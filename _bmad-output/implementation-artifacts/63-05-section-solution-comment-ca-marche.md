@@ -1,6 +1,6 @@
 # Story 63.5: Section Solution — Comment ça marche
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -52,18 +52,18 @@ so that je comprenne le mécanisme et la valeur ajoutée avant de m'inscrire.
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Créer `SolutionSection.tsx` (AC: 1, 2, 3, 4)
-  - [ ] `id="how-it-works"` sur la section
-  - [ ] 3 cards d'étapes avec numéro, icône, titre, description, bénéfice
-- [ ] T2 — Layout et animation (AC: 5, 6, 7, 8)
-  - [ ] CSS 3 colonnes desktop / 1 colonne mobile
-  - [ ] Connecteurs/flèches entre étapes (desktop)
-  - [ ] Animation cascade IntersectionObserver
-- [ ] T3 — CSS (AC: 9, 10, 11)
-  - [ ] Créer `SolutionSection.css`
-  - [ ] Cards glass, numérotation premium
-- [ ] T4 — i18n (AC: 12)
-  - [ ] Clé `solution` dans `landing.ts`
+- [x] T1 — Créer `SolutionSection.tsx` (AC: 1, 2, 3, 4)
+  - [x] `id="how-it-works"` sur la section
+  - [x] 3 cards d'étapes avec numéro, icône, titre, description, bénéfice
+- [x] T2 — Layout et animation (AC: 5, 6, 7, 8)
+  - [x] CSS 3 colonnes desktop / 1 colonne mobile
+  - [x] Connecteurs/flèches entre étapes (desktop)
+  - [x] Animation cascade IntersectionObserver
+- [x] T3 — CSS (AC: 9, 10, 11)
+  - [x] Créer `SolutionSection.css`
+  - [x] Cards glass, numérotation premium
+- [x] T4 — i18n (AC: 12)
+  - [x] Clé `solution` dans `landing.ts`
 
 ## Dev Notes
 
@@ -102,3 +102,7 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+- frontend/src/i18n/landing.ts
+- frontend/src/pages/landing/sections/SolutionSection.tsx
+- frontend/src/pages/landing/sections/SolutionSection.css
+- frontend/src/pages/landing/LandingPage.tsx

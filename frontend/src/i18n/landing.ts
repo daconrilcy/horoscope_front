@@ -53,6 +53,24 @@ export interface LandingTranslation {
       item3: string
     }
   }
+  solution: {
+    title: string
+    step1: {
+      title: string
+      desc: string
+      benefit: string
+    }
+    step2: {
+      title: string
+      desc: string
+      benefit: string
+    }
+    step3: {
+      title: string
+      desc: string
+      benefit: string
+    }
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -109,6 +127,24 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         item3: "Une pédagogie bienveillante pour comprendre votre mission de vie.",
       },
     },
+    solution: {
+      title: "En 3 étapes simples",
+      step1: {
+        title: "Partagez vos données de naissance",
+        desc: "Indiquez votre date, heure et lieu de naissance avec précision pour un calcul rigoureux.",
+        benefit: "Votre thème natal est calculé",
+      },
+      step2: {
+        title: "Choisissez votre astrologue IA",
+        desc: "Entamez une conversation guidée et personnalisée avec l'expert de votre choix.",
+        benefit: "Conversation personnalisée",
+      },
+      step3: {
+        title: "Recevez vos insights au quotidien",
+        desc: "Bénéficiez d'une guidance actionnable et de prédictions basées sur le ciel du jour.",
+        benefit: "Guidance et prédictions",
+      },
+    },
   },
   en: {
     hero: {
@@ -163,6 +199,24 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         item3: "Empathetic guidance to understand your life's mission.",
       },
     },
+    solution: {
+      title: "In 3 simple steps",
+      step1: {
+        title: "Share your birth data",
+        desc: "Provide your date, time and place of birth for a precise calculation.",
+        benefit: "Your birth chart is calculated",
+      },
+      step2: {
+        title: "Choose your AI astrologer",
+        desc: "Start a guided and personalized conversation with the expert of your choice.",
+        benefit: "Personalized conversation",
+      },
+      step3: {
+        title: "Receive daily insights",
+        desc: "Get actionable guidance and predictions based on today's sky.",
+        benefit: "Guidance and predictions",
+      },
+    },
   },
   es: {
     hero: {
@@ -172,7 +226,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       bullet2: "Respuestas instantáneas y empáticas",
       bullet3: "Horóscopo personalizado cada mañana",
       ctaPrimary: "Empezar gratis",
-      ctaSecondary: "Ver un ejemplo",
+      ctaSecondary: "Ver un exemple",
       micro1: "Sin tarjeta de crédito",
       micro2: "Cancela en 1 clic",
       micro3: "Datos protegidos por RGPD",
@@ -215,6 +269,24 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         item1: "Pronósticos basados en tu carta única, calculados al minuto.",
         item2: "Chat en vivo disponible 24/7 para todas tus dudas.",
         item3: "Guía empática para entender tu misión de vida.",
+      },
+    },
+    solution: {
+      title: "En 3 pasos sencillos",
+      step1: {
+        title: "Comparte tus datos de nacimiento",
+        desc: "Indica tu fecha, hora y lugar de nacimiento con precisión para un cálculo riguroso.",
+        benefit: "Tu carta natal es calculada",
+      },
+      step2: {
+        title: "Elige tu astrólogo IA",
+        desc: "Inicia una conversación guiada y personalizada con el experto de tu elección.",
+        benefit: "Conversación personalizada",
+      },
+      step3: {
+        title: "Recibe tus insights diarios",
+        desc: "Recibe consejos prácticos y predicciones basadas en el cielo de hoy.",
+        benefit: "Guía y predicciones",
       },
     },
   },
