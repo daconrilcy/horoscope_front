@@ -1,0 +1,220 @@
+.landing-page {
+  --landing-max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--premium-layout-padding-inline);
+  max-width: var(--landing-max-width);
+}
+
+.hero-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  padding: 80px 0;
+  align-items: center;
+  min-height: calc(100vh - 80px); /* Adjust based on navbar height if known */
+}
+
+@media (min-width: 1024px) {
+  .hero-section {
+    grid-template-columns: 6fr 4fr;
+    gap: 60px;
+  }
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hero-content h1 {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 3rem;
+  line-height: 1.1;
+  color: var(--premium-text-strong);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .hero-content h1 {
+    font-size: 4rem;
+  }
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--premium-text-main);
+  max-width: 600px;
+}
+
+.hero-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-bullet-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--premium-text-main);
+  font-weight: 500;
+}
+
+.hero-bullet-icon {
+  color: var(--premium-accent-purple);
+  flex-shrink: 0;
+}
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.hero-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  height: 56px;
+  font-weight: 600;
+  color: var(--premium-text-strong);
+  text-decoration: none;
+  border-radius: var(--premium-radius-pill);
+  background: var(--premium-glass-surface-1);
+  border: 1px solid var(--premium-glass-border);
+  backdrop-filter: blur(18px) saturate(140%);
+  transition: all 0.2s ease;
+}
+
+.hero-cta-secondary:hover {
+  background: var(--premium-glass-surface-2);
+  transform: translateY(-2px);
+}
+
+.hero-reassurance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.hero-reassurance-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: var(--premium-text-meta);
+}
+
+.hero-reassurance-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--premium-accent-purple-soft);
+}
+
+.hero-visual {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--premium-glass-surface-1);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: var(--premium-radius-hero);
+  box-shadow: var(--premium-shadow-hero);
+  backdrop-filter: blur(18px) saturate(140%);
+  /* overflow: visible; to allow captions to float outside */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-visual-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--premium-text-meta);
+  text-align: center;
+  padding: 40px;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  border-radius: var(--premium-radius-hero);
+  overflow: hidden; /* This clips the placeholder content but NOT the captions outside */
+}
+
+/* Captions for the visual */
+.hero-visual-caption {
+  position: absolute;
+  padding: 12px 20px;
+  background: var(--premium-glass-surface-2);
+  border: 1px solid var(--premium-glass-border-strong);
+  border-radius: var(--premium-radius-card);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--premium-shadow-card);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--premium-text-strong);
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.hero-visual-caption--1 {
+  top: 15%;
+  left: -5%;
+}
+
+.hero-visual-caption--2 {
+  bottom: 20%;
+  right: -2%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-cta-secondary,
+  .hero-ctas .button,
+  .hero-section * {
+    transition: none !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .hero-visual-caption {
+    display: none;
+  }
+  
+  .hero-section {
+    padding: 40px 0;
+    text-align: center;
+  }
+  
+  .hero-content {
+    align-items: center;
+  }
+  
+  .hero-subtitle {
+    margin: 0 auto;
+  }
+  
+  .hero-bullets {
+    align-items: flex-start;
+    margin: 8px auto;
+  }
+  
+  .hero-ctas {
+    justify-content: center;
+  }
+  
+  .hero-reassurance {
+    justify-content: center;
+  }
+}

@@ -2,11 +2,12 @@ import type { RouteObject } from "react-router-dom"
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom"
 
 import { AppShell } from "../components/AppShell"
-import { RootLayout, AuthLayout } from "../layouts"
+import { RootLayout, AuthLayout, LandingLayout } from "../layouts"
 import { EnterpriseLayout } from "../components/layout"
 import { AuthGuard } from "./guards/AuthGuard"
 import { RoleGuard } from "./guards/RoleGuard"
 import { RootRedirect } from "./guards/RootRedirect"
+import { LandingRedirect } from "./guards/LandingRedirect"
 
 import { SignInForm } from "../components/SignInForm"
 import { SignUpForm } from "../components/SignUpForm"
@@ -60,12 +61,21 @@ function RegisterPage() {
 
 export const routes: RouteObject[] = [
   {
-    path: "/",
-    element: <RootRedirect />,
-  },
-  {
     element: <RootLayout />,
     children: [
+      {
+        element: <LandingLayout />,
+        children: [
+          {
+            path: "/",
+            element: <LandingRedirect />,
+          },
+          {
+            path: "/landing",
+            element: <Navigate to="/" replace />,
+          },
+        ],
+      },
       {
         element: <AuthLayout />,
         children: [

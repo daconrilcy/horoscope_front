@@ -13,6 +13,7 @@ import { tConsultations, type ConsultationsTranslation } from "./consultations"
 import { tAstrologers, type AstrologersTranslation } from "./astrologers"
 import { translateInsight, translateInsightSection, type InsightsTranslation, type InsightId } from "./insights"
 import { supportTranslations } from "./support"
+import { landingTranslations, type LandingTranslation } from "./landing"
 import type { AppLocale } from "./types"
 
 export * from "./types"
@@ -31,6 +32,7 @@ export * from "./astrologers"
 export * from "./admin"
 export * from "./insights"
 export * from "./support"
+export * from "./landing"
 
 export type TranslationMap = {
   auth: AuthTranslation
@@ -51,6 +53,7 @@ export type TranslationMap = {
   astrologers: AstrologersTranslation
   insights: InsightsTranslation
   support: any
+  landing: LandingTranslation
 }
 
 export type TranslationNamespace = keyof TranslationMap
@@ -82,6 +85,7 @@ const translationFunctions: {
     section: () => translateInsightSection(lang)
   }),
   support: (lang) => supportTranslations[lang] as any,
+  landing: landingTranslations,
 }
 
 /**

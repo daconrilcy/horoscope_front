@@ -523,3 +523,26 @@ development_status:
   epic-62: in-progress
   62-1-page-support-et-help-center-utilisateur: done
   62-2-amelioration-ux-ui-page-help: done
+  epic-63: in-progress
+  # LOT 1 — MVP conversion (priorité haute)
+  63-1-hero-section-landing-page: done
+  63-2-navbar-landing-page: ready-for-dev
+  63-4-section-probleme-opportunite: ready-for-dev
+  63-5-section-solution-comment-ca-marche: ready-for-dev
+  63-7-section-offre-tarifs: ready-for-dev
+  63-8-section-faq-cta-final: ready-for-dev
+  63-9-footer-landing-page: ready-for-dev
+  63-10-seo-performance-core-web-vitals: ready-for-dev
+  63-11-page-inscription-produit-conversion: ready-for-dev
+  63-16-instrumentation-analytics-funnel: ready-for-dev
+  # LOT 2 — Social proof (après données réelles disponibles)
+  63-3-section-preuves-rapides-social-proof: ready-for-dev
+  63-6-section-temoignages-cas-clients: ready-for-dev
+  # LOT 3 — Email infra (post-MVP)
+  63-12-email-bienvenue-j0-transactionnel: ready-for-dev
+  63-13-emaillog-abstraction-provider: ready-for-dev
+  63-14-unsubscribe-email-tokenise: ready-for-dev
+  # LOT 4 — Email automation V2
+  63-15-scheduler-sequence-emails-j1-j7: backlog
+  # Transverse (en parallèle du LOT 1)
+  63-17-accessibilite-transverse-landing: ready-for-dev
