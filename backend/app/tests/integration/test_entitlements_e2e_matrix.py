@@ -77,9 +77,16 @@ EXPECTED_MATRIX: dict[str, dict[str, ExpectedFeature]] = {
         "natal_chart_short": ExpectedFeature(
             granted=True,
             reason_code="granted",
-            access_mode="unlimited",
-            quota_limit=None,
+            access_mode="quota",
+            quota_limit=1,
             variant_code=None,
+            quota=ExpectedQuota(
+                quota_key="interpretations",
+                quota_limit=1,
+                period_unit="lifetime",
+                period_value=1,
+                reset_mode="lifetime",
+            ),
         ),
         "natal_chart_long": ExpectedFeature(
             granted=False,
@@ -107,9 +114,16 @@ EXPECTED_MATRIX: dict[str, dict[str, ExpectedFeature]] = {
         "natal_chart_short": ExpectedFeature(
             granted=True,
             reason_code="granted",
-            access_mode="unlimited",
-            quota_limit=None,
+            access_mode="quota",
+            quota_limit=1,
             variant_code=None,
+            quota=ExpectedQuota(
+                quota_key="interpretations",
+                quota_limit=1,
+                period_unit="lifetime",
+                period_value=1,
+                reset_mode="lifetime",
+            ),
         ),
         "natal_chart_long": ExpectedFeature(
             granted=True,
@@ -151,9 +165,16 @@ EXPECTED_MATRIX: dict[str, dict[str, ExpectedFeature]] = {
         "natal_chart_short": ExpectedFeature(
             granted=True,
             reason_code="granted",
-            access_mode="unlimited",
-            quota_limit=None,
+            access_mode="quota",
+            quota_limit=1,
             variant_code=None,
+            quota=ExpectedQuota(
+                quota_key="interpretations",
+                quota_limit=1,
+                period_unit="lifetime",
+                period_value=1,
+                reset_mode="lifetime",
+            ),
         ),
         "natal_chart_long": ExpectedFeature(
             granted=True,
@@ -170,18 +191,11 @@ EXPECTED_MATRIX: dict[str, dict[str, ExpectedFeature]] = {
             ),
         ),
         "astrologer_chat": ExpectedFeature(
-            granted=True,
-            reason_code="granted",
-            access_mode="quota",
-            quota_limit=5,
+            granted=False,
+            reason_code="binding_disabled",
+            access_mode="disabled",
+            quota_limit=None,
             variant_code=None,
-            quota=ExpectedQuota(
-                quota_key="messages",
-                quota_limit=5,
-                period_unit="day",
-                period_value=1,
-                reset_mode="calendar",
-            ),
         ),
         "thematic_consultation": ExpectedFeature(
             granted=True,
@@ -202,9 +216,16 @@ EXPECTED_MATRIX: dict[str, dict[str, ExpectedFeature]] = {
         "natal_chart_short": ExpectedFeature(
             granted=True,
             reason_code="granted",
-            access_mode="unlimited",
-            quota_limit=None,
+            access_mode="quota",
+            quota_limit=1,
             variant_code=None,
+            quota=ExpectedQuota(
+                quota_key="interpretations",
+                quota_limit=1,
+                period_unit="lifetime",
+                period_value=1,
+                reset_mode="lifetime",
+            ),
         ),
         "natal_chart_long": ExpectedFeature(
             granted=True,
@@ -224,12 +245,12 @@ EXPECTED_MATRIX: dict[str, dict[str, ExpectedFeature]] = {
             granted=True,
             reason_code="granted",
             access_mode="quota",
-            quota_limit=2000,
+            quota_limit=50000,
             variant_code=None,
             quota=ExpectedQuota(
-                quota_key="messages",
-                quota_limit=2000,
-                period_unit="month",
+                quota_key="tokens",
+                quota_limit=50000,
+                period_unit="day",
                 period_value=1,
                 reset_mode="calendar",
             ),
@@ -238,12 +259,12 @@ EXPECTED_MATRIX: dict[str, dict[str, ExpectedFeature]] = {
             granted=True,
             reason_code="granted",
             access_mode="quota",
-            quota_limit=2,
+            quota_limit=200000,
             variant_code=None,
             quota=ExpectedQuota(
-                quota_key="consultations",
-                quota_limit=2,
-                period_unit="day",
+                quota_key="tokens",
+                quota_limit=200000,
+                period_unit="month",
                 period_value=1,
                 reset_mode="calendar",
             ),
@@ -339,7 +360,7 @@ def _seed_canonical_matrix(db: Session) -> None:
         "natal_chart_short": FeatureCatalogModel(
             feature_code="natal_chart_short",
             feature_name="Natal Chart Short",
-            is_metered=False,
+            is_metered=True,
         ),
         "natal_chart_long": FeatureCatalogModel(
             feature_code="natal_chart_long",
@@ -662,18 +683,18 @@ class TestFrontendContract:
 
     def test_quota_exhausted_stays_in_normalized_vocabulary(self, db_session: Session) -> None:
         user = _create_user(db_session)
-        quota = EXPECTED_MATRIX["basic"]["astrologer_chat"].quota
+        quota = EXPECTED_MATRIX["basic"]["thematic_consultation"].quota
         assert quota is not None
         _create_usage_counter(
             db_session,
             user_id=user.id,
-            feature_code="astrologer_chat",
+            feature_code="thematic_consultation",
             quota=quota,
             used_count=quota.quota_limit,
         )
 
         response = _client_get_entitlements(user_id=user.id, db=db_session, plan_code="basic")
-        feature = _get_feature(response, "astrologer_chat")
+        feature = _get_feature(response, "thematic_consultation")
 
         assert feature["granted"] is False
         assert feature["reason_code"] == "quota_exhausted"

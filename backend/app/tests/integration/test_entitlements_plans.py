@@ -65,7 +65,10 @@ def test_get_plans_catalog_success():
         p_basic = PlanCatalogModel(
             plan_code="basic", plan_name="Basic Plan", audience=Audience.B2C, is_active=True
         )
-        db_session.add_all([p_free, p_basic])
+        p_trial = PlanCatalogModel(
+            plan_code="trial", plan_name="Trial Plan", audience=Audience.B2C, is_active=True
+        )
+        db_session.add_all([p_free, p_basic, p_trial])
         db_session.commit()
 
         # Billing Plans (Prices)
@@ -75,9 +78,21 @@ def test_get_plans_catalog_success():
             monthly_price_cents=900,
             currency="EUR",
             daily_message_limit=5,
+            is_visible_to_users=True,
+            is_available_to_users=True,
             is_active=True,
         )
-        db_session.add(bp_basic)
+        bp_trial = BillingPlanModel(
+            code="trial",
+            display_name="Trial",
+            monthly_price_cents=0,
+            currency="EUR",
+            daily_message_limit=1,
+            is_visible_to_users=False,
+            is_available_to_users=False,
+            is_active=True,
+        )
+        db_session.add_all([bp_basic, bp_trial])
         db_session.commit()
 
         # Bindings
@@ -100,11 +115,19 @@ def test_get_plans_catalog_success():
             plan_feature_binding_id=b2.id,
             quota_key="tokens",
             quota_limit=10,
+            period_unit=PeriodUnit.MONTH,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        )
+        q2 = PlanFeatureQuotaModel(
+            plan_feature_binding_id=b2.id,
+            quota_key="tokens",
+            quota_limit=2,
             period_unit=PeriodUnit.DAY,
             period_value=1,
             reset_mode=ResetMode.CALENDAR,
         )
-        db_session.add(q1)
+        db_session.add_all([q1, q2])
         db_session.commit()
 
     # Overrides
@@ -117,12 +140,14 @@ def test_get_plans_catalog_success():
     assert response.status_code == 200
     data = response.json()["data"]
 
-    # Plans order: free, basic
+    # Plans order: free, basic (trial masqué)
     assert len(data) == 2
     assert data[0]["plan_code"] == "free"
     assert data[0]["monthly_price_cents"] == 0
+    assert data[0]["processing_priority"] == "low"
     assert data[1]["plan_code"] == "basic"
     assert data[1]["monthly_price_cents"] == 900
+    assert data[1]["processing_priority"] == "medium"
 
     # Features exhaustivity (AC1)
     # Even though plan free only has 1 binding, it should return all 4 features
@@ -141,7 +166,64 @@ def test_get_plans_catalog_success():
     assert data[1]["features"][2]["feature_code"] == "astrologer_chat"
     assert data[1]["features"][2]["is_enabled"] is True
     assert data[1]["features"][2]["access_mode"] == "quota"
-    assert len(data[1]["features"][2]["quotas"]) == 1
-    assert data[1]["features"][2]["quotas"][0]["quota_limit"] == 10
+    assert len(data[1]["features"][2]["quotas"]) == 2
+    assert [quota["period_unit"] for quota in data[1]["features"][2]["quotas"]] == ["day", "month"]
+    assert [quota["quota_limit"] for quota in data[1]["features"][2]["quotas"]] == [2, 10]
+    assert data[1]["is_active"] is True
+
+    app.dependency_overrides.clear()
+
+
+def test_get_plans_catalog_forbidden_for_non_user_roles():
+    _cleanup_db()
+    app.dependency_overrides[require_authenticated_user] = _override_auth(role="support")
+
+    response = client.get("/v1/entitlements/plans")
+
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "insufficient_role"
+
+    app.dependency_overrides.clear()
+
+
+def test_get_plans_catalog_keeps_paid_plans_visible_without_billing_rows():
+    _cleanup_db()
+
+    with SessionLocal() as db_session:
+        for code, name in (
+            ("natal_chart_short", "Short Chart"),
+            ("natal_chart_long", "Long Chart"),
+            ("astrologer_chat", "Chat"),
+            ("thematic_consultation", "Thematic"),
+        ):
+            db_session.add(FeatureCatalogModel(feature_code=code, feature_name=name))
+
+        db_session.add_all(
+            [
+                PlanCatalogModel(
+                    plan_code="free", plan_name="Free Plan", audience=Audience.B2C, is_active=True
+                ),
+                PlanCatalogModel(
+                    plan_code="basic", plan_name="Basic Plan", audience=Audience.B2C, is_active=True
+                ),
+                PlanCatalogModel(
+                    plan_code="premium",
+                    plan_name="Premium Plan",
+                    audience=Audience.B2C,
+                    is_active=True,
+                ),
+            ]
+        )
+        db_session.commit()
+
+    app.dependency_overrides[require_authenticated_user] = _override_auth()
+
+    response = client.get("/v1/entitlements/plans")
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert [plan["plan_code"] for plan in data] == ["free", "basic", "premium"]
+    assert data[1]["monthly_price_cents"] == 900
+    assert data[2]["monthly_price_cents"] == 2900
 
     app.dependency_overrides.clear()

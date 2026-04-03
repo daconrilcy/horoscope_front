@@ -161,6 +161,7 @@ def test_billing_plans_are_available_for_authenticated_user() -> None:
     payload = response.json()["data"]
     codes = {plan["code"] for plan in payload}
     assert {"basic", "premium"}.issubset(codes)
+    assert "trial" not in codes
 
 
 def test_billing_plans_normalize_zero_prices_for_canonical_plans() -> None:
@@ -177,6 +178,8 @@ def test_billing_plans_normalize_zero_prices_for_canonical_plans() -> None:
                     monthly_price_cents=0,
                     currency="EUR",
                     daily_message_limit=50,
+                    is_visible_to_users=True,
+                    is_available_to_users=True,
                     is_active=True,
                 ),
                 BillingPlanModel(
@@ -185,6 +188,8 @@ def test_billing_plans_normalize_zero_prices_for_canonical_plans() -> None:
                     monthly_price_cents=0,
                     currency="EUR",
                     daily_message_limit=1000,
+                    is_visible_to_users=True,
+                    is_available_to_users=True,
                     is_active=True,
                 ),
             ]
@@ -196,6 +201,47 @@ def test_billing_plans_normalize_zero_prices_for_canonical_plans() -> None:
     payload = {plan["code"]: plan for plan in response.json()["data"]}
     assert payload["basic"]["monthly_price_cents"] == 900
     assert payload["premium"]["monthly_price_cents"] == 2900
+
+
+def test_billing_plans_hide_user_invisible_trial_plan() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    with SessionLocal() as db:
+        db.add_all(
+            [
+                BillingPlanModel(
+                    code="trial",
+                    display_name="Trial",
+                    monthly_price_cents=0,
+                    currency="EUR",
+                    daily_message_limit=1,
+                    is_visible_to_users=False,
+                    is_available_to_users=False,
+                    is_active=True,
+                ),
+                BillingPlanModel(
+                    code="basic",
+                    display_name="Basic",
+                    monthly_price_cents=900,
+                    currency="EUR",
+                    daily_message_limit=50,
+                    is_visible_to_users=True,
+                    is_available_to_users=True,
+                    is_active=True,
+                ),
+            ]
+        )
+        db.commit()
+
+    response = client.get("/v1/billing/plans", headers=headers)
+
+    assert response.status_code == 200
+    payload = {plan["code"]: plan for plan in response.json()["data"]}
+    assert "trial" not in payload
+    assert payload["basic"]["is_visible_to_users"] is True
+    assert payload["basic"]["is_available_to_users"] is True
 
 
 def test_billing_subscription_status_with_stripe_profile() -> None:

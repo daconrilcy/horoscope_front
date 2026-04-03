@@ -40,6 +40,18 @@ _SEED_CONTEXT = CanonicalMutationContext(
 )
 
 
+def _single_lifetime_interpretation_quota() -> list[dict[str, object]]:
+    return [
+        {
+            "quota_key": "interpretations",
+            "quota_limit": 1,
+            "period_unit": PeriodUnit.LIFETIME,
+            "period_value": 1,
+            "reset_mode": ResetMode.LIFETIME,
+        }
+    ]
+
+
 def seed() -> None:
     desired_bindings: dict[str, dict[str, dict]] = {
         "free": {
@@ -56,10 +68,18 @@ def seed() -> None:
                 "quotas": [],
             },
             "astrologer_chat": {
-                "is_enabled": False,
-                "access_mode": AccessMode.DISABLED,
+                "is_enabled": True,
+                "access_mode": AccessMode.QUOTA,
                 "variant_code": None,
-                "quotas": [],
+                "quotas": [
+                    {
+                        "quota_key": "messages",
+                        "quota_limit": 1,
+                        "period_unit": PeriodUnit.WEEK,
+                        "period_value": 1,
+                        "reset_mode": ResetMode.CALENDAR,
+                    }
+                ],
             },
             "thematic_consultation": {
                 "is_enabled": False,
@@ -71,9 +91,9 @@ def seed() -> None:
         "trial": {
             "natal_chart_short": {
                 "is_enabled": True,
-                "access_mode": AccessMode.UNLIMITED,
+                "access_mode": AccessMode.QUOTA,
                 "variant_code": None,
-                "quotas": [],
+                "quotas": _single_lifetime_interpretation_quota(),
             },
             "natal_chart_long": {
                 "is_enabled": True,
@@ -156,7 +176,7 @@ def seed() -> None:
                         "period_unit": PeriodUnit.MONTH,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
-                    }
+                    },
                 ],
             },
             "thematic_consultation": {
@@ -294,7 +314,7 @@ def seed() -> None:
                 {
                     "feature_code": "natal_chart_short",
                     "feature_name": "Natal Chart Short",
-                    "is_metered": False,
+                    "is_metered": True,
                 },
                 {
                     "feature_code": "natal_chart_long",

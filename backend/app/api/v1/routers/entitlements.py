@@ -26,6 +26,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureBindingModel,
 )
 from app.infra.db.session import get_db_session
+from app.services.billing_service import BillingService
 from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
 from app.services.entitlement_types import EffectiveFeatureAccess, UsageState
 
@@ -38,6 +39,13 @@ FEATURES_TO_QUERY: list[str] = [
     "natal_chart_long",
     "natal_chart_short",
 ]
+
+_PLAN_PRIORITY: dict[str, str] = {
+    "free": "low",
+    "basic": "medium",
+    "premium": "high",
+}
+# fallback : "medium"
 
 
 def _to_usage_state_response(state: UsageState) -> UsageStateResponse:
@@ -155,7 +163,7 @@ def get_my_entitlements(
 @router.get(
     "/plans",
     response_model=PlansCatalogResponse,
-    responses={401: {}},
+    responses={401: {}, 403: {}},
 )
 def get_plans_catalog(
     request: Request,
@@ -167,6 +175,20 @@ def get_plans_catalog(
     Utilisé par la page /help/subscriptions.
     """
     request_id = resolve_request_id(request)
+    if current_user.role not in {"user", "admin"}:
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": {
+                    "code": "insufficient_role",
+                    "message": "role not allowed for entitlements",
+                    "details": {"role": current_user.role},
+                    "request_id": request_id,
+                }
+            },
+        )
+
+    BillingService.ensure_default_plans(db)
 
     # 1. Charger les plans B2C actifs avec leurs bindings, features et quotas (anti N+1)
     stmt = (
@@ -207,8 +229,12 @@ def get_plans_catalog(
     data = []
     for plan in sorted_plans:
         bp = price_map.get(plan.plan_code)
+        if plan.plan_code != "free":
+            if bp is None or not bp.is_visible_to_users:
+                continue
         monthly_price_cents = bp.monthly_price_cents if bp else 0
         currency = bp.currency if bp else "EUR"
+        is_plan_active = bp.is_available_to_users if bp else plan.is_active
 
         # Map des bindings existants pour ce plan
         plan_bindings = {b.feature.feature_code: b for b in plan.bindings}
@@ -224,6 +250,7 @@ def get_plans_catalog(
                 continue
 
             if b:
+                period_order = {"day": 0, "week": 1, "month": 2, "year": 3, "lifetime": 4}
                 quotas_data = [
                     PlanFeatureQuotaData(
                         quota_key=q.quota_key,
@@ -232,7 +259,14 @@ def get_plans_catalog(
                         period_value=q.period_value,
                         reset_mode=q.reset_mode.value,
                     )
-                    for q in b.quotas
+                    for q in sorted(
+                        b.quotas,
+                        key=lambda quota: (
+                            period_order.get(quota.period_unit.value, 99),
+                            quota.period_value,
+                            quota.quota_key,
+                        ),
+                    )
                 ]
                 features_data.append(
                     PlanFeatureData(
@@ -261,7 +295,8 @@ def get_plans_catalog(
                 plan_name=plan.plan_name,
                 monthly_price_cents=monthly_price_cents,
                 currency=currency,
-                is_active=plan.is_active,
+                is_active=is_plan_active,
+                processing_priority=_PLAN_PRIORITY.get(plan.plan_code, "medium"),
                 features=features_data,
             )
         )

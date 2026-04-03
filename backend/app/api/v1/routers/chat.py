@@ -137,8 +137,8 @@ def send_chat_message(
         logger.info("Validating payload...")
         parsed_payload = ChatMessageRequest.model_validate(payload)
 
-        logger.info("Checking access...")
-        entitlement_result = ChatEntitlementGate.check_access(db, user_id=current_user.id)
+        logger.info("Checking access and consuming non-token quota...")
+        entitlement_result = ChatEntitlementGate.check_and_consume(db, user_id=current_user.id)
 
         quota_info = _build_quota_info(entitlement_result)
 

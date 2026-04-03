@@ -403,7 +403,10 @@ def list_billing_plans(
         return role_error
 
     plans = db.scalars(
-        select(BillingPlanModel).where(BillingPlanModel.is_active)
+        select(BillingPlanModel).where(
+            BillingPlanModel.is_active,
+            BillingPlanModel.is_visible_to_users,
+        )
     ).all()
 
     return {

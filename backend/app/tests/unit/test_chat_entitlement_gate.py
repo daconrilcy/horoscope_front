@@ -149,6 +149,36 @@ def test_check_and_consume_processes_legacy_quota(db_session):
     mock_consume.assert_called_once()
 
 
+def test_check_and_consume_processes_messages_quota(db_session):
+    # Quota key is 'messages' -> should be consumed immediately
+    mock_state = MagicMock(spec=UsageState)
+    mock_state.quota_key = "messages"
+    mock_state.quota_limit = 1
+    mock_state.period_unit = "week"
+    mock_state.period_value = 1
+    mock_state.reset_mode = "calendar"
+    snapshot = make_snapshot(access=dict(access_mode="quota", usage_states=[mock_state]))
+
+    with (
+        patch.object(
+            EffectiveEntitlementResolverService,
+            "resolve_b2c_user_snapshot",
+            return_value=snapshot,
+        ),
+        patch.object(QuotaUsageService, "consume", return_value=mock_state) as mock_consume,
+    ):
+        result = ChatEntitlementGate.check_and_consume(db_session, user_id=1)
+
+    assert result.path == "canonical_quota"
+    assert result.usage_states == [mock_state]
+    # Verify consumption amount is 1
+    mock_consume.assert_called_once()
+    call_args = mock_consume.call_args[1]
+    assert call_args["amount"] == 1
+    assert call_args["feature_code"] == "astrologer_chat"
+    assert call_args["quota"].quota_key == "messages"
+
+
 def test_access_denied_no_plan(db_session):
     snapshot = make_snapshot(
         plan_code="none",

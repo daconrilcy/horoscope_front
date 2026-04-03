@@ -9,6 +9,8 @@ export type BillingPlan = {
   monthly_price_cents: number
   currency: string
   daily_message_limit: number
+  is_visible_to_users: boolean
+  is_available_to_users: boolean
   is_active: boolean
 }
 
@@ -171,15 +173,24 @@ type EntitlementUsageState = {
 
 type FeatureEntitlementResponse = {
   feature_code: string
-  final_access: boolean
-  reason: string
+  granted: boolean
+  reason_code: string
+  access_mode: string | null
   usage_states: EntitlementUsageState[]
 }
 
 type EntitlementsMeResponse = {
   data: {
+    plan_code: string
+    billing_status: string
     features: FeatureEntitlementResponse[]
   }
+}
+
+export type EntitlementsSnapshot = {
+  plan_code: string
+  billing_status: string
+  features: FeatureEntitlementResponse[]
 }
 
 type TokenUsageApiResponse = {
@@ -201,7 +212,7 @@ function toChatEntitlementUsage(feature: FeatureEntitlementResponse | undefined)
     consumed: usage.used,
     remaining: usage.remaining,
     reset_at: usage.window_end ?? "",
-    blocked: usage.exhausted || feature?.final_access === false,
+    blocked: usage.exhausted || feature?.granted === false,
   }
 }
 
@@ -212,9 +223,9 @@ function toChatEntitlementFeature(feature: FeatureEntitlementResponse | undefine
 
   return {
     feature_code: feature.feature_code,
-    granted: feature.final_access,
-    reason_code: feature.reason,
-    access_mode: feature.final_access ? "quota" : null,
+    granted: feature.granted,
+    reason_code: feature.reason_code,
+    access_mode: feature.access_mode,
     quota_limit: feature.usage_states[0]?.quota_limit ?? null,
     quota_remaining: feature.usage_states[0]?.remaining ?? null,
     variant_code: null,
@@ -270,21 +281,14 @@ async function fetchEntitlementsPlans(): Promise<PlanCatalog[]> {
 }
 
 async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus | null> {
-  const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
-    method: "GET",
-    headers: getAccessTokenAuthHeader(),
-  })
-  if (!response.ok) {
-    return parseError(response)
-  }
-  const body = (await response.json()) as EntitlementsMeResponse
-  const chatEntitlement = body.data.features.find(
+  const body = await fetchEntitlementsSnapshot()
+  const chatEntitlement = body.features.find(
     (feature) => feature.feature_code === CHAT_QUOTA_FEATURE_CODE,
   )
   return toChatEntitlementUsage(chatEntitlement)
 }
 
-async function fetchChatEntitlementFeature(): Promise<ChatEntitlementFeatureStatus | null> {
+async function fetchEntitlementsSnapshot(): Promise<EntitlementsSnapshot> {
   const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
@@ -293,7 +297,12 @@ async function fetchChatEntitlementFeature(): Promise<ChatEntitlementFeatureStat
     return parseError(response)
   }
   const body = (await response.json()) as EntitlementsMeResponse
-  const chatEntitlement = body.data.features.find(
+  return body.data
+}
+
+async function fetchChatEntitlementFeature(): Promise<ChatEntitlementFeatureStatus | null> {
+  const body = await fetchEntitlementsSnapshot()
+  const chatEntitlement = body.features.find(
     (feature) => feature.feature_code === CHAT_QUOTA_FEATURE_CODE,
   )
   return toChatEntitlementFeature(chatEntitlement)
@@ -339,6 +348,17 @@ export function useEntitlementsPlans() {
   return useQuery({
     queryKey: ["entitlements-plans"],
     queryFn: fetchEntitlementsPlans,
+  })
+}
+
+export function useEntitlementsSnapshot() {
+  return useQuery({
+    queryKey: ["entitlements-me"],
+    queryFn: fetchEntitlementsSnapshot,
+    retry: (failureCount, error) => {
+      if (error instanceof BillingApiError && error.status === 403) return false
+      return failureCount < 1
+    },
   })
 }
 

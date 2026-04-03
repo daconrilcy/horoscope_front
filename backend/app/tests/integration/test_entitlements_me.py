@@ -108,7 +108,7 @@ def _add_binding(
     period_unit: PeriodUnit | None = None,
     period_value: int | None = None,
     reset_mode: ResetMode | None = None,
-) -> None:
+) -> PlanFeatureBindingModel:
     binding = PlanFeatureBindingModel(
         plan_id=plan_id,
         feature_id=feature_id,
@@ -119,7 +119,7 @@ def _add_binding(
     db.flush()
 
     if access_mode != AccessMode.QUOTA:
-        return
+        return binding
 
     assert quota_key is not None
     assert quota_limit is not None
@@ -136,6 +136,7 @@ def _add_binding(
             reset_mode=reset_mode,
         )
     )
+    return binding
 
 
 def seed_canonical_plans(db: Session) -> None:
@@ -154,7 +155,7 @@ def seed_canonical_plans(db: Session) -> None:
         "natal_chart_short": FeatureCatalogModel(
             feature_code="natal_chart_short",
             feature_name="Natal Chart Short",
-            is_metered=False,
+            is_metered=True,
         ),
         "natal_chart_long": FeatureCatalogModel(
             feature_code="natal_chart_long",
@@ -199,7 +200,12 @@ def seed_canonical_plans(db: Session) -> None:
         db,
         plan_id=free_id,
         feature_id=features["natal_chart_short"].id,
-        access_mode=AccessMode.UNLIMITED,
+        access_mode=AccessMode.QUOTA,
+        quota_key="interpretations",
+        quota_limit=1,
+        period_unit=PeriodUnit.LIFETIME,
+        period_value=1,
+        reset_mode=ResetMode.LIFETIME,
     )
 
     trial_id = plans["trial"].id
@@ -236,7 +242,12 @@ def seed_canonical_plans(db: Session) -> None:
         db,
         plan_id=trial_id,
         feature_id=features["natal_chart_short"].id,
-        access_mode=AccessMode.UNLIMITED,
+        access_mode=AccessMode.QUOTA,
+        quota_key="interpretations",
+        quota_limit=1,
+        period_unit=PeriodUnit.LIFETIME,
+        period_value=1,
+        reset_mode=ResetMode.LIFETIME,
     )
 
     basic_id = plans["basic"].id
@@ -244,23 +255,28 @@ def seed_canonical_plans(db: Session) -> None:
         db,
         plan_id=basic_id,
         feature_id=features["astrologer_chat"].id,
-        access_mode=AccessMode.QUOTA,
-        quota_key="messages",
-        quota_limit=5,
-        period_unit=PeriodUnit.DAY,
-        period_value=1,
-        reset_mode=ResetMode.CALENDAR,
+        access_mode=AccessMode.DISABLED,
     )
-    _add_binding(
+    thematic_binding = _add_binding(
         db,
         plan_id=basic_id,
         feature_id=features["thematic_consultation"].id,
         access_mode=AccessMode.QUOTA,
         quota_key="consultations",
-        quota_limit=3,
-        period_unit=PeriodUnit.MONTH,
+        quota_limit=1,
+        period_unit=PeriodUnit.WEEK,
         period_value=1,
         reset_mode=ResetMode.CALENDAR,
+    )
+    db.add(
+        PlanFeatureQuotaModel(
+            plan_feature_binding_id=thematic_binding.id,
+            quota_key="tokens",
+            quota_limit=20000,
+            period_unit=PeriodUnit.WEEK,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR,
+        )
     )
     _add_binding(
         db,
@@ -278,7 +294,12 @@ def seed_canonical_plans(db: Session) -> None:
         db,
         plan_id=basic_id,
         feature_id=features["natal_chart_short"].id,
-        access_mode=AccessMode.UNLIMITED,
+        access_mode=AccessMode.QUOTA,
+        quota_key="interpretations",
+        quota_limit=1,
+        period_unit=PeriodUnit.LIFETIME,
+        period_value=1,
+        reset_mode=ResetMode.LIFETIME,
     )
 
     premium_id = plans["premium"].id
@@ -287,9 +308,9 @@ def seed_canonical_plans(db: Session) -> None:
         plan_id=premium_id,
         feature_id=features["astrologer_chat"].id,
         access_mode=AccessMode.QUOTA,
-        quota_key="messages",
-        quota_limit=2000,
-        period_unit=PeriodUnit.MONTH,
+        quota_key="tokens",
+        quota_limit=50000,
+        period_unit=PeriodUnit.DAY,
         period_value=1,
         reset_mode=ResetMode.CALENDAR,
     )
@@ -297,7 +318,12 @@ def seed_canonical_plans(db: Session) -> None:
         db,
         plan_id=premium_id,
         feature_id=features["thematic_consultation"].id,
-        access_mode=AccessMode.UNLIMITED,
+        access_mode=AccessMode.QUOTA,
+        quota_key="tokens",
+        quota_limit=200000,
+        period_unit=PeriodUnit.MONTH,
+        period_value=1,
+        reset_mode=ResetMode.CALENDAR,
     )
     _add_binding(
         db,
@@ -315,7 +341,12 @@ def seed_canonical_plans(db: Session) -> None:
         db,
         plan_id=premium_id,
         feature_id=features["natal_chart_short"].id,
-        access_mode=AccessMode.UNLIMITED,
+        access_mode=AccessMode.QUOTA,
+        quota_key="interpretations",
+        quota_limit=1,
+        period_unit=PeriodUnit.LIFETIME,
+        period_value=1,
+        reset_mode=ResetMode.LIFETIME,
     )
 
     db.commit()
@@ -354,7 +385,7 @@ def test_trial_user_entitlements(db_session: Session):
     - astrologer_chat: disabled
     - natal_chart_long: quota 1/lifetime
     - thematic_consultation: quota 1/week
-    - natal_chart_short: unlimited
+    - natal_chart_short: quota 1/lifetime
     """
     seed_canonical_plans(db_session)
     user = _create_user(db_session, "trial@example.com")
@@ -387,8 +418,11 @@ def test_trial_user_entitlements(db_session: Session):
     assert chat["reason_code"] == "binding_disabled"
 
     short = next(f for f in features if f["feature_code"] == "natal_chart_short")
-    assert short["access_mode"] == "unlimited"
+    assert short["access_mode"] == "quota"
     assert short["granted"] is True
+    assert short["usage_states"][0]["quota_limit"] == 1
+    assert short["usage_states"][0]["reset_mode"] == "lifetime"
+    assert short["usage_states"][0]["window_end"] is None
 
 
 def test_free_user_entitlements(db_session: Session):
@@ -411,8 +445,11 @@ def test_free_user_entitlements(db_session: Session):
     assert thematic["reason_code"] == "binding_disabled"
 
     short = next(f for f in features if f["feature_code"] == "natal_chart_short")
-    assert short["access_mode"] == "unlimited"
+    assert short["access_mode"] == "quota"
     assert short["granted"] is True
+    assert short["usage_states"][0]["quota_limit"] == 1
+    assert short["usage_states"][0]["reset_mode"] == "lifetime"
+    assert short["usage_states"][0]["window_end"] is None
 
 
 def test_basic_user_entitlements(db_session: Session):
@@ -426,13 +463,20 @@ def test_basic_user_entitlements(db_session: Session):
     assert {feature["feature_code"] for feature in features} == FEATURE_CODES
 
     chat = next(f for f in features if f["feature_code"] == "astrologer_chat")
-    assert chat["access_mode"] == "quota"
-    assert chat["granted"] is True
-    assert chat["usage_states"][0]["quota_limit"] == 5
-    assert chat["usage_states"][0]["period_unit"] == "day"
-    assert chat["usage_states"][0]["reset_mode"] == "calendar"
-    assert chat["usage_states"][0]["remaining"] == 5
-    assert chat["usage_states"][0]["window_end"] is not None
+    assert chat["access_mode"] == "disabled"
+    assert chat["granted"] is False
+    assert chat["reason_code"] == "binding_disabled"
+    assert chat["usage_states"] == []
+
+    thematic = next(f for f in features if f["feature_code"] == "thematic_consultation")
+    assert thematic["access_mode"] == "quota"
+    assert thematic["granted"] is True
+    thematic_by_key = {state["quota_key"]: state for state in thematic["usage_states"]}
+    assert set(thematic_by_key) == {"consultations", "tokens"}
+    assert thematic_by_key["consultations"]["quota_limit"] == 1
+    assert thematic_by_key["consultations"]["period_unit"] == "week"
+    assert thematic_by_key["tokens"]["quota_limit"] == 20000
+    assert thematic_by_key["tokens"]["period_unit"] == "week"
 
     ncl = next(f for f in features if f["feature_code"] == "natal_chart_long")
     assert ncl["variant_code"] == "single_astrologer"
@@ -453,8 +497,8 @@ def test_premium_user_entitlements(db_session: Session):
     chat = next(f for f in features if f["feature_code"] == "astrologer_chat")
     assert chat["access_mode"] == "quota"
     assert chat["granted"] is True
-    assert chat["usage_states"][0]["quota_limit"] == 2000
-    assert chat["usage_states"][0]["period_unit"] == "month"
+    assert chat["usage_states"][0]["quota_limit"] == 50000
+    assert chat["usage_states"][0]["period_unit"] == "day"
     assert chat["usage_states"][0]["reset_mode"] == "calendar"
     assert chat["usage_states"][0]["window_end"] is not None
 
@@ -494,10 +538,10 @@ def test_no_quota_consumed(db_session: Session):
     assert counter.used_count == 0
 
 
-def test_basic_user_chat_usage_states_populated(db_session: Session):
-    """AC: 11 - user basic avec consommation -> usage_states[0].remaining reflète la réalité."""
+def test_premium_user_chat_usage_states_populated(db_session: Session):
+    """AC: 11 - user premium avec consommation -> usage_states[0].remaining reflète la réalité."""
     seed_canonical_plans(db_session)
-    user = _create_user(db_session, "basic_consume@example.com")
+    user = _create_user(db_session, "premium_consume@example.com")
 
     # Créer un compteur avec 2 messages consommés
     window_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -505,7 +549,7 @@ def test_basic_user_chat_usage_states_populated(db_session: Session):
         FeatureUsageCounterModel(
             user_id=user.id,
             feature_code="astrologer_chat",
-            quota_key="messages",
+            quota_key="tokens",
             period_unit=PeriodUnit.DAY,
             period_value=1,
             reset_mode=ResetMode.CALENDAR,
@@ -516,14 +560,15 @@ def test_basic_user_chat_usage_states_populated(db_session: Session):
     )
     db_session.commit()
 
-    response = _call_endpoint_for_plan(db_session, user.id, "basic")
+    response = _call_endpoint_for_plan(db_session, user.id, "premium")
     assert response.status_code == 200
     chat = next(
         f for f in response.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
     )
-    assert chat["usage_states"][0]["used"] == 2
-    assert chat["usage_states"][0]["remaining"] == 3
-    assert chat["usage_states"][0]["window_end"] is not None
+    chat_day_state = next(state for state in chat["usage_states"] if state["period_unit"] == "day")
+    assert chat_day_state["used"] == 2
+    assert chat_day_state["remaining"] == 49998
+    assert chat_day_state["window_end"] is not None
 
 
 def test_no_legacy_fallback_reason_in_response(db_session: Session):
@@ -568,9 +613,9 @@ def test_trialing_stripe_profile_opens_entitlements_without_legacy_subscription(
     assert payload["billing_status"] == "trialing"
 
     chat = next(f for f in payload["features"] if f["feature_code"] == "astrologer_chat")
-    assert chat["granted"] is True
-    assert chat["access_mode"] == "quota"
-    assert chat["usage_states"][0]["quota_limit"] == 5
+    assert chat["granted"] is False
+    assert chat["access_mode"] == "disabled"
+    assert chat["reason_code"] == "binding_disabled"
 
 
 def test_incomplete_stripe_profile_does_not_open_paid_entitlements(db_session: Session):
@@ -626,4 +671,5 @@ def test_past_due_stripe_profile_preserves_product_access(db_session: Session):
     assert payload["billing_status"] == "past_due"
 
     chat = next(f for f in payload["features"] if f["feature_code"] == "astrologer_chat")
-    assert chat["granted"] is True
+    assert chat["granted"] is False
+    assert chat["reason_code"] == "binding_disabled"

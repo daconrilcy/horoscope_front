@@ -79,6 +79,8 @@ class BillingPlanData(BaseModel):
     monthly_price_cents: int
     currency: str
     daily_message_limit: int
+    is_visible_to_users: bool = True
+    is_available_to_users: bool = True
     is_active: bool
 
 
@@ -345,6 +347,8 @@ class BillingService:
             monthly_price_cents=monthly_price_cents,
             currency=currency,
             daily_message_limit=daily_message_limit,
+            is_visible_to_users=model.is_visible_to_users,
+            is_available_to_users=model.is_available_to_users,
             is_active=model.is_active,
         )
 
@@ -360,6 +364,8 @@ class BillingService:
             monthly_price_cents=int(defaults["monthly_price_cents"]),
             currency=str(defaults["currency"]),
             daily_message_limit=int(defaults["daily_message_limit"]),
+            is_visible_to_users=True,
+            is_available_to_users=True,
             is_active=True,
         )
 
@@ -409,6 +415,8 @@ class BillingService:
                     monthly_price_cents=int(data["monthly_price_cents"]),
                     currency=str(data["currency"]),
                     daily_message_limit=int(data["daily_message_limit"]),
+                    is_visible_to_users=True,
+                    is_available_to_users=True,
                     is_active=True,
                 )
                 db.add(existing)

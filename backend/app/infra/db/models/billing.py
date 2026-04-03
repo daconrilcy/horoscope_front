@@ -21,6 +21,8 @@ class BillingPlanModel(Base):
     monthly_price_cents: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(3), default="EUR")
     daily_message_limit: Mapped[int] = mapped_column(Integer)
+    is_visible_to_users: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_available_to_users: Mapped[bool] = mapped_column(Boolean, default=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(

@@ -84,6 +84,7 @@ class PlanCatalogData(BaseModel):
     monthly_price_cents: int
     currency: str
     is_active: bool
+    processing_priority: str  # "low" | "medium" | "high"
     features: list[PlanFeatureData] = Field(default_factory=list)
 
 
