@@ -8,13 +8,21 @@ export const LandingFooter = () => {
   const t = useTranslation("landing")
   const currentYear = new Date().getFullYear()
 
-  const productLinks = [
+  type FooterLink = {
+    key: string
+    label: string
+    enabled: boolean
+    to?: string
+    href?: string
+  }
+
+  const productLinks: FooterLink[] = [
     { key: "howItWorks", href: "#how-it-works", ...t.footer.product.howItWorks },
     { key: "pricing", href: "#pricing", ...t.footer.product.pricing },
     { key: "login", to: "/login", ...t.footer.product.login },
   ]
 
-  const legalLinks = [
+  const legalLinks: FooterLink[] = [
     { key: "privacy", to: t.footer.legal.privacy.path, ...t.footer.legal.privacy },
     { key: "legal", to: t.footer.legal.legal.path, ...t.footer.legal.legal },
     { key: "terms", to: t.footer.legal.terms.path, ...t.footer.legal.terms },

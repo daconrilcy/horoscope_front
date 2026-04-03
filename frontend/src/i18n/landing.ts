@@ -445,6 +445,13 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       register: "Start",
       language: "Language",
     },
+    navbarA11y: {
+      navLabel: "Main navigation",
+      logoLabel: "Astrorizon - Back to home",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
+      mobileMenu: "Mobile menu",
+    },
     socialProof: {
       badges: {
         swiss: "Swiss Ephemeris Calculations",
@@ -649,9 +656,9 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       subtitle: "Pronósticos ultra precisos y chat en vivo con tu astrólogo IA para iluminar tu camino cada día.",
       bullet1: "Carta natal completa gratuita",
       bullet2: "Respuestas instantáneas y empáticas",
-      bullet3: "Horóscopo personnalisé cada mañana",
+      bullet3: "Horóscopo personalizado cada mañana",
       ctaPrimary: "Empezar gratis",
-      ctaSecondary: "Ver un exemple",
+      ctaSecondary: "Ver un ejemplo",
       micro1: "Sin tarjeta de crédito",
       micro2: "Cancela en 1 clic",
       micro3: "Datos protegidos por RGPD",
@@ -666,6 +673,13 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       register: "Empezar",
       language: "Idioma",
     },
+    navbarA11y: {
+      navLabel: "Navegación principal",
+      logoLabel: "Astrorizon - Volver al inicio",
+      openMenu: "Abrir menú",
+      closeMenu: "Cerrar menú",
+      mobileMenu: "Menú móvil",
+    },
     socialProof: {
       badges: {
         swiss: "Cálculos de Swiss Ephemeris",
@@ -673,7 +687,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         available: "Disponible 24/7",
       },
       metrics: {
-        users: "Usuarios actifs",
+        users: "Usuarios activos",
         usersValue: "10k+",
         rating: "Calificación promedio",
         ratingValue: "4.9/5",
@@ -716,10 +730,10 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
     },
     testimonials: {
       title: "Ellos iluminan su camino con Astrorizon",
-      subtitle: "Testimonios basados en nuestros premiers usuarios beta.",
+      subtitle: "Testimonios basados en nuestros primeros usuarios beta.",
       items: [
         {
-          quote: "Finalmente una herramienta que tiene en cuenta la hora exacta de mi naissance. Los consejos diarios siempre son acertados.",
+          quote: "Finalmente una herramienta que tiene en cuenta la hora exacta de mi nacimiento. Los consejos diarios siempre son acertados.",
           author: "Sophie L.",
           context: "Usuaria, Libra",
           rating: 5,
@@ -746,7 +760,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         },
         after: {
           label: "Después",
-          text: "Gracias a su guía personalizada, identificó un período favorable para la acción et lanzó su empresa con confianza.",
+          text: "Gracias a su guía personalizada, identificó un período favorable para la acción y lanzó su empresa con confianza.",
         },
         action: {
           label: "Acción",
@@ -754,7 +768,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         },
       },
       reassurance: {
-        data: "Datos cifrados et protegidos",
+        data: "Datos cifrados y protegidos",
         swiss: "Cálculos basados en Swiss Ephemeris",
         cancel: "Cancelación sin condiciones",
       },
@@ -799,7 +813,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
           a: "Sí, a diferencia de los horóscopos generales, Astrorizon utiliza tu fecha, hora y lugar de nacimiento exactos para calcular posiciones planetarias reales con Swiss Ephemeris.",
         },
         {
-          q: "¿Cuánto tiempo para ver un primer resultado?",
+          q: "¿Cuánto tempo para ver un primer resultado?",
           a: "Desde tu registro, accedes a tu carta natal completa. El chat IA responde instantáneamente a tus dudas desde el primer minuto.",
         },
         {
@@ -858,14 +872,13 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       description: "Descubre tu carta natal y chatea con tu astrólogo IA disponible 24/7. Pronósticos precisos y guía personalizada diaria.",
       ogTitle: "Astrorizon — Astrología Aumentada por IA",
       ogDescription: "Obtén respuestas instantáneas sobre tu futuro y personalidad con nuestra tecnología de cálculo astrológico de precisión.",
-      },
-      common: {
+    },
+    common: {
       skipLink: "Saltar al contenido principal",
       separatorOr: "o",
-      },
-      },
-      }
-
+    },
+  },
+}
 
 export function landingTranslations(lang: AstrologyLang = "fr"): LandingTranslation {
   return translations[lang] ?? translations.fr
