@@ -1,0 +1,23 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+    <h1>Comment lire votre horoscope personnalisé ? 🔭</h1>
+    <p>Bonjour {{ firstname if firstname else "" }},</p>
+    <p>Vous avez maintenant accès à votre univers Astrorizon. Pour tirer le meilleur de vos prévisions, voici comment nous fonctionnons :</p>
+    
+    <div style="margin: 30px 0;">
+        <p><strong>1. Précision Astrale</strong> : Nous utilisons les calculs Swiss Ephemeris pour positionner les planètes au degré près sur votre thème.</p>
+        <p><strong>2. Analyse IA</strong> : Notre intelligence artificielle croise ces positions avec les transits actuels pour décoder les énergies du moment.</p>
+        <p><strong>3. Guidance Actionnable</strong> : Nous transformons ces données complexes en conseils simples et directs pour votre journée.</p>
+    </div>
+    
+    <div style="text-align: center;">
+        <a href="{{ app_url }}/dashboard" class="button">Consulter mon horoscope</a>
+    </div>
+    
+    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+    <p style="font-size: 12px; color: #999;">
+        Vous recevez cet email car vous êtes inscrit sur Astrorizon. 
+        <a href="{{ unsubscribe_url }}">Se désabonner</a>
+    </p>
+{% endblock %}

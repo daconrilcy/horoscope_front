@@ -319,6 +319,9 @@ def _ensure_canonical_entitlements_seeded() -> None:
 
 @asynccontextmanager
 async def _app_lifespan(_: FastAPI):
+    from app.core.scheduler import start_scheduler, shutdown_scheduler
+    start_scheduler()
+    
     ensure_local_sqlite_schema_ready()
     PricingExperimentService.record_variant_state_change(
         enabled=PricingExperimentService.is_enabled(),
@@ -360,6 +363,7 @@ async def _app_lifespan(_: FastAPI):
         run_canonical_db_startup_validation(settings.canonical_db_validation_mode, db)
 
     yield
+    shutdown_scheduler()
 
 
 app = FastAPI(title="horoscope-backend", version="0.1.0", lifespan=_app_lifespan)

@@ -543,6 +543,6 @@ development_status:
   63-13-emaillog-abstraction-provider: done
   63-14-unsubscribe-email-tokenise: done
   # LOT 4 — Email automation V2
-  63-15-scheduler-sequence-emails-j1-j7: backlog
+  63-15-scheduler-sequence-emails-j1-j7: done
   # Transverse (en parallèle du LOT 1)
   63-17-accessibilite-transverse-landing: ready-for-dev

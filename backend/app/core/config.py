@@ -380,6 +380,10 @@ class Settings:
             default=bool(self.stripe_secret_key),
         )
 
+        # Base URLs
+        self.app_url = os.getenv("APP_URL", "http://localhost:5173").strip()
+        self.backend_url = os.getenv("BACKEND_URL", "http://localhost:8000").strip()
+
         # Story 61.54 - MVP Tax Configuration
         self.stripe_tax_enabled = os.getenv("STRIPE_TAX_ENABLED", "false").strip().lower() == "true"
         self.stripe_tax_id_collection_enabled = (

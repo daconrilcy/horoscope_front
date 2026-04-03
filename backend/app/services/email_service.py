@@ -7,6 +7,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.infra.db.models.email_log import EmailLogModel
 from app.infra.db.models.user import UserModel
 from app.services.email_provider import get_email_provider
@@ -25,7 +26,7 @@ class EmailService:
     def _render_template(template_name: str, **kwargs) -> str:
         template = jinja_env.get_template(f"emails/{template_name}")
         kwargs.setdefault("year", datetime.now().year)
-        kwargs.setdefault("app_url", os.getenv("VITE_PRODUCTION_URL", "http://localhost:5173"))
+        kwargs.setdefault("app_url", settings.app_url)
         return template.render(**kwargs)
 
     @staticmethod
@@ -33,13 +34,12 @@ class EmailService:
         """
         AC1: Generates a signed JWT token for unsubscription.
         """
-        secret_key = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
         payload = {
             "user_id": user_id,
             "email_type": email_type,
             "exp": datetime.now(timezone.utc) + timedelta(days=30),
         }
-        return jwt.encode(payload, secret_key, algorithm="HS256")
+        return jwt.encode(payload, settings.jwt_secret_key, algorithm="HS256")
 
     @staticmethod
     def get_unsubscribe_link(user_id: int) -> str:
@@ -47,16 +47,16 @@ class EmailService:
         AC1: Generates the full unsubscription URL.
         """
         token = EmailService.generate_unsubscribe_token(user_id)
-        base_url = os.getenv("APP_URL", "http://localhost:8000")
-        return f"{base_url}/api/email/unsubscribe?token={token}"
+        return f"{settings.backend_url}/api/email/unsubscribe?token={token}"
 
     @staticmethod
-    async def send_welcome_email(
-        db: Session, user_id: int, email: str, firstname: str | None = None
-    ) -> bool:
+    async def send_welcome_email(db: Session, user_id: int, email: str, firstname: str | None = None) -> bool:
         """
         Sends a welcome email to a new user with idempotence check.
         """
+        # AC1 (63.15): Planifier la séquence J1-J7
+        EmailService.schedule_onboarding_sequence(db, user_id, email, firstname)
+
         return await EmailService._send_email(
             db=db,
             user_id=user_id,
@@ -66,6 +66,144 @@ class EmailService:
             subject="Bienvenue dans votre univers astrologique ✨",
             template_vars={"firstname": firstname, "email": email}
         )
+
+    @staticmethod
+    def schedule_onboarding_sequence(db: Session, user_id: int, email: str, firstname: str | None = None):
+        """
+        AC2: Schedule 4 onboarding emails (J1, J3, J5, J7).
+        """
+        from app.core.scheduler import scheduler
+        from datetime import datetime, timedelta, timezone
+
+        # AC2.5: Skip scheduling if already unsubscribed
+        user = db.get(UserModel, user_id)
+        if user and user.email_unsubscribed:
+            logger.info(f"Skipping onboarding sequence scheduling for unsubscribed user {user_id}")
+            return
+
+        base_time = datetime.now(timezone.utc)
+
+        # J1: Education
+        scheduler.add_job(
+            EmailService.send_education_email_task,
+            'date',
+            run_date=base_time + timedelta(days=1),
+            args=[user_id, email, firstname],
+            id=f"email_j1_{user_id}",
+            replace_existing=True
+        )
+
+        # J3: Social Proof
+        scheduler.add_job(
+            EmailService.send_social_proof_email_task,
+            'date',
+            run_date=base_time + timedelta(days=3),
+            args=[user_id, email, firstname],
+            id=f"email_j3_{user_id}",
+            replace_existing=True
+        )
+
+        # J5: Objections
+        scheduler.add_job(
+            EmailService.send_objections_email_task,
+            'date',
+            run_date=base_time + timedelta(days=5),
+            args=[user_id, email, firstname],
+            id=f"email_j5_{user_id}",
+            replace_existing=True
+        )
+
+        # J7: Upgrade
+        scheduler.add_job(
+            EmailService.send_upgrade_email_task,
+            'date',
+            run_date=base_time + timedelta(days=7),
+            args=[user_id, email, firstname],
+            id=f"email_j7_{user_id}",
+            replace_existing=True
+        )
+
+    @staticmethod
+    async def send_education_email_task(user_id: int, email: str, firstname: str | None):
+        from app.infra.db.session import SessionLocal
+        with SessionLocal() as db:
+            await EmailService._send_email(
+                db=db,
+                user_id=user_id,
+                email=email,
+                email_type="marketing",
+                template_name="education.html",
+                subject="Comment lire votre horoscope personnalisé 🔭",
+                template_vars={"firstname": firstname, "unsubscribe_url": EmailService.get_unsubscribe_link(user_id)}
+            )
+
+    @staticmethod
+    async def send_social_proof_email_task(user_id: int, email: str, firstname: str | None):
+        from app.infra.db.session import SessionLocal
+        with SessionLocal() as db:
+            await EmailService._send_email(
+                db=db,
+                user_id=user_id,
+                email=email,
+                email_type="marketing",
+                template_name="social_proof.html",
+                subject="Ils ont trouvé leur voie avec Astrorizon ✨",
+                template_vars={"firstname": firstname, "unsubscribe_url": EmailService.get_unsubscribe_link(user_id)}
+            )
+
+    @staticmethod
+    async def send_objections_email_task(user_id: int, email: str, firstname: str | None):
+        from app.infra.db.session import SessionLocal
+        with SessionLocal() as db:
+            await EmailService._send_email(
+                db=db,
+                user_id=user_id,
+                email=email,
+                email_type="marketing",
+                template_name="objections.html",
+                subject="Vos questions sur Astrorizon 🤔",
+                template_vars={"firstname": firstname, "unsubscribe_url": EmailService.get_unsubscribe_link(user_id)}
+            )
+
+    @staticmethod
+    async def send_upgrade_email_task(user_id: int, email: str, firstname: str | None):
+        from app.infra.db.session import SessionLocal
+        from app.infra.db.models.user import UserModel
+        from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
+        with SessionLocal() as db:
+            # AC2.6: Skip if already subscribed
+            # Check user_subscriptions for active status
+            sub = db.execute(
+                select(UserSubscriptionModel).where(
+                    UserSubscriptionModel.user_id == user_id,
+                    UserSubscriptionModel.status == "active"
+                )
+            ).scalars().first()
+            
+            if sub:
+                logger.info(f"User {user_id} already has an active subscription. Skipping upgrade email.")
+                return
+
+            # AC16: Dynamic price from canonical source
+            plan = db.execute(
+                select(BillingPlanModel).where(BillingPlanModel.code == "premium")
+            ).scalars().first()
+            price = str(plan.monthly_price_cents // 100) if plan else "29"
+
+            await EmailService._send_email(
+                db=db,
+                user_id=user_id,
+                email=email,
+                email_type="marketing",
+                template_name="upgrade.html",
+                subject="Débloquez vos insights premium 🌟",
+                template_vars={
+                    "firstname": firstname, 
+                    "price": price, 
+                    "per_month": "/mois",
+                    "unsubscribe_url": EmailService.get_unsubscribe_link(user_id)
+                }
+            )
 
     @staticmethod
     async def _send_email(

@@ -1,6 +1,6 @@
 # Story 63.15: Scheduler séquence emails J1–J7 [V2 — post-MVP]
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
