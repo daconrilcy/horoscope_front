@@ -100,6 +100,12 @@
   color: var(--premium-text-meta);
 }
 
+.testimonial-rating {
+  margin-left: auto;
+  display: flex;
+  color: #f1c40f;
+}
+
 /* Case Study */
 .case-study {
   background: var(--premium-glass-surface-1);

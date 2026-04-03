@@ -138,14 +138,15 @@ function renderApp(initialEntries: string[] = ["/"]) {
 }
 
 describe("App", () => {
-  it("redirects unauthenticated user from / to /login", async () => {
+  it("shows landing page at / for unauthenticated user", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
     localStorage.removeItem("access_token")
     
     renderApp(["/"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Connexion" })).toBeInTheDocument()
+      // Check for landing page hero title (FR default)
+      expect(screen.getByText(/Votre guide astrologique personnel/i)).toBeInTheDocument()
     })
   })
 
@@ -155,36 +156,36 @@ describe("App", () => {
     
     renderApp(["/login"])
     
-    expect(screen.getByLabelText("Adresse e-mail")).toBeInTheDocument()
-    expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Se connecter" })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Adresse e-mail/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Mot de passe/i, { selector: 'input' })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Se connecter/i })).toBeInTheDocument()
   })
 
-  it("navigates from login to register when Créer un compte is clicked", async () => {
+  it("navigates from login to register when 'Créer un compte' is clicked", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
     localStorage.removeItem("access_token")
     
     renderApp(["/login"])
     
-    fireEvent.click(screen.getByRole("button", { name: "Créer un compte" }))
+    fireEvent.click(screen.getByRole("button", { name: /Créer un compte/i }))
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Créer un compte" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Créer un compte/i })).toBeInTheDocument()
     })
   })
 
-  it("navigates from register to login when Se connecter is clicked", async () => {
+  it("navigates from register to login when 'Se connecter' is clicked", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
     localStorage.removeItem("access_token")
     
     renderApp(["/register"])
     
-    expect(screen.getByRole("heading", { name: "Créer un compte" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /Créer un compte/i })).toBeInTheDocument()
     
-    fireEvent.click(screen.getByRole("button", { name: "Se connecter" }))
+    fireEvent.click(screen.getByRole("button", { name: /Se connecter/i }))
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Connexion" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Connexion/i })).toBeInTheDocument()
     })
   })
 
@@ -196,7 +197,7 @@ describe("App", () => {
     renderApp(["/"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { level: 2, name: /Tableau de bord/i })).toBeInTheDocument()
     })
   })
 

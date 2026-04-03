@@ -51,11 +51,11 @@ export const LandingNavbar = () => {
     <>
       <nav 
         className={`landing-navbar ${isScrolled ? "landing-navbar--glass" : ""}`}
-        aria-label="Navigation principale"
+        aria-label={t.navbarA11y.navLabel}
       >
         <div className="landing-navbar__container">
           {/* Logo */}
-          <Link to="/" className="landing-navbar__logo" onClick={closeMobileMenu} aria-label="Astrorizon - Retour à l'accueil">
+          <Link to="/" className="landing-navbar__logo" onClick={closeMobileMenu} aria-label={t.navbarA11y.logoLabel}>
             <img src={logo} alt="" width="32" height="32" />
             <span className="landing-navbar__logo-text">Astrorizon</span>
           </Link>
@@ -82,9 +82,9 @@ export const LandingNavbar = () => {
                 aria-expanded={isLangMenuOpen}
                 aria-controls="lang-dropdown"
               >
-                <Globe size={16} />
+                <Globe size={16} aria-hidden="true" />
                 <span>{lang}</span>
-                <ChevronDown size={14} />
+                <ChevronDown size={14} aria-hidden="true" />
               </button>
               
               {isLangMenuOpen && (
@@ -118,11 +118,11 @@ export const LandingNavbar = () => {
             <button 
               className="landing-navbar__mobile-toggle" 
               onClick={toggleMobileMenu}
-              aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-label={isMobileMenuOpen ? t.navbarA11y.closeMenu : t.navbarA11y.openMenu}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-menu"
             >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMobileMenuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -130,18 +130,18 @@ export const LandingNavbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div id="mobile-menu" className="landing-navbar__mobile-menu" role="dialog" aria-modal="true" aria-label="Menu mobile">
+        <div id="mobile-menu" className="landing-navbar__mobile-menu" role="dialog" aria-modal="true" aria-label={t.navbarA11y.mobileMenu}>
           <div className="landing-navbar__mobile-header">
             <Link to="/" className="landing-navbar__logo" onClick={closeMobileMenu}>
-              <img src={logo} alt="" />
+              <img src={logo} alt="" width="32" height="32" />
               <span className="landing-navbar__logo-text">Astrorizon</span>
             </Link>
             <button 
               className="landing-navbar__mobile-toggle" 
               onClick={closeMobileMenu}
-              aria-label="Fermer le menu"
+              aria-label={t.navbarA11y.closeMenu}
             >
-              <X size={24} />
+              <X size={24} aria-hidden="true" />
             </button>
           </div>
 

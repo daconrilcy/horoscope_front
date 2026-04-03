@@ -110,6 +110,18 @@
   flex-shrink: 0;
 }
 
+.hero-cta-icon-right {
+  margin-left: 8px;
+}
+
+.hero-cta-icon-left {
+  margin-right: 10px;
+}
+
+.hero-cta-icon--fill {
+  fill: currentColor;
+}
+
 .hero-ctas {
   display: flex;
   flex-wrap: wrap;
@@ -187,6 +199,17 @@
   justify-content: center;
   border-radius: var(--premium-radius-hero);
   overflow: hidden;
+}
+
+.hero-visual-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.hero-visual-text {
+  max-width: 240px;
 }
 
 /* Captions for the visual */

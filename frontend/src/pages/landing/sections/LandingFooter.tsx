@@ -82,11 +82,11 @@ export const LandingFooter = () => {
 
         {/* Contact Column */}
         <div className="landing-footer__column">
-          <h3 className="landing-footer__column-title">{t.footer.contact.title}</h3>
+          <span className="landing-footer__column-title">{t.footer.contact.title}</span>
           <ul className="landing-footer__links">
             {contactEmail.enabled && (
               <li>
-                <a href={`mailto:${contactEmail.value}`} className="landing-footer__link" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <a href={`mailto:${contactEmail.value}`} className="landing-footer__link landing-footer__link--email">
                   <Mail size={16} aria-hidden="true" />
                   {contactEmail.label}
                 </a>
@@ -94,6 +94,7 @@ export const LandingFooter = () => {
             )}
           </ul>
         </div>
+
       </div>
 
       <div className="landing-footer__bottom">

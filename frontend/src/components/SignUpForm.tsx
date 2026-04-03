@@ -117,7 +117,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
             {tAuth.signUp.googleButton}
           </button>
           <div className="auth-divider">
-            <span>ou</span>
+            <span>{tLanding.common.separatorOr}</span>
           </div>
         </>
       )}

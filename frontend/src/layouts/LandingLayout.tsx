@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom"
 import { LandingNavbar } from "../pages/landing/sections/LandingNavbar"
 import { LandingFooter } from "../pages/landing/sections/LandingFooter"
+import { useTranslation } from "../i18n"
 
 /**
  * LandingLayout
@@ -10,10 +11,12 @@ import { LandingFooter } from "../pages/landing/sections/LandingFooter"
  * No AppShell, no Sidebar, no BottomNav.
  */
 export const LandingLayout = () => {
+  const t = useTranslation("landing")
+
   return (
     <div className="landing-layout">
       <a href="#main-content" className="skip-link">
-        Aller au contenu principal
+        {t.common.skipLink}
       </a>
       <LandingNavbar />
       <main id="main-content" className="landing-layout__main">

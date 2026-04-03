@@ -87,6 +87,12 @@
   outline: none;
 }
 
+.landing-footer__link--email {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .landing-footer__link:focus-visible {
   text-decoration: underline;
   text-underline-offset: 4px;

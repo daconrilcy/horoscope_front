@@ -23,6 +23,13 @@ export interface LandingTranslation {
     register: string
     language: string
   }
+  navbarA11y: {
+    navLabel: string
+    logoLabel: string
+    openMenu: string
+    closeMenu: string
+    mobileMenu: string
+  }
   socialProof: {
     badges: {
       swiss: string
@@ -180,6 +187,10 @@ export interface LandingTranslation {
     ogTitle: string
     ogDescription: string
   }
+  common: {
+    skipLink: string
+    separatorOr: string
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -205,6 +216,13 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       login: "Connexion",
       register: "Démarrer",
       language: "Langue",
+    },
+    navbarA11y: {
+      navLabel: "Navigation principale",
+      logoLabel: "Astrorizon - Retour à l'accueil",
+      openMenu: "Ouvrir le menu",
+      closeMenu: "Fermer le menu",
+      mobileMenu: "Menu mobile",
     },
     socialProof: {
       badges: {
@@ -398,6 +416,10 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       description: "Découvrez votre thème natal et échangez avec votre astrologue IA disponible 24h/24. Prévisions précises et guidance personnalisée au quotidien.",
       ogTitle: "Astrorizon — L'astrologie augmentée par l'IA",
       ogDescription: "Obtenez des réponses instantanées sur votre avenir et votre personnalité grâce à notre technologie de calcul astrologique de précision.",
+    },
+    common: {
+      skipLink: "Aller au contenu principal",
+      separatorOr: "ou",
     },
   },
   en: {
@@ -616,6 +638,10 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       ogTitle: "Astrorizon — Astrology Augmented by AI",
       ogDescription: "Get instant answers about your future and personality with our precision astrology calculation technology.",
     },
+    common: {
+      skipLink: "Skip to main content",
+      separatorOr: "or",
+    },
   },
   es: {
     hero: {
@@ -832,9 +858,14 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       description: "Descubre tu carta natal y chatea con tu astrólogo IA disponible 24/7. Pronósticos precisos y guía personalizada diaria.",
       ogTitle: "Astrorizon — Astrología Aumentada por IA",
       ogDescription: "Obtén respuestas instantáneas sobre tu futuro y personalidad con nuestra tecnología de cálculo astrológico de precisión.",
-    },
-  },
-}
+      },
+      common: {
+      skipLink: "Saltar al contenido principal",
+      separatorOr: "o",
+      },
+      },
+      }
+
 
 export function landingTranslations(lang: AstrologyLang = "fr"): LandingTranslation {
   return translations[lang] ?? translations.fr

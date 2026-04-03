@@ -35,7 +35,7 @@ export const TestimonialsSection = () => {
               </div>
               {item.rating && (
                 <div 
-                  style={{ marginLeft: 'auto', display: 'flex', color: '#f1c40f' }}
+                  className="testimonial-rating"
                   aria-label={`Note : ${item.rating} sur 5 étoiles`}
                 >
                   {[...Array(item.rating)].map((_, i) => (
