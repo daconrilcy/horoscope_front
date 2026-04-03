@@ -1,6 +1,6 @@
 # Story 63.14: Désabonnement email tokenisé
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

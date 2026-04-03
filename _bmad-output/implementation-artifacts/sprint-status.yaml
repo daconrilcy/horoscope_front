@@ -541,7 +541,7 @@ development_status:
   # LOT 3 — Email infra (post-MVP)
   63-12-email-bienvenue-j0-transactionnel: done
   63-13-emaillog-abstraction-provider: done
-  63-14-unsubscribe-email-tokenise: ready-for-dev
+  63-14-unsubscribe-email-tokenise: done
   # LOT 4 — Email automation V2
   63-15-scheduler-sequence-emails-j1-j7: backlog
   # Transverse (en parallèle du LOT 1)

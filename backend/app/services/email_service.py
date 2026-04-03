@@ -1,11 +1,14 @@
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+import jwt
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.infra.db.models.email_log import EmailLogModel
+from app.infra.db.models.user import UserModel
 from app.services.email_provider import get_email_provider
 
 logger = logging.getLogger(__name__)
@@ -13,9 +16,9 @@ logger = logging.getLogger(__name__)
 # Basic Setup for Jinja2
 template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
 jinja_env = Environment(
-    loader=FileSystemLoader(template_dir),
-    autoescape=select_autoescape(['html', 'xml'])
+    loader=FileSystemLoader(template_dir), autoescape=select_autoescape(["html", "xml"])
 )
+
 
 class EmailService:
     @staticmethod
@@ -26,7 +29,31 @@ class EmailService:
         return template.render(**kwargs)
 
     @staticmethod
-    async def send_welcome_email(db: Session, user_id: int, email: str, firstname: str | None = None) -> bool:
+    def generate_unsubscribe_token(user_id: int, email_type: str = "marketing") -> str:
+        """
+        AC1: Generates a signed JWT token for unsubscription.
+        """
+        secret_key = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
+        payload = {
+            "user_id": user_id,
+            "email_type": email_type,
+            "exp": datetime.now(timezone.utc) + timedelta(days=30),
+        }
+        return jwt.encode(payload, secret_key, algorithm="HS256")
+
+    @staticmethod
+    def get_unsubscribe_link(user_id: int) -> str:
+        """
+        AC1: Generates the full unsubscription URL.
+        """
+        token = EmailService.generate_unsubscribe_token(user_id)
+        base_url = os.getenv("APP_URL", "http://localhost:8000")
+        return f"{base_url}/api/email/unsubscribe?token={token}"
+
+    @staticmethod
+    async def send_welcome_email(
+        db: Session, user_id: int, email: str, firstname: str | None = None
+    ) -> bool:
         """
         Sends a welcome email to a new user with idempotence check.
         """
@@ -55,6 +82,15 @@ class EmailService:
         """
         # AC3: Idempotence check
         if user_id:
+            user_data = db.execute(
+                select(UserModel.email_unsubscribed).where(UserModel.id == user_id)
+            ).first()
+            
+            # AC4: Skip marketing if unsubscribed
+            if user_data and user_data[0] and email_type == "marketing":
+                logger.info(f"Skipping marketing email for unsubscribed user {user_id}")
+                return True
+
             existing = db.execute(
                 select(EmailLogModel).where(
                     EmailLogModel.user_id == user_id,

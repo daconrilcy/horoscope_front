@@ -21,6 +21,7 @@ from app.api.v1.routers.astrologers import router as astrologers_router
 from app.api.v1.routers.astrology_engine import router as astrology_engine_router
 from app.api.v1.routers.audit import router as audit_router
 from app.api.v1.routers.auth import router as auth_router
+from app.api.v1.routers.email import router as email_router
 from app.api.v1.routers.b2b_astrology import router as b2b_astrology_router
 from app.api.v1.routers.b2b_billing import router as b2b_billing_router
 from app.api.v1.routers.b2b_editorial import router as b2b_editorial_router
@@ -645,3 +646,4 @@ app.include_router(users_router)
 app.include_router(support_router)
 app.include_router(ai_engine_router)
 app.include_router(help_router)
+app.include_router(email_router, prefix="/api", tags=["email"])
