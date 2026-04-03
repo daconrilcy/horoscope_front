@@ -45,16 +45,16 @@ export const ProblemSection = () => {
   ]
 
   return (
-    <section id="problem" className="problem-section">
-      <h2>{t.problem.title}</h2>
+    <section id="problem" className="problem-section" aria-labelledby="problem-title">
+      <h2 id="problem-title">{t.problem.title}</h2>
 
       <div className="problem-container" ref={containerRef}>
         {/* Before Column */}
         <div className="problem-column problem-column--before">
-          <div className="problem-column-title">
-            <AlertCircle size={24} />
+          <h3 className="problem-column-title">
+            <AlertCircle size={24} aria-hidden="true" />
             {t.problem.before.title}
-          </div>
+          </h3>
           
           <ul className="problem-list">
             {beforeItems.map((item) => (
@@ -63,7 +63,7 @@ export const ProblemSection = () => {
                 data-item-id={item.id}
                 className={`problem-item ${visibleItems.has(item.id) ? "problem-item--visible" : ""}`}
               >
-                <div className="problem-item-icon">{item.icon}</div>
+                <div className="problem-item-icon" aria-hidden="true">{item.icon}</div>
                 <div className="problem-item-text">{item.text}</div>
               </li>
             ))}
@@ -72,10 +72,10 @@ export const ProblemSection = () => {
 
         {/* After Column */}
         <div className="problem-column problem-column--after">
-          <div className="problem-column-title">
-            <Sparkles size={24} />
+          <h3 className="problem-column-title">
+            <Sparkles size={24} aria-hidden="true" />
             {t.problem.after.title}
-          </div>
+          </h3>
 
           <ul className="problem-list">
             {afterItems.map((item) => (
@@ -84,7 +84,7 @@ export const ProblemSection = () => {
                 data-item-id={item.id}
                 className={`problem-item ${visibleItems.has(item.id) ? "problem-item--visible" : ""}`}
               >
-                <div className="problem-item-icon">{item.icon}</div>
+                <div className="problem-item-icon" aria-hidden="true">{item.icon}</div>
                 <div className="problem-item-text">{item.text}</div>
               </li>
             ))}

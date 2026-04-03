@@ -13,9 +13,9 @@ export const TestimonialsSection = () => {
   }
 
   return (
-    <section id="testimonials" className="testimonials-section">
+    <section id="testimonials" className="testimonials-section" aria-labelledby="testimonials-title">
       <div className="testimonials-header">
-        <h2>{t.testimonials.title}</h2>
+        <h2 id="testimonials-title">{t.testimonials.title}</h2>
         <p>{t.testimonials.subtitle}</p>
       </div>
 
@@ -26,7 +26,7 @@ export const TestimonialsSection = () => {
               “{item.quote}”
             </div>
             <div className="testimonial-footer">
-              <div className="testimonial-avatar">
+              <div className="testimonial-avatar" aria-hidden="true">
                 {item.author.charAt(0)}
               </div>
               <div className="testimonial-info">
@@ -34,9 +34,12 @@ export const TestimonialsSection = () => {
                 <span className="testimonial-context">{item.context}</span>
               </div>
               {item.rating && (
-                <div style={{ marginLeft: 'auto', display: 'flex', color: '#f1c40f' }}>
+                <div 
+                  style={{ marginLeft: 'auto', display: 'flex', color: '#f1c40f' }}
+                  aria-label={`Note : ${item.rating} sur 5 étoiles`}
+                >
                   {[...Array(item.rating)].map((_, i) => (
-                    <Star key={i} size={14} fill="currentColor" />
+                    <Star key={i} size={14} fill="currentColor" aria-hidden="true" />
                   ))}
                 </div>
               )}
@@ -45,10 +48,10 @@ export const TestimonialsSection = () => {
         ))}
       </div>
 
-      <div className="case-study">
+      <div className="case-study" aria-labelledby="case-study-title">
         <div className="case-study-header">
-          <span className="case-study-badge">{t.testimonials.caseStudy.badge}</span>
-          <h3>{t.testimonials.caseStudy.title}</h3>
+          <span className="case-study-badge" aria-hidden="true">{t.testimonials.caseStudy.badge}</span>
+          <h3 id="case-study-title">{t.testimonials.caseStudy.title}</h3>
         </div>
 
         <div className="case-study-grid">
@@ -69,15 +72,15 @@ export const TestimonialsSection = () => {
 
       <div className="reassurance-badges">
         <div className="reassurance-badge">
-          <Lock className="reassurance-badge-icon" size={20} />
+          <Lock className="reassurance-badge-icon" size={20} aria-hidden="true" />
           {t.testimonials.reassurance.data}
         </div>
         <div className="reassurance-badge">
-          <ShieldCheck className="reassurance-badge-icon" size={20} />
+          <ShieldCheck className="reassurance-badge-icon" size={20} aria-hidden="true" />
           {t.testimonials.reassurance.swiss}
         </div>
         <div className="reassurance-badge">
-          <RotateCcw className="reassurance-badge-icon" size={20} />
+          <RotateCcw className="reassurance-badge-icon" size={20} aria-hidden="true" />
           {t.testimonials.reassurance.cancel}
         </div>
       </div>

@@ -30,13 +30,33 @@ export const LandingNavbar = () => {
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
 
+  // Handle Escape key to close menus
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isMobileMenuOpen) {
+          setIsMobileMenuOpen(false)
+          // Return focus to hamburger button
+          const toggle = document.querySelector(".landing-navbar__mobile-toggle") as HTMLElement
+          toggle?.focus()
+        }
+        if (isLangMenuOpen) setIsLangMenuOpen(false)
+      }
+    }
+    window.addEventListener("keydown", handleEscape)
+    return () => window.removeEventListener("keydown", handleEscape)
+  }, [isMobileMenuOpen, isLangMenuOpen])
+
   return (
     <>
-      <nav className={`landing-navbar ${isScrolled ? "landing-navbar--glass" : ""}`}>
+      <nav 
+        className={`landing-navbar ${isScrolled ? "landing-navbar--glass" : ""}`}
+        aria-label="Navigation principale"
+      >
         <div className="landing-navbar__container">
           {/* Logo */}
-          <Link to="/" className="landing-navbar__logo" onClick={closeMobileMenu}>
-            <img src={logo} alt="Astrorizon Logo" width="32" height="32" />
+          <Link to="/" className="landing-navbar__logo" onClick={closeMobileMenu} aria-label="Astrorizon - Retour à l'accueil">
+            <img src={logo} alt="" width="32" height="32" />
             <span className="landing-navbar__logo-text">Astrorizon</span>
           </Link>
 
@@ -58,6 +78,9 @@ export const LandingNavbar = () => {
                 className="landing-navbar__lang"
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
                 aria-label={t.navbar.language}
+                aria-haspopup="true"
+                aria-expanded={isLangMenuOpen}
+                aria-controls="lang-dropdown"
               >
                 <Globe size={16} />
                 <span>{lang}</span>
@@ -65,10 +88,11 @@ export const LandingNavbar = () => {
               </button>
               
               {isLangMenuOpen && (
-                <div className="landing-navbar__lang-dropdown premium-glass-card">
+                <div id="lang-dropdown" className="landing-navbar__lang-dropdown premium-glass-card" role="menu">
                   {SUPPORTED_LANGS.map((l) => (
                     <button
                       key={l}
+                      role="menuitem"
                       onClick={() => {
                         setLang(l)
                         setIsLangMenuOpen(false)
@@ -91,7 +115,13 @@ export const LandingNavbar = () => {
             </Button>
 
             {/* Mobile Toggle */}
-            <button className="landing-navbar__mobile-toggle" onClick={toggleMobileMenu}>
+            <button 
+              className="landing-navbar__mobile-toggle" 
+              onClick={toggleMobileMenu}
+              aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-menu"
+            >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
@@ -100,13 +130,17 @@ export const LandingNavbar = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="landing-navbar__mobile-menu">
+        <div id="mobile-menu" className="landing-navbar__mobile-menu" role="dialog" aria-modal="true" aria-label="Menu mobile">
           <div className="landing-navbar__mobile-header">
             <Link to="/" className="landing-navbar__logo" onClick={closeMobileMenu}>
-              <img src={logo} alt="Astrorizon Logo" />
+              <img src={logo} alt="" />
               <span className="landing-navbar__logo-text">Astrorizon</span>
             </Link>
-            <button className="landing-navbar__mobile-toggle" onClick={closeMobileMenu}>
+            <button 
+              className="landing-navbar__mobile-toggle" 
+              onClick={closeMobileMenu}
+              aria-label="Fermer le menu"
+            >
               <X size={24} />
             </button>
           </div>

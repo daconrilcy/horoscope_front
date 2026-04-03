@@ -38,13 +38,14 @@ export const SocialProofSection = () => {
       id="social-proof" 
       ref={sectionRef}
       className={`social-proof-section ${isVisible ? "social-proof-section--visible" : ""}`}
+      aria-label="Preuves sociales et certifications"
     >
       <div className="social-proof__container">
         {variant === "badges" ? (
           <>
             <div className="social-proof__item">
               <div className="social-proof__icon">
-                <Globe size={24} />
+                <Globe size={24} aria-hidden="true" />
               </div>
               <div className="social-proof__content">
                 <span className="social-proof__value">{t.socialProof.badges.swiss}</span>
@@ -53,7 +54,7 @@ export const SocialProofSection = () => {
             
             <div className="social-proof__item">
               <div className="social-proof__icon">
-                <ShieldCheck size={24} />
+                <ShieldCheck size={24} aria-hidden="true" />
               </div>
               <div className="social-proof__content">
                 <span className="social-proof__value">{t.socialProof.badges.rgpd}</span>
@@ -62,7 +63,7 @@ export const SocialProofSection = () => {
 
             <div className="social-proof__item">
               <div className="social-proof__icon">
-                <Zap size={24} />
+                <Zap size={24} aria-hidden="true" />
               </div>
               <div className="social-proof__content">
                 <span className="social-proof__value">{t.socialProof.badges.available}</span>
@@ -74,7 +75,7 @@ export const SocialProofSection = () => {
             {/* AC1.1: Metrics are now coming from i18n */}
             <div className="social-proof__item">
               <div className="social-proof__icon">
-                <Globe size={24} />
+                <Globe size={24} aria-hidden="true" />
               </div>
               <div className="social-proof__content">
                 <span className="social-proof__value">{t.socialProof.metrics.usersValue}</span>
@@ -84,7 +85,7 @@ export const SocialProofSection = () => {
             
             <div className="social-proof__item">
               <div className="social-proof__icon">
-                <ShieldCheck size={24} />
+                <ShieldCheck size={24} aria-hidden="true" />
               </div>
               <div className="social-proof__content">
                 <span className="social-proof__value">{t.socialProof.metrics.ratingValue}</span>
@@ -94,7 +95,7 @@ export const SocialProofSection = () => {
 
             <div className="social-proof__item">
               <div className="social-proof__icon">
-                <Zap size={24} />
+                <Zap size={24} aria-hidden="true" />
               </div>
               <div className="social-proof__content">
                 <span className="social-proof__value">{t.socialProof.metrics.consultationsValue}</span>

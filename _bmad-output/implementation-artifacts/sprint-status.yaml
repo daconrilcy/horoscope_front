@@ -545,4 +545,4 @@ development_status:
   # LOT 4 — Email automation V2
   63-15-scheduler-sequence-emails-j1-j7: done
   # Transverse (en parallèle du LOT 1)
-  63-17-accessibilite-transverse-landing: ready-for-dev
+  63-17-accessibilite-transverse-landing: done

@@ -48,7 +48,7 @@ export const LandingFooter = () => {
 
         {/* Product Column */}
         <div className="landing-footer__column">
-          <span className="landing-footer__column-title">{t.footer.product.title}</span>
+          <h3 className="landing-footer__column-title">{t.footer.product.title}</h3>
           <ul className="landing-footer__links">
             {productLinks.filter(l => l.enabled).map((link) => (
               <li key={link.key}>
@@ -68,7 +68,7 @@ export const LandingFooter = () => {
 
         {/* Legal Column */}
         <div className="landing-footer__column">
-          <span className="landing-footer__column-title">{t.footer.legal.title}</span>
+          <h3 className="landing-footer__column-title">{t.footer.legal.title}</h3>
           <ul className="landing-footer__links">
             {legalLinks.filter(l => l.enabled).map((link) => (
               <li key={link.key}>
@@ -82,12 +82,12 @@ export const LandingFooter = () => {
 
         {/* Contact Column */}
         <div className="landing-footer__column">
-          <span className="landing-footer__column-title">{t.footer.contact.title}</span>
+          <h3 className="landing-footer__column-title">{t.footer.contact.title}</h3>
           <ul className="landing-footer__links">
             {contactEmail.enabled && (
               <li>
                 <a href={`mailto:${contactEmail.value}`} className="landing-footer__link" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Mail size={16} />
+                  <Mail size={16} aria-hidden="true" />
                   {contactEmail.label}
                 </a>
               </li>

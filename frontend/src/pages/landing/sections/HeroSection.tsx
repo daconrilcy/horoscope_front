@@ -10,22 +10,22 @@ export const HeroSection = () => {
   const { track } = useAnalytics()
 
   return (
-    <section className="hero-section">
+    <section className="hero-section" aria-labelledby="hero-title">
       <div className="hero-content">
-        <h1>{t.hero.title}</h1>
+        <h1 id="hero-title">{t.hero.title}</h1>
         <p className="hero-subtitle">{t.hero.subtitle}</p>
 
         <ul className="hero-bullets">
           <li className="hero-bullet-item">
-            <Check className="hero-bullet-icon" size={20} />
+            <Check className="hero-bullet-icon" size={20} aria-hidden="true" />
             <span>{t.hero.bullet1}</span>
           </li>
           <li className="hero-bullet-item">
-            <Check className="hero-bullet-icon" size={20} />
+            <Check className="hero-bullet-icon" size={20} aria-hidden="true" />
             <span>{t.hero.bullet2}</span>
           </li>
           <li className="hero-bullet-item">
-            <Check className="hero-bullet-icon" size={20} />
+            <Check className="hero-bullet-icon" size={20} aria-hidden="true" />
             <span>{t.hero.bullet3}</span>
           </li>
         </ul>
@@ -40,7 +40,7 @@ export const HeroSection = () => {
             onClick={() => track('hero_cta_click', { cta_label: t.hero.ctaPrimary })}
           >
             {t.hero.ctaPrimary}
-            <ArrowRight size={20} style={{ marginLeft: '8px' }} />
+            <ArrowRight size={20} style={{ marginLeft: '8px' }} aria-hidden="true" />
           </Button>
 
           <a 
@@ -49,7 +49,7 @@ export const HeroSection = () => {
             aria-label={t.hero.ctaSecondary}
             onClick={() => track('secondary_cta_click')}
           >
-            <Play size={18} style={{ marginRight: '10px', fill: 'currentColor' }} />
+            <Play size={18} style={{ marginRight: '10px', fill: 'currentColor' }} aria-hidden="true" />
             {t.hero.ctaSecondary}
           </a>
         </div>

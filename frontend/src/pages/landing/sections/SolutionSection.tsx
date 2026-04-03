@@ -61,12 +61,12 @@ export const SolutionSection = () => {
   ]
 
   return (
-    <section id="how-it-works" className="solution-section">
-      <h2>{t.solution.title}</h2>
+    <section id="how-it-works" className="solution-section" aria-labelledby="solution-title">
+      <h2 id="solution-title">{t.solution.title}</h2>
 
       <div className="solution-container" ref={containerRef}>
-        <div className="solution-connector solution-connector--1"></div>
-        <div className="solution-connector solution-connector--2"></div>
+        <div className="solution-connector solution-connector--1" aria-hidden="true"></div>
+        <div className="solution-connector solution-connector--2" aria-hidden="true"></div>
 
         {steps.map((step) => (
           <div 
@@ -75,8 +75,8 @@ export const SolutionSection = () => {
             className={`solution-card ${visibleSteps.has(step.id) ? "solution-card--visible" : ""}`}
             style={{ transitionDelay: visibleSteps.has(step.id) ? step.delay : "0ms" }}
           >
-            <div className="solution-step-number">{step.number}</div>
-            <div className="solution-card-icon">{step.icon}</div>
+            <div className="solution-step-number" aria-hidden="true">{step.number}</div>
+            <div className="solution-card-icon" aria-hidden="true">{step.icon}</div>
             
             <div className="solution-card-content">
               <h3>{step.title}</h3>

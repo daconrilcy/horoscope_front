@@ -33,24 +33,26 @@ export const PricingSection = () => {
   }, [track])
 
   return (
-    <section id="pricing" className="pricing-section" ref={sectionRef}>
-      <h2>{t.pricing.title}</h2>
+    <section id="pricing" className="pricing-section" ref={sectionRef} aria-labelledby="pricing-title">
+      <h2 id="pricing-title">{t.pricing.title}</h2>
 
       <div className="pricing-grid">
         {activePlans.map((plan) => {
           const planT = (t.pricing.plans as any)[plan.planCode]
+          const planId = `plan-${plan.planCode}`
           
           return (
             <div 
               key={plan.planCode} 
               className={`pricing-card ${plan.isRecommended ? "pricing-card--recommended" : ""}`}
+              aria-labelledby={planId}
             >
               {plan.isRecommended && (
                 <div className="pricing-badge">{t.pricing.recommended}</div>
               )}
 
               <div className="pricing-card-header">
-                <span className="pricing-plan-name">{planT.name}</span>
+                <h3 id={planId} className="pricing-plan-name">{planT.name}</h3>
                 <div className="pricing-price">
                   <span className="pricing-amount">
                     {formatPrice(plan.monthlyPriceCents, plan.currency, lang)}
@@ -62,13 +64,13 @@ export const PricingSection = () => {
                 <p className="pricing-plan-desc">{planT.desc}</p>
               </div>
 
-              <ul className="pricing-features">
+              <ul className="pricing-features" aria-label={`Fonctionnalités du plan ${planT.name}`}>
                 {plan.features.map((feature) => (
                   <li 
                     key={feature.id} 
                     className={`pricing-feature-item ${!feature.enabled ? "pricing-feature-item--disabled" : ""}`}
                   >
-                    <div className="pricing-feature-icon">
+                    <div className="pricing-feature-icon" aria-hidden="true">
                       {feature.enabled ? <Check size={18} /> : <X size={18} />}
                     </div>
                     <span>
