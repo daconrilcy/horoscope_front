@@ -12,8 +12,9 @@ import {
 } from "@api/billing"
 import { detectLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
+import { supportTranslations } from "@i18n/support"
 import { Modal } from "@components/ui"
-import { Check, CreditCard } from "lucide-react"
+import { ArrowRight, CalendarClock, Check, CreditCard, RefreshCcw, Sparkles } from "lucide-react"
 import "./Settings.css"
 
 const BILLING_PORTAL_PENDING_ACTION_KEY = "billing_portal_pending_action"
@@ -61,6 +62,7 @@ function clearPendingBillingPortalAction() {
 export function SubscriptionSettings() {
   const lang = detectLang()
   const t = settingsTranslations.subscription[lang]
+  const subscriptionGuide = supportTranslations[lang].subscriptions
   const {
     data: subscription,
     isLoading: subLoading,
@@ -71,23 +73,16 @@ export function SubscriptionSettings() {
   const isLoading = subLoading || plansLoading
 
   const PLANS = useMemo(() => {
+    const locale = lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : "en-US"
     const formatPrice = (priceCents: number, currency: string) => {
-      return new Intl.NumberFormat(lang === "fr" ? "fr-FR" : "en-US", {
+      return (
+        new Intl.NumberFormat(locale, {
         style: "currency",
         currency: currency,
         maximumFractionDigits: 0,
-      }).format(priceCents / 100) + (lang === "fr" ? "/mois" : "/month")
-    }
-
-    const formatLimit = (planCode: string | null) => {
-      const isCurrent = (subscription?.plan?.code ?? null) === planCode
-      const quota = subscription?.current_quota
-
-      if (isCurrent && quota) {
-        return `${quota.quota_limit} ${t.quotaUnit}/${t.periodUnit[quota.period_unit] || quota.period_unit}`
-      }
-
-      return `— ${t.quotaUnit}`
+      }).format(priceCents / 100)
+        + ` ${subscriptionGuide.perMonth}`
+      )
     }
 
     const basicPlan = catalog?.find(p => p.code === "basic")
@@ -96,18 +91,30 @@ export function SubscriptionSettings() {
     return [
       {
         code: "basic",
-        label: "Basic",
-        limit: formatLimit("basic"),
-        price: basicPlan ? formatPrice(basicPlan.monthly_price_cents, basicPlan.currency) : "9 €/mois"
+        label: subscriptionGuide.plans.basic.name,
+        tagline: subscriptionGuide.plans.basic.tagline,
+        positioning: subscriptionGuide.plans.basic.positioning,
+        lead: subscriptionGuide.plans.basic.description[0],
+        highlights: subscriptionGuide.planHighlights.basic.slice(0, 4),
+        priority: subscriptionGuide.priority.medium,
+        price: basicPlan
+          ? formatPrice(basicPlan.monthly_price_cents, basicPlan.currency)
+          : `9 ${subscriptionGuide.perMonth}`,
       },
       {
         code: "premium",
-        label: "Premium",
-        limit: formatLimit("premium"),
-        price: premiumPlan ? formatPrice(premiumPlan.monthly_price_cents, premiumPlan.currency) : "29 €/mois"
+        label: subscriptionGuide.plans.premium.name,
+        tagline: subscriptionGuide.plans.premium.tagline,
+        positioning: subscriptionGuide.plans.premium.positioning,
+        lead: subscriptionGuide.plans.premium.description[0],
+        highlights: subscriptionGuide.planHighlights.premium.slice(0, 4),
+        priority: subscriptionGuide.priority.high,
+        price: premiumPlan
+          ? formatPrice(premiumPlan.monthly_price_cents, premiumPlan.currency)
+          : `29 ${subscriptionGuide.perMonth}`,
       },
     ]
-  }, [catalog, lang, t, subscription])
+  }, [catalog, lang, subscriptionGuide])
 
   const currentPlanCode = subscription?.plan?.code ?? null
   const stripeSubscriptionStatus = subscription?.subscription_status ?? null
@@ -261,6 +268,13 @@ export function SubscriptionSettings() {
       day: "numeric",
       month: "long",
       year: "numeric",
+    })
+  }
+
+  const scrollToPlans = () => {
+    document.getElementById("subscription-plans")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
     })
   }
 
@@ -422,6 +436,15 @@ export function SubscriptionSettings() {
     PLANS.find((plan) => plan.code === displaySelected)?.label ?? displaySelected ?? ""
   const currentPlanLabel =
     PLANS.find((plan) => plan.code === currentPlanCode)?.label ?? currentPlanCode ?? ""
+  const currentPlanExperience = currentPlanCode
+    ? PLANS.find((plan) => plan.code === currentPlanCode)?.positioning
+    : subscriptionGuide.plans.free.positioning
+  const currentPlanHighlights = currentPlanCode
+    ? PLANS.find((plan) => plan.code === currentPlanCode)?.highlights ?? []
+    : subscriptionGuide.planHighlights.free.slice(0, 3)
+  const currentPlanLead = currentPlanCode
+    ? PLANS.find((plan) => plan.code === currentPlanCode)?.lead ?? t.overviewLeadActive
+    : subscriptionGuide.plans.free.description[0]
   const currentPlanStatusMessage = useMemo(() => {
     if (!effectiveCurrentPeriodEnd || !currentPlanCode) return null
     if (isCancellationAlreadyScheduled || subscription?.scheduled_plan) {
@@ -436,6 +459,57 @@ export function SubscriptionSettings() {
     subscription?.scheduled_plan,
     t.currentPlanEndsOn,
   ])
+  const overviewPlanLabel = currentPlanLabel || t.planFree
+  const overviewBillingValue = effectiveCurrentPeriodEnd
+    ? formatDisplayDate(effectiveCurrentPeriodEnd)
+    : t.overviewNoBillingDate
+  const overviewRenewalValue = isCancellationAlreadyScheduled
+    ? t.overviewRenewalScheduled
+    : hasActivePaidSubscription
+      ? t.overviewRenewalAuto
+      : t.overviewRenewalInactive
+  const overviewLead = currentPlanCode ? currentPlanLead : currentPlanLead
+  const overviewActionMessage = useMemo(() => {
+    if (subscription?.scheduled_plan?.display_name && subscription.change_effective_at) {
+      return t.overviewActionScheduledChange
+        .replace("{{plan}}", subscription.scheduled_plan.display_name)
+        .replace("{{date}}", formatDisplayDate(subscription.change_effective_at))
+    }
+
+    if (isCancellationAlreadyScheduled && effectiveCurrentPeriodEnd) {
+      return t.overviewActionCancellation.replace("{{date}}", formatDisplayDate(effectiveCurrentPeriodEnd))
+    }
+
+    if (hasChanges && selectedPlanLabel) {
+      return t.overviewActionChangeTo.replace("{{plan}}", selectedPlanLabel)
+    }
+
+    if (!currentPlanCode) {
+      return t.overviewActionFree
+    }
+
+    if (isTrialingBasic) {
+      return t.trialBasicNotice
+    }
+
+    return t.overviewActionCurrent
+  }, [
+    currentPlanCode,
+    effectiveCurrentPeriodEnd,
+    formatDisplayDate,
+    hasChanges,
+    isCancellationAlreadyScheduled,
+    isTrialingBasic,
+    selectedPlanLabel,
+    subscription?.change_effective_at,
+    subscription?.scheduled_plan?.display_name,
+    t.overviewActionCancellation,
+    t.overviewActionChangeTo,
+    t.overviewActionCurrent,
+    t.overviewActionFree,
+    t.overviewActionScheduledChange,
+    t.trialBasicNotice,
+  ])
 
   return (
     <div className="subscription-settings">
@@ -448,13 +522,66 @@ export function SubscriptionSettings() {
           <p className="settings-save-feedback settings-save-feedback--saving">Chargement...</p>
         ) : (
           <>
-            <h3 className="settings-section-title settings-section-title--usage">
-              {t.availablePlans}
-            </h3>
-            {isFreeWithoutSubscription && (
-              <p className="subscription-settings__plans-subtitle">{t.freePlanLimitedAccess}</p>
-            )}
-            <div className="subscription-plans-grid">
+            <section className="subscription-overview">
+              <div className="subscription-overview__header">
+                <div className="subscription-overview__copy">
+                  <span className="subscription-overview__eyebrow">{t.overviewEyebrow}</span>
+                  <h3 className="subscription-overview__title">{overviewPlanLabel}</h3>
+                  <p className="subscription-overview__tagline">{currentPlanExperience}</p>
+                  <p className="subscription-overview__lead">{overviewLead}</p>
+                  <ul className="subscription-overview__highlights">
+                    {currentPlanHighlights.map((highlight) => (
+                      <li key={highlight} className="subscription-overview__highlight">
+                        <Check size={14} />
+                        <span>{highlight}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="subscription-overview__aside">
+                  <span className="subscription-overview__aside-label">{t.overviewActionLabel}</span>
+                  <p className="subscription-overview__aside-value">{overviewActionMessage}</p>
+                  <button
+                    type="button"
+                    className="settings-tab subscription-overview__jump"
+                    onClick={scrollToPlans}
+                  >
+                    {t.jumpToPlans}
+                  </button>
+                </div>
+              </div>
+
+              <div className="subscription-overview__stats">
+                <div className="subscription-overview__stat">
+                  <span className="subscription-overview__stat-label">{t.overviewPlanLabel}</span>
+                  <strong className="subscription-overview__stat-value">{overviewPlanLabel}</strong>
+                </div>
+                <div className="subscription-overview__stat">
+                  <span className="subscription-overview__stat-label">{t.overviewExperienceLabel}</span>
+                  <strong className="subscription-overview__stat-value">{currentPlanExperience}</strong>
+                </div>
+                <div className="subscription-overview__stat">
+                  <span className="subscription-overview__stat-label">{t.overviewBillingLabel}</span>
+                  <strong className="subscription-overview__stat-value">{overviewBillingValue}</strong>
+                </div>
+                <div className="subscription-overview__stat">
+                  <span className="subscription-overview__stat-label">{t.overviewRenewalLabel}</span>
+                  <strong className="subscription-overview__stat-value">{overviewRenewalValue}</strong>
+                </div>
+              </div>
+            </section>
+
+            <section id="subscription-plans" className="subscription-plan-stage">
+              <div className="subscription-plan-stage__header">
+                <h3 className="settings-section-title settings-section-title--usage">
+                  {t.availablePlans}
+                </h3>
+                <p className="subscription-plan-stage__lead">
+                  {isFreeWithoutSubscription ? t.freePlanLimitedAccess : t.plansLead}
+                </p>
+              </div>
+
+              <div className="subscription-plans-grid">
               {PLANS.map((plan) => {
                 const isCurrent = currentPlanCode === plan.code
                 const isSelected = displaySelected === plan.code
@@ -471,10 +598,20 @@ export function SubscriptionSettings() {
                       ? t.reactivateWithBasic
                       : t.reactivateWithPremium
                     : null
+                const cardActionLabel = isCurrent
+                  ? t.currentPlan
+                  : isSelected
+                    ? t.overviewActionChangeTo.replace("{{plan}}", plan.label)
+                    : null
                 return (
-                  <div
+                  <button
                     key={plan.code || "free"}
-                    className={`subscription-plan-card ${isSelected ? 'subscription-plan-card--active' : ''}`}
+                    type="button"
+                    className={[
+                      "subscription-plan-card",
+                      isSelected ? "subscription-plan-card--active" : "",
+                      `subscription-plan-card--${plan.code}`,
+                    ].filter(Boolean).join(" ")}
                     onClick={() => {
                       if (isUiLocked) return
                       setSelectedPlanCode(plan.code)
@@ -493,21 +630,41 @@ export function SubscriptionSettings() {
                     data-current-unselected={isCurrent && !isSelected}
                     data-pending={isUiLocked}
                   >
-                    {isCurrent && !isSelected && (
-                      <div className="subscription-plan-card__badge subscription-plan-card__badge--muted">
-                        {t.currentPlan}
+                    <div className="subscription-plan-card__topline">
+                      <div className="subscription-plan-card__copy">
+                        <span className="subscription-plan-card__tagline">{plan.tagline}</span>
+                        <h4 className="subscription-plan-card__name">
+                          {plan.label}
+                        </h4>
                       </div>
-                    )}
-                    {isSelected && (
-                      <div className="subscription-plan-card__badge">
+                      {isSelected && (
+                        <div className="subscription-plan-card__badge">
                         <Check size={12} /> {isCurrent ? t.currentPlan : t.selected}
+                        </div>
+                      )}
+                      {isCurrent && !isSelected && (
+                        <div className="subscription-plan-card__badge subscription-plan-card__badge--muted">
+                          {t.currentPlan}
+                        </div>
+                      )}
+                    </div>
+                    <div className="subscription-plan-card__priority">{plan.priority}</div>
+                    <div className="subscription-plan-card__price">{plan.price}</div>
+                    <p className="subscription-plan-card__lead">{plan.lead}</p>
+                    <div className="subscription-plan-card__positioning">{plan.positioning}</div>
+                    <ul className="subscription-plan-card__highlights">
+                      {plan.highlights.map((highlight) => (
+                        <li key={highlight} className="subscription-plan-card__highlight">
+                          <Check size={14} />
+                          <span>{highlight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {cardActionLabel && (
+                      <div className="subscription-plan-card__selection-note">
+                        {cardActionLabel}
                       </div>
                     )}
-                    <h4 className="subscription-plan-card__name">
-                      {plan.label}
-                    </h4>
-                    <div className="subscription-plan-card__limit">{plan.limit}</div>
-                    <div className="subscription-plan-card__price">{plan.price}</div>
                     {currentPlanNote && (
                       <div className="subscription-plan-card__status-note">
                         {currentPlanNote}
@@ -521,58 +678,82 @@ export function SubscriptionSettings() {
                     {reactivateLabel && (
                       <div className="subscription-plan-card__action-hint">{reactivateLabel}</div>
                     )}
-                  </div>
+                  </button>
                 )
               })}
-            </div>
+              </div>
+            </section>
 
-            {errorMessage && (
-              <p className="settings-save-feedback settings-save-feedback--error">{errorMessage}</p>
-            )}
-            {!errorMessage && successMessage && (
-              <p className="settings-save-feedback settings-save-feedback--success">{successMessage}</p>
-            )}
-            {!errorMessage && isTrialingBasic && (
-              <p className="settings-save-feedback settings-save-feedback--saving">
-                {t.trialBasicNotice}
-              </p>
-            )}
-
-            <div className="subscription-actions">
-              {isPortalSyncPending && !currentPlanStatusMessage && (
-                <span className="settings-text-muted">{t.portalSyncPending}</span>
+            <div className="subscription-feedback-stack" aria-live="polite">
+              {errorMessage && (
+                <p className="subscription-feedback-banner subscription-feedback-banner--error">
+                  <Sparkles size={16} />
+                  <span>{errorMessage}</span>
+                </p>
               )}
-              <button
-                type="button"
-                className="settings-tab settings-tab--active subscription-actions__button"
-                onClick={() => handleValidate()}
-                disabled={!hasChanges || isUiLocked || isTrialUpgradeBlocked}
-              >
-                {isAnyPending ? t.validating : t.validatePlan}
-              </button>
+              {!errorMessage && successMessage && (
+                <p className="subscription-feedback-banner subscription-feedback-banner--success">
+                  <Check size={16} />
+                  <span>{successMessage}</span>
+                </p>
+              )}
+              {!errorMessage && isTrialingBasic && (
+                <p className="subscription-feedback-banner subscription-feedback-banner--info">
+                  <CalendarClock size={16} />
+                  <span>{t.trialBasicNotice}</span>
+                </p>
+              )}
             </div>
 
-            {hasActivePaidSubscription && (
-              <div className="settings-card__footer">
+            <section className="subscription-actions-panel">
+              <div className="subscription-actions-panel__copy">
+                <span className="subscription-actions-panel__eyebrow">{t.overviewActionLabel}</span>
+                <p className="subscription-actions-panel__summary">{overviewActionMessage}</p>
+                {isPortalSyncPending && !currentPlanStatusMessage && (
+                  <span className="subscription-actions-panel__meta">{t.portalSyncPending}</span>
+                )}
+              </div>
+              <div className="subscription-actions-panel__buttons">
                 <button
                   type="button"
-                  className="settings-tab subscription-management-button"
-                  onClick={handleSubscriptionStatusAction}
-                  disabled={isUiLocked}
+                  className="settings-tab settings-tab--active subscription-actions__button"
+                  onClick={() => handleValidate()}
+                  disabled={!hasChanges || isUiLocked || isTrialUpgradeBlocked}
                 >
-                  {isCancellationAlreadyScheduled ? t.reactivateSubscription : t.cancelSubscription}
+                  {isAnyPending ? t.validating : t.validatePlan}
+                  {!isAnyPending && <ArrowRight size={16} />}
                 </button>
+
+                {hasActivePaidSubscription && (
+                  <button
+                    type="button"
+                    className="settings-tab subscription-management-button"
+                    onClick={handleSubscriptionStatusAction}
+                    disabled={isUiLocked}
+                  >
+                    {isCancellationAlreadyScheduled ? (
+                      <>
+                        <RefreshCcw size={16} />
+                        {t.reactivateSubscription}
+                      </>
+                    ) : (
+                      t.cancelSubscription
+                    )}
+                  </button>
+                )}
               </div>
-            )}
+            </section>
 
             <div className="subscription-credits-section">
               <div className="subscription-credits-section__content">
                 <div className="default-astrologer-option__avatar--placeholder subscription-credits-section__icon">
                   <CreditCard size={24} />
                 </div>
-                <div>
+                <div className="subscription-credits-section__body">
+                  <div className="subscription-credits-section__badge">{t.soon}</div>
                   <h3 className="subscription-credits-section__title">{t.buyCredits}</h3>
                   <p className="subscription-credits-section__desc">{t.buyCreditsDesc}</p>
+                  <p className="subscription-credits-section__hint">{t.buyCreditsHint}</p>
                   <button
                     type="button"
                     className="settings-tab subscription-credits-section__button"

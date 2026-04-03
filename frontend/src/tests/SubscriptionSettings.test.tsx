@@ -43,6 +43,17 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+function getPlanCard(label: "Basic" | "Premium") {
+  const cards = screen.getAllByRole("button").filter((element) =>
+    element.className.includes("subscription-plan-card"),
+  )
+  const card = cards.find((element) => element.textContent?.includes(label))
+  if (!card) {
+    throw new Error(`Plan card not found for ${label}`)
+  }
+  return card
+}
+
 describe("SubscriptionSettings", () => {
   const setupCatalogMock = () => {
     mockUseBillingPlans.mockReturnValue({
@@ -74,7 +85,7 @@ describe("SubscriptionSettings", () => {
     render(<SubscriptionSettings />)
 
     // Sélectionner le plan "Basic" (UI code: basic)
-    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    const basicCard = getPlanCard("Basic")
     fireEvent.click(basicCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -84,6 +95,47 @@ describe("SubscriptionSettings", () => {
       "basic", // code canonique Stripe
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     )
+  })
+
+  it("affiche un résumé de statut avec plan actif, expérience, renouvellement et prochaine échéance", () => {
+    setupCatalogMock()
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "active",
+        subscription_status: "active",
+        plan: {
+          code: "premium",
+          display_name: "Premium",
+          monthly_price_cents: 2900,
+          currency: "EUR",
+          daily_message_limit: 1000,
+          is_active: true,
+        },
+        current_period_end: "2026-04-30T22:00:00Z",
+        failure_reason: null,
+      },
+      refetch: vi.fn(),
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+
+    render(<SubscriptionSettings />)
+
+    expect(screen.getByText(/Résumé de l'abonnement|Subscription snapshot/i)).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Premium", level: 3 })).toBeInTheDocument()
+    expect(screen.getAllByText(/Pour une expérience complète|For a complete experience/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Consultations thématiques incluses|Thematic consultations included/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Renouvellement automatique|Auto-renew enabled/i)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Voir les formules|Browse plans/i })).toBeInTheDocument()
+    expect(screen.queryByText(/tokens/i)).not.toBeInTheDocument()
   })
 
   it("n'envoie jamais basic-entry ou premium-unlimited à useStripeCheckoutSession — uniquement les codes canoniques", () => {
@@ -105,7 +157,7 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    const premiumCard = getPlanCard("Premium")
     fireEvent.click(premiumCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -145,7 +197,7 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    const basicCard = getPlanCard("Basic")
     fireEvent.click(basicCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -183,7 +235,7 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    const premiumCard = getPlanCard("Premium")
     fireEvent.click(premiumCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -233,7 +285,7 @@ describe("SubscriptionSettings", () => {
 
     const { rerender } = render(<SubscriptionSettings />)
 
-    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    const premiumCard = getPlanCard("Premium")
     fireEvent.click(premiumCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -297,7 +349,7 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    const premiumCard = getPlanCard("Premium")
     fireEvent.click(premiumCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -332,7 +384,7 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    const basicCard = getPlanCard("Basic")
     fireEvent.click(basicCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -367,7 +419,7 @@ describe("SubscriptionSettings", () => {
     render(<SubscriptionSettings />)
 
     // La carte "Basic" doit être sélectionnée (aria-pressed=true) — elle est le plan courant
-    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    const basicCard = getPlanCard("Basic")
     expect(basicCard).toHaveAttribute("aria-pressed", "true")
 
     // Le bouton "Valider" doit être désactivé (aucun changement de plan)
@@ -401,7 +453,7 @@ describe("SubscriptionSettings", () => {
     render(<SubscriptionSettings />)
 
     // L'utilisateur sélectionne Premium (changement de plan)
-    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    const premiumCard = getPlanCard("Premium")
     fireEvent.click(premiumCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -449,7 +501,7 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    const basicCard = getPlanCard("Basic")
     fireEvent.click(basicCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -489,11 +541,9 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    expect(
-      screen.getByText(/Votre essai correspond au plan Basic/i),
-    ).toBeInTheDocument()
+    expect(screen.getAllByText(/Votre essai correspond au plan Basic/i).length).toBeGreaterThan(0)
 
-    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    const premiumCard = getPlanCard("Premium")
     fireEvent.click(premiumCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })
@@ -707,7 +757,7 @@ describe("SubscriptionSettings", () => {
 
     rerender(<SubscriptionSettings />)
 
-    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    const basicCard = getPlanCard("Basic")
 
     expect(screen.queryByText(/Synchronisation de l'abonnement en cours/i)).not.toBeInTheDocument()
     expect(basicCard).toHaveAttribute("aria-pressed", "true")
@@ -770,7 +820,7 @@ describe("SubscriptionSettings", () => {
     expect(
       screen.getByText(/Abonnement actif jusqu'au|Current subscription remains active until/i),
     ).toBeInTheDocument()
-    const basicCard = screen.getByText("Basic").closest('[role="button"]')!
+    const basicCard = getPlanCard("Basic")
     expect(basicCard).toHaveTextContent(/Abonnement actif jusqu'au|Current subscription remains active until/i)
     expect(cancelMutate).not.toHaveBeenCalled()
 
@@ -782,7 +832,7 @@ describe("SubscriptionSettings", () => {
     )
     expect(updateMutate).not.toHaveBeenCalled()
 
-    const premiumCard = screen.getByText("Premium").closest('[role="button"]')!
+    const premiumCard = getPlanCard("Premium")
     fireEvent.click(premiumCard)
 
     const validateButton = screen.getByRole("button", { name: /valider|validate/i })

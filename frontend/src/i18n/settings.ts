@@ -167,7 +167,28 @@ export const settingsTranslations = {
   subscription: {
     fr: {
       title: "Mon abonnement",
+      overviewEyebrow: "Résumé de l'abonnement",
+      overviewLeadActive:
+        "Retrouvez votre formule actuelle, son niveau d'expérience et votre prochaine échéance en un coup d'œil.",
+      overviewLeadFree:
+        "Vous êtes actuellement en accès gratuit. Choisissez la formule qui correspond à votre rythme pour aller plus loin.",
+      overviewPlanLabel: "Plan actif",
+      overviewExperienceLabel: "Expérience",
+      overviewRenewalLabel: "Renouvellement",
+      overviewBillingLabel: "Prochaine échéance",
+      overviewActionLabel: "Action principale",
+      overviewNoBillingDate: "Aucune échéance",
+      overviewRenewalAuto: "Renouvellement automatique",
+      overviewRenewalScheduled: "Résiliation programmée",
+      overviewRenewalInactive: "Aucun renouvellement en cours",
+      overviewActionCurrent: "Votre formule actuelle est active.",
+      overviewActionChangeTo: "Passage prévu vers {{plan}} après validation.",
+      overviewActionCancellation: "La résiliation est déjà programmée jusqu'au {{date}}.",
+      overviewActionScheduledChange: "Le passage à {{plan}} est prévu le {{date}}.",
+      overviewActionFree: "Choisissez une formule pour débloquer l'expérience complète.",
+      jumpToPlans: "Voir les formules",
       availablePlans: "Plans disponibles",
+      plansLead: "Retrouvez les points clés de chaque formule, puis confirmez le changement adapté à votre rythme.",
       active: "Actif",
       paused: "En pause",
       currentPlan: "Plan actuel",
@@ -205,20 +226,35 @@ export const settingsTranslations = {
       trialBasicNotice:
         "Votre essai correspond au plan Basic. Le passage Premium sera disponible à la fin de l'essai.",
       buyCredits: "Acheter des crédits",
-      buyCreditsDesc: "Besoin de plus de messages ? Achetez un pack de crédits supplémentaires.",
+      buyCreditsDesc: "Des compléments ponctuels seront bientôt disponibles si vous souhaitez prolonger l'expérience sans changer de formule.",
+      buyCreditsHint:
+        "Ce module servira aux besoins exceptionnels, tandis que vos abonnements restent le cadre principal de l'expérience.",
       soon: "Bientôt disponible",
-      quotaUnit: "tokens",
-      periodUnit: {
-        day: "jour",
-        month: "mois",
-        week: "semaine",
-        year: "an",
-        lifetime: "vie",
-      },
     },
     en: {
       title: "My subscription",
+      overviewEyebrow: "Subscription snapshot",
+      overviewLeadActive:
+        "Keep your current plan, experience level, and next billing milestone in view.",
+      overviewLeadFree:
+        "You are currently on free access. Choose the plan that matches your rhythm to go further.",
+      overviewPlanLabel: "Current plan",
+      overviewExperienceLabel: "Experience",
+      overviewRenewalLabel: "Renewal",
+      overviewBillingLabel: "Next billing date",
+      overviewActionLabel: "Primary action",
+      overviewNoBillingDate: "No billing date",
+      overviewRenewalAuto: "Auto-renew enabled",
+      overviewRenewalScheduled: "Cancellation scheduled",
+      overviewRenewalInactive: "No active renewal",
+      overviewActionCurrent: "Your current plan is active.",
+      overviewActionChangeTo: "Switch to {{plan}} after confirmation.",
+      overviewActionCancellation: "Cancellation is already scheduled until {{date}}.",
+      overviewActionScheduledChange: "Switch to {{plan}} on {{date}}.",
+      overviewActionFree: "Choose a plan to unlock the full experience.",
+      jumpToPlans: "Browse plans",
       availablePlans: "Available plans",
+      plansLead: "Review the key points of each plan, then confirm the change that fits your rhythm.",
       active: "Active",
       paused: "Paused",
       currentPlan: "Current plan",
@@ -256,20 +292,35 @@ export const settingsTranslations = {
       trialBasicNotice:
         "Your trial currently follows the Basic plan. Premium upgrades will be available after the trial ends.",
       buyCredits: "Buy credits",
-      buyCreditsDesc: "Need more messages? Buy an additional credit pack.",
+      buyCreditsDesc: "One-off add-ons will soon be available if you want to extend the experience without switching plans.",
+      buyCreditsHint:
+        "This area is meant for exceptional needs, while subscriptions remain the main framework of the experience.",
       soon: "Soon available",
-      quotaUnit: "tokens",
-      periodUnit: {
-        day: "day",
-        month: "month",
-        week: "week",
-        year: "year",
-        lifetime: "lifetime",
-      },
     },
     es: {
       title: "Mi suscripción",
+      overviewEyebrow: "Resumen de la suscripción",
+      overviewLeadActive:
+        "Mantén a la vista tu plan actual, su nivel de experiencia y tu próxima fecha clave.",
+      overviewLeadFree:
+        "Actualmente estás en acceso gratuito. Elige el plan que encaje con tu ritmo para ir más lejos.",
+      overviewPlanLabel: "Plan activo",
+      overviewExperienceLabel: "Experiencia",
+      overviewRenewalLabel: "Renovación",
+      overviewBillingLabel: "Próximo vencimiento",
+      overviewActionLabel: "Acción principal",
+      overviewNoBillingDate: "Sin vencimiento",
+      overviewRenewalAuto: "Renovación automática",
+      overviewRenewalScheduled: "Cancelación programada",
+      overviewRenewalInactive: "Sin renovación activa",
+      overviewActionCurrent: "Tu plan actual está activo.",
+      overviewActionChangeTo: "Cambio a {{plan}} tras la confirmación.",
+      overviewActionCancellation: "La cancelación ya está programada hasta el {{date}}.",
+      overviewActionScheduledChange: "Cambio a {{plan}} el {{date}}.",
+      overviewActionFree: "Elige un plan para desbloquear la experiencia completa.",
+      jumpToPlans: "Ver planes",
       availablePlans: "Planes disponibles",
+      plansLead: "Revisa los puntos clave de cada plan y luego confirma el cambio que encaja con tu ritmo.",
       active: "Activo",
       paused: "En pausa",
       currentPlan: "Plan actuel",
@@ -307,22 +358,35 @@ export const settingsTranslations = {
       trialBasicNotice:
         "Tu periodo de prueba sigue el plan Basic. El changement a Premium estará disponible al finalizar la prueba.",
       buyCredits: "Comprar crédits",
-      buyCreditsDesc: "¿Necesitas más mensajes? Compra un paquete de créditos adicionales.",
+      buyCreditsDesc: "Pronto habrá complementos puntuales si deseas ampliar la experiencia sin cambiar de plan.",
+      buyCreditsHint:
+        "Este espacio está pensado para necesidades excepcionales, mientras que las suscripciones siguen siendo el marco principal de la experiencia.",
       soon: "Próximamente disponible",
-      quotaUnit: "tokens",
-      periodUnit: {
-        day: "día",
-        month: "mes",
-        week: "semana",
-        year: "año",
-        lifetime: "vida",
-      },
     },
   } as Record<
     AstrologyLang,
     {
       title: string
+      overviewEyebrow: string
+      overviewLeadActive: string
+      overviewLeadFree: string
+      overviewPlanLabel: string
+      overviewExperienceLabel: string
+      overviewRenewalLabel: string
+      overviewBillingLabel: string
+      overviewActionLabel: string
+      overviewNoBillingDate: string
+      overviewRenewalAuto: string
+      overviewRenewalScheduled: string
+      overviewRenewalInactive: string
+      overviewActionCurrent: string
+      overviewActionChangeTo: string
+      overviewActionCancellation: string
+      overviewActionScheduledChange: string
+      overviewActionFree: string
+      jumpToPlans: string
       availablePlans: string
+      plansLead: string
       active: string
       paused: string
       currentPlan: string
@@ -356,9 +420,8 @@ export const settingsTranslations = {
       trialBasicNotice: string
       buyCredits: string
       buyCreditsDesc: string
+      buyCreditsHint: string
       soon: string
-      quotaUnit: string
-      periodUnit: Record<string, string>
     }
   >,
 

@@ -84,3 +84,19 @@ So that je puisse gérer mon compte, mon astrologue par défaut et mon abonnemen
   - **Plan Gratuit** : Option bridée en attente du mapping backend pour la rétractation, avec message d'information temporaire.
   - **UX/Feedback** : Curseurs d'attente, opacité réduite et textes de chargement inline pour un feedback instantané.
 - **Qualité & Tests** : Correction de 33 tests en échec suite aux changements de navigation et de structure UI. Ajout de tests d'intégration backend pour les nouveaux réglages.
+- **Mise à jour post-implémentation 2026-04-03 — `/settings/subscription`** :
+  - La page a été recentrée sur un **cockpit d’abonnement** avec un bloc de synthèse en tête : plan actif, niveau d’expérience, prochaine échéance, état de renouvellement et action principale.
+  - Le wording orienté **tokens/quota** a été retiré de la page abonnement. Les cartes et le résumé reprennent désormais les **points clés éditoriaux** de `/help/subscriptions`.
+  - Les cartes `Basic` et `Premium` affichent maintenant :
+    - un tagline,
+    - une promesse courte,
+    - un positionnement d’usage,
+    - une liste courte de bénéfices visibles,
+    - des états explicites `plan actuel`, `sélectionné`, `résiliation programmée`, `réactivation`.
+  - La hiérarchie visuelle de `/settings/subscription` a été simplifiée pour corriger les problèmes remontés de **mise en page, cadrage et police** :
+    - titre de synthèse moins décoratif,
+    - typographie plus sobre que `/help/subscriptions`,
+    - surfaces et cartes premium conservées mais adaptées à une page de réglages,
+    - meilleurs états de focus et de sélection sur les cartes de plans.
+  - Le bloc `Acheter des crédits` reste présent comme extension future, mais son discours a été réécrit pour ne plus concurrencer le cadre principal des abonnements.
+  - Les tests frontend de `SubscriptionSettings` ont été réalignés sur ce rendu réel et valident explicitement l’absence de wording orienté `tokens` sur la page.
