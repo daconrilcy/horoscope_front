@@ -102,6 +102,38 @@ export interface LandingTranslation {
       cancel: string
     }
   }
+  pricing: {
+    title: string
+    perMonth: string
+    recommended: string
+    cta: {
+      free: string
+      paid: string
+    }
+    features: {
+      natal: string
+      horoscope: string
+      chat: string
+      consultation: string
+      predictions: string
+      support: string
+    }
+    plans: {
+      free: {
+        name: string
+        desc: string
+      }
+      basic: {
+        name: string
+        desc: string
+      }
+      premium: {
+        name: string
+        desc: string
+      }
+    }
+    reassurance: string
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -221,6 +253,38 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         cancel: "Annulation sans conditions",
       },
     },
+    pricing: {
+      title: "Choisissez votre chemin",
+      perMonth: "/ mois",
+      recommended: "Plus populaire",
+      cta: {
+        free: "Démarrer gratuitement",
+        paid: "Choisir ce plan",
+      },
+      features: {
+        natal: "Thème natal précis",
+        horoscope: "Horoscope quotidien",
+        chat: "Chat astrologue IA",
+        consultation: "Consultations thématiques",
+        predictions: "Prédictions & Moments clés",
+        support: "Support prioritaire",
+      },
+      plans: {
+        free: {
+          name: "Free",
+          desc: "Découvrez l'essentiel de l'astrologie.",
+        },
+        basic: {
+          name: "Basic",
+          desc: "Pour un accompagnement régulier.",
+        },
+        premium: {
+          name: "Premium",
+          desc: "L'expérience complète et sans limite.",
+        },
+      },
+      reassurance: "Sans engagement. Annulation en un clic.",
+    },
   },
   en: {
     hero: {
@@ -338,6 +402,38 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         cancel: "Unconditional cancellation",
       },
     },
+    pricing: {
+      title: "Choose your path",
+      perMonth: "/ month",
+      recommended: "Most popular",
+      cta: {
+        free: "Start for free",
+        paid: "Choose this plan",
+      },
+      features: {
+        natal: "Precise birth chart",
+        horoscope: "Daily horoscope",
+        chat: "AI Astrologer chat",
+        consultation: "Thematic consultations",
+        predictions: "Predictions & Key moments",
+        support: "Priority support",
+      },
+      plans: {
+        free: {
+          name: "Free",
+          desc: "Discover the essentials of astrology.",
+        },
+        basic: {
+          name: "Basic",
+          desc: "For regular guidance.",
+        },
+        premium: {
+          name: "Premium",
+          desc: "The complete, unlimited experience.",
+        },
+      },
+      reassurance: "No strings attached. One-click cancellation.",
+    },
   },
   es: {
     hero: {
@@ -396,7 +492,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       title: "¿Cómo funciona?",
       step1: {
         title: "Crea tu perfil natal",
-        desc: "Comparte tu fecha, hora y lugar de nacimiento con precisión.",
+        desc: "Comparte tu fecha, hora y lugar de nacimiento con précision.",
         benefit: "Carta natal calculada al instante",
       },
       step2: {
@@ -442,7 +538,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         },
         after: {
           label: "Después",
-          text: "Gracias a su guía personalizada, identificó un período favorable para la acción y lanzó su empresa con confianza.",
+          text: "Gracias a su guía personalizada, identificó un período favorable para la acción et lanzó su empresa con confianza.",
         },
         action: {
           label: "Acción",
@@ -454,6 +550,38 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         swiss: "Cálculos basados en Swiss Ephemeris",
         cancel: "Cancelación sin condiciones",
       },
+    },
+    pricing: {
+      title: "Elige tu camino",
+      perMonth: "/ mes",
+      recommended: "Más popular",
+      cta: {
+        free: "Empezar gratis",
+        paid: "Elegir este plan",
+      },
+      features: {
+        natal: "Carta natal precisa",
+        horoscope: "Horóscopo diario",
+        chat: "Chat astrólogo IA",
+        consultation: "Consultas temáticas",
+        predictions: "Predicciones y Momentos clave",
+        support: "Soporte prioritario",
+      },
+      plans: {
+        free: {
+          name: "Free",
+          desc: "Descubre lo esencial de la astrología.",
+        },
+        basic: {
+          name: "Basic",
+          desc: "Para un acompañamiento regular.",
+        },
+        premium: {
+          name: "Premium",
+          desc: "La experiencia completa y sin límites.",
+        },
+      },
+      reassurance: "Sin compromiso. Cancelación en un clic.",
     },
   },
 }

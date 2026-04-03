@@ -4,6 +4,7 @@ import { SocialProofSection } from "./sections/SocialProofSection"
 import { ProblemSection } from "./sections/ProblemSection"
 import { SolutionSection } from "./sections/SolutionSection"
 import { TestimonialsSection } from "./sections/TestimonialsSection"
+import { PricingSection } from "./sections/PricingSection"
 
 export const LandingPage = () => {
   return (
@@ -13,8 +14,9 @@ export const LandingPage = () => {
       <ProblemSection />
       <SolutionSection />
       <TestimonialsSection />
+      <PricingSection />
       
-      {/* Future sections (63.7 to 63.9) will be added here */}
+      {/* Future sections (63.8 to 63.9) will be added here */}
     </div>
   )
 }

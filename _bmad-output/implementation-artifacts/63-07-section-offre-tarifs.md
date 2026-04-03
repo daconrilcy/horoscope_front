@@ -1,6 +1,6 @@
 # Story 63.7: Section Offre & Tarifs
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
