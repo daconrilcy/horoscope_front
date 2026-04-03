@@ -25,6 +25,32 @@ Corrections et clarifications apportées dans cette version :
 - les règles CSS sont alignées : les classes existantes peuvent être réutilisées telles quelles, mais **toute nouvelle classe** spécifique à cette page doit être préfixée `help-subscriptions-` ;
 - les critères d'acceptation sont reformulés pour être plus testables et moins ambigus.
 
+### Mise à jour post-implémentation
+
+Les points ci-dessous décrivent l'état réellement livré après implémentation et ajustements produit. En cas de contradiction avec la rédaction initiale, **ces éléments prévalent**.
+
+- la page `/help/subscriptions` est bien alimentée par `GET /v1/entitlements/plans` pour le catalogue ;
+- la détection du plan courant repose sur `GET /v1/entitlements/me` avec fallback `useBillingSubscription()`, afin de couvrir correctement le plan `free` ;
+- le plan `trial` n'est pas affiché à l'utilisateur final ;
+- le bouton CTA héro de gestion a été supprimé pour éviter le doublon avec les CTA présents sur les cartes de plans ;
+- la carte du plan courant n'affiche plus de bouton et rend un libellé statique `Votre plan actuel` ;
+- le contenu éditorial de la page a été enrichi :
+  - hero avec `kicker`, `title`, `lead`, `body`
+  - panneau latéral `Repères rapides` avec plan courant / recommandé, prix d'entrée et points clés
+  - descriptions longues par plan (`free`, `basic`, `premium`)
+  - trois sections éditoriales de bas de page : `Comment choisir`, `Comment fonctionnent les tokens ?`, `Vous pouvez changer à tout moment` ;
+- les badges de `processing_priority` sont affichés sur les cartes comme information de présentation ;
+- les textes marketing affichés sur la page ont été réécrits pour exprimer la promesse produit sans casser l'alignement avec les droits réellement servis par l'API.
+- le plan courant ou, à défaut, `basic`, est mis en avant visuellement comme carte vedette ;
+- les cartes utilisent un rendu glassmorphism renforcé avec variations de matière selon le plan (`free`, `basic`, `premium`) ;
+- le CTA `Comparer les offres` pointe vers `#subscription-plans` avec offset de scroll pour éviter le masquage sous le header fixe ;
+- le bloc `Explorer les détails` est livré sous forme de `<details>` structuré en sections `Expérience` et `Fonctionnalités incluses` ;
+- les CTA de cartes restent les seules actions de changement de plan ; aucun CTA héro ne duplique cette action ;
+- les traductions `fr`, `en`, `es` couvrent les labels de hero, les plans, les quotas, les sections éditoriales et le panneau de détails ;
+- les états de focus visibles ont été ajoutés pour les liens, CTA et résumés `<details>` ;
+- le fond de page a été durci côté stacking (`isolation`, `z-index`, couches absolues) pour limiter les problèmes de rendu automatisé / capture headless ;
+- les cartes éditoriales de bas de page sont alignées en grille, à hauteur homogène, avec neutralisation locale du `margin-top` hérité de `.settings-card + .settings-card`.
+
 ---
 
 ## Contexte
@@ -161,19 +187,26 @@ Structure cible :
 
   <div className="help-page">
     <section className="help-section help-subscriptions-hero">
-      <h1>{t.subscriptions.hero.title}</h1>
-      <p>{t.subscriptions.hero.subtitle}</p>
-      <Link to="/settings/subscription">{t.subscriptions.hero.cta}</Link>
+      <div className="help-subscriptions-hero-copy">
+        <span className="help-subscriptions-hero-kicker">{t.subscriptions.hero.kicker}</span>
+        <h1>{t.subscriptions.hero.title}</h1>
+        <p className="help-subscriptions-hero-lead">{t.subscriptions.hero.lead}</p>
+        <p>{t.subscriptions.hero.body}</p>
+        <div className="help-subscriptions-hero-actions">...</div>
+      </div>
+      <div className="help-subscriptions-hero-panel">...</div>
     </section>
 
-    <section className="help-section help-subscriptions-grid">
+    <section id="subscription-plans" className="help-section help-subscriptions-grid">
       {plans.map((plan) => (
-        <PlanCard key={plan.plan_code} plan={plan} />
+        <PlanCard key={plan.plan_code} plan={plan} isFeatured={...} />
       ))}
     </section>
 
-    <section className="help-section settings-card help-subscriptions-tokens">
-      ...
+    <section className="help-section help-subscriptions-editorial">
+      <EditorialSection section={t.subscriptions.editorial.howToChoose} />
+      <EditorialSection section={{ title: t.subscriptions.tokensExplainer.title, paragraphs: [...] }} />
+      <EditorialSection section={t.subscriptions.editorial.flexibility} />
     </section>
   </div>
 </PageLayout>
@@ -199,37 +232,46 @@ Le composant `PlanCard` peut être :
 Chaque carte affiche :
 
 - le nom du plan ;
+- une tagline et une description éditoriale du plan ;
+- un éventuel badge `Le plus choisi` quand la carte est vedette mais n'est pas le plan courant ;
 - un badge "plan actuel" si `plan.plan_code === userCurrentPlan` ;
+- un badge de priorité si `processing_priority` est présent ;
 - le prix formaté via `Intl.NumberFormat`, selon le même pattern que `SubscriptionSettings.tsx` ;
-- la liste ordonnée des features ;
+- une promesse courte et jusqu'à 3 highlights visibles immédiatement ;
+- un bloc repliable `Explorer les détails` ;
+- dans le bloc ouvert :
+  - un intertitre `Inclus dans {plan}` ;
+  - les sections `Expérience` et `Fonctionnalités incluses` ;
+  - la liste ordonnée des features ;
 - pour chaque feature :
   - état inclus / non inclus ;
   - mode d'accès (`unlimited`, `quota`, `disabled`) ;
   - quotas détaillés quand présents ;
 - un CTA unique :
-  - plan courant : lien vers `/settings/subscription` avec libellé de gestion ;
+  - plan courant : **aucun bouton**, affichage du libellé `Votre plan actuel` ;
   - autre plan : lien vers `/settings/subscription` avec libellé d'upgrade ou de changement de formule.
 
 Réutilisations obligatoires :
 
 - `.subscription-plan-card`
 - `.subscription-plan-card--active`
+- `.subscription-plan-card--featured`
 - `.subscription-plan-card__badge`
 - `.settings-card`
-- icônes `Check`, `X`, `CreditCard`, `Zap` de `lucide-react`
+- icônes `Check`, `X` de `lucide-react` pour les features
 - `<Link>` de `react-router-dom` pour tous les CTA de navigation
 
 Cette page **ne crée pas** de bouton lançant directement Checkout ou Customer Portal.
 
 ### AC6 — Détection du plan courant
 
-La page consomme `useBillingSubscription()` pour récupérer `subscription.plan?.code` et marquer le plan courant.
+La page consomme prioritairement `useEntitlementsSnapshot()` pour récupérer `plan_code` et marquer le plan courant, avec fallback `useBillingSubscription()`.
 
 Contraintes :
 
-- aucun appel réseau supplémentaire n'est requis pour connaître le plan courant ;
-- `useBillingSubscription()` + `useEntitlementsPlans()` suffisent pour le rendu nominal de la page ;
-- si l'abonnement n'est pas chargé ou est inactif, aucun badge "plan actuel" n'est affiché.
+- la détection doit fonctionner aussi pour le plan `free` ;
+- si `entitlements.plan_code === "none"`, la page peut retomber sur `subscription.plan?.code` ;
+- si aucune information d'abonnement n'est disponible, aucun badge "plan actuel" n'est affiché.
 
 ### AC7 — Style et CSS sans duplication
 
@@ -240,8 +282,8 @@ Règles CSS :
 - les classes déjà existantes (`subscription-plan-card`, `settings-card`, `help-section`, `help-bg-halo`, `help-noise`, etc.) peuvent être utilisées telles quelles ;
 - **toute nouvelle classe spécifique à cette page** doit être préfixée `help-subscriptions-` ;
 - la grille de plans repose sur CSS Grid ;
-- hover limité à `translateY(-2px)` ;
-- jamais de `scale(...)` ;
+- la section éditoriale de bas de page repose aussi sur CSS Grid avec alignement homogène des cartes ;
+- hover limité et cohérent avec le reste de la page ;
 - jamais de `transition: all`.
 
 Variables CSS à privilégier :
@@ -265,14 +307,33 @@ Structure attendue :
 ```typescript
 subscriptions: {
   hero: {
+    kicker: string
     title: string
-    subtitle: string
+    lead: string
+    body: string
     cta: string
+    compareCta: string
+    panelBadge: string
+    currentPlanLabel: string
+    recommendedPlanLabel: string
+    startingFrom: string
+    panelPoints: string[]
   },
+  includedTitle: string,
   plans: {
-    free: { name: string; tagline: string }
-    basic: { name: string; tagline: string }
-    premium: { name: string; tagline: string }
+    free: { name: string; tagline: string; positioning: string; description: string[] }
+    basic: { name: string; tagline: string; positioning: string; description: string[] }
+    premium: { name: string; tagline: string; positioning: string; description: string[] }
+  },
+  priority: {
+    low: string
+    medium: string
+    high: string
+  },
+  planHighlights: {
+    free: string[]
+    basic: string[]
+    premium: string[]
   },
   features: {
     natal_chart_short: string
@@ -281,20 +342,28 @@ subscriptions: {
     thematic_consultation: string
   },
   quota: {
+    messages_per_week: string
     tokens_per_day: string
     tokens_per_week: string
     tokens_per_month: string
+    consultations_per_week: string
     interpretations_lifetime: string
     unlimited: string
     disabled: string
   },
-  tokensExplainer: {
-    title: string
-    body: string
+  detailTitles: {
+    experience: string
+    features: string
   },
+  editorial: {
+    howToChoose: { title: string; paragraphs: string[] }
+    flexibility: { title: string; paragraphs: string[] }
+  },
+  perMonth: string
   currentPlan: string
   upgradeCta: string
-  manageCta: string
+  popularBadge: string
+  viewDetails: string
 }
 ```
 
@@ -315,7 +384,7 @@ Rendu attendu :
 
 - mobile : une colonne, CTA pleine largeur ;
 - tablette / desktop à partir de `768px` : grille de 3 colonnes pour les plans ;
-- la carte explicative sur les tokens reste en pleine largeur ;
+- les blocs éditoriaux de bas de page restent lisibles, correctement empilés sur mobile et alignés à hauteur homogène sur desktop ;
 - les contenus restent lisibles sans overflow horizontal.
 
 ### AC10 — Tests frontend
@@ -323,10 +392,12 @@ Rendu attendu :
 Un fichier de test `frontend/src/tests/SubscriptionGuidePage.test.tsx` couvre au minimum :
 
 - affichage des 3 cartes plans quand `useEntitlementsPlans()` retourne des données ;
-- rendu des skeletons en chargement ;
 - rendu du badge "plan actuel" sur le bon plan ;
+- détection correcte du plan `free` comme plan courant ;
 - rendu de `ErrorState` en cas d'erreur ;
 - rendu de `EmptyState` si l'API retourne une liste vide ;
+- affichage du contenu éditorial principal de la page ;
+- ouverture du bloc `Explorer les détails` avant assertion du contenu replié ;
 - CTA renvoyant vers `/settings/subscription`.
 
 Les mocks réutilisent les patterns déjà présents dans `frontend/src/tests/`, en particulier ceux de `HelpPage.test.tsx`.
@@ -360,13 +431,19 @@ Les mocks réutilisent les patterns déjà présents dans `frontend/src/tests/`,
 - [x] **T6 — Frontend : page `SubscriptionGuidePage.tsx`** (AC: 4, 5, 6)
   - [x] Remplacer le placeholder par la page réelle
   - [x] Ajouter le composant `PlanCard`
+  - [x] Ajouter le panneau hero latéral et le CTA d'ancrage vers `#subscription-plans`
   - [x] Gérer chargement / erreur / vide
-  - [x] Brancher le badge de plan courant via `useBillingSubscription()`
+  - [x] Brancher le badge de plan courant via `useEntitlementsSnapshot()` avec fallback `useBillingSubscription()`
   - [x] Formater les prix et quotas
   - [x] Pointer tous les CTA vers `/settings/subscription`
+  - [x] Retirer le CTA héro dupliqué
+  - [x] Ajouter le contenu éditorial long des plans et des sections de bas de page
+  - [x] Structurer `Explorer les détails` en sections
+  - [x] Mettre en avant le plan courant ou `basic` par défaut
 
 - [x] **T7 — Frontend : tests** (AC: 10)
   - [x] Créer `frontend/src/tests/SubscriptionGuidePage.test.tsx`
+  - [x] Ouvrir les panneaux `<details>` dans les tests avant vérification du contenu masqué
 
 ---
 
@@ -467,6 +544,9 @@ Gemini 2.0 Flash
 - Verified backend implementation: updated `GET /v1/entitlements/plans` to always return 4 canonical features (exhaustivity AC1).
 - Verified model relationships: added missing relationships in `product_entitlements.py`.
 - Verified frontend: fixed price formatting to use i18n language and added translations for period.
+- Verified frontend: current plan detection now relies on entitlements first so `free` is handled correctly.
+- Verified frontend: hero CTA removed and editorial content expanded to match delivered product copy.
+- Verified frontend: premium glass UI refinements, featured plan emphasis, hero side panel, details disclosure, focus states, and editorial cards alignment fixes.
 - Verified tests: added comprehensive frontend tests.
 
 ### File List

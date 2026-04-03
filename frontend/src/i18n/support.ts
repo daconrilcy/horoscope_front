@@ -195,14 +195,50 @@ export const supportTranslations = {
     },
     subscriptions: {
       hero: {
-        title: "Choisissez la formule qui vous ressemble",
-        subtitle: "Comparez nos abonnements pour débloquer tout le potentiel de votre thème natal et de vos échanges avec les astrologues.",
+        kicker: "Abonnements",
+        title: "Choisissez l’expérience astrologique qui vous correspond",
+        lead: "Notre approche de l’astrologie ne se limite pas à des réponses automatiques. Elle a été pensée comme une expérience vivante, personnelle et progressive.",
+        body: "Découvrez, approfondissez ou vivez l’expérience complète à votre rythme.",
         cta: "Gérer mon abonnement",
+        compareCta: "Comparer les offres",
+        panelBadge: "Repères rapides",
+        currentPlanLabel: "Votre plan actuel : {plan}",
+        recommendedPlanLabel: "Plan à privilégier : {plan}",
+        startingFrom: "À partir de {price}",
+        panelPoints: ["Changement à tout moment", "Accès immédiat", "Expérience claire et personnelle"],
       },
+      includedTitle: "Inclus dans {plan}",
       plans: {
-        free: { name: "Free", tagline: "Découverte — explorez l'astrologie à votre rythme" },
-        basic: { name: "Basic", tagline: "Usage régulier — vivez l'astrologie au quotidien" },
-        premium: { name: "Premium", tagline: "Expérience complète — priorité, profondeur, confort" },
+        free: {
+          name: "Free",
+          tagline: "Découverte",
+          positioning: "Pour découvrir",
+          description: [
+            "Pour explorer l’essentiel, en toute simplicité.",
+            "L’offre Free est idéale pour découvrir l’univers de l’application et commencer à vous familiariser avec votre rythme astrologique. Elle vous permet d’accéder à une première expérience, sans engagement, avec un aperçu concret de ce que l’astrologie peut vous apporter au quotidien.",
+            "C’est l’offre parfaite pour faire connaissance avec l’application, prendre vos repères, et commencer à observer ce que les astres peuvent éclairer dans votre quotidien.",
+          ],
+        },
+        basic: {
+          name: "Basic",
+          tagline: "Usage régulier",
+          positioning: "Pour un usage quotidien",
+          description: [
+            "Votre compagnon astrologique du quotidien.",
+            "L’offre Basic s’adresse à celles et ceux qui veulent intégrer l’astrologie dans leur vie de manière régulière et concrète. Elle ouvre l’accès aux fonctionnalités centrales de l’application, avec une expérience plus riche, plus confortable, et plus utile dans la durée.",
+            "C’est l’abonnement de l’équilibre : suffisamment riche pour vous accompagner au quotidien, tout en restant simple et accessible.",
+          ],
+        },
+        premium: {
+          name: "Premium",
+          tagline: "Expérience complète",
+          positioning: "Pour une expérience complète",
+          description: [
+            "La version la plus fluide, la plus profonde, la plus généreuse.",
+            "L’offre Premium a été conçue pour les utilisateurs qui souhaitent vivre l’expérience dans toute sa richesse. Elle offre un niveau d’accès supérieur, une capacité d’usage étendue et un confort maximal dans l’utilisation de l’application.",
+            "C’est l’offre idéale pour celles et ceux qui veulent faire de l’astrologie un véritable espace de réflexion, d’éclairage et d’accompagnement personnel.",
+          ],
+        },
       },
       priority: {
         low: "Traitement standard",
@@ -210,12 +246,23 @@ export const supportTranslations = {
         high: "Traitement haute priorité",
       },
       planHighlights: {
-        free: [],
-        basic: ["Horoscope du jour détaillé et personnalisé", "Capacité IA incluse pour un usage régulier"],
+        free: [
+          "Horoscope du jour essentiel",
+          "1 message de chat par semaine",
+          "Découverte de l’expérience astrologique",
+        ],
+        basic: [
+          "Horoscope du jour enrichi",
+          "Chat astrologique inclus",
+          "Accès aux consultations thématiques",
+          "Capacité d’usage IA confortable pour un usage régulier",
+        ],
         premium: [
-          "Horoscope du jour détaillé et personnalisé",
-          "Capacité IA étendue pour un usage intensif",
-          "Traitement haute priorité des demandes",
+          "Horoscope du jour enrichi",
+          "Chat astrologique complet",
+          "Consultations thématiques incluses",
+          "Capacité d’usage IA étendue pour un usage intensif",
+          "Expérience la plus complète et la plus confortable",
         ],
       },
       features: {
@@ -238,9 +285,31 @@ export const supportTranslations = {
         title: "Comment fonctionnent les tokens ?",
         body: "Les tokens mesurent la complexité des réponses générées par l'IA. Une question simple consomme peu, tandis qu'une analyse approfondie en requiert davantage. Votre quota se recharge automatiquement selon votre période d'abonnement.",
       },
+      detailTitles: {
+        experience: "Expérience",
+        features: "Fonctionnalités incluses",
+      },
+      editorial: {
+        howToChoose: {
+          title: "Comment choisir",
+          paragraphs: [
+            "Free vous permet d’entrer dans l’univers. Basic vous aide à installer un vrai rythme quotidien. Premium vous ouvre le cadre le plus fluide, le plus vaste et le plus confortable.",
+            "La bonne formule n’est pas celle qui débloque tout, mais celle qui correspond à votre intensité d’usage aujourd’hui.",
+          ],
+        },
+        flexibility: {
+          title: "Vous pouvez changer à tout moment",
+          paragraphs: [
+            "Vous pouvez commencer simplement, puis faire évoluer votre abonnement à mesure que votre usage grandit.",
+            "L’objectif est de vous laisser entrer dans l’expérience sans friction, puis de vous offrir plus de profondeur, plus de confort et plus de fluidité quand vous en avez besoin.",
+          ],
+        },
+      },
       perMonth: "/ mois",
       currentPlan: "Votre plan actuel",
       upgradeCta: "Passer à ce plan",
+      popularBadge: "Le plus choisi",
+      viewDetails: "Explorer les détails",
       manageCta: "Gérer",
     },
   },
@@ -434,21 +503,71 @@ export const supportTranslations = {
     },
     subscriptions: {
       hero: {
-        title: "Choose the plan that suits you",
-        subtitle: "Compare our subscriptions to unlock the full potential of your natal chart and your interactions with astrologers.",
+        kicker: "Subscriptions",
+        title: "Choose the astrological experience that suits you",
+        lead: "Our approach to astrology goes beyond automated answers. It was designed as a living, personal, and progressive experience.",
+        body: "Discover, deepen, or enjoy the full experience at your own pace.",
         cta: "Manage my subscription",
+        compareCta: "Compare plans",
+        panelBadge: "Quick view",
+        currentPlanLabel: "Your current plan: {plan}",
+        recommendedPlanLabel: "Recommended plan: {plan}",
+        startingFrom: "Starting at {price}",
+        panelPoints: ["Change anytime", "Immediate access", "Clear and personal experience"],
       },
+      includedTitle: "Included in {plan}",
       plans: {
-        free: { name: "Free", tagline: "To discover the essentials" },
-        basic: { name: "Basic", tagline: "Ideal for regular follow-up" },
-        premium: { name: "Premium", tagline: "The ultimate astrological experience" },
+        free: {
+          name: "Free",
+          tagline: "Discovery",
+          positioning: "To discover",
+          description: [
+            "To explore the essentials with ease.",
+            "Free is ideal for discovering the app and getting familiar with your astrological rhythm through a first, commitment-free experience.",
+          ],
+        },
+        basic: {
+          name: "Basic",
+          tagline: "Regular use",
+          positioning: "For everyday use",
+          description: [
+            "Your daily astrological companion.",
+            "Basic is designed for people who want to integrate astrology into everyday life with a richer and more useful ongoing experience.",
+          ],
+        },
+        premium: {
+          name: "Premium",
+          tagline: "Complete experience",
+          positioning: "For a complete experience",
+          description: [
+            "The smoothest, deepest, and most generous version.",
+            "Premium is designed for users who want to enjoy the full richness of the experience with extended capacity and maximum comfort.",
+          ],
+        },
+      },
+      priority: {
+        low: "Standard processing",
+        medium: "Priority processing",
+        high: "High-priority processing",
       },
       planHighlights: {
-        free: [],
-        basic: ["Detailed personalized daily horoscope"],
+        free: [
+          "Essential daily horoscope",
+          "1 chat message per week",
+          "Discover the astrological experience",
+        ],
+        basic: [
+          "Enhanced daily horoscope",
+          "Astrologer chat included",
+          "Access to thematic consultations",
+          "Comfortable AI usage capacity for regular use",
+        ],
         premium: [
-          "Detailed personalized daily horoscope",
-          "Unlimited thematic consultations within your available token balance",
+          "Enhanced daily horoscope",
+          "Full astrologer chat",
+          "Thematic consultations included",
+          "Extended AI usage capacity for intensive use",
+          "The most complete and comfortable experience",
         ],
       },
       features: {
@@ -461,6 +580,7 @@ export const supportTranslations = {
         tokens_per_day: "{{n}} tokens / day",
         tokens_per_week: "{{n}} tokens / week",
         tokens_per_month: "{{n}} tokens / month",
+        messages_per_week: "1 message per week",
         consultations_per_week: "{{n}} consultation / week",
         interpretations_lifetime: "{{n}} interpretations included",
         unlimited: "Unlimited",
@@ -470,9 +590,31 @@ export const supportTranslations = {
         title: "How do tokens work?",
         body: "Tokens measure the complexity of AI-generated responses. A simple question consumes little, while an in-depth analysis requires more. Your quota automatically recharges according to your subscription period.",
       },
+      detailTitles: {
+        experience: "Experience",
+        features: "Included features",
+      },
+      editorial: {
+        howToChoose: {
+          title: "How to choose",
+          paragraphs: [
+            "Free lets you discover the universe. Basic helps you build a daily rhythm. Premium gives you the broadest, smoothest, and most comfortable experience.",
+            "The right plan is not the one that unlocks everything, but the one that matches your current level of usage.",
+          ],
+        },
+        flexibility: {
+          title: "You can change at any time",
+          paragraphs: [
+            "You can start simply and evolve your subscription as your usage grows.",
+            "The goal is to let you enter the experience without friction, then unlock more depth, comfort, and flow when you need it.",
+          ],
+        },
+      },
       perMonth: "/ month",
       currentPlan: "Your current plan",
       upgradeCta: "Switch to this plan",
+      popularBadge: "Most popular",
+      viewDetails: "Explore details",
       manageCta: "Manage",
     },
   },
@@ -667,21 +809,71 @@ export const supportTranslations = {
     },
     subscriptions: {
       hero: {
-        title: "Elige el plan que mejor se adapte a ti",
-        subtitle: "Compara nuestras suscripciones para desbloquear todo el potencial de tu carta natal y de tus interacciones con los astrólogos.",
+        kicker: "Suscripciones",
+        title: "Elige la experiencia astrológica que mejor se adapte a ti",
+        lead: "Nuestro enfoque de la astrología va mucho más allá de las respuestas automáticas. Fue pensado como una experiencia viva, personal y progresiva.",
+        body: "Descubre, profundiza o vive la experiencia completa a tu ritmo.",
         cta: "Gestionar mi suscripción",
+        compareCta: "Comparar las ofertas",
+        panelBadge: "Vista rápida",
+        currentPlanLabel: "Tu plan actual: {plan}",
+        recommendedPlanLabel: "Plan recomendado: {plan}",
+        startingFrom: "Desde {price}",
+        panelPoints: ["Cambia en cualquier momento", "Acceso inmediato", "Experiencia clara y personal"],
       },
+      includedTitle: "Incluido en {plan}",
       plans: {
-        free: { name: "Free", tagline: "Para descubrir lo esencial" },
-        basic: { name: "Basic", tagline: "Ideal para un seguimiento regular" },
-        premium: { name: "Premium", tagline: "La experiencia astrológica definitiva" },
+        free: {
+          name: "Free",
+          tagline: "Descubrimiento",
+          positioning: "Para descubrir",
+          description: [
+            "Para explorar lo esencial con simplicidad.",
+            "Free es ideal para descubrir la aplicación y empezar a familiarizarte con tu ritmo astrológico.",
+          ],
+        },
+        basic: {
+          name: "Basic",
+          tagline: "Uso regular",
+          positioning: "Para un uso diario",
+          description: [
+            "Tu compañero astrológico del día a día.",
+            "Basic está pensado para quienes quieren integrar la astrología en su vida de forma regular y concreta.",
+          ],
+        },
+        premium: {
+          name: "Premium",
+          tagline: "Experiencia completa",
+          positioning: "Para una experiencia completa",
+          description: [
+            "La versión más fluida, profunda y generosa.",
+            "Premium está pensado para quienes desean vivir la experiencia en toda su riqueza.",
+          ],
+        },
+      },
+      priority: {
+        low: "Tratamiento estándar",
+        medium: "Tratamiento prioritario",
+        high: "Tratamiento de alta prioridad",
       },
       planHighlights: {
-        free: [],
-        basic: ["Horóscopo diario detallado y personalizado"],
+        free: [
+          "Horóscopo diario esencial",
+          "1 mensaje de chat por semana",
+          "Descubrimiento de la experiencia astrológica",
+        ],
+        basic: [
+          "Horóscopo diario enriquecido",
+          "Chat astrológico incluido",
+          "Acceso a las consultas temáticas",
+          "Capacidad de uso de IA cómoda para un uso regular",
+        ],
         premium: [
-          "Horóscopo diario detallado y personalizado",
-          "Consultas temáticas ilimitadas dentro del límite de tokens disponibles",
+          "Horóscopo diario enriquecido",
+          "Chat astrológico completo",
+          "Consultas temáticas incluidas",
+          "Capacidad de uso de IA extendida para un uso intensivo",
+          "La experiencia más completa y confortable",
         ],
       },
       features: {
@@ -694,6 +886,7 @@ export const supportTranslations = {
         tokens_per_day: "{{n}} tokens / día",
         tokens_per_week: "{{n}} tokens / semana",
         tokens_per_month: "{{n}} tokens / mes",
+        messages_per_week: "1 mensaje por semana",
         consultations_per_week: "{{n}} consulta / semana",
         interpretations_lifetime: "{{n}} interpretaciones incluidas",
         unlimited: "Ilimitado",
@@ -703,9 +896,31 @@ export const supportTranslations = {
         title: "¿Cómo funcionan los tokens?",
         body: "Los tokens miden la complejidad de las respuestas generadas por la IA. Una pregunta simple consume poco, mientras que un análisis profundo requiere más. Tu cuota se recarga automáticamente según tu periodo de suscripción.",
       },
+      detailTitles: {
+        experience: "Experiencia",
+        features: "Funciones incluidas",
+      },
+      editorial: {
+        howToChoose: {
+          title: "Cómo elegir",
+          paragraphs: [
+            "Free te permite descubrir el universo. Basic te ayuda a instalar un ritmo diario. Premium te ofrece el marco más amplio, fluido y cómodo.",
+            "La mejor oferta no es la que desbloquea todo, sino la que encaja con tu intensidad de uso actual.",
+          ],
+        },
+        flexibility: {
+          title: "Puedes cambiar en cualquier momento",
+          paragraphs: [
+            "Puedes empezar de forma simple y hacer evolucionar tu suscripción según crezca tu uso.",
+            "La idea es permitirte entrar en la experiencia sin fricción y ganar más profundidad, comodidad y fluidez cuando lo necesites.",
+          ],
+        },
+      },
       perMonth: "/ mes",
       currentPlan: "Tu plan actual",
       upgradeCta: "Cambiar a este plan",
+      popularBadge: "Más elegido",
+      viewDetails: "Explorar detalles",
       manageCta: "Gestionar",
     },
   },

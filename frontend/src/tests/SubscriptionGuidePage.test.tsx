@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
 
@@ -253,57 +253,72 @@ describe("SubscriptionGuidePage", () => {
     renderSubscriptionGuidePage()
 
     await waitFor(() => {
-      // Hero title
-      expect(screen.getByText("Choisissez la formule qui vous ressemble")).toBeInTheDocument()
-      
+      expect(screen.getByText("Choisissez l’expérience astrologique qui vous correspond")).toBeInTheDocument()
+      expect(
+        screen.getByText(/Notre approche de l’astrologie ne se limite pas à des réponses automatiques/),
+      ).toBeInTheDocument()
+      expect(screen.getByRole("link", { name: "Gérer mon abonnement" })).toHaveAttribute("href", "/settings/subscription")
+      expect(screen.getByRole("link", { name: "Comparer les offres" })).toHaveAttribute("href", "#subscription-plans")
+      expect(screen.getByText("Repères rapides")).toBeInTheDocument()
+      expect(screen.getByText("Votre plan actuel : Basic")).toBeInTheDocument()
+      expect(screen.getByText("À partir de 0 €")).toBeInTheDocument()
+
       const main = screen.getByRole("main")
 
-      // Plans display
       expect(within(main).getByText("Free")).toBeInTheDocument()
       expect(within(main).getByText("Basic")).toBeInTheDocument()
       expect(within(main).getByText("Premium")).toBeInTheDocument()
 
-      // Taglines
-      expect(within(main).getByText("Découverte — explorez l'astrologie à votre rythme")).toBeInTheDocument()
+      expect(within(main).getByText("Découverte")).toBeInTheDocument()
+      expect(within(main).getByText("Usage régulier")).toBeInTheDocument()
+      expect(within(main).getByText("Expérience complète")).toBeInTheDocument()
+      expect(within(main).getByText("Pour explorer l’essentiel, en toute simplicité.")).toBeInTheDocument()
+      expect(within(main).getByText("Votre compagnon astrologique du quotidien.")).toBeInTheDocument()
+      expect(within(main).getByText("La version la plus fluide, la plus profonde, la plus généreuse.")).toBeInTheDocument()
 
-      // Priority Badges
       expect(within(main).getByText("Traitement standard")).toBeInTheDocument()
       expect(within(main).getByText("Traitement prioritaire")).toBeInTheDocument()
       expect(within(main).getByText("Traitement haute priorité")).toBeInTheDocument()
 
-      // Current plan label
       expect(within(main).getByText("Votre plan actuel")).toBeInTheDocument()
+      const basicCard = within(main).getByText("Basic").closest(".subscription-plan-card")
+      expect(basicCard).not.toBeNull()
+      expect(basicCard).toHaveClass("subscription-plan-card--featured")
+      expect(within(basicCard as HTMLElement).queryByText("Le plus choisi")).not.toBeInTheDocument()
+      expect(within(main).getAllByText("Horoscope du jour enrichi")).toHaveLength(2)
+      expect(within(main).getByText("1 message de chat par semaine")).toBeInTheDocument()
+      expect(within(main).getByText("Chat astrologique inclus")).toBeInTheDocument()
+      expect(within(main).getByText("Chat astrologique complet")).toBeInTheDocument()
+      expect(within(main).getByText("Pour découvrir")).toBeInTheDocument()
+      expect(within(main).getByText("Pour un usage quotidien")).toBeInTheDocument()
+      expect(within(main).getByText("Pour une expérience complète")).toBeInTheDocument()
+      const detailToggles = within(main).getAllByText("Explorer les détails")
+      expect(detailToggles).toHaveLength(3)
+      detailToggles.forEach((toggle) => {
+        fireEvent.click(toggle)
+      })
 
-      // Features list
       expect(within(main).getAllByText("Thème natal")).toHaveLength(3)
       expect(within(main).getAllByText("Interprétation complète du thème natal")).toHaveLength(3)
       expect(within(main).getAllByText("1 interprétations incluses")).toHaveLength(1)
-      expect(within(main).getAllByText("Inclus")).toHaveLength(6) // natal_chart_short (3) + natal_chart_long/chat/thematic for premium (3) = 6
-      expect(within(main).getAllByText("Horoscope du jour détaillé et personnalisé")).toHaveLength(2)
-      expect(within(main).getByText("Capacité IA incluse pour un usage régulier")).toBeInTheDocument()
-      expect(within(main).getByText("Capacité IA étendue pour un usage intensif")).toBeInTheDocument()
-
-      // Quotas
-      // Free: 1 message per week
-      expect(within(main).getByText("1 message par semaine")).toBeInTheDocument()
-      
-      // Basic: tokens hidden
+      expect(within(main).getAllByText("Inclus")).toHaveLength(6)
       expect(within(main).queryByText(/20.?000 tokens \/ semaine/)).not.toBeInTheDocument()
       expect(within(main).queryByText(/50.?000 tokens \/ mois/)).not.toBeInTheDocument()
-      
       expect(within(main).getAllByText("Chat astrologique")).toHaveLength(3)
-      expect(within(main).getAllByText("Non inclus")).toHaveLength(2) // natal_chart_long and thematic for free plan
-      
-      // Prices
+      expect(within(main).getAllByText("Non inclus")).toHaveLength(2)
+
       expect(within(main).getByText("0 €")).toBeInTheDocument()
       expect(within(main).getByText("9 €")).toBeInTheDocument()
       expect(within(main).getByText("29 €")).toBeInTheDocument()
 
-      // CTA check
       const upgradeCtas = within(main).getAllByRole("link", { name: "Passer à ce plan" })
       expect(upgradeCtas).toHaveLength(2)
       expect(upgradeCtas[0]).toHaveAttribute("href", "/settings/subscription")
       expect(within(main).queryByRole("link", { name: "Votre plan actuel" })).not.toBeInTheDocument()
+
+      expect(within(main).getByText("Comment choisir")).toBeInTheDocument()
+      expect(within(main).getByText("Comment fonctionnent les tokens ?")).toBeInTheDocument()
+      expect(within(main).getByText("Vous pouvez changer à tout moment")).toBeInTheDocument()
     })
   })
 
