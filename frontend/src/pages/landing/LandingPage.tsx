@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { useTranslation } from "../../i18n"
+import { useAnalytics, getUtmParams } from "../../hooks/useAnalytics"
 import "./LandingPage.css"
 import { HeroSection } from "./sections/HeroSection"
 import { SocialProofSection } from "./sections/SocialProofSection"
@@ -11,8 +12,12 @@ import { FaqSection } from "./sections/FaqSection"
 
 export const LandingPage = () => {
   const t = useTranslation("landing")
+  const { track } = useAnalytics()
 
   useEffect(() => {
+    // AC2: Track landing view
+    track("landing_view", getUtmParams())
+
     // AC1: Meta tags SEO
     const previousTitle = document.title
     document.title = t.seo.title

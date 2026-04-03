@@ -2,17 +2,19 @@ import { Link } from "react-router-dom"
 import { Check, ArrowRight, Play } from "lucide-react"
 import { Button } from "../../../components/ui/Button/Button"
 import { useTranslation } from "../../../i18n"
+import { useAnalytics } from "../../../hooks/useAnalytics"
 import logo from "../../../assets/logo.PNG"
 
 export const HeroSection = () => {
   const t = useTranslation("landing")
+  const { track } = useAnalytics()
 
   return (
     <section className="hero-section">
       <div className="hero-content">
         <h1>{t.hero.title}</h1>
         <p className="hero-subtitle">{t.hero.subtitle}</p>
-        
+
         <ul className="hero-bullets">
           <li className="hero-bullet-item">
             <Check className="hero-bullet-icon" size={20} />
@@ -35,15 +37,17 @@ export const HeroSection = () => {
             variant="primary" 
             size="lg"
             aria-label={t.hero.ctaPrimary}
+            onClick={() => track('hero_cta_click', { cta_label: t.hero.ctaPrimary })}
           >
             {t.hero.ctaPrimary}
             <ArrowRight size={20} style={{ marginLeft: '8px' }} />
           </Button>
-          
+
           <a 
             href="#how-it-works" 
             className="hero-cta-secondary"
             aria-label={t.hero.ctaSecondary}
+            onClick={() => track('secondary_cta_click')}
           >
             <Play size={18} style={{ marginRight: '10px', fill: 'currentColor' }} />
             {t.hero.ctaSecondary}

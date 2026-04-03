@@ -1,6 +1,6 @@
 # Story 63.16: Instrumentation analytics du funnel [Priorité haute — implémenter tôt]
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

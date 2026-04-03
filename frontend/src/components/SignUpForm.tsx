@@ -9,6 +9,7 @@ import { useTranslation } from "@i18n"
 import { createSignUpSchema } from "@i18n/zod/auth"
 import { Field } from "@ui/Field"
 import { Button } from "@ui/Button"
+import { useAnalytics } from "../hooks/useAnalytics"
 import { PRICING_CONFIG } from "../config/pricingConfig"
 
 type SignUpFormData = {
@@ -23,8 +24,10 @@ type SignUpFormProps = {
 export function SignUpForm({ onSignIn }: SignUpFormProps) {
   const tAuth = useTranslation("auth")
   const tLanding = useTranslation("landing")
+  const { track } = useAnalytics()
   const schema = createSignUpSchema(tAuth)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [hasStarted, setHasStarted] = useState(false)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -33,10 +36,13 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
   const selectedPlan = planCode && PRICING_CONFIG[planCode] ? PRICING_CONFIG[planCode] : null
 
   useEffect(() => {
+    // AC2: Track register view
+    track('register_view', { from_plan: planCode })
+    
     if (selectedPlan) {
       sessionStorage.setItem("intended_plan", selectedPlan.planCode)
     }
-  }, [selectedPlan])
+  }, [selectedPlan, planCode, track])
 
   const {
     register,
@@ -51,15 +57,32 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
     try {
       const result = await registerApi(data.email, data.password)
       setAccessToken(result.access_token)
+      
+      // AC2: Track register success
+      track('register_success', { method: 'email', plan: planCode })
+      
       navigate("/profile", { replace: true })
     } catch (err) {
+      let errorType = 'unknown'
       if (err instanceof AuthApiError && err.code === "email_already_registered") {
         setApiError(tAuth.signUp.errorEmailTaken)
+        errorType = 'email_taken'
       } else if (err instanceof AuthApiError) {
         setApiError(tAuth.signUp.errorRegistrationFailed)
+        errorType = 'registration_failed'
       } else {
         setApiError(tAuth.signUp.errorGeneric)
       }
+      
+      // AC2: Track register error
+      track('register_error', { error_type: errorType })
+    }
+  }
+
+  const handleFocus = () => {
+    if (!hasStarted) {
+      track('register_start')
+      setHasStarted(true)
     }
   }
 
@@ -107,6 +130,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
           autoComplete="email"
           error={errors.email?.message}
           {...register("email")}
+          onFocus={handleFocus}
         />
         <Field
           id="signup-password"
@@ -115,6 +139,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
           autoComplete="new-password"
           error={errors.password?.message}
           {...register("password")}
+          onFocus={handleFocus}
         />
         {apiError && (
           <span className="auth-error-inline" role="alert">

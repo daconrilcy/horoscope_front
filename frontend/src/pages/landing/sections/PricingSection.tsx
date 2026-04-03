@@ -1,17 +1,39 @@
+import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { Check, X } from "lucide-react"
 import { Button } from "../../../components/ui/Button/Button"
 import { useTranslation, useAstrologyLabels } from "../../../i18n"
+import { useAnalytics } from "../../../hooks/useAnalytics"
 import { getActivePlans, formatPrice } from "../../../config/pricingConfig"
 import "./PricingSection.css"
 
 export const PricingSection = () => {
   const t = useTranslation("landing")
   const { lang } = useAstrologyLabels()
+  const { track } = useAnalytics()
+  const sectionRef = useRef<HTMLElement>(null)
   const activePlans = getActivePlans()
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          track('pricing_view')
+          observer.unobserve(entry.target)
+        }
+      },
+      { threshold: 0.5 }
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [track])
+
   return (
-    <section id="pricing" className="pricing-section">
+    <section id="pricing" className="pricing-section" ref={sectionRef}>
       <h2>{t.pricing.title}</h2>
 
       <div className="pricing-grid">
@@ -66,6 +88,7 @@ export const PricingSection = () => {
                   variant={plan.isRecommended ? "primary" : "secondary"}
                   fullWidth
                   size="lg"
+                  onClick={() => track('pricing_plan_select', { plan_id: plan.planCode })}
                 >
                   {plan.planCode === 'free' ? t.pricing.cta.free : t.pricing.cta.paid}
                 </Button>
