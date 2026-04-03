@@ -61,6 +61,7 @@ export type PlanCatalog = {
   monthly_price_cents: number
   currency: string
   is_active: boolean
+  processing_priority: string
   features: PlanFeature[]
 }
 

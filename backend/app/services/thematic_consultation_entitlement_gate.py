@@ -107,7 +107,7 @@ class ThematicConsultationEntitlementGate:
         # access_mode == "quota" — consommer
         consumed_states: list[UsageState] = []
         for state in result.usage_states:
-            # Skip auto-consumption for 'tokens' as they MUST be consumed post-call with exact amount
+            # Token quotas are consumed post-call with the exact LLM usage.
             if state.quota_key == "tokens":
                 continue
 

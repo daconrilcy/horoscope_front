@@ -14,6 +14,30 @@ afin d'avoir un modèle cohérent et lisible côté produit, et un enforcement t
 
 ## Contexte
 
+### Mise à jour post-implémentation
+
+Les décisions ci-dessous reflètent l'état finalement retenu après implémentation et corrections produit. Elles **prévalent** sur les passages plus anciens du document quand il y a contradiction.
+
+- `free.natal_chart_short` : `unlimited`
+- `trial.natal_chart_short` : `quota` `1` interprétation `lifetime`
+- `basic.natal_chart_short` : `unlimited`
+- `premium.natal_chart_short` : `unlimited`
+- `free.astrologer_chat` : activé avec `1 message / semaine` (`quota_key="messages"`)
+- `basic.astrologer_chat` : **retiré de l'offre** et rendu comme `disabled`
+- `basic.thematic_consultation` : double contrainte explicite
+  - `1 consultation / semaine` (`quota_key="consultations"`)
+  - `20 000 tokens / semaine` (`quota_key="tokens"`)
+- `premium.thematic_consultation` : pas de quota de nombre ; règle produit exprimée comme
+  - `Consultations thématiques illimitées dans la limite des tokens disponibles`
+- `/help/subscriptions`
+  - s'appuie sur `GET /v1/entitlements/plans` pour le catalogue
+  - s'appuie sur `GET /v1/entitlements/me` pour détecter le plan courant, y compris `free`
+  - n'affiche plus le CTA héro dupliqué
+  - n'affiche pas de bouton sur la carte du plan courant et rend `Votre plan actuel`
+  - affiche `processing_priority` comme badge de présentation
+
+En pratique, cela signifie que certains AC rédigés initialement pour `basic.astrologer_chat` et `basic.thematic_consultation` ont été **supersédés par ces arbitrages finaux**.
+
 ### Historique des stories précédentes
 
 - **61-67** : migration des quotas vers les tokens LLM. Cible du seed définie mais non entièrement appliquée pour le plan `basic` (`astrologer_chat` reste `DISABLED` dans le seed actuel).
