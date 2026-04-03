@@ -862,7 +862,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       micro2: "Cancela en 1 clic",
     },
     footer: {
-      desc: "Astrorizon combina la sabiduría milenaria de la astrología con la précision de la IA para iluminar tu camino diario.",
+      desc: "Astrorizon combina la sabiduría milenaria de la astrología con la precisión de la IA para iluminar tu camino diario.",
       product: {
         title: "Producto",
         howItWorks: { label: "Cómo funciona", enabled: true },
