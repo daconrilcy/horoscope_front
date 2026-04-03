@@ -148,6 +148,32 @@ export interface LandingTranslation {
     micro1: string
     micro2: string
   }
+  footer: {
+    desc: string
+    product: {
+      title: string
+      howItWorks: { label: string; enabled: boolean }
+      pricing: { label: string; enabled: boolean }
+      login: { label: string; enabled: boolean }
+    }
+    legal: {
+      title: string
+      privacy: { label: string; path: string; enabled: boolean }
+      legal: { label: string; path: string; enabled: boolean }
+      terms: { label: string; path: string; enabled: boolean }
+      cookies: { label: string; path: string; enabled: boolean }
+    }
+    social: {
+      title: string
+      twitter: { url: string; enabled: boolean }
+      instagram: { url: string; enabled: boolean }
+    }
+    contact: {
+      title: string
+      email: { label: string; value: string; enabled: boolean }
+    }
+    copyright: string
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -335,6 +361,32 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       micro1: "Sans carte bancaire",
       micro2: "Annulation en 1 clic",
     },
+    footer: {
+      desc: "Astrorizon combine la sagesse millénaire de l'astrologie avec la précision de l'IA pour éclairer votre chemin quotidien.",
+      product: {
+        title: "Produit",
+        howItWorks: { label: "Comment ça marche", enabled: true },
+        pricing: { label: "Tarifs", enabled: true },
+        login: { label: "Se connecter", enabled: true },
+      },
+      legal: {
+        title: "Légal",
+        privacy: { label: "Confidentialité", path: "/privacy", enabled: true },
+        legal: { label: "Mentions légales", path: "/legal", enabled: false },
+        terms: { label: "CGV/CGU", path: "/terms", enabled: false },
+        cookies: { label: "Cookies", path: "/cookies", enabled: false },
+      },
+      social: {
+        title: "Suivez-nous",
+        twitter: { url: "https://twitter.com/astrorizon", enabled: false },
+        instagram: { url: "https://instagram.com/astrorizon", enabled: false },
+      },
+      contact: {
+        title: "Contact",
+        email: { label: "Email", value: "hello@astrorizon.ai", enabled: true },
+      },
+      copyright: "Astrorizon. Tous droits réservés.",
+    },
   },
   en: {
     hero: {
@@ -520,6 +572,32 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       micro1: "No credit card required",
       micro2: "Cancel in 1 click",
     },
+    footer: {
+      desc: "Astrorizon combines millenary astrology wisdom with AI precision to light your daily path.",
+      product: {
+        title: "Product",
+        howItWorks: { label: "How it works", enabled: true },
+        pricing: { label: "Pricing", enabled: true },
+        login: { label: "Login", enabled: true },
+      },
+      legal: {
+        title: "Legal",
+        privacy: { label: "Privacy Policy", path: "/privacy", enabled: true },
+        legal: { label: "Legal Notice", path: "/legal", enabled: false },
+        terms: { label: "Terms of Service", path: "/terms", enabled: false },
+        cookies: { label: "Cookie Policy", path: "/cookies", enabled: false },
+      },
+      social: {
+        title: "Follow us",
+        twitter: { url: "https://twitter.com/astrorizon", enabled: false },
+        instagram: { url: "https://instagram.com/astrorizon", enabled: false },
+      },
+      contact: {
+        title: "Contact",
+        email: { label: "Email", value: "hello@astrorizon.ai", enabled: true },
+      },
+      copyright: "Astrorizon. All rights reserved.",
+    },
   },
   es: {
     hero: {
@@ -527,7 +605,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       subtitle: "Pronósticos ultra precisos y chat en vivo con tu astrólogo IA para iluminar tu camino cada día.",
       bullet1: "Carta natal completa gratuita",
       bullet2: "Respuestas instantáneas y empáticas",
-      bullet3: "Horóscopo personalizado cada mañana",
+      bullet3: "Horóscopo personnalisé cada mañana",
       ctaPrimary: "Empezar gratis",
       ctaSecondary: "Ver un exemple",
       micro1: "Sin tarjeta de crédito",
@@ -578,7 +656,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       title: "¿Cómo funciona?",
       step1: {
         title: "Crea tu perfil natal",
-        desc: "Comparte tu fecha, hora y lugar de nacimiento con precisión.",
+        desc: "Comparte tu fecha, hora y lugar de nacimiento con précision.",
         benefit: "Carta natal calculada al instante",
       },
       step2: {
@@ -594,7 +672,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
     },
     testimonials: {
       title: "Ellos iluminan su camino con Astrorizon",
-      subtitle: "Testimonios basados en nuestros primeros usuarios beta.",
+      subtitle: "Testimonios basados en nuestros premiers usuarios beta.",
       items: [
         {
           quote: "Finalmente una herramienta que tiene en cuenta la hora exacta de mi nacimiento. Los consejos diarios siempre son acertados.",
@@ -632,7 +710,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         },
       },
       reassurance: {
-        data: "Datos cifrados y protegidos",
+        data: "Datos cifrados et protegidos",
         swiss: "Cálculos basados en Swiss Ephemeris",
         cancel: "Cancelación sin condiciones",
       },
@@ -704,6 +782,32 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       button: "Empezar gratis",
       micro1: "Sin tarjeta de crédito",
       micro2: "Cancela en 1 clic",
+    },
+    footer: {
+      desc: "Astrorizon combina la sabiduría milenaria de la astrología con la precisión de la IA para iluminar tu camino diario.",
+      product: {
+        title: "Producto",
+        howItWorks: { label: "Cómo funciona", enabled: true },
+        pricing: { label: "Precios", enabled: true },
+        login: { label: "Conexión", enabled: true },
+      },
+      legal: {
+        title: "Legal",
+        privacy: { label: "Privacidad", path: "/privacy", enabled: true },
+        legal: { label: "Aviso legal", path: "/legal", enabled: false },
+        terms: { label: "Términos", path: "/terms", enabled: false },
+        cookies: { label: "Cookies", path: "/cookies", enabled: false },
+      },
+      social: {
+        title: "Síguenos",
+        twitter: { url: "https://twitter.com/astrorizon", enabled: false },
+        instagram: { url: "https://instagram.com/astrorizon", enabled: false },
+      },
+      contact: {
+        title: "Contacto",
+        email: { label: "Email", value: "hello@astrorizon.ai", enabled: true },
+      },
+      copyright: "Astrorizon. Todos los derechos reservados.",
     },
   },
 }

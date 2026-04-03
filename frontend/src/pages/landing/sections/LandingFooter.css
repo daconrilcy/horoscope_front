@@ -1,0 +1,131 @@
+.landing-footer {
+  background: var(--color-bg-base, #070a14);
+  border-top: 1px solid var(--color-line, rgba(255, 255, 255, 0.1));
+  padding: 80px var(--premium-layout-padding-inline) 40px;
+  color: var(--premium-text-main);
+}
+
+.landing-footer__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 60px;
+}
+
+@media (min-width: 1024px) {
+  .landing-footer__container {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+  }
+}
+
+.landing-footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 320px;
+}
+
+.landing-footer__logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.landing-footer__logo img {
+  height: 32px;
+  width: auto;
+}
+
+.landing-footer__logo-text {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--premium-text-strong);
+}
+
+.landing-footer__desc {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--premium-text-meta);
+}
+
+.landing-footer__column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.landing-footer__column-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--premium-text-strong);
+}
+
+.landing-footer__links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.landing-footer__link {
+  text-decoration: none;
+  color: var(--premium-text-meta);
+  font-size: 0.9375rem;
+  transition: color var(--duration-fast, 150ms) ease;
+}
+
+.landing-footer__link:hover,
+.landing-footer__link:focus-visible {
+  color: var(--premium-text-main);
+  outline: none;
+}
+
+.landing-footer__link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.landing-footer__bottom {
+  margin-top: 80px;
+  padding-top: 40px;
+  border-top: 1px solid var(--color-line, rgba(255, 255, 255, 0.1));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .landing-footer__bottom {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+.landing-footer__copyright {
+  font-size: 0.875rem;
+  color: var(--premium-text-meta);
+}
+
+.landing-footer__social {
+  display: flex;
+  gap: 20px;
+}
+
+.landing-footer__social-link {
+  color: var(--premium-text-meta);
+  transition: color 0.2s ease;
+}
+
+.landing-footer__social-link:hover {
+  color: var(--premium-accent-purple);
+}

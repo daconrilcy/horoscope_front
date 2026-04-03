@@ -20,6 +20,7 @@ import HelpPage from "../pages/HelpPage"
 import { SubscriptionGuidePage } from "../pages/SubscriptionGuidePage"
 
 import { DashboardPage } from "../pages/DashboardPage"
+import { PrivacyPolicyPage } from "../pages/PrivacyPolicyPage"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
 import { ConsultationResultPage } from "../pages/ConsultationResultPage"
@@ -73,6 +74,10 @@ export const routes: RouteObject[] = [
           {
             path: "/landing",
             element: <Navigate to="/" replace />,
+          },
+          {
+            path: "/privacy",
+            element: <PrivacyPolicyPage />,
           },
         ],
       },
@@ -134,7 +139,7 @@ export const routes: RouteObject[] = [
         element: <BillingCancelPage />,
       },
       {
-        path: "/privacy",
+        path: "/privacy-settings",
         element: <PrivacyPanel />,
       },
       {

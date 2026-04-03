@@ -1,6 +1,6 @@
 # Story 63.9: Footer de la landing page
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
