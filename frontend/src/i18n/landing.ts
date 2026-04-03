@@ -138,6 +138,10 @@ export interface LandingTranslation {
         name: string
         desc: string
       }
+      trial: {
+        name: string
+        desc: string
+      }
     }
     reassurance: string
   }
@@ -345,6 +349,10 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         premium: {
           name: "Premium",
           desc: "L'expérience complète et sans limite.",
+        },
+        trial: {
+          name: "Essai",
+          desc: "Découvrez Astrorizon gratuitement.",
         },
       },
       reassurance: "Sans engagement. Annulation en un clic.",
@@ -574,6 +582,10 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
           name: "Premium",
           desc: "The complete, unlimited experience.",
         },
+        trial: {
+          name: "Trial",
+          desc: "Discover Astrorizon for free.",
+        },
       },
       reassurance: "No strings attached. One-click cancellation.",
     },
@@ -700,7 +712,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       before: {
         title: "Hoy",
         item1: "Horóscopos genéricos que nunca te hablan realmente.",
-        item2: "Imposible hacer una pregunta específica a un experto sin esperar días.",
+        item2: "Imposible hacer una question específica a un experto sin esperar días.",
         item3: "Interpretar tu carta natal solo es complejo e intimidante.",
       },
       after: {
@@ -802,6 +814,10 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
           name: "Premium",
           desc: "La experiencia completa y sin límites.",
         },
+        trial: {
+          name: "Prueba",
+          desc: "Descubre Astrorizon gratis hoy mismo.",
+        },
       },
       reassurance: "Sin compromiso. Cancelación en un clic.",
     },
@@ -813,12 +829,12 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
           a: "Sí, a diferencia de los horóscopos generales, Astrorizon utiliza tu fecha, hora y lugar de nacimiento exactos para calcular posiciones planetarias reales con Swiss Ephemeris.",
         },
         {
-          q: "¿Cuánto tempo para ver un primer resultado?",
+          q: "¿Cuánto tiempo para ver un primer resultado?",
           a: "Desde tu registro, accedes a tu carta natal completa. El chat IA responde instantáneamente a tus dudas desde el primer minuto.",
         },
         {
           q: "¿Mis datos personales están protegidos?",
-          a: "Absolutamente. Cumplimos estrictamente con el RGPD. Tus datos de nacimiento y conversaciones están cifrados y nunca se venden a terceros.",
+          a: "Absolutamente. Cumplimos estrictamente con el RGPD. Tus datos de naissance y conversaciones están cifrados y nunca se venden a terceros.",
         },
         {
           q: "¿Puedo cancelar mi suscripción en cualquier momento?",

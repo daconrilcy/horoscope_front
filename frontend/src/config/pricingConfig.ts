@@ -38,6 +38,21 @@ export const PRICING_CONFIG: Record<string, PlanPricing> = {
       { id: 'support', enabled: false },
     ],
   },
+  trial: {
+    planCode: 'trial',
+    monthlyPriceCents: 0,
+    currency: 'EUR',
+    isRecommended: false,
+    isAvailable: false, // Internal/Canonical only, not shown in public grid
+    features: [
+      { id: 'natal', enabled: true },
+      { id: 'horoscope', enabled: true },
+      { id: 'chat', enabled: false },
+      { id: 'consultation', enabled: true },
+      { id: 'predictions', enabled: false },
+      { id: 'support', enabled: false },
+    ],
+  },
   basic: {
     planCode: 'basic',
     monthlyPriceCents: 900,
