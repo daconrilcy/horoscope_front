@@ -16,6 +16,13 @@ export interface LandingTranslation {
     caption1: string
     caption2: string
   }
+  navbar: {
+    howItWorks: string
+    pricing: string
+    login: string
+    register: string
+    language: string
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -35,6 +42,13 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       caption1: "Analyse en temps réel",
       caption2: "Conseils bienveillants",
     },
+    navbar: {
+      howItWorks: "Comment ça marche",
+      pricing: "Tarifs",
+      login: "Connexion",
+      register: "Démarrer",
+      language: "Langue",
+    },
   },
   en: {
     hero: {
@@ -52,6 +66,13 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       caption1: "Real-time analysis",
       caption2: "Empathetic guidance",
     },
+    navbar: {
+      howItWorks: "How it works",
+      pricing: "Pricing",
+      login: "Login",
+      register: "Start",
+      language: "Language",
+    },
   },
   es: {
     hero: {
@@ -68,6 +89,13 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       imageAlt: "Vista previa de la interfaz de Astrorizon",
       caption1: "Análisis en tiempo real",
       caption2: "Guía empática",
+    },
+    navbar: {
+      howItWorks: "Cómo funciona",
+      pricing: "Precios",
+      login: "Conexión",
+      register: "Empezar",
+      language: "Idioma",
     },
   },
 }

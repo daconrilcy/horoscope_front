@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom"
+import { LandingNavbar } from "../pages/landing/sections/LandingNavbar"
 
 /**
  * LandingLayout
@@ -10,6 +11,7 @@ import { Outlet } from "react-router-dom"
 export const LandingLayout = () => {
   return (
     <div className="landing-layout">
+      <LandingNavbar />
       <main className="landing-layout__main">
         <Outlet />
       </main>

@@ -526,7 +526,7 @@ development_status:
   epic-63: in-progress
   # LOT 1 — MVP conversion (priorité haute)
   63-1-hero-section-landing-page: done
-  63-2-navbar-landing-page: ready-for-dev
+  63-2-navbar-landing-page: done
   63-4-section-probleme-opportunite: ready-for-dev
   63-5-section-solution-comment-ca-marche: ready-for-dev
   63-7-section-offre-tarifs: ready-for-dev
