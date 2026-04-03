@@ -1,6 +1,6 @@
 # Story 63.10: SEO & Performance (Core Web Vitals)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

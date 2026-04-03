@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react"
 import type { RouteObject } from "react-router-dom"
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom"
 
@@ -8,6 +9,8 @@ import { AuthGuard } from "./guards/AuthGuard"
 import { RoleGuard } from "./guards/RoleGuard"
 import { RootRedirect } from "./guards/RootRedirect"
 import { LandingRedirect } from "./guards/LandingRedirect"
+
+const LandingPage = lazy(() => import("../pages/landing/LandingPage"))
 
 import { SignInForm } from "../components/SignInForm"
 import { SignUpForm } from "../components/SignUpForm"

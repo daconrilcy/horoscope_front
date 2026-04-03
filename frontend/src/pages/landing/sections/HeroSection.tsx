@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 import { Check, ArrowRight, Play } from "lucide-react"
 import { Button } from "../../../components/ui/Button/Button"
 import { useTranslation } from "../../../i18n"
+import logo from "../../../assets/logo.PNG"
 
 export const HeroSection = () => {
   const t = useTranslation("landing")
@@ -67,11 +68,15 @@ export const HeroSection = () => {
 
       <div className="hero-visual">
         {/* AC2: Reserve fixed space. Using a placeholder for now as real screenshot might not be in assets yet */}
-        <div className="hero-visual-placeholder">
+        <div className="hero-visual-placeholder" style={{ aspectRatio: '4/3' }}>
           <img 
-            src="/src/assets/logo.PNG" 
+            src={logo} 
             alt={t.hero.imageAlt} 
-            style={{ width: '120px', marginBottom: '20px', opacity: 0.5 }}
+            width="120"
+            height="120"
+            loading="eager"
+            fetchPriority="high"
+            style={{ width: '120px', height: '120px', marginBottom: '20px', opacity: 0.5 }}
           />
           <p style={{ maxWidth: '240px' }}>{t.hero.imageAlt}</p>
         </div>

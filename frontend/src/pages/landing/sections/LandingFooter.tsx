@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { Twitter, Instagram, Mail } from "lucide-react"
 import { useTranslation } from "../../../i18n"
+import logo from "../../../assets/logo.PNG"
 import "./LandingFooter.css"
 
 export const LandingFooter = () => {
@@ -33,7 +34,13 @@ export const LandingFooter = () => {
         {/* Brand Column */}
         <div className="landing-footer__brand">
           <Link to="/" className="landing-footer__logo">
-            <img src="/src/assets/logo.PNG" alt="Astrorizon Logo" />
+            <img 
+              src={logo} 
+              alt="Astrorizon Logo" 
+              width="32" 
+              height="32" 
+              loading="lazy" 
+            />
             <span className="landing-footer__logo-text">Astrorizon</span>
           </Link>
           <p className="landing-footer__desc">{t.footer.desc}</p>

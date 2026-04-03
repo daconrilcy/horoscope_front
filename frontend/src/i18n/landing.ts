@@ -174,6 +174,12 @@ export interface LandingTranslation {
     }
     copyright: string
   }
+  seo: {
+    title: string
+    description: string
+    ogTitle: string
+    ogDescription: string
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -387,6 +393,12 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
       copyright: "Astrorizon. Tous droits réservés.",
     },
+    seo: {
+      title: "Votre Astrologue IA Personnel | Astrorizon",
+      description: "Découvrez votre thème natal et échangez avec votre astrologue IA disponible 24h/24. Prévisions précises et guidance personnalisée au quotidien.",
+      ogTitle: "Astrorizon — L'astrologie augmentée par l'IA",
+      ogDescription: "Obtenez des réponses instantanées sur votre avenir et votre personnalité grâce à notre technologie de calcul astrologique de précision.",
+    },
   },
   en: {
     hero: {
@@ -598,6 +610,12 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
       copyright: "Astrorizon. All rights reserved.",
     },
+    seo: {
+      title: "Your Personal AI Astrologer | Astrorizon",
+      description: "Discover your birth chart and chat with your AI astrologer available 24/7. Precise forecasts and personalized guidance daily.",
+      ogTitle: "Astrorizon — Astrology Augmented by AI",
+      ogDescription: "Get instant answers about your future and personality with our precision astrology calculation technology.",
+    },
   },
   es: {
     hero: {
@@ -656,7 +674,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       title: "¿Cómo funciona?",
       step1: {
         title: "Crea tu perfil natal",
-        desc: "Comparte tu fecha, hora y lugar de nacimiento con précision.",
+        desc: "Comparte tu fecha, hora y lugar de nacimiento con precisión.",
         benefit: "Carta natal calculada al instante",
       },
       step2: {
@@ -675,7 +693,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       subtitle: "Testimonios basados en nuestros premiers usuarios beta.",
       items: [
         {
-          quote: "Finalmente una herramienta que tiene en cuenta la hora exacta de mi nacimiento. Los consejos diarios siempre son acertados.",
+          quote: "Finalmente una herramienta que tiene en cuenta la hora exacta de mi naissance. Los consejos diarios siempre son acertados.",
           author: "Sophie L.",
           context: "Usuaria, Libra",
           rating: 5,
@@ -808,6 +826,12 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         email: { label: "Email", value: "hello@astrorizon.ai", enabled: true },
       },
       copyright: "Astrorizon. Todos los derechos reservados.",
+    },
+    seo: {
+      title: "Tu Astrólogo IA Personal | Astrorizon",
+      description: "Descubre tu carta natal y chatea con tu astrólogo IA disponible 24/7. Pronósticos precisos y guía personalizada diaria.",
+      ogTitle: "Astrorizon — Astrología Aumentada por IA",
+      ogDescription: "Obtén respuestas instantáneas sobre tu futuro y personalidad con nuestra tecnología de cálculo astrológico de precisión.",
     },
   },
 }

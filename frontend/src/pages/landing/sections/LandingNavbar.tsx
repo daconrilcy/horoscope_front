@@ -36,7 +36,7 @@ export const LandingNavbar = () => {
         <div className="landing-navbar__container">
           {/* Logo */}
           <Link to="/" className="landing-navbar__logo" onClick={closeMobileMenu}>
-            <img src={logo} alt="Astrorizon Logo" />
+            <img src={logo} alt="Astrorizon Logo" width="32" height="32" />
             <span className="landing-navbar__logo-text">Astrorizon</span>
           </Link>
 
