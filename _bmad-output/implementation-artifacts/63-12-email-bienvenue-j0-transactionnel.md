@@ -1,6 +1,6 @@
 # Story 63.12: Email de bienvenue J0 — transactionnel post-inscription
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

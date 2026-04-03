@@ -1,0 +1,15 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+    <h1>Bienvenue, {{ firstname if firstname else "Bonjour" }} ✨</h1>
+    <p>Votre compte Astrorizon a été créé avec succès pour l'adresse <strong>{{ email }}</strong>.</p>
+    <p>Nous sommes ravis de vous accompagner dans votre exploration astrologique. La première étape consiste à configurer votre profil natal pour obtenir des prévisions d'une précision inégalée.</p>
+    
+    <div style="text-align: center;">
+        <a href="{{ app_url }}/profile" class="button">Calculer mon thème natal</a>
+    </div>
+    
+    <p>Besoin d'aide ? Notre support est à votre écoute. Répondez simplement à cet email ou consultez notre centre d'aide dans l'application.</p>
+    
+    <p>À très vite sous les étoiles,<br>L'équipe Astrorizon</p>
+{% endblock %}

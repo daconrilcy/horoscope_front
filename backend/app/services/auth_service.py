@@ -190,6 +190,16 @@ class AuthService:
         refresh_token = create_refresh_token(subject=str(user.id), role=user.role)
         refresh_jti = AuthService._extract_refresh_jti(refresh_token)
         UserRefreshTokenRepository(db).upsert_current_jti(user.id, refresh_jti)
+
+        # AC1: Trigger welcome email J0
+        try:
+            from app.services.email_service import EmailService
+            EmailService.send_welcome_email(user_id=user.id, email=user.email)
+        except Exception:
+            # AC1.2: Registration must not be blocked if email fails
+            import logging
+            logging.getLogger(__name__).error(f"Failed to trigger welcome email for user {user.id}", exc_info=True)
+
         return AuthResponse(
             user=AuthUser(id=user.id, email=user.email, role=user.role),
             tokens=AuthTokens(access_token=access_token, refresh_token=refresh_token),

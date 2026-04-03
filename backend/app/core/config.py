@@ -404,6 +404,13 @@ class Settings:
         # LLM Engine Configuration
         self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()
 
+        # Email Configuration
+        self.enable_email = self._parse_bool_env("ENABLE_EMAIL", default=False)
+        self.email_provider = os.getenv("EMAIL_PROVIDER", "noop").lower().strip()
+        self.email_from = os.getenv("EMAIL_FROM", "hello@astrorizon.ai").strip()
+        self.email_from_name = os.getenv("EMAIL_FROM_NAME", "Astrorizon").strip()
+        self.brevo_api_key = os.getenv("BREVO_API_KEY", "").strip() or None
+
         # V3 Engine Conventions (AC4)
         self.v3_engine_version = os.getenv("V3_ENGINE_VERSION", "v3.0.0-alpha").strip()
         self.v3_snapshot_version = os.getenv("V3_SNAPSHOT_VERSION", "1.0").strip()
