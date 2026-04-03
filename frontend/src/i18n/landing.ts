@@ -117,6 +117,7 @@ export interface LandingTranslation {
       free: string
       paid: string
     }
+    ariaFeatures: string
     features: {
       natal: string
       horoscope: string
@@ -329,6 +330,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         free: "Démarrer gratuitement",
         paid: "Choisir ce plan",
       },
+      ariaFeatures: "Fonctionnalités du plan",
       features: {
         natal: "Thème natal précis",
         horoscope: "Horoscope quotidien",
@@ -561,6 +563,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         free: "Start for free",
         paid: "Choose this plan",
       },
+      ariaFeatures: "Plan features",
       features: {
         natal: "Precise birth chart",
         horoscope: "Daily horoscope",
@@ -712,7 +715,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       before: {
         title: "Hoy",
         item1: "Horóscopos genéricos que nunca te hablan realmente.",
-        item2: "Imposible hacer una question específica a un experto sin esperar días.",
+        item2: "Imposible hacer una pregunta específica a un experto sin esperar días.",
         item3: "Interpretar tu carta natal solo es complejo e intimidante.",
       },
       after: {
@@ -793,6 +796,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         free: "Empezar gratis",
         paid: "Elegir este plan",
       },
+      ariaFeatures: "Características del plan",
       features: {
         natal: "Carta natal precisa",
         horoscope: "Horóscopo diario",
@@ -834,7 +838,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         },
         {
           q: "¿Mis datos personales están protegidos?",
-          a: "Absolutamente. Cumplimos estrictamente con el RGPD. Tus datos de naissance y conversaciones están cifrados y nunca se venden a terceros.",
+          a: "Absolutamente. Cumplimos estrictamente con el RGPD. Tus datos de nacimiento y conversaciones están cifrados y nunca se venden a terceros.",
         },
         {
           q: "¿Puedo cancelar mi suscripción en cualquier momento?",
@@ -858,7 +862,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       micro2: "Cancela en 1 clic",
     },
     footer: {
-      desc: "Astrorizon combina la sabiduría milenaria de la astrología con la precisión de la IA para iluminar tu camino diario.",
+      desc: "Astrorizon combina la sabiduría milenaria de la astrología con la précision de la IA para iluminar tu camino diario.",
       product: {
         title: "Producto",
         howItWorks: { label: "Cómo funciona", enabled: true },

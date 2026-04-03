@@ -64,7 +64,11 @@ export const PricingSection = () => {
                 <p className="pricing-plan-desc">{planT.desc}</p>
               </div>
 
-              <ul className="pricing-features" aria-label={`Fonctionnalités du plan ${planT.name}`}>
+              <ul 
+                className="pricing-features"
+                aria-label={`${t.pricing.ariaFeatures} ${planT.name}`}
+              >
+
                 {plan.features.map((feature) => (
                   <li 
                     key={feature.id} 
