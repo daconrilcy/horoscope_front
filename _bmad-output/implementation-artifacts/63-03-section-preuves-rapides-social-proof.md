@@ -1,6 +1,6 @@
 # Story 63.3: Section Preuves rapides (Social Proof)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

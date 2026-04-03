@@ -23,6 +23,21 @@ export interface LandingTranslation {
     register: string
     language: string
   }
+  socialProof: {
+    badges: {
+      swiss: string
+      rgpd: string
+      available: string
+    }
+    metrics: {
+      users: string
+      usersValue: string
+      rating: string
+      ratingValue: string
+      consultations: string
+      consultationsValue: string
+    }
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -49,6 +64,21 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       register: "Démarrer",
       language: "Langue",
     },
+    socialProof: {
+      badges: {
+        swiss: "Calculs Swiss Ephemeris",
+        rgpd: "Données protégées RGPD",
+        available: "Disponible 24h/24",
+      },
+      metrics: {
+        users: "Utilisateurs actifs",
+        usersValue: "10k+",
+        rating: "Note moyenne",
+        ratingValue: "4.9/5",
+        consultations: "Consultations réalisées",
+        consultationsValue: "50k+",
+      },
+    },
   },
   en: {
     hero: {
@@ -73,6 +103,21 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       register: "Start",
       language: "Language",
     },
+    socialProof: {
+      badges: {
+        swiss: "Swiss Ephemeris Calculations",
+        rgpd: "GDPR Protected Data",
+        available: "Available 24/7",
+      },
+      metrics: {
+        users: "Active Users",
+        usersValue: "10k+",
+        rating: "Average Rating",
+        ratingValue: "4.9/5",
+        consultations: "Consultations done",
+        consultationsValue: "50k+",
+      },
+    },
   },
   es: {
     hero: {
@@ -96,6 +141,21 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       login: "Conexión",
       register: "Empezar",
       language: "Idioma",
+    },
+    socialProof: {
+      badges: {
+        swiss: "Cálculos de Swiss Ephemeris",
+        rgpd: "Datos protegidos por RGPD",
+        available: "Disponible 24/7",
+      },
+      metrics: {
+        users: "Usuarios activos",
+        usersValue: "10k+",
+        rating: "Calificación promedio",
+        ratingValue: "4.9/5",
+        consultations: "Consultas realizadas",
+        consultationsValue: "50k+",
+      },
     },
   },
 }
