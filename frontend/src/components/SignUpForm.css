@@ -1,0 +1,122 @@
+.auth-form-card {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.auth-form-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2rem;
+  color: var(--premium-text-strong);
+  text-align: center;
+  margin: 0;
+}
+
+.auth-plan-badge {
+  background: var(--premium-accent-purple-soft);
+  color: var(--premium-accent-purple-strong);
+  padding: 8px 16px;
+  border-radius: var(--premium-radius-pill);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Google Auth Button */
+.google-auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 48px;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: var(--premium-radius-panel);
+  color: #3c4043;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.google-auth-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--premium-text-faint);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--premium-glass-border);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-error-inline {
+  color: var(--danger, #ff6b81);
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: rgba(255, 107, 129, 0.1);
+  padding: 8px 12px;
+  border-radius: var(--premium-radius-panel);
+}
+
+.auth-submit-btn {
+  margin-top: 8px;
+}
+
+.auth-reassurance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--premium-text-meta);
+  flex-wrap: wrap;
+}
+
+.auth-reassurance-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--premium-text-faint);
+}
+
+.auth-switch-link {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.9375rem;
+  color: var(--premium-text-main);
+}
+
+.auth-switch-link button {
+  background: none;
+  border: none;
+  color: var(--premium-accent-purple);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.auth-switch-link button:hover {
+  text-decoration: underline;
+}

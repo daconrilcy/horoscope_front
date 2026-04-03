@@ -1,6 +1,6 @@
 # Story 63.11: Page d'inscription produit optimisée conversion
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
