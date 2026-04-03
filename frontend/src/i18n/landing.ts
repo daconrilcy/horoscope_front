@@ -134,6 +134,20 @@ export interface LandingTranslation {
     }
     reassurance: string
   }
+  faq: {
+    title: string
+    items: Array<{
+      q: string
+      a: string
+    }>
+  }
+  finalCta: {
+    title: string
+    subtitle: string
+    button: string
+    micro1: string
+    micro2: string
+  }
 }
 
 const translations: Record<AstrologyLang, LandingTranslation> = {
@@ -285,6 +299,42 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
       reassurance: "Sans engagement. Annulation en un clic.",
     },
+    faq: {
+      title: "Questions fréquentes",
+      items: [
+        {
+          q: "Est-ce vraiment personnalisé pour moi ?",
+          a: "Oui, contrairement aux horoscopes de presse, Astrorizon utilise votre date, heure et lieu de naissance exacts pour calculer les positions planétaires réelles via Swiss Ephemeris.",
+        },
+        {
+          q: "Combien de temps pour voir un premier résultat ?",
+          a: "Dès votre inscription, vous accédez à votre thème natal complet. Le chat IA répond instantanément à vos questions dès la première minute.",
+        },
+        {
+          q: "Mes données personnelles sont-elles protégées ?",
+          a: "Absolument. Nous respectons strictement le RGPD. Vos données de naissance et vos conversations sont chiffrées et ne sont jamais vendues à des tiers.",
+        },
+        {
+          q: "Puis-je annuler mon abonnement à tout moment ?",
+          a: "Oui, la gestion de l'abonnement se fait en un clic depuis vos paramètres. Il n'y a aucun engagement de durée pour nos plans mensuels.",
+        },
+        {
+          q: "L'astrologie est-elle scientifiquement fondée ?",
+          a: "L'astrologie est un système symbolique millénaire de compréhension de soi. Nos calculs astronomiques sont d'une précision scientifique, tandis que l'interprétation relève du conseil et de la guidance personnelle.",
+        },
+        {
+          q: "Y a-t-il un support si j'ai besoin d'aide ?",
+          a: "Bien sûr. Notre équipe est disponible par email pour toute question technique ou liée à votre compte utilisateur.",
+        },
+      ],
+    },
+    finalCta: {
+      title: "Prêt à découvrir votre thème natal ?",
+      subtitle: "Rejoignez Astrorizon et commencez votre voyage vers une meilleure connaissance de vous-même.",
+      button: "Démarrer gratuitement",
+      micro1: "Sans carte bancaire",
+      micro2: "Annulation en 1 clic",
+    },
   },
   en: {
     hero: {
@@ -434,6 +484,42 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
       reassurance: "No strings attached. One-click cancellation.",
     },
+    faq: {
+      title: "Frequently Asked Questions",
+      items: [
+        {
+          q: "Is it really personalized for me?",
+          a: "Yes, unlike general horoscopes, Astrorizon uses your exact date, time, and place of birth to calculate real planetary positions via Swiss Ephemeris.",
+        },
+        {
+          q: "How long until I see results?",
+          a: "As soon as you sign up, you access your complete birth chart. The AI chat answers your questions from the very first minute.",
+        },
+        {
+          q: "Is my personal data protected?",
+          a: "Absolutely. We strictly comply with GDPR. Your birth data and conversations are encrypted and never sold to third parties.",
+        },
+        {
+          q: "Can I cancel my subscription anytime?",
+          a: "Yes, managing your subscription is easy from your settings. There is no long-term commitment for our monthly plans.",
+        },
+        {
+          q: "Is astrology scientifically based?",
+          a: "Astrology is a millenary symbolic system for self-understanding. Our astronomical calculations are scientifically precise, while interpretation is a matter of personal guidance.",
+        },
+        {
+          q: "Is there support if I need help?",
+          a: "Of course. Our team is available via email for any technical or account-related questions.",
+        },
+      ],
+    },
+    finalCta: {
+      title: "Ready to discover your birth chart?",
+      subtitle: "Join Astrorizon and start your journey towards better self-knowledge.",
+      button: "Start for free",
+      micro1: "No credit card required",
+      micro2: "Cancel in 1 click",
+    },
   },
   es: {
     hero: {
@@ -465,7 +551,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         available: "Disponible 24/7",
       },
       metrics: {
-        users: "Usuarios activos",
+        users: "Usuarios actifs",
         usersValue: "10k+",
         rating: "Calificación promedio",
         ratingValue: "4.9/5",
@@ -492,7 +578,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       title: "¿Cómo funciona?",
       step1: {
         title: "Crea tu perfil natal",
-        desc: "Comparte tu fecha, hora y lugar de nacimiento con précision.",
+        desc: "Comparte tu fecha, hora y lugar de nacimiento con precisión.",
         benefit: "Carta natal calculada al instante",
       },
       step2: {
@@ -582,6 +668,42 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
         },
       },
       reassurance: "Sin compromiso. Cancelación en un clic.",
+    },
+    faq: {
+      title: "Preguntas frecuentes",
+      items: [
+        {
+          q: "¿Es realmente personalizado para mí?",
+          a: "Sí, a diferencia de los horóscopos generales, Astrorizon utiliza tu fecha, hora y lugar de nacimiento exactos para calcular posiciones planetarias reales con Swiss Ephemeris.",
+        },
+        {
+          q: "¿Cuánto tiempo para ver un primer resultado?",
+          a: "Desde tu registro, accedes a tu carta natal completa. El chat IA responde instantáneamente a tus dudas desde el primer minuto.",
+        },
+        {
+          q: "¿Mis datos personales están protegidos?",
+          a: "Absolutamente. Cumplimos estrictamente con el RGPD. Tus datos de nacimiento y conversaciones están cifrados y nunca se venden a terceros.",
+        },
+        {
+          q: "¿Puedo cancelar mi suscripción en cualquier momento?",
+          a: "Sí, la gestión de la suscripción se hace en un clic desde tus ajustes. No hay compromiso de permanencia en nuestros planes mensuales.",
+        },
+        {
+          q: "¿La astrología tiene base científica?",
+          a: "La astrología es un sistema simbólico milenario de autoconocimiento. Nuestros cálculos astronómicos son de precisión científica, mientras que la interpretación es una guía personal.",
+        },
+        {
+          q: "¿Hay soporte si necesito ayuda?",
+          a: "Por supuesto. Nuestro equipo está disponible por email para cualquier duda técnica o relacionada con tu cuenta.",
+        },
+      ],
+    },
+    finalCta: {
+      title: "¿Listo para descubrir tu carta natal?",
+      subtitle: "Únete a Astrorizon y comienza tu viaje hacia un mejor autoconocimiento.",
+      button: "Empezar gratis",
+      micro1: "Sin tarjeta de crédito",
+      micro2: "Cancela en 1 clic",
     },
   },
 }

@@ -5,6 +5,7 @@ import { ProblemSection } from "./sections/ProblemSection"
 import { SolutionSection } from "./sections/SolutionSection"
 import { TestimonialsSection } from "./sections/TestimonialsSection"
 import { PricingSection } from "./sections/PricingSection"
+import { FaqSection } from "./sections/FaqSection"
 
 export const LandingPage = () => {
   return (
@@ -15,8 +16,9 @@ export const LandingPage = () => {
       <SolutionSection />
       <TestimonialsSection />
       <PricingSection />
+      <FaqSection />
       
-      {/* Future sections (63.8 to 63.9) will be added here */}
+      {/* Future sections (63.9) will be added here */}
     </div>
   )
 }

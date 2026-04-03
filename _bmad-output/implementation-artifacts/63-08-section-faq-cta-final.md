@@ -1,6 +1,6 @@
 # Story 63.8: Section FAQ & CTA Final
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
