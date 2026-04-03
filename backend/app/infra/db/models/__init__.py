@@ -50,6 +50,7 @@ from app.infra.db.models.daily_prediction import (
     DailyPredictionTimeBlockModel,
     DailyPredictionTurningPointModel,
 )
+from app.infra.db.models.email_log import EmailLogModel
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.enterprise_billing import (
@@ -146,6 +147,7 @@ __all__ = [
     "DailyPredictionRunModel",
     "DailyPredictionTimeBlockModel",
     "DailyPredictionTurningPointModel",
+    "EmailLogModel",
     "EnterpriseAccountModel",
     "EnterpriseApiCredentialModel",
     "EnterpriseBillingPlanModel",

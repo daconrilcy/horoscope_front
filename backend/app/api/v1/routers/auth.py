@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
@@ -16,6 +16,7 @@ from app.core.security import SecurityError, decode_token
 from app.infra.db.session import get_db_session
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.auth_service import AuthResponse, AuthService, AuthServiceError, AuthTokens
+from app.services.email_service import EmailService
 
 
 class ResponseMeta(BaseModel):
@@ -165,7 +166,10 @@ def me(
     },
 )
 def register(
-    request: Request, payload: RegisterRequest, db: Session = Depends(get_db_session)
+    request: Request, 
+    payload: RegisterRequest, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db_session)
 ) -> Any:
     request_id = resolve_request_id(request)
     try:
@@ -181,6 +185,15 @@ def register(
             status="success",
         )
         db.commit()
+
+        # AC1: Trigger welcome email J0 (non-blocking)
+        background_tasks.add_task(
+            EmailService.send_welcome_email, 
+            db=db, 
+            user_id=auth_response.user.id, 
+            email=auth_response.user.email
+        )
+
         return {"data": auth_response.model_dump(), "meta": {"request_id": request_id}}
     except IntegrityError:
         db.rollback()

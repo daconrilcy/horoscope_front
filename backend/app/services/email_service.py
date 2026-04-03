@@ -1,8 +1,12 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from app.core.config import settings
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
+from app.infra.db.models.email_log import EmailLogModel
+from app.services.email_provider import get_email_provider
 
 logger = logging.getLogger(__name__)
 
@@ -19,101 +23,84 @@ class EmailService:
         template = jinja_env.get_template(f"emails/{template_name}")
         kwargs.setdefault("year", datetime.now().year)
         kwargs.setdefault("app_url", os.getenv("VITE_PRODUCTION_URL", "http://localhost:5173"))
-        kwargs.setdefault("app_name", settings.email_from_name)
         return template.render(**kwargs)
 
     @staticmethod
-    def _get_text_content(template_name: str, **kwargs) -> str:
+    async def send_welcome_email(db: Session, user_id: int, email: str, firstname: str | None = None) -> bool:
         """
-        Provides a plain text version of the email.
-        In a real scenario, we might want a separate .txt template.
-        For now, we'll provide a basic mapping for welcome.html.
+        Sends a welcome email to a new user with idempotence check.
         """
-        if template_name == "welcome.html":
-            firstname = kwargs.get("firstname")
-            email = kwargs.get("email")
-            app_url = os.getenv("VITE_PRODUCTION_URL", "http://localhost:5173")
-            greeting = f"Bienvenue, {firstname}" if firstname else "Bonjour"
-            return (
-                f"{greeting} ✨\n\n"
-                f"Votre compte Astrorizon a été créé avec succès pour l'adresse {email}.\n\n"
-                "Nous sommes ravis de vous accompagner dans votre exploration astrologique. "
-                "La première étape consiste à configurer votre profil natal pour obtenir des "
-                "prévisions d'une précision inégalée.\n\n"
-                f"Calculer mon thème natal : {app_url}/profile\n\n"
-                "Besoin d'aide ? Notre support est à votre écoute. Répondez simplement à cet email "
-                "ou consultez notre centre d'aide dans l'application.\n\n"
-                "À très vite sous les étoiles,\nL'équipe Astrorizon"
-            )
-        return ""
+        return await EmailService._send_email(
+            db=db,
+            user_id=user_id,
+            email=email,
+            email_type="welcome",
+            template_name="welcome.html",
+            subject="Bienvenue dans votre univers astrologique ✨",
+            template_vars={"firstname": firstname, "email": email}
+        )
 
     @staticmethod
-    def send_welcome_email(user_id: int, email: str, firstname: str | None = None) -> bool:
+    async def _send_email(
+        db: Session, 
+        user_id: int | None, 
+        email: str, 
+        email_type: str, 
+        template_name: str, 
+        subject: str,
+        template_vars: dict
+    ) -> bool:
         """
-        Sends a welcome email to a new user.
+        Internal method to send email with idempotence and logging.
         """
-        enable_email = settings.enable_email
-        provider = settings.email_provider
-
-        subject = "Bienvenue dans votre univers astrologique ✨"
-        
-        try:
-            html_content = EmailService._render_template("welcome.html", email=email, firstname=firstname)
-            text_content = EmailService._get_text_content("welcome.html", email=email, firstname=firstname)
+        # AC3: Idempotence check
+        if user_id:
+            existing = db.execute(
+                select(EmailLogModel).where(
+                    EmailLogModel.user_id == user_id,
+                    EmailLogModel.email_type == email_type,
+                    EmailLogModel.status == "sent"
+                )
+            ).scalars().first()
             
-            if not enable_email or provider == "noop":
-                logger.info(f"[EMAIL NOOP] To: {email}, Subject: {subject}")
-                logger.debug(f"[EMAIL CONTENT HTML]\n{html_content}")
-                logger.debug(f"[EMAIL CONTENT TEXT]\n{text_content}")
+            if existing:
+                logger.info(f"Email {email_type} already sent to user {user_id}. Skipping.")
                 return True
 
-            if provider == "brevo":
-                return EmailService._send_via_brevo(email, subject, html_content, text_content)
-            
-            logger.warning(f"Email provider {provider} not implemented.")
-            return False
-
-        except Exception as e:
-            logger.error(f"Failed to send welcome email to {email}: {str(e)}", exc_info=True)
-            return False
-
-    @staticmethod
-    def _send_via_brevo(email: str, subject: str, html_content: str, text_content: str) -> bool:
-        api_key = settings.brevo_api_key
-        if not api_key:
-            logger.error("BREVO_API_KEY not found in settings.")
-            return False
+        enable_email = os.getenv("ENABLE_EMAIL", "false").lower() == "true"
+        
+        # Log attempt
+        log_entry = EmailLogModel(
+            user_id=user_id,
+            email_type=email_type,
+            recipient_email=email,
+            status="pending"
+        )
+        db.add(log_entry)
+        db.commit()
 
         try:
-            import sib_api_v3_sdk
-            from sib_api_v3_sdk.rest import ApiException
+            html_content = EmailService._render_template(template_name, **template_vars)
+            
+            if not enable_email:
+                logger.info(f"[EMAIL DISABLED] To: {email}, Type: {email_type}")
+                log_entry.status = "skipped"
+                log_entry.error_message = "Email globally disabled (ENABLE_EMAIL=false)"
+                db.commit()
+                return True
 
-            configuration = sib_api_v3_sdk.Configuration()
-            configuration.api_key['api-key'] = api_key
+            provider = get_email_provider()
+            message_id = await provider.send(to=email, subject=subject, html=html_content)
             
-            api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
-            
-            sender = {"name": settings.email_from_name, "email": settings.email_from}
-            to = [{"email": email}]
-            
-            send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-                to=to,
-                html_content=html_content,
-                text_content=text_content,
-                sender=sender,
-                subject=subject
-            )
-
-            api_instance.send_transac_email(send_smtp_email)
-            logger.info(f"Email sent successfully to {email} via Brevo")
+            log_entry.status = "sent"
+            log_entry.provider_message_id = message_id
+            db.commit()
             return True
 
-        except ImportError:
-            logger.error("sib-api-v3-sdk not installed. Please install it to use Brevo provider.")
-            return False
-        except ApiException as e:
-            logger.error(f"Exception when calling TransactionalEmailsApi->send_transac_email: {e}")
-            return False
         except Exception as e:
-            logger.error(f"Error sending email via Brevo: {str(e)}")
+            error_msg = str(e)
+            logger.error(f"Failed to send {email_type} email to {email}: {error_msg}")
+            log_entry.status = "failed"
+            log_entry.error_message = error_msg
+            db.commit()
             return False

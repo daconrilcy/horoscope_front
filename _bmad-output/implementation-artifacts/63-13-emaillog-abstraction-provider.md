@@ -1,6 +1,6 @@
 # Story 63.13: EmailLog et abstraction provider email
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
