@@ -21,7 +21,8 @@ def test_build_uses_shorter_daily_synthesis_instruction_for_summary_only() -> No
         variant_code="summary_only",
     )
 
-    assert "strictement 7 à 8 phrases complètes" in prompt
+    assert "strictement 6 à 8 phrases complètes" in prompt
+    assert "comprise entre 50% et 67% de la version complète" in prompt
     assert "strictement 10 à 12 phrases complètes" not in prompt
 
 

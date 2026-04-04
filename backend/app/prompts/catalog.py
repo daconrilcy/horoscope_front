@@ -64,7 +64,7 @@ PROMPT_CATALOG: dict[str, PromptEntry] = {
         description="Horoscope du jour restreint au résumé (plan free)",
         use_case_key="horoscope_daily_free",
         engine_env_key="OPENAI_ENGINE_HOROSCOPE_DAILY_FREE",
-        max_tokens=500,
+        max_tokens=900,
         temperature=0.7,
         output_schema=HOROSCOPE_FREE_OUTPUT_SCHEMA,
     ),

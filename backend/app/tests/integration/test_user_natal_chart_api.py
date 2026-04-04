@@ -1,4 +1,5 @@
 from copy import deepcopy
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -217,6 +218,35 @@ def test_generate_natal_chart_success() -> None:
     assert "birth_place" not in data["result"]["prepared_input"]
     assert "birth_city" not in data["result"]["prepared_input"]
     assert "birth_country" not in data["result"]["prepared_input"]
+
+
+def test_generate_natal_chart_does_not_trigger_background_baseline_refresh() -> None:
+    _cleanup_tables()
+    _seed_reference_data()
+    place_id = _seed_resolved_place()
+    access_token = _register_and_get_access_token()
+    put_birth = client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
+        },
+    )
+    assert put_birth.status_code == 200
+
+    with patch("starlette.background.BackgroundTasks.add_task") as mock_add_task:
+        response = client.post(
+            "/v1/users/me/natal-chart",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={"reference_version": "1.0.0", "accurate": True},
+        )
+
+    assert response.status_code == 200
+    mock_add_task.assert_not_called()
 
 
 def test_get_latest_natal_chart_success() -> None:

@@ -138,3 +138,10 @@ Implementation is now architecture-hardened. The navigation refactor ensures tha
 - Tests : **137 / 137 passent** (BirthProfilePage : 16 → 18 tests avec AC4 natal_engine_unavailable + AC5 network génération)
 - Lint TypeScript : **0 erreur**
 - Tous les AC satisfaits (AC4 natal_engine_unavailable désormais testé, AC5 network failure génération désormais testé)
+
+## Addendum 2026-04-05
+
+- Le flux backend `POST /v1/users/me/natal-chart` a été durci pour ne plus déclencher immédiatement un refresh de baseline utilisateur en arrière-plan.
+- Objectif : éviter qu'un recalcul 365 jours ne pollue le parcours de génération du thème natal avec une rafale de logs `transit_signal_built` / `intraday_activation_built` / `impulse_signal_built` perçue comme une boucle.
+- Le refresh de baseline reste pris en charge hors du parcours utilisateur direct par les mécanismes dédiés.
+- Non-régression ajoutée côté intégration backend pour vérifier qu'aucune tâche `BackgroundTasks.add_task(...)` n'est planifiée pendant la génération du thème natal.

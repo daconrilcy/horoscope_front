@@ -40,7 +40,7 @@ class LLMNarrator:
     TIMEOUT_SECONDS = 60.0
     DEFAULT_MAX_COMPLETION_TOKENS = PROMPT_CATALOG["daily_prediction"].max_tokens
     MIN_DAILY_SYNTHESIS_SENTENCES = 10
-    MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 7
+    MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 6
     MAX_NARRATION_ATTEMPTS = 2
 
     async def narrate(
@@ -217,7 +217,7 @@ class LLMNarrator:
     ) -> str:
         if attempt <= 1:
             return base_prompt
-        target_range = "7 à 8 phrases" if variant_code == "summary_only" else "10 à 12 phrases"
+        target_range = "6 à 8 phrases" if variant_code == "summary_only" else "10 à 12 phrases"
         return (
             f"{base_prompt}\n\n"
             "CORRECTION OBLIGATOIRE : lors de la tentative précédente, "

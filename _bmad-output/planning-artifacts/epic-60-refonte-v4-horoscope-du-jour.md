@@ -150,3 +150,4 @@ L'epic est terminé si :
 - ajout d'un garde backend de type single-flight dans `DailyPredictionService` pour éviter les recalculs multiples du moteur tant que le premier run n'est pas persisté ;
 - validation par test unitaire de non-régression : deux appels simultanés doivent déclencher un seul calcul moteur, puis réutiliser le snapshot persisté ;
 - la correction vise le symptôme observé sur la page horoscope V4 : rafale de recalculs `transit_signal_built` / `intraday_activation_built` / `impulse_signal_built` avant la première réponse HTTP.
+- recalibrage du variant free de la narration LLM : le résumé `day-climate-hero__summary` conserve une structure proche de la version Basic, mais cible désormais 6–8 phrases et une longueur comprise entre 50% et 67% de la version complète, avec un budget tokens rehaussé pour éviter un rendu trop simpliste.

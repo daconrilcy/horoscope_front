@@ -207,11 +207,12 @@ Validation finale produit :
 - correction complémentaire du parcours `/settings/subscription` : un utilisateur free exposé comme plan applicatif `free` mais sans profil Stripe est désormais routé vers un Checkout Stripe initial, et non plus vers le Customer Portal.
 - différenciation runtime durcie entre horoscope `free` et `basic/premium` :
   - `summary_only` utilise désormais le prompt/budget tokens du variant free ;
-  - la synthèse affichée dans `DayClimateHero` pour free est raccourcie à 7–8 phrases, soit environ 30% plus courte que la version complète à 10–12 phrases ;
+  - la synthèse affichée dans `DayClimateHero` pour free reste alignée sur la qualité éditoriale de la version Basic, mais vise désormais 6–8 phrases et une longueur globale comprise entre 50% et 67% de la version complète ;
   - des tests backend verrouillent ce contrat de longueur et de budget.
 - correction complémentaire du flux Basic sur `/natal` : une fois le quota d'interprétation complète consommé, l'interface n'autorise plus de nouvelle génération et remplace le bouton inactif par un CTA explicite vers Premium pour obtenir davantage de quota.
 - correction complémentaire du quota chat Basic : un premier message dont le coût réel dépasse le budget journalier en tokens ne provoque plus un rollback incohérent (`0 utilisé` mais `quota dépassé`) ; le compteur est désormais saturé à la limite puis l'échange suivant est bloqué normalement.
 - correction complémentaire du comptage LLM natal : les tokens consommés par les interprétations natales restent journalisés par utilisateur pour l'observabilité, mais ne sont plus déduits du quota `astrologer_chat`.
+- découplage du flux `POST /v1/users/me/natal-chart` et du refresh de baseline utilisateur : la génération du thème natal n'enchaîne plus un recalcul massif de 365 jours en arrière-plan, ce qui supprime la rafale de logs perçue comme une boucle lors du parcours utilisateur.
 
 ---
 
