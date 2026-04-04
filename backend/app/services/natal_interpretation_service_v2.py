@@ -141,6 +141,21 @@ def _normalize_free_short_summary(summary: str) -> str:
     return normalized
 
 
+def _normalize_free_short_title(title: str, summary: str) -> str:
+    normalized = _normalize_free_short_summary(title)
+    normalized = normalized.strip(" .")
+    if not normalized:
+        fallback = _normalize_free_short_summary(summary).split(".")[0].strip()
+        normalized = fallback.strip(" .")
+    if not normalized:
+        return "Votre thème révèle un équilibre singulier entre sensibilité et élan personnel"
+    if normalized.lower() == "resume":
+        normalized = "Votre thème révèle un équilibre singulier entre sensibilité et élan personnel"
+    if not re.search(r"[.!?]$", normalized):
+        normalized = f"{normalized}."
+    return normalized
+
+
 class NatalInterpretationServiceV2:
     """
     Service for natal interpretation using LLM Gateway V2.
@@ -604,7 +619,7 @@ class NatalInterpretationServiceV2:
     ) -> NatalInterpretationResponse:
         """
         Génère une interprétation restreinte pour les utilisateurs free.
-        Appelle un prompt unique 'natal_long_free' qui produit summary + accordion_titles.
+        Appelle un prompt unique 'natal_long_free' qui produit title + summary + accordion_titles.
         """
         use_case_key = "natal_long_free"
 
@@ -647,6 +662,10 @@ class NatalInterpretationServiceV2:
         ]
 
         interpretation = AstroFreeResponseV1(
+            title=_normalize_free_short_title(
+                str(structured.get("title", "")),
+                str(structured.get("summary", "")),
+            ),
             summary=_normalize_free_short_summary(structured.get("summary", "")),
             sections=free_sections,
             disclaimers=disclaimers,

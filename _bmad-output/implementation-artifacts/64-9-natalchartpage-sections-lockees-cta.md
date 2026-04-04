@@ -180,6 +180,10 @@ Ces deux éléments doivent être rendus **avant ou après la boucle de sections
 - `NatalInterpretation.tsx` : ajout de `isLockedFree?: boolean` à `Props`, passé via `InterpretationContent` → `SectionAccordion`. Dans `SectionAccordion`, quand `isLockedFree`, chaque section affiche le titre via `.ni-accordion-header--locked` + `LockedSection` avec faux contenu long flouté. CTA `UpgradeCTA` présent sur chaque section et routé vers `/settings/subscription`. EvidenceTags et disclaimer hors de la logique de verrouillage (toujours rendus par `InterpretationContent`). Summary toujours rendu (hors accordion).
 - `NatalChartPage.tsx` : `isLockedFree = natalAccess?.variant_code === "free_short"` via `useFeatureAccess("natal_chart_long")`, passé à `NatalInterpretationSection`.
 - Tests : `vi.mock("../hooks/useEntitlementSnapshot", ...)` ajouté. 3 tests dans describe "Story 64.9": AC2/AC3 (sections lockées), AC1 (summary visible), AC4/AC5 (basic déverrouillé). 64/64 tests passent.
+- Ajustement final UX free natal :
+  - le cadre résumé n'affiche plus le label générique `Résumé` ;
+  - le titre visible dans la carte est maintenant une phrase de synthèse issue du payload free-short ;
+  - le backend `natal_long_free` génère désormais `title + summary + accordion_titles` pour aligner le rendu avec la maquette produit.
 
 ### Post-Completion Hardening
 
@@ -191,3 +195,4 @@ Ces deux éléments doivent être rendus **avant ou après la boucle de sections
   - un `UpgradeCTA` direct vers l'abonnement Basic.
 - Le badge `ni-level-badge` du flux free natal n'affiche plus `Complet` mais un badge de résumé pour éviter une promesse trompeuse.
 - Backend `natal_interpretation_service_v2` durci pour réutiliser/mettre à jour la ligne `free_short` existante et éviter les erreurs `UNIQUE constraint failed` lors des clics répétés.
+- Le cadre résumé free natal reprend une hiérarchie visuelle homogène avec les autres cartes, avec une accroche synthétique générée dans l'en-tête au lieu d'un titre statique.

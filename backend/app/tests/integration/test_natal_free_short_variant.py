@@ -200,6 +200,7 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
         )
         mock_usage = UsageInfo(input_tokens=10, output_tokens=10, total_tokens=20)
         mock_output = {
+            "title": "Votre thème révèle une intensité intuitive qui cherche l'équilibre.",
             "summary": "Resume free short",
             "accordion_titles": ["Section 1", "Section 2"],
         }
@@ -230,6 +231,10 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
             assert response.status_code == 200
             data = response.json()["data"]
             assert data["use_case"] == "natal_long_free"
+            assert (
+                data["interpretation"]["title"]
+                == "Votre thème révèle une intensité intuitive qui cherche l'équilibre."
+            )
             assert data["interpretation"]["summary"] == "Resume free short"
 
             sections = data["interpretation"]["sections"]

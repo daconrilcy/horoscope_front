@@ -113,8 +113,12 @@ def _make_free_short_gateway_result() -> GatewayResult:
         use_case="natal_long_free",
         request_id="req-free",
         trace_id="trace-free",
-        raw_output='{"summary":"Resume free","accordion_titles":["Section 1","Section 2"]}',
+        raw_output=(
+            '{"title":"Votre thème révèle une sensibilité vive qui cherche l harmonie.",'
+            '"summary":"Resume free","accordion_titles":["Section 1","Section 2"]}'
+        ),
         structured_output={
+            "title": "Votre thème révèle une sensibilité vive qui cherche l harmonie.",
             "summary": "Resume free",
             "accordion_titles": ["Section 1", "Section 2"],
         },
@@ -611,6 +615,10 @@ class TestNatalInterpretationServiceV2FreeShort:
         assert resp.data.use_case == "natal_long_free"
         assert resp.data.meta.prompt_version_id == "hardcoded-v1"
         assert mock_model.call_args.kwargs["prompt_version_id"] is None
+        assert (
+            resp.data.interpretation.title
+            == "Votre thème révèle une sensibilité vive qui cherche l harmonie."
+        )
 
     @pytest.mark.asyncio
     async def test_free_short_updates_existing_row_instead_of_inserting_duplicate(self):
@@ -667,3 +675,6 @@ class TestNatalInterpretationServiceV2FreeShort:
         assert existing.prompt_version_id is None
         assert existing.use_case == "natal_long_free"
         assert existing.was_fallback is False
+        assert existing.interpretation_payload["title"] == (
+            "Votre thème révèle une sensibilité vive qui cherche l harmonie."
+        )

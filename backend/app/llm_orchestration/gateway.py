@@ -71,6 +71,8 @@ USE_CASE_STUBS = {
             "strictement a partir des donnees techniques suivantes :\n"
             "{{chart_json}}\n\n"
             "Retourne uniquement un JSON valide avec exactement :\n"
+            '- "title" : une phrase courte et fluide qui synthétise le profil natal '
+            "dans un style éditorial, rédigée au vouvoiement, sans deux-points ni guillemets.\n"
             '- "summary" : un portrait natal en 5 a 7 phrases fluides, redige au vouvoiement, '
             "avec un peu plus de matiere qu'un simple resume.\n"
             '- "accordion_titles" : une liste de 2 a 4 titres courts, concrets et distincts '
@@ -78,6 +80,8 @@ USE_CASE_STUBS = {
             "Contraintes :\n"
             "- N'invente aucun placement, aspect ou maison absent des donnees.\n"
             "- Utilisez toujours 'vous' et 'votre', jamais 'il', 'elle' ou 'cette personne'.\n"
+            "- Le champ 'title' doit ressembler a une accroche premium concise, "
+            "pas a un label generique.\n"
             "- Donnez un portrait nuance, utile et incarné, sans jargon inutile.\n"
             "- Pas de promesse absolue, pas de fatalisme.\n"
             "- Aucun markdown, aucun texte hors JSON."

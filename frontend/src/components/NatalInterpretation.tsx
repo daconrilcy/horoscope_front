@@ -649,7 +649,7 @@ function InterpretationContent({
   const legalNoticeLines = t.legalNoticeLines;
 
   return (
-    <div className="ni-content">
+      <div className="ni-content">
       {degraded_mode && (
         <div className="ni-degraded-notice">
           <AlertCircle size={16} style={{ flexShrink: 0 }} />
@@ -657,12 +657,12 @@ function InterpretationContent({
         </div>
       )}
 
-      <div className="ni-content-card ni-content-card--summary">
-        <h3 className="ni-interpretation-title">{interpretation.title}</h3>
-        {meta.persona_name && (
-          <p className="ni-persona-text">
-            {t.completeBy} <strong>{meta.persona_name}</strong>
-          </p>
+        <div className="ni-content-card ni-content-card--summary">
+          <h3 className="ni-interpretation-title">{interpretation.title}</h3>
+          {meta.persona_name && (
+            <p className="ni-persona-text">
+              {t.completeBy} <strong>{meta.persona_name}</strong>
+            </p>
         )}
         <p className="ni-summary">{interpretation.summary}</p>
       </div>
@@ -675,8 +675,26 @@ function InterpretationContent({
       <SectionAccordion sections={sections} sectionsMap={t.sectionsMap} lang={lang} isLockedFree={isLockedFree} />
 
       <div className="ni-content-card ni-content-card--advice ni-advice-block">
+        <p className="ni-section-label ni-section-label--card">{t.adviceTitle}</p>
         <h4 className="ni-advice-title">{t.adviceTitle}</h4>
-        <AdviceList advice={advice} />
+        {isLockedFree ? (
+          <LockedSection
+            cta={
+              <UpgradeCTA
+                featureCode="natal_chart_long"
+                variant="button"
+                to="/settings/subscription"
+              />
+            }
+          >
+            <AdviceLockedContent
+              bullets={t.lockedAdviceBullets}
+              body={t.lockedAdviceBody}
+            />
+          </LockedSection>
+        ) : (
+          <AdviceList advice={advice} />
+        )}
       </div>
 
       <EvidenceTags evidence={evidence} title={t.evidenceTitle} t={t} />
@@ -796,6 +814,28 @@ function AdviceList({ advice }: { advice: string[] }) {
           <p className="ni-advice-text">{stripLeadingNumber(item)}</p>
         </div>
       ))}
+    </div>
+  );
+}
+
+function AdviceLockedContent({
+  bullets,
+  body,
+}: {
+  bullets: string[]
+  body: string
+}) {
+  return (
+    <div className="ni-advice-list ni-advice-list--locked">
+      {bullets.map((item, i) => (
+        <div key={i} className="ni-advice-item">
+          <div className="ni-advice-icon">
+            <Sparkles size={12} className="ni-advice-star" />
+          </div>
+          <p className="ni-advice-text">{item}</p>
+        </div>
+      ))}
+      <p className="ni-advice-text ni-advice-text--locked">{body}</p>
     </div>
   );
 }

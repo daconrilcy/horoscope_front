@@ -1515,7 +1515,7 @@ describe("NatalChartPage", () => {
         persisted_at: null,
       },
       interpretation: {
-        title: "Votre thème natal",
+        title: "Votre thème révèle une sensibilité vive portée par un vrai besoin d'harmonie.",
         summary: "Résumé de votre thème natal unique",
         sections: [
           { key: "overall", heading: "Vue d'ensemble", content: "Contenu vue d'ensemble" },
@@ -1557,7 +1557,8 @@ describe("NatalChartPage", () => {
       // Teaser flouté fixe affiché dans LockedSection
       expect(screen.getAllByText(/Votre vue d'ensemble astrologique complète/i).length).toBeGreaterThan(0)
       expect(screen.getAllByText(/Dans la version Basic, cette section déroule une lecture ample/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByRole("link", { name: /Débloquer l'interprétation complète/i }).length).toBe(2)
+      expect(screen.getAllByText(/Dans la version Basic, ce bloc transforme votre thème en conseils opérationnels/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByRole("link", { name: /Débloquer l'interprétation complète/i }).length).toBe(3)
       expect(screen.getAllByRole("link", { name: /Débloquer l'interprétation complète/i })[0]).toHaveAttribute(
         "href",
         "/settings/subscription",
@@ -1576,6 +1577,11 @@ describe("NatalChartPage", () => {
       )
 
       expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "Votre thème révèle une sensibilité vive portée par un vrai besoin d'harmonie.",
+        ),
+      ).toBeInTheDocument()
     })
 
     it("AC4/AC5 — utilisateur basic : sections rendues normalement sans verrouillage", () => {
@@ -1591,6 +1597,11 @@ describe("NatalChartPage", () => {
 
       // Summary visible
       expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "Votre thème révèle une sensibilité vive portée par un vrai besoin d'harmonie.",
+        ),
+      ).toBeInTheDocument()
 
       // Aucun teaser de locked section
       expect(screen.queryByText(/Votre vue d'ensemble astrologique complète/i)).not.toBeInTheDocument()

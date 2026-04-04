@@ -303,8 +303,15 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
     mock_client.execute = AsyncMock(
         return_value=create_mock_result(
             "natal_long_free",
-            '{"summary":"Resume","accordion_titles":["A","B"]}',
-            {"summary": "Resume", "accordion_titles": ["A", "B"]},
+            (
+                '{"title":"Votre thème révèle une intuition vibrante.",'
+                '"summary":"Resume","accordion_titles":["A","B"]}'
+            ),
+            {
+                "title": "Votre thème révèle une intuition vibrante.",
+                "summary": "Resume",
+                "accordion_titles": ["A", "B"],
+            },
         )
     )
 
@@ -327,7 +334,11 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
     resp_format = args["response_format"]
     assert resp_format is not None
     assert resp_format["json_schema"]["name"] == "natal-long-free-v1"
-    assert resp_format["json_schema"]["schema"]["required"] == ["summary", "accordion_titles"]
+    assert resp_format["json_schema"]["schema"]["required"] == [
+        "title",
+        "summary",
+        "accordion_titles",
+    ]
 
 
 def test_catalog_free_natal_schema_is_openai_responses_compatible():

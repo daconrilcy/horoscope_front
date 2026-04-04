@@ -15,6 +15,7 @@ async def test_catalog_free_natal_use_case_resolves_without_db_prompt(db):
 
     assert config.interaction_mode == "structured"
     assert config.user_question_policy == "none"
+    assert '"title"' in config.developer_prompt
     assert "accordion_titles" in config.developer_prompt
     assert "chart_json" in config.required_prompt_placeholders
 

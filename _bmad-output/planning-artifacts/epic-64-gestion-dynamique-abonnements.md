@@ -196,7 +196,8 @@ Finalisation UX complémentaire sur `64.9` :
 - correction du flux free natal pour empêcher toute relance de génération "complète" depuis les CTA verrouillés ;
 - alignement du rendu sur le cahier des charges produit : summary visible, titres issus de l'interprétation complète, badge de niveau non trompeur, sections détaillées affichées comme faux contenu fixe flouté ;
 - CTA d'upgrade affiché sur chaque section lockée du thème natal et routé directement vers l'abonnement Basic ;
-- hardening backend du variant `free_short` pour réutiliser la version persistée existante au lieu de provoquer un doublon SQL.
+- hardening backend du variant `free_short` pour réutiliser la version persistée existante au lieu de provoquer un doublon SQL ;
+- enrichissement du contrat `free_short` avec une vraie phrase de synthèse `title` générée côté backend, utilisée comme en-tête du cadre résumé à la place du label statique `Résumé`.
 
 ---
 

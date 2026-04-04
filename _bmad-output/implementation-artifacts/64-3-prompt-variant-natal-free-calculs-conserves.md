@@ -14,14 +14,14 @@ Cette story s'appuie sur le `NatalChartLongEntitlementGate`. Elle modifie le com
 
 **Comportement du variant `free_short` :**
 - Appelle le use-case LLM `natal_long_free`.
-- Retourne uniquement un résumé global du thème natal et des titres de sections courts.
+- Retourne une phrase de synthèse (`title`), un résumé global du thème natal et des titres de sections courts.
 - Conserve les calculs astro complets en arrière-plan.
 
 ## Acceptance Criteria
 
 - [x] **AC1 — Activation du gate pour le plan free** : `variant_code="free_short"` est retourné par le gate pour les utilisateurs free.
 - [x] **AC2 — Catalogue des prompts mis à jour** : ajout de `natal_long_free`.
-- [x] **AC3 — Schéma de sortie variant "free_short"** : `summary` + `accordion_titles`.
+- [x] **AC3 — Schéma de sortie variant "free_short"** : `title` + `summary` + `accordion_titles`.
 - [x] **AC4 — Orchestration dans `NatalInterpretationServiceV2`** : support de la redirection vers le prompt restreint.
 - [x] **AC5 — Persistence du variant** : stockage du `variant_code` dans la table `user_natal_interpretations`.
 - [x] **AC6 — Testabilité intégrative** : un utilisateur free peut générer un thème "complet" (en version restreinte).
@@ -66,4 +66,5 @@ Cette story s'appuie sur le `NatalChartLongEntitlementGate`. Elle modifie le com
 - Validation par test d'intégration avec mock du gateway LLM.
 - Stabilisation post-intégration :
   - normalisation du payload persisté `free_short` pour qu'il reste relu comme une interprétation logique `complete` côté API ;
-  - mapping fiable des titres de sections depuis `accordion_titles` pour conserver le contrat frontend attendu.
+  - mapping fiable des titres de sections depuis `accordion_titles` pour conserver le contrat frontend attendu ;
+  - ajout d'un `title` synthétique généré par le prompt free afin d'alimenter directement l'en-tête du cadre résumé côté frontend.

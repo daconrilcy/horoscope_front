@@ -41,8 +41,9 @@ HOROSCOPE_FREE_OUTPUT_SCHEMA = {
 NATAL_FREE_SHORT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["summary", "accordion_titles"],
+    "required": ["title", "summary", "accordion_titles"],
     "properties": {
+        "title": {"type": "string"},
         "summary": {"type": "string"},
         "accordion_titles": {"type": "array", "items": {"type": "string"}},
     },

@@ -441,6 +441,18 @@
   gap: 10px;
 }
 
+.ni-interpretation-title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--premium-text-strong);
+}
+
+.ni-section-label--card {
+  margin-bottom: 2px;
+}
+
 .ni-summary {
   font-size: 15px;
   line-height: 1.75;
@@ -518,13 +530,18 @@
 .ni-advice-title {
   font-size: 18px;
   color: var(--premium-text-strong);
-  margin: 0 0 22px;
+  margin: 0 0 16px;
 }
 
 .ni-advice-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.ni-advice-list--locked {
+  min-height: 220px;
+  padding: 12px 2px 4px;
 }
 
 .ni-advice-item {
@@ -555,6 +572,11 @@
   line-height: 1.6;
   color: var(--premium-text-main);
   margin: 0;
+}
+
+.ni-advice-text--locked {
+  margin-top: 4px;
+  line-height: 1.8;
 }
 
 /* Skeleton Loading */
@@ -1011,7 +1033,7 @@
   align-items: flex-start;
   justify-content: flex-start;
   gap: 12px;
-  min-height: 164px;
+  min-height: 236px;
   padding: 20px 22px;
   text-align: left;
   color: var(--text-2);
