@@ -13,8 +13,9 @@ import {
 } from "../api/natalChart";
 import { useAstrologers, type Astrologer } from "../api/astrologers";
 import { AstrologerGrid } from "../features/astrologers";
-import { natalChartTranslations } from "../i18n/natalChart";
+import { natalChartTranslations, getNatalSectionTeaser } from "../i18n/natalChart";
 import { type AstrologyLang } from "../i18n/astrology";
+import { LockedSection, UpgradeCTA } from "@ui";
 import {
   ChevronDown,
   ChevronUp,
@@ -39,6 +40,7 @@ interface Props {
   fallbackEvidence?: string[];
   initialPersonaId?: string | null;
   initialInterpretationId?: number | null;
+  isLockedFree?: boolean;
   onActiveInterpretationChange?: (payload: {
     level: "short" | "complete";
     personaName: string | null;
@@ -58,6 +60,7 @@ export function NatalInterpretationSection({
   fallbackEvidence,
   initialPersonaId = null,
   initialInterpretationId = null,
+  isLockedFree = false,
   onActiveInterpretationChange,
   actionRequest,
 }: Props) {
@@ -341,7 +344,7 @@ export function NatalInterpretationSection({
           <InterpretationError t={t} onRetry={() => refetch()} />
         ) : data ? (
           <>
-            <InterpretationContent data={data} lang={lang} fallbackEvidence={fallbackEvidence} />
+            <InterpretationContent data={data} lang={lang} fallbackEvidence={fallbackEvidence} isLockedFree={isLockedFree} />
 
             {isUpsellOpen && (
               <PersonaSelector
@@ -602,10 +605,12 @@ function InterpretationContent({
   data,
   lang,
   fallbackEvidence,
+  isLockedFree,
 }: {
   data: NatalInterpretationResult
   lang: AstrologyLang
   fallbackEvidence?: string[]
+  isLockedFree?: boolean
 }) {
   const t = natalChartTranslations[lang].interpretation;
   const { interpretation, meta, degraded_mode } = data;
@@ -642,7 +647,7 @@ function InterpretationContent({
         <HighlightsChips highlights={highlights} />
       </div>
 
-      <SectionAccordion sections={sections} sectionsMap={t.sectionsMap} />
+      <SectionAccordion sections={sections} sectionsMap={t.sectionsMap} lang={lang} isLockedFree={isLockedFree} />
 
       <div className="ni-content-card ni-content-card--advice ni-advice-block">
         <h4 className="ni-advice-title">{t.adviceTitle}</h4>
@@ -685,7 +690,7 @@ function HighlightsChips({ highlights }: { highlights: string[] }) {
   );
 }
 
-function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[], sectionsMap: Record<string, string> }) {
+function SectionAccordion({ sections, sectionsMap, lang, isLockedFree }: { sections: AstroSection[], sectionsMap: Record<string, string>, lang: AstrologyLang, isLockedFree?: boolean }) {
   const [openIds, setOpenIds] = useState<string[]>(sections[0] ? [`${sections[0].key}-0`] : []);
 
   const toggleSection = (sectionId: string) => {
@@ -703,6 +708,25 @@ function SectionAccordion({ sections, sectionsMap }: { sections: AstroSection[],
         const isOpen = openIds.includes(sectionId);
         const sectionTitle =
           section.heading?.trim() || sectionsMap[section.key] || section.key;
+
+        if (isLockedFree) {
+          return (
+            <div key={sectionId} className="ni-accordion-item">
+              <div className="ni-accordion-header ni-accordion-header--locked">
+                <span className="ni-accordion-title">{sectionTitle}</span>
+              </div>
+              <LockedSection
+                cta={index === 0 ? <UpgradeCTA featureCode="natal_chart_long" variant="button" /> : undefined}
+                label={getNatalSectionTeaser(section.key, lang)}
+              >
+                <div className="teaser-placeholder">
+                  <p>{getNatalSectionTeaser(section.key, lang)}</p>
+                </div>
+              </LockedSection>
+            </div>
+          );
+        }
+
         return (
           <div key={sectionId} className="ni-accordion-item">
             <button onClick={() => toggleSection(sectionId)} className="ni-accordion-header">

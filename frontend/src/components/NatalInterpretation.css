@@ -992,3 +992,27 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Story 64.9 — Locked sections (free plan) ── */
+
+.ni-accordion-header--locked {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.teaser-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: var(--space-4, 1rem);
+  text-align: center;
+  color: var(--text-2);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-style: italic;
+}

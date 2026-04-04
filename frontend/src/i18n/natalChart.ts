@@ -777,3 +777,60 @@ export function getGuideTranslations(lang: AstrologyLang): NatalChartGuideTransl
     natalChartTranslations[lang]?.guide ?? natalChartTranslations[DEFAULT_ASTRO_LANG].guide
   )
 }
+
+export type NatalTeaserKey = 'overall' | 'career' | 'relationships' | 'inner_life' | 'daily_life' | 'strengths' | 'challenges' | 'event_context' | 'generic'
+
+export const NATAL_SECTION_TEASERS: Record<NatalTeaserKey, { fr: string; en: string; es: string }> = {
+  overall: {
+    fr: "Votre vue d'ensemble astrologique complète, révélant les grands axes de votre personnalité et de votre destinée...",
+    en: "Your complete astrological overview, revealing the major axes of your personality and destiny...",
+    es: "Tu visión astrológica completa, revelando los grandes ejes de tu personalidad y destino...",
+  },
+  career: {
+    fr: "Vos potentiels de carrière et de vocation, lus à travers vos placements planétaires...",
+    en: "Your career and vocation potential, read through your planetary placements...",
+    es: "Tu potencial de carrera y vocación, leído a través de tus posiciones planetarias...",
+  },
+  relationships: {
+    fr: "Votre style relationnel et amoureux, révélé par Vénus et votre Maison VII...",
+    en: "Your relational and romantic style, revealed by Venus and your House VII...",
+    es: "Tu estilo relacional y amoroso, revelado por Venus y tu Casa VII...",
+  },
+  inner_life: {
+    fr: "Les profondeurs de votre vie intérieure, vos ressources cachées et votre monde émotionnel...",
+    en: "The depths of your inner life, your hidden resources and emotional world...",
+    es: "Las profundidades de tu vida interior, tus recursos ocultos y mundo emocional...",
+  },
+  daily_life: {
+    fr: "Comment votre thème natal influence votre quotidien, vos routines et votre santé...",
+    en: "How your natal chart influences your daily life, routines and health...",
+    es: "Cómo tu tema natal influye en tu vida cotidiana, rutinas y salud...",
+  },
+  strengths: {
+    fr: "Vos forces astrales majeures et les talents naturels inscrits dans votre thème...",
+    en: "Your major astral strengths and natural talents inscribed in your chart...",
+    es: "Tus principales fortalezas astrales y talentos naturales inscritos en tu tema...",
+  },
+  challenges: {
+    fr: "Les défis et axes de croissance révélés par les tensions de votre thème natal...",
+    en: "The challenges and growth areas revealed by the tensions in your natal chart...",
+    es: "Los desafíos y áreas de crecimiento revelados por las tensiones de tu tema natal...",
+  },
+  event_context: {
+    fr: "Le contexte événementiel et les cycles planétaires qui marquent votre période actuelle...",
+    en: "The event context and planetary cycles marking your current period...",
+    es: "El contexto de eventos y ciclos planetarios que marcan tu período actual...",
+  },
+  generic: {
+    fr: "Section disponible avec l'abonnement Basic — analyse approfondie de votre thème natal.",
+    en: "Section available with Basic subscription — in-depth analysis of your natal chart.",
+    es: "Sección disponible con la suscripción Basic — análisis profundo de tu tema natal.",
+  },
+}
+
+export function getNatalSectionTeaser(key: string, lang: AstrologyLang): string {
+  const entry = NATAL_SECTION_TEASERS[key as NatalTeaserKey] ?? NATAL_SECTION_TEASERS.generic
+  if (lang === 'fr') return entry.fr
+  if (lang === 'es') return entry.es
+  return entry.en
+}

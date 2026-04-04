@@ -10,6 +10,7 @@ import { natalChartTranslations } from "../i18n/natalChart"
 import { logSupportRequestId } from "../utils/constants"
 import { formatDateTime } from "../utils/formatDate"
 import { useAccessTokenSnapshot } from "../utils/authToken"
+import { useFeatureAccess } from "../hooks/useEntitlementSnapshot"
 import { NatalChartGuide } from "../components/NatalChartGuide"
 import { NatalInterpretationSection } from "../components/NatalInterpretation"
 import { getZodiacIcon } from "../components/zodiacSignIconMap"
@@ -74,6 +75,8 @@ export function NatalChartPage() {
 
   const error = latestChart.error
   const apiError = error instanceof ApiError ? error : null
+  const natalAccess = useFeatureAccess("natal_chart_long")
+  const isLockedFree = natalAccess?.variant_code === "free_short"
 
   async function handleGenerateChart() {
     if (!accessToken || isGenerating) return
@@ -464,13 +467,14 @@ export function NatalChartPage() {
       <NatalChartGuide lang={lang} missingBirthTime={missingBirthTime} />
       
       <div className="natal-interpretation-container">
-        <NatalInterpretationSection 
-          chartLoaded={Boolean(chart)} 
+        <NatalInterpretationSection
+          chartLoaded={Boolean(chart)}
           chartId={chart.chart_id}
           lang={lang}
           fallbackEvidence={fallbackEvidence}
           initialPersonaId={initialPersonaId}
           initialInterpretationId={initialInterpretationId}
+          isLockedFree={isLockedFree}
           onActiveInterpretationChange={setActiveInterpretation}
           actionRequest={headerActionRequest}
         />

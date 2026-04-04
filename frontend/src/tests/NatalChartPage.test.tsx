@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NatalChartPage } from "../pages/NatalChartPage"
 import { NatalChartGuide } from "../components/NatalChartGuide"
 import { getGuideTranslations, natalChartTranslations } from "../i18n/natalChart"
+import { useFeatureAccess } from "../hooks/useEntitlementSnapshot"
 /**
  * ApiError est importé pour créer des instances dans les tests (new ApiError(...)).
  * vi.mock remplace la classe réelle par notre mock défini ci-dessous.
@@ -47,6 +48,12 @@ vi.mock("../utils/authToken", () => ({
   useAccessTokenSnapshot: () => "mock-token",
 }))
 
+vi.mock("../hooks/useEntitlementSnapshot", () => ({
+  useFeatureAccess: vi.fn().mockReturnValue(undefined),
+  useUpgradeHint: vi.fn().mockReturnValue(undefined),
+  useEntitlementsSnapshot: vi.fn().mockReturnValue({ data: null }),
+}))
+
 const mockUseLatestNatalChart: ReturnType<typeof vi.mocked<typeof useLatestNatalChart>> = vi.mocked(useLatestNatalChart)
 const mockUseNatalInterpretation: ReturnType<typeof vi.mocked<typeof useNatalInterpretation>> = vi.mocked(useNatalInterpretation)
 const mockUseNatalInterpretationsList: ReturnType<typeof vi.mocked<typeof useNatalInterpretationsList>> =
@@ -55,6 +62,7 @@ const mockUseNatalPdfTemplates: ReturnType<typeof vi.mocked<typeof useNatalPdfTe
   vi.mocked(useNatalPdfTemplates)
 const mockUseNatalInterpretationById: ReturnType<typeof vi.mocked<typeof useNatalInterpretationById>> =
   vi.mocked(useNatalInterpretationById)
+const mockUseFeatureAccess: ReturnType<typeof vi.mocked<typeof useFeatureAccess>> = vi.mocked(useFeatureAccess)
 
 const TEST_REFERENCE_VERSION = "1.0"
 const TEST_RULESET_VERSION = "1.0"
@@ -1428,6 +1436,95 @@ describe("NatalChartPage", () => {
       // Le titre du guide doit être en anglais
       expect(screen.getByText("How to read your natal chart")).toBeInTheDocument()
       expect(screen.queryByText("Comment lire ton thème natal")).not.toBeInTheDocument()
+    })
+  })
+
+  describe("Story 64.9 — sections lockées free + CTA upgrade", () => {
+    const INTERPRETATION_DATA = {
+      chart_id: "abc",
+      use_case: "short",
+      degraded_mode: null,
+      meta: {
+        id: 1,
+        level: "short" as const,
+        use_case: "short",
+        persona_id: null,
+        persona_name: null,
+        prompt_version_id: null,
+        validation_status: "valid",
+        repair_attempted: false,
+        fallback_triggered: false,
+        was_fallback: false,
+        latency_ms: null,
+        request_id: null,
+        persisted_at: null,
+      },
+      interpretation: {
+        title: "Votre thème natal",
+        summary: "Résumé de votre thème natal unique",
+        sections: [
+          { key: "overall", heading: "Vue d'ensemble", content: "Contenu vue d'ensemble" },
+          { key: "career", heading: "Carrière et vocation", content: "Contenu carrière" },
+        ],
+        highlights: ["Point clé 1"],
+        advice: ["Conseil 1"],
+        evidence: ["SUN_ARIES_H1"],
+      },
+    }
+
+    it("AC2/AC3 — utilisateur free : sections thématiques wrappées dans LockedSection", () => {
+      mockUseFeatureAccess.mockReturnValue({ variant_code: "free_short", granted: true } as ReturnType<typeof useFeatureAccess>)
+      mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
+      mockUseNatalInterpretation.mockReturnValue({ isLoading: false, isError: false, data: INTERPRETATION_DATA, refetch: vi.fn() })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+
+      // Titres de sections toujours visibles (ni-accordion-title)
+      expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
+      expect(screen.getByText("Carrière et vocation")).toBeInTheDocument()
+
+      // Contenu réel des sections non visible
+      expect(screen.queryByText("Contenu vue d'ensemble")).not.toBeInTheDocument()
+      expect(screen.queryByText("Contenu carrière")).not.toBeInTheDocument()
+
+      // Teaser affiché dans LockedSection
+      expect(screen.getAllByText(/Votre vue d'ensemble astrologique complète/i).length).toBeGreaterThan(0)
+    })
+
+    it("AC1 — utilisateur free : summary affiché normalement", () => {
+      mockUseFeatureAccess.mockReturnValue({ variant_code: "free_short", granted: true } as ReturnType<typeof useFeatureAccess>)
+      mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
+      mockUseNatalInterpretation.mockReturnValue({ isLoading: false, isError: false, data: INTERPRETATION_DATA, refetch: vi.fn() })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+
+      expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
+    })
+
+    it("AC4/AC5 — utilisateur basic : sections rendues normalement sans verrouillage", () => {
+      mockUseFeatureAccess.mockReturnValue({ variant_code: "full", granted: true } as ReturnType<typeof useFeatureAccess>)
+      mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
+      mockUseNatalInterpretation.mockReturnValue({ isLoading: false, isError: false, data: INTERPRETATION_DATA, refetch: vi.fn() })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+
+      // Summary visible
+      expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
+
+      // Aucun teaser de locked section
+      expect(screen.queryByText(/Votre vue d'ensemble astrologique complète/i)).not.toBeInTheDocument()
     })
   })
 })

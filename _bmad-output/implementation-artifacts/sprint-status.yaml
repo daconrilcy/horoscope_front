@@ -546,7 +546,7 @@ development_status:
   63-15-scheduler-sequence-emails-j1-j7: done
   # Transverse (en parallèle du LOT 1)
   63-17-accessibilite-transverse-landing: done
-  epic-64: in-progress
+  epic-64: done
   64-1-feature-horoscope-daily-gate-variants: done
   64-2-prompts-variants-horoscope-config-llm-env: done
   64-3-prompt-variant-natal-free-calculs-conserves: done
@@ -555,4 +555,4 @@ development_status:
   64-6-composants-UpgradeCTA-LockedSection: done
   64-7-chatpage-quota-banner-cta-upgrade: done
   64-8-dailyhoroscopepage-sections-lockees-cta: done
-  64-9-natalchartpage-sections-lockees-cta: todo
+  64-9-natalchartpage-sections-lockees-cta: done

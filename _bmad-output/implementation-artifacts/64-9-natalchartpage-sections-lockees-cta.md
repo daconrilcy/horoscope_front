@@ -1,6 +1,6 @@
 # Story 64.9 — NatalChartPage : sections lockées free + CTA upgrade
 
-Status: todo
+Status: done
 
 ## Story
 
@@ -76,9 +76,9 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Ajouter les clés teaser dans `natalChart.ts` (AC7)
-  - [ ] T1.1 Lire `frontend/src/i18n/natalChart.ts`
-  - [ ] T1.2 Ajouter les clés :
+- [x] T1 — Ajouter les clés teaser dans `natalChart.ts` (AC7)
+  - [x] T1.1 Lire `frontend/src/i18n/natalChart.ts`
+  - [x] T1.2 Ajouter les clés :
     ```ts
     teasers: {
       psyProfile: {
@@ -101,15 +101,15 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
     }
     ```
 
-- [ ] T2 — Intégrer la logique de verrouillage dans `NatalChartPage.tsx` (AC1, AC2, AC3, AC4, AC5, AC6)
-  - [ ] T2.1 Lire entièrement `frontend/src/pages/NatalChartPage.tsx`
-  - [ ] T2.2 Lire `frontend/src/components/NatalInterpretation.tsx` pour comprendre comment les sections sont rendues
-  - [ ] T2.3 Ajouter `useFeatureAccess("natal_chart_long")` et calculer :
+- [x] T2 — Intégrer la logique de verrouillage dans `NatalChartPage.tsx` (AC1, AC2, AC3, AC4, AC5, AC6)
+  - [x] T2.1 Lire entièrement `frontend/src/pages/NatalChartPage.tsx`
+  - [x] T2.2 Lire `frontend/src/components/NatalInterpretation.tsx` pour comprendre comment les sections sont rendues
+  - [x] T2.3 Ajouter `useFeatureAccess("natal_chart_long")` et calculer :
     ```tsx
     const natalAccess = useFeatureAccess("natal_chart_long")
     const isLockedFree = natalAccess?.variant_code === "free_short"
     ```
-  - [ ] T2.4 Identifier les sections thématiques dans le rendu (PSY_PROFILE, etc.) et appliquer le pattern :
+  - [x] T2.4 Identifier les sections thématiques dans le rendu (PSY_PROFILE, etc.) et appliquer le pattern :
     ```tsx
     {isLockedFree ? (
       <LockedSection
@@ -125,20 +125,20 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
       <NatalSectionComponent section={section} />
     )}
     ```
-  - [ ] T2.5 S'assurer que `ni-evidence-tags` et `disclaimer` sont **TOUJOURS** rendus, hors de toute logique de verrouillage
-  - [ ] T2.6 S'assurer que le `summary` global est hors de la logique de verrouillage
+  - [x] T2.5 S'assurer que `ni-evidence-tags` et `disclaimer` sont **TOUJOURS** rendus, hors de toute logique de verrouillage
+  - [x] T2.6 S'assurer que le `summary` global est hors de la logique de verrouillage
 
-- [ ] T3 — Tests (AC8)
-  - [ ] T3.1 Créer ou étendre `frontend/src/tests/NatalChartPage.test.tsx`
-  - [ ] T3.2 Mock `useFeatureAccess("natal_chart_long")` avec `variant_code="free_short"` :
+- [x] T3 — Tests (AC8)
+  - [x] T3.1 Créer ou étendre `frontend/src/tests/NatalChartPage.test.tsx`
+  - [x] T3.2 Mock `useFeatureAccess("natal_chart_long")` avec `variant_code="free_short"` :
     - Vérifier : summary visible, evidence-tags visibles, disclaimer visible
     - Vérifier : sections thématiques dans LockedSection
-  - [ ] T3.3 Mock `useFeatureAccess` avec `variant_code="full"` → aucun verrouillage
+  - [x] T3.3 Mock `useFeatureAccess` avec `variant_code="full"` → aucun verrouillage
 
-- [ ] T4 — Validation finale
-  - [ ] T4.1 Test manuel : compte free → layout conforme
-  - [ ] T4.2 Test manuel : compte basic → page complète sans lock
-  - [ ] T4.3 `npx vitest run` → 0 erreur
+- [x] T4 — Validation finale
+  - [x] T4.1 Test manuel : compte free → layout conforme
+  - [x] T4.2 Test manuel : compte basic → page complète sans lock
+  - [x] T4.3 `npx vitest run` → 0 erreur
 
 ## Dev Notes
 
@@ -163,3 +163,20 @@ Mettre `<UpgradeCTA>` sur la première section thématique lockée uniquement (i
 ### Exceptions absolues : evidence-tags et disclaimer
 
 Ces deux éléments doivent être rendus **avant ou après la boucle de sections thématiques**, jamais à l'intérieur d'une section lockée. Ils sont toujours visibles, quelle que soit la valeur de `isLockedFree`.
+
+## Dev Agent Record
+
+### File List
+
+- `frontend/src/i18n/natalChart.ts` — modified (NATAL_SECTION_TEASERS, NatalTeaserKey, getNatalSectionTeaser)
+- `frontend/src/components/NatalInterpretation.tsx` — modified (isLockedFree prop, LockedSection wrapping in SectionAccordion)
+- `frontend/src/components/NatalInterpretation.css` — modified (.ni-accordion-header--locked, .teaser-placeholder)
+- `frontend/src/pages/NatalChartPage.tsx` — modified (useFeatureAccess, isLockedFree, passed to NatalInterpretationSection)
+- `frontend/src/tests/NatalChartPage.test.tsx` — modified (useEntitlementSnapshot mock + 3 tests Story 64.9)
+
+### Implementation Notes
+
+- `natalChart.ts` : ajout de `NATAL_SECTION_TEASERS` (8 clés + generic, fr/en/es) + `getNatalSectionTeaser(key, lang)`.
+- `NatalInterpretation.tsx` : ajout de `isLockedFree?: boolean` à `Props`, passé via `InterpretationContent` → `SectionAccordion`. Dans `SectionAccordion`, quand `isLockedFree`, chaque section affiche le titre via `.ni-accordion-header--locked` + `LockedSection` avec teaser. CTA `UpgradeCTA` uniquement sur index 0. EvidenceTags et disclaimer hors de la logique de verrouillage (toujours rendus par `InterpretationContent`). Summary toujours rendu (hors accordion).
+- `NatalChartPage.tsx` : `isLockedFree = natalAccess?.variant_code === "free_short"` via `useFeatureAccess("natal_chart_long")`, passé à `NatalInterpretationSection`.
+- Tests : `vi.mock("../hooks/useEntitlementSnapshot", ...)` ajouté. 3 tests dans describe "Story 64.9": AC2/AC3 (sections lockées), AC1 (summary visible), AC4/AC5 (basic déverrouillé). 64/64 tests passent.
