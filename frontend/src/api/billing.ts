@@ -159,7 +159,7 @@ type ErrorEnvelope = {
   }
 }
 
-type EntitlementUsageState = {
+export type EntitlementUsageState = {
   quota_key: string
   quota_limit: number
   used: number
@@ -172,12 +172,22 @@ type EntitlementUsageState = {
   window_end: string | null
 }
 
-type FeatureEntitlementResponse = {
+export type FeatureEntitlementResponse = {
   feature_code: string
   granted: boolean
   reason_code: string
   access_mode: string | null
+  variant_code: string | null
   usage_states: EntitlementUsageState[]
+}
+
+export type UpgradeHint = {
+  feature_code: string
+  current_plan_code: string
+  target_plan_code: string
+  benefit_key: string
+  cta_variant: "banner" | "inline" | "modal"
+  priority: number
 }
 
 type EntitlementsMeResponse = {
@@ -185,6 +195,7 @@ type EntitlementsMeResponse = {
     plan_code: string
     billing_status: string
     features: FeatureEntitlementResponse[]
+    upgrade_hints: UpgradeHint[]
   }
 }
 
@@ -192,6 +203,7 @@ export type EntitlementsSnapshot = {
   plan_code: string
   billing_status: string
   features: FeatureEntitlementResponse[]
+  upgrade_hints: UpgradeHint[]
 }
 
 type TokenUsageApiResponse = {
@@ -289,7 +301,7 @@ async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus |
   return toChatEntitlementUsage(chatEntitlement)
 }
 
-async function fetchEntitlementsSnapshot(): Promise<EntitlementsSnapshot> {
+export async function fetchEntitlementsSnapshot(): Promise<EntitlementsSnapshot> {
   const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
@@ -349,17 +361,6 @@ export function useEntitlementsPlans() {
   return useQuery({
     queryKey: ["entitlements-plans"],
     queryFn: fetchEntitlementsPlans,
-  })
-}
-
-export function useEntitlementsSnapshot() {
-  return useQuery({
-    queryKey: ["entitlements-me"],
-    queryFn: fetchEntitlementsSnapshot,
-    retry: (failureCount, error) => {
-      if (error instanceof BillingApiError && error.status === 403) return false
-      return failureCount < 1
-    },
   })
 }
 

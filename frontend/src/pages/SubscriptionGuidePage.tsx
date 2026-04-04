@@ -7,9 +7,9 @@ import {
   type PlanFeature,
   type PlanFeatureQuota,
   useEntitlementsPlans,
-  useEntitlementsSnapshot,
   useBillingSubscription,
 } from "@api/billing"
+import { useEntitlementsSnapshot } from "@hooks/useEntitlementSnapshot"
 import { Button, SkeletonGroup, ErrorState, EmptyState } from "@ui"
 import "./HelpPage.css"
 
