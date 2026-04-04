@@ -141,3 +141,12 @@ L'epic est terminé si :
 - `frontend/src/pages/DailyHoroscopePage.tsx` — page principale
 - `frontend/src/types/dailyPrediction.ts` — types TypeScript actuels
 - `frontend/src/api/dailyPrediction.ts` — client API
+
+---
+
+## Ajustements Récents
+
+- durcissement du flux `/v1/predictions/daily` contre les appels concurrents pour un même utilisateur et une même journée ;
+- ajout d'un garde backend de type single-flight dans `DailyPredictionService` pour éviter les recalculs multiples du moteur tant que le premier run n'est pas persisté ;
+- validation par test unitaire de non-régression : deux appels simultanés doivent déclencher un seul calcul moteur, puis réutiliser le snapshot persisté ;
+- la correction vise le symptôme observé sur la page horoscope V4 : rafale de recalculs `transit_signal_built` / `intraday_activation_built` / `impulse_signal_built` avant la première réponse HTTP.

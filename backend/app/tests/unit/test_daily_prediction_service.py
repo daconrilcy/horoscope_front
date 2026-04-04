@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from threading import Event, Thread
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -628,3 +630,73 @@ def test_execute_and_persist_passes_runtime_engine_mode(
         request.engine_input,
         engine_mode=DailyEngineMode.DUAL,
     )
+
+
+def test_concurrent_compute_waits_and_reuses_existing_run(service):
+    resolved_request = SimpleNamespace(
+        user_id=1,
+        engine_input=MagicMock(),
+        resolved_date=date(2026, 3, 7),
+        reference_version_id=10,
+        ruleset_id=20,
+        ruleset_version="2.0.0",
+        reference_version="2.0.0",
+    )
+    persisted_snapshot = _build_mock_snapshot()
+    leader_started = Event()
+    allow_leader_to_finish = Event()
+    run_persisted = Event()
+
+    service.resolver.resolve = MagicMock(return_value=resolved_request)
+
+    def decide(_db, _resolved_request, _mode):
+        if run_persisted.is_set():
+            return SimpleNamespace(should_compute=False, existing_run=persisted_snapshot)
+        return SimpleNamespace(should_compute=True, existing_run=None)
+
+    service.reuse_policy.decide = MagicMock(side_effect=decide)
+    service.relative_scoring_service.enrich_snapshot = MagicMock(side_effect=lambda _db, run: run)
+
+    compute_result = MagicMock()
+    compute_result.bundle = MagicMock()
+    compute_result.bundle.core.turning_points = []
+
+    def run_with_timeout(*_args, **_kwargs):
+        leader_started.set()
+        assert allow_leader_to_finish.wait(timeout=1), "leader compute did not finish in time"
+        return compute_result
+
+    service.compute_runner.run_with_timeout = MagicMock(side_effect=run_with_timeout)
+
+    def save(*_args, **_kwargs):
+        run_persisted.set()
+        return MagicMock(run=persisted_snapshot, was_reused=False)
+
+    service.persistence_service.save = MagicMock(side_effect=save)
+
+    db_one = MagicMock(spec=Session)
+    db_two = MagicMock(spec=Session)
+    results: list[ServiceResult] = []
+    errors: list[Exception] = []
+
+    def invoke(db_session: Session) -> None:
+        try:
+            results.append(service.get_or_compute(user_id=1, db=db_session))
+        except Exception as exc:  # pragma: no cover - failure path for assertions
+            errors.append(exc)
+
+    first = Thread(target=invoke, args=(db_one,))
+    second = Thread(target=invoke, args=(db_two,))
+
+    first.start()
+    assert leader_started.wait(timeout=1), "leader compute did not start"
+    second.start()
+    allow_leader_to_finish.set()
+    first.join(timeout=1)
+    second.join(timeout=1)
+
+    assert not errors
+    assert len(results) == 2
+    assert service.compute_runner.run_with_timeout.call_count == 1
+    assert service.persistence_service.save.call_count == 1
+    assert sorted(result.was_reused for result in results) == [False, True]

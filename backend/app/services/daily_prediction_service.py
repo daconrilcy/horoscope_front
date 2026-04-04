@@ -4,6 +4,7 @@ import logging
 import time
 from dataclasses import dataclass
 from datetime import date
+from threading import Condition, Lock
 from typing import TYPE_CHECKING, Any
 
 from app.core.config import settings
@@ -29,6 +30,37 @@ if TYPE_CHECKING:
     from app.services.prediction_request_resolver import ResolvedPredictionRequest
 
 logger = logging.getLogger()
+
+
+class _PredictionSingleFlight:
+    """Process-local single-flight guard for daily prediction computations."""
+
+    def __init__(self) -> None:
+        self._mutex = Lock()
+        self._condition = Condition(self._mutex)
+        self._inflight_keys: set[tuple[object, ...]] = set()
+
+    def acquire(self, key: tuple[object, ...]) -> bool:
+        """
+        Returns True for the leader request that should compute.
+        Followers block until the leader releases, then return False.
+        """
+        with self._condition:
+            if key not in self._inflight_keys:
+                self._inflight_keys.add(key)
+                return True
+
+            while key in self._inflight_keys:
+                self._condition.wait()
+            return False
+
+    def release(self, key: tuple[object, ...]) -> None:
+        with self._condition:
+            self._inflight_keys.discard(key)
+            self._condition.notify_all()
+
+
+_prediction_single_flight = _PredictionSingleFlight()
 
 
 @dataclass(frozen=True)
@@ -121,21 +153,62 @@ class DailyPredictionService:
             # read_only miss
             return None
 
-        # 3. Mode force_recompute : cleanup if needed
-        if mode == ComputeMode.force_recompute:
-            old_run = DailyPredictionRepository(db).get_run(
+        single_flight_key = (
+            user_id,
+            resolved_request.resolved_date,
+            resolved_request.reference_version_id,
+            resolved_request.ruleset_id,
+            settings.daily_engine_mode.value,
+        )
+        single_flight_leader = _prediction_single_flight.acquire(single_flight_key)
+        if not single_flight_leader:
+            logger.info(
+                "prediction.compute_wait_reuse user_id=%s date=%s",
                 user_id,
-                resolved_request.resolved_date,
-                resolved_request.reference_version_id,
-                resolved_request.ruleset_id,
-                engine_mode=settings.daily_engine_mode.value,
+                resolved_request.resolved_date.isoformat(),
             )
-            if old_run:
-                db.delete(old_run)
-                db.flush()
+            reuse_decision = self.reuse_policy.decide(db, resolved_request, mode)
+            if not reuse_decision.should_compute and reuse_decision.existing_run:
+                run = reuse_decision.existing_run
+                try:
+                    run = self.relative_scoring_service.enrich_snapshot(db, run)
+                except Exception as e:
+                    logger.warning("prediction.enrich_failed error=%s", str(e))
 
-        # 4. Compute and Save
+                result = ServiceResult(
+                    run=run,
+                    bundle=None,
+                    was_reused=True,
+                )
+                self._log_and_metrics(
+                    user_id,
+                    start_time,
+                    result,
+                    ruleset_version=resolved_request.ruleset_version,
+                )
+                return result
+
+            logger.info(
+                "prediction.compute_wait_miss user_id=%s date=%s",
+                user_id,
+                resolved_request.resolved_date.isoformat(),
+            )
+
+        # 3. Mode force_recompute : cleanup if needed
         try:
+            if mode == ComputeMode.force_recompute:
+                old_run = DailyPredictionRepository(db).get_run(
+                    user_id,
+                    resolved_request.resolved_date,
+                    resolved_request.reference_version_id,
+                    resolved_request.ruleset_id,
+                    engine_mode=settings.daily_engine_mode.value,
+                )
+                if old_run:
+                    db.delete(old_run)
+                    db.flush()
+
+            # 4. Compute and Save
             if reuse_decision.should_compute and reuse_decision.existing_run:
                 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 
@@ -249,6 +322,9 @@ class DailyPredictionService:
                 "compute_failed",
                 f"Calcul indisponible et aucune prédiction en cache. Détail: {error_str}",
             ) from e
+        finally:
+            if single_flight_leader:
+                _prediction_single_flight.release(single_flight_key)
 
     def _execute_and_persist(
         self,

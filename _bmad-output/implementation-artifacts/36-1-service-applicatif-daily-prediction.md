@@ -349,3 +349,5 @@ def get_daily_prediction_service(db: Session = Depends(get_db)) -> DailyPredicti
 - 2026-03-08: Story créée pour l'Epic 36 — Productisation V1.
 - 2026-03-08: Implémentation complète de `DailyPredictionService` et tests unitaires associés.
 - 2026-03-08: Code review — corrections appliquées (H1 PredictionContextError, H3 orchestrator proto, M1/L1 hash, H2/M3 tests manquants, M2 assert delete, M4 patch manquant).
+- 2026-04-04: Durcissement concurrentiel du service avec garde single-flight process-local sur la clé `(user_id, local_date, reference_version_id, ruleset_id, engine_mode)`.
+- 2026-04-04: Ajout d'un test de non-régression garantissant que deux appels simultanés ne déclenchent qu'un seul calcul moteur, le second attendant puis réutilisant le run persisté.
