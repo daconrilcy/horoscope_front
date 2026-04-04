@@ -64,7 +64,7 @@ def test_no_plan_user_all_features_denied(db_session: Session):
     assert response.status_code == 200
 
     features = response.json()["data"]["features"]
-    assert len(features) == 4
+    assert len(features) == 5
     for f in features:
         assert f["granted"] is False
         assert f["reason_code"] == "feature_not_in_plan"
@@ -77,6 +77,7 @@ FEATURE_CODES = {
     "thematic_consultation",
     "natal_chart_long",
     "natal_chart_short",
+    "horoscope_daily",
 }
 
 
@@ -172,6 +173,11 @@ def seed_canonical_plans(db: Session) -> None:
             feature_name="Thematic Consultation",
             is_metered=True,
         ),
+        "horoscope_daily": FeatureCatalogModel(
+            feature_code="horoscope_daily",
+            feature_name="Horoscope Daily",
+            is_metered=False,
+        ),
     }
     db.add_all(features.values())
     db.flush()
@@ -206,6 +212,13 @@ def seed_canonical_plans(db: Session) -> None:
         period_unit=PeriodUnit.LIFETIME,
         period_value=1,
         reset_mode=ResetMode.LIFETIME,
+    )
+    _add_binding(
+        db,
+        plan_id=free_id,
+        feature_id=features["horoscope_daily"].id,
+        access_mode=AccessMode.UNLIMITED,
+        variant_code="summary_only",
     )
 
     trial_id = plans["trial"].id
@@ -248,6 +261,13 @@ def seed_canonical_plans(db: Session) -> None:
         period_unit=PeriodUnit.LIFETIME,
         period_value=1,
         reset_mode=ResetMode.LIFETIME,
+    )
+    _add_binding(
+        db,
+        plan_id=trial_id,
+        feature_id=features["horoscope_daily"].id,
+        access_mode=AccessMode.UNLIMITED,
+        variant_code="full",
     )
 
     basic_id = plans["basic"].id
@@ -301,6 +321,13 @@ def seed_canonical_plans(db: Session) -> None:
         period_value=1,
         reset_mode=ResetMode.LIFETIME,
     )
+    _add_binding(
+        db,
+        plan_id=basic_id,
+        feature_id=features["horoscope_daily"].id,
+        access_mode=AccessMode.UNLIMITED,
+        variant_code="full",
+    )
 
     premium_id = plans["premium"].id
     _add_binding(
@@ -347,6 +374,13 @@ def seed_canonical_plans(db: Session) -> None:
         period_unit=PeriodUnit.LIFETIME,
         period_value=1,
         reset_mode=ResetMode.LIFETIME,
+    )
+    _add_binding(
+        db,
+        plan_id=premium_id,
+        feature_id=features["horoscope_daily"].id,
+        access_mode=AccessMode.UNLIMITED,
+        variant_code="full",
     )
 
     db.commit()

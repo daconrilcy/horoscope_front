@@ -32,12 +32,13 @@ from app.services.entitlement_types import EffectiveFeatureAccess, UsageState
 
 router = APIRouter(prefix="/v1/entitlements", tags=["entitlements"])
 
-# Liste fixe des 4 features — toujours retournées, quel que soit l'état du binding
+# Liste fixe des features — toujours retournées, quel que soit l'état du binding
 FEATURES_TO_QUERY: list[str] = [
     "astrologer_chat",
     "thematic_consultation",
     "natal_chart_long",
     "natal_chart_short",
+    "horoscope_daily",
 ]
 
 _PLAN_PRIORITY: dict[str, str] = {
@@ -220,6 +221,7 @@ def get_plans_catalog(
         "natal_chart_long": 1,
         "astrologer_chat": 2,
         "thematic_consultation": 3,
+        "horoscope_daily": 4,
     }
     all_features = db.scalars(
         select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code.in_(feature_order.keys()))

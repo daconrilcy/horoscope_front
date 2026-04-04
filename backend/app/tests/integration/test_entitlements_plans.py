@@ -52,10 +52,11 @@ def test_get_plans_catalog_success():
         # Features
         f1 = FeatureCatalogModel(feature_code="natal_chart_short", feature_name="Short Chart")
         f2 = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
-        # We need all 4 canonical features for exhaustivity check
+        # We need all 5 canonical features for exhaustivity check
         f3 = FeatureCatalogModel(feature_code="natal_chart_long", feature_name="Long Chart")
         f4 = FeatureCatalogModel(feature_code="thematic_consultation", feature_name="Thematic")
-        db_session.add_all([f1, f2, f3, f4])
+        f5 = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Horoscope Daily")
+        db_session.add_all([f1, f2, f3, f4, f5])
         db_session.commit()
 
         # Plans
@@ -150,25 +151,30 @@ def test_get_plans_catalog_success():
     assert data[1]["processing_priority"] == "medium"
 
     # Features exhaustivity (AC1)
-    # Even though plan free only has 1 binding, it should return all 4 features
-    assert len(data[0]["features"]) == 4
+    # Even though plan free only has 1 binding, it should return all 5 features
+    assert len(data[0]["features"]) == 5
     codes_free = [f["feature_code"] for f in data[0]["features"]]
-    assert codes_free == [
+    assert set(codes_free) == {
         "natal_chart_short",
         "natal_chart_long",
         "astrologer_chat",
         "thematic_consultation",
-    ]
-    assert data[0]["features"][0]["is_enabled"] is True
-    assert data[0]["features"][1]["is_enabled"] is False  # natal_chart_long not in plan
+        "horoscope_daily",
+    }
+    # find natal_chart_short
+    short_feat = next(f for f in data[0]["features"] if f["feature_code"] == "natal_chart_short")
+    assert short_feat["is_enabled"] is True
+    # find natal_chart_long
+    long_feat = next(f for f in data[0]["features"] if f["feature_code"] == "natal_chart_long")
+    assert long_feat["is_enabled"] is False  # natal_chart_long not in plan
 
-    assert len(data[1]["features"]) == 4
-    assert data[1]["features"][2]["feature_code"] == "astrologer_chat"
-    assert data[1]["features"][2]["is_enabled"] is True
-    assert data[1]["features"][2]["access_mode"] == "quota"
-    assert len(data[1]["features"][2]["quotas"]) == 2
-    assert [quota["period_unit"] for quota in data[1]["features"][2]["quotas"]] == ["day", "month"]
-    assert [quota["quota_limit"] for quota in data[1]["features"][2]["quotas"]] == [2, 10]
+    assert len(data[1]["features"]) == 5
+    chat_feat = next(f for f in data[1]["features"] if f["feature_code"] == "astrologer_chat")
+    assert chat_feat["is_enabled"] is True
+    assert chat_feat["access_mode"] == "quota"
+    assert len(chat_feat["quotas"]) == 2
+    assert [quota["period_unit"] for quota in chat_feat["quotas"]] == ["day", "month"]
+    assert [quota["quota_limit"] for quota in chat_feat["quotas"]] == [2, 10]
     assert data[1]["is_active"] is True
 
     app.dependency_overrides.clear()
@@ -195,6 +201,7 @@ def test_get_plans_catalog_keeps_paid_plans_visible_without_billing_rows():
             ("natal_chart_long", "Long Chart"),
             ("astrologer_chat", "Chat"),
             ("thematic_consultation", "Thematic"),
+            ("horoscope_daily", "Horoscope Daily"),
         ):
             db_session.add(FeatureCatalogModel(feature_code=code, feature_name=name))
 

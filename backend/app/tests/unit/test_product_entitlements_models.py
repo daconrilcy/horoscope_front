@@ -36,12 +36,13 @@ def test_seeded_data_presence():
         assert {p.plan_code for p in plans} == {"free", "trial", "basic", "premium"}
 
         features = db.execute(select(FeatureCatalogModel)).scalars().all()
-        assert len(features) == 4
+        assert len(features) == 5
         assert {f.feature_code for f in features} == {
             "natal_chart_short",
             "natal_chart_long",
             "astrologer_chat",
             "thematic_consultation",
+            "horoscope_daily",
         }
 
 
@@ -51,11 +52,11 @@ def test_seed_idempotence():
     with SessionLocal() as db:
         assert db.execute(select(PlanCatalogModel)).scalars().all()
         assert len(db.execute(select(PlanCatalogModel)).scalars().all()) == 4
-        assert len(db.execute(select(FeatureCatalogModel)).scalars().all()) == 4
-        assert len(db.execute(select(PlanFeatureBindingModel)).scalars().all()) == 16
+        assert len(db.execute(select(FeatureCatalogModel)).scalars().all()) == 5
+        assert len(db.execute(select(PlanFeatureBindingModel)).scalars().all()) == 20
         quotas = db.execute(select(PlanFeatureQuotaModel)).scalars().all()
-        # trial: 2 quotas, basic: 5 quotas, premium: 5 quotas = 12 quotas
-        assert len(quotas) == 12
+        # trial: 3 quotas, basic: 5 quotas, premium: 5 quotas, free: 1 quota = 14 quotas
+        assert len(quotas) == 14
 
 
 def test_plan_code_uniqueness():

@@ -87,6 +87,12 @@ def seed() -> None:
                 "variant_code": None,
                 "quotas": [],
             },
+            "horoscope_daily": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": "summary_only",
+                "quotas": [],
+            },
         },
         "trial": {
             "natal_chart_short": {
@@ -128,6 +134,12 @@ def seed() -> None:
                         "reset_mode": ResetMode.CALENDAR,
                     }
                 ],
+            },
+            "horoscope_daily": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": "full",
+                "quotas": [],
             },
         },
         "basic": {
@@ -193,6 +205,12 @@ def seed() -> None:
                     }
                 ],
             },
+            "horoscope_daily": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": "full",
+                "quotas": [],
+            },
         },
         "premium": {
             "natal_chart_short": {
@@ -256,6 +274,12 @@ def seed() -> None:
                         "reset_mode": ResetMode.CALENDAR,
                     }
                 ],
+            },
+            "horoscope_daily": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": "full",
+                "quotas": [],
             },
         },
     }
@@ -330,6 +354,11 @@ def seed() -> None:
                     "feature_code": "thematic_consultation",
                     "feature_name": "Thematic Consultation",
                     "is_metered": True,
+                },
+                {
+                    "feature_code": "horoscope_daily",
+                    "feature_name": "Horoscope Daily",
+                    "is_metered": False,
                 },
             ]
 
