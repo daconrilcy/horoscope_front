@@ -10,6 +10,7 @@ Status: done
 - Le hero est compacté sur mobile pour éviter qu'un titre trop long monopolise le premier écran.
 - Une passe de finition a encore réduit les espacements mobiles et remonté la composition produit, afin que la preuve visuelle apparaisse plus tôt sans inverser l'ordre narratif texte puis visuel.
 - Le H1 a été reformulé sans tiret et traité sur deux lignes avec une ligne d'accent distincte, pour une lecture plus contemporaine et plus nette.
+- Le mockup hero a ensuite été enrichi pour mieux signifier un aperçu du produit en fonctionnement : faux header applicatif, modules fonctionnels plus lisibles, statut live et premières animations d'activité.
 
 ## Story
 

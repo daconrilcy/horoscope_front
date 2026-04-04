@@ -7,6 +7,7 @@ import { useAstrologyLabels, useTranslation } from "../../../i18n"
 const HERO_LOCAL_COPY = {
   fr: {
     eyebrow: "Guidance astrologique premium",
+    previewLabel: "Aperçu de l'expérience",
     dailyLabel: "Horoscope du jour",
     dailyTitle: "Une journée favorable pour clarifier une décision importante.",
     dailyItems: [
@@ -23,6 +24,7 @@ const HERO_LOCAL_COPY = {
   },
   en: {
     eyebrow: "Premium astrology guidance",
+    previewLabel: "Experience preview",
     dailyLabel: "Today’s horoscope",
     dailyTitle: "A favorable day to clarify an important decision.",
     dailyItems: [
@@ -40,6 +42,7 @@ const HERO_LOCAL_COPY = {
   },
   es: {
     eyebrow: "Guía astrológica premium",
+    previewLabel: "Vista previa de la experiencia",
     dailyLabel: "Horóscopo del día",
     dailyTitle: "Un día favorable para aclarar una decisión importante.",
     dailyItems: [
@@ -144,6 +147,25 @@ export const HeroSection = () => {
               <span className="hero-device__status">{t.hero.caption1}</span>
             </div>
 
+            <div className="hero-device__preview">
+              <span className="hero-device__preview-label">{localCopy.previewLabel}</span>
+            </div>
+
+            <div className="hero-device__toolbar" aria-hidden="true">
+              <span className="hero-device__tool">
+                <Clock3 size={13} />
+                <span>{localCopy.dailyLabel}</span>
+              </span>
+              <span className="hero-device__tool">
+                <MessageCircleMore size={13} />
+                <span>{localCopy.chatLabel}</span>
+              </span>
+              <span className="hero-device__tool">
+                <Star size={13} />
+                <span>{localCopy.momentLabel}</span>
+              </span>
+            </div>
+
             <article className="hero-card hero-card--summary">
               <div className="hero-panel__meta">
                 <span className="hero-panel__label">
@@ -171,8 +193,12 @@ export const HeroSection = () => {
                     {localCopy.chatLabel}
                   </span>
                 </div>
-                <p className="hero-chat__bubble hero-chat__bubble--question">{localCopy.chatQuestion}</p>
-                <p className="hero-chat__bubble hero-chat__bubble--answer">{localCopy.chatAnswer}</p>
+                <p className="hero-chat__bubble hero-chat__bubble--question">
+                  <span className="hero-chat__text hero-chat__text--question">{localCopy.chatQuestion}</span>
+                </p>
+                <p className="hero-chat__bubble hero-chat__bubble--answer">
+                  <span className="hero-chat__text hero-chat__text--answer">{localCopy.chatAnswer}</span>
+                </p>
               </article>
 
               <article className="hero-card hero-card--moment">
@@ -184,7 +210,7 @@ export const HeroSection = () => {
                 </div>
                 <div className="hero-moment__value">
                   <Sparkles size={16} aria-hidden="true" />
-                  {t.solution.step3.benefit}
+                  <span>{t.solution.step3.benefit}</span>
                 </div>
                 <p className="hero-panel__text">{localCopy.momentText}</p>
               </article>
