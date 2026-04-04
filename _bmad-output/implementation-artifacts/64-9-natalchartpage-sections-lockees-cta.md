@@ -196,3 +196,9 @@ Ces deux éléments doivent être rendus **avant ou après la boucle de sections
 - Le badge `ni-level-badge` du flux free natal n'affiche plus `Complet` mais un badge de résumé pour éviter une promesse trompeuse.
 - Backend `natal_interpretation_service_v2` durci pour réutiliser/mettre à jour la ligne `free_short` existante et éviter les erreurs `UNIQUE constraint failed` lors des clics répétés.
 - Le cadre résumé free natal reprend une hiérarchie visuelle homogène avec les autres cartes, avec une accroche synthétique générée dans l'en-tête au lieu d'un titre statique.
+
+### Validation Produit
+
+- validation manuelle finale effectuée sur le rendu free du thème natal ;
+- la carte résumé n'affiche plus `Résumé` comme intitulé interne et repose désormais sur la phrase de synthèse générée ;
+- le comportement CTA/upgrade est confirmé conforme pour l'utilisateur free.

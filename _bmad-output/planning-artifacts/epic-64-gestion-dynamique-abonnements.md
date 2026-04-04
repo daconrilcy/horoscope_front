@@ -199,6 +199,12 @@ Finalisation UX complémentaire sur `64.9` :
 - hardening backend du variant `free_short` pour réutiliser la version persistée existante au lieu de provoquer un doublon SQL ;
 - enrichissement du contrat `free_short` avec une vraie phrase de synthèse `title` générée côté backend, utilisée comme en-tête du cadre résumé à la place du label statique `Résumé`.
 
+Validation finale produit :
+
+- rendu free natal validé en test manuel après ajustements visuels finaux ;
+- carte résumé désormais conforme à la maquette attendue : pas de label générique, accroche synthétique générée dans le cadre ;
+- comportement d'upgrade confirmé : les CTA free redirigent vers l'abonnement Basic sans relancer une génération non autorisée.
+
 ---
 
 ## Stories de l'Epic 64
