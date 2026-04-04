@@ -23,6 +23,7 @@ from app.services.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
     QuotaDefinition,
+    UpgradeHint,
     UsageState,
 )
 from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY, FeatureScope
@@ -404,3 +405,92 @@ class EffectiveEntitlementResolverService:
             "period_value": selected.period_value,
             "reset_mode": selected.reset_mode,
         }
+
+    @staticmethod
+    def compute_upgrade_hints(
+        snapshot: EffectiveEntitlementsSnapshot, db: Session
+    ) -> list[UpgradeHint]:
+        """
+        Calcule les hints d'upgrade pour les features bridées dans le snapshot (Story 64.4).
+        """
+        if snapshot.subject_type != "b2c_user":
+            return []
+
+        hints: list[UpgradeHint] = []
+        next_plan = EffectiveEntitlementResolverService._get_next_plan(snapshot.plan_code, db)
+
+        if not next_plan:
+            return []
+
+        for f_code, access in snapshot.entitlements.items():
+            # Si non accordé ou variant restreint -> on suggère l'upgrade
+            if not access.granted or EffectiveEntitlementResolverService._is_restricted_variant(
+                access.variant_code
+            ):
+                hints.append(
+                    UpgradeHint(
+                        feature_code=f_code,
+                        current_plan_code=snapshot.plan_code,
+                        target_plan_code=next_plan.plan_code,
+                        benefit_key=f"upgrade.{f_code}.unlock",
+                        cta_variant=EffectiveEntitlementResolverService._get_cta_variant(f_code),
+                        priority=EffectiveEntitlementResolverService._get_hint_priority(f_code),
+                    )
+                )
+
+        return sorted(hints, key=lambda h: h.priority)
+
+    @staticmethod
+    def _get_next_plan(current_plan_code: str, db: Session) -> PlanCatalogModel | None:
+        """Récupère le plan suivant dans la hiérarchie B2C par prix croissant."""
+        from app.infra.db.models.billing import BillingPlanModel
+
+        # On joint avec BillingPlanModel pour avoir le prix
+        stmt = (
+            select(PlanCatalogModel)
+            .join(BillingPlanModel, PlanCatalogModel.plan_code == BillingPlanModel.code)
+            .where(PlanCatalogModel.audience == Audience.B2C, PlanCatalogModel.is_active)
+            .order_by(BillingPlanModel.monthly_price_cents.asc())
+        )
+        all_plans = list(db.execute(stmt).scalars().all())
+
+        current_idx = -1
+        for i, p in enumerate(all_plans):
+            if p.plan_code == current_plan_code:
+                current_idx = i
+                break
+
+        if current_idx != -1 and current_idx + 1 < len(all_plans):
+            return all_plans[current_idx + 1]
+
+        # Cas spécial: user "none" ou non trouvé dans le catalogue -> on renvoie le premier plan payant
+        if current_idx == -1 and all_plans:
+            # On cherche le premier plan payant (prix > 0) ou juste le premier si tous gratuits
+            # Note: On a besoin des objets BillingPlan pour filtrer par prix ici si on veut être précis,
+            # mais on peut aussi juste renvoyer le premier de all_plans qui est déjà trié.
+            return all_plans[0]
+
+        return None
+
+    @staticmethod
+    def _is_restricted_variant(variant_code: str | None) -> bool:
+        """Détermine si un variant est considéré comme restreint (incite à l'upgrade)."""
+        return variant_code in ("summary_only", "free_short")
+
+    @staticmethod
+    def _get_cta_variant(feature_code: str) -> str:
+        """Mapping de la variante de CTA par feature (Story 64.4)."""
+        return {
+            "astrologer_chat": "banner",
+            "horoscope_daily": "inline",
+            "natal_chart_long": "inline",
+        }.get(feature_code, "inline")
+
+    @staticmethod
+    def _get_hint_priority(feature_code: str) -> int:
+        """Priorité d'affichage des hints (plus petit = plus prioritaire)."""
+        return {
+            "astrologer_chat": 10,
+            "horoscope_daily": 20,
+            "natal_chart_long": 30,
+        }.get(feature_code, 100)

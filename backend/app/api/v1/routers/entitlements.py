@@ -142,7 +142,10 @@ def get_my_entitlements(
         db, app_user_id=current_user.id
     )
 
-    # AC2 - Toujours exposer les 4 features prioritaires dans l'ordre attendu par le frontend.
+    # Story 64.4 - Calcul des hints d'upgrade
+    hints = EffectiveEntitlementResolverService.compute_upgrade_hints(snapshot, db)
+
+    # AC2 - Toujours exposer les features prioritaires dans l'ordre attendu par le frontend.
     features = [
         _to_feature_response(fc, snapshot.entitlements[fc])
         if fc in snapshot.entitlements
@@ -156,6 +159,7 @@ def get_my_entitlements(
             "plan_code": snapshot.plan_code,
             "billing_status": snapshot.billing_status,
             "features": features,
+            "upgrade_hints": hints,
         },
         "meta": {"request_id": request_id},
     }

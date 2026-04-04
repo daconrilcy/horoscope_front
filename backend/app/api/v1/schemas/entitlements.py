@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -31,6 +32,15 @@ class FeatureEntitlementResponse(BaseModel):
     usage_states: list[UsageStateResponse] = Field(default_factory=list)
 
 
+class UpgradeHintResponse(BaseModel):
+    feature_code: str
+    current_plan_code: str
+    target_plan_code: str
+    benefit_key: str
+    cta_variant: Literal["banner", "inline", "modal"]
+    priority: int
+
+
 class EntitlementsMeData(BaseModel):
     """
     Contrat frontend unique décrivant le plan commercial et les droits effectifs.
@@ -46,6 +56,7 @@ class EntitlementsMeData(BaseModel):
     plan_code: str  # top-level (ex-dupliqué par feature)
     billing_status: str  # top-level
     features: list[FeatureEntitlementResponse] = Field(default_factory=list)
+    upgrade_hints: list[UpgradeHintResponse] = Field(default_factory=list)
 
 
 class ResponseMeta(BaseModel):

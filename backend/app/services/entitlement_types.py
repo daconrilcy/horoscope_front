@@ -56,3 +56,13 @@ class EffectiveEntitlementsSnapshot:
     plan_code: str
     billing_status: str
     entitlements: dict[str, EffectiveFeatureAccess]
+
+
+@dataclass(frozen=True)
+class UpgradeHint:
+    feature_code: str
+    current_plan_code: str
+    target_plan_code: str
+    benefit_key: str
+    cta_variant: str  # "banner" | "inline" | "modal"
+    priority: int

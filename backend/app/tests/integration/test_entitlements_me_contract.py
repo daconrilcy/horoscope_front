@@ -168,7 +168,7 @@ def test_entitlements_me_no_plan(client, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
-    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short"]:
+    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short", "horoscope_daily"]:
         _get_or_create_feature(db_session, fc)
 
     user = _create_user(db_session)
@@ -183,7 +183,8 @@ def test_entitlements_me_no_plan(client, db_session):
     assert "plan_code" in data
     assert data["plan_code"] == "none"
     assert data["billing_status"] == "none"
-    assert len(data["features"]) == 4
+    assert len(data["features"]) == 5
+    assert "upgrade_hints" in data
 
     for feature in data["features"]:
         assert "granted" in feature
@@ -198,7 +199,7 @@ def test_entitlements_me_quota_available(client, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
-    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short"]:
+    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short", "horoscope_daily"]:
         _get_or_create_feature(db_session, fc)
 
     user = _create_user(db_session, email="quota_avail@example.com")
@@ -230,7 +231,7 @@ def test_entitlements_me_quota_exhausted(client, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
-    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short"]:
+    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short", "horoscope_daily"]:
         _get_or_create_feature(db_session, fc)
 
     user = _create_user(db_session, email="quota_exhaust@example.com")
@@ -257,7 +258,7 @@ def test_entitlements_me_unlimited(client, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
-    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short"]:
+    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short", "horoscope_daily"]:
         _get_or_create_feature(db_session, fc)
 
     user = _create_user(db_session, email="unlimited@example.com")
