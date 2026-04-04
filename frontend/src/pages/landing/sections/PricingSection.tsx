@@ -7,40 +7,12 @@ import { useAnalytics } from "../../../hooks/useAnalytics"
 import { useAstrologyLabels, useTranslation } from "../../../i18n"
 import "./PricingSection.css"
 
-const PRICING_LOCAL_COPY = {
-  fr: {
-    eyebrow: "Choix",
-    subtitle: "Commencez gratuitement, choisissez Basic si vous voulez une guidance régulière, Premium si vous utilisez Astrorizon au quotidien.",
-    freeAudience: "Pour découvrir l'expérience",
-    basicAudience: "Pour une guidance régulière",
-    premiumAudience: "Pour un accompagnement complet",
-    freeLabel: "Gratuit",
-  },
-  en: {
-    eyebrow: "Choice",
-    subtitle: "Start for free, choose Basic for regular guidance, Premium for a complete day-to-day companion.",
-    freeAudience: "To discover the experience",
-    basicAudience: "For regular guidance",
-    premiumAudience: "For complete support",
-    freeLabel: "Free",
-  },
-  es: {
-    eyebrow: "Elección",
-    subtitle: "Empieza gratis, elige Basic para una guía regular y Premium para un acompañamiento completo del día a día.",
-    freeAudience: "Para descubrir la experiencia",
-    basicAudience: "Para una guía regular",
-    premiumAudience: "Para un acompañamiento completo",
-    freeLabel: "Gratis",
-  },
-} as const
-
 export const PricingSection = () => {
   const t = useTranslation("landing")
   const { lang } = useAstrologyLabels()
   const { track } = useAnalytics()
   const sectionRef = useRef<HTMLElement>(null)
   const activePlans = getActivePlans()
-  const localCopy = PRICING_LOCAL_COPY[lang]
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -60,17 +32,17 @@ export const PricingSection = () => {
   }, [track])
 
   const planAudience: Record<string, string> = {
-    free: localCopy.freeAudience,
-    basic: localCopy.basicAudience,
-    premium: localCopy.premiumAudience,
+    free: t.pricing.audience.free,
+    basic: t.pricing.audience.basic,
+    premium: t.pricing.audience.premium,
   }
 
   return (
     <section id="pricing" className="pricing-section" ref={sectionRef} aria-labelledby="pricing-title">
       <div className="pricing-section__heading">
-        <span className="pricing-section__eyebrow">{localCopy.eyebrow}</span>
+        <span className="pricing-section__eyebrow">{t.pricing.eyebrow}</span>
         <h2 id="pricing-title">{t.pricing.title}</h2>
-        <p>{localCopy.subtitle}</p>
+        <p>{t.pricing.subtitle}</p>
       </div>
 
       <div className="pricing-reassurance-bar">{t.pricing.reassurance}</div>
@@ -94,7 +66,7 @@ export const PricingSection = () => {
                 <div className="pricing-price">
                   <span className="pricing-amount">
                     {plan.monthlyPriceCents === 0
-                      ? localCopy.freeLabel
+                      ? t.pricing.freeLabel
                       : formatPrice(plan.monthlyPriceCents, plan.currency, lang)}
                   </span>
                   {plan.monthlyPriceCents !== 0 && (

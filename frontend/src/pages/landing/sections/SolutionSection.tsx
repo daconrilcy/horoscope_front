@@ -1,35 +1,9 @@
 import { Calendar, MessageCircle, Sparkles } from "lucide-react"
-import { useAstrologyLabels, useTranslation } from "../../../i18n"
+import { useTranslation } from "../../../i18n"
 import "./SolutionSection.css"
-
-const SOLUTION_LOCAL_COPY = {
-  fr: {
-    eyebrow: "Fonctionnement",
-    subtitle: "Trois étapes simples pour passer de l'intuition à une guidance exploitable.",
-    step1Example: "Date, heure, lieu de naissance",
-    step2Example: "“Est-ce le bon moment pour relancer cette conversation ?”",
-    step3Example: "Fenêtre favorable, ton du jour, conseil concret",
-  },
-  en: {
-    eyebrow: "How it works",
-    subtitle: "Three simple steps to move from intuition to usable guidance.",
-    step1Example: "Date, time, place of birth",
-    step2Example: "“Is this the right time to restart this conversation?”",
-    step3Example: "Best window, tone of the day, concrete advice",
-  },
-  es: {
-    eyebrow: "Funcionamiento",
-    subtitle: "Tres pasos simples para pasar de la intuición a una guía accionable.",
-    step1Example: "Fecha, hora y lugar de nacimiento",
-    step2Example: "“¿Es el momento adecuado para retomar esta conversación?”",
-    step3Example: "Ventana favorable, tono del día y consejo concreto",
-  },
-} as const
 
 export const SolutionSection = () => {
   const t = useTranslation("landing")
-  const { lang } = useAstrologyLabels()
-  const localCopy = SOLUTION_LOCAL_COPY[lang]
 
   const steps = [
     {
@@ -38,7 +12,7 @@ export const SolutionSection = () => {
       title: t.solution.step1.title,
       desc: t.solution.step1.desc,
       benefit: t.solution.step1.benefit,
-      example: localCopy.step1Example,
+      example: t.solution.step1.example,
     },
     {
       id: "02",
@@ -46,7 +20,7 @@ export const SolutionSection = () => {
       title: t.solution.step2.title,
       desc: t.solution.step2.desc,
       benefit: t.solution.step2.benefit,
-      example: localCopy.step2Example,
+      example: t.solution.step2.example,
     },
     {
       id: "03",
@@ -54,16 +28,16 @@ export const SolutionSection = () => {
       title: t.solution.step3.title,
       desc: t.solution.step3.desc,
       benefit: t.solution.step3.benefit,
-      example: localCopy.step3Example,
+      example: t.solution.step3.example,
     },
   ]
 
   return (
     <section id="how-it-works" className="solution-section" aria-labelledby="solution-title">
       <div className="solution-section__heading">
-        <span className="solution-section__eyebrow">{localCopy.eyebrow}</span>
+        <span className="solution-section__eyebrow">{t.solution.eyebrow}</span>
         <h2 id="solution-title">{t.solution.title}</h2>
-        <p>{localCopy.subtitle}</p>
+        <p>{t.solution.subtitle}</p>
       </div>
 
       <div className="solution-container">

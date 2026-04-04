@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useSyncExternalStore } from "react"
 import type { AppLocale } from "./types"
 
 /** Langues supportées pour la traduction astrologique */
@@ -248,6 +248,40 @@ export function detectLang(): AstrologyLang {
 /** Clé localStorage utilisée pour stocker la préférence de langue */
 const LANG_STORAGE_KEY = "lang"
 
+const langStoreListeners = new Set<() => void>()
+
+function notifyLangStoreListeners() {
+  langStoreListeners.forEach((listener) => listener())
+}
+
+function subscribeToLangStore(listener: () => void) {
+  langStoreListeners.add(listener)
+
+  const handleStorageChange = (event: StorageEvent) => {
+    if (event.key === LANG_STORAGE_KEY) {
+      listener()
+    }
+  }
+
+  window.addEventListener("storage", handleStorageChange)
+
+  return () => {
+    langStoreListeners.delete(listener)
+    window.removeEventListener("storage", handleStorageChange)
+  }
+}
+
+function getLangSnapshot(): AstrologyLang {
+  return detectLang()
+}
+
+function updateLangStore(newLang: AstrologyLang) {
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem(LANG_STORAGE_KEY, newLang)
+  }
+  notifyLangStoreListeners()
+}
+
 /**
  * Hook React pour les labels astrologiques avec réactivité au changement de langue.
  * 
@@ -264,24 +298,10 @@ const LANG_STORAGE_KEY = "lang"
  * translatePlanet("sun") // → "Soleil" (si lang = "fr")
  */
 export function useAstrologyLabels() {
-  const [lang, setLangState] = useState<AstrologyLang>(detectLang)
-
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === LANG_STORAGE_KEY) {
-        setLangState(detectLang())
-      }
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
-  }, [])
+  const lang = useSyncExternalStore(subscribeToLangStore, getLangSnapshot, getLangSnapshot)
 
   const setLang = useCallback((newLang: AstrologyLang) => {
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(LANG_STORAGE_KEY, newLang)
-    }
-    setLangState(newLang)
+    updateLangStore(newLang)
   }, [])
 
   const boundTranslateSign = useCallback((code: string) => translateSign(code, lang), [lang])

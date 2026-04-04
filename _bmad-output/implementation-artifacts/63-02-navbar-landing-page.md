@@ -6,6 +6,7 @@ Status: done
 
 - La navbar finale expose 4 entrées desktop : confiance, fonctionnement, tarifs, FAQ.
 - Le sélecteur de langue est visuellement secondaire.
+- Le sélecteur de langue pilote désormais une source d'état partagée par toute l'application publique : un changement depuis `landing-navbar__lang-wrapper` met à jour immédiatement l'ensemble des sections de la landing, et non plus la seule navbar.
 - Le CTA `Démarrer` est plus saillant que `Connexion`.
 - La barre devient plus compacte et plus solide visuellement au scroll, avec fond plus lisible et ombre renforcée.
 - En mobile, le bouton menu a été renforcé visuellement lors d'une passe de polissage finale, pour être plus identifiable comme action primaire de navigation que le sélecteur de langue.
@@ -23,7 +24,7 @@ so that je puisse naviguer facilement entre les sections et me connecter ou m'in
 1. [x] La navbar contient dans l'ordre : Logo (gauche) | Liens de navigation (centre) | Actions (droite).
 2. [x] Liens de navigation : "Comment ça marche" (ancre vers `#how-it-works`), "Tarifs" (ancre vers `#pricing`).
 3. [x] Actions droite : bouton "Connexion" → `/login` et bouton CTA "Démarrer" → `/register`.
-4. [x] Un sélecteur de langue FR/EN est présent (icône globe ou label), appliquant la langue via le mécanisme i18n du projet.
+4. [x] Un sélecteur de langue FR/EN/ES est présent (icône globe ou label), appliquant la langue via le mécanisme i18n du projet.
 
 ### AC2 — Comportement sticky et scroll
 
@@ -51,6 +52,7 @@ so that je puisse naviguer facilement entre les sections et me connecter ou m'in
 ### AC5 — i18n
 
 14. [x] Tous les labels (liens, boutons, langue) dans `frontend/src/i18n/landing.ts` sous la clé `navbar`.
+15. [x] Le changement de langue déclenché depuis la navbar propage immédiatement le nouvel état à toute la landing publique.
 
 ## Tasks / Subtasks
 
@@ -67,8 +69,10 @@ so that je puisse naviguer facilement entre les sections et me connecter ou m'in
   - [x] Dropdown/overlay mobile
 - [x] T4 — CSS (AC: 11, 12, 13)
   - [x] Créer `LandingNavbar.css`
-- [x] T5 — i18n (AC: 14)
+- [x] T5 — i18n (AC: 14, 15)
   - [x] Ajouter clé `navbar` dans `landing.ts`
+  - [x] Aligner toute la landing sur le namespace `landing`
+  - [x] Remplacer l'état local de langue par une source de vérité partagée
 
 ## Dev Notes
 
@@ -111,6 +115,7 @@ gemini-2.0-flash-001 (Code Review & Fix)
 - Implementation is now fully compliant with AC4 (no inline styles).
 - Responsive behavior aligns with AC3 (768px breakpoint).
 - i18n is correctly implemented and used.
+- The landing language switch now updates every section immediately through a shared locale store.
 
 ### File List
 

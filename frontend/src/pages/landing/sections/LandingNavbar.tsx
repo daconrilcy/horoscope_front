@@ -22,15 +22,6 @@ export const LandingNavbar = () => {
     [],
   )
 
-  const trustLabel: Record<string, string> = useMemo(
-    () => ({
-      fr: "Confiance",
-      en: "Trust",
-      es: "Confianza",
-    }),
-    [],
-  )
-
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 24)
     window.addEventListener("scroll", handleScroll)
@@ -72,7 +63,7 @@ export const LandingNavbar = () => {
 
           <div className="landing-navbar__links">
             <a href="#social-proof" className="landing-navbar__link">
-              {trustLabel[lang]}
+              {t.navbar.trust}
             </a>
             <a href="#how-it-works" className="landing-navbar__link">
               {t.navbar.howItWorks}
@@ -81,7 +72,7 @@ export const LandingNavbar = () => {
               {t.navbar.pricing}
             </a>
             <a href="#faq" className="landing-navbar__link">
-              FAQ
+              {t.navbar.faq}
             </a>
           </div>
 
@@ -177,7 +168,7 @@ export const LandingNavbar = () => {
 
             <div className="landing-navbar__mobile-links">
               <a href="#social-proof" className="landing-navbar__mobile-link" onClick={closeAllMenus}>
-                {trustLabel[lang]}
+                {t.navbar.trust}
               </a>
               <a href="#how-it-works" className="landing-navbar__mobile-link" onClick={closeAllMenus}>
                 {t.navbar.howItWorks}
@@ -186,7 +177,7 @@ export const LandingNavbar = () => {
                 {t.navbar.pricing}
               </a>
               <a href="#faq" className="landing-navbar__mobile-link" onClick={closeAllMenus}>
-                FAQ
+                {t.navbar.faq}
               </a>
             </div>
 

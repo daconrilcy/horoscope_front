@@ -5,69 +5,12 @@ import { Button } from "../../../components/ui/Button/Button"
 import { useAnalytics } from "../../../hooks/useAnalytics"
 import { useAstrologyLabels, useTranslation } from "../../../i18n"
 
-const HERO_LOCAL_COPY = {
-  fr: {
-    eyebrow: "Guidance astrologique premium",
-    previewLabel: "Aperçu de l'expérience",
-    dailyLabel: "Horoscope du jour",
-    dailyTitle: "Une journée favorable pour clarifier une décision importante.",
-    dailyItems: [
-      ["Amour", "Dialogue fluide"],
-      ["Travail", "Moment d'initiative"],
-      ["Énergie", "Ralentir après 18h"],
-    ],
-    chatLabel: "Question en direct",
-    chatQuestion: "Est-ce le bon moment pour relancer ce projet ?",
-    chatAnswer:
-      "Oui. Les transits du jour favorisent la reprise de contact et une décision posée, sans brusquer les choses.",
-    momentLabel: "Moment clé",
-    momentText: "Entre 14h et 16h, votre communication est plus claire. Profitez-en pour envoyer le message important.",
-  },
-  en: {
-    eyebrow: "Premium astrology guidance",
-    previewLabel: "Experience preview",
-    dailyLabel: "Today’s horoscope",
-    dailyTitle: "A favorable day to clarify an important decision.",
-    dailyItems: [
-      ["Love", "Smooth dialogue"],
-      ["Work", "Good timing to act"],
-      ["Energy", "Slow down after 6pm"],
-    ],
-    chatLabel: "Live question",
-    chatQuestion: "Is this the right time to relaunch this project?",
-    chatAnswer:
-      "Yes. Today’s transits support renewed contact and a grounded decision, without forcing the pace.",
-    momentLabel: "Key moment",
-    momentText:
-      "Between 2pm and 4pm, your communication is clearer. Use that window for the message that matters.",
-  },
-  es: {
-    eyebrow: "Guía astrológica premium",
-    previewLabel: "Vista previa de la experiencia",
-    dailyLabel: "Horóscopo del día",
-    dailyTitle: "Un día favorable para aclarar una decisión importante.",
-    dailyItems: [
-      ["Amor", "Diálogo fluido"],
-      ["Trabajo", "Buen momento para actuar"],
-      ["Energía", "Baja el ritmo después de las 18h"],
-    ],
-    chatLabel: "Pregunta en directo",
-    chatQuestion: "¿Es el momento adecuado para reactivar este proyecto?",
-    chatAnswer:
-      "Sí. Los tránsitos del día favorecen retomar el contacto y decidir con calma, sin forzar nada.",
-    momentLabel: "Momento clave",
-    momentText:
-      "Entre las 14h y las 16h tu comunicación es más clara. Aprovecha esa ventana para enviar el mensaje importante.",
-  },
-} as const
-
 export const HeroSection = () => {
   const t = useTranslation("landing")
   const { lang } = useAstrologyLabels()
   const { track } = useAnalytics()
-  const localCopy = HERO_LOCAL_COPY[lang]
-  const questionChars = useMemo(() => Array.from(localCopy.chatQuestion), [localCopy.chatQuestion])
-  const answerChars = useMemo(() => Array.from(localCopy.chatAnswer), [localCopy.chatAnswer])
+  const questionChars = useMemo(() => Array.from(t.hero.chatQuestion), [t.hero.chatQuestion])
+  const answerChars = useMemo(() => Array.from(t.hero.chatAnswer), [t.hero.chatAnswer])
   const [liveState, setLiveState] = useState({
     toolIndex: 0,
     trendIndex: 0,
@@ -109,7 +52,7 @@ export const HeroSection = () => {
       <div className="hero-content">
         <div className="hero-eyebrow">
           <Sparkles size={14} aria-hidden="true" />
-          {localCopy.eyebrow}
+          {t.hero.eyebrow}
         </div>
 
         <h1 id="hero-title">
@@ -186,7 +129,7 @@ export const HeroSection = () => {
             </div>
 
             <div className="hero-device__preview">
-              <span className="hero-device__preview-label">{localCopy.previewLabel}</span>
+              <span className="hero-device__preview-label">{t.hero.previewLabel}</span>
             </div>
 
             <div className="hero-device__toolbar" aria-hidden="true">
@@ -194,19 +137,19 @@ export const HeroSection = () => {
                 className={`hero-device__tool ${liveState.toolIndex === 0 ? "hero-device__tool--active" : ""}`}
               >
                 <Clock3 size={13} />
-                <span>{localCopy.dailyLabel}</span>
+                <span>{t.hero.dailyLabel}</span>
               </span>
               <span
                 className={`hero-device__tool ${liveState.toolIndex === 1 ? "hero-device__tool--active" : ""}`}
               >
                 <MessageCircleMore size={13} />
-                <span>{localCopy.chatLabel}</span>
+                <span>{t.hero.chatLabel}</span>
               </span>
               <span
                 className={`hero-device__tool ${liveState.toolIndex === 2 ? "hero-device__tool--active" : ""}`}
               >
                 <Star size={13} />
-                <span>{localCopy.momentLabel}</span>
+                <span>{t.hero.momentLabel}</span>
               </span>
             </div>
 
@@ -214,17 +157,17 @@ export const HeroSection = () => {
               <div className="hero-panel__meta">
                 <span className="hero-panel__label">
                   <Clock3 size={14} aria-hidden="true" />
-                  {localCopy.dailyLabel}
+                  {t.hero.dailyLabel}
                 </span>
                 <span className="hero-panel__badge">{t.hero.caption2}</span>
               </div>
-              <h2 className="hero-panel__title">{localCopy.dailyTitle}</h2>
+              <h2 className="hero-panel__title">{t.hero.dailyTitle}</h2>
               <div className="hero-card__trend-grid">
-                {localCopy.dailyItems.map(([label, value]) => (
+                {t.hero.dailyItems.map(({ label, value }) => (
                   <div
                     key={label}
                     className={`hero-card__trend-item ${
-                      localCopy.dailyItems[liveState.trendIndex]?.[0] === label
+                      t.hero.dailyItems[liveState.trendIndex]?.label === label
                         ? "hero-card__trend-item--active"
                         : ""
                     }`}
@@ -241,7 +184,7 @@ export const HeroSection = () => {
                 <div className="hero-panel__meta">
                   <span className="hero-panel__label">
                     <MessageCircleMore size={14} aria-hidden="true" />
-                    {localCopy.chatLabel}
+                    {t.hero.chatLabel}
                   </span>
                 </div>
                 <p
@@ -264,14 +207,14 @@ export const HeroSection = () => {
                 <div className="hero-panel__meta">
                   <span className="hero-panel__label">
                     <Star size={14} aria-hidden="true" />
-                    {localCopy.momentLabel}
+                    {t.hero.momentLabel}
                   </span>
                 </div>
                 <div className="hero-moment__value">
                   <Sparkles size={16} aria-hidden="true" />
                   <span>{t.solution.step3.benefit}</span>
                 </div>
-                <p className="hero-panel__text">{localCopy.momentText}</p>
+                <p className="hero-panel__text">{t.hero.momentText}</p>
               </article>
             </div>
           </div>

@@ -4,6 +4,8 @@ export interface LandingTranslation {
   hero: {
     titleLead: string
     titleAccent: string
+    eyebrow: string
+    previewLabel: string
     subtitle: string
     bullet1: string
     bullet2: string
@@ -16,10 +18,20 @@ export interface LandingTranslation {
     imageAlt: string
     caption1: string
     caption2: string
+    dailyLabel: string
+    dailyTitle: string
+    dailyItems: Array<{ label: string; value: string }>
+    chatLabel: string
+    chatQuestion: string
+    chatAnswer: string
+    momentLabel: string
+    momentText: string
   }
   navbar: {
+    trust: string
     howItWorks: string
     pricing: string
+    faq: string
     login: string
     register: string
     language: string
@@ -32,7 +44,14 @@ export interface LandingTranslation {
     mobileMenu: string
   }
   socialProof: {
+    eyebrow: string
+    title: string
     badges: {
+      swiss: string
+      rgpd: string
+      available: string
+    }
+    proofs: {
       swiss: string
       rgpd: string
       available: string
@@ -47,6 +66,8 @@ export interface LandingTranslation {
     }
   }
   problem: {
+    eyebrow: string
+    intro: string
     title: string
     before: {
       title: string
@@ -62,21 +83,26 @@ export interface LandingTranslation {
     }
   }
   solution: {
+    eyebrow: string
+    subtitle: string
     title: string
     step1: {
       title: string
       desc: string
       benefit: string
+      example: string
     }
     step2: {
       title: string
       desc: string
       benefit: string
+      example: string
     }
     step3: {
       title: string
       desc: string
       benefit: string
+      example: string
     }
   }
   testimonials: {
@@ -111,9 +137,17 @@ export interface LandingTranslation {
     }
   }
   pricing: {
+    eyebrow: string
+    subtitle: string
     title: string
     perMonth: string
     recommended: string
+    audience: {
+      free: string
+      basic: string
+      premium: string
+    }
+    freeLabel: string
     cta: {
       free: string
       paid: string
@@ -148,6 +182,8 @@ export interface LandingTranslation {
     reassurance: string
   }
   faq: {
+    eyebrow: string
+    subtitle: string
     title: string
     items: Array<{
       q: string
@@ -155,6 +191,7 @@ export interface LandingTranslation {
     }>
   }
   finalCta: {
+    eyebrow: string
     title: string
     subtitle: string
     button: string
@@ -204,6 +241,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
     hero: {
       titleLead: "Votre guide astrologique personnel",
       titleAccent: "Toujours disponible",
+      eyebrow: "Guidance astrologique premium",
+      previewLabel: "Aperçu de l'expérience",
       subtitle: "Comprenez votre journée, posez vos questions et obtenez une guidance personnelle immédiatement utile.",
       bullet1: "Thème natal complet offert",
       bullet2: "Réponses instantanées et bienveillantes",
@@ -216,10 +255,26 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       imageAlt: "Aperçu de l'interface Astrorizon",
       caption1: "Analyse en temps réel",
       caption2: "Conseils bienveillants",
+      dailyLabel: "Horoscope du jour",
+      dailyTitle: "Une journée favorable pour clarifier une décision importante.",
+      dailyItems: [
+        { label: "Amour", value: "Dialogue fluide" },
+        { label: "Travail", value: "Moment d'initiative" },
+        { label: "Énergie", value: "Ralentir après 18h" },
+      ],
+      chatLabel: "Question en direct",
+      chatQuestion: "Est-ce le bon moment pour relancer ce projet ?",
+      chatAnswer:
+        "Oui. Les transits du jour favorisent la reprise de contact et une décision posée, sans brusquer les choses.",
+      momentLabel: "Moment clé",
+      momentText:
+        "Entre 14h et 16h, votre communication est plus claire. Profitez-en pour envoyer le message important.",
     },
     navbar: {
+      trust: "Confiance",
       howItWorks: "Comment ça marche",
       pricing: "Tarifs",
+      faq: "FAQ",
       login: "Connexion",
       register: "Démarrer",
       language: "Langue",
@@ -232,10 +287,17 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       mobileMenu: "Menu mobile",
     },
     socialProof: {
+      eyebrow: "Confiance",
+      title: "Une expérience utile, cadrée et crédible dès la première visite.",
       badges: {
         swiss: "Calculs Swiss Ephemeris",
         rgpd: "Données protégées RGPD",
         available: "Disponible 24h/24",
+      },
+      proofs: {
+        swiss: "Positions planétaires calculées avec un moteur de référence.",
+        rgpd: "Naissance, échanges et compte utilisateur traités de façon sécurisée.",
+        available: "Réponses immédiates, sans attente ni prise de rendez-vous.",
       },
       metrics: {
         users: "Moteur de calcul",
@@ -247,6 +309,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     problem: {
+      eyebrow: "Transformation",
+      intro: "Vous cherchez une guidance personnelle, pas des généralités.",
       title: "L'astrologie devrait éclairer votre chemin, pas vous perdre",
       before: {
         title: "Aujourd'hui",
@@ -262,21 +326,26 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     solution: {
+      eyebrow: "Fonctionnement",
+      subtitle: "Trois étapes simples pour passer de l'intuition à une guidance exploitable.",
       title: "Comment ça marche ?",
       step1: {
         title: "Créez votre profil natal",
         desc: "Partagez votre date, heure et lieu de naissance avec précision.",
         benefit: "Thème natal calculé instantanément",
+        example: "Date, heure, lieu de naissance",
       },
       step2: {
         title: "Échangez avec votre IA",
         desc: "Posez toutes vos questions à votre astrologue personnel.",
         benefit: "Réponses sur-mesure 24h/24",
+        example: "“Est-ce le bon moment pour relancer cette conversation ?”",
       },
       step3: {
         title: "Suivez votre guidance",
         desc: "Recevez chaque matin des conseils actionnables pour votre journée.",
         benefit: "Saisissez les opportunités célestes",
+        example: "Fenêtre favorable, ton du jour, conseil concret",
       },
     },
     testimonials: {
@@ -322,9 +391,18 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     pricing: {
+      eyebrow: "Choix",
+      subtitle:
+        "Commencez gratuitement, choisissez Basic si vous voulez une guidance régulière, Premium si vous utilisez Astrorizon au quotidien.",
       title: "Choisissez votre chemin",
       perMonth: "/ mois",
       recommended: "Plus populaire",
+      audience: {
+        free: "Pour découvrir l'expérience",
+        basic: "Pour une guidance régulière",
+        premium: "Pour un accompagnement complet",
+      },
+      freeLabel: "Gratuit",
       cta: {
         free: "Démarrer gratuitement",
         paid: "Choisir ce plan",
@@ -359,6 +437,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       reassurance: "Sans engagement. Annulation en un clic.",
     },
     faq: {
+      eyebrow: "Objections",
+      subtitle: "Les questions les plus fréquentes avant de commencer.",
       title: "Questions fréquentes",
       items: [
         {
@@ -388,6 +468,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       ],
     },
     finalCta: {
+      eyebrow: "Décision",
       title: "Commencez votre thème natal en quelques minutes",
       subtitle: "Essayez Astrorizon gratuitement dès aujourd'hui et voyez tout de suite comment la guidance s'applique à votre situation.",
       button: "Démarrer gratuitement",
@@ -435,6 +516,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
     hero: {
       titleLead: "Your personal astrological guide",
       titleAccent: "Always available",
+      eyebrow: "Premium astrology guidance",
+      previewLabel: "Experience preview",
       subtitle: "Understand your day, ask your questions, and get personal guidance that feels immediately useful.",
       bullet1: "Complete birth chart included",
       bullet2: "Instant and caring answers",
@@ -447,10 +530,26 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       imageAlt: "Astrorizon interface preview",
       caption1: "Real-time analysis",
       caption2: "Empathetic guidance",
+      dailyLabel: "Today’s horoscope",
+      dailyTitle: "A favorable day to clarify an important decision.",
+      dailyItems: [
+        { label: "Love", value: "Smooth dialogue" },
+        { label: "Work", value: "Good timing to act" },
+        { label: "Energy", value: "Slow down after 6pm" },
+      ],
+      chatLabel: "Live question",
+      chatQuestion: "Is this the right time to relaunch this project?",
+      chatAnswer:
+        "Yes. Today’s transits support renewed contact and a grounded decision, without forcing the pace.",
+      momentLabel: "Key moment",
+      momentText:
+        "Between 2pm and 4pm, your communication is clearer. Use that window for the message that matters.",
     },
     navbar: {
+      trust: "Trust",
       howItWorks: "How it works",
       pricing: "Pricing",
+      faq: "FAQ",
       login: "Login",
       register: "Start",
       language: "Language",
@@ -463,10 +562,17 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       mobileMenu: "Mobile menu",
     },
     socialProof: {
+      eyebrow: "Trust",
+      title: "A useful, credible experience from the very first visit.",
       badges: {
         swiss: "Swiss Ephemeris Calculations",
         rgpd: "GDPR Protected Data",
         available: "Available 24/7",
+      },
+      proofs: {
+        swiss: "Planetary positions calculated with a reference-grade engine.",
+        rgpd: "Birth data, conversations, and account data are handled securely.",
+        available: "Immediate answers, without waiting or booking a consultation.",
       },
       metrics: {
         users: "Calculation engine",
@@ -478,6 +584,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     problem: {
+      eyebrow: "Transformation",
+      intro: "You are looking for personal guidance, not generic content.",
       title: "Astrology should light your path, not confuse you",
       before: {
         title: "Today",
@@ -493,21 +601,26 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     solution: {
+      eyebrow: "How it works",
+      subtitle: "Three simple steps to move from intuition to usable guidance.",
       title: "How it works?",
       step1: {
         title: "Create your birth profile",
         desc: "Share your date, time and place of birth with precision.",
         benefit: "Birth chart calculated instantly",
+        example: "Date, time, place of birth",
       },
       step2: {
         title: "Chat with your AI",
         desc: "Ask all your questions to your personal astrologer.",
         benefit: "Tailor-made answers 24/7",
+        example: "“Is this the right time to restart this conversation?”",
       },
       step3: {
         title: "Follow your guidance",
         desc: "Receive actionable advice for your day every morning.",
         benefit: "Seize celestial opportunities",
+        example: "Best window, tone of the day, concrete advice",
       },
     },
     testimonials: {
@@ -553,9 +666,18 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     pricing: {
+      eyebrow: "Choice",
+      subtitle:
+        "Start for free, choose Basic for regular guidance, Premium for a complete day-to-day companion.",
       title: "Choose your path",
       perMonth: "/ month",
       recommended: "Most popular",
+      audience: {
+        free: "To discover the experience",
+        basic: "For regular guidance",
+        premium: "For complete support",
+      },
+      freeLabel: "Free",
       cta: {
         free: "Start for free",
         paid: "Choose this plan",
@@ -590,6 +712,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       reassurance: "No strings attached. One-click cancellation.",
     },
     faq: {
+      eyebrow: "Objections",
+      subtitle: "The most common questions before getting started.",
       title: "Frequently Asked Questions",
       items: [
         {
@@ -619,6 +743,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       ],
     },
     finalCta: {
+      eyebrow: "Decision",
       title: "Start your birth chart in just a few minutes",
       subtitle: "Try Astrorizon for free today and immediately see how the guidance applies to your situation.",
       button: "Start for free",
@@ -666,6 +791,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
     hero: {
       titleLead: "Tu guía astrológica personal",
       titleAccent: "Siempre disponible",
+      eyebrow: "Guía astrológica premium",
+      previewLabel: "Vista previa de la experiencia",
       subtitle: "Comprende tu día, haz tus preguntas y recibe una guía personal útil desde el primer minuto.",
       bullet1: "Carta natal completa gratuita",
       bullet2: "Respuestas instantáneas y empáticas",
@@ -678,10 +805,26 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       imageAlt: "Vista previa de la interfaz de Astrorizon",
       caption1: "Análisis en tiempo real",
       caption2: "Guía empática",
+      dailyLabel: "Horóscopo del día",
+      dailyTitle: "Un día favorable para aclarar una decisión importante.",
+      dailyItems: [
+        { label: "Amor", value: "Diálogo fluido" },
+        { label: "Trabajo", value: "Buen momento para actuar" },
+        { label: "Energía", value: "Baja el ritmo después de las 18h" },
+      ],
+      chatLabel: "Pregunta en directo",
+      chatQuestion: "¿Es el momento adecuado para reactivar este proyecto?",
+      chatAnswer:
+        "Sí. Los tránsitos del día favorecen retomar el contacto y decidir con calma, sin forzar nada.",
+      momentLabel: "Momento clave",
+      momentText:
+        "Entre las 14h y las 16h tu comunicación es más clara. Aprovecha esa ventana para enviar el mensaje importante.",
     },
     navbar: {
+      trust: "Confianza",
       howItWorks: "Cómo funciona",
       pricing: "Precios",
+      faq: "FAQ",
       login: "Conexión",
       register: "Empezar",
       language: "Idioma",
@@ -694,10 +837,17 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       mobileMenu: "Menú móvil",
     },
     socialProof: {
+      eyebrow: "Confianza",
+      title: "Una experiencia útil, clara y creíble desde la primera visita.",
       badges: {
         swiss: "Cálculos de Swiss Ephemeris",
         rgpd: "Datos protegidos por RGPD",
         available: "Disponible 24/7",
+      },
+      proofs: {
+        swiss: "Posiciones planetarias calculadas con un motor de referencia.",
+        rgpd: "Nacimiento, conversaciones y cuenta tratados de forma segura.",
+        available: "Respuestas inmediatas, sin espera ni cita previa.",
       },
       metrics: {
         users: "Motor de cálculo",
@@ -709,6 +859,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     problem: {
+      eyebrow: "Transformación",
+      intro: "Buscas una guía personal, no generalidades.",
       title: "La astrología debería iluminar tu camino, no confundirte",
       before: {
         title: "Hoy",
@@ -724,21 +876,26 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     solution: {
+      eyebrow: "Funcionamiento",
+      subtitle: "Tres pasos simples para pasar de la intuición a una guía accionable.",
       title: "¿Cómo funciona?",
       step1: {
         title: "Crea tu perfil natal",
         desc: "Comparte tu fecha, hora y lugar de nacimiento con precisión.",
         benefit: "Carta natal calculada al instante",
+        example: "Fecha, hora y lugar de nacimiento",
       },
       step2: {
         title: "Chatea con tu IA",
         desc: "Haz todas tus preguntas a tu astrólogo personal.",
         benefit: "Respuestas a medida 24/7",
+        example: "“¿Es el momento adecuado para retomar esta conversación?”",
       },
       step3: {
         title: "Sigue tu guía",
         desc: "Recibe consejos prácticos para tu día cada mañana.",
         benefit: "Aprovecha las oportunidades celestiales",
+        example: "Ventana favorable, tono del día y consejo concreto",
       },
     },
     testimonials: {
@@ -784,9 +941,18 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       },
     },
     pricing: {
+      eyebrow: "Elección",
+      subtitle:
+        "Empieza gratis, elige Basic para una guía regular y Premium para un acompañamiento completo del día a día.",
       title: "Elige tu camino",
       perMonth: "/ mes",
       recommended: "Más popular",
+      audience: {
+        free: "Para descubrir la experiencia",
+        basic: "Para una guía regular",
+        premium: "Para un acompañamiento completo",
+      },
+      freeLabel: "Gratis",
       cta: {
         free: "Empezar gratis",
         paid: "Elegir este plan",
@@ -821,6 +987,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       reassurance: "Sin compromiso. Cancelación en un clic.",
     },
     faq: {
+      eyebrow: "Objeciones",
+      subtitle: "Las preguntas más frecuentes antes de empezar.",
       title: "Preguntas frecuentes",
       items: [
         {
@@ -850,6 +1018,7 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       ],
     },
     finalCta: {
+      eyebrow: "Decisión",
       title: "Empieza tu carta natal en solo unos minutos",
       subtitle: "Prueba Astrorizon gratis hoy y comprueba de inmediato cómo la guía se aplica a tu situación.",
       button: "Empezar gratis",
