@@ -23,6 +23,10 @@ from app.services.daily_prediction_types import (
     ComputeMode,
     DailyPredictionServiceError,
 )
+from app.services.horoscope_daily_entitlement_gate import (
+    HoroscopeDailyAccessDeniedError,
+    HoroscopeDailyEntitlementGate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -518,7 +522,20 @@ async def get_daily_prediction(
                 detail="Invalid date value. Use a real calendar date in YYYY-MM-DD.",
             )
 
+    # 1. Obtenir les prédictions
     try:
+        # Resolve variant_code (Story 64.2)
+        try:
+            entitlement = HoroscopeDailyEntitlementGate.check_and_get_variant(
+                db, user_id=current_user.id
+            )
+            variant_code = entitlement.variant_code
+        except HoroscopeDailyAccessDeniedError as exc:
+            raise HTTPException(
+                status_code=403,
+                detail={"code": exc.reason_code, "message": str(exc)},
+            )
+
         result = service.get_or_compute(
             user_id=current_user.id,
             db=db,
@@ -590,6 +607,7 @@ async def get_daily_prediction(
             astrologer_profile_key=astrologer_profile_key,
             lang=current_user.lang if hasattr(current_user, "lang") else "fr",
             prompt_context=prompt_context,
+            variant_code=variant_code,
         )
     except ValueError as exc:
         raise HTTPException(

@@ -53,10 +53,21 @@ class LLMNarrator:
         best_window: dict[str, Any] | None = None,
         turning_point: dict[str, Any] | None = None,
         domain_ranking: list[dict[str, Any]] | None = None,
+        variant_code: str | None = None,
     ) -> NarratorResult | None:
         from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
 
         try:
+            # 1. Resolve model name based on variant_code (Story 64.2)
+            # variant_code expected: "summary_only" | "full"
+            use_case = "daily_prediction"
+            if variant_code == "summary_only":
+                use_case = "horoscope_daily_free"
+            elif variant_code == "full":
+                use_case = "horoscope_daily_full"
+
+            model = resolve_model(use_case)
+
             base_prompt = AstrologerPromptBuilder().build(
                 common_context=common_context,
                 time_windows=time_windows,
@@ -70,7 +81,6 @@ class LLMNarrator:
             )
 
             client = openai.AsyncOpenAI()  # uses OPENAI_API_KEY from env
-            model = resolve_model("daily_prediction")
             result: NarratorResult | None = None
             for attempt in range(1, self.MAX_NARRATION_ATTEMPTS + 1):
                 prompt = self._build_attempt_prompt(base_prompt, attempt)
@@ -95,9 +105,10 @@ class LLMNarrator:
             return result
 
         except asyncio.TimeoutError:
+            # Fallback to generic name for log if use_case resolution failed early
             logger.warning(
                 "llm_narrator.timeout model=%s timeout_seconds=%s",
-                resolve_model("daily_prediction"),
+                model if "model" in locals() else "unknown",
                 self.TIMEOUT_SECONDS,
             )
             return None

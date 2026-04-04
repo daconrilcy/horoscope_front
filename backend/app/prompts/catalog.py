@@ -25,8 +25,37 @@ class PromptEntry(BaseModel):
 CHAT_RESPONSE_V1 = {"type": "object", "required": ["message"]}
 ASTRO_RESPONSE_V1 = {"type": "object", "required": ["summary", "key_points", "advice"]}
 ASTRO_RESPONSE_V3 = {"type": "object", "required": ["summary", "sections", "highlights"]}
+HOROSCOPE_FREE_OUTPUT_SCHEMA = {
+    "type": "object",
+    "required": ["day_climate"],
+    "properties": {
+        "day_climate": {
+            "type": "object",
+            "required": ["summary"],
+            "properties": {"summary": {"type": "string"}},
+        }
+    },
+}
 
 PROMPT_CATALOG: dict[str, PromptEntry] = {
+    "horoscope_daily_free": PromptEntry(
+        name="horoscope-daily-free-v1",
+        description="Horoscope du jour restreint au résumé (plan free)",
+        use_case_key="horoscope_daily_free",
+        engine_env_key="OPENAI_ENGINE_HOROSCOPE_DAILY_FREE",
+        max_tokens=500,
+        temperature=0.7,
+        output_schema=HOROSCOPE_FREE_OUTPUT_SCHEMA,
+    ),
+    "horoscope_daily_full": PromptEntry(
+        name="horoscope-daily-full-v1",
+        description="Horoscope du jour complet (plan basic/premium)",
+        use_case_key="horoscope_daily_full",
+        engine_env_key="OPENAI_ENGINE_HOROSCOPE_DAILY_FULL",
+        max_tokens=3000,
+        temperature=0.7,
+        output_schema=None,  # schéma complet géré par le gateway existant
+    ),
     "guidance_daily": PromptEntry(
         name="guidance-daily-v1",
         description="Daily astrological guidance",

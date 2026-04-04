@@ -72,6 +72,7 @@ class PublicPredictionAssembler:
         astrologer_profile_key: str = "standard",
         lang: str = "fr",
         prompt_context: Any | None = None,
+        variant_code: str | None = None,
     ) -> dict[str, Any]:
         # AC1 Story 42.16: Resolve evidence pack
         evidence = self._resolve_evidence_pack(snapshot, engine_output)
@@ -218,6 +219,7 @@ class PublicPredictionAssembler:
                 best_window=best_window,
                 turning_point=main_turning_point,
                 domain_ranking=public_domains,
+                variant_code=variant_code,
             )
 
             if narrator_res:
