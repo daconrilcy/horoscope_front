@@ -62,9 +62,9 @@ def seed() -> None:
                 "quotas": [],
             },
             "natal_chart_long": {
-                "is_enabled": False,
-                "access_mode": AccessMode.DISABLED,
-                "variant_code": None,
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": "free_short",
                 "quotas": [],
             },
             "astrologer_chat": {

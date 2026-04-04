@@ -33,6 +33,7 @@ class UserNatalInterpretationModel(Base):
             "user_id",
             "chart_id",
             "level",
+            "variant_code",
             unique=True,
             postgresql_where=text("persona_id IS NULL"),
             sqlite_where=text("persona_id IS NULL"),
@@ -43,6 +44,7 @@ class UserNatalInterpretationModel(Base):
             "chart_id",
             "level",
             "persona_id",
+            "variant_code",
             unique=True,
             postgresql_where=text("persona_id IS NOT NULL"),
             sqlite_where=text("persona_id IS NOT NULL"),
@@ -65,6 +67,7 @@ class UserNatalInterpretationModel(Base):
     )
 
     use_case: Mapped[str] = mapped_column(String(100), nullable=False)
+    variant_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     persona_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     persona_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
 

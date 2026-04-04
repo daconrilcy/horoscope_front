@@ -36,8 +36,25 @@ HOROSCOPE_FREE_OUTPUT_SCHEMA = {
         }
     },
 }
+NATAL_FREE_SHORT_SCHEMA = {
+    "type": "object",
+    "required": ["summary", "accordion_titles"],
+    "properties": {
+        "summary": {"type": "string"},
+        "accordion_titles": {"type": "array", "items": {"type": "string"}},
+    },
+}
 
 PROMPT_CATALOG: dict[str, PromptEntry] = {
+    "natal_long_free": PromptEntry(
+        name="natal-long-free-v1",
+        description="Interprétation natale restreinte (plan free)",
+        use_case_key="natal_long_free",
+        engine_env_key="OPENAI_ENGINE_NATAL_LONG_FREE",
+        max_tokens=1000,
+        temperature=0.7,
+        output_schema=NATAL_FREE_SHORT_SCHEMA,
+    ),
     "horoscope_daily_free": PromptEntry(
         name="horoscope-daily-free-v1",
         description="Horoscope du jour restreint au résumé (plan free)",

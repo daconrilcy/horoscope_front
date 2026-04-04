@@ -135,6 +135,7 @@ class NatalInterpretationServiceV2:
                 "NATAL_EVOLUTION_PATH",
             ]
         ] = None,
+        variant_code: Optional[str] = None,
     ) -> NatalInterpretationResponse:
         persona_uuid: uuid.UUID | None = None
         if persona_id:
@@ -161,6 +162,10 @@ class NatalInterpretationServiceV2:
                 stmt = stmt.where(UserNatalInterpretationModel.persona_id == persona_uuid)
             else:
                 stmt = stmt.where(UserNatalInterpretationModel.persona_id.is_(None))
+
+            # story 64.3: variant_code must match for cached complete interpretations
+            if level == "complete":
+                stmt = stmt.where(UserNatalInterpretationModel.variant_code == variant_code)
 
             stmt = stmt.order_by(
                 UserNatalInterpretationModel.created_at.desc(),
@@ -272,6 +277,21 @@ class NatalInterpretationServiceV2:
         evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
 
         # 2. Use case selection
+        if level == "complete" and variant_code == "free_short":
+            return await NatalInterpretationServiceV2._generate_free_short(
+                db=db,
+                user_id=user_id,
+                chart_id=chart_id,
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                chart_json_dict=chart_json_dict,
+                evidence_catalog=evidence_catalog,
+                locale=locale,
+                request_id=request_id,
+                trace_id=trace_id,
+                degraded_mode_str=degraded_mode_str,
+            )
+
         if level == "complete" and module:
             use_case_key = MODULE_TO_USE_CASE_KEY.get(module, "natal_interpretation")
         else:
@@ -470,6 +490,7 @@ class NatalInterpretationServiceV2:
                         chart_id=chart_id,
                         level=db_level,
                         use_case=gateway_result.use_case,
+                        variant_code=variant_code,
                         persona_id=persona_uuid,
                         persona_name=persona_name,
                         prompt_version_id=prompt_version_uuid,
@@ -481,6 +502,7 @@ class NatalInterpretationServiceV2:
                 else:
                     primary.chart_id = chart_id
                     primary.use_case = gateway_result.use_case
+                    primary.variant_code = variant_code
                     primary.persona_id = persona_uuid
                     primary.persona_name = persona_name
                     primary.prompt_version_id = prompt_version_uuid
@@ -506,6 +528,162 @@ class NatalInterpretationServiceV2:
             data=NatalInterpretationData(
                 chart_id=chart_id,
                 use_case=gateway_result.use_case,
+                interpretation=interpretation,
+                meta=meta,
+                degraded_mode=degraded_mode_str,
+            ),
+            disclaimers=disclaimers,
+        )
+
+    @staticmethod
+    async def _generate_free_short(
+        db: Session,
+        user_id: int,
+        chart_id: str,
+        natal_result: NatalResult,
+        birth_profile: UserBirthProfileData,
+        chart_json_dict: dict,
+        evidence_catalog: list,
+        locale: str,
+        request_id: str,
+        trace_id: str,
+        degraded_mode_str: str | None,
+    ) -> NatalInterpretationResponse:
+        """
+        Génère une interprétation restreinte pour les utilisateurs free.
+        Appelle un prompt unique 'natal_long_free' qui produit summary + accordion_titles.
+        """
+        use_case_key = "natal_long_free"
+
+        user_input = {
+            "chart_json": chart_json_dict,
+            "locale": locale,
+        }
+        context = {
+            "locale": locale,
+            "chart_json": json.dumps(chart_json_dict, ensure_ascii=False),
+            "evidence_catalog": evidence_catalog,
+            "use_case": use_case_key,
+            "validation_strict": False,
+        }
+
+        gateway = LLMGateway()
+        gateway_result = await gateway.execute(
+            use_case=use_case_key,
+            user_input=user_input,
+            context=context,
+            request_id=request_id,
+            trace_id=trace_id,
+            user_id=user_id,
+            db=db,
+        )
+
+        if not gateway_result.structured_output:
+            logger.error(f"Gateway returned no structured output for {use_case_key}")
+            raise RuntimeError("Gateway returned no structured output")
+
+        disclaimers = get_disclaimers(locale)
+        structured = gateway_result.structured_output
+        
+        # On mappe vers AstroResponseV1 (summary présent, sections vides)
+        # story 64.3: accordion_titles est retourné par le LLM mais pas encore dans AstroResponseV1.
+        # On va l'injecter dans interpretation_payload pour persistence et UI.
+        
+        interpretation = AstroResponseV1(
+            title="Thème Natal (Résumé)",
+            summary=structured.get("summary", ""),
+            sections=[
+                {
+                    "key": "overall",
+                    "heading": "Résumé Global",
+                    "content": "Contenu restreint. Passez au plan Basic ou Premium pour débloquer l'analyse complète.",
+                },
+                {
+                    "key": "inner_life",
+                    "heading": "Vie Intérieure",
+                    "content": "Contenu restreint. Passez au plan Basic ou Premium pour débloquer l'analyse complète.",
+                }
+            ],
+            highlights=["Résumé Premium", "Analyse des dominantes", "Potentiel d'évolution"],
+            key_points=[],
+            advice=["Passez au plan Basic pour l'analyse complète", "Explorez vos dominantes", "Suivez votre guide quotidien"],
+            disclaimers=disclaimers
+        )
+
+        meta = InterpretationMeta(
+            id=None,
+            level="complete",
+            use_case=use_case_key,
+            persona_id=None,
+            persona_name=None,
+            prompt_version_id=gateway_result.meta.prompt_version_id,
+            schema_version="v1",
+            validation_status=gateway_result.meta.validation_status,
+            was_fallback=gateway_result.meta.fallback_triggered,
+            latency_ms=gateway_result.meta.latency_ms,
+            request_id=request_id,
+            cached=False,
+        )
+
+        # Persistence
+        persist_payload = {
+            **structured,
+            "title": "Thème Natal (Résumé)",
+            "sections": [
+                {
+                    "key": "overall",
+                    "heading": "Résumé Global",
+                    "content": "Contenu restreint. Passez au plan Basic ou Premium pour débloquer l'analyse complète.",
+                },
+                {
+                    "key": "inner_life",
+                    "heading": "Vie Intérieure",
+                    "content": "Contenu restreint. Passez au plan Basic ou Premium pour débloquer l'analyse complète.",
+                }
+            ],
+            "highlights": ["Résumé Premium", "Analyse des dominantes", "Potentiel d'évolution"],
+            "key_points": [],
+            "advice": ["Passez au plan Basic pour l'analyse complète", "Explorez vos dominantes", "Suivez votre guide quotidien"]
+        }
+        
+        prompt_version_uuid = (
+            uuid.UUID(gateway_result.meta.prompt_version_id)
+            if gateway_result.meta.prompt_version_id
+            else None
+        )
+        
+        # Nettoyage anciens doublons éventuels
+        stmt_del = select(UserNatalInterpretationModel).where(
+            UserNatalInterpretationModel.user_id == user_id,
+            UserNatalInterpretationModel.level == InterpretationLevel.COMPLETE,
+            UserNatalInterpretationModel.variant_code == "free_short"
+        )
+        existing_rows = list(db.execute(stmt_del).scalars().all())
+        for row in existing_rows:
+            db.delete(row)
+
+        primary = UserNatalInterpretationModel(
+            user_id=user_id,
+            chart_id=chart_id,
+            level=InterpretationLevel.COMPLETE,
+            use_case=use_case_key,
+            variant_code="free_short",
+            persona_id=None,
+            persona_name=None,
+            prompt_version_id=prompt_version_uuid,
+            interpretation_payload=persist_payload,
+            was_fallback=gateway_result.meta.fallback_triggered,
+            degraded_mode=degraded_mode_str,
+        )
+        db.add(primary)
+        db.flush()
+        meta.id = primary.id
+        meta.persisted_at = primary.created_at or datetime.now(timezone.utc)
+
+        return NatalInterpretationResponse(
+            data=NatalInterpretationData(
+                chart_id=chart_id,
+                use_case=use_case_key,
                 interpretation=interpretation,
                 meta=meta,
                 degraded_mode=degraded_mode_str,

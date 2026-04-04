@@ -114,12 +114,14 @@ async def interpret_natal_chart(
 
     # Gate entitlement — uniquement pour use_case_level="complete" (natal_chart_long)
     entitlement_info: NatalChartLongEntitlementInfo | None = None
+    variant_code: str | None = None
     if body.use_case_level == "complete":
         try:
             entitlement_result = NatalChartLongEntitlementGate.check_and_consume(
                 db, user_id=current_user.id
             )
             entitlement_info = _build_natal_entitlement_info(entitlement_result)
+            variant_code = entitlement_result.variant_code
         except NatalChartLongQuotaExceededError as error:
             db.rollback()
             return _create_error_response(
@@ -182,6 +184,7 @@ async def interpret_natal_chart(
             trace_id=trace_id,
             force_refresh=body.force_refresh,
             module=body.module,
+            variant_code=variant_code,
         )
 
         current_step = "apply_disclaimers"
