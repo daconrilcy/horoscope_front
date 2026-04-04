@@ -7,6 +7,7 @@ Status: done
 - La navbar finale expose 4 entrées desktop : confiance, fonctionnement, tarifs, FAQ.
 - Le sélecteur de langue est visuellement secondaire.
 - Le sélecteur de langue pilote désormais une source d'état partagée par toute l'application publique : un changement depuis `landing-navbar__lang-wrapper` met à jour immédiatement l'ensemble des sections de la landing, et non plus la seule navbar.
+- Le sélecteur de langue a reçu une passe visuelle dédiée : capsule plus dense, glassmorph plus net, halo réduit, dropdown plus structurée et état actif plus premium pour mieux s'aligner avec le hero et le ton global de la landing.
 - Le CTA `Démarrer` est plus saillant que `Connexion`.
 - La barre devient plus compacte et plus solide visuellement au scroll, avec fond plus lisible et ombre renforcée.
 - En mobile, le bouton menu a été renforcé visuellement lors d'une passe de polissage finale, pour être plus identifiable comme action primaire de navigation que le sélecteur de langue.
