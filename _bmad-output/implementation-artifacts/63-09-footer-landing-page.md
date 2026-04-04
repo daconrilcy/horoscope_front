@@ -5,8 +5,9 @@ Status: done
 ## Mise en oeuvre réelle
 
 - Le footer final a été allégé : pas de colonne sociale rendue tant que les URLs ne sont pas activées.
-- Le contact et la confidentialité ont été remontés dans une colonne de confiance plus utile que des colonnes semi-vides.
+- Le contact et le légal ont été nettoyés pour éviter toute redondance de sortie de page.
 - Le footer reste strict sur l'absence de liens morts.
+- Une passe finale de polissage a supprimé le doublon `Confidentialité` entre les colonnes contact et légal, afin de garder une sortie de page plus nette.
 
 ## Story
 

@@ -8,6 +8,7 @@ Status: done
 - Le sélecteur de langue est visuellement secondaire.
 - Le CTA `Démarrer` est plus saillant que `Connexion`.
 - La barre devient plus compacte et plus solide visuellement au scroll, avec fond plus lisible et ombre renforcée.
+- En mobile, le bouton menu a été renforcé visuellement lors d'une passe de polissage finale, pour être plus identifiable comme action primaire de navigation que le sélecteur de langue.
 
 ## Story
 

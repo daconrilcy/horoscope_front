@@ -253,10 +253,35 @@
   }
 
   .landing-navbar__shell {
-    padding-inline: 14px;
+    padding-inline: 12px;
+    gap: 12px;
   }
 
   .landing-navbar__logo-text {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
+  }
+
+  .landing-navbar__lang {
+    min-height: 38px;
+    padding: 0 8px;
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(117, 94, 178, 0.08);
+    color: rgba(66, 55, 88, 0.78);
+  }
+
+  .landing-navbar__mobile-toggle {
+    width: 46px;
+    height: 46px;
+    border-color: rgba(111, 87, 217, 0.2);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(236, 228, 255, 0.92));
+    box-shadow: 0 14px 28px rgba(70, 50, 110, 0.16);
+  }
+
+  .landing-navbar__mobile-toggle:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(231, 221, 255, 0.96));
+  }
+
+  .landing-navbar__mobile-close {
+    box-shadow: 0 10px 22px rgba(70, 50, 110, 0.1);
   }
 }

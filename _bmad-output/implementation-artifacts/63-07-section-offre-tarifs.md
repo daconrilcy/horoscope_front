@@ -8,6 +8,7 @@ Status: done
 - `Basic` est mis en avant comme plan vedette par la hiérarchie visuelle et le CTA le plus fort.
 - Chaque plan a désormais un positionnement d'usage explicite dans la carte, au-delà du simple tableau de features.
 - Le plan `trial` reste aligné au modèle canonique dans `pricingConfig.ts`, mais n'est pas exposé dans la grille publique (`isAvailable: false`).
+- Une passe de finition a encore accentué la différenciation visuelle: cartes latérales plus sobres, carte `Basic` légèrement plus élevée et plus contrastée, lecture `Free découverte / Basic recommandé / Premium intensif` plus immédiate.
 
 ## Story
 

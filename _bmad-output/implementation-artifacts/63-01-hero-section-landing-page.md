@@ -8,6 +8,7 @@ Status: done
 - Le CTA secondaire implémenté est `Découvrir comment ça marche` et scrolle vers `#how-it-works`.
 - Le visuel n'est pas un screenshot brut mais une composition produit crédible : carte horoscope du jour, conversation IA et encart "moment clé".
 - Le hero est compacté sur mobile pour éviter qu'un titre trop long monopolise le premier écran.
+- Une passe de finition a encore réduit les espacements mobiles et remonté la composition produit, afin que la preuve visuelle apparaisse plus tôt sans inverser l'ordre narratif texte puis visuel.
 
 ## Story
 

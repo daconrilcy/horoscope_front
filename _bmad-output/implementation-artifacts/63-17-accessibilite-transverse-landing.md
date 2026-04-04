@@ -8,6 +8,7 @@ Status: done
 - Les labels ARIA de navigation, l'accordéon FAQ et les contrôles du menu mobile sont câblés.
 - Le hover des cartes pricing respecte `prefers-reduced-motion`.
 - L'audit reste une passe continue, mais les correctifs transverses prioritaires de la landing ont été intégrés.
+- Les itérations finales ont conservé ces garde-fous tout en renforçant la lisibilité mobile: bouton menu plus évident, hover pricing toujours encadré par `prefers-reduced-motion`, et focus/navigation inchangés malgré le polissage visuel.
 
 ## Story
 

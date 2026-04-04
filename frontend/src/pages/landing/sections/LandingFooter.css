@@ -57,8 +57,7 @@
   gap: 10px;
 }
 
-.landing-footer__link,
-.landing-footer__trust-item {
+.landing-footer__link {
   display: inline-flex;
   align-items: center;
   gap: 8px;

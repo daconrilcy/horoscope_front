@@ -1,4 +1,4 @@
-import { Mail, ShieldCheck } from "lucide-react"
+import { Mail } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "../../../i18n"
 import logo from "../../../assets/logo.PNG"
@@ -77,10 +77,6 @@ export const LandingFooter = () => {
                 </a>
               </li>
             )}
-            <li className="landing-footer__trust-item">
-              <ShieldCheck size={16} aria-hidden="true" />
-              {t.footer.legal.privacy.label}
-            </li>
           </ul>
         </div>
 
