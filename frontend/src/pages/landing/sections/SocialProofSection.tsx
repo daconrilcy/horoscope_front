@@ -1,109 +1,76 @@
-import { useEffect, useRef, useState } from "react"
-import { ShieldCheck, Zap, Globe } from "lucide-react"
-import { useTranslation } from "../../../i18n"
+import { Globe, ShieldCheck, Zap } from "lucide-react"
+import { useAstrologyLabels, useTranslation } from "../../../i18n"
 import "./SocialProofSection.css"
+
+const SOCIAL_PROOF_LOCAL_COPY = {
+  fr: {
+    eyebrow: "Confiance",
+    title: "Une expérience utile, cadrée et crédible dès la première visite.",
+    swissProof: "Positions planétaires calculées avec un moteur de référence.",
+    rgpdProof: "Naissance, échanges et compte utilisateur traités de façon sécurisée.",
+    availableProof: "Réponses immédiates, sans attente ni prise de rendez-vous.",
+  },
+  en: {
+    eyebrow: "Trust",
+    title: "A useful, credible experience from the very first visit.",
+    swissProof: "Planetary positions calculated with a reference-grade engine.",
+    rgpdProof: "Birth data, conversations, and account data are handled securely.",
+    availableProof: "Immediate answers, without waiting or booking a consultation.",
+  },
+  es: {
+    eyebrow: "Confianza",
+    title: "Una experiencia útil, clara y creíble desde la primera visita.",
+    swissProof: "Posiciones planetarias calculadas con un motor de referencia.",
+    rgpdProof: "Nacimiento, conversaciones y cuenta tratados de forma segura.",
+    availableProof: "Respuestas inmediatas, sin espera ni cita previa.",
+  },
+} as const
 
 export const SocialProofSection = () => {
   const t = useTranslation("landing")
-  const sectionRef = useRef<HTMLElement>(null)
-  const [isVisible, setIsVisible] = useState(false)
+  const { lang } = useAstrologyLabels()
+  const localCopy = SOCIAL_PROOF_LOCAL_COPY[lang]
 
-  // AC1.4: Feature flag for variant
-  const variant = import.meta.env.VITE_SOCIAL_PROOF_VARIANT || "badges"
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.unobserve(entry.target)
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current)
-      }
-    }
-  }, [])
+  const items = [
+    {
+      key: "swiss",
+      icon: <Globe size={22} aria-hidden="true" />,
+      title: t.socialProof.badges.swiss,
+      proof: localCopy.swissProof,
+    },
+    {
+      key: "rgpd",
+      icon: <ShieldCheck size={22} aria-hidden="true" />,
+      title: t.socialProof.badges.rgpd,
+      proof: localCopy.rgpdProof,
+    },
+    {
+      key: "available",
+      icon: <Zap size={22} aria-hidden="true" />,
+      title: t.socialProof.badges.available,
+      proof: localCopy.availableProof,
+    },
+  ]
 
   return (
-    <section 
-      id="social-proof" 
-      ref={sectionRef}
-      className={`social-proof-section ${isVisible ? "social-proof-section--visible" : ""}`}
-      aria-label="Preuves sociales et certifications"
-    >
+    <section id="social-proof" className="social-proof-section" aria-labelledby="social-proof-title">
       <div className="social-proof__container">
-        {variant === "badges" ? (
-          <>
-            <div className="social-proof__item">
-              <div className="social-proof__icon">
-                <Globe size={24} aria-hidden="true" />
-              </div>
-              <div className="social-proof__content">
-                <span className="social-proof__value">{t.socialProof.badges.swiss}</span>
-              </div>
-            </div>
-            
-            <div className="social-proof__item">
-              <div className="social-proof__icon">
-                <ShieldCheck size={24} aria-hidden="true" />
-              </div>
-              <div className="social-proof__content">
-                <span className="social-proof__value">{t.socialProof.badges.rgpd}</span>
-              </div>
-            </div>
+        <div className="social-proof__intro">
+          <span className="social-proof__eyebrow">{localCopy.eyebrow}</span>
+          <h2 id="social-proof-title">{localCopy.title}</h2>
+        </div>
 
-            <div className="social-proof__item">
-              <div className="social-proof__icon">
-                <Zap size={24} aria-hidden="true" />
-              </div>
+        <div className="social-proof__grid">
+          {items.map((item) => (
+            <article key={item.key} className="social-proof__item">
+              <div className="social-proof__icon">{item.icon}</div>
               <div className="social-proof__content">
-                <span className="social-proof__value">{t.socialProof.badges.available}</span>
+                <h3 className="social-proof__value">{item.title}</h3>
+                <p className="social-proof__label">{item.proof}</p>
               </div>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* AC1.1: Metrics are now coming from i18n */}
-            <div className="social-proof__item">
-              <div className="social-proof__icon">
-                <Globe size={24} aria-hidden="true" />
-              </div>
-              <div className="social-proof__content">
-                <span className="social-proof__value">{t.socialProof.metrics.usersValue}</span>
-                <span className="social-proof__label">{t.socialProof.metrics.users}</span>
-              </div>
-            </div>
-            
-            <div className="social-proof__item">
-              <div className="social-proof__icon">
-                <ShieldCheck size={24} aria-hidden="true" />
-              </div>
-              <div className="social-proof__content">
-                <span className="social-proof__value">{t.socialProof.metrics.ratingValue}</span>
-                <span className="social-proof__label">{t.socialProof.metrics.rating}</span>
-              </div>
-            </div>
-
-            <div className="social-proof__item">
-              <div className="social-proof__icon">
-                <Zap size={24} aria-hidden="true" />
-              </div>
-              <div className="social-proof__content">
-                <span className="social-proof__value">{t.socialProof.metrics.consultationsValue}</span>
-                <span className="social-proof__label">{t.socialProof.metrics.consultations}</span>
-              </div>
-            </div>
-          </>
-        )}
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   )

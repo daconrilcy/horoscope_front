@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom"
 import { LandingNavbar } from "../pages/landing/sections/LandingNavbar"
 import { LandingFooter } from "../pages/landing/sections/LandingFooter"
 import { useTranslation } from "../i18n"
+import "./LandingLayout.css"
 
 /**
  * LandingLayout

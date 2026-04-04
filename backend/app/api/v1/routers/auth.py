@@ -3,13 +3,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.core.config import settings
 from app.core.rbac import is_valid_role
 from app.core.request_id import resolve_request_id
 from app.core.security import SecurityError, decode_token
@@ -166,10 +167,10 @@ def me(
     },
 )
 def register(
-    request: Request, 
-    payload: RegisterRequest, 
+    request: Request,
+    payload: RegisterRequest,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
     try:
@@ -188,20 +189,19 @@ def register(
 
         # AC1: Trigger welcome email J0 (non-blocking)
         background_tasks.add_task(
-            EmailService.send_welcome_email, 
-            db=db, 
-            user_id=auth_response.user.id, 
-            email=auth_response.user.email
-        )
-
-        # Story 63.15 (V2): Trigger onboarding sequence
-        # Use a separate background task or keep it here if desired for prod
-        background_tasks.add_task(
-            EmailService.schedule_onboarding_sequence,
+            EmailService.send_welcome_email,
             db=db,
             user_id=auth_response.user.id,
-            email=auth_response.user.email
+            email=auth_response.user.email,
         )
+
+        if settings.email_onboarding_sequence_enabled:
+            background_tasks.add_task(
+                EmailService.schedule_onboarding_sequence,
+                db=db,
+                user_id=auth_response.user.id,
+                email=auth_response.user.email,
+            )
 
         return {"data": auth_response.model_dump(), "meta": {"request_id": request_id}}
     except IntegrityError:

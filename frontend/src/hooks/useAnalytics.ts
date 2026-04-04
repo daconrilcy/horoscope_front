@@ -12,19 +12,10 @@ export type AnalyticsEvent =
   | 'register_success' 
   | 'register_error'
 
-/**
- * Basic consent check. 
- * In a real app, this would check a cookie or global state from a Consent Banner.
- */
 const hasConsent = () => {
-  // AC1: Privacy-first - if provider is noop, we always "have consent" for debug logging
   if (ANALYTICS_CONFIG.provider === 'noop') return true
-  
-  // Plausible is a cookie-less, privacy-first provider that can run without explicit consent
   if (ANALYTICS_CONFIG.provider === 'plausible') return true
 
-  // AC1.1: For other providers (Matomo, etc.), check if user has accepted tracking.
-  // Must be explicit to respect the GDPR scope of the epic.
   const consent = localStorage.getItem('cookie_consent')
   return consent === 'granted'
 }
@@ -38,7 +29,6 @@ export const useAnalytics = () => {
       return
     }
 
-    // AC1.1: No events without consent
     if (!hasConsent()) {
       console.warn(`[Analytics] Event ${event} suppressed: No consent`)
       return

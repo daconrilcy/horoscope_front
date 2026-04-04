@@ -2,6 +2,13 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- Le hero final conserve la route canonique `/`, mais a été réorienté vers une composition "message + preuve produit" plus forte.
+- Le CTA secondaire implémenté est `Découvrir comment ça marche` et scrolle vers `#how-it-works`.
+- Le visuel n'est pas un screenshot brut mais une composition produit crédible : carte horoscope du jour, conversation IA et encart "moment clé".
+- Le hero est compacté sur mobile pour éviter qu'un titre trop long monopolise le premier écran.
+
 ## Story
 
 As a visiteur non authentifié arrivant sur la landing page,

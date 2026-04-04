@@ -2,6 +2,13 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- La navbar finale expose 4 entrées desktop : confiance, fonctionnement, tarifs, FAQ.
+- Le sélecteur de langue est visuellement secondaire.
+- Le CTA `Démarrer` est plus saillant que `Connexion`.
+- La barre devient plus compacte et plus solide visuellement au scroll, avec fond plus lisible et ombre renforcée.
+
 ## Story
 
 As a visiteur non authentifié sur la landing page,

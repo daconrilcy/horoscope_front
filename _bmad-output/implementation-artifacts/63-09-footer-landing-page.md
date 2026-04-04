@@ -2,6 +2,12 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- Le footer final a été allégé : pas de colonne sociale rendue tant que les URLs ne sont pas activées.
+- Le contact et la confidentialité ont été remontés dans une colonne de confiance plus utile que des colonnes semi-vides.
+- Le footer reste strict sur l'absence de liens morts.
+
 ## Story
 
 As a visiteur parcourant la landing page,

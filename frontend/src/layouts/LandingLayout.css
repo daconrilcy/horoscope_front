@@ -1,0 +1,22 @@
+.landing-layout {
+  --landing-page-max-width: 1200px;
+  --landing-surface-1: var(--premium-glass-surface-1);
+  --landing-surface-2: var(--premium-glass-surface-2);
+  --landing-surface-3: var(--premium-glass-surface-3);
+  --landing-accent: var(--premium-accent-purple);
+  --landing-accent-soft: color-mix(in srgb, var(--premium-accent-purple-soft) 70%, white 30%);
+  --landing-shadow-card: var(--premium-shadow-card);
+  --landing-shadow-highlight: var(--premium-shadow-focus);
+  --landing-radius-card: var(--premium-radius-card);
+  --landing-radius-cta: var(--premium-radius-pill);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.58), transparent 28%),
+    radial-gradient(circle at top right, rgba(203, 189, 255, 0.26), transparent 24%),
+    linear-gradient(180deg, var(--premium-bg-start) 0%, var(--premium-bg-mid) 42%, var(--premium-bg-end) 100%);
+  color: var(--premium-text-main);
+}
+
+.landing-layout__main {
+  width: 100%;
+}

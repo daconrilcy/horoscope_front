@@ -117,6 +117,6 @@
 
 /* Typography - System font stack (§4.2) */
 html, body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
+  font-family: var(--font-family-base);
 }
 

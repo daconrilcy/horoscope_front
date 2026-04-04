@@ -2,6 +2,13 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- Le pricing final ajoute un sous-titre d'aide au choix au-dessus des cartes.
+- `Basic` est mis en avant comme plan vedette par la hiérarchie visuelle et le CTA le plus fort.
+- Chaque plan a désormais un positionnement d'usage explicite dans la carte, au-delà du simple tableau de features.
+- Le plan `trial` reste aligné au modèle canonique dans `pricingConfig.ts`, mais n'est pas exposé dans la grille publique (`isAvailable: false`).
+
 ## Story
 
 As a visiteur non authentifié ayant compris la valeur du produit,

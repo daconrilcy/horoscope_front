@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -192,6 +193,36 @@ def test_register_returns_503_when_audit_write_fails(monkeypatch: object) -> Non
     )
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "audit_unavailable"
+
+
+def test_register_skips_onboarding_sequence_when_flag_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _cleanup_users()
+    welcome_email_mock = AsyncMock(return_value=True)
+    onboarding_sequence_mock = MagicMock()
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.auth.EmailService.send_welcome_email",
+        welcome_email_mock,
+    )
+    monkeypatch.setattr(
+        "app.api.v1.routers.auth.EmailService.schedule_onboarding_sequence",
+        onboarding_sequence_mock,
+    )
+    monkeypatch.setattr(
+        "app.api.v1.routers.auth.settings.email_onboarding_sequence_enabled",
+        False,
+    )
+
+    response = client.post(
+        "/v1/auth/register",
+        json={"email": "flag-disabled@example.com", "password": "strong-pass-123"},
+    )
+
+    assert response.status_code == 200
+    welcome_email_mock.assert_awaited_once()
+    onboarding_sequence_mock.assert_not_called()
 
 
 def test_refresh_success_records_actor_identity_in_audit_event() -> None:

@@ -2,6 +2,12 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- La FAQ conserve un accordéon natif exclusif, avec une surface plus premium et un état ouvert plus marqué.
+- Le CTA final a été réécrit pour être plus décisionnel et moins redondant avec le hero.
+- Le CTA final actuellement livré est aligné sur la promesse "commencer son thème natal en quelques minutes".
+
 ## Story
 
 As a visiteur non authentifié ayant parcouru la landing page,

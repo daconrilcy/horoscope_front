@@ -1,6 +1,12 @@
 # Story 63.6: Section Preuves — Témoignages et Cas clients
 
-Status: done
+Status: implemented-behind-flag
+
+## Mise en oeuvre réelle
+
+- Le composant `TestimonialsSection` existe toujours avec feature flag `VITE_SHOW_TESTIMONIALS`.
+- Dans la landing refondue actuelle, la section n'est plus rendue dans le parcours principal MVP.
+- La stratégie retenue est : confiance qualitative + FAQ dans le funnel principal, témoignages réactivables plus tard une fois des retours clients validés disponibles.
 
 ## Story
 

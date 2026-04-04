@@ -2,6 +2,12 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- Le CTA secondaire du hero cible cette section avec le libellé `Découvrir comment ça marche`.
+- La section finale ne repose plus sur 3 cartes génériques avec connecteurs décoratifs lourds.
+- Chaque étape embarque une micro-preuve d'usage visible : données demandées, question type, synthèse actionnable.
+
 ## Story
 
 As a visiteur non authentifié sur la landing page,

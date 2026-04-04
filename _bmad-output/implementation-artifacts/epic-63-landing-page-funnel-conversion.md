@@ -1,6 +1,6 @@
 # Epic 63: Landing page et funnel de conversion vers des utilisateurs payants
 
-Status: reviewed
+Status: implemented
 
 ## Objectif
 
@@ -53,3 +53,11 @@ Créer une landing page publique crédible et maintenable, reliée à un funnel 
 - Invention d'IDs de plans `premium_monthly` / `pro_annual` absents du produit.
 - Dépendance erronée à `/v1/billing/plans`, endpoint authentifié et donc inutilisable par une landing publique.
 - Mélange entre email transactionnel et désabonnement marketing.
+
+## Mise en oeuvre réelle
+
+1. La landing publique a été refondue en une narration plus éditoriale et démonstrative : `Navbar` compacte au scroll, `Hero` avec mockup produit crédible, bloc confiance enrichi, diptyque problème/transformation, 3 étapes d'usage, pricing rehiérarchisé, FAQ + CTA final plus direct, footer allégé.
+2. La section `63.06` n'est plus exposée dans le parcours principal de la landing refondue. Le composant de témoignages reste disponible derrière feature flag pour usage futur, mais le funnel MVP actuel s'appuie sur un bloc confiance qualitatif et la FAQ.
+3. L'instrumentation analytics est active via `useAnalytics()` avec support `noop | plausible | matomo`. Plausible est traité comme provider privacy-first sans dépendance à un cookie de consentement applicatif.
+4. La séquence emails J+1/J+7 (`63.15`) reste en code mais n'est plus déclenchée par défaut : elle est désormais protégée par le flag backend `ENABLE_ONBOARDING_EMAIL_SEQUENCE=false` tant qu'elle n'est pas validée en production.
+5. Les contenus fictifs non vérifiables ont été neutralisés dans le funnel principal : pas de métriques chiffrées ni de témoignages publiés par défaut.

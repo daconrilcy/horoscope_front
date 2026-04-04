@@ -6,7 +6,6 @@ import { HeroSection } from "./sections/HeroSection"
 import { SocialProofSection } from "./sections/SocialProofSection"
 import { ProblemSection } from "./sections/ProblemSection"
 import { SolutionSection } from "./sections/SolutionSection"
-import { TestimonialsSection } from "./sections/TestimonialsSection"
 import { PricingSection } from "./sections/PricingSection"
 import { FaqSection } from "./sections/FaqSection"
 
@@ -144,7 +143,6 @@ export const LandingPage = () => {
       <SocialProofSection />
       <ProblemSection />
       <SolutionSection />
-      <TestimonialsSection />
       <PricingSection />
       <FaqSection />
     </div>

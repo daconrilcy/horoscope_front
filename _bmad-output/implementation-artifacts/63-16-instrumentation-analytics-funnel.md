@@ -2,6 +2,13 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- Le hook `useAnalytics()` est en place et couvre les événements du funnel principal.
+- `noop` reste le provider par défaut en dev/test.
+- Plausible est maintenant traité comme provider privacy-first sans blocage par un cookie de consentement applicatif local.
+- Un test frontend dédié couvre ce comportement.
+
 ## Story
 
 As a product manager et équipe produit,

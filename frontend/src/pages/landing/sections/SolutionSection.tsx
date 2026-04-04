@@ -1,92 +1,87 @@
-import { useEffect, useRef, useState } from "react"
 import { Calendar, MessageCircle, Sparkles } from "lucide-react"
-import { useTranslation } from "../../../i18n"
+import { useAstrologyLabels, useTranslation } from "../../../i18n"
 import "./SolutionSection.css"
+
+const SOLUTION_LOCAL_COPY = {
+  fr: {
+    eyebrow: "Fonctionnement",
+    subtitle: "Trois étapes simples pour passer de l'intuition à une guidance exploitable.",
+    step1Example: "Date, heure, lieu de naissance",
+    step2Example: "“Est-ce le bon moment pour relancer cette conversation ?”",
+    step3Example: "Fenêtre favorable, ton du jour, conseil concret",
+  },
+  en: {
+    eyebrow: "How it works",
+    subtitle: "Three simple steps to move from intuition to usable guidance.",
+    step1Example: "Date, time, place of birth",
+    step2Example: "“Is this the right time to restart this conversation?”",
+    step3Example: "Best window, tone of the day, concrete advice",
+  },
+  es: {
+    eyebrow: "Funcionamiento",
+    subtitle: "Tres pasos simples para pasar de la intuición a una guía accionable.",
+    step1Example: "Fecha, hora y lugar de nacimiento",
+    step2Example: "“¿Es el momento adecuado para retomar esta conversación?”",
+    step3Example: "Ventana favorable, tono del día y consejo concreto",
+  },
+} as const
 
 export const SolutionSection = () => {
   const t = useTranslation("landing")
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [visibleSteps, setVisibleItems] = useState<Set<number>>(new Set())
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const stepId = Number(entry.target.getAttribute("data-step-id"))
-            if (!isNaN(stepId)) {
-              setVisibleItems((prev) => new Set([...prev, stepId]))
-              observer.unobserve(entry.target)
-            }
-          }
-        })
-      },
-      { threshold: 0.2 }
-    )
-
-    const cards = containerRef.current?.querySelectorAll(".solution-card")
-    cards?.forEach((card) => observer.observe(card))
-
-    return () => observer.disconnect()
-  }, [])
+  const { lang } = useAstrologyLabels()
+  const localCopy = SOLUTION_LOCAL_COPY[lang]
 
   const steps = [
     {
-      id: 1,
-      number: "01",
-      icon: <Calendar size={24} />,
+      id: "01",
+      icon: <Calendar size={22} aria-hidden="true" />,
       title: t.solution.step1.title,
       desc: t.solution.step1.desc,
       benefit: t.solution.step1.benefit,
-      delay: "0ms"
+      example: localCopy.step1Example,
     },
     {
-      id: 2,
-      number: "02",
-      icon: <MessageCircle size={24} />,
+      id: "02",
+      icon: <MessageCircle size={22} aria-hidden="true" />,
       title: t.solution.step2.title,
       desc: t.solution.step2.desc,
       benefit: t.solution.step2.benefit,
-      delay: "150ms"
+      example: localCopy.step2Example,
     },
     {
-      id: 3,
-      number: "03",
-      icon: <Sparkles size={24} />,
+      id: "03",
+      icon: <Sparkles size={22} aria-hidden="true" />,
       title: t.solution.step3.title,
       desc: t.solution.step3.desc,
       benefit: t.solution.step3.benefit,
-      delay: "300ms"
-    }
+      example: localCopy.step3Example,
+    },
   ]
 
   return (
     <section id="how-it-works" className="solution-section" aria-labelledby="solution-title">
-      <h2 id="solution-title">{t.solution.title}</h2>
+      <div className="solution-section__heading">
+        <span className="solution-section__eyebrow">{localCopy.eyebrow}</span>
+        <h2 id="solution-title">{t.solution.title}</h2>
+        <p>{localCopy.subtitle}</p>
+      </div>
 
-      <div className="solution-container" ref={containerRef}>
-        <div className="solution-connector solution-connector--1" aria-hidden="true"></div>
-        <div className="solution-connector solution-connector--2" aria-hidden="true"></div>
-
+      <div className="solution-container">
         {steps.map((step) => (
-          <div 
-            key={step.id}
-            data-step-id={step.id}
-            className={`solution-card ${visibleSteps.has(step.id) ? "solution-card--visible" : ""}`}
-            style={{ transitionDelay: visibleSteps.has(step.id) ? step.delay : "0ms" }}
-          >
-            <div className="solution-step-number" aria-hidden="true">{step.number}</div>
-            <div className="solution-card-icon" aria-hidden="true">{step.icon}</div>
-            
+          <article key={step.id} className="solution-card">
+            <div className="solution-card__top">
+              <span className="solution-step-number">{step.id}</span>
+              <div className="solution-card-icon">{step.icon}</div>
+            </div>
+
             <div className="solution-card-content">
               <h3>{step.title}</h3>
               <p>{step.desc}</p>
             </div>
 
-            <div className="solution-benefit-badge">
-              {step.benefit}
-            </div>
-          </div>
+            <div className="solution-card-example">{step.example}</div>
+            <div className="solution-benefit-badge">{step.benefit}</div>
+          </article>
         ))}
       </div>
     </section>

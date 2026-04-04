@@ -410,6 +410,9 @@ class Settings:
 
         # Email Configuration
         self.enable_email = self._parse_bool_env("ENABLE_EMAIL", default=False)
+        self.email_onboarding_sequence_enabled = self._parse_bool_env(
+            "ENABLE_ONBOARDING_EMAIL_SEQUENCE", default=False
+        )
         self.email_provider = os.getenv("EMAIL_PROVIDER", "noop").lower().strip()
         self.email_from = os.getenv("EMAIL_FROM", "hello@astrorizon.ai").strip()
         self.email_from_name = os.getenv("EMAIL_FROM_NAME", "Astrorizon").strip()

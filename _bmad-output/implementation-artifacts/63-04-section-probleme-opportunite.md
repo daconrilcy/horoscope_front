@@ -2,6 +2,12 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- La section finale ajoute une phrase d'introduction au-dessus du diptyque pour reformuler le vrai problème utilisateur.
+- Le contraste visuel a été renforcé entre la colonne "Aujourd'hui" et la colonne "Avec Astrorizon".
+- Les animations en cascade initialement prévues ont été simplifiées pour privilégier la lisibilité et limiter le bruit visuel.
+
 ## Story
 
 As a visiteur non authentifié sur la landing page,

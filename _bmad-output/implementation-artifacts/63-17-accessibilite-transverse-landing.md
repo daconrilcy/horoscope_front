@@ -1,6 +1,13 @@
 # Story 63.17: Accessibilité transverse — landing page complète
 
-Status: ready-for-dev
+Status: done
+
+## Mise en oeuvre réelle
+
+- Le skip link est présent dans `LandingLayout`.
+- Les labels ARIA de navigation, l'accordéon FAQ et les contrôles du menu mobile sont câblés.
+- Le hover des cartes pricing respecte `prefers-reduced-motion`.
+- L'audit reste une passe continue, mais les correctifs transverses prioritaires de la landing ont été intégrés.
 
 ## Story
 

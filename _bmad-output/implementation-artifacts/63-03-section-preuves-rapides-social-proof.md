@@ -2,6 +2,12 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- La variante MVP réellement exposée est une section de confiance qualitative en 3 colonnes desktop / 1 colonne mobile.
+- Chaque item affiche désormais : icône + intitulé + preuve courte explicite.
+- La variante chiffrée reste techniquement possible côté contenu, mais le funnel principal n'affiche aucune métrique client fictive.
+
 ## Story
 
 As a visiteur non authentifié explorant la landing page,

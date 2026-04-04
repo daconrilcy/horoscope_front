@@ -1,6 +1,6 @@
 # Story 63.15: Scheduler séquence emails J1–J7 [V2 — post-MVP]
 
-Status: done
+Status: implemented-behind-flag
 
 ## Story
 
@@ -11,6 +11,12 @@ so que je sois guidé vers la valeur du produit et vers un plan payant à mon ry
 ## Note MVP / V2
 
 **Cette story est de priorité V2.** Le quick win business est l'email J0 (story 63.12). Les emails J1–J7 apportent de la valeur mais nécessitent une infrastructure de scheduling stabilisée. Ne pas implémenter tant que 63.12, 63.13 et 63.14 ne sont pas validés en production.
+
+## Mise en oeuvre réelle
+
+- Le code de scheduling existe côté backend, mais le déclenchement au signup n'est plus actif par défaut.
+- La planification post-inscription est maintenant conditionnée par `ENABLE_ONBOARDING_EMAIL_SEQUENCE`.
+- Valeur attendue en production tant que la séquence V2 n'est pas validée : `false`.
 
 ## Acceptance Criteria
 
