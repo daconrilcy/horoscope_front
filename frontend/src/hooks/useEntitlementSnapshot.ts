@@ -6,17 +6,21 @@ import {
   type UpgradeHint,
   BillingApiError,
 } from "../api/billing"
-import { useAccessTokenSnapshot } from "../utils/authToken"
+import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
+
+const ANONYMOUS_SUBJECT = "anonymous"
 
 /**
  * Hook généraliste exposant le snapshot complet des droits de l'utilisateur.
  * Centralise la consommation de /v1/entitlements/me.
+ * La clé inclut le sujet du token pour éviter la réutilisation de cache après changement de compte.
  */
 export function useEntitlementsSnapshot() {
   const token = useAccessTokenSnapshot()
+  const tokenSubject = getSubjectFromAccessToken(token) ?? ANONYMOUS_SUBJECT
 
   return useQuery<EntitlementsSnapshot, BillingApiError>({
-    queryKey: ["entitlements-me"],
+    queryKey: ["entitlements-me", tokenSubject],
     queryFn: fetchEntitlementsSnapshot,
     staleTime: 2 * 60 * 1000, // 2 minutes (AC5)
     enabled: !!token,

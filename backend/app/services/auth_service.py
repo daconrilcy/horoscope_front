@@ -186,6 +186,11 @@ class AuthService:
             password_hash=hash_password(password),
             role=role,
         )
+        # Tests and local resets can recycle integer user IDs across fresh databases.
+        # Clear any stale billing snapshot keyed by the reused ID before issuing tokens.
+        from app.services.billing_service import BillingService
+
+        BillingService._invalidate_cached_subscription_status(user.id)
         access_token = create_access_token(subject=str(user.id), role=user.role)
         refresh_token = create_refresh_token(subject=str(user.id), role=user.role)
         refresh_jti = AuthService._extract_refresh_jti(refresh_token)

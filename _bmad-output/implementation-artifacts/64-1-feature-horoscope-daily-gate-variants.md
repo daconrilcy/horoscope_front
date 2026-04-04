@@ -75,3 +75,7 @@ La feature `horoscope_daily` n'est pas encore enregistrée dans `FEATURE_SCOPE_R
 - Correction de plusieurs tests existants qui échouaient à cause du changement du nombre total de features (passé de 4 à 5).
 - Ajout de tests unitaires et d'intégration complets.
 - Validation via `pytest` (26 tests spécifiques passés, validation globale effectuée).
+- Hardening post-intégration :
+  - fallback backward-compatible vers `full` quand `horoscope_daily` n'est pas encore cataloguée dans certains contextes legacy/tests ;
+  - compatibilité avec les doubles de test non SQLAlchemy sur la route `/v1/predictions/daily` ;
+  - maintien du comportement historique V4 pendant la migration des entitlements canoniques.

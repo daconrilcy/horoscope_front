@@ -64,3 +64,6 @@ Cette story s'appuie sur le `NatalChartLongEntitlementGate`. Elle modifie le com
 - Ajout du support de la persistence des variants d'interprétation dans la base de données.
 - Implémentation d'un flux de génération spécifique pour le variant free, garantissant un format compatible `AstroResponseV1` tout en étant issu d'un prompt dédié plus léger.
 - Validation par test d'intégration avec mock du gateway LLM.
+- Stabilisation post-intégration :
+  - normalisation du payload persisté `free_short` pour qu'il reste relu comme une interprétation logique `complete` côté API ;
+  - mapping fiable des titres de sections depuis `accordion_titles` pour conserver le contrat frontend attendu.

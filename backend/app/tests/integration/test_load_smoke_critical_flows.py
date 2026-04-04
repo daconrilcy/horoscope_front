@@ -48,11 +48,14 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.services.billing_service import BillingService
 from app.services.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.reference_data_service import ReferenceDataService
 
 
 def _cleanup_tables() -> None:
+    app.dependency_overrides.clear()
+    BillingService.reset_subscription_status_cache()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
@@ -297,9 +300,8 @@ def test_load_smoke_critical_flows() -> None:
 
     # Inject active subscription directly
     with SessionLocal() as db:
-        from app.services.billing_service import BillingService
         BillingService.ensure_default_plans(db)
-        
+
         user = db.query(UserModel).filter_by(email="load-smoke-user@example.com").one()
         # 1. Stripe profile
         db.add(

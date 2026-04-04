@@ -1,11 +1,13 @@
-from unittest.mock import patch, MagicMock
+from datetime import UTC, date, datetime
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.main import app
+from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.domain.astrology.natal_calculation import NatalResult
 from app.infra.db.base import Base
-from app.infra.db.models.user import UserModel
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.product_entitlements import (
     AccessMode,
@@ -14,85 +16,111 @@ from app.infra.db.models.product_entitlements import (
     PlanCatalogModel,
     PlanFeatureBindingModel,
 )
-from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.models.chart_result import ChartResultModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.session import get_db_session
+from app.llm_orchestration.gateway import GatewayResult
+from app.llm_orchestration.models import GatewayMeta, UsageInfo
+from app.main import app
 from app.services.billing_service import BillingService
+from app.services.user_birth_profile_service import UserBirthProfileData
+from app.services.user_natal_chart_service import UserNatalChartMetadata, UserNatalChartReadData
 
 
 @pytest.fixture
 def setup_natal_catalog(db_session: Session):
-    # Ensure all models are registered and tables created on this session's bind
     bind = db_session.get_bind()
-    print(f"DEBUG: Base metadata tables = {list(Base.metadata.tables.keys())}")
     Base.metadata.create_all(bind=bind)
     BillingService.reset_subscription_status_cache()
-    
-    # Features
-    f_short = FeatureCatalogModel(feature_code="natal_chart_short", feature_name="Short", is_metered=False)
-    f_long = FeatureCatalogModel(feature_code="natal_chart_long", feature_name="Long", is_metered=False)
+
+    f_short = FeatureCatalogModel(
+        feature_code="natal_chart_short",
+        feature_name="Short",
+        is_metered=False,
+    )
+    f_long = FeatureCatalogModel(
+        feature_code="natal_chart_long",
+        feature_name="Long",
+        is_metered=False,
+    )
     db_session.add_all([f_short, f_long])
-    
-    # Plans
-    # Free plan with natal_chart_long ENABLED and variant free_short
-    cp_free = PlanCatalogModel(plan_code="free", plan_name="Free", audience=Audience.B2C, is_active=True)
+
+    cp_free = PlanCatalogModel(
+        plan_code="free",
+        plan_name="Free",
+        audience=Audience.B2C,
+        is_active=True,
+    )
     db_session.add(cp_free)
     db_session.flush()
-    
-    bp_free = BillingPlanModel(code="free", display_name="Free", monthly_price_cents=0, currency="EUR", daily_message_limit=10, is_active=True)
+
+    bp_free = BillingPlanModel(
+        code="free",
+        display_name="Free",
+        monthly_price_cents=0,
+        currency="EUR",
+        daily_message_limit=10,
+        is_active=True,
+    )
     db_session.add(bp_free)
     db_session.flush()
-    
-    db_session.add(PlanFeatureBindingModel(
-        plan_id=cp_free.id, feature_id=f_short.id, is_enabled=True, access_mode=AccessMode.UNLIMITED
-    ))
-    db_session.add(PlanFeatureBindingModel(
-        plan_id=cp_free.id, feature_id=f_long.id, is_enabled=True, access_mode=AccessMode.UNLIMITED, variant_code="free_short"
-    ))
-    
+
+    db_session.add(
+        PlanFeatureBindingModel(
+            plan_id=cp_free.id,
+            feature_id=f_short.id,
+            is_enabled=True,
+            access_mode=AccessMode.UNLIMITED,
+        )
+    )
+    db_session.add(
+        PlanFeatureBindingModel(
+            plan_id=cp_free.id,
+            feature_id=f_long.id,
+            is_enabled=True,
+            access_mode=AccessMode.UNLIMITED,
+            variant_code="free_short",
+        )
+    )
+
     db_session.commit()
 
 
 def test_interpret_natal_chart_free_user_gets_free_short_variant(
-    db_session: Session, setup_natal_catalog
+    db_session: Session,
+    setup_natal_catalog,
 ):
-    # 1. Setup User and Subscription in DB
     user = UserModel(email="free@example.com", password_hash="...", role="user")
     db_session.add(user)
     db_session.flush()
-    
-    from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-    from datetime import date
-    db_session.add(UserBirthProfileModel(
-        user_id=user.id, 
-        birth_date=date(1990, 1, 1), 
-        birth_time="12:00:00",
-        birth_lat=48.8566, birth_lon=2.3522, birth_place="Paris", birth_timezone="Europe/Paris"
-    ))
-    
+
+    db_session.add(
+        UserBirthProfileModel(
+            user_id=user.id,
+            birth_date=date(1990, 1, 1),
+            birth_time="12:00:00",
+            birth_lat=48.8566,
+            birth_lon=2.3522,
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        )
+    )
+
     free_plan_id = db_session.query(BillingPlanModel).filter_by(code="free").one().id
     db_session.add(UserSubscriptionModel(user_id=user.id, plan_id=free_plan_id, status="active"))
     db_session.commit()
 
-    # 2. Mock auth and DB session
-    from app.api.dependencies.auth import require_authenticated_user, AuthenticatedUser
-    from datetime import datetime, UTC
     auth_user = AuthenticatedUser(
-        id=user.id, email=user.email, role=user.role, created_at=datetime.now(UTC)
+        id=user.id,
+        email=user.email,
+        role=user.role,
+        created_at=datetime.now(UTC),
     )
     app.dependency_overrides[require_authenticated_user] = lambda: auth_user
-    
-    from app.infra.db.session import get_db_session
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     client = TestClient(app)
-    
-    # 3. Mock Service dependencies
-    from app.services.user_natal_chart_service import UserNatalChartReadData, UserNatalChartMetadata
-    from app.domain.astrology.natal_calculation import NatalResult
-    from app.services.user_birth_profile_service import UserBirthProfileData
-    
+
     mock_natal_result = MagicMock(spec=NatalResult)
     mock_natal_result.reference_version = "2.0.0"
     mock_natal_result.ruleset_version = "2.0.0"
@@ -122,16 +150,14 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
     mock_natal_result.aspects = []
     mock_natal_result.ephemeris_path_version = None
     mock_natal_result.ephemeris_path_hash = None
-    # Method model_dump for Pydantic
     mock_natal_result.model_dump.return_value = {}
-    
+
     mock_chart_data = UserNatalChartReadData(
         chart_id="chart-123",
         result=mock_natal_result,
         metadata=MagicMock(spec=UserNatalChartMetadata),
-        created_at=datetime.now(UTC)
+        created_at=datetime.now(UTC),
     )
-    
     mock_profile_data = UserBirthProfileData(
         user_id=user.id,
         birth_date="1990-01-01",
@@ -139,21 +165,26 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
         birth_lat=48.8566,
         birth_lon=2.3522,
         birth_place="Paris",
-        birth_timezone="Europe/Paris"
+        birth_timezone="Europe/Paris",
     )
 
-    with patch("app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user") as mock_get_chart, \
-         patch("app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user") as mock_get_profile, \
-         patch("app.services.natal_interpretation_service_v2.build_chart_json") as mock_build_json:
-        
+    with (
+        patch(
+            "app.api.v1.routers.natal_interpretation."
+            "UserNatalChartService.get_latest_for_user"
+        ) as mock_get_chart,
+        patch(
+            "app.api.v1.routers.natal_interpretation."
+            "UserBirthProfileService.get_for_user"
+        ) as mock_get_profile,
+        patch(
+            "app.services.natal_interpretation_service_v2.build_chart_json"
+        ) as mock_build_json,
+    ):
         mock_get_chart.return_value = mock_chart_data
         mock_get_profile.return_value = mock_profile_data
         mock_build_json.return_value = {"dummy": "chart"}
 
-        # Mock Gateway
-        from app.llm_orchestration.gateway import GatewayResult
-        from app.llm_orchestration.models import GatewayMeta, UsageInfo
-        
         mock_meta = GatewayMeta(
             latency_ms=100,
             cached=False,
@@ -165,41 +196,49 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
             schema_version="v1",
             validation_status="valid",
             repair_attempted=False,
-            fallback_triggered=False
+            fallback_triggered=False,
         )
-        
         mock_usage = UsageInfo(input_tokens=10, output_tokens=10, total_tokens=20)
-        
         mock_output = {
-            "summary": "Résumé free short",
-            "accordion_titles": ["Section 1", "Section 2"]
+            "summary": "Resume free short",
+            "accordion_titles": ["Section 1", "Section 2"],
         }
-        
         mock_res = GatewayResult(
-            use_case="natal_long_free", 
-            structured_output=mock_output, 
+            use_case="natal_long_free",
+            structured_output=mock_output,
             meta=mock_meta,
             request_id="req-123",
             trace_id="trace-123",
             raw_output="{}",
-            usage=mock_usage
+            usage=mock_usage,
         )
-        
-        with patch("app.services.natal_interpretation_service_v2.LLMGateway.execute") as mock_execute:
+
+        with patch(
+            "app.services.natal_interpretation_service_v2.LLMGateway.execute"
+        ) as mock_execute:
             mock_execute.return_value = mock_res
-            
-            response = client.post("/v1/natal/interpretation", json={
-                "use_case_level": "complete",
-                "locale": "fr-FR",
-                "force_refresh": True
-            })
-            
+
+            response = client.post(
+                "/v1/natal/interpretation",
+                json={
+                    "use_case_level": "complete",
+                    "locale": "fr-FR",
+                    "force_refresh": True,
+                },
+            )
+
             assert response.status_code == 200
             data = response.json()["data"]
             assert data["use_case"] == "natal_long_free"
-            assert data["interpretation"]["summary"] == "Résumé free short"
-            
-            # Verify call args
+            assert data["interpretation"]["summary"] == "Resume free short"
+
+            sections = data["interpretation"]["sections"]
+            assert len(sections) == 2
+            assert sections[0]["heading"] == "Section 1"
+            assert sections[1]["heading"] == "Section 2"
+            assert sections[0]["content"] == ""
+            assert data["meta"]["level"] == "complete"
+
             _, kwargs = mock_execute.call_args
             assert kwargs["use_case"] == "natal_long_free"
 

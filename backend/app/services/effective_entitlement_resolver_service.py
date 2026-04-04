@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
@@ -45,18 +46,48 @@ class EffectiveEntitlementResolverService:
     _ACTIVE_BILLING_STATUSES = frozenset({"active", "trialing", "past_due"})
 
     @staticmethod
+    def _get_available_feature_codes(
+        db: Session,
+        *,
+        scope: FeatureScope,
+    ) -> list[str]:
+        registered_codes = [
+            feature_code
+            for feature_code, feature_scope in FEATURE_SCOPE_REGISTRY.items()
+            if feature_scope == scope
+        ]
+        if not registered_codes:
+            return []
+
+        try:
+            existing_codes = set(
+                db.scalars(
+                    select(FeatureCatalogModel.feature_code).where(
+                        FeatureCatalogModel.is_active,
+                        FeatureCatalogModel.feature_code.in_(registered_codes),
+                    )
+                ).all()
+            )
+        except SQLAlchemyError:
+            return registered_codes
+
+        if not existing_codes:
+            return registered_codes
+        return [code for code in registered_codes if code in existing_codes]
+
+    @staticmethod
     def resolve_b2c_user_snapshot(
         db: Session, *, app_user_id: int
     ) -> EffectiveEntitlementsSnapshot:
         """Résout un snapshot complet pour un utilisateur B2C."""
+        features = EffectiveEntitlementResolverService._get_available_feature_codes(
+            db,
+            scope=FeatureScope.B2C,
+        )
+
         # 1. Validation éligibilité (existence utilisateur)
         user = db.get(UserModel, app_user_id)
         if not user:
-            features = [
-                f_code
-                for f_code, scope in FEATURE_SCOPE_REGISTRY.items()
-                if scope == FeatureScope.B2C
-            ]
             entitlements = {
                 f_code: EffectiveFeatureAccess(
                     granted=False,
@@ -101,11 +132,6 @@ class EffectiveEntitlementResolverService:
                 if canonical_plan is not None:
                     break
 
-        # 4. Features du scope B2C
-        features = [
-            f_code for f_code, scope in FEATURE_SCOPE_REGISTRY.items() if scope == FeatureScope.B2C
-        ]
-
         # 5. Résolution globale
         return EffectiveEntitlementResolverService._resolve_snapshot(
             db,
@@ -123,14 +149,14 @@ class EffectiveEntitlementResolverService:
         db: Session, *, enterprise_account_id: int
     ) -> EffectiveEntitlementsSnapshot:
         """Résout un snapshot complet pour un compte B2B."""
+        features = EffectiveEntitlementResolverService._get_available_feature_codes(
+            db,
+            scope=FeatureScope.B2B,
+        )
+
         # 1. Chargement compte
         account = db.get(EnterpriseAccountModel, enterprise_account_id)
         if not account or account.status != "active":
-            features = [
-                f_code
-                for f_code, scope in FEATURE_SCOPE_REGISTRY.items()
-                if scope == FeatureScope.B2B
-            ]
             entitlements = {
                 f_code: EffectiveFeatureAccess(
                     granted=False,
@@ -158,11 +184,6 @@ class EffectiveEntitlementResolverService:
         canonical_plan = resolve_b2b_canonical_plan(db, enterprise_account_id)
         plan_code = canonical_plan.plan_code if canonical_plan else "none"
         billing_status = "active"  # Pour B2B actif, on considère le billing OK pour le snapshot
-
-        # 3. Features du scope B2B
-        features = [
-            f_code for f_code, scope in FEATURE_SCOPE_REGISTRY.items() if scope == FeatureScope.B2B
-        ]
 
         # 4. Résolution globale
         return EffectiveEntitlementResolverService._resolve_snapshot(
@@ -422,6 +443,12 @@ class EffectiveEntitlementResolverService:
         if not next_plan:
             return []
 
+        _BENEFIT_KEY_MAP: dict[str, str] = {
+            "horoscope_daily": "upgrade.horoscope_daily.full_access",
+            "natal_chart_long": "upgrade.natal_chart_long.full_interpretation",
+            "astrologer_chat": "upgrade.astrologer_chat.unlimited_messages",
+        }
+
         for f_code, access in snapshot.entitlements.items():
             # Si non accordé ou variant restreint -> on suggère l'upgrade
             if not access.granted or EffectiveEntitlementResolverService._is_restricted_variant(
@@ -432,7 +459,7 @@ class EffectiveEntitlementResolverService:
                         feature_code=f_code,
                         current_plan_code=snapshot.plan_code,
                         target_plan_code=next_plan.plan_code,
-                        benefit_key=f"upgrade.{f_code}.unlock",
+                        benefit_key=_BENEFIT_KEY_MAP.get(f_code, f"upgrade.{f_code}.unlock"),
                         cta_variant=EffectiveEntitlementResolverService._get_cta_variant(f_code),
                         priority=EffectiveEntitlementResolverService._get_hint_priority(f_code),
                     )
@@ -463,11 +490,9 @@ class EffectiveEntitlementResolverService:
         if current_idx != -1 and current_idx + 1 < len(all_plans):
             return all_plans[current_idx + 1]
 
-        # Cas spécial: user "none" ou non trouvé dans le catalogue -> on renvoie le premier plan payant
+        # Cas spécial: user "none" ou plan absent du catalogue.
         if current_idx == -1 and all_plans:
-            # On cherche le premier plan payant (prix > 0) ou juste le premier si tous gratuits
-            # Note: On a besoin des objets BillingPlan pour filtrer par prix ici si on veut être précis,
-            # mais on peut aussi juste renvoyer le premier de all_plans qui est déjà trié.
+            # La liste est déjà triée par prix croissant.
             return all_plans[0]
 
         return None

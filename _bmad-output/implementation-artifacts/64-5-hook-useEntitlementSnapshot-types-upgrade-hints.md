@@ -53,3 +53,5 @@ Dépend de **Story 64.4** (upgrade_hints disponibles dans `/v1/entitlements/me`)
 - Centralisation de l'accès aux droits effectifs via un hook unique et performant (cache Query).
 - Isolation des sélecteurs de données pour simplifier la consommation dans les futurs composants UI (CTA upgrade).
 - Correction des erreurs de type TypeScript (verbatimModuleSyntax) lors de la création du hook.
+- Stabilisation post-intégration :
+  - la clé de cache Query inclut désormais le sujet authentifié pour éviter les fuites de snapshot entre sessions/tests.

@@ -91,6 +91,7 @@ daily_advice
 - Domaines internes actuels (12): love, work, career, energy, mood, health, money, sex_intimacy, family_home, social_network, communication, pleasure_creativity
 - Scores exposés actuellement: `note_20`, `score_20`, `intensity_20`
 - Endpoint actuel: `GET /v1/predictions/daily` → `DailyPredictionResponse`
+- Depuis l'Epic 64, l'accès runtime à `GET /v1/predictions/daily` passe par `HoroscopeDailyEntitlementGate` avec fallback de compatibilité tant que la migration canonique des droits n'est pas complète.
 
 ---
 

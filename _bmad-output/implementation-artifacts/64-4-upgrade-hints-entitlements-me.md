@@ -74,3 +74,6 @@ Cette story enrichit la réponse `/v1/entitlements/me` de manière additive. Ell
 - Support du déclenchement des hints sur base de `granted=False` ou de `variant_code` restreint.
 - Correction de plusieurs tests existants pour s'adapter au passage à 5 features prioritaires.
 - Garantie de la compatibilité ascendante via l'usage de valeurs par défaut pour le nouveau champ.
+- Hardening post-intégration :
+  - alignement des `benefit_key` exposées par le backend avec les clés i18n réellement consommées côté frontend ;
+  - fallback propre sur le registre canonique quand le `feature_catalog` n'est pas seedé ou partiellement disponible en test/local.

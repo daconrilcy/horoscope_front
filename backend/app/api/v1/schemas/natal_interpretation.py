@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from app.llm_orchestration.schemas import (
     AstroErrorResponseV3,
+    AstroFreeResponseV1,
     AstroResponseV1,
     AstroResponseV2,
     AstroResponseV3,
@@ -64,7 +65,7 @@ class InterpretationMeta(BaseModel):
 class NatalInterpretationData(BaseModel):
     chart_id: str
     use_case: str
-    interpretation: AstroResponseV3 | AstroErrorResponseV3 | AstroResponseV2 | AstroResponseV1
+    interpretation: AstroResponseV3 | AstroErrorResponseV3 | AstroResponseV2 | AstroResponseV1 | AstroFreeResponseV1
     meta: InterpretationMeta
     degraded_mode: Optional[str] = None
 

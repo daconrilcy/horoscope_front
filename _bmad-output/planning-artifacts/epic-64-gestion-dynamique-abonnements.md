@@ -9,14 +9,14 @@ inputDocuments:
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
 workflowType: 'epic'
 epicNumber: 64
-status: 'planning'
+status: 'in-progress'
 createdAt: '2026-04-04'
 owner: Cyril
 ---
 
 # Epic 64 — Gestion dynamique des droits d'accès, de la génération et des CTA d'upgrade par plan d'abonnement
 
-**Status:** planning
+**Status:** in-progress
 **Créé le:** 2026-04-04
 **Owner:** Cyril
 
@@ -176,6 +176,23 @@ Ces hints sont calculés dynamiquement depuis le catalog en base. Le frontend pi
 
 ---
 
+## Avancement au 2026-04-04
+
+Les fondations backend/frontend de l'epic sont en place et stabilisées :
+
+- Stories terminées : `64.1`, `64.2`, `64.3`, `64.4`, `64.5`
+- Hardening complémentaire effectué après intégration :
+  - compatibilité legacy du gate `horoscope_daily` pour préserver les flux et tests V4 existants ;
+  - compatibilité du resolver/endpoint entitlements quand le `feature_catalog` est absent, vide ou partiellement seedé ;
+  - correction de la consommation canonique des quotas chat tokens ;
+  - alignement des `upgrade_hints.benefit_key` sur les clés i18n frontend ;
+  - isolation du cache frontend `useEntitlementSnapshot` par sujet authentifié ;
+  - stabilisation des tests de charge/concurrence via reset du cache billing et neutralisation du scheduler sous `pytest`.
+
+Conséquence : l'ensemble de la suite de tests est verte après intégration des stories fondation de l'epic.
+
+---
+
 ## Stories de l'Epic 64
 
 | Story | Titre | Domaine | Fichier |
@@ -197,11 +214,15 @@ Ces hints sont calculés dynamiquement depuis le catalog en base. Le frontend pi
 ```
 backend/app/services/feature_scope_registry.py     ← 64.1 : ajout horoscope_daily
 backend/app/services/horoscope_daily_entitlement_gate.py  ← 64.1 : nouveau
+backend/app/api/v1/routers/predictions.py         ← 64.1 : branchement gate horoscope_daily
 backend/app/prompts/catalog.py                     ← 64.2 + 64.3 : nouveaux variants
 backend/app/services/prediction_compute_runner.py  ← 64.2 : sélection variant
 backend/app/services/natal_interpretation_service_v2.py ← 64.3 : variant free
 backend/app/api/v1/schemas/entitlements.py         ← 64.4 : UpgradeHint + champ additionnel
 backend/app/services/effective_entitlement_resolver_service.py ← 64.4 : compute hints
+backend/app/api/v1/routers/chat.py                ← 64.4 : consommation correcte des quotas canoniques
+backend/app/services/auth_service.py              ← hardening : invalidation cache billing sur création user
+backend/app/core/scheduler.py                     ← hardening : neutralisation scheduler sous pytest
 backend/.env.example                               ← 64.2 : nouvelles clés engine
 frontend/src/api/billing.ts                        ← 64.5 : types UpgradeHint
 frontend/src/hooks/useEntitlementSnapshot.ts       ← 64.5 : nouveau hook

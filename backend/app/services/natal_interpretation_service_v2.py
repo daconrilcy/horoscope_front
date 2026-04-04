@@ -26,6 +26,8 @@ from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import InputValidationError
 from app.llm_orchestration.schemas import (
     AstroErrorResponseV3,
+    AstroFreeResponseV1,
+    AstroFreeSection,
     AstroResponseV1,
     AstroResponseV2,
     AstroResponseV3,
@@ -108,6 +110,50 @@ class NatalInterpretationServiceV2:
     """
     Service for natal interpretation using LLM Gateway V2.
     """
+
+    @staticmethod
+    def _deserialize_persisted_interpretation(
+        model: UserNatalInterpretationModel,
+        *,
+        level: Literal["short", "complete"],
+        locale: str,
+    ) -> tuple[
+        AstroResponseV3
+        | AstroErrorResponseV3
+        | AstroResponseV2
+        | AstroResponseV1
+        | AstroFreeResponseV1,
+        str,
+    ]:
+        disclaimers = get_disclaimers(locale)
+        base_payload = (
+            model.interpretation_payload if isinstance(model.interpretation_payload, dict) else {}
+        )
+        full_payload = {**base_payload, "disclaimers": disclaimers}
+
+        if level == "complete" and model.variant_code == "free_short":
+            return AstroFreeResponseV1(**full_payload), "v1"
+
+        schema_version = "v1"
+        if level == "complete":
+            use_v3 = settings.natal_schema_version == "v3"
+            if use_v3:
+                try:
+                    return AstroResponseV3(**base_payload), "v3"
+                except Exception:
+                    try:
+                        return AstroErrorResponseV3(**base_payload), "v3_error"
+                    except Exception:
+                        try:
+                            return AstroResponseV2(**full_payload), "v2"
+                        except Exception:
+                            return AstroResponseV1(**full_payload), schema_version
+            try:
+                return AstroResponseV2(**full_payload), "v2"
+            except Exception:
+                return AstroResponseV1(**full_payload), schema_version
+
+        return AstroResponseV1(**full_payload), schema_version
 
     @staticmethod
     async def interpret(
@@ -206,39 +252,13 @@ class NatalInterpretationServiceV2:
                     existing = None
 
             if existing:
-                schema_version = "v1"
-                disclaimers = get_disclaimers(locale)
-                base_payload = (
-                    existing.interpretation_payload
-                    if isinstance(existing.interpretation_payload, dict)
-                    else {}
+                interpretation, schema_version = (
+                    NatalInterpretationServiceV2._deserialize_persisted_interpretation(
+                        existing,
+                        level=level,
+                        locale=locale,
+                    )
                 )
-                full_payload = {**base_payload, "disclaimers": disclaimers}
-
-                if level == "complete":
-                    use_v3 = settings.natal_schema_version == "v3"
-                    if use_v3:
-                        try:
-                            interpretation = AstroResponseV3(**base_payload)
-                            schema_version = "v3"
-                        except Exception:
-                            try:
-                                interpretation = AstroErrorResponseV3(**base_payload)
-                                schema_version = "v3_error"
-                            except Exception:
-                                try:
-                                    interpretation = AstroResponseV2(**full_payload)
-                                    schema_version = "v2"
-                                except Exception:
-                                    interpretation = AstroResponseV1(**full_payload)
-                    else:
-                        try:
-                            interpretation = AstroResponseV2(**full_payload)
-                            schema_version = "v2"
-                        except Exception:
-                            interpretation = AstroResponseV1(**full_payload)
-                else:
-                    interpretation = AstroResponseV1(**full_payload)
 
                 meta = InterpretationMeta(
                     id=existing.id,
@@ -584,30 +604,19 @@ class NatalInterpretationServiceV2:
 
         disclaimers = get_disclaimers(locale)
         structured = gateway_result.structured_output
-        
-        # On mappe vers AstroResponseV1 (summary présent, sections vides)
-        # story 64.3: accordion_titles est retourné par le LLM mais pas encore dans AstroResponseV1.
-        # On va l'injecter dans interpretation_payload pour persistence et UI.
-        
-        interpretation = AstroResponseV1(
-            title="Thème Natal (Résumé)",
+
+        # Story 64.3: map accordion_titles from LLM output to AstroFreeResponseV1.
+        # For the free plan, only headings are returned (no section content).
+        accordion_titles = structured.get("accordion_titles") or []
+        free_sections = [
+            AstroFreeSection(key=f"section_{i}", heading=title, content="")
+            for i, title in enumerate(accordion_titles)
+        ]
+
+        interpretation = AstroFreeResponseV1(
             summary=structured.get("summary", ""),
-            sections=[
-                {
-                    "key": "overall",
-                    "heading": "Résumé Global",
-                    "content": "Contenu restreint. Passez au plan Basic ou Premium pour débloquer l'analyse complète.",
-                },
-                {
-                    "key": "inner_life",
-                    "heading": "Vie Intérieure",
-                    "content": "Contenu restreint. Passez au plan Basic ou Premium pour débloquer l'analyse complète.",
-                }
-            ],
-            highlights=["Résumé Premium", "Analyse des dominantes", "Potentiel d'évolution"],
-            key_points=[],
-            advice=["Passez au plan Basic pour l'analyse complète", "Explorez vos dominantes", "Suivez votre guide quotidien"],
-            disclaimers=disclaimers
+            sections=free_sections,
+            disclaimers=disclaimers,
         )
 
         meta = InterpretationMeta(
@@ -626,25 +635,7 @@ class NatalInterpretationServiceV2:
         )
 
         # Persistence
-        persist_payload = {
-            **structured,
-            "title": "Thème Natal (Résumé)",
-            "sections": [
-                {
-                    "key": "overall",
-                    "heading": "Résumé Global",
-                    "content": "Contenu restreint. Passez au plan Basic ou Premium pour débloquer l'analyse complète.",
-                },
-                {
-                    "key": "inner_life",
-                    "heading": "Vie Intérieure",
-                    "content": "Contenu restreint. Passez au plan Basic ou Premium pour débloquer l'analyse complète.",
-                }
-            ],
-            "highlights": ["Résumé Premium", "Analyse des dominantes", "Potentiel d'évolution"],
-            "key_points": [],
-            "advice": ["Passez au plan Basic pour l'analyse complète", "Explorez vos dominantes", "Suivez votre guide quotidien"]
-        }
+        persist_payload = interpretation.model_dump()
         
         prompt_version_uuid = (
             uuid.UUID(gateway_result.meta.prompt_version_id)
@@ -803,36 +794,14 @@ class NatalInterpretationServiceV2:
         """
         meta.id = model.id
         disclaimers = get_disclaimers(locale)
-        base_payload = (
-            model.interpretation_payload if isinstance(model.interpretation_payload, dict) else {}
+        level = "complete" if model.level == InterpretationLevel.COMPLETE else "short"
+        interpretation, schema_version = (
+            NatalInterpretationServiceV2._deserialize_persisted_interpretation(
+                model,
+                level=level,
+                locale=locale,
+            )
         )
-        full_payload = {**base_payload, "disclaimers": disclaimers}
-
-        schema_version = "v1"
-        if model.level == InterpretationLevel.COMPLETE:
-            use_v3 = settings.natal_schema_version == "v3"
-            if use_v3:
-                try:
-                    interpretation = AstroResponseV3(**base_payload)
-                    schema_version = "v3"
-                except Exception:
-                    try:
-                        interpretation = AstroErrorResponseV3(**base_payload)
-                        schema_version = "v3_error"
-                    except Exception:
-                        try:
-                            interpretation = AstroResponseV2(**full_payload)
-                            schema_version = "v2"
-                        except Exception:
-                            interpretation = AstroResponseV1(**full_payload)
-            else:
-                try:
-                    interpretation = AstroResponseV2(**full_payload)
-                    schema_version = "v2"
-                except Exception:
-                    interpretation = AstroResponseV1(**full_payload)
-        else:
-            interpretation = AstroResponseV1(**full_payload)
 
         meta.schema_version = schema_version
 

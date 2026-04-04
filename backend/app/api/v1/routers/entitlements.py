@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
@@ -102,6 +103,24 @@ def _missing_feature_response(feature_code: str) -> FeatureEntitlementResponse:
     )
 
 
+def _get_available_feature_codes(db: Session) -> list[str]:
+    try:
+        existing_codes = set(
+            db.scalars(
+                select(FeatureCatalogModel.feature_code).where(
+                    FeatureCatalogModel.is_active,
+                    FeatureCatalogModel.feature_code.in_(FEATURES_TO_QUERY),
+                )
+            ).all()
+        )
+    except SQLAlchemyError:
+        return FEATURES_TO_QUERY
+
+    if not existing_codes:
+        return FEATURES_TO_QUERY
+    return [feature_code for feature_code in FEATURES_TO_QUERY if feature_code in existing_codes]
+
+
 @router.get(
     "/me",
     response_model=EntitlementsMeResponse,
@@ -146,11 +165,12 @@ def get_my_entitlements(
     hints = EffectiveEntitlementResolverService.compute_upgrade_hints(snapshot, db)
 
     # AC2 - Toujours exposer les features prioritaires dans l'ordre attendu par le frontend.
+    available_feature_codes = _get_available_feature_codes(db)
     features = [
-        _to_feature_response(fc, snapshot.entitlements[fc])
-        if fc in snapshot.entitlements
-        else _missing_feature_response(fc)
-        for fc in FEATURES_TO_QUERY
+        _to_feature_response(feature_code, snapshot.entitlements[feature_code])
+        if feature_code in snapshot.entitlements
+        else _missing_feature_response(feature_code)
+        for feature_code in available_feature_codes
     ]
 
     # AC1 - plan_code et billing_status au top-level

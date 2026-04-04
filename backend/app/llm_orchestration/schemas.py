@@ -173,6 +173,30 @@ class AstroResponseV1(BaseModel):
     disclaimers: List[_DisclaimerItemV1] = Field(..., max_length=3)
 
 
+class AstroFreeSection(BaseModel):
+    """Section for free plan — heading only, no content constraint, no key enum."""
+
+    key: str = Field(..., min_length=1, max_length=80)
+    heading: str = Field(..., min_length=1, max_length=160)
+    content: str = Field(default="")
+
+
+class AstroFreeResponseV1(BaseModel):
+    """Structured response for free plan interpretations (Story 64.3).
+
+    Contains summary + section headings only. No content, no highlights, no advice.
+    The frontend displays teasers (i18n) instead of the empty content.
+    """
+
+    title: str = Field(default="")
+    summary: str = Field(..., min_length=1)
+    sections: List[AstroFreeSection] = Field(default_factory=list)
+    highlights: List[str] = Field(default_factory=list)
+    advice: List[str] = Field(default_factory=list)
+    evidence: List[str] = Field(default_factory=list)
+    disclaimers: List[str] = Field(default_factory=list)
+
+
 class AstroResponseV2(BaseModel):
     """Extended structured response for premium complete interpretations (Story 30-2)."""
 
