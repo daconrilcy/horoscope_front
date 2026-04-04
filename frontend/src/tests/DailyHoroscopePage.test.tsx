@@ -624,12 +624,66 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+function makeEntitlementsMeFull() {
+  return jsonResponse({
+    data: {
+      plan_code: "basic",
+      billing_status: "active",
+      features: [
+        {
+          feature_code: "horoscope_daily",
+          granted: true,
+          reason_code: "canonical_binding",
+          access_mode: "unlimited",
+          variant_code: "full",
+          usage_states: [],
+        },
+      ],
+      upgrade_hints: [],
+    },
+  });
+}
+
+function makeEntitlementsMeFree() {
+  return jsonResponse({
+    data: {
+      plan_code: "free",
+      billing_status: "active",
+      features: [
+        {
+          feature_code: "horoscope_daily",
+          granted: true,
+          reason_code: "canonical_binding",
+          access_mode: "quota",
+          variant_code: "summary_only",
+          usage_states: [],
+        },
+      ],
+      upgrade_hints: [
+        {
+          feature_code: "horoscope_daily",
+          current_plan_code: "free",
+          target_plan_code: "basic",
+          benefit_key: "upgrade.horoscope_daily.full_access",
+          cta_variant: "inline",
+          priority: 1,
+        },
+      ],
+    },
+  });
+}
+
+const ENTITLEMENTS_ME_FULL = makeEntitlementsMeFull();
+const ENTITLEMENTS_ME_FREE = makeEntitlementsMeFree();
+
 function installFetchMock(options?: {
   authMe?: Response | Promise<Response>;
   prediction?: Response | Promise<Response>;
+  entitlements?: Response | Promise<Response>;
 }) {
   const authMe = options?.authMe ?? jsonResponse(authMeOk);
   const prediction = options?.prediction ?? jsonResponse(predictionOk);
+  const entitlements = options?.entitlements ?? makeEntitlementsMeFull();
 
   vi.stubGlobal(
     "fetch",
@@ -640,6 +694,9 @@ function installFetchMock(options?: {
       }
       if (url.includes("/v1/predictions/daily")) {
         return Promise.resolve(prediction);
+      }
+      if (url.endsWith("/v1/entitlements/me")) {
+        return Promise.resolve(entitlements);
       }
       return Promise.resolve(jsonResponse({ error: { code: "not_found", message: "not found" } }, 404));
     }),
@@ -1102,5 +1159,51 @@ describe("DailyHoroscopePage", () => {
     });
 
     expect(screen.queryByText("Chronologie du jour")).not.toBeInTheDocument();
+  });
+
+  describe("Story 64.8 — Sections lockées free + CTA upgrade", () => {
+    it("affiche les sections lockées avec teasers pour utilisateur free (AC2)", async () => {
+      installFetchMock({ entitlements: makeEntitlementsMeFree() });
+
+      renderDashboard();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+      });
+
+      // Sections lockées doivent afficher les teasers i18n
+      expect(screen.getAllByText(/domaines d'énergie prioritaires/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/fenêtres temporelles/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/tournant astrologique/i).length).toBeGreaterThan(0);
+    });
+
+    it("affiche un UpgradeCTA sur la section DomainRanking pour utilisateur free (AC3)", async () => {
+      installFetchMock({ entitlements: makeEntitlementsMeFree() });
+
+      renderDashboard();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+      });
+
+      // Au moins un lien CTA doit pointer vers /subscription-guide
+      const ctaLinks = document.querySelectorAll('a[href="/subscription-guide"]');
+      expect(ctaLinks.length).toBeGreaterThan(0);
+    });
+
+    it("affiche toutes les sections normalement pour utilisateur basic/premium (AC4)", async () => {
+      installFetchMock({ entitlements: makeEntitlementsMeFull() });
+
+      renderDashboard();
+
+      await waitFor(() => {
+        expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
+      });
+
+      // Sections déverrouillées — pas de teasers
+      expect(screen.queryByText(/domaines d'énergie prioritaires/i)).not.toBeInTheDocument();
+      // DayClimateHero toujours visible
+      expect(screen.getByText("Vos domaines clés")).toBeInTheDocument();
+    });
   });
 });

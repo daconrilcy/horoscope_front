@@ -16,11 +16,14 @@ import { detectLang } from '../i18n/astrology'
 import { normalizeSignCode } from '../i18n/astrology'
 import type { Lang } from '../i18n/predictions'
 import { getPredictionMessage } from '../utils/predictionI18n'
+import { getHoroscopeTeaser } from '../i18n/horoscope_copy'
 import { getSubjectFromAccessToken, useAccessTokenSnapshot } from '../utils/authToken'
 import { useDailyPrediction } from '../api/useDailyPrediction'
 import { useBirthData } from '../api/useBirthData'
 import { trackEvent, EVENTS } from '../utils/analytics'
 import { SectionErrorBoundary } from '../components/ErrorBoundary'
+import { useFeatureAccess } from '../hooks/useEntitlementSnapshot'
+import { LockedSection, UpgradeCTA } from '../components/ui'
 
 import { mapDayClimate } from '../utils/dayClimateHeroMapper'
 import { mapAstroDailyEvents } from '../utils/astroDailyEventsMapper'
@@ -50,6 +53,8 @@ export default function DailyHoroscopePage() {
   const userId = getSubjectFromAccessToken(token)
   const { data: prediction, isLoading, isError, refetch } = useDailyPrediction(token)
   const { data: birthData } = useBirthData(token)
+  const featureAccess = useFeatureAccess("horoscope_daily")
+  const isLocked = featureAccess?.variant_code === "summary_only"
   const bootstrapPredictionRefetchDoneForToken = useRef<string | null>(null)
 
   // Track page view
@@ -154,51 +159,90 @@ export default function DailyHoroscopePage() {
           </SectionErrorBoundary>
 
           {/* Zone 3 : DomainRankingCard (V4) — Premium Metrics */}
-          {(() => {
-            const domains = mapDomainRanking(prediction);
-            return domains.length > 0 ? (
-              <div className="daily-layout__section">
-                <SectionHeading title={pLang === 'fr' ? 'Vos domaines clés' : 'Your key domains'} />
-                <DomainRankingCard domains={domains} lang={pLang} hideTitle />
-              </div>
-            ) : null;
-          })()}
+          {isLocked ? (
+            <div className="daily-layout__section">
+              <SectionHeading title={pLang === 'fr' ? 'Vos domaines clés' : 'Your key domains'} />
+              <LockedSection
+                cta={<UpgradeCTA featureCode="horoscope_daily" variant="button" />}
+                label={getHoroscopeTeaser('domainRanking', pLang)}
+              >
+                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('domainRanking', pLang)}</p></div>
+              </LockedSection>
+            </div>
+          ) : (
+            (() => {
+              const domains = mapDomainRanking(prediction);
+              return domains.length > 0 ? (
+                <div className="daily-layout__section">
+                  <SectionHeading title={pLang === 'fr' ? 'Vos domaines clés' : 'Your key domains'} />
+                  <DomainRankingCard domains={domains} lang={pLang} hideTitle />
+                </div>
+              ) : null;
+            })()
+          )}
 
           {/* Zone 4 : DayTimelineSectionV4 (V4) — Connected Story */}
-          <SectionErrorBoundary onRetry={handleRefresh}>
-            {prediction.time_windows && (
-              <div className="daily-layout__section">
-                <SectionHeading title={pLang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'} />
-                <DayTimelineSectionV4 
-                  timeWindows={prediction.time_windows} 
-                  lang={pLang}
-                  hideTitle
-                />
-              </div>
-            )}
-          </SectionErrorBoundary>
+          {isLocked ? (
+            <div className="daily-layout__section">
+              <SectionHeading title={pLang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'} />
+              <LockedSection label={getHoroscopeTeaser('dayTimeline', pLang)}>
+                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('dayTimeline', pLang)}</p></div>
+              </LockedSection>
+            </div>
+          ) : (
+            <SectionErrorBoundary onRetry={handleRefresh}>
+              {prediction.time_windows && (
+                <div className="daily-layout__section">
+                  <SectionHeading title={pLang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'} />
+                  <DayTimelineSectionV4
+                    timeWindows={prediction.time_windows}
+                    lang={pLang}
+                    hideTitle
+                  />
+                </div>
+              )}
+            </SectionErrorBoundary>
+          )}
 
           {/* Zone 5 : TurningPointCard (V4) */}
-          {(() => {
-            const tp = mapTurningPoint(prediction);
-            return tp ? (
-              <div className="daily-layout__section">
-                <SectionHeading title={pLang === 'fr' ? 'Moment clé' : 'Key moment'} />
-                <TurningPointCard turningPoint={tp} lang={pLang} />
-              </div>
-            ) : null;
-          })()}
+          {isLocked ? (
+            <div className="daily-layout__section">
+              <SectionHeading title={pLang === 'fr' ? 'Moment clé' : 'Key moment'} />
+              <LockedSection label={getHoroscopeTeaser('turningPoint', pLang)}>
+                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('turningPoint', pLang)}</p></div>
+              </LockedSection>
+            </div>
+          ) : (
+            (() => {
+              const tp = mapTurningPoint(prediction);
+              return tp ? (
+                <div className="daily-layout__section">
+                  <SectionHeading title={pLang === 'fr' ? 'Moment clé' : 'Key moment'} />
+                  <TurningPointCard turningPoint={tp} lang={pLang} />
+                </div>
+              ) : null;
+            })()
+          )}
 
           {/* Zone 6 : BestWindowCard (V4) */}
-          {(() => {
-            const bw = mapBestWindow(prediction);
-            return bw ? (
-              <div className="daily-layout__section">
-                <SectionHeading title={pLang === 'fr' ? 'Opportunité' : 'Opportunity'} />
-                <BestWindowCard bestWindow={bw} lang={pLang} />
-              </div>
-            ) : null;
-          })()}
+          {isLocked ? (
+            <div className="daily-layout__section">
+              <SectionHeading title={pLang === 'fr' ? 'Opportunité' : 'Opportunity'} />
+              <LockedSection label={getHoroscopeTeaser('bestWindow', pLang)}>
+                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('bestWindow', pLang)}</p></div>
+              </LockedSection>
+            </div>
+          ) : (
+            (() => {
+              const bw = mapBestWindow(prediction);
+              return bw ? (
+                <div className="daily-layout__section">
+                  <SectionHeading title={pLang === 'fr' ? 'Opportunité' : 'Opportunity'} />
+                  <BestWindowCard bestWindow={bw} lang={pLang} />
+                </div>
+              ) : null;
+            })()
+          )}
 
           {/* Zone 7 : AstroDailyEvents (Story 60.13) — Analytical Card */}
           {(() => {
@@ -217,25 +261,43 @@ export default function DailyHoroscopePage() {
           })()}
 
           {/* Zone 8 : DailyAdviceCard — Conclusive Masterpiece */}
-          <div className="daily-layout__section">
-            <SectionHeading title={pLang === 'fr' ? 'Conseil du jour' : 'Daily advice'} />
-            <DailyAdviceCard model={buildDailyAdviceCardModel(prediction, pLang)} hideTitle />
-          </div>
+          {isLocked ? (
+            <div className="daily-layout__section">
+              <SectionHeading title={pLang === 'fr' ? 'Conseil du jour' : 'Daily advice'} />
+              <LockedSection label={getHoroscopeTeaser('dailyAdvice', pLang)}>
+                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('dailyAdvice', pLang)}</p></div>
+              </LockedSection>
+            </div>
+          ) : (
+            <div className="daily-layout__section">
+              <SectionHeading title={pLang === 'fr' ? 'Conseil du jour' : 'Daily advice'} />
+              <DailyAdviceCard model={buildDailyAdviceCardModel(prediction, pLang)} hideTitle />
+            </div>
+          )}
 
           {/* Zone 9 : AstroFoundationSection (V4) */}
-          {(() => {
-            const foundation = mapAstroFoundation(prediction)
-            return foundation ? (
-              <div className="daily-layout__section">
-                <SectionHeading title={pLang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations'} />
-                <AstroFoundationSection 
-                  foundation={foundation} 
-                  lang={pLang}
-                  hideTitle
-                />
-              </div>
-            ) : null
-          })()}
+          {isLocked ? (
+            <div className="daily-layout__section">
+              <SectionHeading title={pLang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations'} />
+              <LockedSection label={getHoroscopeTeaser('astroFoundation', pLang)}>
+                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('astroFoundation', pLang)}</p></div>
+              </LockedSection>
+            </div>
+          ) : (
+            (() => {
+              const foundation = mapAstroFoundation(prediction)
+              return foundation ? (
+                <div className="daily-layout__section">
+                  <SectionHeading title={pLang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations'} />
+                  <AstroFoundationSection
+                    foundation={foundation}
+                    lang={pLang}
+                    hideTitle
+                  />
+                </div>
+              ) : null
+            })()
+          )}
 
           {/* BottomSpacer */}
           <div className="daily-layout__bottom-spacer" />

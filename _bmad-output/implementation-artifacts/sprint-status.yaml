@@ -554,5 +554,5 @@ development_status:
   64-5-hook-useEntitlementSnapshot-types-upgrade-hints: done
   64-6-composants-UpgradeCTA-LockedSection: done
   64-7-chatpage-quota-banner-cta-upgrade: done
-  64-8-dailyhoroscopepage-sections-lockees-cta: todo
+  64-8-dailyhoroscopepage-sections-lockees-cta: done
   64-9-natalchartpage-sections-lockees-cta: todo

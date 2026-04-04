@@ -1,6 +1,6 @@
 # Story 64.8 — DailyHoroscopePage : sections lockées free + CTA upgrade
 
-Status: todo
+Status: done
 
 ## Story
 
@@ -68,9 +68,9 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Ajouter les clés teaser dans `horoscope_copy.ts` (AC6)
-  - [ ] T1.1 Lire `frontend/src/i18n/horoscope_copy.ts`
-  - [ ] T1.2 Ajouter les clés de teaser :
+- [x] T1 — Ajouter les clés teaser dans `horoscope_copy.ts` (AC6)
+  - [x] T1.1 Lire `frontend/src/i18n/horoscope_copy.ts`
+  - [x] T1.2 Ajouter les clés de teaser :
     ```ts
     teasers: {
       domainRanking: {
@@ -100,44 +100,43 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
     }
     ```
 
-- [ ] T2 — Intégrer la logique de verrouillage dans `DailyHoroscopePage.tsx` (AC1, AC2, AC3, AC4, AC5)
-  - [ ] T2.1 Lire entièrement `frontend/src/pages/DailyHoroscopePage.tsx`
-  - [ ] T2.2 Ajouter `useFeatureAccess("horoscope_daily")` depuis le hook
-  - [ ] T2.3 Calculer `isLocked = featureAccess?.variant_code === "summary_only"` (ou `!featureAccess?.granted`)
-  - [ ] T2.4 Pour chaque section à locker, appliquer le pattern :
-    ```tsx
-    {isLocked ? (
-      <LockedSection
-        cta={<UpgradeCTA featureCode="horoscope_daily" />}
-        label={t.teasers.domainRanking[lang]}
-      >
-        {/* Teaser content fixe — texte i18n */}
-        <div className="teaser-placeholder">
-          <p>{t.teasers.domainRanking[lang]}</p>
-        </div>
-      </LockedSection>
-    ) : (
-      <DomainRankingCard data={...} />
-    )}
-    ```
-  - [ ] T2.5 Ajouter `<UpgradeCTA>` sur la première section lockée uniquement (pour ne pas multiplier les CTA)
-  - [ ] T2.6 Vérifier que `DayClimateHero` n'est jamais wrappé dans `LockedSection`
+- [x] T2 — Intégrer la logique de verrouillage dans `DailyHoroscopePage.tsx` (AC1, AC2, AC3, AC4, AC5)
+  - [x] T2.1 Lu entièrement `frontend/src/pages/DailyHoroscopePage.tsx`
+  - [x] T2.2 Ajouté `useFeatureAccess("horoscope_daily")` + import `LockedSection`, `UpgradeCTA`, `getHoroscopeTeaser`
+  - [x] T2.3 `isLocked = featureAccess?.variant_code === "summary_only"`
+  - [x] T2.4 Appliqué le pattern isLocked sur Zones 3,4,5,6,8,9 — non-locked garde le rendu conditionnel original
+  - [x] T2.5 CTA uniquement sur DomainRankingCard (première section lockée)
+  - [x] T2.6 DayClimateHero jamais wrappé
 
-- [ ] T3 — Tests (AC7)
-  - [ ] T3.1 Créer ou étendre `frontend/src/tests/DailyHoroscopePage.test.tsx`
-  - [ ] T3.2 Mock `useFeatureAccess` avec `variant_code="summary_only"` → vérifier sections lockées
-  - [ ] T3.3 Mock `useFeatureAccess` avec `variant_code="full"` → vérifier aucun verrouillage
+- [x] T3 — Tests (AC7)
+  - [x] T3.1 Étendu `frontend/src/tests/DailyHoroscopePage.test.tsx`
+  - [x] T3.2-T3.3 3 tests ajoutés dans describe "Story 64.8" + `installFetchMock` étendu avec `entitlements`
 
-- [ ] T4 — Validation finale
-  - [ ] T4.1 Test manuel : compte free → sections lockées visibles
-  - [ ] T4.2 Test manuel : compte basic → page complète sans lock
-  - [ ] T4.3 `npx vitest run` → 0 erreur
+- [x] T4 — Validation finale
+  - [x] T4.1-T4.2 N/A (test manuel)
+  - [x] T4.3 22/22 tests DailyHoroscopePage ; suite complète : 4 échecs pré-existants uniquement
 
 ## Dev Notes
 
 ### Donnée de verrouillage : variant_code vs granted
 
 Utiliser `featureAccess.variant_code === "summary_only"` comme critère de verrouillage des sections (et non `!featureAccess.granted` qui indiquerait un accès totalement refusé). Si `granted === false`, la page entière devrait afficher un état différent (accès refusé) — à traiter séparément.
+
+## Dev Agent Record
+
+### File List
+
+- `frontend/src/i18n/horoscope_copy.ts` — modified (HOROSCOPE_TEASERS, TeaserKey, getHoroscopeTeaser)
+- `frontend/src/pages/DailyHoroscopePage.tsx` — modified (useFeatureAccess, isLocked, LockedSection wrapping)
+- `frontend/src/pages/DailyHoroscopePage.css` — modified (teaser-placeholder)
+- `frontend/src/tests/DailyHoroscopePage.test.tsx` — modified (3 tests Story 64.8 + installFetchMock entitlements)
+
+### Implementation Notes
+
+- `horoscope_copy.ts` : ajout de `HOROSCOPE_TEASERS` (6 clés, fr/en/es) + `getHoroscopeTeaser(key, lang)`.
+- `DailyHoroscopePage.tsx` : `isLocked = featureAccess?.variant_code === "summary_only"` via `useFeatureAccess("horoscope_daily")`. Zones 3,4,5,6,8,9 wrappées avec `LockedSection` quand locked. CTA `UpgradeCTA` uniquement sur Zone 3 (DomainRankingCard). DayClimateHero (Zone 2) jamais wrappé (AC1). Comportement non-locked inchangé (AC4).
+- Pattern : quand locked → section toujours affichée avec teaser ; quand non-locked → comportement original préservé (null si données absentes).
+- Tests : `installFetchMock` étendu avec option `entitlements`. Deux fixtures `makeEntitlementsMeFull()` / `makeEntitlementsMeFree()` créées. 3 tests pour AC2, AC3, AC4.
 
 ### Le payload backend pour free
 
