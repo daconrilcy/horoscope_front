@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { FeatureEntitlementResponse } from "../api/billing";
 import {
   useNatalInterpretation,
   useNatalInterpretationsList,
@@ -54,6 +55,7 @@ interface Props {
     kind: "upgrade" | "switch_persona";
     nonce: number;
   } | null;
+  longFeatureAccess?: FeatureEntitlementResponse;
 }
 
 type InterpretationTranslations = typeof natalChartTranslations['fr']['interpretation'];
@@ -68,12 +70,14 @@ export function NatalInterpretationSection({
   isLockedFree = false,
   onActiveInterpretationChange,
   actionRequest,
+  longFeatureAccess,
 }: Props) {
   const pageT = natalChartTranslations[lang];
   const t = pageT.interpretation;
   const accessToken = useAccessTokenSnapshot();
   const navigate = useNavigate();
   const basicUpgradePath = "/settings/subscription";
+  const premiumUpgradePath = "/settings/subscription";
 
   const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">(
     initialPersonaId || isLockedFree ? "complete" : "short"
@@ -117,8 +121,19 @@ export function NatalInterpretationSection({
   const { data, isLoading, error, refetch } = activeQuery;
   const historyItems = historyQuery.data?.items ?? [];
   const hasCompleteInterpretation = historyItems.some((item) => item.level === "complete");
+  const isQuotaUsageExhausted = Boolean(
+    longFeatureAccess?.reason_code === "quota_exhausted" ||
+      longFeatureAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0),
+  );
+  const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer";
+  const isCompleteGenerationBlocked =
+    !isLockedFree && (isQuotaUsageExhausted || (isSingleAstrologerPlan && hasCompleteInterpretation));
   const primaryActionLabel = hasCompleteInterpretation
-    ? (isLockedFree ? t.upgradeToBasicCta : pageT.requestAnotherAstrologer)
+    ? (isLockedFree
+        ? t.upgradeToBasicCta
+        : isCompleteGenerationBlocked
+          ? t.quotaExhaustedCta
+          : pageT.requestAnotherAstrologer)
     : (isLockedFree ? t.upgradeToBasicCta : pageT.unlockCompleteInterpretation);
 
   useEffect(() => {
@@ -134,11 +149,15 @@ export function NatalInterpretationSection({
       navigate(basicUpgradePath);
       return;
     }
+    if (actionRequest.kind === "switch_persona" && isCompleteGenerationBlocked) {
+      navigate(premiumUpgradePath);
+      return;
+    }
     setSelectedInterpretationId(null);
     setSelectedPersonaId(null);
     setForceRefresh(false);
     setIsUpsellOpen(true);
-  }, [actionRequest, basicUpgradePath, isLockedFree, navigate]);
+  }, [actionRequest, basicUpgradePath, isCompleteGenerationBlocked, isLockedFree, navigate, premiumUpgradePath]);
 
   useEffect(() => {
     if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) {
@@ -202,6 +221,10 @@ export function NatalInterpretationSection({
   const handleRegenerate = () => {
     if (isLockedFree) {
       navigate(basicUpgradePath);
+      return;
+    }
+    if (isCompleteGenerationBlocked) {
+      navigate(premiumUpgradePath);
       return;
     }
     setSelectedInterpretationId(null);

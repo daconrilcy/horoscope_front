@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -128,7 +129,7 @@ describe("NatalInterpretationSection", () => {
     (useAstrologers as any).mockReturnValue({ isLoading: false, data: mockAstrologers });
   });
 
-  const renderSection = () => {
+  const renderSection = (props: Partial<ComponentProps<typeof NatalInterpretationSection>> = {}) => {
     return render(
       <MemoryRouter initialEntries={["/natal"]}>
         <Routes>
@@ -136,7 +137,7 @@ describe("NatalInterpretationSection", () => {
             path="/natal"
             element={
               <QueryClientProvider client={queryClient}>
-                <NatalInterpretationSection chartLoaded={true} chartId="chart-123" lang="fr" />
+                <NatalInterpretationSection chartLoaded={true} chartId="chart-123" lang="fr" {...props} />
               </QueryClientProvider>
             }
           />
@@ -269,6 +270,26 @@ describe("NatalInterpretationSection", () => {
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(/Choisissez votre astrologue/i)).toBeInTheDocument();
+  });
+
+  it("redirige vers l'abonnement quand le quota Basic complet est déjà consommé", () => {
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [],
+      },
+    });
+
+    const actionButton = screen.getByRole("button", { name: /Passer à Premium pour plus d'interprétations/i });
+
+    fireEvent.click(actionButton);
+
+    expect(screen.getByText(/Subscription page/i)).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("n'arme pas une requête complete sans persona quand on demande le thème complet", async () => {

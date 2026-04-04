@@ -1606,5 +1606,46 @@ describe("NatalChartPage", () => {
       // Aucun teaser de locked section
       expect(screen.queryByText(/Votre vue d'ensemble astrologique complète/i)).not.toBeInTheDocument()
     })
+
+    it("redirige le CTA d'en-tête vers l'abonnement quand le quota Basic complet est déjà consommé", () => {
+      mockUseFeatureAccess.mockReturnValue({
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [],
+      } as ReturnType<typeof useFeatureAccess>)
+      mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
+      mockUseNatalInterpretation.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          ...INTERPRETATION_DATA,
+          meta: {
+            ...INTERPRETATION_DATA.meta,
+            level: "complete",
+            persona_name: "Luna Céleste",
+          },
+        },
+        refetch: vi.fn(),
+      })
+
+      render(
+        <MemoryRouter
+          initialEntries={["/natal"]}
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
+          <Routes>
+            <Route path="/natal" element={<NatalChartPage />} />
+            <Route path="/settings/subscription" element={<div>Subscription page</div>} />
+          </Routes>
+        </MemoryRouter>
+      )
+
+      fireEvent.click(screen.getByRole("button", { name: /Passer à Premium pour plus d'interprétations/i }))
+
+      expect(screen.getByText(/Subscription page/i)).toBeInTheDocument()
+    })
   })
 })

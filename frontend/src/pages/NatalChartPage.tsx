@@ -77,6 +77,15 @@ export function NatalChartPage() {
   const apiError = error instanceof ApiError ? error : null
   const natalAccess = useFeatureAccess("natal_chart_long")
   const isLockedFree = natalAccess?.variant_code === "free_short"
+  const hasSingleAstrologerQuota = natalAccess?.variant_code === "single_astrologer"
+  const isLongQuotaExhausted = Boolean(
+    !isLockedFree &&
+      (
+        natalAccess?.reason_code === "quota_exhausted" ||
+        natalAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0) ||
+        (hasSingleAstrologerQuota && activeInterpretation.level === "complete")
+      ),
+  )
 
   async function handleGenerateChart() {
     if (!accessToken || isGenerating) return
@@ -248,6 +257,8 @@ export function NatalChartPage() {
   const headerActionLabel =
     isLockedFree
       ? t.interpretation.upgradeToBasicCta
+      : isLongQuotaExhausted
+      ? t.interpretation.quotaExhaustedCta
       : activeInterpretation.level === "complete"
       ? t.requestAnotherAstrologer
       : t.unlockCompleteInterpretation
@@ -305,6 +316,10 @@ export function NatalChartPage() {
                 className="natal-page-header__cta"
                 onClick={() => {
                   if (isLockedFree) {
+                    navigate("/settings/subscription")
+                    return
+                  }
+                  if (isLongQuotaExhausted) {
                     navigate("/settings/subscription")
                     return
                   }
@@ -484,6 +499,7 @@ export function NatalChartPage() {
           initialPersonaId={initialPersonaId}
           initialInterpretationId={initialInterpretationId}
           isLockedFree={isLockedFree}
+          longFeatureAccess={natalAccess}
           onActiveInterpretationChange={setActiveInterpretation}
           actionRequest={headerActionRequest}
         />

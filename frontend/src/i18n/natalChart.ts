@@ -122,6 +122,7 @@ type NatalChartTranslations = {
     standardVersionLabel: string
     summaryBadge: string
     shortBadge: string
+    quotaExhaustedCta: string
     historyTitle: string
     deleteConfirm: string
     deleteConfirmSub: string
@@ -256,6 +257,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       standardVersionLabel: "Standard",
       summaryBadge: "Résumé",
       shortBadge: "Short",
+      quotaExhaustedCta: "Passer à Premium pour plus d'interprétations",
       historyTitle: "Versions disponibles",
       deleteConfirm: "Supprimer cette version ?",
       deleteConfirmSub: "Cette interprétation sera définitivement supprimée de votre historique.",
@@ -472,6 +474,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       standardVersionLabel: "Standard",
       summaryBadge: "Summary",
       shortBadge: "Short",
+      quotaExhaustedCta: "Upgrade to Premium for more readings",
       historyTitle: "Available versions",
       deleteConfirm: "Delete this version?",
       deleteConfirmSub: "This interpretation will be permanently removed from your history.",
@@ -686,6 +689,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       standardVersionLabel: "Standard",
       summaryBadge: "Resumen",
       shortBadge: "Short",
+      quotaExhaustedCta: "Pasar a Premium para más interpretaciones",
       historyTitle: "Versiones disponibles",
       deleteConfirm: "¿Eliminar esta versión?",
       deleteConfirmSub: "Esta interpretación se eliminará permanentemente de tu historial.",

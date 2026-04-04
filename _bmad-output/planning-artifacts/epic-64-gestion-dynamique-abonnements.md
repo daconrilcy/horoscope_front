@@ -205,6 +205,7 @@ Validation finale produit :
 - carte résumé désormais conforme à la maquette attendue : pas de label générique, accroche synthétique générée dans le cadre ;
 - comportement d'upgrade confirmé : les CTA free redirigent vers l'abonnement Basic sans relancer une génération non autorisée.
 - correction complémentaire du parcours `/settings/subscription` : un utilisateur free exposé comme plan applicatif `free` mais sans profil Stripe est désormais routé vers un Checkout Stripe initial, et non plus vers le Customer Portal.
+- correction complémentaire du flux Basic sur `/natal` : une fois le quota d'interprétation complète consommé, l'interface n'autorise plus de nouvelle génération et remplace le bouton inactif par un CTA explicite vers Premium pour obtenir davantage de quota.
 
 ---
 
