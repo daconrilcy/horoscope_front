@@ -21,6 +21,7 @@ import {
 import type { MobileView } from "../features/chat"
 import { AstrologerPickerModal } from "../features/chat/components/AstrologerPickerModal"
 import { ChatEmptyState } from "../features/chat/components/ChatEmptyState"
+import { ChatQuotaBanner } from "../features/chat/components/ChatQuotaBanner"
 import { SectionErrorBoundary } from "../components/ErrorBoundary"
 import { PageLayout } from "../layouts"
 import { detectLang } from "../i18n/astrology"
@@ -387,6 +388,8 @@ export function ChatPage() {
           showBackButton={!isMobile}
         />
       )}
+
+      <ChatQuotaBanner />
 
       <SectionErrorBoundary onRetry={() => conversations.refetch()}>
         <ChatLayout

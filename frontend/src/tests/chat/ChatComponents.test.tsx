@@ -1,6 +1,29 @@
 import { cleanup, render, screen, fireEvent } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+// Mocks hoisted by Vitest — must appear before component imports that use these modules
+vi.mock("../../api/billing", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../api/billing")>()
+  return {
+    ...actual,
+    useChatEntitlementUsage: vi.fn(),
+  }
+})
+
+vi.mock("../../hooks/useEntitlementSnapshot", () => ({
+  useUpgradeHint: vi.fn(),
+  useEntitlementsSnapshot: vi.fn(),
+  useFeatureAccess: vi.fn(),
+}))
+
+import { useChatEntitlementUsage } from "../../api/billing"
+import { useUpgradeHint } from "../../hooks/useEntitlementSnapshot"
+import { ChatQuotaBanner } from "../../features/chat/components/ChatQuotaBanner"
+import { createWrapper } from "../test-utils"
+
+const mockUseChatEntitlementUsage = vi.mocked(useChatEntitlementUsage)
+const mockUseUpgradeHint = vi.mocked(useUpgradeHint)
+
 import { ConversationItem } from "../../features/chat/components/ConversationItem"
 import { ConversationList } from "../../features/chat/components/ConversationList"
 import { MessageBubble } from "../../features/chat/components/MessageBubble"
@@ -680,6 +703,60 @@ describe("useAutoScroll", () => {
     const { result } = renderHook(() => useAutoScroll(ref, 0))
 
     expect(() => result.current.resetScroll()).not.toThrow()
+  })
+})
+
+describe("ChatQuotaBanner", () => {
+  beforeEach(() => {
+    mockUseUpgradeHint.mockReturnValue({
+      feature_code: "astrologer_chat",
+      current_plan_code: "free",
+      target_plan_code: "basic",
+      benefit_key: "upgrade.astrologer_chat.unlimited_messages",
+      cta_variant: "inline",
+      priority: 1,
+    })
+  })
+
+  it("renders null when data is absent (unlimited plan) (AC2)", () => {
+    mockUseChatEntitlementUsage.mockReturnValue({ data: null } as ReturnType<typeof useChatEntitlementUsage>)
+    const { container } = render(<ChatQuotaBanner />, { wrapper: createWrapper() })
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  it("renders informative banner when quota remaining (AC1)", () => {
+    mockUseChatEntitlementUsage.mockReturnValue({
+      data: {
+        quota_date: "2026-04-04",
+        quota_key: "daily",
+        limit: 5,
+        consumed: 2,
+        remaining: 3,
+        reset_at: "2026-04-05T00:00:00Z",
+        blocked: false,
+      },
+    } as ReturnType<typeof useChatEntitlementUsage>)
+    render(<ChatQuotaBanner />, { wrapper: createWrapper() })
+    expect(screen.getByText(/3\/5/)).toBeInTheDocument()
+    expect(document.querySelector(".chat-quota-banner--info")).toBeInTheDocument()
+  })
+
+  it("renders alert banner with UpgradeCTA when quota exhausted (AC3)", () => {
+    mockUseChatEntitlementUsage.mockReturnValue({
+      data: {
+        quota_date: "2026-04-04",
+        quota_key: "daily",
+        limit: 5,
+        consumed: 5,
+        remaining: 0,
+        reset_at: "2026-04-05T00:00:00Z",
+        blocked: true,
+      },
+    } as ReturnType<typeof useChatEntitlementUsage>)
+    render(<ChatQuotaBanner />, { wrapper: createWrapper() })
+    expect(document.querySelector(".chat-quota-banner--exhausted")).toBeInTheDocument()
+    expect(screen.getByRole("alert")).toBeInTheDocument()
+    expect(screen.getByRole("link")).toBeInTheDocument()
   })
 })
 

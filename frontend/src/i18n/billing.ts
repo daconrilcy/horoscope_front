@@ -29,6 +29,34 @@ export function getUpgradeBenefitLabel(key: string, lang: AstrologyLang): string
   return entry[lang] ?? entry["fr"]
 }
 
+export type ChatQuotaMessages = {
+  remaining: (remaining: number, limit: number) => string
+  exhausted: (date: string) => string
+  resetDate: (date: string) => string
+}
+
+const CHAT_QUOTA_MESSAGES: Record<AstrologyLang, ChatQuotaMessages> = {
+  fr: {
+    remaining: (r, l) => `${r}/${l} message(s) restant(s)`,
+    exhausted: (d) => `Quota atteint — rechargement le ${d}`,
+    resetDate: (d) => `Rechargement le ${d}`,
+  },
+  en: {
+    remaining: (r, l) => `${r}/${l} message(s) left`,
+    exhausted: (d) => `Quota reached — resets on ${d}`,
+    resetDate: (d) => `Resets on ${d}`,
+  },
+  es: {
+    remaining: (r, l) => `${r}/${l} mensaje(s) restante(s)`,
+    exhausted: (d) => `Cuota alcanzada — reinicia el ${d}`,
+    resetDate: (d) => `Reinicio el ${d}`,
+  },
+}
+
+export function getChatQuotaMessages(lang: AstrologyLang): ChatQuotaMessages {
+  return CHAT_QUOTA_MESSAGES[lang] ?? CHAT_QUOTA_MESSAGES.fr
+}
+
 export type BillingTranslation = {
   success: {
     trialStarted: string

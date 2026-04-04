@@ -1,0 +1,35 @@
+.chat-quota-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
+  border-bottom: 1px solid var(--glass-border);
+  font-size: var(--font-size-sm, 0.875rem);
+  flex-wrap: wrap;
+}
+
+.chat-quota-banner--info {
+  background: var(--glass);
+  color: var(--text-2);
+}
+
+.chat-quota-banner--exhausted {
+  background: var(--glass-2);
+  color: var(--text-1);
+  border-left: 3px solid var(--color-primary);
+}
+
+.chat-quota-banner__text {
+  flex: 1;
+}
+
+.chat-quota-banner__reset {
+  color: var(--text-2);
+  font-size: var(--font-size-xs, 0.75rem);
+}
+
+@media (max-width: 768px) {
+  .chat-quota-banner {
+    padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  }
+}

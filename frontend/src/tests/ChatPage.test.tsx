@@ -55,6 +55,12 @@ vi.mock("../api/billing", () => ({
   useChatEntitlementUsage: () => mockUseChatEntitlementUsage(),
 }))
 
+vi.mock("../hooks/useEntitlementSnapshot", () => ({
+  useUpgradeHint: vi.fn().mockReturnValue(undefined),
+  useEntitlementsSnapshot: vi.fn().mockReturnValue({ data: null }),
+  useFeatureAccess: vi.fn().mockReturnValue(undefined),
+}))
+
 vi.mock("../api/astrologers", () => ({
   useAstrologer: () => ({
     data: null,
