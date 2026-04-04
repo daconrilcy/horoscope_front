@@ -87,17 +87,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  font-size: 0.75rem;
+  column-gap: 10px;
+  row-gap: 8px;
+  font-size: 0.78125rem;
   color: var(--premium-text-meta);
   flex-wrap: wrap;
+  text-align: center;
+  line-height: 1.45;
+}
+
+.auth-reassurance-item {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .auth-reassurance-dot {
-  width: 3px;
-  height: 3px;
+  flex: 0 0 auto;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--premium-text-faint);
+  opacity: 0.7;
+}
+
+@media (max-width: 480px) {
+  .auth-reassurance {
+    column-gap: 8px;
+    row-gap: 6px;
+    font-size: 0.75rem;
+  }
+
+  .auth-reassurance-item {
+    white-space: normal;
+  }
+
+  .auth-reassurance-dot {
+    width: 3px;
+    height: 3px;
+  }
 }
 
 .auth-switch-link {
@@ -105,18 +133,42 @@
   text-align: center;
   font-size: 0.9375rem;
   color: var(--premium-text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .auth-switch-link button {
-  background: none;
-  border: none;
-  color: var(--premium-accent-purple);
-  font-weight: 600;
+  min-height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(134, 108, 208, 0.34);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(237, 229, 255, 0.84));
+  color: var(--premium-accent-purple-strong);
+  font-weight: 700;
   cursor: pointer;
-  padding: 0;
-  margin-left: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 10px 20px rgba(111, 87, 217, 0.14);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
 .auth-switch-link button:hover {
-  text-decoration: underline;
+  transform: translateY(-1px);
+  border-color: rgba(134, 108, 208, 0.46);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(232, 221, 255, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 14px 26px rgba(111, 87, 217, 0.18);
+}
+
+.auth-switch-link button:focus-visible {
+  outline: 2px solid rgba(134, 108, 208, 0.28);
+  outline-offset: 3px;
 }

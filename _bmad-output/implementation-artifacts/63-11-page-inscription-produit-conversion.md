@@ -2,6 +2,13 @@
 
 Status: done
 
+## Mise en oeuvre réelle
+
+- `SignUpForm` reste limité à `email + mot de passe`, avec conservation du contexte de plan via `?plan=...`.
+- La micro-réassurance sous le bouton de création de compte a été finalisée avec une structure dédiée (`auth-reassurance-item`) et des séparateurs décoratifs non interactifs, pour éviter tout rendu collé ou illisible.
+- La feuille `SignUpForm.css` est désormais importée explicitement par le composant afin que les styles locaux de la page `/register` soient réellement appliqués en production.
+- Le lien d'alternative `Se connecter` a été restylé comme une action secondaire premium en capsule, cohérente avec le ton visuel de la landing et de l'écran d'inscription.
+
 ## Story
 
 As a visiteur non authentifié ayant cliqué sur un CTA de la landing page,

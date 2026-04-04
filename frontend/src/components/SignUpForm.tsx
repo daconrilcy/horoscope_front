@@ -11,6 +11,7 @@ import { Field } from "@ui/Field"
 import { Button } from "@ui/Button"
 import { useAnalytics } from "../hooks/useAnalytics"
 import { PRICING_CONFIG } from "../config/pricingConfig"
+import "./SignUpForm.css"
 
 type SignUpFormData = {
   email: string
@@ -159,11 +160,11 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
       </form>
 
       <div className="auth-reassurance">
-        <span>{tAuth.signUp.reassurance.noCard}</span>
-        <span className="auth-reassurance-dot"></span>
-        <span>{tAuth.signUp.reassurance.cancelAnytime}</span>
-        <span className="auth-reassurance-dot"></span>
-        <span>{tAuth.signUp.reassurance.gdpr}</span>
+        <span className="auth-reassurance-item">{tAuth.signUp.reassurance.noCard}</span>
+        <span className="auth-reassurance-dot" aria-hidden="true"></span>
+        <span className="auth-reassurance-item">{tAuth.signUp.reassurance.cancelAnytime}</span>
+        <span className="auth-reassurance-dot" aria-hidden="true"></span>
+        <span className="auth-reassurance-item">{tAuth.signUp.reassurance.gdpr}</span>
       </div>
 
       <p className="auth-switch-link">
