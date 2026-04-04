@@ -114,3 +114,18 @@ def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscript
     assert status.subscription_status is None
     assert status.plan is not None
     assert status.plan.code == "basic"
+
+
+def test_get_subscription_status_defaults_to_free_in_local_runtime(monkeypatch) -> None:
+    _cleanup_tables()
+    user_id = _create_user_id()
+    monkeypatch.setattr("app.services.billing_service.settings.app_env", "development")
+    monkeypatch.setattr(BillingService, "_is_pytest_runtime", staticmethod(lambda: False))
+
+    with SessionLocal() as db:
+        status = BillingService.get_subscription_status(db, user_id=user_id)
+
+    assert status.status == "active"
+    assert status.subscription_status is None
+    assert status.plan is not None
+    assert status.plan.code == "free"

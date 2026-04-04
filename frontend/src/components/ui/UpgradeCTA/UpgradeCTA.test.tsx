@@ -78,6 +78,15 @@ describe('UpgradeCTA', () => {
     expect(link).toHaveClass('upgrade-cta--link')
   })
 
+  it('allows overriding the target route', () => {
+    mockUseUpgradeHint.mockReturnValue(fakeHint)
+    render(<UpgradeCTA featureCode="horoscope_daily" to="/settings/subscription" />, {
+      wrapper: createWrapper(),
+    })
+    const link = screen.getByRole('link')
+    expect(link).toHaveAttribute('href', '/settings/subscription')
+  })
+
   it('renders null for unknown feature code (AC4)', () => {
     mockUseUpgradeHint.mockReturnValue(undefined)
     const { container } = render(<UpgradeCTA featureCode="unknown_feature" />, {

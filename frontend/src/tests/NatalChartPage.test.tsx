@@ -1,11 +1,11 @@
-import { cleanup, render, screen, within } from "@testing-library/react"
-import { MemoryRouter } from "react-router-dom"
+import { cleanup, render, screen, within, fireEvent, waitFor } from "@testing-library/react"
+import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { NatalChartPage } from "../pages/NatalChartPage"
 import { NatalChartGuide } from "../components/NatalChartGuide"
 import { getGuideTranslations, natalChartTranslations } from "../i18n/natalChart"
-import { useFeatureAccess } from "../hooks/useEntitlementSnapshot"
+import { useFeatureAccess, useUpgradeHint } from "../hooks/useEntitlementSnapshot"
 /**
  * ApiError est importé pour créer des instances dans les tests (new ApiError(...)).
  * vi.mock remplace la classe réelle par notre mock défini ci-dessous.
@@ -63,6 +63,7 @@ const mockUseNatalPdfTemplates: ReturnType<typeof vi.mocked<typeof useNatalPdfTe
 const mockUseNatalInterpretationById: ReturnType<typeof vi.mocked<typeof useNatalInterpretationById>> =
   vi.mocked(useNatalInterpretationById)
 const mockUseFeatureAccess: ReturnType<typeof vi.mocked<typeof useFeatureAccess>> = vi.mocked(useFeatureAccess)
+const mockUseUpgradeHint: ReturnType<typeof vi.mocked<typeof useUpgradeHint>> = vi.mocked(useUpgradeHint)
 
 const TEST_REFERENCE_VERSION = "1.0"
 const TEST_RULESET_VERSION = "1.0"
@@ -99,6 +100,7 @@ const CHART_BASE = {
 beforeEach(() => {
   vi.stubGlobal("navigator", { ...navigator, language: "fr-FR" })
   localStorage.clear()
+  mockUseUpgradeHint.mockReturnValue(undefined)
   mockUseNatalInterpretation.mockReturnValue({
     isLoading: false,
     isError: false,
@@ -171,6 +173,59 @@ describe("NatalChartPage", () => {
         useCaseLevel: "complete",
       })
     )
+  })
+
+  it("uses the free_short complete flow by default for locked free natal access", () => {
+    mockUseFeatureAccess.mockReturnValue({
+      variant_code: "free_short",
+      granted: true,
+    } as ReturnType<typeof useFeatureAccess>)
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { ...CHART_BASE },
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    expect(mockUseNatalInterpretation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        useCaseLevel: "complete",
+        personaId: null,
+        allowCompleteWithoutPersona: true,
+      }),
+    )
+  })
+
+  it("redirects locked free header CTA to subscription instead of requesting a complete reading", async () => {
+    mockUseFeatureAccess.mockReturnValue({
+      variant_code: "free_short",
+      granted: true,
+    } as ReturnType<typeof useFeatureAccess>)
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { ...CHART_BASE },
+    })
+
+    render(
+      <MemoryRouter initialEntries={["/natal"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Routes>
+          <Route path="/natal" element={<NatalChartPage />} />
+          <Route path="/settings/subscription" element={<div>Subscription page</div>} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /Passer à Basic pour le thème complet/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Subscription page/i)).toBeInTheDocument()
+    })
   })
 
   it("forwards interpretationId query parameter to direct interpretation lookup", () => {
@@ -1474,6 +1529,14 @@ describe("NatalChartPage", () => {
 
     it("AC2/AC3 — utilisateur free : sections thématiques wrappées dans LockedSection", () => {
       mockUseFeatureAccess.mockReturnValue({ variant_code: "free_short", granted: true } as ReturnType<typeof useFeatureAccess>)
+      mockUseUpgradeHint.mockReturnValue({
+        feature_code: "natal_chart_long",
+        current_plan_code: "free",
+        target_plan_code: "basic",
+        benefit_key: "upgrade.natal_chart_long.full_interpretation",
+        cta_variant: "inline",
+        priority: 1,
+      })
       mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
       mockUseNatalInterpretation.mockReturnValue({ isLoading: false, isError: false, data: INTERPRETATION_DATA, refetch: vi.fn() })
 
@@ -1491,8 +1554,14 @@ describe("NatalChartPage", () => {
       expect(screen.queryByText("Contenu vue d'ensemble")).not.toBeInTheDocument()
       expect(screen.queryByText("Contenu carrière")).not.toBeInTheDocument()
 
-      // Teaser affiché dans LockedSection
+      // Teaser flouté fixe affiché dans LockedSection
       expect(screen.getAllByText(/Votre vue d'ensemble astrologique complète/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/Dans la version Basic, cette section déroule une lecture ample/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByRole("link", { name: /Débloquer l'interprétation complète/i }).length).toBe(2)
+      expect(screen.getAllByRole("link", { name: /Débloquer l'interprétation complète/i })[0]).toHaveAttribute(
+        "href",
+        "/settings/subscription",
+      )
     })
 
     it("AC1 — utilisateur free : summary affiché normalement", () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { NatalInterpretationSection } from "../components/NatalInterpretation";
 import { 
   useNatalInterpretation, 
@@ -39,6 +40,7 @@ vi.mock("../api/astrologers", async () => {
 // Mock authToken
 vi.mock("../utils/authToken", () => ({
   useAccessTokenSnapshot: () => "mock-token",
+  getSubjectFromAccessToken: () => "mock-subject",
 }));
 
 const queryClient = new QueryClient({
@@ -128,9 +130,19 @@ describe("NatalInterpretationSection", () => {
 
   const renderSection = () => {
     return render(
-      <QueryClientProvider client={queryClient}>
-        <NatalInterpretationSection chartLoaded={true} chartId="chart-123" lang="fr" />
-      </QueryClientProvider>
+      <MemoryRouter initialEntries={["/natal"]}>
+        <Routes>
+          <Route
+            path="/natal"
+            element={
+              <QueryClientProvider client={queryClient}>
+                <NatalInterpretationSection chartLoaded={true} chartId="chart-123" lang="fr" />
+              </QueryClientProvider>
+            }
+          />
+          <Route path="/settings/subscription" element={<div>Subscription page</div>} />
+        </Routes>
+      </MemoryRouter>
     );
   };
 
@@ -278,6 +290,71 @@ describe("NatalInterpretationSection", () => {
     expect(useNatalInterpretation).toHaveBeenLastCalledWith(
       expect.objectContaining({
         useCaseLevel: "short",
+      }),
+    );
+  });
+
+  it("autorise le flux free_short complet sans persona quand le thème free est verrouillé", () => {
+    render(
+      <MemoryRouter initialEntries={["/natal"]}>
+        <Routes>
+          <Route
+            path="/natal"
+            element={
+              <QueryClientProvider client={queryClient}>
+                <NatalInterpretationSection
+                  chartLoaded={true}
+                  chartId="chart-123"
+                  lang="fr"
+                  isLockedFree={true}
+                />
+              </QueryClientProvider>
+            }
+          />
+          <Route path="/settings/subscription" element={<div>Subscription page</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(useNatalInterpretation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        useCaseLevel: "complete",
+        personaId: null,
+        allowCompleteWithoutPersona: true,
+      }),
+    );
+  });
+
+  it("redirige vers l'abonnement Basic au clic sur le CTA free verrouillé", () => {
+    render(
+      <MemoryRouter initialEntries={["/natal"]}>
+        <Routes>
+          <Route
+            path="/natal"
+            element={
+              <QueryClientProvider client={queryClient}>
+                <NatalInterpretationSection
+                  chartLoaded={true}
+                  chartId="chart-123"
+                  lang="fr"
+                  isLockedFree={true}
+                />
+              </QueryClientProvider>
+            }
+          />
+          <Route path="/settings/subscription" element={<div>Subscription page</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Passer à Basic pour le thème complet/i }));
+
+    expect(screen.getByText(/Subscription page/i)).toBeInTheDocument();
+    expect(useNatalInterpretation).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        useCaseLevel: "complete",
+        personaId: null,
+        allowCompleteWithoutPersona: true,
       }),
     );
   });

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import Literal, Optional
@@ -104,6 +105,40 @@ def _build_persona_prompt_profile(persona: LlmPersonaModel) -> str:
         "Méthode attendue : expliquer chaque notion au moment où elle apparaît, relier les indices "
         "astrologiques à des implications concrètes et rester non fataliste."
     )
+
+
+def _parse_prompt_version_uuid(prompt_version_id: str | None) -> uuid.UUID | None:
+    if not prompt_version_id:
+        return None
+    try:
+        return uuid.UUID(prompt_version_id)
+    except (ValueError, TypeError, AttributeError):
+        return None
+
+
+def _normalize_free_short_summary(summary: str) -> str:
+    normalized = summary.strip()
+    if not normalized:
+        return normalized
+
+    replacements = [
+        (r"\b[Cc]et individu\b", "vous"),
+        (r"\b[Cc]ette personne\b", "vous"),
+        (r"\b[Ll]e natif\b", "vous"),
+        (r"\b[Ll]a native\b", "vous"),
+        (r"\b[Ii]l\b", "vous"),
+        (r"\b[Ee]lle\b", "vous"),
+        (r"\b[Ss]on thème\b", "votre thème"),
+        (r"\b[Ss]a personnalité\b", "votre personnalité"),
+        (r"\b[Ss]a sensibilité\b", "votre sensibilité"),
+        (r"\b[Ss]es émotions\b", "vos émotions"),
+        (r"\b[Ss]es relations\b", "vos relations"),
+    ]
+    for pattern, replacement in replacements:
+        normalized = re.sub(pattern, replacement, normalized)
+
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized
 
 
 class NatalInterpretationServiceV2:
@@ -499,10 +534,8 @@ class NatalInterpretationServiceV2:
                 for duplicate in rows[1:]:
                     db.delete(duplicate)
 
-                prompt_version_uuid = (
-                    uuid.UUID(gateway_result.meta.prompt_version_id)
-                    if gateway_result.meta.prompt_version_id
-                    else None
+                prompt_version_uuid = _parse_prompt_version_uuid(
+                    gateway_result.meta.prompt_version_id
                 )
                 if primary is None:
                     primary = UserNatalInterpretationModel(
@@ -614,7 +647,7 @@ class NatalInterpretationServiceV2:
         ]
 
         interpretation = AstroFreeResponseV1(
-            summary=structured.get("summary", ""),
+            summary=_normalize_free_short_summary(structured.get("summary", "")),
             sections=free_sections,
             disclaimers=disclaimers,
         )
@@ -637,36 +670,50 @@ class NatalInterpretationServiceV2:
         # Persistence
         persist_payload = interpretation.model_dump()
         
-        prompt_version_uuid = (
-            uuid.UUID(gateway_result.meta.prompt_version_id)
-            if gateway_result.meta.prompt_version_id
-            else None
-        )
+        prompt_version_uuid = _parse_prompt_version_uuid(gateway_result.meta.prompt_version_id)
         
-        # Nettoyage anciens doublons éventuels
-        stmt_del = select(UserNatalInterpretationModel).where(
+        stmt_existing = select(UserNatalInterpretationModel).where(
             UserNatalInterpretationModel.user_id == user_id,
+            UserNatalInterpretationModel.chart_id == chart_id,
             UserNatalInterpretationModel.level == InterpretationLevel.COMPLETE,
-            UserNatalInterpretationModel.variant_code == "free_short"
+            UserNatalInterpretationModel.variant_code == "free_short",
         )
-        existing_rows = list(db.execute(stmt_del).scalars().all())
-        for row in existing_rows:
-            db.delete(row)
+        existing_rows = list(
+            db.execute(
+                stmt_existing.order_by(
+                    UserNatalInterpretationModel.created_at.desc(),
+                    UserNatalInterpretationModel.id.desc(),
+                )
+            )
+            .scalars()
+            .all()
+        )
+        primary = existing_rows[0] if existing_rows else None
+        for duplicate in existing_rows[1:]:
+            db.delete(duplicate)
 
-        primary = UserNatalInterpretationModel(
-            user_id=user_id,
-            chart_id=chart_id,
-            level=InterpretationLevel.COMPLETE,
-            use_case=use_case_key,
-            variant_code="free_short",
-            persona_id=None,
-            persona_name=None,
-            prompt_version_id=prompt_version_uuid,
-            interpretation_payload=persist_payload,
-            was_fallback=gateway_result.meta.fallback_triggered,
-            degraded_mode=degraded_mode_str,
-        )
-        db.add(primary)
+        if primary is None:
+            primary = UserNatalInterpretationModel(
+                user_id=user_id,
+                chart_id=chart_id,
+                level=InterpretationLevel.COMPLETE,
+                use_case=use_case_key,
+                variant_code="free_short",
+                persona_id=None,
+                persona_name=None,
+                prompt_version_id=prompt_version_uuid,
+                interpretation_payload=persist_payload,
+                was_fallback=gateway_result.meta.fallback_triggered,
+                degraded_mode=degraded_mode_str,
+            )
+            db.add(primary)
+        else:
+            primary.use_case = use_case_key
+            primary.prompt_version_id = prompt_version_uuid
+            primary.interpretation_payload = persist_payload
+            primary.was_fallback = gateway_result.meta.fallback_triggered
+            primary.degraded_mode = degraded_mode_str
+
         db.flush()
         meta.id = primary.id
         meta.persisted_at = primary.created_at or datetime.now(timezone.utc)

@@ -244,9 +244,11 @@ export function NatalChartPage() {
   const SunSignIcon = getZodiacIcon(astroProfile?.sun_sign_code)
   const AscendantSignIcon = getZodiacIcon(astroProfile?.ascendant_sign_code)
   const pageTitle =
-    activeInterpretation.level === "complete" ? t.completeTitle : t.basicTitle
+    !isLockedFree && activeInterpretation.level === "complete" ? t.completeTitle : t.basicTitle
   const headerActionLabel =
-    activeInterpretation.level === "complete"
+    isLockedFree
+      ? t.interpretation.upgradeToBasicCta
+      : activeInterpretation.level === "complete"
       ? t.requestAnotherAstrologer
       : t.unlockCompleteInterpretation
   const sortedHouses = [...houses].sort((a, b) => a.number - b.number)
@@ -302,8 +304,15 @@ export function NatalChartPage() {
                 type="button"
                 className="natal-page-header__cta"
                 onClick={() => {
+                  if (isLockedFree) {
+                    navigate("/settings/subscription")
+                    return
+                  }
                   setHeaderActionRequest({
-                    kind: activeInterpretation.level === "complete" ? "switch_persona" : "upgrade",
+                    kind:
+                      !isLockedFree && activeInterpretation.level === "complete"
+                        ? "switch_persona"
+                        : "upgrade",
                     nonce: Date.now(),
                   })
                 }}

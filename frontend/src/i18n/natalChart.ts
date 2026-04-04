@@ -96,6 +96,7 @@ type NatalChartTranslations = {
     title: string
     upsellTitle: string
     upsellCta: string
+    upgradeToBasicCta: string
     upsellDescription: string
     completeBy: string
     completeBadge: string
@@ -117,6 +118,7 @@ type NatalChartTranslations = {
     cancel: string
     generatedOnLabel: string
     standardVersionLabel: string
+    summaryBadge: string
     shortBadge: string
     historyTitle: string
     deleteConfirm: string
@@ -217,6 +219,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       title: "Interprétation de votre thème",
       upsellTitle: "Interprétation complète",
       upsellCta: "Choisir mon astrologue",
+      upgradeToBasicCta: "Passer à Basic pour le thème complet",
       upsellDescription: "Débloquez une analyse approfondie et personnalisée par l'un de nos experts.",
       completeBy: "Interprétation par",
       completeBadge: "Complet",
@@ -242,6 +245,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       cancel: "Annuler",
       generatedOnLabel: "Généré le",
       standardVersionLabel: "Standard",
+      summaryBadge: "Résumé",
       shortBadge: "Short",
       historyTitle: "Versions disponibles",
       deleteConfirm: "Supprimer cette version ?",
@@ -424,6 +428,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       title: "Chart Interpretation",
       upsellTitle: "Complete Interpretation",
       upsellCta: "Choose my astrologer",
+      upgradeToBasicCta: "Upgrade to Basic for the full reading",
       upsellDescription: "Unlock an in-depth and personalized analysis by one of our experts.",
       completeBy: "Interpretation by",
       completeBadge: "Complete",
@@ -449,6 +454,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       cancel: "Cancel",
       generatedOnLabel: "Generated on",
       standardVersionLabel: "Standard",
+      summaryBadge: "Summary",
       shortBadge: "Short",
       historyTitle: "Available versions",
       deleteConfirm: "Delete this version?",
@@ -629,6 +635,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       title: "Interpretación de tu carta",
       upsellTitle: "Interpretación completa",
       upsellCta: "Elegir mi astrólogo",
+      upgradeToBasicCta: "Pasar a Basic para la lectura completa",
       upsellDescription: "Desbloquea un análisis profundo y personalizado por uno de nuestros expertos.",
       completeBy: "Interpretación por",
       completeBadge: "Completo",
@@ -654,6 +661,7 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       cancel: "Cancelar",
       generatedOnLabel: "Generado el",
       standardVersionLabel: "Standard",
+      summaryBadge: "Resumen",
       shortBadge: "Short",
       historyTitle: "Versiones disponibles",
       deleteConfirm: "¿Eliminar esta versión?",
@@ -832,5 +840,63 @@ export function getNatalSectionTeaser(key: string, lang: AstrologyLang): string 
   const entry = NATAL_SECTION_TEASERS[key as NatalTeaserKey] ?? NATAL_SECTION_TEASERS.generic
   if (lang === 'fr') return entry.fr
   if (lang === 'es') return entry.es
+  return entry.en
+}
+
+export const NATAL_SECTION_LOCKED_COPY: Record<
+  NatalTeaserKey,
+  { fr: string; en: string; es: string }
+> = {
+  overall: {
+    fr: "Dans la version Basic, cette section déroule une lecture ample de vos grands moteurs intérieurs, de vos contradictions structurantes et de la manière dont votre thème relie intuition, volonté, rapport aux autres et rythme de vie. Vous y découvrez une synthèse plus longue, progressive et concrète, pensée pour faire ressortir vos lignes de force au quotidien.",
+    en: "In the Basic version, this section unfolds a broader reading of your core inner drives, your structuring tensions, and the way your chart connects intuition, willpower, relationships, and daily rhythm. It gives you a longer, more progressive synthesis designed to highlight your main strengths in practical life.",
+    es: "En la versión Basic, esta sección desarrolla una lectura amplia de tus motores internos, de tus tensiones estructurales y de la forma en que tu carta conecta intuición, voluntad, relaciones y ritmo cotidiano. Te ofrece una síntesis más larga y progresiva para resaltar tus principales fortalezas en la vida diaria.",
+  },
+  career: {
+    fr: "La version complète approfondit vos appuis de vocation, vos leviers d'expression, votre manière d'entrer dans l'effort et les conditions dans lesquelles votre potentiel professionnel se déploie le mieux. Elle relie vos placements à des dynamiques concrètes de trajectoire, de motivation et de positionnement.",
+    en: "The complete version goes deeper into your vocational strengths, your modes of expression, your relationship to effort, and the conditions in which your professional potential unfolds best. It connects your placements to concrete dynamics of trajectory, motivation, and positioning.",
+    es: "La versión completa profundiza en tus apoyos vocacionales, tus formas de expresión, tu relación con el esfuerzo y las condiciones en las que tu potencial profesional se despliega mejor. Relaciona tus posiciones con dinámicas concretas de trayectoria, motivación y posicionamiento.",
+  },
+  relationships: {
+    fr: "Cette lecture détaillée explore votre style relationnel, votre manière d'entrer dans l'attachement, ce que vous attendez d'un lien équilibré et les zones de vigilance à apprivoiser. Elle articule vos besoins affectifs, votre façon de séduire et la qualité du dialogue que votre thème favorise.",
+    en: "This detailed reading explores your relational style, the way you enter attachment, what you expect from a balanced bond, and the areas of vigilance to work with. It connects your emotional needs, your way of attracting others, and the quality of dialogue suggested by your chart.",
+    es: "Esta lectura detallada explora tu estilo relacional, la manera en que entras en el vínculo, lo que esperas de una relación equilibrada y las áreas de atención que conviene trabajar. Conecta tus necesidades afectivas, tu forma de atraer y la calidad del diálogo sugerida por tu carta.",
+  },
+  inner_life: {
+    fr: "Avec Basic, cette section ouvre une analyse plus intime de votre monde émotionnel, de vos ressources cachées, de vos mécanismes de protection et de ce qui vous aide à retrouver de la cohérence intérieure. Le texte complet met en lumière vos profondeurs sans tomber dans un discours vague ou fataliste.",
+    en: "With Basic, this section opens a more intimate analysis of your emotional world, your hidden resources, your protection mechanisms, and what helps you regain inner coherence. The full text highlights your depths without falling into vague or fatalistic language.",
+    es: "Con Basic, esta sección abre un análisis más íntimo de tu mundo emocional, de tus recursos ocultos, de tus mecanismos de protección y de lo que te ayuda a recuperar coherencia interior. El texto completo ilumina tus profundidades sin caer en un discurso vago o fatalista.",
+  },
+  daily_life: {
+    fr: "La lecture complète montre comment votre thème agit dans vos routines, votre rapport au temps, votre niveau d'énergie, vos habitudes et votre manière d'organiser le concret. Elle transforme vos placements en repères utilisables pour mieux piloter votre quotidien.",
+    en: "The full reading shows how your chart operates in your routines, your relationship to time, your energy level, your habits, and the way you organize practical life. It turns your placements into usable reference points for navigating everyday life.",
+    es: "La lectura completa muestra cómo actúa tu carta en tus rutinas, tu relación con el tiempo, tu nivel de energía, tus hábitos y tu manera de organizar lo concreto. Convierte tus posiciones en referencias útiles para orientar tu vida cotidiana.",
+  },
+  strengths: {
+    fr: "Dans Basic, cette partie isole vos talents naturels, vos ressources spontanées et les combinaisons planétaires qui soutiennent votre confiance, votre créativité ou votre constance. Elle donne une lecture plus généreuse et plus précise de ce sur quoi vous pouvez réellement vous appuyer.",
+    en: "In Basic, this part isolates your natural talents, your spontaneous resources, and the planetary combinations that support your confidence, creativity, or consistency. It provides a fuller and more precise reading of what you can genuinely rely on.",
+    es: "En Basic, esta parte identifica tus talentos naturales, tus recursos espontáneos y las combinaciones planetarias que sostienen tu confianza, creatividad o constancia. Ofrece una lectura más amplia y precisa de aquello en lo que realmente puedes apoyarte.",
+  },
+  challenges: {
+    fr: "La version complète éclaire les tensions utiles de votre thème, les points de friction récurrents et les axes d'évolution qui demandent davantage de conscience. Elle aide à distinguer les vrais défis structurants des simples passages de doute, avec une lecture nuancée et exploitable.",
+    en: "The complete version sheds light on the useful tensions in your chart, the recurring friction points, and the growth axes that require more awareness. It helps separate real structuring challenges from temporary doubts through a nuanced, usable reading.",
+    es: "La versión completa ilumina las tensiones útiles de tu carta, los puntos de fricción recurrentes y los ejes de evolución que requieren más conciencia. Ayuda a diferenciar los verdaderos desafíos estructurales de las dudas pasajeras mediante una lectura matizada y útil.",
+  },
+  event_context: {
+    fr: "Cette section détaillée relie votre thème natal à un contexte plus large de cycles, de périodes et de rythmes d'activation. Elle donne une perspective plus longue sur ce qui s'ouvre, ce qui demande du recul et les moments où vos placements deviennent particulièrement parlants.",
+    en: "This detailed section links your natal chart to a broader context of cycles, periods, and activation rhythms. It offers a longer-range perspective on what is opening up, what calls for distance, and when your placements become especially meaningful.",
+    es: "Esta sección detallada conecta tu carta natal con un contexto más amplio de ciclos, períodos y ritmos de activación. Ofrece una perspectiva más larga sobre lo que se abre, lo que pide distancia y los momentos en que tus posiciones se vuelven especialmente significativas.",
+  },
+  generic: {
+    fr: "Avec l'abonnement Basic, vous accédez à une lecture plus développée, plus structurée et plus concrète de cette partie de votre thème natal. Le texte complet transforme les placements astrologiques en interprétation suivie, avec davantage de nuances, d'exemples et de matière utile.",
+    en: "With the Basic subscription, you unlock a fuller, more structured, and more practical reading of this part of your natal chart. The full text turns astrological placements into a continuous interpretation with more nuance, examples, and useful detail.",
+    es: "Con la suscripción Basic, desbloqueas una lectura más desarrollada, estructurada y práctica de esta parte de tu carta natal. El texto completo transforma las posiciones astrológicas en una interpretación continua con más matices, ejemplos y contenido útil.",
+  },
+}
+
+export function getNatalLockedSectionCopy(key: string, lang: AstrologyLang): string {
+  const entry = NATAL_SECTION_LOCKED_COPY[key as NatalTeaserKey] ?? NATAL_SECTION_LOCKED_COPY.generic
+  if (lang === "fr") return entry.fr
+  if (lang === "es") return entry.es
   return entry.en
 }

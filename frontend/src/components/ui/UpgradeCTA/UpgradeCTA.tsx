@@ -8,9 +8,10 @@ import "./UpgradeCTA.css"
 interface UpgradeCTAProps {
   featureCode: string
   variant?: "button" | "link"
+  to?: string
 }
 
-export function UpgradeCTA({ featureCode, variant = "button" }: UpgradeCTAProps) {
+export function UpgradeCTA({ featureCode, variant = "button", to = "/subscription-guide" }: UpgradeCTAProps) {
   const { lang } = useAstrologyLabels()
   const hint = useUpgradeHint(featureCode)
 
@@ -22,7 +23,7 @@ export function UpgradeCTA({ featureCode, variant = "button" }: UpgradeCTAProps)
 
   return (
     <Link
-      to="/subscription-guide"
+      to={to}
       className={`upgrade-cta upgrade-cta--${variant}`}
     >
       {label}

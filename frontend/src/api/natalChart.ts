@@ -555,6 +555,7 @@ export function useNatalInterpretation(options: {
   enabled: boolean
   useCaseLevel: "short" | "complete"
   personaId?: string | null
+  allowCompleteWithoutPersona?: boolean
   locale?: string
   question?: string
   forceRefresh?: boolean
@@ -566,7 +567,11 @@ export function useNatalInterpretation(options: {
   const canRunInterpretationQuery =
     options.enabled &&
     Boolean(accessToken) &&
-    (options.useCaseLevel === "short" || Boolean(options.personaId))
+    (
+      options.useCaseLevel === "short" ||
+      Boolean(options.personaId) ||
+      Boolean(options.allowCompleteWithoutPersona)
+    )
 
   return useQuery({
     queryKey: [

@@ -15,6 +15,7 @@ from app.llm_orchestration.models import (
     InputValidationError,
     UsageInfo,
 )
+from app.prompts.catalog import NATAL_FREE_SHORT_SCHEMA
 
 
 @pytest.fixture
@@ -294,3 +295,40 @@ async def test_schema_name_in_payload(db_session, monkeypatch):
     args = mock_client.execute.call_args.kwargs
     resp_format = args["response_format"]
     assert resp_format["json_schema"]["name"] == "astroresponse_v2"
+
+
+@pytest.mark.asyncio
+async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
+    mock_client = MagicMock()
+    mock_client.execute = AsyncMock(
+        return_value=create_mock_result(
+            "natal_long_free",
+            '{"summary":"Resume","accordion_titles":["A","B"]}',
+            {"summary": "Resume", "accordion_titles": ["A", "B"]},
+        )
+    )
+
+    gateway = LLMGateway(responses_client=mock_client)
+    await gateway.execute(
+        "natal_long_free",
+        {},
+        {
+            "locale": "fr-FR",
+            "use_case": "natal_long_free",
+            "chart_json": {"meta": {"birth_date": "2017-03-14"}},
+        },
+        "r",
+        "t",
+        user_id=1,
+        db=db_session,
+    )
+
+    args = mock_client.execute.call_args.kwargs
+    resp_format = args["response_format"]
+    assert resp_format is not None
+    assert resp_format["json_schema"]["name"] == "natal-long-free-v1"
+    assert resp_format["json_schema"]["schema"]["required"] == ["summary", "accordion_titles"]
+
+
+def test_catalog_free_natal_schema_is_openai_responses_compatible():
+    assert NATAL_FREE_SHORT_SCHEMA["additionalProperties"] is False

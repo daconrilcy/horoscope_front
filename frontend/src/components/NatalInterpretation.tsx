@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   useNatalInterpretation,
   useNatalInterpretationsList,
@@ -13,7 +14,11 @@ import {
 } from "../api/natalChart";
 import { useAstrologers, type Astrologer } from "../api/astrologers";
 import { AstrologerGrid } from "../features/astrologers";
-import { natalChartTranslations, getNatalSectionTeaser } from "../i18n/natalChart";
+import {
+  natalChartTranslations,
+  getNatalLockedSectionCopy,
+  getNatalSectionTeaser,
+} from "../i18n/natalChart";
 import { type AstrologyLang } from "../i18n/astrology";
 import { LockedSection, UpgradeCTA } from "@ui";
 import {
@@ -67,9 +72,11 @@ export function NatalInterpretationSection({
   const pageT = natalChartTranslations[lang];
   const t = pageT.interpretation;
   const accessToken = useAccessTokenSnapshot();
+  const navigate = useNavigate();
+  const basicUpgradePath = "/settings/subscription";
 
   const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">(
-    initialPersonaId ? "complete" : "short"
+    initialPersonaId || isLockedFree ? "complete" : "short"
   );
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(initialPersonaId);
   const [isUpsellOpen, setIsUpsellOpen] = useState(false);
@@ -94,6 +101,7 @@ export function NatalInterpretationSection({
     enabled: chartLoaded && !selectedInterpretationId,
     useCaseLevel,
     personaId: selectedPersonaId,
+    allowCompleteWithoutPersona: isLockedFree,
     locale: lang === "fr" ? "fr-FR" : lang === "en" ? "en-US" : "es-ES",
     forceRefresh,
     refreshKey,
@@ -110,23 +118,27 @@ export function NatalInterpretationSection({
   const historyItems = historyQuery.data?.items ?? [];
   const hasCompleteInterpretation = historyItems.some((item) => item.level === "complete");
   const primaryActionLabel = hasCompleteInterpretation
-    ? pageT.requestAnotherAstrologer
-    : pageT.unlockCompleteInterpretation;
+    ? (isLockedFree ? t.upgradeToBasicCta : pageT.requestAnotherAstrologer)
+    : (isLockedFree ? t.upgradeToBasicCta : pageT.unlockCompleteInterpretation);
 
   useEffect(() => {
     onActiveInterpretationChange?.({
-      level: data?.meta.level ?? "short",
+      level: isLockedFree ? "short" : (data?.meta.level ?? "short"),
       personaName: data?.meta.persona_name ?? null,
     });
-  }, [data?.meta.level, data?.meta.persona_name, onActiveInterpretationChange]);
+  }, [data?.meta.level, data?.meta.persona_name, isLockedFree, onActiveInterpretationChange]);
 
   useEffect(() => {
     if (!actionRequest) return;
+    if (actionRequest.kind === "upgrade" && isLockedFree) {
+      navigate(basicUpgradePath);
+      return;
+    }
     setSelectedInterpretationId(null);
     setSelectedPersonaId(null);
     setForceRefresh(false);
     setIsUpsellOpen(true);
-  }, [actionRequest]);
+  }, [actionRequest, basicUpgradePath, isLockedFree, navigate]);
 
   useEffect(() => {
     if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) {
@@ -140,8 +152,15 @@ export function NatalInterpretationSection({
       setSelectedInterpretationId(null);
       setSelectedPersonaId(initialPersonaId);
       setUseCaseLevel("complete");
+      return;
     }
-  }, [initialInterpretationId, initialPersonaId]);
+
+    if (isLockedFree) {
+      setSelectedInterpretationId(null);
+      setSelectedPersonaId(null);
+      setUseCaseLevel("complete");
+    }
+  }, [initialInterpretationId, initialPersonaId, isLockedFree]);
 
   useEffect(() => {
     if (selectedTemplateKey) return;
@@ -181,6 +200,10 @@ export function NatalInterpretationSection({
   };
 
   const handleRegenerate = () => {
+    if (isLockedFree) {
+      navigate(basicUpgradePath);
+      return;
+    }
     setSelectedInterpretationId(null);
     setSelectedPersonaId(null);
     setForceRefresh(false);
@@ -332,7 +355,9 @@ export function NatalInterpretationSection({
           )}
 
           {data?.meta.level === "complete" && (
-            <span className="ni-level-badge">{t.completeBadge}</span>
+            <span className="ni-level-badge">
+              {isLockedFree ? t.summaryBadge : t.completeBadge}
+            </span>
           )}
         </div>
       </div>
@@ -716,11 +741,21 @@ function SectionAccordion({ sections, sectionsMap, lang, isLockedFree }: { secti
                 <span className="ni-accordion-title">{sectionTitle}</span>
               </div>
               <LockedSection
-                cta={index === 0 ? <UpgradeCTA featureCode="natal_chart_long" variant="button" /> : undefined}
-                label={getNatalSectionTeaser(section.key, lang)}
+                cta={
+                  <UpgradeCTA
+                    featureCode="natal_chart_long"
+                    variant="button"
+                    to="/settings/subscription"
+                  />
+                }
               >
                 <div className="teaser-placeholder">
-                  <p>{getNatalSectionTeaser(section.key, lang)}</p>
+                  <p className="teaser-placeholder__lead">
+                    {getNatalSectionTeaser(section.key, lang)}
+                  </p>
+                  <p className="teaser-placeholder__body">
+                    {getNatalLockedSectionCopy(section.key, lang)}
+                  </p>
                 </div>
               </LockedSection>
             </div>

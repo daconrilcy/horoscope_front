@@ -8,6 +8,18 @@ from app.llm_orchestration.models import PromptRenderError, UnknownUseCaseError
 
 
 @pytest.mark.asyncio
+async def test_catalog_free_natal_use_case_resolves_without_db_prompt(db):
+    gateway = LLMGateway()
+
+    config = await gateway._resolve_config(db, "natal_long_free", {})
+
+    assert config.interaction_mode == "structured"
+    assert config.user_question_policy == "none"
+    assert "accordion_titles" in config.developer_prompt
+    assert "chart_json" in config.required_prompt_placeholders
+
+
+@pytest.mark.asyncio
 async def test_raises_unknown_use_case_error():
     gateway = LLMGateway()
     with pytest.raises(UnknownUseCaseError) as exc:

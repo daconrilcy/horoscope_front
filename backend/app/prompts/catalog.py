@@ -27,10 +27,12 @@ ASTRO_RESPONSE_V1 = {"type": "object", "required": ["summary", "key_points", "ad
 ASTRO_RESPONSE_V3 = {"type": "object", "required": ["summary", "sections", "highlights"]}
 HOROSCOPE_FREE_OUTPUT_SCHEMA = {
     "type": "object",
+    "additionalProperties": False,
     "required": ["day_climate"],
     "properties": {
         "day_climate": {
             "type": "object",
+            "additionalProperties": False,
             "required": ["summary"],
             "properties": {"summary": {"type": "string"}},
         }
@@ -38,6 +40,7 @@ HOROSCOPE_FREE_OUTPUT_SCHEMA = {
 }
 NATAL_FREE_SHORT_SCHEMA = {
     "type": "object",
+    "additionalProperties": False,
     "required": ["summary", "accordion_titles"],
     "properties": {
         "summary": {"type": "string"},

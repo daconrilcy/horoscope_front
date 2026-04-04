@@ -176,7 +176,18 @@ Ces deux éléments doivent être rendus **avant ou après la boucle de sections
 
 ### Implementation Notes
 
-- `natalChart.ts` : ajout de `NATAL_SECTION_TEASERS` (8 clés + generic, fr/en/es) + `getNatalSectionTeaser(key, lang)`.
-- `NatalInterpretation.tsx` : ajout de `isLockedFree?: boolean` à `Props`, passé via `InterpretationContent` → `SectionAccordion`. Dans `SectionAccordion`, quand `isLockedFree`, chaque section affiche le titre via `.ni-accordion-header--locked` + `LockedSection` avec teaser. CTA `UpgradeCTA` uniquement sur index 0. EvidenceTags et disclaimer hors de la logique de verrouillage (toujours rendus par `InterpretationContent`). Summary toujours rendu (hors accordion).
+- `natalChart.ts` : ajout de `NATAL_SECTION_TEASERS` puis `NATAL_SECTION_LOCKED_COPY` (copies longues fixes, fr/en/es) avec helpers d'accès.
+- `NatalInterpretation.tsx` : ajout de `isLockedFree?: boolean` à `Props`, passé via `InterpretationContent` → `SectionAccordion`. Dans `SectionAccordion`, quand `isLockedFree`, chaque section affiche le titre via `.ni-accordion-header--locked` + `LockedSection` avec faux contenu long flouté. CTA `UpgradeCTA` présent sur chaque section et routé vers `/settings/subscription`. EvidenceTags et disclaimer hors de la logique de verrouillage (toujours rendus par `InterpretationContent`). Summary toujours rendu (hors accordion).
 - `NatalChartPage.tsx` : `isLockedFree = natalAccess?.variant_code === "free_short"` via `useFeatureAccess("natal_chart_long")`, passé à `NatalInterpretationSection`.
 - Tests : `vi.mock("../hooks/useEntitlementSnapshot", ...)` ajouté. 3 tests dans describe "Story 64.9": AC2/AC3 (sections lockées), AC1 (summary visible), AC4/AC5 (basic déverrouillé). 64/64 tests passent.
+
+### Post-Completion Hardening
+
+- CTA header et CTA de régénération sur le flux free routés vers `/settings/subscription` au lieu de relancer une génération complète.
+- Chaque section verrouillée du thème natal affiche désormais :
+  - le titre réel issu du payload `free_short` ;
+  - un faux contenu long fixe, défini en i18n, rendu sous blur ;
+  - l'overlay lock standard ;
+  - un `UpgradeCTA` direct vers l'abonnement Basic.
+- Le badge `ni-level-badge` du flux free natal n'affiche plus `Complet` mais un badge de résumé pour éviter une promesse trompeuse.
+- Backend `natal_interpretation_service_v2` durci pour réutiliser/mettre à jour la ligne `free_short` existante et éviter les erreurs `UNIQUE constraint failed` lors des clics répétés.

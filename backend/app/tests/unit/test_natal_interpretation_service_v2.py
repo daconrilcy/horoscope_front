@@ -108,6 +108,28 @@ def _make_gateway_result(use_case: str) -> GatewayResult:
     )
 
 
+def _make_free_short_gateway_result() -> GatewayResult:
+    return GatewayResult(
+        use_case="natal_long_free",
+        request_id="req-free",
+        trace_id="trace-free",
+        raw_output='{"summary":"Resume free","accordion_titles":["Section 1","Section 2"]}',
+        structured_output={
+            "summary": "Resume free",
+            "accordion_titles": ["Section 1", "Section 2"],
+        },
+        usage=UsageInfo(),
+        meta=GatewayMeta(
+            latency_ms=200,
+            model="gpt-5",
+            prompt_version_id="hardcoded-v1",
+            validation_status="valid",
+            fallback_triggered=False,
+            repair_attempted=False,
+        ),
+    )
+
+
 PERSONA_ID = "12345678-1234-5678-1234-567812345678"
 
 
@@ -536,3 +558,112 @@ class TestNatalInterpretationServiceV2CacheDuplicates:
 
         assert resp.data.meta.cached is True
         assert resp.data.interpretation.title == cached_payload["title"]
+
+
+class TestNatalInterpretationServiceV2FreeShort:
+    @pytest.mark.asyncio
+    async def test_free_short_does_not_crash_on_non_uuid_prompt_version_id(self):
+        natal_result = _make_natal_result()
+        birth_profile = _make_birth_profile()
+        db = MagicMock()
+        db.execute.return_value.scalars.return_value.all.return_value = []
+
+        mock_gw_instance = MagicMock()
+        mock_gw_instance.execute = AsyncMock(return_value=_make_free_short_gateway_result())
+
+        persisted = MagicMock()
+        persisted.created_at = None
+
+        with (
+            patch("app.services.natal_interpretation_service_v2.select"),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_chart_json",
+                return_value={"planets": []},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.LLMGateway",
+                return_value=mock_gw_instance,
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                return_value=persisted,
+            ) as mock_model,
+        ):
+            resp = await NatalInterpretationServiceV2.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-free",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="complete",
+                persona_id=None,
+                locale="fr",
+                question=None,
+                request_id="req-free",
+                trace_id="trace-free",
+                variant_code="free_short",
+            )
+
+        assert resp.data.use_case == "natal_long_free"
+        assert resp.data.meta.prompt_version_id == "hardcoded-v1"
+        assert mock_model.call_args.kwargs["prompt_version_id"] is None
+
+    @pytest.mark.asyncio
+    async def test_free_short_updates_existing_row_instead_of_inserting_duplicate(self):
+        natal_result = _make_natal_result()
+        birth_profile = _make_birth_profile()
+        db = MagicMock()
+
+        existing = MagicMock()
+        existing.created_at = None
+
+        execute_result = MagicMock()
+        execute_result.scalars.return_value.all.return_value = [existing]
+        db.execute.return_value = execute_result
+
+        mock_gw_instance = MagicMock()
+        mock_gw_instance.execute = AsyncMock(return_value=_make_free_short_gateway_result())
+
+        with (
+            patch("app.services.natal_interpretation_service_v2.select"),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_chart_json",
+                return_value={"planets": []},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.LLMGateway",
+                return_value=mock_gw_instance,
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel"
+            ) as mock_model,
+        ):
+            resp = await NatalInterpretationServiceV2.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-free",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="complete",
+                persona_id=None,
+                locale="fr",
+                question=None,
+                request_id="req-free",
+                trace_id="trace-free",
+                variant_code="free_short",
+            )
+
+        assert resp.data.use_case == "natal_long_free"
+        mock_model.assert_not_called()
+        db.add.assert_not_called()
+        assert existing.prompt_version_id is None
+        assert existing.use_case == "natal_long_free"
+        assert existing.was_fallback is False

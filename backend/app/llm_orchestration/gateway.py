@@ -36,7 +36,7 @@ from app.llm_orchestration.services.persona_composer import compose_persona_bloc
 from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
 from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 from app.llm_orchestration.services.repair_prompter import build_repair_prompt
-from app.prompts.catalog import resolve_model
+from app.prompts.catalog import PROMPT_CATALOG, resolve_model
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +60,32 @@ SYSTEM_CORES = {
 
 # Stub use cases
 USE_CASE_STUBS = {
+    "natal_long_free": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=1000,
+        system_core_key="default_v1",
+        developer_prompt=(
+            "Langue de reponse : francais ({{locale}}). Contexte : use_case={{use_case}}.\n\n"
+            "Interpretez le theme natal fourni de facon claire, chaleureuse et non fataliste, "
+            "strictement a partir des donnees techniques suivantes :\n"
+            "{{chart_json}}\n\n"
+            "Retourne uniquement un JSON valide avec exactement :\n"
+            '- "summary" : un portrait natal en 5 a 7 phrases fluides, redige au vouvoiement, '
+            "avec un peu plus de matiere qu'un simple resume.\n"
+            '- "accordion_titles" : une liste de 2 a 4 titres courts, concrets et distincts '
+            "pour les sections premium verrouillees.\n\n"
+            "Contraintes :\n"
+            "- N'invente aucun placement, aspect ou maison absent des donnees.\n"
+            "- Utilisez toujours 'vous' et 'votre', jamais 'il', 'elle' ou 'cette personne'.\n"
+            "- Donnez un portrait nuance, utile et incarné, sans jargon inutile.\n"
+            "- Pas de promesse absolue, pas de fatalisme.\n"
+            "- Aucun markdown, aucun texte hors JSON."
+        ),
+        required_prompt_placeholders=["chart_json", "locale", "use_case"],
+        interaction_mode="structured",
+        user_question_policy="none",
+    ),
     "natal_interpretation": UseCaseConfig(
         model=settings.openai_model_default,
         temperature=0.7,
@@ -481,6 +507,14 @@ class LLMGateway:
                         schema_version = f"v{schema_model.version}"
             except (ValueError, TypeError):
                 logger.error("gateway_invalid_schema_id schema_id=%s", config.output_schema_id)
+
+        # Canonical catalog fallback for use cases that are intentionally available
+        # before their prompt/config has been fully published in DB.
+        if not schema_dict and use_case not in PAID_USE_CASES:
+            catalog_entry = PROMPT_CATALOG.get(use_case)
+            if catalog_entry and catalog_entry.output_schema:
+                schema_dict = catalog_entry.output_schema
+                schema_name = re.sub(r"[^a-z0-9_-]", "_", catalog_entry.name.lower())
 
         is_stub = config.prompt_version_id == "hardcoded-v1"
         is_prod = getattr(settings, "app_env", "development") in {"production", "prod"}
