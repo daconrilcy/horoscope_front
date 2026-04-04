@@ -49,8 +49,32 @@ def _current_revision() -> str | None:
         ).scalar_one_or_none()
 
 
+def _iter_backend_root_candidates() -> tuple[Path, ...]:
+    cwd = Path.cwd().resolve()
+    module_path = Path(__file__).resolve()
+    candidates: list[Path] = []
+
+    for candidate in (cwd, cwd / "backend", *module_path.parents):
+        if candidate not in candidates:
+            candidates.append(candidate)
+
+    return tuple(candidates)
+
+
+def _resolve_backend_root() -> Path:
+    for candidate in _iter_backend_root_candidates():
+        if (candidate / "alembic.ini").exists() and (candidate / "migrations").exists():
+            return candidate
+
+    searched_locations = ", ".join(str(path) for path in _iter_backend_root_candidates())
+    raise FileNotFoundError(
+        f"Unable to locate backend root containing alembic.ini and migrations. "
+        f"Searched: {searched_locations}"
+    )
+
+
 def _alembic_config() -> Config:
-    backend_root = Path(__file__).resolve().parents[3]
+    backend_root = _resolve_backend_root()
     config = Config(str(backend_root / "alembic.ini"))
     config.set_main_option("script_location", str(backend_root / "migrations"))
     config.set_main_option("sqlalchemy.url", settings.database_url)

@@ -8,6 +8,7 @@ Status: done
 - La micro-réassurance sous le bouton de création de compte a été finalisée avec une structure dédiée (`auth-reassurance-item`) et des séparateurs décoratifs non interactifs, pour éviter tout rendu collé ou illisible.
 - La feuille `SignUpForm.css` est désormais importée explicitement par le composant afin que les styles locaux de la page `/register` soient réellement appliqués en production.
 - Le lien d'alternative `Se connecter` a été restylé comme une action secondaire premium en capsule, cohérente avec le ton visuel de la landing et de l'écran d'inscription.
+- Un correctif backend de bootstrap local a été appliqué en parallèle pour fiabiliser l'accès aux flows `/register` et `/login` en environnement de développement Windows : la résolution de `alembic.ini` et du dossier `migrations` ne dépend plus d'un chemin erroné sous `.venv\\Lib\\site-packages`.
 
 ## Story
 
