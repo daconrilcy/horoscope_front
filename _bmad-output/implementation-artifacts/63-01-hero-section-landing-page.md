@@ -6,9 +6,10 @@ Status: done
 
 - Le hero final conserve la route canonique `/`, mais a été réorienté vers une composition "message + preuve produit" plus forte.
 - Le CTA secondaire implémenté est `Découvrir comment ça marche` et scrolle vers `#how-it-works`.
-- Le visuel n'est pas un screenshot brut mais une composition produit crédible : carte horoscope du jour, conversation IA et encart "moment clé".
+- Le visuel n'est pas un screenshot brut mais un mockup produit structuré comme un aperçu d'application : barre supérieure, synthèse du jour dominante, zone de chat et carte "moment clé" clairement hiérarchisées.
 - Le hero est compacté sur mobile pour éviter qu'un titre trop long monopolise le premier écran.
 - Une passe de finition a encore réduit les espacements mobiles et remonté la composition produit, afin que la preuve visuelle apparaisse plus tôt sans inverser l'ordre narratif texte puis visuel.
+- Le H1 a été reformulé sans tiret et traité sur deux lignes avec une ligne d'accent distincte, pour une lecture plus contemporaine et plus nette.
 
 ## Story
 

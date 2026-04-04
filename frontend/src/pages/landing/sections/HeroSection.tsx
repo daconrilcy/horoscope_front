@@ -71,7 +71,10 @@ export const HeroSection = () => {
           {localCopy.eyebrow}
         </div>
 
-        <h1 id="hero-title">{t.hero.title}</h1>
+        <h1 id="hero-title">
+          <span className="hero-title__lead">{t.hero.titleLead}</span>
+          <span className="hero-title__accent">{t.hero.titleAccent}</span>
+        </h1>
         <p className="hero-subtitle">{t.hero.subtitle}</p>
 
         <ul className="hero-bullets">
@@ -130,50 +133,63 @@ export const HeroSection = () => {
 
       <div className="hero-visual" aria-label={t.hero.imageAlt}>
         <div className="hero-visual-shell">
-          <article className="hero-panel hero-panel--daily">
-            <div className="hero-panel__meta">
-              <span className="hero-panel__label">
-                <Clock3 size={14} aria-hidden="true" />
-                {localCopy.dailyLabel}
-              </span>
-              <span className="hero-panel__badge">{t.hero.caption1}</span>
+          <div className="hero-device">
+            <div className="hero-device__bar">
+              <div className="hero-device__brand">
+                <span className="hero-device__dot"></span>
+                <span className="hero-device__dot"></span>
+                <span className="hero-device__dot"></span>
+                <span className="hero-device__brand-name">Astrorizon</span>
+              </div>
+              <span className="hero-device__status">{t.hero.caption1}</span>
             </div>
-            <h2 className="hero-panel__title">{localCopy.dailyTitle}</h2>
-            <ul className="hero-panel__list">
-              {localCopy.dailyItems.map(([label, value]) => (
-                <li key={label}>
-                  <span>{label}</span>
-                  <span>{value}</span>
-                </li>
-              ))}
-            </ul>
-          </article>
 
-          <article className="hero-panel hero-panel--chat">
-            <div className="hero-panel__meta">
-              <span className="hero-panel__label">
-                <MessageCircleMore size={14} aria-hidden="true" />
-                {localCopy.chatLabel}
-              </span>
-              <span className="hero-panel__badge">{t.hero.caption2}</span>
-            </div>
-            <p className="hero-chat__bubble hero-chat__bubble--question">{localCopy.chatQuestion}</p>
-            <p className="hero-chat__bubble hero-chat__bubble--answer">{localCopy.chatAnswer}</p>
-          </article>
+            <article className="hero-card hero-card--summary">
+              <div className="hero-panel__meta">
+                <span className="hero-panel__label">
+                  <Clock3 size={14} aria-hidden="true" />
+                  {localCopy.dailyLabel}
+                </span>
+                <span className="hero-panel__badge">{t.hero.caption2}</span>
+              </div>
+              <h2 className="hero-panel__title">{localCopy.dailyTitle}</h2>
+              <div className="hero-card__trend-grid">
+                {localCopy.dailyItems.map(([label, value]) => (
+                  <div key={label} className="hero-card__trend-item">
+                    <span className="hero-card__trend-label">{label}</span>
+                    <strong className="hero-card__trend-value">{value}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
 
-          <article className="hero-panel hero-panel--moment">
-            <div className="hero-panel__meta">
-              <span className="hero-panel__label">
-                <Star size={14} aria-hidden="true" />
-                {localCopy.momentLabel}
-              </span>
+            <div className="hero-device__grid">
+              <article className="hero-card hero-card--chat">
+                <div className="hero-panel__meta">
+                  <span className="hero-panel__label">
+                    <MessageCircleMore size={14} aria-hidden="true" />
+                    {localCopy.chatLabel}
+                  </span>
+                </div>
+                <p className="hero-chat__bubble hero-chat__bubble--question">{localCopy.chatQuestion}</p>
+                <p className="hero-chat__bubble hero-chat__bubble--answer">{localCopy.chatAnswer}</p>
+              </article>
+
+              <article className="hero-card hero-card--moment">
+                <div className="hero-panel__meta">
+                  <span className="hero-panel__label">
+                    <Star size={14} aria-hidden="true" />
+                    {localCopy.momentLabel}
+                  </span>
+                </div>
+                <div className="hero-moment__value">
+                  <Sparkles size={16} aria-hidden="true" />
+                  {t.solution.step3.benefit}
+                </div>
+                <p className="hero-panel__text">{localCopy.momentText}</p>
+              </article>
             </div>
-            <div className="hero-moment__value">
-              <Sparkles size={16} aria-hidden="true" />
-              {t.solution.step3.benefit}
-            </div>
-            <p className="hero-panel__text">{localCopy.momentText}</p>
-          </article>
+          </div>
         </div>
       </div>
     </section>

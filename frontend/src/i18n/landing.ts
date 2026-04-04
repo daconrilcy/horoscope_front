@@ -2,7 +2,8 @@ import type { AstrologyLang } from "./astrology"
 
 export interface LandingTranslation {
   hero: {
-    title: string
+    titleLead: string
+    titleAccent: string
     subtitle: string
     bullet1: string
     bullet2: string
@@ -201,7 +202,8 @@ export interface LandingTranslation {
 const translations: Record<AstrologyLang, LandingTranslation> = {
   fr: {
     hero: {
-      title: "Votre guide astrologique personnel — disponible 24h/24",
+      titleLead: "Votre guide astrologique personnel",
+      titleAccent: "Toujours disponible",
       subtitle: "Comprenez votre journée, posez vos questions et obtenez une guidance personnelle immédiatement utile.",
       bullet1: "Thème natal complet offert",
       bullet2: "Réponses instantanées et bienveillantes",
@@ -431,7 +433,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
   },
   en: {
     hero: {
-      title: "Your personal astrological guide — available 24/7",
+      titleLead: "Your personal astrological guide",
+      titleAccent: "Always available",
       subtitle: "Understand your day, ask your questions, and get personal guidance that feels immediately useful.",
       bullet1: "Complete birth chart included",
       bullet2: "Instant and caring answers",
@@ -661,7 +664,8 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
   },
   es: {
     hero: {
-      title: "Tu guía astrológica personal — disponible 24/7",
+      titleLead: "Tu guía astrológica personal",
+      titleAccent: "Siempre disponible",
       subtitle: "Comprende tu día, haz tus preguntas y recibe una guía personal útil desde el primer minuto.",
       bullet1: "Carta natal completa gratuita",
       bullet2: "Respuestas instantáneas y empáticas",
