@@ -205,6 +205,10 @@ Validation finale produit :
 - carte résumé désormais conforme à la maquette attendue : pas de label générique, accroche synthétique générée dans le cadre ;
 - comportement d'upgrade confirmé : les CTA free redirigent vers l'abonnement Basic sans relancer une génération non autorisée.
 - correction complémentaire du parcours `/settings/subscription` : un utilisateur free exposé comme plan applicatif `free` mais sans profil Stripe est désormais routé vers un Checkout Stripe initial, et non plus vers le Customer Portal.
+- différenciation runtime durcie entre horoscope `free` et `basic/premium` :
+  - `summary_only` utilise désormais le prompt/budget tokens du variant free ;
+  - la synthèse affichée dans `DayClimateHero` pour free est raccourcie à 7–8 phrases, soit environ 30% plus courte que la version complète à 10–12 phrases ;
+  - des tests backend verrouillent ce contrat de longueur et de budget.
 - correction complémentaire du flux Basic sur `/natal` : une fois le quota d'interprétation complète consommé, l'interface n'autorise plus de nouvelle génération et remplace le bouton inactif par un CTA explicite vers Premium pour obtenir davantage de quota.
 - correction complémentaire du quota chat Basic : un premier message dont le coût réel dépasse le budget journalier en tokens ne provoque plus un rollback incohérent (`0 utilisé` mais `quota dépassé`) ; le compteur est désormais saturé à la limite puis l'échange suivant est bloqué normalement.
 - correction complémentaire du comptage LLM natal : les tokens consommés par les interprétations natales restent journalisés par utilisateur pour l'observabilité, mais ne sont plus déduits du quota `astrologer_chat`.

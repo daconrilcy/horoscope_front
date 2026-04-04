@@ -89,6 +89,7 @@ class AstrologerPromptBuilder:
         best_window: dict[str, Any] | None = None,
         turning_point: dict[str, Any] | None = None,
         domain_ranking: list[dict[str, Any]] | None = None,
+        variant_code: str | None = None,
     ) -> str:
         natal_section = self._build_natal_section(common_context)
         date_str = common_context.today_date
@@ -127,6 +128,8 @@ class AstrologerPromptBuilder:
                     "Use classic western astrology vocabulary with an accessible, concrete tone."
                 )
 
+        daily_synthesis_instruction = self._build_daily_synthesis_instruction(variant_code)
+
         prompt = f"""
 CONTEXTE ASTROLOGIQUE DU JOUR ({date_str})
 
@@ -159,16 +162,7 @@ CONSIGNES DE RÉDACTION :
 - Mets l'accent sur le vécu probable : concentration, échanges, rythme, fatigue, élan, sensibilité,
   besoin d'isolement, envie d'agir, clarté ou dispersion.
 - Ne recopie pas simplement les listes techniques : interprète-les.
-- daily_synthesis : strictement 10 à 12 phrases complètes, dense, incarné et agréable à lire.
-  Vise une vraie histoire de la journée, pas un simple résumé.
-  Doit dire ce qui domine la journée, comment l'ambiance évolue du matin au soir,
-  où se situent les frottements, ce qu'il faut anticiper,
-  et pourquoi astrologiquement.
-  Si des "Domaines les plus activés" sont fournis dans le profil de la journée,
-  ils doivent être explicitement reflétés dans la synthèse comme axes dominants.
-  N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans le contexte.
-  Ne t'arrête pas à 5, 6, 7 ou 8 phrases.
-  Quand c'est pertinent, mentionne le meilleur créneau et la bascule principale.
+{daily_synthesis_instruction}
 - astro_events_intro : 2 à 4 phrases.
   Explique les 2 ou 3 faits astrologiques les plus structurants du jour et leur effet concret.
 - time_window_narratives : Un objet avec les clés "nuit", "matin", "apres_midi", "soiree".
@@ -191,6 +185,38 @@ IMPORTANT :
 - Le conseil du jour doit reprendre au moins un créneau, une vigilance ou un fait astrologique.
 """
         return prompt.strip()
+
+    def _build_daily_synthesis_instruction(self, variant_code: str | None) -> str:
+        if variant_code == "summary_only":
+            return (
+                "- daily_synthesis : strictement 7 à 8 phrases complètes, plus courte que la "
+                "version complète mais toujours utile et incarnée.\n"
+                "  Vise un résumé éditorial dense, sans remplissage.\n"
+                "  Doit dire ce qui domine la journée, où se situe la principale tension ou "
+                "opportunité, et l'attitude la plus juste.\n"
+                "  Si des \"Domaines les plus activés\" sont fournis dans le profil de la "
+                "journée, ils doivent être explicitement reflétés dans la synthèse comme axes "
+                "dominants.\n"
+                "  N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans "
+                "le contexte.\n"
+                "  Quand c'est pertinent, mentionne le meilleur créneau et la bascule "
+                "principale, mais reste plus concise que la variante complète."
+            )
+
+        return (
+            "- daily_synthesis : strictement 10 à 12 phrases complètes, dense, incarné et "
+            "agréable à lire.\n"
+            "  Vise une vraie histoire de la journée, pas un simple résumé.\n"
+            "  Doit dire ce qui domine la journée, comment l'ambiance évolue du matin au soir,\n"
+            "  où se situent les frottements, ce qu'il faut anticiper,\n"
+            "  et pourquoi astrologiquement.\n"
+            "  Si des \"Domaines les plus activés\" sont fournis dans le profil de la journée,\n"
+            "  ils doivent être explicitement reflétés dans la synthèse comme axes dominants.\n"
+            "  N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans le "
+            "contexte.\n"
+            "  Ne t'arrête pas à 5, 6, 7 ou 8 phrases.\n"
+            "  Quand c'est pertinent, mentionne le meilleur créneau et la bascule principale."
+        )
 
     def _build_natal_section(self, ctx: PromptCommonContext) -> str:
         if ctx.natal_interpretation:

@@ -79,3 +79,7 @@ La feature `horoscope_daily` n'est pas encore enregistrée dans `FEATURE_SCOPE_R
   - fallback backward-compatible vers `full` quand `horoscope_daily` n'est pas encore cataloguée dans certains contextes legacy/tests ;
   - compatibilité avec les doubles de test non SQLAlchemy sur la route `/v1/predictions/daily` ;
   - maintien du comportement historique V4 pendant la migration des entitlements canoniques.
+- Hardening complémentaire du différentiel `free` vs `basic/premium` :
+  - le variant `summary_only` pilote désormais aussi la longueur cible de `daily_synthesis` ;
+  - la version free est ramenée à 7–8 phrases avec un budget tokens réduit, au lieu de réutiliser la cible complète 10–12 phrases ;
+  - des tests unitaires verrouillent la consigne de prompt et le budget runtime du narrateur.

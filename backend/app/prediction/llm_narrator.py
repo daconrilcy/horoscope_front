@@ -38,8 +38,9 @@ class LLMNarrator:
     """
 
     TIMEOUT_SECONDS = 60.0
-    MAX_COMPLETION_TOKENS = PROMPT_CATALOG["daily_prediction"].max_tokens
+    DEFAULT_MAX_COMPLETION_TOKENS = PROMPT_CATALOG["daily_prediction"].max_tokens
     MIN_DAILY_SYNTHESIS_SENTENCES = 10
+    MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 7
     MAX_NARRATION_ATTEMPTS = 2
 
     async def narrate(
@@ -60,13 +61,13 @@ class LLMNarrator:
         try:
             # 1. Resolve model name based on variant_code (Story 64.2)
             # variant_code expected: "summary_only" | "full"
-            use_case = "daily_prediction"
-            if variant_code == "summary_only":
-                use_case = "horoscope_daily_free"
-            elif variant_code == "full":
-                use_case = "horoscope_daily_full"
+            use_case = self._resolve_use_case(variant_code)
 
             model = resolve_model(use_case)
+            max_completion_tokens = PROMPT_CATALOG.get(
+                use_case, PROMPT_CATALOG["daily_prediction"]
+            ).max_tokens
+            min_daily_synthesis_sentences = self._get_min_daily_synthesis_sentences(variant_code)
 
             base_prompt = AstrologerPromptBuilder().build(
                 common_context=common_context,
@@ -78,22 +79,29 @@ class LLMNarrator:
                 best_window=best_window,
                 turning_point=turning_point,
                 domain_ranking=domain_ranking,
+                variant_code=variant_code,
             )
 
             client = openai.AsyncOpenAI()  # uses OPENAI_API_KEY from env
             result: NarratorResult | None = None
             for attempt in range(1, self.MAX_NARRATION_ATTEMPTS + 1):
-                prompt = self._build_attempt_prompt(base_prompt, attempt)
+                prompt = self._build_attempt_prompt(
+                    base_prompt,
+                    attempt,
+                    min_daily_synthesis_sentences=min_daily_synthesis_sentences,
+                    variant_code=variant_code,
+                )
                 result = await self._request_narration(
                     client=client,
                     model=model,
                     prompt=prompt,
                     lang=lang,
+                    max_completion_tokens=max_completion_tokens,
                 )
                 if result is None:
                     return None
                 sentence_count = self._count_sentences(result.daily_synthesis)
-                if sentence_count >= self.MIN_DAILY_SYNTHESIS_SENTENCES:
+                if sentence_count >= min_daily_synthesis_sentences:
                     return result
                 logger.warning(
                     "llm_narrator.short_synthesis model=%s attempt=%s sentence_count=%s",
@@ -139,6 +147,7 @@ class LLMNarrator:
         model: str,
         prompt: str,
         lang: str,
+        max_completion_tokens: int,
     ) -> NarratorResult | None:
         response = await asyncio.wait_for(
             client.chat.completions.create(
@@ -148,7 +157,7 @@ class LLMNarrator:
                     {"role": "user", "content": prompt},
                 ],
                 response_format={"type": "json_object"},
-                max_completion_tokens=self.MAX_COMPLETION_TOKENS,
+                max_completion_tokens=max_completion_tokens,
             ),
             timeout=self.TIMEOUT_SECONDS,
         )
@@ -198,16 +207,36 @@ class LLMNarrator:
             or None,
         )
 
-    def _build_attempt_prompt(self, base_prompt: str, attempt: int) -> str:
+    def _build_attempt_prompt(
+        self,
+        base_prompt: str,
+        attempt: int,
+        *,
+        min_daily_synthesis_sentences: int,
+        variant_code: str | None,
+    ) -> str:
         if attempt <= 1:
             return base_prompt
+        target_range = "7 à 8 phrases" if variant_code == "summary_only" else "10 à 12 phrases"
         return (
             f"{base_prompt}\n\n"
             "CORRECTION OBLIGATOIRE : lors de la tentative précédente, "
             "daily_synthesis était trop courte. "
             "Régénère tout le JSON et assure-toi que daily_synthesis comporte "
-            "strictement entre 10 et 12 phrases complètes."
+            f"au moins {min_daily_synthesis_sentences} phrases complètes, cible {target_range}."
         )
+
+    def _resolve_use_case(self, variant_code: str | None) -> str:
+        if variant_code == "summary_only":
+            return "horoscope_daily_free"
+        if variant_code == "full":
+            return "horoscope_daily_full"
+        return "daily_prediction"
+
+    def _get_min_daily_synthesis_sentences(self, variant_code: str | None) -> int:
+        if variant_code == "summary_only":
+            return self.MIN_DAILY_SYNTHESIS_SENTENCES_FREE
+        return self.MIN_DAILY_SYNTHESIS_SENTENCES
 
     def _count_sentences(self, text: str) -> int:
         if not text:

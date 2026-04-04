@@ -57,7 +57,7 @@ async def test_narrate_success():
         }
         assert (
             mock_client.chat.completions.create.await_args.kwargs["max_completion_tokens"]
-            == LLMNarrator.MAX_COMPLETION_TOKENS
+            == LLMNarrator.DEFAULT_MAX_COMPLETION_TOKENS
         )
 
 
@@ -220,3 +220,61 @@ async def test_narrate_retries_when_daily_synthesis_is_too_short():
         assert res is not None
         assert narrator._count_sentences(res.daily_synthesis) == 10
         assert mock_client.chat.completions.create.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
+    narrator = LLMNarrator()
+
+    short_free_content = {
+        "daily_synthesis": (
+            "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6."
+        ),
+        "astro_events_intro": "Intro",
+        "time_window_narratives": {"matin": "Matin text"},
+        "turning_point_narratives": ["TP1"],
+        "main_turning_point_narrative": "Pivot.",
+        "daily_advice": {"advice": "Conseil", "emphasis": "Emphase"},
+    }
+    valid_free_content = {
+        "daily_synthesis": (
+            "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6. Phrase 7."
+        ),
+        "astro_events_intro": "Intro",
+        "time_window_narratives": {"matin": "Matin text"},
+        "turning_point_narratives": ["TP1"],
+        "main_turning_point_narrative": "Pivot.",
+        "daily_advice": {"advice": "Conseil", "emphasis": "Emphase"},
+    }
+
+    first_response = MagicMock()
+    first_response.choices = [
+        MagicMock(message=MagicMock(content=json.dumps(short_free_content)), finish_reason="stop")
+    ]
+    second_response = MagicMock()
+    second_response.choices = [
+        MagicMock(message=MagicMock(content=json.dumps(valid_free_content)), finish_reason="stop")
+    ]
+
+    with patch("openai.AsyncOpenAI") as mock_openai:
+        mock_client = mock_openai.return_value
+        mock_client.chat.completions.create = AsyncMock(
+            side_effect=[first_response, second_response]
+        )
+
+        res = await narrator.narrate(
+            time_windows=[],
+            common_context=_make_common_context(),
+            variant_code="summary_only",
+        )
+
+        assert res is not None
+        assert narrator._count_sentences(res.daily_synthesis) == 7
+        assert mock_client.chat.completions.create.await_count == 2
+        second_messages = mock_client.chat.completions.create.await_args_list[1].kwargs["messages"]
+        second_prompt = second_messages[1]["content"]
+        assert "7 à 8 phrases" in second_prompt
+        assert (
+            mock_client.chat.completions.create.await_args_list[0].kwargs["max_completion_tokens"]
+            == 500
+        )
