@@ -252,9 +252,13 @@ export function SubscriptionSettings() {
   const currentPlanPriceCents = getPlanPriceCents(currentPlanCode)
   const selectedPlanPriceCents = getPlanPriceCents(displaySelected)
   const isUpgradeSyncPending = upgradeSyncTargetPlanCode !== null
-  const hasActivePaidSubscription = stripeSubscriptionStatus === "active" && currentPlanCode !== null
-  const requiresNewCheckout = currentPlanCode === null && subscription?.status !== "active"
-  const isFreeWithoutSubscription = currentPlanCode === null && stripeSubscriptionStatus === null
+  const isFreeEntryPoint = currentPlanCode === null || currentPlanCode === "free"
+  const hasActivePaidSubscription =
+    stripeSubscriptionStatus === "active"
+    && currentPlanCode !== null
+    && currentPlanCode !== "free"
+  const requiresNewCheckout = isFreeEntryPoint && !hasActivePaidSubscription
+  const isFreeWithoutSubscription = isFreeEntryPoint && stripeSubscriptionStatus === null
   const isImmediatePaidUpgrade =
     stripeSubscriptionStatus === "active"
     && !isCancellationAlreadyScheduled

@@ -97,6 +97,54 @@ describe("SubscriptionSettings", () => {
     )
   })
 
+  it("utilise Checkout Stripe pour un utilisateur free exposé comme plan actif local sans profil Stripe", () => {
+    setupCatalogMock()
+    const checkoutMutate = vi.fn()
+    const portalMutate = vi.fn()
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "active",
+        subscription_status: null,
+        plan: {
+          code: "free",
+          display_name: "Free",
+          monthly_price_cents: 0,
+          currency: "EUR",
+          daily_message_limit: 1,
+          is_active: true,
+        },
+        failure_reason: null,
+      },
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: checkoutMutate })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: portalMutate })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+
+    render(<SubscriptionSettings />)
+
+    const basicCard = getPlanCard("Basic")
+    fireEvent.click(basicCard)
+
+    const validateButton = screen.getByRole("button", { name: /valider|validate/i })
+    fireEvent.click(validateButton)
+
+    expect(checkoutMutate).toHaveBeenCalledWith(
+      "basic",
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
+    expect(portalMutate).not.toHaveBeenCalled()
+  })
+
   it("affiche un résumé de statut avec plan actif, expérience, renouvellement et prochaine échéance", () => {
     setupCatalogMock()
 

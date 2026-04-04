@@ -202,3 +202,4 @@ Ces deux éléments doivent être rendus **avant ou après la boucle de sections
 - validation manuelle finale effectuée sur le rendu free du thème natal ;
 - la carte résumé n'affiche plus `Résumé` comme intitulé interne et repose désormais sur la phrase de synthèse générée ;
 - le comportement CTA/upgrade est confirmé conforme pour l'utilisateur free.
+- le tunnel de conversion free → Basic reste cohérent jusqu'à `/settings/subscription`, avec ouverture d'un Checkout Stripe initial quand aucun profil Stripe n'existe encore pour l'utilisateur.
