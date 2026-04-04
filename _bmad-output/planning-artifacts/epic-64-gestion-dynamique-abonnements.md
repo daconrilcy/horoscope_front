@@ -209,6 +209,10 @@ Validation finale produit :
   - `summary_only` utilise désormais le prompt/budget tokens du variant free ;
   - la synthèse affichée dans `DayClimateHero` pour free reste alignée sur la qualité éditoriale de la version Basic, mais vise désormais 6–8 phrases et une longueur globale comprise entre 50% et 67% de la version complète ;
   - des tests backend verrouillent ce contrat de longueur et de budget.
+- finalisation UX complémentaire sur `/dashboard/horoscope` pour le plan free :
+  - ajout d'un CTA Basic directement dans le cadre résumé `DayClimateHero`, avec promesse éditoriale orientée valeur ("obtenir un horoscope du jour plus riche") ;
+  - extension du pattern de verrouillage à toutes les sections free avec teaser long fixe flouté, cadenas visible et CTA Basic sur chaque section (`Vos domaines clés`, `Déroulé de votre journée`, `Moment clé`, `Opportunité`, `Conseil du jour`, `Fondements astrologiques`) ;
+  - centralisation des textes teaser longs et du message CTA dans `frontend/src/i18n/horoscope_copy.ts` pour conserver un pilotage i18n cohérent.
 - correction complémentaire du flux Basic sur `/natal` : une fois le quota d'interprétation complète consommé, l'interface n'autorise plus de nouvelle génération et remplace le bouton inactif par un CTA explicite vers Premium pour obtenir davantage de quota.
 - correction complémentaire du quota chat Basic : un premier message dont le coût réel dépasse le budget journalier en tokens ne provoque plus un rollback incohérent (`0 utilisé` mais `quota dépassé`) ; le compteur est désormais saturé à la limite puis l'échange suivant est bloqué normalement.
 - correction complémentaire du comptage LLM natal : les tokens consommés par les interprétations natales restent journalisés par utilisateur pour l'observabilité, mais ne sont plus déduits du quota `astrologer_chat`.

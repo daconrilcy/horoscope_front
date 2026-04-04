@@ -15,8 +15,8 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
 `DailyHoroscopePage.tsx` consomme `useDailyPrediction(token)` qui retourne le payload de l'horoscope du jour.
 
 **Comportement cible pour le plan free :**
-- Section `DayClimateHero` : rendue normalement (contient le résumé — seule section générée pour free par 64.2)
-- Sections `DomainRankingCard`, `DayTimelineSectionV4`, `TurningPointCard`, `BestWindowCard`, `AstroFoundationSection`, `DailyAdviceCard` : wrapper `LockedSection` avec contenu teaser fixe (i18n)
+- Section `DayClimateHero` : rendue normalement (contient le résumé — seule section générée pour free par 64.2), avec un encart CTA vers Basic intégré sous le résumé éditorial
+- Sections `DomainRankingCard`, `DayTimelineSectionV4`, `TurningPointCard`, `BestWindowCard`, `AstroFoundationSection`, `DailyAdviceCard` : wrapper `LockedSection` avec contenu teaser fixe long (lead + body, i18n), cadenas visible et CTA Basic sur chaque section
 
 **Important (FR64-12) :** Les teasers sont des textes fixes marketing, pas du contenu généré incomplet.
 
@@ -37,11 +37,12 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
 **And** chaque section lockée affiche un contenu teaser fixe (texte marketing i18n)  
 **And** l'effet blur est visible sur le teaser
 
-**AC3 — UpgradeCTA visible sur au moins une section lockée**
+**AC3 — UpgradeCTA visible dans le hero et sur chaque section lockée**
 **Given** un utilisateur free  
 **When** la page est rendue  
-**Then** au moins une section lockée contient un `<UpgradeCTA featureCode="horoscope_daily" />`  
-**And** le CTA pointe vers la page d'abonnement
+**Then** `DayClimateHero` affiche un message d'upgrade contextualisé vers Basic sous le résumé  
+**And** chaque section lockée contient un `<UpgradeCTA featureCode="horoscope_daily" />`  
+**And** chaque CTA pointe vers la page d'abonnement `/settings/subscription`
 
 **AC4 — Utilisateur basic ou premium : page inchangée**
 **Given** un utilisateur basic ou premium  
@@ -59,7 +60,8 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
 **Given** les fichiers `frontend/src/i18n/horoscope_copy.ts`  
 **When** inspecté  
 **Then** des clés de teaser existent pour chaque section lockée  
-**And** les textes sont aspirationnels (ex: "Découvrez vos domaines d'énergie prioritaires ce jour...")
+**And** les textes sont aspirationnels et suffisamment longs pour simuler un vrai contenu verrouillé  
+**And** chaque teaser contient une structure `lead + body`
 
 **AC7 — Tests de rendu**
 **Given** `frontend/src/tests/DailyHoroscopePage.test.tsx` (à créer ou étendre)  
@@ -71,46 +73,25 @@ Dépend de **Stories 64.5** (hook) et **64.6** (composants LockedSection + Upgra
 - [x] T1 — Ajouter les clés teaser dans `horoscope_copy.ts` (AC6)
   - [x] T1.1 Lire `frontend/src/i18n/horoscope_copy.ts`
   - [x] T1.2 Ajouter les clés de teaser :
-    ```ts
-    teasers: {
-      domainRanking: {
-        fr: "Découvrez vos domaines d'énergie prioritaires ce jour et comment les naviguer...",
-        en: "Discover your priority energy domains for today and how to navigate them..."
-      },
-      dayTimeline: {
-        fr: "Vos meilleures fenêtres temporelles pour agir, vous reposer et décider...",
-        en: "Your best time windows to act, rest and decide..."
-      },
-      turningPoint: {
-        fr: "Un tournant astrologique particulier est prévu ce jour — découvrez lequel...",
-        en: "A particular astrological turning point is expected today — discover it..."
-      },
-      bestWindow: {
-        fr: "La fenêtre idéale de votre journée, révélée par votre thème personnel...",
-        en: "Your ideal time window, revealed by your personal chart..."
-      },
-      astroFoundation: {
-        fr: "Les mouvements planétaires qui influencent votre journée en profondeur...",
-        en: "The planetary movements deeply influencing your day..."
-      },
-      dailyAdvice: {
-        fr: "Votre conseil personnalisé du jour, aligné à votre thème natal...",
-        en: "Your personalized daily advice, aligned with your natal chart..."
-      }
-    }
-    ```
+    - `teaser` court pour le label overlay
+    - `lead` long pour le faux contenu flouté
+    - `body` long pour renforcer l'effet de contenu premium verrouillé
+  - [x] T1.3 Ajouter un message CTA hero et un libellé CTA Basic dédiés à l'horoscope du jour free
 
 - [x] T2 — Intégrer la logique de verrouillage dans `DailyHoroscopePage.tsx` (AC1, AC2, AC3, AC4, AC5)
   - [x] T2.1 Lu entièrement `frontend/src/pages/DailyHoroscopePage.tsx`
-  - [x] T2.2 Ajouté `useFeatureAccess("horoscope_daily")` + import `LockedSection`, `UpgradeCTA`, `getHoroscopeTeaser`
+  - [x] T2.2 Ajouté `useFeatureAccess("horoscope_daily")` + import `LockedSection`, `UpgradeCTA`, helpers de teaser/CTA hero
   - [x] T2.3 `isLocked = featureAccess?.variant_code === "summary_only"`
-  - [x] T2.4 Appliqué le pattern isLocked sur Zones 3,4,5,6,8,9 — non-locked garde le rendu conditionnel original
-  - [x] T2.5 CTA uniquement sur DomainRankingCard (première section lockée)
-  - [x] T2.6 DayClimateHero jamais wrappé
+  - [x] T2.4 Ajouté un CTA Basic directement dans `DayClimateHero` pour le plan free
+  - [x] T2.5 Appliqué le pattern isLocked sur Zones 3,4,5,6,8,9 avec teaser long structuré — non-locked garde le rendu conditionnel original
+  - [x] T2.6 CTA Basic présent sur chaque `LockedSection`
+  - [x] T2.7 DayClimateHero jamais wrappé
 
 - [x] T3 — Tests (AC7)
   - [x] T3.1 Étendu `frontend/src/tests/DailyHoroscopePage.test.tsx`
-  - [x] T3.2-T3.3 3 tests ajoutés dans describe "Story 64.8" + `installFetchMock` étendu avec `entitlements`
+  - [x] T3.2 Vérifier les teasers longs structurés pour le plan free
+  - [x] T3.3 Vérifier le CTA hero Basic et les CTA sur chaque section lockée
+  - [x] T3.4 Vérifier l'absence de régression pour basic/premium
 
 - [x] T4 — Validation finale
   - [x] T4.1-T4.2 N/A (test manuel)
@@ -127,16 +108,21 @@ Utiliser `featureAccess.variant_code === "summary_only"` comme critère de verro
 ### File List
 
 - `frontend/src/i18n/horoscope_copy.ts` — modified (HOROSCOPE_TEASERS, TeaserKey, getHoroscopeTeaser)
-- `frontend/src/pages/DailyHoroscopePage.tsx` — modified (useFeatureAccess, isLocked, LockedSection wrapping)
-- `frontend/src/pages/DailyHoroscopePage.css` — modified (teaser-placeholder)
+- `frontend/src/components/DayClimateHero.tsx` — modified (upgrade slot in free hero)
+- `frontend/src/components/DayClimateHero.css` — modified (hero upgrade callout styles)
+- `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.tsx` — modified (custom label support)
+- `frontend/src/pages/DailyHoroscopePage.tsx` — modified (useFeatureAccess, isLocked, LockedSection wrapping, hero CTA, shared locked teaser component)
+- `frontend/src/pages/DailyHoroscopePage.css` — modified (teaser-placeholder lead/body styles)
 - `frontend/src/tests/DailyHoroscopePage.test.tsx` — modified (3 tests Story 64.8 + installFetchMock entitlements)
 
 ### Implementation Notes
 
-- `horoscope_copy.ts` : ajout de `HOROSCOPE_TEASERS` (6 clés, fr/en/es) + `getHoroscopeTeaser(key, lang)`.
-- `DailyHoroscopePage.tsx` : `isLocked = featureAccess?.variant_code === "summary_only"` via `useFeatureAccess("horoscope_daily")`. Zones 3,4,5,6,8,9 wrappées avec `LockedSection` quand locked. CTA `UpgradeCTA` uniquement sur Zone 3 (DomainRankingCard). DayClimateHero (Zone 2) jamais wrappé (AC1). Comportement non-locked inchangé (AC4).
+- `horoscope_copy.ts` : ajout d'une structure `HOROSCOPE_LOCKED_COPY` (6 clés, `teaser` + `lead` + `body`) et de helpers dédiés pour le CTA hero/Basic.
+- `UpgradeCTA.tsx` : ajout d'une prop `label` optionnelle pour personnaliser le message sans casser le hint backend.
+- `DayClimateHero.tsx` : ajout d'un encart CTA free sous `day-climate-hero__summary`, sans wrapper lock.
+- `DailyHoroscopePage.tsx` : `isLocked = featureAccess?.variant_code === "summary_only"` via `useFeatureAccess("horoscope_daily")`. Zones 3,4,5,6,8,9 wrappées avec `LockedSection` quand locked, toutes avec CTA vers `/settings/subscription`. DayClimateHero (Zone 2) reste visible mais affiche aussi un CTA Basic contextualisé (AC1/AC3). Comportement non-locked inchangé (AC4).
 - Pattern : quand locked → section toujours affichée avec teaser ; quand non-locked → comportement original préservé (null si données absentes).
-- Tests : `installFetchMock` étendu avec option `entitlements`. Deux fixtures `makeEntitlementsMeFull()` / `makeEntitlementsMeFree()` créées. 3 tests pour AC2, AC3, AC4.
+- Tests : `installFetchMock` étendu avec option `entitlements`. Deux fixtures `makeEntitlementsMeFull()` / `makeEntitlementsMeFree()` créées. Les tests vérifient désormais les teasers longs, le CTA hero, les CTA sur chaque section lockée et l'absence de régression pour basic/premium.
 
 ### Le payload backend pour free
 
@@ -144,7 +130,11 @@ Depuis Story 64.2, le backend ne retourne que `day_climate.summary` dans le payl
 
 ### Position du CTA
 
-Mettre le CTA sur la deuxième section lockée (DomainRankingCard) — c'est la section la plus visible après le hero. Éviter de mettre un CTA sur chaque section (trop agressif).
+Le design final validé place désormais le CTA à deux niveaux :
+- dans `DayClimateHero`, juste sous le résumé éditorial free ;
+- dans chaque `LockedSection`, avec le même bénéfice Basic et une redirection uniforme vers `/settings/subscription`.
+
+Cette répétition est volontaire pour rendre l'upgrade visible quel que soit le point d'arrêt de lecture sur mobile ou desktop.
 
 ### Teaser vs contenu généré incomplet
 

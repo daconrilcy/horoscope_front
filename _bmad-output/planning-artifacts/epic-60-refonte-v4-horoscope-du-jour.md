@@ -151,3 +151,4 @@ L'epic est terminé si :
 - validation par test unitaire de non-régression : deux appels simultanés doivent déclencher un seul calcul moteur, puis réutiliser le snapshot persisté ;
 - la correction vise le symptôme observé sur la page horoscope V4 : rafale de recalculs `transit_signal_built` / `intraday_activation_built` / `impulse_signal_built` avant la première réponse HTTP.
 - recalibrage du variant free de la narration LLM : le résumé `day-climate-hero__summary` conserve une structure proche de la version Basic, mais cible désormais 6–8 phrases et une longueur comprise entre 50% et 67% de la version complète, avec un budget tokens rehaussé pour éviter un rendu trop simpliste.
+- ajustement frontend du parcours free V4 : le résumé `DayClimateHero` contient désormais un CTA Basic contextuel, et toutes les sections verrouillées utilisent un faux contenu long flouté avec cadenas et CTA cohérent pour mieux matérialiser la valeur de la version Basic.

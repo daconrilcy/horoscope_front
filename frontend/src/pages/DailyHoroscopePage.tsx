@@ -16,7 +16,14 @@ import { detectLang } from '../i18n/astrology'
 import { normalizeSignCode } from '../i18n/astrology'
 import type { Lang } from '../i18n/predictions'
 import { getPredictionMessage } from '../utils/predictionI18n'
-import { getHoroscopeTeaser } from '../i18n/horoscope_copy'
+import {
+  getHoroscopeLockedBody,
+  getHoroscopeLockedLead,
+  getHoroscopeTeaser,
+  getHoroscopeUpgradeCtaLabel,
+  getHoroscopeUpgradeHeroMessage,
+  type TeaserKey,
+} from '../i18n/horoscope_copy'
 import { getSubjectFromAccessToken, useAccessTokenSnapshot } from '../utils/authToken'
 import { useDailyPrediction } from '../api/useDailyPrediction'
 import { useBirthData } from '../api/useBirthData'
@@ -42,6 +49,15 @@ function SectionHeading({ title }: { title: string }) {
   return (
     <div className="daily-layout__section-header">
       <h3 className="daily-layout__section-title">{title}</h3>
+    </div>
+  )
+}
+
+function LockedHoroscopeTeaser({ teaserKey, lang }: { teaserKey: TeaserKey; lang: Lang }) {
+  return (
+    <div className="teaser-placeholder">
+      <p className="teaser-placeholder__lead">{getHoroscopeLockedLead(teaserKey, lang)}</p>
+      <p className="teaser-placeholder__body">{getHoroscopeLockedBody(teaserKey, lang)}</p>
     </div>
   )
 }
@@ -116,6 +132,14 @@ export default function DailyHoroscopePage() {
     : undefined
 
   const pLang = lang as Lang
+  const lockedSectionCta = (
+    <UpgradeCTA
+      featureCode="horoscope_daily"
+      variant="button"
+      to="/settings/subscription"
+      label={getHoroscopeUpgradeCtaLabel(pLang)}
+    />
+  )
 
   return (
     <PageLayout>
@@ -152,7 +176,9 @@ export default function DailyHoroscopePage() {
                   climate={climate} 
                   dailySynthesis={prediction.daily_synthesis} 
                   astroBackgroundProps={astroBackgroundProps}
-                  lang={pLang} 
+                  lang={pLang}
+                  upgradeMessage={isLocked ? getHoroscopeUpgradeHeroMessage(pLang) : undefined}
+                  upgradeCta={isLocked ? lockedSectionCta : undefined}
                 />
               ) : null;
             })()}
@@ -163,10 +189,10 @@ export default function DailyHoroscopePage() {
             <div className="daily-layout__section">
               <SectionHeading title={pLang === 'fr' ? 'Vos domaines clés' : 'Your key domains'} />
               <LockedSection
-                cta={<UpgradeCTA featureCode="horoscope_daily" variant="button" />}
+                cta={lockedSectionCta}
                 label={getHoroscopeTeaser('domainRanking', pLang)}
               >
-                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('domainRanking', pLang)}</p></div>
+                <LockedHoroscopeTeaser teaserKey="domainRanking" lang={pLang} />
               </LockedSection>
             </div>
           ) : (
@@ -185,8 +211,8 @@ export default function DailyHoroscopePage() {
           {isLocked ? (
             <div className="daily-layout__section">
               <SectionHeading title={pLang === 'fr' ? 'Déroulé de votre journée' : 'Your day timeline'} />
-              <LockedSection label={getHoroscopeTeaser('dayTimeline', pLang)}>
-                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('dayTimeline', pLang)}</p></div>
+              <LockedSection cta={lockedSectionCta} label={getHoroscopeTeaser('dayTimeline', pLang)}>
+                <LockedHoroscopeTeaser teaserKey="dayTimeline" lang={pLang} />
               </LockedSection>
             </div>
           ) : (
@@ -208,8 +234,8 @@ export default function DailyHoroscopePage() {
           {isLocked ? (
             <div className="daily-layout__section">
               <SectionHeading title={pLang === 'fr' ? 'Moment clé' : 'Key moment'} />
-              <LockedSection label={getHoroscopeTeaser('turningPoint', pLang)}>
-                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('turningPoint', pLang)}</p></div>
+              <LockedSection cta={lockedSectionCta} label={getHoroscopeTeaser('turningPoint', pLang)}>
+                <LockedHoroscopeTeaser teaserKey="turningPoint" lang={pLang} />
               </LockedSection>
             </div>
           ) : (
@@ -228,8 +254,8 @@ export default function DailyHoroscopePage() {
           {isLocked ? (
             <div className="daily-layout__section">
               <SectionHeading title={pLang === 'fr' ? 'Opportunité' : 'Opportunity'} />
-              <LockedSection label={getHoroscopeTeaser('bestWindow', pLang)}>
-                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('bestWindow', pLang)}</p></div>
+              <LockedSection cta={lockedSectionCta} label={getHoroscopeTeaser('bestWindow', pLang)}>
+                <LockedHoroscopeTeaser teaserKey="bestWindow" lang={pLang} />
               </LockedSection>
             </div>
           ) : (
@@ -264,8 +290,8 @@ export default function DailyHoroscopePage() {
           {isLocked ? (
             <div className="daily-layout__section">
               <SectionHeading title={pLang === 'fr' ? 'Conseil du jour' : 'Daily advice'} />
-              <LockedSection label={getHoroscopeTeaser('dailyAdvice', pLang)}>
-                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('dailyAdvice', pLang)}</p></div>
+              <LockedSection cta={lockedSectionCta} label={getHoroscopeTeaser('dailyAdvice', pLang)}>
+                <LockedHoroscopeTeaser teaserKey="dailyAdvice" lang={pLang} />
               </LockedSection>
             </div>
           ) : (
@@ -279,8 +305,8 @@ export default function DailyHoroscopePage() {
           {isLocked ? (
             <div className="daily-layout__section">
               <SectionHeading title={pLang === 'fr' ? 'Fondements astrologiques' : 'Astrological foundations'} />
-              <LockedSection label={getHoroscopeTeaser('astroFoundation', pLang)}>
-                <div className="teaser-placeholder"><p>{getHoroscopeTeaser('astroFoundation', pLang)}</p></div>
+              <LockedSection cta={lockedSectionCta} label={getHoroscopeTeaser('astroFoundation', pLang)}>
+                <LockedHoroscopeTeaser teaserKey="astroFoundation" lang={pLang} />
               </LockedSection>
             </div>
           ) : (

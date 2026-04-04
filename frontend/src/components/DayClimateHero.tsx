@@ -12,6 +12,8 @@ interface Props {
   climate: DailyPredictionDayClimate;
   dailySynthesis?: string | null;
   lang: Lang;
+  upgradeMessage?: string;
+  upgradeCta?: React.ReactNode;
   astroBackgroundProps?: {
     sign: ZodiacSign;
     userId: string;
@@ -24,6 +26,8 @@ export const DayClimateHero: React.FC<Props> = ({
   climate,
   dailySynthesis,
   lang,
+  upgradeMessage,
+  upgradeCta,
   astroBackgroundProps,
 }) => {
   const content = (
@@ -43,6 +47,17 @@ export const DayClimateHero: React.FC<Props> = ({
         <p className="day-climate-hero__summary">
           {dailySynthesis || climate.summary}
         </p>
+
+        {(upgradeMessage || upgradeCta) && (
+          <div className="day-climate-hero__upgrade">
+            {upgradeMessage && (
+              <p className="day-climate-hero__upgrade-message">{upgradeMessage}</p>
+            )}
+            {upgradeCta && (
+              <div className="day-climate-hero__upgrade-cta">{upgradeCta}</div>
+            )}
+          </div>
+        )}
 
         <div className="day-climate-hero__pills">
           <div className="day-climate-hero__domains">

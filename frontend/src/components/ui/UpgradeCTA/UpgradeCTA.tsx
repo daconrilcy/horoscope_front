@@ -9,9 +9,10 @@ interface UpgradeCTAProps {
   featureCode: string
   variant?: "button" | "link"
   to?: string
+  label?: string
 }
 
-export function UpgradeCTA({ featureCode, variant = "button", to = "/subscription-guide" }: UpgradeCTAProps) {
+export function UpgradeCTA({ featureCode, variant = "button", to = "/subscription-guide", label }: UpgradeCTAProps) {
   const { lang } = useAstrologyLabels()
   const hint = useUpgradeHint(featureCode)
 
@@ -19,14 +20,14 @@ export function UpgradeCTA({ featureCode, variant = "button", to = "/subscriptio
     return null
   }
 
-  const label = getUpgradeBenefitLabel(hint.benefit_key, lang)
+  const ctaLabel = label ?? getUpgradeBenefitLabel(hint.benefit_key, lang)
 
   return (
     <Link
       to={to}
       className={`upgrade-cta upgrade-cta--${variant}`}
     >
-      {label}
+      {ctaLabel}
     </Link>
   )
 }

@@ -174,12 +174,30 @@
 /* ── Teaser Placeholder — Story 64.8 ── */
 .teaser-placeholder {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  min-height: 120px;
-  padding: var(--space-4, 1rem);
-  text-align: center;
-  color: var(--text-2);
-  font-size: var(--font-size-sm, 0.875rem);
-  font-style: italic;
+  gap: 18px;
+  min-height: 180px;
+  padding: 28px 24px;
+  text-align: left;
+  color: var(--text-main);
+}
+
+.teaser-placeholder__lead,
+.teaser-placeholder__body {
+  margin: 0;
+}
+
+.teaser-placeholder__lead {
+  font-size: 15px;
+  line-height: 1.8;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.teaser-placeholder__body {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--text-main);
+  max-width: 76ch;
 }

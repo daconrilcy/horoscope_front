@@ -1171,13 +1171,16 @@ describe("DailyHoroscopePage", () => {
         expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
       });
 
-      // Sections lockées doivent afficher les teasers i18n
+      // Sections lockées doivent afficher les teasers i18n enrichis
       expect(screen.getAllByText(/domaines d'énergie prioritaires/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/fenêtres temporelles/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/tournant astrologique/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/Dans Basic, ce bloc hiérarchise les zones de vie/i)).toBeInTheDocument();
+      expect(screen.getByText(/Avec Basic, cette section déroule la journée comme une séquence lisible/i)).toBeInTheDocument();
+      expect(screen.getByText(/Avec Basic, le conseil du jour prend la forme d'une recommandation plus développée/i)).toBeInTheDocument();
     });
 
-    it("affiche un UpgradeCTA sur la section DomainRanking pour utilisateur free (AC3)", async () => {
+    it("affiche un CTA Basic dans le hero et sur chaque section verrouillée pour utilisateur free (AC3)", async () => {
       installFetchMock({ entitlements: makeEntitlementsMeFree() });
 
       renderDashboard();
@@ -1186,9 +1189,11 @@ describe("DailyHoroscopePage", () => {
         expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
       });
 
-      // Au moins un lien CTA doit pointer vers /subscription-guide
-      const ctaLinks = document.querySelectorAll('a[href="/subscription-guide"]');
-      expect(ctaLinks.length).toBeGreaterThan(0);
+      expect(screen.getByText(/Passez à Basic pour obtenir un horoscope du jour plus riche/i)).toBeInTheDocument();
+      expect(screen.getAllByRole("link", { name: /Obtenez un horoscope du jour plus riche/i })).toHaveLength(7);
+      const ctaLinks = document.querySelectorAll('a[href="/settings/subscription"]');
+      expect(ctaLinks.length).toBeGreaterThanOrEqual(7);
+      expect(document.querySelectorAll(".locked-section__icon").length).toBeGreaterThanOrEqual(6);
     });
 
     it("affiche toutes les sections normalement pour utilisateur basic/premium (AC4)", async () => {

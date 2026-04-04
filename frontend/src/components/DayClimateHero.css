@@ -113,6 +113,31 @@
   max-width: 58ch;
 }
 
+.day-climate-hero__upgrade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  max-width: 58ch;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(245, 239, 255, 0.62) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+.day-climate-hero__upgrade-message {
+  margin: 0;
+  flex: 1 1 260px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
+.day-climate-hero__upgrade-cta {
+  flex: 0 0 auto;
+}
+
 .day-climate-hero__pills {
   margin-top: 4px;
   display: flex;
@@ -177,6 +202,11 @@
 
   .day-climate-hero__summary {
     max-width: 100%;
+  }
+
+  .day-climate-hero__upgrade {
+    max-width: 100%;
+    align-items: flex-start;
   }
 
   .day-climate-hero__title {
