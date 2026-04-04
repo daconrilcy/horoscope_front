@@ -452,6 +452,29 @@ def test_consume_amount_exceeds_raises(db_session):
     assert counter.used_count == 3  # inchangé après l'échec
 
 
+def test_consume_up_to_limit_caps_without_raising(db_session):
+    quota = QuotaDefinition(
+        quota_key="daily", quota_limit=5, period_unit="day", period_value=1, reset_mode="calendar"
+    )
+    ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
+
+    usage = QuotaUsageService.consume_up_to_limit(
+        db_session,
+        user_id=1,
+        feature_code="astrologer_chat",
+        quota=quota,
+        amount=8,
+        ref_dt=ref_dt,
+    )
+
+    assert usage.used == 5
+    assert usage.remaining == 0
+    assert usage.exhausted is True
+
+    counter = db_session.query(FeatureUsageCounterModel).first()
+    assert counter.used_count == 5
+
+
 def test_consume_atomicity_with_for_update(db_session):
     # Vérifier le vrai query builder de production, compilé avec le dialecte PostgreSQL.
     from sqlalchemy.dialects import postgresql

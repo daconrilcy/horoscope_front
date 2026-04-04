@@ -41,6 +41,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 from app.main import app
 from app.services.ai_engine_adapter import (
     reset_test_generators,
@@ -410,7 +411,7 @@ def test_send_chat_message_returns_429_when_token_quota_is_reached() -> None:
         plan_code="basic",
         access_mode=AccessMode.QUOTA,
         is_enabled=True,
-        quotas=[("tokens", 100)],
+        quotas=[("tokens", 100, PeriodUnit.DAY)],
     )
     
     headers = {"Authorization": f"Bearer {access_token}"}
@@ -447,6 +448,57 @@ def test_send_chat_message_returns_429_when_token_quota_is_reached() -> None:
     payload = blocked.json()["error"]
     assert payload["code"] == "chat_quota_exceeded"
     assert payload["details"]["quota_key"] == "tokens"
+
+
+def test_first_chat_message_can_saturate_token_quota_without_rollback() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_entry_plan(access_token, "chat-checkout-token-cap-1")
+    _seed_canonical_chat_binding(
+        plan_code="basic",
+        access_mode=AccessMode.QUOTA,
+        is_enabled=True,
+        quotas=[("tokens", 100, PeriodUnit.DAY)],
+    )
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    async def _large_usage_reply(*args: object, **kwargs: object) -> GatewayResult:
+        return GatewayResult(
+            use_case="chat_astrologer",
+            request_id=str(args[3]),
+            trace_id=str(args[4]),
+            raw_output="Réponse longue mais autorisée.",
+            structured_output=None,
+            usage=UsageInfo(input_tokens=80, output_tokens=50, total_tokens=130),
+            meta=GatewayMeta(latency_ms=0, model="test-model"),
+        )
+
+    set_test_chat_generator(_large_usage_reply)
+
+    first = client.post(
+        "/v1/chat/messages",
+        headers=headers,
+        json={"message": "Premier message quota"},
+    )
+    assert first.status_code == 200
+
+    entitlements = client.get("/v1/entitlements/me", headers=headers)
+    assert entitlements.status_code == 200
+    chat_ent = next(
+        f for f in entitlements.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
+    )
+    day_state = next(state for state in chat_ent["usage_states"] if state["period_unit"] == "day")
+    assert day_state["used"] == 100
+    assert day_state["remaining"] == 0
+    assert day_state["exhausted"] is True
+
+    second = client.post(
+        "/v1/chat/messages",
+        headers=headers,
+        json={"message": "Second message quota"},
+    )
+    assert second.status_code == 429
+    assert second.json()["error"]["code"] == "chat_quota_exceeded"
 
 
 def test_chat_message_consumption_is_reflected_in_entitlements_status() -> None:

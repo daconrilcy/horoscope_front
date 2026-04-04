@@ -49,7 +49,11 @@ class QuotaUsageService:
             .where(StripeBillingProfileModel.user_id == user_id)
             .limit(1)
         )
-        if profile is None or profile.current_period_start is None or profile.current_period_end is None:
+        if (
+            profile is None
+            or profile.current_period_start is None
+            or profile.current_period_end is None
+        ):
             return None, None
 
         period_start = profile.current_period_start
@@ -174,6 +178,73 @@ class QuotaUsageService:
             )
 
         counter.used_count += amount
+        db.flush()
+
+        used = counter.used_count
+        remaining = max(0, quota.quota_limit - used)
+        exhausted = used >= quota.quota_limit
+
+        return UsageState(
+            feature_code=feature_code,
+            quota_key=quota.quota_key,
+            quota_limit=quota.quota_limit,
+            used=used,
+            remaining=remaining,
+            exhausted=exhausted,
+            period_unit=quota.period_unit,
+            period_value=quota.period_value,
+            reset_mode=quota.reset_mode,
+            window_start=window.window_start,
+            window_end=window.window_end,
+        )
+
+    @staticmethod
+    def consume_up_to_limit(
+        db: Session,
+        *,
+        user_id: int,
+        feature_code: str,
+        quota: QuotaDefinition,
+        amount: int = 1,
+        ref_dt: datetime | None = None,
+    ) -> UsageState:
+        """
+        Consume a quota up to its configured limit without raising on overflow.
+
+        This is useful when usage is measured after an LLM call. The full token usage
+        can still be logged while the user-facing quota counter saturates at its limit.
+        """
+        require_feature_scope(feature_code, FeatureScope.B2C)
+
+        if amount <= 0:
+            raise ValueError("amount must be >= 1")
+
+        if ref_dt is None:
+            ref_dt = datetime.now(timezone.utc)
+
+        anchor_start, anchor_end = QuotaUsageService._resolve_billing_cycle_anchor(
+            db,
+            user_id=user_id,
+            feature_code=feature_code,
+            quota=quota,
+            ref_dt=ref_dt,
+        )
+        window = QuotaWindowResolver.compute_window(
+            quota.period_unit,
+            quota.period_value,
+            quota.reset_mode,
+            ref_dt,
+            anchor_start=anchor_start,
+            anchor_end=anchor_end,
+        )
+
+        counter = QuotaUsageService._find_or_create_counter(
+            db, user_id=user_id, feature_code=feature_code, quota=quota, window=window
+        )
+
+        remaining_capacity = max(0, quota.quota_limit - counter.used_count)
+        applied_amount = min(amount, remaining_capacity)
+        counter.used_count += applied_amount
         db.flush()
 
         used = counter.used_count

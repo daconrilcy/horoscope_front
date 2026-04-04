@@ -500,8 +500,8 @@ class TestNatalInterpretationServiceV2Modules:
         assert "situation" not in context_sent
         assert mock_gw_instance.execute.call_args.kwargs["use_case"] == "natal_psy_profile"
         assert resp.data.meta.cached is False
-        db.add.assert_not_called()
         db.commit.assert_not_called()
+        assert db.add.call_count == 1
 
 
 class TestNatalInterpretationServiceV2CacheDuplicates:
@@ -671,10 +671,64 @@ class TestNatalInterpretationServiceV2FreeShort:
 
         assert resp.data.use_case == "natal_long_free"
         mock_model.assert_not_called()
-        db.add.assert_not_called()
         assert existing.prompt_version_id is None
         assert existing.use_case == "natal_long_free"
         assert existing.was_fallback is False
         assert existing.interpretation_payload["title"] == (
             "Votre thème révèle une sensibilité vive qui cherche l harmonie."
         )
+        assert db.add.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_free_short_records_token_usage_without_quota_consumption(self):
+        natal_result = _make_natal_result()
+        birth_profile = _make_birth_profile()
+        db = MagicMock()
+        db.execute.return_value.scalars.return_value.all.return_value = []
+
+        mock_gw_instance = MagicMock()
+        mock_gw_instance.execute = AsyncMock(return_value=_make_free_short_gateway_result())
+
+        persisted = MagicMock()
+        persisted.created_at = None
+
+        with (
+            patch("app.services.natal_interpretation_service_v2.select"),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_chart_json",
+                return_value={"planets": []},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.LLMGateway",
+                return_value=mock_gw_instance,
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                return_value=persisted,
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.LlmTokenUsageService.record_usage"
+            ) as mock_record_usage,
+        ):
+            await NatalInterpretationServiceV2.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-free",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="complete",
+                persona_id=None,
+                locale="fr",
+                question=None,
+                request_id="req-free",
+                trace_id="trace-free",
+                variant_code="free_short",
+            )
+
+        assert mock_record_usage.called is True
+        assert mock_record_usage.call_args.kwargs["feature_code"] == "natal_interpretation"
+        assert mock_record_usage.call_args.kwargs["quotas"] == []

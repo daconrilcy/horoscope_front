@@ -123,6 +123,19 @@ Le `access_mode === "quota"` indique que le plan a un quota — afficher le bann
 - `billing.ts` : ajout de `ChatQuotaMessages` et `getChatQuotaMessages(lang)` avec traductions fr/en/es sous forme de fonctions interpolées (pas de template strings avec placeholders).
 - Fix `ChatPage.test.tsx` : ajout mock `../hooks/useEntitlementSnapshot` car `UpgradeCTA` (dans `ChatQuotaBanner`) appelle `useUpgradeHint` → `fetchEntitlementsSnapshot` non fourni dans le mock billing partiel existant.
 
+### Post-Completion Hardening
+
+- Correction backend du débit `tokens` pour `astrologer_chat` :
+  - un premier message Basic dont le coût réel LLM dépasse le quota journalier n'est plus rejeté après génération ;
+  - le compteur canonique est maintenant saturé à la limite disponible au lieu de rollbacker toute la transaction ;
+  - le message utilisateur et la réponse assistant sont donc bien persistés, puis le message suivant est bloqué normalement avec `chat_quota_exceeded`.
+- Correction du paradoxe produit `0 utilisé` + `quota dépassé` :
+  - auparavant le quota était vérifié avant appel LLM puis débité après coup, ce qui pouvait annuler toute la transaction ;
+  - désormais l'état affiché dans `/chat` reste cohérent avec la réalité du dernier échange.
+- Séparation explicite des usages LLM :
+  - les interprétations natales journalisent leurs tokens par utilisateur pour l'observabilité ;
+  - ces tokens ne consomment plus le quota `astrologer_chat`, réservé aux échanges de chat.
+
 ### Désactivation de la saisie au quota épuisé
 
 Vérifier dans `ChatWindow.tsx` si une prop existe pour désactiver l'input. Si `quota_remaining === 0`, le backend retournera déjà une erreur 429 à l'envoi — s'assurer que le message d'erreur est géré proprement. Le CTA upgrade est affiché en amont pour éviter cette friction.

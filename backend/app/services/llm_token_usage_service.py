@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
+from typing import Literal
 
 from sqlalchemy.orm import Session
 
@@ -27,10 +28,12 @@ class LlmTokenUsageService:
         request_id: str,
         llm_call_log_id: uuid.UUID | None = None,
         ref_dt: datetime | None = None,
+        quota_mode: Literal["strict", "cap"] = "strict",
     ) -> UsageState | None:
         """
         Records LLM token usage for a user.
-        Atomically increments the usage counter (if quota provided) and creates a detailed usage log.
+        Atomically increments the usage counter (if quota provided)
+        and creates a detailed usage log.
         """
         if ref_dt is None:
             ref_dt = datetime.now(timezone.utc)
@@ -40,16 +43,28 @@ class LlmTokenUsageService:
 
         # 1. Increment all matching usage counters (within the same transaction)
         for quota in quotas or []:
-            usage_states.append(
-                QuotaUsageService.consume(
-                    db,
-                    user_id=user_id,
-                    feature_code=feature_code,
-                    quota=quota,
-                    amount=tokens_total,
-                    ref_dt=ref_dt,
+            if quota_mode == "cap":
+                usage_states.append(
+                    QuotaUsageService.consume_up_to_limit(
+                        db,
+                        user_id=user_id,
+                        feature_code=feature_code,
+                        quota=quota,
+                        amount=tokens_total,
+                        ref_dt=ref_dt,
+                    )
                 )
-            )
+            else:
+                usage_states.append(
+                    QuotaUsageService.consume(
+                        db,
+                        user_id=user_id,
+                        feature_code=feature_code,
+                        quota=quota,
+                        amount=tokens_total,
+                        ref_dt=ref_dt,
+                    )
+                )
 
         # 2. Create the usage log (within transaction)
         usage_log = UserTokenUsageLogModel(

@@ -544,6 +544,7 @@ class ChatGuidanceService:
             tokens_in=gateway_result.usage.input_tokens,
             tokens_out=gateway_result.usage.output_tokens,
             request_id=gateway_result.request_id,
+            quota_mode="cap",
         )
 
     @staticmethod

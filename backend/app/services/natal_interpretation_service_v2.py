@@ -24,7 +24,7 @@ from app.infra.db.models.user_natal_interpretation import (
 )
 from app.infra.observability.metrics import observe_duration
 from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import InputValidationError
+from app.llm_orchestration.models import GatewayResult, InputValidationError
 from app.llm_orchestration.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
@@ -39,6 +39,7 @@ from app.services.chart_json_builder import (
     build_enriched_evidence_catalog,
 )
 from app.services.disclaimer_registry import get_disclaimers
+from app.services.llm_token_usage_service import LlmTokenUsageService
 from app.services.user_birth_profile_service import UserBirthProfileData
 
 logger = logging.getLogger(__name__)
@@ -160,6 +161,27 @@ class NatalInterpretationServiceV2:
     """
     Service for natal interpretation using LLM Gateway V2.
     """
+
+    @staticmethod
+    def _record_token_usage(
+        db: Session,
+        *,
+        user_id: int,
+        gateway_result: GatewayResult,
+    ) -> None:
+        """
+        Record natal LLM usage for observability without consuming user chat quota.
+        """
+        LlmTokenUsageService.record_usage(
+            db,
+            user_id=user_id,
+            feature_code="natal_interpretation",
+            quotas=[],
+            provider_model=gateway_result.meta.model,
+            tokens_in=gateway_result.usage.input_tokens,
+            tokens_out=gateway_result.usage.output_tokens,
+            request_id=gateway_result.request_id,
+        )
 
     @staticmethod
     def _deserialize_persisted_interpretation(
@@ -425,6 +447,11 @@ class NatalInterpretationServiceV2:
             user_id=user_id,
             db=db,
         )
+        NatalInterpretationServiceV2._record_token_usage(
+            db,
+            user_id=user_id,
+            gateway_result=gateway_result,
+        )
 
         # 6. Handle result and map to schema
         if not gateway_result.structured_output:
@@ -644,6 +671,11 @@ class NatalInterpretationServiceV2:
             trace_id=trace_id,
             user_id=user_id,
             db=db,
+        )
+        NatalInterpretationServiceV2._record_token_usage(
+            db,
+            user_id=user_id,
+            gateway_result=gateway_result,
         )
 
         if not gateway_result.structured_output:

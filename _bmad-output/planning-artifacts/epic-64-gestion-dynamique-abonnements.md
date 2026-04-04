@@ -206,6 +206,8 @@ Validation finale produit :
 - comportement d'upgrade confirmé : les CTA free redirigent vers l'abonnement Basic sans relancer une génération non autorisée.
 - correction complémentaire du parcours `/settings/subscription` : un utilisateur free exposé comme plan applicatif `free` mais sans profil Stripe est désormais routé vers un Checkout Stripe initial, et non plus vers le Customer Portal.
 - correction complémentaire du flux Basic sur `/natal` : une fois le quota d'interprétation complète consommé, l'interface n'autorise plus de nouvelle génération et remplace le bouton inactif par un CTA explicite vers Premium pour obtenir davantage de quota.
+- correction complémentaire du quota chat Basic : un premier message dont le coût réel dépasse le budget journalier en tokens ne provoque plus un rollback incohérent (`0 utilisé` mais `quota dépassé`) ; le compteur est désormais saturé à la limite puis l'échange suivant est bloqué normalement.
+- correction complémentaire du comptage LLM natal : les tokens consommés par les interprétations natales restent journalisés par utilisateur pour l'observabilité, mais ne sont plus déduits du quota `astrologer_chat`.
 
 ---
 
@@ -234,6 +236,8 @@ backend/app/api/v1/routers/predictions.py         ← 64.1 : branchement gate ho
 backend/app/prompts/catalog.py                     ← 64.2 + 64.3 : nouveaux variants
 backend/app/services/prediction_compute_runner.py  ← 64.2 : sélection variant
 backend/app/services/natal_interpretation_service_v2.py ← 64.3 : variant free
+backend/app/services/llm_token_usage_service.py ← hardening : distinction entre journalisation LLM et consommation quota
+backend/app/services/quota_usage_service.py      ← hardening : consommation capée pour saturation contrôlée des quotas chat tokens
 backend/app/api/v1/schemas/entitlements.py         ← 64.4 : UpgradeHint + champ additionnel
 backend/app/services/effective_entitlement_resolver_service.py ← 64.4 : compute hints
 backend/app/api/v1/routers/chat.py                ← 64.4 : consommation correcte des quotas canoniques
