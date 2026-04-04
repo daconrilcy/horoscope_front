@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Check, Clock3, MessageCircleMore, Sparkles, Star } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "../../../components/ui/Button/Button"
@@ -65,6 +66,43 @@ export const HeroSection = () => {
   const { lang } = useAstrologyLabels()
   const { track } = useAnalytics()
   const localCopy = HERO_LOCAL_COPY[lang]
+  const questionChars = useMemo(() => Array.from(localCopy.chatQuestion), [localCopy.chatQuestion])
+  const answerChars = useMemo(() => Array.from(localCopy.chatAnswer), [localCopy.chatAnswer])
+  const [liveState, setLiveState] = useState({
+    toolIndex: 0,
+    trendIndex: 0,
+    questionLength: 0,
+    answerLength: 0,
+  })
+
+  useEffect(() => {
+    const cycleDurationMs = 5400
+    const answerStartMs = 1100
+    const startTime = Date.now()
+
+    const updateLiveState = () => {
+      const elapsed = (Date.now() - startTime) % cycleDurationMs
+      const toolIndex = elapsed < 1800 ? 0 : elapsed < 3600 ? 1 : 2
+      const trendIndex = elapsed < 1400 ? 0 : elapsed < 2800 ? 1 : 2
+      const questionProgress = Math.min(1, elapsed / 900)
+      const answerProgress = elapsed <= answerStartMs ? 0 : Math.min(1, (elapsed - answerStartMs) / 1700)
+
+      setLiveState({
+        toolIndex,
+        trendIndex,
+        questionLength: Math.floor(questionChars.length * questionProgress),
+        answerLength: Math.floor(answerChars.length * answerProgress),
+      })
+    }
+
+    updateLiveState()
+    const intervalId = window.setInterval(updateLiveState, 80)
+
+    return () => window.clearInterval(intervalId)
+  }, [answerChars, questionChars])
+
+  const liveQuestion = questionChars.slice(0, liveState.questionLength).join("")
+  const liveAnswer = answerChars.slice(0, liveState.answerLength).join("")
 
   return (
     <section className="hero-section" aria-labelledby="hero-title">
@@ -152,15 +190,21 @@ export const HeroSection = () => {
             </div>
 
             <div className="hero-device__toolbar" aria-hidden="true">
-              <span className="hero-device__tool">
+              <span
+                className={`hero-device__tool ${liveState.toolIndex === 0 ? "hero-device__tool--active" : ""}`}
+              >
                 <Clock3 size={13} />
                 <span>{localCopy.dailyLabel}</span>
               </span>
-              <span className="hero-device__tool">
+              <span
+                className={`hero-device__tool ${liveState.toolIndex === 1 ? "hero-device__tool--active" : ""}`}
+              >
                 <MessageCircleMore size={13} />
                 <span>{localCopy.chatLabel}</span>
               </span>
-              <span className="hero-device__tool">
+              <span
+                className={`hero-device__tool ${liveState.toolIndex === 2 ? "hero-device__tool--active" : ""}`}
+              >
                 <Star size={13} />
                 <span>{localCopy.momentLabel}</span>
               </span>
@@ -177,7 +221,14 @@ export const HeroSection = () => {
               <h2 className="hero-panel__title">{localCopy.dailyTitle}</h2>
               <div className="hero-card__trend-grid">
                 {localCopy.dailyItems.map(([label, value]) => (
-                  <div key={label} className="hero-card__trend-item">
+                  <div
+                    key={label}
+                    className={`hero-card__trend-item ${
+                      localCopy.dailyItems[liveState.trendIndex]?.[0] === label
+                        ? "hero-card__trend-item--active"
+                        : ""
+                    }`}
+                  >
                     <span className="hero-card__trend-label">{label}</span>
                     <strong className="hero-card__trend-value">{value}</strong>
                   </div>
@@ -193,11 +244,19 @@ export const HeroSection = () => {
                     {localCopy.chatLabel}
                   </span>
                 </div>
-                <p className="hero-chat__bubble hero-chat__bubble--question">
-                  <span className="hero-chat__text hero-chat__text--question">{localCopy.chatQuestion}</span>
+                <p
+                  className={`hero-chat__bubble hero-chat__bubble--question ${
+                    liveState.toolIndex === 1 ? "hero-chat__bubble--active" : ""
+                  }`}
+                >
+                  <span className="hero-chat__text hero-chat__text--question">{liveQuestion}</span>
                 </p>
-                <p className="hero-chat__bubble hero-chat__bubble--answer">
-                  <span className="hero-chat__text hero-chat__text--answer">{localCopy.chatAnswer}</span>
+                <p
+                  className={`hero-chat__bubble hero-chat__bubble--answer ${
+                    liveState.toolIndex === 1 ? "hero-chat__bubble--active" : ""
+                  }`}
+                >
+                  <span className="hero-chat__text hero-chat__text--answer">{liveAnswer}</span>
                 </p>
               </article>
 
