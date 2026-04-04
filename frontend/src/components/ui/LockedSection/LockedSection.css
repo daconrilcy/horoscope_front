@@ -1,0 +1,60 @@
+.locked-section {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md, 14px);
+}
+
+.locked-section__content {
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.3s ease;
+}
+
+.locked-section__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4, 1rem);
+  gap: var(--space-3, 0.75rem);
+  background: var(--glass-2, rgba(255, 255, 255, 0.38));
+  z-index: 10;
+}
+
+.locked-section__icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--glass, rgba(255, 255, 255, 0.55));
+  border: 1px solid var(--glass-border);
+  color: var(--text-1);
+}
+
+.locked-section__icon {
+  width: 24px;
+  height: 24px;
+}
+
+.locked-section__label {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-1);
+  text-align: center;
+}
+
+.locked-section__cta-container {
+  margin-top: var(--space-2, 0.5rem);
+}
+
+/* Story 64.6 UX refinement for mobile */
+@media (max-width: 768px) {
+  .locked-section__content {
+    filter: blur(4px); /* Slightly less blur on mobile for visibility */
+  }
+}

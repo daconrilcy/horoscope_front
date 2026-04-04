@@ -1,6 +1,6 @@
 # Story 64.6 — Composants `UpgradeCTA` + `LockedSection` réutilisables
 
-Status: todo
+Status: done
 
 ## Story
 
@@ -68,103 +68,29 @@ Ce projet n'utilise pas Tailwind ni de librairie de composants. Tout le style es
 
 ## Tasks / Subtasks
 
-- [ ] T1 — Créer le composant `LockedSection` (AC1, AC3, AC5, AC6)
-  - [ ] T1.1 Créer `frontend/src/components/ui/LockedSection/LockedSection.tsx`
-  - [ ] T1.2 Interface :
-    ```tsx
-    interface LockedSectionProps {
-      children: React.ReactNode
-      cta?: React.ReactNode
-      label?: string  // texte dans l'overlay (ex: "Disponible avec Basic")
-    }
-    ```
-  - [ ] T1.3 Implémenter le markup :
-    ```tsx
-    <div className="locked-section">
-      <div className="locked-section__content">{children}</div>
-      <div className="locked-section__overlay">
-        <LockIcon />
-        {label && <span className="locked-section__label">{label}</span>}
-        {cta}
-      </div>
-    </div>
-    ```
-  - [ ] T1.4 Créer `frontend/src/components/ui/LockedSection/LockedSection.css`
-    ```css
-    .locked-section {
-      position: relative;
-      overflow: hidden;
-    }
-    .locked-section__content {
-      filter: blur(6px);
-      pointer-events: none;
-      user-select: none;
-    }
-    .locked-section__overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-sm, 0.5rem);
-      background: var(--glass, rgba(0,0,0,0.3));
-    }
-    ```
+- [x] T1 — Créer le composant `LockedSection` (AC1, AC3, AC5, AC6)
+  - [x] T1.1 Créer `frontend/src/components/ui/LockedSection/LockedSection.tsx`
+  - [x] T1.2 Interface avec `children`, `cta?`, `label?`
+  - [x] T1.3 Implémenter le markup avec `aria-hidden="true"` sur le contenu
+  - [x] T1.4 Créer `frontend/src/components/ui/LockedSection/LockedSection.css` avec variables CSS projet
 
-- [ ] T2 — Créer le composant `UpgradeCTA` (AC2, AC4, AC5)
-  - [ ] T2.1 Créer `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.tsx`
-  - [ ] T2.2 Interface :
-    ```tsx
-    interface UpgradeCTAProps {
-      featureCode: string
-      variant?: 'button' | 'link'  // défaut: 'button'
-    }
-    ```
-  - [ ] T2.3 Implémenter :
-    ```tsx
-    export function UpgradeCTA({ featureCode, variant = 'button' }: UpgradeCTAProps) {
-      const hint = useUpgradeHint(featureCode)
-      if (!hint) return null
+- [x] T2 — Créer le composant `UpgradeCTA` (AC2, AC4, AC5)
+  - [x] T2.1 Créer `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.tsx`
+  - [x] T2.2 Interface avec `featureCode`, `variant?: 'button' | 'link'`
+  - [x] T2.3 Utilise `useUpgradeHint` + `useAstrologyLabels` + `getUpgradeBenefitLabel` (i18n projet)
+  - [x] T2.4 Créer `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.css`
+  - [x] T2.5 Ajouter clés `benefit_key` dans `frontend/src/i18n/billing.ts`
 
-      const label = t(hint.benefit_key) // résolution i18n
-      return (
-        <Link to="/subscription-guide" className={`upgrade-cta upgrade-cta--${variant}`}>
-          {label}
-        </Link>
-      )
-    }
-    ```
-  - [ ] T2.4 Créer `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.css`
-    ```css
-    .upgrade-cta {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.5rem 1rem;
-      background: var(--primary);
-      color: var(--text-on-primary, #fff);
-      border-radius: var(--radius-md, 6px);
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.875rem;
-      transition: opacity 0.15s ease;
-    }
-    .upgrade-cta:hover { opacity: 0.85; }
-    ```
-  - [ ] T2.5 Ajouter les clés `benefit_key` dans `frontend/src/i18n/billing.ts` :
-    - `"upgrade.horoscope_daily.full_access"` → fr: "Accéder à l'horoscope complet", en: "Get full horoscope"
-    - `"upgrade.natal_chart_long.full_interpretation"` → fr: "Débloquer l'interprétation complète", en: "Unlock full interpretation"
-    - `"upgrade.astrologer_chat.unlimited_messages"` → fr: "Échanger sans limite", en: "Chat without limits"
+- [x] T3 — Exporter depuis l'index UI
+  - [x] T3.1 Créé `frontend/src/components/ui/LockedSection/index.ts`
+  - [x] T3.2 Créé `frontend/src/components/ui/UpgradeCTA/index.ts`
+  - [x] T3.3 Ajouté exports dans `frontend/src/components/ui/index.ts`
 
-- [ ] T3 — Exporter depuis l'index UI (si applicable)
-  - [ ] T3.1 Vérifier s'il existe un `frontend/src/components/ui/index.ts` ou `@ui` alias
-  - [ ] T3.2 Exporter `LockedSection` et `UpgradeCTA` depuis cet index
-
-- [ ] T4 — Tests de rendu (AC7)
-  - [ ] T4.1 Créer `frontend/src/components/ui/LockedSection/LockedSection.test.tsx`
-  - [ ] T4.2 Créer `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.test.tsx`
-  - [ ] T4.3 Tests : rendu avec CTA, sans CTA, UpgradeCTA null si hint absent
-  - [ ] T4.4 `npx vitest run` → 0 erreur
+- [x] T4 — Tests de rendu (AC7)
+  - [x] T4.1 Créer `frontend/src/components/ui/LockedSection/LockedSection.test.tsx` (6 tests)
+  - [x] T4.2 Créer `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.test.tsx` (5 tests)
+  - [x] T4.3 Tests : rendu avec CTA, sans CTA, UpgradeCTA null si hint absent
+  - [x] T4.4 `npx vitest run` → 0 erreur sur les 11 tests nouveaux
 
 ## Dev Notes
 
@@ -187,3 +113,35 @@ Le `benefit_key` est une clé de message i18n (ex: `"upgrade.horoscope_daily.ful
 ### UX : blur non agressif
 
 Le `filter: blur(6px)` est une valeur de départ. Tester sur mobile — si trop agressif, réduire à 4px. L'objectif est que le contenu soit reconnaissable en silhouette (donne envie) mais pas lisible.
+
+## Dev Agent Record
+
+### File List
+
+- `frontend/src/components/ui/LockedSection/LockedSection.tsx` — created
+- `frontend/src/components/ui/LockedSection/LockedSection.css` — created
+- `frontend/src/components/ui/LockedSection/index.ts` — created
+- `frontend/src/components/ui/LockedSection/LockedSection.test.tsx` — created
+- `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.tsx` — created
+- `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.css` — created
+- `frontend/src/components/ui/UpgradeCTA/index.ts` — created
+- `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.test.tsx` — created
+- `frontend/src/components/ui/index.ts` — modified (exports ajoutés)
+- `frontend/src/i18n/billing.ts` — modified (UPGRADE_BENEFIT_LABELS + getUpgradeBenefitLabel)
+
+### Implementation Notes
+
+- `LockedSection.tsx` : markup avec `aria-hidden="true"` sur `.locked-section__content` pour accessibilité. Icône `Lock` de `lucide-react`. Slot `cta` rendu dans `.locked-section__cta-container`.
+- `UpgradeCTA.tsx` : utilise `useUpgradeHint(featureCode)` depuis Story 64.5, `useAstrologyLabels()` pour la langue courante, et `getUpgradeBenefitLabel(key, lang)` ajouté dans `frontend/src/i18n/billing.ts`. Lien vers `/subscription-guide`. Retourne `null` si hint absent.
+- i18n : trois clés ajoutées dans `billing.ts` — `upgrade.horoscope_daily.full_access`, `upgrade.natal_chart_long.full_interpretation`, `upgrade.astrologer_chat.unlimited_messages` — avec traductions fr/en/es.
+- CSS : variables du projet utilisées (`--glass`, `--primary`, `--text-1`, `--radius-md`, `--space-sm`, `--space-md`). Aucune classe Tailwind.
+- Exports ajoutés dans `frontend/src/components/ui/index.ts`.
+
+### Tests
+
+- 6 tests LockedSection : rendu contenu aria-hidden, overlay, label conditionnel, CTA slot, container vide sans CTA
+- 5 tests UpgradeCTA : null sans hint, lien traduit, href vers /subscription-guide, variant button par défaut, variant link
+
+### Deviations from Story
+
+Aucune déviation fonctionnelle. Note : `react-i18next` absent du projet — remplacé par le système i18n custom (`useAstrologyLabels` + `getUpgradeBenefitLabel`) conformément aux patterns existants.

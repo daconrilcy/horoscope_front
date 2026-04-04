@@ -10,3 +10,5 @@ export * from './Badge';
 export * from './ErrorState';
 export * from './UserAvatar';
 export * from './UserMenu';
+export * from './LockedSection';
+export * from './UpgradeCTA';

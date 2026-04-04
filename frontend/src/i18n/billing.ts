@@ -1,5 +1,34 @@
 import type { AstrologyLang } from "./astrology"
 
+export type UpgradeBenefitKey =
+  | "upgrade.horoscope_daily.full_access"
+  | "upgrade.natal_chart_long.full_interpretation"
+  | "upgrade.astrologer_chat.unlimited_messages"
+
+export const UPGRADE_BENEFIT_LABELS: Record<UpgradeBenefitKey, Record<AstrologyLang, string>> = {
+  "upgrade.horoscope_daily.full_access": {
+    fr: "Accéder à l'horoscope complet",
+    en: "Get full horoscope",
+    es: "Obtener el horóscopo completo",
+  },
+  "upgrade.natal_chart_long.full_interpretation": {
+    fr: "Débloquer l'interprétation complète",
+    en: "Unlock full interpretation",
+    es: "Desbloquear la interpretación completa",
+  },
+  "upgrade.astrologer_chat.unlimited_messages": {
+    fr: "Échanger sans limite",
+    en: "Chat without limits",
+    es: "Chatear sin límites",
+  },
+}
+
+export function getUpgradeBenefitLabel(key: string, lang: AstrologyLang): string {
+  const entry = UPGRADE_BENEFIT_LABELS[key as UpgradeBenefitKey]
+  if (!entry) return key
+  return entry[lang] ?? entry["fr"]
+}
+
 export type BillingTranslation = {
   success: {
     trialStarted: string

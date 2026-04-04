@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-03T18:55:00+02:00'
+last_updated: '2026-04-04T13:05:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -546,3 +546,13 @@ development_status:
   63-15-scheduler-sequence-emails-j1-j7: done
   # Transverse (en parallèle du LOT 1)
   63-17-accessibilite-transverse-landing: done
+  epic-64: in-progress
+  64-1-feature-horoscope-daily-gate-variants: done
+  64-2-prompts-variants-horoscope-config-llm-env: done
+  64-3-prompt-variant-natal-free-calculs-conserves: done
+  64-4-upgrade-hints-entitlements-me: done
+  64-5-hook-useEntitlementSnapshot-types-upgrade-hints: done
+  64-6-composants-UpgradeCTA-LockedSection: done
+  64-7-chatpage-quota-banner-cta-upgrade: todo
+  64-8-dailyhoroscopepage-sections-lockees-cta: todo
+  64-9-natalchartpage-sections-lockees-cta: todo
