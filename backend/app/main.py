@@ -16,6 +16,7 @@ from app.api.dependencies.auth import UserAuthenticationError
 from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.health import router as health_router
 from app.api.v1.routers.admin_dashboard import router as admin_dashboard_router
+from app.api.v1.routers.admin_entitlements import router as admin_entitlements_router
 from app.api.v1.routers.admin_llm import router as admin_llm_router
 from app.api.v1.routers.admin_support import router as admin_support_router
 from app.api.v1.routers.admin_users import router as admin_users_router

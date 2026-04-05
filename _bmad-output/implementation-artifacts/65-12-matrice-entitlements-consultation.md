@@ -1,6 +1,6 @@
 # Story 65.12 : Matrice entitlements — vue canonique consultation (plans × features)
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
