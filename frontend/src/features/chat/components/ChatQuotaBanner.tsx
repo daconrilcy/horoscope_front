@@ -17,7 +17,7 @@ export function ChatQuotaBanner() {
   const t = getChatQuotaMessages(lang)
   const resetDateLabel = data.reset_at ? formatDateTime(data.reset_at) : "—"
   const isExhausted = data.blocked || data.remaining === 0
-
+  const limit = data.limit > 0 ? data.limit : 1
   if (isExhausted) {
     return (
       <div className="chat-quota-banner chat-quota-banner--exhausted" role="alert">
@@ -29,7 +29,12 @@ export function ChatQuotaBanner() {
 
   return (
     <div className="chat-quota-banner chat-quota-banner--info">
-      <span className="chat-quota-banner__text">{t.remaining(data.remaining, data.limit)}</span>
+      <progress
+        className="chat-quota-banner__meter"
+        aria-label={t.remaining(data.remaining, data.limit)}
+        value={Math.min(data.consumed, limit)}
+        max={limit}
+      />
       <span className="chat-quota-banner__reset">{t.resetDate(resetDateLabel)}</span>
     </div>
   )

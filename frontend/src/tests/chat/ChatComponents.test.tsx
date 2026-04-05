@@ -728,16 +728,17 @@ describe("ChatQuotaBanner", () => {
     mockUseChatEntitlementUsage.mockReturnValue({
       data: {
         quota_date: "2026-04-04",
-        quota_key: "daily",
-        limit: 5,
-        consumed: 2,
-        remaining: 3,
+        quota_key: "tokens",
+        limit: 1667,
+        consumed: 321,
+        remaining: 1346,
         reset_at: "2026-04-05T00:00:00Z",
         blocked: false,
       },
     } as ReturnType<typeof useChatEntitlementUsage>)
     render(<ChatQuotaBanner />, { wrapper: createWrapper() })
-    expect(screen.getByText(/3\/5/)).toBeInTheDocument()
+    expect(screen.getByRole("progressbar")).toBeInTheDocument()
+    expect(screen.queryByText(/1667/i)).not.toBeInTheDocument()
     expect(document.querySelector(".chat-quota-banner--info")).toBeInTheDocument()
   })
 

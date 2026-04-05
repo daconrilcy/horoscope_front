@@ -82,8 +82,7 @@ export function NatalChartPage() {
     !isLockedFree &&
       (
         natalAccess?.reason_code === "quota_exhausted" ||
-        natalAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0) ||
-        (hasSingleAstrologerQuota && activeInterpretation.level === "complete")
+        natalAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0)
       ),
   )
 

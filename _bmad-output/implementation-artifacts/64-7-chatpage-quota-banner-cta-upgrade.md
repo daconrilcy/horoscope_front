@@ -4,8 +4,8 @@ Status: done
 
 ## Story
 
-En tant qu'utilisateur free sur la page `/chat`,
-je veux voir un encart discret indiquant mes messages restants, le quota total et la date de rechargement,
+En tant qu'utilisateur sur la page `/chat`,
+je veux voir un encart discret indiquant mon niveau d'usage et la date de rechargement,
 afin de savoir où j'en suis dans ma consommation et d'être guidé naturellement vers l'upgrade quand je touche ma limite.
 
 ## Context
@@ -21,10 +21,10 @@ Dépend de **Story 64.5** (hook `useEntitlementSnapshot` disponible).
 
 ## Acceptance Criteria
 
-**AC1 — ChatQuotaBanner affiché pour les utilisateurs free avec quota**
-**Given** un utilisateur free avec un quota chat restant  
+**AC1 — ChatQuotaBanner affiché pour les utilisateurs avec quota**
+**Given** un utilisateur avec un quota chat restant  
 **When** la page `/chat` est rendue  
-**Then** un encart affiche : messages restants, quota total, date/heure de rechargement  
+**Then** un encart affiche : une jauge horizontale de consommation et la date/heure de rechargement  
 **And** l'encart est discret (style informatif, pas alarmiste)
 
 **AC2 — ChatQuotaBanner masqué pour les plans sans quota (unlimited)**
@@ -67,7 +67,7 @@ Dépend de **Story 64.5** (hook `useEntitlementSnapshot` disponible).
 - [x] T1 — Créer `ChatQuotaBanner` (AC1, AC2, AC3, AC4, AC5)
   - [x] T1.1 Créer `frontend/src/features/chat/components/ChatQuotaBanner.tsx`
   - [x] T1.2 Pas de props — lit `useChatEntitlementUsage()` + `useAstrologyLabels()` directement
-  - [x] T1.3 Logique : null si data absent, banner info si remaining>0, banner alerte+CTA si épuisé
+  - [x] T1.3 Logique : null si data absent, banner info si remaining>0 avec jauge de consommation, banner alerte+CTA si épuisé
   - [x] T1.4 Formatage date via `formatDateTime` depuis `utils/formatDate`
   - [x] T1.5 Créer `ChatQuotaBanner.css` avec variables CSS projet
 
@@ -78,7 +78,7 @@ Dépend de **Story 64.5** (hook `useEntitlementSnapshot` disponible).
   - [x] T3.1-T3.2 `ChatQuotaMessages` + `getChatQuotaMessages()` ajoutés dans `billing.ts` (fr/en/es)
 
 - [x] T4 — Tests (AC7)
-  - [x] T4.1 3 tests ajoutés dans `ChatComponents.test.tsx` : null sans data, info avec quota, alerte épuisé+CTA
+  - [x] T4.1 3 tests ajoutés dans `ChatComponents.test.tsx` : null sans data, info avec jauge de quota, alerte épuisé+CTA
   - [x] Fix `ChatPage.test.tsx` : ajout mock `hooks/useEntitlementSnapshot` (regression due à UpgradeCTA)
 
 - [x] T5 — Validation finale
@@ -119,6 +119,10 @@ Le `access_mode === "quota"` indique que le plan a un quota — afficher le bann
 
 - `ChatQuotaBanner` : composant sans props, lit `useChatEntitlementUsage()` pour les données quota et `useAstrologyLabels()` pour la langue. Retourne `null` si `data` absent (plan unlimited ou loading). Deux états : `.chat-quota-banner--info` (quota restant) et `.chat-quota-banner--exhausted` (quota épuisé, avec `role="alert"` + `UpgradeCTA`).
 - La vérification d'épuisement utilise `data.blocked || data.remaining === 0` pour couvrir tous les cas.
+- Ajustement UX complémentaire :
+  - pour les plans à quota tokens comme `basic`, le banner n'affiche plus une unité trompeuse de type `1667/1667 message(s)` ;
+  - l'état informatif repose désormais sur une barre `progress` horizontale représentant le pourcentage d'usage, sans unité textuelle visible ;
+  - seul l'état épuisé conserve un message explicite et un CTA d'upgrade.
 - `ChatPage.tsx` : `<ChatQuotaBanner />` inséré entre le `ChatPageHeader` et `SectionErrorBoundary`, position non-fixed pour ne pas obstruer le scroll.
 - `billing.ts` : ajout de `ChatQuotaMessages` et `getChatQuotaMessages(lang)` avec traductions fr/en/es sous forme de fonctions interpolées (pas de template strings avec placeholders).
 - Fix `ChatPage.test.tsx` : ajout mock `../hooks/useEntitlementSnapshot` car `UpgradeCTA` (dans `ChatQuotaBanner`) appelle `useUpgradeHint` → `fetchEntitlementsSnapshot` non fourni dans le mock billing partiel existant.

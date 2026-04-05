@@ -1611,10 +1611,10 @@ describe("NatalChartPage", () => {
       mockUseFeatureAccess.mockReturnValue({
         feature_code: "natal_chart_long",
         granted: true,
-        reason_code: "granted",
+        reason_code: "quota_exhausted",
         access_mode: "quota",
         variant_code: "single_astrologer",
-        usage_states: [],
+        usage_states: [{ exhausted: true, remaining: 0 }],
       } as ReturnType<typeof useFeatureAccess>)
       mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
       mockUseNatalInterpretation.mockReturnValue({
@@ -1646,6 +1646,28 @@ describe("NatalChartPage", () => {
       fireEvent.click(screen.getByRole("button", { name: /Passer à Premium pour plus d'interprétations/i }))
 
       expect(screen.getByText(/Subscription page/i)).toBeInTheDocument()
+    })
+
+    it("garde le CTA d'interprétation complète en Basic tant que le quota n'est pas épuisé", () => {
+      mockUseFeatureAccess.mockReturnValue({
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [{ exhausted: false, remaining: 1 }],
+      } as ReturnType<typeof useFeatureAccess>)
+      mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+
+      expect(
+        screen.getByRole("button", { name: /Obtenir le thème natal complet/i }),
+      ).toBeInTheDocument()
     })
   })
 })

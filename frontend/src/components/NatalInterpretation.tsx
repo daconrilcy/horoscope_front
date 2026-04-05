@@ -60,6 +60,22 @@ interface Props {
 
 type InterpretationTranslations = typeof natalChartTranslations['fr']['interpretation'];
 
+function isFreeShortInterpretation(item: NatalInterpretationListItem): boolean {
+  return item.use_case === "natal_long_free";
+}
+
+function findLatestCompleteInterpretation(
+  items: NatalInterpretationListItem[],
+): NatalInterpretationListItem | null {
+  return items.find((item) => item.level === "complete") ?? null;
+}
+
+function findLatestShortInterpretation(
+  items: NatalInterpretationListItem[],
+): NatalInterpretationListItem | null {
+  return items.find((item) => item.level === "short") ?? null;
+}
+
 export function NatalInterpretationSection({
   chartLoaded,
   chartId,
@@ -120,14 +136,23 @@ export function NatalInterpretationSection({
   const activeQuery = selectedInterpretationId ? idQuery : mainQuery;
   const { data, isLoading, error, refetch } = activeQuery;
   const historyItems = historyQuery.data?.items ?? [];
-  const hasCompleteInterpretation = historyItems.some((item) => item.level === "complete");
+  const latestCompleteInterpretation = findLatestCompleteInterpretation(historyItems);
+  const latestShortInterpretation = findLatestShortInterpretation(historyItems);
+  const hasCompleteInterpretation = latestCompleteInterpretation !== null;
+  const hasPersistedFreeShortInterpretation = historyItems.some(isFreeShortInterpretation);
   const isQuotaUsageExhausted = Boolean(
     longFeatureAccess?.reason_code === "quota_exhausted" ||
       longFeatureAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0),
   );
   const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer";
-  const isCompleteGenerationBlocked =
-    !isLockedFree && (isQuotaUsageExhausted || (isSingleAstrologerPlan && hasCompleteInterpretation));
+  const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer";
+  const shouldPreferLatestCompleteByDefault = isLockedFree || isPremiumPlan;
+  const shouldRefreshShortAfterBasicUpgrade =
+    isSingleAstrologerPlan &&
+    !isLockedFree &&
+    hasPersistedFreeShortInterpretation &&
+    latestShortInterpretation === null;
+  const isCompleteGenerationBlocked = !isLockedFree && isQuotaUsageExhausted;
   const primaryActionLabel = hasCompleteInterpretation
     ? (isLockedFree
         ? t.upgradeToBasicCta
@@ -180,6 +205,54 @@ export function NatalInterpretationSection({
       setUseCaseLevel("complete");
     }
   }, [initialInterpretationId, initialPersonaId, isLockedFree]);
+
+  useEffect(() => {
+    if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) {
+      return;
+    }
+    if (initialPersonaId) {
+      return;
+    }
+    if (historyItems.length === 0) {
+      return;
+    }
+
+    if (shouldPreferLatestCompleteByDefault && latestCompleteInterpretation) {
+      setSelectedInterpretationId((current) =>
+        current === latestCompleteInterpretation.id ? current : latestCompleteInterpretation.id,
+      );
+      setSelectedPersonaId(null);
+      setUseCaseLevel("complete");
+      return;
+    }
+
+    if (isSingleAstrologerPlan) {
+      setSelectedInterpretationId(null);
+      setSelectedPersonaId(null);
+      setUseCaseLevel("short");
+    }
+  }, [
+    historyItems,
+    initialInterpretationId,
+    initialPersonaId,
+    isSingleAstrologerPlan,
+    latestCompleteInterpretation,
+    shouldPreferLatestCompleteByDefault,
+  ]);
+
+  useEffect(() => {
+    if (!shouldRefreshShortAfterBasicUpgrade) {
+      return;
+    }
+    if (selectedInterpretationId !== null) {
+      return;
+    }
+
+    setSelectedPersonaId(null);
+    setUseCaseLevel("short");
+    setForceRefresh(true);
+    setRefreshKey((previous) => previous + 1);
+  }, [selectedInterpretationId, shouldRefreshShortAfterBasicUpgrade]);
 
   useEffect(() => {
     if (selectedTemplateKey) return;
@@ -238,6 +311,7 @@ export function NatalInterpretationSection({
     if (id === null) {
       setUseCaseLevel("short");
       setSelectedPersonaId(null);
+      setForceRefresh(false);
     }
   };
 
@@ -254,6 +328,7 @@ export function NatalInterpretationSection({
           setSelectedInterpretationId(remaining[0].id);
         } else {
           setSelectedInterpretationId(null);
+          setUseCaseLevel("short");
         }
       }
       setShowDeleteConfirm(null);
@@ -268,6 +343,7 @@ export function NatalInterpretationSection({
     selectedInterpretationId ??
     data?.meta.id ??
     historyQuery.data?.items.find((i) => i.created_at === data?.meta.persisted_at)?.id ??
+    latestShortInterpretation?.id ??
     historyQuery.data?.items[0]?.id;
 
   const usedPersonaIds = new Set(

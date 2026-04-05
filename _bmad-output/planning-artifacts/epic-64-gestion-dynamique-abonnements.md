@@ -224,6 +224,14 @@ Validation finale produit :
 - correction complémentaire du quota chat Free : le plan `free` sur `astrologer_chat` est bien limité par le quota canonique `messages` ; après le premier message autorisé, le compteur hebdomadaire passe à `1/1`, l'état remonté par `/v1/entitlements/me` reste cohérent et le second envoi est bloqué en `chat_quota_exceeded`.
 - correction complémentaire du comptage LLM natal : les tokens consommés par les interprétations natales restent journalisés par utilisateur pour l'observabilité, mais ne sont plus déduits du quota `astrologer_chat`.
 - découplage du flux `POST /v1/users/me/natal-chart` et du refresh de baseline utilisateur : la génération du thème natal n'enchaîne plus un recalcul massif de 365 jours en arrière-plan, ce qui supprime la rafale de logs perçue comme une boucle lors du parcours utilisateur.
+- correction complémentaire du parcours natal multi-plan :
+  - lors d'un passage `free -> basic`, un `free_short` persisté n'est plus repris comme version active par défaut ; l'UI force une nouvelle génération `short` alignée avec le parcours Basic ;
+  - pour `free` et `premium`, si une interprétation complète existe déjà, la dernière version complète est affichée par défaut ; sinon l'UI retombe sur la version `short` ;
+  - pour `basic`, le CTA d'interprétation complète reste disponible tant que le quota réel n'est pas épuisé, avec choix de l'astrologue ; une fois le quota épuisé, l'UI bascule vers un CTA Premium ;
+  - la décision "quota épuisé" n'est plus déduite de l'interprétation affichée à l'écran mais uniquement des entitlements canoniques.
+- correction complémentaire du banner quota `/chat` pour `basic` :
+  - le bandeau n'affiche plus les tokens journaliers comme un nombre de "messages restants" ;
+  - tant que le quota n'est pas épuisé, l'UI affiche désormais une jauge horizontale de consommation en pourcentage, sans unité textuelle.
 
 ---
 

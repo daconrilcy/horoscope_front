@@ -204,3 +204,8 @@ Ces deux éléments doivent être rendus **avant ou après la boucle de sections
 - le comportement CTA/upgrade est confirmé conforme pour l'utilisateur free.
 - le tunnel de conversion free → Basic reste cohérent jusqu'à `/settings/subscription`, avec ouverture d'un Checkout Stripe initial quand aucun profil Stripe n'existe encore pour l'utilisateur.
 - pour un utilisateur Basic ayant déjà consommé son quota `single_astrologer`, les CTA de régénération complète ne sont plus des boutons morts : ils redirigent désormais vers `/settings/subscription` avec un libellé Premium explicite afin de proposer un upgrade pour obtenir plus d'interprétations.
+- ajustement complémentaire du parcours multi-plan :
+  - lors d'un passage `free -> basic`, une interprétation `free_short` persistée n'est plus reprise comme vue active ; l'UI force une nouvelle génération `short` adaptée au parcours Basic ;
+  - pour `free` et `premium`, si l'historique contient déjà une interprétation complète, la dernière version complète est sélectionnée par défaut à l'ouverture ;
+  - pour `basic`, le CTA d'interprétation complète reste disponible tant que les entitlements indiquent un quota restant ; le blocage n'est plus déduit du simple fait qu'une interprétation complète est affichée ;
+  - la décision de basculer vers le CTA Premium repose uniquement sur les `usage_states` / `reason_code` canoniques.

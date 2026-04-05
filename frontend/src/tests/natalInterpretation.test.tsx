@@ -90,6 +90,7 @@ const mockHistory = {
       id: 101,
       chart_id: "chart-123",
       level: "short",
+      persona_id: null,
       persona_name: null,
       created_at: "2026-03-04T10:00:00Z",
       use_case: "natal_interpretation_short"
@@ -98,6 +99,7 @@ const mockHistory = {
       id: 102,
       chart_id: "chart-123",
       level: "complete",
+      persona_id: "1",
       persona_name: "Luna Céleste",
       created_at: "2026-03-04T11:00:00Z",
       use_case: "natal_interpretation"
@@ -277,10 +279,10 @@ describe("NatalInterpretationSection", () => {
       longFeatureAccess: {
         feature_code: "natal_chart_long",
         granted: true,
-        reason_code: "granted",
+        reason_code: "quota_exhausted",
         access_mode: "quota",
         variant_code: "single_astrologer",
-        usage_states: [],
+        usage_states: [{ exhausted: true, remaining: 0 }],
       },
     });
 
@@ -346,7 +348,61 @@ describe("NatalInterpretationSection", () => {
     );
   });
 
+  it("affiche par défaut la dernière interprétation complète en premium", () => {
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "multi_astrologer",
+        usage_states: [{ exhausted: false, remaining: 3 }],
+      } as any,
+    });
+
+    expect(useNatalInterpretationById).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interpretationId: 102,
+        enabled: true,
+      }),
+    );
+  });
+
+  it("affiche par défaut la dernière interprétation complète en free", () => {
+    renderSection({
+      isLockedFree: true,
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "free_short",
+        usage_states: [],
+      } as any,
+    });
+
+    expect(useNatalInterpretationById).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interpretationId: 102,
+        enabled: true,
+      }),
+    );
+  });
+
   it("redirige vers l'abonnement Basic au clic sur le CTA free verrouillé", () => {
+    (useNatalInterpretationById as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockInterpretationData,
+        meta: {
+          ...mockInterpretationData.meta,
+          id: 102,
+          level: "complete",
+          persona_name: "Luna Céleste",
+        },
+      },
+    });
+
     render(
       <MemoryRouter initialEntries={["/natal"]}>
         <Routes>
@@ -378,6 +434,50 @@ describe("NatalInterpretationSection", () => {
         allowCompleteWithoutPersona: true,
       }),
     );
+  });
+
+  it("regénère un short Basic quand l'utilisateur vient d'un free_short", async () => {
+    (useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        items: [
+          {
+            id: 202,
+            chart_id: "chart-123",
+            level: "complete",
+            persona_id: null,
+            persona_name: null,
+            created_at: "2026-03-04T10:00:00Z",
+            use_case: "natal_long_free",
+          },
+        ],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      },
+      refetch: vi.fn(),
+    });
+
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [{ exhausted: false, remaining: 1 }],
+      } as any,
+    });
+
+    await waitFor(() => {
+      expect(useNatalInterpretation).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          useCaseLevel: "short",
+          personaId: null,
+          forceRefresh: true,
+        }),
+      );
+    });
   });
 
   it("rafraîchit l'historique quand une nouvelle interprétation persistée n'est pas encore dans la liste", async () => {

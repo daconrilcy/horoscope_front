@@ -23,6 +23,32 @@
   flex: 1;
 }
 
+.chat-quota-banner__meter {
+  appearance: none;
+  flex: 1;
+  min-width: 12rem;
+  height: 0.5rem;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--glass-border);
+}
+
+.chat-quota-banner__meter::-webkit-progress-bar {
+  background: var(--glass-border);
+  border-radius: 999px;
+}
+
+.chat-quota-banner__meter::-webkit-progress-value {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-strong));
+  border-radius: 999px;
+}
+
+.chat-quota-banner__meter::-moz-progress-bar {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-strong));
+  border-radius: 999px;
+}
+
 .chat-quota-banner__reset {
   color: var(--text-2);
   font-size: var(--font-size-xs, 0.75rem);
