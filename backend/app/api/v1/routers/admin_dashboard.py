@@ -44,7 +44,7 @@ def get_kpis_snapshot(
                 UserTokenUsageLogModel.created_at >= now - timedelta(days=7)
             )
         ) or 0
-        
+
         active_30j = db.scalar(
             select(func.count(func.distinct(UserTokenUsageLogModel.user_id))).where(
                 UserTokenUsageLogModel.created_at >= now - timedelta(days=30)
@@ -172,7 +172,6 @@ def get_kpis_flux(
         if granularity == "day":
             date_func = func.date(UserModel.created_at)
         else:  # week
-            # SQLite specific week grouping
             date_func = func.strftime("%Y-W%W", UserModel.created_at)
 
         trend_stmt = (
@@ -207,4 +206,91 @@ def get_kpis_flux(
 
     except Exception as e:
         logger.error("admin_dashboard_kpis_flux_failed error=%s", e)
+        raise
+
+
+@router.get("/kpis-billing")
+def get_kpis_billing(
+    request: Request,
+    period: str = Query(default="30d"),
+    plan: str = Query(default="all"),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """
+    Get billing health KPIs (payment failures, estimated revenue) for a given period and plan.
+    """
+    request_id = resolve_request_id(request)
+    now = datetime.now(UTC)
+
+    # 1. Period calculation
+    if period == "7d":
+        days = 7
+    elif period == "12m":
+        days = 365
+    else:
+        days = 30
+    start_date = now - timedelta(days=days)
+
+    plan_filter = None if plan == "all" else plan
+
+    try:
+        # 2. Payment failures
+        failures_stmt = select(func.count(UserSubscriptionModel.id)).where(
+            UserSubscriptionModel.failure_reason.is_not(None),
+            UserSubscriptionModel.updated_at >= start_date,
+        )
+        if plan_filter:
+            failures_stmt = failures_stmt.join(
+                BillingPlanModel, BillingPlanModel.id == UserSubscriptionModel.plan_id
+            ).where(BillingPlanModel.code == plan_filter)
+        payment_failures = db.scalar(failures_stmt) or 0
+
+        # 3. Revenue by plan (Current Active base applied to period)
+        revenue_stmt = (
+            select(
+                BillingPlanModel.code,
+                func.count(StripeBillingProfileModel.id),
+                func.sum(BillingPlanModel.monthly_price_cents),
+            )
+            .join(
+                StripeBillingProfileModel,
+                StripeBillingProfileModel.entitlement_plan == BillingPlanModel.code,
+            )
+            .where(StripeBillingProfileModel.subscription_status == "active")
+            .group_by(BillingPlanModel.code)
+        )
+        if plan_filter:
+            revenue_stmt = revenue_stmt.where(BillingPlanModel.code == plan_filter)
+
+        revenue_rows = db.execute(revenue_stmt).all()
+
+        revenue_by_plan = []
+        total_mrr_cents = 0
+        for row in revenue_rows:
+            p_code, count, mrr = row
+            total_mrr_cents += mrr
+            revenue_by_plan.append(
+                {
+                    "plan_code": p_code,
+                    "count": count,
+                    "mrr_cents": mrr,
+                    "estimated_period_revenue_cents": int(mrr * (days / 30)),
+                }
+            )
+
+        return {
+            "data": {
+                "period": period,
+                "plan": plan,
+                "payment_failures": payment_failures,
+                "estimated_total_revenue_cents": int(total_mrr_cents * (days / 30)),
+                "revenue_by_plan": revenue_by_plan,
+                "last_updated": now.isoformat(),
+            },
+            "meta": {"request_id": request_id},
+        }
+
+    except Exception as e:
+        logger.error("admin_dashboard_kpis_billing_failed error=%s", e)
         raise

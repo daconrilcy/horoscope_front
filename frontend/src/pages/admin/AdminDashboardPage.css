@@ -78,11 +78,22 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  transition: transform var(--duration-fast), border-color var(--duration-fast);
 }
 
 .kpi-card--highlight {
   border-color: var(--color-primary);
   background: linear-gradient(to bottom right, var(--glass), rgba(var(--color-primary-rgb), 0.05));
+}
+
+.kpi-card--clickable {
+  cursor: pointer;
+}
+
+.kpi-card--clickable:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card);
 }
 
 .kpi-card-title {
@@ -144,11 +155,39 @@
   flex-direction: column;
 }
 
+.visual-card--full {
+  width: 100%;
+}
+
+.visual-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
 .visual-card-title {
-  margin: 0 0 var(--space-6);
+  margin: 0;
   font-size: var(--font-size-base);
   color: var(--color-text-headline);
   font-weight: 600;
+}
+
+.text-button {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 4px;
+  transition: background-color var(--duration-fast);
+}
+
+.text-button:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.1);
+  text-decoration: underline;
 }
 
 .trend-chart-container {
@@ -183,6 +222,45 @@
   justify-content: center;
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+.billing-table-container {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.admin-table th {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-table td {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.admin-table tfoot td {
+  border-top: 2px solid var(--glass-border);
+  border-bottom: none;
+  color: var(--color-text-headline);
+}
+
+.revenue-cell {
+  text-align: right;
 }
 
 .plan-list {
@@ -220,6 +298,13 @@
   color: var(--color-text-muted);
   padding: var(--space-4);
   text-align: center;
+}
+
+.empty-table-state {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: var(--space-8);
 }
 
 .admin-error {

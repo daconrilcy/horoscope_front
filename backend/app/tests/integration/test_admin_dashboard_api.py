@@ -109,3 +109,33 @@ def test_get_kpis_flux_success(admin_token):
     # Admin + old_user
     assert data["new_users"] == 2
     assert len(data["trend_data"]) >= 1
+
+def test_get_kpis_billing_success(admin_token):
+    with db_session_module.SessionLocal() as db:
+        premium_plan = BillingPlanModel(code="premium", display_name="Premium", monthly_price_cents=1999, daily_message_limit=100)
+        db.add(premium_plan)
+        db.commit()
+
+        user1 = UserModel(email="user-fail@test.com", password_hash="x", role="user")
+        db.add(user1)
+        db.commit()
+        
+        # Add a failure
+        sub_fail = UserSubscriptionModel(
+            user_id=user1.id, 
+            plan_id=premium_plan.id, 
+            status="past_due",
+            failure_reason="card_declined",
+            updated_at=datetime.now(UTC)
+        )
+        db.add(sub_fail)
+        db.commit()
+
+    response = client.get("/v1/admin/dashboard/kpis-billing?period=30d", headers={
+        "Authorization": f"Bearer {admin_token}"
+    })
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["payment_failures"] >= 1
+    # revenue might be 0 if no 'active' stripe profiles are set up in this isolated DB
+    assert "revenue_by_plan" in data

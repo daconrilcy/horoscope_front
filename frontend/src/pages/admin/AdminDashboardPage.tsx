@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { apiFetch } from "../../api/client"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
@@ -33,9 +34,44 @@ interface KpisFlux {
   last_updated: string
 }
 
-function KpiCard({ title, value, unit = "", loading = false, highlight = false }: { title: string, value?: string | number, unit?: string, loading?: boolean, highlight?: boolean }) {
+interface KpisBilling {
+  period: string
+  plan: string
+  payment_failures: number
+  estimated_total_revenue_cents: number
+  revenue_by_plan: Array<{
+    plan_code: string
+    count: number
+    mrr_cents: number
+    estimated_period_revenue_cents: number
+  }>
+  last_updated: string
+}
+
+function KpiCard({ 
+  title, 
+  value, 
+  unit = "", 
+  loading = false, 
+  highlight = false,
+  onClick,
+  clickable = false
+}: { 
+  title: string, 
+  value?: string | number, 
+  unit?: string, 
+  loading?: boolean, 
+  highlight?: boolean,
+  onClick?: () => void,
+  clickable?: boolean
+}) {
   return (
-    <div className={`kpi-card ${highlight ? "kpi-card--highlight" : ""}`}>
+    <div 
+      className={`kpi-card ${highlight ? "kpi-card--highlight" : ""} ${clickable ? "kpi-card--clickable" : ""}`}
+      onClick={onClick}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+    >
       <h3 className="kpi-card-title">{title}</h3>
       <div className="kpi-card-value">
         {loading ? (
@@ -103,10 +139,11 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
 
 export function AdminDashboardPage() {
   const token = useAccessTokenSnapshot()
+  const navigate = useNavigate()
   const [period, setPeriod] = useState("30d")
   const [plan, setPlan] = useState("all")
   
-  // 1. Snapshot KPIs (independent of period/plan filters for some parts, but here we keep them separate)
+  // 1. Snapshot KPIs
   const snapshotQuery = useQuery<{ data: KpisSnapshot }>({
     queryKey: ["admin-kpis-snapshot"],
     queryFn: async () => {
@@ -119,7 +156,7 @@ export function AdminDashboardPage() {
     enabled: Boolean(token),
   })
 
-  // 2. Flux KPIs (filtered)
+  // 2. Flux KPIs
   const fluxQuery = useQuery<{ data: KpisFlux }>({
     queryKey: ["admin-kpis-flux", period, plan],
     queryFn: async () => {
@@ -132,8 +169,28 @@ export function AdminDashboardPage() {
     enabled: Boolean(token),
   })
 
+  // 3. Billing KPIs
+  const billingQuery = useQuery<{ data: KpisBilling }>({
+    queryKey: ["admin-kpis-billing", period, plan],
+    queryFn: async () => {
+      const response = await apiFetch(`/v1/admin/dashboard/kpis-billing?period=${period}&plan=${plan}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error("Failed to fetch billing KPIs")
+      return response.json()
+    },
+    enabled: Boolean(token),
+  })
+
   const snapshot = snapshotQuery.data?.data
   const flux = fluxQuery.data?.data
+  const billing = billingQuery.data?.data
+
+  const handleFailureClick = () => {
+    if (billing && billing.payment_failures > 0) {
+      navigate("/admin/users?filter=payment_failure")
+    }
+  }
 
   return (
     <div className="admin-dashboard-page">
@@ -175,8 +232,15 @@ export function AdminDashboardPage() {
         <div className="kpi-grid">
           <KpiCard title="Nouveaux inscrits" value={flux?.new_users} loading={fluxQuery.isLoading} />
           <KpiCard title="Churn (annulations)" value={flux?.churn_count} loading={fluxQuery.isLoading} />
-          <KpiCard title="Échecs paiement" value={flux?.payment_failures_count} loading={fluxQuery.isLoading} />
           <KpiCard title="Revenu estimé" value={flux ? (flux.revenue_cents / 100).toLocaleString() : undefined} unit="€" loading={fluxQuery.isLoading} />
+          <KpiCard 
+            title="Échecs paiement" 
+            value={billing?.payment_failures} 
+            loading={billingQuery.isLoading}
+            clickable={(billing?.payment_failures ?? 0) > 0}
+            onClick={handleFailureClick}
+            highlight={(billing?.payment_failures ?? 0) > 0}
+          />
         </div>
       </section>
 
@@ -202,6 +266,57 @@ export function AdminDashboardPage() {
                   <span className="plan-count">{count}</span>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="dashboard-section">
+        <div className="visual-card visual-card--full">
+          <div className="visual-card-header">
+            <h3 className="visual-card-title">Répartition du revenu estimé</h3>
+            <button className="text-button" onClick={() => navigate("/admin/billing")}>
+              Voir le détail complet →
+            </button>
+          </div>
+          
+          {billingQuery.isLoading ? (
+            <div className="loading-placeholder">Chargement...</div>
+          ) : (
+            <div className="billing-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Plan</th>
+                    <th>Abonnés Actifs</th>
+                    <th>MRR</th>
+                    <th>Revenu estimé ({period})</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {billing?.revenue_by_plan.map((item) => (
+                    <tr key={item.plan_code}>
+                      <td className="plan-name">{item.plan_code}</td>
+                      <td>{item.count}</td>
+                      <td>{(item.mrr_cents / 100).toLocaleString()} €</td>
+                      <td className="revenue-cell">{(item.estimated_period_revenue_cents / 100).toLocaleString()} €</td>
+                    </tr>
+                  ))}
+                  {(!billing || billing.revenue_by_plan.length === 0) && (
+                    <tr>
+                      <td colSpan={4} className="empty-table-state">Aucun revenu sur cette période.</td>
+                    </tr>
+                  )}
+                </tbody>
+                {billing && billing.revenue_by_plan.length > 0 && (
+                  <tfoot>
+                    <tr>
+                      <td colSpan={3}><strong>Total estimé</strong></td>
+                      <td className="revenue-cell"><strong>{(billing.estimated_total_revenue_cents / 100).toLocaleString()} €</strong></td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
             </div>
           )}
         </div>
