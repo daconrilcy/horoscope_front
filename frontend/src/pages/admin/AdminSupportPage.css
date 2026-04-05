@@ -1,0 +1,157 @@
+.admin-support-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.admin-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.tab-button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all var(--duration-fast);
+}
+
+.tab-button:hover {
+  color: var(--color-text-primary);
+}
+
+.tab-button--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  background: var(--glass);
+  padding: var(--space-2) var(--space-4);
+  border-radius: 8px;
+}
+
+.filter-bar label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.filter-bar select {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--glass-border);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.ticket-title {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.link-button {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: var(--color-primary-strong);
+}
+
+.badge--priority-high {
+  background: rgba(255, 0, 0, 0.1);
+  color: #f87171;
+}
+
+.badge--priority-medium {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.badge--priority-low {
+  background: rgba(0, 255, 0, 0.1);
+  color: #4ade80;
+}
+
+.flagged-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .flagged-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.flagged-card {
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.flagged-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+}
+
+.content-type {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.reported-date {
+  color: var(--color-text-muted);
+}
+
+.excerpt {
+  background: rgba(0, 0, 0, 0.2);
+  padding: var(--space-3);
+  border-radius: 8px;
+  font-style: italic;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.flagged-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--glass-border);
+}
+
+.user-info {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.card-actions {
+  display: flex;
+  gap: var(--space-2);
+}

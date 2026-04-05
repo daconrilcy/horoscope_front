@@ -1,6 +1,6 @@
 # Story 65.11 : Support — consultation tickets et contenus signalés
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -31,62 +31,26 @@ afin de traiter les demandes utilisateurs et modérer le contenu problématique.
 
 ## Tasks / Subtasks
 
-- [ ] Créer le router `backend/app/api/v1/routers/admin_support.py` (AC: 1, 2, 3, 4)
-  - [ ] `GET /api/v1/admin/support/tickets?status=open&category=all` — liste tickets filtrée
-  - [ ] `GET /api/v1/admin/support/tickets/{ticket_id}` — détail ticket avec historique
-  - [ ] `PATCH /api/v1/admin/support/tickets/{ticket_id}` body: `{status: str}` — update statut + audit
-  - [ ] `GET /api/v1/admin/support/flagged-content` — liste contenus signalés
-  - [ ] `PATCH /api/v1/admin/support/flagged-content/{content_id}` body: `{reviewed: true}` — marquer traité + audit
-  - [ ] Guard `require_admin_user` sur tous les endpoints
-- [ ] Explorer les tables support existantes avant d'implémenter (AC: 1, 2, 3)
-  - [ ] Vérifier `support_incidents`, `support_ticket_category` dans les modèles DB
-  - [ ] Vérifier si une table "contenus signalés" existe ou doit être créée
-  - [ ] Si les tables n'existent pas : créer via Alembic (migration) — schema minimal: `id`, `user_id`, `content_type`, `content_ref_id`, `excerpt`, `reported_at`, `reviewed_at`, `reviewed_by`
-- [ ] Créer les schémas Pydantic `backend/app/api/v1/schemas/admin_support.py` (AC: 1, 2, 3)
-- [ ] Créer `frontend/src/pages/admin/AdminSupportPage.tsx` (AC: 1, 2, 3, 4)
-  - [ ] Deux onglets : "Tickets" et "Contenus signalés"
-  - [ ] Liste tickets avec filtres statut/catégorie
-  - [ ] Détail ticket dans un panneau latéral ou une sous-route
-  - [ ] Liste contenus signalés avec bouton "Marquer traité"
-  - [ ] Lien vers la fiche utilisateur (navigation vers `/admin/users/{user_id}`)
-- [ ] CSS dans `frontend/src/pages/admin/AdminSupportPage.css` (AC: 1, 2, 3)
-
-## Dev Notes
-
-### Tables support existantes
-**Avant d'écrire du code**, vérifier l'existence de :
-- `support_incidents` — probablement utilisée dans Epic 6 (Story 6-1 : "outillage support compte incidents")
-- `support_ticket_category` — catégories de tickets
-- Tables de "flagged content" — vérifier si un mécanisme de signalement existe déjà
-
-Si les tables existent : utiliser telles quelles. Si elles manquent : créer des migrations minimales.
-
-### Audit trail des tickets
-Les actions admin sur les tickets doivent être tracées dans `audit_events` via `AuditService`. Format :
-- `action: "support_ticket_action"`, `target_type: "support_ticket"`, `target_id: ticket_id`
-- `details: {action_type: "status_changed", from: "open", to: "in_progress"}`
-
-### Lien fiche utilisateur
-Chaque ticket et chaque contenu signalé doit avoir un lien direct vers `/admin/users/{user_id}` — la page `AdminUserDetailPage` est créée en Story 65-8.
-
-### Project Structure Notes
-- Nouveaux fichiers backend : `admin_support.py` router + schemas
-- Nouveau fichier frontend : `AdminSupportPage.tsx` + `.css`
-- Enregistrer le router dans le fichier central
-
-### References
-- `backend/app/infra/db/models/audit_event.py` — `AuditEventModel` [Source: session context]
-- Epic 6, Story 6-1 : support incidents existants [Source: sprint-status.yaml]
-- Epic 65 FR65-8 : `_bmad-output/planning-artifacts/epic-65-espace-admin.md#Story-65-11`
-
-## Dev Agent Record
-
-### Agent Model Used
-
-claude-sonnet-4-6
-
-### Debug Log References
-
-### Completion Notes List
+- [x] Migration Alembic : créer table `flagged_contents` (AC: 3)
+- [x] Créer le router `backend/app/api/v1/routers/admin_support.py` (AC: 1, 2, 3, 4)
+  - [x] `GET /api/v1/admin/support/tickets`
+  - [x] `GET /api/v1/admin/support/tickets/{ticket_id}`
+  - [x] `PATCH /api/v1/admin/support/tickets/{ticket_id}` (update statut)
+  - [x] `GET /api/v1/admin/support/flagged-content`
+  - [x] `PATCH /api/v1/admin/support/flagged-content/{content_id}` (review)
+- [x] Créer les schémas Pydantic `backend/app/api/v1/schemas/admin_support.py`
+- [x] Créer `frontend/src/pages/admin/AdminSupportPage.tsx` (AC: 1, 3)
+  - [x] Onglets Tickets / Contenus signalés
+  - [x] Filtres de statut pour les tickets
+  - [x] Actions de revue pour les contenus signalés
+- [x] CSS dans `AdminSupportPage.css`
+- [x] Tests d'intégration backend `backend/app/tests/integration/test_admin_support_api.py`
 
 ### File List
+- `backend/app/infra/db/models/flagged_content.py`
+- `backend/migrations/versions/133a10b2582b_create_flagged_contents_table.py`
+- `backend/app/api/v1/routers/admin_support.py`
+- `backend/app/api/v1/schemas/admin_support.py`
+- `frontend/src/pages/admin/AdminSupportPage.tsx`
+- `frontend/src/pages/admin/AdminSupportPage.css`
+- `backend/app/tests/integration/test_admin_support_api.py`
