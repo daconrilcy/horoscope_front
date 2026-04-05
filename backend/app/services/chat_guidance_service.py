@@ -32,11 +32,12 @@ from app.services.ai_engine_adapter import (
     assess_off_scope,
     map_adapter_error_to_codes,
 )
-from app.services.chat_entitlement_gate import ChatEntitlementResult
+from app.services.chat_entitlement_gate import ChatEntitlementResult, ChatQuotaExceededError
 from app.services.current_context import build_current_prompt_context
 from app.services.entitlement_types import QuotaDefinition
 from app.services.llm_token_usage_service import LlmTokenUsageService
 from app.services.natal_interpretation_service import _detect_degraded_mode, build_chat_natal_hint
+from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
 )
@@ -548,6 +549,44 @@ class ChatGuidanceService:
         )
 
     @staticmethod
+    def _consume_non_token_quotas(
+        db: Session,
+        *,
+        user_id: int,
+        entitlement_result: ChatEntitlementResult | None = None,
+    ) -> None:
+        if entitlement_result is None or not entitlement_result.usage_states:
+            return
+
+        non_token_states = sorted(
+            (state for state in entitlement_result.usage_states if state.quota_key != "tokens"),
+            key=lambda state: (state.period_unit, state.period_value, state.quota_limit),
+        )
+        for state in non_token_states:
+            quota = QuotaDefinition(
+                quota_key=state.quota_key,
+                quota_limit=state.quota_limit,
+                period_unit=state.period_unit,
+                period_value=state.period_value,
+                reset_mode=state.reset_mode,
+            )
+            try:
+                QuotaUsageService.consume(
+                    db,
+                    user_id=user_id,
+                    feature_code="astrologer_chat",
+                    quota=quota,
+                    amount=1,
+                )
+            except QuotaExhaustedError as exc:
+                raise ChatQuotaExceededError(
+                    quota_key=exc.quota_key,
+                    used=exc.used,
+                    limit=exc.limit,
+                    window_end=state.window_end,
+                ) from exc
+
+    @staticmethod
     def send_message(
         db: Session,
         *,
@@ -945,7 +984,14 @@ class ChatGuidanceService:
                         user_message.created_at = user_message_created_at
                         user_message.client_message_id = client_message_id
 
-                    # 2. Record Tokens
+                    # 2. Consume non-token quotas such as free-tier message caps.
+                    ChatGuidanceService._consume_non_token_quotas(
+                        db,
+                        user_id=user_id,
+                        entitlement_result=entitlement_result,
+                    )
+
+                    # 3. Record Tokens
                     ChatGuidanceService._record_tokens(
                         db,
                         user_id=user_id,
@@ -953,7 +999,7 @@ class ChatGuidanceService:
                         entitlement_result=entitlement_result,
                     )
 
-                    # 3. Off-scope recovery
+                    # 4. Off-scope recovery
                     (
                         assistant_content,
                         fallback_used,
@@ -970,7 +1016,7 @@ class ChatGuidanceService:
                         entitlement_result=entitlement_result,
                     )
 
-                    # 4. Create Assistant Message
+                    # 5. Create Assistant Message
                     assistant_message = repo.create_message(
                         conversation_id=conversation.id,
                         role="assistant",

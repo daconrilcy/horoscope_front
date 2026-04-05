@@ -129,12 +129,20 @@ Le `access_mode === "quota"` indique que le plan a un quota — afficher le bann
   - un premier message Basic dont le coût réel LLM dépasse le quota journalier n'est plus rejeté après génération ;
   - le compteur canonique est maintenant saturé à la limite disponible au lieu de rollbacker toute la transaction ;
   - le message utilisateur et la réponse assistant sont donc bien persistés, puis le message suivant est bloqué normalement avec `chat_quota_exceeded`.
+- Correction backend du débit `messages` pour le plan Free :
+  - le gate canonique contrôlait bien l'accès avant appel LLM, mais aucun compteur `messages` n'était consommé après un tour réussi ;
+  - `ChatGuidanceService` consomme désormais aussi les quotas non-token dans la même transaction que l'enregistrement du message utilisateur et de la réponse assistant ;
+  - le comportement attendu est restauré : premier message free autorisé, état weekly à `1/1`, second envoi bloqué avec `quota_key=messages`.
 - Correction du paradoxe produit `0 utilisé` + `quota dépassé` :
   - auparavant le quota était vérifié avant appel LLM puis débité après coup, ce qui pouvait annuler toute la transaction ;
   - désormais l'état affiché dans `/chat` reste cohérent avec la réalité du dernier échange.
 - Séparation explicite des usages LLM :
   - les interprétations natales journalisent leurs tokens par utilisateur pour l'observabilité ;
   - ces tokens ne consomment plus le quota `astrologer_chat`, réservé aux échanges de chat.
+
+- Hardening backend complémentaire documenté :
+  - `backend/app/services/chat_guidance_service.py` prend désormais en charge la consommation transactionnelle des quotas non-token de `astrologer_chat` ;
+  - `backend/app/tests/integration/test_chat_api.py` vérifie explicitement le contrat free `messages=1` : premier message accepté, second message refusé en `429`.
 
 ### Désactivation de la saisie au quota épuisé
 

@@ -272,6 +272,17 @@ def _activate_entry_plan(access_token: str, idempotency_key: str) -> None:
     )
 
 
+def _activate_free_plan() -> None:
+    user_id = _get_chat_api_user_id()
+    _set_active_subscription(user_id, "free")
+    _seed_canonical_chat_binding(
+        plan_code="free",
+        access_mode=AccessMode.QUOTA,
+        is_enabled=True,
+        quotas=[("messages", 1, PeriodUnit.WEEK)],
+    )
+
+
 def _register_user_with_role_and_token(email: str, role: str) -> str:
     with SessionLocal() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
@@ -521,6 +532,44 @@ def test_chat_message_consumption_is_reflected_in_entitlements_status() -> None:
     # used should be > 0 tokens
     assert chat_ent["usage_states"][0]["used"] > 0
     assert chat_ent["usage_states"][0]["quota_key"] == "tokens"
+
+
+def test_free_chat_message_limit_consumes_single_message_quota() -> None:
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+    _activate_free_plan()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    first = client.post(
+        "/v1/chat/messages",
+        headers=headers,
+        json={"message": "Premier message free"},
+    )
+    assert first.status_code == 200
+
+    entitlements = client.get("/v1/entitlements/me", headers=headers)
+    assert entitlements.status_code == 200
+    chat_ent = next(
+        f for f in entitlements.json()["data"]["features"] if f["feature_code"] == "astrologer_chat"
+    )
+    week_state = next(
+        state
+        for state in chat_ent["usage_states"]
+        if state["quota_key"] == "messages" and state["period_unit"] == "week"
+    )
+    assert week_state["used"] == 1
+    assert week_state["remaining"] == 0
+    assert week_state["exhausted"] is True
+
+    second = client.post(
+        "/v1/chat/messages",
+        headers=headers,
+        json={"message": "Second message free"},
+    )
+    assert second.status_code == 429
+    payload = second.json()["error"]
+    assert payload["code"] == "chat_quota_exceeded"
+    assert payload["details"]["quota_key"] == "messages"
 
 
 def test_chat_enforcement_uses_updated_limit_after_plan_change() -> None:

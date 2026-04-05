@@ -219,6 +219,7 @@ Validation finale produit :
   - le comportement reste inchangé pour les utilisateurs Basic/Premium, qui conservent l'accès direct aux routes `/consultations/new`.
 - correction complémentaire du flux Basic sur `/natal` : une fois le quota d'interprétation complète consommé, l'interface n'autorise plus de nouvelle génération et remplace le bouton inactif par un CTA explicite vers Premium pour obtenir davantage de quota.
 - correction complémentaire du quota chat Basic : un premier message dont le coût réel dépasse le budget journalier en tokens ne provoque plus un rollback incohérent (`0 utilisé` mais `quota dépassé`) ; le compteur est désormais saturé à la limite puis l'échange suivant est bloqué normalement.
+- correction complémentaire du quota chat Free : le plan `free` sur `astrologer_chat` est bien limité par le quota canonique `messages` ; après le premier message autorisé, le compteur hebdomadaire passe à `1/1`, l'état remonté par `/v1/entitlements/me` reste cohérent et le second envoi est bloqué en `chat_quota_exceeded`.
 - correction complémentaire du comptage LLM natal : les tokens consommés par les interprétations natales restent journalisés par utilisateur pour l'observabilité, mais ne sont plus déduits du quota `astrologer_chat`.
 - découplage du flux `POST /v1/users/me/natal-chart` et du refresh de baseline utilisateur : la génération du thème natal n'enchaîne plus un recalcul massif de 365 jours en arrière-plan, ce qui supprime la rafale de logs perçue comme une boucle lors du parcours utilisateur.
 
@@ -251,6 +252,7 @@ backend/app/services/prediction_compute_runner.py  ← 64.2 : sélection variant
 backend/app/services/natal_interpretation_service_v2.py ← 64.3 : variant free
 backend/app/services/llm_token_usage_service.py ← hardening : distinction entre journalisation LLM et consommation quota
 backend/app/services/quota_usage_service.py      ← hardening : consommation capée pour saturation contrôlée des quotas chat tokens
+backend/app/services/chat_guidance_service.py    ← hardening : consommation transactionnelle des quotas non-token du chat (`messages` pour free)
 backend/app/api/v1/schemas/entitlements.py         ← 64.4 : UpgradeHint + champ additionnel
 backend/app/services/effective_entitlement_resolver_service.py ← 64.4 : compute hints
 backend/app/api/v1/routers/chat.py                ← 64.4 : consommation correcte des quotas canoniques
