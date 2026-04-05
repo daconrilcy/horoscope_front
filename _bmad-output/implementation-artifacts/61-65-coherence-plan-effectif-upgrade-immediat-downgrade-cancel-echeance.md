@@ -221,6 +221,17 @@ elif not profile.cancel_at_period_end:
     profile.pending_cancellation_effective_at = None
 ```
 
+### Hardening complémentaire post-story
+
+- Le contrat de cohérence temporelle ne dépend plus uniquement des webhooks subscription "complets".
+- Lors d'un `checkout.session.completed` portant déjà un `subscription_id`, le backend récupère
+  désormais la subscription Stripe associée pour éviter de laisser `current_period_start` et
+  `current_period_end` à `null` dans `stripe_billing_profiles`.
+- Ce durcissement garantit que :
+  - la période d'effet réelle Stripe est connue immédiatement après un upgrade ou une souscription ;
+  - les fenêtres de quotas adossées au profil Stripe restent alignées sur la période commerciale ;
+  - les utilisateurs ne basculent plus par défaut sur des fenêtres calendaires faute de snapshot complet.
+
 ### T4 — `_to_stripe_subscription_data` enrichi
 
 ```python

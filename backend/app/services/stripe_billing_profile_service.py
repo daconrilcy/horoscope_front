@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
+from app.integrations.stripe_client import get_stripe_client
 
 logger = logging.getLogger(__name__)
 
@@ -201,74 +202,16 @@ class StripeBillingProfileService:
             profile.stripe_customer_id = data_obj["id"]
 
         if object_type == "subscription":
-            profile.stripe_subscription_id = data_obj.get("id")
-            profile.subscription_status = data_obj.get("status")
-            cancel_at_ts = data_obj.get("cancel_at")
-            cancel_at_period_end_flag = bool(data_obj.get("cancel_at_period_end") or False)
+            StripeBillingProfileService._apply_subscription_snapshot(profile, data_obj)
 
-            period_start_ts = data_obj.get("current_period_start")
-            if period_start_ts:
-                profile.current_period_start = datetime.fromtimestamp(
-                    period_start_ts, tz=timezone.utc
-                )
-
-            period_end_ts = data_obj.get("current_period_end")
-            if period_end_ts:
-                profile.current_period_end = datetime.fromtimestamp(
-                    period_end_ts, tz=timezone.utc
-                )
-
-            # Stripe peut planifier une résiliation via cancel_at_period_end=true
-            # ou via un cancel_at explicite tout en gardant cancel_at_period_end=false.
-            # L'application doit exposer les deux cas comme une résiliation planifiée.
-            has_scheduled_cancellation = cancel_at_period_end_flag or bool(cancel_at_ts)
-            profile.cancel_at_period_end = has_scheduled_cancellation
-
-            # Gestion de l'annulation programmée (AC3)
-            if cancel_at_ts:
-                profile.pending_cancellation_effective_at = datetime.fromtimestamp(
-                    cancel_at_ts, tz=timezone.utc
-                )
-            elif has_scheduled_cancellation and profile.current_period_end:
-                profile.pending_cancellation_effective_at = profile.current_period_end
-            else:
-                profile.pending_cancellation_effective_at = None
-
-            # Détection du downgrade programmé via Subscription Schedule (AC2, T2)
-            schedule_id = data_obj.get("schedule")
-            if schedule_id and profile.subscription_status != "canceled":
-                try:
-                    # Import retardé pour éviter les dépendances circulaires
-                    from app.integrations.stripe_client import get_stripe_client
-
-                    client = get_stripe_client()
-                    if client:
-                        schedule = client.subscription_schedules.retrieve(schedule_id)
-                        StripeBillingProfileService._update_schedule_fields(profile, schedule)
-                except Exception as e:
-                    logger.warning(
-                        "stripe_billing: failed to retrieve subscription schedule %s: %s",
-                        schedule_id,
-                        e,
-                    )
-            else:
-                profile.scheduled_plan_code = None
-                profile.scheduled_change_effective_at = None
-
-            # Nettoyage complet si suppression effective (AC4, T3)
-            if profile.subscription_status == "canceled":
-                profile.scheduled_plan_code = None
-                profile.scheduled_change_effective_at = None
-                profile.pending_cancellation_effective_at = None
-                profile.cancel_at_period_end = False
-
-            # Extraction du Price ID (premier item de la subscription)
-            # Garder la valeur existante si l'event ne fournit pas de price.id valide
-            items = data_obj.get("items", {}).get("data", [])
-            if items:
-                price_id = items[0].get("price", {}).get("id")
-                if price_id:
-                    profile.stripe_price_id = price_id
+        elif object_type == "checkout.session":
+            profile.stripe_subscription_id = (
+                data_obj.get("subscription") or profile.stripe_subscription_id
+            )
+            StripeBillingProfileService._hydrate_subscription_snapshot_from_checkout(
+                profile,
+                data_obj,
+            )
 
         elif object_type == "subscription_schedule":
             # Mise à jour directe depuis l'objet schedule
@@ -300,6 +243,112 @@ class StripeBillingProfileService:
 
         db.flush()
         return profile
+
+    @staticmethod
+    def _apply_subscription_snapshot(
+        profile: StripeBillingProfileModel,
+        subscription_data: dict,
+    ) -> None:
+        profile.stripe_subscription_id = (
+            subscription_data.get("id") or profile.stripe_subscription_id
+        )
+        profile.subscription_status = subscription_data.get("status") or profile.subscription_status
+        cancel_at_ts = subscription_data.get("cancel_at")
+        cancel_at_period_end_flag = bool(subscription_data.get("cancel_at_period_end") or False)
+
+        period_start_ts = subscription_data.get("current_period_start")
+        if period_start_ts:
+            profile.current_period_start = datetime.fromtimestamp(period_start_ts, tz=timezone.utc)
+
+        period_end_ts = subscription_data.get("current_period_end")
+        if period_end_ts:
+            profile.current_period_end = datetime.fromtimestamp(period_end_ts, tz=timezone.utc)
+
+        has_scheduled_cancellation = cancel_at_period_end_flag or bool(cancel_at_ts)
+        profile.cancel_at_period_end = has_scheduled_cancellation
+
+        if cancel_at_ts:
+            profile.pending_cancellation_effective_at = datetime.fromtimestamp(
+                cancel_at_ts, tz=timezone.utc
+            )
+        elif has_scheduled_cancellation and profile.current_period_end:
+            profile.pending_cancellation_effective_at = profile.current_period_end
+        else:
+            profile.pending_cancellation_effective_at = None
+
+        schedule_id = subscription_data.get("schedule")
+        if schedule_id and profile.subscription_status != "canceled":
+            try:
+                client = get_stripe_client()
+                if client:
+                    schedule = client.subscription_schedules.retrieve(schedule_id)
+                    StripeBillingProfileService._update_schedule_fields(profile, schedule)
+            except Exception as e:
+                logger.warning(
+                    "stripe_billing: failed to retrieve subscription schedule %s: %s",
+                    schedule_id,
+                    e,
+                )
+        else:
+            profile.scheduled_plan_code = None
+            profile.scheduled_change_effective_at = None
+
+        if profile.subscription_status == "canceled":
+            profile.scheduled_plan_code = None
+            profile.scheduled_change_effective_at = None
+            profile.pending_cancellation_effective_at = None
+            profile.cancel_at_period_end = False
+
+        items = subscription_data.get("items", {}).get("data", [])
+        if items:
+            price_id = items[0].get("price", {}).get("id")
+            if price_id:
+                profile.stripe_price_id = price_id
+
+    @staticmethod
+    def _hydrate_subscription_snapshot_from_checkout(
+        profile: StripeBillingProfileModel,
+        checkout_session_data: dict,
+    ) -> None:
+        subscription_id = checkout_session_data.get("subscription")
+        if not subscription_id:
+            return
+
+        if (
+            profile.current_period_start is not None
+            and profile.current_period_end is not None
+            and profile.subscription_status is not None
+        ):
+            return
+
+        try:
+            client = get_stripe_client()
+            if client is None:
+                return
+            subscription = client.subscriptions.retrieve(subscription_id)
+            if hasattr(subscription, "to_dict"):
+                subscription_data = subscription.to_dict()
+            elif isinstance(subscription, dict):
+                subscription_data = subscription
+            else:
+                to_dict_recursive = getattr(subscription, "to_dict_recursive", None)
+                subscription_data = (
+                    to_dict_recursive()
+                    if callable(to_dict_recursive)
+                    else {}
+                )
+            if isinstance(subscription_data, dict) and subscription_data:
+                StripeBillingProfileService._apply_subscription_snapshot(
+                    profile,
+                    subscription_data,
+                )
+        except Exception as exc:
+            logger.warning(
+                "stripe_billing: failed to hydrate subscription snapshot from checkout session "
+                "subscription_id=%s: %s",
+                subscription_id,
+                exc,
+            )
 
     @staticmethod
     def _update_schedule_fields(profile: StripeBillingProfileModel, schedule: dict) -> None:

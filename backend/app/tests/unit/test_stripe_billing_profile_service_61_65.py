@@ -160,7 +160,7 @@ def test_update_from_event_payload_cancel_cleanup(db: Session, user_id: int):
     assert profile.scheduled_change_effective_at is None
 
 
-@patch("app.integrations.stripe_client.get_stripe_client")
+@patch("app.services.stripe_billing_profile_service.get_stripe_client")
 def test_update_from_event_payload_downgrade_schedule(mock_get_client, db: Session, user_id: int):
     # Mock Stripe Client
     mock_client = MagicMock()

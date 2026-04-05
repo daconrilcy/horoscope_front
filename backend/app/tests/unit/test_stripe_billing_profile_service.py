@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -217,6 +217,81 @@ def test_transition_entitlement_plan(db: Session, user_id: int):
         }
         StripeBillingProfileService.update_from_event_payload(db, user_id, event_canceled)
         assert StripeBillingProfileService.get_entitlement_plan(db, user_id) == "free"
+
+
+@patch("app.services.stripe_billing_profile_service.get_stripe_client")
+def test_checkout_session_hydrates_subscription_period_fields(
+    mock_get_client, db: Session, user_id: int
+):
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    mock_client.subscriptions.retrieve.return_value = {
+        "object": "subscription",
+        "id": "sub_checkout_123",
+        "status": "active",
+        "customer": "cus_checkout_123",
+        "current_period_start": 1711238400,
+        "current_period_end": 1713916800,
+        "items": {"data": [{"price": {"id": "price_basic"}}]},
+    }
+
+    event_data = {
+        "id": "evt_checkout_hydrate",
+        "type": "checkout.session.completed",
+        "created": 1711238500,
+        "data": {
+            "object": {
+                "object": "checkout.session",
+                "id": "cs_123",
+                "customer": "cus_checkout_123",
+                "subscription": "sub_checkout_123",
+            }
+        },
+    }
+
+    with patch.dict(STRIPE_PRICE_ENTITLEMENT_MAP, {"price_basic": "basic"}):
+        profile = StripeBillingProfileService.update_from_event_payload(db, user_id, event_data)
+        db.commit()
+        db.refresh(profile)
+
+    assert profile.stripe_customer_id == "cus_checkout_123"
+    assert profile.stripe_subscription_id == "sub_checkout_123"
+    assert profile.subscription_status == "active"
+    assert profile.entitlement_plan == "basic"
+    assert profile.current_period_start is not None
+    assert profile.current_period_end is not None
+
+
+@patch("app.services.stripe_billing_profile_service.get_stripe_client")
+def test_checkout_session_keeps_partial_profile_when_subscription_hydration_fails(
+    mock_get_client, db: Session, user_id: int
+):
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    mock_client.subscriptions.retrieve.side_effect = RuntimeError("stripe down")
+
+    event_data = {
+        "id": "evt_checkout_partial",
+        "type": "checkout.session.completed",
+        "created": 1711238500,
+        "data": {
+            "object": {
+                "object": "checkout.session",
+                "id": "cs_456",
+                "customer": "cus_partial_123",
+                "subscription": "sub_partial_123",
+            }
+        },
+    }
+
+    profile = StripeBillingProfileService.update_from_event_payload(db, user_id, event_data)
+    db.commit()
+    db.refresh(profile)
+
+    assert profile.stripe_customer_id == "cus_partial_123"
+    assert profile.stripe_subscription_id == "sub_partial_123"
+    assert profile.current_period_start is None
+    assert profile.current_period_end is None
 
 
 def test_price_entitlement_map_populated_from_settings():

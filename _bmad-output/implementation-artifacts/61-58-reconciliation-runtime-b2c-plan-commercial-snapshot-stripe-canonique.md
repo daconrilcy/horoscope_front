@@ -208,6 +208,24 @@ Le comportement attendu par statut Stripe :
 - `docs/billing-self-service-mvp.md`
 - `docs/billing-trials-and-first-payment.md`
 
+### Hardening complémentaire post-story
+
+- Le webhook `checkout.session.completed` peut créer un profil Stripe local partiel
+  (`stripe_customer_id`, `stripe_subscription_id`) avant qu'un événement `customer.subscription.updated`
+  n'arrive avec un snapshot complet.
+- Le service de billing profile hydrate désormais immédiatement le snapshot local depuis la subscription Stripe
+  liée à la Checkout Session quand elle est disponible.
+- Cette hydratation renseigne sans attendre :
+  - `subscription_status`
+  - `stripe_price_id`
+  - `current_period_start`
+  - `current_period_end`
+  - `cancel_at_period_end`
+  - `pending_cancellation_effective_at`
+- Conséquence produit : les quotas alignés sur la période d'abonnement ne retombent plus en mode
+  "fenêtres calendaires simples" uniquement parce que le profil local n'avait pas encore reçu son
+  enrichissement de subscription.
+
 ### Tests attendus
 
 - `pytest -q app/tests/integration/test_billing_api.py`

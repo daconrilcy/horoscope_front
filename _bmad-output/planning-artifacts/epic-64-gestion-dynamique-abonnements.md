@@ -233,6 +233,13 @@ Validation finale produit :
   - le bandeau n'affiche plus les tokens journaliers comme un nombre de "messages restants" ;
   - tant que le quota n'est pas épuisé, l'UI affiche désormais une jauge horizontale de consommation en pourcentage, sans unité textuelle.
   - le quota canonique `astrologer_chat` du plan `basic` est désormais calibré à `10 000 tokens/jour`, `50 000/semaine` et `200 000/mois`.
+- hardening complémentaire de la cohérence Stripe locale :
+  - lors d'un `checkout.session.completed`, le backend hydrate désormais immédiatement le
+    `StripeBillingProfile` depuis la subscription Stripe liée quand elle est déjà disponible ;
+  - les champs `current_period_start` et `current_period_end` ne restent plus à `null` dans ce
+    parcours intermédiaire ;
+  - les fenêtres de quotas adossées au profil Stripe restent ainsi alignées sur la vraie période
+    commerciale, au lieu de retomber en mode calendaire par défaut.
 
 ---
 
