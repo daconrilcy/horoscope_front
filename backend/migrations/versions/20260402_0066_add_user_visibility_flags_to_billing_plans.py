@@ -52,6 +52,7 @@ def upgrade() -> None:
         )
     )
 
+
 def downgrade() -> None:
     op.drop_column("billing_plans", "is_available_to_users")
     op.drop_column("billing_plans", "is_visible_to_users")

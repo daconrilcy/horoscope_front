@@ -188,7 +188,7 @@ def send_chat_message(
             result=entitlement_result,
         )
         logger.info("Message sent, preparing final dict...")
-        
+
         # Plain dict to bypass any return validation
         res = {
             "data": {

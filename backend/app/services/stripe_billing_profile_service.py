@@ -239,6 +239,7 @@ class StripeBillingProfileService:
         # 5. Invalidation du cache de facturation (Story 61.58)
         # Import retardé pour éviter les dépendances circulaires
         from app.services.billing_service import BillingService
+
         BillingService._invalidate_cached_subscription_status(user_id)
 
         db.flush()
@@ -332,11 +333,7 @@ class StripeBillingProfileService:
                 subscription_data = subscription
             else:
                 to_dict_recursive = getattr(subscription, "to_dict_recursive", None)
-                subscription_data = (
-                    to_dict_recursive()
-                    if callable(to_dict_recursive)
-                    else {}
-                )
+                subscription_data = to_dict_recursive() if callable(to_dict_recursive) else {}
             if isinstance(subscription_data, dict) and subscription_data:
                 StripeBillingProfileService._apply_subscription_snapshot(
                     profile,

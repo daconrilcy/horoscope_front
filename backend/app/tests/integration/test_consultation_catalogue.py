@@ -23,7 +23,6 @@ def mock_consultation_gate():
         yield mock
 
 
-
 def _cleanup_catalogue():
     with SessionLocal() as db:
         db.query(ConsultationTemplateModel).delete()

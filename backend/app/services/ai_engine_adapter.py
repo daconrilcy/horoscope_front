@@ -360,7 +360,9 @@ def map_adapter_error_to_codes(
 
 ChatGeneratorFunc = Callable[
     [list[dict[str, str]], dict[str, str | None], int, str, str, str],
-    Awaitable[Any],  # Returns GatewayResult (Any to avoid circular import if needed, but it's imported now)
+    Awaitable[
+        Any
+    ],  # Returns GatewayResult (Any to avoid circular import if needed, but it's imported now)
 ]
 GuidanceGeneratorFunc = Callable[
     [str, dict[str, str | None], int, str, str, str],
@@ -473,9 +475,11 @@ class AIEngineAdapter:
                 trace_id=trace_id,
                 raw_output=raw_text,
                 usage=UsageInfo(
-                    input_tokens=AIEngineAdapter.estimate_tokens(" ".join([m["content"] for m in messages])),
+                    input_tokens=AIEngineAdapter.estimate_tokens(
+                        " ".join([m["content"] for m in messages])
+                    ),
                     output_tokens=AIEngineAdapter.estimate_tokens(raw_text),
-                    total_tokens=0, # total will be calculated later or we can set it
+                    total_tokens=0,  # total will be calculated later or we can set it
                 ),
                 meta=GatewayMeta(latency_ms=0, model="test-model"),
             )
@@ -551,7 +555,9 @@ class AIEngineAdapter:
                     trace_id=trace_id,
                     raw_output=fallback_text,
                     usage=UsageInfo(
-                        input_tokens=AIEngineAdapter.estimate_tokens(" ".join([m["content"] for m in messages])),
+                        input_tokens=AIEngineAdapter.estimate_tokens(
+                            " ".join([m["content"] for m in messages])
+                        ),
                         output_tokens=AIEngineAdapter.estimate_tokens(fallback_text),
                     ),
                     meta=GatewayMeta(latency_ms=0, model="test-model"),

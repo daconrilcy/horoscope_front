@@ -170,14 +170,20 @@ class CanonicalEntitlementAlertQueryService:
             handling_model.handling_status.label("handling_status"),
         ).subquery("h")
 
-        rule_matches_expr = select(literal(1)).where(
-            RuleModel.is_active.is_(True),
-            RuleModel.alert_kind == base.c.alert_kind,
-            (RuleModel.feature_code.is_(None))
-            | (RuleModel.feature_code == base.c.feature_code_snapshot),
-            (RuleModel.plan_code.is_(None)) | (RuleModel.plan_code == base.c.plan_code_snapshot),
-            (RuleModel.actor_type.is_(None)) | (RuleModel.actor_type == base.c.actor_type_snapshot),
-        ).exists()
+        rule_matches_expr = (
+            select(literal(1))
+            .where(
+                RuleModel.is_active.is_(True),
+                RuleModel.alert_kind == base.c.alert_kind,
+                (RuleModel.feature_code.is_(None))
+                | (RuleModel.feature_code == base.c.feature_code_snapshot),
+                (RuleModel.plan_code.is_(None))
+                | (RuleModel.plan_code == base.c.plan_code_snapshot),
+                (RuleModel.actor_type.is_(None))
+                | (RuleModel.actor_type == base.c.actor_type_snapshot),
+            )
+            .exists()
+        )
 
         joined = (
             select(

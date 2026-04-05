@@ -49,9 +49,7 @@ class CanonicalEntitlementAlertSuppressionRuleService:
         *,
         active_rules: list[CanonicalEntitlementMutationAlertSuppressionRuleModel],
     ) -> MatchedAlertSuppressionRule | None:
-        candidate_rules = [
-            rule for rule in active_rules if rule.alert_kind == event.alert_kind
-        ]
+        candidate_rules = [rule for rule in active_rules if rule.alert_kind == event.alert_kind]
 
         best_rule: CanonicalEntitlementMutationAlertSuppressionRuleModel | None = None
         best_score = -1

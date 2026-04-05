@@ -598,7 +598,7 @@ class ChatGuidanceService:
         client_message_id: str | None = None,
         entitlement_result: ChatEntitlementResult | None = None,
     ) -> ChatReplyData:
-        """ wrapper synchrone """
+        """wrapper synchrone"""
         try:
             return asyncio.run(
                 ChatGuidanceService.send_message_async(
@@ -622,9 +622,7 @@ class ChatGuidanceService:
         from app.infra.db.models.llm_persona import LlmPersonaModel
 
         stmt = (
-            select(LlmPersonaModel.id)
-            .where(LlmPersonaModel.name == "Astrologue Standard")
-            .limit(1)
+            select(LlmPersonaModel.id).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
         )
         persona_id = db.scalar(stmt)
         if persona_id:
@@ -729,7 +727,7 @@ class ChatGuidanceService:
         trace_id = trace_id or request_id
         raw_user_message = ChatGuidanceService._validate_user_message(message)
         normalized_message = ChatGuidanceService._anonymize_or_raise(raw_user_message)
-        
+
         increment_counter("conversation_messages_total", 1.0)
         increment_counter("conversation_chat_messages_total", 1.0)
         repo = ChatRepository(db)
@@ -845,6 +843,7 @@ class ChatGuidanceService:
         persona = ChatGuidanceService._load_persona_sync(db, conversation.persona_id)
         persona_profile_code = persona.name.lower().replace(" ", "-")
         from app.services.persona_config_service import PersonaConfigService
+
         monitoring_persona_code = PersonaConfigService.get_active(db).profile_code
         increment_counter(
             f"conversation_messages_total|persona_profile={monitoring_persona_code}",
@@ -866,7 +865,7 @@ class ChatGuidanceService:
         # If not in DB, we will add 1 message (the current one), so we only take
         # window_messages - 1 from history.
         history_limit = window_messages if in_db else window_messages - 1
-        
+
         # Take the LATEST messages from the history
         history_to_process = recent_messages[-history_limit:] if history_limit > 0 else []
 
@@ -880,7 +879,7 @@ class ChatGuidanceService:
 
         chat_messages = [{"role": role, "content": content} for _, role, content in selected]
         chat_messages.reverse()
-        
+
         if not in_db:
             chat_messages.append({"role": "user", "content": normalized_message})
             msg_count = len(selected) + 1
@@ -904,8 +903,8 @@ class ChatGuidanceService:
         current_datetime_str = None
         opening_user_profile = None
         user_model = UserRepository(db).get_by_id(user_id)
-        is_first_user_turn = (msg_count <= 1)
-        
+        is_first_user_turn = msg_count <= 1
+
         try:
             birth_profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
             current_context = build_current_prompt_context(birth_profile)
@@ -977,6 +976,7 @@ class ChatGuidanceService:
                     else:
                         # Re-fetch or use existing metadata (dummy object for compatibility)
                         from types import SimpleNamespace
+
                         user_message = SimpleNamespace()
                         user_message.id = user_message_id
                         user_message.role = "user"

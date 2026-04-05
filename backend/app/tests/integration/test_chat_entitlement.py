@@ -86,7 +86,6 @@ def test_send_message_canonical_quota_ok(mock_user):
             "app.api.v1.routers.chat.ChatEntitlementGate.check_access",
             return_value=mock_result,
         ),
-
         patch(
             "app.services.chat_guidance_service.ChatGuidanceService.send_message",
             return_value=mock_reply,
@@ -145,7 +144,6 @@ def test_send_message_canonical_unlimited_ok(mock_user):
             "app.api.v1.routers.chat.ChatEntitlementGate.check_access",
             return_value=mock_result,
         ),
-
         patch(
             "app.services.chat_guidance_service.ChatGuidanceService.send_message",
             return_value=mock_reply,

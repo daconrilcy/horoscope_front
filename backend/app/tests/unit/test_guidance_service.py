@@ -737,18 +737,20 @@ async def test_guidance_recovery_records_tokens_for_each_recovery_attempt(monkey
     )
 
     with SessionLocal() as db:
-        recovered_text, fallback_used, metadata = (
-            await GuidanceService._apply_off_scope_recovery_async(
-                db=db,
-                use_case="guidance_contextual",
-                context={"objective": "Tester la facturation"},
-                user_id=1,
-                request_id="rid-guidance",
-                trace_id="trace-guidance",
-                assistant_content="[off_scope] reponse initiale",
-                persona_profile_code="legacy-default",
-                entitlement_result=entitlement_result,
-            )
+        (
+            recovered_text,
+            fallback_used,
+            metadata,
+        ) = await GuidanceService._apply_off_scope_recovery_async(
+            db=db,
+            use_case="guidance_contextual",
+            context={"objective": "Tester la facturation"},
+            user_id=1,
+            request_id="rid-guidance",
+            trace_id="trace-guidance",
+            assistant_content="[off_scope] reponse initiale",
+            persona_profile_code="legacy-default",
+            entitlement_result=entitlement_result,
         )
 
     assert recovered_text == "Reponse de recovery exploitable."

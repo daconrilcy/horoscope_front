@@ -281,6 +281,7 @@ class Settings:
         self.enable_reference_seed_admin_fallback = self._parse_bool_env(
             "ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", default=False
         )
+        self.seed_admin = self._parse_bool_env("SEED_ADMIN", default=False)
         # pricing experiment settings
         self.pricing_experiment_enabled = self._parse_bool_env(
             "PRICING_EXPERIMENT_ENABLED",
@@ -336,12 +337,8 @@ class Settings:
         self.ops_review_queue_alerts_enabled = self._parse_bool_env(
             "OPS_REVIEW_QUEUE_ALERTS_ENABLED", default=False
         )
-        self.ops_review_queue_alert_webhook_url = os.getenv(
-            "OPS_REVIEW_QUEUE_ALERT_WEBHOOK_URL"
-        )
-        self.ops_review_queue_alert_base_url = os.getenv(
-            "OPS_REVIEW_QUEUE_ALERT_BASE_URL"
-        )
+        self.ops_review_queue_alert_webhook_url = os.getenv("OPS_REVIEW_QUEUE_ALERT_WEBHOOK_URL")
+        self.ops_review_queue_alert_base_url = os.getenv("OPS_REVIEW_QUEUE_ALERT_BASE_URL")
         self.ops_review_queue_alert_max_candidates = self._parse_int_env(
             "OPS_REVIEW_QUEUE_ALERT_MAX_CANDIDATES", default=100, minimum=1
         )
@@ -372,9 +369,9 @@ class Settings:
             "STRIPE_PORTAL_RETURN_URL",
             "http://localhost:5173/settings/subscription",
         ).strip()
-        self.stripe_portal_configuration_id = os.getenv(
-            "STRIPE_PORTAL_CONFIGURATION_ID", ""
-        ).strip() or None
+        self.stripe_portal_configuration_id = (
+            os.getenv("STRIPE_PORTAL_CONFIGURATION_ID", "").strip() or None
+        )
         self.stripe_portal_endpoints_enabled = self._parse_bool_env(
             "STRIPE_PORTAL_ENDPOINTS_ENABLED",
             default=bool(self.stripe_secret_key),

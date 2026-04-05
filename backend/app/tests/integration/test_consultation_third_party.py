@@ -26,7 +26,6 @@ def mock_consultation_gate():
         yield mock
 
 
-
 def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)

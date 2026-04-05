@@ -20,7 +20,7 @@ def _positive_int(raw_value: str) -> int:
 
 def main() -> int:
     _ensure_backend_root_on_path()
-    
+
     parser = argparse.ArgumentParser(
         description="Emit SLA alerts for canonical entitlement mutations."
     )

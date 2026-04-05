@@ -26,15 +26,15 @@ def temp_db():
     engine = create_engine(db_url)
     Base.metadata.create_all(bind=engine)
     engine.dispose()
-    
+
     yield db_url
-    
+
     # Disposal is important on Windows
     if os.path.exists(path):
         try:
             os.unlink(path)
         except PermissionError:
-            pass # fallback if still locked
+            pass  # fallback if still locked
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def db_session_temp(temp_db):
 @pytest.fixture
 def seed_audits(db_session_temp: Session):
     now = datetime.now(timezone.utc)
-    
+
     # Item 1: High risk, 5h ago -> Overdue (SLA 4h)
     a1 = CanonicalEntitlementMutationAuditModel(
         operation="update",
@@ -67,7 +67,7 @@ def seed_audits(db_session_temp: Session):
         occurred_at=now - timedelta(hours=5),
         request_id="req1",
     )
-    
+
     # Item 2: Medium risk, 1h ago -> Within SLA (SLA 24h)
     a2 = CanonicalEntitlementMutationAuditModel(
         operation="update",
@@ -82,7 +82,7 @@ def seed_audits(db_session_temp: Session):
         occurred_at=now - timedelta(hours=1),
         request_id="req2",
     )
-    
+
     db_session_temp.add_all([a1, a2])
     db_session_temp.commit()
     return [a1, a2]
@@ -92,17 +92,16 @@ def test_script_dry_run_no_persisted_rows(temp_db, db_session_temp: Session, see
     env = os.environ.copy()
     env["OPS_REVIEW_QUEUE_ALERTS_ENABLED"] = "True"
     env["DATABASE_URL"] = temp_db
-    
+
     script_path = Path(__file__).resolve().parents[3] / "scripts" / "run_ops_review_queue_alerts.py"
     res = subprocess.run(
-        [sys.executable, str(script_path), "--dry-run"],
-        capture_output=True, text=True, env=env
+        [sys.executable, str(script_path), "--dry-run"], capture_output=True, text=True, env=env
     )
-    
+
     assert res.returncode == 0
     assert "emitted=1" in res.stdout
     assert "candidates=1" in res.stdout
-    
+
     count = db_session_temp.query(CanonicalEntitlementMutationAlertEventModel).count()
     assert count == 0
 
@@ -111,16 +110,15 @@ def test_script_persists_alert_event_on_overdue(temp_db, db_session_temp: Sessio
     env = os.environ.copy()
     env["OPS_REVIEW_QUEUE_ALERTS_ENABLED"] = "True"
     env["DATABASE_URL"] = temp_db
-    
+
     script_path = Path(__file__).resolve().parents[3] / "scripts" / "run_ops_review_queue_alerts.py"
     res = subprocess.run(
-        [sys.executable, str(script_path)],
-        capture_output=True, text=True, env=env
+        [sys.executable, str(script_path)], capture_output=True, text=True, env=env
     )
-    
+
     assert res.returncode == 0
     assert "emitted=1" in res.stdout
-    
+
     event = db_session_temp.query(CanonicalEntitlementMutationAlertEventModel).first()
     assert event.audit_id == seed_audits[0].id
     assert event.alert_kind == "sla_overdue"
@@ -130,18 +128,17 @@ def test_script_no_duplicate_alert_on_second_run(temp_db, db_session_temp: Sessi
     env = os.environ.copy()
     env["OPS_REVIEW_QUEUE_ALERTS_ENABLED"] = "True"
     env["DATABASE_URL"] = temp_db
-    
+
     script_path = Path(__file__).resolve().parents[3] / "scripts" / "run_ops_review_queue_alerts.py"
-    
+
     # First run
     subprocess.run([sys.executable, str(script_path)], env=env)
-    
+
     # Second run
     res = subprocess.run(
-        [sys.executable, str(script_path)],
-        capture_output=True, text=True, env=env
+        [sys.executable, str(script_path)], capture_output=True, text=True, env=env
     )
-    
+
     assert "emitted=0" in res.stdout
     assert "skipped_duplicate=1" in res.stdout
 
@@ -150,17 +147,16 @@ def test_script_exit_code_1_on_delivery_failure(temp_db, db_session_temp: Sessio
     env = os.environ.copy()
     env["OPS_REVIEW_QUEUE_ALERTS_ENABLED"] = "True"
     env["DATABASE_URL"] = temp_db
-    env["OPS_REVIEW_QUEUE_ALERT_WEBHOOK_URL"] = "http://localhost:1" # Should fail fast
-    
+    env["OPS_REVIEW_QUEUE_ALERT_WEBHOOK_URL"] = "http://localhost:1"  # Should fail fast
+
     script_path = Path(__file__).resolve().parents[3] / "scripts" / "run_ops_review_queue_alerts.py"
     res = subprocess.run(
-        [sys.executable, str(script_path)],
-        capture_output=True, text=True, env=env
+        [sys.executable, str(script_path)], capture_output=True, text=True, env=env
     )
-    
+
     assert res.returncode == 1
     assert "failed=1" in res.stdout
-    
+
     event = db_session_temp.query(CanonicalEntitlementMutationAlertEventModel).first()
     assert event.delivery_status == "failed"
 

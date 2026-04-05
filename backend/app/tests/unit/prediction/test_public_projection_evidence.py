@@ -301,11 +301,14 @@ async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short()
     regenerated.turning_point_narratives = []
     regenerated.main_turning_point_narrative = None
 
-    with patch(
-        "app.prediction.llm_narrator.LLMNarrator.narrate",
-        new_callable=AsyncMock,
-        return_value=regenerated,
-    ) as narrate, patch("app.prediction.public_projection.settings") as mock_settings:
+    with (
+        patch(
+            "app.prediction.llm_narrator.LLMNarrator.narrate",
+            new_callable=AsyncMock,
+            return_value=regenerated,
+        ) as narrate,
+        patch("app.prediction.public_projection.settings") as mock_settings,
+    ):
         mock_settings.llm_narrator_enabled = True
         result = await PublicPredictionAssembler().assemble(
             snapshot,

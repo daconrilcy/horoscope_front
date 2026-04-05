@@ -223,10 +223,8 @@ def get_plans_catalog(
             PlanCatalogModel.is_active,
         )
         .options(
-            selectinload(PlanCatalogModel.bindings)
-            .selectinload(PlanFeatureBindingModel.feature),
-            selectinload(PlanCatalogModel.bindings)
-            .selectinload(PlanFeatureBindingModel.quotas),
+            selectinload(PlanCatalogModel.bindings).selectinload(PlanFeatureBindingModel.feature),
+            selectinload(PlanCatalogModel.bindings).selectinload(PlanFeatureBindingModel.quotas),
         )
     )
     plans = db.scalars(stmt).all()
@@ -248,7 +246,9 @@ def get_plans_catalog(
         "horoscope_daily": 4,
     }
     all_features = db.scalars(
-        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code.in_(feature_order.keys()))
+        select(FeatureCatalogModel).where(
+            FeatureCatalogModel.feature_code.in_(feature_order.keys())
+        )
     ).all()
     feature_map = {f.feature_code: f for f in all_features}
 
@@ -270,7 +270,7 @@ def get_plans_catalog(
         for f_code in sorted(feature_order.keys(), key=lambda k: feature_order[k]):
             b = plan_bindings.get(f_code)
             feature_ref = feature_map.get(f_code)
-            
+
             if not feature_ref:
                 # Si la feature n'existe pas en base, on skip (cas rare si seeds OK)
                 continue

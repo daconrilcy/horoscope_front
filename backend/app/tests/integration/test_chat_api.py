@@ -96,9 +96,7 @@ def _cleanup_tables() -> None:
         db.flush()
 
         # Seed basic plan
-        p_basic = PlanCatalogModel(
-            plan_code="basic", plan_name="Basic", audience=Audience.B2C
-        )
+        p_basic = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
         db.add(p_basic)
         db.flush()
 
@@ -416,7 +414,7 @@ def test_send_chat_message_returns_429_when_token_quota_is_reached() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-quota-1")
-    
+
     # Set a low token quota (enough for one call, not two)
     _seed_canonical_chat_binding(
         plan_code="basic",
@@ -424,9 +422,9 @@ def test_send_chat_message_returns_429_when_token_quota_is_reached() -> None:
         is_enabled=True,
         quotas=[("tokens", 100, PeriodUnit.DAY)],
     )
-    
+
     headers = {"Authorization": f"Bearer {access_token}"}
-    
+
     # First message should consume some tokens
     response = client.post(
         "/v1/chat/messages",
@@ -442,7 +440,7 @@ def test_send_chat_message_returns_429_when_token_quota_is_reached() -> None:
             select(FeatureUsageCounterModel).where(
                 FeatureUsageCounterModel.user_id == user_id,
                 FeatureUsageCounterModel.feature_code == "astrologer_chat",
-                FeatureUsageCounterModel.quota_key == "tokens"
+                FeatureUsageCounterModel.quota_key == "tokens",
             )
         )
         if counter:
@@ -1139,24 +1137,24 @@ def test_send_chat_message_rolls_back_partial_canonical_consumption() -> None:
         is_enabled=True,
         quotas=[("tokens", 5000), ("burst", 2)],
     )
-    
+
     # We mock LlmTokenUsageService.record_usage to fail
     monkeypatch = pytest.MonkeyPatch()
-    
+
     original_record_usage = LlmTokenUsageService.record_usage
 
     def _record_then_fail(*args: object, **kwargs: object) -> object:
         feature_code = kwargs.get("feature_code")
         if feature_code == "astrologer_chat":
-             # Force failure to trigger rollback
-             raise Exception("Simulated DB error during token recording")
+            # Force failure to trigger rollback
+            raise Exception("Simulated DB error during token recording")
         return original_record_usage(*args, **kwargs)
 
     monkeypatch.setattr(
         "app.services.chat_guidance_service.LlmTokenUsageService.record_usage",
         _record_then_fail,
     )
-    
+
     try:
         response = client.post(
             "/v1/chat/messages",

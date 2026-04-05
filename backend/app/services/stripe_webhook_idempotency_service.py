@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class StripeWebhookIdempotencyService:
-
     @staticmethod
     def claim_event(db: Session, event: stripe.Event) -> str:
         """

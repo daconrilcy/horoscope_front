@@ -11,12 +11,11 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # Persistent job store using the same database as the app
-jobstores = {
-    'default': SQLAlchemyJobStore(url=settings.database_url)
-}
+jobstores = {"default": SQLAlchemyJobStore(url=settings.database_url)}
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)
 _scheduler_lock = Lock()
+
 
 def start_scheduler():
     if "pytest" in sys.modules:
@@ -25,6 +24,7 @@ def start_scheduler():
         if not scheduler.running:
             logger.info("Starting APScheduler...")
             scheduler.start()
+
 
 def shutdown_scheduler():
     if "pytest" in sys.modules:

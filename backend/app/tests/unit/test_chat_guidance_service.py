@@ -161,8 +161,7 @@ def test_extract_assistant_text_prefers_structured_output_message() -> None:
     )
 
     assert (
-        ChatGuidanceService._extract_assistant_text(gateway_result)
-        == "Réponse astrologue propre"
+        ChatGuidanceService._extract_assistant_text(gateway_result) == "Réponse astrologue propre"
     )
 
 

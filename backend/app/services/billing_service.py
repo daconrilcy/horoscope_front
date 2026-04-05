@@ -159,10 +159,11 @@ class BillingService:
 
     @staticmethod
     def _should_default_missing_subscription_to_free() -> bool:
-        return (
-            not BillingService._is_pytest_runtime()
-            and settings.app_env in {"development", "dev", "local"}
-        )
+        return not BillingService._is_pytest_runtime() and settings.app_env in {
+            "development",
+            "dev",
+            "local",
+        }
 
     @staticmethod
     def get_token_usage(
@@ -239,9 +240,7 @@ class BillingService:
         ).all()
 
         return TokenUsageData(
-            period=TokenUsagePeriod(
-                unit=unit, window_start=window_start, window_end=window_end
-            ),
+            period=TokenUsagePeriod(unit=unit, window_start=window_start, window_end=window_end),
             summary=TokenUsageSummary(
                 tokens_total=int(totals.total_sum or 0),
                 tokens_in=int(totals.in_sum or 0),
@@ -257,6 +256,7 @@ class BillingService:
                 for row in feature_totals
             ],
         )
+
     """
     Service de gestion de la facturation B2C.
 

@@ -4,6 +4,7 @@ from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
+
 class EmailProvider(Protocol):
     async def send(self, to: str, subject: str, html: str) -> str:
         """
@@ -12,12 +13,15 @@ class EmailProvider(Protocol):
         """
         ...
 
+
 class NoopEmailProvider:
     async def send(self, to: str, subject: str, html: str) -> str:
         logger.debug(f"[NOOP EMAIL] To: {to}, Subject: {subject}")
         # Return a fake message ID
         import uuid
+
         return f"noop-{uuid.uuid4()}"
+
 
 class BrevoEmailProvider:
     async def send(self, to: str, subject: str, html: str) -> str:
@@ -29,17 +33,16 @@ class BrevoEmailProvider:
         from sib_api_v3_sdk.rest import ApiException
 
         configuration = sib_api_v3_sdk.Configuration()
-        configuration.api_key['api-key'] = api_key
-        
-        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
-        
+        configuration.api_key["api-key"] = api_key
+
+        api_instance = sib_api_v3_sdk.TransactionalEmailsApi(
+            sib_api_v3_sdk.ApiClient(configuration)
+        )
+
         sender = {"name": "Astrorizon", "email": os.getenv("EMAIL_FROM", "hello@astrorizon.ai")}
-        
+
         send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-            to=[{"email": to}],
-            html_content=html,
-            sender=sender,
-            subject=subject
+            to=[{"email": to}], html_content=html, sender=sender, subject=subject
         )
 
         try:
@@ -49,10 +52,11 @@ class BrevoEmailProvider:
             logger.error(f"Brevo API error: {e}")
             raise
 
+
 def get_email_provider() -> EmailProvider:
     provider_name = os.getenv("EMAIL_PROVIDER", "noop").lower()
-    
+
     if provider_name == "brevo":
         return BrevoEmailProvider()
-    
+
     return NoopEmailProvider()

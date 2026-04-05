@@ -8,7 +8,6 @@ from app.services.entitlement_types import (
     EffectiveFeatureAccess,
     UsageState,
 )
-from app.services.quota_usage_service import QuotaExhaustedError
 from app.services.thematic_consultation_entitlement_gate import (
     ConsultationAccessDeniedError,
     ConsultationQuotaExceededError,
@@ -93,7 +92,7 @@ def test_check_access_unlimited(db_session):
 
 def test_check_and_consume_skips_tokens_quota(db_session):
     snapshot = make_snapshot()
-    
+
     with (
         patch.object(
             EffectiveEntitlementResolverService,
@@ -107,7 +106,7 @@ def test_check_and_consume_skips_tokens_quota(db_session):
         result = ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
 
     assert result.path == "canonical_quota"
-    assert result.usage_states == [] # Skipped
+    assert result.usage_states == []  # Skipped
     mock_consume.assert_not_called()
 
 
@@ -183,7 +182,7 @@ def test_quota_exceeded_raises_consultation_error(db_session):
             usage_states=[exhausted_state],
         )
     )
-    
+
     with patch.object(
         EffectiveEntitlementResolverService,
         "resolve_b2c_user_snapshot",
@@ -191,6 +190,6 @@ def test_quota_exceeded_raises_consultation_error(db_session):
     ):
         with pytest.raises(ConsultationQuotaExceededError) as exc_info:
             ThematicConsultationEntitlementGate.check_access(db_session, user_id=42)
-    
+
     assert exc_info.value.quota_key == "tokens"
     assert exc_info.value.used == 20000

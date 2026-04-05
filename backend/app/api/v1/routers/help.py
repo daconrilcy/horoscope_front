@@ -224,7 +224,7 @@ async def create_help_ticket(
             initial_status="pending",
         )
         db.commit()
-        
+
         return {
             "data": TicketResponseData(
                 ticket_id=incident.incident_id,

@@ -34,9 +34,7 @@ def test_claim_event_new_event_returns_accepted(db_session: Session):
 
     assert result == "accepted"
     record = (
-        db_session.query(StripeWebhookEventModel)
-        .filter_by(stripe_event_id="evt_new_001")
-        .first()
+        db_session.query(StripeWebhookEventModel).filter_by(stripe_event_id="evt_new_001").first()
     )
     assert record is not None
     assert record.status == "processing"
@@ -74,9 +72,7 @@ def test_claim_event_failed_returns_accepted_and_increments_attempts(db_session:
     assert result == "accepted"
 
     record = (
-        db_session.query(StripeWebhookEventModel)
-        .filter_by(stripe_event_id="evt_fail_001")
-        .first()
+        db_session.query(StripeWebhookEventModel).filter_by(stripe_event_id="evt_fail_001").first()
     )
     assert record.processing_attempts == 2
     assert record.status == "processing"
@@ -90,9 +86,7 @@ def test_mark_processed_updates_status(db_session: Session):
     StripeWebhookIdempotencyService.mark_processed(db_session, "evt_proc_ok")
 
     record = (
-        db_session.query(StripeWebhookEventModel)
-        .filter_by(stripe_event_id="evt_proc_ok")
-        .first()
+        db_session.query(StripeWebhookEventModel).filter_by(stripe_event_id="evt_proc_ok").first()
     )
     assert record.status == "processed"
     assert record.processed_at is not None
@@ -105,9 +99,7 @@ def test_mark_failed_updates_status_and_error(db_session: Session):
     StripeWebhookIdempotencyService.mark_failed(db_session, "evt_proc_fail", "Critical Error")
 
     record = (
-        db_session.query(StripeWebhookEventModel)
-        .filter_by(stripe_event_id="evt_proc_fail")
-        .first()
+        db_session.query(StripeWebhookEventModel).filter_by(stripe_event_id="evt_proc_fail").first()
     )
     assert record.status == "failed"
     assert record.last_error == "Critical Error"
@@ -128,10 +120,6 @@ def test_claim_event_coerces_ids_to_strings(db_session: Session):
     result = StripeWebhookIdempotencyService.claim_event(db_session, event)
     assert result == "accepted"
 
-    record = (
-        db_session.query(StripeWebhookEventModel)
-        .filter_by(stripe_event_id="12345")
-        .first()
-    )
+    record = db_session.query(StripeWebhookEventModel).filter_by(stripe_event_id="12345").first()
     assert record is not None
     assert record.stripe_object_id == "67890"

@@ -31,9 +31,16 @@ VALID_INCIDENT_STATUS = {
 }
 VALID_INCIDENT_PRIORITY = {"low", "medium", "high"}
 VALID_INCIDENT_CATEGORY = {
-    "account", "subscription", "content",  # Ops legacy
-    "subscription_problem", "billing_issue", "bug", "account_access", 
-    "feature_question", "data_privacy", "other"  # Help center
+    "account",
+    "subscription",
+    "content",  # Ops legacy
+    "subscription_problem",
+    "billing_issue",
+    "bug",
+    "account_access",
+    "feature_question",
+    "data_privacy",
+    "other",  # Help center
 }
 ALLOWED_STATUS_TRANSITIONS: dict[str, set[str]] = {
     "open": {"in_progress", "resolved", "closed"},

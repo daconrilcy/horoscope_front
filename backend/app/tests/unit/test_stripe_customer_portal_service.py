@@ -454,7 +454,9 @@ class TestStripeCustomerPortalService:
         params = mock_client.billing_portal.sessions.create.call_args[1]["params"]
         assert params["configuration"] == configuration_id
 
-    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.update_from_event_payload")
+    @patch(
+        "app.services.stripe_customer_portal_service.StripeBillingProfileService.update_from_event_payload"
+    )
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
     def test_reactivate_subscription_success(
@@ -514,9 +516,7 @@ class TestStripeCustomerPortalService:
 
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
-    def test_create_subscription_upgrade_payment_success(
-        self, mock_get_profile, mock_get_client
-    ):
+    def test_create_subscription_upgrade_payment_success(self, mock_get_profile, mock_get_client):
         db = MagicMock()
         profile = StripeBillingProfileModel(
             user_id=123,
@@ -726,7 +726,9 @@ class TestStripeCustomerPortalService:
         assert exc.value.code == "stripe_subscription_upgrade_invalid_proration_preview"
         mock_client.checkout.sessions.create.assert_not_called()
 
-    @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.update_from_event_payload")
+    @patch(
+        "app.services.stripe_customer_portal_service.StripeBillingProfileService.update_from_event_payload"
+    )
     @patch("app.services.stripe_customer_portal_service.get_stripe_client")
     @patch("app.services.stripe_customer_portal_service.StripeBillingProfileService.get_by_user_id")
     def test_apply_paid_subscription_upgrade_checkout_session_success(

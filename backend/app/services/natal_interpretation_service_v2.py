@@ -214,9 +214,7 @@ class NatalInterpretationServiceV2:
         if model.variant_code == "free_short" or model.use_case == "natal_long_free":
             return False
         return NatalInterpretationServiceV2._is_empty_complete_payload(
-            model.interpretation_payload
-            if isinstance(model.interpretation_payload, dict)
-            else None
+            model.interpretation_payload if isinstance(model.interpretation_payload, dict) else None
         )
 
     @staticmethod
@@ -781,9 +779,9 @@ class NatalInterpretationServiceV2:
 
         # Persistence
         persist_payload = interpretation.model_dump()
-        
+
         prompt_version_uuid = _parse_prompt_version_uuid(gateway_result.meta.prompt_version_id)
-        
+
         stmt_existing = select(UserNatalInterpretationModel).where(
             UserNatalInterpretationModel.user_id == user_id,
             UserNatalInterpretationModel.chart_id == chart_id,
@@ -873,7 +871,9 @@ class NatalInterpretationServiceV2:
             stmt = stmt.where(UserNatalInterpretationModel.use_case == use_case)
 
         rows = list(
-            db.execute(stmt.order_by(UserNatalInterpretationModel.created_at.desc())).scalars().all()
+            db.execute(stmt.order_by(UserNatalInterpretationModel.created_at.desc()))
+            .scalars()
+            .all()
         )
         valid_rows: list[UserNatalInterpretationModel] = []
         deleted_any = False

@@ -12,21 +12,21 @@ from app.services.canonical_entitlement_review_queue_service import (
 def test_build_review_queue_rows_empty(db_session: Session):
     # Setup
     now_utc = datetime.now(timezone.utc)
-    
+
     # Mock CanonicalEntitlementMutationAuditQueryService
     with pytest.MonkeyPatch.context() as mp:
         mock_query = MagicMock()
         mock_query.list_mutation_audits.return_value = ([], 0)
         mp.setattr(
             "app.services.canonical_entitlement_review_queue_service.CanonicalEntitlementMutationAuditQueryService",
-            mock_query
+            mock_query,
         )
-        
+
         # Execute
         rows = CanonicalEntitlementReviewQueueService.build_review_queue_rows(
             db_session, now_utc=now_utc
         )
-        
+
         # Verify
         assert rows == []
 
@@ -34,7 +34,7 @@ def test_build_review_queue_rows_empty(db_session: Session):
 def test_summarize_review_queue_rows_empty():
     # Execute
     summary = CanonicalEntitlementReviewQueueService.summarize_review_queue_rows([])
-    
+
     # Verify
     assert summary.total_count == 0
     assert summary.pending_review_count == 0
@@ -48,7 +48,7 @@ def test_compute_sla_within_sla():
     # Age is 1h (3600s). Remaining is 3h.
     # Due soon is 20% of 4h = 48 min (2880s).
     # 3h > 48 min -> within_sla
-    
+
     res = CanonicalEntitlementReviewQueueService._compute_sla(
         "high", "pending_review", occurred, now
     )
@@ -62,7 +62,7 @@ def test_compute_sla_due_soon():
     # We want remaining < 48 min.
     # Age = 4h - 30 min = 3h 30 min (12600s)
     occurred = now - timedelta(hours=3, minutes=30)
-    
+
     res = CanonicalEntitlementReviewQueueService._compute_sla(
         "high", "pending_review", occurred, now
     )
@@ -73,7 +73,7 @@ def test_compute_sla_overdue():
     now = datetime(2026, 3, 29, 12, 0, 0, tzinfo=timezone.utc)
     # Age 5h > 4h
     occurred = now - timedelta(hours=5)
-    
+
     res = CanonicalEntitlementReviewQueueService._compute_sla(
         "high", "pending_review", occurred, now
     )
@@ -87,11 +87,11 @@ def test_compute_review_state_status():
     mock_rev.review_status = "investigating"
     res = CanonicalEntitlementReviewQueueService._compute_review_state_status("high", mock_rev)
     assert res == "investigating"
-    
+
     # No record, high risk
     res = CanonicalEntitlementReviewQueueService._compute_review_state_status("high", None)
     assert res == "pending_review"
-    
+
     # No record, low risk
     res = CanonicalEntitlementReviewQueueService._compute_review_state_status("low", None)
     assert res is None

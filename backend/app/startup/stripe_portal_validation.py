@@ -37,9 +37,8 @@ def run_stripe_portal_startup_validation(settings: Settings) -> None:
         # Stripe complète.
         if settings.app_env in {"test", "testing"}:
             logger.warning(
-                "stripe_portal_startup_validation_skipped env=%s "
-                "missing_portal_configuration_id",
-                settings.app_env
+                "stripe_portal_startup_validation_skipped env=%s missing_portal_configuration_id",
+                settings.app_env,
             )
             return
 

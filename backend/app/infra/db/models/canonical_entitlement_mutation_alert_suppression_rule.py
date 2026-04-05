@@ -11,6 +11,7 @@ from app.infra.db.base import Base
 
 def _utc_now() -> datetime:
     from datetime import timezone
+
     return datetime.now(timezone.utc)
 
 

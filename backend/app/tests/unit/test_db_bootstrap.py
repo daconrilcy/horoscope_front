@@ -29,14 +29,7 @@ def test_resolve_backend_root_falls_back_to_cwd_backend(
     )
 
     fake_module_file = (
-        tmp_path
-        / ".venv"
-        / "Lib"
-        / "site-packages"
-        / "app"
-        / "infra"
-        / "db"
-        / "bootstrap.py"
+        tmp_path / ".venv" / "Lib" / "site-packages" / "app" / "infra" / "db" / "bootstrap.py"
     )
     fake_module_file.parent.mkdir(parents=True)
     fake_module_file.write_text("", encoding="utf-8")

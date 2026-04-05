@@ -83,8 +83,9 @@ def test_get_subscription_status_fallback_to_legacy_when_no_stripe_profile() -> 
     assert status.plan.code == "basic"
 
 
-def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscription_exists(
-) -> None:
+def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscription_exists() -> (
+    None
+):
     _cleanup_tables()
     user_id = _create_user_id()
     with SessionLocal() as db:

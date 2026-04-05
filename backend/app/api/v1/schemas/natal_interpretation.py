@@ -65,7 +65,13 @@ class InterpretationMeta(BaseModel):
 class NatalInterpretationData(BaseModel):
     chart_id: str
     use_case: str
-    interpretation: AstroResponseV3 | AstroErrorResponseV3 | AstroResponseV2 | AstroResponseV1 | AstroFreeResponseV1
+    interpretation: (
+        AstroResponseV3
+        | AstroErrorResponseV3
+        | AstroResponseV2
+        | AstroResponseV1
+        | AstroFreeResponseV1
+    )
     meta: InterpretationMeta
     degraded_mode: Optional[str] = None
 

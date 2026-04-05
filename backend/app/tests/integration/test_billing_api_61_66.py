@@ -12,6 +12,7 @@ from app.tests.integration.test_billing_api import _cleanup_tables, _register_an
 
 client = TestClient(app)
 
+
 def test_billing_subscription_current_quota() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
@@ -28,7 +29,7 @@ def test_billing_subscription_current_quota() -> None:
             )
         )
         db.commit()
-        
+
         # Simulate some usage
         # Premium astrologer_chat is 1_500_000/month (tokens)
         q_def = QuotaDefinition(
@@ -46,7 +47,7 @@ def test_billing_subscription_current_quota() -> None:
     response = client.get("/v1/billing/subscription", headers=headers)
     assert response.status_code == 200
     payload = response.json()["data"]
-    
+
     assert "current_quota" in payload
     quota = payload["current_quota"]
     assert quota is not None
@@ -57,13 +58,14 @@ def test_billing_subscription_current_quota() -> None:
     assert quota["remaining"] == 1_499_958
     assert quota["period_unit"] == "month"
 
+
 def test_downgrade_non_regression_quota() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     future_date = datetime.now(timezone.utc) + timedelta(days=30)
-    
+
     with SessionLocal() as db:
         user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
         # Profile is premium BUT scheduled to downgrade to basic
@@ -81,7 +83,7 @@ def test_downgrade_non_regression_quota() -> None:
     response = client.get("/v1/billing/subscription", headers=headers)
     assert response.status_code == 200
     payload = response.json()["data"]
-    
+
     # Effective plan is still premium
     assert payload["plan"]["code"] == "premium"
     # Quota should still be premium token quota

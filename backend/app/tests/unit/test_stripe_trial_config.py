@@ -78,9 +78,6 @@ def test_settings_stripe_trial_missing_payment_method_behavior_rejects_invalid(
 
     with pytest.raises(
         ValueError,
-        match=(
-            "STRIPE_TRIAL_MISSING_PAYMENT_METHOD_BEHAVIOR must be "
-            "'pause' or 'cancel'"
-        ),
+        match=("STRIPE_TRIAL_MISSING_PAYMENT_METHOD_BEHAVIOR must be 'pause' or 'cancel'"),
     ):
         Settings()

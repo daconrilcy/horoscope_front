@@ -38,9 +38,7 @@ def _cleanup_tables() -> None:
         db.flush()
 
         # Seed basic plan
-        p_basic = PlanCatalogModel(
-            plan_code="basic", plan_name="Basic", audience=Audience.B2C
-        )
+        p_basic = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
         db.add(p_basic)
         db.flush()
 
@@ -83,10 +81,10 @@ def _set_active_subscription(access_token: str, plan_code: str) -> None:
         user = db.query(UserModel).order_by(UserModel.id.desc()).first()
         if not user:
             return
-            
+
         # Ensure plans exist in billing_plans table
         BillingService.ensure_default_plans(db)
-        
+
         # 1. Stripe profile
         db.add(
             StripeBillingProfileModel(
@@ -99,6 +97,7 @@ def _set_active_subscription(access_token: str, plan_code: str) -> None:
         )
         # 2. Also ensure UserSubscriptionModel exists
         from app.services.billing_service import STRIPE_ENTITLEMENT_TO_PLAN_CODE
+
         legacy_code = STRIPE_ENTITLEMENT_TO_PLAN_CODE.get(plan_code, plan_code)
         plan = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == legacy_code))
         db.add(
@@ -113,6 +112,7 @@ def _set_active_subscription(access_token: str, plan_code: str) -> None:
 
 def _record_manual_pricing_events(user_email: str) -> None:
     from app.api.v1.routers.billing import _record_pricing_event_safely
+
     with SessionLocal() as db:
         user = db.query(UserModel).filter_by(email=user_email).one()
         request_id = "manual-test-event"

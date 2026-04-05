@@ -38,8 +38,8 @@ def user_id(db: Session):
 
 def test_update_from_event_payload_period_fields(db: Session, user_id: int):
     period_start = 1711238400  # 2024-03-24
-    period_end = 1713916800    # 2024-04-24
-    
+    period_end = 1713916800  # 2024-04-24
+
     event_data = {
         "id": "evt_period",
         "type": "customer.subscription.updated",
@@ -109,9 +109,8 @@ def test_update_from_event_payload_cancel_at_marks_scheduled_cancellation(
     expected_end = datetime.fromtimestamp(period_end, tz=timezone.utc)
     assert profile.cancel_at_period_end is True
     assert profile.current_period_end.replace(tzinfo=None) == expected_end.replace(tzinfo=None)
-    assert (
-        profile.pending_cancellation_effective_at.replace(tzinfo=None)
-        == expected_end.replace(tzinfo=None)
+    assert profile.pending_cancellation_effective_at.replace(tzinfo=None) == expected_end.replace(
+        tzinfo=None
     )
 
 
@@ -165,17 +164,17 @@ def test_update_from_event_payload_downgrade_schedule(mock_get_client, db: Sessi
     # Mock Stripe Client
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
-    
+
     now_ts = datetime.now(timezone.utc).timestamp()
     future_ts = now_ts + 10000
-    
+
     # Mock du schedule Stripe
     mock_client.subscription_schedules.retrieve.return_value = {
         "id": "sub_sched_123",
         "phases": [
             {"start_date": now_ts - 1000, "items": [{"price": "price_premium"}]},
             {"start_date": future_ts, "items": [{"price": "price_basic"}]},
-        ]
+        ],
     }
 
     event_data = {
@@ -204,7 +203,7 @@ def test_update_from_event_payload_downgrade_schedule(mock_get_client, db: Sessi
         # mis à jour dans ce test simplifié)
         # On vérifie surtout le plan programmé
         assert profile.scheduled_plan_code == "basic"
-        
+
         # Helper for SQLite compatibility
         dt_sched = profile.scheduled_change_effective_at
         dt_expected = datetime.fromtimestamp(future_ts, tz=timezone.utc)
@@ -246,7 +245,7 @@ def test_update_from_event_payload_upgrade_clears_schedule(db: Session, user_id:
 
 def test_update_from_event_payload_direct_schedule_object(db: Session, user_id: int):
     future_ts = datetime.now(timezone.utc).timestamp() + 20000
-    
+
     event_schedule = {
         "id": "evt_sched_direct",
         "type": "subscription_schedule.updated",
@@ -259,7 +258,7 @@ def test_update_from_event_payload_direct_schedule_object(db: Session, user_id: 
                 "phases": [
                     {"start_date": 500, "items": [{"price": "price_premium"}]},
                     {"start_date": future_ts, "items": [{"price": "price_basic"}]},
-                ]
+                ],
             }
         },
     }

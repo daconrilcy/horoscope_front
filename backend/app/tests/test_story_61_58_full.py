@@ -63,14 +63,14 @@ def test_full_reconciliation_chain():
         # mais ici on vérifie surtout les métadonnées du snapshot.
 
         print(
-            "✅ Snapshot reconciled: "
-            f"plan={snapshot.plan_code}, billing={snapshot.billing_status}"
+            f"✅ Snapshot reconciled: plan={snapshot.plan_code}, billing={snapshot.billing_status}"
         )
 
         # Cleanup
         db.delete(profile)
         db.delete(user)
         db.commit()
+
 
 if __name__ == "__main__":
     test_full_reconciliation_chain()

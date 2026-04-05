@@ -117,6 +117,7 @@ class MutationAuditItem(BaseModel):
 
 # --- Suppression Rules Schemas ---
 
+
 class AlertSuppressionRuleItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -1367,8 +1368,7 @@ def create_alert_suppression_rule(
     normalized_ops_comment = _normalize_optional_rule_field(body.ops_comment)
 
     existing_stmt = select(CanonicalEntitlementMutationAlertSuppressionRuleModel).where(
-        CanonicalEntitlementMutationAlertSuppressionRuleModel.alert_kind
-        == body.alert_kind.strip(),
+        CanonicalEntitlementMutationAlertSuppressionRuleModel.alert_kind == body.alert_kind.strip(),
         CanonicalEntitlementMutationAlertSuppressionRuleModel.feature_code
         == normalized_feature_code,
         CanonicalEntitlementMutationAlertSuppressionRuleModel.plan_code == normalized_plan_code,
@@ -1390,14 +1390,13 @@ def create_alert_suppression_rule(
                     "meta": {"request_id": request_id},
                 },
             )
-        
+
         return _error_response(
             status_code=409,
             request_id=request_id,
             code="suppression_rule_conflict",
             message=(
-                "A suppression rule with these criteria already exists "
-                "but with different values"
+                "A suppression rule with these criteria already exists but with different values"
             ),
             details={"rule_id": existing.id},
         )

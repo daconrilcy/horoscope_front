@@ -526,7 +526,11 @@ def test_ensure_b2c_chat_feature_reuses_seeded_feature_without_duplicate(db_sess
     db_session.commit()
 
     assert feature.id == seeded_feature.id
-    features = db_session.execute(
-        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat")
-    ).scalars().all()
+    features = (
+        db_session.execute(
+            select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat")
+        )
+        .scalars()
+        .all()
+    )
     assert len(features) == 1

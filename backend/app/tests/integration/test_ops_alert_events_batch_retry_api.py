@@ -55,9 +55,7 @@ def test_post_retry_batch_dry_run_no_persistence() -> None:
     assert payload["alert_event_ids"] == [first_id, second_id]
 
     with SessionLocal() as db:
-        assert (
-            db.query(CanonicalEntitlementMutationAlertDeliveryAttemptModel).count() == 0
-        )
+        assert db.query(CanonicalEntitlementMutationAlertDeliveryAttemptModel).count() == 0
 
 
 def test_post_retry_batch_real_retries_multiple_failed() -> None:

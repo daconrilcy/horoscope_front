@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -32,16 +32,12 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine, get_db_session
 from app.main import app
-from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
+from app.services.billing_service import BillingService
 from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
 from app.services.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
     UsageState,
-)
-from app.services.thematic_consultation_entitlement_gate import (
-    ConsultationAccessDeniedError,
-    ConsultationQuotaExceededError,
 )
 
 UTC = timezone.utc
@@ -300,7 +296,7 @@ def test_generate_canonical_quota_ok() -> None:
 
     assert response.status_code == 200
     data = response.json()
-    assert data["quota_info"]["remaining"] == 20000 # check_access doesn't consume
+    assert data["quota_info"]["remaining"] == 20000  # check_access doesn't consume
     assert data["quota_info"]["limit"] == 20000
 
 

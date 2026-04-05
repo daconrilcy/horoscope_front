@@ -10,13 +10,14 @@ from app.tests.integration.test_billing_api import _cleanup_tables, _register_an
 
 client = TestClient(app)
 
+
 def test_billing_subscription_enriched_fields() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     future_date = datetime.now(timezone.utc) + timedelta(days=30)
-    
+
     with SessionLocal() as db:
         user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
         db.add(
@@ -35,7 +36,7 @@ def test_billing_subscription_enriched_fields() -> None:
     response = client.get("/v1/billing/subscription", headers=headers)
     assert response.status_code == 200
     payload = response.json()["data"]
-    
+
     assert payload["status"] == "active"
     assert payload["plan"]["code"] == "premium"
     assert payload["scheduled_plan"]["code"] == "basic"

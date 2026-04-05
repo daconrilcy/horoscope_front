@@ -34,9 +34,7 @@ class HoroscopeDailyEntitlementGate:
     FEATURE_CODE = "horoscope_daily"
 
     @staticmethod
-    def check_and_get_variant(
-        db: Session, *, user_id: int
-    ) -> HoroscopeDailyEntitlementResult:
+    def check_and_get_variant(db: Session, *, user_id: int) -> HoroscopeDailyEntitlementResult:
         if not isinstance(db, Session):
             return HoroscopeDailyEntitlementResult(variant_code="full")
 

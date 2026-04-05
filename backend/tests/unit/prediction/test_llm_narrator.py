@@ -227,9 +227,7 @@ async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
     narrator = LLMNarrator()
 
     short_free_content = {
-        "daily_synthesis": (
-            "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6."
-        ),
+        "daily_synthesis": ("Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6."),
         "astro_events_intro": "Intro",
         "time_window_narratives": {"matin": "Matin text"},
         "turning_point_narratives": ["TP1"],

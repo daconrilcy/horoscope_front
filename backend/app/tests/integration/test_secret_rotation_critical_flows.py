@@ -170,13 +170,9 @@ def _seed_reference_data() -> None:
         )
 
         # Seed basic plan
-        p_basic = db.scalar(
-            select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "basic")
-        )
+        p_basic = db.scalar(select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "basic"))
         if not p_basic:
-            p_basic = PlanCatalogModel(
-                plan_code="basic", plan_name="Basic", audience=Audience.B2C
-            )
+            p_basic = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
             db.add(p_basic)
             db.flush()
         else:

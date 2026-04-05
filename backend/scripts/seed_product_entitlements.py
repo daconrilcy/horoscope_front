@@ -258,7 +258,7 @@ def seed() -> None:
                         "period_unit": PeriodUnit.MONTH,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
-                    }
+                    },
                 ],
             },
             "thematic_consultation": {

@@ -162,7 +162,9 @@ class CanonicalEntitlementReviewQueueService:
         rows.sort(
             key=lambda row: (
                 _STATUS_PRIORITY.get(row.effective_review_status, _STATUS_PRIORITY[None]),
-                CanonicalEntitlementReviewQueueService._normalize_occurred_at(row.audit.occurred_at),
+                CanonicalEntitlementReviewQueueService._normalize_occurred_at(
+                    row.audit.occurred_at
+                ),
                 row.audit.id,
             )
         )

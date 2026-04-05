@@ -26,7 +26,9 @@ class UserTokenUsageLogModel(Base):
     __tablename__ = "user_token_usage_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False, index=True
+    )
     feature_code: Mapped[str] = mapped_column(String(100), nullable=False)
     provider_model: Mapped[str] = mapped_column(String(100), nullable=False)
     tokens_in: Mapped[int] = mapped_column(Integer, nullable=False)

@@ -198,7 +198,7 @@ IMPORTANT :
                 "  sauf si le contexte astrologique fourni est exceptionnellement pauvre.\n"
                 "  Doit dire ce qui domine la journée, où se situe la principale tension ou "
                 "opportunité, et l'attitude la plus juste.\n"
-                "  Si des \"Domaines les plus activés\" sont fournis dans le profil de la "
+                '  Si des "Domaines les plus activés" sont fournis dans le profil de la '
                 "journée, ils doivent être explicitement reflétés dans la synthèse comme axes "
                 "dominants.\n"
                 "  N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans "
@@ -214,7 +214,7 @@ IMPORTANT :
             "  Doit dire ce qui domine la journée, comment l'ambiance évolue du matin au soir,\n"
             "  où se situent les frottements, ce qu'il faut anticiper,\n"
             "  et pourquoi astrologiquement.\n"
-            "  Si des \"Domaines les plus activés\" sont fournis dans le profil de la journée,\n"
+            '  Si des "Domaines les plus activés" sont fournis dans le profil de la journée,\n'
             "  ils doivent être explicitement reflétés dans la synthèse comme axes dominants.\n"
             "  N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans le "
             "contexte.\n"

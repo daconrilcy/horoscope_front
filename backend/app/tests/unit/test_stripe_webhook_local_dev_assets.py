@@ -106,6 +106,6 @@ def test_docs_are_aligned_with_supported_backend_webhook_perimeter() -> None:
     assert "périmètre backend élargi" in legacy_doc
     assert EXTENDED_EVENTS.issubset(legacy_events)
 
-    assert (
-        "| `customer.subscription.trial_will_end` | ❌ Non traité |" not in legacy_doc
-    ), "Legacy documentation must not mark a handled event as non traité"
+    assert "| `customer.subscription.trial_will_end` | ❌ Non traité |" not in legacy_doc, (
+        "Legacy documentation must not mark a handled event as non traité"
+    )

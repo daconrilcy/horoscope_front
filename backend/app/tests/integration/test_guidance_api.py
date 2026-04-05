@@ -79,9 +79,7 @@ def _cleanup_tables() -> None:
         db.flush()
 
         # Seed basic plan
-        p_basic = PlanCatalogModel(
-            plan_code="basic", plan_name="Basic", audience=Audience.B2C
-        )
+        p_basic = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
         db.add(p_basic)
         db.flush()
 
@@ -179,6 +177,7 @@ def _set_active_subscription(access_token: str, plan_code: str) -> None:
                 sub.plan_id = plan.id
                 sub.status = "active"
         db.commit()
+
 
 def test_guidance_requires_token() -> None:
     _cleanup_tables()

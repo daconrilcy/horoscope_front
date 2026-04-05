@@ -305,4 +305,3 @@ def test_stripe_checkout_with_trial_enabled(clean_db):
     assert details["trial_period_days"] == 14
     assert details["payment_method_collection"] == "if_required"
     assert details["missing_payment_method_behavior"] == "pause"
-

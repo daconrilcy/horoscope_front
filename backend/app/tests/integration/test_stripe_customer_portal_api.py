@@ -449,9 +449,7 @@ class TestStripeCustomerPortalApi:
         assert response.status_code == 422
         assert response.json()["error"]["code"] == "stripe_portal_subscription_update_disabled"
 
-    def test_update_session_returns_422_when_no_change_options_are_configured(
-        self, clean_db
-    ):
+    def test_update_session_returns_422_when_no_change_options_are_configured(self, clean_db):
         import stripe
 
         token = _register_user_with_role("user@example.com", "user")
@@ -545,6 +543,7 @@ class TestStripeCustomerPortalApi:
 
     def test_portal_session_invalid_configuration_502(self, clean_db):
         import stripe
+
         token = _register_user_with_role("user@example.com", "user")
         with SessionLocal() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
@@ -557,8 +556,7 @@ class TestStripeCustomerPortalApi:
 
         mock_client = MagicMock()
         mock_client.billing_portal.sessions.create.side_effect = stripe.InvalidRequestError(
-            message="No such configuration: 'bpc_invalid'",
-            param="configuration"
+            message="No such configuration: 'bpc_invalid'", param="configuration"
         )
         with patch(
             "app.services.stripe_customer_portal_service.get_stripe_client",

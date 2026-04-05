@@ -535,7 +535,6 @@ def test_trial_quota_1_per_lifetime() -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-
         chart_patch,
         profile_patch,
         interpret_patch,
@@ -575,7 +574,6 @@ def test_premium_quota_5_per_lifetime() -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-
         chart_patch,
         profile_patch,
         interpret_patch,
@@ -618,7 +616,6 @@ def test_variant_code_in_response(plan_code: str, variant_code: str) -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-
         chart_patch,
         profile_patch,
         interpret_patch,
@@ -664,7 +661,6 @@ def test_complete_consumes_before_cached_response() -> None:
             "resolve_b2c_user_snapshot",
             side_effect=_dynamic_snapshot,
         ),
-
         chart_patch,
         profile_patch,
         interpret_patch,

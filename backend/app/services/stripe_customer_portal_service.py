@@ -145,9 +145,7 @@ class StripeCustomerPortalService:
     def _extract_invoice_amount_due(invoice: object) -> int:
         serialized_invoice = StripeCustomerPortalService._serialize_stripe_object(invoice)
         return int(
-            serialized_invoice.get("amount_due", 0)
-            or serialized_invoice.get("total", 0)
-            or 0
+            serialized_invoice.get("amount_due", 0) or serialized_invoice.get("total", 0) or 0
         )
 
     @staticmethod
@@ -674,9 +672,7 @@ class StripeCustomerPortalService:
             )
 
         try:
-            current_subscription = client.subscriptions.retrieve(
-                profile.stripe_subscription_id
-            )
+            current_subscription = client.subscriptions.retrieve(profile.stripe_subscription_id)
             subscription_items = StripeCustomerPortalService._extract_subscription_items(
                 current_subscription
             )

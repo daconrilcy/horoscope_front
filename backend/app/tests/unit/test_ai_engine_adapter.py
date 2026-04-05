@@ -1,11 +1,8 @@
 """Tests for the AI Engine Adapter."""
 
-from types import SimpleNamespace
-from typing import Any
-
 import pytest
 
-from app.llm_orchestration.models import GatewayResult, UsageInfo, GatewayMeta
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 from app.services.ai_engine_adapter import (
     AIEngineAdapter,
     AIEngineAdapterError,

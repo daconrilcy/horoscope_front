@@ -141,10 +141,8 @@ class CanonicalEntitlementAlertRetryService:
             if event is None:
                 raise AlertEventNotFoundError(f"Alert event {alert_event_id} not found")
             if event.delivery_status != "failed":
-                raise AlertEventNotRetryableError(
-                    f"Alert event {alert_event_id} is not retryable"
-                )
-            
+                raise AlertEventNotRetryableError(f"Alert event {alert_event_id} is not retryable")
+
             # Check manual handling
             handling = db.scalars(
                 select(HandlingModel).where(
@@ -173,13 +171,13 @@ class CanonicalEntitlementAlertRetryService:
         )
         if limit is not None:
             query = query.limit(limit)
-        
+
         candidates = list(db.execute(query).scalars().all())
         if not candidates:
             return []
 
         event_ids = [c.id for c in candidates]
-        
+
         # Pre-load manual handlings for all candidates to avoid N+1
         handlings = db.scalars(
             select(HandlingModel).where(
@@ -194,22 +192,23 @@ class CanonicalEntitlementAlertRetryService:
         for ev in candidates:
             if ev.id in suppressed_event_ids:
                 continue
-            
+
             match = CanonicalEntitlementAlertSuppressionRuleService.match_event(
                 ev, active_rules=active_rules
             )
             if match:
                 continue
-            
+
             results.append(ev)
-            
+
         return results
 
     @staticmethod
     def _next_attempt_number(db: Session, *, alert_event_id: int) -> int:
         max_attempt = db.execute(
-            select(func.max(CanonicalEntitlementMutationAlertDeliveryAttemptModel.attempt_number))
-            .where(
+            select(
+                func.max(CanonicalEntitlementMutationAlertDeliveryAttemptModel.attempt_number)
+            ).where(
                 CanonicalEntitlementMutationAlertDeliveryAttemptModel.alert_event_id
                 == alert_event_id
             )

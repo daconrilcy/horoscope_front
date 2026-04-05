@@ -106,9 +106,7 @@ def _cleanup_tables() -> None:
         db.flush()
 
         # Seed basic plan
-        p_basic = PlanCatalogModel(
-            plan_code="basic", plan_name="Basic", audience=Audience.B2C
-        )
+        p_basic = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
         db.add(p_basic)
         db.flush()
 

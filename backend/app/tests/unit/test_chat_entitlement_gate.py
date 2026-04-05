@@ -11,7 +11,6 @@ from app.services.effective_entitlement_resolver_service import EffectiveEntitle
 from app.services.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
-    QuotaDefinition,
     UsageState,
 )
 from app.services.quota_usage_service import QuotaUsageService
@@ -99,7 +98,7 @@ def test_check_access_denied_quota_exhausted(db_session):
     ):
         with pytest.raises(ChatQuotaExceededError) as exc:
             ChatEntitlementGate.check_access(db_session, user_id=1)
-    
+
     assert exc.value.quota_key == "tokens"
 
 
@@ -120,7 +119,7 @@ def test_check_and_consume_skips_tokens_quota(db_session):
         result = ChatEntitlementGate.check_and_consume(db_session, user_id=1)
 
     assert result.path == "canonical_quota"
-    assert result.usage_states == [] # Consumed states list is empty because skip
+    assert result.usage_states == []  # Consumed states list is empty because skip
     mock_consume.assert_not_called()
 
 

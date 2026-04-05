@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import logging
-import os
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse
-from sqlalchemy import select, update
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
-from app.core.config import settings
 
 router = APIRouter(prefix="/email", tags=["email"])
 logger = logging.getLogger(__name__)
@@ -60,11 +59,11 @@ def unsubscribe(token: str = Query(...), db: Session = Depends(get_db_session)) 
         email_type = payload.get("email_type")
 
         marketing_types = {
-            "marketing", 
-            "onboarding_j1_education", 
-            "onboarding_j3_social_proof", 
-            "onboarding_j5_objections", 
-            "onboarding_j7_upgrade"
+            "marketing",
+            "onboarding_j1_education",
+            "onboarding_j3_social_proof",
+            "onboarding_j5_objections",
+            "onboarding_j7_upgrade",
         }
 
         if not user_id or email_type not in marketing_types:
@@ -93,6 +92,4 @@ def unsubscribe(token: str = Query(...), db: Session = Depends(get_db_session)) 
         raise
     except Exception as e:
         logger.error(f"Unsubscribe error: {str(e)}")
-        raise HTTPException(
-            status_code=400, detail="Une erreur est survenue lors du désabonnement"
-        )
+        raise HTTPException(status_code=400, detail="Une erreur est survenue lors du désabonnement")

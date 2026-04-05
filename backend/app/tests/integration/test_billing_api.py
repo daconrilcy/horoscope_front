@@ -289,7 +289,7 @@ def test_billing_subscription_status_with_legacy_fallback() -> None:
     assert status.status_code == 200
     payload = status.json()["data"]
     assert payload["status"] == "active"
-    assert payload["plan"]["code"] == "basic" # Canonical code
+    assert payload["plan"]["code"] == "basic"  # Canonical code
 
 
 @pytest.mark.parametrize(

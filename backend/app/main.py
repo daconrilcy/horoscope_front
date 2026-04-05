@@ -21,7 +21,6 @@ from app.api.v1.routers.astrologers import router as astrologers_router
 from app.api.v1.routers.astrology_engine import router as astrology_engine_router
 from app.api.v1.routers.audit import router as audit_router
 from app.api.v1.routers.auth import router as auth_router
-from app.api.v1.routers.email import router as email_router
 from app.api.v1.routers.b2b_astrology import router as b2b_astrology_router
 from app.api.v1.routers.b2b_billing import router as b2b_billing_router
 from app.api.v1.routers.b2b_editorial import router as b2b_editorial_router
@@ -32,6 +31,7 @@ from app.api.v1.routers.b2b_usage import router as b2b_usage_router
 from app.api.v1.routers.billing import router as billing_router
 from app.api.v1.routers.chat import router as chat_router
 from app.api.v1.routers.consultations import router as consultations_router
+from app.api.v1.routers.email import router as email_router
 from app.api.v1.routers.enterprise_credentials import router as enterprise_credentials_router
 from app.api.v1.routers.entitlements import router as entitlements_router
 from app.api.v1.routers.ephemeris import router as ephemeris_router
@@ -319,9 +319,10 @@ def _ensure_canonical_entitlements_seeded() -> None:
 
 @asynccontextmanager
 async def _app_lifespan(_: FastAPI):
-    from app.core.scheduler import start_scheduler, shutdown_scheduler
+    from app.core.scheduler import shutdown_scheduler, start_scheduler
+
     start_scheduler()
-    
+
     ensure_local_sqlite_schema_ready()
     PricingExperimentService.record_variant_state_change(
         enabled=PricingExperimentService.is_enabled(),
@@ -347,6 +348,9 @@ async def _app_lifespan(_: FastAPI):
     _ensure_llm_registry_seeded()
     _ensure_consultation_templates_seeded()
     _ensure_support_categories_seeded()
+    from app.startup import seed_dev_admin
+
+    seed_dev_admin()
 
     # Story 61.29: Enforcement du registre de scope au démarrage
     run_feature_scope_startup_validation(settings.feature_scope_validation_mode)

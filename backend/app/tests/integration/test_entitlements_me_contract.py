@@ -168,7 +168,13 @@ def test_entitlements_me_no_plan(client, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
-    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short", "horoscope_daily"]:
+    for fc in [
+        "astrologer_chat",
+        "thematic_consultation",
+        "natal_chart_long",
+        "natal_chart_short",
+        "horoscope_daily",
+    ]:
         _get_or_create_feature(db_session, fc)
 
     user = _create_user(db_session)
@@ -199,7 +205,13 @@ def test_entitlements_me_quota_available(client, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
-    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short", "horoscope_daily"]:
+    for fc in [
+        "astrologer_chat",
+        "thematic_consultation",
+        "natal_chart_long",
+        "natal_chart_short",
+        "horoscope_daily",
+    ]:
         _get_or_create_feature(db_session, fc)
 
     user = _create_user(db_session, email="quota_avail@example.com")
@@ -231,7 +243,13 @@ def test_entitlements_me_quota_exhausted(client, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
-    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short", "horoscope_daily"]:
+    for fc in [
+        "astrologer_chat",
+        "thematic_consultation",
+        "natal_chart_long",
+        "natal_chart_short",
+        "horoscope_daily",
+    ]:
         _get_or_create_feature(db_session, fc)
 
     user = _create_user(db_session, email="quota_exhaust@example.com")
@@ -258,7 +276,13 @@ def test_entitlements_me_unlimited(client, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     # Ensure priority features exist
-    for fc in ["astrologer_chat", "thematic_consultation", "natal_chart_long", "natal_chart_short", "horoscope_daily"]:
+    for fc in [
+        "astrologer_chat",
+        "thematic_consultation",
+        "natal_chart_long",
+        "natal_chart_short",
+        "horoscope_daily",
+    ]:
         _get_or_create_feature(db_session, fc)
 
     user = _create_user(db_session, email="unlimited@example.com")

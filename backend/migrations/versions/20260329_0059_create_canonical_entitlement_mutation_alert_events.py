@@ -5,6 +5,7 @@ Revises: 20260328_0058
 Create Date: 2026-03-29 00:59:00.000000
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -44,9 +45,7 @@ def upgrade():
             nullable=False,
         ),
         sa.Column("delivered_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["audit_id"], ["canonical_entitlement_mutation_audits.id"]
-        ),
+        sa.ForeignKeyConstraint(["audit_id"], ["canonical_entitlement_mutation_audits.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("dedupe_key"),
     )

@@ -116,9 +116,7 @@ class CanonicalEntitlementAlertService:
             try:
                 with db.begin_nested():
                     # Créer l'event initial (pending delivery)
-                    alert_kind = (
-                        "sla_due_soon" if row.sla_status == "due_soon" else "sla_overdue"
-                    )
+                    alert_kind = "sla_due_soon" if row.sla_status == "due_soon" else "sla_overdue"
 
                     payload = CanonicalEntitlementAlertService._build_payload(row, request_id)
 
