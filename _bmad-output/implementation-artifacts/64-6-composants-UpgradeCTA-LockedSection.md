@@ -133,6 +133,9 @@ Le `filter: blur(6px)` est une valeur de départ. Tester sur mobile — si trop 
 
 - `LockedSection.tsx` : markup avec `aria-hidden="true"` sur `.locked-section__content` pour accessibilité. Icône `Lock` de `lucide-react`. Slot `cta` rendu dans `.locked-section__cta-container`.
 - `UpgradeCTA.tsx` : utilise `useUpgradeHint(featureCode)` depuis Story 64.5, `useAstrologyLabels()` pour la langue courante, et `getUpgradeBenefitLabel(key, lang)` ajouté dans `frontend/src/i18n/billing.ts`. Lien vers `/subscription-guide`. Retourne `null` si hint absent.
+- Extension ultérieure validée :
+  - `UpgradeCTA` accepte désormais une prop optionnelle `label` pour surcharger ponctuellement le message issu du `benefit_key` quand une page produit a besoin d'un wording de conversion plus précis ;
+  - ce mode est utilisé sur `/dashboard/horoscope` et `/consultations` pour orienter explicitement l'utilisateur free vers l'abonnement Basic sans dupliquer un second composant CTA.
 - i18n : trois clés ajoutées dans `billing.ts` — `upgrade.horoscope_daily.full_access`, `upgrade.natal_chart_long.full_interpretation`, `upgrade.astrologer_chat.unlimited_messages` — avec traductions fr/en/es.
 - CSS : variables du projet utilisées (`--glass`, `--primary`, `--text-1`, `--radius-md`, `--space-sm`, `--space-md`). Aucune classe Tailwind.
 - Exports ajoutés dans `frontend/src/components/ui/index.ts`.

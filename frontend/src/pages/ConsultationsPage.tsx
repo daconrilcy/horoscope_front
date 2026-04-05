@@ -6,11 +6,86 @@ import { CONTEXT_TRUNCATE_LENGTH, getConsultationTypeConfig } from "../types/con
 import { formatDate } from "../utils/formatDate"
 import { PageLayout } from "../layouts"
 import { useConsultationCatalogue } from "../api/consultations"
+import { useFeatureAccess } from "../hooks/useEntitlementSnapshot"
+import { UpgradeCTA } from "../components/ui"
+
+function ConsultationCatalogueCard({
+  title,
+  subtitle,
+  icon,
+  tags,
+  to,
+  actionLabel,
+  isLocked,
+  ctaLabel,
+}: {
+  title: string
+  subtitle: string
+  icon: string
+  tags?: string[]
+  to: string
+  actionLabel: string
+  isLocked: boolean
+  ctaLabel: string
+}) {
+  const cardContent = (
+    <>
+      <div className="consultation-card-premium-icon" aria-hidden="true">
+        {icon}
+      </div>
+      <div className="consultation-card-premium-main">
+        <h3 className="consultation-card-premium-title">{title}</h3>
+        <p className="consultation-card-premium-subtitle">{subtitle}</p>
+        {tags && tags.length > 0 ? (
+          <div className="consultation-card-premium-tags">
+            {tags.map((tag) => (
+              <span key={tag} className="consultation-premium-tag">
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <div className="consultation-card-premium-action">
+        {isLocked ? (
+          <UpgradeCTA
+            featureCode="thematic_consultation"
+            variant="button"
+            to="/settings/subscription"
+            label={ctaLabel}
+          />
+        ) : (
+          <span className="premium-cta-inline">{actionLabel}</span>
+        )}
+      </div>
+    </>
+  )
+
+  if (isLocked) {
+    return (
+      <div className="consultation-card-premium consultation-card-premium--locked">
+        {cardContent}
+      </div>
+    )
+  }
+
+  return (
+    <Link to={to} className="consultation-card-premium">
+      {cardContent}
+    </Link>
+  )
+}
 
 export function ConsultationsPage() {
   const { history, isLoading: isHistoryLoading } = useConsultations()
   const { data: catalogue, isLoading: isCatalogueLoading } = useConsultationCatalogue()
+  const featureAccess = useFeatureAccess("thematic_consultation")
   const lang = detectLang()
+  const isThematicConsultationLocked = featureAccess?.granted === false
+  const upgradeToBasicLabel =
+    lang === "fr"
+      ? "Passer à Basic pour accéder aux consultations thématiques"
+      : "Upgrade to Basic for thematic consultations"
 
   return (
     <PageLayout className="consultations-page premium-page-layout">
@@ -32,49 +107,28 @@ export function ConsultationsPage() {
         ) : (
           <div className="consultation-cards-container">
             {catalogue?.items.map((item) => (
-              <Link
+              <ConsultationCatalogueCard
                 key={item.key}
+                title={item.title}
+                subtitle={item.subtitle}
+                icon={item.icon_ref}
+                tags={item.metadata_config.tags}
                 to={`/consultations/new?type=${item.key}`}
-                className="consultation-card-premium"
-              >
-                <div className="consultation-card-premium-icon" aria-hidden="true">
-                  {item.icon_ref}
-                </div>
-                <div className="consultation-card-premium-main">
-                  <h3 className="consultation-card-premium-title">{item.title}</h3>
-                  <p className="consultation-card-premium-subtitle">{item.subtitle}</p>
-                  <div className="consultation-card-premium-tags">
-                    {item.metadata_config.tags?.map((tag: string) => (
-                      <span key={tag} className="consultation-premium-tag">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="consultation-card-premium-action">
-                  <span className="premium-cta-inline">{t("choose_consultation", lang)}</span>
-                </div>
-              </Link>
+                actionLabel={t("choose_consultation", lang)}
+                isLocked={isThematicConsultationLocked}
+                ctaLabel={upgradeToBasicLabel}
+              />
             ))}
 
-            {/* Fallback card if needed or generic start */}
-            <Link
+            <ConsultationCatalogueCard
+              title={t("no_preference_title", lang)}
+              subtitle={t("no_preference_subtitle", lang)}
+              icon="✨"
               to="/consultations/new"
-              className="consultation-card-premium consultation-card-premium--alt"
-            >
-              <div className="consultation-card-premium-icon" aria-hidden="true">
-                ✨
-              </div>
-              <div className="consultation-card-premium-main">
-                <h3 className="consultation-card-premium-title">{t("no_preference_title", lang)}</h3>
-                <p className="consultation-card-premium-subtitle">
-                  {t("no_preference_subtitle", lang)}
-                </p>
-              </div>
-              <div className="consultation-card-premium-action">
-                <span className="premium-cta-inline">{t("start_now", lang)}</span>
-              </div>
-            </Link>
+              actionLabel={t("start_now", lang)}
+              isLocked={isThematicConsultationLocked}
+              ctaLabel={upgradeToBasicLabel}
+            />
           </div>
         )}
       </section>

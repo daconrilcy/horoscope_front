@@ -213,6 +213,10 @@ Validation finale produit :
   - ajout d'un CTA Basic directement dans le cadre résumé `DayClimateHero`, avec promesse éditoriale orientée valeur ("obtenir un horoscope du jour plus riche") ;
   - extension du pattern de verrouillage à toutes les sections free avec teaser long fixe flouté, cadenas visible et CTA Basic sur chaque section (`Vos domaines clés`, `Déroulé de votre journée`, `Moment clé`, `Opportunité`, `Conseil du jour`, `Fondements astrologiques`) ;
   - centralisation des textes teaser longs et du message CTA dans `frontend/src/i18n/horoscope_copy.ts` pour conserver un pilotage i18n cohérent.
+- finalisation UX complémentaire sur `/consultations` pour le plan free :
+  - la page catalogue reste accessible, mais les cartes de consultations thématiques ne déclenchent plus de navigation vers le wizard ;
+  - chaque zone `consultation-card-premium-action` devient un CTA Basic vers `/settings/subscription` pour rendre explicite que les consultations thématiques sont réservées aux plans payants ;
+  - le comportement reste inchangé pour les utilisateurs Basic/Premium, qui conservent l'accès direct aux routes `/consultations/new`.
 - correction complémentaire du flux Basic sur `/natal` : une fois le quota d'interprétation complète consommé, l'interface n'autorise plus de nouvelle génération et remplace le bouton inactif par un CTA explicite vers Premium pour obtenir davantage de quota.
 - correction complémentaire du quota chat Basic : un premier message dont le coût réel dépasse le budget journalier en tokens ne provoque plus un rollback incohérent (`0 utilisé` mais `quota dépassé`) ; le compteur est désormais saturé à la limite puis l'échange suivant est bloqué normalement.
 - correction complémentaire du comptage LLM natal : les tokens consommés par les interprétations natales restent journalisés par utilisateur pour l'observabilité, mais ne sont plus déduits du quota `astrologer_chat`.

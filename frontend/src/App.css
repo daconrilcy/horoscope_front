@@ -2064,6 +2064,17 @@ textarea:focus-visible {
   box-shadow: 0 20px 40px rgba(64, 42, 102, 0.1);
 }
 
+.consultation-card-premium--locked {
+  cursor: default;
+}
+
+.consultation-card-premium--locked:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(134, 108, 208, 0.22);
+  box-shadow: 0 12px 28px rgba(64, 42, 102, 0.08);
+}
+
 .consultation-card-premium-icon {
   font-size: 3rem;
   width: 80px;
@@ -2122,6 +2133,10 @@ textarea:focus-visible {
 .consultation-card-premium:hover .premium-cta-inline {
   transform: scale(1.05);
   box-shadow: 0 10px 20px rgba(134, 108, 208, 0.4);
+}
+
+.consultation-card-premium-action .upgrade-cta {
+  white-space: nowrap;
 }
 
 .consultation-card-premium--alt {

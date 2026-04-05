@@ -10,6 +10,9 @@ import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
 import { ConsultationResultPage } from "../pages/ConsultationResultPage"
 import { ConsultationProvider, STORAGE_KEY } from "../state/consultationStore"
 
+const mockUseFeatureAccess = vi.fn()
+const mockUseUpgradeHint = vi.fn()
+
 const routerFutureFlags = {
   v7_startTransition: true,
   v7_relativeSplatPath: true,
@@ -113,6 +116,11 @@ vi.mock("../api/geocoding", () => ({
   },
 }))
 
+vi.mock("../hooks/useEntitlementSnapshot", () => ({
+  useFeatureAccess: (...args: unknown[]) => mockUseFeatureAccess(...args),
+  useUpgradeHint: (...args: unknown[]) => mockUseUpgradeHint(...args),
+}))
+
 const createTestQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: { retry: false, gcTime: 0 },
@@ -138,6 +146,15 @@ describe("ConsultationsPage", () => {
     localStorage.setItem("lang", "en")
     sessionStorage.clear()
     vi.clearAllMocks()
+    mockUseFeatureAccess.mockReturnValue({ feature_code: "thematic_consultation", granted: true })
+    mockUseUpgradeHint.mockReturnValue({
+      feature_code: "thematic_consultation",
+      current_plan_code: "free",
+      target_plan_code: "basic",
+      benefit_key: "upgrade.thematic_consultation.unlock",
+      cta_variant: "inline",
+      priority: 3,
+    })
   })
 
   afterEach(() => {
@@ -157,6 +174,38 @@ describe("ConsultationsPage", () => {
 
       expect(screen.getByText("Period Title")).toBeInTheDocument()
       expect(screen.getByText("Career Title")).toBeInTheDocument()
+    })
+
+    it("renders upgrade CTAs to Basic instead of consultation actions for free users", () => {
+      mockUseFeatureAccess.mockReturnValue({
+        feature_code: "thematic_consultation",
+        granted: false,
+        reason_code: "access_denied",
+      })
+
+      renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
+
+      const ctaLinks = screen.getAllByRole("link", {
+        name: /Upgrade to Basic for thematic consultations/i,
+      })
+
+      expect(ctaLinks).toHaveLength(3)
+      ctaLinks.forEach((link) => {
+        expect(link).toHaveAttribute("href", "/settings/subscription")
+      })
+      expect(screen.queryByText("Choose")).not.toBeInTheDocument()
+      expect(screen.queryByText("Start")).not.toBeInTheDocument()
+    })
+
+    it("keeps consultation navigation actions for entitled users", () => {
+      renderWithProviders(<ConsultationsPage />, { route: "/consultations" })
+
+      expect(screen.getByRole("link", { name: /Period Title/i })).toHaveAttribute(
+        "href",
+        "/consultations/new?type=period",
+      )
+      expect(screen.getAllByText("Choose")).toHaveLength(2)
+      expect(screen.getByText("Start")).toBeInTheDocument()
     })
   })
 })
