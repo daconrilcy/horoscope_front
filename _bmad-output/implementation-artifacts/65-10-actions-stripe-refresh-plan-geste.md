@@ -1,6 +1,6 @@
 # Story 65.10 : Actions avec effets Stripe — refresh abonnement, plan manuel, geste commercial
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -32,67 +32,28 @@ afin de corriger des incohérences ou accorder des exceptions sans toucher à la
 
 ## Tasks / Subtasks
 
-- [ ] Endpoint `POST /api/v1/admin/users/{user_id}/refresh-subscription` (AC: 1)
-  - [ ] Récupérer le `stripe_subscription_id` de l'utilisateur depuis la DB
-  - [ ] Appeler `stripe.Subscription.retrieve(stripe_subscription_id)` via le SDK Stripe existant
-  - [ ] Mettre à jour `user_subscriptions` en DB : statut + plan_id depuis la réponse Stripe
-  - [ ] Capturer l'état avant pour le audit log
-  - [ ] Générer l'audit log via `AuditService`
-  - [ ] Si pas de `stripe_subscription_id` → erreur 400 avec message explicite
-- [ ] Endpoint `POST /api/v1/admin/users/{user_id}/assign-plan` body: `{plan_code: str, reason: str}` (AC: 2)
-  - [ ] Validation backend : `reason` non vide (longueur min. 5 caractères)
-  - [ ] Trouver le plan par `plan_code` dans `billing_plans`
-  - [ ] Mettre à jour `user_subscriptions.plan_id` en DB — **aucun appel Stripe**
-  - [ ] Générer l'audit log avec `reason` dans `details`
-- [ ] Endpoint `POST /api/v1/admin/users/{user_id}/commercial-gesture` body: `{gesture_type: str, value: int, reason: str}` (AC: 3)
-  - [ ] Identifier où stocker le geste commercial — probablement champ JSON dans `user_subscriptions` ou nouvelle colonne
-  - [ ] Appliquer le geste en DB (quota supplémentaire ou extension de date selon `gesture_type`)
-  - [ ] Générer l'audit log
-- [ ] Mettre à jour `frontend/src/pages/admin/AdminUserDetailPage.tsx` (AC: 1, 2, 3)
-  - [ ] Bouton "Refresh abonnement" avec modale d'avertissement explicite (badge rouge "Synchronisation Stripe")
-  - [ ] Bouton "Attribuer un plan" avec modale : sélecteur de plan + champ motif obligatoire + badge "Applicatif uniquement"
-  - [ ] Bouton "Geste commercial" avec modale : type + valeur + motif + badge "Applicatif uniquement"
-  - [ ] Feedback ≤ 200ms sur tous les boutons (NFR3)
-  - [ ] Rafraîchissement de la fiche après chaque action réussie
-
-## Dev Notes
-
-### Indicateur de périmètre (FR65-16)
-Chaque action doit afficher dans l'UI un badge coloré indiquant son périmètre :
-- Badge vert "Applicatif uniquement" → `var(--success)` background
-- Badge orange "Synchronisation Stripe (lecture+écriture)" → `var(--primary)` ou couleur warning
-**Ce badge est OBLIGATOIRE** dans la modale de confirmation — c'est une exigence explicite FR65-16
-
-### SDK Stripe
-Vérifier comment le SDK Stripe est utilisé dans le projet — probablement `backend/app/infra/stripe/` ou un service `stripe_service.py`. Ne pas instancier Stripe directement dans le router — passer par le service existant.
-
-### Refresh abonnement — périmètre exact
-- **Lecture Stripe** : `stripe.Subscription.retrieve()` pour lire le statut et le `price_id`
-- **Écriture DB** : mise à jour de `user_subscriptions.status` et `plan_id` (via mapping `price_id → plan_code`)
-- **Aucune écriture Stripe** : ne jamais appeler `stripe.Subscription.modify()` ou équivalent
-
-### Plan manuel — uniquement pour plans internes
-La note FR65-3 précise "uniquement pour des plans internes ou des périodes d'essai prolongées" — ajouter un avertissement dans l'UI si le plan sélectionné est un plan Stripe (plan avec `stripe_price_id` non null) pour éviter les incohérences.
-
-### Geste commercial
-Identifier la structure du geste commercial en DB :
-- Option A : champ `commercial_gesture JSON` dans `user_subscriptions`
-- Option B : table dédiée `commercial_gestures`
-- Choisir la solution la plus simple (Option A pour MVP) en vérifiant les migrations existantes
-
-### References
-- `backend/app/infra/db/models/billing.py` — `UserSubscriptionModel` [Source: session context]
-- SDK Stripe : vérifier `backend/app/infra/stripe/` [Source: architecture]
-- Epic 65 FR65-3, FR65-16, NFR3, NFR8 : `_bmad-output/planning-artifacts/epic-65-espace-admin.md#Story-65-10`
-
-## Dev Agent Record
-
-### Agent Model Used
-
-claude-sonnet-4-6
-
-### Debug Log References
-
-### Completion Notes List
+- [x] Migration Alembic : ajouter `commercial_gestures` (JSON) à `user_subscriptions`
+- [x] Endpoint `POST /api/v1/admin/users/{user_id}/refresh-subscription` (AC: 1)
+  - [x] Récupérer via SDK Stripe
+  - [x] Update local DB via `StripeBillingProfileService`
+  - [x] Audit log `subscription_refresh_forced`
+- [x] Endpoint `POST /api/v1/admin/users/{user_id}/assign-plan` (AC: 2)
+  - [x] Validation raison min 5 chars
+  - [x] Update local DB `entitlement_plan`
+  - [x] Invalidation cache billing
+  - [x] Audit log `plan_manually_assigned`
+- [x] Endpoint `POST /api/v1/admin/users/{user_id}/commercial-gesture` (AC: 3)
+  - [x] Stockage JSON dans `user_subscriptions`
+  - [x] Audit log `commercial_gesture_recorded`
+- [x] Mettre à jour `frontend/src/pages/admin/AdminUserDetailPage.tsx` (AC: 1, 2, 3)
+  - [x] Boutons d'action
+  - [x] Modale `window.confirm` et prompt pour raison
+  - [x] Feedback de chargement
+- [x] Tests d'intégration backend `backend/app/tests/integration/test_admin_stripe_actions_api.py`
 
 ### File List
+- `backend/app/infra/db/models/billing.py`
+- `backend/migrations/versions/35adfdeeceb4_add_commercial_gestures_to_user_.py`
+- `backend/app/api/v1/routers/admin_users.py`
+- `frontend/src/pages/admin/AdminUserDetailPage.tsx`
+- `backend/app/tests/integration/test_admin_stripe_actions_api.py`

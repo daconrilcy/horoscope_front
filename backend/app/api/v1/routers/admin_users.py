@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
@@ -27,6 +28,7 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
+from app.integrations.stripe_client import get_stripe_client
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
@@ -343,5 +345,158 @@ def reset_user_quota(
             ),
         )
     
+    db.commit()
+    return {"status": "success"}
+
+
+@router.post("/{user_id}/refresh-subscription")
+def refresh_subscription(
+    user_id: int,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """
+    Force a sync from Stripe for status and plan.
+    """
+    profile = db.scalar(
+        select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
+    )
+    if not profile or not profile.stripe_subscription_id:
+        raise HTTPException(status_code=400, detail="No active Stripe subscription found for this user")
+
+    from app.services.stripe_billing_profile_service import StripeBillingProfileService
+    
+    stripe_client = get_stripe_client()
+    if not stripe_client:
+        # Fallback for testing if monkeypatching failed or if it's actually not configured
+        raise HTTPException(status_code=503, detail="Stripe client not configured")
+
+    try:
+        subscription = stripe_client.subscriptions.retrieve(profile.stripe_subscription_id)
+        before = {
+            "subscription_status": profile.subscription_status,
+            "entitlement_plan": profile.entitlement_plan,
+        }
+        event_data = {
+            "id": f"forced_refresh_{resolve_request_id(request)}",
+            "type": "admin.forced_refresh",
+            "created": int(datetime.now(UTC).timestamp()),
+            "data": {"object": subscription.to_dict()},
+        }
+        StripeBillingProfileService.update_from_event_payload(db, user_id, event_data)
+        AuditService.record_event(
+            db,
+            payload=AuditEventCreatePayload(
+                request_id=resolve_request_id(request),
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="subscription_refresh_forced",
+                target_type="user",
+                target_id=str(user_id),
+                status="success",
+                details={"before": before, "after": {
+                    "subscription_status": profile.subscription_status,
+                    "entitlement_plan": profile.entitlement_plan
+                }},
+            ),
+        )
+        db.commit()
+        return {"status": "success"}
+    except Exception as e:
+        logger.error("admin_refresh_subscription_failed user_id=%s error=%s", user_id, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{user_id}/assign-plan")
+def assign_plan(
+    user_id: int,
+    request: Request,
+    plan_code: str = Body(embed=True),
+    reason: str = Body(embed=True),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """
+    Manually assign a plan without Stripe side-effects.
+    """
+    if len(reason) < 5:
+        raise HTTPException(status_code=400, detail="A reason of at least 5 characters is required")
+
+    profile = db.scalar(
+        select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
+    )
+    if not profile:
+        from app.services.stripe_billing_profile_service import StripeBillingProfileService
+        profile = StripeBillingProfileService.get_or_create_profile(db, user_id)
+
+    before = profile.entitlement_plan
+    profile.entitlement_plan = plan_code
+    profile.subscription_status = "active"
+    AuditService.record_event(
+        db,
+        payload=AuditEventCreatePayload(
+            request_id=resolve_request_id(request),
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="plan_manually_assigned",
+            target_type="user",
+            target_id=str(user_id),
+            status="success",
+            details={"before": before, "after": plan_code, "reason": reason},
+        ),
+    )
+    from app.services.billing_service import BillingService
+    BillingService._invalidate_cached_subscription_status(user_id)
+    db.commit()
+    return {"status": "success"}
+
+
+@router.post("/{user_id}/commercial-gesture")
+def record_commercial_gesture(
+    user_id: int,
+    request: Request,
+    gesture_type: str = Body(embed=True),
+    value: int = Body(embed=True),
+    reason: str = Body(embed=True, default=""),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """
+    Record a commercial gesture (bonus days/messages).
+    """
+    from app.infra.db.models.billing import UserSubscriptionModel
+    sub = db.scalar(
+        select(UserSubscriptionModel)
+        .where(UserSubscriptionModel.user_id == user_id)
+        .order_by(UserSubscriptionModel.created_at.desc())
+        .limit(1)
+    )
+    if not sub:
+        raise HTTPException(status_code=400, detail="No local subscription record found to attach gesture")
+
+    gesture = {
+        "type": gesture_type,
+        "value": value,
+        "reason": reason,
+        "granted_at": datetime.now(UTC).isoformat(),
+        "granted_by": current_user.id
+    }
+    gestures = list(sub.commercial_gestures or [])
+    gestures.append(gesture)
+    sub.commercial_gestures = gestures
+    AuditService.record_event(
+        db,
+        payload=AuditEventCreatePayload(
+            request_id=resolve_request_id(request),
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="commercial_gesture_recorded",
+            target_type="user",
+            target_id=str(user_id),
+            status="success",
+            details=gesture,
+        ),
+    )
     db.commit()
     return {"status": "success"}
