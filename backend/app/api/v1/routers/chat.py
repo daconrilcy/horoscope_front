@@ -26,6 +26,8 @@ from app.services.chat_guidance_service import (
     ChatGuidanceServiceError,
     ChatReplyData,
 )
+from app.services.entitlement_types import QuotaDefinition
+from app.services.quota_usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +103,35 @@ def _build_quota_info(result: ChatEntitlementResult) -> QuotaInfo:
     return QuotaInfo()
 
 
+def _build_post_turn_quota_info(
+    db: Session,
+    *,
+    user_id: int,
+    result: ChatEntitlementResult,
+) -> QuotaInfo:
+    if result.path != "canonical_quota" or not result.usage_states:
+        return QuotaInfo()
+
+    state = result.usage_states[0]
+    refreshed_state = QuotaUsageService.get_usage(
+        db,
+        user_id=user_id,
+        feature_code=ChatEntitlementGate.FEATURE_CODE,
+        quota=QuotaDefinition(
+            quota_key=state.quota_key,
+            quota_limit=state.quota_limit,
+            period_unit=state.period_unit,
+            period_value=state.period_value,
+            reset_mode=state.reset_mode,
+        ),
+    )
+    return QuotaInfo(
+        remaining=refreshed_state.remaining,
+        limit=refreshed_state.quota_limit,
+        window_end=refreshed_state.window_end,
+    )
+
+
 @router.post(
     "/messages",
     responses={
@@ -140,8 +171,6 @@ def send_chat_message(
         logger.info("Checking access...")
         entitlement_result = ChatEntitlementGate.check_access(db, user_id=current_user.id)
 
-        quota_info = _build_quota_info(entitlement_result)
-
         logger.info("Sending message...")
         response = ChatGuidanceService.send_message(
             db=db,
@@ -152,6 +181,11 @@ def send_chat_message(
             persona_id=parsed_payload.persona_id,
             client_message_id=parsed_payload.client_message_id,
             entitlement_result=entitlement_result,
+        )
+        quota_info = _build_post_turn_quota_info(
+            db,
+            user_id=current_user.id,
+            result=entitlement_result,
         )
         logger.info("Message sent, preparing final dict...")
         

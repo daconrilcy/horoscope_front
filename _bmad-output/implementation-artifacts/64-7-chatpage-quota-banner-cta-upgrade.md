@@ -140,6 +140,10 @@ Le `access_mode === "quota"` indique que le plan a un quota — afficher le bann
 - Correction du paradoxe produit `0 utilisé` + `quota dépassé` :
   - auparavant le quota était vérifié avant appel LLM puis débité après coup, ce qui pouvait annuler toute la transaction ;
   - désormais l'état affiché dans `/chat` reste cohérent avec la réalité du dernier échange.
+- Correction du moment de coupure après dépassement causé par le message courant :
+  - si le message utilisateur fait basculer le quota à `0` après consommation réelle des tokens, la réponse du LLM est désormais bien renvoyée au client ;
+  - le `quota_info` retourné par `POST /v1/chat/messages` est recalculé après enregistrement de l'usage réel ;
+  - la coupure effective intervient donc au message suivant, et non plus avant la réponse du tour qui a saturé le quota.
 - Séparation explicite des usages LLM :
   - les interprétations natales journalisent leurs tokens par utilisateur pour l'observabilité ;
   - ces tokens ne consomment plus le quota `astrologer_chat`, réservé aux échanges de chat.

@@ -221,6 +221,10 @@ Validation finale produit :
   - le comportement reste inchangé pour les utilisateurs Basic/Premium, qui conservent l'accès direct aux routes `/consultations/new`.
 - correction complémentaire du flux Basic sur `/natal` : une fois le quota d'interprétation complète consommé, l'interface n'autorise plus de nouvelle génération et remplace le bouton inactif par un CTA explicite vers Premium pour obtenir davantage de quota.
 - correction complémentaire du quota chat Basic : un premier message dont le coût réel dépasse le budget journalier en tokens ne provoque plus un rollback incohérent (`0 utilisé` mais `quota dépassé`) ; le compteur est désormais saturé à la limite puis l'échange suivant est bloqué normalement.
+- correction complémentaire du moment de coupure quota `/chat` :
+  - lorsque le message courant consomme les derniers tokens disponibles, la réponse du LLM est désormais renvoyée normalement ;
+  - `POST /v1/chat/messages` recalcule ensuite le `quota_info` à partir de l'usage réellement persisté ;
+  - le message suivant est alors bloqué avec l'état quota épuisé, ce qui supprime la coupure prématurée avant réponse.
 - correction complémentaire du quota chat Free : le plan `free` sur `astrologer_chat` est bien limité par le quota canonique `messages` ; après le premier message autorisé, le compteur hebdomadaire passe à `1/1`, l'état remonté par `/v1/entitlements/me` reste cohérent et le second envoi est bloqué en `chat_quota_exceeded`.
 - correction complémentaire du comptage LLM natal : les tokens consommés par les interprétations natales restent journalisés par utilisateur pour l'observabilité, mais ne sont plus déduits du quota `astrologer_chat`.
 - découplage du flux `POST /v1/users/me/natal-chart` et du refresh de baseline utilisateur : la génération du thème natal n'enchaîne plus un recalcul massif de 365 jours en arrière-plan, ce qui supprime la rafale de logs perçue comme une boucle lors du parcours utilisateur.

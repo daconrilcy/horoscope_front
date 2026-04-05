@@ -492,6 +492,9 @@ def test_first_chat_message_can_saturate_token_quota_without_rollback() -> None:
         json={"message": "Premier message quota"},
     )
     assert first.status_code == 200
+    first_payload = first.json()
+    assert first_payload["quota_info"]["remaining"] == 0
+    assert first_payload["quota_info"]["limit"] == 100
 
     entitlements = client.get("/v1/entitlements/me", headers=headers)
     assert entitlements.status_code == 200
