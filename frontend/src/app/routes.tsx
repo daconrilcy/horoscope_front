@@ -228,6 +228,10 @@ export const routes: RouteObject[] = [
             element: <AdminUsersPage />,
           },
           {
+            path: "users/:userId",
+            element: <AdminUserDetailPage />,
+          },
+          {
             path: "entitlements",
             element: <AdminEntitlementsPage />,
           },

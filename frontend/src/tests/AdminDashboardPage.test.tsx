@@ -3,9 +3,15 @@ import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest"
 
+import { MemoryRouter, useLocation } from "react-router-dom"
 import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage"
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
+
+function LocationDisplay() {
+  const location = useLocation()
+  return <div data-testid="location-display">{location.pathname}{location.search}</div>
+}
 
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
@@ -56,11 +62,27 @@ const MOCK_FLUX = {
   }),
 }
 
+const MOCK_BILLING = {
+  ok: true,
+  status: 200,
+  json: async () => ({
+    data: {
+      period: "30d",
+      plan: "all",
+      payment_failures: 2,
+      estimated_total_revenue_cents: 100000,
+      revenue_by_plan: [],
+      last_updated: "2025-04-05T12:00:00Z",
+    },
+  }),
+}
+
 function makeFetchMock() {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (url.includes("/v1/admin/dashboard/kpis-snapshot")) return MOCK_SNAPSHOT
     if (url.includes("/v1/admin/dashboard/kpis-flux")) return MOCK_FLUX
+    if (url.includes("/v1/admin/dashboard/kpis-billing")) return MOCK_BILLING
     return { ok: false, status: 404, json: async () => ({}) }
   })
 }
@@ -72,7 +94,10 @@ function renderPage() {
   return render(
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <AdminDashboardPage />
+        <MemoryRouter>
+          <AdminDashboardPage />
+          <LocationDisplay />
+        </MemoryRouter>
       </QueryClientProvider>
     </ThemeProvider>
   )
@@ -86,16 +111,12 @@ describe("AdminDashboardPage", () => {
     renderPage()
 
     await waitFor(() => {
-      // Snapshot
       expect(screen.getByText("1234")).toBeInTheDocument()
       expect(screen.getByText(/1.*999/)).toBeInTheDocument()
-      
-      // Flux
-      expect(screen.getByText("150")).toBeInTheDocument() // new users
-      expect(screen.getByText("5")).toBeInTheDocument() // churn
+      expect(screen.getByText("150")).toBeInTheDocument()
+      expect(screen.getByText("5")).toBeInTheDocument()
     })
 
-    // Trend chart should be visible
     expect(document.querySelector(".trend-chart")).toBeInTheDocument()
   })
 
@@ -111,7 +132,6 @@ describe("AdminDashboardPage", () => {
       expect(screen.getByText("150")).toBeInTheDocument()
     })
 
-    // Change period
     const periodSelect = screen.getByLabelText(/Période :/i)
     await user.selectOptions(periodSelect, "7d")
 
@@ -121,5 +141,22 @@ describe("AdminDashboardPage", () => {
         expect.anything()
       )
     })
+  })
+
+  it("navigates to users page with filter when clicking payment failures", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+    setAccessToken("fake-token")
+    const user = userEvent.setup()
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText("2")).toBeInTheDocument()
+    })
+
+    const failureCard = screen.getByRole("button", { name: /Échecs paiement/i })
+    await user.click(failureCard)
+
+    expect(screen.getByTestId("location-display")).toHaveTextContent("/admin/users?filter=payment_failure")
   })
 })

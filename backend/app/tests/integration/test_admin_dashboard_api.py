@@ -139,3 +139,32 @@ def test_get_kpis_billing_success(admin_token):
     assert data["payment_failures"] >= 1
     # revenue might be 0 if no 'active' stripe profiles are set up in this isolated DB
     assert "revenue_by_plan" in data
+
+def test_search_users_payment_failure(admin_token):
+    with db_session_module.SessionLocal() as db:
+        premium_plan = BillingPlanModel(code="premium", display_name="Premium", monthly_price_cents=1999, daily_message_limit=100)
+        db.add(premium_plan)
+        db.commit()
+
+        user_fail = UserModel(email="user-fail-search@test.com", password_hash="x", role="user")
+        db.add(user_fail)
+        db.commit()
+        
+        sub_fail = UserSubscriptionModel(
+            user_id=user_fail.id, 
+            plan_id=premium_plan.id, 
+            status="past_due",
+            failure_reason="card_declined",
+            updated_at=datetime.now(UTC)
+        )
+        db.add(sub_fail)
+        db.commit()
+
+    response = client.get("/v1/admin/users?q=payment_failure", headers={
+        "Authorization": f"Bearer {admin_token}"
+    })
+    assert response.status_code == 200
+    data = response.json()["data"]
+    # Should find at least our user_fail
+    emails = [u["email"] for u in data]
+    assert "user-fail-search@test.com" in emails
