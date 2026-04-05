@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom"
 import { useTranslation } from "../i18n"
 import { AdminLayout, type AdminSection } from "../layouts"
-import { AdminPermissionsProvider } from "../state/AdminPermissionsContext"
+import { AdminPermissionsProvider, ALL_ADMIN_SECTIONS } from "../state/AdminPermissionsContext"
 
 function DashboardIcon({ className }: { className?: string }) {
   return (

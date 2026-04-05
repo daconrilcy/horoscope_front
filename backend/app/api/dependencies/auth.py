@@ -18,6 +18,7 @@ class AuthenticatedUser(BaseModel):
     role: str
     email: str
     created_at: datetime
+    permissions: list[str] = []
 
 
 class UserAuthenticationError(Exception):
