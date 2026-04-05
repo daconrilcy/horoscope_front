@@ -38,6 +38,7 @@ import { BillingSuccessPage } from "../pages/billing/BillingSuccessPage"
 import { BillingCancelPage } from "../pages/billing/BillingCancelPage"
 import { PrivacyPanel } from "../components/PrivacyPanel"
 import { SupportOpsPanel } from "../components/SupportOpsPanel"
+import { AdminGuard } from "../components/AdminGuard"
 import { AdminPage } from "../pages/AdminPage"
 import { PricingAdmin, MonitoringAdmin, PersonasAdmin, ReconciliationAdmin } from "../pages/admin"
 import { EnterpriseCredentialsPanel } from "../components/EnterpriseCredentialsPanel"
@@ -196,9 +197,9 @@ export const routes: RouteObject[] = [
       {
         path: "/admin",
         element: (
-          <RoleGuard roles={["ops", "admin"]}>
+          <AdminGuard>
             <AdminPage />
-          </RoleGuard>
+          </AdminGuard>
         ),
         children: [
           {

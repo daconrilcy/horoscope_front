@@ -1,6 +1,6 @@
 # Story 65.3 : Guard admin frontend — protection des routes /admin/*
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -25,23 +25,28 @@ afin que l'espace admin soit inaccessible à toute personne non autorisée.
 4. **Given** le composant de guard admin est rendu  
    **When** le rôle de l'utilisateur est en cours de chargement (état async)  
    **Then** un spinner de chargement est affiché — aucune redirection n'est déclenchée prématurément
+Status: done
 
 ## Tasks / Subtasks
 
-- [ ] Créer le composant `AdminGuard` dans `frontend/src/components/AdminGuard.tsx` (AC: 1, 2, 3, 4)
-  - [ ] Lire le rôle utilisateur depuis le contexte d'auth existant
-  - [ ] Si chargement en cours → afficher spinner (AC: 4)
-  - [ ] Si non authentifié → `<Navigate to="/login" state={{ redirect: location.pathname }} />`
-  - [ ] Si authentifié mais rôle ≠ `"admin"` → `<Navigate to="/" replace />`
-  - [ ] Si rôle `"admin"` → `<Outlet />` (ou `{children}`)
-- [ ] Envelopper toutes les routes `/admin/*` dans le routeur React (`frontend/src/App.tsx` ou fichier de routes) (AC: 1, 2, 3)
-  - [ ] Identifier le fichier qui définit `<Route path="/admin" element={<AdminPage />}>` — probablement `App.tsx` ou `router.tsx`
-  - [ ] Envelopper avec `<AdminGuard>` ou utiliser comme `element={<AdminGuard />}` parent
-- [ ] Ajouter le CSS du spinner de chargement dans `frontend/src/components/AdminGuard.css` (AC: 4)
-  - [ ] Utiliser `var(--primary)` pour la couleur du spinner
-  - [ ] Centrer le spinner dans la page (flex + height: 100vh)
+- [x] Créer le composant `AdminGuard` dans `frontend/src/components/AdminGuard.tsx` (AC: 1, 2, 3, 4)
+  - [x] Lire le rôle utilisateur depuis le contexte d'auth existant
+  - [x] Si chargement en cours → afficher spinner (AC: 4)
+  - [x] Si non authentifié → `<Navigate to="/login" state={{ redirect: location.pathname }} />`
+  - [x] Si authentifié mais rôle ≠ `"admin"` → `<Navigate to="/" replace />`
+  - [x] Si rôle `"admin"` → `<Outlet />` (ou `{children}`)
+- [x] Envelopper toutes les routes `/admin/*` dans le routeur React (`frontend/src/App.tsx` ou fichier de routes) (AC: 1, 2, 3)
+  - [x] Identifier le fichier qui définit `<Route path="/admin" element={<AdminPage />}>` — `frontend/src/app/routes.tsx`
+  - [x] Envelopper avec `<AdminGuard>`
+- [x] Ajouter le CSS du spinner de chargement dans `frontend/src/components/AdminGuard.css` (AC: 4)
+  - [x] Utiliser `var(--primary)` pour la couleur du spinner
+  - [x] Centrer le spinner dans la page (flex + height: 100vh)
 
-## Dev Notes
+### File List
+- `frontend/src/components/AdminGuard.tsx`
+- `frontend/src/components/AdminGuard.css`
+- `frontend/src/app/routes.tsx`
+- `frontend/src/tests/router.test.tsx`
 
 ### Contexte architectural
 - **Contexte d'auth existant** : localiser dans `frontend/src/context/` ou `frontend/src/hooks/` — chercher `useAuth`, `AuthContext`, ou `useUser` — c'est là qu'on obtient `{ user, isLoading }` ou équivalent

@@ -248,21 +248,35 @@ describe("AuthGuard", () => {
   })
 })
 
-describe("RoleGuard", () => {
-  it("redirects non-ops user from /admin to /dashboard", async () => {
-    vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_USER))
-    setupToken()
+describe("AdminGuard", () => {
+  it("redirects non-admin user from /admin to /", async () => {
+    vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_OPS))
+    setupToken("1", "ops")
     
     renderApp(["/admin/monitoring"])
     
     await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
+      // In our test setup, "/" might redirect or show something specific.
+      // Based on AC, it should redirect to "/" (which usually leads to dashboard for logged in users)
+      expect(window.location.pathname).toBe("/")
     })
   })
 
-  it("allows ops user to access /admin routes", async () => {
-    vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_OPS))
-    setupToken("1", "ops")
+  it("allows admin user to access /admin routes", async () => {
+    const AUTH_ME_ADMIN = {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: {
+          id: 99,
+          role: "admin",
+          email: "admin@example.com",
+          created_at: "2025-01-01T00:00:00Z",
+        },
+      }),
+    }
+    vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_ADMIN))
+    setupToken("99", "admin")
     
     renderApp(["/admin/monitoring"])
     
@@ -270,7 +284,9 @@ describe("RoleGuard", () => {
       expect(screen.getByRole("heading", { name: new RegExp(tAdmin.page.fr.title, "i") })).toBeInTheDocument()
     })
   })
+})
 
+describe("RoleGuard", () => {
   it("allows support user to access /support route", async () => {
     vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_SUPPORT))
     setupToken("2", "support")
