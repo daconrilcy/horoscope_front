@@ -32,3 +32,9 @@ class AdminEntitlementMatrixResponse(BaseModel):
     plans: list[AdminEntitlementPlan]
     features: list[AdminEntitlementFeature]
     cells: dict[str, AdminEntitlementCell] # Key: "plan_id:feature_id"
+
+
+class AdminEntitlementUpdate(BaseModel):
+    access_mode: str | None = None
+    quota_limit: int | None = None
+    is_enabled: bool | None = None

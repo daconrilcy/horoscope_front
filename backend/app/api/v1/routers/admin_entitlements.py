@@ -3,12 +3,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.schemas.admin_entitlements import AdminEntitlementMatrixResponse
+from app.api.v1.schemas.admin_entitlements import (
+    AdminEntitlementMatrixResponse,
+    AdminEntitlementUpdate,
+)
+from app.core.request_id import resolve_request_id
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     FeatureCatalogModel,
@@ -16,6 +20,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureBindingModel,
 )
 from app.infra.db.session import get_db_session
+from app.services.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
 
@@ -69,3 +74,65 @@ def get_entitlement_matrix(
         ],
         "cells": cells
     }
+
+
+@router.patch("/{plan_id}/{feature_id}")
+def update_entitlement(
+    plan_id: int,
+    feature_id: int,
+    payload: AdminEntitlementUpdate,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """
+    Update a specific plan-feature binding (quota, mode, enabled).
+    """
+    binding = db.scalar(
+        select(PlanFeatureBindingModel)
+        .where(PlanFeatureBindingModel.plan_id == plan_id, 
+               PlanFeatureBindingModel.feature_id == feature_id)
+        .options(joinedload(PlanFeatureBindingModel.quotas))
+    )
+    if not binding:
+        raise HTTPException(status_code=404, detail="Binding not found")
+
+    before = {
+        "access_mode": binding.access_mode.value,
+        "is_enabled": binding.is_enabled,
+        "quota_limit": binding.quotas[0].quota_limit if binding.quotas else None
+    }
+
+    # Apply updates
+    if payload.access_mode is not None:
+        binding.access_mode = AccessMode(payload.access_mode)
+    if payload.is_enabled is not None:
+        binding.is_enabled = payload.is_enabled
+    if payload.quota_limit is not None:
+        if not binding.quotas:
+            raise HTTPException(status_code=400, detail="No quota record found to update")
+        binding.quotas[0].quota_limit = payload.quota_limit
+
+    # Audit log
+    AuditService.record_event(
+        db,
+        payload=AuditEventCreatePayload(
+            request_id=resolve_request_id(request),
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="entitlement_quota_updated",
+            target_type="plan_entitlement",
+            target_id=f"{plan_id}:{feature_id}",
+            status="success",
+            details={
+                "before": before,
+                "after": {
+                    "access_mode": binding.access_mode.value,
+                    "is_enabled": binding.is_enabled,
+                    "quota_limit": binding.quotas[0].quota_limit if binding.quotas else None
+                }
+            },
+        ),
+    )
+    db.commit()
+    return {"status": "success"}
