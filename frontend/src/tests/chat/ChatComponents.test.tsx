@@ -415,6 +415,7 @@ describe("ChatLayout", () => {
 
     render(
       <ChatLayout
+        topBanner={<div data-testid="banner">Banner</div>}
         leftPanel={<div data-testid="left">Left</div>}
         centerPanel={<div data-testid="center">Center</div>}
         mobileView="list"
@@ -426,6 +427,7 @@ describe("ChatLayout", () => {
 
     expect(screen.getByTestId("left")).toBeInTheDocument()
     expect(screen.getByTestId("center")).toBeInTheDocument()
+    expect(screen.getByTestId("banner")).toBeInTheDocument()
     expect(screen.queryByTestId("right")).not.toBeInTheDocument()
     expect(document.querySelector(".chat-layout--desktop")).toBeInTheDocument()
   })
@@ -729,16 +731,16 @@ describe("ChatQuotaBanner", () => {
       data: {
         quota_date: "2026-04-04",
         quota_key: "tokens",
-        limit: 1667,
+        limit: 10000,
         consumed: 321,
-        remaining: 1346,
+        remaining: 9679,
         reset_at: "2026-04-05T00:00:00Z",
         blocked: false,
       },
     } as ReturnType<typeof useChatEntitlementUsage>)
     render(<ChatQuotaBanner />, { wrapper: createWrapper() })
     expect(screen.getByRole("progressbar")).toBeInTheDocument()
-    expect(screen.queryByText(/1667/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/10000/i)).not.toBeInTheDocument()
     expect(document.querySelector(".chat-quota-banner--info")).toBeInTheDocument()
   })
 

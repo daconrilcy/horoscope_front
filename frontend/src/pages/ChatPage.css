@@ -62,6 +62,8 @@ body:has(.is-chat-page) {
 .chat-page-container .chat-layout {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(248, 243, 255, 0.42) 100%);
   backdrop-filter: blur(24px) saturate(165%);
@@ -71,6 +73,21 @@ body:has(.is-chat-page) {
   box-shadow:
     0 24px 70px rgba(82, 56, 130, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+}
+
+.chat-page-container .chat-layout__banner {
+  flex: 0 0 auto;
+}
+
+.chat-page-container .chat-layout__body {
+  --sidebar-width: 320px;
+
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   overflow: hidden;
 }
 
@@ -101,7 +118,6 @@ body:has(.is-chat-page) {
 
 /* Adjust TwoColumnLayout for chat */
 .chat-page-container .two-col-layout {
-  --sidebar-width: 320px;
   height: 100%;
 }
 
@@ -187,6 +203,10 @@ body:has(.is-chat-page) {
   .chat-page-container .chat-layout {
     border-radius: 20px 20px 0 0;
     border-bottom: none;
+  }
+
+  .chat-page-container .chat-layout__body {
+    grid-template-columns: 1fr;
   }
 
   .chat-page-container .chat-empty-state {

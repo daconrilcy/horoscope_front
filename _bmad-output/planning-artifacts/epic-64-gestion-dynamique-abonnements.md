@@ -232,6 +232,7 @@ Validation finale produit :
 - correction complémentaire du banner quota `/chat` pour `basic` :
   - le bandeau n'affiche plus les tokens journaliers comme un nombre de "messages restants" ;
   - tant que le quota n'est pas épuisé, l'UI affiche désormais une jauge horizontale de consommation en pourcentage, sans unité textuelle.
+  - le quota canonique `astrologer_chat` du plan `basic` est désormais calibré à `10 000 tokens/jour`, `50 000/semaine` et `200 000/mois`.
 
 ---
 

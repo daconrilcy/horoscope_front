@@ -564,21 +564,21 @@ def test_get_usage_tokens_can_use_subscription_anniversary_windows(db_session):
 
     quota_day = QuotaDefinition(
         quota_key="tokens",
-        quota_limit=1667,
+        quota_limit=10000,
         period_unit="day",
         period_value=1,
         reset_mode="calendar",
     )
     quota_week = QuotaDefinition(
         quota_key="tokens",
-        quota_limit=12500,
+        quota_limit=50000,
         period_unit="week",
         period_value=1,
         reset_mode="calendar",
     )
     quota_month = QuotaDefinition(
         quota_key="tokens",
-        quota_limit=50000,
+        quota_limit=200000,
         period_unit="month",
         period_value=1,
         reset_mode="calendar",

@@ -155,7 +155,7 @@ const PLANS_OK = {
             quotas: [
               {
                 quota_key: "tokens",
-                quota_limit: 50000,
+                quota_limit: 200000,
                 period_unit: "month",
                 period_value: 1,
                 reset_mode: "calendar",

@@ -31,9 +31,9 @@ describe("UsageSettings", () => {
       data: {
         quota_date: "2026-04-01",
         quota_key: "tokens",
-        limit: 50000,
+        limit: 200000,
         consumed: 12450,
-        remaining: 37550,
+        remaining: 187550,
         reset_at: "2026-05-01T00:00:00Z",
         blocked: false,
       },
@@ -48,15 +48,15 @@ describe("UsageSettings", () => {
         granted: true,
         reason_code: "granted",
         access_mode: "quota",
-        quota_limit: 50000,
-        quota_remaining: 37550,
+        quota_limit: 200000,
+        quota_remaining: 187550,
         variant_code: null,
         usage_states: [
           {
             quota_key: "tokens",
-            quota_limit: 1667,
+            quota_limit: 10000,
             used: 980,
-            remaining: 687,
+            remaining: 9020,
             exhausted: false,
             period_unit: "day",
             period_value: 1,
@@ -66,9 +66,9 @@ describe("UsageSettings", () => {
           },
           {
             quota_key: "tokens",
-            quota_limit: 12500,
+            quota_limit: 50000,
             used: 4200,
-            remaining: 8300,
+            remaining: 45800,
             exhausted: false,
             period_unit: "week",
             period_value: 1,
@@ -78,9 +78,9 @@ describe("UsageSettings", () => {
           },
           {
             quota_key: "tokens",
-            quota_limit: 50000,
+            quota_limit: 200000,
             used: 12450,
-            remaining: 37550,
+            remaining: 187550,
             exhausted: false,
             period_unit: "month",
             period_value: 1,
@@ -97,9 +97,9 @@ describe("UsageSettings", () => {
     expect(screen.getByText("Usage du jour")).toBeInTheDocument()
     expect(screen.getByText("Usage de la semaine")).toBeInTheDocument()
     expect(screen.getByText("Usage du mois")).toBeInTheDocument()
-    expect(screen.getByText("980 tokens / 1 667 tokens au total")).toBeInTheDocument()
-    expect(screen.getByText("4 200 tokens / 12 500 tokens au total")).toBeInTheDocument()
-    expect(screen.getByText("12 450 tokens / 50 000 tokens au total")).toBeInTheDocument()
+    expect(screen.getByText("980 tokens / 10 000 tokens au total")).toBeInTheDocument()
+    expect(screen.getByText("4 200 tokens / 50 000 tokens au total")).toBeInTheDocument()
+    expect(screen.getByText("12 450 tokens / 200 000 tokens au total")).toBeInTheDocument()
     expect(screen.getAllByText(/Réinitialisation/)).toHaveLength(3)
   })
 })

@@ -120,7 +120,7 @@ Le `access_mode === "quota"` indique que le plan a un quota — afficher le bann
 - `ChatQuotaBanner` : composant sans props, lit `useChatEntitlementUsage()` pour les données quota et `useAstrologyLabels()` pour la langue. Retourne `null` si `data` absent (plan unlimited ou loading). Deux états : `.chat-quota-banner--info` (quota restant) et `.chat-quota-banner--exhausted` (quota épuisé, avec `role="alert"` + `UpgradeCTA`).
 - La vérification d'épuisement utilise `data.blocked || data.remaining === 0` pour couvrir tous les cas.
 - Ajustement UX complémentaire :
-  - pour les plans à quota tokens comme `basic`, le banner n'affiche plus une unité trompeuse de type `1667/1667 message(s)` ;
+  - pour les plans à quota tokens comme `basic`, le banner n'affiche plus une unité trompeuse de type `10000/10000 message(s)` ;
   - l'état informatif repose désormais sur une barre `progress` horizontale représentant le pourcentage d'usage, sans unité textuelle visible ;
   - seul l'état épuisé conserve un message explicite et un CTA d'upgrade.
 - `ChatPage.tsx` : `<ChatQuotaBanner />` inséré entre le `ChatPageHeader` et `SectionErrorBoundary`, position non-fixed pour ne pas obstruer le scroll.

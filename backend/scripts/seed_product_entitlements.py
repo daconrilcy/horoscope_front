@@ -170,21 +170,21 @@ def seed() -> None:
                 "quotas": [
                     {
                         "quota_key": "tokens",
-                        "quota_limit": 1667,
+                        "quota_limit": 10000,
                         "period_unit": PeriodUnit.DAY,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
                     },
                     {
                         "quota_key": "tokens",
-                        "quota_limit": 12500,
+                        "quota_limit": 50000,
                         "period_unit": PeriodUnit.WEEK,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,
                     },
                     {
                         "quota_key": "tokens",
-                        "quota_limit": 50000,
+                        "quota_limit": 200000,
                         "period_unit": PeriodUnit.MONTH,
                         "period_value": 1,
                         "reset_mode": ResetMode.CALENDAR,

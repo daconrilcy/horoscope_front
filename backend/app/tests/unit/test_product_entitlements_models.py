@@ -324,7 +324,7 @@ def test_seeded_quota_shapes():
             "basic",
             "astrologer_chat",
             "tokens",
-            50000,
+            200000,
             PeriodUnit.MONTH,
             1,
             ResetMode.CALENDAR,

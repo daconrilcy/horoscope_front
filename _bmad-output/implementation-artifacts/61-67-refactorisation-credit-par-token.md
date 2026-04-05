@@ -77,9 +77,9 @@ Valeurs initiales attendues dans le seed pour cette story:
 
 | Plan | Feature | quota_key | quota_limit | period_unit | reset_mode |
 |------|---------|-----------|-------------|-------------|------------|
-| basic | astrologer_chat | `tokens` | `1_667` | `day` | `calendar` |
-| basic | astrologer_chat | `tokens` | `12_500` | `week` | `calendar` |
-| basic | astrologer_chat | `tokens` | `50_000` | `month` | `calendar` |
+| basic | astrologer_chat | `tokens` | `10_000` | `day` | `calendar` |
+| basic | astrologer_chat | `tokens` | `50_000` | `week` | `calendar` |
+| basic | astrologer_chat | `tokens` | `200_000` | `month` | `calendar` |
 | basic | thematic_consultation | `tokens` | `20_000` | `week` | `calendar` |
 | premium | astrologer_chat | `tokens` | `50_000` | `day` | `calendar` |
 | premium | astrologer_chat | `tokens` | `375_000` | `week` | `calendar` |

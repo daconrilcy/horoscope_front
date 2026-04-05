@@ -389,10 +389,9 @@ export function ChatPage() {
         />
       )}
 
-      <ChatQuotaBanner />
-
       <SectionErrorBoundary onRetry={() => conversations.refetch()}>
         <ChatLayout
+          topBanner={<ChatQuotaBanner />}
           mobileView={mobileView}
           onMobileViewChange={setMobileView}
           hasConversation={hasSelectedConversation}

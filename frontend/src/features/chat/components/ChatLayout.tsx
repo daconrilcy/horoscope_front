@@ -1,13 +1,13 @@
 import type { ReactNode } from "react"
 import { detectLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
-import { TwoColumnLayout } from "../../../layouts/TwoColumnLayout"
 
 type MobileView = "list" | "chat"
 
 type ChatLayoutProps = {
   leftPanel: ReactNode
   centerPanel: ReactNode
+  topBanner?: ReactNode
   mobileView: MobileView
   onMobileViewChange: (view: MobileView) => void
   hasConversation: boolean
@@ -17,6 +17,7 @@ type ChatLayoutProps = {
 export function ChatLayout({
   leftPanel,
   centerPanel,
+  topBanner,
   mobileView,
   onMobileViewChange,
   hasConversation,
@@ -52,11 +53,20 @@ export function ChatLayout({
   }
 
   return (
-    <TwoColumnLayout
-      sidebar={leftPanel}
-      main={centerPanel}
-      className="chat-layout chat-layout--desktop"
-    />
+    <div
+      className="two-col-layout chat-layout chat-layout--desktop"
+      style={{ "--sidebar-width": "320px" } as React.CSSProperties}
+    >
+      {topBanner ? <div className="chat-layout__banner">{topBanner}</div> : null}
+      <div className="chat-layout__body">
+        <div className="two-col-layout__sidebar two-col-layout__sidebar--collapsible">
+          {leftPanel}
+        </div>
+        <div className="two-col-layout__main">
+          {centerPanel}
+        </div>
+      </div>
+    </div>
   )
 }
 

@@ -93,7 +93,7 @@ La création d’un véritable pool mutualisé du type `ai_shared_budget` est ex
 | trial | thematic_consultation | true | `quota` | 5000 tokens/semaine — inchangé |
 | basic | natal_chart_short | true | `unlimited` | — |
 | basic | natal_chart_long | true | `quota` | 1 interprétation (`lifetime`) |
-| basic | astrologer_chat | true | `quota` | 1667 tokens/jour · 12500/semaine · 50000/mois |
+| basic | astrologer_chat | true | `quota` | 10000 tokens/jour · 50000/semaine · 200000/mois |
 | basic | thematic_consultation | true | `quota` | 20000 tokens/semaine |
 | premium | natal_chart_short | true | `unlimited` | — |
 | premium | natal_chart_long | true | `quota` | 5 interprétations (`lifetime`) |
@@ -177,21 +177,21 @@ Dans le seed, `basic.astrologer_chat` passe de `DISABLED` à `QUOTA` :
     "quotas": [
         {
             "quota_key": "tokens",
-            "quota_limit": 1_667,
+            "quota_limit": 10_000,
             "period_unit": PeriodUnit.DAY,
             "period_value": 1,
             "reset_mode": ResetMode.CALENDAR,
         },
         {
             "quota_key": "tokens",
-            "quota_limit": 12_500,
+            "quota_limit": 50_000,
             "period_unit": PeriodUnit.WEEK,
             "period_value": 1,
             "reset_mode": ResetMode.CALENDAR,
         },
         {
             "quota_key": "tokens",
-            "quota_limit": 50_000,
+            "quota_limit": 200_000,
             "period_unit": PeriodUnit.MONTH,
             "period_value": 1,
             "reset_mode": ResetMode.CALENDAR,
