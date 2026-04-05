@@ -11,16 +11,18 @@ interface UserDetail {
   role: string
   created_at: string
   is_active: boolean
-  plan_code: string | None
-  subscription_status: string | None
-  stripe_customer_id_masked: string | None
-  payment_method_summary: string | None
-  last_invoice_amount_cents: number | None
-  last_invoice_date: string | None
+  is_suspended: boolean
+  is_locked: boolean
+  plan_code: string | null
+  subscription_status: string | null
+  stripe_customer_id_masked: string | null
+  payment_method_summary: string | null
+  last_invoice_amount_cents: number | null
+  last_invoice_date: string | null
   quotas: Array<{
     feature_code: string
     used: number
-    limit: number | None
+    limit: number | null
     period: string
   }>
   recent_tickets: Array<{
@@ -56,6 +58,24 @@ export function AdminUserDetailPage() {
     enabled: Boolean(token && userId),
   })
 
+  const actionMutation = useMutation({
+    mutationFn: async ({ action, body }: { action: string, body?: any }) => {
+      const response = await apiFetch(`/v1/admin/users/${userId}/${action}`, {
+        method: "POST",
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: body ? JSON.stringify(body) : undefined
+      })
+      if (!response.ok) throw new Error(`${action} failed`)
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-user-detail", userId] })
+    }
+  })
+
   const revealMutation = useMutation({
     mutationFn: async () => {
       const response = await apiFetch(`/v1/admin/users/${userId}/reveal-stripe-id`, {
@@ -67,10 +87,15 @@ export function AdminUserDetailPage() {
     },
     onSuccess: (res) => {
       setRevealedStripeId(res.stripe_customer_id)
-      // Refresh audit logs to show the reveal action
       queryClient.invalidateQueries({ queryKey: ["admin-user-detail", userId] })
     }
   })
+
+  const handleAction = (action: string, label: string, body?: any) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir ${label} cet utilisateur ?`)) {
+      actionMutation.mutate({ action, body })
+    }
+  }
 
   if (isLoading) return <div className="admin-loading">Chargement de la fiche utilisateur...</div>
   if (error || !data) return <div className="admin-error">Utilisateur non trouvé ou erreur serveur.</div>
@@ -86,14 +111,45 @@ export function AdminUserDetailPage() {
         </div>
         <div className="header-actions">
           <span className={`badge badge--role-${user.role}`}>{user.role}</span>
+          {user.is_suspended && <span className="badge badge--suspended">Suspendu</span>}
+          {user.is_locked && <span className="badge badge--locked">Verrouillé</span>}
         </div>
       </header>
 
       <div className="detail-grid">
-        {/* Section Profil & Plan */}
         <div className="detail-column">
           <section className="detail-card">
-            <h3 className="card-title">Profil</h3>
+            <div className="card-header-with-actions">
+              <h3 className="card-title">Profil</h3>
+              <div className="card-actions">
+                {user.is_suspended ? (
+                  <button 
+                    className="action-button action-button--success"
+                    onClick={() => handleAction("unsuspend", "réactiver")}
+                    disabled={actionMutation.isPending}
+                  >
+                    Réactiver
+                  </button>
+                ) : (
+                  <button 
+                    className="action-button action-button--danger"
+                    onClick={() => handleAction("suspend", "suspendre")}
+                    disabled={actionMutation.isPending}
+                  >
+                    Suspendre
+                  </button>
+                )}
+                {user.is_locked && (
+                  <button 
+                    className="action-button action-button--warning"
+                    onClick={() => handleAction("unlock", "débloquer")}
+                    disabled={actionMutation.isPending}
+                  >
+                    Débloquer
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="info-list">
               <div className="info-item">
                 <span className="info-label">Email</span>
@@ -106,7 +162,11 @@ export function AdminUserDetailPage() {
               <div className="info-item">
                 <span className="info-label">Statut Compte</span>
                 <span className="info-value">
-                  <span className="status-active">Actif</span>
+                  {user.is_suspended ? (
+                    <span className="status-suspended">Suspendu</span>
+                  ) : (
+                    <span className="status-active">Actif</span>
+                  )}
                 </span>
               </div>
             </div>
@@ -136,6 +196,7 @@ export function AdminUserDetailPage() {
                       className="reveal-button" 
                       onClick={() => revealMutation.mutate()}
                       disabled={revealMutation.isPending}
+                      title="Révéler l'ID (Action journalisée)"
                     >
                       {revealMutation.isPending ? "..." : "👁️"}
                     </button>
@@ -152,7 +213,17 @@ export function AdminUserDetailPage() {
                 <div key={q.feature_code} className="quota-item">
                   <div className="quota-header">
                     <span className="quota-name">{q.feature_code}</span>
-                    <span className="quota-values">{q.used} / {q.limit || "∞"}</span>
+                    <div className="quota-header-right">
+                      <span className="quota-values">{q.used} / {q.limit || "∞"}</span>
+                      <button 
+                        className="reset-button"
+                        onClick={() => handleAction("reset-quota", `réinitialiser le quota ${q.feature_code}`, { feature_code: q.feature_code })}
+                        disabled={actionMutation.isPending}
+                        title="Réinitialiser le quota"
+                      >
+                        🔄
+                      </button>
+                    </div>
                   </div>
                   <div className="quota-bar-container">
                     <div 
@@ -168,7 +239,6 @@ export function AdminUserDetailPage() {
           </section>
         </div>
 
-        {/* Section Tickets & Audit */}
         <div className="detail-column">
           <section className="detail-card">
             <h3 className="card-title">Derniers Tickets Support</h3>

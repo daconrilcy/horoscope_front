@@ -10,6 +10,11 @@
   gap: var(--space-4);
 }
 
+.header-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .back-button {
   background: transparent;
   border: 1px solid var(--glass-border);
@@ -52,12 +57,60 @@
   padding: var(--space-6);
 }
 
+.card-header-with-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.card-header-with-actions .card-title {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.card-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .card-title {
   margin: 0 0 var(--space-4);
   font-size: var(--font-size-base);
   color: var(--color-text-headline);
   border-bottom: 1px solid var(--glass-border);
   padding-bottom: var(--space-2);
+}
+
+.action-button {
+  border: none;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--duration-fast);
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-button--danger {
+  background: var(--error);
+  color: white;
+}
+
+.action-button--success {
+  background: var(--success);
+  color: white;
+}
+
+.action-button--warning {
+  background: #f59e0b;
+  color: white;
 }
 
 .info-list {
@@ -124,9 +177,39 @@
 .quota-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+.quota-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.quota-name {
   font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.quota-values {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.reset-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.5;
+  transition: opacity var(--duration-fast);
+}
+
+.reset-button:hover {
+  opacity: 1;
 }
 
 .quota-bar-container {
@@ -148,53 +231,18 @@
   text-align: right;
 }
 
-.list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+.badge--suspended, .badge--locked {
+  background: var(--error);
+  color: white;
+  border: none;
 }
 
-.list-item:last-child {
-  border-bottom: none;
-}
-
-.list-item-main {
-  display: flex;
-  flex-direction: column;
-}
-
-.list-item-title {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-  font-weight: 500;
-}
-
-.list-item-date {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
-
-.audit-action {
-  font-size: var(--font-size-sm);
+.status-suspended {
+  color: var(--error);
   font-weight: 600;
-  color: var(--color-primary);
-}
-
-.audit-actor {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
-.empty-text {
-  color: var(--color-text-muted);
-  font-style: italic;
-  font-size: var(--font-size-sm);
-  text-align: center;
-  padding: var(--space-4) 0;
 }
 
 .status-active {
   color: #4ade80;
+  font-weight: 600;
 }

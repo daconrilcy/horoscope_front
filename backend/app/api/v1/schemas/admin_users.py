@@ -12,6 +12,8 @@ class AdminUserSearchItem(BaseModel):
     role: str
     plan_code: str | None
     subscription_status: str | None
+    is_suspended: bool
+    is_locked: bool
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

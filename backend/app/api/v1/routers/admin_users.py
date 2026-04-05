@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -59,6 +59,8 @@ def search_users(
             UserModel.email,
             UserModel.role,
             UserModel.created_at,
+            UserModel.is_suspended,
+            UserModel.is_locked,
             StripeBillingProfileModel.entitlement_plan.label("plan_code"),
             StripeBillingProfileModel.subscription_status,
         )
@@ -86,6 +88,8 @@ def search_users(
                 "email": r.email,
                 "role": r.role,
                 "created_at": r.created_at,
+                "is_suspended": r.is_suspended,
+                "is_locked": r.is_locked,
                 "plan_code": r.plan_code,
                 "subscription_status": r.subscription_status,
             }
@@ -114,43 +118,20 @@ def get_user_detail(
     )
 
     # Quotas logic (simplified for MVP)
-    # 1. Current usage counters
     usage_counters = db.scalars(
         select(FeatureUsageCounterModel).where(FeatureUsageCounterModel.user_id == user_id)
     ).all()
 
-    # 2. Map to display format
     quotas_data = []
     for c in usage_counters:
-        # Try to find the limit in plan_catalog (complex JOIN, simplified for now)
-        # We'll just return what we have in counters.
-        # In a real impl, we'd resolve the effective plan and its limits.
         quotas_data.append(
             {
                 "feature_code": c.feature_code,
                 "used": c.used_count,
-                "limit": None,  # Resolve later
+                "limit": None,
                 "period": f"{c.period_value} {c.period_unit.value}",
             }
         )
-
-    # Recent LLM logs (20)
-    llm_logs = db.execute(
-        select(LlmCallLogModel)
-        .where(LlmCallLogModel.request_id.in_(
-            # This is tricky because LlmCallLogModel doesn't have user_id directly
-            # but we can filter by trace_id or request_id if we have a mapping.
-            # In our current schema, we don't have a direct link.
-            # WORKAROUND: skip or use a search if possible.
-            # Let's assume for now we don't have it easily.
-            select(AuditEventModel.request_id).where(
-                AuditEventModel.actor_user_id == user_id,
-                AuditEventModel.action.in_(["chat_message_sent", "natal_interpretation_requested"])
-            )
-        ))
-        .order_by(LlmCallLogModel.timestamp.desc())
-        .limit(20)
-    ).scalars().all() if False else [] # Disable for now due to complexity
 
     # Alternative: Recent audit events (10)
     audit_events = db.scalars(
@@ -176,14 +157,16 @@ def get_user_detail(
             "role": user.role,
             "created_at": user.created_at,
             "is_active": True,
+            "is_suspended": user.is_suspended,
+            "is_locked": user.is_locked,
             "plan_code": profile.entitlement_plan if profile else "free",
             "subscription_status": profile.subscription_status if profile else None,
             "stripe_customer_id_masked": _mask_id(profile.stripe_customer_id) if profile else None,
-            "payment_method_summary": None, # Resolve from Stripe profile if stored
+            "payment_method_summary": None,
             "last_invoice_amount_cents": None,
             "last_invoice_date": None,
             "quotas": quotas_data,
-            "recent_llm_logs": [], # TODO
+            "recent_llm_logs": [],
             "recent_tickets": [
                 {
                     "id": t.id,
@@ -211,9 +194,6 @@ def reveal_stripe_id(
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    """
-    Reveal the full Stripe customer ID and log the action.
-    """
     request_id = resolve_request_id(request)
     profile = db.scalar(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
@@ -221,7 +201,6 @@ def reveal_stripe_id(
     if not profile or not profile.stripe_customer_id:
         raise HTTPException(status_code=404, detail="Stripe profile not found")
 
-    # Audit log
     AuditService.record_event(
         db,
         payload=AuditEventCreatePayload(
@@ -236,5 +215,133 @@ def reveal_stripe_id(
         ),
     )
     db.commit()
-
     return {"stripe_customer_id": profile.stripe_customer_id}
+
+
+@router.post("/{user_id}/suspend")
+def suspend_user(
+    user_id: int,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    user = db.get(UserModel, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    before = {"is_suspended": user.is_suspended}
+    user.is_suspended = True
+    
+    AuditService.record_event(
+        db,
+        payload=AuditEventCreatePayload(
+            request_id=resolve_request_id(request),
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="account_suspended",
+            target_type="user",
+            target_id=str(user_id),
+            status="success",
+            details={"before": before, "after": {"is_suspended": True}},
+        ),
+    )
+    db.commit()
+    return {"status": "success"}
+
+
+@router.post("/{user_id}/unsuspend")
+def unsuspend_user(
+    user_id: int,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    user = db.get(UserModel, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    before = {"is_suspended": user.is_suspended}
+    user.is_suspended = False
+    
+    AuditService.record_event(
+        db,
+        payload=AuditEventCreatePayload(
+            request_id=resolve_request_id(request),
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="account_reactivated",
+            target_type="user",
+            target_id=str(user_id),
+            status="success",
+            details={"before": before, "after": {"is_suspended": False}},
+        ),
+    )
+    db.commit()
+    return {"status": "success"}
+
+
+@router.post("/{user_id}/unlock")
+def unlock_user(
+    user_id: int,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    user = db.get(UserModel, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    before = {"is_locked": user.is_locked}
+    user.is_locked = False
+    
+    AuditService.record_event(
+        db,
+        payload=AuditEventCreatePayload(
+            request_id=resolve_request_id(request),
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
+            action="account_unlocked",
+            target_type="user",
+            target_id=str(user_id),
+            status="success",
+            details={"before": before, "after": {"is_locked": False}},
+        ),
+    )
+    db.commit()
+    return {"status": "success"}
+
+
+@router.post("/{user_id}/reset-quota")
+def reset_user_quota(
+    user_id: int,
+    request: Request,
+    feature_code: str = Body(embed=True),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    # Reset all counters for this user and feature
+    counters = db.scalars(
+        select(FeatureUsageCounterModel)
+        .where(FeatureUsageCounterModel.user_id == user_id, 
+               FeatureUsageCounterModel.feature_code == feature_code)
+    ).all()
+    
+    for c in counters:
+        before_val = c.used_count
+        c.used_count = 0
+        AuditService.record_event(
+            db,
+            payload=AuditEventCreatePayload(
+                request_id=resolve_request_id(request),
+                actor_user_id=current_user.id,
+                actor_role=current_user.role,
+                action="quota_reset",
+                target_type="user",
+                target_id=str(user_id),
+                status="success",
+                details={"feature_code": feature_code, "before": before_val, "after": 0},
+            ),
+        )
+    
+    db.commit()
+    return {"status": "success"}

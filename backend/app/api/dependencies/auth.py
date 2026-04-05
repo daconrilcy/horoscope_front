@@ -84,6 +84,14 @@ def require_authenticated_user(
             details={},
         )
 
+    if user.is_suspended:
+        raise UserAuthenticationError(
+            code="account_suspended",
+            message="this account is suspended",
+            status_code=403,
+            details={},
+        )
+
     return AuthenticatedUser(
         id=user.id,
         role=user.role,
