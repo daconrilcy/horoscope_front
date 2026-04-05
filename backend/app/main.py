@@ -15,6 +15,7 @@ from app.ai_engine.routes import router as ai_engine_router
 from app.api.dependencies.auth import UserAuthenticationError
 from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.health import router as health_router
+from app.api.v1.routers.admin_dashboard import router as admin_dashboard_router
 from app.api.v1.routers.admin_llm import router as admin_llm_router
 from app.api.v1.routers.admin_pdf_templates import router as admin_pdf_templates_router
 from app.api.v1.routers.astrologers import router as astrologers_router
@@ -621,6 +622,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(admin_dashboard_router)
 app.include_router(admin_llm_router)
 app.include_router(admin_pdf_templates_router)
 app.include_router(astrologers_router)
