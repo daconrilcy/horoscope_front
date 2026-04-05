@@ -19,6 +19,7 @@ from app.api.v1.routers.admin_ai import router as admin_ai_router
 from app.api.v1.routers.admin_dashboard import router as admin_dashboard_router
 from app.api.v1.routers.admin_entitlements import router as admin_entitlements_router
 from app.api.v1.routers.admin_llm import router as admin_llm_router
+from app.api.v1.routers.admin_logs import router as admin_logs_router
 from app.api.v1.routers.admin_support import router as admin_support_router
 from app.api.v1.routers.admin_users import router as admin_users_router
 from app.api.v1.routers.admin_pdf_templates import router as admin_pdf_templates_router
@@ -629,6 +630,7 @@ app.include_router(health_router)
 app.include_router(admin_dashboard_router)
 app.include_router(admin_entitlements_router)
 app.include_router(admin_ai_router)
+app.include_router(admin_logs_router)
 app.include_router(admin_llm_router)
 app.include_router(admin_users_router)
 app.include_router(admin_support_router)

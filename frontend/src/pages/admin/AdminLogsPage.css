@@ -1,0 +1,82 @@
+.admin-logs-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.alerts-banner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid #fbbf24;
+  border-radius: 12px;
+  padding: var(--space-4) var(--space-6);
+}
+
+.banner-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: #fbbf24;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.alert-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-xs);
+}
+
+.alert-user {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.alert-info {
+  color: var(--color-text-secondary);
+}
+
+.alert-progress-bg {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.alert-progress-fill {
+  height: 100%;
+  background: #f59e0b;
+}
+
+.json-cell {
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.json-cell:hover {
+  white-space: normal;
+  overflow: visible;
+  background: rgba(0, 0, 0, 0.8);
+  position: relative;
+  z-index: 10;
+}
+
+.event-type {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: 11px;
+}
+
+.text-danger {
+  color: var(--error);
+  font-weight: 600;
+}
