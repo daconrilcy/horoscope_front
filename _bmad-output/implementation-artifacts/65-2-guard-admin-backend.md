@@ -1,6 +1,6 @@
 # Story 65.2 : Guard admin backend — dépendance FastAPI centralisée
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 

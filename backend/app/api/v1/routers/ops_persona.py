@@ -7,7 +7,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.dependencies.auth import (
+    AuthenticatedUser,
+    require_admin_user,
+)
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
@@ -75,18 +78,6 @@ def _error_response(
             }
         },
     )
-
-
-def _ensure_ops_role(user: AuthenticatedUser, request_id: str) -> JSONResponse | None:
-    if user.role not in ["ops", "admin"]:
-        return _error_response(
-            status_code=403,
-            request_id=request_id,
-            code="insufficient_role",
-            message="role is not allowed",
-            details={"required_roles": "ops, admin", "actual_role": user.role},
-        )
-    return None
 
 
 def _enforce_limits(
@@ -178,13 +169,10 @@ def _audit_failure_or_503(
 )
 def get_active_persona_config(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(user=current_user, request_id=request_id, operation="get_config")
     if limit_error is not None:
         return limit_error
@@ -203,13 +191,10 @@ def get_active_persona_config(
 )
 def list_persona_profiles(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(
         user=current_user, request_id=request_id, operation="list_profiles"
     )
@@ -233,13 +218,10 @@ def list_persona_profiles(
 def create_persona_profile(
     request: Request,
     payload: Any = Body(...),
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(
         user=current_user, request_id=request_id, operation="create_profile"
     )
@@ -316,13 +298,10 @@ def create_persona_profile(
 def update_active_persona_config(
     request: Request,
     payload: Any = Body(...),
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(
         user=current_user, request_id=request_id, operation="update_config"
     )
@@ -396,9 +375,6 @@ def _persona_profile_mutation(
     db: Session,
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(user=current_user, request_id=request_id, operation=operation)
     if limit_error is not None:
         return limit_error
@@ -459,7 +435,7 @@ def _persona_profile_mutation(
 def activate_persona_profile(
     profile_id: int,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     return _persona_profile_mutation(
@@ -487,7 +463,7 @@ def activate_persona_profile(
 def archive_persona_profile(
     profile_id: int,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     return _persona_profile_mutation(
@@ -515,7 +491,7 @@ def archive_persona_profile(
 def restore_persona_profile(
     profile_id: int,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     return _persona_profile_mutation(
@@ -542,13 +518,10 @@ def restore_persona_profile(
 )
 def rollback_persona_config(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(user=current_user, request_id=request_id, operation="rollback")
     if limit_error is not None:
         return limit_error

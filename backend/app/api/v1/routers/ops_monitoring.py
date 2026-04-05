@@ -7,7 +7,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.dependencies.auth import (
+    AuthenticatedUser,
+    require_admin_user,
+)
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
@@ -80,18 +83,6 @@ def _error_response(
     )
 
 
-def _ensure_ops_role(user: AuthenticatedUser, request_id: str) -> JSONResponse | None:
-    if user.role not in ["ops", "admin"]:
-        return _error_response(
-            status_code=403,
-            request_id=request_id,
-            code="insufficient_role",
-            message="role is not allowed",
-            details={"required_roles": "ops, admin", "actual_role": user.role},
-        )
-    return None
-
-
 def _enforce_limits(
     *, user: AuthenticatedUser, request_id: str, operation: str
 ) -> JSONResponse | None:
@@ -127,12 +118,9 @@ def _enforce_limits(
 def get_conversation_kpis(
     request: Request,
     window: str = Query(default="24h"),
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(
         user=current_user, request_id=request_id, operation="conversation_kpis"
     )
@@ -164,12 +152,9 @@ def get_conversation_kpis(
 def get_operational_summary(
     request: Request,
     window: str = Query(default="24h"),
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(
         user=current_user, request_id=request_id, operation="operational_summary"
     )
@@ -201,12 +186,9 @@ def get_operational_summary(
 def get_persona_kpis(
     request: Request,
     window: str = Query(default="24h"),
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(
         user=current_user, request_id=request_id, operation="persona_kpis"
     )
@@ -238,13 +220,10 @@ def get_persona_kpis(
 def get_pricing_experiment_kpis(
     request: Request,
     window: str = Query(default="24h"),
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
     limit_error = _enforce_limits(
         user=current_user, request_id=request_id, operation="pricing_experiment_kpis"
     )

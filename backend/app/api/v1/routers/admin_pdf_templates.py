@@ -9,7 +9,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.dependencies.auth import (
+    AuthenticatedUser,
+    require_admin_user,
+)
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.session import get_db_session
@@ -65,22 +68,6 @@ class PdfTemplateResponse(BaseModel):
     is_default: bool
     created_at: Any
     updated_at: Any
-
-
-def _ensure_admin_role(user: AuthenticatedUser, request_id: str) -> Optional[JSONResponse]:
-    if user.role not in {"admin", "ops"}:
-        return JSONResponse(
-            status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "Admin or Ops role required",
-                    "request_id": request_id,
-                    "details": {},
-                }
-            },
-        )
-    return None
 
 
 def _normalize_pdf_template_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -140,14 +127,9 @@ def _normalize_pdf_template_config(config: dict[str, Any]) -> dict[str, Any]:
 @router.get("", response_model=list[PdfTemplateResponse])
 def list_templates(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
-
     stmt = select(PdfTemplateModel).order_by(PdfTemplateModel.key)
     items = db.execute(stmt).scalars().all()
     return items
@@ -157,13 +139,10 @@ def list_templates(
 def create_template(
     request: Request,
     body: PdfTemplateCreate,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     try:
         normalized_config = _normalize_pdf_template_config(body.config_json)
@@ -222,13 +201,10 @@ def update_template(
     template_id: int,
     request: Request,
     body: PdfTemplateUpdate,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     item = db.get(PdfTemplateModel, template_id)
     if not item:
@@ -281,13 +257,10 @@ def update_template(
 def activate_template(
     template_id: int,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     item = db.get(PdfTemplateModel, template_id)
     if not item:

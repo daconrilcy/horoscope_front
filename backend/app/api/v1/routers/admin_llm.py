@@ -11,7 +11,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.dependencies.auth import (
+    AuthenticatedUser,
+    require_admin_user,
+)
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.llm_observability import LlmCallLogModel
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
@@ -183,18 +186,6 @@ def _error_response(
     )
 
 
-def _ensure_admin_role(user: AuthenticatedUser, request_id: str) -> JSONResponse | None:
-    if user.role != "admin":
-        return _error_response(
-            status_code=403,
-            request_id=request_id,
-            code="insufficient_role",
-            message="role is not allowed",
-            details={"required_roles": "admin", "actual_role": user.role},
-        )
-    return None
-
-
 def _record_audit_event(
     db: Session,
     *,
@@ -224,13 +215,10 @@ def _record_audit_event(
 @router.get("/personas", response_model=LlmPersonaListResponse)
 def list_personas(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     stmt = select(LlmPersonaModel).order_by(LlmPersonaModel.name)
     personas = db.execute(stmt).scalars().all()
@@ -245,13 +233,10 @@ def list_personas(
 def create_persona(
     request: Request,
     payload: LlmPersonaCreate,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     persona = LlmPersonaModel(
         name=payload.name,
@@ -289,13 +274,10 @@ def update_persona(
     id: uuid.UUID,
     request: Request,
     payload: LlmPersonaUpdate,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     persona = db.get(LlmPersonaModel, id)
     if not persona:
@@ -334,13 +316,10 @@ def update_persona(
 def disable_persona(
     id: uuid.UUID,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     persona = db.get(LlmPersonaModel, id)
     if not persona:
@@ -374,13 +353,10 @@ def disable_persona(
 @router.get("/output-schemas", response_model=LlmOutputSchemaListResponse)
 def list_output_schemas(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     stmt = select(LlmOutputSchemaModel).order_by(LlmOutputSchemaModel.name)
     schemas = db.execute(stmt).scalars().all()
@@ -395,13 +371,10 @@ def list_output_schemas(
 def get_output_schema(
     id: uuid.UUID,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     schema = db.get(LlmOutputSchemaModel, id)
     if not schema:
@@ -419,13 +392,10 @@ def get_output_schema(
 @router.get("/use-cases", response_model=LlmUseCaseListResponse)
 def list_use_cases(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     stmt = select(LlmUseCaseConfigModel)
     use_cases = db.execute(stmt).scalars().all()
@@ -455,13 +425,10 @@ def update_use_case_config(
     key: str,
     request: Request,
     payload: UseCaseUpdatePayload,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
@@ -614,16 +581,13 @@ def associate_persona(
     key: str,
     request: Request,
     payload: PersonaAssociationPayload,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     """
     Spec 28.3 Task 4: Separate endpoint for persona association.
     """
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
@@ -700,13 +664,10 @@ def associate_persona(
 def get_use_case_contract(
     key: str,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
@@ -749,13 +710,10 @@ def get_use_case_contract(
 def list_prompt_history(
     key: str,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     stmt = (
         select(LlmPromptVersionModel)
@@ -775,13 +733,10 @@ def create_prompt_draft(
     key: str,
     request: Request,
     payload: LlmPromptVersionCreate,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
@@ -841,13 +796,10 @@ async def publish_prompt(
     key: str,
     version_id: uuid.UUID,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
@@ -914,13 +866,10 @@ async def publish_prompt(
 def rollback_prompt(
     key: str,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     try:
         version = PromptRegistryV2.rollback_prompt(db, key)
@@ -961,13 +910,10 @@ def list_call_logs(
     to_date: Optional[datetime] = None,
     page: int = 1,
     page_size: int = 20,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     stmt = select(LlmCallLogModel)
     if use_case:
@@ -1004,13 +950,10 @@ def list_call_logs(
 def get_dashboard(
     request: Request,
     period_hours: int = 24,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     since = datetime.now(timezone.utc) - timedelta(hours=period_hours)
     use_cases_stmt = (
@@ -1091,13 +1034,10 @@ def get_dashboard(
 async def replay_request(
     request: Request,
     payload: ReplayPayload,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     try:
         result = await replay(
@@ -1130,13 +1070,10 @@ async def replay_request(
 @router.post("/call-logs/purge", response_model=dict)
 async def purge_logs(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    role_error = _ensure_admin_role(current_user, request_id)
-    if role_error:
-        return role_error
 
     deleted_count = await purge_expired_logs(db)
 
