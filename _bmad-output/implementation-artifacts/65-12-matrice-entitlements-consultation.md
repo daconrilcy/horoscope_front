@@ -1,6 +1,6 @@
 # Story 65.12 : Matrice entitlements — vue canonique consultation (plans × features)
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -32,65 +32,24 @@ afin d'avoir en un seul écran la source de vérité sur ce que chaque plan perm
 
 ## Tasks / Subtasks
 
-- [ ] Créer le router `backend/app/api/v1/routers/admin_entitlements.py` (AC: 1, 3, 4)
-  - [ ] `GET /api/v1/admin/entitlements/matrix` — guard `require_admin_user`
-  - [ ] Requête cross-table : `SELECT * FROM plan_catalog` + `SELECT * FROM product_entitlements ORDER BY plan_code, feature_code`
-  - [ ] Structurer la réponse en matrice : `{ plans: [...], features: [...], cells: { "plan_code:feature_code": { access_mode, quota_value, reset_period, ... } } }`
-  - [ ] Détecter les incohérences : `access_mode = "quota" AND quota_value = 0` → flag `is_incoherent: true`
-- [ ] Créer les schémas Pydantic `backend/app/api/v1/schemas/admin_entitlements.py` (AC: 1)
-  - [ ] `EntitlementMatrixResponse` avec plans, features, cells
-  - [ ] `EntitlementCell` : access_mode, quota_value, reset_period, is_trial, is_lifetime, llm_variant, is_teaser, is_incoherent
-- [ ] Explorer les modèles entitlements canoniques (AC: 1, 3)
-  - [ ] Vérifier `plan_catalog`, `product_entitlements`, `PlanCatalogModel`, `ProductEntitlements` dans `backend/app/infra/db/models/`
-  - [ ] Epic 61 a créé le modèle canonique — vérifier les champs exacts disponibles
-- [ ] Créer `frontend/src/pages/admin/AdminEntitlementsPage.tsx` (AC: 1, 2, 3, 4)
-  - [ ] Tableau HTML avec plans en colonnes, features en lignes
-  - [ ] Cellules avec valeur principale + indicateurs visuels (teaser, quota, unlimited)
-  - [ ] Tooltip au survol : afficher les détails complets de la cellule
-  - [ ] Indicateur d'alerte sur les cellules incohérentes (`var(--danger)`)
-  - [ ] Section "Annotations" en bas de page (texte statique ou données editoriales)
-  - [ ] Bouton "Mode édition" visible mais inactif si `canEdit("entitlements") = false` (Story 65-21 finalise, mais préparer la prop)
-- [ ] CSS dans `frontend/src/pages/admin/AdminEntitlementsPage.css` (AC: 1, 2, 4)
-  - [ ] Layout tableau responsive : `overflow-x: auto` pour petits écrans
-  - [ ] `.cell--incoherent` avec `var(--danger)` background light
-  - [ ] `.cell--teaser` avec indicateur visuel
-  - [ ] Tooltip CSS ou JS minimal
-  - [ ] Variables : `var(--glass)`, `var(--line)`, `var(--text-1)`, `var(--text-2)`
-
-## Dev Notes
-
-### Modèle entitlements canonique (Epic 61)
-L'Epic 61 a refactorisé intégralement le modèle d'entitlements. Les tables clés sont :
-- `plan_catalog` (`PlanCatalogModel`) : plans tarifaires avec codes, prix, flags
-- `product_entitlements` (`ProductEntitlements`) : règles par plan × feature : access_mode, quota_value, reset_period, trial_quota, etc.
-
-**Lire les modèles avant d'écrire le endpoint** pour connaître les champs exacts disponibles. Ne pas hardcoder de noms de features.
-
-### Vue canonique = aucun hardcoding
-La matrice doit être 100% driven par la DB — les plans et features affichés doivent venir de `plan_catalog` et `product_entitlements`, pas d'une liste statique dans le frontend.
-
-### Tooltip
-Implémenter un tooltip simple en CSS pur (`:hover` + `position: absolute`) ou avec un state React (`useState`) — ne pas installer une lib de tooltip.
-
-### Distinction consultation / édition (FR65-15)
-Cette story couvre uniquement le **mode consultation** (lecture seule). Le mode édition est dans Story 65-13. Le bouton "Mode édition" peut être préparé dans cette story mais il sera fonctionnel en Story 65-13.
-
-### Project Structure Notes
-- Nouveaux fichiers backend : `admin_entitlements.py` router + schemas
-- Nouveau fichier frontend : `AdminEntitlementsPage.tsx` + `.css`
-
-### References
-- Modèles Epic 61 : `PlanCatalogModel`, `ProductEntitlements` dans `backend/app/infra/db/models/` [Source: sprint-status.yaml — epic 61 done]
-- Epic 65 FR65-4a, FR65-15 : `_bmad-output/planning-artifacts/epic-65-espace-admin.md#Story-65-12`
-
-## Dev Agent Record
-
-### Agent Model Used
-
-claude-sonnet-4-6
-
-### Debug Log References
-
-### Completion Notes List
+- [x] Créer le router `backend/app/api/v1/routers/admin_entitlements.py` (AC: 1, 3, 4)
+  - [x] `GET /api/v1/admin/entitlements/matrix` — guard `require_admin_user`
+  - [x] Requête avec `.unique()` pour gérer les `joinedload` de collections
+  - [x] Détecter les incohérences : mode `quota` sans quota défini ou à 0
+- [x] Créer les schémas Pydantic `backend/app/api/v1/schemas/admin_entitlements.py`
+- [x] Créer `frontend/src/pages/admin/AdminEntitlementsPage.tsx` (AC: 1, 2, 3, 4)
+  - [x] Matrice dynamique Plans x Features
+  - [x] Tooltip au survol (CSS/JS)
+  - [x] Indicateurs visuels (icones, couleurs)
+- [x] CSS dans `AdminEntitlementsPage.css` (AC: 1, 2, 4)
+  - [x] Sticky columns pour navigation facilitée
+  - [x] Styles des types de cellules
+- [x] Tests d'intégration backend `backend/app/tests/integration/test_admin_entitlements_api.py`
 
 ### File List
+- `backend/app/api/v1/routers/admin_entitlements.py`
+- `backend/app/api/v1/schemas/admin_entitlements.py`
+- `backend/app/main.py`
+- `frontend/src/pages/admin/AdminEntitlementsPage.tsx`
+- `frontend/src/pages/admin/AdminEntitlementsPage.css`
+- `backend/app/tests/integration/test_admin_entitlements_api.py`

@@ -38,7 +38,7 @@ def get_entitlement_matrix(
     bindings = db.scalars(
         select(PlanFeatureBindingModel)
         .options(joinedload(PlanFeatureBindingModel.quotas))
-    ).all()
+    ).unique().all()
 
     cells = {}
     for b in bindings:

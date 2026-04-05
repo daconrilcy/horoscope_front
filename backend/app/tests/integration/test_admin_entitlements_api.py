@@ -1,0 +1,138 @@
+from pathlib import Path
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.infra.db import session as db_session_module
+from app.infra.db.base import Base
+from app.infra.db.models.user import UserModel
+from app.infra.db.models.product_entitlements import (
+    PlanCatalogModel,
+    FeatureCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    AccessMode,
+    Audience,
+    PeriodUnit,
+    ResetMode
+)
+from app.main import app
+
+client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    database_url = f"sqlite:///{(tmp_path / 'test-admin-entitlements.db').as_posix()}"
+    test_engine = create_engine(
+        database_url,
+        connect_args={"check_same_thread": False},
+        future=True,
+    )
+    test_session_local = sessionmaker(
+        bind=test_engine,
+        autoflush=False,
+        autocommit=False,
+        future=True,
+    )
+    monkeypatch.setattr(db_session_module, "engine", test_engine)
+    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    Base.metadata.create_all(bind=test_engine)
+    try:
+        yield
+    finally:
+        test_engine.dispose()
+
+@pytest.fixture
+def admin_token():
+    with db_session_module.SessionLocal() as db:
+        from app.core.security import hash_password
+        admin = UserModel(
+            email="admin-ent@example.com",
+            password_hash=hash_password("admin123"),
+            role="admin",
+            astrologer_profile="standard"
+        )
+        db.add(admin)
+        db.commit()
+    
+    response = client.post("/v1/auth/login", json={
+        "email": "admin-ent@example.com",
+        "password": "admin123"
+    })
+    return response.json()["data"]["tokens"]["access_token"]
+
+def test_get_entitlement_matrix_success(admin_token):
+    with db_session_module.SessionLocal() as db:
+        # 1. Setup Plan
+        plan = PlanCatalogModel(plan_code="free", plan_name="Free Plan", audience=Audience.B2C)
+        db.add(plan)
+        
+        # 2. Setup Feature
+        feat = FeatureCatalogModel(feature_code="chat", feature_name="Chat Feature")
+        db.add(feat)
+        db.flush()
+        
+        # 3. Setup Binding
+        binding = PlanFeatureBindingModel(
+            plan_id=plan.id,
+            feature_id=feat.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True
+        )
+        db.add(binding)
+        db.flush()
+        
+        # 4. Setup Quota
+        quota = PlanFeatureQuotaModel(
+            plan_feature_binding_id=binding.id,
+            quota_key="daily",
+            quota_limit=5,
+            period_unit=PeriodUnit.DAY,
+            period_value=1,
+            reset_mode=ResetMode.CALENDAR
+        )
+        db.add(quota)
+        db.commit()
+        
+        plan_id = plan.id
+        feat_id = feat.id
+
+    response = client.get("/v1/admin/entitlements/matrix", headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert len(data["plans"]) >= 1
+    assert len(data["features"]) >= 1
+    
+    cell_key = f"{plan_id}:{feat_id}"
+    assert cell_key in data["cells"]
+    cell = data["cells"][cell_key]
+    assert cell["access_mode"] == "quota"
+    assert cell["quota_limit"] == 5
+    assert cell["is_incoherent"] is False
+
+def test_get_entitlement_matrix_incoherent(admin_token):
+    with db_session_module.SessionLocal() as db:
+        plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
+        db.add(plan)
+        feat = FeatureCatalogModel(feature_code="natal", feature_name="Natal")
+        db.add(feat)
+        db.flush()
+        
+        # Binding with QUOTA but NO actual quota records
+        binding = PlanFeatureBindingModel(
+            plan_id=plan.id,
+            feature_id=feat.id,
+            access_mode=AccessMode.QUOTA,
+            is_enabled=True
+        )
+        db.add(binding)
+        db.commit()
+        plan_id = plan.id
+        feat_id = feat.id
+
+    response = client.get("/v1/admin/entitlements/matrix", headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == 200
+    cell_key = f"{plan_id}:{feat_id}"
+    assert response.json()["cells"][cell_key]["is_incoherent"] is True

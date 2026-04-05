@@ -626,6 +626,7 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(admin_dashboard_router)
+app.include_router(admin_entitlements_router)
 app.include_router(admin_llm_router)
 app.include_router(admin_users_router)
 app.include_router(admin_support_router)
