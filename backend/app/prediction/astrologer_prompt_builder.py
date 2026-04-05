@@ -189,11 +189,13 @@ IMPORTANT :
     def _build_daily_synthesis_instruction(self, variant_code: str | None) -> str:
         if variant_code == "summary_only":
             return (
-                "- daily_synthesis : strictement 6 à 8 phrases complètes, avec une longueur "
+                "- daily_synthesis : strictement 7 à 8 phrases complètes, avec une longueur "
                 "globale comprise entre 50% et 67% de la version complète.\n"
                 "  Le rendu doit rester proche du niveau Basic en qualité, densité et "
                 "ancrage astrologique, pas en version simpliste.\n"
                 "  Vise un résumé éditorial dense, précis et incarné, sans remplissage.\n"
+                "  La synthèse doit généralement se situer autour de 450 à 700 caractères,\n"
+                "  sauf si le contexte astrologique fourni est exceptionnellement pauvre.\n"
                 "  Doit dire ce qui domine la journée, où se situe la principale tension ou "
                 "opportunité, et l'attitude la plus juste.\n"
                 "  Si des \"Domaines les plus activés\" sont fournis dans le profil de la "

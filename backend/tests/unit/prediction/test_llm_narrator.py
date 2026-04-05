@@ -228,7 +228,7 @@ async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
 
     short_free_content = {
         "daily_synthesis": (
-            "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5."
+            "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6."
         ),
         "astro_events_intro": "Intro",
         "time_window_narratives": {"matin": "Matin text"},
@@ -238,7 +238,7 @@ async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
     }
     valid_free_content = {
         "daily_synthesis": (
-            "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6."
+            "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6. Phrase 7."
         ),
         "astro_events_intro": "Intro",
         "time_window_narratives": {"matin": "Matin text"},
@@ -269,12 +269,12 @@ async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
         )
 
         assert res is not None
-        assert narrator._count_sentences(res.daily_synthesis) == 6
+        assert narrator._count_sentences(res.daily_synthesis) == 7
         assert mock_client.chat.completions.create.await_count == 2
         second_messages = mock_client.chat.completions.create.await_args_list[1].kwargs["messages"]
         second_prompt = second_messages[1]["content"]
-        assert "6 à 8 phrases" in second_prompt
+        assert "7 à 8 phrases" in second_prompt
         assert (
             mock_client.chat.completions.create.await_args_list[0].kwargs["max_completion_tokens"]
-            == 900
+            == 1300
         )

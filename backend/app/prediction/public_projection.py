@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime, time
 from numbers import Real
 from typing import TYPE_CHECKING, Any
@@ -59,6 +60,8 @@ class PublicPredictionAssembler:
     Assembles the public API response for a daily prediction.
     AC1/AC4 Compliance: Uses typed snapshot and evidence pack for projection.
     """
+
+    _MIN_PERSISTED_FREE_DAILY_SYNTHESIS_SENTENCES = 7
 
     async def assemble(
         self,
@@ -191,6 +194,7 @@ class PublicPredictionAssembler:
                 time_windows=time_windows,
                 turning_points=turning_points,
                 main_turning_point=main_turning_point,
+                variant_code=variant_code,
             )
             if has_llm_narrative:
                 daily_synthesis = self._safe_text(persisted_llm_narrative.get("daily_synthesis"))
@@ -299,7 +303,11 @@ class PublicPredictionAssembler:
         time_windows: list[dict[str, Any]],
         turning_points: list[dict[str, Any]],
         main_turning_point: dict[str, Any] | None,
+        variant_code: str | None = None,
     ) -> bool:
+        if not self._has_valid_persisted_daily_synthesis(payload, variant_code):
+            return False
+
         applied = False
 
         window_payload = payload.get("time_window_narratives")
@@ -339,6 +347,19 @@ class PublicPredictionAssembler:
             applied = True
 
         return applied
+
+    def _has_valid_persisted_daily_synthesis(
+        self, payload: dict[str, Any], variant_code: str | None
+    ) -> bool:
+        daily_synthesis = self._safe_text(payload.get("daily_synthesis"))
+        if not daily_synthesis:
+            return False
+        if variant_code != "summary_only":
+            return True
+        sentence_count = len(
+            [part for part in re.split(r"(?<=[.!?])\s+", daily_synthesis) if part.strip()]
+        )
+        return sentence_count >= self._MIN_PERSISTED_FREE_DAILY_SYNTHESIS_SENTENCES
 
     def _safe_text(self, value: Any) -> str:
         if isinstance(value, str):

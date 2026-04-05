@@ -254,6 +254,75 @@ async def test_assemble_reuses_persisted_llm_narrative_without_regeneration():
 
 
 @pytest.mark.asyncio
+async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short():
+    snapshot = PersistedPredictionSnapshot(
+        run_id=8,
+        user_id=42,
+        local_date=date(2026, 3, 7),
+        timezone="UTC",
+        computed_at=datetime(2026, 3, 7, 7, 0, tzinfo=UTC),
+        input_hash="hash",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        is_provisional_calibration=False,
+        calibration_label="final",
+        overall_summary="legacy summary",
+        overall_tone="neutral",
+        llm_narrative={
+            "daily_synthesis": "Journée calme et sereine, focus sur relations et échanges.",
+            "astro_events_intro": "Intro persistée",
+        },
+        category_scores=[
+            PersistedCategoryScore(
+                category_id=1,
+                category_code="work",
+                note_20=16,
+                raw_score=0.8,
+                power=0.7,
+                volatility=0.25,
+                rank=1,
+                is_provisional=False,
+                summary=None,
+            )
+        ],
+        turning_points=[],
+        time_blocks=[],
+    )
+
+    prompt_context = MagicMock()
+    regenerated = MagicMock()
+    regenerated.daily_synthesis = (
+        "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6. Phrase 7."
+    )
+    regenerated.astro_events_intro = "Nouvelle intro"
+    regenerated.daily_advice = None
+    regenerated.time_window_narratives = {}
+    regenerated.turning_point_narratives = []
+    regenerated.main_turning_point_narrative = None
+
+    with patch(
+        "app.prediction.llm_narrator.LLMNarrator.narrate",
+        new_callable=AsyncMock,
+        return_value=regenerated,
+    ) as narrate, patch("app.prediction.public_projection.settings") as mock_settings:
+        mock_settings.llm_narrator_enabled = True
+        result = await PublicPredictionAssembler().assemble(
+            snapshot,
+            {1: "work"},
+            reference_version="2.0.0",
+            ruleset_version="2.0.0",
+            prompt_context=prompt_context,
+            variant_code="summary_only",
+        )
+
+    narrate.assert_awaited_once()
+    assert result["has_llm_narrative"] is True
+    assert result["daily_synthesis"] == regenerated.daily_synthesis
+    assert result["astro_events_intro"] == "Nouvelle intro"
+
+
+@pytest.mark.asyncio
 async def test_assemble_includes_enriched_turning_points():
     from app.prediction.schemas import V3PrimaryDriver
 

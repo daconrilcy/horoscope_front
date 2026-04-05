@@ -80,7 +80,8 @@ La feature `horoscope_daily` n'est pas encore enregistrée dans `FEATURE_SCOPE_R
   - compatibilité avec les doubles de test non SQLAlchemy sur la route `/v1/predictions/daily` ;
   - maintien du comportement historique V4 pendant la migration des entitlements canoniques.
 - Hardening complémentaire du différentiel `free` vs `basic/premium` :
-  - le variant `summary_only` pilote désormais aussi la longueur cible de `daily_synthesis` ;
-  - la version free est recalibrée à 6–8 phrases, avec une cible explicite de 50% à 67% de la longueur Basic tout en conservant une densité éditoriale proche de la version complète ;
+    - le variant `summary_only` pilote désormais aussi la longueur cible de `daily_synthesis` ;
+  - la version free est recalibrée à 7–8 phrases, avec une cible explicite de 50% à 67% de la longueur Basic tout en conservant une densité éditoriale proche de la version complète ;
   - le budget runtime du variant free est relevé pour éviter un rendu trop pauvre ou simpliste ;
-  - des tests unitaires verrouillent la consigne de prompt et le budget runtime du narrateur.
+  - une narration free persistée trop courte n'est plus servie telle quelle et déclenche désormais une régénération ;
+    - des tests unitaires verrouillent la consigne de prompt, le budget runtime du narrateur et la non-réutilisation des anciennes narrations trop courtes.

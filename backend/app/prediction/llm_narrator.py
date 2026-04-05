@@ -40,7 +40,7 @@ class LLMNarrator:
     TIMEOUT_SECONDS = 60.0
     DEFAULT_MAX_COMPLETION_TOKENS = PROMPT_CATALOG["daily_prediction"].max_tokens
     MIN_DAILY_SYNTHESIS_SENTENCES = 10
-    MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 6
+    MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 7
     MAX_NARRATION_ATTEMPTS = 2
 
     async def narrate(
@@ -100,9 +100,9 @@ class LLMNarrator:
                 )
                 if result is None:
                     return None
-                sentence_count = self._count_sentences(result.daily_synthesis)
-                if sentence_count >= min_daily_synthesis_sentences:
+                if self._is_daily_synthesis_valid(result.daily_synthesis, variant_code):
                     return result
+                sentence_count = self._count_sentences(result.daily_synthesis)
                 logger.warning(
                     "llm_narrator.short_synthesis model=%s attempt=%s sentence_count=%s",
                     model,
@@ -217,7 +217,7 @@ class LLMNarrator:
     ) -> str:
         if attempt <= 1:
             return base_prompt
-        target_range = "6 à 8 phrases" if variant_code == "summary_only" else "10 à 12 phrases"
+        target_range = "7 à 8 phrases" if variant_code == "summary_only" else "10 à 12 phrases"
         return (
             f"{base_prompt}\n\n"
             "CORRECTION OBLIGATOIRE : lors de la tentative précédente, "
@@ -242,6 +242,12 @@ class LLMNarrator:
         if not text:
             return 0
         return len([part for part in re.split(r"(?<=[.!?])\s+", text.strip()) if part.strip()])
+
+    def _is_daily_synthesis_valid(self, text: str, variant_code: str | None) -> bool:
+        sentence_count = self._count_sentences(text)
+        if variant_code == "summary_only":
+            return sentence_count >= self.MIN_DAILY_SYNTHESIS_SENTENCES_FREE
+        return sentence_count >= self.MIN_DAILY_SYNTHESIS_SENTENCES
 
     def _as_string(self, value: Any) -> str:
         if isinstance(value, str):

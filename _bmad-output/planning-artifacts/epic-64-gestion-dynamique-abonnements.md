@@ -207,8 +207,10 @@ Validation finale produit :
 - correction complémentaire du parcours `/settings/subscription` : un utilisateur free exposé comme plan applicatif `free` mais sans profil Stripe est désormais routé vers un Checkout Stripe initial, et non plus vers le Customer Portal.
 - différenciation runtime durcie entre horoscope `free` et `basic/premium` :
   - `summary_only` utilise désormais le prompt/budget tokens du variant free ;
-  - la synthèse affichée dans `DayClimateHero` pour free reste alignée sur la qualité éditoriale de la version Basic, mais vise désormais 6–8 phrases et une longueur globale comprise entre 50% et 67% de la version complète ;
-  - des tests backend verrouillent ce contrat de longueur et de budget.
+  - la synthèse affichée dans `DayClimateHero` pour free reste alignée sur la qualité éditoriale de la version Basic, mais vise désormais 7–8 phrases, une longueur globale comprise entre 50% et 67% de la version complète et un volume suffisant pour éviter les résumés simplistes ;
+  - le budget runtime du variant free est relevé pour permettre un vrai résumé dense ;
+  - une narration free persistée trop courte n'est plus réutilisée telle quelle : le backend force une régénération conforme ;
+  - des tests backend verrouillent ce contrat de longueur, de budget et de réutilisation.
 - finalisation UX complémentaire sur `/dashboard/horoscope` pour le plan free :
   - ajout d'un CTA Basic directement dans le cadre résumé `DayClimateHero`, avec promesse éditoriale orientée valeur ("obtenir un horoscope du jour plus riche") ;
   - extension du pattern de verrouillage à toutes les sections free avec teaser long fixe flouté, cadenas visible et CTA Basic sur chaque section (`Vos domaines clés`, `Déroulé de votre journée`, `Moment clé`, `Opportunité`, `Conseil du jour`, `Fondements astrologiques`) ;
