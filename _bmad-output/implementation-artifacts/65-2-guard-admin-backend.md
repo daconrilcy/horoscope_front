@@ -26,30 +26,37 @@ afin que tous les endpoints admin partagent une logique de contrôle d'accès co
    **When** la migration vers `require_admin_user` est effectuée  
    **Then** les checks inline `if user.role not in {...}` et le helper local `_ensure_admin_role()` sont supprimés  
    **And** le comportement fonctionnel des endpoints existants est inchangé (tests de non-régression passent)
+Status: done
 
 ## Tasks / Subtasks
 
-- [ ] Ajouter `require_admin_user` dans `backend/app/api/dependencies/auth.py` (AC: 1, 2, 3)
-  - [ ] Implémenter comme `async def require_admin_user(user: AuthenticatedUser = Depends(require_authenticated_user)) -> AuthenticatedUser:`
-  - [ ] Vérifier `user.role == "admin"` — lever `HTTPException(403, detail={"code": "insufficient_role", "required_role": "admin", "actual_role": user.role})` si non
-  - [ ] Les erreurs 401 sont gérées automatiquement par `require_authenticated_user` (délégation)
-- [ ] Migrer `backend/app/api/v1/routers/admin_llm.py` (AC: 4)
-  - [ ] Remplacer `_ensure_admin_role(user)` par `Depends(require_admin_user)` sur chaque endpoint
-  - [ ] Supprimer la fonction locale `_ensure_admin_role()`
-- [ ] Migrer `backend/app/api/v1/routers/admin_pdf_templates.py` si existant (AC: 4)
-  - [ ] Remplacer les checks inline par `Depends(require_admin_user)`
-- [ ] Migrer `backend/app/api/v1/routers/ops_monitoring.py` (AC: 4)
-  - [ ] Remplacer les checks inline par `Depends(require_admin_user)`
-- [ ] Migrer `backend/app/api/v1/routers/ops_persona.py` (AC: 4)
-  - [ ] Remplacer les checks inline par `Depends(require_admin_user)`
-- [ ] Tests unitaires `backend/app/tests/unit/test_require_admin_user.py` (AC: 1, 2, 3)
-  - [ ] Test : token admin valide → 200
-  - [ ] Test : token invalide → 401
-  - [ ] Test : token valide rôle `ops` → 403 avec `insufficient_role`
-  - [ ] Test : token valide rôle `user` → 403
-- [ ] Tests de non-régression sur les endpoints migrés (AC: 4)
+- [x] Ajouter `require_admin_user` dans `backend/app/api/dependencies/auth.py` (AC: 1, 2, 3)
+  - [x] Implémenter comme `async def require_admin_user(user: AuthenticatedUser = Depends(require_authenticated_user)) -> AuthenticatedUser:`
+  - [x] Vérifier `user.role == "admin"` — lever `UserAuthenticationError(403, ...)` si non
+  - [x] Les erreurs 401 sont gérées automatiquement par `require_authenticated_user` (délégation)
+- [x] Migrer `backend/app/api/v1/routers/admin_llm.py` (AC: 4)
+  - [x] Remplacer `_ensure_admin_role(user)` par `Depends(require_admin_user)` sur chaque endpoint
+  - [x] Supprimer la fonction locale `_ensure_admin_role()`
+- [x] Migrer `backend/app/api/v1/routers/admin_pdf_templates.py` si existant (AC: 4)
+  - [x] Remplacer les checks inline par `Depends(require_admin_user)`
+- [x] Migrer `backend/app/api/v1/routers/ops_monitoring.py` (AC: 4)
+  - [x] Remplacer les checks inline par `Depends(require_admin_user)`
+- [x] Migrer `backend/app/api/v1/routers/ops_persona.py` (AC: 4)
+  - [x] Remplacer les checks inline par `Depends(require_admin_user)`
+- [x] Tests unitaires `backend/app/tests/unit/test_require_admin_user.py` (AC: 1, 2, 3)
+  - [x] Test : token admin valide → 200
+  - [x] Test : token invalide → 401
+  - [x] Test : token valide rôle `ops` → 403 avec `insufficient_role`
+  - [x] Test : token valide rôle `user` → 403
+- [x] Tests de non-régression sur les endpoints migrés (AC: 4)
 
-## Dev Notes
+### File List
+- `backend/app/api/dependencies/auth.py`
+- `backend/app/api/v1/routers/admin_llm.py`
+- `backend/app/api/v1/routers/admin_pdf_templates.py`
+- `backend/app/api/v1/routers/ops_monitoring.py`
+- `backend/app/api/v1/routers/ops_persona.py`
+- `backend/app/tests/unit/test_require_admin_user.py`
 
 ### Contexte architectural
 - **Fichier cible** : `backend/app/api/dependencies/auth.py` — contient déjà `require_authenticated_user` et `AuthenticatedUser`
