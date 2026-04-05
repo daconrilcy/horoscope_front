@@ -226,9 +226,9 @@ export function AdminUserDetailPage() {
                     </div>
                   </div>
                   <div className="quota-bar-container">
-                    <div 
-                      className="quota-bar-fill" 
-                      style={{ width: q.limit ? `${Math.min((q.used / q.limit) * 100, 100)}%` : "0%" }}
+                    <div
+                      className="quota-bar-fill"
+                      style={{ ["--quota-fill-width" as string]: q.limit ? `${Math.min((q.used / q.limit) * 100, 100)}%` : "0%" }}
                     ></div>
                   </div>
                   <span className="quota-period">{q.period}</span>

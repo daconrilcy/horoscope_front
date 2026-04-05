@@ -80,7 +80,7 @@ class TestNatalInterpretationsHistory:
             chart_id="chart-1",
             level=InterpretationLevel.COMPLETE,
             use_case="natal_psy_profile",
-            interpretation_payload={"title": "Psy Profile"},
+            interpretation_payload={"title": "Psy Profile", "summary": "A complete psy profile interpretation."},
             created_at=datetime.now(timezone.utc),
             was_fallback=False,
         )

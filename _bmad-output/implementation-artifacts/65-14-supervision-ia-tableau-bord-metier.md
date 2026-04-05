@@ -53,3 +53,7 @@ afin de détecter rapidement une dérive ou une surconsommation avant qu'elle im
 - `frontend/src/pages/admin/AdminAiGenerationsPage.tsx`
 - `frontend/src/pages/admin/AdminAiGenerationsPage.css`
 - `backend/app/tests/integration/test_admin_ai_api.py`
+
+### Completion Notes List
+
+- **Fix (code review)** : Les types `float` et `int` dans l'interface TypeScript `UseCaseMetrics` (`estimated_cost_usd`, `avg_latency_ms`, `error_rate`, `retry_rate`) ont été corrigés en `number`. `float` et `int` sont des types Python invalides en TypeScript — ils se résolvent silencieusement en `any` quand `strict` est désactivé.

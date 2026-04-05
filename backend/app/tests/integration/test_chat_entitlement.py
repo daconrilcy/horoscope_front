@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api.v1.routers.chat import QuotaInfo
 from app.main import app
 from app.services.chat_entitlement_gate import ChatEntitlementResult
 from app.services.entitlement_types import UsageState
@@ -89,6 +90,10 @@ def test_send_message_canonical_quota_ok(mock_user):
         patch(
             "app.services.chat_guidance_service.ChatGuidanceService.send_message",
             return_value=mock_reply,
+        ),
+        patch(
+            "app.api.v1.routers.chat._build_post_turn_quota_info",
+            return_value=QuotaInfo(remaining=2, limit=5),
         ),
         patch("app.infra.db.session.get_db_session"),
     ):

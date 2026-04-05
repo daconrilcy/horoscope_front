@@ -58,6 +58,10 @@ Status: done
 - `backend/app/api/v1/routers/ops_persona.py`
 - `backend/app/tests/unit/test_require_admin_user.py`
 
+### Completion Notes List
+
+- **Fix (code review)** : La migration de `ops_monitoring.py` et `ops_persona.py` vers `require_admin_user` (rôle `admin` exclusif) était incorrecte — ces endpoints doivent rester accessibles au rôle `ops` (et `admin`). Ajout d'une dépendance `require_ops_user` dans `auth.py` qui autorise `{"ops", "admin"}`. `ops_monitoring.py` et `ops_persona.py` utilisent désormais `require_ops_user`. Les endpoints admin purs (`admin_llm.py`, `admin_pdf_templates.py`, tous les nouveaux routers admin Epic 65) conservent `require_admin_user`.
+
 ### Contexte architectural
 - **Fichier cible** : `backend/app/api/dependencies/auth.py` — contient déjà `require_authenticated_user` et `AuthenticatedUser`
 - **`AuthenticatedUser`** : modèle Pydantic avec champs `id: int`, `role: str`, `email: str`, `created_at: datetime` — **ne pas modifier** dans cette story (le champ `permissions: list[str]` est ajouté dans Story 65-21)

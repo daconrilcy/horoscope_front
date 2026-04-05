@@ -58,3 +58,7 @@ afin de comprendre son état exact et répondre efficacement à toute demande.
 - `frontend/src/pages/admin/AdminUserDetailPage.css`
 - `frontend/src/pages/admin/index.ts`
 - `frontend/src/app/routes.tsx`
+
+### Completion Notes List
+
+- **Fix (code review)** : La barre de progression des quotas (`quota-bar-fill`) utilisait un style inline `style={{ width: ... }}` pour la largeur dynamique — violation de la règle "aucun style inline". Corrigé via une CSS custom property `--quota-fill-width` définie sur l'élément (seule façon de passer une valeur dynamique calculée sans inline style pour une propriété non-standard) ; la règle CSS `.quota-bar-fill` lit `width: var(--quota-fill-width, 0%)`.

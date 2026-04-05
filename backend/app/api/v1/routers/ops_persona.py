@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import (
     AuthenticatedUser,
-    require_admin_user,
+    require_ops_user,
 )
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
@@ -169,7 +169,7 @@ def _audit_failure_or_503(
 )
 def get_active_persona_config(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
@@ -191,7 +191,7 @@ def get_active_persona_config(
 )
 def list_persona_profiles(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
@@ -218,7 +218,7 @@ def list_persona_profiles(
 def create_persona_profile(
     request: Request,
     payload: Any = Body(...),
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
@@ -298,7 +298,7 @@ def create_persona_profile(
 def update_active_persona_config(
     request: Request,
     payload: Any = Body(...),
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
@@ -435,7 +435,7 @@ def _persona_profile_mutation(
 def activate_persona_profile(
     profile_id: int,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     return _persona_profile_mutation(
@@ -463,7 +463,7 @@ def activate_persona_profile(
 def archive_persona_profile(
     profile_id: int,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     return _persona_profile_mutation(
@@ -491,7 +491,7 @@ def archive_persona_profile(
 def restore_persona_profile(
     profile_id: int,
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     return _persona_profile_mutation(
@@ -518,7 +518,7 @@ def restore_persona_profile(
 )
 def rollback_persona_config(
     request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)

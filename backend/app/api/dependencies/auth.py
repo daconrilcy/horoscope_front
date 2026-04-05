@@ -114,6 +114,19 @@ def require_admin_user(
     return user
 
 
+def require_ops_user(
+    user: AuthenticatedUser = Depends(require_authenticated_user),
+) -> AuthenticatedUser:
+    if user.role not in {"ops", "admin"}:
+        raise UserAuthenticationError(
+            code="insufficient_role",
+            message="ops or admin role is required",
+            status_code=403,
+            details={"required_roles": "ops, admin", "actual_role": user.role},
+        )
+    return user
+
+
 def get_optional_authenticated_user(
     authorization: str | None = Header(default=None),
     db: Session = Depends(get_db_session),

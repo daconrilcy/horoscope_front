@@ -8,10 +8,10 @@ interface UseCaseMetrics {
   use_case: string
   call_count: number
   total_tokens: number
-  estimated_cost_usd: float
-  avg_latency_ms: int
-  error_rate: float
-  retry_rate: float
+  estimated_cost_usd: number
+  avg_latency_ms: number
+  error_rate: number
+  retry_rate: number
 }
 
 interface TrendPoint {

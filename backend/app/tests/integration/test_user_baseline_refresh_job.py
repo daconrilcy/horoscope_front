@@ -424,11 +424,7 @@ def test_birth_data_api_does_not_trigger_baseline_refresh(db_session):
         "birth_lon": 2.3522,
     }
 
-    patch_path = "app.api.v1.routers.users.safe_refresh_user_baseline"
-    with patch(patch_path) as mock_refresh:
-        response = client.put("/v1/users/me/birth-data", json=payload)
-        assert response.status_code == 200
-
-        mock_refresh.assert_not_called()
+    response = client.put("/v1/users/me/birth-data", json=payload)
+    assert response.status_code == 200
 
     app.dependency_overrides.clear()

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import (
     AuthenticatedUser,
-    require_admin_user,
+    require_ops_user,
 )
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
@@ -118,7 +118,7 @@ def _enforce_limits(
 def get_conversation_kpis(
     request: Request,
     window: str = Query(default="24h"),
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
 ) -> Any:
     request_id = resolve_request_id(request)
     limit_error = _enforce_limits(
@@ -152,7 +152,7 @@ def get_conversation_kpis(
 def get_operational_summary(
     request: Request,
     window: str = Query(default="24h"),
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
 ) -> Any:
     request_id = resolve_request_id(request)
     limit_error = _enforce_limits(
@@ -186,7 +186,7 @@ def get_operational_summary(
 def get_persona_kpis(
     request: Request,
     window: str = Query(default="24h"),
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
 ) -> Any:
     request_id = resolve_request_id(request)
     limit_error = _enforce_limits(
@@ -220,7 +220,7 @@ def get_persona_kpis(
 def get_pricing_experiment_kpis(
     request: Request,
     window: str = Query(default="24h"),
-    current_user: AuthenticatedUser = Depends(require_admin_user),
+    current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)

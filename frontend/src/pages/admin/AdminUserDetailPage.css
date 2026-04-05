@@ -221,6 +221,7 @@
 
 .quota-bar-fill {
   height: 100%;
+  width: var(--quota-fill-width, 0%);
   background: var(--color-primary);
   border-radius: 4px;
 }
