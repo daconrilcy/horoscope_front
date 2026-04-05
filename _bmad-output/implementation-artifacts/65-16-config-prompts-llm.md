@@ -1,6 +1,6 @@
 # Story 65.16 : Config prompts LLM — consultation, diff et rollback
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 

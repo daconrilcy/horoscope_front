@@ -3,46 +3,34 @@ import type { RouteObject } from "react-router-dom"
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom"
 
 import { AppShell } from "../components/AppShell"
-import { RootLayout, AuthLayout, LandingLayout } from "../layouts"
-import { EnterpriseLayout } from "../components/layout"
 import { AuthGuard } from "./guards/AuthGuard"
 import { RoleGuard } from "./guards/RoleGuard"
-import { RootRedirect } from "./guards/RootRedirect"
-import { LandingRedirect } from "./guards/LandingRedirect"
+import { AdminGuard } from "../components/AdminGuard"
+import { AppLayout } from "../layouts/AppLayout"
+import { PageErrorBoundary } from "../components/PageErrorBoundary"
 
-const LandingPage = lazy(() => import("../pages/landing/LandingPage"))
-
-import { SignInForm } from "../components/SignInForm"
-import { SignUpForm } from "../components/SignUpForm"
+// Pages
+import { DashboardPage } from "../pages/DashboardPage"
+import { TodayPage } from "../pages/TodayPage"
 import { NatalChartPage } from "../pages/NatalChartPage"
 import { ChatPage } from "../pages/ChatPage"
-import { BirthProfilePage } from "../pages/BirthProfilePage"
+import { SettingsPage } from "../pages/SettingsPage"
+import { LoginPage } from "../pages/LoginPage"
+import { RegisterPage } from "../pages/RegisterPage"
 import { NotFoundPage } from "../pages/NotFoundPage"
-import DailyHoroscopePage from "../pages/DailyHoroscopePage"
-import HelpPage from "../pages/HelpPage"
-import { SubscriptionGuidePage } from "../pages/SubscriptionGuidePage"
-
-import { DashboardPage } from "../pages/DashboardPage"
-import { PrivacyPolicyPage } from "../pages/PrivacyPolicyPage"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
-import { ConsultationResultPage } from "../pages/ConsultationResultPage"
-import { AstrologersPage } from "../pages/AstrologersPage"
-import { AstrologerProfilePage } from "../pages/AstrologerProfilePage"
-import { SettingsPage } from "../pages/SettingsPage"
-import { AccountSettings } from "../pages/settings/AccountSettings"
-import { SubscriptionSettings } from "../pages/settings/SubscriptionSettings"
-import { UsageSettings } from "../pages/settings/UsageSettings"
-import { ConsultationLayout } from "../features/consultations"
-import { BillingSuccessPage } from "../pages/billing/BillingSuccessPage"
-import { BillingCancelPage } from "../pages/billing/BillingCancelPage"
-import { PrivacyPanel } from "../components/PrivacyPanel"
-import { SupportOpsPanel } from "../components/SupportOpsPanel"
-import { AdminGuard } from "../components/AdminGuard"
+import { SupportPage } from "../pages/SupportPage"
+import { EnterpriseDashboardPage } from "../pages/EnterpriseDashboardPage"
 import { AdminPage } from "../pages/AdminPage"
+
 import {
+  PricingAdmin,
+  MonitoringAdmin,
+  PersonasAdmin,
   AdminDashboardPage,
   AdminUsersPage,
+  AdminUserDetailPage,
   AdminEntitlementsPage,
   AdminAiGenerationsPage,
   AdminPromptsPage,
@@ -54,118 +42,46 @@ import {
   AdminHubPage,
   ReconciliationAdmin
 } from "../pages/admin"
-import { EnterpriseCredentialsPanel } from "../components/EnterpriseCredentialsPanel"
-import { B2BAstrologyPanel } from "../components/B2BAstrologyPanel"
-import { B2BUsagePanel } from "../components/B2BUsagePanel"
-import { B2BEditorialPanel } from "../components/B2BEditorialPanel"
-import { B2BBillingPanel } from "../components/B2BBillingPanel"
-
-function LoginPage() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const returnTo = searchParams.get("returnTo")
-  const registerUrl = returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register"
-  return <SignInForm onRegister={() => navigate(registerUrl)} />
-}
-
-function RegisterPage() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const returnTo = searchParams.get("returnTo")
-  const loginUrl = returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login"
-  return <SignUpForm onSignIn={() => navigate(loginUrl)} />
-}
-
 
 export const routes: RouteObject[] = [
   {
-    element: <RootLayout />,
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+  {
+    path: "/",
+    element: (
+      <AuthGuard>
+        <AppLayout />
+      </AuthGuard>
+    ),
     children: [
       {
-        element: <LandingLayout />,
-        children: [
-          {
-            path: "/",
-            element: <LandingRedirect />,
-          },
-          {
-            path: "/privacy",
-            element: <PrivacyPolicyPage />,
-          },
-        ],
+        index: true,
+        element: <Navigate to="/dashboard" replace />,
       },
       {
-        element: <AuthLayout />,
-        children: [
-          {
-            path: "/login",
-            element: <LoginPage />,
-          },
-          {
-            path: "/register",
-            element: <RegisterPage />,
-          },
-        ],
+        path: "dashboard",
+        element: <DashboardPage />,
       },
       {
-        element: (
-          <AuthGuard>
-            <AppShell />
-          </AuthGuard>
-        ),
-        children: [
-      {
-        path: "/dashboard",
-        children: [
-          {
-            index: true,
-            element: <DashboardPage />,
-          },
-          {
-            path: "horoscope",
-            element: <DailyHoroscopePage />,
-          },
-        ],
+        path: "today",
+        element: <TodayPage />,
       },
       {
-        path: "/natal",
+        path: "natal",
         element: <NatalChartPage />,
       },
       {
-        path: "/chat",
+        path: "chat",
         element: <ChatPage />,
       },
       {
-        path: "/chat/:conversationId",
-        element: <ChatPage />,
-      },
-      {
-        path: "/profile",
-        element: <BirthProfilePage />,
-      },
-      {
-        path: "/billing/success",
-        element: <BillingSuccessPage />,
-      },
-      {
-        path: "/billing/cancel",
-        element: <BillingCancelPage />,
-      },
-      {
-        path: "/privacy-settings",
-        element: <PrivacyPanel />,
-      },
-      {
-        path: "/help",
-        element: <HelpPage />,
-      },
-      {
-        path: "/help/subscriptions",
-        element: <SubscriptionGuidePage />,
-      },
-      {
-        path: "/consultations",
-        element: <ConsultationLayout />,
+        path: "consultations",
         children: [
           {
             index: true,
@@ -175,40 +91,30 @@ export const routes: RouteObject[] = [
             path: "new",
             element: <ConsultationWizardPage />,
           },
-          {
-            path: "result",
-            element: <ConsultationResultPage />,
-          },
         ],
       },
       {
-        path: "/astrologers",
-        element: <AstrologersPage />,
-      },
-      {
-        path: "/astrologers/:id",
-        element: <AstrologerProfilePage />,
-      },
-      {
-        path: "/settings",
+        path: "settings",
         element: <SettingsPage />,
-        children: [
-          { index: true, element: <Navigate to="account" replace /> },
-          { path: "account", element: <AccountSettings /> },
-          { path: "subscription", element: <SubscriptionSettings /> },
-          { path: "usage", element: <UsageSettings /> },
-        ],
       },
       {
-        path: "/support",
+        path: "support",
         element: (
-          <RoleGuard roles={["support", "ops"]}>
-            <SupportOpsPanel />
+          <RoleGuard roles={["user", "admin", "ops", "support"]}>
+            <SupportPage />
           </RoleGuard>
         ),
       },
       {
-        path: "/admin",
+        path: "enterprise",
+        element: (
+          <RoleGuard roles={["enterprise_admin", "admin"]}>
+            <EnterpriseDashboardPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "admin",
         element: (
           <AdminGuard>
             <AdminPage />
@@ -278,45 +184,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "reconciliation",
-            element: <ReconciliationAdmin />, // Kept as is or redirected
-          },
-          {
-            path: "*",
-            element: <Navigate to="dashboard" replace />,
-          },
-        ],
-      },
-      {
-        path: "/enterprise/*",
-        element: (
-          <RoleGuard roles={["enterprise_admin"]}>
-            <EnterpriseLayout />
-          </RoleGuard>
-        ),
-        children: [
-          {
-            index: true,
-            element: <Navigate to="/enterprise/credentials" replace />,
-          },
-          {
-            path: "credentials",
-            element: <EnterpriseCredentialsPanel />,
-          },
-          {
-            path: "astrology",
-            element: <B2BAstrologyPanel />,
-          },
-          {
-            path: "usage",
-            element: <B2BUsagePanel />,
-          },
-          {
-            path: "editorial",
-            element: <B2BEditorialPanel />,
-          },
-          {
-            path: "billing",
-            element: <B2BBillingPanel />,
+            element: <ReconciliationAdmin />,
           },
         ],
       },
@@ -326,11 +194,4 @@ export const routes: RouteObject[] = [
       },
     ],
   },
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
-],
-},
 ]
-
