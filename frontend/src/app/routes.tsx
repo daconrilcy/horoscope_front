@@ -40,7 +40,20 @@ import { PrivacyPanel } from "../components/PrivacyPanel"
 import { SupportOpsPanel } from "../components/SupportOpsPanel"
 import { AdminGuard } from "../components/AdminGuard"
 import { AdminPage } from "../pages/AdminPage"
-import { PricingAdmin, MonitoringAdmin, PersonasAdmin, ReconciliationAdmin } from "../pages/admin"
+import {
+  AdminDashboardPage,
+  AdminUsersPage,
+  AdminEntitlementsPage,
+  AdminAiGenerationsPage,
+  AdminPromptsPage,
+  AdminContentPage,
+  AdminBillingPage,
+  AdminLogsPage,
+  AdminSupportPage,
+  AdminSettingsPage,
+  AdminHubPage,
+  ReconciliationAdmin
+} from "../pages/admin"
 import { EnterpriseCredentialsPanel } from "../components/EnterpriseCredentialsPanel"
 import { B2BAstrologyPanel } from "../components/B2BAstrologyPanel"
 import { B2BUsagePanel } from "../components/B2BUsagePanel"
@@ -203,20 +216,69 @@ export const routes: RouteObject[] = [
         ),
         children: [
           {
+            index: true,
+            element: <AdminHubPage />,
+          },
+          {
+            path: "dashboard",
+            element: <AdminDashboardPage />,
+          },
+          {
+            path: "users",
+            element: <AdminUsersPage />,
+          },
+          {
+            path: "entitlements",
+            element: <AdminEntitlementsPage />,
+          },
+          {
+            path: "ai-generations",
+            element: <AdminAiGenerationsPage />,
+          },
+          {
+            path: "prompts",
+            element: <AdminPromptsPage />,
+          },
+          {
+            path: "content",
+            element: <AdminContentPage />,
+          },
+          {
+            path: "billing",
+            element: <AdminBillingPage />,
+          },
+          {
+            path: "logs",
+            element: <AdminLogsPage />,
+          },
+          {
+            path: "support",
+            element: <AdminSupportPage />,
+          },
+          {
+            path: "settings",
+            element: <AdminSettingsPage />,
+          },
+          // Legacy redirects
+          {
             path: "pricing",
-            element: <PricingAdmin />,
+            element: <Navigate to="../billing" replace />,
           },
           {
             path: "monitoring",
-            element: <MonitoringAdmin />,
+            element: <Navigate to="../logs" replace />,
           },
           {
             path: "personas",
-            element: <PersonasAdmin />,
+            element: <Navigate to="../prompts" replace />,
           },
           {
             path: "reconciliation",
-            element: <ReconciliationAdmin />,
+            element: <ReconciliationAdmin />, // Kept as is or redirected
+          },
+          {
+            path: "*",
+            element: <Navigate to="dashboard" replace />,
           },
         ],
       },

@@ -1,5 +1,6 @@
 import React from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, NavLink, useLocation } from "react-router-dom"
+import { useAdminPermissions } from "../state/AdminPermissionsContext"
 import "./AdminLayout.css"
 
 export interface AdminSection {
@@ -23,42 +24,55 @@ export function AdminLayout({
   children, 
   className 
 }: AdminLayoutProps) {
+  const { allowedSections } = useAdminPermissions()
   const location = useLocation()
   const normalizedPath = location.pathname.replace(/\/$/, "")
   const isHub = normalizedPath === "/admin"
 
-  return (
-    <div className={`admin-page ${className ?? ""}`}>
-      <header className="admin-header">
-        <h1>{title}</h1>
-        {!isHub && (
-          <Link to="/admin" className="admin-back-link">
-            {backToHubLabel}
-          </Link>
-        )}
-      </header>
+  // Filter sections based on permissions
+  const filteredSections = sections.filter(section => {
+    const sectionCode = section.path.split("/").pop()
+    return sectionCode && (allowedSections.includes(sectionCode) || sectionCode === "admin")
+  })
 
-      {isHub ? (
-        <section className="admin-hub" aria-label="Sections d'administration">
-          <div className="admin-grid">
-            {sections.map((section) => (
-              <Link
-                key={section.path}
-                to={section.path}
-                className="admin-card"
-                aria-label={section.label}
-              >
-                <section.Icon className="admin-card-icon-svg" />
-                <span className="admin-card-label">{section.label}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : (
-        <div className="admin-content">
+  return (
+    <div className={`admin-layout ${className ?? ""}`}>
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar-header">
+          <Link to="/admin" className="admin-sidebar-logo">
+            {title}
+          </Link>
+        </div>
+        <nav className="admin-sidebar-nav" aria-label="Sections d'administration">
+          {filteredSections.map((section) => (
+            <NavLink
+              key={section.path}
+              to={section.path}
+              className={({ isActive }) => 
+                `admin-sidebar-link ${isActive ? "admin-sidebar-link--active" : ""}`
+              }
+              aria-current={location.pathname === section.path ? "page" : undefined}
+            >
+              <section.Icon className="admin-sidebar-icon" />
+              <span className="admin-sidebar-label">{section.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+
+      <main className="admin-main">
+        {!isHub && (
+          <header className="admin-content-header">
+            <Link to="/admin" className="admin-back-link">
+              {backToHubLabel}
+            </Link>
+          </header>
+        )}
+
+        <div className="admin-container">
           {children}
         </div>
-      )}
+      </main>
     </div>
   )
 }

@@ -4,6 +4,16 @@ import type { AstrologyLang } from "./astrology"
 export interface AdminTranslation {
   page: { title: string; backToHub: string }
   sections: {
+    dashboard: string
+    users: string
+    entitlements: string
+    ai_generations: string
+    prompts: string
+    content: string
+    billing: string
+    logs: string
+    support: string
+    settings: string
     pricing: string
     monitoring: string
     personas: string
@@ -181,24 +191,54 @@ export const adminTranslations = {
 
   sections: {
     fr: {
+      dashboard: "Tableau de bord",
+      users: "Utilisateurs",
+      entitlements: "Abonnements & Droits",
+      ai_generations: "Générations IA",
+      prompts: "Prompts & Personas",
+      content: "Contenus & Paywalls",
+      billing: "Billing",
+      logs: "Logs & Incidents",
+      support: "Support",
+      settings: "Paramètres",
       pricing: "Gestion des tarifs",
       monitoring: "Monitoring Ops",
       personas: "Personas Astrologues",
       reconciliation: "Réconciliation B2B",
     },
     en: {
+      dashboard: "Dashboard",
+      users: "Users",
+      entitlements: "Subscriptions & Rights",
+      ai_generations: "AI Generations",
+      prompts: "Prompts & Personas",
+      content: "Content & Paywalls",
+      billing: "Billing",
+      logs: "Logs & Incidents",
+      support: "Support",
+      settings: "Settings",
       pricing: "Pricing Management",
       monitoring: "Ops Monitoring",
       personas: "Astrologer Personas",
       reconciliation: "B2B Reconciliation",
     },
     es: {
+      dashboard: "Panel de control",
+      users: "Usuarios",
+      entitlements: "Suscripciones y Derechos",
+      ai_generations: "Generaciones de IA",
+      prompts: "Prompts y Personas",
+      content: "Contenidos y Paywalls",
+      billing: "Facturación",
+      logs: "Logs e Incidentes",
+      support: "Soporte",
+      settings: "Parámetros",
       pricing: "Gestión de tarifas",
       monitoring: "Monitoreo Ops",
       personas: "Personas Astrólogos",
       reconciliation: "Reconciliación B2B",
     },
-  } as Record<AstrologyLang, Record<"pricing" | "monitoring" | "personas" | "reconciliation", string>>,
+  } as Record<AstrologyLang, Record<string, string>>,
 
   monitoring: {
     fr: { title: "Monitoring Opérationnel" },

@@ -1,6 +1,6 @@
 # Story 65.4 : Navigation admin — menu 10 sections avec architecture de permissions conditionnelle
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -31,69 +31,43 @@ afin de piloter tous les domaines du produit depuis une interface cohérente et 
 
 ## Tasks / Subtasks
 
-- [ ] Créer `frontend/src/context/AdminPermissionsContext.tsx` (AC: 3)
-  - [ ] Définir l'interface : `{ allowedSections: string[], canEdit: (domain: string) => boolean, canExport: boolean }`
-  - [ ] Provider initialise avec toutes les 10 sections pour le rôle `admin` (valeurs hardcodées dans cet epic)
-  - [ ] Exporter `useAdminPermissions()` hook
-- [ ] Mettre à jour `frontend/src/pages/AdminPage.tsx` (AC: 1, 2, 3, 4)
-  - [ ] Remplacer le tableau statique de 4 sections par 10 sections avec les nouvelles URLs
-  - [ ] Intégrer `AdminPermissionsContext.Provider` en haut de l'arbre admin
-  - [ ] Filtrer les sections du menu avec `allowedSections` depuis le contexte
-  - [ ] Gérer la rétrocompatibilité des 4 URLs existantes (redirects ou conservation)
-- [ ] Mettre à jour `frontend/src/layouts/AdminLayout.tsx` (AC: 4)
-  - [ ] Ajouter `aria-current="page"` sur le lien actif (utiliser `useMatch` ou `NavLink` de React Router)
-  - [ ] Consommer `allowedSections` pour filtrer les sections affichées
-- [ ] Ajouter/mettre à jour les routes dans le router React (`App.tsx`) (AC: 1, 2)
-  - [ ] Déclarer les 10 nouvelles routes sous `/admin/*`
-  - [ ] Maintenir les 4 routes existantes (ou ajouter des redirects)
-  - [ ] Route de fallback `/admin/*` non reconnue → redirect vers `/admin/dashboard`
-- [ ] Créer les pages placeholder pour les 6 nouvelles sections (AC: 1)
-  - [ ] `AdminDashboardPage.tsx`, `AdminUsersPage.tsx`, `AdminEntitlementsPage.tsx`, `AdminAiGenerationsPage.tsx`, `AdminContentPage.tsx`, `AdminBillingPage.tsx`, `AdminLogsPage.tsx`, `AdminSupportPage.tsx`, `AdminSettingsPage.tsx` — pages vides avec titre, à étoffer dans les stories suivantes
-- [ ] Ajouter les clés i18n dans `frontend/src/i18n/` namespace `admin` (AC: 1)
-  - [ ] Labels des 10 sections : `sections.dashboard`, `sections.users`, `sections.entitlements`, `sections.ai_generations`, `sections.prompts`, `sections.content`, `sections.billing`, `sections.logs`, `sections.support`, `sections.settings`
-- [ ] CSS dans `frontend/src/layouts/AdminLayout.css` ou `frontend/src/pages/AdminPage.css` (AC: 4)
-  - [ ] Style `.nav-item--active` ou `[aria-current="page"]` pour la section active
-  - [ ] Utiliser `var(--primary)`, `var(--glass)`, `var(--text-1)`, `var(--text-2)`
-
-## Dev Notes
-
-### Contexte architectural
-- **`AdminPage.tsx`** (lire avant de modifier) : actuellement 4 sections statiques `PricingIcon`, `MonitoringIcon`, `PersonasIcon`, `ReconciliationIcon` dans un `AdminSection[]` passé à `AdminLayout`
-- **`AdminLayout`** : composant dans `frontend/src/layouts/` — accepte `title`, `sections: AdminSection[]`, `backToHubLabel` — lire avant de modifier
-- **`AdminSection` type** : `{ path: string, label: string, Icon: ComponentType<{className?: string}> }` — l'étendre si nécessaire mais préserver la compatibilité
-- **Frontière avec Story 65-21** : cette story crée `AdminPermissionsContext` et l'instancie pour le menu. La story 65-21 (dernier sprint) contractualise l'interface complète et vérifie la consommation cross-composants. Ne pas sur-ingéniérer le contexte ici — juste `allowedSections` suffit pour cette story
-- **React Router NavLink** : utiliser `<NavLink>` de react-router-dom qui gère automatiquement `aria-current` et la classe active — vérifier si `AdminLayout` utilise déjà `NavLink` ou `Link`
-
-### Rétrocompatibilité des 4 URLs existantes
-Vérifier dans `App.tsx` quelles routes existent pour `/admin/pricing`, `/admin/monitoring`, `/admin/personas`, `/admin/reconciliation`. Options :
-1. Conserver les routes existantes ET les mapper dans le nouveau menu (URL `pricing` → section "Billing", `monitoring` → "Logs & Incidents", `personas` → "Prompts & Personas", `reconciliation` → "Billing")
-2. Ajouter des `<Route path="/admin/pricing" element={<Navigate to="/admin/billing" replace />} />`
-Préférer l'option 2 pour la cohérence long terme.
-
-### CSS — aucun style inline
-- Tout le CSS dans `AdminLayout.css` ou `AdminPage.css`
-- Variables : `var(--primary)`, `var(--primary-strong)`, `var(--glass)`, `var(--glass-border)`, `var(--text-1)`, `var(--text-2)`, `var(--bg-base)`, `var(--line)`
-
-### Project Structure Notes
-- Nouveau fichier : `frontend/src/context/AdminPermissionsContext.tsx`
-- Modifier : `frontend/src/pages/AdminPage.tsx`, `frontend/src/layouts/AdminLayout.tsx` (lire d'abord), `frontend/src/App.tsx` (routing)
-- Nouveaux fichiers pages : dans `frontend/src/pages/admin/` (suivre le pattern existant)
-- i18n : `frontend/src/i18n/` — namespace `admin` déjà présent, ajouter/compléter les clés
-
-### References
-- `frontend/src/pages/AdminPage.tsx` [Source: session context — structure actuelle lue]
-- `frontend/src/layouts/` — `AdminLayout` [Source: architecture frontend]
-- i18n : `frontend/src/i18n/` namespace `admin` [Source: architecture frontend]
-- Epic 65 FR65-12, FR65-13, FR65-18 : `_bmad-output/planning-artifacts/epic-65-espace-admin.md#Story-65-4`
-
-## Dev Agent Record
-
-### Agent Model Used
-
-claude-sonnet-4-6
-
-### Debug Log References
-
-### Completion Notes List
+- [x] Créer `frontend/src/state/AdminPermissionsContext.tsx` (AC: 3)
+  - [x] Définir l'interface : `{ allowedSections: string[], canEdit: (domain: string) => boolean, canExport: boolean }`
+  - [x] Provider initialise avec toutes les 10 sections pour le rôle `admin`
+  - [x] Exporter `useAdminPermissions()` hook
+- [x] Mettre à jour `frontend/src/pages/AdminPage.tsx` (AC: 1, 2, 3, 4)
+  - [x] Remplacer le tableau statique de 4 sections par 10 sections avec les nouvelles URLs
+  - [x] Intégrer `AdminPermissionsProvider`
+  - [x] Passer les sections via le context de l'Outlet
+- [x] Mettre à jour `frontend/src/layouts/AdminLayout.tsx` (AC: 4)
+  - [x] Ajouter un menu latéral permanent pour l'espace admin
+  - [x] Utiliser `NavLink` pour gérer `aria-current="page"` et le style actif
+  - [x] Consommer `allowedSections` pour filtrer les sections affichées
+- [x] Ajouter/mettre à jour les routes dans le router React (`frontend/src/app/routes.tsx`) (AC: 1, 2)
+  - [x] Déclarer les 10 nouvelles routes sous `/admin/*`
+  - [x] Ajouter des redirections pour les 4 routes legacy
+- [x] Créer les pages placeholder pour les nouvelles sections dans `frontend/src/pages/admin/` (AC: 1)
+  - [x] `AdminDashboardPage.tsx`, `AdminUsersPage.tsx`, etc.
+  - [x] `AdminHubPage.tsx` pour le hub `/admin`
+- [x] Ajouter les clés i18n dans `frontend/src/i18n/admin.ts` (AC: 1)
+- [x] CSS dans `frontend/src/layouts/AdminLayout.css` (AC: 4)
 
 ### File List
+- `frontend/src/state/AdminPermissionsContext.tsx`
+- `frontend/src/pages/AdminPage.tsx`
+- `frontend/src/layouts/AdminLayout.tsx`
+- `frontend/src/layouts/AdminLayout.css`
+- `frontend/src/app/routes.tsx`
+- `frontend/src/pages/admin/AdminHubPage.tsx`
+- `frontend/src/pages/admin/AdminDashboardPage.tsx`
+- `frontend/src/pages/admin/AdminUsersPage.tsx`
+- `frontend/src/pages/admin/AdminEntitlementsPage.tsx`
+- `frontend/src/pages/admin/AdminAiGenerationsPage.tsx`
+- `frontend/src/pages/admin/AdminPromptsPage.tsx`
+- `frontend/src/pages/admin/AdminContentPage.tsx`
+- `frontend/src/pages/admin/AdminBillingPage.tsx`
+- `frontend/src/pages/admin/AdminLogsPage.tsx`
+- `frontend/src/pages/admin/AdminSupportPage.tsx`
+- `frontend/src/pages/admin/AdminSettingsPage.tsx`
+- `frontend/src/i18n/admin.ts`
+- `frontend/src/tests/AdminPage.test.tsx`
