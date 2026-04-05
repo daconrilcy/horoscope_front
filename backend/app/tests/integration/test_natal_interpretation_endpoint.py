@@ -378,3 +378,36 @@ class TestNatalInterpretationEndpointV2:
             )
         assert response.status_code == 504
         assert response.json()["error"]["code"] == "llm_upstream_timeout"
+
+    def test_empty_complete_interpretation_returns_502(self, test_client, mock_db) -> None:
+        persona_id = str(uuid.uuid4())
+        persona_mock = MagicMock()
+        persona_mock.name = "Test Persona"
+        mock_db.execute.return_value.scalar_one_or_none.return_value = persona_mock
+
+        with (
+            patch(
+                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                return_value=_make_chart_read_data(),
+            ),
+            patch(
+                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                return_value=_make_birth_profile(),
+            ),
+            patch(
+                "app.api.v1.routers.natal_interpretation.NatalInterpretationServiceV2.interpret",
+                new_callable=AsyncMock,
+                side_effect=RuntimeError("empty complete interpretation"),
+            ),
+        ):
+            response = test_client.post(
+                "/v1/natal/interpretation",
+                json={
+                    "use_case_level": "complete",
+                    "persona_id": persona_id,
+                    "locale": "fr-FR",
+                },
+            )
+
+        assert response.status_code == 502
+        assert response.json()["error"]["code"] == "interpretation_failed"

@@ -217,7 +217,7 @@ async def interpret_natal_chart(
         )
     except RuntimeError as e:
         db.rollback()
-        if "no structured output" in str(e):
+        if "no structured output" in str(e) or "empty complete interpretation" in str(e):
             return _create_error_response(502, "interpretation_failed", str(e), request_id)
         raise
     except UpstreamRateLimitError:

@@ -209,3 +209,9 @@ Ces deux éléments doivent être rendus **avant ou après la boucle de sections
   - pour `free` et `premium`, si l'historique contient déjà une interprétation complète, la dernière version complète est sélectionnée par défaut à l'ouverture ;
   - pour `basic`, le CTA d'interprétation complète reste disponible tant que les entitlements indiquent un quota restant ; le blocage n'est plus déduit du simple fait qu'une interprétation complète est affichée ;
   - la décision de basculer vers le CTA Premium repose uniquement sur les `usage_states` / `reason_code` canoniques.
+- hardening complémentaire du parcours Basic/Premium :
+  - une entrée historique `free_short` (`use_case = natal_long_free`) n'est plus considérée comme une vraie interprétation complète pour piloter les CTA ou la sélection active ;
+  - en `basic`, si aucune vraie interprétation complète n'existe encore, l'action principale reste `Obtenir le thème natal complet` ;
+  - `Choisir un autre astrologue` n'est désormais valable qu'en `premium`, et seulement quand une vraie interprétation complète existe déjà ;
+  - le header `NatalChartPage` et le CTA principal de `NatalInterpretationSection` s'alignent maintenant sur la même règle métier (`canSwitchPersona`) ;
+  - les lignes d'interprétations complètes vides sont nettoyées côté backend avant d'être renvoyées à l'UI, afin de ne pas être comptabilisées à tort dans l'historique ni dans la logique d'affichage.

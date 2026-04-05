@@ -67,7 +67,8 @@ export function NatalChartPage() {
   const [activeInterpretation, setActiveInterpretation] = useState<{
     level: "short" | "complete";
     personaName: string | null;
-  }>({ level: "short", personaName: null })
+    canSwitchPersona: boolean;
+  }>({ level: "short", personaName: null, canSwitchPersona: false })
   const [headerActionRequest, setHeaderActionRequest] = useState<{
     kind: "upgrade" | "switch_persona";
     nonce: number;
@@ -258,7 +259,7 @@ export function NatalChartPage() {
       ? t.interpretation.upgradeToBasicCta
       : isLongQuotaExhausted
       ? t.interpretation.quotaExhaustedCta
-      : activeInterpretation.level === "complete"
+      : activeInterpretation.canSwitchPersona
       ? t.requestAnotherAstrologer
       : t.unlockCompleteInterpretation
   const sortedHouses = [...houses].sort((a, b) => a.number - b.number)
@@ -324,7 +325,7 @@ export function NatalChartPage() {
                   }
                   setHeaderActionRequest({
                     kind:
-                      !isLockedFree && activeInterpretation.level === "complete"
+                      !isLockedFree && activeInterpretation.canSwitchPersona
                         ? "switch_persona"
                         : "upgrade",
                     nonce: Date.now(),

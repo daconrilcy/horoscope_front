@@ -50,6 +50,7 @@ interface Props {
   onActiveInterpretationChange?: (payload: {
     level: "short" | "complete";
     personaName: string | null;
+    canSwitchPersona: boolean;
   }) => void;
   actionRequest?: {
     kind: "upgrade" | "switch_persona";
@@ -64,10 +65,14 @@ function isFreeShortInterpretation(item: NatalInterpretationListItem): boolean {
   return item.use_case === "natal_long_free";
 }
 
+function isRealCompleteInterpretation(item: NatalInterpretationListItem): boolean {
+  return item.level === "complete" && item.use_case === "natal_interpretation";
+}
+
 function findLatestCompleteInterpretation(
   items: NatalInterpretationListItem[],
 ): NatalInterpretationListItem | null {
-  return items.find((item) => item.level === "complete") ?? null;
+  return items.find(isRealCompleteInterpretation) ?? null;
 }
 
 function findLatestShortInterpretation(
@@ -146,6 +151,7 @@ export function NatalInterpretationSection({
   );
   const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer";
   const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer";
+  const canSwitchPersona = isPremiumPlan && hasCompleteInterpretation;
   const shouldPreferLatestCompleteByDefault = isLockedFree || isPremiumPlan;
   const shouldRefreshShortAfterBasicUpgrade =
     isSingleAstrologerPlan &&
@@ -158,15 +164,18 @@ export function NatalInterpretationSection({
         ? t.upgradeToBasicCta
         : isCompleteGenerationBlocked
           ? t.quotaExhaustedCta
-          : pageT.requestAnotherAstrologer)
+          : canSwitchPersona
+            ? pageT.requestAnotherAstrologer
+            : pageT.unlockCompleteInterpretation)
     : (isLockedFree ? t.upgradeToBasicCta : pageT.unlockCompleteInterpretation);
 
   useEffect(() => {
     onActiveInterpretationChange?.({
       level: isLockedFree ? "short" : (data?.meta.level ?? "short"),
       personaName: data?.meta.persona_name ?? null,
+      canSwitchPersona,
     });
-  }, [data?.meta.level, data?.meta.persona_name, isLockedFree, onActiveInterpretationChange]);
+  }, [canSwitchPersona, data?.meta.level, data?.meta.persona_name, isLockedFree, onActiveInterpretationChange]);
 
   useEffect(() => {
     if (!actionRequest) return;
@@ -348,7 +357,7 @@ export function NatalInterpretationSection({
 
   const usedPersonaIds = new Set(
     (historyQuery.data?.items ?? [])
-      .filter((item) => item.level === "complete" && Boolean(item.persona_id))
+      .filter((item) => isRealCompleteInterpretation(item) && Boolean(item.persona_id))
       .map((item) => item.persona_id as string),
   );
 

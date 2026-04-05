@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Literal, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.v1.schemas.natal_interpretation import (
@@ -184,6 +184,42 @@ class NatalInterpretationServiceV2:
         )
 
     @staticmethod
+    def _is_empty_complete_payload(payload: dict[str, object] | None) -> bool:
+        if not isinstance(payload, dict):
+            return True
+
+        summary = payload.get("summary")
+        has_summary = isinstance(summary, str) and bool(summary.strip())
+
+        sections = payload.get("sections")
+        has_section_content = False
+        if isinstance(sections, list):
+            has_section_content = any(
+                isinstance(section, dict)
+                and (
+                    isinstance(section.get("content"), str)
+                    and bool(section.get("content", "").strip())
+                )
+                for section in sections
+            )
+
+        return not (has_summary or has_section_content)
+
+    @staticmethod
+    def _is_invalid_complete_interpretation(
+        model: UserNatalInterpretationModel,
+    ) -> bool:
+        if model.level != InterpretationLevel.COMPLETE:
+            return False
+        if model.variant_code == "free_short" or model.use_case == "natal_long_free":
+            return False
+        return NatalInterpretationServiceV2._is_empty_complete_payload(
+            model.interpretation_payload
+            if isinstance(model.interpretation_payload, dict)
+            else None
+        )
+
+    @staticmethod
     def _deserialize_persisted_interpretation(
         model: UserNatalInterpretationModel,
         *,
@@ -291,7 +327,23 @@ class NatalInterpretationServiceV2:
             )
 
             existing_rows = list(db.execute(stmt).scalars().all())
-            existing = existing_rows[0] if existing_rows else None
+            valid_existing_rows: list[UserNatalInterpretationModel] = []
+            for row in existing_rows:
+                if NatalInterpretationServiceV2._is_invalid_complete_interpretation(row):
+                    logger.warning(
+                        (
+                            "Deleting empty persisted natal interpretation "
+                            "user_id=%s id=%s use_case=%s"
+                        ),
+                        user_id,
+                        row.id,
+                        row.use_case,
+                    )
+                    db.delete(row)
+                    continue
+                valid_existing_rows.append(row)
+
+            existing = valid_existing_rows[0] if valid_existing_rows else None
             if len(existing_rows) > 1:
                 logger.warning(
                     "Multiple cached natal interpretations found for unique key; keeping latest "
@@ -465,6 +517,15 @@ class NatalInterpretationServiceV2:
             else {}
         )
         full_output = {**base_output, "disclaimers": disclaimers}
+
+        if level == "complete" and variant_code != "free_short":
+            if NatalInterpretationServiceV2._is_empty_complete_payload(base_output):
+                logger.error(
+                    "Gateway returned empty complete interpretation request_id=%s use_case=%s",
+                    request_id,
+                    use_case_key,
+                )
+                raise RuntimeError("empty complete interpretation")
 
         # Mapping structured_output to AstroResponseV1/V2/V3 (Story 30-8 T7.4)
         schema_version = "v1"
@@ -811,15 +872,23 @@ class NatalInterpretationServiceV2:
             use_case = MODULE_TO_USE_CASE_KEY.get(module, module)
             stmt = stmt.where(UserNatalInterpretationModel.use_case == use_case)
 
-        total = int(db.scalar(select(func.count()).select_from(stmt.subquery())) or 0)
-
-        stmt = (
-            stmt.order_by(UserNatalInterpretationModel.created_at.desc())
-            .limit(limit)
-            .offset(offset)
+        rows = list(
+            db.execute(stmt.order_by(UserNatalInterpretationModel.created_at.desc())).scalars().all()
         )
-        items = db.execute(stmt).scalars().all()
-        return list(items), total
+        valid_rows: list[UserNatalInterpretationModel] = []
+        deleted_any = False
+        for row in rows:
+            if NatalInterpretationServiceV2._is_invalid_complete_interpretation(row):
+                db.delete(row)
+                deleted_any = True
+                continue
+            valid_rows.append(row)
+
+        if deleted_any:
+            db.commit()
+
+        total = len(valid_rows)
+        return valid_rows[offset : offset + limit], total
 
     @staticmethod
     def delete_interpretation(
@@ -878,7 +947,12 @@ class NatalInterpretationServiceV2:
             UserNatalInterpretationModel.id == interpretation_id,
             UserNatalInterpretationModel.user_id == user_id,
         )
-        return db.execute(stmt).scalar_one_or_none()
+        item = db.execute(stmt).scalar_one_or_none()
+        if item and NatalInterpretationServiceV2._is_invalid_complete_interpretation(item):
+            db.delete(item)
+            db.commit()
+            return None
+        return item
 
     @staticmethod
     def format_interpretation_response(

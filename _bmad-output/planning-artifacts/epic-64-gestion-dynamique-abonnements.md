@@ -233,6 +233,12 @@ Validation finale produit :
   - pour `free` et `premium`, si une interprétation complète existe déjà, la dernière version complète est affichée par défaut ; sinon l'UI retombe sur la version `short` ;
   - pour `basic`, le CTA d'interprétation complète reste disponible tant que le quota réel n'est pas épuisé, avec choix de l'astrologue ; une fois le quota épuisé, l'UI bascule vers un CTA Premium ;
   - la décision "quota épuisé" n'est plus déduite de l'interprétation affichée à l'écran mais uniquement des entitlements canoniques.
+- correction complémentaire du flux natal Basic/Premium :
+  - l'interprétation natale complète n'est pas liée au quota `astrologer_chat` ; les tokens LLM natal restent journalisés à part pour l'observabilité, sans bloquer le chat ni être bloqués par lui ;
+  - une interprétation persistée `free_short` (`natal_long_free`) n'est plus comptée comme une vraie interprétation complète dans l'UI Basic/Premium ;
+  - en `basic`, tant qu'aucune vraie interprétation complète n'existe, le CTA reste `Obtenir le thème natal complet` ; `Choisir un autre astrologue` n'est plus proposé par erreur ;
+  - `Choisir un autre astrologue` n'est désormais proposé qu'en `premium`, et seulement si une vraie interprétation complète existe déjà ;
+  - les interprétations complètes vides sont supprimées côté backend et exclues des listes pour éviter qu'elles soient comptabilisées dans l'historique ou dans la logique de CTA.
 - correction complémentaire du banner quota `/chat` pour `basic` :
   - le bandeau n'affiche plus les tokens journaliers comme un nombre de "messages restants" ;
   - tant que le quota n'est pas épuisé, l'UI affiche désormais une jauge horizontale de consommation en pourcentage, sans unité textuelle.

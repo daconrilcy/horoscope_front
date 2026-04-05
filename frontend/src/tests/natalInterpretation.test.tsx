@@ -266,12 +266,109 @@ describe("NatalInterpretationSection", () => {
   });
 
   it("ouvre le sélecteur d'astrologues au clic sur l'action autre astrologue quand short+complete existent", async () => {
-    renderSection();
+    (useNatalInterpretationById as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockInterpretationData,
+        meta: {
+          ...mockInterpretationData.meta,
+          id: 102,
+          level: "complete",
+          use_case: "natal_interpretation",
+          persona_id: "1",
+          persona_name: "Luna Céleste",
+        },
+      },
+    });
+
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "multi_astrologer",
+        usage_states: [{ exhausted: false, remaining: 3 }],
+      } as any,
+    });
 
     fireEvent.click(screen.getByRole("button", { name: /Choisir un autre astrologue/i }));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(/Choisissez votre astrologue/i)).toBeInTheDocument();
+  });
+
+  it("n'affiche pas le CTA autre astrologue en Basic quand seul un free_short existe", () => {
+    (useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        items: [
+          {
+            id: 202,
+            chart_id: "chart-123",
+            level: "complete",
+            persona_id: null,
+            persona_name: null,
+            created_at: "2026-03-04T10:00:00Z",
+            use_case: "natal_long_free",
+          },
+        ],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      },
+      refetch: vi.fn(),
+    });
+
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [{ exhausted: false, remaining: 1 }],
+      } as any,
+    });
+
+    expect(
+      screen.getByRole("button", { name: /Obtenir le thème natal complet/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Choisir un autre astrologue/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("n'affiche le CTA autre astrologue qu'en Premium avec une vraie interprétation complète", () => {
+    (useNatalInterpretationById as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockInterpretationData,
+        meta: {
+          ...mockInterpretationData.meta,
+          id: 102,
+          level: "complete",
+          use_case: "natal_interpretation",
+          persona_id: "1",
+          persona_name: "Luna Céleste",
+        },
+      },
+    });
+
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "multi_astrologer",
+        usage_states: [{ exhausted: false, remaining: 3 }],
+      } as any,
+    });
+
+    expect(
+      screen.getAllByRole("button", { name: /Choisir un autre astrologue/i }).length,
+    ).toBeGreaterThan(0);
   });
 
   it("redirige vers l'abonnement quand le quota Basic complet est déjà consommé", () => {

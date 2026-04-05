@@ -1648,7 +1648,7 @@ describe("NatalChartPage", () => {
       expect(screen.getByText(/Subscription page/i)).toBeInTheDocument()
     })
 
-    it("garde le CTA d'interprétation complète en Basic tant que le quota n'est pas épuisé", () => {
+  it("garde le CTA d'interprétation complète en Basic tant que le quota n'est pas épuisé", () => {
       mockUseFeatureAccess.mockReturnValue({
         feature_code: "natal_chart_long",
         granted: true,
@@ -1668,6 +1668,134 @@ describe("NatalChartPage", () => {
       expect(
         screen.getByRole("button", { name: /Obtenir le thème natal complet/i }),
       ).toBeInTheDocument()
+    })
+
+    it("ne propose pas 'Choisir un autre astrologue' en Basic quand seule une free_short existe", () => {
+      mockUseFeatureAccess.mockReturnValue({
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [{ exhausted: false, remaining: 1 }],
+      } as ReturnType<typeof useFeatureAccess>)
+      mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
+      mockUseNatalInterpretationsList.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          items: [
+            {
+              id: 55,
+              chart_id: "abc",
+              level: "complete",
+              persona_id: null,
+              persona_name: null,
+              module: null,
+              created_at: "2026-04-05T10:00:00Z",
+              use_case: "natal_long_free",
+              prompt_version_id: null,
+              was_fallback: false,
+            },
+          ],
+          total: 1,
+          limit: 20,
+          offset: 0,
+        },
+        refetch: vi.fn(),
+      })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+
+      expect(
+        screen.getByRole("button", { name: /Obtenir le thème natal complet/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: /Choisir un autre astrologue/i }),
+      ).not.toBeInTheDocument()
+    })
+
+    it("propose 'Choisir un autre astrologue' en Premium uniquement quand une vraie complète existe", () => {
+      mockUseFeatureAccess.mockReturnValue({
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "multi_astrologer",
+        usage_states: [{ exhausted: false, remaining: 3 }],
+      } as ReturnType<typeof useFeatureAccess>)
+      mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
+      mockUseNatalInterpretationsList.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          items: [
+            {
+              id: 56,
+              chart_id: "abc",
+              level: "complete",
+              persona_id: "persona-1",
+              persona_name: "Luna Céleste",
+              module: null,
+              created_at: "2026-04-05T11:00:00Z",
+              use_case: "natal_interpretation",
+              prompt_version_id: "v1",
+              was_fallback: false,
+            },
+          ],
+          total: 1,
+          limit: 20,
+          offset: 0,
+        },
+        refetch: vi.fn(),
+      })
+      mockUseNatalInterpretationById.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          chart_id: "abc",
+          use_case: "natal_interpretation",
+          degraded_mode: null,
+          meta: {
+            id: 56,
+            level: "complete",
+            use_case: "natal_interpretation",
+            persona_id: "persona-1",
+            persona_name: "Luna Céleste",
+            prompt_version_id: "v1",
+            validation_status: "valid",
+            repair_attempted: false,
+            fallback_triggered: false,
+            was_fallback: false,
+            latency_ms: null,
+            request_id: null,
+            persisted_at: "2026-04-05T11:00:00Z",
+          },
+          interpretation: {
+            title: "Thème complet",
+            summary: "Résumé complet",
+            sections: [],
+            highlights: [],
+            advice: [],
+            evidence: [],
+          },
+        },
+        refetch: vi.fn(),
+      })
+
+      render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>
+      )
+
+      expect(
+        screen.getAllByRole("button", { name: /Choisir un autre astrologue/i }).length,
+      ).toBeGreaterThan(0)
     })
   })
 })

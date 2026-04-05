@@ -134,6 +134,34 @@ def _make_free_short_gateway_result() -> GatewayResult:
     )
 
 
+def _make_empty_complete_gateway_result() -> GatewayResult:
+    return GatewayResult(
+        use_case="natal_interpretation",
+        request_id="req-empty",
+        trace_id="trace-empty",
+        raw_output="{}",
+        structured_output={
+            "title": "Interprétation vide",
+            "summary": "   ",
+            "sections": [
+                {"key": "overall", "heading": "Vue d ensemble", "content": "   "},
+            ],
+            "highlights": [],
+            "advice": [],
+            "evidence": [],
+        },
+        usage=UsageInfo(),
+        meta=GatewayMeta(
+            latency_ms=200,
+            model="gpt-5",
+            prompt_version_id="11111111-1111-1111-1111-111111111111",
+            validation_status="valid",
+            fallback_triggered=False,
+            repair_attempted=False,
+        ),
+    )
+
+
 PERSONA_ID = "12345678-1234-5678-1234-567812345678"
 
 
@@ -732,3 +760,44 @@ class TestNatalInterpretationServiceV2FreeShort:
         assert mock_record_usage.called is True
         assert mock_record_usage.call_args.kwargs["feature_code"] == "natal_interpretation"
         assert mock_record_usage.call_args.kwargs["quotas"] == []
+
+
+class TestNatalInterpretationServiceV2EmptyComplete:
+    @pytest.mark.asyncio
+    async def test_complete_empty_payload_raises_runtime_error(self):
+        natal_result = _make_natal_result()
+        birth_profile = _make_birth_profile()
+        db = _make_db_mock(has_persona=True)
+
+        mock_gw_instance = MagicMock()
+        mock_gw_instance.execute = AsyncMock(return_value=_make_empty_complete_gateway_result())
+
+        with (
+            patch("app.services.natal_interpretation_service_v2.select"),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_chart_json",
+                return_value={"planets": []},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                return_value={"SUN_LEO": ["Soleil en Lion"]},
+            ),
+            patch(
+                "app.services.natal_interpretation_service_v2.LLMGateway",
+                return_value=mock_gw_instance,
+            ),
+        ):
+            with pytest.raises(RuntimeError, match="empty complete interpretation"):
+                await NatalInterpretationServiceV2.interpret(
+                    db=db,
+                    user_id=1,
+                    chart_id="chart-abc",
+                    natal_result=natal_result,
+                    birth_profile=birth_profile,
+                    level="complete",
+                    persona_id=PERSONA_ID,
+                    locale="fr",
+                    question=None,
+                    request_id="req-empty",
+                    trace_id="trace-empty",
+                )
