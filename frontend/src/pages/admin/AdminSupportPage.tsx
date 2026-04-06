@@ -182,7 +182,7 @@ export function AdminSupportPage() {
                           onClick={() => reviewMutation.mutate({ id: content.id, status: "resolved" })}
                           disabled={reviewMutation.isPending}
                         >
-                          Traté
+                          Traiter
                         </button>
                         <button 
                           className="action-button action-button--danger"

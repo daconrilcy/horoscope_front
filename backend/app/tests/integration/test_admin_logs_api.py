@@ -1,5 +1,6 @@
-from pathlib import Path
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -7,10 +8,21 @@ from sqlalchemy.orm import sessionmaker
 
 from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
-from app.infra.db.models.user import UserModel
 from app.infra.db.models.audit_event import AuditEventModel
+from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
+    FeatureUsageCounterModel,
+    PeriodUnit,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
+    ResetMode,
+)
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
-from app.infra.db.models.product_entitlements import FeatureUsageCounterModel, PeriodUnit, ResetMode
+from app.infra.db.models.user import UserModel
 from app.main import app
 
 client = TestClient(app)
@@ -69,7 +81,10 @@ def test_get_app_errors(admin_token):
         db.add(err)
         db.commit()
 
-    response = client.get("/v1/admin/logs/errors", headers={"Authorization": f"Bearer {admin_token}"})
+    response = client.get(
+        "/v1/admin/logs/errors",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
     assert response.status_code == 200
     assert len(response.json()["data"]) >= 1
     assert response.json()["data"][0]["action"] == "test_action"
@@ -84,7 +99,10 @@ def test_get_stripe_events(admin_token):
         db.add(evt)
         db.commit()
 
-    response = client.get("/v1/admin/logs/stripe", headers={"Authorization": f"Bearer {admin_token}"})
+    response = client.get(
+        "/v1/admin/logs/stripe",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
     assert response.status_code == 200
     assert len(response.json()["data"]) >= 1
 
@@ -93,7 +111,46 @@ def test_get_quota_alerts(admin_token):
         user = UserModel(email="high-usage@test.com", password_hash="x", role="user")
         db.add(user)
         db.flush()
-        
+
+        plan = PlanCatalogModel(
+            plan_code="premium",
+            plan_name="Premium",
+            audience=Audience.B2C,
+        )
+        feature = FeatureCatalogModel(
+            feature_code="chat",
+            feature_name="Chat astrologue",
+            is_metered=True,
+        )
+        db.add_all([plan, feature])
+        db.flush()
+
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user.id,
+                entitlement_plan="premium",
+                subscription_status="active",
+            )
+        )
+        binding = PlanFeatureBindingModel(
+            plan_id=plan.id,
+            feature_id=feature.id,
+            is_enabled=True,
+            access_mode=AccessMode.QUOTA,
+        )
+        db.add(binding)
+        db.flush()
+        db.add(
+            PlanFeatureQuotaModel(
+                plan_feature_binding_id=binding.id,
+                quota_key="daily",
+                quota_limit=10,
+                period_unit=PeriodUnit.DAY,
+                period_value=1,
+                reset_mode=ResetMode.CALENDAR,
+            )
+        )
+
         now = datetime.now(UTC)
         counter = FeatureUsageCounterModel(
             user_id=user.id,
@@ -109,7 +166,13 @@ def test_get_quota_alerts(admin_token):
         db.add(counter)
         db.commit()
 
-    response = client.get("/v1/admin/logs/quota-alerts", headers={"Authorization": f"Bearer {admin_token}"})
+    response = client.get(
+        "/v1/admin/logs/quota-alerts",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
     assert response.status_code == 200
     assert len(response.json()["data"]) >= 1
-    assert response.json()["data"][0]["user_email_masked"].endswith("@test.com")
+    alert = response.json()["data"][0]
+    assert alert["user_email_masked"].endswith("@test.com")
+    assert alert["plan_code"] == "premium"
+    assert alert["limit"] == 10

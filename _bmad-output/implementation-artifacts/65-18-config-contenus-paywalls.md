@@ -103,3 +103,7 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+## Senior Developer Review (AI)
+
+- Constat du 2026-04-06 : la story est correctement laissée `ready-for-dev`. `frontend/src/pages/admin/AdminContentPage.tsx` est encore un placeholder et aucun modèle/router admin de contenu (`ConfigTextModel`, `admin_content.py`) n'est présent côté backend. L'epic ne doit pas présenter cette story comme livrée tant que ces éléments n'existent pas.

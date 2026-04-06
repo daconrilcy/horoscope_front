@@ -55,3 +55,12 @@ afin de diagnostiquer et rejouer les cas problématiques sans accès direct aux 
 - `frontend/src/pages/admin/AdminLogsPage.tsx`
 - `frontend/src/pages/admin/AdminLogsPage.css`
 - `backend/app/tests/integration/test_admin_logs_api.py`
+
+### Completion Notes List
+
+- Revue AI du 2026-04-06 : correction des alertes quotas pour lire le vrai plan et la vraie limite depuis la matrice d'entitlements, ajout des filtres LLM côté frontend, et remplacement du faux bouton replay par une modale de confirmation fonctionnelle.
+
+## Senior Developer Review (AI)
+
+- Corrigé un défaut bloquant dans `admin_logs.py` : la requête de quotas était laissée dans un état de démonstration avec un commentaire `very broken join`, un plan `unknown` et une limite hardcodée.
+- Corrigé un défaut AC côté frontend : le replay LLM n'était pas exécutable et l'écran n'exposait pas les filtres annoncés. La story reste `done` après mise en conformité du cockpit technique livré.

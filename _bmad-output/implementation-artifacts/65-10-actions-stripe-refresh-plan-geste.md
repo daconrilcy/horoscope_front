@@ -47,7 +47,7 @@ afin de corriger des incohérences ou accorder des exceptions sans toucher à la
   - [x] Audit log `commercial_gesture_recorded`
 - [x] Mettre à jour `frontend/src/pages/admin/AdminUserDetailPage.tsx` (AC: 1, 2, 3)
   - [x] Boutons d'action
-  - [x] Modale `window.confirm` et prompt pour raison
+  - [x] Modales dédiées pour refresh / assignation / geste commercial
   - [x] Feedback de chargement
 - [x] Tests d'intégration backend `backend/app/tests/integration/test_admin_stripe_actions_api.py`
 
@@ -56,4 +56,14 @@ afin de corriger des incohérences ou accorder des exceptions sans toucher à la
 - `backend/migrations/versions/35adfdeeceb4_add_commercial_gestures_to_user_.py`
 - `backend/app/api/v1/routers/admin_users.py`
 - `frontend/src/pages/admin/AdminUserDetailPage.tsx`
+- `frontend/src/pages/admin/AdminUserDetailPage.css`
 - `backend/app/tests/integration/test_admin_stripe_actions_api.py`
+
+### Completion Notes List
+
+- Revue AI du 2026-04-06 : la story était marquée done alors que les actions Stripe n'étaient pas réellement exposées dans la fiche utilisateur. L'UI admin a été complétée avec des actions visibles, des modales explicites de périmètre et des formulaires pour le plan manuel et le geste commercial.
+
+## Senior Developer Review (AI)
+
+- Corrigé le faux positif d'implémentation côté frontend : les endpoints existaient, mais l'UI ne permettait pas d'exécuter les actions annoncées par les AC.
+- La story reste `done` après correction : l'écran expose maintenant `refresh-subscription`, `assign-plan` et `commercial-gesture` avec un wording de périmètre conforme.

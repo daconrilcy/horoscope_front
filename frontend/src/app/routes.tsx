@@ -1,17 +1,14 @@
-import { Suspense, lazy } from "react"
 import type { RouteObject } from "react-router-dom"
-import { Navigate, useNavigate, useSearchParams } from "react-router-dom"
+import { Navigate } from "react-router-dom"
 
-import { AppShell } from "../components/AppShell"
 import { AuthGuard } from "./guards/AuthGuard"
 import { RoleGuard } from "./guards/RoleGuard"
 import { AdminGuard } from "../components/AdminGuard"
 import { AppLayout } from "../layouts/AppLayout"
-import { PageErrorBoundary } from "../components/PageErrorBoundary"
 
 // Pages
 import { DashboardPage } from "../pages/DashboardPage"
-import { TodayPage } from "../pages/TodayPage"
+import DailyHoroscopePage from "../pages/DailyHoroscopePage"
 import { NatalChartPage } from "../pages/NatalChartPage"
 import { ChatPage } from "../pages/ChatPage"
 import { SettingsPage } from "../pages/SettingsPage"
@@ -20,14 +17,11 @@ import { RegisterPage } from "../pages/RegisterPage"
 import { NotFoundPage } from "../pages/NotFoundPage"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
-import { SupportPage } from "../pages/SupportPage"
+import HelpPage from "../pages/HelpPage"
 import { EnterpriseDashboardPage } from "../pages/EnterpriseDashboardPage"
 import { AdminPage } from "../pages/AdminPage"
 
 import {
-  PricingAdmin,
-  MonitoringAdmin,
-  PersonasAdmin,
   AdminDashboardPage,
   AdminUsersPage,
   AdminUserDetailPage,
@@ -70,7 +64,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: "today",
-        element: <TodayPage />,
+        element: <DailyHoroscopePage />,
       },
       {
         path: "natal",
@@ -101,7 +95,7 @@ export const routes: RouteObject[] = [
         path: "support",
         element: (
           <RoleGuard roles={["user", "admin", "ops", "support"]}>
-            <SupportPage />
+            <HelpPage />
           </RoleGuard>
         ),
       },

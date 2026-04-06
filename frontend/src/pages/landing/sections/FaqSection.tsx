@@ -7,7 +7,7 @@ import "./FaqSection.css"
 
 export const FaqSection = () => {
   const t = useTranslation("landing")
-  const [openIndex, setOpenIndex] = useState<number | null>(0)
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
     <section id="faq" className="faq-section" aria-labelledby="faq-title">

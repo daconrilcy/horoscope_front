@@ -103,3 +103,7 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+## Senior Developer Review (AI)
+
+- Constat du 2026-04-06 : la story est correctement laissée `in-progress`. Le backend LLM expose des briques réutilisables, mais `frontend/src/pages/admin/AdminPromptsPage.tsx` n'implémente toujours pas la liste des use cases, le détail, le diff ni le rollback attendus par les AC.

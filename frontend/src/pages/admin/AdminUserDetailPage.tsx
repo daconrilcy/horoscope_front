@@ -1,6 +1,7 @@
 import React, { useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useNavigate, useParams } from "react-router-dom"
+
 import { apiFetch } from "../../api/client"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminUserDetailPage.css"
@@ -39,66 +40,266 @@ interface UserDetail {
   }>
 }
 
+type ActionDialogState =
+  | { type: "refresh-subscription" }
+  | { type: "assign-plan" }
+  | { type: "commercial-gesture" }
+  | null
+
+interface ActionDialogProps {
+  actionMutationPending: boolean
+  assignPlanForm: {
+    plan_code: string
+    reason: string
+  }
+  commercialGestureForm: {
+    gesture_type: string
+    value: number
+    reason: string
+  }
+  dialog: NonNullable<ActionDialogState>
+  onAssignPlanChange: (field: "plan_code" | "reason", value: string) => void
+  onCommercialGestureChange: (
+    field: "gesture_type" | "value" | "reason",
+    value: string,
+  ) => void
+  onClose: () => void
+  onSubmit: () => void
+}
+
+function ActionDialog({
+  actionMutationPending,
+  assignPlanForm,
+  commercialGestureForm,
+  dialog,
+  onAssignPlanChange,
+  onCommercialGestureChange,
+  onClose,
+  onSubmit,
+}: ActionDialogProps) {
+  const isRefreshSubscription = dialog.type === "refresh-subscription"
+  const isAssignPlan = dialog.type === "assign-plan"
+
+  return (
+    <div className="modal-overlay" role="presentation">
+      <div
+        className="modal-content admin-user-detail-modal"
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="admin-user-detail-modal-title"
+      >
+        <h3 id="admin-user-detail-modal-title">
+          {isRefreshSubscription
+            ? "Forcer un refresh d'abonnement"
+            : isAssignPlan
+              ? "Attribuer un plan manuellement"
+              : "Enregistrer un geste commercial"}
+        </h3>
+
+        {isRefreshSubscription ? (
+          <>
+            <p className="scope-badge scope-badge--warning">
+              Cette action resynchronise le statut et le plan depuis Stripe en lecture+écriture.
+              Aucun changement de facturation ne sera effectué côté Stripe.
+            </p>
+            <p className="modal-note">
+              Le refresh met à jour l&apos;état local du compte à partir de Stripe et journalise
+              l&apos;opération.
+            </p>
+          </>
+        ) : isAssignPlan ? (
+          <>
+            <p className="scope-badge">Applicatif uniquement — sans effet Stripe</p>
+            <div className="modal-form-grid">
+              <label>
+                Plan
+                <select
+                  value={assignPlanForm.plan_code}
+                  onChange={(event) => onAssignPlanChange("plan_code", event.target.value)}
+                >
+                  <option value="free">Free</option>
+                  <option value="basic">Basic</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </label>
+              <label>
+                Motif obligatoire
+                <textarea
+                  rows={3}
+                  value={assignPlanForm.reason}
+                  onChange={(event) => onAssignPlanChange("reason", event.target.value)}
+                />
+              </label>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="scope-badge">Applicatif uniquement — aucun crédit Stripe</p>
+            <div className="modal-form-grid">
+              <label>
+                Type de geste
+                <select
+                  value={commercialGestureForm.gesture_type}
+                  onChange={(event) =>
+                    onCommercialGestureChange("gesture_type", event.target.value)
+                  }
+                >
+                  <option value="extra_days">Jours supplémentaires</option>
+                  <option value="extra_messages">Messages supplémentaires</option>
+                </select>
+              </label>
+              <label>
+                Valeur
+                <input
+                  min={1}
+                  type="number"
+                  value={commercialGestureForm.value}
+                  onChange={(event) => onCommercialGestureChange("value", event.target.value)}
+                />
+              </label>
+              <label>
+                Motif
+                <textarea
+                  rows={3}
+                  value={commercialGestureForm.reason}
+                  onChange={(event) => onCommercialGestureChange("reason", event.target.value)}
+                />
+              </label>
+            </div>
+          </>
+        )}
+
+        <div className="modal-actions">
+          <button className="text-button" onClick={onClose}>
+            Annuler
+          </button>
+          <button
+            className="action-button action-button--primary"
+            disabled={actionMutationPending}
+            onClick={onSubmit}
+          >
+            {actionMutationPending ? "Action en cours..." : "Confirmer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function AdminUserDetailPage() {
   const { userId } = useParams()
   const token = useAccessTokenSnapshot()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [revealedStripeId, setRevealedStripeId] = useState<string | null>(null)
+  const [dialog, setDialog] = useState<ActionDialogState>(null)
+  const [assignPlanForm, setAssignPlanForm] = useState({
+    plan_code: "basic",
+    reason: "",
+  })
+  const [commercialGestureForm, setCommercialGestureForm] = useState({
+    gesture_type: "extra_days",
+    value: 7,
+    reason: "",
+  })
 
   const { data, isLoading, error } = useQuery<{ data: UserDetail }>({
     queryKey: ["admin-user-detail", userId],
     queryFn: async () => {
       const response = await apiFetch(`/v1/admin/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
-      if (!response.ok) throw new Error("Failed to fetch user detail")
+      if (!response.ok) {
+        throw new Error("Failed to fetch user detail")
+      }
       return response.json()
     },
     enabled: Boolean(token && userId),
   })
 
   const actionMutation = useMutation({
-    mutationFn: async ({ action, body }: { action: string, body?: any }) => {
+    mutationFn: async ({
+      action,
+      body,
+    }: {
+      action: string
+      body?: Record<string, string | number>
+    }) => {
       const response = await apiFetch(`/v1/admin/users/${userId}/${action}`, {
         method: "POST",
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: body ? JSON.stringify(body) : undefined
+        body: body ? JSON.stringify(body) : undefined,
       })
-      if (!response.ok) throw new Error(`${action} failed`)
+      if (!response.ok) {
+        throw new Error(`${action} failed`)
+      }
       return response.json()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-user-detail", userId] })
-    }
+      setDialog(null)
+    },
   })
 
   const revealMutation = useMutation({
     mutationFn: async () => {
       const response = await apiFetch(`/v1/admin/users/${userId}/reveal-stripe-id`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
-      if (!response.ok) throw new Error("Reveal failed")
+      if (!response.ok) {
+        throw new Error("Reveal failed")
+      }
       return response.json()
     },
-    onSuccess: (res) => {
-      setRevealedStripeId(res.stripe_customer_id)
+    onSuccess: (response) => {
+      setRevealedStripeId(response.stripe_customer_id)
       queryClient.invalidateQueries({ queryKey: ["admin-user-detail", userId] })
-    }
+    },
   })
 
-  const handleAction = (action: string, label: string, body?: any) => {
-    if (window.confirm(`Êtes-vous sûr de vouloir ${label} cet utilisateur ?`)) {
-      actionMutation.mutate({ action, body })
+  const runImmediateAction = (action: string, body?: Record<string, string>) => {
+    actionMutation.mutate({ action, body })
+  }
+
+  const submitDialogAction = () => {
+    if (dialog?.type === "refresh-subscription") {
+      actionMutation.mutate({ action: "refresh-subscription" })
+      return
+    }
+
+    if (dialog?.type === "assign-plan") {
+      actionMutation.mutate({
+        action: "assign-plan",
+        body: {
+          plan_code: assignPlanForm.plan_code,
+          reason: assignPlanForm.reason,
+        },
+      })
+      return
+    }
+
+    if (dialog?.type === "commercial-gesture") {
+      actionMutation.mutate({
+        action: "commercial-gesture",
+        body: {
+          gesture_type: commercialGestureForm.gesture_type,
+          value: commercialGestureForm.value,
+          reason: commercialGestureForm.reason,
+        },
+      })
     }
   }
 
-  if (isLoading) return <div className="admin-loading">Chargement de la fiche utilisateur...</div>
-  if (error || !data) return <div className="admin-error">Utilisateur non trouvé ou erreur serveur.</div>
+  if (isLoading) {
+    return <div className="admin-loading">Chargement de la fiche utilisateur...</div>
+  }
+  if (error || !data) {
+    return <div className="admin-error">Utilisateur non trouvé ou erreur serveur.</div>
+  }
 
   const user = data.data
 
@@ -106,7 +307,9 @@ export function AdminUserDetailPage() {
     <div className="admin-user-detail-page">
       <header className="admin-page-header">
         <div className="header-left">
-          <button className="back-button" onClick={() => navigate("/admin/users")}>← Retour</button>
+          <button className="back-button" onClick={() => navigate("/admin/users")}>
+            Retour
+          </button>
           <h2>Fiche Utilisateur #{user.id}</h2>
         </div>
         <div className="header-actions">
@@ -123,26 +326,26 @@ export function AdminUserDetailPage() {
               <h3 className="card-title">Profil</h3>
               <div className="card-actions">
                 {user.is_suspended ? (
-                  <button 
+                  <button
                     className="action-button action-button--success"
-                    onClick={() => handleAction("unsuspend", "réactiver")}
+                    onClick={() => runImmediateAction("unsuspend")}
                     disabled={actionMutation.isPending}
                   >
                     Réactiver
                   </button>
                 ) : (
-                  <button 
+                  <button
                     className="action-button action-button--danger"
-                    onClick={() => handleAction("suspend", "suspendre")}
+                    onClick={() => runImmediateAction("suspend")}
                     disabled={actionMutation.isPending}
                   >
                     Suspendre
                   </button>
                 )}
                 {user.is_locked && (
-                  <button 
+                  <button
                     className="action-button action-button--warning"
-                    onClick={() => handleAction("unlock", "débloquer")}
+                    onClick={() => runImmediateAction("unlock")}
                     disabled={actionMutation.isPending}
                   >
                     Débloquer
@@ -173,11 +376,46 @@ export function AdminUserDetailPage() {
           </section>
 
           <section className="detail-card">
-            <h3 className="card-title">Abonnement & Billing</h3>
+            <div className="card-header-with-actions">
+              <h3 className="card-title">Abonnement & Billing</h3>
+              <div className="card-actions card-actions--wrap">
+                <button
+                  className="action-button action-button--primary"
+                  disabled={actionMutation.isPending}
+                  onClick={() => setDialog({ type: "refresh-subscription" })}
+                >
+                  Refresh abonnement
+                </button>
+                <button
+                  className="action-button"
+                  disabled={actionMutation.isPending}
+                  onClick={() => setDialog({ type: "assign-plan" })}
+                >
+                  Attribuer un plan
+                </button>
+                <button
+                  className="action-button"
+                  disabled={actionMutation.isPending}
+                  onClick={() => setDialog({ type: "commercial-gesture" })}
+                >
+                  Geste commercial
+                </button>
+              </div>
+            </div>
+            <div className="scope-list">
+              <p className="scope-badge scope-badge--warning">
+                Refresh abonnement: synchronisation Stripe en lecture+écriture, sans effet de
+                facturation.
+              </p>
+              <p className="scope-badge">Plan manuel: applicatif uniquement, sans effet Stripe.</p>
+              <p className="scope-badge">Geste commercial: applicatif uniquement, aucun crédit Stripe.</p>
+            </div>
             <div className="info-list">
               <div className="info-item">
                 <span className="info-label">Plan Actuel</span>
-                <span className="info-value"><strong>{user.plan_code}</strong></span>
+                <span className="info-value">
+                  <strong>{user.plan_code}</strong>
+                </span>
               </div>
               <div className="info-item">
                 <span className="info-label">Statut Stripe</span>
@@ -192,13 +430,13 @@ export function AdminUserDetailPage() {
                 <div className="info-value stripe-id-container">
                   <code>{revealedStripeId || user.stripe_customer_id_masked || "N/A"}</code>
                   {!revealedStripeId && user.stripe_customer_id_masked && (
-                    <button 
-                      className="reveal-button" 
+                    <button
+                      className="reveal-button"
                       onClick={() => revealMutation.mutate()}
                       disabled={revealMutation.isPending}
-                      title="Révéler l'ID (Action journalisée)"
+                      title="Révéler l'ID (action journalisée)"
                     >
-                      {revealMutation.isPending ? "..." : "👁️"}
+                      Révéler
                     </button>
                   )}
                 </div>
@@ -209,31 +447,39 @@ export function AdminUserDetailPage() {
           <section className="detail-card">
             <h3 className="card-title">Quotas (Usage courant)</h3>
             <div className="quota-list">
-              {user.quotas.map(q => (
-                <div key={q.feature_code} className="quota-item">
-                  <div className="quota-header">
-                    <span className="quota-name">{q.feature_code}</span>
-                    <div className="quota-header-right">
-                      <span className="quota-values">{q.used} / {q.limit || "∞"}</span>
-                      <button 
-                        className="reset-button"
-                        onClick={() => handleAction("reset-quota", `réinitialiser le quota ${q.feature_code}`, { feature_code: q.feature_code })}
-                        disabled={actionMutation.isPending}
-                        title="Réinitialiser le quota"
-                      >
-                        🔄
-                      </button>
+              {user.quotas.map((quota) => {
+                const progressValue =
+                  quota.limit && quota.limit > 0
+                    ? Math.min(Math.round((quota.used / quota.limit) * 100), 100)
+                    : 0
+
+                return (
+                  <div key={quota.feature_code} className="quota-item">
+                    <div className="quota-header">
+                      <span className="quota-name">{quota.feature_code}</span>
+                      <div className="quota-header-right">
+                        <span className="quota-values">
+                          {quota.used} / {quota.limit || "∞"}
+                        </span>
+                        <button
+                          className="reset-button"
+                          onClick={() =>
+                            runImmediateAction("reset-quota", {
+                              feature_code: quota.feature_code,
+                            })
+                          }
+                          disabled={actionMutation.isPending}
+                          title="Réinitialiser le quota"
+                        >
+                          Reset
+                        </button>
+                      </div>
                     </div>
+                    <progress className="quota-progress" max={100} value={progressValue} />
+                    <span className="quota-period">{quota.period}</span>
                   </div>
-                  <div className="quota-bar-container">
-                    <div
-                      className="quota-bar-fill"
-                      style={{ ["--quota-fill-width" as string]: q.limit ? `${Math.min((q.used / q.limit) * 100, 100)}%` : "0%" }}
-                    ></div>
-                  </div>
-                  <span className="quota-period">{q.period}</span>
-                </div>
-              ))}
+                )
+              })}
               {user.quotas.length === 0 && <p className="empty-text">Aucun quota actif.</p>}
             </div>
           </section>
@@ -243,13 +489,17 @@ export function AdminUserDetailPage() {
           <section className="detail-card">
             <h3 className="card-title">Derniers Tickets Support</h3>
             <div className="ticket-list">
-              {user.recent_tickets.map(t => (
-                <div key={t.id} className="list-item">
+              {user.recent_tickets.map((ticket) => (
+                <div key={ticket.id} className="list-item">
                   <div className="list-item-main">
-                    <span className="list-item-title">{t.title}</span>
-                    <span className="list-item-date">{new Date(t.created_at).toLocaleDateString()}</span>
+                    <span className="list-item-title">{ticket.title}</span>
+                    <span className="list-item-date">
+                      {new Date(ticket.created_at).toLocaleDateString()}
+                    </span>
                   </div>
-                  <span className={`badge badge--status-${t.status.toLowerCase()}`}>{t.status}</span>
+                  <span className={`badge badge--status-${ticket.status.toLowerCase()}`}>
+                    {ticket.status}
+                  </span>
                 </div>
               ))}
               {user.recent_tickets.length === 0 && <p className="empty-text">Aucun ticket.</p>}
@@ -257,22 +507,46 @@ export function AdminUserDetailPage() {
           </section>
 
           <section className="detail-card">
-            <h3 className="card-title">Journal d'Audit</h3>
+            <h3 className="card-title">Journal d&apos;Audit</h3>
             <div className="audit-list">
-              {user.recent_audit_events.map(a => (
-                <div key={a.id} className="list-item audit-item">
+              {user.recent_audit_events.map((event) => (
+                <div key={event.id} className="list-item audit-item">
                   <div className="list-item-main">
-                    <span className="audit-action">{a.action}</span>
-                    <span className="list-item-date">{new Date(a.created_at).toLocaleString()}</span>
+                    <span className="audit-action">{event.action}</span>
+                    <span className="list-item-date">
+                      {new Date(event.created_at).toLocaleString()}
+                    </span>
                   </div>
-                  <span className="audit-actor">{a.actor_role}</span>
+                  <span className="audit-actor">{event.actor_role}</span>
                 </div>
               ))}
-              {user.recent_audit_events.length === 0 && <p className="empty-text">Aucun événement d'audit.</p>}
+              {user.recent_audit_events.length === 0 && (
+                <p className="empty-text">Aucun événement d&apos;audit.</p>
+              )}
             </div>
           </section>
         </div>
       </div>
+
+      {dialog && (
+        <ActionDialog
+          actionMutationPending={actionMutation.isPending}
+          assignPlanForm={assignPlanForm}
+          commercialGestureForm={commercialGestureForm}
+          dialog={dialog}
+          onAssignPlanChange={(field, value) =>
+            setAssignPlanForm((current) => ({ ...current, [field]: value }))
+          }
+          onCommercialGestureChange={(field, value) =>
+            setCommercialGestureForm((current) => ({
+              ...current,
+              [field]: field === "value" ? Number(value) : value,
+            }))
+          }
+          onClose={() => setDialog(null)}
+          onSubmit={submitDialogAction}
+        />
+      )}
     </div>
   )
 }
