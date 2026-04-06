@@ -141,7 +141,7 @@
   padding: var(--space-4);
   border: 1px solid var(--glass-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass);
 }
 
 .personas-admin__panel ul {

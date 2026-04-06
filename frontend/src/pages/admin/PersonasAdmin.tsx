@@ -76,6 +76,7 @@ export function PersonasAdmin() {
   const personas = personasQuery.data ?? []
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [personaToToggle, setPersonaToToggle] = useState<AdminLlmPersona | null>(null)
 
   useEffect(() => {
@@ -92,21 +93,27 @@ export function PersonasAdmin() {
     if (!personaToToggle) {
       return
     }
-    const updatedPersona = await updatePersonaMutation.mutateAsync({
-      personaId: personaToToggle.id,
-      payload: { enabled: !personaToToggle.enabled },
-    })
-    setSuccessMessage(
-      updatedPersona.enabled
-        ? `Persona ${updatedPersona.name} réactivée.`
-        : `Persona ${updatedPersona.name} désactivée.`,
-    )
-    setPersonaToToggle(null)
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["admin-llm-personas"] }),
-      queryClient.invalidateQueries({ queryKey: ["admin-llm-persona-detail", updatedPersona.id] }),
-      queryClient.invalidateQueries({ queryKey: ["admin-llm-use-cases"] }),
-    ])
+    try {
+      setErrorMessage(null)
+      const updatedPersona = await updatePersonaMutation.mutateAsync({
+        personaId: personaToToggle.id,
+        payload: { enabled: !personaToToggle.enabled },
+      })
+      setSuccessMessage(
+        updatedPersona.enabled
+          ? `Persona ${updatedPersona.name} réactivée.`
+          : `Persona ${updatedPersona.name} désactivée.`,
+      )
+      setPersonaToToggle(null)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin-llm-personas"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-llm-persona-detail", updatedPersona.id] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-llm-use-cases"] }),
+      ])
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur inconnue."
+      setErrorMessage(`Impossible de mettre à jour la persona. ${message}`)
+    }
   }
 
   const hasError = personasQuery.isError || personaDetailQuery.isError
@@ -125,6 +132,7 @@ export function PersonasAdmin() {
       </header>
 
       {successMessage ? <p className="state-line state-success">{successMessage}</p> : null}
+      {errorMessage ? <p className="chat-error">{errorMessage}</p> : null}
       {personasQuery.isPending ? <div className="loading-placeholder">Chargement des personas...</div> : null}
       {hasError ? (
         <p className="chat-error">Impossible de charger les personas admin. Rafraîchissez puis réessayez.</p>
@@ -143,6 +151,7 @@ export function PersonasAdmin() {
                 onClick={() => {
                   setSelectedPersonaId(persona.id)
                   setSuccessMessage(null)
+                  setErrorMessage(null)
                 }}
               >
                 <div className="personas-admin__card-topline">

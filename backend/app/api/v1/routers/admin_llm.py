@@ -313,18 +313,9 @@ def get_persona_detail(
         db.scalar(
             select(func.count(func.distinct(UserModel.id)))
             .select_from(UserModel)
-            .join(
-                UserSubscriptionModel,
-                UserSubscriptionModel.user_id == UserModel.id,
-                isouter=True,
-            )
+            .join(UserSubscriptionModel, UserSubscriptionModel.user_id == UserModel.id)
             .where(UserModel.default_astrologer_id == str(id))
-            .where(
-                sa.or_(
-                    UserSubscriptionModel.status.in_(["active", "trialing"]),
-                    UserSubscriptionModel.id.is_(None),
-                )
-            )
+            .where(UserSubscriptionModel.status.in_(["active", "trialing"]))
         )
         or 0
     )

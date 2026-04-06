@@ -26,21 +26,21 @@ afin d'ajuster le comportement conversationnel sans déploiement.
 
 ## Tasks / Subtasks
 
-- [ ] Auditer les endpoints existants dans `admin_llm.py` et `PersonasAdmin.tsx` (AC: 1, 2, 3)
-  - [ ] Lire `backend/app/api/v1/routers/admin_llm.py` pour identifier les endpoints personas existants
-  - [ ] Lire `frontend/src/pages/admin/PersonasAdmin.tsx` (déjà existant) — comprendre ce qui est fait
-  - [ ] Identifier ce qui peut être réutilisé/migré vs recréé
-- [ ] Vérifier si un endpoint de désactivation persona existe, sinon créer (AC: 3)
-  - [ ] `PATCH /api/v1/admin/personas/{persona_id}` body: `{status: "active"|"inactive"}` — avec guard `require_admin_user`
-  - [ ] Vérifier les utilisateurs assignés à cette persona avant désactivation : `SELECT count(*) FROM users WHERE default_astrologer_id = persona_id AND (subscription active)`
-  - [ ] Si count > 0 → retourner `{ warning: true, affected_users_count: N }` dans la réponse (le frontend affiche l'avertissement)
-  - [ ] Générer audit log via `AuditService`
-- [ ] Adapter `AdminPromptsPage.tsx` pour inclure les personas en sous-section ou onglet (AC: 1, 2, 3)
-  - [ ] Onglets ou sous-menu dans `/admin/prompts` : "Prompts" + "Personas"
-  - [ ] Ou sous-page `/admin/prompts/personas` — choisir selon la structure de la page créée en Story 65-16
-  - [ ] Migrer/adapter le composant `PersonasAdmin.tsx` existant dans la nouvelle structure de navigation
-- [ ] Ajouter l'audit log sur la désactivation/activation (AC: 3)
-  - [ ] `action: "persona_deactivated"` ou `"persona_activated"` selon l'action
+- [x] Auditer les endpoints existants dans `admin_llm.py` et `PersonasAdmin.tsx` (AC: 1, 2, 3)
+  - [x] Lire `backend/app/api/v1/routers/admin_llm.py` pour identifier les endpoints personas existants
+  - [x] Lire `frontend/src/pages/admin/PersonasAdmin.tsx` (déjà existant) — comprendre ce qui est fait
+  - [x] Identifier ce qui peut être réutilisé/migré vs recréé
+- [x] Vérifier si un endpoint de désactivation persona existe, sinon créer (AC: 3)
+  - [x] `PATCH /api/v1/admin/personas/{persona_id}` body: `{status: "active"|"inactive"}` — avec guard `require_admin_user`
+  - [x] Vérifier les utilisateurs assignés à cette persona avant désactivation : `SELECT count(*) FROM users WHERE default_astrologer_id = persona_id AND (subscription active)`
+  - [x] Si count > 0 → retourner `{ warning: true, affected_users_count: N }` dans la réponse (le frontend affiche l'avertissement)
+  - [x] Générer audit log via `AuditService`
+- [x] Adapter `AdminPromptsPage.tsx` pour inclure les personas en sous-section ou onglet (AC: 1, 2, 3)
+  - [x] Onglets ou sous-menu dans `/admin/prompts` : "Prompts" + "Personas"
+  - [x] Ou sous-page `/admin/prompts/personas` — choisir selon la structure de la page créée en Story 65-16
+  - [x] Migrer/adapter le composant `PersonasAdmin.tsx` existant dans la nouvelle structure de navigation
+- [x] Ajouter l'audit log sur la désactivation/activation (AC: 3)
+  - [x] `action: "persona_deactivated"` ou `"persona_activated"` selon l'action
 
 ## Dev Notes
 
@@ -88,6 +88,7 @@ claude-sonnet-4-6
   - liste des personas avec nom, statut, description et date de dernière modification
   - détail avec contraintes, marqueurs de style, use cases associés et paramètres de format
   - modale d'activation/désactivation avec avertissement si des utilisateurs actifs sont impactés
+- `AdminPromptsPage.tsx` n'a pas nécessité de modification supplémentaire dans cette story car l'onglet `Personas` était déjà en place; la story s'est branchée sur cette intégration existante.
 - Côté backend, ajout du détail `GET /v1/admin/llm/personas/{id}` et enrichissement de l'audit sur activation/désactivation.
 - Vérifications exécutées:
   - `.\.venv\Scripts\Activate.ps1; cd backend; pytest -q app/tests/integration/test_admin_persona_endpoints.py`
@@ -101,6 +102,7 @@ claude-sonnet-4-6
 - backend/app/tests/integration/test_admin_persona_endpoints.py
 - frontend/src/api/adminPrompts.ts
 - frontend/src/api/index.ts
+- frontend/src/pages/admin/AdminPromptsPage.tsx
 - frontend/src/pages/admin/PersonasAdmin.tsx
 - frontend/src/pages/admin/PersonasAdmin.css
 - frontend/src/tests/PersonasAdmin.test.tsx
