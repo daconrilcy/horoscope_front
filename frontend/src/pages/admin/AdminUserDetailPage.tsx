@@ -497,7 +497,7 @@ export function AdminUserDetailPage() {
                     : 0
 
                 return (
-                  <div key={quota.feature_code} className="quota-item">
+                  <div key={`${quota.feature_code}-${quota.period}`} className="quota-item">
                     <div className="quota-header">
                       <span className="quota-name">{quota.feature_code}</span>
                       <div className="quota-header-right">
