@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { apiFetch } from "../../api/client"
+import { useAdminPermissions } from "../../state/AdminPermissionsContext"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminSettingsPage.css"
 
@@ -111,6 +112,7 @@ function ExportModal({ type, onClose }: ExportModalProps) {
 }
 
 export function AdminSettingsPage() {
+  const { canExport } = useAdminPermissions()
   const [activeExport, setActiveExport] = useState<ExportModalProps["type"] | null>(null)
 
   return (
@@ -129,7 +131,13 @@ export function AdminSettingsPage() {
               <h4>Utilisateurs</h4>
               <p>Liste complète, plans, statuts et IDs Stripe.</p>
             </div>
-            <button className="action-button" onClick={() => setActiveExport("users")}>Exporter (CSV)</button>
+            {canExport ? (
+              <button className="action-button" onClick={() => setActiveExport("users")}>
+                Exporter (CSV)
+              </button>
+            ) : (
+              <span className="export-disabled-note">Export indisponible pour ce profil.</span>
+            )}
           </div>
 
           <div className="export-card">
@@ -137,7 +145,13 @@ export function AdminSettingsPage() {
               <h4>Générations LLM</h4>
               <p>Volumes, tokens, latence et erreurs (sans contenu).</p>
             </div>
-            <button className="action-button" onClick={() => setActiveExport("generations")}>Exporter (CSV/JSON)</button>
+            {canExport ? (
+              <button className="action-button" onClick={() => setActiveExport("generations")}>
+                Exporter (CSV/JSON)
+              </button>
+            ) : (
+              <span className="export-disabled-note">Export indisponible pour ce profil.</span>
+            )}
           </div>
 
           <div className="export-card">
@@ -145,12 +159,18 @@ export function AdminSettingsPage() {
               <h4>Facturation</h4>
               <p>Abonnements, prix, dates et échecs.</p>
             </div>
-            <button className="action-button" onClick={() => setActiveExport("billing")}>Exporter (CSV)</button>
+            {canExport ? (
+              <button className="action-button" onClick={() => setActiveExport("billing")}>
+                Exporter (CSV)
+              </button>
+            ) : (
+              <span className="export-disabled-note">Export indisponible pour ce profil.</span>
+            )}
           </div>
         </div>
       </section>
 
-      {activeExport && (
+      {canExport && activeExport && (
         <ExportModal 
           type={activeExport} 
           onClose={() => setActiveExport(null)} 

@@ -50,6 +50,11 @@
   color: var(--color-text-muted);
 }
 
+.export-disabled-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;

@@ -4,9 +4,10 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
 import { AdminSettingsPage } from "../pages/admin/AdminSettingsPage"
+import { AdminPermissionsProvider } from "../state/AdminPermissionsContext"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 
-function renderPage() {
+function renderPage(canExport = true) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -15,7 +16,9 @@ function renderPage() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <AdminSettingsPage />
+      <AdminPermissionsProvider overrides={{ canExport }}>
+        <AdminSettingsPage />
+      </AdminPermissionsProvider>
     </QueryClientProvider>,
   )
 }
@@ -68,5 +71,13 @@ describe("AdminSettingsPage", () => {
     })
 
     expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:users-export")
+  })
+
+  it("hides export actions when canExport is false", () => {
+    renderPage(false)
+
+    expect(screen.queryByRole("button", { name: "Exporter (CSV)" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Exporter (CSV/JSON)" })).not.toBeInTheDocument()
+    expect(screen.getAllByText("Export indisponible pour ce profil.")).toHaveLength(3)
   })
 })

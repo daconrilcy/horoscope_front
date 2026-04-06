@@ -1,11 +1,16 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { AdminPermissionsProvider, useAdminPermissions } from "../state/AdminPermissionsContext"
+import {
+  ALL_ADMIN_SECTIONS,
+  AdminPermissionsProvider,
+  useAdminPermissions,
+} from "../state/AdminPermissionsContext"
 
 function PermissionCheck({ domain }: { domain: any }) {
-  const { canEdit, canExport } = useAdminPermissions()
+  const { allowedSections, canEdit, canExport } = useAdminPermissions()
   return (
     <div>
+      <div data-testid="allowed-sections">{allowedSections.join(",")}</div>
       <div data-testid="can-edit">{canEdit(domain) ? "YES" : "NO"}</div>
       <div data-testid="can-export">{canExport ? "YES" : "NO"}</div>
     </div>
@@ -26,6 +31,7 @@ describe("AdminPermissionsContext", () => {
     
     expect(screen.getByTestId("can-edit")).toHaveTextContent("YES")
     expect(screen.getByTestId("can-export")).toHaveTextContent("YES")
+    expect(screen.getByTestId("allowed-sections")).toHaveTextContent(ALL_ADMIN_SECTIONS.join(","))
   })
 
   it("respects overrides", () => {
