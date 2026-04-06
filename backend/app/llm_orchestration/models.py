@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 EVIDENCE_ID_REGEX = r"^[A-Z0-9_\.:-]{3,80}$"
 
@@ -52,6 +52,89 @@ class GatewayRequest(BaseModel):
     use_case: str
     user_input: Dict[str, Any] = Field(default_factory=dict)
     context: Dict[str, Any] = Field(default_factory=dict)
+    request_id: str
+    trace_id: str
+
+
+class ExecutionMessage(BaseModel):
+    """A single message in the conversational history."""
+
+    role: Literal["user", "assistant", "system"]
+    content: str
+    content_blocks: Optional[List[Dict[str, Any]]] = None
+    """Réservé aux blocs multi-modaux (GPT-5+). Si renseigné, prend la priorité sur content
+    lors de la composition des messages dans ResponsesClient."""
+
+    model_config = ConfigDict(frozen=True)
+
+
+class ExecutionUserInput(BaseModel):
+    """Structured and typed user input for an LLM execution."""
+
+    use_case: str
+    locale: str = "fr-FR"
+    """Format BCP-47 (ex: 'fr-FR', 'en-US')."""
+
+    message: Optional[str] = None
+    question: Optional[str] = None
+    situation: Optional[str] = None
+    conversation_id: Optional[str] = None
+    persona_id_override: Optional[str] = None
+
+
+class ExecutionContext(BaseModel):
+    """Contextual data for an LLM execution, including history and domain data."""
+
+    history: List[ExecutionMessage] = Field(default_factory=list)
+    natal_data: Optional[Dict[str, Any]] = None
+    chart_json: Optional[str] = None
+    precision_level: Optional[str] = None
+    astro_context: Optional[str] = None
+    extra_context: Dict[str, Any] = Field(default_factory=dict)
+    """Extension transitoire pour payloads métier non structurants.
+    Interdit pour tout nouveau champ structurant. Destiné à être progressivement vidé."""
+
+
+class ExecutionFlags(BaseModel):
+    """Operational flags for the orchestration pipeline."""
+
+    is_repair_call: bool = False
+    skip_common_context: bool = False
+    test_fallback_active: bool = False
+    validation_strict: bool = False
+    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]] = None
+    prompt_version_id_override: Optional[str] = None
+    visited_use_cases: List[str] = Field(default_factory=list)
+    """Usage interne plateforme uniquement — ne pas renseigner côté appelant métier."""
+
+
+class ExecutionOverrides(BaseModel):
+    """
+    Surcharges de stratégie use case. Sémantique contractuelle :
+    - USAGE AUTORISÉ : migrations, tests d'infrastructure, use cases expérimentaux non encore en config DB.
+    - USAGE INTERDIT : services métier normaux (chat, guidance, natal en production stable).
+    - EFFET : les valeurs non-None remplacent celles résolues par _resolve_config() dans ResolvedExecutionPlan.
+    - JOURNALISATION : toute surcharge effective est tracée dans ResolvedExecutionPlan.to_log_dict()
+      sous une clé 'overrides_applied' pour auditabilité.
+    - RÈGLE : un nouveau use case ne doit JAMAIS dépendre d'ExecutionOverrides pour fonctionner
+      nominalement — la config DB doit être sa source de vérité.
+    """
+
+    interaction_mode: Optional[Literal["structured", "chat"]] = None
+    user_question_policy: Optional[Literal["none", "optional", "required"]] = None
+    _applied_by: Optional[str] = None  # Internal audit identifier
+
+
+class LLMExecutionRequest(BaseModel):
+    """Canonical request contract for the LLM Gateway."""
+
+    user_input: ExecutionUserInput
+    context: ExecutionContext = Field(default_factory=ExecutionContext)
+    flags: ExecutionFlags = Field(default_factory=ExecutionFlags)
+    overrides: Optional[ExecutionOverrides] = None
+
+    # Runtime identifiers (not infrastructure)
+    user_id: Optional[int] = None
     request_id: str
     trace_id: str
 

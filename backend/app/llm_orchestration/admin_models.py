@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.infra.db.models.llm_persona import PersonaTone, PersonaVerbosity
 from app.infra.db.models.llm_prompt import PromptStatus
@@ -54,6 +54,13 @@ class LlmPersonaBase(BaseModel):
         default_factory=lambda: {"sections": True, "bullets": False, "emojis": False}
     )
     enabled: bool = True
+
+    @field_validator("tone", mode="before")
+    @classmethod
+    def _normalize_legacy_tone(cls, value: object) -> object:
+        if value == "calm" or value == "empathetic":
+            return PersonaTone.WARM
+        return value
 
 
 class LlmPersonaCreate(LlmPersonaBase):

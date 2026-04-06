@@ -7,10 +7,12 @@ stepsCompleted:
 inputDocuments:
   - 'C:\dev\horoscope_front\_bmad-output\planning-artifacts\prd.md'
   - 'C:\dev\horoscope_front\_bmad-output\planning-artifacts\architecture.md'
-lastEdited: '2026-02-21T14:39:07+01:00'
+lastEdited: '2026-04-06'
 editHistory:
   - date: '2026-02-21T14:39:07+01:00'
     changes: 'Epics rebaseline after PRD/Architecture finalization (FR38-42 + NFR SMART alignment)'
+  - date: '2026-04-06'
+    changes: 'Ajout Epic 66 — Refactorisation orchestration LLM vers contrats explicites'
 ---
 
 # horoscope_front - Epic Breakdown
@@ -2465,3 +2467,59 @@ so that l'évolution du résumé dashboard n'introduise ni régression de naviga
 - Les fichiers BMAD de l'epic 48 reflètent explicitement ces garde-fous et les risques résiduels.
 
 [Source: docs/interfaces/integration_fond_astrologique_dashboard.md ; _bmad-output/implementation-artifacts/45-4-verrouiller-qa-accessibilite-et-coherence-i18n-du-parcours-dashboard.md ; frontend/src/tests/DashboardPage.test.tsx ; frontend/src/tests/router.test.tsx]
+
+## Epic 66: Refactoriser l'orchestration LLM pour remplacer les conventions implicites par des contrats d'exécution explicites
+
+Faire évoluer l'architecture d'orchestration LLM d'un système fonctionnel mais basé sur des dictionnaires implicites et des fallbacks successifs, vers une plateforme à contrats explicites, typés, observables et gouvernés. L'objectif est de fiabiliser la plateforme interne sans changer le comportement produit visible.
+
+**FRs covered:** FR66-1 à FR66-8, NFR66-1 à NFR66-5
+
+**Document complet:** [epic-66-llm-orchestration-contrats-explicites.md](_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md)
+
+### Story 66.1: Introduire un `LLMExecutionRequest`
+
+As a plateforme d'orchestration,
+I want un modèle d'entrée explicite pour les appels LLM,
+so that les conventions diffuses transportées dans `user_input` et `context` soient remplacées par un contrat typé.
+
+### Story 66.2: Introduire un `ResolvedExecutionPlan`
+
+As a moteur d'orchestration,
+I want matérialiser la config finale réellement résolue avant exécution,
+so that la vérité canonique de ce qui va être exécuté soit explicite et loggable.
+
+### Story 66.3: Refactoriser `LLMGateway.execute()` en pipeline
+
+As a développeur backend,
+I want découper le gateway en étapes explicites et testables,
+so that l'effet "god orchestrator" soit réduit et chaque étape soit indépendamment testable.
+
+### Story 66.4: Séparer validation, normalisation et sanitization
+
+As a plateforme LLM,
+I want une chaîne explicite de traitement de sortie (parse → validate → normalize → sanitize),
+so that les transformations réellement appliquées soient visibles et catégorisées.
+
+### Story 66.5: Qualifier le common context
+
+As a moteur de prompts,
+I want connaître l'état exact du contexte commun injecté (`QualifiedContext`),
+so que je puisse distinguer un contexte complet d'un contexte dégradé.
+
+### Story 66.6: Clarifier le rôle de l'adapter
+
+As a architecte backend,
+I want séparer la normalisation métier de l'intégration technique côté `AIEngineAdapter`,
+so that la dérive fonctionnelle de cette couche soit limitée.
+
+### Story 66.7: Enrichir `GatewayMeta`
+
+As a équipe produit / tech,
+I want des métadonnées d'exécution exposant le chemin réel (nominal / repaired / fallback / degraded),
+so that je puisse comprendre précisément le chemin suivi par chaque réponse.
+
+### Story 66.8: Migrer le parcours natal vers les nouveaux contrats
+
+As a domaine natal,
+I want consommer les nouveaux contrats de plateforme sans perdre les spécificités métier,
+so that la dette locale soit réduite tout en conservant le comportement utilisateur nominal.

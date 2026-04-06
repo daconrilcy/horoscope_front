@@ -10,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
+from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
@@ -202,3 +203,32 @@ def test_admin_llm_targeted_rollback():
     assert previous.status == "archived"
     assert event.details["from_version"] == v3_id
     assert event.details["to_version"] == v1_id
+
+
+def test_admin_llm_list_personas_supports_legacy_tone_values():
+    _cleanup_tables()
+    admin_token = _register_user("admin-personas@example.com", "admin")
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    with SessionLocal() as db:
+        db.add(
+            LlmPersonaModel(
+                name="Legacy Persona",
+                tone="calm",
+                verbosity="medium",
+                style_markers=["simple"],
+                boundaries=["none"],
+                allowed_topics=["astrology"],
+                disallowed_topics=["medical"],
+                formatting={"sections": True, "bullets": False, "emojis": False},
+                enabled=True,
+            )
+        )
+        db.commit()
+
+    response = client.get("/v1/admin/llm/personas", headers=headers)
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert len(data) == 1
+    assert data[0]["name"] == "Legacy Persona"
+    assert data[0]["tone"] == "warm"

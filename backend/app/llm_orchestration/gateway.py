@@ -17,10 +17,16 @@ from app.core.config import settings
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
 from app.llm_orchestration.models import (
+    ExecutionContext,
+    ExecutionFlags,
+    ExecutionMessage,
+    ExecutionOverrides,
+    ExecutionUserInput,
     GatewayConfigError,
     GatewayError,
     GatewayResult,
     InputValidationError,
+    LLMExecutionRequest,
     OutputValidationError,
     PromptRenderError,
     UnknownUseCaseError,
@@ -671,6 +677,87 @@ class LLMGateway:
                 return config.model_copy(update=updates)
         return config
 
+    @staticmethod
+    def _legacy_dicts_to_request(
+        use_case: str,
+        user_input: Dict[str, Any],
+        context: Dict[str, Any],
+        request_id: str,
+        trace_id: str,
+        user_id: Optional[int] = None,
+        is_repair_call: bool = False,
+    ) -> LLMExecutionRequest:
+        """
+        Maps legacy dict-based parameters to the canonical LLMExecutionRequest.
+        (AC6: signature mapping)
+        """
+        # 1. ExecutionUserInput
+        # Locale can be in user_input or context
+        locale = user_input.get("locale") or context.get("locale") or "fr-FR"
+
+        user_input_model = ExecutionUserInput(
+            use_case=use_case,
+            locale=locale,
+            message=user_input.get("message") or user_input.get("last_user_msg"),
+            question=user_input.get("question"),
+            situation=user_input.get("situation"),
+            conversation_id=user_input.get("conversation_id") or context.get("conversation_id"),
+            persona_id_override=user_input.get("persona_id") or context.get("persona_id"),
+        )
+
+        # 2. ExecutionContext
+        history = []
+        for m in context.get("history", []):
+            if isinstance(m, dict) and "role" in m and "content" in m:
+                history.append(ExecutionMessage(**m))
+
+        # Identify non-structuring keys for extra_context
+        structuring_keys = {
+            "history",
+            "natal_data",
+            "chart_json",
+            "precision_level",
+            "astro_context",
+            "locale",
+            "conversation_id",
+            "persona_id",
+            "_visited_use_cases",
+            "evidence_catalog",
+            "validation_strict",
+            "_override_prompt_version_id",
+        }
+        extra_context = {k: v for k, v in context.items() if k not in structuring_keys}
+
+        context_model = ExecutionContext(
+            history=history,
+            natal_data=context.get("natal_data"),
+            chart_json=context.get("chart_json"),
+            precision_level=context.get("precision_level"),
+            astro_context=context.get("astro_context"),
+            extra_context=extra_context,
+        )
+
+        # 3. ExecutionFlags
+        flags_model = ExecutionFlags(
+            is_repair_call=is_repair_call,
+            skip_common_context=context.get("skip_common_context", False),
+            test_fallback_active=context.get("test_fallback_active", False),
+            validation_strict=context.get("validation_strict", False),
+            evidence_catalog=context.get("evidence_catalog"),
+            prompt_version_id_override=context.get("_override_prompt_version_id"),
+            visited_use_cases=context.get("_visited_use_cases", []),
+        )
+
+        # 4. LLMExecutionRequest
+        return LLMExecutionRequest(
+            user_input=user_input_model,
+            context=context_model,
+            flags=flags_model,
+            user_id=user_id,
+            request_id=request_id,
+            trace_id=trace_id,
+        )
+
     async def execute(
         self,
         use_case: str,
@@ -683,15 +770,48 @@ class LLMGateway:
         is_repair_call: bool = False,
     ) -> GatewayResult:
         """
-        Execute the LLM gateway for a given use case.
+        Legacy entry point for LLM orchestration.
+        Règle de migration legacy → canonique (NON CONTOURNABLE) :
+        execute() legacy est un wrapper de conversion uniquement.
+        Toute nouvelle logique doit être ajoutée exclusivement dans execute_request().
+        """
+        request = self._legacy_dicts_to_request(
+            use_case=use_case,
+            user_input=user_input,
+            context=context,
+            request_id=request_id,
+            trace_id=trace_id,
+            user_id=user_id,
+            is_repair_call=is_repair_call,
+        )
+        return await self.execute_request(request, db=db)
+
+    async def execute_request(
+        self, request: LLMExecutionRequest, db: Optional[Session] = None
+    ) -> GatewayResult:
+        """
+        Canonical entry point for LLM orchestration using typed contracts.
         """
         result: GatewayResult | None = None
         error: Exception | None = None
         config: UseCaseConfig | None = None
 
+        # Extract values for easier use (maintaining internal legacy compatibility for now)
+        use_case = request.user_input.use_case
+        user_input = request.user_input.model_dump()
+        context = request.context.model_dump()
+        # Merge extra_context back into flat context for legacy compatibility
+        extra = context.pop("extra_context", {})
+        context.update(extra)
+
+        request_id = request.request_id
+        trace_id = request.trace_id
+        user_id = request.user_id
+        is_repair_call = request.flags.is_repair_call
+        visited = request.flags.visited_use_cases
+
         try:
             # 0. Anti-loop protection (circuit breaker)
-            visited = context.get("_visited_use_cases", [])
             if use_case in visited and not is_repair_call:
                 raise GatewayError(
                     f"Infinite fallback loop detected for use case '{use_case}'",
@@ -701,8 +821,21 @@ class LLMGateway:
             # 1. Resolve config
             config = await self._resolve_config(db, use_case, context)
 
+            # 1.3 Overrides (AC2)
+            if request.overrides:
+                updates = {}
+                if request.overrides.interaction_mode:
+                    updates["interaction_mode"] = request.overrides.interaction_mode
+                if request.overrides.user_question_policy:
+                    updates["user_question_policy"] = request.overrides.user_question_policy
+                if updates:
+                    config = config.model_copy(update=updates)
+                    logger.info(
+                        "gateway_config_overridden use_case=%s updates=%s", use_case, updates
+                    )
+
             # Story 59.5: Build and merge common context
-            if db and user_id is not None:
+            if db and user_id is not None and not request.flags.skip_common_context:
                 try:
                     from app.prompts.common_context import CommonContextBuilder
 
@@ -725,7 +858,7 @@ class LLMGateway:
             if not is_repair_call:
                 log_payload = sanitize_request_for_logging(
                     use_case=use_case,
-                    user_id="unknown",
+                    user_id=user_id or "unknown",
                     request_id=request_id,
                     trace_id=trace_id,
                     input_data=user_input,
@@ -734,16 +867,9 @@ class LLMGateway:
                 logger.info("llm_gateway_start %s", log_payload)
 
             # 3. Validation runtime locale/use_case
-            merged_vars = {**user_input, **context}
-            for req_var in ["locale", "use_case"]:
-                if req_var not in merged_vars:
-                    increment_counter(
-                        "llm_gateway_config_error_total",
-                        labels={"use_case": use_case, "reason": f"missing_{req_var}"},
-                    )
-                    raise GatewayConfigError(f"Missing mandatory platform variable: '{req_var}'")
-
-            locale = merged_vars["locale"]
+            locale = request.user_input.locale
+            if not locale:
+                raise GatewayConfigError("Missing mandatory platform variable: 'locale'")
 
             # 4. Mode & Policy check
             if config.interaction_mode not in _VALID_INTERACTION_MODES:
@@ -769,10 +895,11 @@ class LLMGateway:
 
             # 6. Render prompts
             render_vars = {
-                k: v for k, v in merged_vars.items() if k in config.required_prompt_placeholders
+                k: v for k, v in {**user_input, **context}.items()
+                if k in config.required_prompt_placeholders
             }
             render_vars["locale"] = locale
-            render_vars["use_case"] = merged_vars["use_case"]
+            render_vars["use_case"] = use_case
 
             try:
                 if is_repair_call:
@@ -804,6 +931,10 @@ class LLMGateway:
                 raise GatewayConfigError(str(e))
 
             # 8. Layer 3 (Persona)
+            # Persona override from ExecutionUserInput has priority
+            if request.user_input.persona_id_override:
+                context["persona_id"] = request.user_input.persona_id_override
+
             persona_block, resolved_persona_id = await self._resolve_persona(
                 db, config, context, use_case
             )
@@ -825,7 +956,7 @@ class LLMGateway:
                     system_core=system_core,
                     dev_prompt=rendered_developer_prompt,
                     persona_block=persona_block,
-                    history=context.get("history", []),
+                    history=[m.model_dump() for m in request.context.history],
                     user_payload=user_data_block,
                     locale=locale,
                 )
@@ -864,8 +995,6 @@ class LLMGateway:
                     else None,
                 )
             except (UpstreamRateLimitError, UpstreamTimeoutError, UpstreamError):
-                # Preserve upstream exception types so API routers can map
-                # precise HTTP status codes (429/503/504).
                 raise
 
             # 11. Finalize Metadata
