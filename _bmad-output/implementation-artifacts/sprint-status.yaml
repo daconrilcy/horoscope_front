@@ -556,24 +556,24 @@ development_status:
   64-7-chatpage-quota-banner-cta-upgrade: done
   64-8-dailyhoroscopepage-sections-lockees-cta: done
   64-9-natalchartpage-sections-lockees-cta: done
-  epic-65: in-progress
+  epic-65: done
   # Groupe 65.A — Fondation Admin
-  65-1-seed-dev-utilisateur-admin: ready-for-dev
+  65-1-seed-dev-utilisateur-admin: done
   65-2-guard-admin-backend: done
   65-3-guard-admin-frontend: done
-  65-4-navigation-admin-menu-10-sections: ready-for-dev
+  65-4-navigation-admin-menu-10-sections: done
   # Groupe 65.B — Dashboard & Analytics
-  65-5-dashboard-kpis-instantanes: ready-for-dev
-  65-6-dashboard-kpis-flux: ready-for-dev
-  65-7-dashboard-kpis-billing: ready-for-dev
+  65-5-dashboard-kpis-instantanes: done
+  65-6-dashboard-kpis-flux: done
+  65-7-dashboard-kpis-billing: done
   # Groupe 65.C — Utilisateurs & Actions Support
-  65-8-fiche-utilisateur-consultation: ready-for-dev
-  65-9-actions-applicatives-compte: ready-for-dev
+  65-8-fiche-utilisateur-consultation: done
+  65-9-actions-applicatives-compte: done
   65-10-actions-stripe-refresh-plan-geste: done
-  65-11-support-tickets-contenus-signales: ready-for-dev
+  65-11-support-tickets-contenus-signales: done
   # Groupe 65.D — Abonnements & Entitlements
-  65-12-matrice-entitlements-consultation: ready-for-dev
-  65-13-matrice-entitlements-edition: ready-for-dev
+  65-12-matrice-entitlements-consultation: done
+  65-13-matrice-entitlements-edition: done
   # Groupe 65.E — LLM Ops & Configuration
   65-14-supervision-ia-tableau-bord-metier: done
   65-15-observabilite-technique-incidents: done

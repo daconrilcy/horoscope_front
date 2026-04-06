@@ -21,6 +21,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/admin/ai", tags=["admin-ai"])
 
 
+def _derive_failed_call_error_code(log: LlmCallLogModel) -> str:
+    if log.fallback_triggered:
+        return "FALLBACK_TRIGGERED"
+    if log.repair_attempted:
+        return "REPAIR_FAILED"
+    if log.evidence_warnings_count > 0:
+        return "VALIDATION_ERROR"
+    return "LLM_CALL_ERROR"
+
+
 @router.get("/metrics", response_model=AdminAiMetricsResponse)
 def get_ai_metrics(
     request: Request,
@@ -141,7 +151,7 @@ def get_use_case_detail(
         {
             "id": str(f.id),
             "timestamp": f.timestamp,
-            "error_code": "GENERIC_ERROR",
+            "error_code": _derive_failed_call_error_code(f),
             "request_id_masked": f.request_id[:8] + "...",
         }
         for f in failed_rows

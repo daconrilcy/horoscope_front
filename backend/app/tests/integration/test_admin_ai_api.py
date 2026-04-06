@@ -126,3 +126,4 @@ def test_get_use_case_detail_success(admin_token):
     assert data["use_case"] == "natal_interpretation"
     assert len(data["recent_failed_calls"]) >= 1
     assert data["recent_failed_calls"][0]["request_id_masked"] == "req_fail..."
+    assert data["recent_failed_calls"][0]["error_code"] == "LLM_CALL_ERROR"

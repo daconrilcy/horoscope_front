@@ -78,7 +78,7 @@
 }
 
 .badge--error {
-  background: var(--error);
+  background: var(--danger);
   color: white;
   font-size: 10px;
   padding: 1px 6px;

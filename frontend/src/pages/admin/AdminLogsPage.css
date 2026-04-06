@@ -149,7 +149,7 @@
 }
 
 .text-danger {
-  color: var(--error);
+  color: var(--danger);
   font-weight: 600;
 }
 

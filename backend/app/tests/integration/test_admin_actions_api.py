@@ -1,15 +1,16 @@
-from pathlib import Path
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select, create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
-from app.infra.db.models.user import UserModel
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.product_entitlements import FeatureUsageCounterModel, PeriodUnit, ResetMode
+from app.infra.db.models.user import UserModel
 from app.main import app
 
 client = TestClient(app)
@@ -63,19 +64,27 @@ def test_suspend_unsuspend_user(admin_token):
         user_id = user.id
 
     # Suspend
-    response = client.post(f"/v1/admin/users/{user_id}/suspend", headers={"Authorization": f"Bearer {admin_token}"})
+    response = client.post(
+        f"/v1/admin/users/{user_id}/suspend",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
     assert response.status_code == 200
     
     with db_session_module.SessionLocal() as db:
         user = db.get(UserModel, user_id)
         assert user.is_suspended is True
         # Check audit
-        audit = db.scalar(select(AuditEventModel).where(AuditEventModel.action == "account_suspended"))
+        audit = db.scalar(
+            select(AuditEventModel).where(AuditEventModel.action == "account_suspended")
+        )
         assert audit is not None
         assert audit.target_id == str(user_id)
 
     # Unsuspend
-    response = client.post(f"/v1/admin/users/{user_id}/unsuspend", headers={"Authorization": f"Bearer {admin_token}"})
+    response = client.post(
+        f"/v1/admin/users/{user_id}/unsuspend",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
     assert response.status_code == 200
     
     with db_session_module.SessionLocal() as db:
@@ -112,5 +121,35 @@ def test_reset_quota(admin_token):
     assert response.status_code == 200
     
     with db_session_module.SessionLocal() as db:
-        counter = db.scalar(select(FeatureUsageCounterModel).where(FeatureUsageCounterModel.user_id == user_id))
+        counter = db.scalar(
+            select(FeatureUsageCounterModel).where(FeatureUsageCounterModel.user_id == user_id)
+        )
         assert counter.used_count == 0
+
+
+def test_unlock_user(admin_token):
+    with db_session_module.SessionLocal() as db:
+        user = UserModel(
+            email="user-to-unlock@test.com",
+            password_hash="x",
+            role="user",
+            is_locked=True,
+        )
+        db.add(user)
+        db.commit()
+        user_id = user.id
+
+    response = client.post(
+        f"/v1/admin/users/{user_id}/unlock",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert response.status_code == 200
+
+    with db_session_module.SessionLocal() as db:
+        user = db.get(UserModel, user_id)
+        assert user.is_locked is False
+        audit = db.scalar(
+            select(AuditEventModel).where(AuditEventModel.action == "account_unlocked")
+        )
+        assert audit is not None
+        assert audit.target_id == str(user_id)
