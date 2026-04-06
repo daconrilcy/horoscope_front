@@ -9,10 +9,10 @@ from app.api.dependencies.auth import (
     require_admin_user,
 )
 
-# We use a small test app to test the dependency in isolation
-test_app = FastAPI()
+# We use a small app fixture-like helper to test the dependency in isolation.
+admin_dependency_app = FastAPI()
 
-@test_app.exception_handler(UserAuthenticationError)
+@admin_dependency_app.exception_handler(UserAuthenticationError)
 def handle_user_authentication_error(request: Request, error: UserAuthenticationError) -> JSONResponse:
     return JSONResponse(
         status_code=error.status_code,
@@ -25,11 +25,11 @@ def handle_user_authentication_error(request: Request, error: UserAuthentication
         },
     )
 
-@test_app.get("/admin-only")
+@admin_dependency_app.get("/admin-only")
 def admin_only_endpoint(user: AuthenticatedUser = Depends(require_admin_user)):
     return {"message": "hello admin", "user_id": user.id}
 
-client = TestClient(test_app)
+client = TestClient(admin_dependency_app)
 
 
 def test_require_admin_user_success():
@@ -43,13 +43,13 @@ def test_require_admin_user_success():
     )
     
     # We patch the dependency in the app
-    test_app.dependency_overrides[require_admin_user] = lambda: admin_user
+    admin_dependency_app.dependency_overrides[require_admin_user] = lambda: admin_user
     
     response = client.get("/admin-only")
     assert response.status_code == 200
     assert response.json() == {"message": "hello admin", "user_id": 1}
     
-    test_app.dependency_overrides = {}
+    admin_dependency_app.dependency_overrides = {}
 
 
 def test_require_admin_user_forbidden():
@@ -64,14 +64,14 @@ def test_require_admin_user_forbidden():
     # We need to test the actual logic of require_admin_user
     # So we override require_authenticated_user which is called by require_admin_user
     from app.api.dependencies import auth
-    test_app.dependency_overrides[auth.require_authenticated_user] = lambda: ops_user
+    admin_dependency_app.dependency_overrides[auth.require_authenticated_user] = lambda: ops_user
     
     response = client.get("/admin-only")
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "insufficient_role"
     assert response.json()["error"]["details"]["actual_role"] == "ops"
     
-    test_app.dependency_overrides = {}
+    admin_dependency_app.dependency_overrides = {}
 
 
 def test_require_admin_user_unauthorized():
@@ -84,10 +84,10 @@ def test_require_admin_user_unauthorized():
             status_code=401
         )
     
-    test_app.dependency_overrides[auth.require_authenticated_user] = mock_auth_error
+    admin_dependency_app.dependency_overrides[auth.require_authenticated_user] = mock_auth_error
     
     response = client.get("/admin-only")
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "missing_access_token"
     
-    test_app.dependency_overrides = {}
+    admin_dependency_app.dependency_overrides = {}

@@ -20,6 +20,15 @@ interface UserDetail {
   payment_method_summary: string | null
   last_invoice_amount_cents: number | null
   last_invoice_date: string | null
+  activity_summary: {
+    total_tokens: number
+    tokens_in: number
+    tokens_out: number
+    messages_count: number
+    natal_charts_total: number
+    natal_charts_short: number
+    natal_charts_complete: number
+  }
   quotas: Array<{
     feature_code: string
     used: number
@@ -308,7 +317,7 @@ export function AdminUserDetailPage() {
       <header className="admin-page-header">
         <div className="header-left">
           <button className="back-button" onClick={() => navigate("/admin/users")}>
-            Retour
+            Retour à la liste
           </button>
           <h2>Fiche Utilisateur #{user.id}</h2>
         </div>
@@ -440,6 +449,40 @@ export function AdminUserDetailPage() {
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="detail-card">
+            <h3 className="card-title">Activité</h3>
+            <div className="info-list">
+              <div className="info-item">
+                <span className="info-label">Tokens totaux</span>
+                <span className="info-value">{user.activity_summary.total_tokens}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Tokens envoyés</span>
+                <span className="info-value">{user.activity_summary.tokens_in}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Tokens reçus</span>
+                <span className="info-value">{user.activity_summary.tokens_out}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Messages</span>
+                <span className="info-value">{user.activity_summary.messages_count}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Thèmes natals (total)</span>
+                <span className="info-value">{user.activity_summary.natal_charts_total}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Thèmes natals courts</span>
+                <span className="info-value">{user.activity_summary.natal_charts_short}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Thèmes natals complets</span>
+                <span className="info-value">{user.activity_summary.natal_charts_complete}</span>
               </div>
             </div>
           </section>

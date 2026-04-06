@@ -53,6 +53,16 @@ class AdminUserAuditEvent(BaseModel):
     created_at: datetime
 
 
+class AdminUserActivitySummary(BaseModel):
+    total_tokens: int
+    tokens_in: int
+    tokens_out: int
+    messages_count: int
+    natal_charts_total: int
+    natal_charts_short: int
+    natal_charts_complete: int
+
+
 class AdminUserDetail(BaseModel):
     id: int
     email: str
@@ -71,6 +81,7 @@ class AdminUserDetail(BaseModel):
     last_invoice_date: datetime | None
     
     # Related data summaries
+    activity_summary: AdminUserActivitySummary
     quotas: list[AdminUserQuota]
     recent_llm_logs: list[AdminUserLlmLog]
     recent_tickets: list[AdminUserSupportTicket]

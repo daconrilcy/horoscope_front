@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
@@ -19,6 +19,27 @@ from app.infra.db.session import get_db_session
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/admin/dashboard", tags=["admin-dashboard"])
+
+
+def _apply_user_plan_filter(stmt: Any, plan_filter: str | None) -> Any:
+    if not plan_filter:
+        return stmt
+
+    if plan_filter == "free":
+        return stmt.outerjoin(
+            StripeBillingProfileModel,
+            StripeBillingProfileModel.user_id == UserModel.id,
+        ).where(
+            or_(
+                StripeBillingProfileModel.user_id.is_(None),
+                StripeBillingProfileModel.entitlement_plan == "free",
+            )
+        )
+
+    return stmt.join(
+        StripeBillingProfileModel,
+        StripeBillingProfileModel.user_id == UserModel.id,
+    ).where(StripeBillingProfileModel.entitlement_plan == plan_filter)
 
 
 @router.get("/kpis-snapshot")
@@ -128,11 +149,10 @@ def get_kpis_flux(
 
     try:
         # 3. New registered users
-        new_users_stmt = select(func.count(UserModel.id)).where(UserModel.created_at >= start_date)
-        if plan_filter:
-            new_users_stmt = new_users_stmt.join(
-                StripeBillingProfileModel, StripeBillingProfileModel.user_id == UserModel.id
-            ).where(StripeBillingProfileModel.entitlement_plan == plan_filter)
+        new_users_stmt = select(func.count(func.distinct(UserModel.id))).where(
+            UserModel.created_at >= start_date
+        )
+        new_users_stmt = _apply_user_plan_filter(new_users_stmt, plan_filter)
         new_users_count = db.scalar(new_users_stmt) or 0
 
         # 4. Churn (canceled/unpaid profiles updated in the period)
@@ -175,15 +195,12 @@ def get_kpis_flux(
             date_func = func.strftime("%Y-W%W", UserModel.created_at)
 
         trend_stmt = (
-            select(date_func, func.count(UserModel.id))
+            select(date_func, func.count(func.distinct(UserModel.id)))
             .where(UserModel.created_at >= start_date)
             .group_by(date_func)
             .order_by(date_func)
         )
-        if plan_filter:
-            trend_stmt = trend_stmt.join(
-                StripeBillingProfileModel, StripeBillingProfileModel.user_id == UserModel.id
-            ).where(StripeBillingProfileModel.entitlement_plan == plan_filter)
+        trend_stmt = _apply_user_plan_filter(trend_stmt, plan_filter)
 
         trend_rows = db.execute(trend_stmt).all()
         trend_data = [{"date": str(row[0]), "new_users": row[1]} for row in trend_rows]

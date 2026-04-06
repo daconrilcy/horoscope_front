@@ -52,6 +52,7 @@ afin de comprendre son état exact et répondre efficacement à toute demande.
 - `backend/app/api/v1/routers/admin_users.py`
 - `backend/app/api/v1/schemas/admin_users.py`
 - `backend/app/main.py`
+- `backend/app/tests/integration/test_admin_actions_api.py`
 - `frontend/src/pages/admin/AdminUsersPage.tsx`
 - `frontend/src/pages/admin/AdminUsersPage.css`
 - `frontend/src/pages/admin/AdminUserDetailPage.tsx`
@@ -62,3 +63,6 @@ afin de comprendre son état exact et répondre efficacement à toute demande.
 ### Completion Notes List
 
 - **Fix (code review)** : La barre de progression des quotas (`quota-bar-fill`) utilisait un style inline `style={{ width: ... }}` pour la largeur dynamique — violation de la règle "aucun style inline". Corrigé via une CSS custom property `--quota-fill-width` définie sur l'élément (seule façon de passer une valeur dynamique calculée sans inline style pour une propriété non-standard) ; la règle CSS `.quota-bar-fill` lit `width: var(--quota-fill-width, 0%)`.
+- **Amélioration UX** : le bouton de retour de la fiche utilisateur renvoie désormais vers `/admin/users` au lieu du hub admin.
+- **Visibilité support** : la fiche utilisateur expose maintenant un bloc `Activité` avec les tokens totaux / envoyés / reçus, le nombre de messages et le volume de thèmes natals (total, short, complete).
+- **Correctif quota** : la section `Quotas` ne dépend plus uniquement des compteurs bruts. Elle privilégie la résolution canonique `plan + quota courant` utilisée par la facturation pour afficher des valeurs `consommé / autorisé` cohérentes dans les fiches utilisateurs.

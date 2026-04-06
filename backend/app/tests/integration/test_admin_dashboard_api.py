@@ -110,6 +110,50 @@ def test_get_kpis_flux_success(admin_token):
     assert data["new_users"] == 2
     assert len(data["trend_data"]) >= 1
 
+
+def test_get_kpis_flux_free_plan_includes_users_without_stripe_profile(admin_token):
+    with db_session_module.SessionLocal() as db:
+        free_user = UserModel(
+            email="free-user@test.com",
+            password_hash="x",
+            role="user",
+            created_at=datetime.now(UTC) - timedelta(days=2),
+        )
+        premium_user = UserModel(
+            email="premium-user@test.com",
+            password_hash="x",
+            role="user",
+            created_at=datetime.now(UTC) - timedelta(days=2),
+        )
+        premium_plan = BillingPlanModel(
+            code="premium",
+            display_name="Premium",
+            monthly_price_cents=1999,
+            daily_message_limit=100,
+        )
+        db.add_all([free_user, premium_user, premium_plan])
+        db.commit()
+
+        from app.infra.db.models.stripe_billing import StripeBillingProfileModel
+
+        db.add(
+            StripeBillingProfileModel(
+                user_id=premium_user.id,
+                entitlement_plan="premium",
+                subscription_status="active",
+            )
+        )
+        db.commit()
+
+    response = client.get("/v1/admin/dashboard/kpis-flux?period=30d&plan=free", headers={
+        "Authorization": f"Bearer {admin_token}"
+    })
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["new_users"] >= 1
+    assert any(point["new_users"] >= 1 for point in data["trend_data"])
+
 def test_get_kpis_billing_success(admin_token):
     with db_session_module.SessionLocal() as db:
         premium_plan = BillingPlanModel(code="premium", display_name="Premium", monthly_price_cents=1999, daily_message_limit=100)

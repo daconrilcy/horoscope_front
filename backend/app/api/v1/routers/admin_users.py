@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
-from sqlalchemy import func, or_, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
@@ -17,15 +17,23 @@ from app.api.v1.schemas.admin_users import (
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import UserSubscriptionModel
+from app.infra.db.models.chat_conversation import ChatConversationModel
+from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.product_entitlements import (
     FeatureUsageCounterModel,
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.support_incident import SupportIncidentModel
+from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
+from app.infra.db.models.user_natal_interpretation import (
+    InterpretationLevel,
+    UserNatalInterpretationModel,
+)
 from app.infra.db.session import get_db_session
 from app.integrations.stripe_client import get_stripe_client
 from app.services.audit_service import AuditEventCreatePayload, AuditService
+from app.services.billing_service import BillingService
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +46,46 @@ def _mask_id(raw_id: str | None) -> str | None:
     if len(raw_id) <= 11:
         return raw_id
     return f"{raw_id[:7]}...{raw_id[-4:]}"
+
+
+def _build_user_quotas(*, db: Session, user_id: int, plan_code: str) -> list[dict[str, object]]:
+    quotas_by_feature: dict[str, dict[str, object]] = {}
+
+    # Prefer the canonical quota resolution used by billing to expose the current
+    # limit/consumption pair shown to admins for the active plan.
+    if plan_code:
+        try:
+            current_quota = BillingService._resolve_current_quota(
+                db,
+                user_id=user_id,
+                plan_code=plan_code,
+            )
+        except Exception:
+            logger.warning("admin_user_detail_quota_resolution_failed user_id=%s", user_id)
+        else:
+            if current_quota is not None:
+                quotas_by_feature[current_quota.feature_code] = {
+                    "feature_code": current_quota.feature_code,
+                    "used": current_quota.consumed,
+                    "limit": current_quota.quota_limit,
+                    "period": f"{current_quota.period_value} {current_quota.period_unit}",
+                }
+
+    usage_counters = db.scalars(
+        select(FeatureUsageCounterModel).where(FeatureUsageCounterModel.user_id == user_id)
+    ).all()
+    for counter in usage_counters:
+        quotas_by_feature.setdefault(
+            counter.feature_code,
+            {
+                "feature_code": counter.feature_code,
+                "used": counter.used_count,
+                "limit": None,
+                "period": f"{counter.period_value} {counter.period_unit.value}",
+            },
+        )
+
+    return sorted(quotas_by_feature.values(), key=lambda item: str(item["feature_code"]))
 
 
 @router.get("", response_model=AdminUserSearchResponse)
@@ -114,22 +162,46 @@ def get_user_detail(
     profile = db.scalar(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
     )
+    plan_code = profile.entitlement_plan if profile else "free"
+    quotas_data = _build_user_quotas(db=db, user_id=user_id, plan_code=plan_code)
 
-    # Quotas logic (simplified for MVP)
-    usage_counters = db.scalars(
-        select(FeatureUsageCounterModel).where(FeatureUsageCounterModel.user_id == user_id)
-    ).all()
+    token_totals = db.execute(
+        select(
+            func.coalesce(func.sum(UserTokenUsageLogModel.tokens_total), 0),
+            func.coalesce(func.sum(UserTokenUsageLogModel.tokens_in), 0),
+            func.coalesce(func.sum(UserTokenUsageLogModel.tokens_out), 0),
+        ).where(UserTokenUsageLogModel.user_id == user_id)
+    ).one()
 
-    quotas_data = []
-    for c in usage_counters:
-        quotas_data.append(
-            {
-                "feature_code": c.feature_code,
-                "used": c.used_count,
-                "limit": None,
-                "period": f"{c.period_value} {c.period_unit.value}",
-            }
-        )
+    messages_count = db.scalar(
+        select(func.count(ChatMessageModel.id))
+        .join(ChatConversationModel, ChatConversationModel.id == ChatMessageModel.conversation_id)
+        .where(ChatConversationModel.user_id == user_id)
+    ) or 0
+
+    natal_counts = db.execute(
+        select(
+            func.count(UserNatalInterpretationModel.id),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (UserNatalInterpretationModel.level == InterpretationLevel.SHORT, 1),
+                        else_=0,
+                    )
+                ),
+                0,
+            ),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (UserNatalInterpretationModel.level == InterpretationLevel.COMPLETE, 1),
+                        else_=0,
+                    )
+                ),
+                0,
+            ),
+        ).where(UserNatalInterpretationModel.user_id == user_id)
+    ).one()
 
     # Alternative: Recent audit events (10)
     audit_events = db.scalars(
@@ -162,12 +234,21 @@ def get_user_detail(
             "is_active": True,
             "is_suspended": user.is_suspended,
             "is_locked": user.is_locked,
-            "plan_code": profile.entitlement_plan if profile else "free",
+            "plan_code": plan_code,
             "subscription_status": profile.subscription_status if profile else None,
             "stripe_customer_id_masked": _mask_id(profile.stripe_customer_id) if profile else None,
             "payment_method_summary": None,
             "last_invoice_amount_cents": None,
             "last_invoice_date": None,
+            "activity_summary": {
+                "total_tokens": int(token_totals[0] or 0),
+                "tokens_in": int(token_totals[1] or 0),
+                "tokens_out": int(token_totals[2] or 0),
+                "messages_count": int(messages_count),
+                "natal_charts_total": int(natal_counts[0] or 0),
+                "natal_charts_short": int(natal_counts[1] or 0),
+                "natal_charts_complete": int(natal_counts[2] or 0),
+            },
             "quotas": quotas_data,
             "recent_llm_logs": [],
             "recent_tickets": [

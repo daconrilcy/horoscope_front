@@ -7,6 +7,26 @@ export const API_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTi
   ? configuredTimeout
   : DEFAULT_TIMEOUT_MS
 
+function resolveApiInput(input: RequestInfo | URL): RequestInfo | URL {
+  if (typeof input === "string") {
+    if (input.startsWith("http://") || input.startsWith("https://")) {
+      return input
+    }
+    if (input.startsWith("/")) {
+      return `${API_BASE_URL}${input}`
+    }
+    return input
+  }
+
+  if (input instanceof URL) {
+    if (input.protocol === "http:" || input.protocol === "https:") {
+      return input
+    }
+  }
+
+  return input
+}
+
 export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
@@ -24,7 +44,7 @@ export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {})
   const controller = new AbortController()
   const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS)
   try {
-    const response = await fetch(input, {
+    const response = await fetch(resolveApiInput(input), {
       ...init,
       signal: controller.signal,
     })
