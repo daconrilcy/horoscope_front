@@ -250,7 +250,7 @@ def test_get_user_detail_includes_activity_summary(admin_token):
     }
 
 
-def test_get_user_detail_uses_canonical_current_quota(admin_token):
+def test_get_user_detail_lists_daily_weekly_and_monthly_quotas(admin_token):
     with db_session_module.SessionLocal() as db:
         user = UserModel(email="user-detail-quota@test.com", password_hash="x", role="user")
         db.add(user)
@@ -286,29 +286,79 @@ def test_get_user_detail_uses_canonical_current_quota(admin_token):
         db.add(binding)
         db.flush()
 
-        db.add(
-            PlanFeatureQuotaModel(
-                plan_feature_binding_id=binding.id,
-                quota_key="tokens",
-                quota_limit=1_500,
-                period_unit=PeriodUnit.MONTH,
-                period_value=1,
-                reset_mode=ResetMode.CALENDAR,
-            )
+        db.add_all(
+            [
+                PlanFeatureQuotaModel(
+                    plan_feature_binding_id=binding.id,
+                    quota_key="daily_tokens",
+                    quota_limit=150,
+                    period_unit=PeriodUnit.DAY,
+                    period_value=1,
+                    reset_mode=ResetMode.CALENDAR,
+                ),
+                PlanFeatureQuotaModel(
+                    plan_feature_binding_id=binding.id,
+                    quota_key="weekly_tokens",
+                    quota_limit=700,
+                    period_unit=PeriodUnit.WEEK,
+                    period_value=1,
+                    reset_mode=ResetMode.CALENDAR,
+                ),
+                PlanFeatureQuotaModel(
+                    plan_feature_binding_id=binding.id,
+                    quota_key="tokens",
+                    quota_limit=1_500,
+                    period_unit=PeriodUnit.MONTH,
+                    period_value=1,
+                    reset_mode=ResetMode.CALENDAR,
+                ),
+            ]
         )
 
-        db.add(
-            FeatureUsageCounterModel(
-                user_id=user.id,
-                feature_code="astrologer_chat",
-                quota_key="tokens",
-                period_unit=PeriodUnit.MONTH,
-                period_value=1,
-                reset_mode=ResetMode.CALENDAR,
-                window_start=current_period_start,
-                window_end=current_period_end,
-                used_count=725,
-            )
+        now = datetime.now(UTC)
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = (now - timedelta(days=now.weekday())).replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        db.add_all(
+            [
+                FeatureUsageCounterModel(
+                    user_id=user.id,
+                    feature_code="astrologer_chat",
+                    quota_key="daily_tokens",
+                    period_unit=PeriodUnit.DAY,
+                    period_value=1,
+                    reset_mode=ResetMode.CALENDAR,
+                    window_start=day_start,
+                    window_end=day_start + timedelta(days=1),
+                    used_count=25,
+                ),
+                FeatureUsageCounterModel(
+                    user_id=user.id,
+                    feature_code="astrologer_chat",
+                    quota_key="weekly_tokens",
+                    period_unit=PeriodUnit.WEEK,
+                    period_value=1,
+                    reset_mode=ResetMode.CALENDAR,
+                    window_start=week_start,
+                    window_end=week_start + timedelta(days=7),
+                    used_count=210,
+                ),
+                FeatureUsageCounterModel(
+                    user_id=user.id,
+                    feature_code="astrologer_chat",
+                    quota_key="tokens",
+                    period_unit=PeriodUnit.MONTH,
+                    period_value=1,
+                    reset_mode=ResetMode.CALENDAR,
+                    window_start=current_period_start,
+                    window_end=current_period_end,
+                    used_count=725,
+                ),
+            ]
         )
         db.commit()
         user_id = user.id
@@ -323,8 +373,20 @@ def test_get_user_detail_uses_canonical_current_quota(admin_token):
     assert quotas == [
         {
             "feature_code": "astrologer_chat",
+            "used": 25,
+            "limit": 150,
+            "period": "1 day",
+        },
+        {
+            "feature_code": "astrologer_chat",
+            "used": 210,
+            "limit": 700,
+            "period": "1 week",
+        },
+        {
+            "feature_code": "astrologer_chat",
             "used": 725,
             "limit": 1500,
             "period": "1 month",
-        }
+        },
     ]

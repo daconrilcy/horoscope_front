@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import asc, case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
@@ -20,7 +20,13 @@ from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.product_entitlements import (
+    AccessMode,
+    Audience,
+    FeatureCatalogModel,
     FeatureUsageCounterModel,
+    PlanCatalogModel,
+    PlanFeatureBindingModel,
+    PlanFeatureQuotaModel,
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.support_incident import SupportIncidentModel
@@ -34,6 +40,8 @@ from app.infra.db.session import get_db_session
 from app.integrations.stripe_client import get_stripe_client
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.billing_service import BillingService
+from app.services.entitlement_types import QuotaDefinition
+from app.services.quota_usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
 
@@ -49,34 +57,78 @@ def _mask_id(raw_id: str | None) -> str | None:
 
 
 def _build_user_quotas(*, db: Session, user_id: int, plan_code: str) -> list[dict[str, object]]:
-    quotas_by_feature: dict[str, dict[str, object]] = {}
+    quotas_by_key: dict[tuple[str, str], dict[str, object]] = {}
+    period_order = {"day": 0, "week": 1, "month": 2, "year": 3, "lifetime": 4}
 
-    # Prefer the canonical quota resolution used by billing to expose the current
-    # limit/consumption pair shown to admins for the active plan.
     if plan_code:
         try:
-            current_quota = BillingService._resolve_current_quota(
-                db,
-                user_id=user_id,
-                plan_code=plan_code,
+            plan = db.scalar(
+                select(PlanCatalogModel)
+                .where(
+                    PlanCatalogModel.plan_code == plan_code,
+                    PlanCatalogModel.audience == Audience.B2C,
+                    PlanCatalogModel.is_active.is_(True),
+                )
+                .limit(1)
+            )
+            feature = db.scalar(
+                select(FeatureCatalogModel)
+                .where(
+                    FeatureCatalogModel.feature_code == BillingService._BILLING_QUOTA_FEATURE,
+                    FeatureCatalogModel.is_active.is_(True),
+                )
+                .limit(1)
             )
         except Exception:
             logger.warning("admin_user_detail_quota_resolution_failed user_id=%s", user_id)
         else:
-            if current_quota is not None:
-                quotas_by_feature[current_quota.feature_code] = {
-                    "feature_code": current_quota.feature_code,
-                    "used": current_quota.consumed,
-                    "limit": current_quota.quota_limit,
-                    "period": f"{current_quota.period_value} {current_quota.period_unit}",
-                }
+            if plan is not None and feature is not None:
+                binding = db.scalar(
+                    select(PlanFeatureBindingModel)
+                    .where(
+                        PlanFeatureBindingModel.plan_id == plan.id,
+                        PlanFeatureBindingModel.feature_id == feature.id,
+                        PlanFeatureBindingModel.is_enabled.is_(True),
+                        PlanFeatureBindingModel.access_mode == AccessMode.QUOTA,
+                    )
+                    .limit(1)
+                )
+                if binding is not None:
+                    quota_rows = db.scalars(
+                        select(PlanFeatureQuotaModel)
+                        .where(PlanFeatureQuotaModel.plan_feature_binding_id == binding.id)
+                        .order_by(
+                            asc(PlanFeatureQuotaModel.period_value),
+                            asc(PlanFeatureQuotaModel.period_unit),
+                            asc(PlanFeatureQuotaModel.quota_key),
+                        )
+                    ).all()
+                    for quota_row in quota_rows:
+                        usage = QuotaUsageService.get_usage(
+                            db,
+                            user_id=user_id,
+                            feature_code=feature.feature_code,
+                            quota=QuotaDefinition(
+                                quota_key=quota_row.quota_key,
+                                quota_limit=quota_row.quota_limit,
+                                period_unit=quota_row.period_unit.value,
+                                period_value=quota_row.period_value,
+                                reset_mode=quota_row.reset_mode.value,
+                            ),
+                        )
+                        quotas_by_key[(usage.feature_code, usage.quota_key)] = {
+                            "feature_code": usage.feature_code,
+                            "used": usage.used,
+                            "limit": usage.quota_limit,
+                            "period": f"{usage.period_value} {usage.period_unit}",
+                        }
 
     usage_counters = db.scalars(
         select(FeatureUsageCounterModel).where(FeatureUsageCounterModel.user_id == user_id)
     ).all()
     for counter in usage_counters:
-        quotas_by_feature.setdefault(
-            counter.feature_code,
+        quotas_by_key.setdefault(
+            (counter.feature_code, counter.quota_key),
             {
                 "feature_code": counter.feature_code,
                 "used": counter.used_count,
@@ -85,7 +137,14 @@ def _build_user_quotas(*, db: Session, user_id: int, plan_code: str) -> list[dic
             },
         )
 
-    return sorted(quotas_by_feature.values(), key=lambda item: str(item["feature_code"]))
+    return sorted(
+        quotas_by_key.values(),
+        key=lambda item: (
+            str(item["feature_code"]),
+            period_order.get(str(item["period"]).split(" ", maxsplit=1)[-1], 99),
+            str(item["period"]),
+        ),
+    )
 
 
 @router.get("", response_model=AdminUserSearchResponse)

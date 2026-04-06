@@ -66,3 +66,4 @@ afin de comprendre son état exact et répondre efficacement à toute demande.
 - **Amélioration UX** : le bouton de retour de la fiche utilisateur renvoie désormais vers `/admin/users` au lieu du hub admin.
 - **Visibilité support** : la fiche utilisateur expose maintenant un bloc `Activité` avec les tokens totaux / envoyés / reçus, le nombre de messages et le volume de thèmes natals (total, short, complete).
 - **Correctif quota** : la section `Quotas` ne dépend plus uniquement des compteurs bruts. Elle privilégie la résolution canonique `plan + quota courant` utilisée par la facturation pour afficher des valeurs `consommé / autorisé` cohérentes dans les fiches utilisateurs.
+- **Complément quota** : la fiche admin affiche désormais l'ensemble des fenêtres de quota configurées pour le plan actif sur `astrologer_chat` (journalier, hebdomadaire, mensuel), et non plus uniquement le quota mensuel.
