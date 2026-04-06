@@ -1,0 +1,168 @@
+.personas-admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.personas-admin__header h2,
+.personas-admin__detail-title h3,
+.personas-admin__panel h4 {
+  margin: 0;
+}
+
+.personas-admin__intro,
+.personas-admin__detail-header p,
+.personas-admin__card-copy,
+.personas-admin-modal__copy {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+}
+
+.personas-admin .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.personas-admin .badge--status-active {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+.personas-admin .badge--status-deprecated {
+  background: color-mix(in srgb, var(--error) 16%, transparent);
+  color: var(--error);
+}
+
+.personas-admin .state-warning {
+  background: color-mix(in srgb, #f59e0b 14%, transparent);
+  border-color: #f59e0b;
+  color: var(--color-text-primary);
+}
+
+.personas-admin__layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.personas-admin__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.personas-admin__card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: var(--glass);
+  color: var(--color-text-primary);
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.personas-admin__card:hover,
+.personas-admin__card:focus-visible {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.personas-admin__card--active {
+  border-color: var(--color-primary);
+  background: var(--glass-2);
+}
+
+.personas-admin__card-topline,
+.personas-admin__detail-title,
+.personas-admin__detail-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.personas-admin__card-title {
+  font-weight: 700;
+}
+
+.personas-admin__card-meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.personas-admin__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.personas-admin__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.personas-admin__meta div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.personas-admin__meta dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.personas-admin__meta dd {
+  margin: 0;
+}
+
+.personas-admin__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.personas-admin__panel {
+  padding: var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.personas-admin__panel ul {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-5);
+}
+
+.personas-admin-modal {
+  max-width: 520px;
+}
+
+@media (max-width: 960px) {
+  .personas-admin__layout,
+  .personas-admin__meta,
+  .personas-admin__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .personas-admin__detail-header,
+  .personas-admin__detail-title {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

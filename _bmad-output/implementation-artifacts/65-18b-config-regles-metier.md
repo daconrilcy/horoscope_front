@@ -1,6 +1,6 @@
 # Story 65.18b : Config règles métier — templates éditoriaux et scoring/calibration
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -106,4 +106,25 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Vérification initiale du 2026-04-06: les templates éditoriaux et règles de calibration n'étaient pas exposés dans `/admin/content`.
+- Implémentation réalisée dans le même périmètre que la story 65-18:
+  - versionnage DB des templates éditoriaux via `EditorialTemplateVersionModel`
+  - endpoints admin pour liste, détail, publication de nouvelle version et rollback
+  - exposition des règles de calibration depuis le ruleset actif avec édition et audit
+  - sous-section `Règles métier` dans `AdminContentPage.tsx`
+- Vérifications exécutées:
+  - `.\.venv\Scripts\Activate.ps1; cd backend; pytest -q app/tests/integration/test_admin_content_api.py`
+  - `.\.venv\Scripts\Activate.ps1; cd backend; ruff check app/api/v1/routers/admin_content.py app/tests/integration/test_admin_content_api.py`
+  - `cd frontend; npm test -- src/tests/AdminContentPage.test.tsx`
+  - `cd frontend; npx tsc --noEmit`
+
 ### File List
+
+- backend/app/api/v1/routers/admin_content.py
+- backend/app/infra/db/models/editorial_template.py
+- backend/app/tests/integration/test_admin_content_api.py
+- backend/migrations/versions/fe2d4b3a1c01_add_admin_content_tables.py
+- frontend/src/api/adminContent.ts
+- frontend/src/pages/admin/AdminContentPage.tsx
+- frontend/src/pages/admin/AdminContentPage.css
+- frontend/src/tests/AdminContentPage.test.tsx

@@ -16,6 +16,7 @@ from app.api.dependencies.auth import (
     require_admin_user,
 )
 from app.core.request_id import resolve_request_id
+from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.llm_observability import LlmCallLogModel
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
@@ -24,6 +25,7 @@ from app.infra.db.models.llm_prompt import (
     LlmUseCaseConfigModel,
     PromptStatus,
 )
+from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.llm_orchestration.admin_models import (
     LlmOutputSchema,
@@ -73,6 +75,17 @@ class LlmPersonaListResponse(BaseModel):
 
 class LlmPersonaApiResponse(BaseModel):
     data: LlmPersona
+    meta: ResponseMeta
+
+
+class LlmPersonaDetail(BaseModel):
+    persona: LlmPersona
+    use_cases: list[str]
+    affected_users_count: int
+
+
+class LlmPersonaDetailResponse(BaseModel):
+    data: LlmPersonaDetail
     meta: ResponseMeta
 
 
@@ -273,6 +286,59 @@ def create_persona(
     return {"data": LlmPersona.model_validate(persona), "meta": {"request_id": request_id}}
 
 
+@router.get("/personas/{id}", response_model=LlmPersonaDetailResponse)
+def get_persona_detail(
+    id: uuid.UUID,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    del current_user
+    request_id = resolve_request_id(request)
+    persona = db.get(LlmPersonaModel, id)
+    if not persona:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="persona_not_found",
+            message=f"persona {id} not found",
+            details={},
+        )
+
+    use_case_models = db.scalars(select(LlmUseCaseConfigModel)).all()
+    use_cases = [
+        item.key for item in use_case_models if str(id) in (item.allowed_persona_ids or [])
+    ]
+    affected_users_count = int(
+        db.scalar(
+            select(func.count(func.distinct(UserModel.id)))
+            .select_from(UserModel)
+            .join(
+                UserSubscriptionModel,
+                UserSubscriptionModel.user_id == UserModel.id,
+                isouter=True,
+            )
+            .where(UserModel.default_astrologer_id == str(id))
+            .where(
+                sa.or_(
+                    UserSubscriptionModel.status.in_(["active", "trialing"]),
+                    UserSubscriptionModel.id.is_(None),
+                )
+            )
+        )
+        or 0
+    )
+
+    return {
+        "data": {
+            "persona": LlmPersona.model_validate(persona),
+            "use_cases": list(use_cases),
+            "affected_users_count": affected_users_count,
+        },
+        "meta": {"request_id": request_id},
+    }
+
+
 @router.patch("/personas/{id}", response_model=LlmPersonaApiResponse)
 def update_persona(
     id: uuid.UUID,
@@ -301,15 +367,19 @@ def update_persona(
     db.commit()
     db.refresh(persona)
 
+    action = "llm_persona_update"
+    if "enabled" in update_data:
+        action = "persona_activated" if persona.enabled else "persona_deactivated"
+
     _record_audit_event(
         db,
         request_id=request_id,
         actor=current_user,
-        action="llm_persona_update",
+        action=action,
         target_type="llm_persona",
         target_id=str(persona.id),
         status="success",
-        details=update_data,
+        details={"persona_id": str(persona.id), "persona_name": persona.name, **update_data},
     )
     db.commit()
 

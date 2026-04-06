@@ -1,6 +1,6 @@
 # Story 65.17 : Config personas — consultation et activation/désactivation
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -83,4 +83,24 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Vérification réalisée le 2026-04-06: la story n'était pas implémentée malgré la présence de l'onglet Personas dans `/admin/prompts`.
+- Réutilisation de la structure existante `AdminPromptsPage.tsx` avec remplacement de `PersonasAdmin.tsx` par un écran de gestion réel:
+  - liste des personas avec nom, statut, description et date de dernière modification
+  - détail avec contraintes, marqueurs de style, use cases associés et paramètres de format
+  - modale d'activation/désactivation avec avertissement si des utilisateurs actifs sont impactés
+- Côté backend, ajout du détail `GET /v1/admin/llm/personas/{id}` et enrichissement de l'audit sur activation/désactivation.
+- Vérifications exécutées:
+  - `.\.venv\Scripts\Activate.ps1; cd backend; pytest -q app/tests/integration/test_admin_persona_endpoints.py`
+  - `.\.venv\Scripts\Activate.ps1; cd backend; ruff check app/api/v1/routers/admin_llm.py app/tests/integration/test_admin_persona_endpoints.py`
+  - `cd frontend; npm test -- src/tests/PersonasAdmin.test.tsx src/tests/AdminPromptsPage.test.tsx`
+  - `cd frontend; npx tsc --noEmit`
+
 ### File List
+
+- backend/app/api/v1/routers/admin_llm.py
+- backend/app/tests/integration/test_admin_persona_endpoints.py
+- frontend/src/api/adminPrompts.ts
+- frontend/src/api/index.ts
+- frontend/src/pages/admin/PersonasAdmin.tsx
+- frontend/src/pages/admin/PersonasAdmin.css
+- frontend/src/tests/PersonasAdmin.test.tsx

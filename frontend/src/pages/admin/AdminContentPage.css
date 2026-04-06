@@ -1,0 +1,187 @@
+.admin-content-page,
+.admin-content-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.admin-content-page__intro,
+.admin-content-text-card__meta,
+.admin-content-template-card span,
+.admin-content-template-summary p,
+.admin-content-version-card p,
+.admin-content-modal__copy,
+.text-muted {
+  color: var(--color-text-secondary);
+}
+
+.admin-content-page .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.admin-content-page .badge--status-active {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+.admin-content-page .badge--status-deprecated {
+  background: color-mix(in srgb, var(--error) 16%, transparent);
+  color: var(--error);
+}
+
+.admin-content-page .badge--info {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+}
+
+.admin-content-section__header h3,
+.admin-content-template-summary h4,
+.admin-content-version-list h4 {
+  margin: 0;
+}
+
+.admin-content-text-list,
+.admin-content-version-list,
+.admin-content-template-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-content-text-card,
+.admin-content-template-card,
+.admin-content-version-card {
+  padding: var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-content-text-card__header,
+.admin-content-template-summary,
+.admin-content-version-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.admin-content-text-card__header > div,
+.admin-content-version-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.admin-content-text-card textarea,
+.admin-content-editor textarea,
+.admin-content-editor input,
+.admin-content-page input {
+  width: 100%;
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.14);
+  color: var(--color-text-primary);
+}
+
+.admin-content-text-card textarea,
+.admin-content-editor textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.admin-content-rules-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.admin-content-template-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+  color: var(--color-text-primary);
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.admin-content-template-card:hover,
+.admin-content-template-card:focus-visible {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.admin-content-template-card--active {
+  border-color: var(--color-primary);
+  background: var(--glass-2);
+}
+
+.admin-content-template-detail,
+.admin-content-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-content-template-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.admin-content-template-meta div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.admin-content-template-meta dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.admin-content-template-meta dd {
+  margin: 0;
+}
+
+.admin-content-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-content-editor__code {
+  min-height: 220px;
+  white-space: pre-wrap;
+}
+
+.admin-content-modal {
+  max-width: 520px;
+}
+
+@media (max-width: 960px) {
+  .admin-content-rules-layout,
+  .admin-content-template-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-content-text-card__header,
+  .admin-content-template-summary,
+  .admin-content-version-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

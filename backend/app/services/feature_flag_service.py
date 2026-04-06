@@ -74,6 +74,9 @@ class FeatureFlagService:
 
     _KNOWN_FLAGS: dict[str, str] = {
         "test_flag": "Drapeau de test pour l'infrastructure",
+        "paywall_experiment_copy": "Variante de wording paywall pour experimentation produit",
+        "natal_premium_teaser": "Teaser premium sur la page theme astral complet",
+        "llm_replay_enabled": "Autorise le rejeu manuel des appels LLM depuis l'admin",
     }
     _ALLOWED_ROLES = {"user", "support", "ops", "enterprise_admin", "admin"}
 

@@ -17,6 +17,7 @@ from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.health import router as health_router
 from app.api.v1.routers.admin_ai import router as admin_ai_router
 from app.api.v1.routers.admin_audit import router as admin_audit_router
+from app.api.v1.routers.admin_content import router as admin_content_router
 from app.api.v1.routers.admin_dashboard import router as admin_dashboard_router
 from app.api.v1.routers.admin_entitlements import router as admin_entitlements_router
 from app.api.v1.routers.admin_exports import router as admin_exports_router
@@ -639,6 +640,7 @@ app.include_router(admin_users_router)
 app.include_router(admin_support_router)
 app.include_router(admin_pdf_templates_router)
 app.include_router(admin_audit_router)
+app.include_router(admin_content_router)
 app.include_router(astrologers_router)
 app.include_router(ephemeris_router)
 app.include_router(auth_router)

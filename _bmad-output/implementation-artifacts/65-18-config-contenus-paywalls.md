@@ -1,6 +1,6 @@
 # Story 65.18 : Config contenus & paywalls — textes et feature flags
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -106,4 +106,40 @@ claude-sonnet-4-6
 
 ## Senior Developer Review (AI)
 
-- Constat du 2026-04-06 : la story est correctement laissée `ready-for-dev`. `frontend/src/pages/admin/AdminContentPage.tsx` est encore un placeholder et aucun modèle/router admin de contenu (`ConfigTextModel`, `admin_content.py`) n'est présent côté backend. L'epic ne doit pas présenter cette story comme livrée tant que ces éléments n'existent pas.
+- Revue mise à jour le 2026-04-06: la story a été réellement implémentée.
+- Le placeholder `AdminContentPage.tsx` a été remplacé par une page admin exploitable avec les sections attendues:
+  - `Textes paywalls`
+  - `Messages transactionnels`
+  - `Feature flags`
+- Le backend introduit `ConfigTextModel`, la migration DB associée et le router `admin_content.py` avec audit `content_text_updated` et `feature_flag_toggled`.
+- La section feature flags réutilise l'infrastructure existante et l'a rendue exploitable côté admin avec plusieurs flags seedés.
+
+### Completion Notes List
+
+- Vérification initiale du 2026-04-06: la story était réellement non implémentée.
+- Implémentation réalisée:
+  - création de `ConfigTextModel` et migration Alembic
+  - création du router `backend/app/api/v1/routers/admin_content.py`
+  - ajout du client front `frontend/src/api/adminContent.ts`
+  - implémentation de `frontend/src/pages/admin/AdminContentPage.tsx` et `.css`
+- Vérifications exécutées:
+  - `.\.venv\Scripts\Activate.ps1; cd backend; pytest -q app/tests/integration/test_admin_content_api.py`
+  - `.\.venv\Scripts\Activate.ps1; cd backend; ruff check app/api/v1/routers/admin_content.py app/services/feature_flag_service.py app/tests/integration/test_admin_content_api.py`
+  - `cd frontend; npm test -- src/tests/AdminContentPage.test.tsx`
+  - `cd frontend; npx tsc --noEmit`
+
+### File List
+
+- backend/app/api/v1/routers/admin_content.py
+- backend/app/infra/db/models/config_text.py
+- backend/app/infra/db/models/editorial_template.py
+- backend/app/infra/db/models/__init__.py
+- backend/app/main.py
+- backend/app/services/feature_flag_service.py
+- backend/app/tests/integration/test_admin_content_api.py
+- backend/migrations/versions/fe2d4b3a1c01_add_admin_content_tables.py
+- frontend/src/api/adminContent.ts
+- frontend/src/api/index.ts
+- frontend/src/pages/admin/AdminContentPage.tsx
+- frontend/src/pages/admin/AdminContentPage.css
+- frontend/src/tests/AdminContentPage.test.tsx

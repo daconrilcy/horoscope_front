@@ -19,6 +19,22 @@ export type AdminLlmPersona = {
   id: string
   name: string
   enabled: boolean
+  description: string | null
+  tone: string
+  verbosity: string
+  style_markers: string[]
+  boundaries: string[]
+  allowed_topics: string[]
+  disallowed_topics: string[]
+  formatting: Record<string, boolean>
+  created_at: string
+  updated_at: string
+}
+
+export type AdminLlmPersonaDetail = {
+  persona: AdminLlmPersona
+  use_cases: string[]
+  affected_users_count: number
 }
 
 export type AdminLlmUseCase = {
@@ -125,6 +141,36 @@ export async function listPromptHistory(useCaseKey: string): Promise<AdminPrompt
   }
 }
 
+export async function getAdminPersonaDetail(personaId: string): Promise<AdminLlmPersonaDetail> {
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/personas/${personaId}`, {
+      headers: getAccessTokenAuthHeader(),
+    })
+    return decodeResponse<AdminLlmPersonaDetail>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function updateAdminPersona(
+  personaId: string,
+  payload: Partial<Pick<AdminLlmPersona, "enabled">>,
+): Promise<AdminLlmPersona> {
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/personas/${personaId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAccessTokenAuthHeader(),
+      },
+      body: JSON.stringify(payload),
+    })
+    return decodeResponse<AdminLlmPersona>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
 export async function rollbackPromptVersion(params: {
   useCaseKey: string
   targetVersionId: string
@@ -166,8 +212,23 @@ export function useAdminPromptHistory(useCaseKey: string, enabled = true) {
   })
 }
 
+export function useAdminPersonaDetail(personaId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ["admin-llm-persona-detail", personaId],
+    queryFn: () => getAdminPersonaDetail(personaId ?? ""),
+    enabled: enabled && Boolean(personaId),
+  })
+}
+
 export function useRollbackPromptVersion() {
   return useMutation({
     mutationFn: rollbackPromptVersion,
+  })
+}
+
+export function useUpdateAdminPersona() {
+  return useMutation({
+    mutationFn: ({ personaId, payload }: { personaId: string; payload: Partial<Pick<AdminLlmPersona, "enabled">> }) =>
+      updateAdminPersona(personaId, payload),
   })
 }

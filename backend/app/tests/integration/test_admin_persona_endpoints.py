@@ -1,7 +1,9 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
+from app.infra.db.models.audit_event import AuditEventModel
+from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmUseCaseConfigModel
 from app.infra.db.models.user import UserModel
@@ -105,3 +107,84 @@ def test_admin_persona_rbac() -> None:
     )
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "insufficient_role"
+
+
+def test_admin_persona_detail_and_deactivation_audit() -> None:
+    _cleanup_tables()
+    admin_token = _register_admin_and_token()
+    headers = {"Authorization": f"Bearer {admin_token}", "X-Request-Id": "rid-persona-detail-1"}
+
+    create_resp = client.post(
+        "/v1/admin/llm/personas",
+        headers=headers,
+        json={
+            "name": "Luna",
+            "description": "Bienveillante",
+            "tone": "warm",
+            "verbosity": "medium",
+            "style_markers": ["tutoiement"],
+            "boundaries": ["pas de fatalisme"],
+            "formatting": {"sections": True, "bullets": False, "emojis": False},
+        },
+    )
+    persona_id = create_resp.json()["data"]["id"]
+
+    with SessionLocal() as db:
+        db.add(
+            BillingPlanModel(
+                code="premium",
+                display_name="Premium",
+                monthly_price_cents=1990,
+                currency="EUR",
+                daily_message_limit=50,
+            )
+        )
+        db.flush()
+        db.add(
+            LlmUseCaseConfigModel(
+                key="chat",
+                display_name="Chat",
+                description="Conversation astrologique",
+                allowed_persona_ids=[persona_id],
+            )
+        )
+        user = UserModel(
+            email="persona-user@example.com",
+            password_hash="x",
+            role="user",
+            default_astrologer_id=persona_id,
+        )
+        db.add(user)
+        db.flush()
+        plan = db.scalar(
+            select(BillingPlanModel).where(BillingPlanModel.code == "premium").limit(1)
+        )
+        assert plan is not None
+        db.add(UserSubscriptionModel(user_id=user.id, plan_id=plan.id, status="active"))
+        db.commit()
+
+    detail_resp = client.get(f"/v1/admin/llm/personas/{persona_id}", headers=headers)
+    assert detail_resp.status_code == 200
+    payload = detail_resp.json()["data"]
+    assert payload["persona"]["name"] == "Luna"
+    assert payload["use_cases"] == ["chat"]
+    assert payload["affected_users_count"] == 1
+
+    deactivate_resp = client.patch(
+        f"/v1/admin/llm/personas/{persona_id}",
+        headers=headers,
+        json={"enabled": False},
+    )
+    assert deactivate_resp.status_code == 200
+    assert deactivate_resp.json()["data"]["enabled"] is False
+
+    with SessionLocal() as db:
+        event = db.scalar(
+            select(AuditEventModel)
+            .where(AuditEventModel.request_id == "rid-persona-detail-1")
+            .where(AuditEventModel.action == "persona_deactivated")
+            .order_by(AuditEventModel.id.desc())
+            .limit(1)
+        )
+        assert event is not None
+        assert event.details["persona_name"] == "Luna"
