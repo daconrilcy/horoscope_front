@@ -1,9 +1,30 @@
-"""
-Adapter for integrating the AI Engine into existing services.
+# CANONICAL LLM APPLICATION LAYER (nom legacy conservé post-epic-66 — renommage prévu)
+# Rôle : construire LLMExecutionRequest, appeler gateway.execute_request(), mapper les erreurs.
+# Renommage futur : LLMApplicationLayer ou équivalent — story dédiée à créer.
 
-This module provides a simplified interface for Chat and Guidance services
-to interact with the new AI Engine while maintaining compatibility with
-existing error handling patterns.
+"""
+CANONICAL LLM APPLICATION LAYER
+
+Ce module constitue le point d'entrée unique pour les services métier (Chat, Guidance, 
+et prochainement Natal) souhaitant exécuter un appel LLM orchestré.
+
+RESPONSABILITÉS :
+1. Construire le contrat canonique LLMExecutionRequest à partir des entrées métier.
+2. Appeler le LLMGateway via sa méthode execute_request().
+3. Mapper les exceptions de plateforme (GatewayError, UpstreamError) en exceptions 
+   applicatives (AIEngineAdapterError) avec les codes HTTP appropriés.
+
+NON-RÔLES :
+- Ce module ne contient aucune logique d'orchestration (résolution de config, prompts).
+- Ce module ne contient aucune logique de validation de schéma de sortie LLM.
+- Ce module n'interagit pas directement avec les providers (OpenAI, etc.).
+
+PATTERN POUR NOUVEAU USE CASE :
+Créer une méthode generate_xxx() qui :
+- Prend en entrée des types métier forts (modèles Pydantic ou types natifs clairs).
+- Construit une LLMExecutionRequest.
+- Appelle self.gateway.execute_request(request, db).
+- Gère le mapping d'erreurs via _handle_gateway_error.
 """
 
 from __future__ import annotations
@@ -36,6 +57,13 @@ from app.ai_engine.exceptions import (
     ValidationError as AIEngineValidationError,
 )
 from app.core.config import settings
+from app.llm_orchestration.models import (
+    ExecutionContext,
+    ExecutionFlags,
+    ExecutionMessage,
+    ExecutionUserInput,
+    LLMExecutionRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,29 +85,31 @@ def _looks_like_unclear_opening_message(message: str) -> bool:
     return False
 
 
-def _build_guidance_gateway_payload(
+def _build_guidance_request(
     use_case: str,
     context: dict[str, str | None],
     locale: str,
-) -> tuple[dict[str, str], dict[str, str | None]]:
-    """Normalize guidance inputs for Gateway V2 contracts."""
+    user_id: int,
+    request_id: str,
+    trace_id: str,
+) -> LLMExecutionRequest:
+    """
+    Builds a canonical LLMExecutionRequest for guidance use cases.
+    (Story 66.3 AC4)
+    """
     normalized_context = dict(context)
-    user_input: dict[str, str] = {
-        "use_case": use_case,
-        "locale": locale,
-    }
-
+    
     situation = (normalized_context.get("situation") or "").strip()
     objective = (normalized_context.get("objective") or "").strip()
     time_horizon = (normalized_context.get("time_horizon") or "").strip()
 
+    # 1. Situation default logic (Legacy preservation)
     if use_case == "guidance_daily" and not situation:
         situation = "Lecture astrologique quotidienne basee sur le profil natal du jour."
-        normalized_context["situation"] = situation
     elif use_case == "guidance_weekly" and not situation:
         situation = "Lecture astrologique hebdomadaire basee sur le profil natal de la semaine."
-        normalized_context["situation"] = situation
 
+    # 2. Question logic (Legacy preservation)
     if use_case == "guidance_contextual":
         if objective and time_horizon:
             question = f"{objective} Horizon: {time_horizon}."
@@ -92,11 +122,39 @@ def _build_guidance_gateway_payload(
     else:
         question = "Quelle guidance astrologique ressort pour aujourd hui ?"
 
-    user_input["question"] = question
-    if situation:
-        user_input["situation"] = situation
+    # 3. ExecutionUserInput
+    user_input = ExecutionUserInput(
+        use_case=use_case,
+        locale=locale,
+        question=question,
+        situation=situation if situation else None,
+    )
 
-    return user_input, normalized_context
+    # 4. ExecutionContext
+    # Story 66.3 AC4: time_horizon and objective in extra_context
+    extra_context = {
+        "objective": objective,
+        "time_horizon": time_horizon,
+        "context_lines": normalized_context.get("context_lines"),
+    }
+    # Clean None values from extra_context
+    extra_context = {k: v for k, v in extra_context.items() if v is not None}
+
+    # Add other context fields
+    exec_context = ExecutionContext(
+        natal_data=normalized_context.get("natal_data"),
+        chart_json=normalized_context.get("chart_json"),
+        astro_context=normalized_context.get("astro_context"),
+        extra_context=extra_context
+    )
+
+    return LLMExecutionRequest(
+        user_input=user_input,
+        context=exec_context,
+        user_id=user_id,
+        request_id=request_id,
+        trace_id=trace_id
+    )
 
 
 def _is_non_production_env() -> bool:
@@ -252,7 +310,7 @@ def _handle_gateway_error(
         raise AIEngineAdapterError(
             code="prompt_render_error",
             message=f"failed to render prompt for {use_case}",
-            status_code=500,
+            status_code=400,
             details=err.details,
         ) from err
     if isinstance(err, UnknownUseCaseError):
@@ -272,15 +330,15 @@ def _handle_gateway_error(
     if isinstance(err, InputValidationError):
         raise AIEngineAdapterError(
             code=f"invalid_{use_case}_input",
-            message=str(err),
-            status_code=422,
+            message="Input validation failed",
+            status_code=400,
             details=err.details,
         ) from err
     if isinstance(err, OutputValidationError):
         raise AIEngineAdapterError(
             code=f"invalid_{use_case}_output",
-            message=str(err),
-            status_code=502,
+            message="Output validation failed",
+            status_code=422,
             details=err.details,
         ) from err
 
@@ -440,23 +498,7 @@ class AIEngineAdapter:
     ) -> Any:  # Returns GatewayResult
         """
         Generate a chat reply via the AI Engine.
-
-        Args:
-            messages: List of messages in {"role": "...", "content": "..."} format.
-            context: Additional context (natal_chart_summary, memory, etc.).
-            user_id: User identifier.
-            request_id: Request identifier for logging.
-            trace_id: Trace identifier for distributed tracing.
-            locale: Locale for the response (default: "fr-FR").
-            db: Database session for orchestration v2.
-
-        Returns:
-            GatewayResult from the LLMGateway.
-
-        Raises:
-            AIEngineAdapterError: On generation error.
-            TimeoutError: If the provider exceeds the timeout.
-            ConnectionError: If the provider is unavailable.
+        (Story 66.3: Refactored to LLMExecutionRequest)
         """
         if _test_chat_generator is not None:
             # For testing, we mock a result object if the generator returns a string
@@ -479,7 +521,7 @@ class AIEngineAdapter:
                         " ".join([m["content"] for m in messages])
                     ),
                     output_tokens=AIEngineAdapter.estimate_tokens(raw_text),
-                    total_tokens=0,  # total will be calculated later or we can set it
+                    total_tokens=0,
                 ),
                 meta=GatewayMeta(latency_ms=0, model="test-model"),
             )
@@ -496,43 +538,62 @@ class AIEngineAdapter:
             from app.llm_orchestration.gateway import LLMGateway
 
             gateway = LLMGateway()
-            # For chat, we use the 'chat_astrologer' use case from DB
-            # user_input: includes 'message' (for schema) and 'last_user_msg' (for prompt)
+            
+            # 1. Prepare User Input
             last_user_msg = ""
             for msg in reversed(messages):
                 if msg.get("role") == "user":
                     last_user_msg = msg.get("content", "")
                     break
 
-            gateway_user_input = {
-                "message": last_user_msg,
-                "last_user_msg": last_user_msg,
-                "use_case": "chat_astrologer",
-                "locale": locale,
-            }
-            conversation_id = context.get("conversation_id")
-            if conversation_id is not None:
-                gateway_user_input["conversation_id"] = str(conversation_id)
+            user_input = ExecutionUserInput(
+                use_case="chat_astrologer",
+                locale=locale,
+                message=last_user_msg,
+                conversation_id=str(context.get("conversation_id")) 
+                if context.get("conversation_id") else None,
+            )
 
-            gateway_context = {
-                **context,
-                "history": messages[:-1],  # Exclude the last message sent as user_input
-            }
+            # 2. Prepare Context
+            history = [
+                ExecutionMessage(role=m["role"], content=m["content"]) 
+                for m in messages[:-1]
+            ]
+            
+            extra_context = {**context}
+            # Remove keys already handled in request or not relevant for extra_context
+            for key in ["conversation_id", "history", "chat_turn_stage"]:
+                extra_context.pop(key, None)
+
+            # Story 66.3 AC2: chat_turn_stage handled via extra_context or flags
             if context.get("chat_turn_stage") == "opening":
-                gateway_context["user_data_block"] = _build_opening_chat_user_data_block(
+                extra_context["user_data_block"] = _build_opening_chat_user_data_block(
                     last_user_msg=last_user_msg,
                     context=context,
                 )
+                # We could also use flags here if we had a dedicated flag for 'opening'
+                # but for now we follow the instruction to use extra_context["chat_turn_stage"]
+                extra_context["chat_turn_stage"] = "opening"
 
-            result = await gateway.execute(
-                use_case="chat_astrologer",
-                user_input=gateway_user_input,
-                context=gateway_context,
-                request_id=request_id,
-                trace_id=trace_id,
-                user_id=user_id,
-                db=db,
+            exec_context = ExecutionContext(
+                history=history,
+                natal_data=context.get("natal_data"),
+                chart_json=context.get("chart_json"),
+                astro_context=context.get("astro_context"),
+                extra_context=extra_context
             )
+
+            # 3. Build Request
+            request = LLMExecutionRequest(
+                user_input=user_input,
+                context=exec_context,
+                user_id=user_id,
+                request_id=request_id,
+                trace_id=trace_id
+            )
+
+            # 4. Execute
+            result = await gateway.execute_request(request=request, db=db)
 
             # Fallback estimation if usage is zero but output exists
             if result.usage.output_tokens == 0 and result.raw_output:
@@ -637,20 +698,15 @@ class AIEngineAdapter:
             from app.llm_orchestration.gateway import LLMGateway
 
             gateway = LLMGateway()
-            gateway_user_input, gateway_context = _build_guidance_gateway_payload(
-                use_case,
-                context,
-                locale,
-            )
-            result = await gateway.execute(
+            request = _build_guidance_request(
                 use_case=use_case,
-                user_input=gateway_user_input,
-                context=gateway_context,
-                request_id=request_id,
-                trace_id=trace_id,
+                context=context,
+                locale=locale,
                 user_id=user_id,
-                db=db,
+                request_id=request_id,
+                trace_id=trace_id
             )
+            result = await gateway.execute_request(request=request, db=db)
             return result
         except Exception as err:
             if _can_use_test_fallback(err):

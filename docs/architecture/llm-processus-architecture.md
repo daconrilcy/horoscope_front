@@ -38,6 +38,22 @@ La méthode `LLMGateway.execute()` est conservée comme **wrapper legacy**. Elle
 
 Toute nouvelle logique de plateforme doit être implémentée exclusivement dans `execute_request()`.
 
+## Couche Applicative LLM (`AIEngineAdapter`)
+
+Bien que conservant son nom legacy `AIEngineAdapter` (décision Option A, Epic 66), ce module fait office de **couche applicative canonique** pour les appels LLM.
+
+### Rôle et Responsabilités
+- **Construction du contrat** : transformer les entrées métier typées (historique de chat, paramètres de guidance) en une `LLMExecutionRequest`.
+- **Exécution orchestrée** : appeler `LLMGateway.execute_request()`.
+- **Mapping d'erreurs** : traduire les exceptions techniques de la plateforme en erreurs applicatives avec les codes HTTP corrects.
+
+### Pattern pour nouveau Use Case
+Pour ajouter un nouveau parcours LLM (ex: Story 66.7 Natal) :
+1. Créer une méthode `generate_xxx()` dans `AIEngineAdapter`.
+2. Construire la `LLMExecutionRequest` (input, context, flags).
+3. Appeler `gateway.execute_request(request, db)`.
+4. Mapper les erreurs via `_handle_gateway_error()`.
+
 ## Vue d'ensemble
 
 ```mermaid
