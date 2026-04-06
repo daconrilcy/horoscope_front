@@ -24,7 +24,7 @@ interface FailedCall {
   id: string
   timestamp: string
   error_code: string
-  user_id_masked: string | null
+  request_id_masked: string | null
 }
 
 interface UseCaseDetail {
@@ -155,7 +155,7 @@ export function AdminAiGenerationsPage() {
                     {detailData.recent_failed_calls.map(f => (
                       <tr key={f.id}>
                         <td>{new Date(f.timestamp).toLocaleString()}</td>
-                        <td><code>{f.user_id_masked}</code></td>
+                        <td><code>{f.request_id_masked}</code></td>
                         <td><span className="badge badge--error">{f.error_code}</span></td>
                       </tr>
                     ))}

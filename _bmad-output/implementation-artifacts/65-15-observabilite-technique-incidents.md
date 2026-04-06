@@ -59,6 +59,7 @@ afin de diagnostiquer et rejouer les cas problématiques sans accès direct aux 
 ### Completion Notes List
 
 - Revue AI du 2026-04-06 : correction des alertes quotas pour lire le vrai plan et la vraie limite depuis la matrice d'entitlements, ajout des filtres LLM côté frontend, et remplacement du faux bouton replay par une modale de confirmation fonctionnelle.
+- Revue Epic 65 du 2026-04-06 : libellés UI alignés sur les AC ("Erreurs applicatives", "Événements Stripe") et audit de replay normalisé sur `llm_call_replayed`.
 
 ## Senior Developer Review (AI)
 

@@ -363,7 +363,7 @@ export function AdminLogsPage() {
             className={`tab-button ${activeTab === "audit" ? "tab-button--active" : ""}`}
             onClick={() => setActiveTab("audit")}
           >
-            Journal d&apos;audit
+            Erreurs applicatives
           </button>
           <button
             className={`tab-button ${activeTab === "llm" ? "tab-button--active" : ""}`}
@@ -375,7 +375,7 @@ export function AdminLogsPage() {
             className={`tab-button ${activeTab === "stripe" ? "tab-button--active" : ""}`}
             onClick={() => setActiveTab("stripe")}
           >
-            Events Stripe
+            Événements Stripe
           </button>
         </div>
       </header>

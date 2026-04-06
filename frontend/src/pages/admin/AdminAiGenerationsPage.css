@@ -5,11 +5,11 @@
 }
 
 .row--alert {
-  background-color: rgba(255, 0, 0, 0.05) !important;
+  background-color: color-mix(in srgb, var(--danger) 10%, transparent) !important;
 }
 
 .text-danger {
-  color: var(--error);
+  color: var(--danger);
   font-weight: 700;
 }
 

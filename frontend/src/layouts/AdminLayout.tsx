@@ -51,7 +51,6 @@ export function AdminLayout({
               className={({ isActive }) => 
                 `admin-sidebar-link ${isActive ? "admin-sidebar-link--active" : ""}`
               }
-              aria-current={location.pathname === section.path ? "page" : undefined}
             >
               <section.Icon className="admin-sidebar-icon" />
               <span className="admin-sidebar-label">{section.label}</span>

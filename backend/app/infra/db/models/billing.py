@@ -44,6 +44,9 @@ class UserSubscriptionModel(Base):
     plan_id: Mapped[int] = mapped_column(ForeignKey("billing_plans.id"), index=True)
     status: Mapped[str] = mapped_column(String(16), index=True)
     failure_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    commercial_gestures: Mapped[dict[str, object]] = mapped_column(
+        JSON, default=list, nullable=False
+    )
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
@@ -70,7 +73,9 @@ class PaymentAttemptModel(Base):
     idempotency_key: Mapped[str] = mapped_column(String(128), index=True)
     status: Mapped[str] = mapped_column(String(16), index=True)
     failure_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    commercial_gestures: Mapped[dict[str, object]] = mapped_column(JSON, default=list, nullable=False)
+    commercial_gestures: Mapped[dict[str, object]] = mapped_column(
+        JSON, default=list, nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
@@ -116,7 +121,9 @@ class SubscriptionPlanChangeModel(Base):
     idempotency_key: Mapped[str] = mapped_column(String(128), index=True)
     status: Mapped[str] = mapped_column(String(16), index=True)
     failure_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    commercial_gestures: Mapped[dict[str, object]] = mapped_column(JSON, default=list, nullable=False)
+    commercial_gestures: Mapped[dict[str, object]] = mapped_column(
+        JSON, default=list, nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

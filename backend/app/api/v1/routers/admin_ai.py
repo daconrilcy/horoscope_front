@@ -12,9 +12,7 @@ from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.schemas.admin_ai import (
     AdminAiMetricsResponse,
     AdminAiUseCaseDetailResponse,
-    AdminAiUseCaseMetrics,
 )
-from app.core.request_id import resolve_request_id
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.session import get_db_session
 
@@ -56,19 +54,21 @@ def get_ai_metrics(
     )
 
     results = db.execute(stmt).all()
-    
+
     metrics = []
     for r in results:
         error_rate = (r.error_count / r.call_count) if r.call_count > 0 else 0
-        metrics.append({
-            "use_case": r.use_case,
-            "call_count": r.call_count,
-            "total_tokens": int(r.total_tokens or 0),
-            "estimated_cost_usd": float(r.total_cost or 0),
-            "avg_latency_ms": int(r.avg_latency or 0),
-            "error_rate": float(error_rate),
-            "retry_rate": 0,
-        })
+        metrics.append(
+            {
+                "use_case": r.use_case,
+                "call_count": r.call_count,
+                "total_tokens": int(r.total_tokens or 0),
+                "estimated_cost_usd": float(r.total_cost or 0),
+                "avg_latency_ms": int(r.avg_latency or 0),
+                "error_rate": float(error_rate),
+                "retry_rate": 0,
+            }
+        )
 
     return {"data": metrics, "period": period}
 
@@ -92,16 +92,13 @@ def get_use_case_detail(
     error_case = case((LlmCallLogModel.validation_status == LlmValidationStatus.ERROR, 1), else_=0)
 
     # 1. Summary
-    summary_stmt = (
-        select(
-            func.count(LlmCallLogModel.id).label("call_count"),
-            func.sum(LlmCallLogModel.tokens_in + LlmCallLogModel.tokens_out).label("total_tokens"),
-            func.sum(LlmCallLogModel.cost_usd_estimated).label("total_cost"),
-            func.avg(LlmCallLogModel.latency_ms).label("avg_latency"),
-            func.sum(error_case).label("error_count"),
-        )
-        .where(LlmCallLogModel.use_case == use_case, LlmCallLogModel.timestamp >= start_date)
-    )
+    summary_stmt = select(
+        func.count(LlmCallLogModel.id).label("call_count"),
+        func.sum(LlmCallLogModel.tokens_in + LlmCallLogModel.tokens_out).label("total_tokens"),
+        func.sum(LlmCallLogModel.cost_usd_estimated).label("total_cost"),
+        func.avg(LlmCallLogModel.latency_ms).label("avg_latency"),
+        func.sum(error_case).label("error_count"),
+    ).where(LlmCallLogModel.use_case == use_case, LlmCallLogModel.timestamp >= start_date)
     s = db.execute(summary_stmt).first()
     if not s or s.call_count == 0:
         raise HTTPException(status_code=404, detail="No data for this use case")
@@ -119,26 +116,23 @@ def get_use_case_detail(
     # 2. Trend Data
     date_func = func.date(LlmCallLogModel.timestamp)
     trend_stmt = (
-        select(
-            date_func,
-            func.count(LlmCallLogModel.id),
-            func.sum(error_case)
-        )
+        select(date_func, func.count(LlmCallLogModel.id), func.sum(error_case))
         .where(LlmCallLogModel.use_case == use_case, LlmCallLogModel.timestamp >= start_date)
         .group_by(date_func)
         .order_by(date_func)
     )
     trend_rows = db.execute(trend_stmt).all()
     trend_data = [
-        {"date": str(r[0]), "call_count": r[1], "error_count": int(r[2] or 0)} 
-        for r in trend_rows
+        {"date": str(r[0]), "call_count": r[1], "error_count": int(r[2] or 0)} for r in trend_rows
     ]
 
     # 3. Failed calls
     failed_stmt = (
         select(LlmCallLogModel)
-        .where(LlmCallLogModel.use_case == use_case, 
-               LlmCallLogModel.validation_status == LlmValidationStatus.ERROR)
+        .where(
+            LlmCallLogModel.use_case == use_case,
+            LlmCallLogModel.validation_status == LlmValidationStatus.ERROR,
+        )
         .order_by(LlmCallLogModel.timestamp.desc())
         .limit(10)
     )
@@ -148,7 +142,7 @@ def get_use_case_detail(
             "id": str(f.id),
             "timestamp": f.timestamp,
             "error_code": "GENERIC_ERROR",
-            "user_id_masked": f.request_id[:8] + "..."
+            "request_id_masked": f.request_id[:8] + "...",
         }
         for f in failed_rows
     ]
@@ -157,5 +151,5 @@ def get_use_case_detail(
         "use_case": use_case,
         "metrics": metrics,
         "trend_data": trend_data,
-        "recent_failed_calls": recent_failed_calls
+        "recent_failed_calls": recent_failed_calls,
     }

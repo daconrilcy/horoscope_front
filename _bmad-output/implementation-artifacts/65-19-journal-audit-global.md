@@ -36,7 +36,7 @@ afin d'avoir une traçabilité complète de qui a fait quoi et quand sur le syst
 - [x] Créer les schémas `backend/app/api/v1/schemas/admin_audit.py`
 - [x] Mettre à jour `backend/app/main.py` : ajout du router `admin_audit_router`
 - [x] Mettre à jour `frontend/src/pages/admin/AdminLogsPage.tsx` (AC: 1, 2, 3, 4)
-  - [x] Onglet "Journal d'audit" basé sur `/v1/admin/audit`
+  - [x] Onglet "Erreurs applicatives" basé sur `/v1/admin/audit`
   - [x] Filtres acteur / action / période
   - [x] Détail d'événement au clic
   - [x] Export CSV branché sur `/v1/admin/audit/export`

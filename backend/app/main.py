@@ -23,9 +23,9 @@ from app.api.v1.routers.admin_entitlements import router as admin_entitlements_r
 from app.api.v1.routers.admin_exports import router as admin_exports_router
 from app.api.v1.routers.admin_llm import router as admin_llm_router
 from app.api.v1.routers.admin_logs import router as admin_logs_router
+from app.api.v1.routers.admin_pdf_templates import router as admin_pdf_templates_router
 from app.api.v1.routers.admin_support import router as admin_support_router
 from app.api.v1.routers.admin_users import router as admin_users_router
-from app.api.v1.routers.admin_pdf_templates import router as admin_pdf_templates_router
 from app.api.v1.routers.astrologers import router as astrologers_router
 from app.api.v1.routers.astrology_engine import router as astrology_engine_router
 from app.api.v1.routers.audit import router as audit_router
@@ -359,7 +359,7 @@ async def _app_lifespan(_: FastAPI):
     _ensure_support_categories_seeded()
     from app.startup import seed_dev_admin
 
-    seed_dev_admin()
+    await seed_dev_admin()
 
     # Story 61.29: Enforcement du registre de scope au démarrage
     run_feature_scope_startup_validation(settings.feature_scope_validation_mode)

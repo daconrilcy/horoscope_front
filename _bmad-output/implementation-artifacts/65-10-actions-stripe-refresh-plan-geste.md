@@ -44,7 +44,7 @@ afin de corriger des incohérences ou accorder des exceptions sans toucher à la
   - [x] Audit log `plan_manually_assigned`
 - [x] Endpoint `POST /api/v1/admin/users/{user_id}/commercial-gesture` (AC: 3)
   - [x] Stockage JSON dans `user_subscriptions`
-  - [x] Audit log `commercial_gesture_recorded`
+  - [x] Audit log `commercial_gesture_recorded` avec `before` / `after`
 - [x] Mettre à jour `frontend/src/pages/admin/AdminUserDetailPage.tsx` (AC: 1, 2, 3)
   - [x] Boutons d'action
   - [x] Modales dédiées pour refresh / assignation / geste commercial
@@ -62,6 +62,7 @@ afin de corriger des incohérences ou accorder des exceptions sans toucher à la
 ### Completion Notes List
 
 - Revue AI du 2026-04-06 : la story était marquée done alors que les actions Stripe n'étaient pas réellement exposées dans la fiche utilisateur. L'UI admin a été complétée avec des actions visibles, des modales explicites de périmètre et des formulaires pour le plan manuel et le geste commercial.
+- Revue Epic 65 du 2026-04-06 : l'audit `commercial_gesture_recorded` capture désormais `gesture_type`, `value`, `reason`, `before` et `after`. La migration historique a aussi propagé `commercial_gestures` aux tables billing liées pour cohérence de schéma.
 
 ## Senior Developer Review (AI)
 

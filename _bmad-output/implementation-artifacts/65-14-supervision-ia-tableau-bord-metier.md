@@ -29,7 +29,7 @@ afin de détecter rapidement une dérive ou une surconsommation avant qu'elle im
 
 4. **Given** l'admin clique sur un use case  
    **When** le détail s'ouvre  
-   **Then** les 10 derniers appels en échec sont listés avec leurs métadonnées (timestamp, user_id masqué)
+   **Then** les 10 derniers appels en échec sont listés avec leurs métadonnées d'observabilité disponibles (timestamp, identifiant masqué)
 
 ## Tasks / Subtasks
 
@@ -57,3 +57,4 @@ afin de détecter rapidement une dérive ou une surconsommation avant qu'elle im
 ### Completion Notes List
 
 - **Fix (code review)** : Les types `float` et `int` dans l'interface TypeScript `UseCaseMetrics` (`estimated_cost_usd`, `avg_latency_ms`, `error_rate`, `retry_rate`) ont été corrigés en `number`. `float` et `int` sont des types Python invalides en TypeScript — ils se résolvent silencieusement en `any` quand `strict` est désactivé.
+- **Fix (Epic 65 review)** : le détail des échecs expose `request_id_masked`, la table d'observabilité actuelle ne stockant pas de `user_id`.

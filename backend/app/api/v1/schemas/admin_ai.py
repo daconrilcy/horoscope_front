@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -14,7 +15,7 @@ class AdminAiFailedCall(BaseModel):
     id: str
     timestamp: datetime
     error_code: str
-    user_id_masked: str | None
+    request_id_masked: str | None
 
 
 class AdminAiUseCaseMetrics(BaseModel):
@@ -26,7 +27,7 @@ class AdminAiUseCaseMetrics(BaseModel):
     p50_latency_ms: int | None = None
     p95_latency_ms: int | None = None
     error_rate: float
-    retry_rate: float = 0 # retry_count not in current schema? 
+    retry_rate: float = 0  # retry_count not in current schema?
     # top_persona: str | None = None
     # top_prompt_version: str | None = None
 

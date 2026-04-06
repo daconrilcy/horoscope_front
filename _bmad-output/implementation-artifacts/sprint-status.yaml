@@ -582,6 +582,6 @@ development_status:
   65-18-config-contenus-paywalls: done
   65-18b-config-regles-metier: done
   # Groupe 65.F — Gouvernance & Audit
-  65-19-journal-audit-global: ready-for-dev
-  65-20-exports-securises: ready-for-dev
-  65-21-infrastructure-permissions: ready-for-dev
+  65-19-journal-audit-global: done
+  65-20-exports-securises: done
+  65-21-infrastructure-permissions: done

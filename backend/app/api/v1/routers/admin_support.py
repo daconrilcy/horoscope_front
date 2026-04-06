@@ -17,6 +17,7 @@ from app.api.v1.schemas.admin_support import (
     TicketStatusUpdate,
 )
 from app.core.request_id import resolve_request_id
+from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.flagged_content import FlaggedContentModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
@@ -94,7 +95,30 @@ def get_ticket_detail(
     if not result:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    return {"data": result}
+    audit_events = db.scalars(
+        select(AuditEventModel)
+        .where(
+            AuditEventModel.target_type == "support_ticket",
+            AuditEventModel.target_id == str(ticket_id),
+        )
+        .order_by(AuditEventModel.created_at.desc())
+        .limit(20)
+    ).all()
+
+    ticket = dict(result._mapping)
+    ticket["audit_trail"] = [
+        {
+            "id": event.id,
+            "action": event.action,
+            "actor_role": event.actor_role,
+            "status": event.status,
+            "details": event.details or {},
+            "created_at": event.created_at,
+        }
+        for event in audit_events
+    ]
+
+    return {"data": ticket}
 
 
 @router.patch("/tickets/{ticket_id}")

@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -44,7 +45,7 @@ def test_seed_dev_admin_success(test_db, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(dev_seed.settings, "seed_admin", False)
 
     # Run seed
-    seed_dev_admin()
+    asyncio.run(seed_dev_admin())
 
     # Verify
     with test_db() as db:
@@ -59,8 +60,8 @@ def test_seed_dev_admin_idempotent(test_db, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(dev_seed.settings, "app_env", "dev")
     monkeypatch.setattr(dev_seed.settings, "seed_admin", False)
 
-    seed_dev_admin()
-    seed_dev_admin()  # Second call
+    asyncio.run(seed_dev_admin())
+    asyncio.run(seed_dev_admin())  # Second call
 
     with test_db() as db:
         admins = db.scalars(select(UserModel).where(UserModel.role == "admin")).all()
@@ -73,7 +74,7 @@ def test_seed_dev_admin_ignored_in_prod(test_db, monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(dev_seed.settings, "app_env", "production")
     monkeypatch.setattr(dev_seed.settings, "seed_admin", False)
 
-    seed_dev_admin()
+    asyncio.run(seed_dev_admin())
 
     with test_db() as db:
         admin = db.scalar(select(UserModel).where(UserModel.role == "admin"))
@@ -86,7 +87,7 @@ def test_seed_dev_admin_login_works(test_db, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(dev_seed.settings, "app_env", "dev")
     monkeypatch.setattr(dev_seed.settings, "seed_admin", False)
 
-    seed_dev_admin()
+    asyncio.run(seed_dev_admin())
 
     # Try login via API
     # Note: the app's AuthService needs to use the same patched SessionLocal

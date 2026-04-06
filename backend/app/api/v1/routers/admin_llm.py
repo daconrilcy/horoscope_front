@@ -1123,7 +1123,7 @@ async def replay_request(
             db,
             request_id=request_id,
             actor=current_user,
-            action="llm_replay",
+            action="llm_call_replayed",
             target_type="llm_call_log",
             target_id=payload.request_id,
             status="success",

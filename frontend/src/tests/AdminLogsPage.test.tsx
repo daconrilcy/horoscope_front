@@ -128,7 +128,7 @@ describe("AdminLogsPage", () => {
       expect(screen.getByRole("heading", { name: "Observabilité Technique" })).toBeInTheDocument()
     })
 
-    expect(screen.getByRole("button", { name: "Journal d'audit" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Erreurs applicatives" })).toBeInTheDocument()
     expect(await screen.findByText("adm***@example.com")).toBeInTheDocument()
     expect(screen.getByText("***4")).toBeInTheDocument()
 

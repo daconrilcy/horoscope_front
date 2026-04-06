@@ -26,12 +26,12 @@ afin de pouvoir tester l'espace admin immédiatement sans manipulation manuelle 
 ## Tasks / Subtasks
 
 - [x] Créer `backend/app/startup/dev_seed.py` (AC: 1, 2)
-  - [x] Implémenter `seed_dev_admin(db: AsyncSession)` : vérifie l'absence d'admin, crée l'utilisateur avec `pwd_context.hash("admin123")` et `role="admin"`
+  - [x] Implémenter `async def seed_dev_admin()` : vérifie l'absence d'admin, crée l'utilisateur avec `pwd_context.hash("admin123")` et `role="admin"`
   - [x] Idempotence : `SELECT WHERE email = 'admin@test.com'` — skip si présent
   - [x] Guard strict : `if settings.app_env not in {"dev", "test"} and not settings.seed_admin: return` (silencieux)
 - [x] Intégrer le seed dans `backend/app/main.py` lifespan (AC: 1, 2)
-  - [x] Appeler `await seed_dev_admin(db)` dans le bloc `startup` du lifespan, après les migrations
-  - [x] Injecter une session DB via le context manager de session async
+  - [x] Appeler `await seed_dev_admin()` dans le bloc `startup` du lifespan, après les migrations
+  - [x] Le wrapper async délègue à la couche SQLAlchemy sync existante du projet
 - [x] Ajouter la variable `SEED_ADMIN=false` dans `backend/.env.example` (AC: 2)
 - [x] Ajouter `seed_admin: bool = False` dans `backend/app/core/config.py` (Settings) si absent (AC: 2)
 - [x] Test d'intégration `backend/app/tests/integration/test_dev_seed.py` (AC: 1, 2, 3)

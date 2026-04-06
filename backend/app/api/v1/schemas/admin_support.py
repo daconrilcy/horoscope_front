@@ -29,7 +29,7 @@ class AdminSupportTicketDetail(AdminSupportTicketItem):
     support_response: str | None
     resolved_at: datetime | None
     updated_at: datetime
-    # We could add exchanges here later
+    audit_trail: list[dict[str, Any]]
 
 
 class AdminSupportTicketDetailResponse(BaseModel):
@@ -60,4 +60,4 @@ class TicketStatusUpdate(BaseModel):
 
 
 class FlaggedContentReviewUpdate(BaseModel):
-    status: str # resolved, dismissed
+    status: str  # resolved, dismissed

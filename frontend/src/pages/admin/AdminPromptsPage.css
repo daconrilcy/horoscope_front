@@ -216,7 +216,7 @@
 }
 
 .admin-prompts-diff__line--removed {
-  background: color-mix(in srgb, var(--error) 18%, transparent);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
 }
 
 .admin-prompts-modal {

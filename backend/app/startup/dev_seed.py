@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from app.core.config import settings
@@ -9,7 +10,7 @@ from app.infra.db.models.user import UserModel
 logger = logging.getLogger(__name__)
 
 
-def seed_dev_admin() -> None:
+def _seed_dev_admin_sync() -> None:
     """
     Seed a default admin user if in development environment and no admin exists.
     """
@@ -54,3 +55,7 @@ def seed_dev_admin() -> None:
 
     except Exception as e:
         logger.error("dev_seed_admin_failed error=%s", e)
+
+
+async def seed_dev_admin() -> None:
+    await asyncio.to_thread(_seed_dev_admin_sync)

@@ -39,6 +39,7 @@ afin de traiter les demandes utilisateurs et modérer le contenu problématique.
   - [x] `GET /api/v1/admin/support/flagged-content`
   - [x] `PATCH /api/v1/admin/support/flagged-content/{content_id}` (review)
 - [x] Créer les schémas Pydantic `backend/app/api/v1/schemas/admin_support.py`
+- [x] Le détail ticket expose un `audit_trail` backend pour les actions admin déjà effectuées
 - [x] Créer `frontend/src/pages/admin/AdminSupportPage.tsx` (AC: 1, 3)
   - [x] Onglets Tickets / Contenus signalés
   - [x] Filtres de statut pour les tickets

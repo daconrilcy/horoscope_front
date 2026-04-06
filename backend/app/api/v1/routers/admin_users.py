@@ -17,12 +17,8 @@ from app.api.v1.schemas.admin_users import (
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import UserSubscriptionModel
-from app.infra.db.models.llm_observability import LlmCallLogModel
 from app.infra.db.models.product_entitlements import (
-    AccessMode,
     FeatureUsageCounterModel,
-    PlanFeatureBindingModel,
-    PlanFeatureQuotaModel,
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.support_incident import SupportIncidentModel
@@ -72,9 +68,9 @@ def search_users(
 
     if q:
         if q == "payment_failure":
-            stmt = stmt.join(UserSubscriptionModel, UserSubscriptionModel.user_id == UserModel.id).where(
-                UserSubscriptionModel.failure_reason.is_not(None)
-            )
+            stmt = stmt.join(
+                UserSubscriptionModel, UserSubscriptionModel.user_id == UserModel.id
+            ).where(UserSubscriptionModel.failure_reason.is_not(None))
         elif q.isdigit():
             stmt = stmt.where(or_(UserModel.email.ilike(f"%{q}%"), UserModel.id == int(q)))
         else:
@@ -138,8 +134,13 @@ def get_user_detail(
     # Alternative: Recent audit events (10)
     audit_events = db.scalars(
         select(AuditEventModel)
-        .where(or_(AuditEventModel.actor_user_id == user_id, 
-                   (AuditEventModel.target_type == "user") & (AuditEventModel.target_id == str(user_id))))
+        .where(
+            or_(
+                AuditEventModel.actor_user_id == user_id,
+                (AuditEventModel.target_type == "user")
+                & (AuditEventModel.target_id == str(user_id)),
+            )
+        )
         .order_by(AuditEventModel.created_at.desc())
         .limit(10)
     ).all()
@@ -170,21 +171,18 @@ def get_user_detail(
             "quotas": quotas_data,
             "recent_llm_logs": [],
             "recent_tickets": [
-                {
-                    "id": t.id,
-                    "title": t.title,
-                    "status": t.status,
-                    "created_at": t.created_at
-                } for t in tickets
+                {"id": t.id, "title": t.title, "status": t.status, "created_at": t.created_at}
+                for t in tickets
             ],
             "recent_audit_events": [
                 {
                     "id": a.id,
                     "action": a.action,
                     "actor_role": a.actor_role,
-                    "created_at": a.created_at
-                } for a in audit_events
-            ]
+                    "created_at": a.created_at,
+                }
+                for a in audit_events
+            ],
         }
     }
 
@@ -230,10 +228,10 @@ def suspend_user(
     user = db.get(UserModel, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     before = {"is_suspended": user.is_suspended}
     user.is_suspended = True
-    
+
     AuditService.record_event(
         db,
         payload=AuditEventCreatePayload(
@@ -261,10 +259,10 @@ def unsuspend_user(
     user = db.get(UserModel, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     before = {"is_suspended": user.is_suspended}
     user.is_suspended = False
-    
+
     AuditService.record_event(
         db,
         payload=AuditEventCreatePayload(
@@ -292,10 +290,10 @@ def unlock_user(
     user = db.get(UserModel, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     before = {"is_locked": user.is_locked}
     user.is_locked = False
-    
+
     AuditService.record_event(
         db,
         payload=AuditEventCreatePayload(
@@ -323,11 +321,12 @@ def reset_user_quota(
 ) -> Any:
     # Reset all counters for this user and feature
     counters = db.scalars(
-        select(FeatureUsageCounterModel)
-        .where(FeatureUsageCounterModel.user_id == user_id, 
-               FeatureUsageCounterModel.feature_code == feature_code)
+        select(FeatureUsageCounterModel).where(
+            FeatureUsageCounterModel.user_id == user_id,
+            FeatureUsageCounterModel.feature_code == feature_code,
+        )
     ).all()
-    
+
     for c in counters:
         before_val = c.used_count
         c.used_count = 0
@@ -344,7 +343,7 @@ def reset_user_quota(
                 details={"feature_code": feature_code, "before": before_val, "after": 0},
             ),
         )
-    
+
     db.commit()
     return {"status": "success"}
 
@@ -363,10 +362,12 @@ def refresh_subscription(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
     )
     if not profile or not profile.stripe_subscription_id:
-        raise HTTPException(status_code=400, detail="No active Stripe subscription found for this user")
+        raise HTTPException(
+            status_code=400, detail="No active Stripe subscription found for this user"
+        )
 
     from app.services.stripe_billing_profile_service import StripeBillingProfileService
-    
+
     stripe_client = get_stripe_client()
     if not stripe_client:
         # Fallback for testing if monkeypatching failed or if it's actually not configured
@@ -395,10 +396,13 @@ def refresh_subscription(
                 target_type="user",
                 target_id=str(user_id),
                 status="success",
-                details={"before": before, "after": {
-                    "subscription_status": profile.subscription_status,
-                    "entitlement_plan": profile.entitlement_plan
-                }},
+                details={
+                    "before": before,
+                    "after": {
+                        "subscription_status": profile.subscription_status,
+                        "entitlement_plan": profile.entitlement_plan,
+                    },
+                },
             ),
         )
         db.commit()
@@ -428,6 +432,7 @@ def assign_plan(
     )
     if not profile:
         from app.services.stripe_billing_profile_service import StripeBillingProfileService
+
         profile = StripeBillingProfileService.get_or_create_profile(db, user_id)
 
     before = profile.entitlement_plan
@@ -447,6 +452,7 @@ def assign_plan(
         ),
     )
     from app.services.billing_service import BillingService
+
     BillingService._invalidate_cached_subscription_status(user_id)
     db.commit()
     return {"status": "success"}
@@ -466,6 +472,7 @@ def record_commercial_gesture(
     Record a commercial gesture (bonus days/messages).
     """
     from app.infra.db.models.billing import UserSubscriptionModel
+
     sub = db.scalar(
         select(UserSubscriptionModel)
         .where(UserSubscriptionModel.user_id == user_id)
@@ -473,18 +480,24 @@ def record_commercial_gesture(
         .limit(1)
     )
     if not sub:
-        raise HTTPException(status_code=400, detail="No local subscription record found to attach gesture")
+        raise HTTPException(
+            status_code=400, detail="No local subscription record found to attach gesture"
+        )
 
+    existing_gestures = list(sub.commercial_gestures or [])
+    before = {
+        "commercial_gestures_count": len(existing_gestures),
+        "commercial_gestures": existing_gestures,
+    }
     gesture = {
-        "type": gesture_type,
+        "gesture_type": gesture_type,
         "value": value,
         "reason": reason,
         "granted_at": datetime.now(UTC).isoformat(),
-        "granted_by": current_user.id
+        "granted_by": current_user.id,
     }
-    gestures = list(sub.commercial_gestures or [])
-    gestures.append(gesture)
-    sub.commercial_gestures = gestures
+    updated_gestures = [*existing_gestures, gesture]
+    sub.commercial_gestures = updated_gestures
     AuditService.record_event(
         db,
         payload=AuditEventCreatePayload(
@@ -495,7 +508,16 @@ def record_commercial_gesture(
             target_type="user",
             target_id=str(user_id),
             status="success",
-            details=gesture,
+            details={
+                "gesture_type": gesture_type,
+                "value": value,
+                "reason": reason,
+                "before": before,
+                "after": {
+                    "commercial_gestures_count": len(updated_gestures),
+                    "commercial_gestures": updated_gestures,
+                },
+            },
         ),
     )
     db.commit()
