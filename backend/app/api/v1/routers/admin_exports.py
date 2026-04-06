@@ -4,10 +4,10 @@ import csv
 import io
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -44,7 +44,14 @@ def _generate_csv_response(rows: list[dict[str, Any]], fieldnames: list[str], fi
     )
 
 
-def _record_export_audit(db: Session, request: Request, user: AuthenticatedUser, export_type: str, count: int, filters: dict):
+def _record_export_audit(
+    db: Session,
+    request: Request,
+    user: AuthenticatedUser,
+    export_type: str,
+    count: int,
+    filters: dict,
+):
     AuditService.record_event(
         db,
         payload=AuditEventCreatePayload(
@@ -58,7 +65,7 @@ def _record_export_audit(db: Session, request: Request, user: AuthenticatedUser,
             details={
                 "export_type": export_type,
                 "filters": filters,
-                "record_count": count
+                "record_count": count,
             },
         ),
     )
@@ -97,9 +104,16 @@ def export_users(
 
     results = db.execute(stmt).all()
     rows = [dict(r._mapping) for r in results]
-    
+
     # 1. Audit
-    _record_export_audit(db, request, current_user, "users", len(rows), payload.model_dump())
+    _record_export_audit(
+        db,
+        request,
+        current_user,
+        "users",
+        len(rows),
+        payload.model_dump(mode="json"),
+    )
 
     # 2. Return CSV
     fieldnames = [
@@ -140,14 +154,21 @@ def export_generations(
 
     results = db.execute(stmt).all()
     rows = [dict(r._mapping) for r in results]
-    
+
     # Process ISO dates for JSON
     for r in rows:
         if isinstance(r["created_at"], datetime):
             r["created_at"] = r["created_at"].isoformat()
 
     # 1. Audit
-    _record_export_audit(db, request, current_user, "generations", len(rows), payload.model_dump())
+    _record_export_audit(
+        db,
+        request,
+        current_user,
+        "generations",
+        len(rows),
+        payload.model_dump(mode="json"),
+    )
 
     # 2. Return File
     if payload.format == "json":
@@ -195,9 +216,16 @@ def export_billing(
 
     results = db.execute(stmt).all()
     rows = [dict(r._mapping) for r in results]
-    
+
     # 1. Audit
-    _record_export_audit(db, request, current_user, "billing", len(rows), payload.model_dump())
+    _record_export_audit(
+        db,
+        request,
+        current_user,
+        "billing",
+        len(rows),
+        payload.model_dump(mode="json"),
+    )
 
     # 2. Return CSV
     fieldnames = [

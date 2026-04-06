@@ -45,6 +45,7 @@ afin de produire des rapports ou de transférer des données en respectant les p
   - [x] Gestion du téléchargement du Blob
 - [x] CSS dans `AdminSettingsPage.css` pour les modales et cards d'export
 - [x] Tests d'intégration backend `backend/app/tests/integration/test_admin_exports_api.py`
+- [x] Tests frontend `frontend/src/tests/AdminSettingsPage.test.tsx`
 
 ### File List
 - `backend/app/api/v1/routers/admin_exports.py`
@@ -53,3 +54,4 @@ afin de produire des rapports ou de transférer des données en respectant les p
 - `frontend/src/pages/admin/AdminSettingsPage.tsx`
 - `frontend/src/pages/admin/AdminSettingsPage.css`
 - `backend/app/tests/integration/test_admin_exports_api.py`
+- `frontend/src/tests/AdminSettingsPage.test.tsx`

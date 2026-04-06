@@ -41,6 +41,7 @@ function ExportModal({ type, onClose }: ExportModalProps) {
       document.body.appendChild(a)
       a.click()
       a.remove()
+      window.URL.revokeObjectURL(url)
     },
     onSuccess: () => {
       onClose()

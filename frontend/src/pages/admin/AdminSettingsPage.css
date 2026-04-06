@@ -66,7 +66,7 @@
 }
 
 .modal-content {
-  background: var(--glass-heavy);
+  background: var(--glass-2);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
   padding: var(--space-8);
@@ -88,9 +88,9 @@
 }
 
 .alert-box--warning {
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid #fbbf24;
-  color: #fbbf24;
+  background: color-mix(in srgb, var(--cta-l) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cta-l) 52%, transparent);
+  color: var(--color-text-primary);
 }
 
 .export-filters {
