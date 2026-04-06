@@ -1,6 +1,6 @@
 # Story 65.2 : Guard admin backend — dépendance FastAPI centralisée
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -26,7 +26,6 @@ afin que tous les endpoints admin partagent une logique de contrôle d'accès co
    **When** la migration vers `require_admin_user` est effectuée  
    **Then** les checks inline `if user.role not in {...}` et le helper local `_ensure_admin_role()` sont supprimés  
    **And** le comportement fonctionnel des endpoints existants est inchangé (tests de non-régression passent)
-Status: done
 
 ## Tasks / Subtasks
 

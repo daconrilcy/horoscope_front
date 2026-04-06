@@ -169,6 +169,7 @@ export function AdminLogsPage() {
   })
 
   const llmLogs = activeTab === "llm" ? ((logsData?.data ?? []) as LlmLog[]) : []
+  const rows = logsData?.data ?? []
   const llmUseCaseOptions = Array.from(new Set(llmLogs.map((log) => log.use_case))).sort()
 
   const replayMutation = useMutation({
@@ -405,7 +406,7 @@ export function AdminLogsPage() {
                 </>
               )}
             </table>
-            {(!logsData || logsData.data.length === 0) && (
+            {rows.length === 0 && (
               <div className="empty-table-state">Aucun log trouvé.</div>
             )}
           </div>

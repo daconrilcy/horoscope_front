@@ -116,6 +116,10 @@ class LlmPromptPublishResponse(BaseModel):
     meta: dict  # includes eval_report
 
 
+class RollbackPromptPayload(BaseModel):
+    target_version_id: uuid.UUID | None = None
+
+
 class LlmCallLog(BaseModel):
     id: uuid.UUID
     use_case: str
@@ -866,13 +870,19 @@ async def publish_prompt(
 def rollback_prompt(
     key: str,
     request: Request,
+    payload: RollbackPromptPayload | None = None,
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+    previous_version = PromptRegistryV2.get_active_prompt(db, key)
 
     try:
-        version = PromptRegistryV2.rollback_prompt(db, key)
+        version = PromptRegistryV2.rollback_prompt(
+            db,
+            key,
+            target_version_id=payload.target_version_id if payload else None,
+        )
 
         _record_audit_event(
             db,
@@ -882,7 +892,11 @@ def rollback_prompt(
             target_type="llm_prompt",
             target_id=str(version.id),
             status="success",
-            details={"use_case_key": key},
+            details={
+                "use_case_key": key,
+                "from_version": str(previous_version.id) if previous_version else None,
+                "to_version": str(version.id),
+            },
         )
         db.commit()
 

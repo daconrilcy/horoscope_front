@@ -1,6 +1,6 @@
 # Story 65.3 : Guard admin frontend — protection des routes /admin/*
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -25,7 +25,6 @@ afin que l'espace admin soit inaccessible à toute personne non autorisée.
 4. **Given** le composant de guard admin est rendu  
    **When** le rôle de l'utilisateur est en cours de chargement (état async)  
    **Then** un spinner de chargement est affiché — aucune redirection n'est déclenchée prématurément
-Status: done
 
 ## Tasks / Subtasks
 

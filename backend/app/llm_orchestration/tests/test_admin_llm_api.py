@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import uuid
 from collections.abc import Generator
 
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, delete
+from sqlalchemy import create_engine, delete, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -133,3 +134,71 @@ def test_admin_llm_crud_flow():
     assert rb_resp.status_code == 200
     assert rb_resp.json()["data"]["id"] == version_id
     assert rb_resp.json()["data"]["status"] == "published"
+
+
+def test_admin_llm_targeted_rollback():
+    _cleanup_tables()
+    admin_token = _register_user("admin-rollback@example.com", "admin")
+    headers = {"Authorization": f"Bearer {admin_token}", "X-Request-Id": "req-admin-llm-rollback"}
+
+    with SessionLocal() as db:
+        db.add(
+            LlmUseCaseConfigModel(key="natal", display_name="Natal", description="Natal use case")
+        )
+        db.commit()
+
+    draft_one = client.post(
+        "/v1/admin/llm/use-cases/natal/prompts",
+        headers=headers,
+        json={
+            "developer_prompt": "Prompt V1 {{locale}} {{use_case}}",
+            "model": "gpt-4o-mini",
+        },
+    )
+    v1_id = draft_one.json()["data"]["id"]
+    client.patch(f"/v1/admin/llm/use-cases/natal/prompts/{v1_id}/publish", headers=headers)
+
+    draft_two = client.post(
+        "/v1/admin/llm/use-cases/natal/prompts",
+        headers=headers,
+        json={
+            "developer_prompt": "Prompt V2 {{locale}} {{use_case}}",
+            "model": "gpt-4o-mini",
+        },
+    )
+    v2_id = draft_two.json()["data"]["id"]
+    client.patch(f"/v1/admin/llm/use-cases/natal/prompts/{v2_id}/publish", headers=headers)
+
+    draft_three = client.post(
+        "/v1/admin/llm/use-cases/natal/prompts",
+        headers=headers,
+        json={
+            "developer_prompt": "Prompt V3 {{locale}} {{use_case}}",
+            "model": "gpt-4o-mini",
+        },
+    )
+    v3_id = draft_three.json()["data"]["id"]
+    client.patch(f"/v1/admin/llm/use-cases/natal/prompts/{v3_id}/publish", headers=headers)
+
+    rollback = client.post(
+        "/v1/admin/llm/use-cases/natal/rollback",
+        headers=headers,
+        json={"target_version_id": v1_id},
+    )
+    assert rollback.status_code == 200
+    assert rollback.json()["data"]["id"] == v1_id
+
+    with SessionLocal() as db:
+        active = db.get(LlmPromptVersionModel, uuid.UUID(v1_id))
+        previous = db.get(LlmPromptVersionModel, uuid.UUID(v3_id))
+        audits = db.execute(
+            select(AuditEventModel).where(AuditEventModel.action == "llm_prompt_rollback")
+        )
+        event = audits.scalars().one()
+
+    assert active is not None
+    assert previous is not None
+    assert active.status == "published"
+    assert previous.status == "archived"
+    assert event.details["from_version"] == v3_id
+    assert event.details["to_version"] == v1_id

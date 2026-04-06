@@ -118,48 +118,52 @@ class PromptRegistryV2:
         return version
 
     @staticmethod
-    def rollback_prompt(db: Session, use_case_key: str) -> LlmPromptVersionModel:
+    def rollback_prompt(
+        db: Session,
+        use_case_key: str,
+        target_version_id: uuid.UUID | None = None,
+    ) -> LlmPromptVersionModel:
         """
-        Rollback to the most recent archived version.
+        Rollback to a specific historical version or the most recent archived version.
         """
-        # 1. Find the current published version
         current_published = PromptRegistryV2.get_active_prompt(db, use_case_key)
 
-        # 2. Find the most recent archived version
-        stmt = (
-            select(LlmPromptVersionModel)
-            .where(
-                LlmPromptVersionModel.use_case_key == use_case_key,
-                LlmPromptVersionModel.status == PromptStatus.ARCHIVED,
+        if target_version_id is not None:
+            target_version = db.get(LlmPromptVersionModel, target_version_id)
+            if not target_version or target_version.use_case_key != use_case_key:
+                raise ValueError(
+                    f"Prompt version {target_version_id} not found for use case {use_case_key}"
+                )
+            if current_published and target_version.id == current_published.id:
+                return target_version
+        else:
+            stmt = (
+                select(LlmPromptVersionModel)
+                .where(
+                    LlmPromptVersionModel.use_case_key == use_case_key,
+                    LlmPromptVersionModel.status == PromptStatus.ARCHIVED,
+                )
+                .order_by(LlmPromptVersionModel.published_at.desc())
+                .limit(1)
             )
-            .order_by(LlmPromptVersionModel.published_at.desc())
-            .limit(1)
-        )
-        result = db.execute(stmt)
-        last_archived = result.scalar_one_or_none()
+            result = db.execute(stmt)
+            target_version = result.scalar_one_or_none()
+            if not target_version:
+                raise ValueError(f"No archived version found for use case {use_case_key}")
 
-        if not last_archived:
-            raise ValueError(f"No archived version found for use case {use_case_key}")
-
-        # 3. Archive current
         if current_published:
-            # If it was from cache, we might need to get it from DB to update it
-            # But here we just want to change status.
-            # If it's a detached instance, we should merge it or just use an update stmt.
             db.execute(
                 update(LlmPromptVersionModel)
                 .where(LlmPromptVersionModel.id == current_published.id)
                 .values(status=PromptStatus.ARCHIVED)
             )
 
-        # 4. Re-publish last archived
-        last_archived.status = PromptStatus.PUBLISHED
-        last_archived.published_at = utc_now()
+        target_version.status = PromptStatus.PUBLISHED
+        target_version.published_at = utc_now()
 
         db.commit()
-        db.refresh(last_archived)
+        db.refresh(target_version)
 
-        # 5. Invalidate cache
         PromptRegistryV2.invalidate_cache(use_case_key)
 
-        return last_archived
+        return target_version
