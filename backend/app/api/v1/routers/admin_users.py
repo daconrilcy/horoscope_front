@@ -57,7 +57,7 @@ def _mask_id(raw_id: str | None) -> str | None:
 
 
 def _build_user_quotas(*, db: Session, user_id: int, plan_code: str) -> list[dict[str, object]]:
-    quotas_by_key: dict[tuple[str, str], dict[str, object]] = {}
+    quotas_by_key: dict[tuple[str, str, str, int, str], dict[str, object]] = {}
     period_order = {"day": 0, "week": 1, "month": 2, "year": 3, "lifetime": 4}
 
     if plan_code:
@@ -116,7 +116,15 @@ def _build_user_quotas(*, db: Session, user_id: int, plan_code: str) -> list[dic
                                 reset_mode=quota_row.reset_mode.value,
                             ),
                         )
-                        quotas_by_key[(usage.feature_code, usage.quota_key)] = {
+                        quotas_by_key[
+                            (
+                                usage.feature_code,
+                                usage.quota_key,
+                                usage.period_unit,
+                                usage.period_value,
+                                usage.reset_mode,
+                            )
+                        ] = {
                             "feature_code": usage.feature_code,
                             "used": usage.used,
                             "limit": usage.quota_limit,
@@ -128,7 +136,13 @@ def _build_user_quotas(*, db: Session, user_id: int, plan_code: str) -> list[dic
     ).all()
     for counter in usage_counters:
         quotas_by_key.setdefault(
-            (counter.feature_code, counter.quota_key),
+            (
+                counter.feature_code,
+                counter.quota_key,
+                counter.period_unit.value,
+                counter.period_value,
+                counter.reset_mode.value,
+            ),
             {
                 "feature_code": counter.feature_code,
                 "used": counter.used_count,
