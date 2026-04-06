@@ -6,6 +6,7 @@ import "./AdminAiGenerationsPage.css"
 
 interface UseCaseMetrics {
   use_case: string
+  display_name: string
   call_count: number
   total_tokens: number
   estimated_cost_usd: number
@@ -101,7 +102,7 @@ export function AdminAiGenerationsPage() {
                   className={m.error_rate > 0.05 ? "row--alert" : ""}
                   onClick={() => setSelectedUseCase(m.use_case)}
                 >
-                  <td className="use-case-name">{m.use_case}</td>
+                  <td className="use-case-name">{m.display_name}</td>
                   <td>{m.call_count}</td>
                   <td>{(m.total_tokens / 1000).toFixed(1)}k</td>
                   <td>${m.estimated_cost_usd.toFixed(2)}</td>
@@ -125,7 +126,7 @@ export function AdminAiGenerationsPage() {
       {selectedUseCase && (
         <section className="use-case-detail-panel">
           <div className="detail-panel-header">
-            <h3>Détail : {selectedUseCase}</h3>
+            <h3>Détail : {detailData?.metrics.display_name ?? selectedUseCase}</h3>
             <button className="close-button" onClick={() => setSelectedUseCase(null)}>×</button>
           </div>
 

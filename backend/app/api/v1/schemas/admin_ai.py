@@ -20,6 +20,7 @@ class AdminAiFailedCall(BaseModel):
 
 class AdminAiUseCaseMetrics(BaseModel):
     use_case: str
+    display_name: str
     call_count: int
     total_tokens: int
     estimated_cost_usd: float

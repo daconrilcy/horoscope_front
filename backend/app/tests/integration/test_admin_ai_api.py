@@ -59,33 +59,49 @@ def admin_token():
 
 def test_get_ai_metrics_success(admin_token):
     with db_session_module.SessionLocal() as db:
-        log1 = LlmCallLogModel(
-            use_case="chat_astrologer",
-            model="gpt-4o",
-            latency_ms=500,
-            tokens_in=100,
-            tokens_out=200,
-            cost_usd_estimated=0.003,
-            validation_status=LlmValidationStatus.VALID,
-            request_id="req1",
-            trace_id="trace1",
-            input_hash="hash1",
-            environment="test",
+        db.add_all(
+            [
+                LlmCallLogModel(
+                    use_case="chat_astrologer",
+                    model="gpt-4o",
+                    latency_ms=500,
+                    tokens_in=100,
+                    tokens_out=200,
+                    cost_usd_estimated=0.003,
+                    validation_status=LlmValidationStatus.VALID,
+                    request_id="req1",
+                    trace_id="trace1",
+                    input_hash="hash1",
+                    environment="test",
+                ),
+                LlmCallLogModel(
+                    use_case="chat_astrologer",
+                    model="gpt-4o",
+                    latency_ms=1000,
+                    tokens_in=100,
+                    tokens_out=200,
+                    cost_usd_estimated=0.003,
+                    validation_status=LlmValidationStatus.ERROR,
+                    request_id="req2",
+                    trace_id="trace2",
+                    input_hash="hash2",
+                    environment="test",
+                ),
+                LlmCallLogModel(
+                    use_case="natal_psy_profile",
+                    model="gpt-4o",
+                    latency_ms=1500,
+                    tokens_in=50,
+                    tokens_out=250,
+                    cost_usd_estimated=0.004,
+                    validation_status=LlmValidationStatus.VALID,
+                    request_id="req3",
+                    trace_id="trace3",
+                    input_hash="hash3",
+                    environment="test",
+                ),
+            ]
         )
-        log2 = LlmCallLogModel(
-            use_case="chat_astrologer",
-            model="gpt-4o",
-            latency_ms=1000,
-            tokens_in=100,
-            tokens_out=200,
-            cost_usd_estimated=0.003,
-            validation_status=LlmValidationStatus.ERROR,
-            request_id="req2",
-            trace_id="trace2",
-            input_hash="hash2",
-            environment="test",
-        )
-        db.add_all([log1, log2])
         db.commit()
 
     response = client.get(
@@ -93,37 +109,69 @@ def test_get_ai_metrics_success(admin_token):
     )
     assert response.status_code == 200
     data = response.json()["data"]
-    assert len(data) >= 1
-    m = [x for x in data if x["use_case"] == "chat_astrologer"][0]
-    assert m["call_count"] == 2
-    assert m["error_rate"] == 0.5
+    assert len(data) >= 7
+
+    metrics_by_key = {item["use_case"]: item for item in data}
+
+    chat_metrics = metrics_by_key["astrologer_chat"]
+    assert chat_metrics["display_name"] == "Chat astrologue"
+    assert chat_metrics["call_count"] == 2
+    assert chat_metrics["error_rate"] == 0.5
+
+    thematic_metrics = metrics_by_key["thematic_consultations"]
+    assert thematic_metrics["call_count"] == 1
+    assert thematic_metrics["display_name"] == "Consultations thematiques"
+
+    assert metrics_by_key["natal_theme_short_free"]["call_count"] == 0
+    assert metrics_by_key["natal_theme_short_paid"]["call_count"] == 0
+    assert metrics_by_key["natal_theme_complete_paid"]["call_count"] == 0
+    assert metrics_by_key["daily_horoscope"]["call_count"] == 0
+    assert metrics_by_key["weekly_horoscope"]["call_count"] == 0
 
 
 def test_get_use_case_detail_success(admin_token):
     with db_session_module.SessionLocal() as db:
-        log = LlmCallLogModel(
-            use_case="natal_interpretation",
-            model="gpt-4o",
-            latency_ms=2000,
-            tokens_in=500,
-            tokens_out=1500,
-            cost_usd_estimated=0.02,
-            validation_status=LlmValidationStatus.ERROR,
-            request_id="req_fail",
-            trace_id="trace_fail",
-            input_hash="hash_fail",
-            environment="test",
+        db.add_all(
+            [
+                LlmCallLogModel(
+                    use_case="natal_interpretation",
+                    model="gpt-4o",
+                    latency_ms=2000,
+                    tokens_in=500,
+                    tokens_out=1500,
+                    cost_usd_estimated=0.02,
+                    validation_status=LlmValidationStatus.ERROR,
+                    request_id="req_fail",
+                    trace_id="trace_fail",
+                    input_hash="hash_fail",
+                    environment="test",
+                ),
+                LlmCallLogModel(
+                    use_case="natal_interpretation",
+                    model="gpt-4o",
+                    latency_ms=1200,
+                    tokens_in=400,
+                    tokens_out=1100,
+                    cost_usd_estimated=0.015,
+                    validation_status=LlmValidationStatus.VALID,
+                    request_id="req_ok",
+                    trace_id="trace_ok",
+                    input_hash="hash_ok",
+                    environment="test",
+                ),
+            ]
         )
-        db.add(log)
         db.commit()
 
     response = client.get(
-        "/v1/admin/ai/metrics/natal_interpretation?period=30d",
+        "/v1/admin/ai/metrics/natal_theme_complete_paid?period=30d",
         headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["use_case"] == "natal_interpretation"
+    assert data["use_case"] == "natal_theme_complete_paid"
+    assert data["metrics"]["display_name"] == "Theme natal complete basic/premium"
+    assert data["metrics"]["call_count"] == 2
     assert len(data["recent_failed_calls"]) >= 1
     assert data["recent_failed_calls"][0]["request_id_masked"] == "req_fail..."
     assert data["recent_failed_calls"][0]["error_code"] == "LLM_CALL_ERROR"

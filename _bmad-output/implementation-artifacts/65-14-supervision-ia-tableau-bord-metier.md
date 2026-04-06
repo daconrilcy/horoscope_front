@@ -59,3 +59,18 @@ afin de détecter rapidement une dérive ou une surconsommation avant qu'elle im
 - **Fix (code review)** : Les types `float` et `int` dans l'interface TypeScript `UseCaseMetrics` (`estimated_cost_usd`, `avg_latency_ms`, `error_rate`, `retry_rate`) ont été corrigés en `number`. `float` et `int` sont des types Python invalides en TypeScript — ils se résolvent silencieusement en `any` quand `strict` est désactivé.
 - **Fix (Epic 65 review)** : le détail des échecs expose `request_id_masked`, la table d'observabilité actuelle ne stockant pas de `user_id`.
 - **Fix (Epic 65 review)** : `error_code` n'est plus un placeholder `GENERIC_ERROR` systématique ; il est désormais dérivé de l'état réel du log LLM (`FALLBACK_TRIGGERED`, `REPAIR_FAILED`, `VALIDATION_ERROR`, sinon `LLM_CALL_ERROR`).
+- **Clarification métier (admin ops)** : l'endpoint `GET /v1/admin/ai/metrics` ne remonte plus seulement les `use_case` techniques bruts. Les logs LLM sont agrégés en catégories lisibles pour l'admin :
+  - `natal_theme_short_free`
+  - `natal_theme_short_paid`
+  - `natal_theme_complete_paid`
+  - `thematic_consultations`
+  - `astrologer_chat`
+  - `daily_horoscope`
+  - `weekly_horoscope`
+- **Couverture complète** : les catégories métier attendues sont toujours présentes dans la réponse, même quand leur volume est nul sur la période sélectionnée. Cela évite les trous d'affichage dans le tableau de supervision.
+- **Natal par offre** : les métriques de thèmes natals sont désormais regroupées selon les trois variantes métier attendues côté produit :
+  - short free
+  - short basic/premium
+  - complete basic/premium
+- **Regroupements additionnels** : les consultations thématiques, le chat astrologue et les horoscopes quotidien/hebdomadaire agrègent chacun plusieurs `use_case` techniques pour produire une vue opérationnelle stable côté admin.
+- **UI admin** : `AdminAiGenerationsPage` affiche désormais le libellé métier (`display_name`) renvoyé par l'API au lieu du code technique interne.
