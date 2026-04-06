@@ -139,6 +139,58 @@ class LLMExecutionRequest(BaseModel):
     trace_id: str
 
 
+class ResponseFormatConfig(BaseModel):
+    """Configuration for the LLM response format."""
+
+    type: Literal["json_schema", "text"] = "text"
+    schema_dict: Optional[Dict[str, Any]] = Field(default=None, alias="schema")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class ResolvedExecutionPlan(BaseModel):
+    """Artifact representing the final resolved configuration for an LLM call."""
+
+    # Model resolution
+    model_id: str
+    model_source: Literal["os_granular", "os_legacy", "config", "stub"]
+
+    # Prompts & Persona
+    rendered_developer_prompt: str
+    system_core: str
+    persona_id: Optional[str] = None
+    persona_block: Optional[str] = None
+
+    # Schemas
+    output_schema_id: Optional[str] = None
+    output_schema: Optional[Dict[str, Any]] = None
+    output_schema_version: str = "v1"
+
+    # Strategy & Strategy resolution
+    interaction_mode: Literal["structured", "chat"]
+    user_question_policy: Literal["none", "optional", "required"]
+    overrides_applied: Dict[str, Any] = Field(default_factory=dict)
+
+    # Provider params
+    temperature: float
+    max_output_tokens: int
+    response_format: Optional[ResponseFormatConfig] = None
+    reasoning_effort: Optional[str] = None
+    verbosity: Optional[str] = None
+
+    # Quality metadata
+    context_quality: str = "unknown"
+
+    def to_log_dict(self) -> Dict[str, Any]:
+        """
+        Returns a JSON-serializable dict for logging, excluding verbose artifacts.
+        (AC4: filter verbose fields)
+        """
+        exclude = {"rendered_developer_prompt", "persona_block", "system_core", "output_schema"}
+        dump = self.model_dump(exclude=exclude)
+        return dump
+
+
 class UsageInfo(BaseModel):
     """Token usage information."""
 
