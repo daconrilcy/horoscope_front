@@ -188,3 +188,68 @@ def test_admin_content_editorial_templates_and_calibration_rules() -> None:
         )
         assert calibration_event is not None
         assert calibration_event.details["rule_code"] == "scores.flat_day_threshold"
+
+
+def test_admin_content_rejects_invalid_calibration_value_and_noop_rollback() -> None:
+    _cleanup_tables()
+    admin_token = _register_admin_and_token()
+    headers = {"Authorization": f"Bearer {admin_token}", "X-Request-Id": "rid-admin-content-3"}
+
+    with SessionLocal() as db:
+        reference_version = ReferenceVersionModel(
+            version="2026.04-ref",
+            description="Reference version de test",
+            is_locked=False,
+        )
+        db.add(reference_version)
+        db.flush()
+        ruleset = PredictionRulesetModel(
+            version="2026.04",
+            reference_version_id=reference_version.id,
+        )
+        db.add(ruleset)
+        db.flush()
+        db.add(
+            RulesetParameterModel(
+                ruleset_id=ruleset.id,
+                param_key="scores.flat_day_threshold",
+                param_value="0.45",
+                data_type="float",
+            )
+        )
+        db.commit()
+
+    templates_resp = client.get("/v1/admin/content/editorial-templates", headers=headers)
+    template_code = templates_resp.json()["data"][0]["template_code"]
+    detail_resp = client.get(
+        f"/v1/admin/content/editorial-templates/{template_code}",
+        headers=headers,
+    )
+    create_resp = client.post(
+        f"/v1/admin/content/editorial-templates/{template_code}/versions",
+        headers=headers,
+        json={
+            "title": "Daily overview updated",
+            "content": "<intro>\n<advice>\n<cta>",
+            "expected_tags": ["intro", "advice", "cta"],
+            "example_render": "Nouvelle structure",
+        },
+    )
+    assert create_resp.status_code == 200
+    active_version_id = create_resp.json()["data"]["active_version_id"]
+
+    rollback_resp = client.post(
+        f"/v1/admin/content/editorial-templates/{template_code}/rollback",
+        headers=headers,
+        json={"version_id": active_version_id},
+    )
+    assert rollback_resp.status_code == 200
+    assert rollback_resp.json()["data"]["active_version_id"] == active_version_id
+
+    invalid_rule_resp = client.patch(
+        "/v1/admin/content/calibration-rules/scores.flat_day_threshold",
+        headers=headers,
+        json={"value": {"not": "a-float"}},
+    )
+    assert invalid_rule_resp.status_code == 422
+    assert invalid_rule_resp.json()["error"]["code"] == "invalid_calibration_rule_value"

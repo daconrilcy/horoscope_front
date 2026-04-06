@@ -36,26 +36,26 @@ afin d'ajuster la structure et la qualité des contenus générés sans déploie
 
 ## Tasks / Subtasks
 
-- [ ] Explorer les tables existantes avant tout (AC: 1, 2, 3, 4, 5)
-  - [ ] Chercher `consultation_template`, `editorial_template`, ou tables similaires dans `backend/app/infra/db/models/`
-  - [ ] Chercher les modèles de calibration : `calibration.py`, `ruleset`, `calibration_rule` dans les modèles DB
-  - [ ] Epic 31-42 ont créé des tables de calibration et de règles — identifier les tables utilisables
-  - [ ] Si aucune table n'est adaptée pour les templates éditoriaux : créer `EditorialTemplateVersionModel` suivant le pattern de `LlmPromptVersionModel`
-- [ ] Créer/adapter les endpoints dans `admin_content.py` (AC: 2, 3, 4, 5)
-  - [ ] `GET /api/v1/admin/content/editorial-templates` — liste templates avec version active
-  - [ ] `GET /api/v1/admin/content/editorial-templates/{template_code}` — détail + historique versions
-  - [ ] `POST /api/v1/admin/content/editorial-templates/{template_code}/versions` body: `{content: str}` — nouvelle version (pas de PUT/PATCH — versionnage append-only)
-  - [ ] `POST /api/v1/admin/content/editorial-templates/{template_code}/rollback` body: `{version_id: str}` — rollback
-  - [ ] `GET /api/v1/admin/content/calibration-rules` — liste règles de calibration
-  - [ ] `PATCH /api/v1/admin/content/calibration-rules/{rule_code}` body: `{value: Any}` — update + audit
-  - [ ] Guard `require_admin_user` sur tous les endpoints
-- [ ] Créer les migrations si nécessaire (AC: 2, 3)
-  - [ ] Si `EditorialTemplateVersionModel` doit être créé : migration Alembic
-  - [ ] Si tables calibration déjà existantes : aucune migration
-- [ ] Adapter `frontend/src/pages/admin/AdminContentPage.tsx` (AC: 1, 2, 3, 4, 5)
-  - [ ] Ajouter l'onglet/section "Règles métier" à la page créée en Story 65-18
-  - [ ] Sous-section "Templates éditoriaux" : liste + détail + éditeur + bouton rollback
-  - [ ] Sous-section "Règles de calibration" : liste + édition inline ou modale
+- [x] Explorer les tables existantes avant tout (AC: 1, 2, 3, 4, 5)
+  - [x] Chercher `consultation_template`, `editorial_template`, ou tables similaires dans `backend/app/infra/db/models/`
+  - [x] Chercher les modèles de calibration : `calibration.py`, `ruleset`, `calibration_rule` dans les modèles DB
+  - [x] Epic 31-42 ont créé des tables de calibration et de règles — identifier les tables utilisables
+  - [x] Si aucune table n'est adaptée pour les templates éditoriaux : créer `EditorialTemplateVersionModel` suivant le pattern de `LlmPromptVersionModel`
+- [x] Créer/adapter les endpoints dans `admin_content.py` (AC: 2, 3, 4, 5)
+  - [x] `GET /api/v1/admin/content/editorial-templates` — liste templates avec version active
+  - [x] `GET /api/v1/admin/content/editorial-templates/{template_code}` — détail + historique versions
+  - [x] `POST /api/v1/admin/content/editorial-templates/{template_code}/versions` body: `{content: str}` — nouvelle version (pas de PUT/PATCH — versionnage append-only)
+  - [x] `POST /api/v1/admin/content/editorial-templates/{template_code}/rollback` body: `{version_id: str}` — rollback
+  - [x] `GET /api/v1/admin/content/calibration-rules` — liste règles de calibration
+  - [x] `PATCH /api/v1/admin/content/calibration-rules/{rule_code}` body: `{value: Any}` — update + audit
+  - [x] Guard `require_admin_user` sur tous les endpoints
+- [x] Créer les migrations si nécessaire (AC: 2, 3)
+  - [x] Si `EditorialTemplateVersionModel` doit être créé : migration Alembic
+  - [x] Si tables calibration déjà existantes : aucune migration
+- [x] Adapter `frontend/src/pages/admin/AdminContentPage.tsx` (AC: 1, 2, 3, 4, 5)
+  - [x] Ajouter l'onglet/section "Règles métier" à la page créée en Story 65-18
+  - [x] Sous-section "Templates éditoriaux" : liste + détail + éditeur + bouton rollback
+  - [x] Sous-section "Règles de calibration" : liste + édition inline ou modale
 
 ## Dev Notes
 

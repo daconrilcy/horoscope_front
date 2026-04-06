@@ -256,6 +256,10 @@ describe("AdminContentPage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Confirmer" }))
 
+    await waitFor(() => {
+      expect(screen.getByText("Feature flag paywall_experiment_copy mis à jour.")).toBeInTheDocument()
+    })
+
     await userEvent.click(screen.getByRole("tab", { name: "Règles métier" }))
 
     await waitFor(() => {

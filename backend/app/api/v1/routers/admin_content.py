@@ -261,7 +261,8 @@ def _ensure_config_texts_seeded(db: Session) -> None:
 
 def _ensure_editorial_templates_seeded(db: Session) -> None:
     existing_codes = {
-        item[0] for item in db.execute(select(EditorialTemplateVersionModel.template_code)).all()
+        item[0]
+        for item in db.execute(select(EditorialTemplateVersionModel.template_code).distinct()).all()
     }
     now = datetime.now(timezone.utc)
     for item in DEFAULT_EDITORIAL_TEMPLATES:
@@ -334,10 +335,34 @@ def _get_latest_ruleset(db: Session) -> PredictionRulesetModel | None:
 
 
 def _serialize_calibration_value(value: Any, data_type: str) -> str:
+    if data_type == "float":
+        try:
+            return str(float(value))
+        except (TypeError, ValueError) as error:
+            raise ValueError("calibration value must be a float") from error
+    if data_type == "int":
+        try:
+            if isinstance(value, str) and "." in value:
+                raise ValueError
+            return str(int(value))
+        except (TypeError, ValueError) as error:
+            raise ValueError("calibration value must be an integer") from error
     if data_type == "bool":
-        return "true" if bool(value) else "false"
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"true", "1", "yes", "oui"}:
+                return "true"
+            if normalized in {"false", "0", "no", "non"}:
+                return "false"
+        raise ValueError("calibration value must be a boolean")
     if data_type == "json":
         if isinstance(value, str):
+            try:
+                json.loads(value)
+            except json.JSONDecodeError as error:
+                raise ValueError("calibration value must be valid JSON") from error
             return value
         return json.dumps(value)
     return str(value)
@@ -639,6 +664,15 @@ def rollback_editorial_template(
             message="editorial template version was not found",
             details={"template_code": template_code, "version_id": str(payload.version_id)},
         )
+    if current_active and current_active.id == target.id:
+        return {
+            "data": {
+                "template_code": template_code,
+                "active_version_id": target.id,
+                "versions": [_to_editorial_version_data(item) for item in versions],
+            },
+            "meta": {"request_id": request_id},
+        }
     if current_active and current_active.id != target.id:
         current_active.status = "archived"
     target.status = "published"
@@ -741,7 +775,16 @@ def update_calibration_rule(
             details={"rule_code": rule_code},
         )
     before_value = row.param_value
-    row.param_value = _serialize_calibration_value(payload.value, row.data_type)
+    try:
+        row.param_value = _serialize_calibration_value(payload.value, row.data_type)
+    except ValueError as error:
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code="invalid_calibration_rule_value",
+            message=str(error),
+            details={"rule_code": rule_code, "data_type": row.data_type},
+        )
     db.flush()
     _record_audit_event(
         db,
