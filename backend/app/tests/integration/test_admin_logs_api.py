@@ -176,3 +176,96 @@ def test_get_quota_alerts(admin_token):
     assert alert["user_email_masked"].endswith("@test.com")
     assert alert["plan_code"] == "premium"
     assert alert["limit"] == 10
+
+
+def test_get_audit_log_with_filters_and_masking(admin_token):
+    with db_session_module.SessionLocal() as db:
+        admin = db.query(UserModel).filter(UserModel.email == "admin-logs@example.com").one()
+        db.add_all(
+            [
+                AuditEventModel(
+                    request_id="req_audit_1",
+                    actor_user_id=admin.id,
+                    actor_role="admin",
+                    action="user_suspended",
+                    target_type="user",
+                    target_id="1234",
+                    status="success",
+                    details={"reason": "fraud"},
+                ),
+                AuditEventModel(
+                    request_id="req_audit_2",
+                    actor_user_id=admin.id,
+                    actor_role="admin",
+                    action="feature_flag_toggled",
+                    target_type="system",
+                    target_id="ff-paywall",
+                    status="success",
+                    details={"flag": "paywall_copy"},
+                ),
+            ]
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/admin/audit?action=user_suspended&period=all",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] >= 1
+    assert payload["data"][0]["action"] == "user_suspended"
+    assert payload["data"][0]["actor_email_masked"] == "adm***@example.com"
+    assert payload["data"][0]["target_id_masked"] == "***4"
+
+
+def test_get_audit_log_rejects_invalid_period(admin_token):
+    response = client.get(
+        "/v1/admin/audit?period=xyz",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_export_audit_log_generates_csv_and_audits_export(admin_token):
+    with db_session_module.SessionLocal() as db:
+        admin = db.query(UserModel).filter(UserModel.email == "admin-logs@example.com").one()
+        db.add(
+            AuditEventModel(
+                request_id="req_export_1",
+                actor_user_id=admin.id,
+                actor_role="admin",
+                action="user_note_updated",
+                target_type="user",
+                target_id="56",
+                status="success",
+                details={"note": "VIP"},
+            )
+        )
+        db.commit()
+
+    response = client.post(
+        "/v1/admin/audit/export",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"action": "user_note_updated", "period": "all"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "attachment; filename=audit_log_all_" in response.headers["content-disposition"]
+    assert "user_note_updated" in response.text
+    assert "**" in response.text
+
+    with db_session_module.SessionLocal() as db:
+        export_event = (
+            db.query(AuditEventModel)
+            .filter(AuditEventModel.action == "audit_log_exported")
+            .order_by(AuditEventModel.created_at.desc())
+            .first()
+        )
+
+        assert export_event is not None
+        assert export_event.details["filters"]["action"] == "user_note_updated"
+        assert export_event.details["record_count"] == 1

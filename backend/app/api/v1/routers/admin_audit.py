@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import StreamingResponse
@@ -14,7 +15,6 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.schemas.admin_audit import (
     AdminAuditExportRequest,
-    AdminAuditLogItem,
     AdminAuditLogResponse,
 )
 from app.core.request_id import resolve_request_id
@@ -26,6 +26,7 @@ from app.services.audit_service import AuditEventCreatePayload, AuditService
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/admin/audit", tags=["admin-audit"])
+AuditPeriod = Literal["7d", "30d", "all"]
 
 
 def _mask_email(email: str | None) -> str | None:
@@ -42,18 +43,19 @@ def _mask_target_id(target_id: str | None, target_type: str | None) -> str | Non
     if not target_id:
         return None
     if target_type == "user" and target_id.isdigit():
+        if len(target_id) <= 2:
+            return "*" * len(target_id)
         if len(target_id) <= 4:
-            return target_id
+            return f"{'*' * (len(target_id) - 1)}{target_id[-1]}"
         return f"{target_id[:2]}...{target_id[-2:]}"
     return target_id
 
 
 def _get_audit_query(
-    db: Session,
     actor: str | None = None,
     action: str | None = None,
     target_type: str | None = None,
-    period: str | None = None,
+    period: AuditPeriod | None = None,
 ):
     stmt = (
         select(
@@ -72,17 +74,28 @@ def _get_audit_query(
     )
 
     if actor:
-        stmt = stmt.where(or_(UserModel.email.ilike(f"%{actor}%"), AuditEventModel.actor_role.ilike(f"%{actor}%")))
+        stmt = stmt.where(
+            or_(
+                UserModel.email.ilike(f"%{actor}%"),
+                AuditEventModel.actor_role.ilike(f"%{actor}%"),
+            )
+        )
     if action:
         stmt = stmt.where(AuditEventModel.action == action)
     if target_type:
         stmt = stmt.where(AuditEventModel.target_type == target_type)
-    if period:
+    if period in {"7d", "30d"}:
         days = 7 if period == "7d" else 30
         start_date = datetime.now(UTC) - timedelta(days=days)
         stmt = stmt.where(AuditEventModel.created_at >= start_date)
 
     return stmt
+
+
+def _build_export_filename(period: AuditPeriod | None) -> str:
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    suffix = period if period in {"7d", "30d"} else "all"
+    return f"audit_log_{suffix}_{timestamp}.csv"
 
 
 @router.get("", response_model=AdminAuditLogResponse)
@@ -91,7 +104,7 @@ def get_audit_log(
     actor: str | None = Query(default=None),
     action: str | None = Query(default=None),
     target_type: str | None = Query(default=None),
-    period: str | None = Query(default=None),
+    period: AuditPeriod | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=50, le=100),
     current_user: AuthenticatedUser = Depends(require_admin_user),
@@ -100,33 +113,33 @@ def get_audit_log(
     """
     Get global audit logs with filters and pagination.
     """
-    stmt = _get_audit_query(db, actor, action, target_type, period)
-    
+    stmt = _get_audit_query(actor, action, target_type, period)
+
     total = db.scalar(select(func.count()).select_from(stmt.subquery()))
-    
-    results = db.execute(
-        stmt.offset((page - 1) * per_page).limit(per_page)
-    ).all()
+
+    results = db.execute(stmt.offset((page - 1) * per_page).limit(per_page)).all()
 
     data = []
     for r in results:
-        data.append({
-            "id": r.id,
-            "timestamp": r.timestamp,
-            "actor_email_masked": _mask_email(r.actor_email),
-            "actor_role": r.actor_role,
-            "action": r.action,
-            "target_type": r.target_type,
-            "target_id_masked": _mask_target_id(r.target_id, r.target_type),
-            "status": r.status,
-            "details": r.details or {},
-        })
+        data.append(
+            {
+                "id": r.id,
+                "timestamp": r.timestamp,
+                "actor_email_masked": _mask_email(r.actor_email),
+                "actor_role": r.actor_role,
+                "action": r.action,
+                "target_type": r.target_type,
+                "target_id_masked": _mask_target_id(r.target_id, r.target_type),
+                "status": r.status,
+                "details": r.details or {},
+            }
+        )
 
     return {
         "data": data,
         "total": total or 0,
         "page": page,
-        "per_page": per_page
+        "per_page": per_page,
     }
 
 
@@ -140,11 +153,11 @@ def export_audit_log(
     """
     Export filtered audit logs to CSV.
     """
-    stmt = _get_audit_query(db, payload.actor, payload.action, payload.target_type, payload.period)
-    
+    stmt = _get_audit_query(payload.actor, payload.action, payload.target_type, payload.period)
+
     # Limit to 5000 for MVP
     results = db.execute(stmt.limit(5000)).all()
-    
+
     # 1. Audit the export action itself
     AuditService.record_event(
         db,
@@ -158,7 +171,7 @@ def export_audit_log(
             status="success",
             details={
                 "filters": payload.model_dump(),
-                "record_count": len(results)
+                "record_count": len(results),
             },
         ),
     )
@@ -167,30 +180,41 @@ def export_audit_log(
     # 2. Generate CSV
     output = io.StringIO()
     writer = csv.writer(output)
-    
+
     header = [
-        "ID", "Timestamp", "Actor Email (Masked)", "Actor Role", "Action", 
-        "Target Type", "Target ID (Masked)", "Status", "Details (JSON)"
+        "ID",
+        "Timestamp",
+        "Actor Email (Masked)",
+        "Actor Role",
+        "Action",
+        "Target Type",
+        "Target ID (Masked)",
+        "Status",
+        "Details (JSON)",
     ]
     writer.writerow(header)
-    
+
     for r in results:
-        writer.writerow([
-            r.id,
-            r.timestamp.isoformat(),
-            _mask_email(r.actor_email),
-            r.actor_role,
-            r.action,
-            r.target_type,
-            _mask_target_id(r.target_id, r.target_type),
-            r.status,
-            str(r.details or {})
-        ])
-    
+        writer.writerow(
+            [
+                r.id,
+                r.timestamp.isoformat(),
+                _mask_email(r.actor_email),
+                r.actor_role,
+                r.action,
+                r.target_type,
+                _mask_target_id(r.target_id, r.target_type),
+                r.status,
+                json.dumps(r.details or {}, ensure_ascii=False, sort_keys=True),
+            ]
+        )
+
     output.seek(0)
-    
+
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=audit_log.csv"}
+        headers={
+            "Content-Disposition": f"attachment; filename={_build_export_filename(payload.period)}"
+        },
     )

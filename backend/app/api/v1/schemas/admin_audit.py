@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -29,4 +31,4 @@ class AdminAuditExportRequest(BaseModel):
     actor: str | None = None
     action: str | None = None
     target_type: str | None = None
-    period: str | None = None # 7d, 30d
+    period: Literal["7d", "30d", "all"] | None = None

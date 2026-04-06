@@ -15,13 +15,23 @@ interface QuotaAlert {
   consumption_rate: number
 }
 
-interface AppError {
+interface AuditLog {
   id: number
   timestamp: string
-  request_id: string
+  actor_email_masked: string | null
+  actor_role: string
   action: string
+  target_type: string | null
+  target_id_masked: string | null
   status: string
   details: Record<string, unknown>
+}
+
+interface AuditLogsResponse {
+  data: AuditLog[]
+  total: number
+  page: number
+  per_page: number
 }
 
 interface LlmLog {
@@ -50,6 +60,11 @@ interface ReplayModalProps {
   replayResult: string | null
   onClose: () => void
   onConfirm: () => void
+}
+
+interface AuditDetailModalProps {
+  log: AuditLog
+  onClose: () => void
 }
 
 function ReplayModal({
@@ -103,6 +118,49 @@ function ReplayModal({
   )
 }
 
+function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
+  return (
+    <div className="modal-overlay" role="presentation">
+      <div
+        className="modal-content admin-logs-modal admin-logs-modal--wide"
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="admin-audit-detail-title"
+      >
+        <h3 id="admin-audit-detail-title">Détail de l&apos;événement d&apos;audit</h3>
+        <div className="modal-summary admin-audit-summary">
+          <div>
+            <strong>Timestamp</strong>
+            <span>{new Date(log.timestamp).toLocaleString()}</span>
+          </div>
+          <div>
+            <strong>Acteur</strong>
+            <span>{log.actor_email_masked ?? log.actor_role}</span>
+          </div>
+          <div>
+            <strong>Action</strong>
+            <span>{log.action}</span>
+          </div>
+          <div>
+            <strong>Cible</strong>
+            <span>{log.target_id_masked ?? log.target_type ?? "Système"}</span>
+          </div>
+          <div>
+            <strong>Statut</strong>
+            <span>{log.status}</span>
+          </div>
+        </div>
+        <pre className="audit-details-json">{JSON.stringify(log.details, null, 2)}</pre>
+        <div className="modal-actions">
+          <button className="action-button action-button--primary" onClick={onClose}>
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function buildLlmLogsPath(
   useCaseFilter: string,
   statusFilter: string,
@@ -129,9 +187,38 @@ function buildLlmLogsPath(
   return query ? `/v1/admin/llm/call-logs?${query}` : "/v1/admin/llm/call-logs"
 }
 
+function buildAuditLogsPath(actorFilter: string, actionFilter: string, periodFilter: string) {
+  const params = new URLSearchParams()
+  if (actorFilter.trim()) {
+    params.set("actor", actorFilter.trim())
+  }
+  if (actionFilter !== "all") {
+    params.set("action", actionFilter)
+  }
+  if (periodFilter !== "all") {
+    params.set("period", periodFilter)
+  }
+  const query = params.toString()
+  return query ? `/v1/admin/audit?${query}` : "/v1/admin/audit"
+}
+
+async function extractApiErrorMessage(response: Response, fallback: string) {
+  try {
+    const payload = (await response.clone().json()) as { error?: { message?: string } }
+    return payload?.error?.message ?? fallback
+  } catch {
+    return fallback
+  }
+}
+
 export function AdminLogsPage() {
   const token = useAccessTokenSnapshot()
-  const [activeTab, setActiveTab] = useState<"errors" | "llm" | "stripe">("errors")
+  const [activeTab, setActiveTab] = useState<"audit" | "llm" | "stripe">("audit")
+  const [auditActorFilter, setAuditActorFilter] = useState("")
+  const [auditActionFilter, setAuditActionFilter] = useState("all")
+  const [auditPeriodFilter, setAuditPeriodFilter] = useState("30d")
+  const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLog | null>(null)
+  const [auditExportMessage, setAuditExportMessage] = useState<string | null>(null)
   const [llmStatusFilter, setLlmStatusFilter] = useState("all")
   const [llmUseCaseFilter, setLlmUseCaseFilter] = useState("all")
   const [llmPeriodFilter, setLlmPeriodFilter] = useState("30d")
@@ -149,28 +236,49 @@ export function AdminLogsPage() {
     enabled: Boolean(token),
   })
 
+  const auditLogsPath = buildAuditLogsPath(auditActorFilter, auditActionFilter, auditPeriodFilter)
   const llmLogsPath = buildLlmLogsPath(llmUseCaseFilter, llmStatusFilter, llmPeriodFilter)
 
-  const { data: logsData, isLoading } = useQuery<{ data: AppError[] | LlmLog[] | StripeEvent[] }>({
-    queryKey: ["admin-logs", activeTab, llmUseCaseFilter, llmStatusFilter, llmPeriodFilter],
+  const { data: auditLogsData, isLoading: isAuditLoading } = useQuery<AuditLogsResponse>({
+    queryKey: ["admin-audit", auditActorFilter, auditActionFilter, auditPeriodFilter],
     queryFn: async () => {
-      const path =
-        activeTab === "errors"
-          ? "/v1/admin/logs/errors"
-          : activeTab === "llm"
-            ? llmLogsPath
-            : "/v1/admin/logs/stripe"
-      const response = await apiFetch(path, {
+      const response = await apiFetch(auditLogsPath, {
         headers: { Authorization: `Bearer ${token}` },
       })
       return response.json()
     },
-    enabled: Boolean(token),
+    enabled: Boolean(token) && activeTab === "audit",
   })
 
-  const llmLogs = activeTab === "llm" ? ((logsData?.data ?? []) as LlmLog[]) : []
-  const rows = logsData?.data ?? []
+  const { data: llmLogsData, isLoading: isLlmLoading } = useQuery<{ data: LlmLog[] }>({
+    queryKey: ["admin-logs-llm", llmUseCaseFilter, llmStatusFilter, llmPeriodFilter],
+    queryFn: async () => {
+      const response = await apiFetch(llmLogsPath, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      return response.json()
+    },
+    enabled: Boolean(token) && activeTab === "llm",
+  })
+
+  const { data: stripeLogsData, isLoading: isStripeLoading } = useQuery<{ data: StripeEvent[] }>({
+    queryKey: ["admin-logs-stripe"],
+    queryFn: async () => {
+      const response = await apiFetch("/v1/admin/logs/stripe", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      return response.json()
+    },
+    enabled: Boolean(token) && activeTab === "stripe",
+  })
+
+  const auditLogs = auditLogsData?.data ?? []
+  const llmLogs = llmLogsData?.data ?? []
+  const stripeEvents = stripeLogsData?.data ?? []
+  const rows = activeTab === "audit" ? auditLogs : activeTab === "llm" ? llmLogs : stripeEvents
   const llmUseCaseOptions = Array.from(new Set(llmLogs.map((log) => log.use_case))).sort()
+  const auditActionOptions = Array.from(new Set(auditLogs.map((log) => log.action))).sort()
+  const isLoading = activeTab === "audit" ? isAuditLoading : activeTab === "llm" ? isLlmLoading : isStripeLoading
 
   const replayMutation = useMutation({
     mutationFn: async (log: LlmLog) => {
@@ -198,9 +306,52 @@ export function AdminLogsPage() {
     },
   })
 
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiFetch("/v1/admin/audit/export", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          actor: auditActorFilter.trim() || null,
+          action: auditActionFilter === "all" ? null : auditActionFilter,
+          period: auditPeriodFilter,
+        }),
+      })
+      if (!response.ok) {
+        throw new Error(await extractApiErrorMessage(response, "Export CSV impossible."))
+      }
+
+      const blob = await response.blob()
+      const header = response.headers.get("Content-Disposition")
+      const filename = header?.match(/filename=([^;]+)/)?.[1] ?? "audit_log.csv"
+      const objectUrl = window.URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = objectUrl
+      anchor.download = filename.replace(/\"/g, "")
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      window.URL.revokeObjectURL(objectUrl)
+      return filename
+    },
+    onSuccess: (filename) => {
+      setAuditExportMessage(`Export CSV généré: ${filename}`)
+    },
+    onError: (error) => {
+      setAuditExportMessage(error instanceof Error ? error.message : "Export CSV impossible.")
+    },
+  })
+
   const openReplayModal = (log: LlmLog) => {
     setReplayResult(null)
     setSelectedReplayLog(log)
+  }
+
+  const openAuditDetail = (log: AuditLog) => {
+    setSelectedAuditLog(log)
   }
 
   return (
@@ -209,10 +360,10 @@ export function AdminLogsPage() {
         <h2>Observabilité Technique</h2>
         <div className="admin-tabs">
           <button
-            className={`tab-button ${activeTab === "errors" ? "tab-button--active" : ""}`}
-            onClick={() => setActiveTab("errors")}
+            className={`tab-button ${activeTab === "audit" ? "tab-button--active" : ""}`}
+            onClick={() => setActiveTab("audit")}
           >
-            Erreurs App
+            Journal d&apos;audit
           </button>
           <button
             className={`tab-button ${activeTab === "llm" ? "tab-button--active" : ""}`}
@@ -246,6 +397,58 @@ export function AdminLogsPage() {
                 />
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {activeTab === "audit" && (
+        <section className="filter-panel">
+          <div className="filter-group">
+            <label htmlFor="audit-actor-filter">Acteur</label>
+            <input
+              id="audit-actor-filter"
+              type="search"
+              value={auditActorFilter}
+              onChange={(event) => setAuditActorFilter(event.target.value)}
+              placeholder="email ou rôle"
+            />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="audit-action-filter">Action</label>
+            <select
+              id="audit-action-filter"
+              value={auditActionFilter}
+              onChange={(event) => setAuditActionFilter(event.target.value)}
+            >
+              <option value="all">Toutes</option>
+              {auditActionOptions.map((action) => (
+                <option key={action} value={action}>
+                  {action}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="audit-period-filter">Période</label>
+            <select
+              id="audit-period-filter"
+              value={auditPeriodFilter}
+              onChange={(event) => setAuditPeriodFilter(event.target.value)}
+            >
+              <option value="7d">7 derniers jours</option>
+              <option value="30d">30 derniers jours</option>
+              <option value="all">Historique</option>
+            </select>
+          </div>
+          <div className="filter-actions">
+            <button
+              className="action-button action-button--primary"
+              disabled={exportMutation.isPending}
+              onClick={() => exportMutation.mutate()}
+            >
+              {exportMutation.isPending ? "Export..." : "Exporter CSV"}
+            </button>
+            {auditExportMessage && <p className="status-message">{auditExportMessage}</p>}
           </div>
         </section>
       )}
@@ -301,25 +504,35 @@ export function AdminLogsPage() {
         ) : (
           <div className="table-container">
             <table className="admin-table">
-              {activeTab === "errors" && (
+              {activeTab === "audit" && (
                 <>
                   <thead>
                     <tr>
                       <th>Timestamp</th>
+                      <th>Acteur</th>
                       <th>Action</th>
-                      <th>Request ID</th>
+                      <th>Cible</th>
+                      <th>Statut</th>
                       <th>Détails</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {((logsData?.data ?? []) as AppError[]).map((log) => (
+                    {auditLogs.map((log) => (
                       <tr key={log.id}>
                         <td>{new Date(log.timestamp).toLocaleString()}</td>
-                        <td className="text-danger">{log.action}</td>
+                        <td>{log.actor_email_masked ?? log.actor_role}</td>
+                        <td>{log.action}</td>
+                        <td>{log.target_id_masked ?? log.target_type ?? "Système"}</td>
                         <td>
-                          <code>{log.request_id}</code>
+                          <span className={`badge badge--status-${log.status.toLowerCase()}`}>
+                            {log.status}
+                          </span>
                         </td>
-                        <td className="json-cell">{JSON.stringify(log.details)}</td>
+                        <td>
+                          <button className="text-button" onClick={() => openAuditDetail(log)}>
+                            Voir détail
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -387,7 +600,7 @@ export function AdminLogsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {((logsData?.data ?? []) as StripeEvent[]).map((event) => (
+                    {stripeEvents.map((event) => (
                       <tr key={event.id}>
                         <td>{new Date(event.received_at).toLocaleString()}</td>
                         <td className="event-type">{event.event_type}</td>
@@ -406,12 +619,14 @@ export function AdminLogsPage() {
                 </>
               )}
             </table>
-            {rows.length === 0 && (
-              <div className="empty-table-state">Aucun log trouvé.</div>
-            )}
+            {rows.length === 0 && <div className="empty-table-state">Aucun log trouvé.</div>}
           </div>
         )}
       </section>
+
+      {selectedAuditLog && (
+        <AuditDetailModal log={selectedAuditLog} onClose={() => setSelectedAuditLog(null)} />
+      )}
 
       {selectedReplayLog && (
         <ReplayModal

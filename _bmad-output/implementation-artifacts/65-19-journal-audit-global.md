@@ -36,15 +36,20 @@ afin d'avoir une traçabilité complète de qui a fait quoi et quand sur le syst
 - [x] Créer les schémas `backend/app/api/v1/schemas/admin_audit.py`
 - [x] Mettre à jour `backend/app/main.py` : ajout du router `admin_audit_router`
 - [x] Mettre à jour `frontend/src/pages/admin/AdminLogsPage.tsx` (AC: 1, 2, 3, 4)
-  - [x] Onglet "Erreurs App" basé sur audit logs filtrés
-  - [x] (Note: export CSV non implémenté en UI car Story 65.20 s'en charge de manière plus globale)
+  - [x] Onglet "Journal d'audit" basé sur `/v1/admin/audit`
+  - [x] Filtres acteur / action / période
+  - [x] Détail d'événement au clic
+  - [x] Export CSV branché sur `/v1/admin/audit/export`
 - [x] CSS dans `AdminLogsPage.css`
 - [x] Tests d'intégration backend `backend/app/tests/integration/test_admin_logs_api.py`
+- [x] Tests frontend `frontend/src/tests/AdminLogsPage.test.tsx`
 
 ### File List
 - `backend/app/api/v1/routers/admin_audit.py`
 - `backend/app/api/v1/schemas/admin_audit.py`
 - `backend/app/main.py`
+- `frontend/src/app/routes.tsx`
 - `frontend/src/pages/admin/AdminLogsPage.tsx`
 - `frontend/src/pages/admin/AdminLogsPage.css`
 - `backend/app/tests/integration/test_admin_logs_api.py`
+- `frontend/src/tests/AdminLogsPage.test.tsx`
