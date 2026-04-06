@@ -164,6 +164,17 @@ export function AdminContentPage() {
     })
   }, [templateDetail])
 
+  useEffect(() => {
+    if (!successMessage) {
+      return
+    }
+    const timeoutId = window.setTimeout(() => {
+      setSuccessMessage(null)
+    }, 3500)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [successMessage])
+
   const hasError =
     paywallTextsQuery.isError ||
     transactionalTextsQuery.isError ||

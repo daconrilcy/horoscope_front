@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -338,8 +339,6 @@ def _serialize_calibration_value(value: Any, data_type: str) -> str:
     if data_type == "json":
         if isinstance(value, str):
             return value
-        import json
-
         return json.dumps(value)
     return str(value)
 

@@ -31,27 +31,27 @@ afin d'ajuster l'expérience produit sans déploiement.
 
 ## Tasks / Subtasks
 
-- [ ] **Migration Alembic — OBLIGATOIRE EN PREMIER** : créer `ConfigTextModel` (AC: 2)
-  - [ ] Table `config_texts` : `id`, `key` (unique), `value` (TEXT), `category` (`paywall`/`transactional`/`marketing`), `updated_at`, `updated_by_user_id` (FK users)
-  - [ ] Créer le modèle SQLAlchemy `ConfigTextModel` dans `backend/app/infra/db/models/config_text.py`
-  - [ ] Migration Alembic `add_config_texts_table`
-  - [ ] Seed initial : quelques clés paywall de test pour le dev (optionnel mais recommandé)
-- [ ] Créer le router `backend/app/api/v1/routers/admin_content.py` (AC: 1, 2, 3, 4)
-  - [ ] `GET /api/v1/admin/content/texts?category=paywall` — liste textes filtrés
-  - [ ] `PATCH /api/v1/admin/content/texts/{key}` body: `{value: str}` — mise à jour texte + audit
-  - [ ] `GET /api/v1/admin/content/feature-flags` — liste flags depuis ops router existant ou DB
-  - [ ] `PATCH /api/v1/admin/content/feature-flags/{flag_code}` body: `{enabled: bool}` — toggle + audit
-  - [ ] Guard `require_admin_user` sur tous les endpoints
-- [ ] Vérifier le router `ops_feature_flags.py` existant (AC: 3, 4)
-  - [ ] Lire le router existant — si les endpoints feature flags existent déjà, les wrapper plutôt que dupliquer
-  - [ ] S'assurer que le guard passe à `require_admin_user`
-- [ ] Créer `frontend/src/pages/admin/AdminContentPage.tsx` (AC: 1, 2, 3, 4)
-  - [ ] Trois sections en onglets : "Textes paywalls", "Messages transactionnels", "Feature flags"
-  - [ ] Section textes : liste clés + valeurs éditables (textarea inline ou édition en place)
-  - [ ] Indicateur `updated_at` visible pour chaque texte édité
-  - [ ] Section feature flags : liste avec toggle (switch ou bouton) + scope
-  - [ ] Modale de confirmation avant chaque toggle de flag (AC: 4)
-- [ ] CSS dans `AdminContentPage.css` (AC: 1)
+- [x] **Migration Alembic — OBLIGATOIRE EN PREMIER** : créer `ConfigTextModel` (AC: 2)
+  - [x] Table `config_texts` : `id`, `key` (unique), `value` (TEXT), `category` (`paywall`/`transactional`/`marketing`), `updated_at`, `updated_by_user_id` (FK users)
+  - [x] Créer le modèle SQLAlchemy `ConfigTextModel` dans `backend/app/infra/db/models/config_text.py`
+  - [x] Migration Alembic `add_config_texts_table`
+  - [x] Seed initial : quelques clés paywall de test pour le dev (optionnel mais recommandé)
+- [x] Créer le router `backend/app/api/v1/routers/admin_content.py` (AC: 1, 2, 3, 4)
+  - [x] `GET /api/v1/admin/content/texts?category=paywall` — liste textes filtrés
+  - [x] `PATCH /api/v1/admin/content/texts/{key}` body: `{value: str}` — mise à jour texte + audit
+  - [x] `GET /api/v1/admin/content/feature-flags` — liste flags depuis ops router existant ou DB
+  - [x] `PATCH /api/v1/admin/content/feature-flags/{flag_code}` body: `{enabled: bool}` — toggle + audit
+  - [x] Guard `require_admin_user` sur tous les endpoints
+- [x] Vérifier le router `ops_feature_flags.py` existant (AC: 3, 4)
+  - [x] Lire le router existant — si les endpoints feature flags existent déjà, les wrapper plutôt que dupliquer
+  - [x] S'assurer que le guard passe à `require_admin_user`
+- [x] Créer `frontend/src/pages/admin/AdminContentPage.tsx` (AC: 1, 2, 3, 4)
+  - [x] Trois sections en onglets : "Textes paywalls", "Messages transactionnels", "Feature flags"
+  - [x] Section textes : liste clés + valeurs éditables (textarea inline ou édition en place)
+  - [x] Indicateur `updated_at` visible pour chaque texte édité
+  - [x] Section feature flags : liste avec toggle (switch ou bouton) + scope
+  - [x] Modale de confirmation avant chaque toggle de flag (AC: 4)
+- [x] CSS dans `AdminContentPage.css` (AC: 1)
 
 ## Dev Notes
 
