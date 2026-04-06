@@ -58,3 +58,4 @@ afin de détecter rapidement une dérive ou une surconsommation avant qu'elle im
 
 - **Fix (code review)** : Les types `float` et `int` dans l'interface TypeScript `UseCaseMetrics` (`estimated_cost_usd`, `avg_latency_ms`, `error_rate`, `retry_rate`) ont été corrigés en `number`. `float` et `int` sont des types Python invalides en TypeScript — ils se résolvent silencieusement en `any` quand `strict` est désactivé.
 - **Fix (Epic 65 review)** : le détail des échecs expose `request_id_masked`, la table d'observabilité actuelle ne stockant pas de `user_id`.
+- **Fix (Epic 65 review)** : `error_code` n'est plus un placeholder `GENERIC_ERROR` systématique ; il est désormais dérivé de l'état réel du log LLM (`FALLBACK_TRIGGERED`, `REPAIR_FAILED`, `VALIDATION_ERROR`, sinon `LLM_CALL_ERROR`).

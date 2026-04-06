@@ -54,8 +54,8 @@ afin de pouvoir tester l'espace admin immédiatement sans manipulation manuelle 
 - **Modèle utilisateur** : `UserModel` dans `backend/app/infra/db/models/user.py` — champs : `email`, `password_hash`, `role`, `astrologer_profile` (default "standard"), `email_unsubscribed` (default False)
 - **Hashage du mot de passe** : utiliser `CryptContext` (passlib) déjà utilisé dans le service d'auth existant — localiser dans `backend/app/services/auth_service.py` ou `backend/app/core/security.py`
 - **Settings** : `backend/app/core/config.py` contient la classe `Settings` avec `app_env` — vérifier le nom exact du champ (`APP_ENV`)
-- **Session DB async** : utiliser le même pattern que les autres seeds ou services — `async with async_session() as db:`
-- **Lifespan FastAPI** : `backend/app/main.py` a un bloc `@asynccontextmanager async def lifespan(app)` — ajouter l'appel de seed dans le bloc `yield` (avant le `yield`, côté startup)
+- **Session DB** : l'implémentation finale conserve la couche SQLAlchemy sync existante et l'expose via un wrapper async (`asyncio.to_thread`) pour rester compatible avec le lifespan FastAPI sans refonte du socle DB
+- **Lifespan FastAPI** : `backend/app/main.py` appelle `await seed_dev_admin()` dans le bloc startup, après les migrations
 
 ### Sécurité critique
 - La vérification `APP_ENV in {"dev", "test"}` est une **condition bloquante non-optionnelle** — le seed doit refuser silencieusement en production/staging
@@ -83,5 +83,4 @@ claude-sonnet-4-6
 ### Debug Log References
 
 ### Completion Notes List
-
-### File List
+- Revue Epic 65 du 2026-04-06 : le seed est désormais exposé via un wrapper async et appelé avec `await` au démarrage, tout en réutilisant la session SQLAlchemy sync existante du projet.

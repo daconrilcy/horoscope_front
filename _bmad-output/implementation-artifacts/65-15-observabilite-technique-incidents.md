@@ -50,11 +50,13 @@ afin de diagnostiquer et rejouer les cas problématiques sans accès direct aux 
 
 ### File List
 - `backend/app/api/v1/routers/admin_logs.py`
+- `backend/app/api/v1/routers/admin_llm.py`
 - `backend/app/api/v1/schemas/admin_logs.py`
 - `backend/app/main.py`
 - `frontend/src/pages/admin/AdminLogsPage.tsx`
 - `frontend/src/pages/admin/AdminLogsPage.css`
 - `backend/app/tests/integration/test_admin_logs_api.py`
+- `frontend/src/tests/AdminLogsPage.test.tsx`
 
 ### Completion Notes List
 

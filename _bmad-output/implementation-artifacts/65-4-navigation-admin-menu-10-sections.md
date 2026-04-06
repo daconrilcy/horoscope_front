@@ -71,3 +71,7 @@ afin de piloter tous les domaines du produit depuis une interface cohérente et 
 - `frontend/src/pages/admin/AdminSettingsPage.tsx`
 - `frontend/src/i18n/admin.ts`
 - `frontend/src/tests/AdminPage.test.tsx`
+
+### Completion Notes List
+
+- Revue Epic 65 du 2026-04-06 : le layout repose désormais uniquement sur `NavLink` pour l'état actif et `aria-current`, ce qui corrige le cas des sous-routes admin (`/admin/users/123`, etc.) sans logique manuelle redondante.
