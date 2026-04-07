@@ -48,6 +48,7 @@ from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
 from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 from app.llm_orchestration.services.repair_prompter import build_repair_prompt
 from app.prompts.catalog import PROMPT_CATALOG, resolve_model
+from app.prompts.common_context import CommonContextBuilder, QualifiedContext
 
 logger = logging.getLogger(__name__)
 
@@ -201,6 +202,7 @@ class LLMGateway:
     """
     Main entry point for LLM orchestration.
     Refactored into a 6-stage pipeline (Story 66.4).
+    Enriched with telemetry and qualified context (Story 66.6).
     """
 
     def __init__(self, responses_client: Optional[ResponsesClient] = None) -> None:
@@ -581,12 +583,31 @@ class LLMGateway:
 
     async def _resolve_plan(
         self, request: LLMExecutionRequest, db: Optional[Session]
-    ) -> ResolvedExecutionPlan:
+    ) -> tuple[ResolvedExecutionPlan, Optional[QualifiedContext]]:
         """Stage 1: Orchestrates the resolution of all configuration artifacts into a single plan."""
         use_case = request.user_input.use_case
+        user_id = request.user_id
+        
+        # Merge extra_context
         context_dict = request.context.model_dump()
         extra = context_dict.pop("extra_context", {})
         context_dict.update(extra)
+
+        # 0. Common context resolution (Story 66.6)
+        qualified_ctx = None
+        if db and user_id is not None and not request.flags.skip_common_context:
+            try:
+                period = "daily"
+                if "weekly" in use_case or context_dict.get("period") == "weekly":
+                    period = "weekly"
+                
+                qualified_ctx = CommonContextBuilder.build(
+                    user_id=user_id, use_case_key=use_case, period=period, db=db
+                )
+                # Merge into context dict for resolution
+                context_dict = {**qualified_ctx.payload.model_dump(), **context_dict}
+            except Exception as e:
+                logger.warning("gateway_common_context_failed use_case=%s error=%s", use_case, e)
 
         source_base = "config"
         config = None
@@ -629,6 +650,10 @@ class LLMGateway:
         else:
             render_vars = {**request.user_input.model_dump(), **request.context.model_dump()}
             render_vars.update(extra)
+            # Add merged common context vars if available
+            if qualified_ctx:
+                render_vars.update(qualified_ctx.payload.model_dump())
+            
             render_vars["locale"] = request.user_input.locale
             render_vars["use_case"] = use_case
             
@@ -660,7 +685,7 @@ class LLMGateway:
         if output_schema:
             response_format = ResponseFormatConfig(type="json_schema", schema=output_schema)
 
-        return ResolvedExecutionPlan(
+        plan = ResolvedExecutionPlan(
             model_id=model_id,
             model_source=model_source,
             rendered_developer_prompt=rendered_developer_prompt,
@@ -678,10 +703,12 @@ class LLMGateway:
             response_format=response_format,
             reasoning_effort=config.reasoning_effort,
             verbosity=config.verbosity,
+            context_quality=qualified_ctx.context_quality if qualified_ctx else "unknown"
         )
+        return plan, qualified_ctx
 
     def _build_messages(
-        self, request: LLMExecutionRequest, plan: ResolvedExecutionPlan
+        self, request: LLMExecutionRequest, plan: ResolvedExecutionPlan, qualified_ctx: Optional[QualifiedContext]
     ) -> ComposedMessages:
         """Stage 2: Composes the final message list for the LLM."""
         use_case = request.user_input.use_case
@@ -689,6 +716,10 @@ class LLMGateway:
         context_dict = request.context.model_dump()
         extra = context_dict.pop("extra_context", {})
         context_dict.update(extra)
+        
+        # Merge qualified context payload if present
+        if qualified_ctx:
+            context_dict.update(qualified_ctx.payload.model_dump())
 
         user_data_block = extra.get("user_data_block")
         if not user_data_block:
@@ -842,10 +873,41 @@ class LLMGateway:
         plan: ResolvedExecutionPlan,
         recovery: RecoveryResult,
         latency_ms: int,
+        request: LLMExecutionRequest,
+        qualified_ctx: Optional[QualifiedContext] = None
     ) -> GatewayResult:
         """Stage 6: Finalizes the GatewayResult with unified metadata."""
         result = recovery.result
         
+        # Telemetry Axis 1: Execution Path
+        if request.flags.test_fallback_active:
+            execution_path = "test_fallback"
+        elif recovery.fallback_reason:
+            execution_path = "fallback_use_case"
+        elif recovery.repair_attempts > 0:
+            execution_path = "repaired"
+        else:
+            execution_path = "nominal"
+
+        # Telemetry Axis 2: Context Quality
+        context_quality = plan.context_quality
+        missing_context_fields = qualified_ctx.missing_fields if qualified_ctx else []
+
+        # Telemetry Axis 3: Normalizations
+        normalizations = validation_result.normalizations_applied
+
+        # Update metadata
+        result.meta.execution_path = execution_path
+        result.meta.context_quality = context_quality
+        result.meta.missing_context_fields = missing_context_fields
+        result.meta.normalizations_applied = normalizations
+        result.meta.repair_attempts = recovery.repair_attempts
+        result.meta.fallback_reason = recovery.fallback_reason
+        
+        # Synchronize legacy booleans (AC7)
+        result.meta.repair_attempted = (recovery.repair_attempts > 0)
+        result.meta.fallback_triggered = (recovery.fallback_reason is not None)
+
         if recovery.repair_attempts > 0:
              if result.meta.validation_status in ["valid", "repair_success"]:
                  result.meta.validation_status = "repair_success"
@@ -857,13 +919,12 @@ class LLMGateway:
         else:
              result.meta.validation_status = "valid"
 
+        # Preserve other technical metadata
         result.meta.latency_ms = latency_ms
         result.meta.model = plan.model_id
         result.meta.persona_id = plan.persona_id
         result.meta.output_schema_id = plan.output_schema_id
         result.meta.schema_version = plan.output_schema_version
-        result.meta.repair_attempted = (recovery.repair_attempts > 0)
-        result.meta.fallback_triggered = (recovery.fallback_reason is not None)
         
         return result
 
@@ -880,43 +941,31 @@ class LLMGateway:
             if use_case in visited and not is_repair_call:
                 raise GatewayError(f"Infinite fallback loop detected for use case '{use_case}'", details={"visited": visited})
 
+            # Stage 1: Resolve Plan (Now includes QualifiedContext)
             try:
-                plan = await self._resolve_plan(request, db)
+                plan, qualified_ctx = await self._resolve_plan(request, db)
             except Exception as e:
                 logger.error("gateway_step_failed:resolve_plan use_case=%s error=%s", use_case, e)
                 raise
 
-            user_id = request.user_id
-            context_dict = request.context.model_dump()
-            extra = context_dict.pop("extra_context", {})
-            context_dict.update(extra)
-            
-            if db and user_id is not None and not request.flags.skip_common_context:
-                try:
-                    from app.prompts.common_context import CommonContextBuilder
-                    period = "daily"
-                    if "weekly" in use_case or context_dict.get("period") == "weekly":
-                        period = "weekly"
-                    common_ctx = CommonContextBuilder.build(user_id=user_id, use_case_key=use_case, period=period, db=db)
-                    context_dict = {**common_ctx.model_dump(), **context_dict}
-                except Exception as e:
-                    logger.warning("gateway_common_context_failed use_case=%s error=%s", use_case, e)
-
             if not is_repair_call:
                 logger.info("llm_gateway_start use_case=%s request_id=%s", use_case, request.request_id)
 
+            # Stage 2: Build Messages
             try:
-                messages = self._build_messages(request, plan)
+                messages = self._build_messages(request, plan, qualified_ctx)
             except Exception as e:
                 logger.error("gateway_step_failed:build_messages use_case=%s error=%s", use_case, e)
                 raise
 
+            # Stage 3: Call Provider
             try:
                 provider_result = await self._call_provider(messages, plan, request)
             except Exception as e:
                 logger.error("gateway_step_failed:call_provider use_case=%s error=%s", use_case, e)
                 raise
 
+            # Stage 4: Validate & Normalize
             try:
                 validation = self._validate_and_normalize(provider_result.raw_output, plan, request)
                 if validation.valid:
@@ -925,6 +974,7 @@ class LLMGateway:
                 logger.error("gateway_step_failed:validate_and_normalize use_case=%s error=%s", use_case, e)
                 raise
 
+            # Stage 5: Recovery (Repair/Fallback)
             try:
                 if not validation.valid:
                     recovery = await self._handle_repair_or_fallback(validation, request, plan, provider_result, db=db)
@@ -935,8 +985,12 @@ class LLMGateway:
                 raise
 
             latency_ms = int((time.perf_counter() - start_time) * 1000)
+            # Stage 6: Build Final Result
             try:
-                final_result = self._build_result(provider_result, validation, plan, recovery, latency_ms)
+                final_result = self._build_result(
+                    provider_result, validation, plan, recovery, latency_ms, 
+                    request=request, qualified_ctx=qualified_ctx
+                )
             except Exception as e:
                 logger.error("gateway_step_failed:build_result use_case=%s error=%s", use_case, e)
                 raise

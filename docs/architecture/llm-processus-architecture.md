@@ -63,6 +63,30 @@ Le traitement de la réponse brute du LLM est découpé en **4 étapes séquenti
 
 La politique `strict=True` rend ces anomalies visibles via des warnings mais ne bloque pas la réponse, préservant la continuité du service tout en assurant une sortie conforme au catalogue.
 
+## Qualification du Contexte (`QualifiedContext`)
+
+Le socle commun de contexte est désormais qualifié avant l'injection dans le prompt pour mesurer la pertinence des données fournies au LLM.
+
+### Niveaux de Qualité (`context_quality`)
+- **`full`** : Tous les champs structurants et secondaires sont présents.
+- **`partial`** : Au moins une source de données est manquante (ex: pas d'interprétation natale pré-existante) mais les données critiques (données natales brutes) sont disponibles.
+- **`minimal`** : Les données critiques manquent (ex: pas de données natales ET pas d'interprétation), le LLM fonctionnera en mode dégradé.
+
+### Provenance (`source`)
+- **`db`** : Données extraites avec succès de la base.
+- **`partial_db`** : Mix de données DB et de fallbacks.
+- **`fallback`** : Échec de récupération des données métier, utilisation de valeurs par défaut uniquement.
+
+## Télémétrie et Observabilité (`GatewayMeta`)
+
+La plateforme expose désormais trois axes d'analyse orthogonaux dans les métadonnées de chaque réponse :
+
+1.  **Axe 1 : Chemin d'Exécution** (`execution_path`) : Décrit le flux de contrôle (`nominal`, `repaired`, `fallback_use_case`, `test_fallback`).
+2.  **Axe 2 : Qualité des Données** (`context_quality`) : Décrit la richesse du contexte injecté (`full`, `partial`, `minimal`).
+3.  **Axe 3 : Transformations** (`normalizations_applied`) : Liste les normalisations effectuées sur la sortie (tags de validation).
+
+Cette séparation permet de distinguer un incident technique (ex: repair) d'une dégradation fonctionnelle liée aux données utilisateur (ex: contexte partiel).
+
 ## Couche Applicative LLM (`AIEngineAdapter`)
 
 Bien que conservant son nom legacy `AIEngineAdapter` (décision Option A, Epic 66), ce module fait office de **couche applicative canonique** pour les appels LLM.

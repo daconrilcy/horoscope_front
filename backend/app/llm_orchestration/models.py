@@ -224,6 +224,14 @@ class GatewayMeta(BaseModel):
     fallback_triggered: bool = False
     validation_errors: Optional[List[str]] = None
 
+    # Enriched Telemetry (Story 66.6)
+    execution_path: Literal["nominal", "repaired", "fallback_use_case", "test_fallback"] = "nominal"
+    context_quality: str = "unknown"
+    missing_context_fields: List[str] = Field(default_factory=list)
+    normalizations_applied: List[str] = Field(default_factory=list)
+    repair_attempts: int = 0
+    fallback_reason: Optional[str] = None
+
 
 class GatewayResult(BaseModel):
     """Result from the LLM Gateway."""
