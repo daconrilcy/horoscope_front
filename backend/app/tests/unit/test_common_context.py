@@ -49,10 +49,10 @@ async def test_build_common_context_with_interpretation() -> None:
         mock_db.execute.return_value.scalar_one_or_none.return_value = mock_interp
         ctx = CommonContextBuilder.build(user_id, "chat_astrologer", "daily", mock_db)
 
-        assert ctx.natal_interpretation == "Votre thème est harmonieux."
-        assert ctx.natal_data is None
-        assert ctx.precision_level == "précision complète"
-        assert ctx.use_case_name == "chat-astrologer-v1"
+        assert ctx.payload.natal_interpretation == "Votre thème est harmonieux."
+        assert ctx.payload.natal_data is None
+        assert ctx.payload.precision_level == "précision complète"
+        assert ctx.payload.use_case_name == "chat-astrologer-v1"
 
 
 @pytest.mark.asyncio
@@ -91,6 +91,6 @@ async def test_build_common_context_without_interpretation() -> None:
 
         ctx = CommonContextBuilder.build(user_id, "guidance_daily", "daily", mock_db)
 
-        assert ctx.natal_interpretation is None
-        assert ctx.natal_data == {"planets": {"sun": {"sign": "aries"}}}
-        assert "heure de naissance manquante" in ctx.precision_level
+        assert ctx.payload.natal_interpretation is None
+        assert ctx.payload.natal_data == {"planets": {"sun": {"sign": "aries"}}}
+        assert "heure de naissance manquante" in ctx.payload.precision_level

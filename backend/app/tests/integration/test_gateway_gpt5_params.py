@@ -23,21 +23,19 @@ def db_session():
         Base.metadata.drop_all(bind=test_engine)
 
 
-def _make_mock_result(model: str) -> MagicMock:
+from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
+
+def _make_mock_result(model: str) -> GatewayResult:
     """Helper : crée un GatewayResult mock minimal."""
-    mock_result = MagicMock()
-    mock_result.raw_output = "{}"
-    mock_result.structured_output = {}
-    mock_result.meta.model = model
-    mock_result.meta.validation_status = "valid"
-    mock_result.meta.repair_attempted = False
-    mock_result.meta.fallback_triggered = False
-    mock_result.meta.persona_id = None
-    mock_result.meta.output_schema_id = None
-    mock_result.usage.input_tokens = 1
-    mock_result.usage.output_tokens = 1
-    mock_result.usage.total_tokens = 2
-    return mock_result
+    return GatewayResult(
+        use_case="test",
+        request_id="test",
+        trace_id="test",
+        raw_output="{}",
+        structured_output={},
+        usage=UsageInfo(),
+        meta=GatewayMeta(latency_ms=10, model=model)
+    )
 
 
 @pytest.mark.asyncio

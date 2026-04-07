@@ -96,7 +96,7 @@ USE_CASE_STUBS = {
             "Interpretez le theme natal fourni de facon claire, chaleureuse et non fataliste, "
             "strictement a partir des donnees techniques suivantes :\n"
             "{{chart_json}}\n\n"
-            "Retourne uniquement un JSON valide with exactement :\n"
+            "Retourne uniquement un JSON valide with exactly :\n"
             '- "title" : une phrase courte et fluide qui synthétise le profil natal '
             "dans un style éditorial, rédigée au vouvoiement, sans deux-points ni guillemets.\n"
             '- "summary" : un portrait natal en 5 a 7 phrases fluides, redige au vouvoiement, '
@@ -242,12 +242,12 @@ class LLMGateway:
         if policy != "none" and question:
             parts.append(question)
 
-        if "natal_chart_summary" in context:
+        if "natal_chart_summary" in context and context["natal_chart_summary"]:
             parts.append(f"Natal Chart Summary: {context['natal_chart_summary']}")
-        if "situation" in context:
+        if "situation" in context and context["situation"]:
             parts.append(f"Context: {context['situation']}")
 
-        if "chart_json" in context and not chart_json_in_prompt:
+        if "chart_json" in context and context["chart_json"] and not chart_json_in_prompt:
             parts.append(f"Technical Data: {context['chart_json']}")
 
         if not parts:
@@ -318,8 +318,12 @@ class LLMGateway:
                     LlmUseCaseConfigModel.key == use_case
                 )
                 db_use_case = db.execute(use_case_stmt).scalar_one_or_none()
+                
+                if db_use_case and "allowed_persona_ids" not in context:
+                    context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
 
                 if db_prompt:
+                    logger.debug("gateway_db_prompt_found use_case=%s model=%s effort=%s verbosity=%s", use_case, db_prompt.model, db_prompt.reasoning_effort, db_prompt.verbosity)
                     authorized_vars = {
                         "locale", "use_case", "natal_chart_summary", "last_user_msg",
                         "situation", "birth_date", "birth_time", "birth_timezone",
@@ -353,7 +357,7 @@ class LLMGateway:
                         max_output_tokens=db_prompt.max_output_tokens,
                         system_core_key="default_v1",
                         developer_prompt=db_prompt.developer_prompt,
-                        prompt_version_id=str(db_prompt.id),
+                        prompt_version_id=str(db_prompt.id) if hasattr(db_prompt, "id") else "hardcoded-v1",
                         required_prompt_placeholders=required,
                         fallback_use_case=resolved_fallback,
                         persona_strategy=db_use_case.persona_strategy if db_use_case else "optional",
@@ -365,13 +369,32 @@ class LLMGateway:
                         interaction_mode=db_use_case.interaction_mode if db_use_case else "structured",
                         user_question_policy=db_use_case.user_question_policy if db_use_case else "none",
                     )
-                    if db_use_case and "allowed_persona_ids" not in context:
-                        context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
             except Exception as e:
                 logger.error("gateway_db_prompt_resolve_failed use_case=%s error=%s", use_case, str(e))
 
         if not config:
             config = USE_CASE_STUBS.get(use_case)
+            if db and config:
+                # Still try to merge DB use case config even if prompt is stubbed
+                use_case_stmt = select(LlmUseCaseConfigModel).where(
+                    LlmUseCaseConfigModel.key == use_case
+                )
+                try:
+                    db_use_case = db.execute(use_case_stmt).scalar_one_or_none()
+                    if db_use_case:
+                        new_data = config.model_dump()
+                        new_data.update({
+                            "input_schema": db_use_case.input_schema,
+                            "output_schema_id": db_use_case.output_schema_id,
+                            "persona_strategy": db_use_case.persona_strategy,
+                            "interaction_mode": db_use_case.interaction_mode,
+                            "user_question_policy": db_use_case.user_question_policy,
+                        })
+                        config = UseCaseConfig(**new_data)
+                        if "allowed_persona_ids" not in context:
+                            context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
+                except Exception as e:
+                    logger.error("gateway_db_use_case_merge_failed error=%s", str(e))
             logger.warning("gateway_fallback_to_stub use_case=%s", use_case)
 
         if not config:
@@ -391,17 +414,26 @@ class LLMGateway:
         """Resolves persona and returns (persona_block, persona_id)."""
         persona_block = None
         resolved_persona_id = context.get("persona_id")
+        allowed_ids = context.get("allowed_persona_ids")
+        
+        logger.warning("gateway_resolve_persona start use_case=%s allowed_ids=%s", use_case, allowed_ids)
 
         if config.persona_strategy == "forbidden":
             return None, None
 
-        if db and context.get("allowed_persona_ids"):
-            allowed_ids = context["allowed_persona_ids"]
+        if db and allowed_ids:
             uuid_ids = []
             for pid in allowed_ids:
                 try:
-                    uuid_ids.append(uuid.UUID(pid))
-                except (ValueError, TypeError):
+                    if isinstance(pid, str) and pid.startswith("["):
+                        # Handle potential double-encoded list
+                        import ast
+                        actual_list = ast.literal_eval(pid)
+                        for apid in actual_list:
+                            uuid_ids.append(uuid.UUID(apid))
+                    else:
+                        uuid_ids.append(uuid.UUID(pid))
+                except (ValueError, TypeError, SyntaxError):
                     continue
 
             if uuid_ids:
@@ -483,12 +515,13 @@ class LLMGateway:
     def _adjust_reasoning_config(self, config: UseCaseConfig) -> UseCaseConfig:
         """Auto-adjusts tokens, timeout, and reasoning_effort for reasoning models."""
         if is_reasoning_model(config.model):
+            logger.warning("gateway_adjust_reasoning model=%s effort=%s", config.model, config.reasoning_effort)
             updates = {}
             if config.max_output_tokens < 16384:
                 updates["max_output_tokens"] = 16384
             if config.timeout_seconds < 180:
                 updates["timeout_seconds"] = 180
-            if not config.reasoning_effort:
+            if config.reasoning_effort is None:
                 updates["reasoning_effort"] = "medium"
             if updates:
                 return config.model_copy(update=updates)
@@ -582,16 +615,21 @@ class LLMGateway:
     # --- PIPELINE STAGES (Story 66.4) ---
 
     async def _resolve_plan(
-        self, request: LLMExecutionRequest, db: Optional[Session]
+        self, request: LLMExecutionRequest, db: Optional[Session], 
+        config_override: Optional[UseCaseConfig] = None,
+        context_override: Optional[Dict[str, Any]] = None
     ) -> tuple[ResolvedExecutionPlan, Optional[QualifiedContext]]:
         """Stage 1: Orchestrates the resolution of all configuration artifacts into a single plan."""
         use_case = request.user_input.use_case
         user_id = request.user_id
         
-        # Merge extra_context
-        context_dict = request.context.model_dump()
-        extra = context_dict.pop("extra_context", {})
-        context_dict.update(extra)
+        # Use provided context_dict or build from request
+        if context_override is not None:
+            context_dict = context_override
+        else:
+            context_dict = request.context.model_dump()
+            extra = context_dict.pop("extra_context", {})
+            context_dict.update(extra)
 
         # 0. Common context resolution (Story 66.6)
         qualified_ctx = None
@@ -609,19 +647,23 @@ class LLMGateway:
             except Exception as e:
                 logger.warning("gateway_common_context_failed use_case=%s error=%s", use_case, e)
 
-        source_base = "config"
-        config = None
-        if db:
-            try:
-                config = await self._resolve_config(db, use_case, context_dict)
-                if config.prompt_version_id == "hardcoded-v1":
+        if config_override:
+            config = config_override
+            source_base = "config" if config.prompt_version_id != "hardcoded-v1" else "stub"
+        else:
+            source_base = "config"
+            config = None
+            if db:
+                try:
+                    config = await self._resolve_config(db, use_case, context_dict)
+                    if config.prompt_version_id == "hardcoded-v1":
+                        source_base = "stub"
+                except Exception:
                     source_base = "stub"
-            except Exception:
+            
+            if not config:
+                config = await self._resolve_config(db, use_case, context_dict)
                 source_base = "stub"
-        
-        if not config:
-            config = await self._resolve_config(db, use_case, context_dict)
-            source_base = "stub"
 
         model_id = config.model
         model_source = source_base
@@ -637,6 +679,7 @@ class LLMGateway:
 
         if request.user_input.persona_id_override:
             context_dict["persona_id"] = request.user_input.persona_id_override
+        
         persona_block, persona_id = await self._resolve_persona(db, config, context_dict, use_case)
 
         output_schema, schema_name, schema_version = self._resolve_schema(db, config, use_case)
@@ -649,16 +692,16 @@ class LLMGateway:
             )
         else:
             render_vars = {**request.user_input.model_dump(), **request.context.model_dump()}
-            render_vars.update(extra)
-            # Add merged common context vars if available
-            if qualified_ctx:
-                render_vars.update(qualified_ctx.payload.model_dump())
+            # Manual update to include overrides/context_dict
+            render_vars.update(context_dict)
             
             render_vars["locale"] = request.user_input.locale
             render_vars["use_case"] = use_case
-            
-            if request.user_input.message:
-                render_vars["last_user_msg"] = request.user_input.message
+            render_vars["last_user_msg"] = request.user_input.last_user_msg
+            if persona_block:
+                render_vars["persona_name"] = persona_id  # Best effort if name not in context
+                if not render_vars["last_user_msg"]:
+                    render_vars["last_user_msg"] = request.user_input.message
             if request.user_input.question:
                 render_vars["question"] = request.user_input.question
             if request.user_input.situation:
@@ -695,6 +738,7 @@ class LLMGateway:
             output_schema_id=config.output_schema_id,
             output_schema=output_schema,
             output_schema_version=schema_version,
+            input_schema=config.input_schema,
             interaction_mode=interaction_mode,
             user_question_policy=user_question_policy,
             overrides_applied=overrides_applied,
@@ -887,7 +931,10 @@ class LLMGateway:
         elif recovery.repair_attempts > 0:
             execution_path = "repaired"
         else:
-            execution_path = "nominal"
+            # Check if inner result already has an execution path (from recursion)
+            execution_path = getattr(result.meta, "execution_path", "nominal")
+            if execution_path == "unknown":
+                execution_path = "nominal"
 
         # Telemetry Axis 2: Context Quality
         context_quality = plan.context_quality
@@ -901,12 +948,15 @@ class LLMGateway:
         result.meta.context_quality = context_quality
         result.meta.missing_context_fields = missing_context_fields
         result.meta.normalizations_applied = normalizations
-        result.meta.repair_attempts = recovery.repair_attempts
-        result.meta.fallback_reason = recovery.fallback_reason
+        
+        # Increment if recursion occurred, or take from recovery
+        result.meta.repair_attempts = max(getattr(result.meta, "repair_attempts", 0), recovery.repair_attempts)
+        if recovery.fallback_reason:
+            result.meta.fallback_reason = recovery.fallback_reason
         
         # Synchronize legacy booleans (AC7)
-        result.meta.repair_attempted = (recovery.repair_attempts > 0)
-        result.meta.fallback_triggered = (recovery.fallback_reason is not None)
+        result.meta.repair_attempted = (result.meta.repair_attempts > 0)
+        result.meta.fallback_triggered = (result.meta.fallback_reason is not None)
 
         if recovery.repair_attempts > 0:
              if result.meta.validation_status in ["valid", "repair_success"]:
@@ -928,12 +978,29 @@ class LLMGateway:
         
         return result
 
+    def _validate_input(self, config: UseCaseConfig, user_input: Dict[str, Any]) -> None:
+        """Helper to validate user input against UseCaseConfig.input_schema."""
+        logger.debug("gateway_validate_input use_case=%s has_schema=%s", getattr(config, "use_case", "unknown"), config.input_schema is not None)
+        if config.input_schema:
+            try:
+                res = validate_input(user_input, config.input_schema)
+                if not res.valid:
+                    error_msg = "; ".join(res.errors)
+                    logger.warning("gateway_input_validation_failed error=%s", error_msg)
+                    raise InputValidationError(f"Input validation failed: {error_msg}")
+            except InputValidationError:
+                raise
+            except Exception as e:
+                logger.error("gateway_input_validation_unexpected_error error=%s", str(e))
+                raise InputValidationError(f"Input validation failed (unexpected): {str(e)}") from e
+
     async def execute_request(
         self, request: LLMExecutionRequest, db: Optional[Session] = None
     ) -> GatewayResult:
         """Canonical entry point for LLM orchestration using typed contracts."""
         start_time = time.perf_counter()
         use_case = request.user_input.use_case
+        user_input_dict = request.user_input.model_dump()
         visited = request.flags.visited_use_cases
         is_repair_call = request.flags.is_repair_call
 
@@ -941,11 +1008,33 @@ class LLMGateway:
             if use_case in visited and not is_repair_call:
                 raise GatewayError(f"Infinite fallback loop detected for use case '{use_case}'", details={"visited": visited})
 
+            # 0. Merge extra_context for preliminary resolution
+            context_dict = request.context.model_dump()
+            extra = context_dict.pop("extra_context", {})
+            context_dict.update(extra)
+
+            # Stage 0.5: Fast Validate Input (Story 66.4 AC8)
+            # We need config before the full Stage 1 (which includes prompt rendering)
+            # to fail fast if the user input is invalid.
+            # We must use context_dict here to ensure correct resolution (e.g. overrides)
+            config = await self._resolve_config(db, use_case, context_dict)
+            self._validate_input(config, user_input_dict)
+
             # Stage 1: Resolve Plan (Now includes QualifiedContext)
             try:
-                plan, qualified_ctx = await self._resolve_plan(request, db)
+                plan, qualified_ctx = await self._resolve_plan(request, db, config_override=config, context_override=context_dict)
             except Exception as e:
                 logger.error("gateway_step_failed:resolve_plan use_case=%s error=%s", use_case, e)
+                raise
+
+            # Stage 1.5: Validate Input (Story 66.4 AC8)
+            try:
+                # We use the config from the plan which was just resolved
+                self._validate_input(plan, user_input_dict)
+            except InputValidationError:
+                raise
+            except Exception as e:
+                logger.error("gateway_step_failed:validate_input use_case=%s error=%s", use_case, e)
                 raise
 
             if not is_repair_call:

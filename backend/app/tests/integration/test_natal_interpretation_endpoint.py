@@ -222,7 +222,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute",
+                "app.llm_orchestration.gateway.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 return_value=_make_gateway_result(use_case),
             ),
@@ -242,9 +242,15 @@ class TestNatalInterpretationEndpointV2:
         persona_id = str(uuid.uuid4())
         persona_mock = MagicMock()
         persona_mock.name = "Test Persona"
+        persona_mock.description = "Test"
+        persona_mock.tone = "warm"
+        persona_mock.verbosity = "medium"
+        persona_mock.style_markers = []
+        persona_mock.boundaries = []
+        persona_mock.allowed_topics = []
 
         mock_db.execute.return_value.scalar_one_or_none.return_value = persona_mock
-
+        mock_db.get.return_value = persona_mock
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
@@ -255,7 +261,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute",
+                "app.llm_orchestration.gateway.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 return_value=_make_gateway_result(use_case, persona_id=persona_id),
             ),
@@ -278,6 +284,8 @@ class TestNatalInterpretationEndpointV2:
 
     def test_complete_persona_missing(self, test_client, mock_db) -> None:
         # mock_db.execute.return_value.scalar_one_or_none.return_value = None (from fixture)
+        from app.llm_orchestration.models import InputValidationError
+
         with (
             patch(
                 "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
@@ -287,9 +295,17 @@ class TestNatalInterpretationEndpointV2:
                 "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
+            patch(
+                "app.services.ai_engine_adapter.AIEngineAdapter.generate_natal_interpretation",
+                side_effect=InputValidationError("Persona missing"),
+            ),
         ):
             response = test_client.post(
-                "/v1/natal/interpretation", json={"use_case_level": "complete"}
+                "/v1/natal/interpretation",
+                json={
+                    "use_case_level": "complete",
+                    "persona_id": str(uuid.uuid4())
+                }
             )
         assert response.status_code == 422
         assert response.json()["error"]["code"] == "natal_input_invalid"
@@ -321,7 +337,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute",
+                "app.llm_orchestration.gateway.LLMGateway.execute_request",
                 side_effect=GatewayConfigError("Invalid gateway config"),
             ),
         ):
@@ -345,7 +361,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute",
+                "app.llm_orchestration.gateway.LLMGateway.execute_request",
                 side_effect=UnknownUseCaseError("Unknown use case"),
             ),
         ):
@@ -369,7 +385,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute",
+                "app.llm_orchestration.gateway.LLMGateway.execute_request",
                 side_effect=UpstreamTimeoutError("LLM Timeout"),
             ),
         ):

@@ -60,7 +60,10 @@ def test_validate_output_evidence_aliases_strict_mode():
         raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
     )
     assert result.valid is True
-    assert result.parsed["evidence"] == ["SUN_TAURUS", "SUN_TAURUS", "ASPECT_SUN_VENUS_CONJUNCTION"]
+    # SUN is too ambiguous to normalize -> filtered in strict mode
+    # TAURUS is mapped to SUN_TAURUS (because it is the only key ending in _TAURUS)
+    # SUN_CONJUNCTION_VENUS is mapped to ASPECT_SUN_VENUS_CONJUNCTION
+    assert result.parsed["evidence"] == ["SUN_TAURUS", "ASPECT_SUN_VENUS_CONJUNCTION"]
 
 
 def test_validate_output_evidence_unknown_strict_mode_filters():

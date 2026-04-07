@@ -390,6 +390,14 @@ class NatalInterpretationServiceV2:
             )
 
         # 4. Call AIEngineAdapter (Story 66.7)
+        effective_question = question
+        if level == "short":
+            if not effective_question:
+                effective_question = "Interprète mon thème natal."
+        else:
+            # Story 30-5: level complete does not take a question
+            effective_question = None
+
         persona_name = None
         if persona_id:
             persona = db.get(LlmPersonaModel, uuid.UUID(persona_id))
@@ -405,7 +413,7 @@ class NatalInterpretationServiceV2:
             evidence_catalog=evidence_catalog,
             persona_id=persona_id,
             validation_strict=level == "complete",
-            question=question if level == "short" else None,
+            question=effective_question,
             astro_context=None,  # Specific natal astro_context if any
             module=module,
             variant_code=variant_code,

@@ -8,6 +8,7 @@ from app.infra.db.base import Base
 from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
 
 
 @pytest.fixture
@@ -21,6 +22,17 @@ def db_session():
     finally:
         session.close()
         Base.metadata.drop_all(bind=test_engine)
+
+
+def _make_mock_result(use_case, raw_output):
+    return GatewayResult(
+        use_case=use_case,
+        request_id="req",
+        trace_id="trace",
+        raw_output=raw_output,
+        usage=UsageInfo(),
+        meta=GatewayMeta(latency_ms=10, model="m"),
+    )
 
 
 @pytest.mark.asyncio
@@ -56,19 +68,8 @@ async def test_gateway_repair_sequence(db_session, monkeypatch):
     # 3. Mock ResponsesClient to fail once then succeed
     mock_client = MagicMock()
 
-    # First response: invalid JSON
-    res1 = MagicMock()
-    res1.raw_output = "INVALID JSON"
-    res1.usage = MagicMock()
-    res1.meta = MagicMock()
-    res1.meta.latency_ms = 100
-
-    # Second response: valid JSON (repair success)
-    res2 = MagicMock()
-    res2.raw_output = '{"message": "fixed"}'
-    res2.usage = MagicMock()
-    res2.meta = MagicMock()
-    res2.meta.latency_ms = 100
+    res1 = _make_mock_result("test_repair", "INVALID JSON")
+    res2 = _make_mock_result("test_repair", '{"message": "fixed"}')
 
     mock_client.execute = AsyncMock(side_effect=[res1, res2])
 
@@ -133,18 +134,10 @@ async def test_gateway_fallback_sequence(db_session, monkeypatch):
     # 3. Mock ResponsesClient to always fail primary, then succeed fallback
     mock_client = MagicMock()
 
-    # Responses for primary (call + repair)
-    res_fail = MagicMock()
-    res_fail.raw_output = "FAIL"
-    res_fail.usage = MagicMock()
-    res_fail.meta = MagicMock()
+    res_fail = _make_mock_result("primary", "FAIL")
+    res_fallback = _make_mock_result("fallback_uc", "Fallback Success")
 
-    # Response for fallback
-    res_fallback = MagicMock()
-    res_fallback.raw_output = "Fallback Success"
-    res_fallback.usage = MagicMock()
-    res_fallback.meta = MagicMock()
-
+    # Call primary -> Repair primary -> Fallback to fallback_uc
     mock_client.execute = AsyncMock(side_effect=[res_fail, res_fail, res_fallback])
 
     gateway = LLMGateway(responses_client=mock_client)

@@ -1,0 +1,1 @@
+BadRequestError: Error code: 400 - {'error': {'message': "Invalid schema for response_format 'guidance_daily': In context=(), object schema missing properties.", 'type': 'invalid_request_error', 'param': 'text.format.schema', 'code': 'invalid_json_schema'}}

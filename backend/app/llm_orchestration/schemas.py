@@ -148,6 +148,8 @@ _SuggestedReplyItemV2 = Annotated[str, Field(min_length=1, max_length=120)]
 
 
 class AstroSection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     key: _SECTION_KEYS
     heading: str = Field(..., min_length=1, max_length=80)
     content: str = Field(..., min_length=1, max_length=2500)
@@ -156,6 +158,8 @@ class AstroSection(BaseModel):
 class AstroSectionV2(BaseModel):
     """Extended section with wider content limit for premium interpretations."""
 
+    model_config = ConfigDict(extra="forbid")
+
     key: _SECTION_KEYS
     heading: str = Field(..., min_length=1, max_length=100)
     content: str = Field(..., min_length=1, max_length=6500)
@@ -163,6 +167,8 @@ class AstroSectionV2(BaseModel):
 
 class AstroResponseV1(BaseModel):
     """Canonical structured response for astrological interpretations."""
+
+    model_config = ConfigDict(extra="forbid")
 
     title: str = Field(..., min_length=1, max_length=120)
     summary: str = Field(..., min_length=1, max_length=1200)
@@ -176,6 +182,8 @@ class AstroResponseV1(BaseModel):
 class AstroFreeSection(BaseModel):
     """Section for free plan — heading only, no content constraint, no key enum."""
 
+    model_config = ConfigDict(extra="forbid")
+
     key: str = Field(..., min_length=1, max_length=80)
     heading: str = Field(..., min_length=1, max_length=160)
     content: str = Field(default="")
@@ -187,6 +195,8 @@ class AstroFreeResponseV1(BaseModel):
     Contains summary + section headings only. No content, no highlights, no advice.
     The frontend displays teasers (i18n) instead of the empty content.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     title: str = Field(default="")
     summary: str = Field(..., min_length=1)
@@ -200,6 +210,8 @@ class AstroFreeResponseV1(BaseModel):
 class AstroResponseV2(BaseModel):
     """Extended structured response for premium complete interpretations (Story 30-2)."""
 
+    model_config = ConfigDict(extra="forbid")
+
     title: str = Field(..., min_length=1, max_length=160)
     summary: str = Field(..., min_length=1, max_length=2800)
     sections: List[AstroSectionV2] = Field(..., min_length=2, max_length=10)
@@ -212,6 +224,8 @@ class AstroResponseV2(BaseModel):
 class AstroSectionV3(BaseModel):
     """Section premium v3 — contenu obligatoirement substantiel (min 280 chars)."""
 
+    model_config = ConfigDict(extra="forbid")
+
     key: _SECTION_KEYS
     heading: str = Field(..., min_length=1, max_length=100)
     content: str = Field(..., min_length=280, max_length=6500)
@@ -219,6 +233,8 @@ class AstroSectionV3(BaseModel):
 
 class AstroSectionErrorV3(BaseModel):
     """Section mode erreur v3 — pas de contrainte de densité premium."""
+
+    model_config = ConfigDict(extra="forbid")
 
     key: _SECTION_KEYS
     heading: str = Field(..., min_length=1, max_length=100)
@@ -257,6 +273,8 @@ class AstroErrorResponseV3(BaseModel):
 class ChatResponseV1(BaseModel):
     """Canonical structured response for interactive chat."""
 
+    model_config = ConfigDict(extra="forbid")
+
     message: str = Field(..., min_length=1, max_length=2500)
     suggested_replies: List[_SuggestedReplyItemV1] = Field(..., min_length=1, max_length=5)
     intent: Optional[_CHAT_INTENTS] = Field(...)
@@ -266,6 +284,8 @@ class ChatResponseV1(BaseModel):
 
 class ChatResponseV2(BaseModel):
     """Extended structured response for premium chat (GPT-5 optimization)."""
+
+    model_config = ConfigDict(extra="forbid")
 
     message: str = Field(..., min_length=1, max_length=4000)
     suggested_replies: List[_SuggestedReplyItemV2] = Field(..., min_length=1, max_length=8)

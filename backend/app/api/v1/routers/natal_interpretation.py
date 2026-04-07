@@ -39,6 +39,7 @@ from app.services.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementResult,
     NatalChartLongQuotaExceededError,
 )
+from app.services.ai_engine_adapter import AIEngineAdapterError
 from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -197,6 +198,25 @@ async def interpret_natal_chart(
         current_step = "return_response"
         return response
 
+    except AIEngineAdapterError as e:
+        db.rollback()
+        # Map internal codes to status codes
+        code = e.code or "interpretation_failed"
+        status_code = 500
+        if "unknown_use_case" in code or "not configured" in str(e).lower():
+            status_code = 404
+            code = "unknown_use_case"
+        elif "timeout" in code or "timeout" in str(e).lower():
+            status_code = 504
+            code = "llm_upstream_timeout"
+        elif "rate_limit" in code:
+            status_code = 429
+            code = "llm_rate_limit"
+        elif "config" in code:
+            status_code = 500
+            code = "gateway_config_error"
+        
+        return _create_error_response(status_code, code, str(e), request_id)
     except UnknownUseCaseError as e:
         db.rollback()
         logger.error(f"Unknown use case error: {e}")

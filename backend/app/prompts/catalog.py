@@ -21,10 +21,43 @@ class PromptEntry(BaseModel):
     output_schema: dict[str, Any] | None = None  # None = text output, no JSON schema
 
 
-# Canonical Output Schemas (simplified for metadata)
-CHAT_RESPONSE_V1 = {"type": "object", "required": ["message"]}
-ASTRO_RESPONSE_V1 = {"type": "object", "required": ["summary", "key_points", "advice"]}
-ASTRO_RESPONSE_V3 = {"type": "object", "required": ["summary", "sections", "highlights"]}
+CHAT_RESPONSE_V1 = {
+    "type": "object", 
+    "required": ["message"], 
+    "additionalProperties": False,
+    "properties": {"message": {"type": "string"}}
+}
+ASTRO_RESPONSE_V1 = {
+    "type": "object", 
+    "required": ["summary", "key_points", "advice"],
+    "additionalProperties": False,
+    "properties": {
+        "summary": {"type": "string"},
+        "key_points": {"type": "array", "items": {"type": "string"}},
+        "advice": {"type": "string"}
+    }
+}
+ASTRO_RESPONSE_V3 = {
+    "type": "object", 
+    "required": ["summary", "sections", "highlights"],
+    "additionalProperties": False,
+    "properties": {
+        "summary": {"type": "string"},
+        "sections": {
+            "type": "array", 
+            "items": {
+                "type": "object",
+                "required": ["title", "content"],
+                "additionalProperties": False,
+                "properties": {
+                    "title": {"type": "string"},
+                    "content": {"type": "string"}
+                }
+            }
+        },
+        "highlights": {"type": "array", "items": {"type": "string"}}
+    }
+}
 HOROSCOPE_FREE_OUTPUT_SCHEMA = {
     "type": "object",
     "additionalProperties": False,

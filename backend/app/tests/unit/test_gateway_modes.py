@@ -14,6 +14,9 @@ from app.llm_orchestration.models import (
     GatewayResult,
     InputValidationError,
     UsageInfo,
+    LLMExecutionRequest,
+    ExecutionUserInput,
+    ExecutionContext,
 )
 from app.prompts.catalog import NATAL_FREE_SHORT_SCHEMA
 
@@ -66,13 +69,14 @@ async def test_structured_mode_no_question(db_session):
     mock_client.execute = AsyncMock(return_value=create_mock_result("test_none", "Result"))
 
     gateway = LLMGateway(responses_client=mock_client)
-    await gateway.execute(
-        "test_none",
-        {"question": "Ignored?"},
-        {"locale": "fr", "use_case": "test_none"},
-        "r",
-        "t",
-        user_id=1,
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="test_none", locale="fr", question="Ignored?"),
+        request_id="r",
+        trace_id="t",
+        user_id=1
+    )
+    await gateway.execute_request(
+        request=request,
         db=db_session,
     )
 
@@ -110,13 +114,14 @@ async def test_structured_mode_optional_question(db_session):
     gateway = LLMGateway(responses_client=mock_client)
 
     # With question
-    await gateway.execute(
-        "test_opt",
-        {"question": "How am I?"},
-        {"locale": "fr", "use_case": "test_opt"},
-        "r1",
-        "t",
-        user_id=1,
+    request1 = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="test_opt", locale="fr", question="How am I?"),
+        request_id="r1",
+        trace_id="t",
+        user_id=1
+    )
+    await gateway.execute_request(
+        request=request1,
         db=db_session,
     )
     user_msg = next(
@@ -125,13 +130,14 @@ async def test_structured_mode_optional_question(db_session):
     assert "How am I?" in user_msg["content"]
 
     # Without question
-    await gateway.execute(
-        "test_opt",
-        {},
-        {"locale": "fr", "use_case": "test_opt"},
-        "r2",
-        "t",
-        user_id=1,
+    request2 = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="test_opt", locale="fr"),
+        request_id="r2",
+        trace_id="t",
+        user_id=1
+    )
+    await gateway.execute_request(
+        request=request2,
         db=db_session,
     )
     user_msg = next(
@@ -142,7 +148,7 @@ async def test_structured_mode_optional_question(db_session):
 
 
 @pytest.mark.asyncio
-async def test_structured_mode_required_question(db_session, monkeypatch):
+async def test_structured_mode_required_question(db_session):
     """Test interaction_mode=structured, user_question_policy=required."""
     uc = LlmUseCaseConfigModel(
         key="test_req",
@@ -164,21 +170,22 @@ async def test_structured_mode_required_question(db_session, monkeypatch):
     gateway = LLMGateway(responses_client=MagicMock())
 
     # Missing question
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="test_req", locale="fr"),
+        request_id="r",
+        trace_id="t",
+        user_id=1
+    )
     with pytest.raises(InputValidationError) as exc:
-        await gateway.execute(
-            "test_req",
-            {},
-            {"locale": "fr", "use_case": "test_req"},
-            "r",
-            "t",
-            user_id=1,
+        await gateway.execute_request(
+            request=request,
             db=db_session,
         )
     assert "User question is required" in str(exc.value)
 
 
 @pytest.mark.asyncio
-async def test_chat_mode_with_history(db_session, monkeypatch):
+async def test_chat_mode_with_history(db_session):
     """Test interaction_mode=chat with history injection."""
     uc = LlmUseCaseConfigModel(
         key="test_chat",
@@ -202,30 +209,35 @@ async def test_chat_mode_with_history(db_session, monkeypatch):
 
     gateway = LLMGateway(responses_client=mock_client)
 
-    history = [{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi there"}]
+    history = [
+        {"role": "user", "content": "Hello"}, 
+        {"role": "assistant", "content": "Hi there"}
+    ]
 
-    await gateway.execute(
-        "test_chat",
-        {"question": "How are you?"},
-        {"locale": "fr", "use_case": "test_chat", "history": history},
-        "r",
-        "t",
-        user_id=1,
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="test_chat", locale="fr", question="How are you?"),
+        context=ExecutionContext(history=history),
+        request_id="r",
+        trace_id="t",
+        user_id=1
+    )
+    await gateway.execute_request(
+        request=request,
         db=db_session,
     )
 
     args = mock_client.execute.call_args.kwargs
     messages = args["messages"]
 
-    # system, developer, persona (skipped here), user, assistant, user
-    assert len(messages) == 5  # system, dev, user (hello), assistant (hi), user (how are you)
+    # system, developer, persona (skipped here), user (hello), assistant (hi), user (how are you)
+    assert len(messages) == 5
     assert messages[2]["content"] == "Hello"
     assert messages[3]["content"] == "Hi there"
     assert messages[4]["content"] == "How are you?"
 
 
 @pytest.mark.asyncio
-async def test_schema_blocking_paid_use_case(db_session, monkeypatch):
+async def test_schema_blocking_paid_use_case(db_session):
     """Point 0.2: Rendre schema_dict absent bloquant pour natal_interpretation."""
     uc = LlmUseCaseConfigModel(
         key="natal_interpretation",
@@ -245,23 +257,24 @@ async def test_schema_blocking_paid_use_case(db_session, monkeypatch):
 
     gateway = LLMGateway(responses_client=MagicMock())
 
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="natal_interpretation", locale="fr"),
+        request_id="r",
+        trace_id="t",
+        user_id=1
+    )
     with pytest.raises(GatewayConfigError) as exc:
-        await gateway.execute(
-            "natal_interpretation",
-            {},
-            {"locale": "fr", "use_case": "natal_interpretation"},
-            "r",
-            "t",
-            user_id=1,
+        await gateway.execute_request(
+            request=request,
             db=db_session,
         )
     assert "Mandatory output schema missing" in str(exc.value)
 
 
 @pytest.mark.asyncio
-async def test_schema_name_in_payload(db_session, monkeypatch):
+async def test_schema_name_in_payload(db_session):
     """Point 0.1: Correct schema.name in payload."""
-    schema = LlmOutputSchemaModel(name="AstroResponse_v2", json_schema={"type": "object"})
+    schema = LlmOutputSchemaModel(name="test_schema", json_schema={"type": "object"})
     db_session.add(schema)
     db_session.flush()
 
@@ -282,19 +295,20 @@ async def test_schema_name_in_payload(db_session, monkeypatch):
     mock_client.execute = AsyncMock(return_value=create_mock_result("test_schema", "{}"))
 
     gateway = LLMGateway(responses_client=mock_client)
-    await gateway.execute(
-        "test_schema",
-        {},
-        {"locale": "fr", "use_case": "test_schema"},
-        "r",
-        "t",
-        user_id=1,
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="test_schema", locale="fr"),
+        request_id="r",
+        trace_id="t",
+        user_id=1
+    )
+    await gateway.execute_request(
+        request=request,
         db=db_session,
     )
 
     args = mock_client.execute.call_args.kwargs
     resp_format = args["response_format"]
-    assert resp_format["json_schema"]["name"] == "astroresponse_v2"
+    assert resp_format["json_schema"]["name"] == "test_schema"
 
 
 @pytest.mark.asyncio
@@ -316,24 +330,22 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
     )
 
     gateway = LLMGateway(responses_client=mock_client)
-    await gateway.execute(
-        "natal_long_free",
-        {},
-        {
-            "locale": "fr-FR",
-            "use_case": "natal_long_free",
-            "chart_json": {"meta": {"birth_date": "2017-03-14"}},
-        },
-        "r",
-        "t",
-        user_id=1,
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="natal_long_free", locale="fr-FR"),
+        context=ExecutionContext(chart_json='{"meta": {"birth_date": "2017-03-14"}}'),
+        request_id="r",
+        trace_id="t",
+        user_id=1
+    )
+    await gateway.execute_request(
+        request=request,
         db=db_session,
     )
 
     args = mock_client.execute.call_args.kwargs
     resp_format = args["response_format"]
     assert resp_format is not None
-    assert resp_format["json_schema"]["name"] == "natal-long-free-v1"
+    assert resp_format["json_schema"]["name"] == "natal_long_free"
     assert resp_format["json_schema"]["schema"]["required"] == [
         "title",
         "summary",

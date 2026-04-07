@@ -57,6 +57,7 @@ from app.ai_engine.exceptions import (
     ValidationError as AIEngineValidationError,
 )
 from app.core.config import settings
+from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
     ExecutionContext,
     ExecutionFlags,
@@ -233,7 +234,15 @@ def _can_use_test_fallback(err: Exception) -> bool:
         if hasattr(curr, "details") and getattr(curr, "details"):
             texts.append(str(getattr(curr, "details")).lower())
 
-    markers = ["not configured", "api key", "auth", "invalid_api_key", "incorrect api key"]
+    markers = [
+        "not configured",
+        "api key",
+        "auth",
+        "invalid_api_key",
+        "incorrect api key",
+        "missing required variables",
+        "missing mandatory platform variable",
+    ]
     for t in texts:
         if any(m in t for m in markers):
             return True
@@ -536,8 +545,6 @@ class AIEngineAdapter:
         )
 
         try:
-            from app.llm_orchestration.gateway import LLMGateway
-
             gateway = LLMGateway()
             
             # 1. Prepare User Input
@@ -678,8 +685,6 @@ class AIEngineAdapter:
             )
 
         try:
-            from app.llm_orchestration.gateway import LLMGateway
-
             gateway = LLMGateway()
             request = _build_guidance_request(
                 use_case=use_case,
@@ -721,7 +726,7 @@ class AIEngineAdapter:
             if isinstance(err, GatewayError):
                 _handle_gateway_error(err, request_id, use_case)
             logger.error(
-                "ai_engine_adapter_v2_unexpected_error request_id=%s error=%s",
+                "ai_engine_adapter_v2_unexpected_error use_case=%s request_id=%s error=%s",
                 use_case,
                 request_id,
                 str(err),
@@ -737,8 +742,6 @@ class AIEngineAdapter:
         (Story 66.7: Natal migration to canonical entry point)
         """
         try:
-            from app.llm_orchestration.gateway import LLMGateway
-
             gateway = LLMGateway()
 
             # 1. Prepare User Input

@@ -10,6 +10,7 @@ from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCa
 from app.infra.db.models.llm_persona import PersonaTone, PersonaVerbosity
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
 
 
 @pytest.fixture
@@ -24,6 +25,17 @@ def db_session():
     finally:
         session.close()
         Base.metadata.drop_all(bind=test_engine)
+
+
+def _make_mock_result(use_case):
+    return GatewayResult(
+        use_case=use_case,
+        request_id="req",
+        trace_id="trace",
+        raw_output="ok",
+        usage=UsageInfo(),
+        meta=GatewayMeta(latency_ms=10, model="m"),
+    )
 
 
 @pytest.mark.asyncio
@@ -58,11 +70,7 @@ async def test_persona_injection_success(db_session, monkeypatch):
 
     # Mock ResponsesClient
     mock_client = MagicMock()
-    # Mock return value of execute
-    mock_result = MagicMock()
-    mock_result.meta = MagicMock()
-    mock_result.usage = MagicMock()
-    mock_client.execute = AsyncMock(return_value=mock_result)
+    mock_client.execute = AsyncMock(return_value=_make_mock_result("test_use_case"))
 
     gateway = LLMGateway(responses_client=mock_client)
 
@@ -121,10 +129,7 @@ async def test_persona_injection_disabled(db_session, monkeypatch):
 
     # Mock ResponsesClient
     mock_client = MagicMock()
-    mock_result = MagicMock()
-    mock_result.meta = MagicMock()
-    mock_result.usage = MagicMock()
-    mock_client.execute = AsyncMock(return_value=mock_result)
+    mock_client.execute = AsyncMock(return_value=_make_mock_result("test_use_case_disabled"))
 
     gateway = LLMGateway(responses_client=mock_client)
 

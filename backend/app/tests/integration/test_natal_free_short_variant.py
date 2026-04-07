@@ -211,7 +211,7 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
         )
 
         with patch(
-            "app.services.natal_interpretation_service_v2.LLMGateway.execute"
+            "app.llm_orchestration.gateway.LLMGateway.execute_request"
         ) as mock_execute:
             mock_execute.return_value = mock_res
 
@@ -241,6 +241,6 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
             assert data["meta"]["level"] == "complete"
 
             _, kwargs = mock_execute.call_args
-            assert kwargs["use_case"] == "natal_long_free"
+            assert kwargs["request"].user_input.use_case == "natal_long_free"
 
     app.dependency_overrides.clear()

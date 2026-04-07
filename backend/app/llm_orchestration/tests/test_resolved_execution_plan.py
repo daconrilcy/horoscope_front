@@ -22,7 +22,7 @@ async def test_resolve_plan_source_config(db):
     
     # Ensure no environment overrides
     with patch.dict(os.environ, {}, clear=True):
-        plan = await gateway._resolve_plan(request, db)
+        plan, qctx = await gateway._resolve_plan(request, db)
         # natal_long_free is in STUBS but _resolve_config might return 'hardcoded-v1' 
         # which maps to 'stub' source in our implementation of _resolve_plan
         assert plan.model_source in ["config", "stub"]
@@ -37,7 +37,7 @@ async def test_resolve_plan_source_os_granular(db):
     )
     
     with patch.dict(os.environ, {"OPENAI_ENGINE_NATAL_LONG_FREE": "gpt-override"}):
-        plan = await gateway._resolve_plan(request, db)
+        plan, qctx = await gateway._resolve_plan(request, db)
         assert plan.model_id == "gpt-override"
         assert plan.model_source == "os_granular"
 
@@ -51,7 +51,7 @@ async def test_resolve_plan_source_os_legacy(db):
     )
     
     with patch.dict(os.environ, {"LLM_MODEL_OVERRIDE_CHAT": "gpt-legacy"}):
-        plan = await gateway._resolve_plan(request, db)
+        plan, qctx = await gateway._resolve_plan(request, db)
         assert plan.model_id == "gpt-legacy"
         assert plan.model_source == "os_legacy"
 
@@ -89,7 +89,7 @@ async def test_resolve_plan_overrides(db):
         trace_id="t"
     )
     
-    plan = await gateway._resolve_plan(request, db)
+    plan, qctx = await gateway._resolve_plan(request, db)
     assert plan.interaction_mode == "chat"
     assert plan.overrides_applied["interaction_mode"] == "chat"
 
@@ -105,5 +105,5 @@ async def test_resolve_plan_repair_short_circuit(db):
         is_repair_call=True
     )
     
-    plan = await gateway._resolve_plan(request, db)
+    plan, qctx = await gateway._resolve_plan(request, db)
     assert "Ta seule mission est de corriger le format JSON" in plan.rendered_developer_prompt

@@ -81,6 +81,11 @@ class ExecutionUserInput(BaseModel):
     conversation_id: Optional[str] = None
     persona_id_override: Optional[str] = None
 
+    @property
+    def last_user_msg(self) -> Optional[str]:
+        """Alias for question or message, used by prompt renderer."""
+        return self.question or self.message
+
 
 class ExecutionContext(BaseModel):
     """Contextual data for an LLM execution, including history and domain data."""
@@ -89,7 +94,7 @@ class ExecutionContext(BaseModel):
     natal_data: Optional[Dict[str, Any]] = None
     chart_json: Optional[str] = None
     precision_level: Optional[str] = None
-    astro_context: Optional[str] = None
+    astro_context: Optional[Any] = None
     extra_context: Dict[str, Any] = Field(default_factory=dict)
     """Extension transitoire pour payloads métier non structurants.
     Interdit pour tout nouveau champ structurant. Destiné à être progressivement vidé."""
@@ -185,6 +190,7 @@ class ResolvedExecutionPlan(BaseModel):
     output_schema_id: Optional[str] = None
     output_schema: Optional[Dict[str, Any]] = None
     output_schema_version: str = "v1"
+    input_schema: Optional[Dict[str, Any]] = None
 
     # Strategy & Strategy resolution
     interaction_mode: Literal["structured", "chat"]
@@ -214,9 +220,11 @@ class ResolvedExecutionPlan(BaseModel):
 class RecoveryResult(BaseModel):
     """Artifact representing the result of a repair or fallback operation."""
 
-    result: GatewayResult
+    result: Any
     repair_attempts: int = 0
     fallback_reason: Optional[str] = None
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class UsageInfo(BaseModel):
@@ -263,6 +271,8 @@ class GatewayResult(BaseModel):
     structured_output: Optional[Dict[str, Any]] = None
     usage: UsageInfo
     meta: GatewayMeta
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class ReplayResult(BaseModel):
