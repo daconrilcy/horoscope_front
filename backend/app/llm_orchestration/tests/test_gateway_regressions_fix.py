@@ -72,6 +72,7 @@ async def test_prompt_version_id_propagation():
     # Critical: final result must carry the resolved prompt_version_id, not the provider default
     assert result.meta.prompt_version_id == real_prompt_id
 
+
 @pytest.mark.asyncio
 async def test_observability_success_persists_to_db():
     """Verify that a successful execute_request creates an LlmCallLogModel entry."""
@@ -138,6 +139,66 @@ async def test_observability_success_persists_to_db():
         # Check that it's NOT hardcoded-v1 if prompt was found
         assert str(log_entry.prompt_version_id) == str(prompt.id)
 
+    finally:
+        db.close()
+        Base.metadata.drop_all(bind=engine)
+
+
+@pytest.mark.asyncio
+async def test_observability_success_ignores_missing_fk_references():
+    """A valid-but-missing FK UUID must not break success logging."""
+    from sqlalchemy import create_engine, select
+    from sqlalchemy.orm import sessionmaker
+    from app.infra.db.base import Base
+    from app.infra.db.models.llm_observability import LlmCallLogModel
+
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    try:
+        missing_prompt_id = str(uuid.uuid4())
+        mock_client = MagicMock()
+        provider_res = GatewayResult(
+            use_case="test_missing_fk",
+            request_id="req-missing-fk",
+            trace_id="trace-missing-fk",
+            raw_output="plain text response",
+            usage=UsageInfo(input_tokens=3, output_tokens=5),
+            meta=GatewayMeta(latency_ms=12, model="m", prompt_version_id="hardcoded-v1"),
+        )
+        mock_client.execute = AsyncMock(return_value=provider_res)
+
+        gateway = LLMGateway(responses_client=mock_client)
+        gateway._resolve_config = AsyncMock(
+            return_value=UseCaseConfig(
+                model="m",
+                developer_prompt="hello",
+                prompt_version_id=missing_prompt_id,
+                interaction_mode="structured",
+                user_question_policy="none",
+            )
+        )
+
+        request = LLMExecutionRequest(
+            user_input=ExecutionUserInput(use_case="test_missing_fk", locale="fr"),
+            context=ExecutionContext(),
+            request_id="req-missing-fk",
+            trace_id="trace-missing-fk",
+            user_id=1,
+        )
+
+        result = await gateway.execute_request(request, db=db)
+
+        stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == "req-missing-fk")
+        log_entry = db.execute(stmt).scalar_one_or_none()
+
+        assert result.meta.prompt_version_id == missing_prompt_id
+        assert log_entry is not None
+        assert log_entry.prompt_version_id is None
+        assert log_entry.tokens_in == 3
+        assert log_entry.tokens_out == 5
     finally:
         db.close()
         Base.metadata.drop_all(bind=engine)

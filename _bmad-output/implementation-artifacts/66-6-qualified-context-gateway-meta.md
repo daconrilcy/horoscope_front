@@ -101,3 +101,10 @@ Un appel peut être simultanément `repaired` **et** avoir un contexte `partial`
 - [x] Mettre à jour `docs/architecture/llm-processus-architecture.md` **avant merge**
   - [x] Documenter `QualifiedContext` et taxonomie des 3 axes
   - [x] Documenter les nouveaux champs de télémétrie dans `GatewayMeta`
+
+## Post-review hardening
+
+- [x] Durcir `log_call()` contre les UUID valides mais orphelins côté FK (`prompt_version_id`, `persona_id`)
+  - [x] Résoudre les références observabilité en mode best-effort avant insertion DB
+  - [x] Retomber à `NULL` si la ligne référencée n'existe pas, sans casser le log de succès
+- [x] Ajouter une non-régression dédiée sur la persistence de succès avec FK absente

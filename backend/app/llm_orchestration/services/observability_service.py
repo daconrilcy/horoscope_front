@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.ai_engine.services.log_sanitizer import sanitize_for_logging
 from app.core.config import settings
+from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel
 from app.infra.db.models.llm_observability import (
     LlmCallLogModel,
     LlmReplaySnapshotModel,
@@ -36,6 +37,24 @@ def safe_uuid(val: Any) -> uuid.UUID | None:
         return uuid.UUID(str(val))
     except (ValueError, TypeError):
         return None
+
+
+def _resolve_existing_fk_uuid(db: Session, model: type[Any], raw_value: Any) -> uuid.UUID | None:
+    """
+    Returns a UUID only when it is syntactically valid and the referenced row exists.
+    This keeps observability best-effort even when runtime metadata carries stale IDs.
+    """
+    resolved_uuid = safe_uuid(raw_value)
+    if resolved_uuid is None:
+        return None
+
+    try:
+        if db.get(model, resolved_uuid) is None:
+            return None
+    except Exception:
+        return None
+
+    return resolved_uuid
 
 
 def compute_input_hash(user_input: Dict[str, Any]) -> str:
@@ -107,8 +126,10 @@ async def log_call(
             if error:  # Force error status if exception occurred
                 status = LlmValidationStatus.ERROR
 
-            prompt_version_id = safe_uuid(result.meta.prompt_version_id)
-            persona_id = safe_uuid(result.meta.persona_id)
+            prompt_version_id = _resolve_existing_fk_uuid(
+                db, LlmPromptVersionModel, result.meta.prompt_version_id
+            )
+            persona_id = _resolve_existing_fk_uuid(db, LlmPersonaModel, result.meta.persona_id)
             model = result.meta.model or "unknown"
             latency_ms = int(result.meta.latency_ms or 0)
             tokens_in = result.usage.input_tokens
