@@ -38,6 +38,17 @@ La méthode `LLMGateway.execute()` est conservée comme **wrapper legacy**. Elle
 
 Toute nouvelle logique de plateforme doit être implémentée exclusivement dans `execute_request()`.
 
+## Pipeline d'Orchestration (`execute_request`)
+
+Le flux d'exécution est structuré en **6 étapes explicites** pour garantir la séparation des responsabilités et faciliter le débogage :
+
+1.  **Stage 1: Resolve Plan** (`_resolve_plan`) : Résolution de la configuration, du modèle, des prompts et du persona dans un objet `ResolvedExecutionPlan`.
+2.  **Stage 2: Build Messages** (`_build_messages`) : Composition des couches de messages (System, Developer, Persona, History, User).
+3.  **Stage 3: Call Provider** (`_call_provider`) : Appel technique au client provider (OpenAI).
+4.  **Stage 4: Validate & Normalize** (`_validate_and_normalize`) : Validation du format de sortie (JSON) et parsing.
+5.  **Stage 5: Recovery (Repair/Fallback)** (`_handle_repair_or_fallback`) : Gestion récursive des erreurs via réparation automatique ou basculement de use case.
+6.  **Stage 6: Build Final Result** (`_build_result`) : Assemblage du `GatewayResult` final avec ses métadonnées de traçabilité.
+
 ## Couche Applicative LLM (`AIEngineAdapter`)
 
 Bien que conservant son nom legacy `AIEngineAdapter` (décision Option A, Epic 66), ce module fait office de **couche applicative canonique** pour les appels LLM.

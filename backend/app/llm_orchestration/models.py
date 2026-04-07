@@ -191,6 +191,14 @@ class ResolvedExecutionPlan(BaseModel):
         return dump
 
 
+class RecoveryResult(BaseModel):
+    """Artifact representing the result of a repair or fallback operation."""
+
+    result: GatewayResult
+    repair_attempts: int = 0
+    fallback_reason: Optional[str] = None
+
+
 class UsageInfo(BaseModel):
     """Token usage information."""
 
