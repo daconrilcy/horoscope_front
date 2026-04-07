@@ -4,6 +4,7 @@ import { Header } from "../components/layout/Header"
 import { Sidebar } from "../components/layout/Sidebar"
 import { BottomNav } from "../components/layout/BottomNav"
 import { PageErrorBoundary } from "../components/ErrorBoundary"
+import { StarfieldBackground } from "../components/StarfieldBackground"
 import { SidebarProvider, useSidebarContext } from "../state/SidebarContext"
 
 function AppLayoutContent() {
@@ -13,18 +14,21 @@ function AppLayoutContent() {
     : "app-shell-main"
 
   return (
-    <>
-      <Header />
-      <div className="app-shell-body">
-        <Sidebar />
-        <main className={mainClassName}>
-          <PageErrorBoundary>
-            <Outlet />
-          </PageErrorBoundary>
-        </main>
+    <div className="app-shell app-bg">
+      <StarfieldBackground />
+      <div className="app-bg-container">
+        <Header />
+        <div className="app-shell-body">
+          <Sidebar />
+          <main className={mainClassName}>
+            <PageErrorBoundary>
+              <Outlet />
+            </PageErrorBoundary>
+          </main>
+        </div>
+        <BottomNav />
       </div>
-      <BottomNav />
-    </>
+    </div>
   )
 }
 

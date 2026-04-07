@@ -187,7 +187,7 @@ describe("AdminPage - Story 65.4", () => {
     // Test /admin/monitoring -> should render Logs page content
     const { unmount } = renderApp(["/admin/monitoring"])
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Logs & Incidents" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Observabilité Technique" })).toBeInTheDocument()
     })
     unmount()
 

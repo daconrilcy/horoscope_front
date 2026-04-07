@@ -344,3 +344,34 @@ describe("Dashboard Path", () => {
     })
   })
 })
+
+describe("Consultations Routing", () => {
+  it("renders /consultations without missing provider error", async () => {
+    vi.stubGlobal("fetch", makeFetchMock())
+    setupToken()
+
+    renderApp(["/consultations"])
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { level: 1, name: /consultation/i })).toBeInTheDocument()
+    })
+  })
+})
+
+describe("Route config", () => {
+  function collectPaths(routeList: typeof routes): string[] {
+    return routeList.flatMap((route) => {
+      const currentPath = route.path ? [route.path] : []
+      const childPaths = route.children ? collectPaths(route.children as typeof routes) : []
+      return [...currentPath, ...childPaths]
+    })
+  }
+
+  it("déclare les routes astrologers et chat conversation", () => {
+    const paths = collectPaths(routes)
+
+    expect(paths).toContain("astrologers")
+    expect(paths).toContain("astrologers/:id")
+    expect(paths).toContain("chat/:conversationId")
+  })
+})

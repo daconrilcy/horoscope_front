@@ -275,6 +275,7 @@ export function AdminLogsPage() {
   const auditLogs = auditLogsData?.data ?? []
   const llmLogs = llmLogsData?.data ?? []
   const stripeEvents = stripeLogsData?.data ?? []
+  const quotaAlerts = alertsData?.data ?? []
   const rows = activeTab === "audit" ? auditLogs : activeTab === "llm" ? llmLogs : stripeEvents
   const llmUseCaseOptions = Array.from(new Set(llmLogs.map((log) => log.use_case))).sort()
   const auditActionOptions = Array.from(new Set(auditLogs.map((log) => log.action))).sort()
@@ -380,11 +381,11 @@ export function AdminLogsPage() {
         </div>
       </header>
 
-      {alertsData && alertsData.data.length > 0 && (
+      {quotaAlerts.length > 0 && (
         <section className="alerts-banner">
           <h3 className="banner-title">Alertes quotas (&gt;90%)</h3>
           <div className="alerts-list">
-            {alertsData.data.map((alert) => (
+            {quotaAlerts.map((alert) => (
               <div key={`${alert.user_id}-${alert.feature_code}`} className="alert-item">
                 <span className="alert-user">{alert.user_email_masked}</span>
                 <span className="alert-info">

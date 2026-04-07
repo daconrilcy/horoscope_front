@@ -162,6 +162,9 @@ describe("AppShell", () => {
     setupAuthenticatedUser()
     renderAppShell(["/dashboard"])
 
+    expect(document.querySelector(".app-shell.app-bg")).toBeInTheDocument()
+    expect(document.querySelector(".app-bg-container")).toBeInTheDocument()
+
     const sidebar = document.querySelector(".app-sidebar")
     expect(sidebar).toHaveClass("app-sidebar--hidden")
     expect(document.querySelector(".sidebar-backdrop")).not.toBeInTheDocument()

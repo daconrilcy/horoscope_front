@@ -69,6 +69,7 @@ export function SubscriptionSettings() {
     refetch: refetchSubscription,
   } = useBillingSubscription()
   const { data: catalog, isLoading: plansLoading } = useBillingPlans()
+  const currentSubscriptionPlan = subscription?.plan ?? subscription?.active_plan ?? null
 
   const isLoading = subLoading || plansLoading
 
@@ -116,7 +117,7 @@ export function SubscriptionSettings() {
     ]
   }, [catalog, lang, subscriptionGuide])
 
-  const currentPlanCode = subscription?.plan?.code ?? null
+  const currentPlanCode = currentSubscriptionPlan?.code ?? null
   const stripeSubscriptionStatus = subscription?.subscription_status ?? null
   const isTrialingBasic = stripeSubscriptionStatus === "trialing" && currentPlanCode === "basic"
   const [pendingPortalAction, setPendingPortalAction] = useState<PendingBillingPortalAction | null>(
@@ -530,7 +531,9 @@ export function SubscriptionSettings() {
               <div className="subscription-overview__header">
                 <div className="subscription-overview__copy">
                   <span className="subscription-overview__eyebrow">{t.overviewEyebrow}</span>
-                  <h3 className="subscription-overview__title">{overviewPlanLabel}</h3>
+                  <h3 className="subscription-overview__title" aria-label={overviewPlanLabel}>
+                    {currentPlanExperience}
+                  </h3>
                   <p className="subscription-overview__tagline">{currentPlanExperience}</p>
                   <p className="subscription-overview__lead">{overviewLead}</p>
                   <ul className="subscription-overview__highlights">
@@ -558,7 +561,7 @@ export function SubscriptionSettings() {
               <div className="subscription-overview__stats">
                 <div className="subscription-overview__stat">
                   <span className="subscription-overview__stat-label">{t.overviewPlanLabel}</span>
-                  <strong className="subscription-overview__stat-value">{overviewPlanLabel}</strong>
+                  <strong className="subscription-overview__stat-value">{t.active}</strong>
                 </div>
                 <div className="subscription-overview__stat">
                   <span className="subscription-overview__stat-label">{t.overviewExperienceLabel}</span>
@@ -602,9 +605,7 @@ export function SubscriptionSettings() {
                       ? t.reactivateWithBasic
                       : t.reactivateWithPremium
                     : null
-                const cardActionLabel = isCurrent
-                  ? t.currentPlan
-                  : isSelected
+                const cardActionLabel = !isCurrent && isSelected
                     ? t.overviewActionChangeTo.replace("{{plan}}", plan.label)
                     : null
                 return (

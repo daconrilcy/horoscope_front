@@ -2,24 +2,36 @@ import type { RouteObject } from "react-router-dom"
 import { Navigate } from "react-router-dom"
 
 import { AuthGuard } from "./guards/AuthGuard"
+import { LandingRedirect } from "./guards/LandingRedirect"
 import { RoleGuard } from "./guards/RoleGuard"
 import { AdminGuard } from "../components/AdminGuard"
 import { AppLayout } from "../layouts/AppLayout"
+import { EnterpriseLayout } from "../components/layout/EnterpriseLayout"
+import { EnterpriseCredentialsPanel } from "../components/EnterpriseCredentialsPanel"
+import { SupportOpsPanel } from "../components/SupportOpsPanel"
 
 // Pages
 import { DashboardPage } from "../pages/DashboardPage"
 import DailyHoroscopePage from "../pages/DailyHoroscopePage"
 import { NatalChartPage } from "../pages/NatalChartPage"
 import { ChatPage } from "../pages/ChatPage"
+import { AstrologersPage } from "../pages/AstrologersPage"
+import { AstrologerProfilePage } from "../pages/AstrologerProfilePage"
 import { SettingsPage } from "../pages/SettingsPage"
 import { LoginPage } from "../pages/LoginPage"
 import { RegisterPage } from "../pages/RegisterPage"
 import { NotFoundPage } from "../pages/NotFoundPage"
 import { ConsultationsPage } from "../pages/ConsultationsPage"
 import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
+import { ConsultationResultPage } from "../pages/ConsultationResultPage"
 import HelpPage from "../pages/HelpPage"
 import { EnterpriseDashboardPage } from "../pages/EnterpriseDashboardPage"
 import { AdminPage } from "../pages/AdminPage"
+import { SubscriptionGuidePage } from "../pages/SubscriptionGuidePage"
+import { ConsultationLayout } from "../features/consultations/components/ConsultationLayout"
+import { AccountSettings } from "../pages/settings/AccountSettings"
+import { SubscriptionSettings } from "../pages/settings/SubscriptionSettings"
+import { UsageSettings } from "../pages/settings/UsageSettings"
 
 import {
   AdminDashboardPage,
@@ -39,6 +51,10 @@ import {
 
 export const routes: RouteObject[] = [
   {
+    path: "/",
+    element: <LandingRedirect />,
+  },
+  {
     path: "/login",
     element: <LoginPage />,
   },
@@ -55,19 +71,28 @@ export const routes: RouteObject[] = [
     ),
     children: [
       {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
-      {
         path: "dashboard",
-        element: <DashboardPage />,
+        children: [
+          {
+            index: true,
+            element: <DashboardPage />,
+          },
+          {
+            path: "horoscope",
+            element: <DailyHoroscopePage />,
+          },
+        ],
       },
       {
         path: "today",
-        element: <DailyHoroscopePage />,
+        element: <Navigate to="/dashboard/horoscope" replace />,
       },
       {
         path: "natal",
+        element: <NatalChartPage />,
+      },
+      {
+        path: "natal-chart",
         element: <NatalChartPage />,
       },
       {
@@ -75,7 +100,20 @@ export const routes: RouteObject[] = [
         element: <ChatPage />,
       },
       {
+        path: "chat/:conversationId",
+        element: <ChatPage />,
+      },
+      {
+        path: "astrologers",
+        element: <AstrologersPage />,
+      },
+      {
+        path: "astrologers/:id",
+        element: <AstrologerProfilePage />,
+      },
+      {
         path: "consultations",
+        element: <ConsultationLayout />,
         children: [
           {
             index: true,
@@ -85,14 +123,36 @@ export const routes: RouteObject[] = [
             path: "new",
             element: <ConsultationWizardPage />,
           },
+          {
+            path: "result",
+            element: <ConsultationResultPage />,
+          },
         ],
       },
       {
         path: "settings",
         element: <SettingsPage />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="account" replace />,
+          },
+          {
+            path: "account",
+            element: <AccountSettings />,
+          },
+          {
+            path: "subscription",
+            element: <SubscriptionSettings />,
+          },
+          {
+            path: "usage",
+            element: <UsageSettings />,
+          },
+        ],
       },
       {
-        path: "support",
+        path: "help",
         element: (
           <RoleGuard roles={["user", "admin", "ops", "support"]}>
             <HelpPage />
@@ -100,12 +160,38 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        path: "help/subscriptions",
+        element: (
+          <RoleGuard roles={["user", "admin", "ops", "support"]}>
+            <SubscriptionGuidePage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "support",
+        element: (
+          <RoleGuard roles={["admin", "ops", "support"]}>
+            <SupportOpsPanel />
+          </RoleGuard>
+        ),
+      },
+      {
         path: "enterprise",
         element: (
           <RoleGuard roles={["enterprise_admin", "admin"]}>
-            <EnterpriseDashboardPage />
+            <EnterpriseLayout />
           </RoleGuard>
         ),
+        children: [
+          {
+            index: true,
+            element: <EnterpriseDashboardPage />,
+          },
+          {
+            path: "credentials",
+            element: <EnterpriseCredentialsPanel />,
+          },
+        ],
       },
       {
         path: "admin",
@@ -166,15 +252,15 @@ export const routes: RouteObject[] = [
           // Legacy redirects
           {
             path: "pricing",
-            element: <Navigate to="../billing" replace />,
+            element: <Navigate to="/admin/billing" replace />,
           },
           {
             path: "monitoring",
-            element: <Navigate to="../logs" replace />,
+            element: <Navigate to="/admin/logs" replace />,
           },
           {
             path: "personas",
-            element: <Navigate to="../prompts" replace />,
+            element: <Navigate to="/admin/prompts" replace />,
           },
           {
             path: "reconciliation",

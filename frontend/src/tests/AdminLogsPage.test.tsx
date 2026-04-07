@@ -80,7 +80,7 @@ describe("AdminLogsPage", () => {
         return makeJsonResponse({ data: [] })
       }
 
-      if (url.startsWith("/v1/admin/audit?") || url.endsWith("/v1/admin/audit")) {
+      if (url.includes("/v1/admin/audit?") || url.endsWith("/v1/admin/audit")) {
         const requestUrl = new URL(url, "http://localhost")
         const actor = requestUrl.searchParams.get("actor")
         const action = requestUrl.searchParams.get("action")

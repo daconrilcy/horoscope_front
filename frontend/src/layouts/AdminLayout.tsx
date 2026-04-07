@@ -60,6 +60,7 @@ export function AdminLayout({
       </aside>
 
       <main className="admin-main">
+        <h1 className="sr-only">{title}</h1>
         {!isHub && (
           <header className="admin-content-header">
             <Link to="/admin" className="admin-back-link">
