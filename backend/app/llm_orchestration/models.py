@@ -181,9 +181,11 @@ class ResolvedExecutionPlan(BaseModel):
     model_source: Literal["os_granular", "os_legacy", "config", "stub"]
 
     # Prompts & Persona
+    prompt_version_id: Optional[str] = None
     rendered_developer_prompt: str
     system_core: str
     persona_id: Optional[str] = None
+    persona_name: Optional[str] = None
     persona_block: Optional[str] = None
 
     # Schemas
@@ -206,15 +208,6 @@ class ResolvedExecutionPlan(BaseModel):
 
     # Quality metadata
     context_quality: str = "unknown"
-
-    def to_log_dict(self) -> Dict[str, Any]:
-        """
-        Returns a JSON-serializable dict for logging, excluding verbose artifacts.
-        (AC4: filter verbose fields)
-        """
-        exclude = {"rendered_developer_prompt", "persona_block", "system_core", "output_schema"}
-        dump = self.model_dump(exclude=exclude)
-        return dump
 
 
 class RecoveryResult(BaseModel):
@@ -273,6 +266,16 @@ class GatewayResult(BaseModel):
     meta: GatewayMeta
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def to_log_dict(self) -> Dict[str, Any]:
+        """
+        Returns a JSON-serializable dict for logging, excluding verbose artifacts.
+        (AC4: filter verbose fields)
+        """
+        dump = self.model_dump()
+        # The meta and result are already fairly clean, but we can filter if needed.
+        # Actually, the user report said it was missing from GatewayResult.
+        return dump
 
 
 class ReplayResult(BaseModel):

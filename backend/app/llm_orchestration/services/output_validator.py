@@ -202,7 +202,7 @@ def sanitize_evidence(
         if isinstance(val, str):
             text_blobs.append(val)
         elif isinstance(val, list):
-            text_blobs.extend([v for e in val if isinstance(e, str)])
+            text_blobs.extend([e for e in val if isinstance(e, str)])
             
     if "sections" in sanitized_data and isinstance(sanitized_data["sections"], list):
         for s in sanitized_data["sections"]:

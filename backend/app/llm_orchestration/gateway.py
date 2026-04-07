@@ -398,16 +398,17 @@ class LLMGateway:
 
     async def _resolve_persona(
         self, db: Optional[Session], config: UseCaseConfig, context: Dict[str, Any], use_case: str
-    ) -> tuple[Optional[str], Optional[str]]:
-        """Resolves persona and returns (persona_block, persona_id)."""
+    ) -> tuple[Optional[str], Optional[str], Optional[str]]:
+        """Resolves persona and returns (persona_block, persona_id, persona_name)."""
         persona_block = None
         resolved_persona_id = context.get("persona_id")
+        persona_name = None
         allowed_ids = context.get("allowed_persona_ids")
         
         logger.debug("gateway_resolve_persona start use_case=%s allowed_ids=%s", use_case, allowed_ids)
 
         if config.persona_strategy == "forbidden":
-            return None, None
+            return None, None, None
 
         if db and allowed_ids:
             uuid_ids = []
@@ -437,6 +438,7 @@ class LLMGateway:
                         resolved_persona = persona_map[requested_id]
                         persona_block = compose_persona_block(resolved_persona)
                         resolved_persona_id = requested_id
+                        persona_name = resolved_persona.name
                     else:
                         default_persona = None
                         for pid in allowed_ids:
@@ -446,6 +448,7 @@ class LLMGateway:
                         if default_persona:
                             persona_block = compose_persona_block(default_persona)
                             resolved_persona_id = str(default_persona.id)
+                            persona_name = default_persona.name
                         else:
                             resolved_persona_id = None
                 else:
@@ -454,6 +457,7 @@ class LLMGateway:
                             resolved_persona = persona_map[pid]
                             persona_block = compose_persona_block(resolved_persona)
                             resolved_persona_id = pid
+                            persona_name = resolved_persona.name
                             break
 
         if not persona_block and config.persona_strategy == "required":
@@ -461,8 +465,9 @@ class LLMGateway:
 
         if not persona_block:
             persona_block = context.get("persona_block") or context.get("persona_line")
+            persona_name = context.get("persona_name")
 
-        return persona_block, resolved_persona_id
+        return persona_block, resolved_persona_id, persona_name
 
     def _resolve_schema(
         self, db: Optional[Session], config: UseCaseConfig, use_case: str
@@ -668,7 +673,7 @@ class LLMGateway:
         if request.user_input.persona_id_override:
             context_dict["persona_id"] = request.user_input.persona_id_override
         
-        persona_block, persona_id = await self._resolve_persona(db, config, context_dict, use_case)
+        persona_block, persona_id, persona_name = await self._resolve_persona(db, config, context_dict, use_case)
 
         output_schema, schema_name, schema_version = self._resolve_schema(db, config, use_case)
 
@@ -687,7 +692,7 @@ class LLMGateway:
             render_vars["use_case"] = use_case
             render_vars["last_user_msg"] = request.user_input.last_user_msg
             if persona_block:
-                render_vars["persona_name"] = persona_id  # Best effort if name not in context
+                render_vars["persona_name"] = persona_name or persona_id
                 if not render_vars["last_user_msg"]:
                     render_vars["last_user_msg"] = request.user_input.message
             if request.user_input.question:
@@ -719,9 +724,11 @@ class LLMGateway:
         plan = ResolvedExecutionPlan(
             model_id=model_id,
             model_source=model_source,
+            prompt_version_id=config.prompt_version_id,
             rendered_developer_prompt=rendered_developer_prompt,
             system_core=system_core,
             persona_id=persona_id,
+            persona_name=persona_name,
             persona_block=persona_block,
             output_schema_id=config.output_schema_id,
             output_schema=output_schema,
@@ -959,6 +966,7 @@ class LLMGateway:
         # Preserve other technical metadata
         result.meta.latency_ms = latency_ms
         result.meta.model = plan.model_id
+        result.meta.prompt_version_id = plan.prompt_version_id or "hardcoded-v1"
         result.meta.persona_id = plan.persona_id
         result.meta.output_schema_id = plan.output_schema_id
         result.meta.schema_version = plan.output_schema_version
@@ -1073,6 +1081,10 @@ class LLMGateway:
             except Exception as e:
                 logger.error("gateway_step_failed:build_result use_case=%s error=%s", use_case, e)
                 raise
+
+            if db and not is_repair_call:
+                await log_call(db=db, use_case=use_case, request_id=request.request_id, trace_id=request.trace_id, user_input=request.user_input.model_dump(), result=final_result.to_log_dict())
+                increment_counter("llm_gateway_requests_total", labels={"use_case": use_case, "status": "success"})
 
             return final_result
 
