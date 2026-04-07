@@ -125,6 +125,26 @@ class ExecutionOverrides(BaseModel):
     _applied_by: Optional[str] = None  # Internal audit identifier
 
 
+class NatalExecutionInput(BaseModel):
+    """Structured input for natal interpretation requests (Story 66.7)."""
+
+    use_case_key: str
+    locale: str = "fr-FR"
+    level: Literal["short", "complete"]
+    chart_json: str
+    natal_data: Dict[str, Any]
+    evidence_catalog: Union[List[str], Dict[str, List[str]]]
+    persona_id: Optional[str] = None
+    validation_strict: bool = True
+    question: Optional[str] = None
+    astro_context: Optional[str] = None
+    module: Optional[str] = None
+    variant_code: Optional[str] = None
+    user_id: int
+    request_id: str
+    trace_id: str
+
+
 class LLMExecutionRequest(BaseModel):
     """Canonical request contract for the LLM Gateway."""
 

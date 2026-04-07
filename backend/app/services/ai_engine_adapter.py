@@ -63,6 +63,7 @@ from app.llm_orchestration.models import (
     ExecutionMessage,
     ExecutionUserInput,
     LLMExecutionRequest,
+    NatalExecutionInput,
 )
 
 logger = logging.getLogger(__name__)
@@ -659,24 +660,6 @@ class AIEngineAdapter:
     ) -> Any:
         """
         Generate guidance via the AI Engine.
-
-        Args:
-            use_case: Use case identifier (guidance_daily, guidance_weekly,
-                guidance_contextual).
-            context: Context including birth_data, situation, objective,
-                time_horizon, context_lines.
-            user_id: User identifier.
-            request_id: Request identifier for logging.
-            trace_id: Trace identifier for distributed tracing.
-            locale: Locale for the response (default: "fr-FR").
-            db: Database session for orchestration v2.
-
-        Returns:
-            GatewayResult from the LLMGateway.
-
-        Raises:
-            AIEngineAdapterError: On generation error.
-            ConnectionError: If the provider is unavailable.
         """
         if _test_guidance_generator is not None:
             # For testing, we mock a result object
@@ -720,7 +703,6 @@ class AIEngineAdapter:
                     usage=UsageInfo(),
                     meta=GatewayMeta(latency_ms=0, model="test-model"),
                 )
-            # Preserve typed upstream errors so callers get correct HTTP codes (429/504/502).
             if isinstance(err, UpstreamRateLimitError):
                 raise AIEngineAdapterError(
                     code="rate_limit_exceeded",
@@ -739,9 +721,88 @@ class AIEngineAdapter:
             if isinstance(err, GatewayError):
                 _handle_gateway_error(err, request_id, use_case)
             logger.error(
-                "ai_engine_adapter_v2_unexpected_error use_case=%s request_id=%s error=%s",
+                "ai_engine_adapter_v2_unexpected_error request_id=%s error=%s",
                 use_case,
                 request_id,
                 str(err),
             )
             raise ConnectionError("llm provider unavailable (v2)") from err
+
+    @staticmethod
+    async def generate_natal_interpretation(
+        natal_input: NatalExecutionInput, db: Optional[Session] = None
+    ) -> Any:  # Returns GatewayResult
+        """
+        Generate a natal interpretation via the AI Engine.
+        (Story 66.7: Natal migration to canonical entry point)
+        """
+        try:
+            from app.llm_orchestration.gateway import LLMGateway
+
+            gateway = LLMGateway()
+
+            # 1. Prepare User Input
+            user_input = ExecutionUserInput(
+                use_case=natal_input.use_case_key,
+                locale=natal_input.locale,
+                question=natal_input.question,
+                persona_id_override=natal_input.persona_id,
+            )
+
+            # 2. Prepare Context (AC4: only fields not in common context)
+            exec_context = ExecutionContext(
+                natal_data=natal_input.natal_data,
+                chart_json=natal_input.chart_json,
+                astro_context=natal_input.astro_context,
+                extra_context={
+                    "module": natal_input.module,
+                    "variant_code": natal_input.variant_code,
+                    "level": natal_input.level,
+                },
+            )
+
+            # 3. Prepare Flags
+            flags = ExecutionFlags(
+                validation_strict=natal_input.validation_strict,
+                evidence_catalog=natal_input.evidence_catalog,
+            )
+
+            # 4. Build Request
+            request = LLMExecutionRequest(
+                user_input=user_input,
+                context=exec_context,
+                flags=flags,
+                user_id=natal_input.user_id,
+                request_id=natal_input.request_id,
+                trace_id=natal_input.trace_id,
+            )
+
+            # 5. Execute
+            result = await gateway.execute_request(request=request, db=db)
+            return result
+
+        except Exception as err:
+            if isinstance(err, UpstreamRateLimitError):
+                raise AIEngineAdapterError(
+                    code="rate_limit_exceeded",
+                    message="rate limit exceeded",
+                    status_code=429,
+                    details={"retry_after_ms": str(err.retry_after_ms or 60000)},
+                ) from err
+            if isinstance(err, UpstreamTimeoutError):
+                raise AIEngineAdapterError(
+                    code="upstream_timeout",
+                    message="llm provider timeout",
+                    status_code=504,
+                ) from err
+            from app.llm_orchestration.models import GatewayError
+
+            if isinstance(err, GatewayError):
+                _handle_gateway_error(err, natal_input.request_id, natal_input.use_case_key)
+            logger.error(
+                "ai_engine_adapter_natal_unexpected_error use_case=%s request_id=%s error=%s",
+                natal_input.use_case_key,
+                natal_input.request_id,
+                str(err),
+            )
+            raise ConnectionError("llm provider unavailable (natal)") from err

@@ -23,8 +23,7 @@ from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
 from app.infra.observability.metrics import observe_duration
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import GatewayResult, InputValidationError
+from app.llm_orchestration.models import GatewayResult, InputValidationError, NatalExecutionInput
 from app.llm_orchestration.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
@@ -34,6 +33,7 @@ from app.llm_orchestration.schemas import (
     AstroResponseV3,
 )
 from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
+from app.services.ai_engine_adapter import AIEngineAdapter
 from app.services.chart_json_builder import (
     build_chart_json,
     build_enriched_evidence_catalog,
@@ -54,58 +54,6 @@ MODULE_TO_USE_CASE_KEY: dict[str, str] = {
     "NATAL_VALUES_SECURITY": "natal_values_security",
     "NATAL_EVOLUTION_PATH": "natal_evolution_path",
 }
-
-
-def _normalize_persona_field(value: object) -> list[str]:
-    if isinstance(value, list):
-        return [str(item).strip() for item in value if str(item).strip()]
-    if isinstance(value, str):
-        return [line.strip() for line in value.splitlines() if line.strip()]
-    return []
-
-
-def _build_persona_prompt_profile(persona: LlmPersonaModel) -> str:
-    tone_value = persona.tone.value if hasattr(persona.tone, "value") else str(persona.tone)
-    verbosity_value = (
-        persona.verbosity.value if hasattr(persona.verbosity, "value") else str(persona.verbosity)
-    )
-    tone_label = {
-        "warm": "chaleureux, empathique et soutenant",
-        "direct": "clair, direct et factuel",
-        "mystical": "symbolique, intuitif et inspirant",
-        "rational": "rationnel, structuré et analytique",
-    }.get(tone_value, tone_value)
-    verbosity_label = {
-        "short": "synthétique",
-        "medium": "équilibré",
-        "long": "approfondi",
-    }.get(verbosity_value, verbosity_value)
-
-    style_markers = _normalize_persona_field(persona.style_markers)
-    boundaries = _normalize_persona_field(persona.boundaries)
-    allowed_topics = _normalize_persona_field(persona.allowed_topics)
-
-    style_fragment = ", ".join(style_markers) if style_markers else "pédagogie claire et concrète"
-    boundaries_fragment = (
-        "; ".join(boundaries) if boundaries else "pas de fatalisme et pas de promesse absolue"
-    )
-    topics_fragment = (
-        ", ".join(allowed_topics) if allowed_topics else "thème natal et dynamiques de vie"
-    )
-    description = (persona.description or "").strip()
-    if not description:
-        description = "Profil astrologique orienté pédagogie et application concrète."
-
-    return (
-        f"Astrologue sélectionné : {persona.name}. "
-        f"Personnalité : {description} "
-        f"Style relationnel : ton {tone_label}, niveau {verbosity_label}. "
-        f"Caractéristiques d'écriture : {style_fragment}. "
-        f"Compétences clés : {topics_fragment}. "
-        f"Cadre de pratique : {boundaries_fragment}. "
-        "Méthode attendue : expliquer chaque notion au moment où elle apparaît, relier les indices "
-        "astrologiques à des implications concrètes et rester non fataliste."
-    )
 
 
 def _parse_prompt_version_uuid(prompt_version_id: str | None) -> uuid.UUID | None:
@@ -418,7 +366,7 @@ class NatalInterpretationServiceV2:
         chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str)
         evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
 
-        # 2. Use case selection
+        # 3. Use case selection
         if level == "complete" and variant_code == "free_short":
             return await NatalInterpretationServiceV2._generate_free_short(
                 db=db,
@@ -441,69 +389,42 @@ class NatalInterpretationServiceV2:
                 "natal_interpretation" if level == "complete" else "natal_interpretation_short"
             )
 
-        # 3. Persona resolution (AC3)
+        # 4. Call AIEngineAdapter (Story 66.7)
         persona_name = None
-        persona_prompt_profile = None
-        if level == "complete" and not persona_id:
-            raise InputValidationError("persona_id is required for complete interpretation.")
-
         if persona_id:
-            try:
-                if persona_uuid is None:
-                    raise InputValidationError(f"Persona {persona_id} not found.")
-                persona = db.execute(
-                    select(LlmPersonaModel).where(LlmPersonaModel.id == persona_uuid)
-                ).scalar_one_or_none()
-                if persona:
-                    persona_name = persona.name
-                    persona_prompt_profile = _build_persona_prompt_profile(persona)
-                else:
-                    logger.warning(f"Persona {persona_id} not found in DB")
-                    raise InputValidationError(f"Persona {persona_id} not found.")
-            except InputValidationError:
-                raise
-            except Exception as e:
-                logger.error(f"Error resolving persona {persona_id}: {e}")
-                raise
+            persona = db.get(LlmPersonaModel, uuid.UUID(persona_id))
+            if persona:
+                persona_name = persona.name
 
-        # 4. Build user_input vs context (AC4)
-        user_input: dict = {
-            "chart_json": chart_json_dict,
-            "locale": locale,
-        }
-        if level == "short":
-            user_input["question"] = question or "Interprète mon thème natal."
-
-        context = {
-            "locale": locale,
-            "chart_json": json.dumps(chart_json_dict, ensure_ascii=False),
-            "evidence_catalog": evidence_catalog,
-            "use_case": use_case_key,
-            "validation_strict": level == "complete",
-        }
-        if persona_id:
-            context["persona_id"] = persona_id
-        if persona_prompt_profile:
-            context["persona_name"] = persona_prompt_profile
-
-        # 5. Call Gateway
-        gateway = LLMGateway()
-        gateway_result = await gateway.execute(
-            use_case=use_case_key,
-            user_input=user_input,
-            context=context,
-            request_id=request_id,
-            trace_id=trace_id,
+        natal_input = NatalExecutionInput(
+            use_case_key=use_case_key,
+            locale=locale,
+            level=level,
+            chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
+            natal_data=chart_json_dict,
+            evidence_catalog=evidence_catalog,
+            persona_id=persona_id,
+            validation_strict=level == "complete",
+            question=question if level == "short" else None,
+            astro_context=None,  # Specific natal astro_context if any
+            module=module,
+            variant_code=variant_code,
             user_id=user_id,
-            db=db,
+            request_id=request_id,
+            trace_id=trace_id
         )
+
+        gateway_result = await AIEngineAdapter.generate_natal_interpretation(
+            natal_input=natal_input, db=db
+        )
+
         NatalInterpretationServiceV2._record_token_usage(
             db,
             user_id=user_id,
             gateway_result=gateway_result,
         )
 
-        # 6. Handle result and map to schema
+        # 5. Handle result and map to schema
         if not gateway_result.structured_output:
             logger.error(f"Gateway returned no structured output for {use_case_key}")
             raise RuntimeError("Gateway returned no structured output")
@@ -709,28 +630,28 @@ class NatalInterpretationServiceV2:
         """
         use_case_key = "natal_long_free"
 
-        user_input = {
-            "chart_json": chart_json_dict,
-            "locale": locale,
-        }
-        context = {
-            "locale": locale,
-            "chart_json": json.dumps(chart_json_dict, ensure_ascii=False),
-            "evidence_catalog": evidence_catalog,
-            "use_case": use_case_key,
-            "validation_strict": False,
-        }
-
-        gateway = LLMGateway()
-        gateway_result = await gateway.execute(
-            use_case=use_case_key,
-            user_input=user_input,
-            context=context,
-            request_id=request_id,
-            trace_id=trace_id,
+        natal_input = NatalExecutionInput(
+            use_case_key=use_case_key,
+            locale=locale,
+            level="complete",  # Free short is mapped to complete level in persistence
+            chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
+            natal_data=chart_json_dict,
+            evidence_catalog=evidence_catalog,
+            persona_id=None,
+            validation_strict=False,
+            question=None,
+            astro_context=None,
+            module=None,
+            variant_code="free_short",
             user_id=user_id,
-            db=db,
+            request_id=request_id,
+            trace_id=trace_id
         )
+
+        gateway_result = await AIEngineAdapter.generate_natal_interpretation(
+            natal_input=natal_input, db=db
+        )
+
         NatalInterpretationServiceV2._record_token_usage(
             db,
             user_id=user_id,
