@@ -71,3 +71,73 @@ async def test_prompt_version_id_propagation():
     
     # Critical: final result must carry the resolved prompt_version_id, not the provider default
     assert result.meta.prompt_version_id == real_prompt_id
+
+@pytest.mark.asyncio
+async def test_observability_success_persists_to_db():
+    """Verify that a successful execute_request creates an LlmCallLogModel entry."""
+    from sqlalchemy import create_engine, select
+    from sqlalchemy.orm import sessionmaker
+    from app.infra.db.base import Base
+    from app.infra.db.models.llm_observability import LlmCallLogModel
+    from app.infra.db.models import LlmUseCaseConfigModel, LlmPromptVersionModel
+    from app.infra.db.models.llm_prompt import PromptStatus
+
+    # 1. Setup in-memory DB
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    try:
+        # 2. Setup use case and prompt
+        use_case_key = "test_obs"
+        uc = LlmUseCaseConfigModel(key=use_case_key, display_name="Test", description="D")
+        db.add(uc)
+        prompt = LlmPromptVersionModel(
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            model="m",
+            developer_prompt="hello",
+            created_by="test"
+        )
+        db.add(prompt)
+        db.commit()
+
+        # 3. Mock provider
+        mock_client = MagicMock()
+        provider_res = GatewayResult(
+            use_case=use_case_key,
+            request_id="req-obs",
+            trace_id="trace-obs",
+            raw_output='{"ok": true}',
+            usage=UsageInfo(input_tokens=10, output_tokens=20),
+            meta=GatewayMeta(latency_ms=15, model="m")
+        )
+        mock_client.execute = AsyncMock(return_value=provider_res)
+
+        gateway = LLMGateway(responses_client=mock_client)
+
+        request = LLMExecutionRequest(
+            user_input=ExecutionUserInput(use_case=use_case_key, locale="fr"),
+            request_id="req-obs",
+            trace_id="trace-obs",
+            user_id=1
+        )
+
+        # 4. Execute
+        await gateway.execute_request(request, db=db)
+
+        # 5. Verify DB persistence
+        stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == "req-obs")
+        log_entry = db.execute(stmt).scalar_one_or_none()
+
+        assert log_entry is not None
+        assert log_entry.use_case == use_case_key
+        assert log_entry.tokens_in == 10
+        assert log_entry.tokens_out == 20
+        # Check that it's NOT hardcoded-v1 if prompt was found
+        assert str(log_entry.prompt_version_id) == str(prompt.id)
+
+    finally:
+        db.close()
+        Base.metadata.drop_all(bind=engine)

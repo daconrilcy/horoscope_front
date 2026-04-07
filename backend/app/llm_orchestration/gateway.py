@@ -1083,7 +1083,7 @@ class LLMGateway:
                 raise
 
             if db and not is_repair_call:
-                await log_call(db=db, use_case=use_case, request_id=request.request_id, trace_id=request.trace_id, user_input=request.user_input.model_dump(), result=final_result.to_log_dict())
+                await log_call(db=db, use_case=use_case, request_id=request.request_id, trace_id=request.trace_id, user_input=request.user_input.model_dump(), result=final_result)
                 increment_counter("llm_gateway_requests_total", labels={"use_case": use_case, "status": "success"})
 
             return final_result
