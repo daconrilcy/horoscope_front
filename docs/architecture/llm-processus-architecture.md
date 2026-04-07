@@ -49,6 +49,20 @@ Le flux d'exécution est structuré en **6 étapes explicites** pour garantir la
 5.  **Stage 5: Recovery (Repair/Fallback)** (`_handle_repair_or_fallback`) : Gestion récursive des erreurs via réparation automatique ou basculement de use case.
 6.  **Stage 6: Build Final Result** (`_build_result`) : Assemblage du `GatewayResult` final avec ses métadonnées de traçabilité.
 
+## Pipeline de Validation de Sortie (`validate_output`)
+
+Le traitement de la réponse brute du LLM est découpé en **4 étapes séquentielles** garantissant l'intégrité et la sécurité des données :
+
+1.  **Parse JSON** (`parse_json`) : Conversion de la chaîne brute en dictionnaire. Gestion spécifique de la suppression des `disclaimers` en V3 (tag `v3_disclaimers_stripped`).
+2.  **Schema Validation** (`validate_schema`) : Validation stricte contre le JSON Schema configuré. Catégorise les erreurs en `schema_error`.
+3.  **Field Normalization** (`normalize_fields`) : Normalisation des alias d'evidence (ex: `SUN` → `PLANET_SUN_...`) pour réduire les faux positifs (tag `evidence_alias_normalized`).
+4.  **Evidence Sanitization** (`sanitize_evidence`) : 
+    - Détection d'hallucinations (comparaison au catalogue).
+    - Vérification de la règle bidirectionnelle (présence dans le texte).
+    - Filtrage sécurisé : suppression silencieuse des items hors catalogue (tag `evidence_filtered_non_catalog`).
+
+La politique `strict=True` rend ces anomalies visibles via des warnings mais ne bloque pas la réponse, préservant la continuité du service tout en assurant une sortie conforme au catalogue.
+
 ## Couche Applicative LLM (`AIEngineAdapter`)
 
 Bien que conservant son nom legacy `AIEngineAdapter` (décision Option A, Epic 66), ce module fait office de **couche applicative canonique** pour les appels LLM.

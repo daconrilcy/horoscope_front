@@ -4,54 +4,312 @@ import json
 import logging
 import re
 import unicodedata
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from jsonschema import Draft7Validator
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.infra.observability.metrics import increment_counter
 
 logger = logging.getLogger(__name__)
 
 
-class ValidationResult(BaseModel):
+class ParseResult(BaseModel):
+    """Result of the JSON parsing stage."""
+
+    success: bool
+    data: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
+    error_category: Optional[Literal["parse_error"]] = None
+    normalizations_applied: List[str] = Field(default_factory=list)
+
+
+class SchemaValidationResult(BaseModel):
+    """Result of the JSON Schema validation stage."""
+
     valid: bool
-    parsed: Optional[dict[str, Any]] = None
-    errors: List[str] = []
-    warnings: List[str] = []
+    errors: List[str] = Field(default_factory=list)
+    error_category: Optional[Literal["schema_error"]] = None
+
+
+class NormalizationResult(BaseModel):
+    """Result of the field normalization stage."""
+
+    data: Dict[str, Any]
+    normalizations_applied: List[str] = Field(default_factory=list)
+
+
+class SanitizationResult(BaseModel):
+    """Result of the evidence sanitization stage."""
+
+    data: Dict[str, Any]
+    normalizations_applied: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+
+
+class ValidationResult(BaseModel):
+    """Final result of the output validation pipeline."""
+
+    valid: bool
+    parsed: Optional[Dict[str, Any]] = None
+    errors: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    error_category: Optional[Literal["parse_error", "schema_error"]] = None
+    normalizations_applied: List[str] = Field(default_factory=list)
 
 
 _PLANET_CODES = {
-    "SUN",
-    "MOON",
-    "MERCURY",
-    "VENUS",
-    "MARS",
-    "JUPITER",
-    "SATURN",
-    "URANUS",
-    "NEPTUNE",
-    "PLUTO",
-    "CHIRON",
-    "LILITH",
-    "NODE",
+    "SUN", "MOON", "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN",
+    "URANUS", "NEPTUNE", "PLUTO", "CHIRON", "LILITH", "NODE",
 }
 _ANGLE_CODES = {"ASC", "MC", "DSC", "IC"}
 _ASPECT_CODES = {"CONJUNCTION", "OPPOSITION", "TRINE", "SQUARE", "SEXTILE"}
 _SIGN_CODES = {
-    "ARIES",
-    "TAURUS",
-    "GEMINI",
-    "CANCER",
-    "LEO",
-    "VIRGO",
-    "LIBRA",
-    "SCORPIO",
-    "SAGITTARIUS",
-    "CAPRICORN",
-    "AQUARIUS",
-    "PISCES",
+    "ARIES", "TAURUS", "GEMINI", "CANCER", "LEO", "VIRGO", "LIBRA",
+    "SCORPIO", "SAGITTARIUS", "CAPRICORN", "AQUARIUS", "PISCES",
 }
+
+
+def parse_json(raw_output: str, schema_version: str) -> ParseResult:
+    """
+    Stage 1: Parses raw string into JSON and applies version-specific cleanup.
+    (AC1, AC2, AC3)
+    """
+    try:
+        data = json.loads(raw_output)
+        normalizations = []
+        if schema_version.startswith("v3") and isinstance(data, dict):
+            if "disclaimers" in data:
+                data.pop("disclaimers")
+                normalizations.append("v3_disclaimers_stripped")
+        
+        return ParseResult(
+            success=True,
+            data=data,
+            normalizations_applied=normalizations
+        )
+    except json.JSONDecodeError as e:
+        return ParseResult(
+            success=False,
+            error_message=f"JSON syntax error: {str(e)}",
+            error_category="parse_error"
+        )
+
+
+def validate_schema(data: Dict[str, Any], json_schema: Dict[str, Any]) -> SchemaValidationResult:
+    """
+    Stage 2: Validates the parsed data against the JSON Schema.
+    (AC1, AC2)
+    """
+    validator = Draft7Validator(json_schema)
+    errors = sorted(validator.iter_errors(data), key=lambda e: e.path)
+
+    error_messages = []
+    for error in errors:
+        path = ".".join([str(p) for p in error.path]) or "root"
+        error_messages.append(f"[{path}] {error.message}")
+
+    if error_messages:
+        return SchemaValidationResult(
+            valid=False,
+            errors=error_messages,
+            error_category="schema_error"
+        )
+    
+    return SchemaValidationResult(valid=True)
+
+
+def normalize_fields(
+    data: Dict[str, Any], 
+    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]], 
+    use_case: str
+) -> NormalizationResult:
+    """
+    Stage 3: Normalizes specific fields (like evidence aliases).
+    (AC1, AC3)
+    """
+    normalized_data = dict(data)
+    normalizations = []
+    
+    evidence = normalized_data.get("evidence", [])
+    if isinstance(evidence, list) and evidence_catalog is not None:
+        catalog_set = set()
+        catalog_map = None
+        if isinstance(evidence_catalog, dict):
+            catalog_map = evidence_catalog
+            catalog_set = set(evidence_catalog.keys())
+        else:
+            catalog_set = set(evidence_catalog)
+            
+        new_evidence = []
+        any_normalized = False
+        for item in evidence:
+            if not isinstance(item, str):
+                new_evidence.append(item)
+                continue
+            
+            norm_item = _normalize_evidence_item(item, catalog_set, catalog_map)
+            if norm_item != item:
+                any_normalized = True
+            new_evidence.append(norm_item)
+            
+        if any_normalized:
+            normalized_data["evidence"] = new_evidence
+            normalizations.append("evidence_alias_normalized")
+            
+    return NormalizationResult(
+        data=normalized_data,
+        normalizations_applied=normalizations
+    )
+
+
+def sanitize_evidence(
+    data: Dict[str, Any], 
+    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]], 
+    strict: bool
+) -> SanitizationResult:
+    """
+    Stage 4: Applies security filters and consistency checks.
+    (AC1, AC3, AC4)
+    """
+    sanitized_data = dict(data)
+    normalizations = []
+    warnings = []
+    
+    evidence = sanitized_data.get("evidence", [])
+    if not isinstance(evidence, list):
+        return SanitizationResult(data=sanitized_data)
+
+    catalog_set = set()
+    catalog_map = None
+    if evidence_catalog is not None:
+        if isinstance(evidence_catalog, dict):
+            catalog_map = evidence_catalog
+            catalog_set = set(evidence_catalog.keys())
+        else:
+            catalog_set = set(evidence_catalog)
+
+    # 1. Hallucination Detection (Warnings only, AC4)
+    if evidence_catalog is not None:
+        for item in evidence:
+            if isinstance(item, str) and item not in catalog_set:
+                warnings.append(f"Hallucinated evidence: '{item}' not in catalog.")
+
+    # 2. Bidirectional Rule
+    text_blobs = []
+    for key in ["summary", "highlights", "advice"]:
+        val = sanitized_data.get(key)
+        if isinstance(val, str):
+            text_blobs.append(val)
+        elif isinstance(val, list):
+            text_blobs.extend([v for e in val if isinstance(e, str)])
+            
+    if "sections" in sanitized_data and isinstance(sanitized_data["sections"], list):
+        for s in sanitized_data["sections"]:
+            if isinstance(s, dict) and "content" in s:
+                text_blobs.append(s["content"])
+
+    full_text = _normalize_for_matching("\n".join(text_blobs))
+    if full_text.strip():
+        for item in evidence:
+            if not isinstance(item, str):
+                continue
+            
+            found = False
+            pattern = rf"\b{re.escape(_normalize_for_matching(item))}\b"
+            if re.search(pattern, full_text):
+                found = True
+            elif catalog_map is not None and item in catalog_map:
+                for label in catalog_map[item]:
+                    label_pattern = rf"\b{re.escape(_normalize_for_matching(label))}\b"
+                    if re.search(label_pattern, full_text):
+                        found = True
+                        break
+            
+            if not found:
+                warnings.append(f"Orphan evidence: '{item}' present in evidence but never mentioned in text.")
+
+    # 3. Secure Filter (Silently remove non-catalog items, AC4)
+    if evidence_catalog is not None:
+        original_count = len(evidence)
+        filtered_evidence = [e for e in evidence if e in catalog_set]
+        if len(filtered_evidence) < original_count:
+            sanitized_data["evidence"] = filtered_evidence
+            normalizations.append("evidence_filtered_non_catalog")
+
+    # 4. historical space check
+    for i, item in enumerate(sanitized_data.get("evidence", [])):
+        if isinstance(item, str) and " " in item:
+            warnings.append(f"[evidence.{i}] Item contains spaces: '{item}'")
+
+    return SanitizationResult(
+        data=sanitized_data,
+        normalizations_applied=normalizations,
+        warnings=warnings
+    )
+
+
+def validate_output(
+    raw_output: str,
+    json_schema: Dict[str, Any],
+    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]] = None,
+    strict: bool = False,
+    use_case: str = "",
+    schema_version: str = "v1",
+) -> ValidationResult:
+    """
+    Orchestrates the 4-stage validation pipeline.
+    (AC5)
+    """
+    try:
+        # Stage 1: Parse
+        parse_res = parse_json(raw_output, schema_version)
+        if not parse_res.success:
+            if use_case.startswith("natal"):
+                increment_counter("natal_validation_fail_total", labels={"use_case": use_case, "reason": "json_error", "schema_version": schema_version})
+            return ValidationResult(
+                valid=False, 
+                errors=[parse_res.error_message] if parse_res.error_message else [], 
+                error_category="parse_error"
+            )
+
+        # Stage 2: Schema
+        schema_res = validate_schema(parse_res.data, json_schema)
+        if not schema_res.valid:
+            if use_case.startswith("natal"):
+                increment_counter("natal_validation_fail_total", labels={"use_case": use_case, "reason": "schema_error", "schema_version": schema_version})
+            return ValidationResult(
+                valid=False, 
+                parsed=parse_res.data, 
+                errors=schema_res.errors, 
+                error_category="schema_error"
+            )
+
+        # Stage 3: Normalize
+        norm_res = normalize_fields(parse_res.data, evidence_catalog, use_case)
+
+        # Stage 4: Sanitize
+        sanit_res = sanitize_evidence(norm_res.data, evidence_catalog, strict)
+
+        # Aggregation
+        applied = parse_res.normalizations_applied + norm_res.normalizations_applied + sanit_res.normalizations_applied
+        
+        if use_case.startswith("natal"):
+            increment_counter("natal_validation_pass_total", labels={"use_case": use_case, "schema_version": schema_version})
+            filtered_count = len(norm_res.data.get("evidence", [])) - len(sanit_res.data.get("evidence", []))
+            if filtered_count > 0:
+                increment_counter("natal_invalid_evidence_total", value=float(filtered_count), labels={"use_case": use_case, "schema_version": schema_version})
+
+        return ValidationResult(
+            valid=True,
+            parsed=sanit_res.data,
+            warnings=sanit_res.warnings,
+            normalizations_applied=applied
+        )
+
+    except Exception as e:
+        logger.exception("unexpected_validation_error")
+        return ValidationResult(valid=False, errors=[f"Unexpected validation error: {str(e)}"])
 
 
 def _normalize_evidence_item(
@@ -64,75 +322,67 @@ def _normalize_evidence_item(
     if cleaned in catalog_set:
         return cleaned
 
-    # Angles aliases: ASC / MC / DSC / IC -> first matching canonical id.
     if cleaned in _ANGLE_CODES:
         prefix = f"{cleaned}_"
         for key in catalog_set:
             if key.startswith(prefix):
                 return key
 
-    # House aliases: HOUSE_10 -> first matching HOUSE_10_...
     if re.fullmatch(r"HOUSE_\d{1,2}", cleaned):
         prefix = f"{cleaned}_"
         for key in catalog_set:
             if key.startswith(prefix):
                 return key
 
-    # Planet aliases: SUN / VENUS / ... -> first matching PLANET_...
     if cleaned in _PLANET_CODES:
-        prefix = f"{cleaned}_"
+        prefix = f"PLANET_{cleaned}_"
         for key in catalog_set:
             if key.startswith(prefix):
                 return key
 
-    # Sign aliases: TAURUS -> first matching *_TAURUS or *_TAURUS_*
     if cleaned in _SIGN_CODES:
         needle = f"_{cleaned}"
         for key in catalog_set:
             if key.endswith(needle) or f"{needle}_" in key:
                 return key
 
-    # Aspect alias: SUN_CONJUNCTION_VENUS -> ASPECT_SUN_VENUS_CONJUNCTION
     parts = cleaned.split("_")
     if (
         len(parts) == 3
         and parts[0] in _PLANET_CODES
         and parts[1] in _ASPECT_CODES
         and parts[2] in _PLANET_CODES
-    ):  # noqa: E501
+    ):
         p1, aspect, p2 = parts
         pair = sorted([p1, p2])
         canonical = f"ASPECT_{pair[0]}_{pair[1]}_{aspect}"
         if canonical in catalog_set:
             return canonical
 
-    # Aspect alias: CONJUNCTION_SUN_VENUS -> ASPECT_SUN_VENUS_CONJUNCTION
     if (
         len(parts) == 3
         and parts[0] in _ASPECT_CODES
         and parts[1] in _PLANET_CODES
         and parts[2] in _PLANET_CODES
-    ):  # noqa: E501
+    ):
         aspect, p1, p2 = parts
         pair = sorted([p1, p2])
         canonical = f"ASPECT_{pair[0]}_{pair[1]}_{aspect}"
         if canonical in catalog_set:
             return canonical
 
-    # Planet/sign alias: SUN_IN_TAURUS -> any matching SUN_TAURUS*
     if (
         len(parts) == 3
         and parts[0] in _PLANET_CODES
         and parts[1] == "IN"
         and parts[2] in _SIGN_CODES
-    ):  # noqa: E501
+    ):
         p, _, s = parts
         prefix = f"{p}_{s}"
         for key in catalog_set:
             if key.startswith(prefix):
                 return key
 
-    # Support legacy ASPECT_* aliases with different ordering.
     if cleaned.startswith("ASPECT_"):
         parts = cleaned.split("_")
         if (
@@ -146,7 +396,6 @@ def _normalize_evidence_item(
             if canonical in catalog_set:
                 return canonical
 
-    # If no catalog mapping, keep the cleaned value so regex/casing issues don't fail unnecessarily.
     if catalog_map is None:
         return cleaned
 
@@ -158,175 +407,3 @@ def _normalize_for_matching(value: str) -> str:
     no_accents = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
     lowered = no_accents.lower()
     return re.sub(r"[^a-z0-9\s]", " ", lowered)
-
-
-def validate_output(
-    raw_output: str,
-    json_schema: dict[str, Any],
-    evidence_catalog: Optional[list[str] | dict[str, list[str]]] = None,
-    strict: bool = False,
-    use_case: str = "",
-    schema_version: str = "v1",
-) -> ValidationResult:
-    """
-    Validates LLM output against a JSON Schema.
-    Includes special handling for the 'evidence' field pattern.
-
-    Args:
-        raw_output: The raw JSON string from LLM.
-        json_schema: The schema to validate against.
-        evidence_catalog: Authorized identifiers for 'evidence'.
-                          Can be a list of IDs or a mapping of ID -> natural labels.
-        strict: If True, evidence catalog misses or bidirectional rule violations
-                are treated as errors instead of warnings.
-        schema_version: The version of the schema being validated (v1, v2, v3).
-    """
-    try:
-        # 1. Parse JSON
-        try:
-            data = json.loads(raw_output)
-            # Story 30-8: V3 strictly forbids 'disclaimers'.
-            # If the LLM included them, we remove them here to pass validation
-            # and let the application layer inject the static ones.
-            if schema_version.startswith("v3") and isinstance(data, dict):
-                data.pop("disclaimers", None)
-        except json.JSONDecodeError as e:
-            if use_case.startswith("natal"):
-                increment_counter(
-                    "natal_validation_fail_total",
-                    labels={
-                        "use_case": use_case,
-                        "reason": "json_error",
-                        "schema_version": schema_version,
-                    },
-                )
-            return ValidationResult(valid=False, errors=[f"JSON syntax error: {str(e)}"])
-
-        # 2. Validate against schema
-        validator = Draft7Validator(json_schema)
-        errors = sorted(validator.iter_errors(data), key=lambda e: e.path)
-
-        error_messages = []
-        for error in errors:
-            path = ".".join([str(p) for p in error.path]) or "root"
-            error_messages.append(f"[{path}] {error.message}")
-
-        if error_messages:
-            if use_case.startswith("natal"):
-                increment_counter(
-                    "natal_validation_fail_total",
-                    labels={
-                        "use_case": use_case,
-                        "reason": "schema_error",
-                        "schema_version": schema_version,
-                    },
-                )
-            return ValidationResult(valid=False, parsed=data, errors=error_messages)
-
-        # 3. Specific validation for 'evidence' (pattern check + catalog + bidirectional)
-        warnings = []
-        evidence = data.get("evidence", [])
-        if isinstance(evidence, list):
-            # 3.1 Catalog check (hallucination detection)
-            catalog_set: set[str] = set()
-            catalog_map: Optional[dict[str, list[str]]] = None
-            if evidence_catalog is not None:
-                # If list, convert to set for speed. If dict, use keys.
-                if isinstance(evidence_catalog, dict):
-                    catalog_map = evidence_catalog
-                    catalog_set = set(evidence_catalog.keys())
-                else:
-                    catalog_set = set(evidence_catalog)
-                normalized_evidence: list[str] = []
-                for item in evidence:
-                    if not isinstance(item, str):
-                        normalized_evidence.append(item)
-                        continue
-                    normalized_item = _normalize_evidence_item(item, catalog_set, catalog_map)
-                    normalized_evidence.append(normalized_item)
-                    if normalized_item not in catalog_set:
-                        # Story 30-8 T4: Always warn (never error) — secure filter handles removal.
-                        msg = f"Hallucinated evidence: '{item}' not in catalog."
-                        warnings.append(msg)
-                data["evidence"] = normalized_evidence
-                evidence = normalized_evidence
-
-            # 3.2 Bidirectional Rule (Story 30.5 M4)
-            # Every evidence item must be mentioned in text fields.
-            text_blobs = []
-            if "summary" in data:
-                text_blobs.append(data["summary"])
-            if "highlights" in data:
-                text_blobs.extend(data["highlights"])
-            if "advice" in data:
-                text_blobs.extend(data["advice"])
-            if "sections" in data and isinstance(data["sections"], list):
-                for s in data["sections"]:
-                    if "content" in s:
-                        text_blobs.append(s["content"])
-
-            full_text = _normalize_for_matching("\n".join(text_blobs))
-
-            if full_text.strip():
-                for item in evidence:
-                    if not isinstance(item, str):
-                        continue
-
-                    # Check for mention: either the ID itself or any of its natural labels.
-                    # Use regex with word boundaries to avoid false positives (e.g. 'sun' in 'sunday').  # noqa: E501
-                    found = False
-                    pattern = rf"\b{re.escape(_normalize_for_matching(item))}\b"
-                    if re.search(pattern, full_text):
-                        found = True
-                    elif catalog_map is not None and item in catalog_map:
-                        labels = catalog_map[item]
-                        for label in labels:
-                            label_pattern = rf"\b{re.escape(_normalize_for_matching(label))}\b"
-                            if re.search(label_pattern, full_text):
-                                found = True
-                                break
-
-                    if not found:
-                        msg = f"Orphan evidence: '{item}' present in evidence but never mentioned in text."  # noqa: E501
-                        warnings.append(msg)
-
-            # 3.3 Secure filter — guarantee evidence ⊆ allowed_evidence (Story 30-8 T4)
-            # Non-blocking: silently removes non-catalog IDs after normalization.
-            if evidence_catalog is not None:
-                original_count = len(data["evidence"])
-                data["evidence"] = [e for e in data["evidence"] if e in catalog_set]
-                evidence = data["evidence"]
-                filtered_count = original_count - len(data["evidence"])
-                if filtered_count > 0:
-                    logger.warning(
-                        "evidence_secure_filter removed=%d use_case=%s",
-                        filtered_count,
-                        use_case or "unknown",
-                    )
-                    if use_case.startswith("natal"):
-                        increment_counter(
-                            "natal_invalid_evidence_total",
-                            value=float(filtered_count),
-                            labels={"use_case": use_case, "schema_version": schema_version},
-                        )
-
-            # 3.4 Space check (historical constraint)
-            for i, item in enumerate(evidence):
-                if not isinstance(item, str):
-                    continue
-                if " " in item:
-                    warnings.append(f"[evidence.{i}] Item contains spaces: '{item}'")
-
-        if error_messages:
-            return ValidationResult(valid=False, parsed=data, errors=error_messages)
-
-        if use_case.startswith("natal"):
-            increment_counter(
-                "natal_validation_pass_total",
-                labels={"use_case": use_case, "schema_version": schema_version},
-            )
-
-        return ValidationResult(valid=True, parsed=data, warnings=warnings)
-
-    except Exception as e:
-        return ValidationResult(valid=False, errors=[f"Unexpected validation error: {str(e)}"])
