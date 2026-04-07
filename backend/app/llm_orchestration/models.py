@@ -168,7 +168,7 @@ class ResponseFormatConfig(BaseModel):
     """Configuration for the LLM response format."""
 
     type: Literal["json_schema", "text"] = "text"
-    schema_dict: Optional[Dict[str, Any]] = Field(default=None, alias="schema")
+    json_schema: Optional[Dict[str, Any]] = Field(default=None, alias="schema")
 
     model_config = ConfigDict(populate_by_name=True)
 

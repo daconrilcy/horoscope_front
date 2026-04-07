@@ -817,7 +817,7 @@ class LLMGateway:
                 "type": plan.response_format.type,
                 "json_schema": {
                     "name": request.user_input.use_case,
-                    "schema": plan.response_format.schema_dict,
+                    "schema": plan.response_format.json_schema,
                     "strict": True,
                 },
             }
@@ -1008,6 +1008,9 @@ class LLMGateway:
             if use_case in visited and not is_repair_call:
                 raise GatewayError(f"Infinite fallback loop detected for use case '{use_case}'", details={"visited": visited})
 
+            if len(visited) > 3:
+                raise GatewayError(f"Fallback chain depth limit exceeded for '{use_case}'", details={"visited": visited})
+
             # 0. Merge extra_context for preliminary resolution
             context_dict = request.context.model_dump()
             extra = context_dict.pop("extra_context", {})
@@ -1029,8 +1032,8 @@ class LLMGateway:
 
             # Stage 1.5: Validate Input (Story 66.4 AC8)
             try:
-                # We use the config from the plan which was just resolved
-                self._validate_input(plan, user_input_dict)
+                # We use the config just resolved
+                self._validate_input(config, user_input_dict)
             except InputValidationError:
                 raise
             except Exception as e:

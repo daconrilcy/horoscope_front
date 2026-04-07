@@ -399,6 +399,13 @@ def _normalize_evidence_item(
     if catalog_map is None:
         return cleaned
 
+    # Search for item in catalog_map values
+    for canonical_id, aliases in catalog_map.items():
+        # If item matches an alias, return canonical_id
+        normalized_aliases = [_normalize_for_matching(a) for p in aliases for a in (p if isinstance(p, list) else [p])]
+        if _normalize_for_matching(cleaned) in normalized_aliases:
+            return canonical_id
+
     return cleaned
 
 

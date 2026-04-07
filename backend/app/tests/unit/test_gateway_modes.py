@@ -346,6 +346,7 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
     resp_format = args["response_format"]
     assert resp_format is not None
     assert resp_format["json_schema"]["name"] == "natal_long_free"
+    # Access the dict through json_schema key directly
     assert resp_format["json_schema"]["schema"]["required"] == [
         "title",
         "summary",

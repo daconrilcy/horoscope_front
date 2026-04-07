@@ -110,6 +110,13 @@ def test_build_result_metadata_preservation():
     )
     recovery = RecoveryResult(result=provider_res, repair_attempts=1)
     
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="uc", locale="fr"),
+        request_id="r",
+        trace_id="t",
+        user_id=1
+    )
+    
     final = gateway._build_result(provider_res, ValidationResult(valid=True, parsed={}, errors=[]), plan, recovery, 500, request=request)
     
     assert final.meta.latency_ms == 500
