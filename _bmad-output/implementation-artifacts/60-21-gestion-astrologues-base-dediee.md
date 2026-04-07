@@ -122,3 +122,9 @@ L'implémentation respecte parfaitement le découplage entre identité technique
 ### Final Outcome
 
 L'architecture est désormais prête pour une gestion administrative complète des astrologues, avec profils métier structurés, prompts dédiés, biographies éditoriales cohérentes, différenciation explicite `IA / réel`, photos réelles branchées côté produit, et une exposition cohérente des astrologues sur les parcours publics, la navigation, les surfaces de sélection et un catalogue premium réellement différenciant, sans réapparition de profils legacy parasites.
+
+### Correctif de maintenance du 2026-04-07
+
+- Les routes `/astrologers` et `/astrologers/:id` ont été réintroduites explicitement dans `frontend/src/app/routes.tsx` après une régression de routing qui rendait le catalogue et ses fiches inaccessibles malgré des composants toujours présents.
+- Le catalogue astrologues bénéficie de nouveau du fond premium global clair en mode light grâce au rétablissement de `app-bg` dans `AppLayout`, au lieu de dépendre d'un fallback visuel plus sombre au niveau racine.
+- Des garde-fous de test ont été ajoutés sur la configuration de routes et sur le shell applicatif afin d'éviter une nouvelle disparition du catalogue dans le routeur principal.

@@ -183,3 +183,13 @@ Implementation is robust, visually stunning, and perfectly integrated into the p
 - Regression tests updated to reflect the final UI vocabulary and back-button labeling.
 - Conversation avatars and labels now resolve against the astrologer catalog so the chat surfaces reuse the same photos and civil names as `/astrologers`.
 - Opening-turn chat behavior hardened to avoid robotic replies on meaningless first messages such as `chch`, with dedicated backend tests and prompt publication in the local registry.
+
+### Correctif de maintenance du 2026-04-07
+
+- La route `/chat/:conversationId` a été redéclarée explicitement dans `frontend/src/app/routes.tsx` après une régression de configuration qui empêchait l'affichage des conversations profondes.
+- Le layout authentifié remonte de nouveau le wrapper visuel premium global dans `frontend/src/layouts/AppLayout.tsx` :
+  - `app-shell app-bg`
+  - `app-bg-container`
+  - `StarfieldBackground`
+- Ce correctif rétablit le fond clair standard en mode light pour `/chat` et les autres pages applicatives, tout en conservant le starfield uniquement sous thème dark.
+- Les tests de shell et de routing ont été renforcés pour verrouiller cette dépendance structurelle.

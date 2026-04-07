@@ -338,6 +338,7 @@ Gemini CLI (Autonomous Mode)
 - Les biographies `À propos` et les signatures mission reflètent maintenant le ton et le rôle exacts de chaque astrologue.
 - Le flux d'avis utilisateur est finalisé avec une modale en surimpression, une seule action de publication, validation d'un commentaire libre à partir de 10 caractères et fallback propre vers une simple note si aucun texte n'est saisi.
 - Les avis textuels persistés exposent désormais l'alias utilisateur, la date et le commentaire dans la section `Avis`, avec possibilité de noter d'abord puis d'ajouter un avis ultérieurement.
+- Correctif de maintenance `2026-04-07` : la route `/astrologers/:id` a été rebranchée explicitement dans le routeur principal, ce qui restaure l'accès aux fiches premium depuis le catalogue, le chat et les liens profonds.
 
 ### File List
 
