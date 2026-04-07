@@ -56,6 +56,23 @@ class QualifiedContext(BaseModel):
     context_quality: Literal["full", "partial", "minimal"] = "full"
     degradation_reasons: List[str] = Field(default_factory=list)
 
+    @model_validator(mode="after")
+    def _validate_quality(self) -> QualifiedContext:
+        """Auto-computes missing fields and quality if not already provided."""
+        if not self.missing_fields:
+            missing = []
+            if not self.payload.natal_interpretation:
+                missing.append("natal_interpretation")
+            if not self.payload.natal_data:
+                missing.append("natal_data")
+            if not self.payload.astrologer_profile:
+                missing.append("astrologer_profile")
+            self.missing_fields = missing
+        
+        # Always re-compute quality to match missing_fields
+        self.context_quality = self.compute_quality(self.missing_fields)
+        return self
+
     _CRITICAL_FIELDS = frozenset({"natal_data", "astrologer_profile"})
     _SECONDARY_FIELDS = frozenset({"natal_interpretation", "period_covered", "today_date"})
 

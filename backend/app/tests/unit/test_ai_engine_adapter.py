@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
-from app.services.ai_engine_adapter import AIEngineAdapter
+from app.services.ai_engine_adapter import AIEngineAdapter, build_opening_chat_user_data_block
 
 @pytest.mark.asyncio
 async def test_generate_chat_reply_v2_omits_none_conversation_id(

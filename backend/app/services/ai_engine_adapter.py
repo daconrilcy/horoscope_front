@@ -175,8 +175,7 @@ def _build_test_guidance_fallback(use_case: str) -> str:
     return f"Guidance test hors provider pour {use_case}."
 
 
-def _build_opening_chat_user_data_block(
-    *,
+def build_opening_chat_user_data_block(
     last_user_msg: str,
     context: dict[str, str | None],
 ) -> str:
@@ -575,7 +574,7 @@ class AIEngineAdapter:
 
             # Story 66.3 AC2: chat_turn_stage handled via extra_context or flags
             if context.get("chat_turn_stage") == "opening":
-                extra_context["user_data_block"] = _build_opening_chat_user_data_block(
+                extra_context["user_data_block"] = build_opening_chat_user_data_block(
                     last_user_msg=last_user_msg,
                     context=context,
                 )

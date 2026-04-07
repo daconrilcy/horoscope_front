@@ -121,7 +121,7 @@ def validate_schema(data: Dict[str, Any], json_schema: Dict[str, Any]) -> Schema
 
 def normalize_fields(
     data: Dict[str, Any], 
-    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]], 
+    evidence_catalog: Optional[Union[List[str], Dict[str, List[Union[str, List[str]]]]]], 
     use_case: str
 ) -> NormalizationResult:
     """
@@ -151,7 +151,7 @@ def normalize_fields(
             norm_item = _normalize_evidence_item(item, catalog_set, catalog_map)
             if norm_item != item:
                 any_normalized = True
-            new_evidence.append(norm_item)
+            new_evidence.append(norm_item.upper())
             
         if any_normalized:
             normalized_data["evidence"] = new_evidence
@@ -396,21 +396,31 @@ def _normalize_evidence_item(
             if canonical in catalog_set:
                 return canonical
 
-    if catalog_map is None:
-        return cleaned
-
-    # Search for item in catalog_map values
-    for canonical_id, aliases in catalog_map.items():
-        # If item matches an alias, return canonical_id
-        normalized_aliases = [_normalize_for_matching(a) for p in aliases for a in (p if isinstance(p, list) else [p])]
-        if _normalize_for_matching(cleaned) in normalized_aliases:
-            return canonical_id
+    if catalog_map:
+        # Search for item in catalog_map values
+        norm_item = _normalize_for_matching(item)
+        for canonical_id, aliases in catalog_map.items():
+            # If item matches an alias, return canonical_id
+            # aliases can be nested list: ["Alias A", ["Subalias A1", "Subalias A2"]]
+            flattened_aliases = []
+            for a in aliases:
+                if isinstance(a, list):
+                    flattened_aliases.extend(a)
+                else:
+                    flattened_aliases.append(a)
+            
+            for alias in flattened_aliases:
+                if _normalize_for_matching(str(alias)) == norm_item:
+                    return canonical_id
 
     return cleaned
 
 
 def _normalize_for_matching(value: str) -> str:
+    """Accents removal and case normalization for fuzzy matching."""
     decomposed = unicodedata.normalize("NFKD", value)
     no_accents = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
-    lowered = no_accents.lower()
-    return re.sub(r"[^a-z0-9\s]", " ", lowered)
+    lowered = no_accents.lower().strip()
+    # Keep only alphanumeric and single spaces
+    cleaned = re.sub(r"[^a-z0-9\s]", " ", lowered)
+    return re.sub(r"\s+", " ", cleaned).strip()

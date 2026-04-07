@@ -13,8 +13,6 @@ from app.ai_engine.exceptions import (
     UpstreamRateLimitError,
     UpstreamTimeoutError,
 )
-from app.ai_engine.services.log_sanitizer import sanitize_request_for_logging
-from app.ai_engine.services.utils import calculate_cost
 from app.core.config import settings
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
@@ -66,16 +64,6 @@ _FALLBACK_USER_MSG = {
 
 # ComposedMessages type alias (Story 66.4 AC3)
 ComposedMessages = List[Dict[str, Any]]
-
-
-def _build_opening_chat_user_data_block(last_user_msg: str, context: Dict[str, Any]) -> str:
-    """Helper to build user payload for opening chat stage."""
-    parts = []
-    if last_user_msg:
-        parts.append(last_user_msg)
-    if "natal_chart_summary" in context:
-        parts.append(f"Natal Chart Summary: {context['natal_chart_summary']}")
-    return "\n".join(parts)
 
 
 # Stub system cores
@@ -416,7 +404,7 @@ class LLMGateway:
         resolved_persona_id = context.get("persona_id")
         allowed_ids = context.get("allowed_persona_ids")
         
-        logger.warning("gateway_resolve_persona start use_case=%s allowed_ids=%s", use_case, allowed_ids)
+        logger.debug("gateway_resolve_persona start use_case=%s allowed_ids=%s", use_case, allowed_ids)
 
         if config.persona_strategy == "forbidden":
             return None, None
@@ -768,7 +756,7 @@ class LLMGateway:
         user_data_block = extra.get("user_data_block")
         if not user_data_block:
             if extra.get("chat_turn_stage") == "opening":
-                user_data_block = _build_opening_chat_user_data_block(
+                user_data_block = build_opening_chat_user_data_block(
                     last_user_msg=request.user_input.message or "",
                     context=context_dict,
                 )
@@ -912,7 +900,6 @@ class LLMGateway:
 
     def _build_result(
         self,
-        provider_result: GatewayResult,
         validation_result: ValidationResult,
         plan: ResolvedExecutionPlan,
         recovery: RecoveryResult,
@@ -1080,7 +1067,7 @@ class LLMGateway:
             # Stage 6: Build Final Result
             try:
                 final_result = self._build_result(
-                    provider_result, validation, plan, recovery, latency_ms, 
+                    validation, plan, recovery, latency_ms,
                     request=request, qualified_ctx=qualified_ctx
                 )
             except Exception as e:

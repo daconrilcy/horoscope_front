@@ -8,6 +8,57 @@ import pytest
 from app.prompts.common_context import CommonContextBuilder
 
 
+from app.prompts.common_context import CommonContextBuilder, QualifiedContext, PromptCommonContext
+
+
+def test_qualified_context_compute_quality():
+    """Test transitions between full, partial, and minimal quality."""
+    
+    # 1. Full Quality
+    full_payload = PromptCommonContext(
+        today_date="mardi 7 avril 2026",
+        use_case_name="test",
+        use_case_key="test",
+        astrologer_profile={"name": "Luna"},
+        natal_interpretation="Some interp",
+        natal_data={"planets": []}, # Added
+        precision_level="précision complète",
+        period_covered="daily"
+    )
+    ctx_full = QualifiedContext(payload=full_payload, source="daily")
+    assert ctx_full.context_quality == "full"
+    assert ctx_full.is_degraded() is False
+
+    # 2. Partial (missing interpretation but has raw data)
+    partial_payload = PromptCommonContext(
+        today_date="mardi 7 avril 2026",
+        use_case_name="test",
+        use_case_key="test",
+        astrologer_profile={"name": "Luna"},
+        natal_data={"planets": []},
+        precision_level="précision complète",
+        period_covered="daily"
+    )
+    ctx_partial = QualifiedContext(payload=partial_payload, source="daily")
+    assert ctx_partial.context_quality == "partial"
+    assert "natal_interpretation" in ctx_partial.missing_fields
+
+    # 3. Minimal (missing profile)
+    minimal_payload = PromptCommonContext(
+        today_date="mardi 7 avril 2026",
+        use_case_name="test",
+        use_case_key="test",
+        natal_interpretation="Some interp",
+        astrologer_profile={}, # Missing content
+        precision_level="unknown",
+        period_covered="daily"
+    )
+    ctx_minimal = QualifiedContext(payload=minimal_payload, source="daily")
+    assert ctx_minimal.context_quality == "minimal"
+    assert "astrologer_profile" in ctx_minimal.missing_fields
+    assert ctx_minimal.is_degraded() is True
+
+
 def test_format_date_fr() -> None:
     """Test French date formatting."""
     d = date(2026, 3, 18)
