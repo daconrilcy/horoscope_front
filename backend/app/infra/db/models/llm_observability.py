@@ -55,6 +55,14 @@ class LlmCallLogModel(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     use_case: Mapped[str] = mapped_column(String(100), nullable=False)
 
+    assembly_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("llm_assembly_configs.id"), nullable=True
+    )
+    feature: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    subfeature: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    plan: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    template_source: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
     prompt_version_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("llm_prompt_versions.id"), nullable=True
     )

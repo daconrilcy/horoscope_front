@@ -44,3 +44,19 @@ class PromptRenderer:
         rendered = re.sub(r"\{\{([a-zA-Z0-9_]+)\}\}", replace, template)
 
         return rendered
+
+    @staticmethod
+    def extract_placeholders(template: str) -> List[str]:
+        """
+        Extract all {{variable_name}} placeholders from a template string.
+
+        Args:
+            template: The string template to analyze.
+
+        Returns:
+            A list of unique placeholder names found (without curly braces).
+        """
+        if not template:
+            return []
+        matches = re.findall(r"\{\{([a-zA-Z0-9_]+)\}\}", template)
+        return list(dict.fromkeys(matches))  # Maintain order and remove duplicates

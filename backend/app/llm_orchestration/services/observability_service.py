@@ -109,6 +109,11 @@ async def log_call(
 
         # Prepare fields
         status = LlmValidationStatus.ERROR
+        assembly_id = None
+        feature = None
+        subfeature = None
+        plan = None
+        template_source = None
         prompt_version_id = None
         persona_id = None
         model = "unknown"
@@ -125,6 +130,18 @@ async def log_call(
 
             if error:  # Force error status if exception occurred
                 status = LlmValidationStatus.ERROR
+
+            # Resolve Assembly metadata if present (Story 66.8 AC10)
+            # From ExecutionPlan mapped to result in build_result
+            # result.meta should have these if I added them to GatewayMeta
+            # WAIT: I didn't add them to GatewayMeta yet.
+            
+            # Let's check result.meta for assembly fields (I'll add them to GatewayMeta first)
+            assembly_id = safe_uuid(getattr(result.meta, "assembly_id", None))
+            feature = getattr(result.meta, "feature", None)
+            subfeature = getattr(result.meta, "subfeature", None)
+            plan = getattr(result.meta, "plan", None)
+            template_source = getattr(result.meta, "template_source", None)
 
             prompt_version_id = _resolve_existing_fk_uuid(
                 db, LlmPromptVersionModel, result.meta.prompt_version_id
@@ -143,6 +160,11 @@ async def log_call(
         with transaction:
             log_entry = LlmCallLogModel(
                 use_case=use_case,
+                assembly_id=assembly_id,
+                feature=feature,
+                subfeature=subfeature,
+                plan=plan,
+                template_source=template_source,
                 prompt_version_id=prompt_version_id,
                 persona_id=persona_id,
                 model=model,

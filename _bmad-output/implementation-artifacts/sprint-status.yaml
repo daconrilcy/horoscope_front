@@ -585,7 +585,7 @@ development_status:
   65-19-journal-audit-global: done
   65-20-exports-securises: done
   65-21-infrastructure-permissions: done
-  epic-66: done
+  epic-66: in-progress
   66-1-llm-execution-request: done
   66-2-resolved-execution-plan: done
   66-3-entree-applicative-llm-canonique: done
@@ -593,3 +593,4 @@ development_status:
   66-5-pipeline-validation-explicite: done
   66-6-qualified-context-gateway-meta: done
   66-7-migration-natal-contrats-canoniques: done
+  66-8-catalogue-administrable-composition-llm: done

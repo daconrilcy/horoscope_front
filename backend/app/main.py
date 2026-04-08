@@ -22,6 +22,7 @@ from app.api.v1.routers.admin_dashboard import router as admin_dashboard_router
 from app.api.v1.routers.admin_entitlements import router as admin_entitlements_router
 from app.api.v1.routers.admin_exports import router as admin_exports_router
 from app.api.v1.routers.admin_llm import router as admin_llm_router
+from app.api.v1.routers.admin_llm_assembly import router as admin_llm_assembly_router
 from app.api.v1.routers.admin_logs import router as admin_logs_router
 from app.api.v1.routers.admin_pdf_templates import router as admin_pdf_templates_router
 from app.api.v1.routers.admin_support import router as admin_support_router
@@ -92,6 +93,7 @@ def _ensure_llm_registry_seeded() -> None:
     from app.infra.db.models.llm_prompt import PromptStatus
     from app.infra.db.session import SessionLocal
     from app.llm_orchestration.seeds.use_cases_seed import seed_use_cases
+    from app.llm_orchestration.seeds.seed_assembly import seed_assembly
     from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
     from scripts.seed_29_prompts import seed_prompts
     from scripts.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
@@ -636,6 +638,7 @@ app.include_router(admin_ai_router)
 app.include_router(admin_logs_router)
 app.include_router(admin_exports_router)
 app.include_router(admin_llm_router)
+app.include_router(admin_llm_assembly_router)
 app.include_router(admin_users_router)
 app.include_router(admin_support_router)
 app.include_router(admin_pdf_templates_router)

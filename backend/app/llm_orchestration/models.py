@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+import uuid
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -74,6 +73,11 @@ class ExecutionUserInput(BaseModel):
     use_case: str
     locale: str = "fr-FR"
     """Format BCP-47 (ex: 'fr-FR', 'en-US')."""
+
+    feature: Optional[str] = None
+    subfeature: Optional[str] = None
+    plan: Optional[str] = None
+    assembly_config_id: Optional[uuid.UUID] = None
 
     message: Optional[str] = None
     question: Optional[str] = None
@@ -176,9 +180,18 @@ class ResponseFormatConfig(BaseModel):
 class ResolvedExecutionPlan(BaseModel):
     """Artifact representing the final resolved configuration for an LLM call."""
 
+    # Assembly resolution (Story 66.8)
+    assembly_id: Optional[str] = None
+    feature: Optional[str] = None
+    subfeature: Optional[str] = None
+    plan: Optional[str] = None
+    feature_template_id: Optional[str] = None
+    subfeature_template_id: Optional[str] = None
+    template_source: Optional[str] = None
+
     # Model resolution
     model_id: str
-    model_source: Literal["os_granular", "os_legacy", "config", "stub"]
+    model_source: Literal["os_granular", "os_legacy", "config", "stub", "assembly"]
 
     # Prompts & Persona
     prompt_version_id: Optional[str] = None
@@ -235,6 +248,13 @@ class GatewayMeta(BaseModel):
     latency_ms: int
     cached: bool = False
     prompt_version_id: str = "hardcoded-v1"
+    
+    # Assembly metadata (Story 66.8 AC10)
+    assembly_id: Optional[str] = None
+    feature: Optional[str] = None
+    subfeature: Optional[str] = None
+    plan: Optional[str] = None
+
     persona_id: Optional[str] = None
     model: str
     model_override_active: bool = False
@@ -270,11 +290,11 @@ class GatewayResult(BaseModel):
     def to_log_dict(self) -> Dict[str, Any]:
         """
         Returns a JSON-serializable dict for logging, excluding verbose artifacts.
-        (AC4: filter verbose fields)
+        (AC10: include assembly metadata)
         """
         dump = self.model_dump()
-        # The meta and result are already fairly clean, but we can filter if needed.
-        # Actually, the user report said it was missing from GatewayResult.
+        # If we have assembly metadata in meta (implied via build_result)
+        # the dump already contains them.
         return dump
 
 
@@ -348,3 +368,25 @@ class OutputValidationError(GatewayError):
     """Raised when LLM output fails schema validation after repair/fallback."""
 
     pass
+
+
+# Rebuild models to resolve type hints (Story 66.8 fix)
+UseCaseConfig.model_rebuild()
+ComposedMessages.model_rebuild()
+GatewayRequest.model_rebuild()
+ExecutionMessage.model_rebuild()
+ExecutionUserInput.model_rebuild()
+ExecutionContext.model_rebuild()
+ExecutionFlags.model_rebuild()
+ExecutionOverrides.model_rebuild()
+NatalExecutionInput.model_rebuild()
+LLMExecutionRequest.model_rebuild()
+ResponseFormatConfig.model_rebuild()
+ResolvedExecutionPlan.model_rebuild()
+RecoveryResult.model_rebuild()
+UsageInfo.model_rebuild()
+GatewayMeta.model_rebuild()
+GatewayResult.model_rebuild()
+ReplayResult.model_rebuild()
+EvalFixtureResult.model_rebuild()
+EvalReport.model_rebuild()

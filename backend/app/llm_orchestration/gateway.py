@@ -38,6 +38,11 @@ from app.llm_orchestration.models import (
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
 from app.llm_orchestration.providers.responses_client import ResponsesClient
+from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+from app.llm_orchestration.services.assembly_resolver import (
+    assemble_developer_prompt,
+    resolve_assembly,
+)
 from app.llm_orchestration.services.input_validator import validate_input
 from app.llm_orchestration.services.observability_service import log_call
 from app.llm_orchestration.services.output_validator import validate_output, ValidationResult
@@ -648,17 +653,109 @@ class LLMGateway:
             config = None
             if db:
                 try:
-                    config = await self._resolve_config(db, use_case, context_dict)
-                    if config.prompt_version_id == "hardcoded-v1":
-                        source_base = "stub"
-                except Exception:
-                    source_base = "stub"
-            
-            if not config:
-                config = await self._resolve_config(db, use_case, context_dict)
-                source_base = "stub"
+                    # 0.5 Assembly resolution (Story 66.8 AC10 / D3)
+                    from sqlalchemy.ext.asyncio import AsyncSession
+                    registry = AssemblyRegistry(db)
+                    
+                    assembly_db = None
+                    if request.user_input.assembly_config_id:
+                        # Absolute priority (D3)
+                        assembly_db = await registry.get_config_by_id(request.user_input.assembly_config_id)
+                        if not assembly_db:
+                            raise GatewayConfigError(f"Assembly config {request.user_input.assembly_config_id} not found")
+                    elif request.user_input.feature:
+                        if isinstance(db, AsyncSession):
+                            assembly_db = await registry.get_active_config(
+                                feature=request.user_input.feature,
+                                subfeature=request.user_input.subfeature,
+                                plan=request.user_input.plan,
+                                locale=request.user_input.locale
+                            )
+                        else:
+                            # Sync fallback (tests/legacy)
+                            from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+                            from app.infra.db.models.llm_prompt import PromptStatus
+                            from sqlalchemy.orm import selectinload
+                            stmt = select(PromptAssemblyConfigModel).where(
+                                PromptAssemblyConfigModel.feature == request.user_input.feature,
+                                PromptAssemblyConfigModel.subfeature == request.user_input.subfeature,
+                                PromptAssemblyConfigModel.plan == request.user_input.plan,
+                                PromptAssemblyConfigModel.locale == request.user_input.locale,
+                                PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED
+                            ).options(
+                                selectinload(PromptAssemblyConfigModel.feature_template),
+                                selectinload(PromptAssemblyConfigModel.subfeature_template),
+                                selectinload(PromptAssemblyConfigModel.persona)
+                            )
+                            assembly_db = db.execute(stmt).scalar_one_or_none()
 
-        model_id = config.model
+                    if assembly_db:
+                        # Assembly found! Override everything (AC10)
+                        resolved_assembly = resolve_assembly(assembly_db)
+                        
+                        # Map ResolvedAssembly to UseCaseConfig for compatibility with Stage 1.5+
+                        config = UseCaseConfig(
+                            model=resolved_assembly.execution_config.model,
+                            temperature=resolved_assembly.execution_config.temperature or 0.7,
+                            max_output_tokens=resolved_assembly.execution_config.max_output_tokens,
+                            timeout_seconds=resolved_assembly.execution_config.timeout_seconds,
+                            system_core_key="default_v1",  # Hard policy handled later
+                            developer_prompt=assemble_developer_prompt(resolved_assembly, assembly_db),
+                            prompt_version_id=str(assembly_db.id),
+                            persona_strategy="forbidden",  # Persona already handled in assembly
+                            interaction_mode="chat" if request.overrides and request.overrides.interaction_mode == "chat" else "structured",
+                            user_question_policy="none",   # Policy already handled in building user payload
+                            output_schema_id=resolved_assembly.output_contract_ref,
+                            reasoning_effort=resolved_assembly.execution_config.reasoning_effort,
+                            verbosity=resolved_assembly.execution_config.verbosity,
+                            fallback_use_case=resolved_assembly.execution_config.fallback_model,
+                        )
+                        source_base = "assembly"
+                        # CRITICAL FIX: ensure model_id is updated from this config
+                        model_id = config.model
+                        # We also inject persona_block directly to bypass _resolve_persona
+                        persona_block = resolved_assembly.persona_block
+                        persona_id = str(resolved_assembly.persona_ref) if resolved_assembly.persona_ref else None
+                        persona_name = None 
+                        
+                        # Store assembly metadata for ResolvedExecutionPlan
+                        context_dict["_assembly_resolved"] = resolved_assembly
+                        context_dict["_assembly_db_id"] = str(assembly_db.id)
+                except GatewayConfigError:
+                    raise
+                except Exception as e:
+                    logger.warning("gateway_assembly_resolution_failed use_case=%s error=%s", use_case, e)
+
+            if not config:
+                if db:
+                    try:
+                        config = await self._resolve_config(db, use_case, context_dict)
+                        if config.prompt_version_id == "hardcoded-v1":
+                            source_base = "stub"
+                    except Exception:
+                        source_base = "stub"
+                
+                if not config:
+                    config = await self._resolve_config(db, use_case, context_dict)
+                    source_base = "stub"
+            else:
+                # config was set by assembly
+                pass
+
+        if source_base == "assembly":
+            # For assembly, we trust the model from config (AC10)
+            # but still allow environment variable overrides via resolve_model
+            # D3: Absolute priority. resolve_model might fall back to global default 
+            # if use_case not in catalog. We must pass fallback_model correctly.
+            model_id = resolve_model(use_case, fallback_model=config.model)
+            if model_id != config.model:
+                config = config.model_copy(update={"model": model_id})
+        else:
+            resolved_model = resolve_model(use_case, fallback_model=config.model)
+            if resolved_model != config.model:
+                config = config.model_copy(update={"model": resolved_model})
+            model_id = config.model
+
         model_source = source_base
         entry = PROMPT_CATALOG.get(use_case)
         if entry and os.environ.get(entry.engine_env_key):
@@ -670,10 +767,11 @@ class LLMGateway:
 
         system_core = get_hard_policy(config.safety_profile)
 
-        if request.user_input.persona_id_override:
-            context_dict["persona_id"] = request.user_input.persona_id_override
-        
-        persona_block, persona_id, persona_name = await self._resolve_persona(db, config, context_dict, use_case)
+        if source_base != "assembly":
+            if request.user_input.persona_id_override:
+                context_dict["persona_id"] = request.user_input.persona_id_override
+            
+            persona_block, persona_id, persona_name = await self._resolve_persona(db, config, context_dict, use_case)
 
         output_schema, schema_name, schema_version = self._resolve_schema(db, config, use_case)
 
@@ -721,7 +819,18 @@ class LLMGateway:
         if output_schema:
             response_format = ResponseFormatConfig(type="json_schema", schema=output_schema)
 
+        # Build plan with assembly metadata (AC10)
+        assembly_id = context_dict.get("_assembly_db_id")
+        resolved_assembly: Optional[ResolvedAssembly] = context_dict.get("_assembly_resolved")
+
         plan = ResolvedExecutionPlan(
+            assembly_id=assembly_id,
+            feature=request.user_input.feature,
+            subfeature=request.user_input.subfeature,
+            plan=request.user_input.plan,
+            feature_template_id=str(resolved_assembly.feature_template_id) if resolved_assembly else None,
+            subfeature_template_id=str(resolved_assembly.subfeature_template_id) if resolved_assembly and resolved_assembly.subfeature_template_id else None,
+            template_source=resolved_assembly.template_source if resolved_assembly else None,
             model_id=model_id,
             model_source=model_source,
             prompt_version_id=config.prompt_version_id,
@@ -967,6 +1076,14 @@ class LLMGateway:
         result.meta.latency_ms = latency_ms
         result.meta.model = plan.model_id
         result.meta.prompt_version_id = plan.prompt_version_id or "hardcoded-v1"
+        
+        # Map Assembly metadata (AC10)
+        result.meta.assembly_id = plan.assembly_id
+        result.meta.feature = plan.feature
+        result.meta.subfeature = plan.subfeature
+        result.meta.plan = plan.plan
+        result.meta.template_source = plan.template_source
+
         result.meta.persona_id = plan.persona_id
         result.meta.output_schema_id = plan.output_schema_id
         result.meta.schema_version = plan.output_schema_version
@@ -1020,7 +1137,21 @@ class LLMGateway:
 
             # Stage 1: Resolve Plan (Now includes QualifiedContext)
             try:
-                plan, qualified_ctx = await self._resolve_plan(request, db, config_override=config, context_override=context_dict)
+                plan, qualified_ctx = await self._resolve_plan(request, db, config_override=None, context_override=context_dict)
+                # If assembly was used, config is within plan. We need to sync back to 'config' variable
+                # for Stage 1.5 validation if it depends on the exact model resolved.
+                if plan.model_source == "assembly":
+                    # Re-map config from plan for validation
+                    config = UseCaseConfig(
+                        model=plan.model_id,
+                        temperature=plan.temperature,
+                        max_output_tokens=plan.max_output_tokens,
+                        developer_prompt=plan.rendered_developer_prompt,
+                        output_schema_id=plan.output_schema_id,
+                        input_schema=plan.input_schema,
+                        interaction_mode=plan.interaction_mode,
+                        user_question_policy=plan.user_question_policy,
+                    )
             except Exception as e:
                 logger.error("gateway_step_failed:resolve_plan use_case=%s error=%s", use_case, e)
                 raise
