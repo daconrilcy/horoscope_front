@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.infra.db.session import get_db_session
 from app.llm_orchestration.admin_models import (
+    DraftPublishResponse,
     PromptAssemblyConfig,
     PromptAssemblyPreview,
 )
@@ -143,7 +144,6 @@ async def publish_assembly_config(
         )
     )
     
-    from app.llm_orchestration.admin_models import DraftPublishResponse
     return {
         "data": DraftPublishResponse(
             assembly_id=config.id,
@@ -151,6 +151,53 @@ async def publish_assembly_config(
             published_at=config.published_at,
             archived_count=archived_count
         ),
+        "meta": {"request_id": request.state.request_id}
+    }
+
+
+@router.post("/configs/{config_id}/rollback", response_model=AssemblyConfigResponse)
+async def rollback_assembly_config(
+    request: Request,
+    config_id: uuid.UUID,
+    db=Depends(get_db_session),
+    admin: AuthenticatedUser = Depends(require_admin_user),
+):
+    """Rollback to an archived assembly configuration."""
+    service = AssemblyAdminService(db)
+    try:
+        # We need to fetch the archived config first to get target params
+        target_config = await service.get_config(config_id)
+        if not target_config:
+            raise HTTPException(status_code=404, detail="Configuration not found")
+            
+        config = await service.rollback_config(
+            feature=target_config.feature,
+            subfeature=target_config.subfeature,
+            plan=target_config.plan,
+            locale=target_config.locale,
+            target_id=config_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    # Audit log
+    audit_service = AuditService(db)
+    await audit_service.log_event(
+        admin.id,
+        AuditEventCreatePayload(
+            event_type="llm_assembly_config_rollbacked",
+            target_type="llm_assembly_config",
+            target_id=str(config.id),
+            details={
+                "feature": config.feature,
+                "subfeature": config.subfeature,
+                "plan": config.plan,
+            }
+        )
+    )
+    
+    return {
+        "data": PromptAssemblyConfig.model_validate(config),
         "meta": {"request_id": request.state.request_id}
     }
 

@@ -17,7 +17,6 @@ class PromptAssemblyTarget(BaseModel):
     subfeature: Optional[str] = None
     plan: Optional[str] = None
     locale: str = "fr-FR"
-    persona_id: Optional[str] = None
 
 
 class ExecutionConfigAdmin(BaseModel):

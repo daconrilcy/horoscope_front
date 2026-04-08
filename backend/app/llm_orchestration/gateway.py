@@ -654,7 +654,6 @@ class LLMGateway:
             if db:
                 try:
                     # 0.5 Assembly resolution (Story 66.8 AC10 / D3)
-                    from sqlalchemy.ext.asyncio import AsyncSession
                     registry = AssemblyRegistry(db)
                     
                     assembly_db = None
@@ -664,30 +663,13 @@ class LLMGateway:
                         if not assembly_db:
                             raise GatewayConfigError(f"Assembly config {request.user_input.assembly_config_id} not found")
                     elif request.user_input.feature:
-                        if isinstance(db, AsyncSession):
-                            assembly_db = await registry.get_active_config(
-                                feature=request.user_input.feature,
-                                subfeature=request.user_input.subfeature,
-                                plan=request.user_input.plan,
-                                locale=request.user_input.locale
-                            )
-                        else:
-                            # Sync fallback (tests/legacy)
-                            from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-                            from app.infra.db.models.llm_prompt import PromptStatus
-                            from sqlalchemy.orm import selectinload
-                            stmt = select(PromptAssemblyConfigModel).where(
-                                PromptAssemblyConfigModel.feature == request.user_input.feature,
-                                PromptAssemblyConfigModel.subfeature == request.user_input.subfeature,
-                                PromptAssemblyConfigModel.plan == request.user_input.plan,
-                                PromptAssemblyConfigModel.locale == request.user_input.locale,
-                                PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED
-                            ).options(
-                                selectinload(PromptAssemblyConfigModel.feature_template),
-                                selectinload(PromptAssemblyConfigModel.subfeature_template),
-                                selectinload(PromptAssemblyConfigModel.persona)
-                            )
-                            assembly_db = db.execute(stmt).scalar_one_or_none()
+                        # AssemblyRegistry.get_active_config now handles both sync/async sessions
+                        assembly_db = await registry.get_active_config(
+                            feature=request.user_input.feature,
+                            subfeature=request.user_input.subfeature,
+                            plan=request.user_input.plan,
+                            locale=request.user_input.locale
+                        )
 
                     if assembly_db:
                         # Assembly found! Override everything (AC10)

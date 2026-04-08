@@ -35,7 +35,7 @@ class PromptAssemblyConfigModel(Base):
     locale: Mapped[str] = mapped_column(String(16), index=True, default="fr-FR")
 
     feature_template_ref: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("llm_prompt_versions.id", ondelete="CASCADE")
+        ForeignKey("llm_prompt_versions.id", ondelete="RESTRICT")
     )
     subfeature_template_ref: Mapped[Optional[uuid.UUID]] = mapped_column(
         ForeignKey("llm_prompt_versions.id", ondelete="SET NULL"), nullable=True

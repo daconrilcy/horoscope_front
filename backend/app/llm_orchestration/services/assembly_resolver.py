@@ -23,6 +23,13 @@ class PlanRule(BaseModel):
     instruction: Optional[str] = None
     max_output_tokens_override: Optional[int] = None
 
+# AC6: Placeholder allowlist indexed by feature
+PLACEHOLDER_ALLOWLIST: dict[str, list[str]] = {
+    "guidance": ["locale", "use_case", "situation", "last_user_msg"],
+    "natal": ["locale", "use_case", "chart_json", "natal_data", "birth_date", "birth_time", "birth_timezone"],
+    "chat": ["locale", "use_case", "last_user_msg", "persona_name"],
+}
+
 # AC11: Plan Rules Registry
 PLAN_RULES_REGISTRY: dict[str, PlanRule] = {
     "premium_depth": PlanRule(
@@ -42,10 +49,12 @@ def validate_placeholders(template: str, feature: str) -> list[str]:
     Returns a list of unknown/forbidden placeholders.
     """
     found = PromptRenderer.extract_placeholders(template)
-    allowed = PLACEHOLDER_ALLOWLIST.get(feature, [])
+    # Normalize feature key for lookup
+    feat_key = feature.split("_")[0] if "_" in feature else feature
+    allowed = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
     
     # Allow some universal placeholders if not explicitly in list
-    universal = {"locale", "use_case", "persona_name"}
+    universal = {"locale", "use_case", "persona_name", "last_user_msg"}
     
     invalid = [p for p in found if p not in allowed and p not in universal]
     return invalid
@@ -59,8 +68,15 @@ def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyP
     rendered_prompt = assemble_developer_prompt(resolved, config)
     
     # AC4: Hard policy is visible but separate
-    # Safety profile should be derived from feature use case, defaulting to astrology
-    hard_policy = get_hard_policy("astrology")
+    # M2 Fix: Derive safety_profile from feature template
+    from app.prompts.catalog import PROMPT_CATALOG
+    use_case_key = config.feature_template.use_case_key
+    catalog_entry = PROMPT_CATALOG.get(use_case_key)
+    safety_profile = "astrology"
+    if catalog_entry and hasattr(catalog_entry, "safety_profile"):
+        safety_profile = catalog_entry.safety_profile
+    
+    hard_policy = get_hard_policy(safety_profile)
 
     # AC7: Available variables extraction
     found_placeholders = PromptRenderer.extract_placeholders(rendered_prompt)
@@ -142,9 +158,14 @@ def resolve_assembly(config: PromptAssemblyConfigModel) -> ResolvedAssembly:
     execution_config = ExecutionConfigAdmin(**exec_dict)
 
     # 5. Policy Layer (Architectural Note 1)
-    # We derive safety_profile from feature template use_case_key
-    # This requires a join/lookup if not already loaded
+    # M2 Fix: Derive safety_profile from feature template
+    from app.prompts.catalog import PROMPT_CATALOG
+    use_case_key = config.feature_template.use_case_key
+    catalog_entry = PROMPT_CATALOG.get(use_case_key)
     safety_profile = "astrology"
+    if catalog_entry and hasattr(catalog_entry, "safety_profile"):
+        safety_profile = catalog_entry.safety_profile
+    
     policy_layer_content = get_hard_policy(safety_profile)
 
     return ResolvedAssembly(

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import select, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -87,7 +87,7 @@ class AssemblyAdminService:
         await self.session.flush()
         return new_config
 
-    async def publish_config(self, config_id: uuid.UUID) -> PromptAssemblyConfigModel:
+    async def publish_config(self, config_id: uuid.UUID) -> Tuple[PromptAssemblyConfigModel, int]:
         """
         Publish a configuration using registry.
         """
@@ -101,6 +101,10 @@ class AssemblyAdminService:
             raise ValueError(f"Invalid placeholders in feature template: {', '.join(invalid)}")
             
         return await self.registry.publish_config(config_id)
+
+    async def rollback_config(self, feature: str, subfeature: Optional[str], plan: Optional[str], locale: str, target_id: uuid.UUID) -> PromptAssemblyConfigModel:
+        """Rollback using registry."""
+        return await self.registry.rollback_config(feature, subfeature, plan, locale, target_id)
 
     async def get_assembly_preview(self, config_id: uuid.UUID) -> PromptAssemblyPreview:
         """

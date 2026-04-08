@@ -38,7 +38,7 @@ def upgrade() -> None:
         sa.Column('created_by', sa.String(length=255), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column('published_at', sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(['feature_template_ref'], ['llm_prompt_versions.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['feature_template_ref'], ['llm_prompt_versions.id'], ondelete='RESTRICT'),
         sa.ForeignKeyConstraint(['persona_ref'], ['llm_personas.id'], ondelete='SET NULL'),
         sa.ForeignKeyConstraint(['subfeature_template_ref'], ['llm_prompt_versions.id'], ondelete='SET NULL'),
         sa.PrimaryKeyConstraint('id')

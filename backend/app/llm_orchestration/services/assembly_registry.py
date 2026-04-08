@@ -1,14 +1,22 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
+import logging
+import time
+from typing import Optional, Dict, Tuple
 
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
+
+logger = logging.getLogger(__name__)
+
+# AC8: TTL Cache for resolved configs
+_ASSEMBLY_CACHE: Dict[str, Tuple[PromptAssemblyConfigModel, float]] = {}
+CACHE_TTL = 60.0
 
 
 class AssemblyRegistry:
@@ -31,6 +39,16 @@ class AssemblyRegistry:
         Resolve the best matching active (PUBLISHED) assembly config using waterfall logic.
         Waterfall: (feature, subfeature, plan) -> (feature, subfeature, None) -> (feature, None, None)
         """
+        cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
+        now = time.time()
+        
+        # AC8: Cache lookup
+        if cache_key in _ASSEMBLY_CACHE:
+            config, expiry = _ASSEMBLY_CACHE[cache_key]
+            if now < expiry:
+                return config
+            del _ASSEMBLY_CACHE[cache_key]
+
         # Search patterns in order of priority
         search_patterns = [
             (feature, subfeature, plan),
@@ -38,6 +56,7 @@ class AssemblyRegistry:
             (feature, None, None),
         ]
 
+        resolved_config = None
         for f, sf, p in search_patterns:
             stmt = (
                 select(PromptAssemblyConfigModel)
@@ -59,9 +78,14 @@ class AssemblyRegistry:
             result = await self._execute(stmt)
             config = result.scalar_one_or_none()
             if config:
-                return config
+                resolved_config = config
+                break
 
-        return None
+        if resolved_config:
+            # AC8: Update cache
+            _ASSEMBLY_CACHE[cache_key] = (resolved_config, now + CACHE_TTL)
+            
+        return resolved_config
 
     async def get_config_by_id(self, assembly_id: uuid.UUID) -> Optional[PromptAssemblyConfigModel]:
         """Fetch an assembly config by its unique ID."""
@@ -77,7 +101,7 @@ class AssemblyRegistry:
         result = await self._execute(stmt)
         return result.scalar_one_or_none()
 
-    async def publish_config(self, config_id: uuid.UUID) -> PromptAssemblyConfigModel:
+    async def publish_config(self, config_id: uuid.UUID) -> Tuple[PromptAssemblyConfigModel, int]:
         """
         Publish a configuration, archiving the previous active one for the same target.
         Implements AC9.
@@ -117,29 +141,43 @@ class AssemblyRegistry:
         else:
             self.session.commit()
             
+        # H1: Invalidate cache on publish
+        self.invalidate_cache()
+            
         return config, archived_count
 
     async def rollback_config(self, feature: str, subfeature: Optional[str], plan: Optional[str], locale: str, target_id: uuid.UUID) -> PromptAssemblyConfigModel:
         """
         Rollback to a specific archived configuration.
         """
-        # Follows pattern: archive current published, publish target archived
-        current_active = await self.get_active_config(feature, subfeature, plan, locale)
-        if current_active:
-            current_active.status = PromptStatus.ARCHIVED
-            
-        target_config = await self.get_config_by_id(target_id)
-        if not target_config:
-            raise ValueError(f"Target config {target_id} not found")
-            
-        target_config.status = PromptStatus.PUBLISHED
-        from datetime import datetime, timezone
-        target_config.published_at = datetime.now(timezone.utc)
-        
-        from sqlalchemy.ext.asyncio import AsyncSession
+        # L2 Fix: Single transaction for atomicity
+        async def _do_rollback():
+            current_active = await self.get_active_config(feature, subfeature, plan, locale)
+            if current_active:
+                current_active.status = PromptStatus.ARCHIVED
+                
+            target_config = await self.get_config_by_id(target_id)
+            if not target_config:
+                raise ValueError(f"Target config {target_id} not found")
+                
+            target_config.status = PromptStatus.PUBLISHED
+            from datetime import datetime, timezone
+            target_config.published_at = datetime.now(timezone.utc)
+            return target_config
+
         if isinstance(self.session, AsyncSession):
+            # Atomic transaction
+            res = await _do_rollback()
             await self.session.commit()
         else:
+            res = await _do_rollback()
             self.session.commit()
             
-        return target_config
+        # H1: Invalidate cache on rollback
+        self.invalidate_cache()
+        return res
+
+    def invalidate_cache(self) -> None:
+        """H1: Clears the in-memory assembly configuration cache."""
+        _ASSEMBLY_CACHE.clear()
+        logger.info("assembly_registry_cache_invalidated")

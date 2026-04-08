@@ -8,18 +8,30 @@ from app.llm_orchestration.models import LLMExecutionRequest, ExecutionUserInput
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
 from app.llm_orchestration.services.assembly_resolver import resolve_assembly, assemble_developer_prompt
 
+from app.infra.db.models import LlmUseCaseConfigModel
+from app.llm_orchestration.services.assembly_resolver import validate_placeholders
+
 @pytest.mark.asyncio
 async def test_assembly_resolution_basic(db):
     # 1. Setup data
     feature_v = LlmPromptVersionModel(
         id=uuid.uuid4(),
         use_case_key="feature_test",
-        developer_prompt="FEATURE PROMPT",
+        developer_prompt="FEATURE PROMPT {{locale}}",
         status=PromptStatus.PUBLISHED,
         model="gpt-4o",
         created_by="test"
     )
     db.add(feature_v)
+    
+    # M2 Fix: Need UseCaseConfig to resolve safety_profile
+    uc_config = LlmUseCaseConfigModel(
+        key="feature_test",
+        display_name="Feature Test",
+        description="test",
+        safety_profile="astrology"
+    )
+    db.add(uc_config)
     
     persona = LlmPersonaModel(
         id=uuid.uuid4(),
@@ -52,12 +64,26 @@ async def test_assembly_resolution_basic(db):
 
     # 3. Test Resolver
     resolved = resolve_assembly(resolved_db)
-    assert resolved.feature_template_prompt == "FEATURE PROMPT"
+    assert resolved.feature_template_prompt == "FEATURE PROMPT {{locale}}"
     assert "Adopte un ton direct" in resolved.persona_block
     assert resolved.execution_config.temperature == 0.5
+    assert "interprétation astrologique" in resolved.policy_layer_content
     # 4. Test Assembly concatenation
     full_prompt = assemble_developer_prompt(resolved, resolved_db)
-    assert full_prompt == "FEATURE PROMPT"
+    assert full_prompt == "FEATURE PROMPT {{locale}}"
+
+def test_validate_placeholders_logic():
+    # Valid placeholders for guidance
+    assert validate_placeholders("Hello {{last_user_msg}}", "guidance") == []
+    assert validate_placeholders("Hello {{locale}}", "guidance") == []
+    
+    # Invalid placeholder
+    assert validate_placeholders("Hello {{forbidden_var}}", "guidance") == ["forbidden_var"]
+    
+    # Valid for natal
+    assert validate_placeholders("Theme {{chart_json}}", "natal") == []
+    # Invalid for natal
+    assert validate_placeholders("Theme {{situation}}", "natal") == ["situation"]
 
 @pytest.mark.asyncio
 async def test_assembly_waterfall_fallback(db):
