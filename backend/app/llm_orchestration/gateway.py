@@ -878,6 +878,9 @@ class LLMGateway:
 
         output_schema, schema_name, schema_version = self._resolve_schema(db, config, use_case)
 
+        cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
+        context_quality_injected = False
+
         if request.flags.is_repair_call:
             rendered_developer_prompt = (
                 "Tu es un assistant technique. Ta seule mission est de corriger le format JSON "
@@ -891,7 +894,6 @@ class LLMGateway:
             current_prompt = config.developer_prompt
             
             # 1. & 2. context_quality blocks and compensation (handled in order in gateway/renderer)
-            cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
             if request.user_input.feature:
                 from app.llm_orchestration.services.context_quality_injector import (
                     ContextQualityInjector,

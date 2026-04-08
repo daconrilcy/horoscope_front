@@ -14,6 +14,7 @@ import { SupportOpsPanel } from "../components/SupportOpsPanel"
 import { DashboardPage } from "../pages/DashboardPage"
 import DailyHoroscopePage from "../pages/DailyHoroscopePage"
 import { NatalChartPage } from "../pages/NatalChartPage"
+import { BirthProfilePage } from "../pages/BirthProfilePage"
 import { ChatPage } from "../pages/ChatPage"
 import { AstrologersPage } from "../pages/AstrologersPage"
 import { AstrologerProfilePage } from "../pages/AstrologerProfilePage"
@@ -94,6 +95,14 @@ export const routes: RouteObject[] = [
       {
         path: "natal-chart",
         element: <NatalChartPage />,
+      },
+      {
+        path: "profile",
+        element: <BirthProfilePage />,
+      },
+      {
+        path: "birth-profile",
+        element: <Navigate to="/profile" replace />,
       },
       {
         path: "chat",

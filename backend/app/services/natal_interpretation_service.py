@@ -8,6 +8,7 @@ des thèmes natals en utilisant le AI Engine.
 from __future__ import annotations
 
 import logging
+from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
@@ -326,6 +327,7 @@ class NatalInterpretationService:
         )
 
         current_context = build_current_prompt_context(birth_profile)
+        current_context_payload = asdict(current_context)
 
         birth_data = {
             "date": birth_profile.birth_date,
@@ -338,31 +340,56 @@ class NatalInterpretationService:
         }
 
         try:
-            # Story 66.15: Resolve user plan for assembly
-            from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-            snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
-            user_plan = snapshot.plan_code
+            user_plan = "free"
+            if db is not None:
+                # Story 66.15: resolve user plan for assembly when DB context is available.
+                from app.services.effective_entitlement_resolver_service import (
+                    EffectiveEntitlementResolverService,
+                )
 
-            from app.llm_orchestration.models import NatalExecutionInput
-            natal_input = NatalExecutionInput(
-                use_case_key="natal_interpretation",
-                user_id=user_id,
-                request_id=request_id,
-                trace_id=trace_id or request_id,
-                level="complete",
-                chart_json=natal_chart.chart_id, # Should probably be the actual JSON or ID
-                natal_data=birth_profile.model_dump(),
-                evidence_catalog=[],
-                persona_id=persona_id,
-                plan=user_plan,
-                astro_context=str(current_context.model_dump())
-            )
+                snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
+                    db,
+                    app_user_id=user_id,
+                )
+                user_plan = snapshot.plan_code
 
-            # Generate interpretation via Gateway V2
-            result = await AIEngineAdapter.generate_natal_interpretation(
-                natal_input=natal_input,
-                db=db
-            )
+            if db is None:
+                # Legacy compatibility path used by unit tests and lightweight callers.
+                result = await AIEngineAdapter.generate_guidance(
+                    use_case=USE_CASE,
+                    context={
+                        "natal_chart_summary": natal_chart_summary,
+                        "current_context": str(current_context_payload),
+                        "birth_data": str(birth_data),
+                    },
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id or request_id,
+                    db=db,
+                    plan=user_plan,
+                )
+            else:
+                from app.llm_orchestration.models import NatalExecutionInput
+
+                natal_input = NatalExecutionInput(
+                    use_case_key="natal_interpretation",
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id or request_id,
+                    level="complete",
+                    chart_json=natal_chart.chart_id,  # Should probably be the actual JSON or ID
+                    natal_data=birth_profile.model_dump(),
+                    evidence_catalog=[],
+                    persona_id=persona_id,
+                    plan=user_plan,
+                    astro_context=str(current_context_payload),
+                )
+
+                # Generate interpretation via Gateway V2
+                result = await AIEngineAdapter.generate_natal_interpretation(
+                    natal_input=natal_input,
+                    db=db,
+                )
 
             # Extract structured sections or fallback to raw
             if result.structured_output:

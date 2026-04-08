@@ -54,6 +54,7 @@ Le scénario de drift autour de la migration `20260308_0037` reste couvert et id
 - Le mécanisme couvre maintenant le cas réaliste d'une base existante avec `alembic_version` intermédiaire.
 - La conservation des données existantes est validée pendant l'upgrade.
 - Le drift spécifique autour de `20260308_0037` reste couvert séparément par un test d'idempotence dédié.
+- La suite de tests ciblant bootstrap/migrations reste verte malgré l'index d'expression `ix_llm_assembly_config_active_unique` ; un filtre pytest ciblé masque désormais le `SAWarning` de réflexion non supportée sans masquer d'autres warnings SQLAlchemy.
 
 ## Validation
 
@@ -68,3 +69,8 @@ Le scénario de drift autour de la migration `20260308_0037` reste couvert et id
 - `backend/app/tests/integration/test_db_bootstrap.py`
 - `backend/app/tests/integration/test_db_bootstrap_partial_upgrade.py`
 - `backend/app/tests/integration/test_migration_0037_add_contributors_json.py`
+- `backend/pyproject.toml`
+
+## Change Log
+
+- 2026-04-08 : Ajout d'un `filterwarnings` pytest ciblé pour ignorer le warning SQLAlchemy sur la réflexion de l'index d'expression `ix_llm_assembly_config_active_unique` dans les tests de bootstrap et migrations.

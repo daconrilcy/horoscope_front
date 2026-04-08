@@ -141,6 +141,12 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Implémentation runtime consolidée autour d'OpenAI comme moteur effectivement exécuté ; les providers non supportés ou non implémentés retombent explicitement sur `openai` via `resolve_model()`.
+- `response_format.type` a été élargi pour accepter `json_schema`, `json_object` et `text`, afin d'aligner le contrat de plan avec les paramètres traduits par provider.
+- La priorité `max_output_tokens` a été stabilisée dans le gateway : `LengthBudget` > `ExecutionProfile.max_output_tokens` > recommandation issue de `verbosity_profile`.
+- Régression corrigée après intégration 66.18 : `context_quality_instruction_injected` pouvait rester non initialisé dans `gateway._resolve_plan()` lorsque `feature` était absente ; initialisation défensive ajoutée avant construction de `ResolvedExecutionPlan`.
+- Couverture ciblée ajoutée pour le fallback provider (`anthropic` ou provider inconnu) et pour la propagation du mode `json_object`.
+
 ### File List
 
 - `backend/app/llm_orchestration/services/provider_parameter_mapper.py`
@@ -149,3 +155,7 @@ claude-sonnet-4-6
 - `docs/llm-prompt-generation-by-feature.md`
 - `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
 - `backend/app/llm_orchestration/tests/test_story_66_18_stable_profiles.py`
+
+### Change Log
+
+- 2026-04-08 : Alignement runtime OpenAI prioritaire, fallback cohérent pour provider non supporté, prise en charge `json_object`, et correction de la régression `context_quality_instruction_injected` non initialisé dans le gateway.

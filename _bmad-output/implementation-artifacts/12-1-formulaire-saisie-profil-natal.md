@@ -95,6 +95,7 @@ claude-sonnet-4-6
 - **[M2 — 1er review]** NatalChartPage.tsx modifie dans ce sprint : affichage du requestId d erreur, bouton Reessayer, gestion explicite du code `natal_chart_not_found`.
 - **[1er review]** `birth_timezone` regex corrigee de `+` a `*` pour accepter UTC/GMT sans slash. Message mis a jour. Test UTC ajoute.
 - **[1er review]** `onChange` corrige pour nettoyer `saveErrorRequestId` et `generationErrorRequestId` en meme temps que les messages d erreur parents.
+- 2026-04-08 : Route React Router `/profile` restauree vers `BirthProfilePage` avec alias legacy `/birth-profile` -> `/profile`, afin de realigner le routing reel avec les liens deja utilises dans l application.
 
 ### File List
 
@@ -105,6 +106,8 @@ claude-sonnet-4-6
 - frontend/src/App.tsx (modifie — ajout vue "profil-natal" + renderView switch + onNavigate prop)
 - frontend/src/tests/BirthProfilePage.test.tsx (nouveau — 14 tests 12-1 + 4 tests generation 12-2)
 - frontend/src/tests/App.test.tsx (modifie — test navigation vers "Mon profil natal")
+- frontend/src/app/routes.tsx (modifie — route `/profile` restauree + alias `/birth-profile`)
+- frontend/src/tests/router.test.tsx (modifie — garde-fou sur la presence des routes `profile` et `birth-profile`)
 - frontend/src/utils/constants.ts (nouveau — GENERATION_TIMEOUT_LABEL pour 12-2)
 - frontend/src/App.css (modifie)
 
@@ -140,3 +143,4 @@ claude-sonnet-4-6
 - 2026-02-21 : Implementation story 12.1 — ajout formulaire profil natal (BirthProfilePage.tsx + birthProfile.ts), vue "Mon profil natal" dans App.tsx, 14 tests.
 - 2026-02-21 : ADVERSARIAL Review (Gemini CLI) — Final Consolidated Fixes: Improved regex for birth time (HH:MM:SS support) and nested timezones, added form accessibility labels, refined error mapping to API messages, optimized cache usage via `setQueryData`, added retry button, robust calendar validation (refine), enhanced tests to verify updated data payloads, improved globalization (removed hardcoded locale), fixed "B2B B2B Billing" typo in navigation, and cleaned up redundant code. Story marked as done with 14 passing tests.
 - 2026-02-21 : Code review adversarial (claude-sonnet-4-6) — 6 findings corrigés : H1 test invalid_timezone ajouté (AC4), H2+M2 File List et Completion Notes documentés (scope 12-2), H3 task stale corrigée, M1 regex UTC/GMT + test, M3 onChange nettoyage requestId.
+- 2026-04-08 : Correction de regression de routing — re-declaration de `/profile` dans React Router et ajout d'un alias `/birth-profile`, avec validation par tests `router.test.tsx` et `BirthProfilePage.test.tsx`.

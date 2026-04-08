@@ -149,6 +149,10 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Le champ de traçabilité `context_quality_instruction_injected` est bien porté dans `ResolvedExecutionPlan`, avec une initialisation défensive pour éviter tout `UnboundLocalError` quand aucune injection n'a lieu.
+- L'ordre canonique documenté reste inchangé, mais l'implémentation réelle du gateway a été corrigée pour garantir que `context_quality` et le booléen d'injection sont toujours définis avant la construction du plan.
+- Régression de pipeline éliminée sur les chemins sans `feature` et sur les repair calls.
+
 ### File List
 
 - `backend/app/llm_orchestration/services/prompt_renderer.py`
@@ -160,3 +164,7 @@ claude-sonnet-4-6
 - `docs/llm-prompt-generation-by-feature.md`
 - `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
 - `backend/app/llm_orchestration/tests/test_story_66_14_context_quality.py`
+
+### Change Log
+
+- 2026-04-08 : Correction post-intégration du gateway pour garantir l'initialisation systématique de `context_quality_instruction_injected` et supprimer les échecs transverses sur la résolution de plan.

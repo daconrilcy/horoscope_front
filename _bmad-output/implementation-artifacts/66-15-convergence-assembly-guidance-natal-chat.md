@@ -146,6 +146,11 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Le service natal legacy a été durci pour supporter les appels sans session DB : résolution de plan par défaut sur `free` et chemin de compatibilité via `AIEngineAdapter.generate_guidance(...)` pour les tests unitaires et les appelants légers.
+- Le chemin nominal avec DB conserve l'appel canonique `AIEngineAdapter.generate_natal_interpretation(...)` et continue d'alimenter `NatalExecutionInput` avec `plan`.
+- La sérialisation du contexte courant côté service natal a été stabilisée via `dataclasses.asdict(...)` au lieu d'un appel `model_dump()` invalide sur `CurrentPromptContext`.
+- Les tests unitaires du service natal repassent sur les scénarios succès, mode dégradé et timeout.
+
 ### File List
 
 - `backend/app/services/ai_engine_adapter.py`
@@ -157,3 +162,7 @@ claude-sonnet-4-6
 - `docs/llm-prompt-generation-by-feature.md`
 - `backend/scripts/seed_66_15_assembly_convergence.py`
 - `backend/app/llm_orchestration/tests/test_story_66_15_convergence.py`
+
+### Change Log
+
+- 2026-04-08 : Correction de compatibilité du service natal pour `db=None`, avec fallback legacy contrôlé et restauration des tests unitaires historiques.

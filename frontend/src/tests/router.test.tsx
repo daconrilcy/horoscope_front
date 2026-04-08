@@ -373,5 +373,7 @@ describe("Route config", () => {
     expect(paths).toContain("astrologers")
     expect(paths).toContain("astrologers/:id")
     expect(paths).toContain("chat/:conversationId")
+    expect(paths).toContain("profile")
+    expect(paths).toContain("birth-profile")
   })
 })
