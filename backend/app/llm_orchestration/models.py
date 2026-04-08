@@ -144,6 +144,7 @@ class NatalExecutionInput(BaseModel):
     natal_data: Dict[str, Any]
     evidence_catalog: Union[List[str], Dict[str, List[str]]]
     persona_id: Optional[str] = None
+    plan: str = "free"
     validation_strict: bool = True
     question: Optional[str] = None
     astro_context: Optional[str] = None

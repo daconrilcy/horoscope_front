@@ -41,6 +41,7 @@ class ChatQuotaExceededError(Exception):
 @dataclass
 class ChatEntitlementResult:
     path: str  # "canonical_quota" | "canonical_unlimited"
+    plan_code: str = "free"
     usage_states: list[UsageState] = field(default_factory=list)
 
 
@@ -90,6 +91,7 @@ class ChatEntitlementGate:
         path = "canonical_unlimited" if access.access_mode == "unlimited" else "canonical_quota"
         return ChatEntitlementResult(
             path=path,
+            plan_code=snapshot.plan_code,
             usage_states=access.usage_states,
         )
 

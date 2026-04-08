@@ -147,3 +147,13 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/services/ai_engine_adapter.py`
+- `backend/app/services/guidance_service.py`
+- `backend/app/services/natal_interpretation_service.py`
+- `backend/app/services/chat_entitlement_gate.py`
+- `backend/app/llm_orchestration/models.py`
+- `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
+- `docs/llm-prompt-generation-by-feature.md`
+- `backend/scripts/seed_66_15_assembly_convergence.py`
+- `backend/app/llm_orchestration/tests/test_story_66_15_convergence.py`

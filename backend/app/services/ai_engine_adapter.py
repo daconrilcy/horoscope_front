@@ -504,13 +504,14 @@ class AIEngineAdapter:
         trace_id: str,
         locale: str = "fr-FR",
         db: Optional[Session] = None,
+        entitlement_result: Any = None, # Story 66.15: passing entitlement to get plan
     ) -> Any:  # Returns GatewayResult
         """
         Generate a chat reply via the AI Engine.
         (Story 66.3: Refactored to LLMExecutionRequest)
         """
         if _test_chat_generator is not None:
-            # For testing, we mock a result object if the generator returns a string
+            # ... (unchanged)
             result_raw = await _test_chat_generator(
                 messages, context, user_id, request_id, trace_id, locale
             )
@@ -553,8 +554,16 @@ class AIEngineAdapter:
                     last_user_msg = msg.get("content", "")
                     break
 
+            # Story 66.15 AC3: pass feature and subfeature
+            plan = "free"
+            if entitlement_result and hasattr(entitlement_result, "plan_code"):
+                plan = entitlement_result.plan_code
+
             user_input = ExecutionUserInput(
                 use_case="chat_astrologer",
+                feature="chat",
+                subfeature="astrologer",
+                plan=plan,
                 locale=locale,
                 message=last_user_msg,
                 conversation_id=str(context.get("conversation_id")) 
@@ -663,12 +672,13 @@ class AIEngineAdapter:
         trace_id: str,
         locale: str = "fr-FR",
         db: Optional[Session] = None,
+        plan: str = "free", # Story 66.15: passing plan
     ) -> Any:
         """
         Generate guidance via the AI Engine.
         """
         if _test_guidance_generator is not None:
-            # For testing, we mock a result object
+            # ...
             text = await _test_guidance_generator(
                 use_case, context, user_id, request_id, trace_id, locale
             )
@@ -693,6 +703,19 @@ class AIEngineAdapter:
                 request_id=request_id,
                 trace_id=trace_id
             )
+            
+            # Story 66.15 AC2: populate feature, subfeature, plan
+            request.user_input.feature = "guidance"
+            # subfeature is the part after 'guidance_'
+            if use_case.startswith("guidance_"):
+                request.user_input.subfeature = use_case.replace("guidance_", "")
+            elif use_case == "event_guidance":
+                request.user_input.subfeature = "event"
+            else:
+                request.user_input.subfeature = use_case
+            
+            request.user_input.plan = plan
+
             result = await gateway.execute_request(request=request, db=db)
             return result
         except Exception as err:
@@ -746,6 +769,9 @@ class AIEngineAdapter:
             # 1. Prepare User Input
             user_input = ExecutionUserInput(
                 use_case=natal_input.use_case_key,
+                feature="natal",
+                subfeature=natal_input.use_case_key,
+                plan=natal_input.plan,
                 locale=natal_input.locale,
                 question=natal_input.question,
                 persona_id_override=natal_input.persona_id,

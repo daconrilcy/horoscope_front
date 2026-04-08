@@ -338,25 +338,30 @@ class NatalInterpretationService:
         }
 
         try:
-            # Generate interpretation via Gateway V2
-            result = await AIEngineAdapter.generate_guidance(
-                use_case="natal_interpretation",
-                context={
-                    "natal_chart_summary": natal_chart_summary,
-                    "birth_date": birth_data["date"],
-                    "birth_time": birth_data["time"],
-                    "birth_place": birth_data["place"],
-                    "current_datetime": current_context.current_datetime,
-                    "current_timezone": current_context.current_timezone,
-                    "current_location": current_context.current_location,
-                    "locale": "fr-FR",
-                    "persona_id": persona_id,
-                },
+            # Story 66.15: Resolve user plan for assembly
+            from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+            snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+            user_plan = snapshot.plan_code
+
+            from app.llm_orchestration.models import NatalExecutionInput
+            natal_input = NatalExecutionInput(
+                use_case_key="natal_interpretation",
                 user_id=user_id,
                 request_id=request_id,
                 trace_id=trace_id or request_id,
-                locale="fr-FR",
-                db=db,
+                level="complete",
+                chart_json=natal_chart.chart_id, # Should probably be the actual JSON or ID
+                natal_data=birth_profile.model_dump(),
+                evidence_catalog=[],
+                persona_id=persona_id,
+                plan=user_plan,
+                astro_context=str(current_context.model_dump())
+            )
+
+            # Generate interpretation via Gateway V2
+            result = await AIEngineAdapter.generate_natal_interpretation(
+                natal_input=natal_input,
+                db=db
             )
 
             # Extract structured sections or fallback to raw

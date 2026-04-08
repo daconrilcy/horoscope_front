@@ -707,6 +707,11 @@ class GuidanceService:
         for _ in range(max_attempts):
             attempts += 1
             try:
+                # Story 66.15: Resolve user plan for assembly
+                from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+                snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+                user_plan = snapshot.plan_code
+
                 result = await AIEngineAdapter.generate_guidance(
                     use_case=use_case,
                     context=context,
@@ -714,6 +719,7 @@ class GuidanceService:
                     request_id=request_id,
                     trace_id=trace_id,
                     db=db,
+                    plan=user_plan
                 )
                 (
                     recovered_text,
@@ -1002,6 +1008,11 @@ class GuidanceService:
         for _ in range(max_attempts):
             attempts += 1
             try:
+                # Story 66.15: Resolve user plan for assembly
+                from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+                snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+                user_plan = snapshot.plan_code
+
                 result = await AIEngineAdapter.generate_guidance(
                     use_case=use_case,
                     context=context,
@@ -1009,6 +1020,7 @@ class GuidanceService:
                     request_id=request_id,
                     trace_id=trace_id,
                     db=db,
+                    plan=user_plan
                 )
 
                 # Record tokens for the call

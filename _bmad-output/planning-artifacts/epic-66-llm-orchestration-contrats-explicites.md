@@ -260,6 +260,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.12 — Pilotage des longueurs par section (budgets de longueur)](#story-6612--pilotage-des-longueurs-par-section-budgets-de-longueur)
 - [Story 66.13 — Durcir la gestion des placeholders](#story-6613--durcir-la-gestion-des-placeholders)
 - [Story 66.14 — Utiliser context_quality comme paramètre de stratégie de rédaction](#story-6614--utiliser-context_quality-comme-paramètre-de-stratégie-de-rédaction)
+- [Story 66.15 — Faire converger guidance/natal/chat vers une gouvernance assembly complète](#story-6615--faire-converger-guidancenatalchat-vers-une-gouvernance-assembly-complète)
 - [Story 66.18 — Encapsuler les options OpenAI derrière des profils internes stables](#story-6618--encapsuler-les-options-openai-derrière-des-profils-internes-stables)
 
 ---
@@ -608,6 +609,35 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] Les budgets de longueur sont pilotables par feature/plan et injectés automatiquement (Story 66.12).
 - [ ] La gestion des placeholders est durcie (required/optional/fallback) et tracée (Story 66.13).
 - [ ] La qualité de contexte (`context_quality`) pilote activement la stratégie rédactionnelle (Story 66.14).
+- [ ] Les familles guidance, natal et chat ont convergé vers la gouvernance assembly complète (Story 66.15).
+
+---
+
+## Story 66.15 — Faire converger guidance/natal/chat vers une gouvernance assembly complète
+
+**Statut :** draft
+
+En tant qu'**architecte plateforme**,
+Je veux **migrer les familles de features historiques (guidance, natal, chat) vers une gouvernance assembly complète**,
+Afin d'**unifier le pilotage des prompts, des personas et de l'exécution sur une base technique unique**.
+
+**Acceptance Criteria :**
+
+**Given** une exécution `natal_interpretation` (Story 66.7)
+**When** `AIEngineAdapter.generate_natal_interpretation()` construit l'`ExecutionUserInput`
+**Then** il passe `feature="natal", subfeature="natal_interpretation"` et le plan de l'utilisateur — le chemin assembly est activé
+
+**Given** une exécution de guidance (daily, weekly, contextual)
+**When** `AIEngineAdapter.generate_guidance()` est appelé
+**Then** il passe `feature="guidance", subfeature="{daily|weekly|contextual}"` — le chemin assembly est activé
+
+**Given** une exécution de chat
+**When** `AIEngineAdapter.generate_chat_reply()` est appelé
+**Then** il passe `feature="chat", subfeature="astrologer"` — le chemin assembly est activé
+
+**Given** les services applicatifs (`NatalInterpretationService`, `GuidanceService`, `ChatGuidanceService`)
+**When** un appel est initié
+**Then** le plan de l'utilisateur est résolu en amont et propagé jusqu'au gateway pour permettre la résolution de l'assembly
 - [ ] Les options spécifiques aux providers sont encapsulées derrière des profils internes stables (Story 66.18).
 
 ---
