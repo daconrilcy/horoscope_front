@@ -73,7 +73,7 @@ def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyP
     use_case_key = config.feature_template.use_case_key
     catalog_entry = PROMPT_CATALOG.get(use_case_key)
     safety_profile = "astrology"
-    if catalog_entry and hasattr(catalog_entry, "safety_profile"):
+    if catalog_entry and catalog_entry.safety_profile:
         safety_profile = catalog_entry.safety_profile
     
     hard_policy = get_hard_policy(safety_profile)
@@ -158,12 +158,12 @@ def resolve_assembly(config: PromptAssemblyConfigModel) -> ResolvedAssembly:
     execution_config = ExecutionConfigAdmin(**exec_dict)
 
     # 5. Policy Layer (Architectural Note 1)
-    # M2 Fix: Derive safety_profile from feature template
+    # M2 Fix: Derive safety_profile from feature template use_case_key
     from app.prompts.catalog import PROMPT_CATALOG
     use_case_key = config.feature_template.use_case_key
     catalog_entry = PROMPT_CATALOG.get(use_case_key)
     safety_profile = "astrology"
-    if catalog_entry and hasattr(catalog_entry, "safety_profile"):
+    if catalog_entry and catalog_entry.safety_profile:
         safety_profile = catalog_entry.safety_profile
     
     policy_layer_content = get_hard_policy(safety_profile)
