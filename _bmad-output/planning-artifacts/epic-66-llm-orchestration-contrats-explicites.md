@@ -259,6 +259,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.11 — Introduire les ExecutionProfiles administrables](#story-6611--introduire-les-executionprofiles-administrables)
 - [Story 66.12 — Pilotage des longueurs par section (budgets de longueur)](#story-6612--pilotage-des-longueurs-par-section-budgets-de-longueur)
 - [Story 66.13 — Durcir la gestion des placeholders](#story-6613--durcir-la-gestion-des-placeholders)
+- [Story 66.14 — Utiliser context_quality comme paramètre de stratégie de rédaction](#story-6614--utiliser-context_quality-comme-paramètre-de-stratégie-de-rédaction)
 
 ---
 
@@ -605,6 +606,35 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] Les profils d'exécution (`ExecutionProfile`) sont administrables et décorrélés du prompt (Story 66.11).
 - [ ] Les budgets de longueur sont pilotables par feature/plan et injectés automatiquement (Story 66.12).
 - [ ] La gestion des placeholders est durcie (required/optional/fallback) et tracée (Story 66.13).
+- [ ] La qualité de contexte (`context_quality`) pilote activement la stratégie rédactionnelle (Story 66.14).
+
+---
+
+## Story 66.14 — Utiliser context_quality comme paramètre de stratégie de rédaction
+
+**Statut :** draft
+
+En tant qu'**architecte plateforme**,
+Je veux **transformer `context_quality` en un paramètre actif de stratégie de rédaction**,
+Afin de **garantir que le système adapte consciemment la rédaction au niveau de contexte disponible**.
+
+**Acceptance Criteria :**
+
+**Given** un template contenant un bloc conditionnel `{{#context_quality:minimal}}...{{/context_quality}}`
+**When** `PromptRenderer.render()` est appelé
+**Then** le bloc est inclus uniquement si le niveau correspond, sinon il est supprimé
+
+**Given** un template ne gérant pas explicitement le niveau de qualité
+**When** `context_quality` est `minimal` ou `partial`
+**Then** `ContextQualityInjector` ajoute automatiquement une instruction de compensation en fin de prompt adaptée à la feature
+
+**Given** le gateway LLM
+**When** une exécution est terminée
+**Then** `context_quality` et l'indicateur d'injection sont présents dans les logs de télémétrie
+
+**Given** l'interface d'administration
+**When** un admin simule un niveau de qualité dans la preview
+**Then** le rendu reflète immédiatement les blocs conditionnels et les instructions injectées
 
 ---
 

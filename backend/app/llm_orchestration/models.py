@@ -232,6 +232,7 @@ class ResolvedExecutionPlan(BaseModel):
 
     # Quality metadata
     context_quality: str = "unknown"
+    context_quality_instruction_injected: bool = False
 
 
 class RecoveryResult(BaseModel):
@@ -280,6 +281,7 @@ class GatewayMeta(BaseModel):
     # Enriched Telemetry (Story 66.6)
     execution_path: Literal["nominal", "repaired", "fallback_use_case", "test_fallback"] = "nominal"
     context_quality: str = "unknown"
+    context_quality_instruction_injected: bool = False
     missing_context_fields: List[str] = Field(default_factory=list)
     normalizations_applied: List[str] = Field(default_factory=list)
     repair_attempts: int = 0

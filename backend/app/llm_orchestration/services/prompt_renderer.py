@@ -18,8 +18,27 @@ class PromptRenderer:
         feature: str = "unknown"
     ) -> str:
         """
-        Render a template with variables and enforcement policy (Story 66.13).
+        Render a template with variables and enforcement policy (Story 66.13, 66.14).
         """
+        # 0. Story 66.14: Resolve context_quality conditional blocks BEFORE anything else
+        context_quality = variables.get("context_quality", "full")
+        
+        # Pattern: {{#context_quality:VALUE}}...{{/context_quality}}
+        # We use a non-greedy match for the content
+        def resolve_quality_block(match):
+            target_quality = match.group(1)
+            content = match.group(2)
+            if target_quality == context_quality:
+                return content
+            return ""
+
+        template = re.sub(
+            r"\{\{#context_quality:([a-z]+)\}\}(.*?)\{\{/context_quality\}\}", 
+            resolve_quality_block, 
+            template, 
+            flags=re.DOTALL
+        )
+
         from app.llm_orchestration.placeholder_policy import PLACEHOLDER_POLICY
         from app.llm_orchestration.services.assembly_resolver import PLACEHOLDER_ALLOWLIST
 

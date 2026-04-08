@@ -246,6 +246,8 @@ class ResolvedAssembly(BaseModel):
     execution_config: ExecutionConfigAdmin
     output_contract_ref: Optional[str] = None
     length_budget: Optional[LengthBudget] = None
+    context_quality: str = "full"
+    context_quality_instruction_injected: bool = False
     policy_layer_content: str
 
 

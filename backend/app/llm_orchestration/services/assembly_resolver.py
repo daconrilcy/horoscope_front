@@ -89,11 +89,12 @@ def validate_placeholders(template: str, feature: str) -> list[str]:
     return invalid
 
 
-def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyPreview:
+def build_assembly_preview(config: PromptAssemblyConfigModel, simulated_context_quality: str = "full") -> PromptAssemblyPreview:
     """
     Builds a full preview of an assembly rendering (AC7, AC12).
+    Now supports simulated context quality (Story 66.14 AC6).
     """
-    resolved = resolve_assembly(config)
+    resolved = resolve_assembly(config, context_quality=simulated_context_quality)
     rendered_prompt = assemble_developer_prompt(resolved, config)
     
     # AC4: Hard policy is visible but separate
@@ -108,8 +109,19 @@ def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyP
     resolution_statuses = []
     
     # Mock some context for preview resolution
-    mock_vars = {"locale": "fr-FR", "use_case": use_case_key}
+    mock_vars = {
+        "locale": "fr-FR", 
+        "context_quality": simulated_context_quality,
+        "use_case": config.feature_template.use_case_key
+    }
     
+    # Feature-specific mock context
+    if config.feature == "chat":
+        mock_vars["last_user_msg"] = "Hello Luna!"
+    if config.feature == "natal":
+        mock_vars["chart_json"] = '{"planets": {}}'
+        mock_vars["natal_data"] = '{"birth_date": "1990-01-01"}'
+
     feat_key = config.feature.split("_")[0] if "_" in config.feature else config.feature
     allowlist = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
     placeholder_defs = {d.name: d for d in allowlist}
@@ -167,7 +179,7 @@ def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyP
     )
 
 
-def resolve_assembly(config: PromptAssemblyConfigModel) -> ResolvedAssembly:
+def resolve_assembly(config: PromptAssemblyConfigModel, context_quality: str = "full") -> ResolvedAssembly:
     """
     Orchestrates the resolution of an assembly config into a ResolvedAssembly artifact.
     Implements AC1, AC2, AC11.
@@ -239,6 +251,7 @@ def resolve_assembly(config: PromptAssemblyConfigModel) -> ResolvedAssembly:
         execution_config=execution_config,
         output_contract_ref=config.output_contract_ref,
         length_budget=length_budget,
+        context_quality=context_quality,
         policy_layer_content=policy_layer_content,
     )
 
@@ -267,4 +280,16 @@ def assemble_developer_prompt(resolved: ResolvedAssembly, config: PromptAssembly
         from app.llm_orchestration.services.length_budget_injector import LengthBudgetInjector
         prompt = LengthBudgetInjector.inject_into_developer_prompt(prompt, resolved.length_budget)
 
+    # Story 66.14: Context Quality injection (compensation instructions)
+    # We use 'full' as default if not provided yet (resolved in gateway)
+    context_quality = "full"
+    injected = False
+    if hasattr(resolved, 'context_quality'): # Should be there if coming from build_assembly_preview
+        context_quality = resolved.context_quality
+        from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
+        prompt, injected = ContextQualityInjector.inject(prompt, config.feature, context_quality)
+    
+    # Store injection status in resolved object if possible (it's a Pydantic model)
+    # Actually, ResolvedAssembly doesn't have this field yet.
+    
     return prompt

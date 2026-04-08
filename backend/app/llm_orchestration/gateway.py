@@ -889,6 +889,17 @@ class LLMGateway:
         assembly_id = context_dict.get("_assembly_db_id")
         resolved_assembly: Optional[ResolvedAssembly] = context_dict.get("_assembly_resolved")
 
+        # Story 66.14: Context Quality instruction injection (D3, AC3, AC4)
+        context_quality_injected = False
+        cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
+        if request.user_input.feature:
+            from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
+            rendered_developer_prompt, context_quality_injected = ContextQualityInjector.inject(
+                rendered_developer_prompt,
+                request.user_input.feature,
+                cq_level
+            )
+
         plan = ResolvedExecutionPlan(
             assembly_id=assembly_id,
             feature=request.user_input.feature,
@@ -926,7 +937,8 @@ class LLMGateway:
             response_format=response_format,
             reasoning_effort=config.reasoning_effort,
             verbosity=config.verbosity,
-            context_quality=qualified_ctx.context_quality if qualified_ctx else "unknown"
+            context_quality=cq_level,
+            context_quality_instruction_injected=context_quality_injected
         )
         return plan, qualified_ctx
 
