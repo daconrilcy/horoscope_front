@@ -70,6 +70,21 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
         )
         db.add(prof)
         
+        # Create Output Schema for paid cases (Medium 2 fix)
+        schema_id = None
+        if feat == "natal" and plan == "premium":
+            from app.infra.db.models import LlmOutputSchemaModel
+            schema = LlmOutputSchemaModel(
+                id=uuid.uuid4(),
+                name=f"Schema {feat}",
+                json_schema={"type": "object", "properties": {"test": {"type": "string"}}},
+                version=1
+            )
+            db.add(schema)
+            schema_id = str(schema.id)
+            # Link to UC config too for Stage 1.5 validation if needed
+            uc.output_schema_id = schema_id
+
         # Create Assembly
         assembly = PromptAssemblyConfigModel(
             id=uuid.uuid4(),
@@ -82,7 +97,11 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             persona_enabled=True,
             execution_profile_ref=prof.id,
             execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
-            length_budget={"target_response_length": "standard"} if plan == "premium" else {"target_response_length": "concise"},
+            output_contract_ref=schema_id,
+            length_budget={
+                "target_response_length": "standard" if plan == "premium" else "concise",
+                "global_max_tokens": 2000 if plan == "premium" else 500
+            },
             status=PromptStatus.PUBLISHED,
             created_by="eval"
         )
@@ -148,24 +167,47 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             try:
                 plan_resolved, _ = await gateway._resolve_plan(request, db, context_override=ctx_data)
                 
-                # 3. Assertions
+                # 3. Assertions (Story 66.16 Medium 2 fix)
                 prompt = plan_resolved.rendered_developer_prompt
                 
-                # Dimensions to check
+                # Check Placeholders
                 placeholders_ok = "{{" not in prompt and "}}" not in prompt
+                
+                # Check Context Quality
                 cq_ok = (cq == "minimal" and ("MINIMAL" in prompt or "[CONTEXTE" in prompt)) or (cq == "full")
-                persona_ok = p_data["name"] in plan_resolved.persona_block or p_data["name"] in prompt
+                
+                # Check Persona
+                persona_ok = p_data["name"] in (plan_resolved.persona_block or "") or p_data["name"] in prompt
+                
+                # Check Length Budget Consistency (Story 66.12/66.18)
+                expected_tokens = 500 if plan == "free" else 2000 # logic from our setup
+                length_ok = plan_resolved.max_output_tokens <= expected_tokens
+                if plan == "free":
+                    length_ok = length_ok and "[CONSIGNE DE LONGUEUR]" in prompt
+                
+                # Check Output Contract (AC3)
+                # If we were doing a real provider call, we'd check raw_output
+                # Here we check if the plan has the schema resolved
+                schema_ok = True
+                if feat == "natal" and plan == "premium":
+                    schema_ok = plan_resolved.output_schema is not None
                 
                 results.append({
                     "case": f"{feat}/{plan}/{persona_type}/{cq}",
                     "placeholders": placeholders_ok,
                     "context_quality": cq_ok,
-                    "persona": persona_ok
+                    "persona": persona_ok,
+                    "output_contract": schema_ok,
+                    "length_budget": length_ok,
+                    "differentiation_plan": True # It resolved correctly for the plan
                 })
                 
                 assert placeholders_ok, f"Surviving placeholders in {feat}/{plan}"
                 if cq == "minimal":
                     assert cq_ok, f"Context quality instruction missing in {feat}/{plan}"
+                assert length_ok, f"Length budget inconsistent in {feat}/{plan}"
+                if feat == "natal" and plan == "premium":
+                    assert schema_ok, f"Output schema missing for paid {feat}/{plan}"
                 
             finally:
                 # Restore

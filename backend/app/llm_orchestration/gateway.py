@@ -810,10 +810,11 @@ class LLMGateway:
                     tool_mode=profile_db.tool_mode
                 )
             except NotImplementedError as e:
-                # High #1: Fallback if provider/params mapping not implemented
-                logger.warning("gateway_provider_mapping_not_implemented provider=%s error=%s. Falling back to resolve_model.", provider, e)
+                # High #1 & #2: Fallback if provider/params mapping not implemented
+                logger.warning("gateway_provider_mapping_not_implemented provider=%s error=%s. Falling back to resolve_model/openai.", provider, e)
                 model_id = resolve_model(use_case, fallback_model=config.model)
                 profile_source = "fallback_resolve_model"
+                provider = "openai"  # High #2 Fix: Reset to supported provider
                 translated_params = {}
             
             # If we didn't get verbosity_instruction yet, get it now
@@ -1032,7 +1033,7 @@ class LLMGateway:
     async def _call_provider(
         self, messages: ComposedMessages, plan: ResolvedExecutionPlan, request: LLMExecutionRequest
     ) -> GatewayResult:
-        """Stage 3: Executes the actual call to the LLM provider."""
+        """Stage 3: Executes the actual call to the LLM provider (Story 66.18 Multi-provider routing)."""
         # Story 66.18: Resolve final response_format (High 2 fix)
         # 1. Start with profile-translated params (can force JSON even without schema)
         response_format = plan.translated_provider_params.get("response_format")
@@ -1048,18 +1049,27 @@ class LLMGateway:
                 },
             }
 
-        return await self.client.execute(
-            messages=messages,
-            model=plan.model_id,
-            temperature=plan.temperature,
-            max_output_tokens=plan.max_output_tokens,
-            request_id=request.request_id,
-            trace_id=request.trace_id,
-            use_case=request.user_input.use_case,
-            reasoning_effort=plan.reasoning_effort,
-            verbosity=plan.verbosity,
-            response_format=response_format,
-        )
+        # High #1 Fix: Provider routing
+        if plan.provider == "openai":
+            return await self.client.execute(
+                messages=messages,
+                model=plan.model_id,
+                temperature=plan.temperature,
+                max_output_tokens=plan.max_output_tokens,
+                request_id=request.request_id,
+                trace_id=request.trace_id,
+                use_case=request.user_input.use_case,
+                reasoning_effort=plan.reasoning_effort,
+                verbosity=plan.verbosity,
+                response_format=response_format,
+            )
+        elif plan.provider == "anthropic":
+            # In a real multi-provider setup, we would call an AnthropicClient here.
+            # For now, we reuse the mapper logic and let the client handle or fail.
+            # (Assuming ResponsesClient is extended or a factory is used in future stories)
+            raise NotImplementedError(f"Anthropic provider support is mapped but client integration is pending (Story 66.18 AC4)")
+        
+        raise ValueError(f"Unsupported provider: {plan.provider}")
 
     def _validate_and_normalize(
         self, raw_output: str, plan: ResolvedExecutionPlan, request: LLMExecutionRequest

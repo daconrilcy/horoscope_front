@@ -4,29 +4,38 @@ import json
 from pathlib import Path
 
 def generate_markdown_report(results: list[dict]) -> str:
-    """Generates a markdown table from evaluation results (Story 66.16 Low fix)."""
-    header = "| Combination | Placeholders | CQ | Persona | Contract | Length | Status |\n"
-    separator = "|---|---|---|---|---|---|---|\n"
+    """Generates a markdown table from evaluation results (Story 66.16 Matrix fix)."""
+    header = "| Combination | Placeholders | CQ | Persona | Contract | Length | Diff. Plan | Status |\n"
+    separator = "|---|---|---|---|---|---|---|---|\n"
     rows = []
     
+    def get_status_icon(val):
+        if val == "N/A":
+            return "➖"
+        return "✅" if val else "❌"
+
     for r in results:
-        # Check all dimensions
-        dims = [
-            r.get("placeholders", False),
-            r.get("context_quality", False),
-            r.get("persona", False),
-            r.get("output_contract", True), # Optional dimension
-            r.get("length_budget", True)    # Optional dimension
+        # Status logic: all must be true or N/A
+        all_metrics = [
+            r.get("placeholders"),
+            r.get("context_quality"),
+            r.get("persona"),
+            r.get("output_contract"),
+            r.get("length_budget"),
+            r.get("differentiation_plan", True)
         ]
-        status = "✅" if all(dims) else "❌"
+        
+        passed = all(m is True or m == "N/A" for m in all_metrics)
+        status = "✅" if passed else "❌"
         
         rows.append(
             f"| {r['case']} | "
-            f"{'✅' if r.get('placeholders') else '❌'} | "
-            f"{'✅' if r.get('context_quality') else '❌'} | "
-            f"{'✅' if r.get('persona') else '❌'} | "
-            f"{'✅' if r.get('output_contract', 'N/A') else '❌'} | "
-            f"{'✅' if r.get('length_budget', 'N/A') else '❌'} | "
+            f"{get_status_icon(r.get('placeholders'))} | "
+            f"{get_status_icon(r.get('context_quality'))} | "
+            f"{get_status_icon(r.get('persona'))} | "
+            f"{get_status_icon(r.get('output_contract'))} | "
+            f"{get_status_icon(r.get('length_budget'))} | "
+            f"{get_status_icon(r.get('differentiation_plan'))} | "
             f"{status} |"
         )
         
@@ -41,7 +50,8 @@ if __name__ == "__main__":
             "context_quality": True, 
             "persona": True,
             "output_contract": True,
-            "length_budget": True
+            "length_budget": True,
+            "differentiation_plan": True
         },
         {
             "case": "chat/free/synthetique/minimal", 
@@ -49,7 +59,8 @@ if __name__ == "__main__":
             "context_quality": True, 
             "persona": True,
             "output_contract": "N/A",
-            "length_budget": True
+            "length_budget": True,
+            "differentiation_plan": True
         }
     ]
     report = generate_markdown_report(dummy_results)
