@@ -1,19 +1,27 @@
-import pytest
 import uuid
 from unittest.mock import MagicMock
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import LLMExecutionRequest, ExecutionUserInput
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus, LlmUseCaseConfigModel
+
+import pytest
+
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
+from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
+
 
 @pytest.mark.evaluation
 @pytest.mark.asyncio
 async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_quality, mock_personas):
     """
     Evaluates prompt resolution for every combination in the matrix.
-    Checks: absence of {{}}, context_quality injection, length budget consistency.
+    Checks: absence of {{}}, context quality handling, runtime schema resolution,
+    and length-budget propagation in the assembly path.
     """
     results = []
     
@@ -70,19 +78,19 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
         )
         db.add(prof)
         
-        # Create Output Schema for paid cases (Medium 2 fix)
+        # Create Output Schema for paid cases so the gateway resolves a real contract.
         schema_id = None
         if feat == "natal" and plan == "premium":
             from app.infra.db.models import LlmOutputSchemaModel
+            from app.llm_orchestration.seeds.use_cases_seed import ASTRO_RESPONSE_V3_JSON_SCHEMA
             schema = LlmOutputSchemaModel(
                 id=uuid.uuid4(),
                 name=f"Schema {feat}",
-                json_schema={"type": "object", "properties": {"test": {"type": "string"}}},
+                json_schema=ASTRO_RESPONSE_V3_JSON_SCHEMA,
                 version=1
             )
             db.add(schema)
             schema_id = str(schema.id)
-            # Link to UC config too for Stage 1.5 validation if needed
             uc.output_schema_id = schema_id
 
         # Create Assembly
@@ -128,7 +136,7 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
         )
         
         # We need to mock CommonContextBuilder.build to return our desired quality
-        from app.prompts.common_context import QualifiedContext, PromptCommonContext
+        from app.prompts.common_context import PromptCommonContext, QualifiedContext
         
         mock_payload = PromptCommonContext(
             natal_interpretation="test",
@@ -158,7 +166,7 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             context_quality=cq
         )
         
-        with MagicMock() as mock_builder:
+        with MagicMock():
             import app.llm_orchestration.gateway as gateway_module
             # We patch it directly in the module
             original_build = gateway_module.CommonContextBuilder.build
@@ -180,17 +188,21 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
                 persona_ok = p_data["name"] in (plan_resolved.persona_block or "") or p_data["name"] in prompt
                 
                 # Check Length Budget Consistency (Story 66.12/66.18)
-                expected_tokens = 500 if plan == "free" else 2000 # logic from our setup
-                length_ok = plan_resolved.max_output_tokens <= expected_tokens
-                if plan == "free":
-                    length_ok = length_ok and "[CONSIGNE DE LONGUEUR]" in prompt
+                expected_tokens = 500 if plan == "free" else 2000
+                length_ok = (
+                    plan_resolved.max_output_tokens == expected_tokens
+                    and plan_resolved.max_output_tokens_source == "length_budget"
+                    and "[CONSIGNE DE LONGUEUR]" in prompt
+                )
                 
-                # Check Output Contract (AC3)
-                # If we were doing a real provider call, we'd check raw_output
-                # Here we check if the plan has the schema resolved
+                # Check Output Contract resolution (AC3)
                 schema_ok = True
                 if feat == "natal" and plan == "premium":
-                    schema_ok = plan_resolved.output_schema is not None
+                    schema_ok = (
+                        plan_resolved.output_schema is not None
+                        and plan_resolved.response_format is not None
+                        and plan_resolved.response_format.type == "json_schema"
+                    )
                 
                 results.append({
                     "case": f"{feat}/{plan}/{persona_type}/{cq}",
@@ -199,7 +211,7 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
                     "persona": persona_ok,
                     "output_contract": schema_ok,
                     "length_budget": length_ok,
-                    "differentiation_plan": True # It resolved correctly for the plan
+                    "differentiation_plan": True
                 })
                 
                 assert placeholders_ok, f"Surviving placeholders in {feat}/{plan}"

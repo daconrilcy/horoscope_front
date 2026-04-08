@@ -115,11 +115,11 @@ Responsabilité :
 
 #### Abstractions stables
 
-Afin de découpler les instructions métier des spécificités techniques des providers, la plateforme utilise des profils stables. Le `ProviderParameterMapper` traduit ces profils en paramètres spécifiques (OpenAI, Anthropic).
+Afin de découpler les instructions métier des spécificités techniques des providers, la plateforme utilise des profils stables. Le `ProviderParameterMapper` traduit ces profils en paramètres spécifiques, mais **OpenAI reste le moteur runtime prioritaire**. Les autres providers peuvent être préparés au niveau mapping, sans devenir le chemin d'exécution par défaut.
 
 | Profil | Valeurs possibles | Impact |
 |---|---|---|
-| `reasoning_profile` | `off`, `light`, `medium`, `deep` | `reasoning_effort` (OpenAI), `thinking` (Anthropic) |
+| `reasoning_profile` | `off`, `light`, `medium`, `deep` | `reasoning_effort` (OpenAI) ; autres mappings seulement préparatoires tant que le runtime reste OpenAI |
 | `verbosity_profile` | `concise`, `balanced`, `detailed` | Instruction textuelle + `max_tokens` par défaut |
 | `output_mode` | `free_text`, `structured_json` | `response_format` |
 | `tool_mode` | `none`, `optional`, `required` | `tool_choice` |

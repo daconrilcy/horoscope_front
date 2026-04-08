@@ -1,11 +1,18 @@
-import pytest
 import uuid
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import LLMExecutionRequest, ExecutionUserInput
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus, LlmUseCaseConfigModel
+
+import pytest
+
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
+from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
+from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+
 
 @pytest.mark.evaluation
 @pytest.mark.asyncio
@@ -23,7 +30,6 @@ async def test_plan_differentiation(db):
     db.add(v)
     db.commit()
     
-    from app.llm_orchestration.services.assembly_resolver import PLAN_RULES_REGISTRY
     
     # Create assemblies for free and premium
     for plan in ["free", "premium"]:
@@ -61,8 +67,8 @@ async def test_plan_differentiation(db):
 @pytest.mark.evaluation
 @pytest.mark.asyncio
 async def test_persona_differentiation(db, mock_personas):
-    """Checks that different astrologer profiles produce different persona blocks."""
-    feat = "chat"
+    """Checks persona differentiation through the assembly path, not only via runtime override."""
+    feat = "chat_persona_eval"
     uc_key = "chat_test"
     uc = LlmUseCaseConfigModel(key=uc_key, display_name=uc_key, description="test", safety_profile="astrology")
     db.add(uc)
@@ -78,35 +84,57 @@ async def test_persona_differentiation(db, mock_personas):
     for p_type, p_data in mock_personas.items():
         persona = LlmPersonaModel(
             id=uuid.uuid4(), name=p_data["name"], description="test",
+            tone="direct" if p_type == "synthetique" else "mystical",
+            verbosity="short" if p_type == "synthetique" else "long",
             style_markers=p_data["style_markers"], boundaries=p_data["boundaries"],
+            allowed_topics=[],
+            disallowed_topics=[],
+            formatting={"sections": True, "bullets": False, "emojis": False},
             enabled=True
         )
         db.add(persona)
         p_ids[p_type] = persona.id
     db.commit()
     
-    # Update UC with allowed personas
-    uc.allowed_persona_ids = [str(pid) for pid in p_ids.values()]
+    assembly = PromptAssemblyConfigModel(
+        id=uuid.uuid4(),
+        feature=feat,
+        plan="free",
+        locale="fr-FR",
+        feature_template_ref=v.id,
+        persona_ref=p_ids["synthetique"],
+        persona_enabled=True,
+        execution_config={"model": "gpt-4o", "max_output_tokens": 1200},
+        status=PromptStatus.PUBLISHED,
+        created_by="eval",
+    )
+    db.add(assembly)
     db.commit()
 
     gateway = LLMGateway()
-    
-    # 2. Resolve both with the same feature/plan but different persona_ref in assembly
-    # We simulate this by overriding persona_id in the request
-    # but the story says we should compare blocks.
-    
-    results = []
-    for p_type in ["synthetique", "ample"]:
-        request = LLMExecutionRequest(
-            user_input=ExecutionUserInput(
-                use_case=uc_key, feature=feat, plan="free", persona_id_override=str(p_ids[p_type])
-            ),
-            request_id=f"r-{p_type}", trace_id="t"
-        )
-        plan_res, _ = await gateway._resolve_plan(request, db)
-        results.append(plan_res.persona_block)
-        
-    # 3. Assertions
+    registry = AssemblyRegistry(db)
+    registry.invalidate_cache()
+
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case=uc_key, feature=feat, plan="free"),
+        request_id="r-synthetique",
+        trace_id="t",
+    )
+    plan_synth, _ = await gateway._resolve_plan(request, db)
+
+    assembly.persona_ref = p_ids["ample"]
+    db.commit()
+    registry.invalidate_cache()
+
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case=uc_key, feature=feat, plan="free"),
+        request_id="r-ample",
+        trace_id="t",
+    )
+    plan_ample, _ = await gateway._resolve_plan(request, db)
+
+    results = [plan_synth.persona_block, plan_ample.persona_block]
+
     assert results[0] != results[1]
     assert mock_personas["synthetique"]["name"] in results[0]
     assert mock_personas["ample"]["name"] in results[1]

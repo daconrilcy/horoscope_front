@@ -12,7 +12,7 @@ afin de **découpler le système des conventions spécifiques au provider et de 
 
 La story 66.11 a introduit les profils internes stables (`reasoning_profile`, `verbosity_profile`, `output_mode`, `tool_mode`) dans `ExecutionProfile` et un mapper OpenAI minimal. Cette story 66.18 complète ce travail sur deux axes :
 
-1. **Extension multi-provider** : ajouter le support Anthropic (et rendre le mapper extensible pour d'autres providers sans modifier les profils internes).
+1. **Préparation multi-provider** : garder un mapper extensible pour d'autres providers, tout en maintenant **OpenAI comme moteur runtime prioritaire et unique moteur effectivement exécuté** à ce stade.
 2. **Clarification de `verbosity_profile`** : préciser exactement comment ce profil agit — une seule source d'effet, pas deux concurrentes.
 
 ## Intent
@@ -27,15 +27,15 @@ Ces deux effets ne doivent **pas** agir comme deux sources concurrentes non cont
 
 > `verbosity_profile` produit **une instruction textuelle** injectée dans le developer_prompt par `ProviderParameterMapper.resolve_verbosity_instruction()`. Le `max_output_tokens` recommandé associé au profil est utilisé **seulement si** aucun `LengthBudget.global_max_tokens` ni `ExecutionProfile.max_output_tokens` explicite n'est défini. C'est donc un défaut de sécurité, pas une contrainte prioritaire. Le mapper décide de la combinaison — pas deux couches indépendantes.
 
-### Extension multi-provider
+### Préparation multi-provider
 
-`ProviderParameterMapper` est étendu avec `map_for_anthropic()`. Les `ExecutionProfile` existants configurés avec `reasoning_profile="deep"` produisent les paramètres Anthropic corrects (`extended_thinking`) sans modification des entités admin.
+`ProviderParameterMapper` peut exposer des mappings additionnels (ex: Anthropic) pour préparer une extension future. **Cependant, OpenAI reste le moteur prioritaire et le seul moteur effectivement appelé par le gateway en production courante.** Si un profil d'exécution déclare un provider non supporté en runtime, le gateway retombe sur le chemin stable `openai`/`resolve_model()`.
 
 ## Décisions d'architecture
 
 **D1 — Les profils internes stables sont définis en 66.11 et ne changent pas ici.** Cette story n'introduit pas de nouveau champ dans `ExecutionProfile` ou `ExecutionProfileAdmin`.
 
-**D2 — `ProviderParameterMapper` est étendu, pas réécrit.** Ajouter `map_for_anthropic()` en suivant la même interface que `map_for_openai()`. Un provider inconnu → `NotImplementedError` avec message explicite.
+**D2 — `ProviderParameterMapper` est extensible, pas réécrit.** Des mappings supplémentaires peuvent être ajoutés sans changer les profils internes. **Mais l'exécution runtime reste prioritairement OpenAI** tant qu'aucun client provider alternatif n'est intégré de bout en bout.
 
 **D3 — `verbosity_profile` produit une instruction textuelle ET un `max_output_tokens` recommandé, mais le mapper arbitre la priorité** selon la règle de D4.
 
@@ -57,9 +57,9 @@ Ces deux effets ne doivent **pas** agir comme deux sources concurrentes non cont
    **When** le gateway résout `max_output_tokens` final
    **Then** `max_output_tokens=800` s'applique (priorité LengthBudget) — le `max_output_tokens` recommandé par `verbosity_profile` est ignoré ; seule l'instruction textuelle `"detailed"` est injectée dans le prompt
 
-4. **Given** qu'un `ExecutionProfile` cible `provider="anthropic"` avec `reasoning_profile="deep"`
-   **When** `ProviderParameterMapper.map_for_anthropic()` est appelé
-   **Then** les paramètres Anthropic corrects sont produits (`extended_thinking` ou équivalent selon l'API Anthropic courante) — sans modification des entités admin ou des profils internes
+4. **Given** qu'un `ExecutionProfile` cible un provider non supporté en runtime
+   **When** le gateway résout l'exécution
+   **Then** le provider runtime effectif est réinitialisé sur `openai`, le modèle repasse par `resolve_model()` et un warning structuré signale le fallback — l'exécution reste stable
 
 5. **Given** qu'un provider inconnu est spécifié dans `ExecutionProfile`
    **When** le gateway tente de mapper les profils internes
@@ -75,10 +75,10 @@ Ces deux effets ne doivent **pas** agir comme deux sources concurrentes non cont
 
 ## Tasks / Subtasks
 
-- [ ] Étendre `ProviderParameterMapper` avec le support Anthropic (AC: 4, 5)
+- [ ] Garder `ProviderParameterMapper` extensible pour des providers futurs (AC: 4, 5)
   - [ ] Dans `backend/app/llm_orchestration/services/provider_parameter_mapper.py` (créé en 66.11) :
-  - [ ] Ajouter `map_for_anthropic(reasoning_profile, verbosity_profile, output_mode, tool_mode) -> dict` avec le mapping Anthropic correct
-  - [ ] Ajouter `map(provider: str, ...) -> dict` : dispatch selon provider, `NotImplementedError` si provider inconnu (AC: 5)
+  - [ ] Conserver `map(provider: str, ...) -> dict` extensible
+  - [ ] Si le provider n'est pas supporté en runtime, laisser le gateway retomber sur le chemin stable `openai`
   - [ ] La signature de `resolve_verbosity_instruction(verbosity_profile) -> tuple[str, Optional[int]]` est celle définie en 66.11 — s'assurer que le `Optional[int]` (max_tokens recommandé) n'est utilisé qu'en dernier recours selon la règle D4
 
 - [ ] Implémenter la règle de priorité `max_output_tokens` dans le gateway (AC: 2, 3)
@@ -99,8 +99,7 @@ Ces deux effets ne doivent **pas** agir comme deux sources concurrentes non cont
   - [ ] Logger une note de dépréciation structurée
 
 - [ ] Tests (toutes AC)
-  - [ ] Test unitaire `map_for_anthropic()` : chaque `reasoning_profile` → paramètres Anthropic corrects
-  - [ ] Test unitaire provider inconnu → `NotImplementedError`
+  - [ ] Test unitaire provider runtime non supporté → fallback cohérent vers `openai`
   - [ ] Test unitaire règle priorité `max_output_tokens` : LengthBudget présent → override verbosity default
   - [ ] Test unitaire : `verbosity_profile="detailed"` + `LengthBudget.global_max_tokens=800` → `max_output_tokens=800`, instruction textuelle `detailed` injectée, pas de double contrainte
   - [ ] Test unitaire : `verbosity_profile="concise"` sans LengthBudget ni ExecutionProfile.max_output_tokens → default tokens recommandé utilisé
@@ -123,7 +122,7 @@ Ces deux effets ne doivent **pas** agir comme deux sources concurrentes non cont
 
 - **`verbosity_profile` affecte deux choses :** (1) une instruction textuelle dans le developer_prompt, (2) un `max_output_tokens` recommandé (si `LengthBudget` non défini). Si `LengthBudget` est défini (story 66.12), il prend priorité sur le max_tokens recommandé par verbosity.
 
-- **Story complémentaire 66.11 :** `ExecutionProfile` est l'entité DB créée en 66.11 avec les profils internes stables déjà en place. Cette story 66.18 **n'introduit pas de nouveaux champs dans `ExecutionProfile`** — elle étend `ProviderParameterMapper` pour le support multi-provider (Anthropic) et clarifie la règle de priorité `max_output_tokens`. L'ordre d'implémentation : 66.11 d'abord, puis 66.18 en extension. Pas de churn de modèle DB entre les deux.
+- **Story complémentaire 66.11 :** `ExecutionProfile` est l'entité DB créée en 66.11 avec les profils internes stables déjà en place. Cette story 66.18 **n'introduit pas de nouveaux champs dans `ExecutionProfile`** — elle clarifie la règle de priorité `max_output_tokens`, le traitement de `verbosity_profile` et le fait qu'**OpenAI reste le moteur runtime prioritaire**. L'ordre d'implémentation : 66.11 d'abord, puis 66.18 en extension. Pas de churn de modèle DB entre les deux.
 
 ### References
 

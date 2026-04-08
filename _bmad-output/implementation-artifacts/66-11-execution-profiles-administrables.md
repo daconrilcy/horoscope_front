@@ -25,7 +25,7 @@ Cette story introduit `ExecutionProfile` comme **entité administrable DB dédi�
 
 **D3 — `resolve_model()` existant devient un fallback de compatibilité.** Quand aucun `ExecutionProfile` n'est trouvé pour la combinaison courante, `resolve_model()` reste actif. Cela garantit la non-régression.
 
-**D4 — Les profils internes stables sont introduits dès cette story.** `ExecutionProfile` expose d'emblée les abstractions stables (`reasoning_profile`, `verbosity_profile`, `output_mode`, `tool_mode`) au lieu des paramètres OpenAI bruts (`reasoning_effort`, `verbosity`). Un `ProviderParameterMapper` minimal (OpenAI uniquement) est inclus dans le scope. La story 66.18 étend ce mapper pour le support multi-provider et clarifie le traitement de `verbosity_profile` (instruction textuelle vs contrainte tokens). Il n'y a pas de churn de modèle entre 66.11 et 66.18 : 66.11 construit la structure cible dès le départ.
+**D4 — Les profils internes stables sont introduits dès cette story.** `ExecutionProfile` expose d'emblée les abstractions stables (`reasoning_profile`, `verbosity_profile`, `output_mode`, `tool_mode`) au lieu des paramètres OpenAI bruts (`reasoning_effort`, `verbosity`). Un `ProviderParameterMapper` minimal (OpenAI uniquement) est inclus dans le scope. La story 66.18 clarifie le traitement de `verbosity_profile` et la préparation éventuelle d'autres providers, **sans remettre en cause le fait qu'OpenAI reste le moteur runtime prioritaire**. Il n'y a pas de churn de modèle entre 66.11 et 66.18 : 66.11 construit la structure cible dès le départ.
 
 **D5 — `fallback_profile_id`** permet de chaîner un profil de fallback (ex: si le modèle principal est indisponible, utiliser un profil backup).
 
@@ -140,7 +140,7 @@ Cette story introduit `ExecutionProfile` comme **entité administrable DB dédi�
 
 - **Non-régression critique :** `resolve_model()` dans `catalog.py` ne doit pas être supprimé. Il devient le fallback de dernier recours. Les use_cases existants qui n'ont pas de `ExecutionProfile` en DB continuent de fonctionner via `resolve_model()`.
 
-- **Story 66.18 complémentaire :** Cette story introduit les profils internes et un mapper OpenAI minimal. La story 66.18 étend le mapper pour le support multi-provider (Anthropic, etc.) et clarifie la gestion de `verbosity_profile` (instruction textuelle injectée dans le prompt vs contrainte `max_output_tokens` provider — les deux aspects sont traités dans 66.18 pour éviter un double effet non contrôlé). Il n'y a **pas de réécriture de modèle** entre 66.11 et 66.18 — la structure DB et les profils internes sont stables dès 66.11.
+- **Story 66.18 complémentaire :** Cette story introduit les profils internes et un mapper OpenAI minimal. La story 66.18 clarifie la gestion de `verbosity_profile` (instruction textuelle injectée dans le prompt vs contrainte `max_output_tokens` provider) et prépare l'extensibilité future du mapper, **tout en conservant OpenAI comme moteur runtime prioritaire**. Il n'y a **pas de réécriture de modèle** entre 66.11 et 66.18 — la structure DB et les profils internes sont stables dès 66.11.
 
 ### References
 

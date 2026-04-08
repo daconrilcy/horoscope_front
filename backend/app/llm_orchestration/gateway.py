@@ -8,19 +8,14 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.ai_engine.exceptions import (
-    UpstreamError,
-    UpstreamRateLimitError,
-    UpstreamTimeoutError,
-)
 from app.core.config import settings
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
+from app.llm_orchestration.admin_models import ResolvedAssembly
 from app.llm_orchestration.models import (
     ExecutionContext,
     ExecutionFlags,
     ExecutionMessage,
-    ExecutionOverrides,
     ExecutionUserInput,
     GatewayConfigError,
     GatewayError,
@@ -28,7 +23,6 @@ from app.llm_orchestration.models import (
     InputValidationError,
     LLMExecutionRequest,
     OutputValidationError,
-    PromptRenderError,
     RecoveryResult,
     ResolvedExecutionPlan,
     ResponseFormatConfig,
@@ -45,7 +39,7 @@ from app.llm_orchestration.services.assembly_resolver import (
 )
 from app.llm_orchestration.services.input_validator import validate_input
 from app.llm_orchestration.services.observability_service import log_call
-from app.llm_orchestration.services.output_validator import validate_output, ValidationResult
+from app.llm_orchestration.services.output_validator import ValidationResult, validate_output
 from app.llm_orchestration.services.persona_composer import compose_persona_block
 from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
 from app.llm_orchestration.services.prompt_renderer import PromptRenderer
@@ -742,7 +736,9 @@ class LLMGateway:
         profile_source = None
         if db:
             try:
-                from app.llm_orchestration.services.execution_profile_registry import ExecutionProfileRegistry
+                from app.llm_orchestration.services.execution_profile_registry import (
+                    ExecutionProfileRegistry,
+                )
                 
                 # 1. Try from assembly if present
                 if source_base == "assembly" and context_dict.get("_assembly_db_id"):
@@ -777,7 +773,9 @@ class LLMGateway:
         verbosity_instruction = ""
         
         if profile_db:
-            from app.llm_orchestration.services.provider_parameter_mapper import ProviderParameterMapper
+            from app.llm_orchestration.services.provider_parameter_mapper import (
+                ProviderParameterMapper,
+            )
             
             # Profile overrides config/assembly model
             model_id = profile_db.model
@@ -815,6 +813,17 @@ class LLMGateway:
                 model_id = resolve_model(use_case, fallback_model=config.model)
                 profile_source = "fallback_resolve_model"
                 provider = "openai"  # High #2 Fix: Reset to supported provider
+                translated_params = {}
+
+            if provider == "anthropic":
+                logger.warning(
+                    "gateway_provider_not_supported_yet provider=%s model=%s. Falling back to resolve_model/openai.",
+                    provider,
+                    model_id,
+                )
+                model_id = resolve_model(use_case, fallback_model=config.model)
+                profile_source = "fallback_resolve_model"
+                provider = "openai"
                 translated_params = {}
             
             # If we didn't get verbosity_instruction yet, get it now
@@ -884,7 +893,9 @@ class LLMGateway:
             # 1. & 2. context_quality blocks and compensation (handled in order in gateway/renderer)
             cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
             if request.user_input.feature:
-                from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
+                from app.llm_orchestration.services.context_quality_injector import (
+                    ContextQualityInjector,
+                )
                 current_prompt, context_quality_injected = ContextQualityInjector.inject(
                     current_prompt,
                     request.user_input.feature,
@@ -934,6 +945,9 @@ class LLMGateway:
         response_format = None
         if output_schema:
             response_format = ResponseFormatConfig(type="json_schema", schema=output_schema)
+        elif translated_params.get("response_format"):
+            translated_response_format = translated_params["response_format"]
+            response_format = ResponseFormatConfig(type=translated_response_format["type"])
 
         # Build plan with assembly metadata (AC10)
         assembly_id = context_dict.get("_assembly_db_id")
@@ -999,6 +1013,8 @@ class LLMGateway:
         user_data_block = extra.get("user_data_block")
         if not user_data_block:
             if extra.get("chat_turn_stage") == "opening":
+                from app.services.ai_engine_adapter import build_opening_chat_user_data_block
+
                 user_data_block = build_opening_chat_user_data_block(
                     last_user_msg=request.user_input.message or "",
                     context=context_dict,
@@ -1048,6 +1064,8 @@ class LLMGateway:
                     "strict": True,
                 },
             }
+        elif plan.response_format and plan.response_format.type == "json_object":
+            response_format = {"type": "json_object"}
 
         # High #1 Fix: Provider routing
         if plan.provider == "openai":
@@ -1063,11 +1081,6 @@ class LLMGateway:
                 verbosity=plan.verbosity,
                 response_format=response_format,
             )
-        elif plan.provider == "anthropic":
-            # In a real multi-provider setup, we would call an AnthropicClient here.
-            # For now, we reuse the mapper logic and let the client handle or fail.
-            # (Assuming ResponsesClient is extended or a factory is used in future stories)
-            raise NotImplementedError(f"Anthropic provider support is mapped but client integration is pending (Story 66.18 AC4)")
         
         raise ValueError(f"Unsupported provider: {plan.provider}")
 

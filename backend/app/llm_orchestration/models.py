@@ -172,7 +172,7 @@ class LLMExecutionRequest(BaseModel):
 class ResponseFormatConfig(BaseModel):
     """Configuration for the LLM response format."""
 
-    type: Literal["json_schema", "text"] = "text"
+    type: Literal["json_schema", "json_object", "text"] = "text"
     json_schema: Optional[Dict[str, Any]] = Field(default=None, alias="schema")
 
     model_config = ConfigDict(populate_by_name=True)
