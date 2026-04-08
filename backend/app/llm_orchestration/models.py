@@ -254,6 +254,7 @@ class GatewayMeta(BaseModel):
     feature: Optional[str] = None
     subfeature: Optional[str] = None
     plan: Optional[str] = None
+    template_source: Optional[str] = None
 
     persona_id: Optional[str] = None
     model: str

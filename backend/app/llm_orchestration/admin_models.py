@@ -10,6 +10,125 @@ from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.models import is_reasoning_model
 
 
+class LlmOutputSchema(BaseModel):
+    """Serializable admin view of an output schema."""
+
+    id: uuid.UUID
+    name: str
+    json_schema: Dict[str, Any]
+    version: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LlmPersona(BaseModel):
+    """Serializable admin view of an LLM persona."""
+
+    id: uuid.UUID
+    name: str
+    description: Optional[str] = None
+    tone: str
+    verbosity: str
+    style_markers: List[str] = Field(default_factory=list)
+    boundaries: List[str] = Field(default_factory=list)
+    allowed_topics: List[str] = Field(default_factory=list)
+    disallowed_topics: List[str] = Field(default_factory=list)
+    formatting: Dict[str, Any] = Field(default_factory=dict)
+    enabled: bool = True
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LlmPersonaCreate(BaseModel):
+    """Payload for persona creation."""
+
+    name: str
+    description: Optional[str] = None
+    tone: str = "direct"
+    verbosity: str = "medium"
+    style_markers: List[str] = Field(default_factory=list)
+    boundaries: List[str] = Field(default_factory=list)
+    allowed_topics: List[str] = Field(default_factory=list)
+    disallowed_topics: List[str] = Field(default_factory=list)
+    formatting: Dict[str, Any] = Field(
+        default_factory=lambda: {"sections": True, "bullets": False, "emojis": False}
+    )
+    enabled: bool = True
+
+
+class LlmPersonaUpdate(BaseModel):
+    """Patch payload for persona updates."""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+    tone: Optional[str] = None
+    verbosity: Optional[str] = None
+    style_markers: Optional[List[str]] = None
+    boundaries: Optional[List[str]] = None
+    allowed_topics: Optional[List[str]] = None
+    disallowed_topics: Optional[List[str]] = None
+    formatting: Optional[Dict[str, Any]] = None
+    enabled: Optional[bool] = None
+
+
+class LlmPromptVersion(BaseModel):
+    """Serializable admin view of a prompt version."""
+
+    id: uuid.UUID
+    use_case_key: str
+    status: PromptStatus
+    developer_prompt: str
+    model: str
+    temperature: float
+    max_output_tokens: int
+    fallback_use_case_key: Optional[str] = None
+    reasoning_effort: Optional[str] = None
+    verbosity: Optional[str] = None
+    created_by: str
+    created_at: datetime
+    published_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LlmPromptVersionCreate(BaseModel):
+    """Payload for prompt draft creation."""
+
+    developer_prompt: str
+    model: str
+    temperature: Optional[float] = 0.7
+    max_output_tokens: int = 2048
+    fallback_use_case_key: Optional[str] = None
+    reasoning_effort: Optional[str] = None
+    verbosity: Optional[str] = None
+
+
+class LlmUseCaseConfig(BaseModel):
+    """Serializable admin view of a use case configuration."""
+
+    key: str
+    display_name: str
+    description: str
+    input_schema: Optional[Dict[str, Any]] = None
+    output_schema: Optional[Dict[str, Any]] = None
+    output_schema_id: Optional[str] = None
+    persona_strategy: str = "optional"
+    interaction_mode: str = "structured"
+    user_question_policy: str = "none"
+    safety_profile: str = "astrology"
+    required_prompt_placeholders: List[str] = Field(default_factory=list)
+    fallback_use_case_key: Optional[str] = None
+    allowed_persona_ids: List[str] = Field(default_factory=list)
+    eval_fixtures_path: Optional[str] = None
+    eval_failure_threshold: Optional[float] = None
+    active_prompt_version_id: Optional[uuid.UUID] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class PromptAssemblyTarget(BaseModel):
     """Target identifying a unique assembly configuration."""
 

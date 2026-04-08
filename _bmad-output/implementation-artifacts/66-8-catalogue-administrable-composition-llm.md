@@ -450,14 +450,16 @@ backend/app/
 
 - `backend/app/infra/db/models/llm_assembly.py` — création : `PromptAssemblyConfigModel`
 - `backend/app/infra/db/models/__init__.py` — extension : ajout de l'import
-- `backend/alembic/versions/xxxx_add_llm_assembly_configs.py` — création : migration
+- `backend/migrations/versions/1a16484f6ae0_add_llm_assembly_configs.py` — création : migration initiale
+- `backend/migrations/versions/432a48efb602_add_assembly_interaction_fields.py` — extension : ajout de `interaction_mode`, `user_question_policy`, `fallback_use_case`
 - `backend/app/llm_orchestration/admin_models.py` — extension : `PromptAssemblyTarget`, `PromptAssemblyConfig`, `ResolvedAssembly`, `PromptAssemblyPreview`, `ExecutionConfigAdmin`, `AssemblyBlock`, `AssemblyBlockPreview`, `PlaceholderInfo`, `PlanRule`
 - `backend/app/llm_orchestration/models.py` — extension : `ResolvedExecutionPlan` (+4 champs), `ExecutionUserInput` (+4 champs), `to_log_dict()` mis à jour
 - `backend/app/llm_orchestration/gateway.py` — extension : `_resolve_plan()` branché sur `assembly_resolver`
 - `backend/app/llm_orchestration/services/assembly_resolver.py` — création : `resolve_assembly()`, `validate_placeholders()`, `build_assembly_preview()`, `FEATURE_USE_CASE_MAP` (bootstrap), `PLACEHOLDER_ALLOWLIST`, `PLAN_RULES_REGISTRY`
 - `backend/app/llm_orchestration/services/assembly_registry.py` — création : `AssemblyConfigRegistry` (get_active_config, publish_config, rollback_config, invalidate_cache)
 - `backend/app/llm_orchestration/services/prompt_renderer.py` — extension : `PromptRenderer.extract_placeholders()`
-- `backend/app/llm_orchestration/tests/test_assembly_resolver.py` — création : 12 tests (résolution, fallback, validation, preview, persistance, runtime)
+- `backend/app/llm_orchestration/tests/test_assembly_resolution.py` — couverture résolution, fallback, rollback hot-cache, validation multi-templates, mode chat assembly
+- `backend/app/llm_orchestration/services/prompt_registry_v2.py` — correction cache TTL : sérialisation de `reasoning_effort` et `verbosity`
 
 ## Contexte architectural
 
@@ -472,6 +474,22 @@ backend/app/
 
 ### Agent Model Used
 
+- Codex GPT-5
+
 ### Debug Log References
 
+- `gateway_step_failed:build_result use_case=* error="GatewayMeta" object has no field "template_source"` — corrigé par ajout de `template_source` dans `GatewayMeta`
+- `gateway_adjust_reasoning model=gpt-5 effort=low` suivi d'un second passage avec `effort=None` — corrigé par enrichissement du cache TTL de `PromptRegistryV2` pour conserver `reasoning_effort` et `verbosity`
+- revue post-implémentation : détection puis correction d'une migration incomplète sur `fallback_use_case`
+
 ### Completion Notes List
+
+- implémentation finalisée avec persistance DB, preview locale, branchement runtime du gateway et traçabilité assembly dans `ResolvedExecutionPlan` / `GatewayMeta`
+- correctif post-review : conservation de `interaction_mode`, `user_question_policy` et `fallback_use_case` dans le runtime assembly
+- correctif post-review : rollback rendu fiable même avec cache chaud via `UPDATE` direct sur la config publiée courante
+- correctif post-review : validation des placeholders étendue au `subfeature_template` au save et au publish
+- correctif post-review : migration complémentaire ajoutée pour aligner le schéma SQL réel avec le modèle ORM (`interaction_mode`, `user_question_policy`, `fallback_use_case`)
+- correctif de compatibilité admin : réintroduction des schémas Pydantic attendus par `admin_llm.py` dans `admin_models.py`
+- correctif de compatibilité runtime : ajout de `template_source` dans `GatewayMeta`
+- correctif de cache runtime : sérialisation de `reasoning_effort` et `verbosity` dans `PromptRegistryV2` pour éviter la perte de paramètres GPT-5 sur lecture TTL
+- validation finale confirmée en local : `pytest -q` -> `2757 passed, 3 skipped`

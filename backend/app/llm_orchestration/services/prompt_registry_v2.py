@@ -62,6 +62,8 @@ class PromptRegistryV2:
                 "max_output_tokens": result.max_output_tokens,
                 "developer_prompt": result.developer_prompt,
                 "fallback_use_case_key": result.fallback_use_case_key,
+                "reasoning_effort": result.reasoning_effort,
+                "verbosity": result.verbosity,
                 "status": result.status,
                 "created_by": result.created_by,
                 "created_at": result.created_at,
