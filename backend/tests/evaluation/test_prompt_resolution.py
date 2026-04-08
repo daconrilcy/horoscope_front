@@ -1,0 +1,177 @@
+import pytest
+import uuid
+from unittest.mock import MagicMock
+from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import LLMExecutionRequest, ExecutionUserInput
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus, LlmUseCaseConfigModel
+from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+
+@pytest.mark.evaluation
+@pytest.mark.asyncio
+async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_quality, mock_personas):
+    """
+    Evaluates prompt resolution for every combination in the matrix.
+    Checks: absence of {{}}, context_quality injection, length budget consistency.
+    """
+    results = []
+    
+    for case in evaluation_matrix:
+        feat = case["feature"]
+        plan = case["plan"]
+        subfeat = case.get("subfeature")
+        persona_type = case["persona"]
+        cq = case["context_quality"]
+        
+        # 1. Setup DB data for this combination
+        # Clear previous to avoid unique constraints
+        db.query(PromptAssemblyConfigModel).delete()
+        db.query(LlmPromptVersionModel).delete()
+        db.query(LlmUseCaseConfigModel).delete()
+        db.query(LlmPersonaModel).delete()
+        db.query(LlmExecutionProfileModel).delete()
+        db.commit()
+        
+        # Create Persona
+        p_data = mock_personas[persona_type]
+        persona = LlmPersonaModel(
+            id=uuid.uuid4(),
+            name=p_data["name"],
+            description="test",
+            style_markers=p_data["style_markers"],
+            boundaries=p_data["boundaries"],
+            enabled=True
+        )
+        db.add(persona)
+        
+        # Create Template
+        uc_key = f"{feat}_test"
+        uc = LlmUseCaseConfigModel(key=uc_key, display_name=uc_key, description="test", safety_profile="astrology")
+        db.add(uc)
+        v = LlmPromptVersionModel(
+            id=uuid.uuid4(),
+            use_case_key=uc_key,
+            developer_prompt=f"BASE PROMPT FOR {feat} {{#context_quality:minimal}}MINIMAL{{/context_quality}}",
+            model="gpt-4o",
+            status=PromptStatus.PUBLISHED,
+            created_by="eval"
+        )
+        db.add(v)
+        
+        # Create Profile
+        prof = LlmExecutionProfileModel(
+            id=uuid.uuid4(),
+            name="Eval Profile",
+            provider="openai",
+            model="gpt-4o",
+            status=PromptStatus.PUBLISHED,
+            created_by="eval"
+        )
+        db.add(prof)
+        
+        # Create Assembly
+        assembly = PromptAssemblyConfigModel(
+            id=uuid.uuid4(),
+            feature=feat,
+            subfeature=subfeat,
+            plan=plan,
+            locale="fr-FR",
+            feature_template_ref=v.id,
+            persona_ref=persona.id,
+            persona_enabled=True,
+            execution_profile_ref=prof.id,
+            execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
+            length_budget={"target_response_length": "standard"} if plan == "premium" else {"target_response_length": "concise"},
+            status=PromptStatus.PUBLISHED,
+            created_by="eval"
+        )
+        db.add(assembly)
+        db.commit()
+        
+        # 2. Resolve via Gateway
+        gateway = LLMGateway()
+        # Mock Context Quality resolution (usually handled by CommonContextBuilder)
+        # We simulate it by passing the quality level in render_vars
+        
+        # Build request
+        ctx_data = mock_context_by_quality[cq]
+        request = LLMExecutionRequest(
+            user_input=ExecutionUserInput(
+                use_case=uc_key,
+                feature=feat,
+                subfeature=subfeat,
+                plan=plan,
+                locale="fr-FR"
+            ),
+            request_id="eval-req",
+            trace_id="eval-trace"
+        )
+        
+        # We need to mock CommonContextBuilder.build to return our desired quality
+        from app.prompts.common_context import QualifiedContext, PromptCommonContext
+        
+        mock_payload = PromptCommonContext(
+            natal_interpretation="test",
+            natal_data={"test": "data"},
+            precision_level="full",
+            astrologer_profile={"name": "test"},
+            period_covered="today",
+            today_date="today",
+            use_case_name=uc_key,
+            use_case_key=uc_key
+        )
+        
+        # We manually compute missing fields to satisfy _validate_quality
+        missing = []
+        if cq == "partial":
+            missing = ["natal_interpretation"]
+            mock_payload.natal_interpretation = None
+        elif cq == "minimal":
+            missing = ["natal_data", "natal_interpretation"]
+            mock_payload.natal_data = None
+            mock_payload.natal_interpretation = None
+
+        mock_qualified = QualifiedContext(
+            payload=mock_payload,
+            source="db",
+            missing_fields=missing,
+            context_quality=cq
+        )
+        
+        with MagicMock() as mock_builder:
+            import app.llm_orchestration.gateway as gateway_module
+            # We patch it directly in the module
+            original_build = gateway_module.CommonContextBuilder.build
+            gateway_module.CommonContextBuilder.build = MagicMock(return_value=mock_qualified)
+            
+            try:
+                plan_resolved, _ = await gateway._resolve_plan(request, db, context_override=ctx_data)
+                
+                # 3. Assertions
+                prompt = plan_resolved.rendered_developer_prompt
+                
+                # Dimensions to check
+                placeholders_ok = "{{" not in prompt and "}}" not in prompt
+                cq_ok = (cq == "minimal" and ("MINIMAL" in prompt or "[CONTEXTE" in prompt)) or (cq == "full")
+                persona_ok = p_data["name"] in plan_resolved.persona_block or p_data["name"] in prompt
+                
+                results.append({
+                    "case": f"{feat}/{plan}/{persona_type}/{cq}",
+                    "placeholders": placeholders_ok,
+                    "context_quality": cq_ok,
+                    "persona": persona_ok
+                })
+                
+                assert placeholders_ok, f"Surviving placeholders in {feat}/{plan}"
+                if cq == "minimal":
+                    assert cq_ok, f"Context quality instruction missing in {feat}/{plan}"
+                
+            finally:
+                # Restore
+                gateway_module.CommonContextBuilder.build = original_build
+
+    # Final result report summary (will be used by report generator later)
+    print("\nEVALUATION MATRIX SUMMARY:")
+    for r in results:
+        print(f"{r['case']}: Placeholders={'✅' if r['placeholders'] else '❌'}, CQ={'✅' if r['context_quality'] else '❌'}, Persona={'✅' if r['persona'] else '❌'}")

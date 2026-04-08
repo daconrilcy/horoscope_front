@@ -1,0 +1,37 @@
+matrix:
+  - feature: chat
+    plan: premium
+    persona: ample
+    context_quality: full
+  - feature: chat
+    plan: free
+    persona: synthetique
+    context_quality: partial
+  - feature: guidance
+    plan: premium
+    subfeature: daily
+    persona: ample
+    context_quality: full
+  - feature: guidance
+    plan: free
+    subfeature: daily
+    persona: synthetique
+    context_quality: minimal
+  - feature: natal
+    plan: premium
+    subfeature: natal_interpretation
+    persona: ample
+    context_quality: full
+  - feature: natal
+    plan: free
+    subfeature: natal_interpretation
+    persona: synthetique
+    context_quality: minimal
+  - feature: horoscope_daily
+    plan: premium
+    persona: ample
+    context_quality: full
+  - feature: horoscope_daily
+    plan: free
+    persona: synthetique
+    context_quality: partial

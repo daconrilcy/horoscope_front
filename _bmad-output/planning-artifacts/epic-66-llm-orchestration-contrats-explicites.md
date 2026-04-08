@@ -261,6 +261,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.13 — Durcir la gestion des placeholders](#story-6613--durcir-la-gestion-des-placeholders)
 - [Story 66.14 — Utiliser context_quality comme paramètre de stratégie de rédaction](#story-6614--utiliser-context_quality-comme-paramètre-de-stratégie-de-rédaction)
 - [Story 66.15 — Faire converger guidance/natal/chat vers une gouvernance assembly complète](#story-6615--faire-converger-guidancenatalchat-vers-une-gouvernance-assembly-complète)
+- [Story 66.16 — Créer une matrice d'évaluation systématique](#story-6616--créer-une-matrice-dévaluation-systématique)
 - [Story 66.18 — Encapsuler les options OpenAI derrière des profils internes stables](#story-6618--encapsuler-les-options-openai-derrière-des-profils-internes-stables)
 
 ---
@@ -610,6 +611,35 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] La gestion des placeholders est durcie (required/optional/fallback) et tracée (Story 66.13).
 - [ ] La qualité de contexte (`context_quality`) pilote activement la stratégie rédactionnelle (Story 66.14).
 - [ ] Les familles guidance, natal et chat ont convergé vers la gouvernance assembly complète (Story 66.15).
+- [ ] Une matrice d'évaluation systématique (feature x plan x context) est en place (Story 66.16).
+
+---
+
+## Story 66.16 — Créer une matrice d'évaluation systématique
+
+**Statut :** draft
+
+En tant qu'**architecte qualité / responsable plateforme LLM**,
+Je veux **une infrastructure de tests d'évaluation paramétrés couvrant la matrice feature × plan × astrologue × context_quality**,
+Afin de **pouvoir détecter toute régression sur le contrat de sortie, la longueur, les placeholders et l'influence stylistique**.
+
+**Acceptance Criteria :**
+
+**Given** que la matrice d'évaluation est configurée dans `backend/tests/evaluation/evaluation_matrix.yaml`
+**When** les tests d'évaluation sont exécutés (`pytest -m evaluation`)
+**Then** chaque combinaison produit un résultat pass/fail pour les 5 dimensions vérifiées
+
+**Given** un test de résolution de prompt
+**When** exécuté
+**Then** le prompt résolu ne contient aucun `{{...}}`, respecte le budget de longueur et intègre les blocs conditionnels appropriés
+
+**Given** un test de contrat de sortie avec fixture LLM
+**When** la réponse est validée
+**Then** la validation Pydantic passe contre le schéma attendu pour la feature
+
+**Given** qu'un rapport d'évaluation est généré
+**When** consulté
+**Then** il affiche un tableau clair montrant le statut de chaque cellule de la matrice
 
 ---
 

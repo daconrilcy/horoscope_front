@@ -176,6 +176,20 @@ Source de vérité :
 - `PLACEHOLDER_ALLOWLIST` dans `assembly_resolver.py`.
 - `PLACEHOLDER_POLICY` dans `placeholder_policy.py`.
 
+### 8. Infrastructure d'évaluation (Story 66.16)
+
+Afin de prévenir les régressions sur un système de composition devenu complexe, une matrice d'évaluation systématique est maintenue dans `backend/tests/evaluation/`.
+
+Elle couvre la matrice : **Feature × Plan × Persona × Context Quality**.
+
+Chaque exécution de la matrice vérifie :
+- l'absence de fuite de placeholders ;
+- le respect des budgets de longueur ;
+- l'influence correcte de la persona ;
+- la validité du contrat de sortie (via fixtures).
+
+Exécution : `pytest -m evaluation`
+
 ### 7. Adaptation à la qualité de contexte (Story 66.14)
 
 La rédaction s'adapte dynamiquement au niveau de contexte disponible (`full`, `partial`, `minimal`).

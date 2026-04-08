@@ -154,3 +154,12 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/tests/evaluation/conftest.py`
+- `backend/tests/evaluation/evaluation_matrix.yaml`
+- `backend/tests/evaluation/test_prompt_resolution.py`
+- `backend/tests/evaluation/test_differentiation.py`
+- `backend/tests/evaluation/test_output_contract.py`
+- `backend/tests/evaluation/report_generator.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
