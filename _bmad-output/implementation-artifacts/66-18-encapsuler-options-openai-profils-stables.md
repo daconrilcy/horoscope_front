@@ -143,3 +143,10 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/llm_orchestration/services/provider_parameter_mapper.py`
+- `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/models.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
+- `backend/app/llm_orchestration/tests/test_story_66_18_stable_profiles.py`

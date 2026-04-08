@@ -768,11 +768,13 @@ class LLMGateway:
             except Exception as e:
                 logger.warning("gateway_execution_profile_resolution_failed use_case=%s error=%s", use_case, e)
 
-        # 0.8 Final Model & Provider merge (Story 66.11 D4, D6)
+        # 0.8 Final Model & Provider merge (Story 66.11 D4, D6, 66.18)
         provider = "openai"
         timeout_seconds = config.timeout_seconds
         max_output_tokens = config.max_output_tokens
+        max_output_tokens_source = "config"
         translated_params = {}
+        verbosity_instruction = ""
         
         if profile_db:
             from app.llm_orchestration.services.provider_parameter_mapper import ProviderParameterMapper
@@ -781,35 +783,54 @@ class LLMGateway:
             model_id = profile_db.model
             provider = profile_db.provider
             timeout_seconds = profile_db.timeout_seconds
-            if profile_db.max_output_tokens:
+            
+            # Resolve max_output_tokens priority (Story 66.18 D4)
+            # 1. Length Budget (highest)
+            if resolved_assembly and resolved_assembly.length_budget and resolved_assembly.length_budget.global_max_tokens:
+                max_output_tokens = resolved_assembly.length_budget.global_max_tokens
+                max_output_tokens_source = "length_budget"
+            # 2. Execution Profile
+            elif profile_db.max_output_tokens:
                 max_output_tokens = profile_db.max_output_tokens
+                max_output_tokens_source = "execution_profile"
+            # 3. Verbosity default (lowest)
+            else:
+                verbosity_instruction, rec_tokens = ProviderParameterMapper.resolve_verbosity_instruction(profile_db.verbosity_profile)
+                if rec_tokens:
+                    max_output_tokens = rec_tokens
+                    max_output_tokens_source = "verbosity_default"
             
             # Map profiles to provider-specific params
-            if provider == "openai":
-                translated_params = ProviderParameterMapper.map_for_openai(
-                    reasoning_profile=profile_db.reasoning_profile,
-                    verbosity_profile=profile_db.verbosity_profile,
-                    output_mode=profile_db.output_mode,
-                    tool_mode=profile_db.tool_mode
-                )
+            translated_params = ProviderParameterMapper.map(
+                provider=provider,
+                reasoning_profile=profile_db.reasoning_profile,
+                verbosity_profile=profile_db.verbosity_profile,
+                output_mode=profile_db.output_mode,
+                tool_mode=profile_db.tool_mode
+            )
             
+            # If we didn't get verbosity_instruction yet, get it now
+            if not verbosity_instruction:
+                verbosity_instruction, _ = ProviderParameterMapper.resolve_verbosity_instruction(profile_db.verbosity_profile)
+
             logger.info(
-                "gateway_execution_profile_applied profile_id=%s source=%s model=%s provider=%s",
-                str(profile_db.id), profile_source, model_id, provider
+                "gateway_execution_profile_applied profile_id=%s source=%s model=%s provider=%s max_tokens=%s source=%s",
+                str(profile_db.id), profile_source, model_id, provider, max_output_tokens, max_output_tokens_source
             )
         else:
             # Legacy/Fallback resolution
-            if source_base == "assembly":
-                model_id = resolve_model(use_case, fallback_model=config.model)
-            else:
-                model_id = resolve_model(use_case, fallback_model=config.model)
-            
+            model_id = resolve_model(use_case, fallback_model=config.model)
             profile_source = "fallback_resolve_model"
-
-        # Story 66.12: Length Budget global_max_tokens override (D2)
-        if resolved_assembly and resolved_assembly.length_budget and resolved_assembly.length_budget.global_max_tokens:
-            max_output_tokens = resolved_assembly.length_budget.global_max_tokens
-            logger.info("gateway_length_budget_applied global_max_tokens=%d", max_output_tokens)
+            
+            # Story 66.18 AC6: Compatibility for raw ExecutionConfigAdmin
+            if config.reasoning_effort or config.verbosity:
+                logger.info("gateway_legacy_execution_config_used use_case=%s reasoning=%s verbosity=%s", use_case, config.reasoning_effort, config.verbosity)
+                # We could infer a profile here for telemetry
+            
+            # For legacy, we still apply LengthBudget if present
+            if resolved_assembly and resolved_assembly.length_budget and resolved_assembly.length_budget.global_max_tokens:
+                max_output_tokens = resolved_assembly.length_budget.global_max_tokens
+                max_output_tokens_source = "length_budget"
 
         # Apply translated params to config if applicable
         if translated_params:
@@ -847,9 +868,30 @@ class LLMGateway:
                 "Ne modifie pas le sens profond. Réponds EXCLUSIVEMENT avec le bloc JSON."
             )
         else:
+            # STORY 66.14 & 66.18: CANONICAL TRANSFORMATIONS ORDER
+            
+            # Base prompt from config (already contains blocks if assembly)
+            current_prompt = config.developer_prompt
+            
+            # 1. & 2. context_quality blocks and compensation (handled in order in gateway/renderer)
+            cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
+            if request.user_input.feature:
+                from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
+                current_prompt, context_quality_injected = ContextQualityInjector.inject(
+                    current_prompt,
+                    request.user_input.feature,
+                    cq_level
+                )
+            
+            # 3. verbosity_profile instruction (Story 66.18 AC1)
+            if verbosity_instruction:
+                current_prompt = f"{current_prompt}\n\n[CONSIGNE DE VERBOSITÉ] {verbosity_instruction}"
+
+            # 4. & 5. render placeholders and final validation
             render_vars = {**request.user_input.model_dump(), **request.context.model_dump()}
             # Manual update to include overrides/context_dict
             render_vars.update(context_dict)
+            render_vars["context_quality"] = cq_level # For conditional blocks
             
             render_vars["locale"] = request.user_input.locale
             render_vars["use_case"] = use_case
@@ -864,7 +906,7 @@ class LLMGateway:
                 render_vars["situation"] = request.user_input.situation
             
             rendered_developer_prompt = self.renderer.render(
-                config.developer_prompt,
+                current_prompt,
                 render_vars,
                 required_variables=config.required_prompt_placeholders,
                 feature=request.user_input.feature or "unknown"
@@ -934,6 +976,7 @@ class LLMGateway:
             overrides_applied=overrides_applied,
             temperature=config.temperature,
             max_output_tokens=max_output_tokens,
+            max_output_tokens_source=max_output_tokens_source,
             response_format=response_format,
             reasoning_effort=config.reasoning_effort,
             verbosity=config.verbosity,
@@ -1178,6 +1221,7 @@ class LLMGateway:
         # Map Execution Profile metadata (Story 66.11 AC10)
         result.meta.execution_profile_id = plan.execution_profile_id
         result.meta.execution_profile_source = plan.execution_profile_source
+        result.meta.max_output_tokens_source = plan.max_output_tokens_source
         result.meta.reasoning_profile = plan.reasoning_profile
         result.meta.verbosity_profile = plan.verbosity_profile
         result.meta.output_mode = plan.output_mode

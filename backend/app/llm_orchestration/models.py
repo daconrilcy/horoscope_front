@@ -226,6 +226,7 @@ class ResolvedExecutionPlan(BaseModel):
     # Provider params
     temperature: float
     max_output_tokens: int
+    max_output_tokens_source: Optional[str] = None
     response_format: Optional[ResponseFormatConfig] = None
     reasoning_effort: Optional[str] = None
     verbosity: Optional[str] = None
@@ -290,6 +291,7 @@ class GatewayMeta(BaseModel):
     # Execution Profile metadata (Story 66.11)
     execution_profile_id: Optional[str] = None
     execution_profile_source: Optional[str] = None
+    max_output_tokens_source: Optional[str] = None
     reasoning_profile: Optional[str] = None
     verbosity_profile: Optional[str] = None
     output_mode: Optional[str] = None

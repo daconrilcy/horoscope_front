@@ -260,6 +260,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.12 — Pilotage des longueurs par section (budgets de longueur)](#story-6612--pilotage-des-longueurs-par-section-budgets-de-longueur)
 - [Story 66.13 — Durcir la gestion des placeholders](#story-6613--durcir-la-gestion-des-placeholders)
 - [Story 66.14 — Utiliser context_quality comme paramètre de stratégie de rédaction](#story-6614--utiliser-context_quality-comme-paramètre-de-stratégie-de-rédaction)
+- [Story 66.18 — Encapsuler les options OpenAI derrière des profils internes stables](#story-6618--encapsuler-les-options-openai-derrière-des-profils-internes-stables)
 
 ---
 
@@ -607,6 +608,35 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] Les budgets de longueur sont pilotables par feature/plan et injectés automatiquement (Story 66.12).
 - [ ] La gestion des placeholders est durcie (required/optional/fallback) et tracée (Story 66.13).
 - [ ] La qualité de contexte (`context_quality`) pilote activement la stratégie rédactionnelle (Story 66.14).
+- [ ] Les options spécifiques aux providers sont encapsulées derrière des profils internes stables (Story 66.18).
+
+---
+
+## Story 66.18 — Encapsuler les options OpenAI derrière des profils internes stables
+
+**Statut :** draft
+
+En tant qu'**architecte plateforme**,
+Je veux **exposer des profils internes stables (reasoning_profile, verbosity_profile) et les mapper automatiquement aux paramètres techniques des providers (OpenAI, Anthropic)**,
+Afin de **protéger les instructions métier de l'évolution des APIs techniques**.
+
+**Acceptance Criteria :**
+
+**Given** un `verbosity_profile` configuré (ex: `concise`, `detailed`)
+**When** le prompt est rendu
+**Then** une instruction textuelle explicite est injectée dans le prompt developer, et une valeur `max_output_tokens` par défaut est appliquée si aucune surcharge n'est présente
+
+**Given** un `reasoning_profile` configuré (ex: `deep`)
+**When** le moteur est OpenAI
+**Then** il est traduit en `reasoning_effort: high` et la température est désactivée
+
+**Given** un `reasoning_profile: deep`
+**When** le moteur est Anthropic
+**Then** il active le mode `thinking` avec un budget de tokens approprié
+
+**Given** la résolution de `max_output_tokens`
+**When** plusieurs sources sont disponibles
+**Then** la priorité suivante est appliquée : `LengthBudget` > `ExecutionProfile` > `Verbosity Default`
 
 ---
 

@@ -115,14 +115,21 @@ Responsabilité :
 
 #### Abstractions stables
 
-Afin de découpler les instructions métier des spécificités techniques des providers, la plateforme utilise des profils stables :
+Afin de découpler les instructions métier des spécificités techniques des providers, la plateforme utilise des profils stables. Le `ProviderParameterMapper` traduit ces profils en paramètres spécifiques (OpenAI, Anthropic).
 
-| Profil | Valeurs possibles |
-|---|---|
-| `reasoning_profile` | `off`, `light`, `medium`, `deep` |
-| `verbosity_profile` | `concise`, `balanced`, `detailed` |
-| `output_mode` | `free_text`, `structured_json` |
-| `tool_mode` | `none`, `optional`, `required` |
+| Profil | Valeurs possibles | Impact |
+|---|---|---|
+| `reasoning_profile` | `off`, `light`, `medium`, `deep` | `reasoning_effort` (OpenAI), `thinking` (Anthropic) |
+| `verbosity_profile` | `concise`, `balanced`, `detailed` | Instruction textuelle + `max_tokens` par défaut |
+| `output_mode` | `free_text`, `structured_json` | `response_format` |
+| `tool_mode` | `none`, `optional`, `required` | `tool_choice` |
+
+#### Règle de priorité max_output_tokens
+
+Le nombre maximum de tokens en sortie suit une priorité stricte :
+1. `LengthBudget.global_max_tokens` (Surchage admin par feature/plan)
+2. `ExecutionProfile.max_output_tokens` (Réglage technique du profil)
+3. `verbosity_profile` (Valeur par défaut recommandée par le profil de verbosité)
 
 #### Résolution par cascade (Waterfall)
 
