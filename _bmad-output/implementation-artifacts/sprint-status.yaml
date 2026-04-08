@@ -596,7 +596,7 @@ development_status:
   66-8-catalogue-administrable-composition-llm: done
   66-9-unifier-doctrine-abonnement-llm: done
   66-10-bornes-stylistiques-persona-astrologue: done
-  66-11-execution-profiles-administrables: ready-for-dev
+  66-11-execution-profiles-administrables: done
   66-12-budgets-longueur-par-section: ready-for-dev
   66-13-durcir-gestion-placeholders: ready-for-dev
   66-14-context-quality-strategie-redaction: ready-for-dev

@@ -43,6 +43,9 @@ class PromptAssemblyConfigModel(Base):
     persona_ref: Mapped[Optional[uuid.UUID]] = mapped_column(
         ForeignKey("llm_personas.id", ondelete="SET NULL"), nullable=True
     )
+    execution_profile_ref: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("llm_execution_profiles.id", ondelete="SET NULL"), nullable=True
+    )
     plan_rules_ref: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
     execution_config: Mapped[dict] = mapped_column(JSON)

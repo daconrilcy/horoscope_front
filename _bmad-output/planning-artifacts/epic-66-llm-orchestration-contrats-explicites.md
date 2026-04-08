@@ -256,6 +256,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.7 — Migrer le parcours natal vers l'entrée applicative canonique](#story-667--migrer-le-parcours-natal-vers-lentrée-applicative-canonique)
 - [Story 66.9 — Unifier la doctrine d'abonnement dans la couche LLM](#story-669--unifier-la-doctrine-dabonnement-dans-la-couche-llm)
 - [Story 66.10 — Définir les bornes stylistiques de la persona astrologue](#story-6610--définir-les-bornes-stylistiques-de-la-persona-astrologue)
+- [Story 66.11 — Introduire les ExecutionProfiles administrables](#story-6611--introduire-les-executionprofiles-administrables)
 
 ---
 
@@ -599,6 +600,35 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] La documentation d'architecture (`docs/architecture/llm-processus-architecture.md`) est mise à jour.
 - [ ] La doctrine d'abonnement (Story 66.9) est appliquée aux use cases éligibles.
 - [ ] Les bornes stylistiques de la persona (Story 66.10) sont encodées et validées.
+- [ ] Les profils d'exécution (`ExecutionProfile`) sont administrables et décorrélés du prompt (Story 66.11).
+
+---
+
+## Story 66.11 — Introduire les ExecutionProfiles administrables
+
+**Statut :** draft
+
+En tant qu'**administrateur plateforme**,
+Je veux **piloter les paramètres d'exécution moteur (provider, modèle, profils reasoning/verbosité) de façon centralisée**,
+Afin de **découpler les choix techniques de moteur du texte des prompts et de permettre des changements rapides sans modification de code**.
+
+**Acceptance Criteria :**
+
+**Given** la table `llm_execution_profiles`
+**When** une exécution LLM est lancée pour une feature/plan donnée
+**Then** le pipeline résout automatiquement le profil le plus spécifique via une cascade (waterfall) : `feature+subfeature+plan` > `feature+subfeature` > `feature`
+
+**Given** un profil d'exécution configuré
+**When** résolu par le gateway
+**Then** les abstractions internes (`reasoning_profile`, `verbosity_profile`, etc.) sont traduites en paramètres spécifiques au provider (ex: `reasoning_effort` pour OpenAI) via un `ProviderParameterMapper`
+
+**Given** une configuration assembly (`PromptAssemblyConfig`)
+**When** elle contient une référence `execution_profile_ref`
+**Then** ce profil est prioritaire sur la cascade automatique
+
+**Given** les logs d'exécution (`GatewayMeta`)
+**When** un profil d'exécution est appliqué
+**Then** son ID, sa source et les paramètres traduits sont explicitement tracés dans la télémétrie
 
 ---
 

@@ -7,6 +7,12 @@ from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.infra.db.models.llm_prompt import PromptStatus
+from app.llm_orchestration.execution_profiles_types import (
+    OutputMode,
+    ReasoningProfile,
+    ToolMode,
+    VerbosityProfile,
+)
 from app.llm_orchestration.models import is_reasoning_model
 
 
@@ -180,6 +186,7 @@ class PromptAssemblyConfig(BaseModel):
     feature_template_ref: uuid.UUID
     subfeature_template_ref: Optional[uuid.UUID] = None
     persona_ref: Optional[uuid.UUID] = None
+    execution_profile_ref: Optional[uuid.UUID] = None
     plan_rules_ref: Optional[str] = None
 
     execution_config: ExecutionConfigAdmin
@@ -270,3 +277,71 @@ class PromptAssemblyPreview(BaseModel):
     resolved_execution_config: ExecutionConfigAdmin
     
     draft_preview: bool = True
+
+
+class LlmExecutionProfile(BaseModel):
+    """Serializable admin view of an execution profile."""
+
+    id: uuid.UUID
+    name: str
+    provider: str
+    model: str
+    reasoning_profile: ReasoningProfile
+    verbosity_profile: VerbosityProfile
+    output_mode: OutputMode
+    tool_mode: ToolMode
+    max_output_tokens: Optional[int] = None
+    timeout_seconds: int = 30
+    fallback_profile_id: Optional[uuid.UUID] = None
+    feature: Optional[str] = None
+    subfeature: Optional[str] = None
+    plan: Optional[str] = None
+    status: PromptStatus
+    created_at: datetime
+    created_by: str
+    published_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LlmExecutionProfileCreate(BaseModel):
+    """Payload for execution profile creation."""
+
+    name: str
+    provider: str = "openai"
+    model: str
+    reasoning_profile: ReasoningProfile = "off"
+    verbosity_profile: VerbosityProfile = "balanced"
+    output_mode: OutputMode = "free_text"
+    tool_mode: ToolMode = "none"
+    max_output_tokens: Optional[int] = None
+    timeout_seconds: int = 30
+    fallback_profile_id: Optional[uuid.UUID] = None
+    feature: Optional[str] = None
+    subfeature: Optional[str] = None
+    plan: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_reasoning(self) -> "LlmExecutionProfileCreate":
+        if self.reasoning_profile != "off":
+            if not is_reasoning_model(self.model):
+                raise ValueError(
+                    f"reasoning_profile '{self.reasoning_profile}' requires a reasoning-capable model — got: {self.model}"
+                )
+        return self
+
+
+class ResolvedExecutionProfile(BaseModel):
+    """Runtime resolved profile with translated parameters."""
+
+    profile_id: Optional[uuid.UUID] = None
+    provider: str
+    model: str
+    reasoning_profile: ReasoningProfile
+    verbosity_profile: VerbosityProfile
+    output_mode: OutputMode
+    tool_mode: ToolMode
+    max_output_tokens: Optional[int] = None
+    timeout_seconds: int = 30
+    source: Literal["explicit", "waterfall", "assembly_ref", "fallback_resolve_model"]
+    translated_provider_params: Dict[str, Any] = Field(default_factory=dict)

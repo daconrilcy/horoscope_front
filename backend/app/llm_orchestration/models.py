@@ -193,6 +193,17 @@ class ResolvedExecutionPlan(BaseModel):
     model_id: str
     model_source: Literal["os_granular", "os_legacy", "config", "stub", "assembly"]
 
+    # Execution Profile (Story 66.11)
+    execution_profile_id: Optional[str] = None
+    execution_profile_source: Optional[str] = None
+    reasoning_profile: Optional[str] = None
+    verbosity_profile: Optional[str] = None
+    output_mode: Optional[str] = None
+    tool_mode: Optional[str] = None
+    provider: str = "openai"
+    timeout_seconds: int = 30
+    translated_provider_params: Dict[str, Any] = Field(default_factory=dict)
+
     # Prompts & Persona
     prompt_version_id: Optional[str] = None
     rendered_developer_prompt: str
@@ -273,6 +284,16 @@ class GatewayMeta(BaseModel):
     normalizations_applied: List[str] = Field(default_factory=list)
     repair_attempts: int = 0
     fallback_reason: Optional[str] = None
+
+    # Execution Profile metadata (Story 66.11)
+    execution_profile_id: Optional[str] = None
+    execution_profile_source: Optional[str] = None
+    reasoning_profile: Optional[str] = None
+    verbosity_profile: Optional[str] = None
+    output_mode: Optional[str] = None
+    tool_mode: Optional[str] = None
+    provider: Optional[str] = None
+    translated_provider_params: Dict[str, Any] = Field(default_factory=dict)
 
 
 class GatewayResult(BaseModel):

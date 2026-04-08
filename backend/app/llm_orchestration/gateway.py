@@ -735,19 +735,81 @@ class LLMGateway:
                 # config was set by assembly
                 pass
 
-        if source_base == "assembly":
-            # For assembly, we trust the model from config (AC10)
-            # but still allow environment variable overrides via resolve_model
-            # D3: Absolute priority. resolve_model might fall back to global default 
-            # if use_case not in catalog. We must pass fallback_model correctly.
-            model_id = resolve_model(use_case, fallback_model=config.model)
-            if model_id != config.model:
-                config = config.model_copy(update={"model": model_id})
+        # 0.7 Execution Profile resolution (Story 66.11)
+        profile_db = None
+        profile_source = None
+        if db:
+            try:
+                from app.llm_orchestration.services.execution_profile_registry import ExecutionProfileRegistry
+                
+                # 1. Try from assembly if present
+                if source_base == "assembly" and context_dict.get("_assembly_db_id"):
+                    # We need the actual assembly model to get execution_profile_ref
+                    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+                    stmt = select(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == uuid.UUID(context_dict["_assembly_db_id"]))
+                    assembly_model = db.execute(stmt).scalar_one_or_none()
+                    if assembly_model and assembly_model.execution_profile_ref:
+                        profile_db = ExecutionProfileRegistry.get_profile_by_id(db, assembly_model.execution_profile_ref)
+                        if profile_db:
+                            profile_source = "assembly_ref"
+
+                # 2. Waterfall resolution (D2)
+                if not profile_db and request.user_input.feature:
+                    profile_db = ExecutionProfileRegistry.get_active_profile(
+                        db,
+                        feature=request.user_input.feature,
+                        subfeature=request.user_input.subfeature,
+                        plan=request.user_input.plan
+                    )
+                    if profile_db:
+                        profile_source = "waterfall"
+            except Exception as e:
+                logger.warning("gateway_execution_profile_resolution_failed use_case=%s error=%s", use_case, e)
+
+        # 0.8 Final Model & Provider merge (Story 66.11 D4, D6)
+        provider = "openai"
+        timeout_seconds = config.timeout_seconds
+        translated_params = {}
+        
+        if profile_db:
+            from app.llm_orchestration.services.provider_parameter_mapper import ProviderParameterMapper
+            
+            # Profile overrides config/assembly model
+            model_id = profile_db.model
+            provider = profile_db.provider
+            timeout_seconds = profile_db.timeout_seconds
+            
+            # Map profiles to provider-specific params
+            if provider == "openai":
+                translated_params = ProviderParameterMapper.map_for_openai(
+                    reasoning_profile=profile_db.reasoning_profile,
+                    verbosity_profile=profile_db.verbosity_profile,
+                    output_mode=profile_db.output_mode,
+                    tool_mode=profile_db.tool_mode
+                )
+            
+            logger.info(
+                "gateway_execution_profile_applied profile_id=%s source=%s model=%s provider=%s",
+                str(profile_db.id), profile_source, model_id, provider
+            )
         else:
-            resolved_model = resolve_model(use_case, fallback_model=config.model)
-            if resolved_model != config.model:
-                config = config.model_copy(update={"model": resolved_model})
-            model_id = config.model
+            # Legacy/Fallback resolution
+            if source_base == "assembly":
+                model_id = resolve_model(use_case, fallback_model=config.model)
+            else:
+                model_id = resolve_model(use_case, fallback_model=config.model)
+            
+            profile_source = "fallback_resolve_model"
+
+        # Apply translated params to config if applicable
+        if translated_params:
+            if "reasoning_effort" in translated_params:
+                config.reasoning_effort = translated_params["reasoning_effort"]
+            if "response_format" in translated_params:
+                # config doesn't have response_format yet, it's in ResolvedExecutionPlan
+                pass
+
+        # Final Stage 1 resolution
 
         model_source = source_base
         entry = PROMPT_CATALOG.get(use_case)
@@ -826,6 +888,15 @@ class LLMGateway:
             template_source=resolved_assembly.template_source if resolved_assembly else None,
             model_id=model_id,
             model_source=model_source,
+            execution_profile_id=str(profile_db.id) if profile_db else None,
+            execution_profile_source=profile_source,
+            reasoning_profile=profile_db.reasoning_profile if profile_db else None,
+            verbosity_profile=profile_db.verbosity_profile if profile_db else None,
+            output_mode=profile_db.output_mode if profile_db else None,
+            tool_mode=profile_db.tool_mode if profile_db else None,
+            provider=provider,
+            translated_provider_params=translated_params,
+            timeout_seconds=timeout_seconds,
             prompt_version_id=config.prompt_version_id,
             rendered_developer_prompt=rendered_developer_prompt,
             system_core=system_core,
@@ -1081,6 +1152,16 @@ class LLMGateway:
         result.meta.output_schema_id = plan.output_schema_id
         result.meta.schema_version = plan.output_schema_version
         
+        # Map Execution Profile metadata (Story 66.11 AC10)
+        result.meta.execution_profile_id = plan.execution_profile_id
+        result.meta.execution_profile_source = plan.execution_profile_source
+        result.meta.reasoning_profile = plan.reasoning_profile
+        result.meta.verbosity_profile = plan.verbosity_profile
+        result.meta.output_mode = plan.output_mode
+        result.meta.tool_mode = plan.tool_mode
+        result.meta.provider = plan.provider
+        result.meta.translated_provider_params = plan.translated_provider_params
+
         return result
 
     def _validate_input(self, config: UseCaseConfig, user_input: Dict[str, Any]) -> None:

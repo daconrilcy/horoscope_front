@@ -159,3 +159,17 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/llm_orchestration/execution_profiles_types.py`
+- `backend/app/llm_orchestration/services/provider_parameter_mapper.py`
+- `backend/app/infra/db/models/llm_execution_profile.py`
+- `backend/app/infra/db/models/llm_assembly.py`
+- `backend/app/llm_orchestration/admin_models.py`
+- `backend/app/llm_orchestration/services/execution_profile_registry.py`
+- `backend/app/llm_orchestration/models.py`
+- `backend/app/llm_orchestration/gateway.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
+- `backend/app/llm_orchestration/tests/test_story_66_11_execution_profiles.py`
+- `backend/migrations/versions/cc211a38294d_add_llm_execution_profiles.py`
+- `backend/migrations/versions/21011e7e01f2_add_execution_profile_ref_to_assembly.py`

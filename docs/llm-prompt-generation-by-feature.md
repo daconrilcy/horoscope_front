@@ -509,6 +509,32 @@ Règle d'architecture :
 - `assemble_developer_prompt()` ne produit que cette couche métier ;
 - cette couche n'est pas le prompt final complet.
 
+### 4. Profils d'exécution (Story 66.11)
+
+Responsabilité :
+
+- choix technique du moteur (provider, modèle) ;
+- paramètres de raisonnement (reasoning effort) ;
+- paramètres de verbosité et de format (JSON, outils).
+
+#### Abstractions stables
+
+Afin de découpler les instructions métier des spécificités techniques des providers, la plateforme utilise des profils stables :
+
+| Profil | Valeurs possibles |
+|---|---|
+| `reasoning_profile` | `off`, `light`, `medium`, `deep` |
+| `verbosity_profile` | `concise`, `balanced`, `detailed` |
+| `output_mode` | `free_text`, `structured_json` |
+| `tool_mode` | `none`, `optional`, `required` |
+
+#### Résolution par cascade (Waterfall)
+
+Le profil d'exécution est résolu selon la priorité suivante :
+1. Référence explicite dans la configuration assembly (`execution_profile_ref`).
+2. Cascade automatique : `feature + subfeature + plan` -> `feature + subfeature` -> `feature`.
+3. Résolution par défaut via `resolve_model` (legacy).
+
 ### 3. Persona
 
 Responsabilité :
