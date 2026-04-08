@@ -162,3 +162,12 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/llm_orchestration/ARCHITECTURE.md`
+- `backend/app/prompts/validators.py`
+- `backend/app/llm_orchestration/models.py`
+- `backend/app/llm_orchestration/admin_models.py`
+- `backend/app/llm_orchestration/services/prompt_registry_v2.py`
+- `backend/app/llm_orchestration/services/assembly_resolver.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `backend/app/llm_orchestration/tests/test_story_66_17_architecture_guards.py`

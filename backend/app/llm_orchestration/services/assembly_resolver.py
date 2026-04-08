@@ -219,6 +219,16 @@ def resolve_assembly(config: PromptAssemblyConfigModel, context_quality: str = "
         rule = PLAN_RULES_REGISTRY.get(config.plan_rules_ref)
         if rule:
             plan_rules_content = rule.instruction
+            
+            # Story 66.17 AC4: Plan rules guard
+            from app.prompts.validators import validate_plan_rules_content
+            arch_violations = validate_plan_rules_content(plan_rules_content)
+            for v in arch_violations:
+                logger.warning(
+                    "plan_rules_violation: %s detected in plan rules. Excerpt: %s",
+                    v.violation_type, v.excerpt
+                )
+
             if rule.max_output_tokens_override is not None:
                 # AC11: Constraint max_output_tokens downwards
                 current_max = exec_dict.get("max_output_tokens", 2048)

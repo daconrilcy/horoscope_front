@@ -44,7 +44,12 @@ class LengthBudget(BaseModel):
 
 
 class LlmPersona(BaseModel):
-    """Serializable admin view of an LLM persona."""
+    """
+    Serializable admin view of an LLM persona.
+    
+    Source of truth for: stylistic voice and tone.
+    See: ARCHITECTURE.md
+    """
 
     id: uuid.UUID
     name: str
@@ -96,7 +101,12 @@ class LlmPersonaUpdate(BaseModel):
 
 
 class LlmPromptVersion(BaseModel):
-    """Serializable admin view of a prompt version."""
+    """
+    Serializable admin view of a prompt version.
+    
+    Source of truth for: prompt block textual content.
+    See: ARCHITECTURE.md
+    """
 
     id: uuid.UUID
     use_case_key: str
@@ -190,7 +200,12 @@ class ExecutionConfigAdmin(BaseModel):
 
 
 class PromptAssemblyConfig(BaseModel):
-    """Pydantic model for reading/writing assembly configurations."""
+    """
+    Pydantic model for reading/writing assembly configurations.
+    
+    Source of truth for: prompt composition selection and block activation.
+    See: ARCHITECTURE.md
+    """
 
     id: Optional[uuid.UUID] = None
     feature: str

@@ -179,7 +179,12 @@ class ResponseFormatConfig(BaseModel):
 
 
 class ResolvedExecutionPlan(BaseModel):
-    """Artifact representing the final resolved configuration for an LLM call."""
+    """
+    Artifact representing the final resolved configuration for an LLM call.
+    
+    Source of truth for: final runtime truth at execution time — immutable after construction.
+    See: ARCHITECTURE.md
+    """
 
     # Assembly resolution (Story 66.8)
     assembly_id: Optional[str] = None
@@ -235,6 +240,8 @@ class ResolvedExecutionPlan(BaseModel):
     # Quality metadata
     context_quality: str = "unknown"
     context_quality_instruction_injected: bool = False
+
+    model_config = ConfigDict(frozen=True)
 
 
 class RecoveryResult(BaseModel):

@@ -262,6 +262,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.14 — Utiliser context_quality comme paramètre de stratégie de rédaction](#story-6614--utiliser-context_quality-comme-paramètre-de-stratégie-de-rédaction)
 - [Story 66.15 — Faire converger guidance/natal/chat vers une gouvernance assembly complète](#story-6615--faire-converger-guidancenatalchat-vers-une-gouvernance-assembly-complète)
 - [Story 66.16 — Créer une matrice d'évaluation systématique](#story-6616--créer-une-matrice-dévaluation-systématique)
+- [Story 66.17 — Formaliser la source de vérité canonique de composition](#story-6617--formaliser-la-source-de-vérité-canonique-de-composition)
 - [Story 66.18 — Encapsuler les options OpenAI derrière des profils internes stables](#story-6618--encapsuler-les-options-openai-derrière-des-profils-internes-stables)
 
 ---
@@ -612,6 +613,35 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] La qualité de contexte (`context_quality`) pilote activement la stratégie rédactionnelle (Story 66.14).
 - [ ] Les familles guidance, natal et chat ont convergé vers la gouvernance assembly complète (Story 66.15).
 - [ ] Une matrice d'évaluation systématique (feature x plan x context) est en place (Story 66.16).
+- [ ] La source de vérité canonique de composition est formalisée et protégée (Story 66.17).
+
+---
+
+## Story 66.17 — Formaliser la source de vérité canonique de composition
+
+**Statut :** draft
+
+En tant qu'**architecte plateforme**,
+Je veux **documenter et encoder dans le code les responsabilités canoniques de chaque entité de composition**,
+Afin de **pérenniser la séparation des préoccupations et d'empêcher l'érosion architecturelle**.
+
+**Acceptance Criteria :**
+
+**Given** le pipeline de composition
+**When** un bloc est manipulé
+**Then** il respecte sa responsabilité exclusive (ex: persona = style uniquement, template = métier uniquement) documentée dans `backend/app/llm_orchestration/ARCHITECTURE.md`
+
+**Given** un template de prompt (`LlmPromptVersion`)
+**When** publié
+**Then** un lint détecte et alerte sur la présence de préoccupations d'exécution (ex: nom de modèle, paramètres techniques)
+
+**Given** un plan d'exécution résolu (`ResolvedExecutionPlan`)
+**When** créé par le gateway
+**Then** il est immuable (frozen) pour garantir qu'aucune couche aval ne modifie la vérité de l'exécution
+
+**Given** une règle de plan (`PlanRule`)
+**When** résolue
+**Then** un lint alerte si elle tente de modifier la sélection de la feature (responsabilité de l'assembly)
 
 ---
 
