@@ -53,11 +53,12 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["app/tests", "app/ai_engine/tests"]
+testpaths = ["app/tests", "app/ai_engine/tests", "tests/evaluation"]
 asyncio_mode = "auto"
 markers = [
   "golden: SwissEph precision tests with frozen reference values (requires pyswisseph)",
   "regression: regression tests (deselect with -m 'not regression')",
+  "evaluation: marks tests as part of the evaluation matrix (Story 66.16)",
 ]
 
 [tool.ruff]

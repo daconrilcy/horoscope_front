@@ -800,14 +800,21 @@ class LLMGateway:
                     max_output_tokens = rec_tokens
                     max_output_tokens_source = "verbosity_default"
             
-            # Map profiles to provider-specific params
-            translated_params = ProviderParameterMapper.map(
-                provider=provider,
-                reasoning_profile=profile_db.reasoning_profile,
-                verbosity_profile=profile_db.verbosity_profile,
-                output_mode=profile_db.output_mode,
-                tool_mode=profile_db.tool_mode
-            )
+            # Map profiles to provider-specific params (Story 66.18)
+            try:
+                translated_params = ProviderParameterMapper.map(
+                    provider=provider,
+                    reasoning_profile=profile_db.reasoning_profile,
+                    verbosity_profile=profile_db.verbosity_profile,
+                    output_mode=profile_db.output_mode,
+                    tool_mode=profile_db.tool_mode
+                )
+            except NotImplementedError as e:
+                # High #1: Fallback if provider/params mapping not implemented
+                logger.warning("gateway_provider_mapping_not_implemented provider=%s error=%s. Falling back to resolve_model.", provider, e)
+                model_id = resolve_model(use_case, fallback_model=config.model)
+                profile_source = "fallback_resolve_model"
+                translated_params = {}
             
             # If we didn't get verbosity_instruction yet, get it now
             if not verbosity_instruction:
@@ -931,17 +938,6 @@ class LLMGateway:
         assembly_id = context_dict.get("_assembly_db_id")
         resolved_assembly: Optional[ResolvedAssembly] = context_dict.get("_assembly_resolved")
 
-        # Story 66.14: Context Quality instruction injection (D3, AC3, AC4)
-        context_quality_injected = False
-        cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
-        if request.user_input.feature:
-            from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
-            rendered_developer_prompt, context_quality_injected = ContextQualityInjector.inject(
-                rendered_developer_prompt,
-                request.user_input.feature,
-                cq_level
-            )
-
         plan = ResolvedExecutionPlan(
             assembly_id=assembly_id,
             feature=request.user_input.feature,
@@ -1037,6 +1033,21 @@ class LLMGateway:
         self, messages: ComposedMessages, plan: ResolvedExecutionPlan, request: LLMExecutionRequest
     ) -> GatewayResult:
         """Stage 3: Executes the actual call to the LLM provider."""
+        # Story 66.18: Resolve final response_format (High 2 fix)
+        # 1. Start with profile-translated params (can force JSON even without schema)
+        response_format = plan.translated_provider_params.get("response_format")
+        
+        # 2. If plan has an explicit output_schema, it takes precedence for Structured Outputs
+        if plan.response_format and plan.response_format.type == "json_schema":
+            response_format = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": request.user_input.use_case,
+                    "schema": plan.response_format.json_schema,
+                    "strict": True,
+                },
+            }
+
         return await self.client.execute(
             messages=messages,
             model=plan.model_id,
@@ -1047,16 +1058,7 @@ class LLMGateway:
             use_case=request.user_input.use_case,
             reasoning_effort=plan.reasoning_effort,
             verbosity=plan.verbosity,
-            response_format={
-                "type": plan.response_format.type,
-                "json_schema": {
-                    "name": request.user_input.use_case,
-                    "schema": plan.response_format.json_schema,
-                    "strict": True,
-                },
-            }
-            if plan.response_format and plan.response_format.type == "json_schema"
-            else None,
+            response_format=response_format,
         )
 
     def _validate_and_normalize(

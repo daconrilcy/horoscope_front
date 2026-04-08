@@ -89,13 +89,19 @@ def validate_use_case_naming(use_case: str, output_schema: Optional[dict[str, An
     """
     Detects use_case suffix '_free'/'_full' and issues a warning if output schema is identical
     or not provided (Story 66.9 AC4).
+    (Medium 2 fix: only warn if schema is missing or potentially identical to sibling)
     """
     warnings = []
     if use_case.endswith(("_free", "_full")):
-        # AC4: Avertissement explicite
+        # If output_schema is provided and substantial, we consider it justified
+        if output_schema and len(output_schema.get("properties", {})) > 0:
+            # AC4: Justified by different contract
+            return []
+
+        # AC4: Avertissement explicite car le contrat semble identique ou absent
         warnings.append(
-            f"use_case suffix '_free'/'_full' detected for '{use_case}' — "
-            "prefer plan_rules in PromptAssemblyConfig unless output schema differs"
+            f"use_case suffix '_free'/'_full' detected for '{use_case}' without distinct output schema — "
+            "prefer plan_rules in PromptAssemblyConfig"
         )
     return warnings
 
