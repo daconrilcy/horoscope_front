@@ -258,6 +258,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.10 — Définir les bornes stylistiques de la persona astrologue](#story-6610--définir-les-bornes-stylistiques-de-la-persona-astrologue)
 - [Story 66.11 — Introduire les ExecutionProfiles administrables](#story-6611--introduire-les-executionprofiles-administrables)
 - [Story 66.12 — Pilotage des longueurs par section (budgets de longueur)](#story-6612--pilotage-des-longueurs-par-section-budgets-de-longueur)
+- [Story 66.13 — Durcir la gestion des placeholders](#story-6613--durcir-la-gestion-des-placeholders)
 
 ---
 
@@ -603,6 +604,35 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] Les bornes stylistiques de la persona (Story 66.10) sont encodées et validées.
 - [ ] Les profils d'exécution (`ExecutionProfile`) sont administrables et décorrélés du prompt (Story 66.11).
 - [ ] Les budgets de longueur sont pilotables par feature/plan et injectés automatiquement (Story 66.12).
+- [ ] La gestion des placeholders est durcie (required/optional/fallback) et tracée (Story 66.13).
+
+---
+
+## Story 66.13 — Durcir la gestion des placeholders
+
+**Statut :** draft
+
+En tant qu'**architecte plateforme**,
+Je veux **classifier les placeholders en required/optional/avec fallback et empêcher qu'un placeholder non résolu survive silencieusement dans le prompt**,
+Afin de **garantir l'intégrité des templates envoyés aux modèles LLM**.
+
+**Acceptance Criteria :**
+
+**Given** une variable classifiée `required` pour une feature sensible (`natal`, `guidance`)
+**When** elle n'est pas résolue au runtime
+**Then** une `PromptRenderError` est levée et l'exécution est bloquée
+
+**Given** une variable classifiée `optional` ou `optional_with_fallback`
+**When** elle n'est pas résolue
+**Then** elle est remplacée par vide ou sa valeur de fallback, et un log structuré est émis avec le niveau approprié (WARNING ou INFO)
+
+**Given** un prompt rendu par le gateway
+**When** l'exécution se termine
+**Then** il ne contient plus aucun résidu de type `{{...}}` (nettoyage systématique)
+
+**Given** la preview admin d'une assembly
+**When** générée avec un contexte partiel
+**Then** l'état de résolution de chaque placeholder est explicitement affiché (`resolved`, `missing`, `fallback_used`, `unknown`)
 
 ---
 

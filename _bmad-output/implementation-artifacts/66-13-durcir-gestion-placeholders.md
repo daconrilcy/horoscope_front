@@ -133,3 +133,12 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/llm_orchestration/placeholder_policy.py`
+- `backend/app/llm_orchestration/services/assembly_resolver.py`
+- `backend/app/llm_orchestration/services/prompt_renderer.py`
+- `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/admin_models.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
+- `backend/app/llm_orchestration/tests/test_story_66_13_placeholders.py`

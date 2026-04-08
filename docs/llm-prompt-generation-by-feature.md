@@ -509,42 +509,6 @@ Règle d'architecture :
 - `assemble_developer_prompt()` ne produit que cette couche métier ;
 - cette couche n'est pas le prompt final complet.
 
-### 5. Budgets de longueur (Story 66.12)
-
-Afin de garantir une expérience utilisateur homogène et de contrôler les coûts, la plateforme permet de définir des budgets de longueur à trois niveaux dans la configuration assembly :
-
-1. **Global Max Tokens** : Limite technique dure envoyée au provider (ex: `max_tokens=1500`).
-2. **Cible de réponse (Editorial)** : Instruction textuelle globale (ex: "Sois concis, maximum 100 mots").
-3. **Cibles par section** : Instructions spécifiques par champ du schéma de sortie (ex: "Section 'summary' : 2-3 phrases").
-
-Ces budgets sont injectés automatiquement à la fin du prompt developer sous la balise `[CONSIGNE DE LONGUEUR]`.
-
-### 4. Profils d'exécution (Story 66.11)
-
-Responsabilité :
-
-- choix technique du moteur (provider, modèle) ;
-- paramètres de raisonnement (reasoning effort) ;
-- paramètres de verbosité et de format (JSON, outils).
-
-#### Abstractions stables
-
-Afin de découpler les instructions métier des spécificités techniques des providers, la plateforme utilise des profils stables :
-
-| Profil | Valeurs possibles |
-|---|---|
-| `reasoning_profile` | `off`, `light`, `medium`, `deep` |
-| `verbosity_profile` | `concise`, `balanced`, `detailed` |
-| `output_mode` | `free_text`, `structured_json` |
-| `tool_mode` | `none`, `optional`, `required` |
-
-#### Résolution par cascade (Waterfall)
-
-Le profil d'exécution est résolu selon la priorité suivante :
-1. Référence explicite dans la configuration assembly (`execution_profile_ref`).
-2. Cascade automatique : `feature + subfeature + plan` -> `feature + subfeature` -> `feature`.
-3. Résolution par défaut via `resolve_model` (legacy).
-
 ### 3. Persona
 
 Responsabilité :
@@ -583,6 +547,72 @@ La persona est une couche **purement stylistique**. Elle ne doit en aucun cas in
 Un lint automatique (Story 66.10) analyse le contenu des personas et émet des avertissements si des mots-clés interdits (ex: "JSON", "ignore instructions", "GPT-4") sont détectés.
 
 Source de vérité :
+- persona active ou ciblée en base de données ;
+- composition via le service de persona.
+
+### 4. Profils d'exécution (Story 66.11)
+
+Responsabilité :
+
+- choix technique du moteur (provider, modèle) ;
+- paramètres de raisonnement (reasoning effort) ;
+- paramètres de verbosité et de format (JSON, outils).
+
+#### Abstractions stables
+
+Afin de découpler les instructions métier des spécificités techniques des providers, la plateforme utilise des profils stables :
+
+| Profil | Valeurs possibles |
+|---|---|
+| `reasoning_profile` | `off`, `light`, `medium`, `deep` |
+| `verbosity_profile` | `concise`, `balanced`, `detailed` |
+| `output_mode` | `free_text`, `structured_json` |
+| `tool_mode` | `none`, `optional`, `required` |
+
+#### Résolution par cascade (Waterfall)
+
+Le profil d'exécution est résolu selon la priorité suivante :
+1. Référence explicite dans la configuration assembly (`execution_profile_ref`).
+2. Cascade automatique : `feature + subfeature + plan` -> `feature + subfeature` -> `feature`.
+3. Résolution par défaut via `resolve_model` (legacy).
+
+Source de vérité :
+- table `llm_execution_profiles` en base de données.
+
+### 5. Budgets de longueur (Story 66.12)
+
+Afin de garantir une expérience utilisateur homogène et de contrôler les coûts, la plateforme permet de définir des budgets de longueur à trois niveaux dans la configuration assembly :
+
+1. **Global Max Tokens** : Limite technique dure envoyée au provider (ex: `max_tokens=1500`).
+2. **Cible de réponse (Editorial)** : Instruction textuelle globale (ex: "Sois concis, maximum 100 mots").
+3. **Cibles par section** : Instructions spécifiques par champ du schéma de sortie (ex: "Section 'summary' : 2-3 phrases").
+
+Ces budgets sont injectés automatiquement à la fin du prompt developer sous la balise `[CONSIGNE DE LONGUEUR]`.
+
+Source de vérité :
+- champ `length_budget` (JSON) dans `llm_assembly_configs`.
+
+### 6. Gestion des placeholders (Story 66.13)
+
+La plateforme applique une politique stricte de résolution des variables `{{placeholder}}`. Aucun placeholder non résolu ne doit être envoyé au LLM.
+
+#### Classification
+
+Chaque variable autorisée pour une feature est classifiée :
+
+| Classification | Comportement si absent | Impact exécution |
+|---|---|---|
+| `required` | Exception ou Log Error | Bloquant pour features sensibles |
+| `optional` | Remplacement par chaîne vide | Log Warning |
+| `optional_with_fallback` | Remplacement par valeur par défaut | Log Info |
+
+#### Features bloquantes (blocking_features)
+
+Pour certaines features critiques (ex: `natal`, `guidance_contextual`), l'absence d'une variable `required` lève une `PromptRenderError` et interrompt l'appel.
+
+Source de vérité :
+- `PLACEHOLDER_ALLOWLIST` dans `assembly_resolver.py`.
+- `PLACEHOLDER_POLICY` dans `placeholder_policy.py`.
 
 - persona active ou ciblée en base de données ;
 - composition via le service de persona.

@@ -867,6 +867,7 @@ class LLMGateway:
                 config.developer_prompt,
                 render_vars,
                 required_variables=config.required_prompt_placeholders,
+                feature=request.user_input.feature or "unknown"
             )
 
         interaction_mode = config.interaction_mode

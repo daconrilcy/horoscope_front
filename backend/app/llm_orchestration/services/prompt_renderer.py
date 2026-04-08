@@ -1,7 +1,10 @@
+import logging
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from app.llm_orchestration.models import PromptRenderError
+
+logger = logging.getLogger(__name__)
 
 
 class PromptRenderer:
@@ -9,39 +12,88 @@ class PromptRenderer:
 
     @staticmethod
     def render(
-        template: str, variables: Dict[str, Any], required_variables: List[str] = None
+        template: str, 
+        variables: Dict[str, Any], 
+        required_variables: List[str] = None, # Legacy support
+        feature: str = "unknown"
     ) -> str:
         """
-        Render a template with variables.
-
-        Args:
-            template: The string template with {{variable_name}} placeholders.
-            variables: A dictionary of variables for interpolation.
-            required_variables: A list of variable names that MUST be present.
-
-        Returns:
-            The rendered string.
-
-        Raises:
-            PromptRenderError: If a required variable is missing from the variables dictionary.
+        Render a template with variables and enforcement policy (Story 66.13).
         """
-        required_variables = required_variables or []
+        from app.llm_orchestration.placeholder_policy import PLACEHOLDER_POLICY
+        from app.llm_orchestration.services.assembly_resolver import PLACEHOLDER_ALLOWLIST
 
-        # Check for missing required variables
-        missing = [v for v in required_variables if v not in variables]
-        if missing:
+        # 1. Check legacy required_variables first
+        required_variables = required_variables or []
+        missing_legacy = [v for v in required_variables if v not in variables]
+        if missing_legacy:
             raise PromptRenderError(
-                f"Missing required variables for prompt rendering: {', '.join(missing)}",
-                details={"missing_variables": missing},
+                f"Missing required legacy variables for prompt rendering: {', '.join(missing_legacy)}",
+                details={"missing_variables": missing_legacy},
             )
 
-        # Basic rendering using regex for {{snake_case}}
+        # 2. Advanced resolution based on classification (D2)
+        # Normalize feature key for lookup
+        feat_key = feature.split("_")[0] if "_" in feature else feature
+        allowlist = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
+        placeholder_defs = {d.name: d for d in allowlist}
+        
+        found_placeholders = PromptRenderer.extract_placeholders(template)
+        
+        # We'll use a copy of variables to add fallbacks if needed
+        effective_vars = variables.copy()
+        
+        for p_name in found_placeholders:
+            if p_name in variables:
+                # Resolved!
+                continue
+                
+            # Not resolved, check classification
+            p_def = placeholder_defs.get(p_name)
+            
+            if not p_def:
+                # Unknown placeholder (AC4)
+                logger.error(
+                    "placeholder_unknown_detected placeholder=%s feature=%s",
+                    p_name, feature
+                )
+                effective_vars[p_name] = ""
+                continue
+                
+            if p_def.classification == "required":
+                # AC1, AC6
+                msg = f"Required placeholder '{{{{{p_name}}}}}' not resolved for feature '{feature}'"
+                if feature in PLACEHOLDER_POLICY.blocking_features or feat_key in PLACEHOLDER_POLICY.blocking_features:
+                    raise PromptRenderError(msg, details={"placeholder": p_name, "feature": feature})
+                else:
+                    logger.error("placeholder_not_resolved event=placeholder_not_resolved placeholder=%s feature=%s classification=required", p_name, feature)
+                    effective_vars[p_name] = ""
+            
+            elif p_def.classification == "optional":
+                # AC2
+                logger.warning("placeholder_not_resolved event=placeholder_not_resolved placeholder=%s feature=%s classification=optional", p_name, feature)
+                effective_vars[p_name] = ""
+                
+            elif p_def.classification == "optional_with_fallback":
+                # AC3
+                fallback_val = p_def.fallback or ""
+                logger.info("placeholder_fallback_used placeholder=%s feature=%s fallback=%s", p_name, feature, fallback_val)
+                effective_vars[p_name] = fallback_val
+
+        # 3. Perform final substitution
         def replace(match):
             key = match.group(1)
-            return str(variables.get(key, match.group(0)))
+            # Ensure we return empty string if still not found (double safety)
+            return str(effective_vars.get(key, ""))
 
         # Match {{variable_name}}
         rendered = re.sub(r"\{\{([a-zA-Z0-9_]+)\}\}", replace, template)
+
+        # Final check: no {{...}} should survive (AC4)
+        if "{{" in rendered and "}}" in rendered:
+            # This might happen if there are nested braces or non-snake_case patterns
+            # We strip them to be safe
+            rendered = re.sub(r"\{\{.*?\}\}", "", rendered)
 
         return rendered
 

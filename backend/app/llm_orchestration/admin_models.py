@@ -267,6 +267,14 @@ class DraftPublishResponse(BaseModel):
     archived_count: int
 
 
+class PlaceholderResolutionStatus(BaseModel):
+    """Status of a placeholder resolution in a preview (Story 66.13)."""
+
+    name: str
+    status: Literal["resolved", "missing_optional", "missing_required", "fallback_used", "unknown"]
+    value_preview: Optional[str] = None
+
+
 class PromptAssemblyPreview(BaseModel):
     """Full preview of a rendered assembly config."""
 
@@ -289,6 +297,9 @@ class PromptAssemblyPreview(BaseModel):
     
     # Available variables for the feature
     available_variables: List[PlaceholderInfo]
+    
+    # Resolution status for each variable (Story 66.13)
+    placeholder_resolution_status: List[PlaceholderResolutionStatus] = Field(default_factory=list)
     
     # Execution parameters
     resolved_execution_config: ExecutionConfigAdmin

@@ -23,11 +23,31 @@ class PlanRule(BaseModel):
     instruction: Optional[str] = None
     max_output_tokens_override: Optional[int] = None
 
-# AC6: Placeholder allowlist indexed by feature
-PLACEHOLDER_ALLOWLIST: dict[str, list[str]] = {
-    "guidance": ["locale", "use_case", "situation", "last_user_msg"],
-    "natal": ["locale", "use_case", "chart_json", "natal_data", "birth_date", "birth_time", "birth_timezone"],
-    "chat": ["locale", "use_case", "last_user_msg", "persona_name"],
+from app.llm_orchestration.placeholder_policy import PlaceholderDef
+
+# AC6: Placeholder allowlist indexed by feature (Extended in Story 66.13 D1)
+PLACEHOLDER_ALLOWLIST: dict[str, list[PlaceholderDef]] = {
+    "guidance": [
+        PlaceholderDef(name="locale", classification="optional_with_fallback", fallback="fr-FR"),
+        PlaceholderDef(name="use_case", classification="optional"),
+        PlaceholderDef(name="situation", classification="required"),
+        PlaceholderDef(name="last_user_msg", classification="optional"),
+    ],
+    "natal": [
+        PlaceholderDef(name="locale", classification="optional_with_fallback", fallback="fr-FR"),
+        PlaceholderDef(name="use_case", classification="optional"),
+        PlaceholderDef(name="chart_json", classification="required"),
+        PlaceholderDef(name="natal_data", classification="required"),
+        PlaceholderDef(name="birth_date", classification="optional"),
+        PlaceholderDef(name="birth_time", classification="optional"),
+        PlaceholderDef(name="birth_timezone", classification="optional"),
+    ],
+    "chat": [
+        PlaceholderDef(name="locale", classification="optional_with_fallback", fallback="fr-FR"),
+        PlaceholderDef(name="use_case", classification="optional"),
+        PlaceholderDef(name="last_user_msg", classification="required"),
+        PlaceholderDef(name="persona_name", classification="optional"),
+    ],
 }
 
 # AC11: Plan Rules Registry
@@ -59,12 +79,13 @@ def validate_placeholders(template: str, feature: str) -> list[str]:
     found = PromptRenderer.extract_placeholders(template)
     # Normalize feature key for lookup
     feat_key = feature.split("_")[0] if "_" in feature else feature
-    allowed = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
+    allowed_defs = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
+    allowed_names = {d.name for d in allowed_defs}
     
     # Allow some universal placeholders if not explicitly in list
     universal = {"locale", "use_case", "persona_name", "last_user_msg"}
     
-    invalid = [p for p in found if p not in allowed and p not in universal]
+    invalid = [p for p in found if p not in allowed_names and p not in universal]
     return invalid
 
 
@@ -84,13 +105,46 @@ def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyP
     found_placeholders = PromptRenderer.extract_placeholders(rendered_prompt)
     
     variables = []
+    resolution_statuses = []
+    
+    # Mock some context for preview resolution
+    mock_vars = {"locale": "fr-FR", "use_case": use_case_key}
+    
+    feat_key = config.feature.split("_")[0] if "_" in config.feature else config.feature
+    allowlist = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
+    placeholder_defs = {d.name: d for d in allowlist}
+
     for p in found_placeholders:
-        # Placeholder enrichment could be more complex, but here we provide basic info
+        # 1. Available variables info
         variables.append(PlaceholderInfo(
             name=p,
             type="string",
             origin="context",
             example=f"example_{p}"
+        ))
+        
+        # 2. Resolution status (Story 66.13 AC5)
+        p_def = placeholder_defs.get(p)
+        status = "unknown"
+        val_preview = None
+        
+        if p in mock_vars:
+            status = "resolved"
+            val_preview = str(mock_vars[p])[:10]
+        elif p_def:
+            if p_def.classification == "required":
+                status = "missing_required"
+            elif p_def.classification == "optional":
+                status = "missing_optional"
+            elif p_def.classification == "optional_with_fallback":
+                status = "fallback_used"
+                val_preview = (p_def.fallback or "")[:10]
+        
+        from app.llm_orchestration.admin_models import PlaceholderResolutionStatus
+        resolution_statuses.append(PlaceholderResolutionStatus(
+            name=p,
+            status=status,
+            value_preview=val_preview
         ))
 
     from app.infra.db.models.llm_prompt import PromptStatus
@@ -106,6 +160,7 @@ def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyP
         hard_policy_block=hard_policy,
         output_contract_ref=resolved.output_contract_ref,
         available_variables=variables,
+        placeholder_resolution_status=resolution_statuses,
         resolved_execution_config=resolved.execution_config,
         length_budget=resolved.length_budget,
         draft_preview=(config.status != PromptStatus.PUBLISHED)
