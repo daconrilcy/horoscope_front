@@ -132,3 +132,13 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/llm_orchestration/admin_models.py`
+- `backend/app/infra/db/models/llm_assembly.py`
+- `backend/app/llm_orchestration/services/length_budget_injector.py`
+- `backend/app/llm_orchestration/services/assembly_resolver.py`
+- `backend/app/llm_orchestration/gateway.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
+- `backend/app/llm_orchestration/tests/test_story_66_12_length_budgets.py`
+- `backend/migrations/versions/5e52f7244424_add_length_budget_to_assembly.py`

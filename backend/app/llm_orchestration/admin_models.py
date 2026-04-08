@@ -28,6 +28,21 @@ class LlmOutputSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class SectionBudget(BaseModel):
+    """Target length for a specific section."""
+
+    section_name: str
+    target: str  # Editorial description (e.g. "2-3 sentences")
+
+
+class LengthBudget(BaseModel):
+    """Budget for response length (Story 66.12)."""
+
+    target_response_length: Optional[str] = None  # Editorial overall (e.g. "concise (100 words)")
+    global_max_tokens: Optional[int] = None  # Hard provider limit override
+    section_budgets: List[SectionBudget] = Field(default_factory=list)
+
+
 class LlmPersona(BaseModel):
     """Serializable admin view of an LLM persona."""
 
@@ -191,6 +206,7 @@ class PromptAssemblyConfig(BaseModel):
 
     execution_config: ExecutionConfigAdmin
     output_contract_ref: Optional[str] = None
+    length_budget: Optional[LengthBudget] = None
 
     interaction_mode: str = "structured"
     user_question_policy: str = "none"
@@ -229,6 +245,7 @@ class ResolvedAssembly(BaseModel):
     
     execution_config: ExecutionConfigAdmin
     output_contract_ref: Optional[str] = None
+    length_budget: Optional[LengthBudget] = None
     policy_layer_content: str
 
 
@@ -275,6 +292,7 @@ class PromptAssemblyPreview(BaseModel):
     
     # Execution parameters
     resolved_execution_config: ExecutionConfigAdmin
+    length_budget: Optional[LengthBudget] = None
     
     draft_preview: bool = True
 

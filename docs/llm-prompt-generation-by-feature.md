@@ -509,6 +509,16 @@ Règle d'architecture :
 - `assemble_developer_prompt()` ne produit que cette couche métier ;
 - cette couche n'est pas le prompt final complet.
 
+### 5. Budgets de longueur (Story 66.12)
+
+Afin de garantir une expérience utilisateur homogène et de contrôler les coûts, la plateforme permet de définir des budgets de longueur à trois niveaux dans la configuration assembly :
+
+1. **Global Max Tokens** : Limite technique dure envoyée au provider (ex: `max_tokens=1500`).
+2. **Cible de réponse (Editorial)** : Instruction textuelle globale (ex: "Sois concis, maximum 100 mots").
+3. **Cibles par section** : Instructions spécifiques par champ du schéma de sortie (ex: "Section 'summary' : 2-3 phrases").
+
+Ces budgets sont injectés automatiquement à la fin du prompt developer sous la balise `[CONSIGNE DE LONGUEUR]`.
+
 ### 4. Profils d'exécution (Story 66.11)
 
 Responsabilité :

@@ -76,14 +76,8 @@ def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyP
     rendered_prompt = assemble_developer_prompt(resolved, config)
     
     # AC4: Hard policy is visible but separate
-    # M2 Fix: Derive safety_profile from feature template
-    from app.prompts.catalog import PROMPT_CATALOG
-    use_case_key = config.feature_template.use_case_key
-    catalog_entry = PROMPT_CATALOG.get(use_case_key)
+    # M2 Fix: Default safety_profile to astrology
     safety_profile = "astrology"
-    if catalog_entry and catalog_entry.safety_profile:
-        safety_profile = catalog_entry.safety_profile
-    
     hard_policy = get_hard_policy(safety_profile)
 
     # AC7: Available variables extraction
@@ -113,6 +107,7 @@ def build_assembly_preview(config: PromptAssemblyConfigModel) -> PromptAssemblyP
         output_contract_ref=resolved.output_contract_ref,
         available_variables=variables,
         resolved_execution_config=resolved.execution_config,
+        length_budget=resolved.length_budget,
         draft_preview=(config.status != PromptStatus.PUBLISHED)
     )
 
@@ -166,15 +161,15 @@ def resolve_assembly(config: PromptAssemblyConfigModel) -> ResolvedAssembly:
     execution_config = ExecutionConfigAdmin(**exec_dict)
 
     # 5. Policy Layer (Architectural Note 1)
-    # M2 Fix: Derive safety_profile from feature template use_case_key
-    from app.prompts.catalog import PROMPT_CATALOG
-    use_case_key = config.feature_template.use_case_key
-    catalog_entry = PROMPT_CATALOG.get(use_case_key)
+    # M2 Fix: Default safety_profile to astrology
     safety_profile = "astrology"
-    if catalog_entry and catalog_entry.safety_profile:
-        safety_profile = catalog_entry.safety_profile
-    
     policy_layer_content = get_hard_policy(safety_profile)
+
+    # 6. Length Budget (Story 66.12)
+    length_budget = None
+    if config.length_budget:
+        from app.llm_orchestration.admin_models import LengthBudget
+        length_budget = LengthBudget(**config.length_budget)
 
     return ResolvedAssembly(
         target=target,
@@ -188,6 +183,7 @@ def resolve_assembly(config: PromptAssemblyConfigModel) -> ResolvedAssembly:
         plan_rules_content=plan_rules_content,
         execution_config=execution_config,
         output_contract_ref=config.output_contract_ref,
+        length_budget=length_budget,
         policy_layer_content=policy_layer_content,
     )
 
@@ -209,4 +205,11 @@ def assemble_developer_prompt(resolved: ResolvedAssembly, config: PromptAssembly
     if config.plan_rules_enabled and resolved.plan_rules_content:
         blocks.append(resolved.plan_rules_content)
         
-    return "\n\n".join(blocks)
+    prompt = "\n\n".join(blocks)
+
+    # Story 66.12: Length Budget injection
+    if resolved.length_budget:
+        from app.llm_orchestration.services.length_budget_injector import LengthBudgetInjector
+        prompt = LengthBudgetInjector.inject_into_developer_prompt(prompt, resolved.length_budget)
+
+    return prompt

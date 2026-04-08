@@ -617,11 +617,13 @@ class LLMGateway:
         config_override: Optional[UseCaseConfig] = None,
         context_override: Optional[Dict[str, Any]] = None
     ) -> tuple[ResolvedExecutionPlan, Optional[QualifiedContext]]:
-        """Stage 1: Orchestrates the resolution of all configuration artifacts into a single plan."""
+        # Stage 1: Orchestrates the resolution of all configuration artifacts into a single plan.
         use_case = request.user_input.use_case
         user_id = request.user_id
-        
+        resolved_assembly = None
+
         # 0. Compatibility fallback for deprecated use cases (Story 66.9 AC5)
+
         from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
         if use_case in DEPRECATED_USE_CASE_MAPPING:
             mapping = DEPRECATED_USE_CASE_MAPPING[use_case]
@@ -769,6 +771,7 @@ class LLMGateway:
         # 0.8 Final Model & Provider merge (Story 66.11 D4, D6)
         provider = "openai"
         timeout_seconds = config.timeout_seconds
+        max_output_tokens = config.max_output_tokens
         translated_params = {}
         
         if profile_db:
@@ -778,6 +781,8 @@ class LLMGateway:
             model_id = profile_db.model
             provider = profile_db.provider
             timeout_seconds = profile_db.timeout_seconds
+            if profile_db.max_output_tokens:
+                max_output_tokens = profile_db.max_output_tokens
             
             # Map profiles to provider-specific params
             if provider == "openai":
@@ -800,6 +805,11 @@ class LLMGateway:
                 model_id = resolve_model(use_case, fallback_model=config.model)
             
             profile_source = "fallback_resolve_model"
+
+        # Story 66.12: Length Budget global_max_tokens override (D2)
+        if resolved_assembly and resolved_assembly.length_budget and resolved_assembly.length_budget.global_max_tokens:
+            max_output_tokens = resolved_assembly.length_budget.global_max_tokens
+            logger.info("gateway_length_budget_applied global_max_tokens=%d", max_output_tokens)
 
         # Apply translated params to config if applicable
         if translated_params:
@@ -911,7 +921,7 @@ class LLMGateway:
             user_question_policy=user_question_policy,
             overrides_applied=overrides_applied,
             temperature=config.temperature,
-            max_output_tokens=config.max_output_tokens,
+            max_output_tokens=max_output_tokens,
             response_format=response_format,
             reasoning_effort=config.reasoning_effort,
             verbosity=config.verbosity,

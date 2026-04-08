@@ -257,6 +257,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.9 — Unifier la doctrine d'abonnement dans la couche LLM](#story-669--unifier-la-doctrine-dabonnement-dans-la-couche-llm)
 - [Story 66.10 — Définir les bornes stylistiques de la persona astrologue](#story-6610--définir-les-bornes-stylistiques-de-la-persona-astrologue)
 - [Story 66.11 — Introduire les ExecutionProfiles administrables](#story-6611--introduire-les-executionprofiles-administrables)
+- [Story 66.12 — Pilotage des longueurs par section (budgets de longueur)](#story-6612--pilotage-des-longueurs-par-section-budgets-de-longueur)
 
 ---
 
@@ -601,6 +602,31 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] La doctrine d'abonnement (Story 66.9) est appliquée aux use cases éligibles.
 - [ ] Les bornes stylistiques de la persona (Story 66.10) sont encodées et validées.
 - [ ] Les profils d'exécution (`ExecutionProfile`) sont administrables et décorrélés du prompt (Story 66.11).
+- [ ] Les budgets de longueur sont pilotables par feature/plan et injectés automatiquement (Story 66.12).
+
+---
+
+## Story 66.12 — Pilotage des longueurs par section (budgets de longueur)
+
+**Statut :** draft
+
+En tant qu'**administrateur produit**,
+Je veux **définir des budgets de longueur à trois niveaux (global max, cible de réponse, cible par section)**,
+Afin de **garantir une expérience utilisateur homogène, de contrôler les coûts et de donner des instructions claires au LLM**.
+
+**Acceptance Criteria :**
+
+**Given** un budget de longueur défini dans une configuration assembly
+**When** le prompt est composé
+**Then** des instructions explicites sont injectées sous la balise `[CONSIGNE DE LONGUEUR]` listant les cibles éditoriales et par section
+
+**Given** le paramètre `global_max_tokens` dans le budget
+**When** résolu par le gateway
+**Then** il surcharge la limite technique du modèle envoyé au provider
+
+**Given** l'interface d'administration
+**When** un budget est modifié
+**Then** l'impact est visible immédiatement dans la prévisualisation de l'assembly
 
 ---
 
