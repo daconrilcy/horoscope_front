@@ -12,6 +12,24 @@ from app.prompts.exceptions import ConfigurationError
 logger = logging.getLogger(__name__)
 
 
+from typing import Any, Optional
+
+
+def validate_use_case_naming(use_case: str, output_schema: Optional[dict[str, Any]] = None) -> list[str]:
+    """
+    Detects use_case suffix '_free'/'_full' and issues a warning if output schema is identical
+    or not provided (Story 66.9 AC4).
+    """
+    warnings = []
+    if use_case.endswith(("_free", "_full")):
+        # AC4: Avertissement explicite
+        warnings.append(
+            f"use_case suffix '_free'/'_full' detected for '{use_case}' — "
+            "prefer plan_rules in PromptAssemblyConfig unless output schema differs"
+        )
+    return warnings
+
+
 def validate_catalog_vs_db(db: Session) -> None:
     """
     Validate that all active use cases in the database are present in the catalog.

@@ -621,6 +621,17 @@ class LLMGateway:
         use_case = request.user_input.use_case
         user_id = request.user_id
         
+        # 0. Compatibility fallback for deprecated use cases (Story 66.9 AC5)
+        from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
+        if use_case in DEPRECATED_USE_CASE_MAPPING:
+            mapping = DEPRECATED_USE_CASE_MAPPING[use_case]
+            request.user_input.feature = mapping["feature"]
+            request.user_input.plan = mapping["plan"]
+            logger.info(
+                "gateway_deprecation_warning use_case=%s redirected_to_feature=%s redirected_to_plan=%s",
+                use_case, mapping["feature"], mapping["plan"]
+            )
+
         # Use provided context_dict or build from request
         if context_override is not None:
             context_dict = context_override

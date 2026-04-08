@@ -1,0 +1,145 @@
+# Story 66.18 : Encapsuler les options OpenAI derrière des profils internes stables
+
+Status: ready-for-dev
+
+## Story
+
+En tant qu'**architecte plateforme**,
+je veux **exposer des profils internes stables (reasoning_profile, verbosity_profile, output_mode, tool_mode) au lieu des paramètres OpenAI bruts dans les entités administrables**,
+afin de **découpler le système des conventions spécifiques au provider et de permettre un changement de provider sans modifier les configurations de prompt**.
+
+## Contexte de continuité avec 66.11
+
+La story 66.11 a introduit les profils internes stables (`reasoning_profile`, `verbosity_profile`, `output_mode`, `tool_mode`) dans `ExecutionProfile` et un mapper OpenAI minimal. Cette story 66.18 complète ce travail sur deux axes :
+
+1. **Extension multi-provider** : ajouter le support Anthropic (et rendre le mapper extensible pour d'autres providers sans modifier les profils internes).
+2. **Clarification de `verbosity_profile`** : préciser exactement comment ce profil agit — une seule source d'effet, pas deux concurrentes.
+
+## Intent
+
+### Traitement de `verbosity_profile` — règle non ambiguë
+
+`verbosity_profile` a deux effets potentiels :
+- Une **instruction textuelle** injectée dans le developer_prompt (`"Réponds de façon concise."`)
+- Un **`max_output_tokens` recommandé** côté provider
+
+Ces deux effets ne doivent **pas** agir comme deux sources concurrentes non contrôlées. La règle est :
+
+> `verbosity_profile` produit **une instruction textuelle** injectée dans le developer_prompt par `ProviderParameterMapper.resolve_verbosity_instruction()`. Le `max_output_tokens` recommandé associé au profil est utilisé **seulement si** aucun `LengthBudget.global_max_tokens` ni `ExecutionProfile.max_output_tokens` explicite n'est défini. C'est donc un défaut de sécurité, pas une contrainte prioritaire. Le mapper décide de la combinaison — pas deux couches indépendantes.
+
+### Extension multi-provider
+
+`ProviderParameterMapper` est étendu avec `map_for_anthropic()`. Les `ExecutionProfile` existants configurés avec `reasoning_profile="deep"` produisent les paramètres Anthropic corrects (`extended_thinking`) sans modification des entités admin.
+
+## Décisions d'architecture
+
+**D1 — Les profils internes stables sont définis en 66.11 et ne changent pas ici.** Cette story n'introduit pas de nouveau champ dans `ExecutionProfile` ou `ExecutionProfileAdmin`.
+
+**D2 — `ProviderParameterMapper` est étendu, pas réécrit.** Ajouter `map_for_anthropic()` en suivant la même interface que `map_for_openai()`. Un provider inconnu → `NotImplementedError` avec message explicite.
+
+**D3 — `verbosity_profile` produit une instruction textuelle ET un `max_output_tokens` recommandé, mais le mapper arbitre la priorité** selon la règle de D4.
+
+**D4 — Règle de priorité sur `max_output_tokens` :** `LengthBudget.global_max_tokens` > `ExecutionProfile.max_output_tokens` > `verbosity_profile` default tokens. Le mapper `resolve_verbosity_instruction()` retourne `(instruction_text, Optional[int])` — la valeur `Optional[int]` n'est utilisée par le gateway que si les deux premières sources sont `None`.
+
+**D5 — Rétrocompatibilité avec `ExecutionConfigAdmin` (story 66.8).** `ExecutionConfigAdmin` garde ses champs bruts pour la compatibilité. Une migration progressive vers les profils internes est documentée mais hors scope.
+
+## Acceptance Criteria
+
+1. **Given** qu'un `ExecutionProfile` est configuré avec `provider="openai", reasoning_profile="deep", verbosity_profile="concise"`
+   **When** le gateway construit l'appel via `ResponsesClient`
+   **Then** `ProviderParameterMapper.map_for_openai()` produit : `reasoning_effort="high"`, `temperature=None` ; `resolve_verbosity_instruction("concise")` retourne l'instruction textuelle de concision qui est injectée dans le developer_prompt **en une seule passe** — il n'y a pas d'injection concurrente depuis deux couches différentes
+
+2. **Given** que `verbosity_profile="concise"` et qu'aucun `LengthBudget.global_max_tokens` ni `ExecutionProfile.max_output_tokens` n'est défini
+   **When** le gateway résout `max_output_tokens` final
+   **Then** le `max_output_tokens` recommandé par `resolve_verbosity_instruction()` est utilisé comme valeur par défaut de sécurité
+
+3. **Given** que `verbosity_profile="detailed"` et que `LengthBudget.global_max_tokens=800` est défini
+   **When** le gateway résout `max_output_tokens` final
+   **Then** `max_output_tokens=800` s'applique (priorité LengthBudget) — le `max_output_tokens` recommandé par `verbosity_profile` est ignoré ; seule l'instruction textuelle `"detailed"` est injectée dans le prompt
+
+4. **Given** qu'un `ExecutionProfile` cible `provider="anthropic"` avec `reasoning_profile="deep"`
+   **When** `ProviderParameterMapper.map_for_anthropic()` est appelé
+   **Then** les paramètres Anthropic corrects sont produits (`extended_thinking` ou équivalent selon l'API Anthropic courante) — sans modification des entités admin ou des profils internes
+
+5. **Given** qu'un provider inconnu est spécifié dans `ExecutionProfile`
+   **When** le gateway tente de mapper les profils internes
+   **Then** `ProviderParameterMapper` lève `NotImplementedError: "No parameter mapping for provider: {provider}"` avec suggestion d'ajouter `map_for_{provider}()` — le fallback sur `resolve_model()` est activé
+
+6. **Given** qu'une configuration `ExecutionConfigAdmin` existante (story 66.8) utilise `reasoning_effort="medium"` (champ brut)
+   **When** la plateforme est déployée avec cette story
+   **Then** les anciens champs bruts dans `ExecutionConfigAdmin` continuent de fonctionner via un chemin de compatibilité — une note de dépréciation est loguée mais pas d'exception
+
+7. **Given** que `reasoning_profile="off"` et `provider="openai"`
+   **When** `ProviderParameterMapper.map_for_openai()` est appelé
+   **Then** `reasoning_effort` n'est pas inclus dans les paramètres de l'appel et `temperature` est inclus (modèle standard GPT)
+
+## Tasks / Subtasks
+
+- [ ] Étendre `ProviderParameterMapper` avec le support Anthropic (AC: 4, 5)
+  - [ ] Dans `backend/app/llm_orchestration/services/provider_parameter_mapper.py` (créé en 66.11) :
+  - [ ] Ajouter `map_for_anthropic(reasoning_profile, verbosity_profile, output_mode, tool_mode) -> dict` avec le mapping Anthropic correct
+  - [ ] Ajouter `map(provider: str, ...) -> dict` : dispatch selon provider, `NotImplementedError` si provider inconnu (AC: 5)
+  - [ ] La signature de `resolve_verbosity_instruction(verbosity_profile) -> tuple[str, Optional[int]]` est celle définie en 66.11 — s'assurer que le `Optional[int]` (max_tokens recommandé) n'est utilisé qu'en dernier recours selon la règle D4
+
+- [ ] Implémenter la règle de priorité `max_output_tokens` dans le gateway (AC: 2, 3)
+  - [ ] Dans `backend/app/llm_orchestration/gateway.py`, lors de la construction de `ResolvedExecutionPlan.max_output_tokens` :
+    - Priorité 1 : `LengthBudget.global_max_tokens` (si défini)
+    - Priorité 2 : `ExecutionProfile.max_output_tokens` (si défini)
+    - Priorité 3 : `resolve_verbosity_instruction()[1]` (default recommandé par verbosity_profile)
+  - [ ] Loguer la source utilisée : `max_output_tokens_source: "length_budget" | "execution_profile" | "verbosity_default"`
+
+- [ ] Injecter l'instruction textuelle `verbosity_profile` dans le pipeline (AC: 1)
+  - [ ] L'injection est faite par le **gateway** (`gateway._resolve_plan()`) après résolution du profil d'exécution, **avant** l'appel à `PromptRenderer.render()` — le renderer n'a pas de dépendance sur `ExecutionProfile`
+  - [ ] Position dans l'ordre canonique des transformations (défini en 66.14) : étape 3, après injections éditoriales (context_quality, ContextQualityInjector) et avant rendu des placeholders
+  - [ ] Le developer_prompt augmenté de l'instruction verbosity est passé à `render()` — `render()` ne sait pas que l'instruction a été ajoutée, il traite simplement le texte reçu
+  - [ ] Vérifier dans `gateway.py` qu'il n'y a **aucun autre endroit** qui injecte une instruction de verbosité (notamment dans `ResponsesClient`) pour garantir une seule passe
+
+- [ ] Compatibilité `ExecutionConfigAdmin` existant (AC: 6)
+  - [ ] Dans le gateway, si le chemin assembly 66.8 est utilisé (sans `ExecutionProfile`), construire un profil interne par inférence depuis `ExecutionConfigAdmin` brut : `reasoning_effort="medium"` → `reasoning_profile="medium"`, etc.
+  - [ ] Logger une note de dépréciation structurée
+
+- [ ] Tests (toutes AC)
+  - [ ] Test unitaire `map_for_anthropic()` : chaque `reasoning_profile` → paramètres Anthropic corrects
+  - [ ] Test unitaire provider inconnu → `NotImplementedError`
+  - [ ] Test unitaire règle priorité `max_output_tokens` : LengthBudget présent → override verbosity default
+  - [ ] Test unitaire : `verbosity_profile="detailed"` + `LengthBudget.global_max_tokens=800` → `max_output_tokens=800`, instruction textuelle `detailed` injectée, pas de double contrainte
+  - [ ] Test unitaire : `verbosity_profile="concise"` sans LengthBudget ni ExecutionProfile.max_output_tokens → default tokens recommandé utilisé
+  - [ ] Test unitaire `ExecutionConfigAdmin` legacy → inférence profils internes sans exception
+
+## Dev Notes
+
+- **Fichiers principaux à toucher :**
+  - `backend/app/llm_orchestration/execution_profiles_types.py` (nouveau)
+  - `backend/app/llm_orchestration/services/provider_parameter_mapper.py` (nouveau)
+  - `backend/app/llm_orchestration/admin_models.py` — `ExecutionProfileAdmin` mis à jour
+  - `backend/app/llm_orchestration/providers/responses_client.py` — intégration mapper
+  - `backend/app/llm_orchestration/gateway.py` — compatibilité `ExecutionConfigAdmin` legacy
+
+- **Mapping reasoning_profile → OpenAI reasoning_effort :**
+  - `off` → pas de reasoning (modèles standard GPT)
+  - `light` → `reasoning_effort="low"` (modèles o-series)
+  - `medium` → `reasoning_effort="medium"`
+  - `deep` → `reasoning_effort="high"`
+
+- **`verbosity_profile` affecte deux choses :** (1) une instruction textuelle dans le developer_prompt, (2) un `max_output_tokens` recommandé (si `LengthBudget` non défini). Si `LengthBudget` est défini (story 66.12), il prend priorité sur le max_tokens recommandé par verbosity.
+
+- **Story complémentaire 66.11 :** `ExecutionProfile` est l'entité DB créée en 66.11 avec les profils internes stables déjà en place. Cette story 66.18 **n'introduit pas de nouveaux champs dans `ExecutionProfile`** — elle étend `ProviderParameterMapper` pour le support multi-provider (Anthropic) et clarifie la règle de priorité `max_output_tokens`. L'ordre d'implémentation : 66.11 d'abord, puis 66.18 en extension. Pas de churn de modèle DB entre les deux.
+
+### References
+
+- [Source: backend/app/llm_orchestration/providers/responses_client.py]
+- [Source: backend/app/llm_orchestration/admin_models.py — ExecutionConfigAdmin]
+- [Source: _bmad-output/implementation-artifacts/66-8-catalogue-administrable-composition-llm.md#ExecutionConfigAdmin]
+- [Source: _bmad-output/implementation-artifacts/66-11-execution-profiles-administrables.md]
+
+## Dev Agent Record
+
+### Agent Model Used
+
+claude-sonnet-4-6
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List

@@ -224,9 +224,28 @@ Aujourd'hui, la logique abonnement est éclatée entre trois mécanismes :
 
 Autrement dit, l'absence d'une boîte unique "abonnement" dans le premier schéma n'était pas une erreur de lecture du code ; c'est surtout le reflet de l'architecture actuelle.
 
-Conclusion explicite :
+## Doctrine d'abonnement (Story 66.9)
 
-Aujourd'hui, le niveau d'abonnement n'est pas une couche unique de composition de prompt ; il agit soit par sélection de `use_case`, soit par `plan` assembly, soit en amont via les entitlements.
+La plateforme applique désormais une doctrine canonique pour gérer la variabilité liée à l'abonnement dans la couche LLM. L'objectif est de réduire la prolifération de use_cases dupliqués (`_free`/`_full`) quand seule la longueur ou la profondeur du prompt varie.
+
+### Règle de décision (Waterfall)
+
+1. **Entitlements (Amont)** : Contrôle d'accès et quotas. Si l'utilisateur n'a pas accès à la feature, l'appel est bloqué avant d'entrer dans le gateway LLM.
+2. **Plan Assembly (Composition)** : Si la feature est identique mais que l'abonnement change la profondeur, la longueur ou la richesse des instructions (ex: "sois concis" vs "analyse approfondie"), on utilise une configuration assembly unique avec des `plan_rules`.
+3. **Use Case Distinct (Contrat)** : Réservé exclusivement aux cas où le **contrat de sortie change structurellement** (schéma JSON différent, structure métier différente).
+
+### Classification des use_cases existants
+
+| Use Case | Plan | Migrable ? | Destination Cible | Raison |
+|---|---|---|---|---|
+| `horoscope_daily_free` | Free | **Oui** | Feature `horoscope_daily` (plan: free) | Même tâche que `full`, seule la longueur change. |
+| `horoscope_daily_full` | Premium | **Oui** | Feature `horoscope_daily` (plan: premium) | Base de référence pour la feature horoscope. |
+| `natal_long_free` | Free | **Non** | `natal_long_free` (Maintenu) | Contrat de sortie spécifique (`title`, `summary`, `accordion_titles`) sans équivalent "full" identique. |
+| `natal_psy_profile` | Premium | **Non** | N/A | Feature spécialisée, pas un doublon de plan. |
+
+### Conclusion explicite
+
+Le niveau d'abonnement doit être géré en priorité par assembly (`plan_rules`) pour toutes les features partageant le même contrat de sortie.
 
 ## Axe orthogonal : qualité de contexte
 

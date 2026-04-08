@@ -19,6 +19,15 @@ class PromptEntry(BaseModel):
     max_tokens: int
     temperature: float
     output_schema: dict[str, Any] | None = None  # None = text output, no JSON schema
+    deprecated: bool = False
+    deprecation_note: str | None = None
+
+
+# Compatibility mapping for deprecated use cases (Story 66.9 AC5)
+DEPRECATED_USE_CASE_MAPPING = {
+    "horoscope_daily_free": {"feature": "horoscope_daily", "plan": "free"},
+    "horoscope_daily_full": {"feature": "horoscope_daily", "plan": "premium"},
+}
 
 
 CHAT_RESPONSE_V1 = {
@@ -100,6 +109,8 @@ PROMPT_CATALOG: dict[str, PromptEntry] = {
         max_tokens=1300,
         temperature=0.7,
         output_schema=HOROSCOPE_FREE_OUTPUT_SCHEMA,
+        deprecated=True,
+        deprecation_note="Migré vers feature='horoscope_daily', plan='free' via assembly.",
     ),
     "horoscope_daily_full": PromptEntry(
         name="horoscope-daily-full-v1",
@@ -109,6 +120,8 @@ PROMPT_CATALOG: dict[str, PromptEntry] = {
         max_tokens=3000,
         temperature=0.7,
         output_schema=None,  # schéma complet géré par le gateway existant
+        deprecated=True,
+        deprecation_note="Migré vers feature='horoscope_daily', plan='premium' via assembly.",
     ),
     "guidance_daily": PromptEntry(
         name="guidance-daily-v1",

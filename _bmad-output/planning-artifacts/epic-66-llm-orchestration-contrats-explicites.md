@@ -254,6 +254,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.5 — Séparer validation, normalisation et sanitization](#story-665--séparer-validation-normalisation-et-sanitization)
 - [Story 66.6 — Qualifier le common context et enrichir `GatewayMeta`](#story-666--qualifier-le-common-context-et-enrichir-gatewaymeta)
 - [Story 66.7 — Migrer le parcours natal vers l'entrée applicative canonique](#story-667--migrer-le-parcours-natal-vers-lentrée-applicative-canonique)
+- [Story 66.9 — Unifier la doctrine d'abonnement dans la couche LLM](#story-669--unifier-la-doctrine-dabonnement-dans-la-couche-llm)
 
 ---
 
@@ -595,6 +596,38 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] Les conventions legacy majeures ont été remplacées ou encapsulées dans des adaptateurs temporaires.
 - [ ] Les tests unitaires couvrent chaque étape du pipeline séparément.
 - [ ] La documentation d'architecture (`docs/architecture/llm-processus-architecture.md`) est mise à jour.
+- [ ] La doctrine d'abonnement (Story 66.9) est appliquée aux use cases éligibles.
+
+---
+
+## Story 66.9 — Unifier la doctrine d'abonnement dans la couche LLM
+
+**Statut :** draft
+
+En tant qu'**architecte plateforme**,
+Je veux **unifier la doctrine de gestion des plans (free/premium) dans la couche LLM**,
+Afin de **limiter la duplication de use cases et de favoriser l'usage de l'assembly**.
+
+**Contexte technique :**
+Actuellement, certaines variations liées à l'abonnement sont gérées par des use cases distincts (`_free`/`_full`), ce qui multiplie les prompts à maintenir en base. La nouvelle doctrine impose de passer par `plan_rules` dans `PromptAssemblyConfig` quand le contrat de sortie est identique.
+
+**Acceptance Criteria :**
+
+**Given** la doctrine d'abonnement `entitlements > plan assembly > use_case distinct`
+**When** un use case est analysé pour migration
+**Then** il est migré vers un `plan` assembly si son schéma JSON de sortie est identique à sa variante, sinon il reste un use case distinct
+
+**Given** les use cases `horoscope_daily_free` et `horoscope_daily_full`
+**When** ils sont migrés
+**Then** ils utilisent la feature `horoscope_daily` avec les plans `free` et `premium`, et les anciens use cases sont marqués `deprecated`
+
+**Given** le gateway LLM
+**When** un use case déprécié est appelé
+**Then** il est automatiquement redirigé vers la feature et le plan correspondants via un mapping de compatibilité, avec un avertissement dans les logs
+
+**Given** une nouvelle version de prompt publiée
+**When** le suffixe `_free` ou `_full` est détecté
+**Then** un avertissement de nommage est émis si aucune différence de schéma n'est justifiée
 
 ---
 

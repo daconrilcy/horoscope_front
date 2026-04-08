@@ -40,6 +40,14 @@ PLAN_RULES_REGISTRY: dict[str, PlanRule] = {
         instruction="Contrainte : sois très concis, maximum 2 paragraphes.",
         max_output_tokens_override=800,
     ),
+    "plan_free_concise": PlanRule(
+        instruction="CONSIGNE ABONNEMENT FREE : Sois très concis et direct. Limite-toi à l'essentiel (environ 5 à 7 phrases pour la synthèse).",
+        max_output_tokens_override=1000,
+    ),
+    "plan_premium_full": PlanRule(
+        instruction="CONSIGNE ABONNEMENT PREMIUM : Fournis une analyse riche, détaillée et nuancée (au moins 10 à 12 phrases pour la synthèse).",
+        max_output_tokens_override=None,
+    ),
 }
 
 

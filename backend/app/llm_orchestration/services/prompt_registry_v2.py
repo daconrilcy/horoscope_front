@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Tuple
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.infra.db.models import LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.observability.metrics import increment_counter
 
@@ -110,6 +111,19 @@ class PromptRegistryV2:
         # 3. Publish the new version
         version.status = PromptStatus.PUBLISHED
         version.published_at = utc_now()
+
+        # Story 66.9 AC4: Validate use case naming on publish
+        try:
+            from app.prompts.validators import validate_use_case_naming
+            # Try to get output_schema_id from UseCaseConfig if possible
+            stmt_uc = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key)
+            db_uc = db.execute(stmt_uc).scalar_one_or_none()
+            
+            warnings = validate_use_case_naming(use_case_key)
+            for w in warnings:
+                logger.warning("prompt_registry_v2_naming_warning: %s", w)
+        except Exception as e:
+            logger.debug("prompt_registry_v2_naming_validation_skipped: %s", e)
 
         db.commit()
         db.refresh(version)
