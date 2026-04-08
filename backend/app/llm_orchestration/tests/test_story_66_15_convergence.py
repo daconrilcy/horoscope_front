@@ -134,6 +134,7 @@ async def test_natal_convergence_to_assembly(db):
     setup_convergence_data(db)
     gateway = LLMGateway()
     
+    # We use the seeded assembly natal/natal_interpretation/premium
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case="natal_interpretation",
@@ -150,3 +151,33 @@ async def test_natal_convergence_to_assembly(db):
     assert plan.feature == "natal"
     assert plan.subfeature == "natal_interpretation"
     assert plan.output_schema is not None
+
+@pytest.mark.asyncio
+async def test_assembly_fallback_to_use_case(db, caplog):
+    """Test Story 66.15 AC4: Fallback to use_case when no assembly is found (L2 fix)."""
+    setup_convergence_data(db)
+    gateway = LLMGateway()
+
+    # Combination that DOES NOT exist in seeded assemblies
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="chat_astrologer",
+            feature="non_existent_feature", 
+            plan="free"
+        ),
+        request_id="req-fallback", trace_id="tr-fallback"
+    )
+
+    import logging
+    with caplog.at_level(logging.INFO, logger="app.llm_orchestration.gateway"):
+        plan, _ = await gateway._resolve_plan(request, db)
+
+    # Assertions
+    # model_source should NOT be 'assembly'
+    assert plan.model_source != "assembly"
+    # It should fallback to resolve_model (legacy behavior)
+    assert plan.model_source in ["os_granular", "os_legacy", "config", "stub"]
+    
+    # Story 66.11 D3/AC2 logic in gateway confirms the source
+    assert plan.execution_profile_source == "fallback_resolve_model"
+

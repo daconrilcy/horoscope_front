@@ -32,15 +32,19 @@ Chaque couche a une responsabilité unique. Ne mélangez pas les préoccupations
 
 ## 4. Ordre de résolution (Gateway)
 
+La transformation du prompt suit un ordre séquentiel strict. Les étapes 2 et 3 sont des mutations textuelles opérées par le Gateway avant l'appel final au moteur de rendu.
+
 1. **Qualification du contexte** (`CommonContextBuilder`)
 2. **Résolution de l'Assembly** (Sélection des IDs et activation des flags)
 3. **Résolution du Profil d'Exécution** (Choix du moteur et paramètres techniques)
-4. **Assemblage du Prompt Developer** :
-   - Blocs conditionnels `context_quality`
-   - Instructions de compensation `context_quality`
-   - Instructions de verbosité
-   - Rendu des placeholders `{{variable}}`
-5. **Résolution de la Persona**
-6. **Résolution du Schéma de sortie**
-7. **Gel du plan** -> `ResolvedExecutionPlan` est créé et devient immuable.
-8. **Appel Provider**
+4. **Assemblage et Mutations du Prompt Developer** (Opérées par le Gateway) :
+   - a. Injection des instructions de compensation `context_quality` (via `ContextQualityInjector`)
+   - b. Injection des instructions de verbosité (via `verbosity_profile`)
+5. **Rendu et Validation** (Opérés par `PromptRenderer.render()`) :
+   - a. Résolution des blocs conditionnels `{{#context_quality:VALUE}}...{{/context_quality}}`
+   - b. Rendu des placeholders `{{variable}}`
+   - c. Nettoyage final des résidus `{{...}}`
+6. **Résolution de la Persona**
+7. **Résolution du Schéma de sortie**
+8. **Gel du plan** -> `ResolvedExecutionPlan` est créé et devient immuable.
+9. **Appel Provider**

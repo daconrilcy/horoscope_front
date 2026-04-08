@@ -99,6 +99,7 @@ Des assertions ou validations statiques à des points clés du pipeline qui dét
   - [ ] Section "Ordre de résolution dans le gateway" : diagramme textuel du flux
 
 - [ ] Implémenter le guard de template content (AC: 2)
+  - [ ] Dans `backend/app/prompts/validators.py` : créer `ArchitectureViolation(entity, violation_type, severity, excerpt)` (dataclass ou BaseModel) (L3 fix)
   - [ ] Dans `backend/app/prompts/validators.py` : créer `validate_template_content(template_text: str) -> list[ArchitectureViolation]`
   - [ ] Patterns interdits dans les templates : références à des modèles spécifiques, instructions de provider
   - [ ] Appeler cette validation dans `PromptRegistryV2` au publish

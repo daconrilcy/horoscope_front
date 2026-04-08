@@ -25,37 +25,33 @@ PERSONA_BOUNDARY_POLICY = {
     ],
     "forbidden_patterns": {
         "output_contract": [
-            r"json",
-            r"format de sortie",
-            r"schéma",
+            r"répondre? en json",
+            r"format de sortie json",
+            r"schéma json",
             r"structure de réponse",
             r"respond in json",
-            r"clé",
-            r"field",
+            r"clé \"[a-z_]+\"",
+            r"field \"[a-z_]+\"",
         ],
         "hard_policy": [
-            r"ignore",
-            r"bypass",
-            r"oublie",
-            r"désactive",
-            r"sans restriction",
-            r"instruction système",
-            r"passer outre",
+            r"ignore(r|s)? les (règles|instructions|contraintes)",
+            r"bypass(er)? (security|safety|instructions)",
+            r"oublie les instructions précédentes",
+            r"désactive la sécurité",
+            r"sans restriction aucune",
+            r"passer outre les consignes système",
         ],
         "model_choice": [
-            r"utilise le modèle",
-            r"passe à",
+            r"utilise le modèle (gpt|claude|o1)",
+            r"passe au modèle",
             r"switch to model",
-            r"gpt-",
-            r"claude-",
-            r"o1-",
+            r"\b(gpt-4|gpt-5|claude-3|o1-preview)\b",
         ],
         "plan_rules": [
-            r"plan gratuit",
-            r"abonnement",
-            r"premium only",
-            r"payant",
-            r"limite de caractères",
+            r"si l'utilisateur est (en plan gratuit|premium)",
+            r"abonnement (free|premium|payant)",
+            r"uniquement pour les comptes",
+            r"limite de \d+ caractères",
         ],
     },
     "severity_map": {
@@ -65,6 +61,9 @@ PERSONA_BOUNDARY_POLICY = {
         "plan_rules": "WARNING",
     },
 }
+
+# Note Dev: Les patterns interdits sont des heuristiques (L4 fix).
+# Préférer des expressions composées (verbe + objet) aux mots simples pour limiter les faux positifs.
 
 def validate_persona_block(persona_content: str, persona_id: str) -> list[PersonaBoundaryViolation]:
     """

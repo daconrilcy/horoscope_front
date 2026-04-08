@@ -87,8 +87,8 @@ Ces budgets sont portés par un `LengthBudget` embarqué dans `PromptAssemblyCon
   - [ ] Si `PromptAssemblyConfig` a un `length_budget`, appeler `LengthBudgetInjector.inject_into_developer_prompt()` après l'assemblage des blocs
   - [ ] Si pas de `length_budget`, ne rien injecter (non-régression)
 
-- [ ] Intégrer `global_max_tokens` dans la résolution d'exécution (AC: 3)
-  - [ ] Dans `gateway._resolve_plan()`, si `ResolvedAssembly.length_budget.global_max_tokens` est défini, le propager dans `ResolvedExecutionPlan.max_output_tokens` (priorité sur `ExecutionConfigAdmin`)
+- [x] Intégrer `global_max_tokens` dans la résolution d'exécution (AC: 3)
+  - [x] Dans `gateway._resolve_plan()`, si `ResolvedAssembly.length_budget.global_max_tokens` est défini, le propager dans `ResolvedExecutionPlan.max_output_tokens` (priorité sur `ExecutionProfile.max_output_tokens`) (L1 fix)
 
 - [ ] Mettre à jour la preview admin (AC: 6)
   - [ ] L'instruction de longueur injectée doit apparaître dans `PromptAssemblyPreview.rendered_developer_prompt`
