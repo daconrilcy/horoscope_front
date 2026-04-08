@@ -3,19 +3,21 @@ from __future__ import annotations
 import uuid
 import logging
 import time
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, Any
 
 from sqlalchemy import select, and_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm_persona import LlmPersonaModel
 
 logger = logging.getLogger(__name__)
 
 # AC8: TTL Cache for resolved configs
-_ASSEMBLY_CACHE: Dict[str, Tuple[PromptAssemblyConfigModel, float]] = {}
+# M4 Fix: Store serialized dicts instead of ORM instances
+_ASSEMBLY_CACHE: Dict[str, Tuple[Dict[str, Any], float]] = {}
 CACHE_TTL = 60.0
 
 
@@ -32,6 +34,72 @@ class AssemblyRegistry:
             return await self.session.execute(stmt)
         return self.session.execute(stmt)
 
+    def _serialize_config(self, config: PromptAssemblyConfigModel) -> Dict[str, Any]:
+        """Convert ORM model to a serializable dict for cache (including relationships)."""
+        data = {
+            "id": config.id,
+            "feature": config.feature,
+            "subfeature": config.subfeature,
+            "plan": config.plan,
+            "locale": config.locale,
+            "feature_template_ref": config.feature_template_ref,
+            "subfeature_template_ref": config.subfeature_template_ref,
+            "persona_ref": config.persona_ref,
+            "plan_rules_ref": config.plan_rules_ref,
+            "execution_config": config.execution_config,
+            "output_contract_ref": config.output_contract_ref,
+            "feature_enabled": config.feature_enabled,
+            "subfeature_enabled": config.subfeature_enabled,
+            "persona_enabled": config.persona_enabled,
+            "plan_rules_enabled": config.plan_rules_enabled,
+            "status": config.status,
+            "created_by": config.created_by,
+            "created_at": config.created_at,
+            "published_at": config.published_at,
+        }
+        
+        # Serialize relationships if loaded
+        if config.feature_template:
+            data["_feature_template"] = {
+                "id": config.feature_template.id,
+                "use_case_key": config.feature_template.use_case_key,
+                "developer_prompt": config.feature_template.developer_prompt,
+                "model": config.feature_template.model,
+            }
+        if config.subfeature_template:
+            data["_subfeature_template"] = {
+                "id": config.subfeature_template.id,
+                "use_case_key": config.subfeature_template.use_case_key,
+                "developer_prompt": config.subfeature_template.developer_prompt,
+                "model": config.subfeature_template.model,
+            }
+        if config.persona:
+            data["_persona"] = {
+                "id": config.persona.id,
+                "name": config.persona.name,
+                "description": config.persona.description,
+                "tone": config.persona.tone,
+                "verbosity": config.persona.verbosity,
+            }
+        return data
+
+    def _reconstruct_config(self, data: Dict[str, Any]) -> PromptAssemblyConfigModel:
+        """Reconstruct a detached ORM instance from serialized dict."""
+        data_copy = data.copy()
+        feat_data = data_copy.pop("_feature_template", None)
+        sub_data = data_copy.pop("_subfeature_template", None)
+        pers_data = data_copy.pop("_persona", None)
+        
+        config = PromptAssemblyConfigModel(**data_copy)
+        if feat_data:
+            config.feature_template = LlmPromptVersionModel(**feat_data)
+        if sub_data:
+            config.subfeature_template = LlmPromptVersionModel(**sub_data)
+        if pers_data:
+            config.persona = LlmPersonaModel(**pers_data)
+            
+        return config
+
     async def get_active_config(
         self, feature: str, subfeature: Optional[str], plan: Optional[str], locale: str = "fr-FR"
     ) -> Optional[PromptAssemblyConfigModel]:
@@ -44,9 +112,10 @@ class AssemblyRegistry:
         
         # AC8: Cache lookup
         if cache_key in _ASSEMBLY_CACHE:
-            config, expiry = _ASSEMBLY_CACHE[cache_key]
+            data, expiry = _ASSEMBLY_CACHE[cache_key]
             if now < expiry:
-                return config
+                # Return a detached instance
+                return self._reconstruct_config(data)
             del _ASSEMBLY_CACHE[cache_key]
 
         # Search patterns in order of priority
@@ -82,8 +151,8 @@ class AssemblyRegistry:
                 break
 
         if resolved_config:
-            # AC8: Update cache
-            _ASSEMBLY_CACHE[cache_key] = (resolved_config, now + CACHE_TTL)
+            # AC8: Update cache with serialized data
+            _ASSEMBLY_CACHE[cache_key] = (self._serialize_config(resolved_config), now + CACHE_TTL)
             
         return resolved_config
 
