@@ -685,12 +685,12 @@ class LLMGateway:
                             developer_prompt=assemble_developer_prompt(resolved_assembly, assembly_db),
                             prompt_version_id=str(assembly_db.id),
                             persona_strategy="forbidden",  # Persona already handled in assembly
-                            interaction_mode="chat" if request.overrides and request.overrides.interaction_mode == "chat" else "structured",
-                            user_question_policy="none",   # Policy already handled in building user payload
+                            interaction_mode=assembly_db.interaction_mode,
+                            user_question_policy=assembly_db.user_question_policy,
                             output_schema_id=resolved_assembly.output_contract_ref,
                             reasoning_effort=resolved_assembly.execution_config.reasoning_effort,
                             verbosity=resolved_assembly.execution_config.verbosity,
-                            fallback_use_case=resolved_assembly.execution_config.fallback_model,
+                            fallback_use_case=resolved_assembly.execution_config.fallback_use_case,
                         )
                         source_base = "assembly"
                         # CRITICAL FIX: ensure model_id is updated from this config

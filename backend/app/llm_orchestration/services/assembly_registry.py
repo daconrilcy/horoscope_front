@@ -48,6 +48,9 @@ class AssemblyRegistry:
             "plan_rules_ref": config.plan_rules_ref,
             "execution_config": config.execution_config,
             "output_contract_ref": config.output_contract_ref,
+            "interaction_mode": config.interaction_mode,
+            "user_question_policy": config.user_question_policy,
+            "fallback_use_case": config.fallback_use_case,
             "feature_enabled": config.feature_enabled,
             "subfeature_enabled": config.subfeature_enabled,
             "persona_enabled": config.persona_enabled,
@@ -220,11 +223,25 @@ class AssemblyRegistry:
         Rollback to a specific archived configuration.
         """
         # L2 Fix: Single transaction for atomicity
+        # M4 Fix: Use direct update for the archive step to avoid issues with detached instances
         async def _do_rollback():
-            current_active = await self.get_active_config(feature, subfeature, plan, locale)
-            if current_active:
-                current_active.status = PromptStatus.ARCHIVED
+            # Archive current active
+            archive_stmt = (
+                update(PromptAssemblyConfigModel)
+                .where(
+                    and_(
+                        PromptAssemblyConfigModel.feature == feature,
+                        PromptAssemblyConfigModel.subfeature == subfeature,
+                        PromptAssemblyConfigModel.plan == plan,
+                        PromptAssemblyConfigModel.locale == locale,
+                        PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+                    )
+                )
+                .values(status=PromptStatus.ARCHIVED)
+            )
+            await self._execute(archive_stmt)
                 
+            # Publish target
             target_config = await self.get_config_by_id(target_id)
             if not target_config:
                 raise ValueError(f"Target config {target_id} not found")

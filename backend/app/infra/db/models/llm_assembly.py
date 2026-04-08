@@ -48,6 +48,10 @@ class PromptAssemblyConfigModel(Base):
     execution_config: Mapped[dict] = mapped_column(JSON)
     output_contract_ref: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
+    interaction_mode: Mapped[str] = mapped_column(String(16), default="structured")
+    user_question_policy: Mapped[str] = mapped_column(String(16), default="none")
+    fallback_use_case: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+
     feature_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     subfeature_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     persona_enabled: Mapped[bool] = mapped_column(Boolean, default=True)

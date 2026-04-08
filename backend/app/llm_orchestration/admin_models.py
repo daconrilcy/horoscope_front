@@ -28,7 +28,7 @@ class ExecutionConfigAdmin(BaseModel):
     timeout_seconds: int = 30
     reasoning_effort: Optional[Literal["low", "medium", "high"]] = None
     verbosity: Optional[Literal["verbose", "normal", "concise"]] = None
-    fallback_model: Optional[str] = None
+    fallback_use_case: Optional[str] = None
 
     @model_validator(mode="after")
     def validate_provider_params(self) -> "ExecutionConfigAdmin":
@@ -41,10 +41,10 @@ class ExecutionConfigAdmin(BaseModel):
             if self.reasoning_effort is not None:
                 raise ValueError("Reasoning effort is only supported for reasoning models")
                 
-        if self.fallback_model:
-            is_fallback_reasoning = is_reasoning_model(self.fallback_model)
-            if is_fallback_reasoning != is_reasoning:
-                raise ValueError("Fallback model must be from the same family (reasoning vs standard)")
+        if self.fallback_use_case:
+            # We don't strictly validate fallback_use_case as reasoning or not here
+            # because it's a full use case redirection, not just a model swap.
+            pass
                 
         return self
 
@@ -65,6 +65,10 @@ class PromptAssemblyConfig(BaseModel):
 
     execution_config: ExecutionConfigAdmin
     output_contract_ref: Optional[str] = None
+
+    interaction_mode: str = "structured"
+    user_question_policy: str = "none"
+    fallback_use_case: Optional[str] = None
 
     feature_enabled: bool = True
     subfeature_enabled: bool = True

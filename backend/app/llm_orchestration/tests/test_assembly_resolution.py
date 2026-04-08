@@ -4,7 +4,7 @@ from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import LLMExecutionRequest, ExecutionUserInput
+from app.llm_orchestration.models import LLMExecutionRequest, ExecutionUserInput, InputValidationError, ExecutionContext, ExecutionMessage
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
 from app.llm_orchestration.services.assembly_resolver import resolve_assembly, assemble_developer_prompt
 
@@ -186,41 +186,114 @@ async def test_gateway_assembly_priority_id(db):
     assert plan2.model_id == "m2"
     assert plan2.assembly_id == str(c2.id)
 
+from app.llm_orchestration.services.assembly_admin_service import AssemblyAdminService
+from app.llm_orchestration.admin_models import PromptAssemblyConfig, ExecutionConfigAdmin
+
 @pytest.mark.asyncio
-async def test_assembly_template_source_traceability(db):
-    # Setup assembly with subfeature
+async def test_assembly_rollback_with_hot_cache(db):
+    # 1. Setup two published versions for same target
     fv = LlmPromptVersionModel(
-        id=uuid.uuid4(), use_case_key="ts", developer_prompt="F",
+        id=uuid.uuid4(), use_case_key="rb", developer_prompt="P",
         status=PromptStatus.PUBLISHED, model="m", created_by="t"
     )
-    sv = LlmPromptVersionModel(
-        id=uuid.uuid4(), use_case_key="ts_sub", developer_prompt="S",
-        status=PromptStatus.PUBLISHED, model="m", created_by="t"
-    )
-    db.add_all([fv, sv])
+    db.add(fv)
     db.commit()
 
     c1 = PromptAssemblyConfigModel(
-        id=uuid.uuid4(), feature="ts", subfeature="sub", locale="fr-FR",
-        feature_template_ref=fv.id, subfeature_template_ref=sv.id,
-        execution_config={"model":"m"}, status=PromptStatus.PUBLISHED, created_by="t"
+        id=uuid.uuid4(), feature="rb", locale="fr-FR",
+        feature_template_ref=fv.id, execution_config={"model":"m1"},
+        status=PromptStatus.ARCHIVED, created_by="t"
     )
     c2 = PromptAssemblyConfigModel(
-        id=uuid.uuid4(), feature="ts", subfeature="other", locale="fr-FR",
-        feature_template_ref=fv.id, subfeature_template_ref=None,
-        execution_config={"model":"m"}, status=PromptStatus.PUBLISHED, created_by="t"
+        id=uuid.uuid4(), feature="rb", locale="fr-FR",
+        feature_template_ref=fv.id, execution_config={"model":"m2"},
+        status=PromptStatus.PUBLISHED, created_by="t"
     )
     db.add_all([c1, c2])
     db.commit()
 
+    registry = AssemblyRegistry(db)
+    
+    # 2. Heat cache
+    res_heat = await registry.get_active_config("rb", None, None, "fr-FR")
+    assert res_heat.execution_config["model"] == "m2"
+
+    # 3. Rollback to c1
+    await registry.rollback_config("rb", None, None, "fr-FR", c1.id)
+    
+    # 4. Verify DB and Cache (cache should be invalidated)
+    res_final = await registry.get_active_config("rb", None, None, "fr-FR")
+    assert res_final.execution_config["model"] == "m1"
+    assert res_final.id == c1.id
+
+@pytest.mark.asyncio
+async def test_assembly_admin_validate_all_templates(db):
+    fv_valid = LlmPromptVersionModel(
+        id=uuid.uuid4(), use_case_key="val_feat", developer_prompt="Valid {{locale}}",
+        status=PromptStatus.PUBLISHED, model="m", created_by="t"
+    )
+    sv_invalid = LlmPromptVersionModel(
+        id=uuid.uuid4(), use_case_key="val_sub", developer_prompt="Invalid {{forbidden}}",
+        status=PromptStatus.PUBLISHED, model="m", created_by="t"
+    )
+    db.add_all([fv_valid, sv_invalid])
+    db.commit()
+
+    admin_service = AssemblyAdminService(db)
+    config_in = PromptAssemblyConfig(
+        feature="guidance",
+        feature_template_ref=fv_valid.id,
+        subfeature_template_ref=sv_invalid.id,
+        execution_config=ExecutionConfigAdmin(model="gpt-4o")
+    )
+
+    # Should raise error because of subfeature_template_ref
+    with pytest.raises(ValueError, match="Invalid placeholders in subfeature template"):
+        await admin_service.create_draft(config_in, "test@test.com")
+
+@pytest.mark.asyncio
+async def test_gateway_assembly_chat_mode(db):
+    fv = LlmPromptVersionModel(
+        id=uuid.uuid4(), use_case_key="chat", developer_prompt="CHAT PROMPT {{last_user_msg}}",
+        status=PromptStatus.PUBLISHED, model="gpt-4o", created_by="t"
+    )
+    db.add(fv)
+    db.commit()
+
+    config = PromptAssemblyConfigModel(
+        feature="chat", locale="fr-FR",
+        feature_template_ref=fv.id,
+        execution_config={"model": "gpt-4o"},
+        interaction_mode="chat",
+        user_question_policy="required",
+        status=PromptStatus.PUBLISHED, created_by="t"
+    )
+    db.add(config)
+    db.commit()
+
     gateway = LLMGateway()
     
-    # Case 1: explicit_subfeature
-    req1 = LLMExecutionRequest(user_input=ExecutionUserInput(use_case="ts", feature="ts", subfeature="sub"), request_id="r1", trace_id="t1")
-    plan1, _ = await gateway._resolve_plan(req1, db)
-    assert plan1.template_source == "explicit_subfeature"
+    # 1. Test missing question triggers InputValidationError (policy=required)
+    req_fail = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="chat", feature="chat"),
+        request_id="r1", trace_id="t1"
+    )
+    with pytest.raises(InputValidationError):
+        await gateway.execute_request(req_fail, db=db)
 
-    # Case 2: fallback_default (no subfeature template defined in assembly)
-    req2 = LLMExecutionRequest(user_input=ExecutionUserInput(use_case="ts", feature="ts", subfeature="other"), request_id="r2", trace_id="t2")
-    plan2, _ = await gateway._resolve_plan(req2, db)
-    assert plan2.template_source == "fallback_default"
+    # 2. Test successful plan resolution with chat mode
+    req_ok = LLMExecutionRequest(
+        user_input=ExecutionUserInput(use_case="chat", feature="chat", message="Hello"),
+        context=ExecutionContext(history=[ExecutionMessage(role="user", content="Hi")]),
+        request_id="r2", trace_id="t2"
+    )
+    plan, _ = await gateway._resolve_plan(req_ok, db)
+    assert plan.interaction_mode == "chat"
+    assert plan.user_question_policy == "required"
+
+    # 3. Test message composition (Stage 2)
+    messages = gateway._build_messages(req_ok, plan, None)
+    # system + developer + history(1) + user = 4 messages
+    assert len(messages) == 4
+    assert messages[2]["content"] == "Hi"
+    assert messages[3]["content"] == "Hello"

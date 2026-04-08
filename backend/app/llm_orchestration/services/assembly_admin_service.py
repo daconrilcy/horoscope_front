@@ -36,6 +36,13 @@ class AssemblyAdminService:
         self.session = session
         self.registry = AssemblyRegistry(session)
 
+    async def _execute(self, stmt):
+        """Unified executor for sync/async sessions."""
+        from sqlalchemy.ext.asyncio import AsyncSession
+        if isinstance(self.session, AsyncSession):
+            return await self.session.execute(stmt)
+        return self.session.execute(stmt)
+
     async def list_configs(self, feature: Optional[str] = None) -> List[PromptAssemblyConfigModel]:
         """List all assembly configurations, optionally filtered by feature."""
         stmt = select(PromptAssemblyConfigModel).options(
@@ -46,7 +53,7 @@ class AssemblyAdminService:
         if feature:
             stmt = stmt.where(PromptAssemblyConfigModel.feature == feature)
         
-        result = await self.session.execute(stmt)
+        result = await self._execute(stmt)
         return list(result.scalars().all())
 
     async def get_config(self, config_id: uuid.UUID) -> Optional[PromptAssemblyConfigModel]:
@@ -55,15 +62,26 @@ class AssemblyAdminService:
 
     async def create_draft(self, config_in: PromptAssemblyConfig, created_by: str) -> PromptAssemblyConfigModel:
         """Create a new draft assembly configuration."""
-        # AC6: Validate placeholders before saving draft
-        # 1. Fetch feature template to get developer_prompt
+        # AC6: Validate placeholders for BOTH templates before saving draft
+        
+        # 1. Feature Template
         stmt = select(LlmPromptVersionModel).where(LlmPromptVersionModel.id == config_in.feature_template_ref)
-        res = await self.session.execute(stmt)
+        res = await self._execute(stmt)
         fv = res.scalar_one_or_none()
         if fv:
             invalid = validate_placeholders(fv.developer_prompt, config_in.feature)
             if invalid:
                 raise ValueError(f"Invalid placeholders in feature template: {', '.join(invalid)}")
+
+        # 2. Subfeature Template (if provided)
+        if config_in.subfeature_template_ref:
+            stmt_sub = select(LlmPromptVersionModel).where(LlmPromptVersionModel.id == config_in.subfeature_template_ref)
+            res_sub = await self._execute(stmt_sub)
+            sv = res_sub.scalar_one_or_none()
+            if sv:
+                invalid_sub = validate_placeholders(sv.developer_prompt, config_in.feature)
+                if invalid_sub:
+                    raise ValueError(f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}")
 
         new_config = PromptAssemblyConfigModel(
             feature=config_in.feature,
@@ -76,6 +94,9 @@ class AssemblyAdminService:
             plan_rules_ref=config_in.plan_rules_ref,
             execution_config=config_in.execution_config.model_dump(),
             output_contract_ref=config_in.output_contract_ref,
+            interaction_mode=config_in.interaction_mode,
+            user_question_policy=config_in.user_question_policy,
+            fallback_use_case=config_in.fallback_use_case,
             feature_enabled=config_in.feature_enabled,
             subfeature_enabled=config_in.subfeature_enabled,
             persona_enabled=config_in.persona_enabled,
@@ -91,7 +112,7 @@ class AssemblyAdminService:
         """
         Publish a configuration using registry.
         """
-        # AC6: Re-validate placeholders before publishing
+        # AC6: Re-validate ALL templates before publishing
         config = await self.get_config(config_id)
         if not config:
             raise ValueError(f"Config {config_id} not found")
@@ -99,6 +120,11 @@ class AssemblyAdminService:
         invalid = validate_placeholders(config.feature_template.developer_prompt, config.feature)
         if invalid:
             raise ValueError(f"Invalid placeholders in feature template: {', '.join(invalid)}")
+            
+        if config.subfeature_template:
+            invalid_sub = validate_placeholders(config.subfeature_template.developer_prompt, config.feature)
+            if invalid_sub:
+                raise ValueError(f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}")
             
         return await self.registry.publish_config(config_id)
 
