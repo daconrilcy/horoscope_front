@@ -255,6 +255,7 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.6 — Qualifier le common context et enrichir `GatewayMeta`](#story-666--qualifier-le-common-context-et-enrichir-gatewaymeta)
 - [Story 66.7 — Migrer le parcours natal vers l'entrée applicative canonique](#story-667--migrer-le-parcours-natal-vers-lentrée-applicative-canonique)
 - [Story 66.9 — Unifier la doctrine d'abonnement dans la couche LLM](#story-669--unifier-la-doctrine-dabonnement-dans-la-couche-llm)
+- [Story 66.10 — Définir les bornes stylistiques de la persona astrologue](#story-6610--définir-les-bornes-stylistiques-de-la-persona-astrologue)
 
 ---
 
@@ -597,6 +598,35 @@ L'epic sera considéré comme terminé lorsque :
 - [ ] Les tests unitaires couvrent chaque étape du pipeline séparément.
 - [ ] La documentation d'architecture (`docs/architecture/llm-processus-architecture.md`) est mise à jour.
 - [ ] La doctrine d'abonnement (Story 66.9) est appliquée aux use cases éligibles.
+- [ ] Les bornes stylistiques de la persona (Story 66.10) sont encodées et validées.
+
+---
+
+## Story 66.10 — Définir les bornes stylistiques de la persona astrologue
+
+**Statut :** draft
+
+En tant qu'**architecte plateforme**,
+Je veux **définir et encoder explicitement les dimensions que la persona astrologue peut modifier**,
+Afin de **garantir que la persona reste une couche purement stylistique et n'interfère pas avec la logique métier ou la sécurité**.
+
+**Acceptance Criteria :**
+
+**Given** la politique `PersonaBoundaryPolicy`
+**When** un bloc persona est composé (via `PersonaComposer`)
+**Then** une validation détecte les tentatives de redéfinition de dimensions interdites (ex: schéma JSON, hard policy, choix du modèle)
+
+**Given** l'interface d'administration des personas
+**When** une modification est enregistrée
+**Then** les violations de bornes sont immédiatement signalées par un avertissement
+
+**Given** une exécution LLM
+**When** un bloc persona contient une violation
+**Then** un avertissement est loggué dans le backend sans bloquer l'exécution (sauf pour les violations critiques type "bypass security")
+
+**Given** la documentation d'architecture
+**When** consultée
+**Then** elle liste clairement les dimensions autorisées (ton, vocabulaire, etc.) et interdites
 
 ---
 

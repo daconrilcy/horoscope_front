@@ -518,6 +518,34 @@ Responsabilité :
 - limites d'expression ;
 - cadrage de voix.
 
+#### Bornes stylistiques de la persona (Story 66.10)
+
+La persona est une couche **purement stylistique**. Elle ne doit en aucun cas interférer avec la logique métier, les contrats de sortie ou la sécurité.
+
+##### Dimensions autorisées (Style)
+
+| Dimension | Description |
+|---|---|
+| `tone` | Registre de voix : chaleureux, professionnel, mystique, factuel... |
+| `warmth` | Degré d'empathie et de proximité ressentie |
+| `vocabulary` | Champ lexical privilégié : ésotérique, psychologique, poétique... |
+| `symbolism_level` | Densité des références symboliques et mythologiques |
+| `explanatory_density` | Niveau de détail explicatif par rapport à l'affirmation |
+| `formulation_style` | Structure de la formulation (questions, affirmations, métaphores...) |
+
+##### Dimensions interdites (Structure & Logique)
+
+| Dimension | Raison |
+|---|---|
+| `hard_policy` | Immuable — les garde-fous de sécurité ne sont pas négociables |
+| `feature_intent` | Objectif métier défini dans le template de la feature |
+| `output_contract` | Le schéma JSON est imposé par le contrat technique |
+| `plan_rules` | Les limites liées à l'abonnement sont gérées par la couche Plan |
+| `model_choice` | Le choix du modèle LLM relève du profil d'exécution |
+| `placeholders` | Les variables techniques sont gérées par le moteur de rendu |
+
+Un lint automatique (Story 66.10) analyse le contenu des personas et émet des avertissements si des mots-clés interdits (ex: "JSON", "ignore instructions", "GPT-4") sont détectés.
+
 Source de vérité :
 
 - persona active ou ciblée en base de données ;

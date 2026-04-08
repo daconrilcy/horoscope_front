@@ -47,9 +47,17 @@ from app.services.audit_service import AuditEventCreatePayload, AuditService
 router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])
 
 
+from app.llm_orchestration.persona_boundary import (
+    PersonaBoundaryViolation,
+    validate_persona_block,
+)
+from app.llm_orchestration.services.persona_composer import compose_persona_block
+
+
 class ResponseMeta(BaseModel):
     request_id: str
     warnings: List[str] = Field(default_factory=list)
+    boundary_violations: List[PersonaBoundaryViolation] = Field(default_factory=list)
 
 
 class LlmUseCaseListResponse(BaseModel):
@@ -271,6 +279,14 @@ def create_persona(
     db.commit()
     db.refresh(persona)
 
+    # Boundary validation (Story 66.10 AC5)
+    boundary_violations = []
+    try:
+        block = compose_persona_block(persona)
+        boundary_violations = validate_persona_block(block, str(persona.id))
+    except Exception as e:
+        logger.debug("admin_persona_validation_error: %s", e)
+
     _record_audit_event(
         db,
         request_id=request_id,
@@ -283,7 +299,10 @@ def create_persona(
     )
     db.commit()
 
-    return {"data": LlmPersona.model_validate(persona), "meta": {"request_id": request_id}}
+    return {
+        "data": LlmPersona.model_validate(persona),
+        "meta": {"request_id": request_id, "boundary_violations": boundary_violations},
+    }
 
 
 @router.get("/personas/{id}", response_model=LlmPersonaDetailResponse)
@@ -358,6 +377,14 @@ def update_persona(
     db.commit()
     db.refresh(persona)
 
+    # Boundary validation (Story 66.10 AC5)
+    boundary_violations = []
+    try:
+        block = compose_persona_block(persona)
+        boundary_violations = validate_persona_block(block, str(persona.id))
+    except Exception as e:
+        logger.debug("admin_persona_validation_error: %s", e)
+
     action = "llm_persona_update"
     if "enabled" in update_data:
         action = "persona_activated" if persona.enabled else "persona_deactivated"
@@ -374,7 +401,10 @@ def update_persona(
     )
     db.commit()
 
-    return {"data": LlmPersona.model_validate(persona), "meta": {"request_id": request_id}}
+    return {
+        "data": LlmPersona.model_validate(persona),
+        "meta": {"request_id": request_id, "boundary_violations": boundary_violations},
+    }
 
 
 @router.delete("/personas/{id}", response_model=LlmPersonaApiResponse)

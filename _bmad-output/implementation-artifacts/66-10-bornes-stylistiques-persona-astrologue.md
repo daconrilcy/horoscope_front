@@ -138,3 +138,10 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 ### File List
+
+- `backend/app/llm_orchestration/persona_boundary.py`
+- `backend/app/llm_orchestration/services/persona_composer.py`
+- `backend/app/api/v1/routers/admin_llm.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `_bmad-output/planning-artifacts/epic-66-llm-orchestration-contrats-explicites.md`
+- `backend/app/llm_orchestration/tests/test_story_66_10_persona_boundary.py`

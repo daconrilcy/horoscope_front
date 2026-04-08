@@ -63,6 +63,19 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
         # We still add a header for structure
         block = f"## Directives de persona : {persona_name}\n{prompt_content}"
 
+        # 3. Boundary validation (Story 66.10 AC2, AC3, AC4)
+        try:
+            from app.llm_orchestration.persona_boundary import validate_persona_block
+            violations = validate_persona_block(block, str(persona.id))
+            for v in violations:
+                msg = f"persona_boundary_violation: {v.dimension} detected in persona block id={v.persona_id}. Severity={v.severity}. Excerpt: {v.excerpt}"
+                if v.severity == "ERROR":
+                    logger.error(msg)
+                else:
+                    logger.warning(msg)
+        except Exception as e:
+            logger.debug("persona_boundary_validation_skipped: %s", e)
+
         # Security: check size
         block_len = len(block)
         if block_len > 3000:
@@ -140,6 +153,19 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
         lines.append(" ".join(formatting_parts))
 
     block = "\n".join(lines)
+
+    # 3. Boundary validation (Story 66.10 AC2, AC3, AC4)
+    try:
+        from app.llm_orchestration.persona_boundary import validate_persona_block
+        violations = validate_persona_block(block, str(persona.id))
+        for v in violations:
+            msg = f"persona_boundary_violation: {v.dimension} detected in persona block id={v.persona_id}. Severity={v.severity}. Excerpt: {v.excerpt}"
+            if v.severity == "ERROR":
+                logger.error(msg)
+            else:
+                logger.warning(msg)
+    except Exception as e:
+        logger.debug("persona_boundary_validation_skipped: %s", e)
 
     # Security: check size
     block_len = len(block)
