@@ -1,6 +1,6 @@
 # Génération des Prompts LLM par Feature
 
-Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.18.
+Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.19.
 
 Objectifs :
 
@@ -96,7 +96,7 @@ flowchart TD
     AC --> AD["Réponse finale"]
 ```
 
-## Stories 66.9 à 66.18
+## Stories 66.9 à 66.19
 
 | Story | Apport canonique | Impact dans le processus |
 |---|---|---|
@@ -110,6 +110,7 @@ flowchart TD
 | `66.16` | Matrice d'évaluation | garde-fous de non-régression sur la composition |
 | `66.17` | Doctrine canonique de responsabilité | clarification documentaire des rôles de chaque entité |
 | `66.18` | Profils provider stables | encapsulation des paramètres provider derrière des profils internes |
+| `66.19` | Migration narrator daily | convergence de `horoscope_daily` et `daily_prediction` vers `AIEngineAdapter` puis `LLMGateway.execute_request()` |
 
 ## Couverture réelle par famille
 
@@ -117,11 +118,11 @@ Cette section ne décrit que ce qui est explicitement visible dans le code. Elle
 
 | Famille | Indice explicite dans le code | Chemin effectivement observable | Commentaire strictement dérivé du code |
 |---|---|---|---|
-| `horoscope_daily` | `DEPRECATED_USE_CASE_MAPPING` mappe `horoscope_daily_free` et `horoscope_daily_full` vers `feature="horoscope_daily"` avec `plan="free"` ou `plan="premium"` | compatibilité `use_case` legacy vers `feature/plan` | c'est la seule famille dont la migration `use_case -> feature/plan` est explicitement codée dans `catalog.py` |
+| `horoscope_daily` | `AIEngineAdapter.generate_horoscope_narration()` route `variant_code="summary_only"` vers `feature="horoscope_daily"`, `subfeature="narration"`, `plan="free"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | `public_projection.py` appelle désormais l'adapter canonique ; le mapping déprécié `horoscope_daily_free/full -> feature/plan` reste présent pour compatibilité |
 | `natal` | `seed_assembly.py` crée une assembly publiée pour `feature="natal_interpretation"` ; `generate_natal_interpretation()` continue à construire un `use_case` canonique | chemin hybride : use case canonique + support assembly explicite | le code prouve l'existence d'un support assembly pour `natal_interpretation`, mais l'entrée métier reste encore construite côté adapter à partir d'un `use_case` |
 | `guidance` | `generate_guidance()` construit des requêtes à partir de `guidance_daily`, `guidance_weekly`, `guidance_contextual` | chemin observable `use_case-first` côté adapter ; support assembly possible si `feature` est fourni | aucun mapping déprécié ni seed assembly guidance n'est codé en dur dans les sources inspectées |
 | `chat` | `generate_chat_reply()` construit aujourd'hui `use_case="chat_astrologer"` | chemin observable `use_case-first` côté adapter ; support assembly possible si `feature` est fourni | aucun mapping déprécié ni seed assembly chat n'est codé en dur dans les sources inspectées |
-| `daily_prediction` | `llm_narrator.py` route encore entre `horoscope_daily_free`, `horoscope_daily_full` et `daily_prediction` | chemin observable `use_case-first` | aucune résolution `feature/subfeature/plan` dédiée à `daily_prediction` n'est explicitement codée dans les sources inspectées |
+| `daily_prediction` | `AIEngineAdapter.generate_horoscope_narration()` route `variant_code` absent ou non spécialisé vers `feature="daily_prediction"`, `subfeature="narration"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | ici la convergence repose sur une construction canonique explicite par l'adapter, pas sur un mapping déprécié préexistant ; `llm_narrator.py` reste seulement en compatibilité dépréciée |
 | `support` | aucune orchestration LLM spécifique à cette famille n'a été trouvée dans les sources inspectées pour ce document | non documenté comme famille LLM active à partir des sources inspectées | ne pas lui attribuer un statut de convergence sans nouvelle preuve dans le code |
 
 ### Clarification sur `natal`
@@ -199,34 +200,36 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["Prediction layer"] --> B["LLMNarrator.narrate"]
+    A["Prediction layer / public_projection"] --> B["AIEngineAdapter.generate_horoscope_narration"]
     B --> C{"variant_code"}
-    C -->|summary_only| D["use_case=horoscope_daily_free"]
-    C -->|full| E["use_case=horoscope_daily_full"]
-    C -->|autre| F["use_case=daily_prediction"]
-    D --> G["resolve_model(use_case)"]
-    E --> G
-    F --> G
-    G --> H["AstrologerPromptBuilder.build"]
-    H --> I["openai.AsyncOpenAI.chat.completions.create"]
-    I --> J["response_format=json_object"]
-    J --> K["Parsing JSON local"]
-    K --> L["NarratorResult"]
+    C -->|summary_only| D["feature=horoscope_daily<br/>subfeature=narration<br/>plan=free"]
+    C -->|full| E["feature=horoscope_daily<br/>subfeature=narration<br/>plan=premium"]
+    D --> F["AstrologerPromptBuilder.build"]
+    E --> F
+    F --> G["Construit LLMExecutionRequest"]
+    G --> H["LLMGateway.execute_request"]
+    H --> I["Resolve Plan / Assembly / ExecutionProfile"]
+    I --> J["Call Provider"]
+    J --> K["Validate / Normalize JSON"]
+    K --> L["Map GatewayResult -> NarratorResult"]
+    L --> M["Post-validation métier longueur<br/>retry adapter si nécessaire"]
 ```
 
 ### Daily Prediction
 
 ```mermaid
 flowchart TD
-    A["Prediction layer"] --> B["LLMNarrator.narrate"]
+    A["Prediction layer / public_projection"] --> B["AIEngineAdapter.generate_horoscope_narration"]
     B --> C["variant_code absent ou non spécialisé"]
-    C --> D["use_case=daily_prediction"]
-    D --> E["resolve_model(daily_prediction)"]
-    E --> F["AstrologerPromptBuilder.build"]
-    F --> G["openai.AsyncOpenAI.chat.completions.create"]
-    G --> H["response_format=json_object"]
-    H --> I["Parsing JSON local"]
-    I --> J["NarratorResult"]
+    C --> D["feature=daily_prediction<br/>subfeature=narration<br/>plan métier par défaut"]
+    D --> E["AstrologerPromptBuilder.build"]
+    E --> F["Construit LLMExecutionRequest"]
+    F --> G["LLMGateway.execute_request"]
+    G --> H["Resolve Plan / Assembly / ExecutionProfile"]
+    H --> I["Call Provider"]
+    I --> J["Validate / Normalize JSON"]
+    J --> K["Map GatewayResult -> NarratorResult"]
+    K --> L["Post-validation métier longueur<br/>retry adapter si nécessaire"]
 ```
 
 ### Support
@@ -235,11 +238,14 @@ Aucun pipeline de génération de réponse LLM spécifique à une famille `suppo
 
 ### Synthèse sur `horoscope_daily` et `daily_prediction`
 
-À date, `horoscope_daily` et `daily_prediction` restent documentés comme des parcours hors pipeline canonique du gateway :
+À date, `horoscope_daily` et `daily_prediction` ont convergé vers le pipeline canonique pour leur chemin principal observé :
 
-- ils passent par `LLMNarrator.narrate()` ;
-- ils appellent OpenAI directement via `chat.completions.create` ;
-- ils ne passent pas par `LLMGateway.execute_request()` dans le chemin principal observé ici.
+- `public_projection.py` appelle `AIEngineAdapter.generate_horoscope_narration()` ;
+- l'adapter construit un `LLMExecutionRequest` canonique avec `feature/subfeature/plan` selon `variant_code` ;
+- l'exécution passe par `LLMGateway.execute_request()` puis par la validation structurée ;
+- le contrat aval reste `NarratorResult` grâce à un mapping explicite `GatewayResult -> NarratorResult`.
+
+Le composant `LLMNarrator` existe encore dans le dépôt, mais il est désormais documenté comme déprécié et ne constitue plus le chemin principal de narration daily.
 
 ## Doctrine d'abonnement
 
@@ -282,6 +288,7 @@ But :
 | `PromptAssemblyConfig` | sélection de configuration, activation de blocs, plan, longueur, liens vers persona et exécution | paramètres provider bruts, règles métier cachées dans les `plan_rules` |
 | `LlmPromptVersionModel` | contenu textuel des blocs feature/subfeature | choix de modèle, provider, règles de sécurité |
 | `LlmPersonaModel` / composition persona | ton, chaleur, vocabulaire, densité symbolique | JSON schema, provider, plan, hard policy |
+| contrat de sortie / schéma de validation | structure JSON attendue, champs requis et validation de sortie | choix de provider, paramètres runtime, style de persona |
 | `ExecutionProfile` | modèle, provider, reasoning/verbosity/output/tool profiles, timeout, max tokens techniques | texte métier, longueur éditoriale par section |
 | `LengthBudget` | instruction éditoriale de longueur + plafond global optionnel | sélection du provider |
 | `PromptRenderer` | rendu final des blocs conditionnels et placeholders | logique de choix de modèle |
@@ -693,7 +700,7 @@ Les chemins ci-dessous sont explicitement observables dans le code actuel.
 | fallback `resolve_model()` | [catalog.py](/c:/dev/horoscope_front/backend/app/prompts/catalog.py) + [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | maintient le chemin historique de choix de modèle |
 | compatibilité `ExecutionConfigAdmin` brut | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | supporte encore `reasoning_effort` / `verbosity` portés directement par la config |
 | fallback provider vers OpenAI | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | réabsorbe les providers non encore réellement supportés |
-| narrator hors gateway | [llm_narrator.py](/c:/dev/horoscope_front/backend/app/prediction/llm_narrator.py) | pipeline legacy direct OpenAI pour `horoscope_daily_*` et `daily_prediction` |
+| narrator legacy déprécié | [llm_narrator.py](/c:/dev/horoscope_front/backend/app/prediction/llm_narrator.py) | compatibilité historique documentée ; ne doit plus être considéré comme le chemin principal pour `horoscope_daily` et `daily_prediction`, ni être réintroduit comme fallback implicite du chemin principal |
 | fallback de test hors provider | [ai_engine_adapter.py](/c:/dev/horoscope_front/backend/app/services/ai_engine_adapter.py) | continuité locale / tests quand la config provider est absente |
 | chemin sans DB dans certains parcours natal | [natal_interpretation_service.py](/c:/dev/horoscope_front/backend/app/services/natal_interpretation_service.py) | compatibilité pour tests unitaires et modes dégradés historiques |
 
