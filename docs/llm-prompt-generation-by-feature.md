@@ -124,6 +124,15 @@ Cette section ne décrit que ce qui est explicitement visible dans le code. Elle
 | `daily_prediction` | `llm_narrator.py` route encore entre `horoscope_daily_free`, `horoscope_daily_full` et `daily_prediction` | chemin observable `use_case-first` | aucune résolution `feature/subfeature/plan` dédiée à `daily_prediction` n'est explicitement codée dans les sources inspectées |
 | `support` | aucune orchestration LLM spécifique à cette famille n'a été trouvée dans les sources inspectées pour ce document | non documenté comme famille LLM active à partir des sources inspectées | ne pas lui attribuer un statut de convergence sans nouvelle preuve dans le code |
 
+### Clarification sur `natal`
+
+Le vocabulaire n'est pas encore parfaitement homogène entre les couches :
+
+- dans le seed d'assembly, on observe une publication pour `feature="natal_interpretation"` ;
+- dans l'entrée canonique métier au runtime, `AIEngineAdapter.generate_natal_interpretation()` normalise aujourd'hui l'appel vers `feature="natal"` et `subfeature=use_case_key`.
+
+Ce point doit être lu comme un état hybride du système, pas comme deux vérités concurrentes.
+
 ### Règle de lecture
 
 - une ligne n'affirme qu'un comportement appuyé par une source explicite du dépôt ;
@@ -223,6 +232,14 @@ flowchart TD
 ### Support
 
 Aucun pipeline de génération de réponse LLM spécifique à une famille `support` n'a été identifié dans les sources inspectées pour ce document. Cette famille n'a donc pas de schéma Mermaid dédié ici.
+
+### Synthèse sur `horoscope_daily` et `daily_prediction`
+
+À date, `horoscope_daily` et `daily_prediction` restent documentés comme des parcours hors pipeline canonique du gateway :
+
+- ils passent par `LLMNarrator.narrate()` ;
+- ils appellent OpenAI directement via `chat.completions.create` ;
+- ils ne passent pas par `LLMGateway.execute_request()` dans le chemin principal observé ici.
 
 ## Doctrine d'abonnement
 
@@ -350,6 +367,11 @@ En plus de ces six étapes, `execute_request()` exécute aujourd'hui deux valida
 
 - une validation rapide avant `_resolve_plan()` pour échouer tôt sur un contrat d'entrée invalide ;
 - une seconde validation juste après la résolution du plan, pour sécuriser le chemin effectivement résolu.
+
+Cette double validation est intentionnelle. Elle n'est pas un doublon accidentel :
+
+- la première coupe court avant la composition complète si l'entrée est déjà invalide ;
+- la seconde revalide le contrat après résolution effective de la configuration et du plan.
 
 ### Pipeline runtime complet
 
@@ -698,6 +720,20 @@ Cette séparation permet de distinguer :
 - une dégradation liée à la qualité des données ;
 - une transformation volontaire du pipeline.
 
+### Exemple de lecture croisée
+
+Exemple :
+
+- `execution_path = repaired`
+- `context_quality = minimal`
+- `normalizations_applied = ["evidence_alias_normalized", "evidence_filtered_non_catalog"]`
+
+Lecture :
+
+- le premier appel provider a produit une sortie invalide ;
+- le contexte disponible était partiel au point de tomber en `minimal` ;
+- la sortie finale a été réparée puis normalisée avant restitution.
+
 ## Matrice d'évaluation
 
 La validation du pipeline ne repose plus uniquement sur les tests unitaires métier.
@@ -773,6 +809,6 @@ Toute story ou PR qui modifie l'un des points suivants doit mettre à jour ce do
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 - date : `2026-04-09`
-- commit / tag : `à renseigner`
+- commit / tag : `63b492de`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation.
