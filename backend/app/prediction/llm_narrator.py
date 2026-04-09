@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import re
+import warnings
 from dataclasses import dataclass
 from typing import Any
 
@@ -34,7 +35,8 @@ class NarratorResult:
 
 class LLMNarrator:
     """
-    Narrates astrological data using OpenAI (Story 60.16).
+    DÉPRÉCIÉ (post-EPIC-66) : Utiliser AIEngineAdapter.generate_horoscope_narration() 
+    pour passer par le pipeline canonique LLMGateway.
     """
 
     TIMEOUT_SECONDS = 60.0
@@ -42,6 +44,13 @@ class LLMNarrator:
     MIN_DAILY_SYNTHESIS_SENTENCES = 10
     MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 7
     MAX_NARRATION_ATTEMPTS = 2
+
+    def __init__(self) -> None:
+        warnings.warn(
+            "LLMNarrator is deprecated. Use AIEngineAdapter.generate_horoscope_narration instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     async def narrate(
         self,

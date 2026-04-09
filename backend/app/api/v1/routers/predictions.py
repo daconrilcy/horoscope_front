@@ -600,6 +600,7 @@ async def get_daily_prediction(
         assembled = await assembler.assemble(
             snapshot=snapshot,
             cat_id_to_code=cat_id_to_code,
+            db=db,
             engine_output=result.bundle,
             was_reused=result.was_reused,
             reference_version=reference_version,

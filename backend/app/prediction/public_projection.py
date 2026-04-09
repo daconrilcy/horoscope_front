@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import logging
 import re
+import uuid
 from datetime import datetime, time
 from numbers import Real
 from typing import TYPE_CHECKING, Any
+
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.prediction.decision_window_builder import DecisionWindowBuilder
@@ -44,6 +48,8 @@ if TYPE_CHECKING:
     from .persisted_snapshot import PersistedPredictionSnapshot
     from .schemas import V3EvidencePack
 
+logger = logging.getLogger(__name__)
+
 MAJOR_ASPECT_NOTE_THRESHOLD = 12.0
 PUBLIC_PIVOT_EVENT_TYPES = frozenset(
     {
@@ -68,6 +74,7 @@ class PublicPredictionAssembler:
         snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
         *,
+        db: Session | None = None,
         engine_output: Any | None = None,
         was_reused: bool = False,
         reference_version: str,
@@ -209,22 +216,31 @@ class PublicPredictionAssembler:
                         daily_advice = {"advice": advice, "emphasis": emphasis}
 
         if not has_llm_narrative and settings.llm_narrator_enabled and prompt_context:
-            from app.prediction.llm_narrator import LLMNarrator
+            from app.services.ai_engine_adapter import AIEngineAdapter
 
-            narrator = LLMNarrator()
-
-            narrator_res = await narrator.narrate(
-                astro_daily_events=astro_daily_events,
-                time_windows=time_windows,
-                common_context=prompt_context,
-                astrologer_profile_key=astrologer_profile_key,
-                lang=lang,
-                day_climate=day_climate,
-                best_window=best_window,
-                turning_point=main_turning_point,
-                domain_ranking=public_domains,
-                variant_code=variant_code,
-            )
+            # Note : db est requis pour le pipeline canonique. 
+            # Si absent (ex: tests legacy), on log un warning et on saute la narration.
+            if not db:
+                logger.warning("assemble_narration_skipped: db session missing")
+                narrator_res = None
+            else:
+                # AC9: Utilisation de AIEngineAdapter (pipeline canonique)
+                narrator_res = await AIEngineAdapter.generate_horoscope_narration(
+                    variant_code=variant_code,
+                    time_windows=time_windows,
+                    common_context=prompt_context,
+                    user_id=snapshot.user_id,
+                    request_id=str(uuid.uuid4()), # fallback safe (T6)
+                    trace_id=str(uuid.uuid4()),   # fallback safe (T6)
+                    db=db,
+                    astrologer_profile_key=astrologer_profile_key,
+                    lang=lang,
+                    day_climate=day_climate,
+                    best_window=best_window,
+                    turning_point=main_turning_point,
+                    domain_ranking=public_domains,
+                    astro_daily_events=astro_daily_events,
+                )
 
             if narrator_res:
                 has_llm_narrative = True

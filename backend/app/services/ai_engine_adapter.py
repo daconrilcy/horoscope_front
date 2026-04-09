@@ -41,6 +41,7 @@ __all__ = [
 ]
 
 import logging
+import re
 from typing import Any, Awaitable, Callable, NoReturn, Optional
 
 from sqlalchemy.orm import Session
@@ -63,9 +64,11 @@ from app.llm_orchestration.models import (
     ExecutionFlags,
     ExecutionMessage,
     ExecutionUserInput,
+    GatewayResult,
     LLMExecutionRequest,
     NatalExecutionInput,
 )
+from app.prediction.llm_narrator import NarratorAdvice, NarratorResult
 
 logger = logging.getLogger(__name__)
 
@@ -834,3 +837,187 @@ class AIEngineAdapter:
                 str(err),
             )
             raise ConnectionError("llm provider unavailable (natal)") from err
+
+    @staticmethod
+    async def generate_horoscope_narration(
+        variant_code: str | None,
+        time_windows: list[dict[str, Any]],
+        common_context: Any,
+        user_id: int,
+        request_id: str,
+        trace_id: str,
+        db: Session,
+        astrologer_profile_key: str = "standard",
+        lang: str = "fr",
+        day_climate: dict[str, Any] | None = None,
+        best_window: dict[str, Any] | None = None,
+        turning_point: dict[str, Any] | None = None,
+        domain_ranking: list[dict[str, Any]] | None = None,
+        astro_daily_events: dict[str, Any] | None = None,
+    ) -> NarratorResult | None:
+        """
+        Génère la narration d'horoscope via le pipeline canonique (Story 66.19).
+        Remplace LLMNarrator.narrate().
+        """
+        from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
+
+        try:
+            gateway = LLMGateway()
+
+            # 1. Routage canonique (D1)
+            if variant_code == "summary_only":
+                feature, subfeature, plan = "horoscope_daily", "narration", "free"
+            elif variant_code == "full":
+                feature, subfeature, plan = "horoscope_daily", "narration", "premium"
+            else:
+                feature, subfeature, plan = "daily_prediction", "narration", None
+
+            # 2. Validation métier de longueur (D4)
+            min_sentences = 7 if plan == "free" else 10
+            
+            # 3. Construction du prompt via le builder existant (D2)
+            base_question = AstrologerPromptBuilder().build(
+                common_context=common_context,
+                time_windows=time_windows,
+                astro_daily_events=astro_daily_events,
+                astrologer_profile_key=astrologer_profile_key,
+                lang=lang,
+                day_climate=day_climate,
+                best_window=best_window,
+                turning_point=turning_point,
+                domain_ranking=domain_ranking,
+                variant_code=variant_code,
+            )
+
+            # 4. Boucle de retry métier (D4)
+            final_narrator_result: NarratorResult | None = None
+            
+            for attempt in range(1, 3):  # MAX_NARRATION_ATTEMPTS = 2
+                question = base_question if attempt == 1 else (
+                    base_question
+                    + f"\n\nCORRECTION OBLIGATOIRE : daily_synthesis trop courte. "
+                      f"Assure-toi d'au moins {min_sentences} phrases complètes."
+                )
+
+                # 5. Build Request
+                user_input = ExecutionUserInput(
+                    use_case=feature, # feature as use_case for now
+                    feature=feature,
+                    subfeature=subfeature,
+                    plan=plan,
+                    locale="fr-FR" if lang == "fr" else "en-US",
+                    question=question,
+                )
+
+                exec_context = ExecutionContext(
+                    natal_data=None, # Already in common_context -> question
+                    chart_json=None, # Already in common_context -> question
+                    extra_context={
+                        "variant_code": variant_code,
+                        "astrologer_profile_key": astrologer_profile_key,
+                    }
+                )
+
+                request = LLMExecutionRequest(
+                    user_input=user_input,
+                    context=exec_context,
+                    user_id=user_id,
+                    request_id=request_id,
+                    trace_id=trace_id
+                )
+
+                # 6. Execute
+                result = await gateway.execute_request(request=request, db=db)
+                
+                # Fallback estimation if usage is zero but output exists
+                if result.usage.output_tokens == 0 and result.raw_output:
+                    result.usage.output_tokens = (
+                        AIEngineAdapter.estimate_tokens(result.raw_output)
+                    )
+
+                # 7. Map to legacy NarratorResult (D3)
+                final_narrator_result = (
+                    AIEngineAdapter._map_gateway_result_to_narrator_result(result)
+                )
+                
+                if (
+                    final_narrator_result 
+                    and AIEngineAdapter._count_sentences(
+                        final_narrator_result.daily_synthesis
+                    ) >= min_sentences
+                ):
+                    return final_narrator_result
+
+            return final_narrator_result
+
+        except Exception as err:
+            from app.llm_orchestration.models import GatewayError
+            if isinstance(err, GatewayError):
+                if variant_code == "summary_only" or variant_code == "full":
+                    uc_to_report = "horoscope_daily"
+                else:
+                    uc_to_report = "daily_prediction"
+                _handle_gateway_error(err, request_id, uc_to_report)
+            
+            logger.error(
+                "ai_engine_adapter_narration_failed request_id=%s error=%s",
+                request_id,
+                str(err),
+            )
+            raise
+
+    @staticmethod
+    def _map_gateway_result_to_narrator_result(result: GatewayResult) -> NarratorResult | None:
+        """
+        Mappe GatewayResult vers le contrat legacy NarratorResult (T5).
+        """
+        if not result.structured_output:
+            return None
+        
+        data = result.structured_output
+        synthesis = data.get("daily_synthesis", "")
+        if not synthesis:
+            return None
+            
+        advice_data = data.get("daily_advice")
+        daily_advice = None
+        if isinstance(advice_data, dict):
+            advice = str(advice_data.get("advice", "")).strip()
+            emphasis = str(advice_data.get("emphasis", "")).strip()
+            if advice or emphasis:
+                daily_advice = NarratorAdvice(advice=advice, emphasis=emphasis)
+
+        # Normalization logic from LLMNarrator
+        def as_string(v: Any) -> str:
+            return str(v).strip() if v is not None else ""
+
+        tw_raw = data.get("time_window_narratives")
+        time_window_narratives = {}
+        if isinstance(tw_raw, dict):
+            allowed_keys = {"nuit", "matin", "apres_midi", "soiree"}
+            time_window_narratives = {
+                k: as_string(v) for k, v in tw_raw.items() 
+                if k in allowed_keys and as_string(v)
+            }
+
+        tp_raw = data.get("turning_point_narratives")
+        turning_point_narratives = []
+        if isinstance(tp_raw, list):
+            turning_point_narratives = [as_string(item) for item in tp_raw if as_string(item)]
+
+        return NarratorResult(
+            daily_synthesis=as_string(synthesis),
+            astro_events_intro=as_string(data.get("astro_events_intro")),
+            time_window_narratives=time_window_narratives,
+            turning_point_narratives=turning_point_narratives,
+            daily_advice=daily_advice,
+            main_turning_point_narrative=as_string(
+                data.get("main_turning_point_narrative")
+            ) or None,
+        )
+
+    @staticmethod
+    def _count_sentences(text: str) -> int:
+        if not text:
+            return 0
+        return len([part for part in re.split(r"(?<=[.!?])\s+", text.strip()) if part.strip()])
