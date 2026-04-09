@@ -675,6 +675,21 @@ class LLMGateway:
 
     # --- PIPELINE STAGES (Story 66.4) ---
 
+    def _normalize_plan_for_assembly(self, plan: Optional[str]) -> Optional[str]:
+        """
+        Collapses various commercial plan codes into canonical assembly plans (free/premium).
+        (Story 66.20 High Issue 2)
+        """
+        if not plan:
+            return "free"
+        
+        plan_lower = plan.lower()
+        if plan_lower in {"premium", "pro", "ultra", "full"}:
+            return "premium"
+        
+        # All others (free, basic, trial, none, guest, unknown) resolve to 'free' assembly
+        return "free"
+
     async def _resolve_plan(
         self, request: LLMExecutionRequest, db: Optional[Session], 
         config_override: Optional[UseCaseConfig] = None,
@@ -746,13 +761,39 @@ class LLMGateway:
                                 f"Assembly config {request.user_input.assembly_config_id} not found"
                             )
                     elif request.user_input.feature:
-                        # AssemblyRegistry.get_active_config now handles both sync/async sessions
-                        assembly_db = await registry.get_active_config(
-                            feature=request.user_input.feature,
-                            subfeature=request.user_input.subfeature,
-                            plan=request.user_input.plan,
-                            locale=request.user_input.locale
-                        )
+                        # Story 66.20: Normalize plan for resolution (High Issue 2)
+                        normalized_plan = self._normalize_plan_for_assembly(request.user_input.plan)
+                        
+                        # Use synchronous query because db is a Session, not AsyncSession
+                        from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel, PromptStatus
+                        from sqlalchemy.orm import selectinload
+                        
+                        search_patterns = [
+                            (request.user_input.feature, request.user_input.subfeature, normalized_plan),
+                            (request.user_input.feature, request.user_input.subfeature, None),
+                            (request.user_input.feature, None, None),
+                        ]
+                        
+                        assembly_db = None
+                        for f, sf, p in search_patterns:
+                            stmt = (
+                                select(PromptAssemblyConfigModel)
+                                .where(
+                                    PromptAssemblyConfigModel.feature == f,
+                                    PromptAssemblyConfigModel.subfeature == sf,
+                                    PromptAssemblyConfigModel.plan == p,
+                                    PromptAssemblyConfigModel.locale == request.user_input.locale,
+                                    PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+                                )
+                                .options(
+                                    selectinload(PromptAssemblyConfigModel.feature_template),
+                                    selectinload(PromptAssemblyConfigModel.subfeature_template),
+                                    selectinload(PromptAssemblyConfigModel.persona),
+                                )
+                            )
+                            assembly_db = db.execute(stmt).scalar_one_or_none()
+                            if assembly_db:
+                                break
 
                     # Story 66.20: Enforce mandatory assembly for nominal families
                     CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
@@ -1456,6 +1497,9 @@ class LLMGateway:
         is_repair_call = request.flags.is_repair_call
 
         try:
+            # Story 66.20: Early normalization of plan for all stages (AC2, AC3)
+            request.user_input.plan = self._normalize_plan_for_assembly(request.user_input.plan)
+
             if use_case in visited and not is_repair_call:
                 raise GatewayError(
                     f"Infinite fallback loop detected for use case '{use_case}'", 

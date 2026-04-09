@@ -393,6 +393,10 @@ def test_send_chat_message_requires_token() -> None:
 
 def test_send_chat_message_success() -> None:
     _cleanup_tables()
+    # Story 66.20: Seed mandatory assemblies after table cleanup
+    from scripts.seed_66_20_convergence import seed_66_20_convergence
+    seed_66_20_convergence()
+
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-success-1")
     response = client.post(

@@ -950,6 +950,15 @@ class ChatGuidanceService:
         last_error_code = "llm_unavailable"
         last_error_message = "llm provider is unavailable"
 
+        # Story 66.20 High Issue 1: Resolve user plan for assembly resolution
+        from types import SimpleNamespace
+        from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+        try:
+            snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+            user_plan = snapshot.plan_code
+        except Exception:
+            user_plan = "free"
+
         for _ in range(max_attempts):
             attempts += 1
             try:
@@ -960,6 +969,7 @@ class ChatGuidanceService:
                     request_id=request_id,
                     trace_id=trace_id,
                     db=db,
+                    entitlement_result=SimpleNamespace(plan_code=user_plan) if user_plan else None,
                 )
                 logger.info("Chat reply generated, recording tokens...")
                 # Atomic transaction for the whole turn recording (AC9)

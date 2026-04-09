@@ -123,7 +123,7 @@ def seed_66_20_taxonomy(db: Session) -> None:
                 provider="openai",
                 reasoning_profile="off",
                 verbosity_profile="balanced",
-                output_mode="json_schema" if f in ["guidance", "natal"] else "free_text",
+                output_mode="structured_json" if f in ["guidance", "natal"] else "free_text",
                 timeout_seconds=60,
                 status=PromptStatus.PUBLISHED,
                 created_by="system"

@@ -188,6 +188,12 @@ def seed_66_20_convergence():
                     locale="fr-FR",
                     feature_template_ref=v_id,
                     execution_profile_ref=target_prof_id,
+                    execution_config={
+                        "model": base_prof.model,
+                        "temperature": 0.7,
+                        "max_output_tokens": 2048,
+                        "timeout_seconds": 30
+                    },
                     status=PromptStatus.PUBLISHED,
                     created_by="system_66_20"
                 )
@@ -196,6 +202,12 @@ def seed_66_20_convergence():
             else:
                 existing_asm.feature_template_ref = v_id
                 existing_asm.execution_profile_ref = target_prof_id
+                existing_asm.execution_config = {
+                    "model": base_prof.model,
+                    "temperature": 0.7,
+                    "max_output_tokens": 2048,
+                    "timeout_seconds": 30
+                }
                 print(f"Updated assembly: {f}/{sf}/{p}")
 
         db.commit()

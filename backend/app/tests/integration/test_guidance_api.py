@@ -188,6 +188,10 @@ def test_guidance_requires_token() -> None:
 
 def test_guidance_success_daily_and_weekly() -> None:
     _cleanup_tables()
+    # Story 66.20: Seed mandatory assemblies after table cleanup
+    from scripts.seed_66_20_convergence import seed_66_20_convergence
+    seed_66_20_convergence()
+
     access_token = _register_and_get_access_token()
     _seed_birth_profile(access_token)
 
