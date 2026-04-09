@@ -43,8 +43,7 @@ def test_build_result_enriched_telemetry():
     )
     
     final = gateway._build_result(
-        provider_res, validation, plan, recovery, 150, 
-        request=request, qualified_ctx=qualified_ctx
+        validation, plan, recovery, 150, request, qualified_ctx
     )
     
     assert final.meta.execution_path == "repaired"
@@ -76,8 +75,7 @@ def test_build_result_test_fallback_path():
     validation = ValidationResult(valid=True, parsed={}, normalizations_applied=[])
     
     final = gateway._build_result(
-        provider_res, validation, 
-        plan, recovery, 10, request=request
+        validation, plan, recovery, 10, request
     )
     
     assert final.meta.execution_path == "test_fallback"
@@ -107,8 +105,7 @@ def test_build_result_fallback_path():
     validation = ValidationResult(valid=False, errors=["err"], normalizations_applied=[])
     
     final = gateway._build_result(
-        provider_res, validation, 
-        plan, recovery, 10, request=request
+        validation, plan, recovery, 10, request
     )
     
     assert final.meta.execution_path == "fallback_use_case"

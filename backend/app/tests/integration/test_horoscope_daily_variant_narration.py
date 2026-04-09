@@ -22,6 +22,7 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import engine
 from app.main import app
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+from app.prediction.llm_narrator import NarratorResult, NarratorAdvice
 from app.services.billing_service import BillingService
 from app.services.daily_prediction_service import ServiceResult
 
@@ -130,41 +131,52 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
         # Mock CommonContextBuilder.build
         with patch("app.prompts.common_context.CommonContextBuilder.build") as mock_ctx_build:
-            mock_ctx_build.return_value = MagicMock()
-
+            mock_ctx = MagicMock()
+            mock_ctx.context_quality = "nominal"
+            mock_ctx.missing_fields = []
+            mock_ctx.payload.model_dump.return_value = {}
+            mock_ctx_build.return_value = mock_ctx
             # Mock DailyPredictionService to return a dummy run
-            dummy_run = MagicMock(spec=PersistedPredictionSnapshot)
-            dummy_run.run_id = 1
-            dummy_run.local_date = date(2026, 4, 4)
-            dummy_run.timezone = "Europe/Paris"
-            dummy_run.computed_at = datetime(2026, 4, 4, 10, 0)
-            dummy_run.reference_version_id = 1
-            dummy_run.ruleset_id = 1
-            dummy_run.house_system_effective = "placidus"
-            dummy_run.is_provisional_calibration = False
-            dummy_run.calibration_label = "test"
-            dummy_run.overall_tone = "positive"
-            dummy_run.overall_summary = "Test summary"
-            dummy_run.category_scores = []
-            dummy_run.turning_points = []
-            dummy_run.time_blocks = []
-            dummy_run.llm_narrative = None
+            dummy_run = PersistedPredictionSnapshot(
+                run_id=1,
+                user_id=1,
+                local_date=date(2026, 4, 4),
+                timezone="Europe/Paris",
+                computed_at=datetime(2026, 4, 4, 10, 0),
+                input_hash="test-hash",
+                reference_version_id=1,
+                ruleset_id=1,
+                house_system_effective="placidus",
+                is_provisional_calibration=False,
+                calibration_label="test",
+                overall_tone="positive",
+                overall_summary="Test summary",
+                category_scores=[],
+                turning_points=[],
+                time_blocks=[],
+                llm_narrative=None,
+            )
 
             mock_result = ServiceResult(run=dummy_run, bundle=None, was_reused=True)
 
             with patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls:
                 mock_service = mock_service_cls.return_value
-                mock_service.get_or_compute.return_value = mock_result
+                mock_service.get_or_compute.return_value = mock_result  
 
-                # Mock LLMNarrator.narrate
-                with patch("app.prediction.llm_narrator.LLMNarrator.narrate") as mock_narrate:
-                    mock_narrate.return_value = None  # Don't actually call OpenAI
+                # AC9: Ensure canonical path is used
+                with (
+                    patch("app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration") as mock_adapter
+                ):
+                    mock_adapter.return_value = NarratorResult(
+                        daily_synthesis="Synthèse du jour canonique.",
+                        astro_events_intro="Intro canonique.",
+                        time_window_narratives={},
+                        turning_point_narratives=[]
+                    )
 
-                    response = client.get("/v1/predictions/daily")
+                    response = client.get("/v1/predictions/daily")      
                     assert response.status_code == 200
-
-                    # Verify variant_code passed to narrate()
-                    _, kwargs = mock_narrate.call_args
+                    _, kwargs = mock_adapter.call_args
                     assert kwargs["variant_code"] == "summary_only"
 
     # 2. Basic User
@@ -208,19 +220,31 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
         mock_settings_proj.llm_narrator_enabled = True
 
         with patch("app.prompts.common_context.CommonContextBuilder.build") as mock_ctx_build:
-            mock_ctx_build.return_value = MagicMock()
+            mock_ctx = MagicMock()
+            mock_ctx.context_quality = "nominal"
+            mock_ctx.missing_fields = []
+            mock_ctx.payload.model_dump.return_value = {}
+            mock_ctx_build.return_value = mock_ctx
 
             with patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls:
                 mock_service = mock_service_cls.return_value
-                mock_service.get_or_compute.return_value = mock_result
+                mock_service.get_or_compute.return_value = mock_result  
 
-                with patch("app.prediction.llm_narrator.LLMNarrator.narrate") as mock_narrate:
+                with (
+                    patch("app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration") as mock_adapter,
+                    patch("app.prediction.llm_narrator.LLMNarrator.narrate") as mock_narrate
+                ):
+                    mock_adapter.return_value = NarratorResult(
+                        daily_synthesis="Synthèse du jour canonique.",
+                        astro_events_intro="Intro canonique.",
+                        time_window_narratives={},
+                        turning_point_narratives=[]
+                    )
                     mock_narrate.return_value = None
 
-                    response = client.get("/v1/predictions/daily")
+                    response = client.get("/v1/predictions/daily")      
                     assert response.status_code == 200
-
-                    _, kwargs = mock_narrate.call_args
+                    _, kwargs = mock_adapter.call_args
                     assert kwargs["variant_code"] == "full"
 
     app.dependency_overrides.clear()
@@ -266,51 +290,57 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
     )
     app.dependency_overrides[require_authenticated_user] = lambda: auth_user
 
-    dummy_run = MagicMock(spec=PersistedPredictionSnapshot)
-    dummy_run.run_id = 1
-    dummy_run.local_date = date(2026, 4, 4)
-    dummy_run.timezone = "Europe/Paris"
-    dummy_run.computed_at = datetime(2026, 4, 4, 10, 0)
-    dummy_run.reference_version_id = 1
-    dummy_run.ruleset_id = 1
-    dummy_run.house_system_effective = "placidus"
-    dummy_run.is_provisional_calibration = False
-    dummy_run.calibration_label = "test"
-    dummy_run.overall_tone = "positive"
-    dummy_run.overall_summary = "Test summary"
-    dummy_run.category_scores = []
-    dummy_run.turning_points = []
-    dummy_run.time_blocks = []
-    dummy_run.llm_narrative = None
+    dummy_run = PersistedPredictionSnapshot(
+        run_id=1,
+        user_id=user.id,
+        local_date=date(2026, 4, 4),
+        timezone="Europe/Paris",
+        computed_at=datetime(2026, 4, 4, 10, 0),
+        input_hash="test-hash",
+        reference_version_id=1,
+        ruleset_id=1,
+        house_system_effective="placidus",
+        is_provisional_calibration=False,
+        calibration_label="test",
+        overall_tone="positive",
+        overall_summary="Test summary",
+        category_scores=[],
+        turning_points=[],
+        time_blocks=[],
+        llm_narrative=None,
+    )
     mock_result = ServiceResult(run=dummy_run, bundle=None, was_reused=True)
-
-    narrator_payload = MagicMock()
-    narrator_payload.daily_synthesis = "Synthèse du jour en plusieurs phrases."
-    narrator_payload.astro_events_intro = "Introduction narrative."
-    narrator_payload.daily_advice = None
-    narrator_payload.time_window_narratives = {}
-    narrator_payload.turning_point_narratives = []
-    narrator_payload.main_turning_point_narrative = None
 
     with (
         patch("app.api.v1.routers.predictions.settings") as mock_settings_router,
         patch("app.prediction.public_projection.settings") as mock_settings_proj,
         patch("app.prompts.common_context.CommonContextBuilder.build") as mock_ctx_build,
         patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls,
-        patch("app.prediction.llm_narrator.LLMNarrator.narrate") as mock_narrate,
+        patch("app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration") as mock_adapter,
     ):
         mock_settings_router.llm_narrator_enabled = True
         mock_settings_router.ruleset_version = "2.0.0"
         mock_settings_router.active_reference_version = "2.0.0"
         mock_settings_proj.llm_narrator_enabled = True
-        mock_ctx_build.return_value = MagicMock()
+
+        mock_ctx = MagicMock()
+        mock_ctx.context_quality = "nominal"
+        mock_ctx.missing_fields = []
+        mock_ctx.payload.model_dump.return_value = {}
+        mock_ctx_build.return_value = mock_ctx
+
         mock_service = mock_service_cls.return_value
         mock_service.get_or_compute.return_value = mock_result
-        mock_narrate.return_value = narrator_payload
+
+        mock_adapter.return_value = NarratorResult(
+            daily_synthesis="Synthèse du jour en plusieurs phrases.",
+            astro_events_intro="Introduction narrative.",
+            time_window_narratives={},
+            turning_point_narratives=[]
+        )
 
         response = client.get("/v1/predictions/daily")
         assert response.status_code == 200
-
     astrologer_chat_counter = (
         db_session.query(FeatureUsageCounterModel)
         .filter(FeatureUsageCounterModel.feature_code == "astrologer_chat")

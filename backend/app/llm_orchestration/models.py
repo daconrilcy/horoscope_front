@@ -198,6 +198,7 @@ class ResolvedExecutionPlan(BaseModel):
     # Model resolution
     model_id: str
     model_source: Literal["os_granular", "os_legacy", "config", "stub", "assembly"]
+    model_override_active: bool = False
 
     # Execution Profile (Story 66.11)
     execution_profile_id: Optional[str] = None
@@ -242,6 +243,19 @@ class ResolvedExecutionPlan(BaseModel):
     context_quality_instruction_injected: bool = False
 
     model_config = ConfigDict(frozen=True)
+
+    def to_log_dict(self) -> Dict[str, Any]:
+        """Returns a filtered dict for logging, excluding verbose artifacts."""
+        dump = self.model_dump()
+        for key in [
+            "rendered_developer_prompt",
+            "system_core",
+            "persona_block",
+            "output_schema",
+            "input_schema",
+        ]:
+            dump.pop(key, None)
+        return dump
 
 
 class RecoveryResult(BaseModel):

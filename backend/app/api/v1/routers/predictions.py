@@ -596,6 +596,7 @@ async def get_daily_prediction(
 
     # AC1/AC2/AC4 - Call Assembler with typed snapshot
     assembler = PublicPredictionAssembler()
+
     try:
         assembled = await assembler.assemble(
             snapshot=snapshot,

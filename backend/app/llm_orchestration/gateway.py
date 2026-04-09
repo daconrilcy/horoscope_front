@@ -50,7 +50,7 @@ from app.prompts.common_context import CommonContextBuilder, QualifiedContext
 logger = logging.getLogger(__name__)
 
 # Use cases that MUST have a valid output schema (premium paid features)
-PAID_USE_CASES = {"natal_interpretation", "event_guidance"}
+PAID_USE_CASES = {"natal_interpretation", "event_guidance", "natal_interpretation_short"}
 
 _VALID_INTERACTION_MODES = {"structured", "chat"}
 _VALID_QUESTION_POLICIES = {"none", "optional", "required"}
@@ -103,6 +103,16 @@ USE_CASE_STUBS = {
         interaction_mode="structured",
         user_question_policy="none",
     ),
+    "natal-long-free": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=1000,
+        system_core_key="default_v1",
+        developer_prompt="Génère un horoscope natal long (stub).",
+        required_prompt_placeholders=[],
+        interaction_mode="structured",
+        user_question_policy="none",
+    ),
     "natal_interpretation": UseCaseConfig(
         model=settings.openai_model_default,
         temperature=0.7,
@@ -149,8 +159,28 @@ USE_CASE_STUBS = {
         system_core_key="default_v1",
         developer_prompt="Génère une guidance quotidienne basée sur le contexte: {{situation}}.",
         required_prompt_placeholders=["situation"],
-        interaction_mode="chat",
-        user_question_policy="optional",
+        interaction_mode="structured",
+        user_question_policy="none",
+    ),
+    "horoscope_daily": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=3000,
+        system_core_key="default_v1",
+        developer_prompt="Génère un horoscope quotidien (stub). Question: {{question}}",
+        required_prompt_placeholders=["question"],
+        interaction_mode="structured",
+        user_question_policy="none",
+    ),
+    "daily_prediction": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=1600,
+        system_core_key="default_v1",
+        developer_prompt="Génère des prédictions quotidiennes (stub). Question: {{question}}",
+        required_prompt_placeholders=["question"],
+        interaction_mode="structured",
+        user_question_policy="none",
     ),
     "guidance_weekly": UseCaseConfig(
         model=settings.openai_model_default,
@@ -310,7 +340,10 @@ class LLMGateway:
                     context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
 
                 if db_prompt:
-                    logger.debug("gateway_db_prompt_found use_case=%s model=%s effort=%s verbosity=%s", use_case, db_prompt.model, db_prompt.reasoning_effort, db_prompt.verbosity)
+                    logger.debug(
+                        "gateway_db_prompt_found use_case=%s model=%s effort=%s verbosity=%s", 
+                        use_case, db_prompt.model, db_prompt.reasoning_effort, db_prompt.verbosity
+                    )
                     authorized_vars = {
                         "locale", "use_case", "natal_chart_summary", "last_user_msg",
                         "situation", "birth_date", "birth_time", "birth_timezone",
@@ -344,20 +377,35 @@ class LLMGateway:
                         max_output_tokens=db_prompt.max_output_tokens,
                         system_core_key="default_v1",
                         developer_prompt=db_prompt.developer_prompt,
-                        prompt_version_id=str(db_prompt.id) if hasattr(db_prompt, "id") else "hardcoded-v1",
+                        prompt_version_id=(
+                            str(db_prompt.id) if hasattr(db_prompt, "id") else "hardcoded-v1"
+                        ),
                         required_prompt_placeholders=required,
                         fallback_use_case=resolved_fallback,
-                        persona_strategy=db_use_case.persona_strategy if db_use_case else "optional",
-                        safety_profile=db_use_case.safety_profile if db_use_case else "astrology",
-                        output_schema_id=db_use_case.output_schema_id if db_use_case else None,
+                        persona_strategy=(
+                            db_use_case.persona_strategy if db_use_case else "optional"
+                        ),
+                        safety_profile=(
+                            db_use_case.safety_profile if db_use_case else "astrology"
+                        ),
+                        output_schema_id=(
+                            db_use_case.output_schema_id if db_use_case else None
+                        ),
                         input_schema=db_use_case.input_schema if db_use_case else None,
                         reasoning_effort=db_prompt.reasoning_effort,
                         verbosity=db_prompt.verbosity,
-                        interaction_mode=db_use_case.interaction_mode if db_use_case else "structured",
-                        user_question_policy=db_use_case.user_question_policy if db_use_case else "none",
+                        interaction_mode=(
+                            db_use_case.interaction_mode if db_use_case else "structured"
+                        ),
+                        user_question_policy=(
+                            db_use_case.user_question_policy if db_use_case else "none"
+                        ),
                     )
             except Exception as e:
-                logger.error("gateway_db_prompt_resolve_failed use_case=%s error=%s", use_case, str(e))
+                logger.error(
+                    "gateway_db_prompt_resolve_failed use_case=%s error=%s", 
+                    use_case, str(e)
+                )
 
         if not config:
             config = USE_CASE_STUBS.get(use_case)
@@ -390,7 +438,10 @@ class LLMGateway:
         resolved_model = resolve_model(use_case, fallback_model=config.model)
         if resolved_model != config.model:
             config = config.model_copy(update={"model": resolved_model})
-            logger.info("gateway_model_resolved use_case=%s model=%s (override active)", use_case, resolved_model)
+            logger.info(
+                "gateway_model_resolved use_case=%s model=%s (override active)", 
+                use_case, resolved_model
+            )
 
         config = self._adjust_reasoning_config(config)
         return config
@@ -404,7 +455,10 @@ class LLMGateway:
         persona_name = None
         allowed_ids = context.get("allowed_persona_ids")
         
-        logger.debug("gateway_resolve_persona start use_case=%s allowed_ids=%s", use_case, allowed_ids)
+        logger.debug(
+            "gateway_resolve_persona start use_case=%s allowed_ids=%s", 
+            use_case, allowed_ids
+        )
 
         if config.persona_strategy == "forbidden":
             return None, None, None
@@ -460,7 +514,9 @@ class LLMGateway:
                             break
 
         if not persona_block and config.persona_strategy == "required":
-            raise GatewayConfigError(f"No active persona available for required use case '{use_case}'")
+            raise GatewayConfigError(
+                f"No active persona available for required use case '{use_case}'"
+            )
 
         if not persona_block:
             persona_block = context.get("persona_block") or context.get("persona_line")
@@ -507,7 +563,10 @@ class LLMGateway:
     def _adjust_reasoning_config(self, config: UseCaseConfig) -> UseCaseConfig:
         """Auto-adjusts tokens, timeout, and reasoning_effort for reasoning models."""
         if is_reasoning_model(config.model):
-            logger.warning("gateway_adjust_reasoning model=%s effort=%s", config.model, config.reasoning_effort)
+            logger.warning(
+                "gateway_adjust_reasoning model=%s effort=%s", 
+                config.model, config.reasoning_effort
+            )
             updates = {}
             if config.max_output_tokens < 16384:
                 updates["max_output_tokens"] = 16384
@@ -624,7 +683,8 @@ class LLMGateway:
             request.user_input.feature = mapping["feature"]
             request.user_input.plan = mapping["plan"]
             logger.info(
-                "gateway_deprecation_warning use_case=%s redirected_to_feature=%s redirected_to_plan=%s",
+                "gateway_deprecation_warning use_case=%s "
+                "redirected_to_feature=%s redirected_to_plan=%s",
                 use_case, mapping["feature"], mapping["plan"]
             )
 
@@ -666,9 +726,13 @@ class LLMGateway:
                     assembly_db = None
                     if request.user_input.assembly_config_id:
                         # Absolute priority (D3)
-                        assembly_db = await registry.get_config_by_id(request.user_input.assembly_config_id)
+                        assembly_db = await registry.get_config_by_id(
+                            request.user_input.assembly_config_id
+                        )
                         if not assembly_db:
-                            raise GatewayConfigError(f"Assembly config {request.user_input.assembly_config_id} not found")
+                            raise GatewayConfigError(
+                                f"Assembly config {request.user_input.assembly_config_id} not found"
+                            )
                     elif request.user_input.feature:
                         # AssemblyRegistry.get_active_config now handles both sync/async sessions
                         assembly_db = await registry.get_active_config(
@@ -689,7 +753,9 @@ class LLMGateway:
                             max_output_tokens=resolved_assembly.execution_config.max_output_tokens,
                             timeout_seconds=resolved_assembly.execution_config.timeout_seconds,
                             system_core_key="default_v1",  # Hard policy handled later
-                            developer_prompt=assemble_developer_prompt(resolved_assembly, assembly_db),
+                            developer_prompt=assemble_developer_prompt(
+                                resolved_assembly, assembly_db
+                            ),
                             prompt_version_id=str(assembly_db.id),
                             persona_strategy="forbidden",  # Persona already handled in assembly
                             interaction_mode=assembly_db.interaction_mode,
@@ -704,7 +770,10 @@ class LLMGateway:
                         model_id = config.model
                         # We also inject persona_block directly to bypass _resolve_persona
                         persona_block = resolved_assembly.persona_block
-                        persona_id = str(resolved_assembly.persona_ref) if resolved_assembly.persona_ref else None
+                        persona_id = (
+                            str(resolved_assembly.persona_ref) 
+                            if resolved_assembly.persona_ref else None
+                        )
                         persona_name = None 
                         
                         # Store assembly metadata for ResolvedExecutionPlan
@@ -713,7 +782,10 @@ class LLMGateway:
                 except GatewayConfigError:
                     raise
                 except Exception as e:
-                    logger.warning("gateway_assembly_resolution_failed use_case=%s error=%s", use_case, e)
+                    logger.warning(
+                        "gateway_assembly_resolution_failed use_case=%s error=%s", 
+                        use_case, e
+                    )
 
             if not config:
                 if db:
@@ -744,10 +816,14 @@ class LLMGateway:
                 if source_base == "assembly" and context_dict.get("_assembly_db_id"):
                     # We need the actual assembly model to get execution_profile_ref
                     from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-                    stmt = select(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == uuid.UUID(context_dict["_assembly_db_id"]))
+                    stmt = select(PromptAssemblyConfigModel).where(
+                        PromptAssemblyConfigModel.id == uuid.UUID(context_dict["_assembly_db_id"])
+                    )
                     assembly_model = db.execute(stmt).scalar_one_or_none()
                     if assembly_model and assembly_model.execution_profile_ref:
-                        profile_db = ExecutionProfileRegistry.get_profile_by_id(db, assembly_model.execution_profile_ref)
+                        profile_db = ExecutionProfileRegistry.get_profile_by_id(
+                            db, assembly_model.execution_profile_ref
+                        )
                         if profile_db:
                             profile_source = "assembly_ref"
 
@@ -762,7 +838,10 @@ class LLMGateway:
                     if profile_db:
                         profile_source = "waterfall"
             except Exception as e:
-                logger.warning("gateway_execution_profile_resolution_failed use_case=%s error=%s", use_case, e)
+                logger.warning(
+                    "gateway_execution_profile_resolution_failed use_case=%s error=%s", 
+                    use_case, e
+                )
 
         # 0.8 Final Model & Provider merge (Story 66.11 D4, D6, 66.18)
         provider = "openai"
@@ -784,7 +863,10 @@ class LLMGateway:
             
             # Resolve max_output_tokens priority (Story 66.18 D4)
             # 1. Length Budget (highest)
-            if resolved_assembly and resolved_assembly.length_budget and resolved_assembly.length_budget.global_max_tokens:
+            if (
+                resolved_assembly and resolved_assembly.length_budget 
+                and resolved_assembly.length_budget.global_max_tokens
+            ):
                 max_output_tokens = resolved_assembly.length_budget.global_max_tokens
                 max_output_tokens_source = "length_budget"
             # 2. Execution Profile
@@ -793,7 +875,11 @@ class LLMGateway:
                 max_output_tokens_source = "execution_profile"
             # 3. Verbosity default (lowest)
             else:
-                verbosity_instruction, rec_tokens = ProviderParameterMapper.resolve_verbosity_instruction(profile_db.verbosity_profile)
+                verbosity_instruction, rec_tokens = (
+                    ProviderParameterMapper.resolve_verbosity_instruction(
+                        profile_db.verbosity_profile
+                    )
+                )
                 if rec_tokens:
                     max_output_tokens = rec_tokens
                     max_output_tokens_source = "verbosity_default"
@@ -809,7 +895,11 @@ class LLMGateway:
                 )
             except NotImplementedError as e:
                 # High #1 & #2: Fallback if provider/params mapping not implemented
-                logger.warning("gateway_provider_mapping_not_implemented provider=%s error=%s. Falling back to resolve_model/openai.", provider, e)
+                logger.warning(
+                    "gateway_provider_mapping_not_implemented provider=%s error=%s. "
+                    "Falling back to resolve_model/openai.", 
+                    provider, e
+                )
                 model_id = resolve_model(use_case, fallback_model=config.model)
                 profile_source = "fallback_resolve_model"
                 provider = "openai"  # High #2 Fix: Reset to supported provider
@@ -817,7 +907,8 @@ class LLMGateway:
 
             if provider == "anthropic":
                 logger.warning(
-                    "gateway_provider_not_supported_yet provider=%s model=%s. Falling back to resolve_model/openai.",
+                    "gateway_provider_not_supported_yet provider=%s model=%s. "
+                    "Falling back to resolve_model/openai.",
                     provider,
                     model_id,
                 )
@@ -828,11 +919,17 @@ class LLMGateway:
             
             # If we didn't get verbosity_instruction yet, get it now
             if not verbosity_instruction:
-                verbosity_instruction, _ = ProviderParameterMapper.resolve_verbosity_instruction(profile_db.verbosity_profile)
+                verbosity_instruction, _ = (
+                    ProviderParameterMapper.resolve_verbosity_instruction(
+                        profile_db.verbosity_profile
+                    )
+                )
 
             logger.info(
-                "gateway_execution_profile_applied profile_id=%s source=%s model=%s provider=%s max_tokens=%s source=%s",
-                str(profile_db.id), profile_source, model_id, provider, max_output_tokens, max_output_tokens_source
+                "gateway_execution_profile_applied profile_id=%s source=%s "
+                "model=%s provider=%s max_tokens=%s source=%s",
+                str(profile_db.id), profile_source, model_id, provider, 
+                max_output_tokens, max_output_tokens_source
             )
         else:
             # Legacy/Fallback resolution
@@ -841,11 +938,18 @@ class LLMGateway:
             
             # Story 66.18 AC6: Compatibility for raw ExecutionConfigAdmin
             if config.reasoning_effort or config.verbosity:
-                logger.info("gateway_legacy_execution_config_used use_case=%s reasoning=%s verbosity=%s", use_case, config.reasoning_effort, config.verbosity)
+                logger.info(
+                    "gateway_legacy_execution_config_used use_case=%s "
+                    "reasoning=%s verbosity=%s", 
+                    use_case, config.reasoning_effort, config.verbosity
+                )
                 # We could infer a profile here for telemetry
             
             # For legacy, we still apply LengthBudget if present
-            if resolved_assembly and resolved_assembly.length_budget and resolved_assembly.length_budget.global_max_tokens:
+            if (
+                resolved_assembly and resolved_assembly.length_budget 
+                and resolved_assembly.length_budget.global_max_tokens
+            ):
                 max_output_tokens = resolved_assembly.length_budget.global_max_tokens
                 max_output_tokens_source = "length_budget"
 
@@ -874,7 +978,9 @@ class LLMGateway:
             if request.user_input.persona_id_override:
                 context_dict["persona_id"] = request.user_input.persona_id_override
             
-            persona_block, persona_id, persona_name = await self._resolve_persona(db, config, context_dict, use_case)
+            persona_block, persona_id, persona_name = await self._resolve_persona(
+                db, config, context_dict, use_case
+            )
 
         output_schema, schema_name, schema_version = self._resolve_schema(db, config, use_case)
 
@@ -906,7 +1012,9 @@ class LLMGateway:
             
             # 3. verbosity_profile instruction (Story 66.18 AC1)
             if verbosity_instruction:
-                current_prompt = f"{current_prompt}\n\n[CONSIGNE DE VERBOSITÉ] {verbosity_instruction}"
+                current_prompt = (
+                    f"{current_prompt}\n\n[CONSIGNE DE VERBOSITÉ] {verbosity_instruction}"
+                )
 
             # 4. & 5. render placeholders and final validation
             render_vars = {**request.user_input.model_dump(), **request.context.model_dump()}
@@ -960,11 +1068,17 @@ class LLMGateway:
             feature=request.user_input.feature,
             subfeature=request.user_input.subfeature,
             plan=request.user_input.plan,
-            feature_template_id=str(resolved_assembly.feature_template_id) if resolved_assembly else None,
-            subfeature_template_id=str(resolved_assembly.subfeature_template_id) if resolved_assembly and resolved_assembly.subfeature_template_id else None,
+            feature_template_id=(
+                str(resolved_assembly.feature_template_id) if resolved_assembly else None
+            ),
+            subfeature_template_id=(
+                str(resolved_assembly.subfeature_template_id) 
+                if resolved_assembly and resolved_assembly.subfeature_template_id else None
+            ),
             template_source=resolved_assembly.template_source if resolved_assembly else None,
             model_id=model_id,
             model_source=model_source,
+            model_override_active=model_source in ["os_granular", "os_legacy"],
             execution_profile_id=str(profile_db.id) if profile_db else None,
             execution_profile_source=profile_source,
             reasoning_profile=profile_db.reasoning_profile if profile_db else None,
@@ -999,7 +1113,10 @@ class LLMGateway:
         return plan, qualified_ctx
 
     def _build_messages(
-        self, request: LLMExecutionRequest, plan: ResolvedExecutionPlan, qualified_ctx: Optional[QualifiedContext]
+        self, 
+        request: LLMExecutionRequest, 
+        plan: ResolvedExecutionPlan, 
+        qualified_ctx: Optional[QualifiedContext]
     ) -> ComposedMessages:
         """Stage 2: Composes the final message list for the LLM."""
         use_case = request.user_input.use_case
@@ -1049,9 +1166,12 @@ class LLMGateway:
             )
 
     async def _call_provider(
-        self, messages: ComposedMessages, plan: ResolvedExecutionPlan, request: LLMExecutionRequest
+        self, 
+        messages: ComposedMessages, 
+        plan: ResolvedExecutionPlan, 
+        request: LLMExecutionRequest
     ) -> GatewayResult:
-        """Stage 3: Executes the actual call to the LLM provider (Story 66.18 Multi-provider routing)."""
+        """Stage 3: Executes the actual call to the LLM provider."""
         # Story 66.18: Resolve final response_format (High 2 fix)
         # 1. Start with profile-translated params (can force JSON even without schema)
         response_format = plan.translated_provider_params.get("response_format")
@@ -1115,7 +1235,10 @@ class LLMGateway:
         is_repair_call = request.flags.is_repair_call
 
         if not validation_result.valid and not is_repair_call:
-            logger.warning("gateway_step:repair_invoked use_case=%s errors=%s", use_case, validation_result.errors)
+            logger.warning(
+                "gateway_step:repair_invoked use_case=%s errors=%s", 
+                use_case, validation_result.errors
+            )
             increment_counter(
                 "llm_repair_invoked_total",
                 labels={"use_case": use_case, "schema_version": plan.output_schema_version},
@@ -1126,7 +1249,9 @@ class LLMGateway:
                     labels={"use_case": use_case, "schema_version": plan.output_schema_version},
                 )
 
-            repair_prompt = build_repair_prompt(provider_result.raw_output, validation_result.errors, plan.output_schema)
+            repair_prompt = build_repair_prompt(
+                provider_result.raw_output, validation_result.errors, plan.output_schema
+            )
             repair_request = request.model_copy(deep=True)
             repair_request.flags.is_repair_call = True
             repair_request.flags.visited_use_cases = request.flags.visited_use_cases + [use_case]
@@ -1144,7 +1269,10 @@ class LLMGateway:
         config = await self._resolve_config(db, use_case, context_dict)
 
         if not validation_result.valid and config.fallback_use_case:
-            logger.warning("gateway_step:fallback_invoked use_case=%s fallback=%s", use_case, config.fallback_use_case)
+            logger.warning(
+                "gateway_step:fallback_invoked use_case=%s fallback=%s", 
+                use_case, config.fallback_use_case
+            )
             increment_counter(
                 "llm_fallback_invoked_total",
                 labels={"use_case": use_case, "schema_version": plan.output_schema_version},
@@ -1158,7 +1286,10 @@ class LLMGateway:
             return RecoveryResult(
                 result=fallback_result,
                 repair_attempts=0,
-                fallback_reason=str(validation_result.errors[0]) if validation_result.errors else "validation_failed"
+                fallback_reason=(
+                    str(validation_result.errors[0]) 
+                    if validation_result.errors else "validation_failed"
+                )
             )
 
         if not validation_result.valid:
@@ -1167,7 +1298,10 @@ class LLMGateway:
                     "natal_repair_fail_total",
                     labels={"use_case": use_case, "schema_version": plan.output_schema_version},
                 )
-            raise OutputValidationError(f"Output validation failed for '{use_case}'", details={"errors": validation_result.errors})
+            raise OutputValidationError(
+                f"Output validation failed for '{use_case}'", 
+                details={"errors": validation_result.errors}
+            )
 
         return RecoveryResult(result=provider_result)
 
@@ -1182,6 +1316,7 @@ class LLMGateway:
     ) -> GatewayResult:
         """Stage 6: Finalizes the GatewayResult with unified metadata."""
         result = recovery.result
+        # The request is passed as an argument
         
         # Telemetry Axis 1: Execution Path
         if request.flags.test_fallback_active:
@@ -1210,7 +1345,9 @@ class LLMGateway:
         result.meta.normalizations_applied = normalizations
         
         # Increment if recursion occurred, or take from recovery
-        result.meta.repair_attempts = max(getattr(result.meta, "repair_attempts", 0), recovery.repair_attempts)
+        result.meta.repair_attempts = max(
+            getattr(result.meta, "repair_attempts", 0), recovery.repair_attempts
+        )
         if recovery.fallback_reason:
             result.meta.fallback_reason = recovery.fallback_reason
         
@@ -1232,6 +1369,7 @@ class LLMGateway:
         # Preserve other technical metadata
         result.meta.latency_ms = latency_ms
         result.meta.model = plan.model_id
+        result.meta.model_override_active = plan.model_override_active
         result.meta.prompt_version_id = plan.prompt_version_id or "hardcoded-v1"
         
         # Map Assembly metadata (AC10)
@@ -1260,7 +1398,10 @@ class LLMGateway:
 
     def _validate_input(self, config: UseCaseConfig, user_input: Dict[str, Any]) -> None:
         """Helper to validate user input against UseCaseConfig.input_schema."""
-        logger.debug("gateway_validate_input use_case=%s has_schema=%s", getattr(config, "use_case", "unknown"), config.input_schema is not None)
+        logger.debug(
+            "gateway_validate_input use_case=%s has_schema=%s", 
+            getattr(config, "use_case", "unknown"), config.input_schema is not None
+        )
         if config.input_schema:
             try:
                 res = validate_input(user_input, config.input_schema)
@@ -1286,10 +1427,16 @@ class LLMGateway:
 
         try:
             if use_case in visited and not is_repair_call:
-                raise GatewayError(f"Infinite fallback loop detected for use case '{use_case}'", details={"visited": visited})
+                raise GatewayError(
+                    f"Infinite fallback loop detected for use case '{use_case}'", 
+                    details={"visited": visited}
+                )
 
             if len(visited) > 3:
-                raise GatewayError(f"Fallback chain depth limit exceeded for '{use_case}'", details={"visited": visited})
+                raise GatewayError(
+                    f"Fallback chain depth limit exceeded for '{use_case}'", 
+                    details={"visited": visited}
+                )
 
             # 0. Merge extra_context for preliminary resolution
             context_dict = request.context.model_dump()
@@ -1305,9 +1452,11 @@ class LLMGateway:
 
             # Stage 1: Resolve Plan (Now includes QualifiedContext)
             try:
-                plan, qualified_ctx = await self._resolve_plan(request, db, config_override=None, context_override=context_dict)
-                # If assembly was used, config is within plan. We need to sync back to 'config' variable
-                # for Stage 1.5 validation if it depends on the exact model resolved.
+                plan, qualified_ctx = await self._resolve_plan(
+                    request, db, config_override=None, context_override=context_dict
+                )
+                # If assembly was used, config is within plan. We need to sync back to 'config' 
+                # variable for Stage 1.5 validation if it depends on the exact model resolved.
                 if plan.model_source == "assembly":
                     # Re-map config from plan for validation
                     config = UseCaseConfig(
@@ -1335,7 +1484,10 @@ class LLMGateway:
                 raise
 
             if not is_repair_call:
-                logger.info("llm_gateway_start use_case=%s request_id=%s", use_case, request.request_id)
+                logger.info(
+                    "llm_gateway_start use_case=%s request_id=%s", 
+                    use_case, request.request_id
+                )
 
             # Stage 2: Build Messages
             try:
@@ -1357,13 +1509,18 @@ class LLMGateway:
                 if validation.valid:
                     provider_result.structured_output = validation.parsed
             except Exception as e:
-                logger.error("gateway_step_failed:validate_and_normalize use_case=%s error=%s", use_case, e)
+                logger.error(
+                    "gateway_step_failed:validate_and_normalize use_case=%s error=%s", 
+                    use_case, e
+                )
                 raise
 
             # Stage 5: Recovery (Repair/Fallback)
             try:
                 if not validation.valid:
-                    recovery = await self._handle_repair_or_fallback(validation, request, plan, provider_result, db=db)
+                    recovery = await self._handle_repair_or_fallback(
+                        validation, request, plan, provider_result, db=db
+                    )
                 else:
                     recovery = RecoveryResult(result=provider_result)
             except Exception as e:
@@ -1375,19 +1532,37 @@ class LLMGateway:
             try:
                 final_result = self._build_result(
                     validation, plan, recovery, latency_ms,
-                    request=request, qualified_ctx=qualified_ctx
+                    request, qualified_ctx
                 )
             except Exception as e:
                 logger.error("gateway_step_failed:build_result use_case=%s error=%s", use_case, e)
                 raise
 
             if db and not is_repair_call:
-                await log_call(db=db, use_case=use_case, request_id=request.request_id, trace_id=request.trace_id, user_input=request.user_input.model_dump(), result=final_result)
-                increment_counter("llm_gateway_requests_total", labels={"use_case": use_case, "status": "success"})
+                await log_call(
+                    db=db, 
+                    use_case=use_case, 
+                    request_id=request.request_id, 
+                    trace_id=request.trace_id, 
+                    user_input=request.user_input.model_dump(), 
+                    result=final_result
+                )
+                increment_counter(
+                    "llm_gateway_requests_total", 
+                    labels={"use_case": use_case, "status": "success"}
+                )
 
             return final_result
 
         except Exception as e:
             if db and not is_repair_call:
-                await log_call(db=db, use_case=use_case, request_id=request.request_id, trace_id=request.trace_id, user_input=request.user_input.model_dump(), result=None, error=e)
+                await log_call(
+                    db=db, 
+                    use_case=use_case, 
+                    request_id=request.request_id, 
+                    trace_id=request.trace_id, 
+                    user_input=request.user_input.model_dump(), 
+                    result=None, 
+                    error=e
+                )
             raise

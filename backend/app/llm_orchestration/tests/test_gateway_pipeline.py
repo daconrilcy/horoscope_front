@@ -117,7 +117,13 @@ def test_build_result_metadata_preservation():
         user_id=1
     )
     
-    final = gateway._build_result(provider_res, ValidationResult(valid=True, parsed={}, errors=[]), plan, recovery, 500, request=request)
+    final = gateway._build_result(
+        ValidationResult(valid=True, parsed={}, errors=[]), 
+        plan, 
+        recovery, 
+        500, 
+        request
+    )
     
     assert final.meta.latency_ms == 500
     assert final.meta.model == "plan-model"

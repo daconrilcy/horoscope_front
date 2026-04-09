@@ -9,6 +9,7 @@ from app.prediction.persisted_snapshot import (
     PersistedPredictionSnapshot,
     PersistedTimeBlock,
 )
+from app.prediction.llm_narrator import NarratorResult
 from app.prediction.public_projection import PublicPredictionAssembler
 from app.prediction.schemas import (
     V3EvidencePack,
@@ -235,9 +236,9 @@ async def test_assemble_reuses_persisted_llm_narrative_without_regeneration():
     prompt_context = MagicMock()
 
     with patch(
-        "app.prediction.llm_narrator.LLMNarrator.narrate",
+        "app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration",
         new_callable=AsyncMock,
-    ) as narrate:
+    ) as mock_gen:
         result = await PublicPredictionAssembler().assemble(
             snapshot,
             {1: "work"},
@@ -246,7 +247,7 @@ async def test_assemble_reuses_persisted_llm_narrative_without_regeneration():
             prompt_context=prompt_context,
         )
 
-    narrate.assert_not_awaited()
+    mock_gen.assert_not_awaited()
     assert result["has_llm_narrative"] is True
     assert result["daily_synthesis"] == "Synthèse persistée"
     assert result["astro_events_intro"] == "Intro persistée"
@@ -291,22 +292,19 @@ async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short()
     )
 
     prompt_context = MagicMock()
-    regenerated = MagicMock()
-    regenerated.daily_synthesis = (
-        "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6. Phrase 7."
+    regenerated = NarratorResult(
+        daily_synthesis="Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6. Phrase 7.",
+        astro_events_intro="Nouvelle intro",
+        time_window_narratives={},
+        turning_point_narratives=[]
     )
-    regenerated.astro_events_intro = "Nouvelle intro"
-    regenerated.daily_advice = None
-    regenerated.time_window_narratives = {}
-    regenerated.turning_point_narratives = []
-    regenerated.main_turning_point_narrative = None
 
     with (
         patch(
-            "app.prediction.llm_narrator.LLMNarrator.narrate",
+            "app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration",
             new_callable=AsyncMock,
             return_value=regenerated,
-        ) as narrate,
+        ) as mock_gen,
         patch("app.prediction.public_projection.settings") as mock_settings,
     ):
         mock_settings.llm_narrator_enabled = True
@@ -319,7 +317,7 @@ async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short()
             variant_code="summary_only",
         )
 
-    narrate.assert_awaited_once()
+    mock_gen.assert_awaited_once()
     assert result["has_llm_narrative"] is True
     assert result["daily_synthesis"] == regenerated.daily_synthesis
     assert result["astro_events_intro"] == "Nouvelle intro"

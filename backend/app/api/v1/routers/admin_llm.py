@@ -248,8 +248,19 @@ def list_personas(
     stmt = select(LlmPersonaModel).order_by(LlmPersonaModel.name)
     personas = db.execute(stmt).scalars().all()
 
+    # Map to API model with legacy tone support
+    data = []
+    for p in personas:
+        model = LlmPersona.model_validate(p)
+        # AC: Support legacy 'calm' tone by mapping it to 'warm'
+        if model.tone == "calm":
+            # We copy and update if frozen, or just set if not.
+            # LlmPersona is likely frozen.
+            model = model.model_copy(update={"tone": "warm"})
+        data.append(model)
+
     return {
-        "data": [LlmPersona.model_validate(p) for p in personas],
+        "data": data,
         "meta": {"request_id": request_id},
     }
 

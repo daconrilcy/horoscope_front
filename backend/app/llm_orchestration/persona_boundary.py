@@ -35,6 +35,7 @@ PERSONA_BOUNDARY_POLICY = {
         ],
         "hard_policy": [
             r"ignore(r|s)? les (règles|instructions|contraintes)",
+            r"ignore (all )?(previous )?(system )?instructions",
             r"bypass(er)? (security|safety|instructions)",
             r"oublie les instructions précédentes",
             r"désactive la sécurité",
@@ -52,6 +53,8 @@ PERSONA_BOUNDARY_POLICY = {
             r"abonnement (free|premium|payant)",
             r"uniquement pour les comptes",
             r"limite de \d+ caractères",
+            r"premium only",
+            r"free plan",
         ],
     },
     "severity_map": {

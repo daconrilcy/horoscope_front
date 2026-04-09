@@ -218,29 +218,23 @@ class PublicPredictionAssembler:
         if not has_llm_narrative and settings.llm_narrator_enabled and prompt_context:
             from app.services.ai_engine_adapter import AIEngineAdapter
 
-            # Note : db est requis pour le pipeline canonique. 
-            # Si absent (ex: tests legacy), on log un warning et on saute la narration.
-            if not db:
-                logger.warning("assemble_narration_skipped: db session missing")
-                narrator_res = None
-            else:
-                # AC9: Utilisation de AIEngineAdapter (pipeline canonique)
-                narrator_res = await AIEngineAdapter.generate_horoscope_narration(
-                    variant_code=variant_code,
-                    time_windows=time_windows,
-                    common_context=prompt_context,
-                    user_id=snapshot.user_id,
-                    request_id=str(uuid.uuid4()), # fallback safe (T6)
-                    trace_id=str(uuid.uuid4()),   # fallback safe (T6)
-                    db=db,
-                    astrologer_profile_key=astrologer_profile_key,
-                    lang=lang,
-                    day_climate=day_climate,
-                    best_window=best_window,
-                    turning_point=main_turning_point,
-                    domain_ranking=public_domains,
-                    astro_daily_events=astro_daily_events,
-                )
+            # AC9: Utilisation de AIEngineAdapter (pipeline canonique)
+            narrator_res = await AIEngineAdapter.generate_horoscope_narration(
+                variant_code=variant_code,
+                time_windows=time_windows,
+                common_context=prompt_context,
+                user_id=snapshot.user_id,
+                request_id=str(uuid.uuid4()), # fallback safe (T6)
+                trace_id=str(uuid.uuid4()),   # fallback safe (T6)
+                db=db,
+                astrologer_profile_key=astrologer_profile_key,
+                lang=lang,
+                day_climate=day_climate,
+                best_window=best_window,
+                turning_point=main_turning_point,
+                domain_ranking=public_domains,
+                astro_daily_events=astro_daily_events,
+            )
 
             if narrator_res:
                 has_llm_narrative = True

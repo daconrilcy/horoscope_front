@@ -384,6 +384,10 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- 2026-04-09 : Revue finale validée. Le chemin principal de `public_projection.py` n'utilise plus `LLMNarrator` en fallback et passe exclusivement par `AIEngineAdapter.generate_horoscope_narration()`.
+- 2026-04-09 : Le seed `seed_horoscope_narrator_assembly.py` est branché dans l'auto-heal du registre LLM (`backend/app/main.py`) pour garantir la disponibilité des assemblies narrateur en environnement dev/local.
+- 2026-04-09 : Les tests de convergence ont été réalignés sur le chemin canonique (`AIEngineAdapter`) et la suite Story 66 ciblée est verte (`pytest app/llm_orchestration/tests -k story_66 -q` → 42 passed).
+
 ### File List
 
 - `backend/app/llm_orchestration/narrator_contract.py` (nouveau) — `NARRATOR_OUTPUT_SCHEMA`
@@ -391,8 +395,11 @@ claude-sonnet-4-6
 - `backend/app/services/ai_engine_adapter.py` (modifié) — ajout `generate_horoscope_narration`
 - `backend/app/prediction/public_projection.py` (modifié) — redirection vers l'adapter
 - `backend/app/api/v1/routers/predictions.py` (modifié) — injection du `db` session
+- `backend/app/main.py` (modifié) — branchement du seed narrateur dans l'auto-heal du registre LLM
 - `backend/app/prediction/llm_narrator.py` (modifié) — dépréciation
 - `backend/app/llm_orchestration/tests/test_story_66_19_narrator_migration.py` (nouveau) — tests de convergence
+- `backend/app/tests/unit/prediction/test_public_projection_evidence.py` (modifié) — réalignement des tests assembleur sur `AIEngineAdapter`
+- `backend/app/tests/integration/test_horoscope_daily_variant_narration.py` (modifié) — réalignement des tests d'intégration sur le chemin canonique
 
 ### Change Log
 
@@ -403,3 +410,4 @@ claude-sonnet-4-6
 - 2026-04-09 : T4 & T5 Implémentés. Méthode `generate_horoscope_narration` et mapping `GatewayResult` -> `NarratorResult` ajoutés dans `AIEngineAdapter`.
 - 2026-04-09 : T6 & T7 Implémentés. Redirection de `public_projection.py` vers l'adapter et dépréciation de `LLMNarrator`.
 - 2026-04-09 : T8 Implémenté. Ajout des tests de convergence dans `test_story_66_19_narrator_migration.py`.
+- 2026-04-09 : Correctifs post-review. Suppression du fallback legacy vers `LLMNarrator` dans `public_projection.py`, branchement du seed narrateur dans `main.py`, réalignement des tests unitaires et d'intégration sur le chemin canonique, puis validation des suites ciblées et Story 66.

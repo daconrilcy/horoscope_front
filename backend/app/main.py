@@ -93,7 +93,6 @@ def _ensure_llm_registry_seeded() -> None:
     from app.infra.db.models.llm_prompt import PromptStatus
     from app.infra.db.session import SessionLocal
     from app.llm_orchestration.seeds.use_cases_seed import seed_use_cases
-    from app.llm_orchestration.seeds.seed_assembly import seed_assembly
     from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
     from scripts.seed_29_prompts import seed_prompts
     from scripts.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
@@ -141,6 +140,18 @@ def _ensure_llm_registry_seeded() -> None:
                     LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
                 )
             ).scalar_one_or_none()
+
+            # Check for Horoscope Daily (Story 66.19)
+            horoscope_daily_uc = db.query(LlmUseCaseConfigModel).filter(
+                LlmUseCaseConfigModel.key == "horoscope_daily"
+            ).one_or_none()
+            active_horoscope_prompt = db.execute(
+                select(LlmPromptVersionModel).where(
+                    LlmPromptVersionModel.use_case_key == "horoscope_daily",
+                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+                )
+            ).scalar_one_or_none()
+
             placeholder_drift = (
                 not complete_use_case
                 or "chart_json" not in (complete_use_case.required_prompt_placeholders or [])
@@ -148,13 +159,17 @@ def _ensure_llm_registry_seeded() -> None:
                 or "chart_json" not in (short_use_case.required_prompt_placeholders or [])
             )
             missing_registry = (
-                use_case_count == 0 or prompt_count == 0 or active_short_prompt is None
+                use_case_count == 0 
+                or prompt_count == 0 
+                or active_short_prompt is None
+                or horoscope_daily_uc is None
             )
             degraded_registry = (
                 enabled_personas < 6
                 or has_persona_lock
                 or active_complete_prompt is None
                 or active_chat_prompt is None
+                or active_horoscope_prompt is None
                 or placeholder_drift
             )
             return (
@@ -221,6 +236,12 @@ def _ensure_llm_registry_seeded() -> None:
         seed_prompts()
         seed_natal_v3_prompts()
         seed_chat_prompt_v2()
+        
+        from app.llm_orchestration.seeds.seed_horoscope_narrator_assembly import (
+            seed_horoscope_narrator_assembly,
+        )
+        with SessionLocal() as db:
+            seed_horoscope_narrator_assembly(db)
     except IntegrityError:
         logger.debug("llm_registry_auto_heal_concurrent_skip")
     except Exception as e:
