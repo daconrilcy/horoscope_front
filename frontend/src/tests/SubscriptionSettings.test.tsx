@@ -145,6 +145,50 @@ describe("SubscriptionSettings", () => {
     expect(portalMutate).not.toHaveBeenCalled()
   })
 
+  it("affiche le résumé gratuit quand l'API renvoie explicitement le plan free", () => {
+    setupCatalogMock()
+
+    mockUseBillingSubscription.mockReturnValue({
+      isLoading: false,
+      data: {
+        status: "active",
+        subscription_status: null,
+        plan: {
+          code: "free",
+          display_name: "Free",
+          monthly_price_cents: 0,
+          currency: "EUR",
+          daily_message_limit: 1,
+          is_active: true,
+        },
+        failure_reason: null,
+      },
+      refetch: vi.fn(),
+    })
+    mockUseStripeCheckoutSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSession.mockReturnValue({ isPending: false, mutate: vi.fn() })
+    mockUseStripePortalSubscriptionCancelSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripePortalSubscriptionUpdateSession.mockReturnValue({
+      isPending: false,
+      mutate: vi.fn(),
+    })
+    mockUseStripeSubscriptionReactivate.mockReturnValue({ isPending: false, mutate: vi.fn() })
+
+    render(<SubscriptionSettings />)
+
+    expect(screen.getAllByText(/Gratuit|Free/i).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText(/Choisissez une formule pour débloquer l'expérience complète|Choose a plan to unlock the full experience/i).length,
+    ).toBeGreaterThan(0)
+    expect(
+      screen.queryByText(/Votre formule actuelle est active|Your current plan is active/i),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Actif$|^Active$/i)).not.toBeInTheDocument()
+  })
+
   it("affiche un résumé de statut avec plan actif, expérience, renouvellement et prochaine échéance", () => {
     setupCatalogMock()
 

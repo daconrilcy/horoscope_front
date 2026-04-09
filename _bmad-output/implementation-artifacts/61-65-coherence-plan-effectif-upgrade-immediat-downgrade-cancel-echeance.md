@@ -392,6 +392,9 @@ claude-sonnet-4-6
 - [UX polish 2026-04-01] Avant un upgrade payant, une modal explicite maintenant la facturation intermédiaire avant redirection vers Stripe.
 - [Resubscribe fix 2026-04-01] Un utilisateur sans plan actif mais avec snapshot Stripe `subscription_status="canceled"` repart désormais vers un nouveau Checkout Stripe au lieu du Customer Portal générique. Ce cas couvre le réabonnement après suppression effective de la subscription côté Stripe.
 - [Billing return UX 2026-04-01] La page `/billing/success` n’affiche plus l’identifiant de session Checkout, et son CTA "Voir mon abonnement" pointe explicitement vers `/settings/subscription`.
+- [UX wording fix 2026-04-09] `SubscriptionSettings` traite désormais explicitement `plan.code="free"` comme un état gratuit dans le résumé d’abonnement. Le message principal n’affiche plus "Votre formule actuelle est active." pour un utilisateur sans abonnement payant.
+- [UX wording fix 2026-04-09] La statistique "Plan actif" affiche maintenant `Gratuit` quand le snapshot commercial courant est `free`, au lieu du libellé trompeur `Actif`.
+- [UX wording fix 2026-04-09] La couverture frontend a été complétée avec un test dédié vérifiant qu’un snapshot `plan=free` rend bien le résumé gratuit et qu’aucun wording `active` n’est encore affiché dans ce cas.
 
 ### File List
 

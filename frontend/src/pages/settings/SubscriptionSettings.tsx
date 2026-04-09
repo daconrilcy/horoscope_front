@@ -440,26 +440,27 @@ export function SubscriptionSettings() {
   const selectedPlanLabel =
     PLANS.find((plan) => plan.code === displaySelected)?.label ?? displaySelected ?? ""
   const currentPlanLabel =
-    PLANS.find((plan) => plan.code === currentPlanCode)?.label ?? currentPlanCode ?? ""
-  const currentPlanExperience = currentPlanCode
-    ? PLANS.find((plan) => plan.code === currentPlanCode)?.positioning
-    : subscriptionGuide.plans.free.positioning
-  const currentPlanHighlights = currentPlanCode
-    ? PLANS.find((plan) => plan.code === currentPlanCode)?.highlights ?? []
-    : subscriptionGuide.planHighlights.free.slice(0, 3)
-  const currentPlanLead = currentPlanCode
-    ? PLANS.find((plan) => plan.code === currentPlanCode)?.lead ?? t.overviewLeadActive
-    : subscriptionGuide.plans.free.description[0]
+    PLANS.find((plan) => plan.code === currentPlanCode)?.label
+    ?? (currentPlanCode === "free" ? t.planFree : currentPlanCode ?? "")
+  const currentPlanExperience = isFreeEntryPoint
+    ? subscriptionGuide.plans.free.positioning
+    : PLANS.find((plan) => plan.code === currentPlanCode)?.positioning
+  const currentPlanHighlights = isFreeEntryPoint
+    ? subscriptionGuide.planHighlights.free.slice(0, 3)
+    : PLANS.find((plan) => plan.code === currentPlanCode)?.highlights ?? []
+  const currentPlanLead = isFreeEntryPoint
+    ? subscriptionGuide.plans.free.description[0]
+    : PLANS.find((plan) => plan.code === currentPlanCode)?.lead ?? t.overviewLeadActive
   const currentPlanStatusMessage = useMemo(() => {
-    if (!effectiveCurrentPeriodEnd || !currentPlanCode) return null
+    if (!effectiveCurrentPeriodEnd || isFreeEntryPoint) return null
     if (isCancellationAlreadyScheduled || subscription?.scheduled_plan) {
       return t.currentPlanEndsOn.replace("{{date}}", formatDisplayDate(effectiveCurrentPeriodEnd))
     }
     return null
   }, [
-    currentPlanCode,
     effectiveCurrentPeriodEnd,
     formatDisplayDate,
+    isFreeEntryPoint,
     isCancellationAlreadyScheduled,
     subscription?.scheduled_plan,
     t.currentPlanEndsOn,
@@ -473,7 +474,7 @@ export function SubscriptionSettings() {
     : hasActivePaidSubscription
       ? t.overviewRenewalAuto
       : t.overviewRenewalInactive
-  const overviewLead = currentPlanCode ? currentPlanLead : currentPlanLead
+  const overviewLead = currentPlanLead
   const overviewActionMessage = useMemo(() => {
     if (subscription?.scheduled_plan?.display_name && subscription.change_effective_at) {
       return t.overviewActionScheduledChange
@@ -489,7 +490,7 @@ export function SubscriptionSettings() {
       return t.overviewActionChangeTo.replace("{{plan}}", selectedPlanLabel)
     }
 
-    if (!currentPlanCode) {
+    if (isFreeEntryPoint) {
       return t.overviewActionFree
     }
 
@@ -499,10 +500,10 @@ export function SubscriptionSettings() {
 
     return t.overviewActionCurrent
   }, [
-    currentPlanCode,
     effectiveCurrentPeriodEnd,
     formatDisplayDate,
     hasChanges,
+    isFreeEntryPoint,
     isCancellationAlreadyScheduled,
     isTrialingBasic,
     selectedPlanLabel,
@@ -561,7 +562,7 @@ export function SubscriptionSettings() {
               <div className="subscription-overview__stats">
                 <div className="subscription-overview__stat">
                   <span className="subscription-overview__stat-label">{t.overviewPlanLabel}</span>
-                  <strong className="subscription-overview__stat-value">{t.active}</strong>
+                  <strong className="subscription-overview__stat-value">{overviewPlanLabel}</strong>
                 </div>
                 <div className="subscription-overview__stat">
                   <span className="subscription-overview__stat-label">{t.overviewExperienceLabel}</span>
