@@ -387,6 +387,8 @@ claude-sonnet-4-6
 - 2026-04-09 : Revue finale validée. Le chemin principal de `public_projection.py` n'utilise plus `LLMNarrator` en fallback et passe exclusivement par `AIEngineAdapter.generate_horoscope_narration()`.
 - 2026-04-09 : Le seed `seed_horoscope_narrator_assembly.py` est branché dans l'auto-heal du registre LLM (`backend/app/main.py`) pour garantir la disponibilité des assemblies narrateur en environnement dev/local.
 - 2026-04-09 : Les tests de convergence ont été réalignés sur le chemin canonique (`AIEngineAdapter`) et la suite Story 66 ciblée est verte (`pytest app/llm_orchestration/tests -k story_66 -q` → 42 passed).
+- 2026-04-09 : Correctif de stabilisation global. Ajout de `horoscope_daily` dans `PROMPT_CATALOG` pour réaligner le catalogue Python avec les use cases seedés en base et supprimer l'échec startup `validate_catalog_vs_db()`.
+- 2026-04-09 : Vérification finale complète validée après correction catalogue. Les tests d'intégration critiques en échec sont verts et la suite complète est annoncée verte.
 
 ### File List
 
@@ -396,6 +398,7 @@ claude-sonnet-4-6
 - `backend/app/prediction/public_projection.py` (modifié) — redirection vers l'adapter
 - `backend/app/api/v1/routers/predictions.py` (modifié) — injection du `db` session
 - `backend/app/main.py` (modifié) — branchement du seed narrateur dans l'auto-heal du registre LLM
+- `backend/app/prompts/catalog.py` (modifié) — ajout de la clé canonique `horoscope_daily` pour cohérence catalogue/base
 - `backend/app/prediction/llm_narrator.py` (modifié) — dépréciation
 - `backend/app/llm_orchestration/tests/test_story_66_19_narrator_migration.py` (nouveau) — tests de convergence
 - `backend/app/tests/unit/prediction/test_public_projection_evidence.py` (modifié) — réalignement des tests assembleur sur `AIEngineAdapter`
@@ -411,3 +414,4 @@ claude-sonnet-4-6
 - 2026-04-09 : T6 & T7 Implémentés. Redirection de `public_projection.py` vers l'adapter et dépréciation de `LLMNarrator`.
 - 2026-04-09 : T8 Implémenté. Ajout des tests de convergence dans `test_story_66_19_narrator_migration.py`.
 - 2026-04-09 : Correctifs post-review. Suppression du fallback legacy vers `LLMNarrator` dans `public_projection.py`, branchement du seed narrateur dans `main.py`, réalignement des tests unitaires et d'intégration sur le chemin canonique, puis validation des suites ciblées et Story 66.
+- 2026-04-09 : Correctif final de cohérence startup. Ajout de `horoscope_daily` dans `backend/app/prompts/catalog.py` pour aligner `PROMPT_CATALOG` avec `llm_use_case_configs` et éliminer les échecs des tests de smoke/load/secret-rotation liés à `validate_catalog_vs_db()`.

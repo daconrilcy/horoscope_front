@@ -92,6 +92,15 @@ NATAL_FREE_SHORT_SCHEMA = {
 }
 
 PROMPT_CATALOG: dict[str, PromptEntry] = {
+    "horoscope_daily": PromptEntry(
+        name="horoscope-daily-canonical-v1",
+        description="Horoscope du jour canonique résolu via feature/plan assembly",
+        use_case_key="horoscope_daily",
+        engine_env_key="OPENAI_ENGINE_HOROSCOPE_DAILY_FULL",
+        max_tokens=3000,
+        temperature=0.7,
+        output_schema=None,
+    ),
     "natal_long_free": PromptEntry(
         name="natal-long-free-v1",
         description="Interprétation natale restreinte (plan free)",
