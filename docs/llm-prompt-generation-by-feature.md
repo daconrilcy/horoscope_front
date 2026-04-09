@@ -1,6 +1,6 @@
 # Génération des Prompts LLM par Feature
 
-Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.19.
+Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.20.
 
 Objectifs :
 
@@ -63,7 +63,7 @@ flowchart TD
 
     G --> H{"Assembly explicite<br/>ou active trouvée ?"}
     H -->|Oui| I["Résolution PromptAssemblyConfig"]
-    H -->|Non| J["Fallback use_case-first"]
+    H -->|Non| J["Fallback use_case-first<br/>legacy uniquement"]
 
     I --> K["Composition textuelle<br/>feature + subfeature + plan_rules + persona"]
     J --> K2["Prompt legacy / config historique"]
@@ -96,7 +96,7 @@ flowchart TD
     AC --> AD["Réponse finale"]
 ```
 
-## Stories 66.9 à 66.19
+## Stories 66.9 à 66.20
 
 | Story | Apport canonique | Impact dans le processus |
 |---|---|---|
@@ -111,6 +111,7 @@ flowchart TD
 | `66.17` | Doctrine canonique de responsabilité | clarification documentaire des rôles de chaque entité |
 | `66.18` | Profils provider stables | encapsulation des paramètres provider derrière des profils internes |
 | `66.19` | Migration narrator daily | convergence de `horoscope_daily` et `daily_prediction` vers `AIEngineAdapter` puis `LLMGateway.execute_request()` |
+| `66.20` | Convergence canonique obligatoire | assemblies nominales obligatoires pour `chat`, `guidance`, `natal`, `horoscope_daily` + normalisation des plans runtime vers `free/premium` |
 
 ## Couverture réelle par famille
 
@@ -129,6 +130,13 @@ Cette section ne décrit que ce qui est explicitement visible dans le code. Elle
 
 Depuis la story 66.20, l'usage de la taxonomie `feature/subfeature/plan` est devenu obligatoire pour les familles nominales (`chat`, `guidance`, `natal`, `horoscope_daily`). Le gateway rejette désormais tout appel vers ces familles qui ne résoudrait pas une assembly valide, sauf via le mécanisme explicite de compatibilité `DEPRECATED_USE_CASE_MAPPING`.
 
+Pour ces familles, le plan runtime est d'abord normalisé vers la taxonomie assembly canonique :
+
+- `premium`, `pro`, `ultra`, `full` -> `premium`
+- `free`, `basic`, `trial`, `none`, `guest`, `unknown` et absence de plan -> `free`
+
+Cette normalisation sert à résoudre l'assembly et le `ExecutionProfile`. Elle ne remplace pas la logique d'accès produit portée en amont par les entitlements.
+
 ### Règle de lecture
 
 - une ligne n'affirme qu'un comportement appuyé par une source explicite du dépôt ;
@@ -144,7 +152,7 @@ Les schémas ci-dessous décrivent uniquement les chemins de génération de ré
 ```mermaid
 flowchart TD
     A["Service métier / route chat"] --> B["AIEngineAdapter.generate_chat_reply"]
-    B --> C["Construit ExecutionUserInput<br/>use_case=chat_astrologer<br/>feature=chat<br/>subfeature=astrologer<br/>plan depuis entitlement ou free"]
+    B --> C["Construit ExecutionUserInput<br/>feature=chat<br/>subfeature=astrologer<br/>plan depuis entitlement<br/>use_case transporté pour compatibilité"]
     C --> D["Construit ExecutionContext<br/>history + natal_data + chart_json + astro_context"]
     D --> E["Construit LLMExecutionRequest"]
     E --> F["LLMGateway.execute_request"]
@@ -160,8 +168,8 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["Service métier / route guidance"] --> B["AIEngineAdapter.generate_guidance"]
-    B --> C["_build_guidance_request<br/>use_case guidance_daily / weekly / contextual / event_guidance"]
-    C --> D["Enrichit user_input<br/>feature=guidance<br/>subfeature dérivée du use_case<br/>plan transmis par le service"]
+    B --> C["_build_guidance_request<br/>feature=guidance + subfeature canonique<br/>use_case éventuellement conservé pour compatibilité"]
+    C --> D["Enrichit user_input<br/>feature=guidance<br/>subfeature canonique métier<br/>plan transmis par le service"]
     D --> E["Construit ExecutionContext<br/>natal_data + chart_json + astro_context + extra_context"]
     E --> F["Construit LLMExecutionRequest"]
     F --> G["LLMGateway.execute_request"]
@@ -178,12 +186,12 @@ flowchart TD
 flowchart TD
     A["Service métier natal"] --> B["AIEngineAdapter.generate_natal_interpretation"]
     B --> C["Reçoit NatalExecutionInput"]
-    C --> D["Construit ExecutionUserInput<br/>use_case=natal_input.use_case_key<br/>feature=natal<br/>subfeature=use_case_key<br/>plan=natal_input.plan"]
+    C --> D["Construit ExecutionUserInput<br/>feature=natal<br/>subfeature canonique métier<br/>plan=natal_input.plan<br/>use_case transporté à titre résiduel"]
     D --> E["Construit ExecutionContext<br/>natal_data + chart_json + astro_context<br/>extra_context: module / variant_code / level"]
     E --> F["Construit ExecutionFlags<br/>validation_strict + evidence_catalog"]
     F --> G["Construit LLMExecutionRequest"]
     G --> H["LLMGateway.execute_request"]
-    H --> I["Resolve Plan<br/>assembly possible si présente"]
+    H --> I["Resolve Plan<br/>assembly nominale requise"]
     I --> J["Build Messages"]
     J --> K["Call Provider openai"]
     K --> L["Validate Output + sanitize evidence"]
@@ -242,6 +250,8 @@ Aucun pipeline de génération de réponse LLM spécifique à une famille `suppo
 
 Le composant `LLMNarrator` existe encore dans le dépôt, mais il est désormais documenté comme déprécié et ne constitue plus le chemin principal de narration daily.
 
+La fermeture nominale imposée par la story 66.20 vise explicitement `horoscope_daily` ; `daily_prediction` est documenté ici comme convergé sur son chemin principal, sans être promu dans ce document au même statut de famille nominale fermée.
+
 ## Doctrine d'abonnement
 
 La règle officielle est la suivante :
@@ -268,7 +278,7 @@ Conserver un `use_case` distinct quand la différence porte sur :
 
 ### Fallback de compatibilité
 
-Le gateway supporte encore un mapping `deprecated_use_case -> feature + plan` via `DEPRECATED_USE_CASE_MAPPING`.
+Le gateway supporte encore un mapping `deprecated_use_case -> feature + subfeature + plan` via `DEPRECATED_USE_CASE_MAPPING`.
 
 But :
 
@@ -301,7 +311,7 @@ Le gateway reçoit un `LLMExecutionRequest` avec :
 - `flags` ;
 - éventuellement des overrides.
 
-Pour les familles migrées, l'appelant doit préférer `feature/subfeature/plan`.
+Pour `chat`, `guidance`, `natal` et `horoscope_daily`, l'appelant doit fournir `feature/subfeature/plan` comme entrée nominale. Sur ces familles, `use_case` ne doit plus être utilisé comme clé primaire de résolution, seulement comme champ de compatibilité, d'observabilité ou de transition contractuelle si nécessaire.
 
 ### 2. Fallback de compatibilité `use_case`
 
@@ -325,10 +335,10 @@ Ce niveau n'est pas décoratif : il influence directement le prompt résolu.
 Le gateway tente dans cet ordre :
 
 1. configuration assembly explicite si `assembly_config_id` est fourni ;
-2. assembly actif par `feature/subfeature/plan/locale` ;
-3. fallback vers la configuration historique `use_case-first`.
+2. assembly actif par `feature/subfeature/plan/locale` après normalisation éventuelle du plan runtime vers `free/premium` ;
+3. fallback vers la configuration historique `use_case-first` sur les seuls chemins legacy encore autorisés.
 
-En pratique, le chemin assembly devient la source canonique dès qu'une famille a migré, mais le fallback legacy reste actif comme filet de sécurité.
+En pratique, le chemin assembly devient la source canonique dès qu'une famille a migré, mais le fallback legacy reste actif comme filet de sécurité uniquement pour les chemins explicitement legacy. Pour `chat`, `guidance`, `natal` et `horoscope_daily`, l'absence d'assembly résolue est désormais une erreur de configuration nominale, pas un motif de retomber silencieusement sur le chemin `use_case-first`. `daily_prediction` suit bien le pipeline canonique observé via assembly pour son chemin principal documenté, mais n'est pas classé ici parmi les familles nominales explicitement fermées par la story 66.20.
 
 ### 5. Composition assembly
 
@@ -382,10 +392,10 @@ Vu depuis `execute_request()`, le pipeline réel est aujourd'hui le suivant :
 1. fusion préliminaire de `context` et `extra_context` ;
 2. résolution rapide de config puis validation d'entrée précoce ;
 3. `_resolve_plan()` :
-   - fallback éventuel `deprecated use_case -> feature/plan`
+   - fallback éventuel `deprecated use_case -> feature/subfeature/plan`
    - enrichissement `CommonContextBuilder`
    - résolution assembly explicite ou active
-   - fallback `use_case-first`
+   - fallback `use_case-first` uniquement sur les chemins legacy encore autorisés
    - résolution `ExecutionProfile`
    - merge final modèle / provider / max tokens
    - rendu final du `developer_prompt`
@@ -545,7 +555,7 @@ Toutes les features n'appliquent pas nécessairement le même niveau de sévéri
 La liste des **features bloquantes** est définie dans la politique de résolution des placeholders du backend. À date, elle contient :
 
 - `natal`
-- `guidance_contextual`
+- `guidance_contextual` (désignation legacy de politique, correspondant au domaine `feature="guidance"` avec une variante contextuelle)
 
 Pour ces familles :
 
@@ -678,9 +688,9 @@ Ces compatibilités ne doivent pas être lues comme des variantes concurrentes �
 
 ### Compatibilités encore supportées
 
-- fallback `use_case-first` quand aucune assembly active n'est trouvée ;
+- fallback `use_case-first` quand aucune assembly active n'est trouvée sur un chemin legacy encore autorisé ;
 - fallback `resolve_model()` quand aucun `ExecutionProfile` n'est résolu ;
-- support des anciens use_cases mappés vers `feature + plan` ;
+- support des anciens use_cases mappés vers `feature + subfeature + plan` ;
 - chemin legacy dans certains services métier pendant la convergence complète.
 
 ### Chemins legacy actifs à date
@@ -690,8 +700,8 @@ Les chemins ci-dessous sont explicitement observables dans le code actuel.
 | Chemin legacy | Où il vit | Rôle actuel |
 |---|---|---|
 | `LLMGateway.execute()` | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | wrapper de compatibilité vers `execute_request()` |
-| fallback `deprecated use_case -> feature/plan` | [catalog.py](/c:/dev/horoscope_front/backend/app/prompts/catalog.py) + [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | préserve les anciens appelants `horoscope_daily_free/full` |
-| fallback `use_case-first` | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | reste utilisé quand aucune assembly n'est résolue |
+| fallback `deprecated use_case -> feature/subfeature/plan` | [catalog.py](/c:/dev/horoscope_front/backend/app/prompts/catalog.py) + [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | préserve les anciens appelants legacy tout en les redirigeant vers la taxonomie canonique |
+| fallback `use_case-first` | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | reste utilisé sur les chemins legacy encore autorisés ; n'est plus un fallback nominal pour `chat`, `guidance`, `natal`, `horoscope_daily` |
 | fallback `resolve_model()` | [catalog.py](/c:/dev/horoscope_front/backend/app/prompts/catalog.py) + [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | maintient le chemin historique de choix de modèle |
 | compatibilité `ExecutionConfigAdmin` brut | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | supporte encore `reasoning_effort` / `verbosity` portés directement par la config |
 | fallback provider vers OpenAI | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | réabsorbe les providers non encore réellement supportés |
@@ -778,10 +788,10 @@ Elle sert à vérifier notamment :
 
 Le processus cible est :
 
-1. entrée canonique `feature/subfeature/plan` quand disponible ;
+1. entrée canonique obligatoire `feature/subfeature/plan` pour `chat`, `guidance`, `natal` et `horoscope_daily` ;
 2. fallback éventuel depuis un ancien `use_case` ;
 3. enrichissement du contexte et calcul de `context_quality` ;
-4. résolution assembly ou fallback legacy ;
+4. résolution assembly ; fallback legacy seulement pour les chemins explicitement autorisés ;
 5. résolution du profil d'exécution ;
 6. application ordonnée des transformations textuelles ;
 7. construction d'un `ResolvedExecutionPlan` unique ;
@@ -811,6 +821,6 @@ Toute story ou PR qui modifie l'un des points suivants doit mettre à jour ce do
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 - date : `2026-04-09`
-- commit / tag : `63b492de`
+- commit / tag : `5a069556`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation.
