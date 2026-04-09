@@ -770,10 +770,14 @@ class AIEngineAdapter:
             gateway = LLMGateway()
 
             # 1. Prepare User Input
+            subfeature = natal_input.use_case_key
+            if subfeature == "natal_interpretation_short":
+                subfeature = "natal_interpretation"
+
             user_input = ExecutionUserInput(
                 use_case=natal_input.use_case_key,
                 feature="natal",
-                subfeature=natal_input.use_case_key,
+                subfeature=subfeature,
                 plan=natal_input.plan,
                 locale=natal_input.locale,
                 question=natal_input.question,

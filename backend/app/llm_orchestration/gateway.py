@@ -212,6 +212,16 @@ USE_CASE_STUBS = {
         interaction_mode="chat",
         user_question_policy="required",
     ),
+    "astrologer_selection_help": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=2000,
+        system_core_key="default_v1",
+        developer_prompt="Aide l'utilisateur à choisir un astrologue.",
+        required_prompt_placeholders=[],
+        interaction_mode="chat",
+        user_question_policy="optional",
+    ),
 }
 
 
@@ -675,17 +685,19 @@ class LLMGateway:
         user_id = request.user_id
         resolved_assembly = None
 
-        # 0. Compatibility fallback for deprecated use cases (Story 66.9 AC5)
-
+        # 0. Compatibility fallback for deprecated use cases (Story 66.9 AC5, 66.20)
+        is_legacy_compatibility = False
         from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
-        if use_case in DEPRECATED_USE_CASE_MAPPING:
+        if use_case in DEPRECATED_USE_CASE_MAPPING and not request.user_input.feature:
+            is_legacy_compatibility = True
             mapping = DEPRECATED_USE_CASE_MAPPING[use_case]
             request.user_input.feature = mapping["feature"]
+            request.user_input.subfeature = mapping.get("subfeature")
             request.user_input.plan = mapping["plan"]
-            logger.info(
-                "gateway_deprecation_warning use_case=%s "
-                "redirected_to_feature=%s redirected_to_plan=%s",
-                use_case, mapping["feature"], mapping["plan"]
+            logger.warning(
+                "DEPRECATION WARNING: Use case '%s' is deprecated. "
+                "Please use canonical taxonomy: feature='%s', subfeature='%s', plan='%s'.",
+                use_case, mapping["feature"], mapping.get("subfeature"), mapping["plan"]
             )
 
         # Use provided context_dict or build from request
@@ -740,6 +752,18 @@ class LLMGateway:
                             subfeature=request.user_input.subfeature,
                             plan=request.user_input.plan,
                             locale=request.user_input.locale
+                        )
+
+                    # Story 66.20: Enforce mandatory assembly for nominal families
+                    CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
+                    if (
+                        not assembly_db 
+                        and not is_legacy_compatibility
+                        and request.user_input.feature in CANONICAL_FAMILIES
+                    ):
+                        raise GatewayConfigError(
+                            f"Mandatory assembly missing for nominal {request.user_input.feature} family. "
+                            f"Taxonomy: {request.user_input.feature}/{request.user_input.subfeature}/{request.user_input.plan}"
                         )
 
                     if assembly_db:
@@ -1017,22 +1041,28 @@ class LLMGateway:
                 )
 
             # 4. & 5. render placeholders and final validation
-            render_vars = {**request.user_input.model_dump(), **request.context.model_dump()}
-            # Manual update to include overrides/context_dict
-            render_vars.update(context_dict)
-            render_vars["context_quality"] = cq_level # For conditional blocks
+            # Initial vars from user_input
+            render_vars = request.user_input.model_dump()
             
-            render_vars["locale"] = request.user_input.locale
-            render_vars["use_case"] = use_case
-            render_vars["last_user_msg"] = request.user_input.last_user_msg
-            if persona_block:
-                render_vars["persona_name"] = persona_name or persona_id
-                if not render_vars["last_user_msg"]:
-                    render_vars["last_user_msg"] = request.user_input.message
+            # Universal placeholders (Story 66.13 AC6) - set as defaults
+            render_vars.setdefault("locale", request.user_input.locale)
+            render_vars.setdefault("use_case", use_case)
+            render_vars.setdefault("last_user_msg", request.user_input.last_user_msg)
             if request.user_input.question:
-                render_vars["question"] = request.user_input.question
+                render_vars.setdefault("question", request.user_input.question)
             if request.user_input.situation:
-                render_vars["situation"] = request.user_input.situation
+                render_vars.setdefault("situation", request.user_input.situation)
+
+            # Overlay context_dict (priority to context)
+            render_vars.update(context_dict)
+            
+            # Re-apply persona info if resolved
+            if persona_block:
+                render_vars.setdefault("persona_name", persona_name or persona_id)
+                if not render_vars.get("last_user_msg"):
+                    render_vars["last_user_msg"] = request.user_input.message
+
+            render_vars["context_quality"] = cq_level # For conditional blocks
             
             rendered_developer_prompt = self.renderer.render(
                 current_prompt,

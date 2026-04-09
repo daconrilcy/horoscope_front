@@ -55,7 +55,7 @@ async def test_gateway_context_quality_propagation(db):
     
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="chat", feature="natal"),
+        user_input=ExecutionUserInput(use_case="chat", feature="test_cq"),
         request_id="req-cq", trace_id="tr-cq"
     )
     

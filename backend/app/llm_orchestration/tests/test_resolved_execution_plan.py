@@ -14,8 +14,9 @@ from app.llm_orchestration.models import (
 @pytest.mark.asyncio
 async def test_resolve_plan_source_config(db):
     gateway = LLMGateway()
+    # Use a generic use case not in DEPRECATED_USE_CASE_MAPPING
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_long_free"),
+        user_input=ExecutionUserInput(use_case="astrologer_selection_help"),
         request_id="r",
         trace_id="t"
     )
@@ -23,8 +24,6 @@ async def test_resolve_plan_source_config(db):
     # Ensure no environment overrides
     with patch.dict(os.environ, {}, clear=True):
         plan, qctx = await gateway._resolve_plan(request, db)
-        # natal_long_free is in STUBS but _resolve_config might return 'hardcoded-v1' 
-        # which maps to 'stub' source in our implementation of _resolve_plan
         assert plan.model_source in ["config", "stub"]
 
 @pytest.mark.asyncio

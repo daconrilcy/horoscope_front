@@ -118,21 +118,16 @@ Cette section ne décrit que ce qui est explicitement visible dans le code. Elle
 
 | Famille | Indice explicite dans le code | Chemin effectivement observable | Commentaire strictement dérivé du code |
 |---|---|---|---|
-| `horoscope_daily` | `AIEngineAdapter.generate_horoscope_narration()` route `variant_code="summary_only"` vers `feature="horoscope_daily"`, `subfeature="narration"`, `plan="free"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | `public_projection.py` appelle désormais l'adapter canonique ; le mapping déprécié `horoscope_daily_free/full -> feature/plan` reste présent pour compatibilité |
-| `natal` | `seed_assembly.py` crée une assembly publiée pour `feature="natal_interpretation"` ; `generate_natal_interpretation()` continue à construire un `use_case` canonique | chemin hybride : use case canonique + support assembly explicite | le code prouve l'existence d'un support assembly pour `natal_interpretation`, mais l'entrée métier reste encore construite côté adapter à partir d'un `use_case` |
-| `guidance` | `generate_guidance()` construit des requêtes à partir de `guidance_daily`, `guidance_weekly`, `guidance_contextual` | chemin observable `use_case-first` côté adapter ; support assembly possible si `feature` est fourni | aucun mapping déprécié ni seed assembly guidance n'est codé en dur dans les sources inspectées |
-| `chat` | `generate_chat_reply()` construit aujourd'hui `use_case="chat_astrologer"` | chemin observable `use_case-first` côté adapter ; support assembly possible si `feature` est fourni | aucun mapping déprécié ni seed assembly chat n'est codé en dur dans les sources inspectées |
-| `daily_prediction` | `AIEngineAdapter.generate_horoscope_narration()` route `variant_code` absent ou non spécialisé vers `feature="daily_prediction"`, `subfeature="narration"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | ici la convergence repose sur une construction canonique explicite par l'adapter, pas sur un mapping déprécié préexistant ; `llm_narrator.py` reste seulement en compatibilité dépréciée |
-| `support` | aucune orchestration LLM spécifique à cette famille n'a été trouvée dans les sources inspectées pour ce document | non documenté comme famille LLM active à partir des sources inspectées | ne pas lui attribuer un statut de convergence sans nouvelle preuve dans le code |
+| `horoscope_daily` | `AIEngineAdapter.generate_horoscope_narration()` route vers `feature="horoscope_daily"`, `subfeature="narration"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | convergence totale ; mapping déprécié conservé uniquement pour compatibilité descendante |
+| `natal` | `AIEngineAdapter.generate_natal_interpretation()` impose `feature="natal"` et `subfeature` métier | entrée canonique systématique via adapter | convergence totale ; taxonomie homogène entre code, seeds et exécution |
+| `guidance` | `generate_guidance()` construit `feature="guidance"` et `subfeature` dérivé | entrée canonique systématique via adapter | convergence totale ; assemblies et profils d'exécution obligatoires |
+| `chat` | `generate_chat_reply()` impose `feature="chat"`, `subfeature="astrologer"` | entrée canonique systématique via adapter | convergence totale ; assemblies et profils d'exécution obligatoires |
+| `daily_prediction` | `AIEngineAdapter.generate_horoscope_narration()` route vers `feature="daily_prediction"`, `subfeature="narration"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | convergence totale |
+| `support` | aucune orchestration LLM spécifique à cette famille n'a été trouvée dans les sources inspectées | non documenté comme famille LLM active | ne pas lui attribuer un statut de convergence sans nouvelle preuve dans le code |
 
-### Clarification sur `natal`
+### Synthèse de convergence (Story 66.20)
 
-Le vocabulaire n'est pas encore parfaitement homogène entre les couches :
-
-- dans le seed d'assembly, on observe une publication pour `feature="natal_interpretation"` ;
-- dans l'entrée canonique métier au runtime, `AIEngineAdapter.generate_natal_interpretation()` normalise aujourd'hui l'appel vers `feature="natal"` et `subfeature=use_case_key`.
-
-Ce point doit être lu comme un état hybride du système, pas comme deux vérités concurrentes.
+Depuis la story 66.20, l'usage de la taxonomie `feature/subfeature/plan` est devenu obligatoire pour les familles nominales (`chat`, `guidance`, `natal`, `horoscope_daily`). Le gateway rejette désormais tout appel vers ces familles qui ne résoudrait pas une assembly valide, sauf via le mécanisme explicite de compatibilité `DEPRECATED_USE_CASE_MAPPING`.
 
 ### Règle de lecture
 

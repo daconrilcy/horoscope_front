@@ -389,6 +389,11 @@ class NatalInterpretationServiceV2:
                 "natal_interpretation" if level == "complete" else "natal_interpretation_short"
             )
 
+        # 3.5 Resolve Plan (Story 66.20)
+        from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+        entitlements = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+        user_plan = entitlements.plan_code
+
         # 4. Call AIEngineAdapter (Story 66.7)
         effective_question = question
         if level == "short":
@@ -412,6 +417,7 @@ class NatalInterpretationServiceV2:
             natal_data=chart_json_dict,
             evidence_catalog=evidence_catalog,
             persona_id=persona_id,
+            plan=user_plan,
             validation_strict=level == "complete",
             question=effective_question,
             astro_context=None,  # Specific natal astro_context if any
@@ -638,6 +644,11 @@ class NatalInterpretationServiceV2:
         """
         use_case_key = "natal_long_free"
 
+        # 3.5 Resolve Plan (Story 66.20)
+        from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+        entitlements = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+        user_plan = entitlements.plan_code
+
         natal_input = NatalExecutionInput(
             use_case_key=use_case_key,
             locale=locale,
@@ -646,6 +657,7 @@ class NatalInterpretationServiceV2:
             natal_data=chart_json_dict,
             evidence_catalog=evidence_catalog,
             persona_id=None,
+            plan=user_plan,
             validation_strict=False,
             question=None,
             astro_context=None,

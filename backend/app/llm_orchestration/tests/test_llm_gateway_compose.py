@@ -44,7 +44,7 @@ async def test_gateway_context_overrides_user_input():
     mock_client.execute = AsyncMock(return_value=GatewayResult(
         use_case="guidance_contextual",
         request_id="r1", trace_id="t1",
-        raw_output='{"message": "ok"}',
+        raw_output='{"summary": "ok", "key_points": ["p1"], "advice": "go"}',
         usage=UsageInfo(),
         meta=GatewayMeta(latency_ms=1, model="m")
     ))
@@ -52,7 +52,7 @@ async def test_gateway_context_overrides_user_input():
     
     await gateway.execute(
         use_case="guidance_contextual",
-        user_input={"situation": "from_input", "locale": "fr"},
+        user_input={"situation": "from_input", "locale": "fr", "question": "test?"},
         context={"situation": "from_context"},
         request_id="r1",
         trace_id="t1"
@@ -70,7 +70,7 @@ async def test_gateway_filters_extra_variables():
     mock_client.execute = AsyncMock(return_value=GatewayResult(
         use_case="guidance_daily",
         request_id="r1", trace_id="t1",
-        raw_output='{"message": "ok"}',
+        raw_output='{"summary": "ok", "key_points": ["p1"], "advice": "go"}',
         usage=UsageInfo(),
         meta=GatewayMeta(latency_ms=1, model="m")
     ))

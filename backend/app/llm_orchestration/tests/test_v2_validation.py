@@ -87,16 +87,32 @@ async def test_error_mapping_reaches_client_v2(db):
     db.add(prompt)
     db.commit()
 
+    # 1.5 Seed dummy assembly to satisfy Story 66.20 enforcement
+    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+    asm = PromptAssemblyConfigModel(
+        feature="chat", subfeature="astrologer", plan="free",
+        locale="fr-FR",
+        feature_template_ref=prompt.id,
+        execution_config={"model": "gpt-4o-mini"},
+        status=PromptStatus.PUBLISHED,
+        created_by="test"
+    )
+    db.add(asm)
+    db.commit()
+
     try:
-        await AIEngineAdapter.generate_chat_reply(
-            messages=[{"role": "user", "content": "hi"}],
-            context={"locale": "fr"},  # Missing natal_chart_summary
-            user_id=1,
-            request_id="r1",
-            trace_id="t1",
-            db=db,
-        )
+        # Disable test fallback for this specific call
+        with patch("app.services.ai_engine_adapter._is_non_production_env", return_value=False):
+            await AIEngineAdapter.generate_chat_reply(
+                messages=[{"role": "user", "content": "hi"}],
+                context={"locale": "fr"},  # Missing natal_chart_summary
+                user_id=1,
+                request_id="r1",
+                trace_id="t1",
+                db=db,
+            )
         pytest.fail("Should have raised AIEngineAdapterError")
+
     except AIEngineAdapterError as err:
         # Assert
         assert err.code == "prompt_render_error"

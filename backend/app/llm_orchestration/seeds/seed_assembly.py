@@ -31,8 +31,8 @@ def seed_assembly(db: Session) -> None:
 
     # 3. Check if assembly already exists
     stmt_exists = select(PromptAssemblyConfigModel).where(
-        PromptAssemblyConfigModel.feature == "natal_interpretation",
-        PromptAssemblyConfigModel.subfeature == None,
+        PromptAssemblyConfigModel.feature == "natal",
+        PromptAssemblyConfigModel.subfeature == "natal_interpretation",
         PromptAssemblyConfigModel.plan == None,
         PromptAssemblyConfigModel.locale == "fr-FR"
     )
@@ -44,8 +44,8 @@ def seed_assembly(db: Session) -> None:
 
     # 4. Create first assembly
     new_assembly = PromptAssemblyConfigModel(
-        feature="natal_interpretation",
-        subfeature=None,
+        feature="natal",
+        subfeature="natal_interpretation",
         plan=None,
         locale="fr-FR",
         feature_template_ref=feature_template.id,

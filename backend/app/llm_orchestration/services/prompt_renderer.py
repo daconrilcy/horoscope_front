@@ -52,7 +52,11 @@ class PromptRenderer:
             )
 
         # 2. Advanced resolution based on classification (D2)
-        feat_key = feature.split("_")[0] if "_" in feature else feature
+        effective_feature = feature
+        if effective_feature == "unknown" and variables.get("use_case"):
+            effective_feature = variables["use_case"]
+            
+        feat_key = effective_feature.split("_")[0] if "_" in effective_feature else effective_feature
         allowlist = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
         placeholder_defs = {d.name: d for d in allowlist}
         
@@ -61,20 +65,39 @@ class PromptRenderer:
         
         # Universal placeholders (Story 66.13 AC6)
         universal = {"locale", "use_case", "persona_name", "last_user_msg"}
+        CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
         
         for p_name in found_placeholders:
-            if p_name in variables:
-                continue
-                
             p_def = placeholder_defs.get(p_name)
             
             if not p_def and p_name not in universal:
-                # Unknown placeholder (AC4)
-                logger.error(
-                    "placeholder_unknown_detected placeholder=%s feature=%s",
-                    p_name, feature
+                # Unknown placeholder (AC4) - NOT authorized for this feature
+                is_blocking = (
+                    effective_feature in CANONICAL_FAMILIES 
+                    or p_name in required_variables
                 )
-                effective_vars[p_name] = ""
+                
+                if is_blocking:
+                    logger.error(
+                        "placeholder_unauthorized_detected placeholder=%s feature=%s",
+                        p_name, effective_feature
+                    )
+                    effective_vars[p_name] = ""
+                    # Story 66.13: If it was required in legacy list, we must fail even if stripped
+                    if p_name in required_variables:
+                         raise PromptRenderError(
+                            f"Unauthorized required placeholder '{{{{{p_name}}}}}' for feature '{effective_feature}'",
+                            details={"placeholder": p_name, "feature": effective_feature}
+                        )
+                    continue
+                else:
+                    # Generic mode (e.g. basic tests), just log and continue without stripping
+                    # unless it's missing from variables
+                    if p_name not in variables:
+                        effective_vars[p_name] = ""
+                    continue
+            
+            if p_name in variables:
                 continue
                 
             # If it's universal but not provided, treat as optional empty for safety

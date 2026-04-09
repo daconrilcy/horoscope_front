@@ -25,8 +25,8 @@ def test_render_missing_non_required_variable():
     template = "Hello {{name}}."
     variables = {}
     result = renderer.render(template, variables)
-    # The current implementation keeps the placeholder if not found in variables.
-    assert result == "Hello {{name}}."
+    # Story 66.13: Unknown placeholders are now stripped (replaced by empty string)
+    assert result == "Hello ."
 
 
 def test_render_raises_error_for_missing_required_variable():

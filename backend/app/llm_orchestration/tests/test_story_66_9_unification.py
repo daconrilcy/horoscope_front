@@ -34,6 +34,7 @@ async def test_deprecated_use_case_redirection(db):
     
     config = PromptAssemblyConfigModel(
         feature="horoscope_daily",
+        subfeature="narration",
         plan="free",
         locale="fr-FR",
         feature_template_ref=fv.id,
@@ -43,6 +44,7 @@ async def test_deprecated_use_case_redirection(db):
         status=PromptStatus.PUBLISHED,
         created_by="test"
     )
+
     db.add(config)
     db.commit()
 
@@ -119,6 +121,7 @@ async def test_deprecated_full_redirection(db):
     
     config = PromptAssemblyConfigModel(
         feature="horoscope_daily",
+        subfeature="narration",
         plan="premium",
         locale="fr-FR",
         feature_template_ref=fv.id,

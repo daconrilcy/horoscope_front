@@ -53,10 +53,9 @@ def test_placeholder_unknown(caplog):
     vars = {}
     
     rendered = PromptRenderer.render(template, vars, feature="chat")
-    
-    assert rendered == "Hello "
-    assert "placeholder_unknown_detected" in caplog.text
 
+    assert rendered == "Hello "
+    assert "placeholder_unauthorized_detected" in caplog.text
 def test_no_surviving_placeholders():
     """Test Story 66.13: No {{...}} should survive."""
     template = "Hello {{missing}} {{other}}"

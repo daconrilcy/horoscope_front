@@ -1,4 +1,5 @@
 import pytest
+import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
@@ -22,6 +23,22 @@ async def test_pipeline_nominal_flow(db):
         trace_id="trace-test"
     )
     
+    # Story 66.20: Seed assembly for natal family to satisfy mandatory enforcement
+    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+    from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+    fv = LlmPromptVersionModel(
+        id=uuid.uuid4(), use_case_key="natal_long_free", developer_prompt="P",
+        status=PromptStatus.PUBLISHED, model="m", created_by="t"
+    )
+    db.add(fv)
+    asm = PromptAssemblyConfigModel(
+        feature="natal", subfeature="natal_interpretation", plan="free",
+        locale="fr-FR", feature_template_ref=fv.id,
+        execution_config={"model": "m"}, status=PromptStatus.PUBLISHED, created_by="t"
+    )
+    db.add(asm)
+    db.commit()
+
     # 1. Mock Stage 3 (Provider)
     mock_provider_res = GatewayResult(
         use_case="natal_long_free",
@@ -54,6 +71,22 @@ async def test_pipeline_repair_flow(db):
         trace_id="trace-repair"
     )
     
+    # Story 66.20: Seed assembly for natal family to satisfy mandatory enforcement
+    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+    from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+    fv = LlmPromptVersionModel(
+        id=uuid.uuid4(), use_case_key="natal_long_free", developer_prompt="P",
+        status=PromptStatus.PUBLISHED, model="m", created_by="t"
+    )
+    db.add(fv)
+    asm = PromptAssemblyConfigModel(
+        feature="natal", subfeature="natal_interpretation", plan="free",
+        locale="fr-FR", feature_template_ref=fv.id,
+        execution_config={"model": "m"}, status=PromptStatus.PUBLISHED, created_by="t"
+    )
+    db.add(asm)
+    db.commit()
+
     # 1. First call returns invalid JSON
     bad_output = "INVALID JSON"
     # 2. Second call (repair) returns valid JSON
