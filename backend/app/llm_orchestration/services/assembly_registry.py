@@ -159,6 +159,66 @@ class AssemblyRegistry:
             
         return resolved_config
 
+    def get_active_config_sync(
+        self, feature: str, subfeature: Optional[str], plan: Optional[str], locale: str = "fr-FR"
+    ) -> Optional[PromptAssemblyConfigModel]:
+        """
+        Synchronous version of get_active_config for callers with a standard Session.
+        (Story 66.20 Medium Issue Fix)
+        """
+        cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
+        now = time.time()
+        
+        if cache_key in _ASSEMBLY_CACHE:
+            data, expiry = _ASSEMBLY_CACHE[cache_key]
+            if now < expiry:
+                return self._reconstruct_config(data)
+            del _ASSEMBLY_CACHE[cache_key]
+
+        search_patterns = [
+            (feature, subfeature, plan),
+            (feature, subfeature, None),
+            (feature, None, None),
+        ]
+
+        resolved_config = None
+        for f, sf, p in search_patterns:
+            stmt = (
+                select(PromptAssemblyConfigModel)
+                .where(
+                    and_(
+                        PromptAssemblyConfigModel.feature == f,
+                        PromptAssemblyConfigModel.subfeature == sf,
+                        PromptAssemblyConfigModel.plan == p,
+                        PromptAssemblyConfigModel.locale == locale,
+                        PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+                    )
+                )
+                .options(
+                    selectinload(PromptAssemblyConfigModel.feature_template),
+                    selectinload(PromptAssemblyConfigModel.subfeature_template),
+                    selectinload(PromptAssemblyConfigModel.persona),
+                )
+            )
+            # Use synchronous execute
+            from sqlalchemy.orm import Session
+            if not isinstance(self.session, Session):
+                # If we somehow have an AsyncSession here, we can't do sync call
+                # but in practice LLMGateway.execute_request uses SessionLocal()
+                # or is passed a Session from FastAPI dependency.
+                logger.warning("assembly_registry_get_sync_with_async_session_fallback")
+                return None
+
+            config = self.session.execute(stmt).scalar_one_or_none()
+            if config:
+                resolved_config = config
+                break
+
+        if resolved_config:
+            _ASSEMBLY_CACHE[cache_key] = (self._serialize_config(resolved_config), now + CACHE_TTL)
+            
+        return resolved_config
+
     async def get_config_by_id(self, assembly_id: uuid.UUID) -> Optional[PromptAssemblyConfigModel]:
         """Fetch an assembly config by its unique ID."""
         stmt = (

@@ -31,7 +31,7 @@ async def test_enforce_mandatory_assembly_chat_nominal():
     
     db = MagicMock(spec=Session)
     
-    with patch("app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config", new_callable=AsyncMock) as mock_get:
+    with patch("app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync") as mock_get:
         mock_get.return_value = None
         
         with pytest.raises(GatewayConfigError) as exc:
@@ -60,7 +60,7 @@ async def test_allow_legacy_fallback_for_deprecated_use_case():
     db = MagicMock(spec=Session)
 
     # Mock DEPRECATED_USE_CASE_MAPPING lookup sets feature="chat"
-    with patch("app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config", new_callable=AsyncMock) as mock_get:
+    with patch("app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync") as mock_get:
         mock_get.return_value = None
 
         # Mock _resolve_config to return a valid UseCaseConfig
@@ -113,7 +113,7 @@ async def test_natal_convergence_nominal():
     
     db = MagicMock(spec=Session)
     
-    with patch("app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config", new_callable=AsyncMock) as mock_get:
+    with patch("app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync") as mock_get:
         mock_get.return_value = None
         
         with pytest.raises(GatewayConfigError) as exc:

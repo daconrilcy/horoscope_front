@@ -764,36 +764,13 @@ class LLMGateway:
                         # Story 66.20: Normalize plan for resolution (High Issue 2)
                         normalized_plan = self._normalize_plan_for_assembly(request.user_input.plan)
                         
-                        # Use synchronous query because db is a Session, not AsyncSession
-                        from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel, PromptStatus
-                        from sqlalchemy.orm import selectinload
-                        
-                        search_patterns = [
-                            (request.user_input.feature, request.user_input.subfeature, normalized_plan),
-                            (request.user_input.feature, request.user_input.subfeature, None),
-                            (request.user_input.feature, None, None),
-                        ]
-                        
-                        assembly_db = None
-                        for f, sf, p in search_patterns:
-                            stmt = (
-                                select(PromptAssemblyConfigModel)
-                                .where(
-                                    PromptAssemblyConfigModel.feature == f,
-                                    PromptAssemblyConfigModel.subfeature == sf,
-                                    PromptAssemblyConfigModel.plan == p,
-                                    PromptAssemblyConfigModel.locale == request.user_input.locale,
-                                    PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
-                                )
-                                .options(
-                                    selectinload(PromptAssemblyConfigModel.feature_template),
-                                    selectinload(PromptAssemblyConfigModel.subfeature_template),
-                                    selectinload(PromptAssemblyConfigModel.persona),
-                                )
-                            )
-                            assembly_db = db.execute(stmt).scalar_one_or_none()
-                            if assembly_db:
-                                break
+                        # Use centralized registry (Story 66.20 Medium Issue Fix)
+                        assembly_db = registry.get_active_config_sync(
+                            feature=request.user_input.feature,
+                            subfeature=request.user_input.subfeature,
+                            plan=normalized_plan,
+                            locale=request.user_input.locale
+                        )
 
                     # Story 66.20: Enforce mandatory assembly for nominal families
                     CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
