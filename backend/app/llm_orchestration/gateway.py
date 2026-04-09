@@ -17,6 +17,7 @@ from app.llm_orchestration.models import (
     ExecutionFlags,
     ExecutionMessage,
     ExecutionUserInput,
+    FallbackType,
     GatewayConfigError,
     GatewayError,
     GatewayResult,
@@ -37,6 +38,7 @@ from app.llm_orchestration.services.assembly_resolver import (
     assemble_developer_prompt,
     resolve_assembly,
 )
+from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
 from app.llm_orchestration.services.input_validator import validate_input
 from app.llm_orchestration.services.observability_service import log_call
 from app.llm_orchestration.services.output_validator import ValidationResult, validate_output
@@ -337,6 +339,7 @@ class LLMGateway:
                 override_id = context.get("_override_prompt_version_id")
                 if override_id:
                     from app.infra.db.models import LlmPromptVersionModel
+
                     db_prompt = db.get(LlmPromptVersionModel, uuid.UUID(override_id))
                 else:
                     db_prompt = PromptRegistryV2.get_active_prompt(db, use_case)
@@ -345,28 +348,49 @@ class LLMGateway:
                     LlmUseCaseConfigModel.key == use_case
                 )
                 db_use_case = db.execute(use_case_stmt).scalar_one_or_none()
-                
+
                 if db_use_case and "allowed_persona_ids" not in context:
                     context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
 
                 if db_prompt:
                     logger.debug(
-                        "gateway_db_prompt_found use_case=%s model=%s effort=%s verbosity=%s", 
-                        use_case, db_prompt.model, db_prompt.reasoning_effort, db_prompt.verbosity
+                        "gateway_db_prompt_found use_case=%s model=%s effort=%s verbosity=%s",
+                        use_case,
+                        db_prompt.model,
+                        db_prompt.reasoning_effort,
+                        db_prompt.verbosity,
                     )
                     authorized_vars = {
-                        "locale", "use_case", "natal_chart_summary", "last_user_msg",
-                        "situation", "birth_date", "birth_time", "birth_timezone",
-                        "chart_json", "tone", "persona_name", "event_description",
-                        "astro_context", "natal_interpretation", "natal_data",
-                        "precision_level", "astrologer_profile", "period_covered",
-                        "today_date", "use_case_name", "use_case_key",
-                        "current_datetime", "current_timezone", "current_location",
+                        "locale",
+                        "use_case",
+                        "natal_chart_summary",
+                        "last_user_msg",
+                        "situation",
+                        "birth_date",
+                        "birth_time",
+                        "birth_timezone",
+                        "chart_json",
+                        "tone",
+                        "persona_name",
+                        "event_description",
+                        "astro_context",
+                        "natal_interpretation",
+                        "natal_data",
+                        "precision_level",
+                        "astrologer_profile",
+                        "period_covered",
+                        "today_date",
+                        "use_case_name",
+                        "use_case_key",
+                        "current_datetime",
+                        "current_timezone",
+                        "current_location",
                     }
 
                     if db_use_case and db_use_case.required_prompt_placeholders:
                         required = [
-                            p for p in db_use_case.required_prompt_placeholders
+                            p
+                            for p in db_use_case.required_prompt_placeholders
                             if p in authorized_vars
                         ]
                     else:
@@ -395,12 +419,8 @@ class LLMGateway:
                         persona_strategy=(
                             db_use_case.persona_strategy if db_use_case else "optional"
                         ),
-                        safety_profile=(
-                            db_use_case.safety_profile if db_use_case else "astrology"
-                        ),
-                        output_schema_id=(
-                            db_use_case.output_schema_id if db_use_case else None
-                        ),
+                        safety_profile=(db_use_case.safety_profile if db_use_case else "astrology"),
+                        output_schema_id=(db_use_case.output_schema_id if db_use_case else None),
                         input_schema=db_use_case.input_schema if db_use_case else None,
                         reasoning_effort=db_prompt.reasoning_effort,
                         verbosity=db_prompt.verbosity,
@@ -413,8 +433,7 @@ class LLMGateway:
                     )
             except Exception as e:
                 logger.error(
-                    "gateway_db_prompt_resolve_failed use_case=%s error=%s", 
-                    use_case, str(e)
+                    "gateway_db_prompt_resolve_failed use_case=%s error=%s", use_case, str(e)
                 )
 
         if not config:
@@ -428,13 +447,15 @@ class LLMGateway:
                     db_use_case = db.execute(use_case_stmt).scalar_one_or_none()
                     if db_use_case:
                         new_data = config.model_dump()
-                        new_data.update({
-                            "input_schema": db_use_case.input_schema,
-                            "output_schema_id": db_use_case.output_schema_id,
-                            "persona_strategy": db_use_case.persona_strategy,
-                            "interaction_mode": db_use_case.interaction_mode,
-                            "user_question_policy": db_use_case.user_question_policy,
-                        })
+                        new_data.update(
+                            {
+                                "input_schema": db_use_case.input_schema,
+                                "output_schema_id": db_use_case.output_schema_id,
+                                "persona_strategy": db_use_case.persona_strategy,
+                                "interaction_mode": db_use_case.interaction_mode,
+                                "user_question_policy": db_use_case.user_question_policy,
+                            }
+                        )
                         config = UseCaseConfig(**new_data)
                         if "allowed_persona_ids" not in context:
                             context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
@@ -449,8 +470,9 @@ class LLMGateway:
         if resolved_model != config.model:
             config = config.model_copy(update={"model": resolved_model})
             logger.info(
-                "gateway_model_resolved use_case=%s model=%s (override active)", 
-                use_case, resolved_model
+                "gateway_model_resolved use_case=%s model=%s (override active)",
+                use_case,
+                resolved_model,
             )
 
         config = self._adjust_reasoning_config(config)
@@ -464,10 +486,9 @@ class LLMGateway:
         resolved_persona_id = context.get("persona_id")
         persona_name = None
         allowed_ids = context.get("allowed_persona_ids")
-        
+
         logger.debug(
-            "gateway_resolve_persona start use_case=%s allowed_ids=%s", 
-            use_case, allowed_ids
+            "gateway_resolve_persona start use_case=%s allowed_ids=%s", use_case, allowed_ids
         )
 
         if config.persona_strategy == "forbidden":
@@ -480,6 +501,7 @@ class LLMGateway:
                     if isinstance(pid, str) and pid.startswith("["):
                         # Handle potential double-encoded list
                         import ast
+
                         actual_list = ast.literal_eval(pid)
                         for apid in actual_list:
                             uuid_ids.append(uuid.UUID(apid))
@@ -574,8 +596,7 @@ class LLMGateway:
         """Auto-adjusts tokens, timeout, and reasoning_effort for reasoning models."""
         if is_reasoning_model(config.model):
             logger.warning(
-                "gateway_adjust_reasoning model=%s effort=%s", 
-                config.model, config.reasoning_effort
+                "gateway_adjust_reasoning model=%s effort=%s", config.model, config.reasoning_effort
             )
             updates = {}
             if config.max_output_tokens < 16384:
@@ -616,9 +637,18 @@ class LLMGateway:
                 history.append(ExecutionMessage(**m))
 
         structuring_keys = {
-            "history", "natal_data", "chart_json", "precision_level", "astro_context",
-            "locale", "conversation_id", "persona_id", "_visited_use_cases",
-            "evidence_catalog", "validation_strict", "_override_prompt_version_id",
+            "history",
+            "natal_data",
+            "chart_json",
+            "precision_level",
+            "astro_context",
+            "locale",
+            "conversation_id",
+            "persona_id",
+            "_visited_use_cases",
+            "evidence_catalog",
+            "validation_strict",
+            "_override_prompt_version_id",
         }
         extra_context = {k: v for k, v in context.items() if k not in structuring_keys}
 
@@ -662,6 +692,9 @@ class LLMGateway:
         is_repair_call: bool = False,
     ) -> GatewayResult:
         """Legacy entry point for LLM orchestration."""
+        FallbackGovernanceRegistry.track_fallback(
+            FallbackType.LEGACY_WRAPPER, call_site="LLMGateway.execute", is_nominal=False
+        )
         request = self._legacy_dicts_to_request(
             use_case=use_case,
             user_input=user_input,
@@ -682,18 +715,20 @@ class LLMGateway:
         """
         if not plan:
             return "free"
-        
+
         plan_lower = plan.lower()
         if plan_lower in {"premium", "pro", "ultra", "full"}:
             return "premium"
-        
+
         # All others (free, basic, trial, none, guest, unknown) resolve to 'free' assembly
         return "free"
 
     async def _resolve_plan(
-        self, request: LLMExecutionRequest, db: Optional[Session], 
+        self,
+        request: LLMExecutionRequest,
+        db: Optional[Session],
         config_override: Optional[UseCaseConfig] = None,
-        context_override: Optional[Dict[str, Any]] = None
+        context_override: Optional[Dict[str, Any]] = None,
     ) -> tuple[ResolvedExecutionPlan, Optional[QualifiedContext]]:
         # Stage 1: Orchestrates the resolution of all configuration artifacts into a single plan.
         use_case = request.user_input.use_case
@@ -703,16 +738,27 @@ class LLMGateway:
         # 0. Compatibility fallback for deprecated use cases (Story 66.9 AC5, 66.20)
         is_legacy_compatibility = False
         from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
+
         if use_case in DEPRECATED_USE_CASE_MAPPING and not request.user_input.feature:
             is_legacy_compatibility = True
             mapping = DEPRECATED_USE_CASE_MAPPING[use_case]
             request.user_input.feature = mapping["feature"]
             request.user_input.subfeature = mapping.get("subfeature")
             request.user_input.plan = mapping["plan"]
+
+            FallbackGovernanceRegistry.track_fallback(
+                FallbackType.DEPRECATED_USE_CASE,
+                call_site=f"mapping:{use_case}",
+                feature=request.user_input.feature,
+            )
+
             logger.warning(
                 "DEPRECATION WARNING: Use case '%s' is deprecated. "
                 "Please use canonical taxonomy: feature='%s', subfeature='%s', plan='%s'.",
-                use_case, mapping["feature"], mapping.get("subfeature"), mapping["plan"]
+                use_case,
+                mapping["feature"],
+                mapping.get("subfeature"),
+                mapping["plan"],
             )
 
         # Use provided context_dict or build from request
@@ -730,7 +776,7 @@ class LLMGateway:
                 period = "daily"
                 if "weekly" in use_case or context_dict.get("period") == "weekly":
                     period = "weekly"
-                
+
                 qualified_ctx = CommonContextBuilder.build(
                     user_id=user_id, use_case_key=use_case, period=period, db=db
                 )
@@ -749,7 +795,7 @@ class LLMGateway:
                 try:
                     # 0.5 Assembly resolution (Story 66.8 AC10 / D3)
                     registry = AssemblyRegistry(db)
-                    
+
                     assembly_db = None
                     if request.user_input.assembly_config_id:
                         # Absolute priority (D3)
@@ -763,31 +809,32 @@ class LLMGateway:
                     elif request.user_input.feature:
                         # Story 66.20: Normalize plan for resolution (High Issue 2)
                         normalized_plan = self._normalize_plan_for_assembly(request.user_input.plan)
-                        
+
                         # Use centralized registry (Story 66.20 Medium Issue Fix)
                         assembly_db = registry.get_active_config_sync(
                             feature=request.user_input.feature,
                             subfeature=request.user_input.subfeature,
                             plan=normalized_plan,
-                            locale=request.user_input.locale
+                            locale=request.user_input.locale,
                         )
 
                     # Story 66.20: Enforce mandatory assembly for nominal families
                     CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
                     if (
-                        not assembly_db 
+                        not assembly_db
                         and not is_legacy_compatibility
                         and request.user_input.feature in CANONICAL_FAMILIES
                     ):
-                        raise GatewayConfigError(
-                            f"Mandatory assembly missing for nominal {request.user_input.feature} family. "
-                            f"Taxonomy: {request.user_input.feature}/{request.user_input.subfeature}/{request.user_input.plan}"
+                        msg = (
+                            f"Mandatory assembly missing for nominal {request.user_input.feature} "
+                            f"family. Taxonomy: {request.user_input.feature}/"
+                            f"{request.user_input.subfeature}/{request.user_input.plan}"
                         )
-
+                        raise GatewayConfigError(msg)
                     if assembly_db:
                         # Assembly found! Override everything (AC10)
                         resolved_assembly = resolve_assembly(assembly_db)
-                        
+
                         # Map ResolvedAssembly to UseCaseConfig for compatibility with Stage 1.5+
                         config = UseCaseConfig(
                             model=resolved_assembly.execution_config.model,
@@ -813,11 +860,12 @@ class LLMGateway:
                         # We also inject persona_block directly to bypass _resolve_persona
                         persona_block = resolved_assembly.persona_block
                         persona_id = (
-                            str(resolved_assembly.persona_ref) 
-                            if resolved_assembly.persona_ref else None
+                            str(resolved_assembly.persona_ref)
+                            if resolved_assembly.persona_ref
+                            else None
                         )
-                        persona_name = None 
-                        
+                        persona_name = None
+
                         # Store assembly metadata for ResolvedExecutionPlan
                         context_dict["_assembly_resolved"] = resolved_assembly
                         context_dict["_assembly_db_id"] = str(assembly_db.id)
@@ -825,8 +873,7 @@ class LLMGateway:
                     raise
                 except Exception as e:
                     logger.warning(
-                        "gateway_assembly_resolution_failed use_case=%s error=%s", 
-                        use_case, e
+                        "gateway_assembly_resolution_failed use_case=%s error=%s", use_case, e
                     )
 
             if not config:
@@ -837,10 +884,16 @@ class LLMGateway:
                             source_base = "stub"
                     except Exception:
                         source_base = "stub"
-                
+
                 if not config:
                     config = await self._resolve_config(db, use_case, context_dict)
                     source_base = "stub"
+
+                FallbackGovernanceRegistry.track_fallback(
+                    FallbackType.USE_CASE_FIRST,
+                    call_site=f"resolve_config:{use_case}",
+                    feature=request.user_input.feature,
+                )
             else:
                 # config was set by assembly
                 pass
@@ -853,11 +906,12 @@ class LLMGateway:
                 from app.llm_orchestration.services.execution_profile_registry import (
                     ExecutionProfileRegistry,
                 )
-                
+
                 # 1. Try from assembly if present
                 if source_base == "assembly" and context_dict.get("_assembly_db_id"):
                     # We need the actual assembly model to get execution_profile_ref
                     from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+
                     stmt = select(PromptAssemblyConfigModel).where(
                         PromptAssemblyConfigModel.id == uuid.UUID(context_dict["_assembly_db_id"])
                     )
@@ -875,14 +929,13 @@ class LLMGateway:
                         db,
                         feature=request.user_input.feature,
                         subfeature=request.user_input.subfeature,
-                        plan=request.user_input.plan
+                        plan=request.user_input.plan,
                     )
                     if profile_db:
                         profile_source = "waterfall"
             except Exception as e:
                 logger.warning(
-                    "gateway_execution_profile_resolution_failed use_case=%s error=%s", 
-                    use_case, e
+                    "gateway_execution_profile_resolution_failed use_case=%s error=%s", use_case, e
                 )
 
         # 0.8 Final Model & Provider merge (Story 66.11 D4, D6, 66.18)
@@ -892,21 +945,22 @@ class LLMGateway:
         max_output_tokens_source = "config"
         translated_params = {}
         verbosity_instruction = ""
-        
+
         if profile_db:
             from app.llm_orchestration.services.provider_parameter_mapper import (
                 ProviderParameterMapper,
             )
-            
+
             # Profile overrides config/assembly model
             model_id = profile_db.model
             provider = profile_db.provider
             timeout_seconds = profile_db.timeout_seconds
-            
+
             # Resolve max_output_tokens priority (Story 66.18 D4)
             # 1. Length Budget (highest)
             if (
-                resolved_assembly and resolved_assembly.length_budget 
+                resolved_assembly
+                and resolved_assembly.length_budget
                 and resolved_assembly.length_budget.global_max_tokens
             ):
                 max_output_tokens = resolved_assembly.length_budget.global_max_tokens
@@ -925,7 +979,7 @@ class LLMGateway:
                 if rec_tokens:
                     max_output_tokens = rec_tokens
                     max_output_tokens_source = "verbosity_default"
-            
+
             # Map profiles to provider-specific params (Story 66.18)
             try:
                 translated_params = ProviderParameterMapper.map(
@@ -933,14 +987,20 @@ class LLMGateway:
                     reasoning_profile=profile_db.reasoning_profile,
                     verbosity_profile=profile_db.verbosity_profile,
                     output_mode=profile_db.output_mode,
-                    tool_mode=profile_db.tool_mode
+                    tool_mode=profile_db.tool_mode,
                 )
             except NotImplementedError as e:
                 # High #1 & #2: Fallback if provider/params mapping not implemented
+                FallbackGovernanceRegistry.track_fallback(
+                    FallbackType.PROVIDER_OPENAI,
+                    call_site=f"provider_fallback:{provider}",
+                    feature=request.user_input.feature,
+                )
                 logger.warning(
                     "gateway_provider_mapping_not_implemented provider=%s error=%s. "
-                    "Falling back to resolve_model/openai.", 
-                    provider, e
+                    "Falling back to resolve_model/openai.",
+                    provider,
+                    e,
                 )
                 model_id = resolve_model(use_case, fallback_model=config.model)
                 profile_source = "fallback_resolve_model"
@@ -958,38 +1018,53 @@ class LLMGateway:
                 profile_source = "fallback_resolve_model"
                 provider = "openai"
                 translated_params = {}
-            
+
             # If we didn't get verbosity_instruction yet, get it now
             if not verbosity_instruction:
-                verbosity_instruction, _ = (
-                    ProviderParameterMapper.resolve_verbosity_instruction(
-                        profile_db.verbosity_profile
-                    )
+                verbosity_instruction, _ = ProviderParameterMapper.resolve_verbosity_instruction(
+                    profile_db.verbosity_profile
                 )
 
             logger.info(
                 "gateway_execution_profile_applied profile_id=%s source=%s "
                 "model=%s provider=%s max_tokens=%s source=%s",
-                str(profile_db.id), profile_source, model_id, provider, 
-                max_output_tokens, max_output_tokens_source
+                str(profile_db.id),
+                profile_source,
+                model_id,
+                provider,
+                max_output_tokens,
+                max_output_tokens_source,
             )
         else:
             # Legacy/Fallback resolution
             model_id = resolve_model(use_case, fallback_model=config.model)
             profile_source = "fallback_resolve_model"
-            
+
+            FallbackGovernanceRegistry.track_fallback(
+                FallbackType.RESOLVE_MODEL,
+                call_site=f"resolve_model:{use_case}",
+                feature=request.user_input.feature,
+            )
+
             # Story 66.18 AC6: Compatibility for raw ExecutionConfigAdmin
             if config.reasoning_effort or config.verbosity:
+                FallbackGovernanceRegistry.track_fallback(
+                    FallbackType.EXECUTION_CONFIG_ADMIN,
+                    call_site=f"ExecutionConfigAdmin:{use_case}",
+                    feature=request.user_input.feature,
+                )
                 logger.info(
-                    "gateway_legacy_execution_config_used use_case=%s "
-                    "reasoning=%s verbosity=%s", 
-                    use_case, config.reasoning_effort, config.verbosity
+                    "gateway_legacy_execution_config_used use_case=%s reasoning=%s verbosity=%s",
+                    use_case,
+                    config.reasoning_effort,
+                    config.verbosity,
                 )
                 # We could infer a profile here for telemetry
-            
+
             # For legacy, we still apply LengthBudget if present
             if (
-                resolved_assembly and resolved_assembly.length_budget 
+                resolved_assembly
+                and resolved_assembly.length_budget
                 and resolved_assembly.length_budget.global_max_tokens
             ):
                 max_output_tokens = resolved_assembly.length_budget.global_max_tokens
@@ -1019,7 +1094,7 @@ class LLMGateway:
         if source_base != "assembly":
             if request.user_input.persona_id_override:
                 context_dict["persona_id"] = request.user_input.persona_id_override
-            
+
             persona_block, persona_id, persona_name = await self._resolve_persona(
                 db, config, context_dict, use_case
             )
@@ -1037,21 +1112,20 @@ class LLMGateway:
             )
         else:
             # STORY 66.14 & 66.18: CANONICAL TRANSFORMATIONS ORDER
-            
+
             # Base prompt from config (already contains blocks if assembly)
             current_prompt = config.developer_prompt
-            
+
             # 1. & 2. context_quality blocks and compensation (handled in order in gateway/renderer)
             if request.user_input.feature:
                 from app.llm_orchestration.services.context_quality_injector import (
                     ContextQualityInjector,
                 )
+
                 current_prompt, context_quality_injected = ContextQualityInjector.inject(
-                    current_prompt,
-                    request.user_input.feature,
-                    cq_level
+                    current_prompt, request.user_input.feature, cq_level
                 )
-            
+
             # 3. verbosity_profile instruction (Story 66.18 AC1)
             if verbosity_instruction:
                 current_prompt = (
@@ -1061,7 +1135,7 @@ class LLMGateway:
             # 4. & 5. render placeholders and final validation
             # Initial vars from user_input
             render_vars = request.user_input.model_dump()
-            
+
             # Universal placeholders (Story 66.13 AC6) - set as defaults
             render_vars.setdefault("locale", request.user_input.locale)
             render_vars.setdefault("use_case", use_case)
@@ -1073,20 +1147,20 @@ class LLMGateway:
 
             # Overlay context_dict (priority to context)
             render_vars.update(context_dict)
-            
+
             # Re-apply persona info if resolved
             if persona_block:
                 render_vars.setdefault("persona_name", persona_name or persona_id)
                 if not render_vars.get("last_user_msg"):
                     render_vars["last_user_msg"] = request.user_input.message
 
-            render_vars["context_quality"] = cq_level # For conditional blocks
-            
+            render_vars["context_quality"] = cq_level  # For conditional blocks
+
             rendered_developer_prompt = self.renderer.render(
                 current_prompt,
                 render_vars,
                 required_variables=config.required_prompt_placeholders,
-                feature=request.user_input.feature or "unknown"
+                feature=request.user_input.feature or "unknown",
             )
 
         interaction_mode = config.interaction_mode
@@ -1120,8 +1194,9 @@ class LLMGateway:
                 str(resolved_assembly.feature_template_id) if resolved_assembly else None
             ),
             subfeature_template_id=(
-                str(resolved_assembly.subfeature_template_id) 
-                if resolved_assembly and resolved_assembly.subfeature_template_id else None
+                str(resolved_assembly.subfeature_template_id)
+                if resolved_assembly and resolved_assembly.subfeature_template_id
+                else None
             ),
             template_source=resolved_assembly.template_source if resolved_assembly else None,
             model_id=model_id,
@@ -1156,15 +1231,15 @@ class LLMGateway:
             reasoning_effort=config.reasoning_effort,
             verbosity=config.verbosity,
             context_quality=cq_level,
-            context_quality_instruction_injected=context_quality_injected
+            context_quality_instruction_injected=context_quality_injected,
         )
         return plan, qualified_ctx
 
     def _build_messages(
-        self, 
-        request: LLMExecutionRequest, 
-        plan: ResolvedExecutionPlan, 
-        qualified_ctx: Optional[QualifiedContext]
+        self,
+        request: LLMExecutionRequest,
+        plan: ResolvedExecutionPlan,
+        qualified_ctx: Optional[QualifiedContext],
     ) -> ComposedMessages:
         """Stage 2: Composes the final message list for the LLM."""
         use_case = request.user_input.use_case
@@ -1172,7 +1247,7 @@ class LLMGateway:
         context_dict = request.context.model_dump()
         extra = context_dict.pop("extra_context", {})
         context_dict.update(extra)
-        
+
         # Merge qualified context payload if present
         if qualified_ctx:
             context_dict.update(qualified_ctx.payload.model_dump())
@@ -1214,16 +1289,13 @@ class LLMGateway:
             )
 
     async def _call_provider(
-        self, 
-        messages: ComposedMessages, 
-        plan: ResolvedExecutionPlan, 
-        request: LLMExecutionRequest
+        self, messages: ComposedMessages, plan: ResolvedExecutionPlan, request: LLMExecutionRequest
     ) -> GatewayResult:
         """Stage 3: Executes the actual call to the LLM provider."""
         # Story 66.18: Resolve final response_format (High 2 fix)
         # 1. Start with profile-translated params (can force JSON even without schema)
         response_format = plan.translated_provider_params.get("response_format")
-        
+
         # 2. If plan has an explicit output_schema, it takes precedence for Structured Outputs
         if plan.response_format and plan.response_format.type == "json_schema":
             response_format = {
@@ -1251,7 +1323,7 @@ class LLMGateway:
                 verbosity=plan.verbosity,
                 response_format=response_format,
             )
-        
+
         raise ValueError(f"Unsupported provider: {plan.provider}")
 
     def _validate_and_normalize(
@@ -1284,8 +1356,9 @@ class LLMGateway:
 
         if not validation_result.valid and not is_repair_call:
             logger.warning(
-                "gateway_step:repair_invoked use_case=%s errors=%s", 
-                use_case, validation_result.errors
+                "gateway_step:repair_invoked use_case=%s errors=%s",
+                use_case,
+                validation_result.errors,
             )
             increment_counter(
                 "llm_repair_invoked_total",
@@ -1318,8 +1391,9 @@ class LLMGateway:
 
         if not validation_result.valid and config.fallback_use_case:
             logger.warning(
-                "gateway_step:fallback_invoked use_case=%s fallback=%s", 
-                use_case, config.fallback_use_case
+                "gateway_step:fallback_invoked use_case=%s fallback=%s",
+                use_case,
+                config.fallback_use_case,
             )
             increment_counter(
                 "llm_fallback_invoked_total",
@@ -1335,9 +1409,10 @@ class LLMGateway:
                 result=fallback_result,
                 repair_attempts=0,
                 fallback_reason=(
-                    str(validation_result.errors[0]) 
-                    if validation_result.errors else "validation_failed"
-                )
+                    str(validation_result.errors[0])
+                    if validation_result.errors
+                    else "validation_failed"
+                ),
             )
 
         if not validation_result.valid:
@@ -1347,8 +1422,8 @@ class LLMGateway:
                     labels={"use_case": use_case, "schema_version": plan.output_schema_version},
                 )
             raise OutputValidationError(
-                f"Output validation failed for '{use_case}'", 
-                details={"errors": validation_result.errors}
+                f"Output validation failed for '{use_case}'",
+                details={"errors": validation_result.errors},
             )
 
         return RecoveryResult(result=provider_result)
@@ -1360,15 +1435,21 @@ class LLMGateway:
         recovery: RecoveryResult,
         latency_ms: int,
         request: LLMExecutionRequest,
-        qualified_ctx: Optional[QualifiedContext] = None
+        qualified_ctx: Optional[QualifiedContext] = None,
     ) -> GatewayResult:
         """Stage 6: Finalizes the GatewayResult with unified metadata."""
         result = recovery.result
         # The request is passed as an argument
-        
+
         # Telemetry Axis 1: Execution Path
         if request.flags.test_fallback_active:
             execution_path = "test_fallback"
+            FallbackGovernanceRegistry.track_fallback(
+                FallbackType.TEST_LOCAL,
+                call_site="gateway_telemetry",
+                feature=plan.feature,
+                is_nominal=False,
+            )
         elif recovery.fallback_reason:
             execution_path = "fallback_use_case"
         elif recovery.repair_attempts > 0:
@@ -1391,35 +1472,35 @@ class LLMGateway:
         result.meta.context_quality = context_quality
         result.meta.missing_context_fields = missing_context_fields
         result.meta.normalizations_applied = normalizations
-        
+
         # Increment if recursion occurred, or take from recovery
         result.meta.repair_attempts = max(
             getattr(result.meta, "repair_attempts", 0), recovery.repair_attempts
         )
         if recovery.fallback_reason:
             result.meta.fallback_reason = recovery.fallback_reason
-        
+
         # Synchronize legacy booleans (AC7)
-        result.meta.repair_attempted = (result.meta.repair_attempts > 0)
-        result.meta.fallback_triggered = (result.meta.fallback_reason is not None)
+        result.meta.repair_attempted = result.meta.repair_attempts > 0
+        result.meta.fallback_triggered = result.meta.fallback_reason is not None
 
         if recovery.repair_attempts > 0:
-             if result.meta.validation_status in ["valid", "repair_success"]:
-                 result.meta.validation_status = "repair_success"
+            if result.meta.validation_status in ["valid", "repair_success"]:
+                result.meta.validation_status = "repair_success"
         elif recovery.fallback_reason:
-             result.meta.validation_status = "fallback"
+            result.meta.validation_status = "fallback"
         elif not validation_result.valid:
-             result.meta.validation_status = "error"
-             result.meta.validation_errors = validation_result.errors
+            result.meta.validation_status = "error"
+            result.meta.validation_errors = validation_result.errors
         else:
-             result.meta.validation_status = "valid"
+            result.meta.validation_status = "valid"
 
         # Preserve other technical metadata
         result.meta.latency_ms = latency_ms
         result.meta.model = plan.model_id
         result.meta.model_override_active = plan.model_override_active
         result.meta.prompt_version_id = plan.prompt_version_id or "hardcoded-v1"
-        
+
         # Map Assembly metadata (AC10)
         result.meta.assembly_id = plan.assembly_id
         result.meta.feature = plan.feature
@@ -1430,7 +1511,7 @@ class LLMGateway:
         result.meta.persona_id = plan.persona_id
         result.meta.output_schema_id = plan.output_schema_id
         result.meta.schema_version = plan.output_schema_version
-        
+
         # Map Execution Profile metadata (Story 66.11 AC10)
         result.meta.execution_profile_id = plan.execution_profile_id
         result.meta.execution_profile_source = plan.execution_profile_source
@@ -1447,8 +1528,9 @@ class LLMGateway:
     def _validate_input(self, config: UseCaseConfig, user_input: Dict[str, Any]) -> None:
         """Helper to validate user input against UseCaseConfig.input_schema."""
         logger.debug(
-            "gateway_validate_input use_case=%s has_schema=%s", 
-            getattr(config, "use_case", "unknown"), config.input_schema is not None
+            "gateway_validate_input use_case=%s has_schema=%s",
+            getattr(config, "use_case", "unknown"),
+            config.input_schema is not None,
         )
         if config.input_schema:
             try:
@@ -1479,14 +1561,14 @@ class LLMGateway:
 
             if use_case in visited and not is_repair_call:
                 raise GatewayError(
-                    f"Infinite fallback loop detected for use case '{use_case}'", 
-                    details={"visited": visited}
+                    f"Infinite fallback loop detected for use case '{use_case}'",
+                    details={"visited": visited},
                 )
 
             if len(visited) > 3:
                 raise GatewayError(
-                    f"Fallback chain depth limit exceeded for '{use_case}'", 
-                    details={"visited": visited}
+                    f"Fallback chain depth limit exceeded for '{use_case}'",
+                    details={"visited": visited},
                 )
 
             # 0. Merge extra_context for preliminary resolution
@@ -1506,7 +1588,7 @@ class LLMGateway:
                 plan, qualified_ctx = await self._resolve_plan(
                     request, db, config_override=None, context_override=context_dict
                 )
-                # If assembly was used, config is within plan. We need to sync back to 'config' 
+                # If assembly was used, config is within plan. We need to sync back to 'config'
                 # variable for Stage 1.5 validation if it depends on the exact model resolved.
                 if plan.model_source == "assembly":
                     # Re-map config from plan for validation
@@ -1536,8 +1618,7 @@ class LLMGateway:
 
             if not is_repair_call:
                 logger.info(
-                    "llm_gateway_start use_case=%s request_id=%s", 
-                    use_case, request.request_id
+                    "llm_gateway_start use_case=%s request_id=%s", use_case, request.request_id
                 )
 
             # Stage 2: Build Messages
@@ -1561,8 +1642,7 @@ class LLMGateway:
                     provider_result.structured_output = validation.parsed
             except Exception as e:
                 logger.error(
-                    "gateway_step_failed:validate_and_normalize use_case=%s error=%s", 
-                    use_case, e
+                    "gateway_step_failed:validate_and_normalize use_case=%s error=%s", use_case, e
                 )
                 raise
 
@@ -1582,8 +1662,7 @@ class LLMGateway:
             # Stage 6: Build Final Result
             try:
                 final_result = self._build_result(
-                    validation, plan, recovery, latency_ms,
-                    request, qualified_ctx
+                    validation, plan, recovery, latency_ms, request, qualified_ctx
                 )
             except Exception as e:
                 logger.error("gateway_step_failed:build_result use_case=%s error=%s", use_case, e)
@@ -1591,16 +1670,15 @@ class LLMGateway:
 
             if db and not is_repair_call:
                 await log_call(
-                    db=db, 
-                    use_case=use_case, 
-                    request_id=request.request_id, 
-                    trace_id=request.trace_id, 
-                    user_input=request.user_input.model_dump(), 
-                    result=final_result
+                    db=db,
+                    use_case=use_case,
+                    request_id=request.request_id,
+                    trace_id=request.trace_id,
+                    user_input=request.user_input.model_dump(),
+                    result=final_result,
                 )
                 increment_counter(
-                    "llm_gateway_requests_total", 
-                    labels={"use_case": use_case, "status": "success"}
+                    "llm_gateway_requests_total", labels={"use_case": use_case, "status": "success"}
                 )
 
             return final_result
@@ -1608,12 +1686,12 @@ class LLMGateway:
         except Exception as e:
             if db and not is_repair_call:
                 await log_call(
-                    db=db, 
-                    use_case=use_case, 
-                    request_id=request.request_id, 
-                    trace_id=request.trace_id, 
-                    user_input=request.user_input.model_dump(), 
-                    result=None, 
-                    error=e
+                    db=db,
+                    use_case=use_case,
+                    request_id=request.request_id,
+                    trace_id=request.trace_id,
+                    user_input=request.user_input.model_dump(),
+                    result=None,
+                    error=e,
                 )
             raise

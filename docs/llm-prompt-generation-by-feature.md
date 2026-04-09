@@ -478,9 +478,35 @@ Le système s'appuie sur des modèles d'entrée explicites :
 
 ### Règle de migration legacy
 
-`LLMGateway.execute()` reste un wrapper legacy.
+`LLMGateway.execute()` est officiellement requalifié comme **wrapper legacy transitoire**.
 
-Toute nouvelle logique de plateforme doit être implémentée dans `execute_request()`, pas dans le wrapper historique.
+- **Interdiction** : Toute nouvelle logique plateforme est interdite dans ce wrapper.
+- **Usage** : Réservé exclusivement à la compatibilité des call sites n'ayant pas encore migré vers `execute_request()`.
+- **Critère de retrait** : Ce wrapper sera supprimé dès que le dernier call site legacy aura été migré.
+
+## Gouvernance des compatibilités et fallbacks
+
+Le système n'autorise aucun mécanisme de compatibilité "implicite". Chaque fallback est classé selon une trajectoire ferme.
+
+### Matrice de Gouvernance
+
+| Fallback / Chemin | Statut | Périmètre autorisé | Observabilité | Condition de retrait / Maintien | Justification |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `LLMGateway.execute()` | **Transitoire** | Appelants legacy existants | Log `deprecation_warning` + call site | Migration du dernier appelant | Wrapper de façade (Story 66.21). |
+| Mapping `deprecated use_case` | **Transitoire** | Use cases dans `DEPRECATED_USE_CASE_MAPPING` | Compteur `llm_gateway_fallback_usage_total` | Compteurs à zéro en production | Transition vers `feature/subfeature/plan`. |
+| Fallback `use_case-first` | **À retirer** (Familles fermées) | **Interdit** pour `chat`, `guidance`, `natal`, `horoscope_daily` | **Anomalie critique** si déclenché sur famille fermée | Migration 100% des features | Éteindre la concurrence avec le pipeline canonique. |
+| Fallback `resolve_model()` | **Transitoire** | Chemins sans `ExecutionProfile` | Compteur `llm_gateway_fallback_usage_total` | Généralisation des `ExecutionProfile` | Filet de sécurité de résolution. |
+| `ExecutionConfigAdmin` brut | **À retirer** | Dette technique identifiée | Compteur `llm_gateway_fallback_usage_total` | Migration vers `ExecutionProfile` | Ancienne config directe (dette). |
+| Fallback OpenAI | **Toléré durablement** | Runtime OpenAI-only actuel | Compteur `llm_gateway_fallback_usage_total` | Activation multi-provider réelle | Limitation runtime assumée. |
+| Narrator legacy | **À retirer** | **Interdit** pour `horoscope_daily` | Blocage technique / Exception | Suppression du fichier `llm_narrator.py` | Obsolète (remplacé par gateway). |
+| Fallback local/tests | **Toléré durablement** | Environnements `dev` et `test` uniquement | **Interdit en production** | Pérenne (hors production) | Productivité développement. |
+| Natal sans DB | **Transitoire** | Tests unitaires / Modes dégradés | Log `context_degraded_no_db` | DB obligatoire en production nominale | Souplesse de test historique. |
+
+### Politiques de Statut
+
+- **Transitoire** : Le mécanisme est toléré mais possède un critère de sortie explicite. Aucune nouvelle dépendance ne doit être ajoutée.
+- **Toléré durablement** : Le mécanisme est assumé comme faisant partie de l'architecture (souvent pour des raisons hors-production ou de limitation runtime), mais ses bornes de périmètre sont strictes.
+- **À retirer** : Le mécanisme est en cours d'extinction. Son usage sur les périmètres interdits déclenche une anomalie bloquante.
 
 ## Ordre canonique des transformations textuelles
 

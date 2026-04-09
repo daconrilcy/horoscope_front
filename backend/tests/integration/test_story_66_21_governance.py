@@ -1,0 +1,141 @@
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import (
+    ExecutionContext,
+    ExecutionUserInput,
+    FallbackType,
+    GatewayError,
+    LLMExecutionRequest,
+    UseCaseConfig,
+)
+from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
+
+
+@pytest.fixture
+def gateway():
+    return LLMGateway()
+
+
+@pytest.mark.asyncio
+async def test_governance_blocks_use_case_first_on_closed_family(gateway):
+    """
+    AC3: Sur les familles nominales fermées (ex: chat), le fallback use_case-first est interdit.
+    """
+    # En utilisant un use_case déprécié SANS feature, on active is_legacy_compatibility=True
+    # ce qui bypasse le check assembly obligatoire, mais feature est quand même mappé à 'chat'.
+    # Cela nous permet d'atteindre le track_fallback de use_case_first avec feature='chat'.
+
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="chat",  # Dans DEPRECATED_USE_CASE_MAPPING
+            feature=None,  # Pour activer la compatibilité legacy
+            locale="fr-FR",
+        ),
+        context=ExecutionContext(),
+        request_id="test-gov-1",
+        trace_id="trace-gov-1",
+    )
+
+    # On mock le DB pour forcer le passage par resolve_config qui déclenche le fallback
+    # use_case-first si aucune assembly n'est trouvée.
+    with patch(
+        "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
+        return_value=None,
+    ):
+        # On doit aussi mocker _resolve_config pour qu'il ne trouve rien (ou simuler un échec)
+        with patch.object(gateway, "_resolve_config", return_value=None):
+            with pytest.raises(GatewayError) as exc:
+                await gateway._resolve_plan(request, db=MagicMock())
+
+            assert "Usage du fallback 'use_case_first' interdit pour la famille 'chat'" in str(
+                exc.value
+            )
+
+
+@pytest.mark.asyncio
+async def test_governance_blocks_narrator_legacy_for_horoscope_daily():
+    """
+    AC8: Le narrator legacy est interdit pour horoscope_daily.
+    """
+    from app.prediction.llm_narrator import LLMNarrator
+
+    narrator = LLMNarrator()
+
+    with pytest.raises(GatewayError) as exc:
+        await narrator.narrate(
+            time_windows=[],
+            common_context=MagicMock(),
+        )
+
+    # Message exact : "Usage du fallback 'narrator_legacy' interdit 
+    # pour la famille 'horoscope_daily'"
+    expected = "Usage du fallback 'narrator_legacy' interdit pour la famille 'horoscope_daily'"
+    assert expected in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_governance_telemetry_emission():
+    """
+    Vérifie que l'usage d'un fallback autorisé émet bien la télémétrie.
+    """
+    with patch(
+        "app.llm_orchestration.services.fallback_governance.increment_counter"
+    ) as mock_increment:
+        # On utilise un feature autorisé pour ne pas lever d'exception
+        FallbackGovernanceRegistry.track_fallback(
+            FallbackType.LEGACY_WRAPPER,
+            call_site="test_site",
+            feature="other_allowed",
+            is_nominal=False,
+        )
+
+        mock_increment.assert_called_once()
+        args, kwargs = mock_increment.call_args
+        assert args[0] == "llm_gateway_fallback_usage_total"
+        assert kwargs["labels"]["fallback_type"] == "legacy_wrapper"
+        assert kwargs["labels"]["status"] == "transitoire"
+
+
+@pytest.mark.asyncio
+async def test_governance_allows_transitory_fallback_on_permitted_perimeter(gateway):
+    """
+    Vérifie qu'un fallback transitoire est autorisé s'il n'est pas sur une famille interdite.
+    """
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="deprecated_case",
+            feature="other_family",  # Not in closed families
+            locale="fr-FR",
+        ),
+        context=ExecutionContext(),
+        request_id="test-gov-2",
+        trace_id="trace-gov-2",
+    )
+
+    # Mock config correct pour éviter les erreurs Pydantic et de policy
+    mock_config = UseCaseConfig(
+        model="gpt-4o",
+        temperature=0.7,
+        max_output_tokens=1000,
+        system_core_key="default_v1",
+        developer_prompt="test prompt",
+        prompt_version_id="stub-v1",
+        safety_profile="astrology",
+    )
+
+    with patch(
+        "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
+        return_value=None,
+    ):
+        with patch.object(gateway, "_resolve_config", return_value=mock_config):
+            # Should not raise GatewayError from Governance
+            try:
+                await gateway._resolve_plan(request, db=MagicMock())
+            except GatewayError as e:
+                pytest.fail(f"GatewayError raised unexpectedly: {e}")
+            except Exception:
+                # Ignore other downstream errors
+                pass

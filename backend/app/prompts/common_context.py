@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
@@ -68,7 +68,7 @@ class QualifiedContext(BaseModel):
             if not self.payload.astrologer_profile:
                 missing.append("astrologer_profile")
             self.missing_fields = missing
-        
+
         # Always re-compute quality to match missing_fields
         self.context_quality = self.compute_quality(self.missing_fields)
         return self
@@ -83,19 +83,21 @@ class QualifiedContext(BaseModel):
         (AC2 rules)
         """
         missing_set = set(missing)
-        
+
         # 1. Minimal: both natal sources missing
         if "natal_data" in missing_set and "natal_interpretation" in missing_set:
             return "minimal"
-            
+
         # 2. Minimal: astrologer_profile AND at least one natal source missing
-        if "astrologer_profile" in missing_set and ("natal_data" in missing_set or "natal_interpretation" in missing_set):
+        if "astrologer_profile" in missing_set and (
+            "natal_data" in missing_set or "natal_interpretation" in missing_set
+        ):
             return "minimal"
-            
+
         # 3. Partial: everything else missing
         if missing_set:
             return "partial"
-            
+
         return "full"
 
     def is_degraded(self) -> bool:
@@ -109,8 +111,18 @@ class CommonContextBuilder:
     def _format_date_fr(d: date) -> str:
         """Formatte une date en français long."""
         MOIS_FR = [
-            "janvier", "février", "mars", "avril", "mai", "juin",
-            "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+            "janvier",
+            "février",
+            "mars",
+            "avril",
+            "mai",
+            "juin",
+            "juillet",
+            "août",
+            "septembre",
+            "octobre",
+            "novembre",
+            "décembre",
         ]
         JOURS_FR = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
         jour = JOURS_FR[d.weekday()]
@@ -118,9 +130,7 @@ class CommonContextBuilder:
         return f"{jour} {d.day} {mois} {d.year}"
 
     @classmethod
-    def build(
-        cls, user_id: int, use_case_key: str, period: str, db: Session
-    ) -> QualifiedContext:
+    def build(cls, user_id: int, use_case_key: str, period: str, db: Session) -> QualifiedContext:
         """
         Construit le socle commun de contexte qualifié.
         (Story 66.6)
@@ -183,6 +193,19 @@ class CommonContextBuilder:
             if not natal_interpretation:
                 source = "fallback"
 
+            # Story 66.21: Track Natal No DB fallback
+            from app.llm_orchestration.models import FallbackType
+            from app.llm_orchestration.services.fallback_governance import (
+                FallbackGovernanceRegistry,
+            )
+
+            FallbackGovernanceRegistry.track_fallback(
+                FallbackType.NATAL_NO_DB,
+                call_site="common_context_builder",
+                feature="natal",
+                is_nominal=False,
+            )
+
         # 4. Dates & Periods
         today = date.today()
         today_date = cls._format_date_fr(today)
@@ -209,19 +232,22 @@ class CommonContextBuilder:
             source = "partial_db"
 
         quality = QualifiedContext.compute_quality(missing_fields)
-        
+
         qualified_ctx = QualifiedContext(
             payload=payload,
             source=source,
             missing_fields=missing_fields,
             context_quality=quality,
-            degradation_reasons=degradation_reasons
+            degradation_reasons=degradation_reasons,
         )
 
         if qualified_ctx.is_degraded():
             logger.warning(
                 "common_context_degraded user_id=%d use_case=%s quality=%s missing=%s",
-                user_id, use_case_key, quality, missing_fields
+                user_id,
+                use_case_key,
+                quality,
+                missing_fields,
             )
 
         return qualified_ctx

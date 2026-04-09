@@ -1,9 +1,33 @@
 import uuid
+from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
 EVIDENCE_ID_REGEX = r"^[A-Z0-9_\.:-]{3,80}$"
+
+
+class FallbackStatus(str, Enum):
+    """Statuts de gouvernance pour les mécanismes de compatibilité (Story 66.21)."""
+
+    TRANSITORY = "transitoire"
+    TOLERATED = "toléré durablement"
+    TO_REMOVE = "à retirer"
+
+
+class FallbackType(str, Enum):
+    """Types de mécanismes de compatibilité identifiés (Story 66.21)."""
+
+    LEGACY_WRAPPER = "legacy_wrapper"
+    DEPRECATED_USE_CASE = "deprecated_use_case"
+    USE_CASE_FIRST = "use_case_first"
+    RESOLVE_MODEL = "resolve_model"
+    EXECUTION_CONFIG_ADMIN = "execution_config_admin"
+    PROVIDER_OPENAI = "provider_openai"
+    NARRATOR_LEGACY = "narrator_legacy"
+    TEST_LOCAL = "test_local"
+    NATAL_NO_DB = "natal_no_db"
+
 
 # Shared reasoning-model detection — single source of truth for gateway and provider.
 # L1 fix: "gpt-5-" prefix (with dash) avoids false match on hypothetical "gpt-50", "gpt-500".
@@ -120,13 +144,16 @@ class ExecutionFlags(BaseModel):
 class ExecutionOverrides(BaseModel):
     """
     Surcharges de stratégie use case. Sémantique contractuelle :
-    - USAGE AUTORISÉ : migrations, tests d'infrastructure, use cases expérimentaux non encore en config DB.
-    - USAGE INTERDIT : services métier normaux (chat, guidance, natal en production stable).
-    - EFFET : les valeurs non-None remplacent celles résolues par _resolve_config() dans ResolvedExecutionPlan.
-    - JOURNALISATION : toute surcharge effective est tracée dans ResolvedExecutionPlan.to_log_dict()
-      sous une clé 'overrides_applied' pour auditabilité.
-    - RÈGLE : un nouveau use case ne doit JAMAIS dépendre d'ExecutionOverrides pour fonctionner
-      nominalement — la config DB doit être sa source de vérité.
+    - USAGE AUTORISÉ : migrations, tests d'infrastructure, 
+      use cases expérimentaux non encore en config DB.
+    - USAGE INTERDIT : services métier normaux (chat, guidance, 
+      natal en production stable).
+    - EFFET : les valeurs non-None remplacent celles résolues par 
+      _resolve_config() dans ResolvedExecutionPlan.
+    - JOURNALISATION : toute surcharge effective est tracée dans 
+      ResolvedExecutionPlan.to_log_dict() sous une clé 'overrides_applied'.
+    - RÈGLE : un nouveau use case ne doit JAMAIS dépendre d'ExecutionOverrides 
+      pour fonctionner nominalement — la config DB doit être sa source de vérité.
     """
 
     interaction_mode: Optional[Literal["structured", "chat"]] = None
@@ -181,7 +208,7 @@ class ResponseFormatConfig(BaseModel):
 class ResolvedExecutionPlan(BaseModel):
     """
     Artifact representing the final resolved configuration for an LLM call.
-    
+
     Source of truth for: final runtime truth at execution time — immutable after construction.
     See: ARCHITECTURE.md
     """
@@ -283,7 +310,7 @@ class GatewayMeta(BaseModel):
     latency_ms: int
     cached: bool = False
     prompt_version_id: str = "hardcoded-v1"
-    
+
     # Assembly metadata (Story 66.8 AC10)
     assembly_id: Optional[str] = None
     feature: Optional[str] = None

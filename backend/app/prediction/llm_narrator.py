@@ -35,7 +35,7 @@ class NarratorResult:
 
 class LLMNarrator:
     """
-    DÉPRÉCIÉ (post-EPIC-66) : Utiliser AIEngineAdapter.generate_horoscope_narration() 
+    DÉPRÉCIÉ (post-EPIC-66) : Utiliser AIEngineAdapter.generate_horoscope_narration()
     pour passer par le pipeline canonique LLMGateway.
     """
 
@@ -65,7 +65,15 @@ class LLMNarrator:
         domain_ranking: list[dict[str, Any]] | None = None,
         variant_code: str | None = None,
     ) -> NarratorResult | None:
+        from app.llm_orchestration.models import FallbackType
+        from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
         from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
+
+        # 0. Governance check (Story 66.21 AC8)
+        # LLMNarrator est exclusivement utilisé pour la famille horoscope_daily
+        FallbackGovernanceRegistry.track_fallback(
+            FallbackType.NARRATOR_LEGACY, call_site="LLMNarrator.narrate", feature="horoscope_daily"
+        )
 
         try:
             # 1. Resolve model name based on variant_code (Story 64.2)
