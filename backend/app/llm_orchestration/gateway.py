@@ -40,7 +40,7 @@ from app.llm_orchestration.services.assembly_resolver import (
 )
 from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
 from app.llm_orchestration.services.input_validator import validate_input
-from app.llm_orchestration.services.observability_service import log_call
+from app.llm_orchestration.services.observability_service import log_call, log_governance_event
 from app.llm_orchestration.services.output_validator import ValidationResult, validate_output
 from app.llm_orchestration.services.persona_composer import compose_persona_block
 from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
@@ -987,6 +987,58 @@ class LLMGateway:
                     max_output_tokens = rec_tokens
                     max_output_tokens_source = "verbosity_default"
 
+            # Story 66.22 AC4/AC5: Enforce supported providers on nominal paths
+            from app.llm_orchestration.supported_providers import is_provider_supported
+
+            is_nominal = (
+                bool(request.user_input.feature)
+                and not is_legacy_compatibility
+                and not request.flags.test_fallback_active
+            )
+
+            if not is_provider_supported(provider):
+                if is_nominal:
+                    # AC4: Explicit failure on nominal path
+                    log_governance_event(
+                        event_type="runtime_rejected",
+                        provider=provider,
+                        feature=request.user_input.feature,
+                        is_nominal=True,
+                    )
+                    logger.error(
+                        "gateway_nominal_provider_not_supported provider=%s use_case=%s feature=%s",
+                        provider,
+                        use_case,
+                        request.user_input.feature,
+                    )
+                    raise ValueError(
+                        f"Provider '{provider}' is not nominally supported by the platform."
+                    )
+                else:
+                    # AC5: Fallback on non-nominal/test paths
+                    log_governance_event(
+                        event_type="non_nominal_tolerated",
+                        provider=provider,
+                        feature=request.user_input.feature,
+                        is_nominal=False,
+                    )
+                    FallbackGovernanceRegistry.track_fallback(
+                        FallbackType.PROVIDER_OPENAI,
+                        call_site=f"provider_not_supported:{provider}",
+                        feature=request.user_input.feature,
+                        is_nominal=False,
+                    )
+                    logger.warning(
+                        "gateway_non_nominal_provider_fallback provider=%s model=%s. "
+                        "Falling back to resolve_model/openai.",
+                        provider,
+                        model_id,
+                    )
+                    model_id = resolve_model(use_case, fallback_model=config.model)
+                    profile_source = "fallback_resolve_model"
+                    provider = "openai"
+                    translated_params = {}
+
             # Map profiles to provider-specific params (Story 66.18)
             try:
                 translated_params = ProviderParameterMapper.map(
@@ -1013,46 +1065,6 @@ class LLMGateway:
                 profile_source = "fallback_resolve_model"
                 provider = "openai"  # High #2 Fix: Reset to supported provider
                 translated_params = {}
-
-            # Story 66.22 AC4/AC5: Enforce supported providers on nominal paths
-            from app.llm_orchestration.supported_providers import is_provider_supported
-
-            is_nominal = (
-                bool(request.user_input.feature)
-                and not is_legacy_compatibility
-                and not request.flags.test_fallback_active
-            )
-
-            if not is_provider_supported(provider):
-                if is_nominal:
-                    # AC4: Explicit failure on nominal path
-                    logger.error(
-                        "gateway_nominal_provider_not_supported provider=%s use_case=%s feature=%s",
-                        provider,
-                        use_case,
-                        request.user_input.feature,
-                    )
-                    raise ValueError(
-                        f"Provider '{provider}' is not nominally supported by the platform."
-                    )
-                else:
-                    # AC5: Fallback on non-nominal/test paths
-                    FallbackGovernanceRegistry.track_fallback(
-                        FallbackType.PROVIDER_OPENAI,
-                        call_site=f"provider_not_supported:{provider}",
-                        feature=request.user_input.feature,
-                        is_nominal=False,
-                    )
-                    logger.warning(
-                        "gateway_non_nominal_provider_fallback provider=%s model=%s. "
-                        "Falling back to resolve_model/openai.",
-                        provider,
-                        model_id,
-                    )
-                    model_id = resolve_model(use_case, fallback_model=config.model)
-                    profile_source = "fallback_resolve_model"
-                    provider = "openai"
-                    translated_params = {}
 
             # If we didn't get verbosity_instruction yet, get it now
             if not verbosity_instruction:

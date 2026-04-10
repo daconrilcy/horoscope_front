@@ -13,7 +13,7 @@ from sqlalchemy import (
     String,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm_prompt import PromptStatus
@@ -60,6 +60,27 @@ class LlmExecutionProfileModel(Base):
     )
     created_by: Mapped[str] = mapped_column(String(100), nullable=False)
     published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @validates("status")
+    def validate_status_change(self, key: str, value: PromptStatus) -> PromptStatus:
+        """
+        AC3.1: Enforce provider support when transition to PUBLISHED.
+        """
+        if value == PromptStatus.PUBLISHED:
+            from app.llm_orchestration.supported_providers import is_provider_supported
+            from app.llm_orchestration.services.observability_service import log_governance_event
+
+            if not is_provider_supported(self.provider):
+                log_governance_event(
+                    event_type="publish_rejected",
+                    provider=self.provider,
+                    feature=self.feature,
+                    is_nominal=True,
+                )
+                raise ValueError(
+                    f"ExecutionProfile cannot be published: Provider '{self.provider}' is not nominally supported."
+                )
+        return value
 
     # Relationship for fallback
     fallback_profile = relationship("LlmExecutionProfileModel", remote_side=[id])

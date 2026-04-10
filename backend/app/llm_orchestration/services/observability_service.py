@@ -19,6 +19,7 @@ from app.infra.db.models.llm_observability import (
     LlmValidationStatus,
     map_status_to_enum,
 )
+from app.infra.observability.metrics import increment_counter
 from app.llm_orchestration.models import GatewayResult
 from app.llm_orchestration.services.crypto_utils import encrypt_input
 
@@ -89,6 +90,33 @@ def count_evidence_warnings(structured_output: Dict[str, Any] | None) -> int:
             warnings += 1
 
     return warnings
+
+
+def log_governance_event(
+    event_type: str,
+    provider: str,
+    feature: str | None = None,
+    is_nominal: bool = True,
+) -> None:
+    """
+    Emits unified governance metrics (AC6).
+    event_type: publish_rejected | runtime_rejected | non_nominal_tolerated
+    """
+    labels = {
+        "event_type": event_type,
+        "provider": provider,
+        "feature": feature or "unknown",
+        "is_nominal": str(is_nominal).lower(),
+        "environment": settings.app_env,
+    }
+    increment_counter("llm_governance_event_total", labels=labels)
+    logger.info(
+        "llm_governance_event type=%s provider=%s feature=%s is_nominal=%s",
+        event_type,
+        provider,
+        feature,
+        is_nominal,
+    )
 
 
 async def log_call(

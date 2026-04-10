@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import List, Optional, Tuple
 
@@ -18,6 +19,9 @@ from app.llm_orchestration.services.assembly_resolver import (
     build_assembly_preview,
     validate_placeholders,
 )
+from app.llm_orchestration.services.observability_service import log_governance_event
+
+logger = logging.getLogger(__name__)
 
 
 class AssemblyAdminService:
@@ -108,21 +112,18 @@ class AssemblyAdminService:
         await self.session.flush()
         return new_config
 
-    async def publish_config(self, config_id: uuid.UUID) -> Tuple[PromptAssemblyConfigModel, int]:
+    async def _validate_provider_support(self, config: PromptAssemblyConfigModel) -> str:
         """
-        Publish a configuration using registry.
+        Validates that the provider for this config is nominally supported.
+        Returns the resolved provider name.
         """
-        # AC6: Re-validate ALL templates before publishing
-        config = await self.get_config(config_id)
-        if not config:
-            raise ValueError(f"Config {config_id} not found")
-
-        # Story 66.22 AC3: Validate provider support on publication
         from app.llm_orchestration.supported_providers import is_provider_supported
+
         provider = "openai"  # Default
 
         if config.execution_profile_ref:
             from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+
             stmt_p = select(LlmExecutionProfileModel.provider).where(
                 LlmExecutionProfileModel.id == config.execution_profile_ref
             )
@@ -135,12 +136,34 @@ class AssemblyAdminService:
             provider = config.execution_config.get("provider", "openai")
 
         if not is_provider_supported(provider):
+            log_governance_event(
+                event_type="publish_rejected",
+                provider=provider,
+                feature=config.feature,
+                is_nominal=True,
+            )
             logger.error(
                 "assembly_publication_rejected_unsupported_provider config_id=%s provider=%s",
-                str(config_id),
+                str(config.id),
                 provider,
             )
-            raise ValueError(f"Publication rejected: Provider '{provider}' is not nominally supported.")
+            raise ValueError(
+                f"Publication rejected: Provider '{provider}' is not nominally supported."
+            )
+
+        return provider
+
+    async def publish_config(self, config_id: uuid.UUID) -> Tuple[PromptAssemblyConfigModel, int]:
+        """
+        Publish a configuration using registry.
+        """
+        # AC6: Re-validate ALL templates before publishing
+        config = await self.get_config(config_id)
+        if not config:
+            raise ValueError(f"Config {config_id} not found")
+
+        # Story 66.22 AC3: Validate provider support on publication
+        await self._validate_provider_support(config)
 
         invalid = validate_placeholders(config.feature_template.developer_prompt, config.feature)
         if invalid:
@@ -166,6 +189,11 @@ class AssemblyAdminService:
         target_id: uuid.UUID,
     ) -> PromptAssemblyConfigModel:
         """Rollback using registry."""
+        # Story 66.22 AC3: Validate provider support on rollback (Finding 2)
+        config = await self.get_config(target_id)
+        if config:
+            await self._validate_provider_support(config)
+
         return await self.registry.rollback_config(feature, subfeature, plan, locale, target_id)
 
     async def get_assembly_preview(self, config_id: uuid.UUID) -> PromptAssemblyPreview:
