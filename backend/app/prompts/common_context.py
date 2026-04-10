@@ -188,12 +188,18 @@ class CommonContextBuilder:
         try:
             chart = UserNatalChartService.get_latest_for_user(db, user_id)
             natal_data = chart.result.model_dump(mode="json")
-        except Exception:
+        except Exception as e:
             missing_fields.append("natal_data")
             if not natal_interpretation:
                 source = "fallback"
 
-            # Story 66.21: Track Natal No DB fallback
+            # Story 66.21: Track Natal No DB fallback (AC9)
+            # On distingue si c'est attendu (ex: tests sans session DB)
+            # ou si c'est une erreur technique imprévue (prod).
+            from sqlalchemy.exc import SQLAlchemyError
+
+            is_database_error = isinstance(e, SQLAlchemyError)
+
             from app.llm_orchestration.models import FallbackType
             from app.llm_orchestration.services.fallback_governance import (
                 FallbackGovernanceRegistry,
@@ -203,8 +209,13 @@ class CommonContextBuilder:
                 FallbackType.NATAL_NO_DB,
                 call_site="common_context_builder",
                 feature="natal",
-                is_nominal=False,
+                is_nominal=not is_database_error,  # Nominal if intentional (stub/test)
             )
+
+            if is_database_error:
+                logger.error(
+                    "common_context_database_error_fallback user_id=%d error=%s", user_id, e
+                )
 
         # 4. Dates & Periods
         today = date.today()

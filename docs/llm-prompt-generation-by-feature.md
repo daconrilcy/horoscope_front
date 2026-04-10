@@ -486,7 +486,7 @@ Le système s'appuie sur des modèles d'entrée explicites :
 
 ## Gouvernance des compatibilités et fallbacks
 
-Le système n'autorise aucun mécanisme de compatibilité "implicite". Chaque fallback est classé selon une trajectoire ferme.
+Le système n'autorise aucun mécanisme de compatibilité "implicite". Chaque fallback est classé selon une trajectoire ferme de gouvernance. Cette section remplace et clôt l'ancien inventaire descriptif.
 
 ### Matrice de Gouvernance
 
@@ -506,7 +506,7 @@ Le système n'autorise aucun mécanisme de compatibilité "implicite". Chaque fa
 
 - **Transitoire** : Le mécanisme est toléré mais possède un critère de sortie explicite. Aucune nouvelle dépendance ne doit être ajoutée.
 - **Toléré durablement** : Le mécanisme est assumé comme faisant partie de l'architecture (souvent pour des raisons hors-production ou de limitation runtime), mais ses bornes de périmètre sont strictes.
-- **À retirer** : Le mécanisme est en cours d'extinction. Son usage sur les périmètres interdits déclenche une anomalie bloquante.
+- **À retirer** : Le mécanisme est en cours d'extinction. Son usage sur les périmètres interdits déclenche une anomalie bloquante. Son utilisation sur des chemins autorisés reste tracée comme une dette.
 
 ## Ordre canonique des transformations textuelles
 
@@ -705,42 +705,6 @@ Elle ne doit pas influencer :
 - les règles d'abonnement ;
 - les placeholders ;
 - la logique métier de la feature.
-
-## Chemins de compatibilité encore actifs
-
-Le système reste hybride par design, pour éviter les régressions.
-
-Ces compatibilités ne doivent pas être lues comme des variantes concurrentes équivalentes, mais comme des mécanismes transitoires ou de sécurité destinés à préserver la non-régression.
-
-### Compatibilités encore supportées
-
-- fallback `use_case-first` quand aucune assembly active n'est trouvée sur un chemin legacy encore autorisé ;
-- fallback `resolve_model()` quand aucun `ExecutionProfile` n'est résolu ;
-- support des anciens use_cases mappés vers `feature + subfeature + plan` ;
-- chemin legacy dans certains services métier pendant la convergence complète.
-
-### Chemins legacy actifs à date
-
-Les chemins ci-dessous sont explicitement observables dans le code actuel.
-
-| Chemin legacy | Où il vit | Rôle actuel |
-|---|---|---|
-| `LLMGateway.execute()` | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | wrapper de compatibilité vers `execute_request()` |
-| fallback `deprecated use_case -> feature/subfeature/plan` | [catalog.py](/c:/dev/horoscope_front/backend/app/prompts/catalog.py) + [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | préserve les anciens appelants legacy tout en les redirigeant vers la taxonomie canonique |
-| fallback `use_case-first` | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | reste utilisé sur les chemins legacy encore autorisés ; n'est plus un fallback nominal pour `chat`, `guidance`, `natal`, `horoscope_daily` |
-| fallback `resolve_model()` | [catalog.py](/c:/dev/horoscope_front/backend/app/prompts/catalog.py) + [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | maintient le chemin historique de choix de modèle |
-| compatibilité `ExecutionConfigAdmin` brut | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | supporte encore `reasoning_effort` / `verbosity` portés directement par la config |
-| fallback provider vers OpenAI | [gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) | réabsorbe les providers non encore réellement supportés |
-| narrator legacy déprécié | [llm_narrator.py](/c:/dev/horoscope_front/backend/app/prediction/llm_narrator.py) | compatibilité historique documentée ; ne doit plus être considéré comme le chemin principal pour `horoscope_daily` et `daily_prediction`, ni être réintroduit comme fallback implicite du chemin principal |
-| fallback de test hors provider | [ai_engine_adapter.py](/c:/dev/horoscope_front/backend/app/services/ai_engine_adapter.py) | continuité locale / tests quand la config provider est absente |
-| chemin sans DB dans certains parcours natal | [natal_interpretation_service.py](/c:/dev/horoscope_front/backend/app/services/natal_interpretation_service.py) | compatibilité pour tests unitaires et modes dégradés historiques |
-
-### Exemple concret
-
-Pour `natal_interpretation` :
-
-- avec DB et config assembly résolue, le service suit le chemin canonique `feature/subfeature/plan` ;
-- sans DB dans certains tests unitaires historiques, un chemin de compatibilité peut rester actif tant qu'il ne change pas le contrat fonctionnel attendu.
 
 ## Observabilité et télémétrie
 

@@ -692,8 +692,12 @@ class LLMGateway:
         is_repair_call: bool = False,
     ) -> GatewayResult:
         """Legacy entry point for LLM orchestration."""
+        # Use inspect or a passed identifier to identify the real caller if possible
+        # Here we include the use_case in the call_site for better mapping
         FallbackGovernanceRegistry.track_fallback(
-            FallbackType.LEGACY_WRAPPER, call_site="LLMGateway.execute", is_nominal=False
+            FallbackType.LEGACY_WRAPPER,
+            call_site=f"LLMGateway.execute:{use_case}",
+            is_nominal=False
         )
         request = self._legacy_dicts_to_request(
             use_case=use_case,
@@ -1008,6 +1012,11 @@ class LLMGateway:
                 translated_params = {}
 
             if provider == "anthropic":
+                FallbackGovernanceRegistry.track_fallback(
+                    FallbackType.PROVIDER_OPENAI,
+                    call_site=f"provider_not_supported:{provider}",
+                    feature=request.user_input.feature
+                )
                 logger.warning(
                     "gateway_provider_not_supported_yet provider=%s model=%s. "
                     "Falling back to resolve_model/openai.",
