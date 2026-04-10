@@ -98,7 +98,7 @@ flowchart TD
     AC --> AD["Réponse finale"]
 ```
 
-## Stories 66.9 à 66.21
+## Stories 66.9 à 66.22
 
 | Story | Apport canonique | Impact dans le processus |
 |---|---|---|
@@ -115,6 +115,7 @@ flowchart TD
 | `66.19` | Migration narrator daily | convergence de `horoscope_daily` et `daily_prediction` vers `AIEngineAdapter` puis `LLMGateway.execute_request()` |
 | `66.20` | Convergence canonique obligatoire | assemblies nominales obligatoires pour `chat`, `guidance`, `natal`, `horoscope_daily` + normalisation des plans runtime vers `free/premium` |
 | `66.21` | Gouvernance des fallbacks LLM | matrice de statut, télémétrie `llm_gateway_fallback_usage_total`, blocage des fallbacks à retirer sur chemins nominaux, bornes explicites des compatibilités legacy/test |
+| `66.22` | Verrouillage des providers supportés | registre canonique `NOMINAL_SUPPORTED_PROVIDERS`, blocage des providers non supportés sur chemins nominaux, fallback OpenAI borné aux chemins non nominaux |
 
 ## Couverture réelle par famille
 
@@ -410,6 +411,7 @@ Vu depuis `execute_request()`, le pipeline réel est aujourd'hui le suivant :
    - fallback `use_case-first` uniquement sur les chemins non nominaux encore autorisés
    - résolution `ExecutionProfile`
    - merge final modèle / provider / max tokens
+   - contrôle du provider contre `NOMINAL_SUPPORTED_PROVIDERS` sur chemin nominal
    - rendu final du `developer_prompt`
    - construction du `ResolvedExecutionPlan`
 4. seconde validation d'entrée sur la configuration effectivement résolue ;
@@ -509,7 +511,7 @@ Le système n'autorise aucun mécanisme de compatibilité "implicite". Chaque fa
 | Fallback `use_case-first` | **À retirer** sur familles fermées ; **transitoire** ailleurs | **Interdit comme chemin nominal** pour `chat`, `guidance`, `natal`, `horoscope_daily`; toléré seulement sur chemins non nominaux classés | Compteur `llm_gateway_fallback_usage_total`; anomalie si nominal | Migration 100% des features | Éteindre la concurrence avec le pipeline canonique sans casser la compatibilité déclarée. |
 | Fallback `resolve_model()` | **Transitoire** | Chemins sans `ExecutionProfile` | Compteur `llm_gateway_fallback_usage_total` | Généralisation des `ExecutionProfile` | Filet de sécurité de résolution. |
 | `ExecutionConfigAdmin` brut | **À retirer** | Dette technique identifiée ; interdit comme source primaire sur nouveau parcours nominal | Compteur `llm_gateway_fallback_usage_total`; blocage si nominal | Migration vers `ExecutionProfile` | Ancienne config directe (dette). |
-| Fallback OpenAI | **Toléré durablement** | Runtime OpenAI-only actuel (registre canonique) | Compteur `llm_gateway_fallback_usage_total` | Activation multi-provider réelle | Limitation runtime assumée. Bloquant sur chemin nominal si provider non supporté. |
+| Fallback OpenAI | **Toléré durablement hors nominal** | Runtime OpenAI-only actuel ; autorisé uniquement pour compatibilités legacy, dev et test explicitement non nominales | Compteur `llm_gateway_fallback_usage_total` + métrique provider 66.22 attendue | Activation multi-provider réelle | Limitation runtime assumée. Interdit comme fallback silencieux sur chemin nominal. |
 | Narrator legacy | **À retirer** | **Interdit** pour `horoscope_daily` | Blocage technique / Exception | Suppression du fichier `llm_narrator.py` | Obsolète (remplacé par gateway). |
 | Fallback local/tests | **Toléré durablement** | Environnements `dev` et `test` uniquement, y compris absence de provider ou assembly de test manquante | **Interdit en production** | Pérenne (hors production) | Productivité développement et stabilité des tests sans provider externe. |
 | Natal sans DB | **Transitoire** en production nominale ; **toléré durablement** en test ciblé | Tests unitaires / modes dégradés non nominaux uniquement | Log `context_degraded_no_db`; log critique si erreur DB masquée en production | DB obligatoire en production nominale | Souplesse de test historique, sans droit de masquer une panne DB produit. |
@@ -520,7 +522,9 @@ Le système n'autorise aucun mécanisme de compatibilité "implicite". Chaque fa
 - **Toléré durablement** : Le mécanisme est assumé comme faisant partie de l'architecture (souvent pour des raisons hors-production ou de limitation runtime), mais ses bornes de périmètre sont strictes.
 - **À retirer** : Le mécanisme est en cours d'extinction. Son usage sur les périmètres interdits déclenche une anomalie bloquante. Son utilisation sur des chemins autorisés reste tracée comme une dette.
 
-### Règles runtime ajoutées par 66.21
+### Règles runtime par story de gouvernance
+
+#### Story 66.21 — Gouvernance des fallbacks
 
 Le registre `FallbackGovernanceRegistry` applique les règles suivantes :
 
@@ -530,6 +534,16 @@ Le registre `FallbackGovernanceRegistry` applique les règles suivantes :
 4. les compatibilités explicitement legacy ou de test sont tracées avec `is_nominal=false` et ne doivent pas être interprétées comme chemins produit ;
 5. `TEST_LOCAL` est strictement interdit en production ; il matérialise la ligne de matrice `Fallback local/tests`, et ne constitue ni un nouveau statut ni un chemin runtime parallèle ;
 6. les erreurs d'assembly obligatoire peuvent déclencher le fallback local/test hors production, mais ne doivent pas masquer une erreur de configuration nominale en production.
+
+#### Story 66.22 — Verrouillage provider
+
+La story 66.22 ajoute une seconde ligne de défense, distincte de la gouvernance générale des fallbacks : le provider réellement exécutable doit être présent dans un registre canonique.
+
+1. `NOMINAL_SUPPORTED_PROVIDERS` est la source de vérité des providers supportés nominalement. À date, elle contient uniquement `openai`.
+2. Les surfaces admin et publication doivent consommer ce registre, sans allowlist locale divergente.
+3. Un chemin nominal ne doit jamais transformer un provider non supporté en appel OpenAI silencieux.
+4. Un chemin non nominal peut rester compatible avec OpenAI seulement s'il est déjà classé `legacy`, `dev` ou `test`, et tracé avec `is_nominal=false`.
+5. Le provider demandé, le provider effectivement exécuté, la feature, l'environnement et le type d'événement doivent rester observables.
 
 ## Ordre canonique des transformations textuelles
 
@@ -652,24 +666,50 @@ La traduction des profils internes vers les paramètres provider est faite par `
 
 ### Support runtime effectif actuel des providers (Story 66.22)
 
-La plateforme expose des profils internes stables et un `ProviderParameterMapper`, mais l'exécution réelle est strictement verrouillée par un registre canonique.
+La plateforme expose des profils internes stables et un `ProviderParameterMapper`, mais le support nominal d'un provider ne dépend pas seulement de l'existence d'un mapper. Le support nominal dépend d'un registre canonique explicite.
 
 À ce jour :
 
-- **OpenAI** est le seul provider déclaré dans le registre canonique `NOMINAL_SUPPORTED_PROVIDERS`.
-- **Chemin nominal** : Si un `ResolvedExecutionPlan` référence un provider absent du registre, le gateway échoue explicitement avec une `ValueError`. Le fallback silencieux vers OpenAI est désormais interdit sur ce chemin.
-- **Chemin non nominal / Test** : Pour les tests ou les compatibilités legacy classées, un fallback vers OpenAI reste toléré si le provider demandé n'est pas supporté (ex: `anthropic` redirigé vers `openai`).
-- `_call_provider()` n'exécute techniquement que `openai` à date.
+- **OpenAI** est le seul provider déclaré dans `backend/app/llm_orchestration/supported_providers.py`.
+- `NOMINAL_SUPPORTED_PROVIDERS` est la source de vérité du support provider nominal. Les autres listes, fixtures, seeds ou mappers ne doivent pas être interprétés comme preuve de support runtime.
+- `_call_provider()` n'exécute techniquement que `openai`.
+- `ProviderParameterMapper` peut contenir des traductions pour d'autres providers afin de préparer une extension future, mais cela ne les rend pas publiables ni exécutables nominalement.
+
+### Chemin nominal et chemin non nominal
+
+Le verrou 66.22 distingue deux cas.
+
+**Chemin nominal** :
+
+- une requête produit/runtime avec `feature/subfeature/plan` résolus ;
+- une publication d'assembly destinée à devenir active ;
+- un `ExecutionProfile` publié ou référencé par une assembly publiée.
+
+Sur ce chemin, un provider absent du registre doit produire un échec explicite. Il ne doit pas passer par `resolve_model()` ni être transformé en OpenAI sous le capot.
+
+**Chemin non nominal** :
+
+- compatibilité legacy explicitement classée ;
+- tests locaux ;
+- chemins `dev` ou migration non production.
+
+Sur ce chemin, un fallback vers OpenAI peut rester toléré si l'événement est tracé comme `is_nominal=false`. Cette tolérance ne crée pas un support nominal du provider demandé.
 
 ### Verrouillage et Déverrouillage d'un Provider
 
-Le verrouillage est appliqué à trois niveaux (AC1, AC2, AC3) :
+Le verrouillage cible trois niveaux :
 
-1. **Admin** : Le backend rejette toute création/mise à jour d'un `ExecutionProfile` dont le provider n'est pas dans le registre.
-2. **Publication** : La publication d'une `PromptAssemblyConfig` ou d'un `ExecutionProfile` échoue si le provider n'est pas supporté nominalement.
-3. **Gateway** : L'exécution nominale est bloquée si le plan résolu utilise un provider non supporté.
+1. **Admin** : les payloads d'administration d'`ExecutionProfile` doivent refuser un provider absent du registre.
+2. **Publication** : une `PromptAssemblyConfig` nominale ne doit pas être publiée si son `execution_profile_ref` ou son `execution_config.provider` pointe vers un provider non supporté.
+3. **Gateway** : un `ResolvedExecutionPlan` nominal doit être rejeté avant tout appel provider si `plan.provider` est absent du registre.
 
-**Procédure de déverrouillage** : Pour supporter nominalement un nouveau provider (ex: `anthropic`), il doit être ajouté au fichier `backend/app/llm_orchestration/supported_providers.py` APRES que son mapper et son client runtime ont été validés.
+Points d'attention d'implémentation :
+
+- la validation doit être appliquée avant tout fallback `resolve_model()` ou fallback OpenAI ;
+- les rollbacks et réactivations de configurations doivent repasser par le même verrou de publication ;
+- doctrine de statut : la création d'un profil en brouillon peut rester possible pour préparer un futur provider, mais le passage à `PUBLISHED`, la référence par une assembly publiée et toute seed/migration publiant un profil doivent être interdits tant que le provider est absent du registre.
+
+**Procédure de déverrouillage** : pour supporter nominalement un nouveau provider (ex: `anthropic`), il doit être ajouté à `NOMINAL_SUPPORTED_PROVIDERS` seulement après validation de trois éléments : mapper provider, client runtime effectif dans le gateway, et tests nominaux de publication/exécution.
 
 ### Conséquence de gouvernance
 
@@ -755,6 +795,23 @@ Cette séparation permet de distinguer :
 - une dégradation liée à la qualité des données ;
 - une transformation volontaire du pipeline.
 
+### Télémétrie provider 66.22
+
+Les événements liés au verrou provider doivent être observables avec une métrique unifiée permettant de séparer les cas suivants :
+
+- `event_type=publish_rejected` : une publication nominale est refusée parce que le provider résolu n'est pas supporté ;
+- `event_type=runtime_rejected` : le gateway bloque une exécution nominale avant l'appel provider ;
+- `event_type=non_nominal_tolerated` : un chemin legacy, dev ou test tolère explicitement un fallback OpenAI.
+
+Les labels minimum attendus sont :
+
+- `provider` : provider demandé ou résolu avant fallback ;
+- `feature` : feature concernée, ou `unknown` si elle n'existe pas encore sur un chemin legacy ;
+- `is_nominal` : `true` ou `false` ;
+- `environment` : environnement applicatif au moment de l'événement.
+
+Cette métrique ne remplace pas `llm_gateway_requests_total` ni `llm_gateway_fallback_usage_total`. Elle sert à auditer spécifiquement le verrou provider introduit par 66.22.
+
 ### Exemple de lecture croisée
 
 Exemple :
@@ -816,10 +873,11 @@ Le processus cible est :
 3. enrichissement du contexte et calcul de `context_quality` ;
 4. résolution assembly ; fallback legacy seulement pour les chemins explicitement autorisés ;
 5. résolution du profil d'exécution ;
-6. application ordonnée des transformations textuelles ;
-7. construction d'un `ResolvedExecutionPlan` unique ;
-8. appel provider à partir de ce plan, avec `openai` comme seul chemin d'exécution effectivement accepté par le gateway à date ;
-9. validation et garde-fous via la matrice d'évaluation.
+6. contrôle du provider résolu contre `NOMINAL_SUPPORTED_PROVIDERS` sur tout chemin nominal ;
+7. application ordonnée des transformations textuelles ;
+8. construction d'un `ResolvedExecutionPlan` unique ;
+9. appel provider à partir de ce plan, avec `openai` comme seul chemin d'exécution effectivement accepté par le gateway à date ;
+10. validation et garde-fous via la matrice d'évaluation.
 
 Ce document doit être lu comme la référence de mise en oeuvre. Si le code diverge, c'est le pipeline réel du gateway qui fait foi jusqu'à mise à jour de cette documentation.
 
