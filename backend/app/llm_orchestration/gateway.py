@@ -393,11 +393,7 @@ class LLMGateway:
                     }
 
                     if db_use_case and db_use_case.required_prompt_placeholders:
-                        required = [
-                            p
-                            for p in db_use_case.required_prompt_placeholders
-                            if p in authorized_vars
-                        ]
+                        required = list(db_use_case.required_prompt_placeholders)
                     else:
                         placeholders = re.findall(
                             r"\{\{([a-zA-Z0-9_]+)\}\}", db_prompt.developer_prompt
@@ -740,6 +736,14 @@ class LLMGateway:
         context_override: Optional[Dict[str, Any]] = None,
     ) -> tuple[ResolvedExecutionPlan, Optional[QualifiedContext]]:
         # Stage 1: Orchestrates the resolution of all configuration artifacts into a single plan.
+
+        # Story 66.23: Early hardening of taxonomy within resolution stage (AC3, AC7, AC10)
+        if request.user_input.feature:
+            request.user_input.feature = normalize_feature(request.user_input.feature)
+            request.user_input.subfeature = normalize_subfeature(
+                request.user_input.feature, request.user_input.subfeature
+            )
+
         use_case = request.user_input.use_case
         user_id = request.user_id
         resolved_assembly = None
@@ -751,8 +755,10 @@ class LLMGateway:
         if use_case in DEPRECATED_USE_CASE_MAPPING and not request.user_input.feature:
             is_legacy_compatibility = True
             mapping = DEPRECATED_USE_CASE_MAPPING[use_case]
-            request.user_input.feature = mapping["feature"]
-            request.user_input.subfeature = mapping.get("subfeature")
+            request.user_input.feature = normalize_feature(mapping["feature"])
+            request.user_input.subfeature = normalize_subfeature(
+                request.user_input.feature, mapping.get("subfeature")
+            )
             request.user_input.plan = mapping["plan"]
 
             FallbackGovernanceRegistry.track_fallback(
@@ -843,6 +849,13 @@ class LLMGateway:
                     if assembly_db:
                         # Assembly found! Override everything (AC10)
                         resolved_assembly = resolve_assembly(assembly_db)
+                        dev_prompt = assemble_developer_prompt(resolved_assembly, assembly_db)
+
+                        # Story 66.23: Auto-detect required placeholders for assembly prompt
+                        placeholders = re.findall(r"\{\{([a-zA-Z0-9_]+)\}\}", dev_prompt)
+                        # We use authorized_vars here too for safety if resolved from assembly?
+                        # Actually, assemblies are trusted (admin-created), but let's be safe.
+                        required = list(set(placeholders))
 
                         # Map ResolvedAssembly to UseCaseConfig for compatibility with Stage 1.5+
                         config = UseCaseConfig(
@@ -851,10 +864,9 @@ class LLMGateway:
                             max_output_tokens=resolved_assembly.execution_config.max_output_tokens,
                             timeout_seconds=resolved_assembly.execution_config.timeout_seconds,
                             system_core_key="default_v1",  # Hard policy handled later
-                            developer_prompt=assemble_developer_prompt(
-                                resolved_assembly, assembly_db
-                            ),
+                            developer_prompt=dev_prompt,
                             prompt_version_id=str(assembly_db.id),
+                            required_prompt_placeholders=required,
                             persona_strategy="forbidden",  # Persona already handled in assembly
                             interaction_mode=assembly_db.interaction_mode,
                             user_question_policy=assembly_db.user_question_policy,
@@ -996,7 +1008,7 @@ class LLMGateway:
             from app.llm_orchestration.supported_providers import is_provider_supported
 
             is_nominal = (
-                bool(request.user_input.feature)
+                request.user_input.feature in {"chat", "guidance", "natal", "horoscope_daily"}
                 and not is_legacy_compatibility
                 and not request.flags.test_fallback_active
             )
@@ -1276,6 +1288,7 @@ class LLMGateway:
             output_schema=output_schema,
             output_schema_version=schema_version,
             input_schema=config.input_schema,
+            required_prompt_placeholders=config.required_prompt_placeholders,
             interaction_mode=interaction_mode,
             user_question_policy=user_question_policy,
             overrides_applied=overrides_applied,
@@ -1679,6 +1692,7 @@ class LLMGateway:
                         input_schema=plan.input_schema,
                         interaction_mode=plan.interaction_mode,
                         user_question_policy=plan.user_question_policy,
+                        required_prompt_placeholders=plan.required_prompt_placeholders,
                     )
             except Exception as e:
                 logger.error("gateway_step_failed:resolve_plan use_case=%s error=%s", use_case, e)

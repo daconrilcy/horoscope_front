@@ -63,7 +63,7 @@ def setup_convergence_data(db):
         elif uc_key == "guidance_daily":
             subfeat = "daily"
         elif uc_key == "natal_interpretation":
-            subfeat = "natal_interpretation"
+            subfeat = "interpretation"
         else:
             subfeat = uc_key
 
@@ -152,7 +152,7 @@ async def test_natal_convergence_to_assembly(db):
 
     assert plan.model_source == "assembly"
     assert plan.feature == "natal"
-    assert plan.subfeature == "natal_interpretation"
+    assert plan.subfeature == "interpretation"
     assert plan.output_schema is not None
 
 

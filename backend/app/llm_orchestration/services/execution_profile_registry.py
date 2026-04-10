@@ -37,9 +37,11 @@ class ExecutionProfileRegistry:
         feature + subfeature + plan -> feature + subfeature -> feature
         """
         # Story 66.23: Hardened taxonomy resolution
+        # AC4, AC10: Reject legacy nominal keys before any normalization
+        assert_nominal_feature_allowed(feature)
+
         feature = normalize_feature(feature)
         subfeature = normalize_subfeature(feature, subfeature)
-        assert_nominal_feature_allowed(feature)
 
         cache_key = f"{feature}:{subfeature}:{plan}"
 

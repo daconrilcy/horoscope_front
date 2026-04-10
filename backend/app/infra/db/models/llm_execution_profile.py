@@ -65,21 +65,64 @@ class LlmExecutionProfileModel(Base):
     def validate_status_change(self, key: str, value: PromptStatus) -> PromptStatus:
         """
         AC3.1: Enforce provider support when transition to PUBLISHED.
+        AC5: Reject legacy nominal features on publication.
         """
         if value == PromptStatus.PUBLISHED:
+            from app.llm_orchestration.feature_taxonomy import (
+                NATAL_CANONICAL_FEATURE,
+                assert_nominal_feature_allowed,
+                is_natal_subfeature_canonical,
+            )
             from app.llm_orchestration.services.observability_service import log_governance_event
             from app.llm_orchestration.supported_providers import is_provider_supported
 
-            if not is_provider_supported(self.provider):
-                log_governance_event(
-                    event_type="publish_rejected",
-                    provider=self.provider,
-                    feature=self.feature,
-                    is_nominal=True,
-                )
-                raise ValueError(
-                    f"ExecutionProfile cannot be published: Provider '{self.provider}' is not nominally supported."
-                )
+            # AC2, AC5: Validate feature taxonomy
+            if self.feature:
+                assert_nominal_feature_allowed(self.feature)
+
+                # AC6: Ensure subfeature is canonical if feature is natal
+                if self.feature == NATAL_CANONICAL_FEATURE and self.subfeature:
+                    if not is_natal_subfeature_canonical(self.subfeature):
+                        raise ValueError(
+                            f"Subfeature '{self.subfeature}' is not canonical "
+                            f"for feature '{self.feature}'."
+                        )
+
+            # AC3.1, AC5: Enforce provider support when transition to PUBLISHED.
+            # We strictly reject on nominal paths, but tolerate on non-nominal/test paths.
+            CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
+            is_nominal = self.feature in CANONICAL_FAMILIES
+            provider_to_check = self.provider or "openai"
+
+            if not is_provider_supported(provider_to_check):
+                if is_nominal:
+                    log_governance_event(
+                        event_type="publish_rejected",
+                        provider=provider_to_check,
+                        feature=self.feature,
+                        is_nominal=True,
+                    )
+                    raise ValueError(
+                        f"ExecutionProfile cannot be published for nominal feature "
+                        f"'{self.feature}': Provider '{provider_to_check}' "
+                        "is not nominally supported."
+                    )
+                else:
+                    # Non-nominal: we allow but log a warning (AC5)
+                    log_governance_event(
+                        event_type="non_nominal_publish_tolerated",
+                        provider=provider_to_check,
+                        feature=self.feature,
+                        is_nominal=False,
+                    )
+                    import logging
+
+                    logging.getLogger(__name__).warning(
+                        "ExecutionProfile published with non-nominal provider '%s' "
+                        "for feature '%s'. This will trigger fallback at runtime.",
+                        provider_to_check,
+                        self.feature,
+                    )
         return value
 
     # Relationship for fallback

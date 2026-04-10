@@ -114,12 +114,15 @@ class AssemblyRegistry:
     ) -> Optional[PromptAssemblyConfigModel]:
         """
         Resolve the best matching active (PUBLISHED) assembly config using waterfall logic.
-        Waterfall: (feature, subfeature, plan) -> (feature, subfeature, None) -> (feature, None, None)
+        Waterfall: (feature, subfeature, plan) -> (feature, subfeature, None)
+                   -> (feature, None, None)
         """
         # Story 66.23: Hardened taxonomy resolution
+        # AC4, AC10: Reject legacy nominal keys before any normalization
+        assert_nominal_feature_allowed(feature)
+
         feature = normalize_feature(feature)
         subfeature = normalize_subfeature(feature, subfeature)
-        assert_nominal_feature_allowed(feature)
 
         cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
         now = time.time()
@@ -178,9 +181,11 @@ class AssemblyRegistry:
         (Story 66.20 Medium Issue Fix)
         """
         # Story 66.23: Hardened taxonomy resolution
+        # AC4, AC10: Reject legacy nominal keys before any normalization
+        assert_nominal_feature_allowed(feature)
+
         feature = normalize_feature(feature)
         subfeature = normalize_subfeature(feature, subfeature)
-        assert_nominal_feature_allowed(feature)
 
         cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
         now = time.time()

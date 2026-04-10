@@ -132,7 +132,8 @@ class AssemblyAdminService:
             if profile_provider:
                 provider = profile_provider
         else:
-            # Check if provider is explicitly in execution_config (even if not in current admin_models)
+            # Check if provider is explicitly in execution_config
+            # (even if not in current admin_models)
             provider = config.execution_config.get("provider", "openai")
 
         if not is_provider_supported(provider):
@@ -161,6 +162,11 @@ class AssemblyAdminService:
         config = await self.get_config(config_id)
         if not config:
             raise ValueError(f"Config {config_id} not found")
+
+        # Story 66.23: Reject legacy nominal features on publication (AC5)
+        from app.llm_orchestration.feature_taxonomy import assert_nominal_feature_allowed
+
+        assert_nominal_feature_allowed(config.feature)
 
         # Story 66.22 AC3: Validate provider support on publication
         await self._validate_provider_support(config)

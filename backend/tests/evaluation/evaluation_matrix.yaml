@@ -19,12 +19,12 @@ matrix:
     context_quality: minimal
   - feature: natal
     plan: premium
-    subfeature: natal_interpretation
+    subfeature: interpretation
     persona: ample
     context_quality: full
   - feature: natal
     plan: free
-    subfeature: natal_interpretation
+    subfeature: interpretation
     persona: synthetique
     context_quality: minimal
   - feature: horoscope_daily

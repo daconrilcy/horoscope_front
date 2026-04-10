@@ -14,7 +14,7 @@ from sqlalchemy import (
     String,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm_persona import LlmPersonaModel
@@ -66,6 +66,31 @@ class PromptAssemblyConfigModel(Base):
     created_by: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @validates("status")
+    def validate_status_change(self, key: str, value: PromptStatus) -> PromptStatus:
+        """
+        AC5: Reject legacy nominal features on publication.
+        """
+        if value == PromptStatus.PUBLISHED:
+            from app.llm_orchestration.feature_taxonomy import (
+                NATAL_CANONICAL_FEATURE,
+                assert_nominal_feature_allowed,
+                is_natal_subfeature_canonical,
+            )
+
+            # AC2, AC5: Validate feature taxonomy
+            if self.feature:
+                assert_nominal_feature_allowed(self.feature)
+
+                # AC6: Ensure subfeature is canonical if feature is natal
+                if self.feature == NATAL_CANONICAL_FEATURE and self.subfeature:
+                    if not is_natal_subfeature_canonical(self.subfeature):
+                        raise ValueError(
+                            f"Subfeature '{self.subfeature}' is not canonical "
+                            f"for feature '{self.feature}'."
+                        )
+        return value
 
     # Relationships
     feature_template: Mapped[LlmPromptVersionModel] = relationship(

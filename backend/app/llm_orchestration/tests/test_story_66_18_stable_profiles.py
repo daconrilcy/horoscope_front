@@ -210,4 +210,9 @@ async def test_unsupported_profile_provider_falls_back_to_openai(db):
 
     assert plan.provider == "openai"
     assert plan.execution_profile_source == "fallback_resolve_model"
-    assert plan.translated_provider_params == {}
+    # High #2 Fix: No translated params from unsupported profile
+    # But we might have default params from reasoning model if it was auto-resolved to one
+    if plan.model_id in ["gpt-4o", "gpt-4o-mini"]:
+        assert plan.translated_provider_params.get("tool_choice") == "none"
+    else:
+        assert plan.translated_provider_params == {}

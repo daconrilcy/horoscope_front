@@ -90,7 +90,8 @@ class PromptRenderer:
                     # Story 66.13: If it was required in legacy list, we must fail even if stripped
                     if p_name in required_variables:
                         raise PromptRenderError(
-                            f"Unauthorized required placeholder '{{{{{p_name}}}}}' for feature '{effective_feature}'",
+                            f"Unauthorized required placeholder '{{{{{p_name}}}}}' "
+                            f"for feature '{effective_feature}'",
                             details={"placeholder": p_name, "feature": effective_feature},
                         )
                     continue
@@ -101,7 +102,7 @@ class PromptRenderer:
                         effective_vars[p_name] = ""
                     continue
 
-            if p_name in variables:
+            if p_name in variables and variables[p_name] is not None:
                 continue
 
             # If it's universal but not provided, treat as optional empty for safety
@@ -122,7 +123,8 @@ class PromptRenderer:
                     )
                 else:
                     logger.error(
-                        "placeholder_not_resolved placeholder=%s feature=%s classification=required",
+                        "placeholder_not_resolved placeholder=%s feature=%s "
+                        "classification=required",
                         p_name,
                         feature,
                     )

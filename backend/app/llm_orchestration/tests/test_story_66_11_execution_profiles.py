@@ -99,7 +99,7 @@ async def test_execution_profile_assembly_ref(db):
 
     assembly = PromptAssemblyConfigModel(
         feature="feat_ref",
-        plan="standard",
+        plan="free",
         locale="fr-FR",
         feature_template_ref=fv.id,
         execution_profile_ref=profile.id,  # Explicit ref
@@ -114,7 +114,7 @@ async def test_execution_profile_assembly_ref(db):
 
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="chat", feature="feat_ref", plan="standard"),
+        user_input=ExecutionUserInput(use_case="test_ref", feature="feat_ref", plan="free"),
         request_id="req3",
         trace_id="tr3",
     )

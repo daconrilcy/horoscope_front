@@ -130,23 +130,23 @@ def seed_66_20_convergence():
             ("guidance", "contextual", "free", "guidance_contextual", "standard"),
             ("guidance", "contextual", "premium", "guidance_contextual", "premium"),
             # NATAL
-            ("natal", "natal_interpretation", "free", "natal_long_free", "standard"),
-            ("natal", "natal_interpretation", "premium", "natal_interpretation", "premium"),
+            ("natal", "interpretation", "free", "natal_long_free", "standard"),
+            ("natal", "interpretation", "premium", "natal_interpretation", "premium"),
             # Added other natal subfeatures from catalog to be safe
-            ("natal", "natal_psy_profile", "premium", "natal_psy_profile", "premium"),
-            ("natal", "natal_shadow_integration", "premium", "natal_shadow_integration", "premium"),
+            ("natal", "psy_profile", "premium", "natal_psy_profile", "premium"),
+            ("natal", "shadow_integration", "premium", "natal_shadow_integration", "premium"),
             (
                 "natal",
-                "natal_leadership_workstyle",
+                "leadership_workstyle",
                 "premium",
                 "natal_leadership_workstyle",
                 "premium",
             ),
-            ("natal", "natal_creativity_joy", "premium", "natal_creativity_joy", "premium"),
-            ("natal", "natal_relationship_style", "premium", "natal_relationship_style", "premium"),
-            ("natal", "natal_community_networks", "premium", "natal_community_networks", "premium"),
-            ("natal", "natal_values_security", "premium", "natal_values_security", "premium"),
-            ("natal", "natal_evolution_path", "premium", "natal_evolution_path", "premium"),
+            ("natal", "creativity_joy", "premium", "natal_creativity_joy", "premium"),
+            ("natal", "relationship_style", "premium", "natal_relationship_style", "premium"),
+            ("natal", "community_networks", "premium", "natal_community_networks", "premium"),
+            ("natal", "values_security", "premium", "natal_values_security", "premium"),
+            ("natal", "evolution_path", "premium", "natal_evolution_path", "premium"),
         ]
 
         for f, sf, p, uc_key, b_prof_key in target_map:

@@ -33,7 +33,7 @@ def setup_budget_assembly(db):
     assembly = PromptAssemblyConfigModel(
         id=uuid.uuid4(),
         feature="test_budget",
-        plan="standard",
+        plan="free",
         locale="fr-FR",
         feature_template_ref=fv.id,
         length_budget=budget,
@@ -51,7 +51,7 @@ async def test_length_budget_injection(db, setup_budget_assembly):
     """Test Story 66.12: Length budget is injected into developer prompt."""
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="chat", feature="test_budget", plan="standard"),
+        user_input=ExecutionUserInput(use_case="chat", feature="test_budget", plan="free"),
         request_id="req-budget",
         trace_id="tr-budget",
     )

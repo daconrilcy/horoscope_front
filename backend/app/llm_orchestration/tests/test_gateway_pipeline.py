@@ -40,7 +40,7 @@ async def test_pipeline_nominal_flow(db):
     db.add(fv)
     asm = PromptAssemblyConfigModel(
         feature="natal",
-        subfeature="natal_interpretation",
+        subfeature="interpretation",
         plan="free",
         locale="fr-FR",
         feature_template_ref=fv.id,
@@ -48,6 +48,7 @@ async def test_pipeline_nominal_flow(db):
         status=PromptStatus.PUBLISHED,
         created_by="t",
     )
+
     db.add(asm)
     db.commit()
 
@@ -99,7 +100,7 @@ async def test_pipeline_repair_flow(db):
     db.add(fv)
     asm = PromptAssemblyConfigModel(
         feature="natal",
-        subfeature="natal_interpretation",
+        subfeature="interpretation",
         plan="free",
         locale="fr-FR",
         feature_template_ref=fv.id,
@@ -107,6 +108,7 @@ async def test_pipeline_repair_flow(db):
         status=PromptStatus.PUBLISHED,
         created_by="t",
     )
+
     db.add(asm)
     db.commit()
 

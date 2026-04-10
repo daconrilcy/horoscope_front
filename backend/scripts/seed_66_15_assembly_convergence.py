@@ -138,13 +138,13 @@ def seed_66_15_convergence():
             # NATAL
             (
                 "natal",
-                "natal_interpretation",
+                "interpretation",
                 "premium",
                 "natal_interpretation",
                 profiles["premium"].id,
             ),
-            ("natal", "natal_interpretation", "free", "natal_long_free", profiles["standard"].id),
-            ("natal", "natal_short", "free", "natal_interpretation_short", profiles["standard"].id),
+            ("natal", "interpretation", "free", "natal_long_free", profiles["standard"].id),
+            ("natal", "short", "free", "natal_interpretation_short", profiles["standard"].id),
             # GUIDANCE
             ("guidance", "daily", "free", "guidance_daily", profiles["standard"].id),
             ("guidance", "daily", "premium", "guidance_daily", profiles["premium"].id),

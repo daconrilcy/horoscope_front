@@ -175,9 +175,10 @@ class PromptAssemblyTarget(BaseModel):
 
     @model_validator(mode="after")
     def normalize_taxonomy(self) -> "PromptAssemblyTarget":
+        # AC2/AC5: Rejeter l'utilisation nominale des anciennes clés AVANT normalisation
+        assert_nominal_feature_allowed(self.feature)
         self.feature = normalize_feature(self.feature)
         self.subfeature = normalize_subfeature(self.feature, self.subfeature)
-        assert_nominal_feature_allowed(self.feature)
         return self
 
 
@@ -248,9 +249,10 @@ class PromptAssemblyConfig(BaseModel):
 
     @model_validator(mode="after")
     def normalize_taxonomy(self) -> "PromptAssemblyConfig":
+        # AC2/AC5: Rejeter l'utilisation nominale des anciennes clés AVANT normalisation
+        assert_nominal_feature_allowed(self.feature)
         self.feature = normalize_feature(self.feature)
         self.subfeature = normalize_subfeature(self.feature, self.subfeature)
-        assert_nominal_feature_allowed(self.feature)
         return self
 
     model_config = ConfigDict(from_attributes=True)
@@ -386,14 +388,16 @@ class LlmExecutionProfileCreate(BaseModel):
     @model_validator(mode="after")
     def normalize_taxonomy(self) -> "LlmExecutionProfileCreate":
         if self.feature:
+            # AC2/AC5: Rejeter l'utilisation nominale des anciennes clés AVANT normalisation
+            assert_nominal_feature_allowed(self.feature)
             self.feature = normalize_feature(self.feature)
             self.subfeature = normalize_subfeature(self.feature, self.subfeature)
-            assert_nominal_feature_allowed(self.feature)
         return self
 
     @model_validator(mode="after")
     def validate_provider(self) -> "LlmExecutionProfileCreate":
         from app.llm_orchestration.supported_providers import is_provider_supported
+
         if not is_provider_supported(self.provider):
             raise ValueError(
                 f"Provider '{self.provider}' is not nominally supported by the platform."

@@ -252,6 +252,7 @@ class ResolvedExecutionPlan(BaseModel):
     output_schema: Optional[Dict[str, Any]] = None
     output_schema_version: str = "v1"
     input_schema: Optional[Dict[str, Any]] = None
+    required_prompt_placeholders: List[str] = Field(default_factory=list)
 
     # Strategy & Strategy resolution
     interaction_mode: Literal["structured", "chat"]

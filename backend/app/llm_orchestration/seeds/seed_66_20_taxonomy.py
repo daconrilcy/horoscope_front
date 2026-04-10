@@ -17,7 +17,7 @@ def seed_66_20_taxonomy(db: Session) -> None:
     """Finalize canonical taxonomy for chat, guidance and natal (Story 66.20)."""
 
     # 1. Get default persona
-    stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled == True)
+    stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled)
     persona = db.execute(stmt_persona).scalars().first()
     if not persona:
         logger.warning("seed_66_20_taxonomy: no enabled persona found")
@@ -40,16 +40,16 @@ def seed_66_20_taxonomy(db: Session) -> None:
         ("guidance", "event", "free", "event_guidance"),
         ("guidance", "event", "premium", "event_guidance"),
         # NATAL
-        ("natal", "natal_interpretation", "free", "natal_interpretation_short"),
-        ("natal", "natal_interpretation", "premium", "natal_interpretation"),
-        ("natal", "natal_psy_profile", "premium", "natal_psy_profile"),
-        ("natal", "natal_shadow_integration", "premium", "natal_shadow_integration"),
-        ("natal", "natal_leadership_workstyle", "premium", "natal_leadership_workstyle"),
-        ("natal", "natal_creativity_joy", "premium", "natal_creativity_joy"),
-        ("natal", "natal_relationship_style", "premium", "natal_relationship_style"),
-        ("natal", "natal_community_networks", "premium", "natal_community_networks"),
-        ("natal", "natal_values_security", "premium", "natal_values_security"),
-        ("natal", "natal_evolution_path", "premium", "natal_evolution_path"),
+        ("natal", "interpretation", "free", "natal_interpretation_short"),
+        ("natal", "interpretation", "premium", "natal_interpretation"),
+        ("natal", "psy_profile", "premium", "natal_psy_profile"),
+        ("natal", "shadow_integration", "premium", "natal_shadow_integration"),
+        ("natal", "leadership_workstyle", "premium", "natal_leadership_workstyle"),
+        ("natal", "creativity_joy", "premium", "natal_creativity_joy"),
+        ("natal", "relationship_style", "premium", "natal_relationship_style"),
+        ("natal", "community_networks", "premium", "natal_community_networks"),
+        ("natal", "values_security", "premium", "natal_values_security"),
+        ("natal", "evolution_path", "premium", "natal_evolution_path"),
     ]
 
     for f, sf, p, t_key in target_assemblies:

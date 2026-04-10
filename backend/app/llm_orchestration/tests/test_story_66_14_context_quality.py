@@ -6,7 +6,10 @@ from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 
 def test_context_quality_conditional_blocks():
     """Test Story 66.14: Conditional blocks resolution based on context_quality."""
-    template = "Base. {{#context_quality:minimal}}MINIMAL CONTENT{{/context_quality}}{{#context_quality:full}}FULL CONTENT{{/context_quality}}"
+    template = (
+        "Base. {{#context_quality:minimal}}MINIMAL CONTENT{{/context_quality}}"
+        "{{#context_quality:full}}FULL CONTENT{{/context_quality}}"
+    )
 
     # 1. Test minimal
     rendered = PromptRenderer.render(template, {"context_quality": "minimal"})
@@ -57,11 +60,16 @@ def test_context_quality_injector_no_duplicate():
 async def test_gateway_context_quality_propagation(db):
     """Test Story 66.14: Context quality propagation in gateway."""
     from app.llm_orchestration.gateway import LLMGateway
-    from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
+    from app.llm_orchestration.models import (
+        ExecutionContext,
+        ExecutionUserInput,
+        LLMExecutionRequest,
+    )
 
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="chat", feature="test_cq"),
+        user_input=ExecutionUserInput(use_case="natal_long_free", feature="natal_test"),
+        context=ExecutionContext(chart_json='{"planets": []}'),
         request_id="req-cq",
         trace_id="tr-cq",
     )
