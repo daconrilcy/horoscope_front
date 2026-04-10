@@ -98,6 +98,28 @@ flowchart TD
     AC --> AD["Réponse finale"]
 ```
 
+## Gouvernance des Chemins d'Exécution
+
+Depuis la story 66.24, chaque chemin d'exécution LLM est classé par un attribut `pipeline_kind` qui définit sa maturité de gouvernance et de déploiement.
+
+### Pipeline Kind : Nominal Canonical (`nominal_canonical`)
+
+Les features marquées `nominal_canonical` sont pleinement intégrées au cycle de vie standard du gateway. Elles bénéficient de :
+- L'injection automatique des blocs de qualité de contexte (`ContextQualityInjector`).
+- La résolution obligatoire par Assembly (`PromptAssemblyConfigModel`).
+- L'application stricte des Length Budgets et des Execution Profiles.
+- Un reporting de gating complet dans les rapports d'évaluation.
+
+**Features concernées :** `chat`, `guidance`, `natal`, `horoscope_daily`.
+
+### Pipeline Kind : Transitional Governance (`transitional_governance`)
+
+Les features marquées `transitional_governance` sont en cours de convergence. Elles utilisent déjà le pipeline technique du gateway (assembly, renderer) mais conservent des particularités (ex: stubs temporaires dans le gateway, validation métier externe additionnelle).
+- Elles sont explicitement suivies dans la matrice d'évaluation pour éviter toute régression durant leur phase de transition.
+- Elles ne sont pas encore promues au rang de "familles nominales" fermées dans le code de routage du gateway.
+
+**Features concernées :** `daily_prediction`.
+
 ## Stories 66.9 à 66.23
 
 | Story | Apport canonique | Impact dans le processus |
@@ -117,6 +139,7 @@ flowchart TD
 | `66.21` | Gouvernance des fallbacks LLM | matrice de statut, télémétrie `llm_gateway_fallback_usage_total`, blocage des fallbacks à retirer sur chemins nominaux, bornes explicites des compatibilités legacy/test |
 | `66.22` | Verrouillage des providers supportés | registre canonique `NOMINAL_SUPPORTED_PROVIDERS`, blocage des providers non supportés sur chemins nominaux, fallback OpenAI borné aux chemins non nominaux |
 | `66.23` | Normalisation taxonomie natal | `feature="natal"` comme unique identifiant canonique, rejet nominal de `feature="natal_interpretation"` en admin/publication/registries, taxonomie des subfeatures natal non préfixée (`interpretation`, `short`, `full`, etc.), compatibilité alias bornée et télémétrée via `legacy_feature_alias_used` |
+| `66.24` | Extension matrice d'évaluation | extension aux chemins `horoscope_daily` et `daily_prediction`, introduction du discriminant structurel `pipeline_kind` (nominal vs transitional) |
 
 ## Couverture réelle par famille
 

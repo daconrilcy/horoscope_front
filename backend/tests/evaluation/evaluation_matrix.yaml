@@ -3,35 +3,59 @@ matrix:
     plan: premium
     persona: ample
     context_quality: full
+    pipeline_kind: nominal_canonical
   - feature: chat
     plan: free
     persona: synthetique
     context_quality: partial
+    pipeline_kind: nominal_canonical
   - feature: guidance
     plan: premium
     subfeature: daily
     persona: ample
     context_quality: full
+    pipeline_kind: nominal_canonical
   - feature: guidance
     plan: free
     subfeature: daily
     persona: synthetique
     context_quality: minimal
+    pipeline_kind: nominal_canonical
   - feature: natal
     plan: premium
     subfeature: interpretation
     persona: ample
     context_quality: full
+    pipeline_kind: nominal_canonical
   - feature: natal
     plan: free
     subfeature: interpretation
     persona: synthetique
     context_quality: minimal
+    pipeline_kind: nominal_canonical
   - feature: horoscope_daily
     plan: premium
     persona: ample
     context_quality: full
+    pipeline_kind: nominal_canonical
   - feature: horoscope_daily
     plan: free
     persona: synthetique
     context_quality: partial
+    pipeline_kind: nominal_canonical
+  # Story 66.24: Paths with transitional governance
+  - feature: daily_prediction
+    plan: premium
+    persona: ample
+    context_quality: full
+    pipeline_kind: transitional_governance
+  - feature: daily_prediction
+    plan: free
+    persona: synthetique
+    context_quality: minimal
+    pipeline_kind: transitional_governance
+  - feature: horoscope_daily
+    plan: premium
+    persona: ample
+    context_quality: minimal
+    pipeline_kind: nominal_canonical

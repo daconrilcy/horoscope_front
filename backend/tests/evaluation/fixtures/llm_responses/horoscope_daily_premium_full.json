@@ -1,0 +1,19 @@
+{
+  "daily_synthesis": "Une journée marquée par l'harmonie. Les astres vous soutiennent dans vos projets personnels. Votre créativité est à son comble. Profitez de ce climat serein pour avancer. Les relations sociales sont favorisées. Écoutez votre intuition profonde. C'est le moment de semer les graines de votre futur. La persévérance paiera demain. Restez ouvert aux opportunités inattendues. Une belle énergie vous anime aujourd'hui.",
+  "astro_events_intro": "Le passage de Jupiter renforce votre confiance.",
+  "time_window_narratives": {
+    "nuit": "Sommeil réparateur et rêves lucides.",
+    "matin": "Éveil dynamique et idées claires.",
+    "apres_midi": "Productivité maximale au travail.",
+    "soiree": "Détente en famille ou entre amis."
+  },
+  "turning_point_narratives": [
+    "Un appel important vers 14h.",
+    "Une rencontre fortuite en fin de journée."
+  ],
+  "main_turning_point_narrative": "La conjonction Soleil-Jupiter vous offre un élan de chance exceptionnel.",
+  "daily_advice": {
+    "advice": "Prenez du temps pour vous ressourcer.",
+    "emphasis": "Concentrez-vous sur vos objectifs long terme."
+  }
+}

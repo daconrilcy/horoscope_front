@@ -89,6 +89,11 @@ class AssemblyRegistry:
                 "description": config.persona.description,
                 "tone": config.persona.tone,
                 "verbosity": config.persona.verbosity,
+                "style_markers": config.persona.style_markers,
+                "boundaries": config.persona.boundaries,
+                "allowed_topics": config.persona.allowed_topics,
+                "disallowed_topics": config.persona.disallowed_topics,
+                "formatting": config.persona.formatting,
             }
         return data
 

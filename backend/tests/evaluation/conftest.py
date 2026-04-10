@@ -50,17 +50,25 @@ def mock_context_by_quality():
             "birth_place": "Paris",
             "last_user_msg": "Hello",
             "natal_data": {"planets": {"sun": "aries"}},
-            "chart_json": '{"planets": {}}',
+            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
             "situation": "recherche d'emploi",
             "objective": "comprendre mon avenir",
+            "today_date": "2026-04-11",
+            "astro_context": {"transit": "Jupiter conjunct Sun"},
+            "natal_interpretation": "Un profil dynamique et entreprenant.",
         },
         "partial": {
             "locale": "fr-FR",
             "birth_date": "1990-01-01",
             "last_user_msg": "Hello",
             "situation": "recherche d'emploi",
+            "today_date": "2026-04-11",
+            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
         },
-        "minimal": {"locale": "fr-FR"},
+        "minimal": {
+            "locale": "fr-FR",
+            "today_date": "2026-04-11",
+        },
     }
 
 

@@ -4,17 +4,24 @@ from pathlib import Path
 
 
 def generate_markdown_report(results: list[dict]) -> str:
-    """Generates a markdown table from evaluation results (Story 66.16 Matrix fix)."""
+    """Generates a markdown table from evaluation results (Story 66.24 Matrix)."""
     header = (
-        "| Combination | Placeholders | CQ | Persona | Contract | Length | Diff. Plan | Status |\n"
+        "| Combination | Pipeline | Placeholders | CQ | Persona | Contract | Length | Diff. Plan | Status |\n"
     )
-    separator = "|---|---|---|---|---|---|---|---|\n"
+    separator = "|---|---|---|---|---|---|---|---|---|\n"
     rows = []
 
     def get_status_icon(val):
         if val == "N/A":
             return "➖"
         return "✅" if val else "❌"
+
+    def get_pipeline_label(val):
+        if val == "nominal_canonical":
+            return "🏛️ nominal"
+        if val == "transitional_governance":
+            return "🚧 trans."
+        return f"❓ {val}"
 
     for r in results:
         # Status logic: all must be true or N/A
@@ -32,6 +39,7 @@ def generate_markdown_report(results: list[dict]) -> str:
 
         rows.append(
             f"| {r['case']} | "
+            f"{get_pipeline_label(r.get('pipeline_kind'))} | "
             f"{get_status_icon(r.get('placeholders'))} | "
             f"{get_status_icon(r.get('context_quality'))} | "
             f"{get_status_icon(r.get('persona'))} | "
@@ -49,6 +57,7 @@ if __name__ == "__main__":
     dummy_results = [
         {
             "case": "natal/premium/ample/full",
+            "pipeline_kind": "nominal_canonical",
             "placeholders": True,
             "context_quality": True,
             "persona": True,
@@ -57,7 +66,8 @@ if __name__ == "__main__":
             "differentiation_plan": True,
         },
         {
-            "case": "chat/free/synthetique/minimal",
+            "case": "daily_prediction/free/synthetique/minimal",
+            "pipeline_kind": "transitional_governance",
             "placeholders": True,
             "context_quality": True,
             "persona": True,
