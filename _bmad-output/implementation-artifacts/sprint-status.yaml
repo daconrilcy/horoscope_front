@@ -607,3 +607,4 @@ development_status:
   66-19-migrer-horoscope-daily-daily-prediction-gateway-canonique: done
   66-20-achevement-obligatoire-convergence-canonique: done
   66-21-gouvernance-et-extinction-des-fallbacks-llm-encore-actifs: done
+  66-22-verrouillage-des-providers-supportes-entre-admin-runtime: done

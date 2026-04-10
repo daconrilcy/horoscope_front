@@ -117,6 +117,31 @@ class AssemblyAdminService:
         if not config:
             raise ValueError(f"Config {config_id} not found")
 
+        # Story 66.22 AC3: Validate provider support on publication
+        from app.llm_orchestration.supported_providers import is_provider_supported
+        provider = "openai"  # Default
+
+        if config.execution_profile_ref:
+            from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+            stmt_p = select(LlmExecutionProfileModel.provider).where(
+                LlmExecutionProfileModel.id == config.execution_profile_ref
+            )
+            res_p = await self._execute(stmt_p)
+            profile_provider = res_p.scalar_one_or_none()
+            if profile_provider:
+                provider = profile_provider
+        else:
+            # Check if provider is explicitly in execution_config (even if not in current admin_models)
+            provider = config.execution_config.get("provider", "openai")
+
+        if not is_provider_supported(provider):
+            logger.error(
+                "assembly_publication_rejected_unsupported_provider config_id=%s provider=%s",
+                str(config_id),
+                provider,
+            )
+            raise ValueError(f"Publication rejected: Provider '{provider}' is not nominally supported.")
+
         invalid = validate_placeholders(config.feature_template.developer_prompt, config.feature)
         if invalid:
             raise ValueError(f"Invalid placeholders in feature template: {', '.join(invalid)}")

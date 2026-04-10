@@ -116,6 +116,7 @@ async def log_call(
         template_source = None
         prompt_version_id = None
         persona_id = None
+        provider = "openai"
         model = "unknown"
         latency_ms = 0
         tokens_in = 0
@@ -147,6 +148,7 @@ async def log_call(
                 db, LlmPromptVersionModel, result.meta.prompt_version_id
             )
             persona_id = _resolve_existing_fk_uuid(db, LlmPersonaModel, result.meta.persona_id)
+            provider = result.meta.provider or "openai"
             model = result.meta.model or "unknown"
             latency_ms = int(result.meta.latency_ms or 0)
             tokens_in = result.usage.input_tokens
@@ -167,6 +169,7 @@ async def log_call(
                 template_source=template_source,
                 prompt_version_id=prompt_version_id,
                 persona_id=persona_id,
+                provider=provider,
                 model=model,
                 latency_ms=latency_ms,
                 tokens_in=tokens_in,

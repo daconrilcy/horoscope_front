@@ -1014,22 +1014,41 @@ class LLMGateway:
                 provider = "openai"  # High #2 Fix: Reset to supported provider
                 translated_params = {}
 
-            if provider == "anthropic":
-                FallbackGovernanceRegistry.track_fallback(
-                    FallbackType.PROVIDER_OPENAI,
-                    call_site=f"provider_not_supported:{provider}",
-                    feature=request.user_input.feature,
-                )
-                logger.warning(
-                    "gateway_provider_not_supported_yet provider=%s model=%s. "
-                    "Falling back to resolve_model/openai.",
-                    provider,
-                    model_id,
-                )
-                model_id = resolve_model(use_case, fallback_model=config.model)
-                profile_source = "fallback_resolve_model"
-                provider = "openai"
-                translated_params = {}
+            # Story 66.22 AC4/AC5: Enforce supported providers on nominal paths
+            from app.llm_orchestration.supported_providers import is_provider_supported
+            is_nominal = (
+                bool(request.user_input.feature)
+                and not is_legacy_compatibility
+                and not request.flags.test_fallback_active
+            )
+
+            if not is_provider_supported(provider):
+                if is_nominal:
+                    # AC4: Explicit failure on nominal path
+                    logger.error(
+                        "gateway_nominal_provider_not_supported provider=%s use_case=%s feature=%s",
+                        provider,
+                        use_case,
+                        request.user_input.feature,
+                    )
+                    raise ValueError(f"Provider '{provider}' is not nominally supported by the platform.")
+                else:
+                    # AC5: Fallback on non-nominal/test paths
+                    FallbackGovernanceRegistry.track_fallback(
+                        FallbackType.PROVIDER_OPENAI,
+                        call_site=f"provider_not_supported:{provider}",
+                        feature=request.user_input.feature,
+                    )
+                    logger.warning(
+                        "gateway_non_nominal_provider_fallback provider=%s model=%s. "
+                        "Falling back to resolve_model/openai.",
+                        provider,
+                        model_id,
+                    )
+                    model_id = resolve_model(use_case, fallback_model=config.model)
+                    profile_source = "fallback_resolve_model"
+                    provider = "openai"
+                    translated_params = {}
 
             # If we didn't get verbosity_instruction yet, get it now
             if not verbosity_instruction:
@@ -1633,7 +1652,10 @@ class LLMGateway:
 
             if not is_repair_call:
                 logger.info(
-                    "llm_gateway_start use_case=%s request_id=%s", use_case, request.request_id
+                    "llm_gateway_start use_case=%s provider=%s request_id=%s",
+                    use_case,
+                    plan.provider,
+                    request.request_id,
                 )
 
             # Stage 2: Build Messages
@@ -1693,7 +1715,8 @@ class LLMGateway:
                     result=final_result,
                 )
                 increment_counter(
-                    "llm_gateway_requests_total", labels={"use_case": use_case, "status": "success"}
+                    "llm_gateway_requests_total",
+                    labels={"use_case": use_case, "provider": plan.provider, "status": "success"},
                 )
 
             return final_result
@@ -1708,5 +1731,13 @@ class LLMGateway:
                     user_input=request.user_input.model_dump(),
                     result=None,
                     error=e,
+                )
+                # Story 66.22 AC6: Error metrics with provider dimension
+                provider_label = "unknown"
+                if "plan" in locals() and plan:
+                    provider_label = plan.provider
+                increment_counter(
+                    "llm_gateway_requests_total",
+                    labels={"use_case": use_case, "provider": provider_label, "status": "error"},
                 )
             raise

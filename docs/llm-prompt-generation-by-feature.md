@@ -1,6 +1,6 @@
 # Génération des Prompts LLM par Feature
 
-Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.20.
+Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.21.
 
 Objectifs :
 
@@ -20,7 +20,7 @@ Le document couvre :
 - la gestion des placeholders ;
 - l'adaptation à `context_quality` ;
 - la traduction des profils internes stables vers les paramètres provider ;
-- les fallbacks de compatibilité encore actifs.
+- la gouvernance des fallbacks de compatibilité encore actifs.
 
 Il décrit le fonctionnement réel du backend autour de :
 
@@ -63,7 +63,7 @@ flowchart TD
 
     G --> H{"Assembly explicite<br/>ou active trouvée ?"}
     H -->|Oui| I["Résolution PromptAssemblyConfig"]
-    H -->|Non| J["Fallback use_case-first<br/>legacy uniquement"]
+    H -->|Non| J["Fallback use_case-first<br/>compatibilité non nominale uniquement"]
 
     I --> K["Composition textuelle<br/>feature + subfeature + plan_rules + persona"]
     J --> K2["Prompt legacy / config historique"]
@@ -87,16 +87,18 @@ flowchart TD
     V --> Y["ResolvedExecutionPlan final"]
     W --> Y
 
-    Y --> Z{"Provider runtime supporté ?"}
+    Y --> Z{"Provider supporté nominalement ?"}
     Z -->|Oui: OpenAI| AA["Exécution ResponsesClient"]
-    Z -->|Non| AB["Fallback runtime OpenAI"]
+    Z -->|Non| AC1{"Chemin nominal ?"}
+    AC1 -->|Oui| AD1["Échec explicite (ValueError)"]
+    AC1 -->|Non| AB["Fallback runtime OpenAI"]
     AB --> AA
 
     AA --> AC["Validation / repair / fallback éventuel"]
     AC --> AD["Réponse finale"]
 ```
 
-## Stories 66.9 à 66.20
+## Stories 66.9 à 66.21
 
 | Story | Apport canonique | Impact dans le processus |
 |---|---|---|
@@ -112,6 +114,7 @@ flowchart TD
 | `66.18` | Profils provider stables | encapsulation des paramètres provider derrière des profils internes |
 | `66.19` | Migration narrator daily | convergence de `horoscope_daily` et `daily_prediction` vers `AIEngineAdapter` puis `LLMGateway.execute_request()` |
 | `66.20` | Convergence canonique obligatoire | assemblies nominales obligatoires pour `chat`, `guidance`, `natal`, `horoscope_daily` + normalisation des plans runtime vers `free/premium` |
+| `66.21` | Gouvernance des fallbacks LLM | matrice de statut, télémétrie `llm_gateway_fallback_usage_total`, blocage des fallbacks à retirer sur chemins nominaux, bornes explicites des compatibilités legacy/test |
 
 ## Couverture réelle par famille
 
@@ -128,7 +131,14 @@ Cette section ne décrit que ce qui est explicitement visible dans le code. Elle
 
 ### Synthèse de convergence (Story 66.20)
 
-Depuis la story 66.20, l'usage de la taxonomie `feature/subfeature/plan` est devenu obligatoire pour les familles nominales (`chat`, `guidance`, `natal`, `horoscope_daily`). Le gateway rejette désormais tout appel vers ces familles qui ne résoudrait pas une assembly valide, sauf via le mécanisme explicite de compatibilité `DEPRECATED_USE_CASE_MAPPING`.
+Depuis la story 66.20, l'usage de la taxonomie `feature/subfeature/plan` est devenu obligatoire pour les familles nominales (`chat`, `guidance`, `natal`, `horoscope_daily`). Le gateway rejette désormais tout appel nominal vers ces familles qui ne résoudrait pas une assembly valide.
+
+Depuis la story 66.21, ce rejet est gouverné avec une distinction explicite entre :
+
+- **chemin nominal** : appel canonique produit/runtime ; les fallbacks classés `à retirer` y sont bloquants ;
+- **chemin non nominal** : compatibilité legacy explicitement mappée, test local, ou parcours de migration ; les fallbacks peuvent être tolérés s'ils sont classés et télémétrés.
+
+La redirection via `DEPRECATED_USE_CASE_MAPPING` reste donc autorisée uniquement comme compatibilité déclarée et observable. Elle ne doit pas être confondue avec une résolution nominale `use_case-first`.
 
 Pour ces familles, le plan runtime est d'abord normalisé vers la taxonomie assembly canonique :
 
@@ -136,6 +146,8 @@ Pour ces familles, le plan runtime est d'abord normalisé vers la taxonomie asse
 - `free`, `basic`, `trial`, `none`, `guest`, `unknown` et absence de plan -> `free`
 
 Cette normalisation sert à résoudre l'assembly et le `ExecutionProfile`. Elle ne remplace pas la logique d'accès produit portée en amont par les entitlements.
+
+La convergence 66.20 couvre notamment les assemblies `guidance/contextual/free` et `guidance/contextual/premium`, afin que les parcours de guidance contextuelle aient une résolution canonique pour les plans gratuits et premium.
 
 ### Règle de lecture
 
@@ -336,9 +348,9 @@ Le gateway tente dans cet ordre :
 
 1. configuration assembly explicite si `assembly_config_id` est fourni ;
 2. assembly actif par `feature/subfeature/plan/locale` après normalisation éventuelle du plan runtime vers `free/premium` ;
-3. fallback vers la configuration historique `use_case-first` sur les seuls chemins legacy encore autorisés.
+3. fallback vers la configuration historique `use_case-first` sur les seuls chemins non nominaux encore autorisés.
 
-En pratique, le chemin assembly devient la source canonique dès qu'une famille a migré, mais le fallback legacy reste actif comme filet de sécurité uniquement pour les chemins explicitement legacy. Pour `chat`, `guidance`, `natal` et `horoscope_daily`, l'absence d'assembly résolue est désormais une erreur de configuration nominale, pas un motif de retomber silencieusement sur le chemin `use_case-first`. `daily_prediction` suit bien le pipeline canonique observé via assembly pour son chemin principal documenté, mais n'est pas classé ici parmi les familles nominales explicitement fermées par la story 66.20.
+En pratique, le chemin assembly devient la source canonique dès qu'une famille a migré, mais le fallback legacy reste actif comme filet de sécurité uniquement pour les chemins explicitement legacy, non nominaux ou de test local. Pour `chat`, `guidance`, `natal` et `horoscope_daily`, l'absence d'assembly résolue est désormais une erreur de configuration nominale, pas un motif de retomber silencieusement sur le chemin `use_case-first`. `daily_prediction` suit bien le pipeline canonique observé via assembly pour son chemin principal documenté, mais n'est pas classé ici parmi les familles nominales explicitement fermées par la story 66.20.
 
 ### 5. Composition assembly
 
@@ -395,7 +407,7 @@ Vu depuis `execute_request()`, le pipeline réel est aujourd'hui le suivant :
    - fallback éventuel `deprecated use_case -> feature/subfeature/plan`
    - enrichissement `CommonContextBuilder`
    - résolution assembly explicite ou active
-   - fallback `use_case-first` uniquement sur les chemins legacy encore autorisés
+   - fallback `use_case-first` uniquement sur les chemins non nominaux encore autorisés
    - résolution `ExecutionProfile`
    - merge final modèle / provider / max tokens
    - rendu final du `developer_prompt`
@@ -493,20 +505,31 @@ Le système n'autorise aucun mécanisme de compatibilité "implicite". Chaque fa
 | Fallback / Chemin | Statut | Périmètre autorisé | Observabilité | Condition de retrait / Maintien | Justification |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `LLMGateway.execute()` | **Transitoire** | Appelants legacy existants | Log `deprecation_warning` + call site | Migration du dernier appelant | Wrapper de façade (Story 66.21). |
-| Mapping `deprecated use_case` | **Transitoire** | Use cases dans `DEPRECATED_USE_CASE_MAPPING` | Compteur `llm_gateway_fallback_usage_total` | Compteurs à zéro en production | Transition vers `feature/subfeature/plan`. |
-| Fallback `use_case-first` | **À retirer** (Familles fermées) | **Interdit** pour `chat`, `guidance`, `natal`, `horoscope_daily` | **Anomalie critique** si déclenché sur famille fermée | Migration 100% des features | Éteindre la concurrence avec le pipeline canonique. |
+| Mapping `deprecated use_case` | **Transitoire** | Use cases dans `DEPRECATED_USE_CASE_MAPPING`, comme compatibilité non nominale | Compteur `llm_gateway_fallback_usage_total` | Compteurs à zéro en production | Transition vers `feature/subfeature/plan`. |
+| Fallback `use_case-first` | **À retirer** sur familles fermées ; **transitoire** ailleurs | **Interdit comme chemin nominal** pour `chat`, `guidance`, `natal`, `horoscope_daily`; toléré seulement sur chemins non nominaux classés | Compteur `llm_gateway_fallback_usage_total`; anomalie si nominal | Migration 100% des features | Éteindre la concurrence avec le pipeline canonique sans casser la compatibilité déclarée. |
 | Fallback `resolve_model()` | **Transitoire** | Chemins sans `ExecutionProfile` | Compteur `llm_gateway_fallback_usage_total` | Généralisation des `ExecutionProfile` | Filet de sécurité de résolution. |
-| `ExecutionConfigAdmin` brut | **À retirer** | Dette technique identifiée | Compteur `llm_gateway_fallback_usage_total` | Migration vers `ExecutionProfile` | Ancienne config directe (dette). |
-| Fallback OpenAI | **Toléré durablement** | Runtime OpenAI-only actuel | Compteur `llm_gateway_fallback_usage_total` | Activation multi-provider réelle | Limitation runtime assumée. |
+| `ExecutionConfigAdmin` brut | **À retirer** | Dette technique identifiée ; interdit comme source primaire sur nouveau parcours nominal | Compteur `llm_gateway_fallback_usage_total`; blocage si nominal | Migration vers `ExecutionProfile` | Ancienne config directe (dette). |
+| Fallback OpenAI | **Toléré durablement** | Runtime OpenAI-only actuel (registre canonique) | Compteur `llm_gateway_fallback_usage_total` | Activation multi-provider réelle | Limitation runtime assumée. Bloquant sur chemin nominal si provider non supporté. |
 | Narrator legacy | **À retirer** | **Interdit** pour `horoscope_daily` | Blocage technique / Exception | Suppression du fichier `llm_narrator.py` | Obsolète (remplacé par gateway). |
-| Fallback local/tests | **Toléré durablement** | Environnements `dev` et `test` uniquement | **Interdit en production** | Pérenne (hors production) | Productivité développement. |
-| Natal sans DB | **Transitoire** | Tests unitaires / Modes dégradés | Log `context_degraded_no_db` | DB obligatoire en production nominale | Souplesse de test historique. |
+| Fallback local/tests | **Toléré durablement** | Environnements `dev` et `test` uniquement, y compris absence de provider ou assembly de test manquante | **Interdit en production** | Pérenne (hors production) | Productivité développement et stabilité des tests sans provider externe. |
+| Natal sans DB | **Transitoire** en production nominale ; **toléré durablement** en test ciblé | Tests unitaires / modes dégradés non nominaux uniquement | Log `context_degraded_no_db`; log critique si erreur DB masquée en production | DB obligatoire en production nominale | Souplesse de test historique, sans droit de masquer une panne DB produit. |
 
 ### Politiques de Statut
 
 - **Transitoire** : Le mécanisme est toléré mais possède un critère de sortie explicite. Aucune nouvelle dépendance ne doit être ajoutée.
 - **Toléré durablement** : Le mécanisme est assumé comme faisant partie de l'architecture (souvent pour des raisons hors-production ou de limitation runtime), mais ses bornes de périmètre sont strictes.
 - **À retirer** : Le mécanisme est en cours d'extinction. Son usage sur les périmètres interdits déclenche une anomalie bloquante. Son utilisation sur des chemins autorisés reste tracée comme une dette.
+
+### Règles runtime ajoutées par 66.21
+
+Le registre `FallbackGovernanceRegistry` applique les règles suivantes :
+
+1. chaque fallback émet `llm_gateway_fallback_usage_total` avec `fallback_type`, `status`, `call_site`, `feature` et `is_nominal` ;
+2. les familles fermées (`chat`, `guidance`, `natal`, `horoscope_daily`) bloquent `use_case-first` uniquement quand l'usage est nominal ;
+3. les fallbacks classés `à retirer`, dont `ExecutionConfigAdmin`, bloquent les dépendances nominales ;
+4. les compatibilités explicitement legacy ou de test sont tracées avec `is_nominal=false` et ne doivent pas être interprétées comme chemins produit ;
+5. `TEST_LOCAL` est strictement interdit en production ; il matérialise la ligne de matrice `Fallback local/tests`, et ne constitue ni un nouveau statut ni un chemin runtime parallèle ;
+6. les erreurs d'assembly obligatoire peuvent déclencher le fallback local/test hors production, mais ne doivent pas masquer une erreur de configuration nominale en production.
 
 ## Ordre canonique des transformations textuelles
 
@@ -627,16 +650,26 @@ Le système expose des abstractions stables :
 
 La traduction des profils internes vers les paramètres provider est faite par `ProviderParameterMapper`.
 
-### Support runtime effectif actuel des providers
+### Support runtime effectif actuel des providers (Story 66.22)
 
-La plateforme expose des profils internes stables et un `ProviderParameterMapper`, mais cela ne signifie pas que tous les providers sont exécutés réellement par le runtime à date.
+La plateforme expose des profils internes stables et un `ProviderParameterMapper`, mais l'exécution réelle est strictement verrouillée par un registre canonique.
 
 À ce jour :
 
-- **OpenAI** est le provider effectivement supporté et exécuté par le gateway ;
-- les autres providers éventuels peuvent être modélisés dans les abstractions internes, mais ne doivent pas être considérés comme support runtime complet tant que leur mapper et leur client d'exécution ne sont pas implémentés et activés ;
-- le code retombe explicitement sur le chemin de compatibilité OpenAI / `resolve_model()` pour les cas actuellement couverts de compatibilité, notamment mapper non implémenté et provider `anthropic` ;
-- `_call_provider()` n'accepte aujourd'hui que `openai` comme chemin d'exécution effectif.
+- **OpenAI** est le seul provider déclaré dans le registre canonique `NOMINAL_SUPPORTED_PROVIDERS`.
+- **Chemin nominal** : Si un `ResolvedExecutionPlan` référence un provider absent du registre, le gateway échoue explicitement avec une `ValueError`. Le fallback silencieux vers OpenAI est désormais interdit sur ce chemin.
+- **Chemin non nominal / Test** : Pour les tests ou les compatibilités legacy classées, un fallback vers OpenAI reste toléré si le provider demandé n'est pas supporté (ex: `anthropic` redirigé vers `openai`).
+- `_call_provider()` n'exécute techniquement que `openai` à date.
+
+### Verrouillage et Déverrouillage d'un Provider
+
+Le verrouillage est appliqué à trois niveaux (AC1, AC2, AC3) :
+
+1. **Admin** : Le backend rejette toute création/mise à jour d'un `ExecutionProfile` dont le provider n'est pas dans le registre.
+2. **Publication** : La publication d'une `PromptAssemblyConfig` ou d'un `ExecutionProfile` échoue si le provider n'est pas supporté nominalement.
+3. **Gateway** : L'exécution nominale est bloquée si le plan résolu utilise un provider non supporté.
+
+**Procédure de déverrouillage** : Pour supporter nominalement un nouveau provider (ex: `anthropic`), il doit être ajouté au fichier `backend/app/llm_orchestration/supported_providers.py` APRES que son mapper et son client runtime ont été validés.
 
 ### Conséquence de gouvernance
 
@@ -810,7 +843,7 @@ Toute story ou PR qui modifie l'un des points suivants doit mettre à jour ce do
 ### Vérification
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
-- date : `2026-04-09`
-- commit / tag : `5a069556`
+- date : `2026-04-10`
+- commit / tag : `ac0ed7cb`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation.

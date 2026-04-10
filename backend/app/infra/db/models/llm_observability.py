@@ -70,6 +70,7 @@ class LlmCallLogModel(Base):
         UUID(as_uuid=True), ForeignKey("llm_personas.id"), nullable=True
     )
 
+    provider: Mapped[str] = mapped_column(String(32), nullable=False, default="openai")
     model: Mapped[str] = mapped_column(String(50), nullable=False)
     latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     tokens_in: Mapped[int] = mapped_column(Integer, nullable=False)

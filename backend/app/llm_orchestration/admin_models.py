@@ -368,6 +368,13 @@ class LlmExecutionProfileCreate(BaseModel):
     plan: Optional[str] = None
 
     @model_validator(mode="after")
+    def validate_provider(self) -> "LlmExecutionProfileCreate":
+        from app.llm_orchestration.supported_providers import is_provider_supported
+        if not is_provider_supported(self.provider):
+            raise ValueError(f"Provider '{self.provider}' is not nominally supported by the platform.")
+        return self
+
+    @model_validator(mode="after")
     def validate_reasoning(self) -> "LlmExecutionProfileCreate":
         if self.reasoning_profile != "off":
             if not is_reasoning_model(self.model):
