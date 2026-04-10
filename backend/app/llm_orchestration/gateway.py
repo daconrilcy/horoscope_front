@@ -1016,6 +1016,7 @@ class LLMGateway:
 
             # Story 66.22 AC4/AC5: Enforce supported providers on nominal paths
             from app.llm_orchestration.supported_providers import is_provider_supported
+
             is_nominal = (
                 bool(request.user_input.feature)
                 and not is_legacy_compatibility
@@ -1031,13 +1032,16 @@ class LLMGateway:
                         use_case,
                         request.user_input.feature,
                     )
-                    raise ValueError(f"Provider '{provider}' is not nominally supported by the platform.")
+                    raise ValueError(
+                        f"Provider '{provider}' is not nominally supported by the platform."
+                    )
                 else:
                     # AC5: Fallback on non-nominal/test paths
                     FallbackGovernanceRegistry.track_fallback(
                         FallbackType.PROVIDER_OPENAI,
                         call_site=f"provider_not_supported:{provider}",
                         feature=request.user_input.feature,
+                        is_nominal=False,
                     )
                     logger.warning(
                         "gateway_non_nominal_provider_fallback provider=%s model=%s. "
