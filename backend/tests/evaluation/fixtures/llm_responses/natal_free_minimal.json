@@ -1,0 +1,13 @@
+{
+  "title": "Portrait astro express (données minimales)",
+  "summary": "Votre profil Bélier vous donne une nature dynamique. Cette version gratuite offre un aperçu de vos tendances principales.",
+  "sections": [
+    {"key": "overall", "heading": "Votre mission de vie", "content": ""},
+    {"key": "strengths", "heading": "Forces cachées", "content": ""},
+    {"key": "challenges", "heading": "Défis évolutifs", "content": ""}
+  ],
+  "highlights": [],
+  "advice": [],
+  "evidence": [],
+  "disclaimers": []
+}
