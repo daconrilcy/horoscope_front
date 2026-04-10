@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 from app.infra.observability.metrics import increment_counter
 from app.llm_orchestration.models import FallbackStatus, FallbackType
@@ -14,7 +14,7 @@ class FallbackGovernanceRegistry:
     Définit le statut, le périmètre et la politique d'extinction de chaque fallback.
     """
 
-    GOVERNANCE_MATRIX: Dict[FallbackType, Dict[str, any]] = {
+    GOVERNANCE_MATRIX: Dict[FallbackType, Dict[str, Any]] = {
         FallbackType.LEGACY_WRAPPER: {
             "status": FallbackStatus.TRANSITORY,
             "justification": "Wrapper de façade pour non-régression immédiate.",
@@ -72,7 +72,7 @@ class FallbackGovernanceRegistry:
 
     @staticmethod
     def _infer_family(feature: Optional[str], call_site: str) -> Optional[str]:
-        """Infecte la famille à partir du feature ou du call_site (use_case)."""
+        """Infère la famille à partir du feature ou du call_site (use_case)."""
         if feature:
             return feature
         
