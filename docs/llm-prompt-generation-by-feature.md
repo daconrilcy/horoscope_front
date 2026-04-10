@@ -1,6 +1,6 @@
 # Génération des Prompts LLM par Feature
 
-Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.23.
+Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.24.
 
 Objectifs :
 
@@ -139,7 +139,7 @@ Les features marquées `transitional_governance` sont en cours de convergence. E
 | `66.21` | Gouvernance des fallbacks LLM | matrice de statut, télémétrie `llm_gateway_fallback_usage_total`, blocage des fallbacks à retirer sur chemins nominaux, bornes explicites des compatibilités legacy/test |
 | `66.22` | Verrouillage des providers supportés | registre canonique `NOMINAL_SUPPORTED_PROVIDERS`, blocage des providers non supportés sur chemins nominaux, fallback OpenAI borné aux chemins non nominaux |
 | `66.23` | Normalisation taxonomie natal | `feature="natal"` comme unique identifiant canonique, rejet nominal de `feature="natal_interpretation"` en admin/publication/registries, taxonomie des subfeatures natal non préfixée (`interpretation`, `short`, `full`, etc.), compatibilité alias bornée et télémétrée via `legacy_feature_alias_used` |
-| `66.24` | Extension matrice d'évaluation | extension aux chemins `horoscope_daily` et `daily_prediction`, introduction du discriminant structurel `pipeline_kind` (nominal vs transitional) |
+| `66.24` | Extension matrice d'évaluation | extension aux chemins `horoscope_daily` et `daily_prediction`, introduction du discriminant structurel `pipeline_kind` (`nominal_canonical` vs `transitional_governance`) et d'un gating global de campagne |
 
 ## Couverture réelle par famille
 
@@ -151,7 +151,7 @@ Cette section ne décrit que ce qui est explicitement visible dans le code. Elle
 | `natal` | `AIEngineAdapter.generate_natal_interpretation()` impose `feature="natal"` et `subfeature` métier | entrée canonique systématique via adapter | convergence totale ; le chemin observé utilise `feature="natal"` avec une subfeature canonique non préfixée, actuellement `interpretation` pour ce parcours ; alias historiques normalisés en runtime |
 | `guidance` | `generate_guidance()` construit `feature="guidance"` et `subfeature` dérivé | entrée canonique systématique via adapter | convergence totale ; assemblies et profils d'exécution obligatoires |
 | `chat` | `generate_chat_reply()` impose `feature="chat"`, `subfeature="astrologer"` | entrée canonique systématique via adapter | convergence totale ; assemblies et profils d'exécution obligatoires |
-| `daily_prediction` | `AIEngineAdapter.generate_horoscope_narration()` route vers `feature="daily_prediction"`, `subfeature="narration"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | convergence totale |
+| `daily_prediction` | `AIEngineAdapter.generate_horoscope_narration()` route vers `feature="daily_prediction"`, `subfeature="narration"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | chemin principal convergé via adapter/gateway, mais gouvernance d'évaluation encore classée `transitional_governance` |
 | `support` | aucune orchestration LLM spécifique à cette famille n'a été trouvée dans les sources inspectées | non documenté comme famille LLM active | ne pas lui attribuer un statut de convergence sans nouvelle preuve dans le code |
 
 ### Synthèse de convergence (Story 66.20)
@@ -892,14 +892,38 @@ Une matrice d'évaluation couvre les combinaisons :
 - feature ;
 - plan ;
 - persona ;
-- context quality.
+- context quality ;
+- pipeline kind.
 
 Elle sert à vérifier notamment :
 
 - l'absence de fuite de placeholders ;
 - le respect des budgets de longueur ;
 - l'effet réel de la persona ;
-- la stabilité des contrats de sortie.
+- la stabilité des contrats de sortie ;
+- la cohérence entre la famille métier évaluée et le mode réel de gouvernance du pipeline.
+
+Depuis la story 66.24, la matrice est explicitement alignée sur l'architecture réellement exécutée et ne masque plus l'hétérogénéité restante des chemins daily :
+
+- `horoscope_daily` reste évalué comme `nominal_canonical` ;
+- `daily_prediction` est évalué dans les mêmes campagnes mais marqué `transitional_governance` ;
+- le discriminant `pipeline_kind` est porté par les cas de matrice et recroisé dans les tests avec une classification calculée ;
+- les rapports distinguent les échecs nominaux des alertes transitoires ;
+- le statut global de campagne devient bloquant si un chemin requis (`chat`, `guidance`, `natal`, `horoscope_daily`, `daily_prediction`) est absent.
+
+Le reporting de campagne expose désormais :
+
+- le volume total de cas exécutés ;
+- le nombre de cas passants ;
+- les échecs sur chemins nominaux ;
+- les échecs sur chemins transitoires ;
+- la liste des familles obligatoires manquantes ;
+- un statut global de campagne (`PASSED`, `WARNING`, `BLOCKED`, `INCOMPLETE`).
+
+Cette lecture permet de distinguer deux questions qui étaient auparavant mêlées :
+
+- le chemin principal d'exécution daily passe-t-il bien par le pipeline adapter/gateway ;
+- la gouvernance d'évaluation considère-t-elle déjà cette famille comme nominale ou encore transitoire.
 
 ## Où mettre une nouvelle règle
 
