@@ -195,6 +195,7 @@ async def test_governance_critical_log_on_db_error_in_prod():
     with patch("app.core.config.settings.app_env", "production"):
         # Import logger from the module to patch it correctly
         from app.llm_orchestration.services.fallback_governance import logger as gov_logger
+
         with patch.object(gov_logger, "critical") as mock_log:
             FallbackGovernanceRegistry.track_fallback(
                 FallbackType.NATAL_NO_DB,

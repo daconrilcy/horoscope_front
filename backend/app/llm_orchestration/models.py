@@ -144,15 +144,15 @@ class ExecutionFlags(BaseModel):
 class ExecutionOverrides(BaseModel):
     """
     Surcharges de stratégie use case. Sémantique contractuelle :
-    - USAGE AUTORISÉ : migrations, tests d'infrastructure, 
+    - USAGE AUTORISÉ : migrations, tests d'infrastructure,
       use cases expérimentaux non encore en config DB.
-    - USAGE INTERDIT : services métier normaux (chat, guidance, 
+    - USAGE INTERDIT : services métier normaux (chat, guidance,
       natal en production stable).
-    - EFFET : les valeurs non-None remplacent celles résolues par 
+    - EFFET : les valeurs non-None remplacent celles résolues par
       _resolve_config() dans ResolvedExecutionPlan.
-    - JOURNALISATION : toute surcharge effective est tracée dans 
+    - JOURNALISATION : toute surcharge effective est tracée dans
       ResolvedExecutionPlan.to_log_dict() sous une clé 'overrides_applied'.
-    - RÈGLE : un nouveau use case ne doit JAMAIS dépendre d'ExecutionOverrides 
+    - RÈGLE : un nouveau use case ne doit JAMAIS dépendre d'ExecutionOverrides
       pour fonctionner nominalement — la config DB doit être sa source de vérité.
     """
 

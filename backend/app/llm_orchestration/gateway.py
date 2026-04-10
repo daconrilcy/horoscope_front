@@ -697,7 +697,7 @@ class LLMGateway:
         FallbackGovernanceRegistry.track_fallback(
             FallbackType.LEGACY_WRAPPER,
             call_site=f"LLMGateway.execute:{use_case}",
-            is_nominal=False
+            is_nominal=False,
         )
         request = self._legacy_dicts_to_request(
             use_case=use_case,
@@ -1015,7 +1015,7 @@ class LLMGateway:
                 FallbackGovernanceRegistry.track_fallback(
                     FallbackType.PROVIDER_OPENAI,
                     call_site=f"provider_not_supported:{provider}",
-                    feature=request.user_input.feature
+                    feature=request.user_input.feature,
                 )
                 logger.warning(
                     "gateway_provider_not_supported_yet provider=%s model=%s. "

@@ -212,7 +212,6 @@ class CommonContextBuilder:
                 is_nominal=not is_database_error,  # True if intentional stub, False if DB crash
             )
 
-
             if is_database_error:
                 logger.error(
                     "common_context_database_error_fallback user_id=%d error=%s", user_id, e

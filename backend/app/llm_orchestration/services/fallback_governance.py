@@ -75,13 +75,13 @@ class FallbackGovernanceRegistry:
         """Infère la famille à partir du feature ou du call_site (use_case)."""
         if feature:
             return feature
-        
+
         # Les call_sites de resolve_config et mapping contiennent souvent le use_case
         # ex: "resolve_config:horoscope_daily"
         match = re.search(r":([a-zA-Z0-9_-]+)$", call_site)
         if not match:
             return None
-        
+
         use_case = match.group(1).lower()
         if use_case.startswith("chat"):
             return "chat"
@@ -91,7 +91,7 @@ class FallbackGovernanceRegistry:
             return "natal"
         if use_case.startswith("horoscope_daily") or use_case == "daily_prediction":
             return "horoscope_daily"
-        
+
         return None
 
     @classmethod
@@ -118,7 +118,7 @@ class FallbackGovernanceRegistry:
 
         status = gov["status"]
         forbidden_families: Set[str] = gov.get("forbidden_families", set())
-        
+
         # AC3 Bypass Fix: Inférence de la famille si absente
         effective_feature = self._infer_family(feature, call_site)
 
@@ -140,8 +140,7 @@ class FallbackGovernanceRegistry:
         # 3. Vérification du périmètre (Forbidden families)
         if effective_feature in forbidden_families:
             logger.error(
-                "governance_violation_forbidden_fallback type=%s feature=%s "
-                "call_site=%s status=%s",
+                "governance_violation_forbidden_fallback type=%s feature=%s call_site=%s status=%s",
                 fallback_type.value,
                 effective_feature,
                 call_site,
