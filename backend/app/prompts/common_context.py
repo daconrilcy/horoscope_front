@@ -209,8 +209,9 @@ class CommonContextBuilder:
                 FallbackType.NATAL_NO_DB,
                 call_site="common_context_builder",
                 feature="natal",
-                is_nominal=not is_database_error,  # Nominal if intentional (stub/test)
+                is_nominal=not is_database_error,  # True if intentional stub, False if DB crash
             )
+
 
             if is_database_error:
                 logger.error(

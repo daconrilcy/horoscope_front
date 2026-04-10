@@ -27,7 +27,7 @@ class FallbackGovernanceRegistry:
             "extinction_criteria": "Compteurs d'usage à zéro en production.",
         },
         FallbackType.USE_CASE_FIRST: {
-            "status": FallbackStatus.TO_REMOVE,
+            "status": FallbackStatus.TO_REMOVE,  # Par défaut, restreint
             "justification": "Éteindre la concurrence avec le pipeline canonique.",
             "forbidden_families": {"chat", "guidance", "natal", "horoscope_daily"},
             "extinction_criteria": "Migration 100% des features vers assembly.",
@@ -81,6 +81,7 @@ class FallbackGovernanceRegistry:
         Enregistre l'usage d'un fallback, vérifie sa conformité et émet la télémétrie.
         """
         from app.core.config import settings
+
         is_prod = settings.app_env in {"production", "prod"}
 
         gov = self.GOVERNANCE_MATRIX.get(fallback_type)
@@ -91,14 +92,23 @@ class FallbackGovernanceRegistry:
             return
 
         status = gov["status"]
-
-        # 1. Vérification du périmètre (Forbidden families)
         forbidden_families: Set[str] = gov.get("forbidden_families", set())
+
+        # 1. Gestion spécifique du statut conditionnel pour USE_CASE_FIRST (AC3)
+        # La story dit: À RETIRER sur familles fermées, TRANSITOIRE ailleurs.
+        if fallback_type == FallbackType.USE_CASE_FIRST:
+            if feature not in forbidden_families:
+                status = FallbackStatus.TRANSITORY
+
+        # 2. Vérification du périmètre (Forbidden families)
         if feature in forbidden_families:
             logger.error(
                 "governance_violation_forbidden_fallback type=%s feature=%s "
                 "call_site=%s status=%s",
-                fallback_type, feature, call_site, status
+                fallback_type.value,
+                feature,
+                call_site,
+                status.value,
             )
             if status == FallbackStatus.TO_REMOVE:
                 from app.llm_orchestration.models import GatewayError
@@ -116,42 +126,42 @@ class FallbackGovernanceRegistry:
                     },
                 )
 
-        # 2. Vérification environnementale (AC9)
+        # 3. Vérification environnementale (AC9)
         if is_prod:
             if fallback_type == FallbackType.TEST_LOCAL:
                 from app.llm_orchestration.models import GatewayError
+
                 raise GatewayError(
                     f"Usage du fallback '{fallback_type.value}' strictement interdit en production",
-                    details={"fallback_type": fallback_type.value, "call_site": call_site}
+                    details={"fallback_type": fallback_type.value, "call_site": call_site},
                 )
-            
-            # Natal No DB est transitoire mais ne devrait pas arriver silencieusement en prod nominale
-            if fallback_type == FallbackType.NATAL_NO_DB and is_nominal:
+
+            # Natal No DB en production: alerte critique si non nominal (erreur DB masquée)
+            if fallback_type == FallbackType.NATAL_NO_DB and not is_nominal:
                 logger.critical(
-                    "governance_critical_prod_fallback_violation type=%s call_site=%s",
-                    fallback_type.value, call_site
+                    "governance_critical_prod_database_error_masked type=%s call_site=%s",
+                    fallback_type.value,
+                    call_site,
                 )
-                # On ne bloque pas encore forcément NATAL_NO_DB car c'est 'transitoire'
-                # mais on logue en CRITICAL pour AC9.
 
-        # 3. Restriction TO_REMOVE sur nouveaux parcours (AC6)
+        # 4. Restriction TO_REMOVE sur nouveaux parcours (AC6)
         # Si le fallback est à retirer et qu'on est sur un parcours nominal (is_nominal=True)
-        # cela signifie qu'un nouveau parcours dépend d'une dette.
+        # cela signifie qu'un nouveau parcours dépend d'une dette. INTERDIT (AC6).
         if status == FallbackStatus.TO_REMOVE and is_nominal:
-             logger.error(
+            logger.error(
                 "governance_nominal_path_dependency_on_to_remove_fallback type=%s call_site=%s",
-                fallback_type.value, call_site
+                fallback_type.value,
+                call_site,
             )
-            # AC6: Aucun nouveau parcours canonique ne peut être merged s'il dépend de champs bruts.
-            # En dev/test, on peut être plus strict pour forcer la migration.
-             if not is_prod:
-                from app.llm_orchestration.models import GatewayError
-                raise GatewayError(
-                    f"Dépendance nominale au fallback '{fallback_type.value}' interdite (Statut: À RETIRER)",
-                    details={"fallback_type": fallback_type.value, "call_site": call_site}
-                )
+            from app.llm_orchestration.models import GatewayError
 
-        # 4. Télémétrie (AC5, AC7, AC9)
+            raise GatewayError(
+                f"Dépendance nominale au fallback '{fallback_type.value}' interdite "
+                "(Statut: À RETIRER)",
+                details={"fallback_type": fallback_type.value, "call_site": call_site},
+            )
+
+        # 5. Télémétrie (AC5, AC7, AC9)
         labels = {
             "fallback_type": fallback_type.value,
             "status": status.value,

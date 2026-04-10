@@ -106,8 +106,8 @@ async def test_governance_allows_transitory_fallback_on_permitted_perimeter(gate
     """
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
-            use_case="deprecated_case",
-            feature="other_family",  # Not in closed families
+            use_case="any_case",
+            feature="other_family",  # NOT in closed families -> TRANSITORY
             locale="fr-FR",
         ),
         context=ExecutionContext(),
@@ -131,20 +131,14 @@ async def test_governance_allows_transitory_fallback_on_permitted_perimeter(gate
         return_value=None,
     ):
         with patch.object(gateway, "_resolve_config", return_value=mock_config):
-            # Story 66.21 High Issue fix: use_case_first is TO_REMOVE and is blocked if nominal.
-            # We mock track_fallback to avoid the error or ensure we test it correctly.
-            with patch(
-                "app.llm_orchestration.services.fallback_governance.FallbackGovernanceRegistry.track_fallback"
-            ) as mock_track:
-                # Should not raise GatewayError from Governance because it's patched
-                try:
-                    await gateway._resolve_plan(request, db=MagicMock())
-                except GatewayError as e:
-                    pytest.fail(f"GatewayError raised unexpectedly: {e}")
-                except Exception:
-                    # Ignore other downstream errors
-                    pass
-                mock_track.assert_called()
+            # No mock on track_fallback here: we want to check it doesn't raise
+            # because 'other_family' makes use_case_first TRANSITORY
+            try:
+                await gateway._resolve_plan(request, db=MagicMock())
+            except GatewayError as e:
+                pytest.fail(f"GatewayError raised unexpectedly for non-forbidden family: {e}")
+            except Exception:
+                pass
 
 
 @pytest.mark.asyncio
@@ -152,11 +146,23 @@ async def test_governance_blocks_to_remove_on_nominal_path():
     """
     AC6: Les fallbacks à retirer sont interdits sur les parcours nominaux.
     """
+    # En développement, cela doit bloquer
     with patch("app.core.config.settings.app_env", "development"):
         with pytest.raises(GatewayError) as exc:
             FallbackGovernanceRegistry.track_fallback(
                 FallbackType.EXECUTION_CONFIG_ADMIN,
                 call_site="test_nominal",
+                feature="any",
+                is_nominal=True,
+            )
+        assert "Dépendance nominale au fallback 'execution_config_admin' interdite" in str(exc.value)
+
+    # En production, cela doit AUSSI bloquer (AC6 strict)
+    with patch("app.core.config.settings.app_env", "production"):
+        with pytest.raises(GatewayError) as exc:
+            FallbackGovernanceRegistry.track_fallback(
+                FallbackType.EXECUTION_CONFIG_ADMIN,
+                call_site="test_prod_nominal",
                 feature="any",
                 is_nominal=True,
             )
@@ -177,3 +183,21 @@ async def test_governance_blocks_test_local_in_prod():
                 is_nominal=False,
             )
         assert "Usage du fallback 'test_local' strictement interdit en production" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_governance_critical_log_on_db_error_in_prod():
+    """
+    AC9: Une erreur DB masquée en production doit déclencher un log critique.
+    """
+    with patch("app.core.config.settings.app_env", "production"):
+        with patch("app.llm_orchestration.services.fallback_governance.logger.critical") as mock_log:
+            FallbackGovernanceRegistry.track_fallback(
+                FallbackType.NATAL_NO_DB,
+                call_site="test_db_crash",
+                feature="natal",
+                is_nominal=False,  # False means it's an error, not intentional stub
+            )
+            mock_log.assert_called_once()
+            args, _ = mock_log.call_args
+            assert "governance_critical_prod_database_error_masked" in args[0]
