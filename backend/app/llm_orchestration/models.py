@@ -27,6 +27,7 @@ class FallbackType(str, Enum):
     NARRATOR_LEGACY = "narrator_legacy"
     TEST_LOCAL = "test_local"
     NATAL_NO_DB = "natal_no_db"
+    DEPRECATED_FEATURE_ALIAS = "deprecated_feature_alias"
 
 
 # Shared reasoning-model detection — single source of truth for gateway and provider.

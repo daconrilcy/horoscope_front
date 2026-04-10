@@ -27,14 +27,14 @@ def seed_assembly(db: Session) -> None:
         return
 
     # 2. Find a default persona
-    stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled == True)
+    stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled)
     persona = db.execute(stmt_persona).scalars().first()
 
     # 3. Check if assembly already exists
     stmt_exists = select(PromptAssemblyConfigModel).where(
         PromptAssemblyConfigModel.feature == "natal",
-        PromptAssemblyConfigModel.subfeature == "natal_interpretation",
-        PromptAssemblyConfigModel.plan == None,
+        PromptAssemblyConfigModel.subfeature == "interpretation",
+        PromptAssemblyConfigModel.plan.is_(None),
         PromptAssemblyConfigModel.locale == "fr-FR",
     )
     existing = db.execute(stmt_exists).scalar_one_or_none()
@@ -46,7 +46,7 @@ def seed_assembly(db: Session) -> None:
     # 4. Create first assembly
     new_assembly = PromptAssemblyConfigModel(
         feature="natal",
-        subfeature="natal_interpretation",
+        subfeature="interpretation",
         plan=None,
         locale="fr-FR",
         feature_template_ref=feature_template.id,
@@ -62,4 +62,4 @@ def seed_assembly(db: Session) -> None:
     )
     db.add(new_assembly)
     db.commit()
-    logger.info("seed_assembly_success: created natal_interpretation default assembly")
+    logger.info("seed_assembly_success: created natal:interpretation default assembly")

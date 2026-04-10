@@ -12,6 +12,11 @@ from sqlalchemy.orm import selectinload
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.llm_orchestration.feature_taxonomy import (
+    assert_nominal_feature_allowed,
+    normalize_feature,
+    normalize_subfeature,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +116,11 @@ class AssemblyRegistry:
         Resolve the best matching active (PUBLISHED) assembly config using waterfall logic.
         Waterfall: (feature, subfeature, plan) -> (feature, subfeature, None) -> (feature, None, None)
         """
+        # Story 66.23: Hardened taxonomy resolution
+        feature = normalize_feature(feature)
+        subfeature = normalize_subfeature(feature, subfeature)
+        assert_nominal_feature_allowed(feature)
+
         cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
         now = time.time()
 
@@ -167,6 +177,11 @@ class AssemblyRegistry:
         Synchronous version of get_active_config for callers with a standard Session.
         (Story 66.20 Medium Issue Fix)
         """
+        # Story 66.23: Hardened taxonomy resolution
+        feature = normalize_feature(feature)
+        subfeature = normalize_subfeature(feature, subfeature)
+        assert_nominal_feature_allowed(feature)
+
         cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
         now = time.time()
 

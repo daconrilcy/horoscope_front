@@ -10,6 +10,11 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_prompt import PromptStatus
+from app.llm_orchestration.feature_taxonomy import (
+    assert_nominal_feature_allowed,
+    normalize_feature,
+    normalize_subfeature,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +36,11 @@ class ExecutionProfileRegistry:
         Resolves the active execution profile using waterfall:
         feature + subfeature + plan -> feature + subfeature -> feature
         """
+        # Story 66.23: Hardened taxonomy resolution
+        feature = normalize_feature(feature)
+        subfeature = normalize_subfeature(feature, subfeature)
+        assert_nominal_feature_allowed(feature)
+
         cache_key = f"{feature}:{subfeature}:{plan}"
 
         with _cache_lock:

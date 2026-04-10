@@ -12,6 +12,11 @@ from app.core.config import settings
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
 from app.llm_orchestration.admin_models import ResolvedAssembly
+from app.llm_orchestration.feature_taxonomy import (
+    assert_nominal_feature_allowed,
+    normalize_feature,
+    normalize_subfeature,
+)
 from app.llm_orchestration.models import (
     ExecutionContext,
     ExecutionFlags,
@@ -1606,6 +1611,29 @@ class LLMGateway:
         is_repair_call = request.flags.is_repair_call
 
         try:
+            # Story 66.23: Early taxonomy normalization and validation (AC1, AC2, AC10)
+            if request.user_input.feature:
+                old_f = request.user_input.feature
+                request.user_input.feature = normalize_feature(request.user_input.feature)
+                request.user_input.subfeature = normalize_subfeature(
+                    request.user_input.feature, request.user_input.subfeature
+                )
+                assert_nominal_feature_allowed(request.user_input.feature)
+
+                if request.user_input.feature != old_f:
+                    log_governance_event(
+                        event_type="legacy_feature_alias_used",
+                        feature=request.user_input.feature,
+                        subfeature=request.user_input.subfeature,
+                        is_nominal=False,
+                    )
+                    FallbackGovernanceRegistry.track_fallback(
+                        FallbackType.DEPRECATED_FEATURE_ALIAS,
+                        call_site=f"normalize_feature:{old_f}",
+                        feature=request.user_input.feature,
+                        is_nominal=False,
+                    )
+
             # Story 66.20: Early normalization of plan for all stages (AC2, AC3)
             request.user_input.plan = self._normalize_plan_for_assembly(request.user_input.plan)
 

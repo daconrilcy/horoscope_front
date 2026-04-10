@@ -13,6 +13,11 @@ from app.llm_orchestration.execution_profiles_types import (
     ToolMode,
     VerbosityProfile,
 )
+from app.llm_orchestration.feature_taxonomy import (
+    assert_nominal_feature_allowed,
+    normalize_feature,
+    normalize_subfeature,
+)
 from app.llm_orchestration.models import is_reasoning_model
 
 
@@ -168,6 +173,13 @@ class PromptAssemblyTarget(BaseModel):
     plan: Optional[str] = None
     locale: str = "fr-FR"
 
+    @model_validator(mode="after")
+    def normalize_taxonomy(self) -> "PromptAssemblyTarget":
+        self.feature = normalize_feature(self.feature)
+        self.subfeature = normalize_subfeature(self.feature, self.subfeature)
+        assert_nominal_feature_allowed(self.feature)
+        return self
+
 
 class ExecutionConfigAdmin(BaseModel):
     """Execution parameters for an assembly config."""
@@ -232,10 +244,14 @@ class PromptAssemblyConfig(BaseModel):
     persona_enabled: bool = True
     plan_rules_enabled: bool = True
 
-    status: PromptStatus = PromptStatus.DRAFT
-    created_by: Optional[str] = None
-    created_at: Optional[datetime] = None
     published_at: Optional[datetime] = None
+
+    @model_validator(mode="after")
+    def normalize_taxonomy(self) -> "PromptAssemblyConfig":
+        self.feature = normalize_feature(self.feature)
+        self.subfeature = normalize_subfeature(self.feature, self.subfeature)
+        assert_nominal_feature_allowed(self.feature)
+        return self
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -368,10 +384,20 @@ class LlmExecutionProfileCreate(BaseModel):
     plan: Optional[str] = None
 
     @model_validator(mode="after")
+    def normalize_taxonomy(self) -> "LlmExecutionProfileCreate":
+        if self.feature:
+            self.feature = normalize_feature(self.feature)
+            self.subfeature = normalize_subfeature(self.feature, self.subfeature)
+            assert_nominal_feature_allowed(self.feature)
+        return self
+
+    @model_validator(mode="after")
     def validate_provider(self) -> "LlmExecutionProfileCreate":
         from app.llm_orchestration.supported_providers import is_provider_supported
         if not is_provider_supported(self.provider):
-            raise ValueError(f"Provider '{self.provider}' is not nominally supported by the platform.")
+            raise ValueError(
+                f"Provider '{self.provider}' is not nominally supported by the platform."
+            )
         return self
 
     @model_validator(mode="after")
@@ -379,7 +405,8 @@ class LlmExecutionProfileCreate(BaseModel):
         if self.reasoning_profile != "off":
             if not is_reasoning_model(self.model):
                 raise ValueError(
-                    f"reasoning_profile '{self.reasoning_profile}' requires a reasoning-capable model — got: {self.model}"
+                    f"reasoning_profile '{self.reasoning_profile}' requires a "
+                    f"reasoning-capable model — got: {self.model}"
                 )
         return self
 

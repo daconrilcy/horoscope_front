@@ -94,27 +94,31 @@ def count_evidence_warnings(structured_output: Dict[str, Any] | None) -> int:
 
 def log_governance_event(
     event_type: str,
-    provider: str,
+    provider: str | None = None,
     feature: str | None = None,
+    subfeature: str | None = None,
     is_nominal: bool = True,
 ) -> None:
     """
-    Emits unified governance metrics (AC6).
-    event_type: publish_rejected | runtime_rejected | non_nominal_tolerated
+    Emits unified governance metrics (AC6, Story 66.23 AC10).
+    event_type: publish_rejected | runtime_rejected | non_nominal_tolerated 
+                | legacy_feature_alias_used
     """
     labels = {
         "event_type": event_type,
-        "provider": provider,
+        "provider": provider or "unknown",
         "feature": feature or "unknown",
+        "subfeature": subfeature or "none",
         "is_nominal": str(is_nominal).lower(),
         "environment": settings.app_env,
     }
     increment_counter("llm_governance_event_total", labels=labels)
     logger.info(
-        "llm_governance_event type=%s provider=%s feature=%s is_nominal=%s",
+        "llm_governance_event type=%s provider=%s feature=%s subfeature=%s is_nominal=%s",
         event_type,
         provider,
         feature,
+        subfeature,
         is_nominal,
     )
 

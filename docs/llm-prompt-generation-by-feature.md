@@ -116,6 +116,7 @@ flowchart TD
 | `66.20` | Convergence canonique obligatoire | assemblies nominales obligatoires pour `chat`, `guidance`, `natal`, `horoscope_daily` + normalisation des plans runtime vers `free/premium` |
 | `66.21` | Gouvernance des fallbacks LLM | matrice de statut, télémétrie `llm_gateway_fallback_usage_total`, blocage des fallbacks à retirer sur chemins nominaux, bornes explicites des compatibilités legacy/test |
 | `66.22` | Verrouillage des providers supportés | registre canonique `NOMINAL_SUPPORTED_PROVIDERS`, blocage des providers non supportés sur chemins nominaux, fallback OpenAI borné aux chemins non nominaux |
+| `66.23` | Normalisation taxonomie natal | `feature="natal"` comme unique identifiant canonique, normalisation des alias historiques (`natal_interpretation`), taxonomie des subfeatures natal non préfixée (`interpretation`, `short`, `full`), télémétrie `legacy_feature_alias_used` |
 
 ## Couverture réelle par famille
 
@@ -124,7 +125,7 @@ Cette section ne décrit que ce qui est explicitement visible dans le code. Elle
 | Famille | Indice explicite dans le code | Chemin effectivement observable | Commentaire strictement dérivé du code |
 |---|---|---|---|
 | `horoscope_daily` | `AIEngineAdapter.generate_horoscope_narration()` route vers `feature="horoscope_daily"`, `subfeature="narration"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | convergence totale ; mapping déprécié conservé uniquement pour compatibilité descendante |
-| `natal` | `AIEngineAdapter.generate_natal_interpretation()` impose `feature="natal"` et `subfeature` métier | entrée canonique systématique via adapter | convergence totale ; taxonomie homogène entre code, seeds et exécution |
+| `natal` | `AIEngineAdapter.generate_natal_interpretation()` impose `feature="natal"` et `subfeature` métier | entrée canonique systématique via adapter | convergence totale ; taxonomie homogène `feature="natal"` et `subfeature="interpretation"` ; alias historiques normalisés en runtime |
 | `guidance` | `generate_guidance()` construit `feature="guidance"` et `subfeature` dérivé | entrée canonique systématique via adapter | convergence totale ; assemblies et profils d'exécution obligatoires |
 | `chat` | `generate_chat_reply()` impose `feature="chat"`, `subfeature="astrologer"` | entrée canonique systématique via adapter | convergence totale ; assemblies et profils d'exécution obligatoires |
 | `daily_prediction` | `AIEngineAdapter.generate_horoscope_narration()` route vers `feature="daily_prediction"`, `subfeature="narration"` | entrée canonique `feature/subfeature/plan` via adapter puis gateway | convergence totale |

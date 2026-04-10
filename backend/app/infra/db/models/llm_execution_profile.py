@@ -67,8 +67,8 @@ class LlmExecutionProfileModel(Base):
         AC3.1: Enforce provider support when transition to PUBLISHED.
         """
         if value == PromptStatus.PUBLISHED:
-            from app.llm_orchestration.supported_providers import is_provider_supported
             from app.llm_orchestration.services.observability_service import log_governance_event
+            from app.llm_orchestration.supported_providers import is_provider_supported
 
             if not is_provider_supported(self.provider):
                 log_governance_event(
