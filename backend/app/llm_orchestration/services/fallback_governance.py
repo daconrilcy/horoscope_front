@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Dict, Optional, Set
 
 from app.infra.observability.metrics import increment_counter
@@ -69,6 +70,30 @@ class FallbackGovernanceRegistry:
         },
     }
 
+    @staticmethod
+    def _infer_family(feature: Optional[str], call_site: str) -> Optional[str]:
+        """Infecte la famille à partir du feature ou du call_site (use_case)."""
+        if feature:
+            return feature
+        
+        # Les call_sites de resolve_config et mapping contiennent souvent le use_case
+        # ex: "resolve_config:horoscope_daily"
+        match = re.search(r":([a-zA-Z0-9_-]+)$", call_site)
+        if not match:
+            return None
+        
+        use_case = match.group(1).lower()
+        if use_case.startswith("chat"):
+            return "chat"
+        if use_case.startswith("guidance") or "guidance" in use_case:
+            return "guidance"
+        if use_case.startswith("natal") or "natal" in use_case:
+            return "natal"
+        if use_case.startswith("horoscope_daily") or use_case == "daily_prediction":
+            return "horoscope_daily"
+        
+        return None
+
     @classmethod
     def track_fallback(
         self,
@@ -93,20 +118,32 @@ class FallbackGovernanceRegistry:
 
         status = gov["status"]
         forbidden_families: Set[str] = gov.get("forbidden_families", set())
+        
+        # AC3 Bypass Fix: Inférence de la famille si absente
+        effective_feature = self._infer_family(feature, call_site)
 
         # 1. Gestion spécifique du statut conditionnel pour USE_CASE_FIRST (AC3)
-        # La story dit: À RETIRER sur familles fermées, TRANSITOIRE ailleurs.
         if fallback_type == FallbackType.USE_CASE_FIRST:
-            if feature not in forbidden_families:
+            if effective_feature not in forbidden_families:
                 status = FallbackStatus.TRANSITORY
 
-        # 2. Vérification du périmètre (Forbidden families)
-        if feature in forbidden_families:
+        # 2. Télémétrie (AC5, AC7, AC9) - Toujours émise même si blocage (Medium Issue Fix)
+        labels = {
+            "fallback_type": fallback_type.value,
+            "status": status.value,
+            "call_site": call_site,
+            "feature": effective_feature or feature or "unknown",
+            "is_nominal": "true" if is_nominal else "false",
+        }
+        increment_counter("llm_gateway_fallback_usage_total", labels=labels)
+
+        # 3. Vérification du périmètre (Forbidden families)
+        if effective_feature in forbidden_families:
             logger.error(
                 "governance_violation_forbidden_fallback type=%s feature=%s "
                 "call_site=%s status=%s",
                 fallback_type.value,
-                feature,
+                effective_feature,
                 call_site,
                 status.value,
             )
@@ -115,18 +152,18 @@ class FallbackGovernanceRegistry:
 
                 msg = (
                     f"Usage du fallback '{fallback_type.value}' interdit pour "
-                    f"la famille '{feature}' (Gouvernance 66.21)"
+                    f"la famille '{effective_feature}' (Gouvernance 66.21)"
                 )
                 raise GatewayError(
                     msg,
                     details={
                         "fallback_type": fallback_type.value,
-                        "feature": feature,
+                        "feature": effective_feature,
                         "status": status.value,
                     },
                 )
 
-        # 3. Vérification environnementale (AC9)
+        # 4. Vérification environnementale (AC9)
         if is_prod:
             if fallback_type == FallbackType.TEST_LOCAL:
                 from app.llm_orchestration.models import GatewayError
@@ -144,9 +181,7 @@ class FallbackGovernanceRegistry:
                     call_site,
                 )
 
-        # 4. Restriction TO_REMOVE sur nouveaux parcours (AC6)
-        # Si le fallback est à retirer et qu'on est sur un parcours nominal (is_nominal=True)
-        # cela signifie qu'un nouveau parcours dépend d'une dette. INTERDIT (AC6).
+        # 5. Restriction TO_REMOVE sur nouveaux parcours (AC6)
         if status == FallbackStatus.TO_REMOVE and is_nominal:
             logger.error(
                 "governance_nominal_path_dependency_on_to_remove_fallback type=%s call_site=%s",
@@ -161,17 +196,6 @@ class FallbackGovernanceRegistry:
                 details={"fallback_type": fallback_type.value, "call_site": call_site},
             )
 
-        # 5. Télémétrie (AC5, AC7, AC9)
-        labels = {
-            "fallback_type": fallback_type.value,
-            "status": status.value,
-            "call_site": call_site,
-            "feature": feature or "unknown",
-            "is_nominal": "true" if is_nominal else "false",
-        }
-
-        increment_counter("llm_gateway_fallback_usage_total", labels=labels)
-
         # Logging structuré pour observabilité (AC5)
         log_level = logging.WARNING if status == FallbackStatus.TO_REMOVE else logging.INFO
         logger.log(
@@ -179,7 +203,7 @@ class FallbackGovernanceRegistry:
             "governance_fallback_usage type=%s status=%s feature=%s call_site=%s nominal=%s",
             fallback_type.value,
             status.value,
-            feature,
+            effective_feature,
             call_site,
             is_nominal,
         )

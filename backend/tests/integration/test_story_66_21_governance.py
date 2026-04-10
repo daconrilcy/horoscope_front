@@ -155,7 +155,8 @@ async def test_governance_blocks_to_remove_on_nominal_path():
                 feature="any",
                 is_nominal=True,
             )
-        assert "Dépendance nominale au fallback 'execution_config_admin' interdite" in str(exc.value)
+        msg = "Dépendance nominale au fallback 'execution_config_admin' interdite"
+        assert msg in str(exc.value)
 
     # En production, cela doit AUSSI bloquer (AC6 strict)
     with patch("app.core.config.settings.app_env", "production"):
@@ -166,7 +167,8 @@ async def test_governance_blocks_to_remove_on_nominal_path():
                 feature="any",
                 is_nominal=True,
             )
-        assert "Dépendance nominale au fallback 'execution_config_admin' interdite" in str(exc.value)
+        msg = "Dépendance nominale au fallback 'execution_config_admin' interdite"
+        assert msg in str(exc.value)
 
 
 @pytest.mark.asyncio
@@ -191,7 +193,9 @@ async def test_governance_critical_log_on_db_error_in_prod():
     AC9: Une erreur DB masquée en production doit déclencher un log critique.
     """
     with patch("app.core.config.settings.app_env", "production"):
-        with patch("app.llm_orchestration.services.fallback_governance.logger.critical") as mock_log:
+        # Import logger from the module to patch it correctly
+        from app.llm_orchestration.services.fallback_governance import logger as gov_logger
+        with patch.object(gov_logger, "critical") as mock_log:
             FallbackGovernanceRegistry.track_fallback(
                 FallbackType.NATAL_NO_DB,
                 call_site="test_db_crash",
@@ -201,3 +205,44 @@ async def test_governance_critical_log_on_db_error_in_prod():
             mock_log.assert_called_once()
             args, _ = mock_log.call_args
             assert "governance_critical_prod_database_error_masked" in args[0]
+
+
+@pytest.mark.asyncio
+async def test_governance_infers_family_from_call_site():
+    """
+    AC3: La famille doit être inférée si feature est None (évite contournement).
+    """
+    with patch("app.core.config.settings.app_env", "development"):
+        with pytest.raises(GatewayError) as exc:
+            # feature=None, but call_site has 'horoscope_daily'
+            FallbackGovernanceRegistry.track_fallback(
+                FallbackType.USE_CASE_FIRST,
+                call_site="resolve_config:horoscope_daily",
+                feature=None,
+                is_nominal=True,
+            )
+        expected = "Usage du fallback 'use_case_first' interdit pour la famille 'horoscope_daily'"
+        assert expected in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_governance_telemetry_emitted_even_on_block():
+    """
+    Medium: La télémétrie doit être émise même si l'appel est bloqué par une exception.
+    """
+    with patch(
+        "app.llm_orchestration.services.fallback_governance.increment_counter"
+    ) as mock_increment:
+        # On force un blocage via TO_REMOVE + is_nominal
+        with pytest.raises(GatewayError):
+            FallbackGovernanceRegistry.track_fallback(
+                FallbackType.EXECUTION_CONFIG_ADMIN,
+                call_site="test_telemetry_block",
+                feature="any",
+                is_nominal=True,
+            )
+        # increment_counter doit avoir été appelé AVANT de lever GatewayError
+        mock_increment.assert_called_once()
+        args, kwargs = mock_increment.call_args
+        assert args[0] == "llm_gateway_fallback_usage_total"
+        assert kwargs["labels"]["fallback_type"] == "execution_config_admin"
