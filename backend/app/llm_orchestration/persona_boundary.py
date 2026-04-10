@@ -1,17 +1,20 @@
 from __future__ import annotations
 
-import re
 import logging
-from typing import Literal, Optional
+import re
+from typing import Literal
+
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
+
 
 class PersonaBoundaryViolation(BaseModel):
     dimension: str
     severity: Literal["WARNING", "ERROR"]
     excerpt: str
     persona_id: str
+
 
 # AC11: Persona Boundary Policy (Story 66.10 D3)
 PERSONA_BOUNDARY_POLICY = {
@@ -68,6 +71,7 @@ PERSONA_BOUNDARY_POLICY = {
 # Note Dev: Les patterns interdits sont des heuristiques (L4 fix).
 # Préférer des expressions composées (verbe + objet) aux mots simples pour limiter les faux positifs.
 
+
 def validate_persona_block(persona_content: str, persona_id: str) -> list[PersonaBoundaryViolation]:
     """
     Detects if a persona block attempts to redefine forbidden dimensions.
@@ -81,18 +85,20 @@ def validate_persona_block(persona_content: str, persona_id: str) -> list[Person
             match = re.search(pattern, content_lower)
             if match:
                 severity = PERSONA_BOUNDARY_POLICY["severity_map"].get(dimension, "WARNING")
-                
+
                 # Extract excerpt around match
                 start = max(0, match.start() - 30)
                 end = min(len(persona_content), match.end() + 30)
                 excerpt = persona_content[start:end]
-                
-                violations.append(PersonaBoundaryViolation(
-                    dimension=dimension,
-                    severity=severity,
-                    excerpt=f"...{excerpt}...",
-                    persona_id=persona_id
-                ))
+
+                violations.append(
+                    PersonaBoundaryViolation(
+                        dimension=dimension,
+                        severity=severity,
+                        excerpt=f"...{excerpt}...",
+                        persona_id=persona_id,
+                    )
+                )
                 # One match per dimension is enough for the report
                 break
 

@@ -59,14 +59,35 @@ class ValidationResult(BaseModel):
 
 
 _PLANET_CODES = {
-    "SUN", "MOON", "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN",
-    "URANUS", "NEPTUNE", "PLUTO", "CHIRON", "LILITH", "NODE",
+    "SUN",
+    "MOON",
+    "MERCURY",
+    "VENUS",
+    "MARS",
+    "JUPITER",
+    "SATURN",
+    "URANUS",
+    "NEPTUNE",
+    "PLUTO",
+    "CHIRON",
+    "LILITH",
+    "NODE",
 }
 _ANGLE_CODES = {"ASC", "MC", "DSC", "IC"}
 _ASPECT_CODES = {"CONJUNCTION", "OPPOSITION", "TRINE", "SQUARE", "SEXTILE"}
 _SIGN_CODES = {
-    "ARIES", "TAURUS", "GEMINI", "CANCER", "LEO", "VIRGO", "LIBRA",
-    "SCORPIO", "SAGITTARIUS", "CAPRICORN", "AQUARIUS", "PISCES",
+    "ARIES",
+    "TAURUS",
+    "GEMINI",
+    "CANCER",
+    "LEO",
+    "VIRGO",
+    "LIBRA",
+    "SCORPIO",
+    "SAGITTARIUS",
+    "CAPRICORN",
+    "AQUARIUS",
+    "PISCES",
 }
 
 
@@ -82,17 +103,13 @@ def parse_json(raw_output: str, schema_version: str) -> ParseResult:
             if "disclaimers" in data:
                 data.pop("disclaimers")
                 normalizations.append("v3_disclaimers_stripped")
-        
-        return ParseResult(
-            success=True,
-            data=data,
-            normalizations_applied=normalizations
-        )
+
+        return ParseResult(success=True, data=data, normalizations_applied=normalizations)
     except json.JSONDecodeError as e:
         return ParseResult(
             success=False,
             error_message=f"JSON syntax error: {str(e)}",
-            error_category="parse_error"
+            error_category="parse_error",
         )
 
 
@@ -111,18 +128,16 @@ def validate_schema(data: Dict[str, Any], json_schema: Dict[str, Any]) -> Schema
 
     if error_messages:
         return SchemaValidationResult(
-            valid=False,
-            errors=error_messages,
-            error_category="schema_error"
+            valid=False, errors=error_messages, error_category="schema_error"
         )
-    
+
     return SchemaValidationResult(valid=True)
 
 
 def normalize_fields(
-    data: Dict[str, Any], 
-    evidence_catalog: Optional[Union[List[str], Dict[str, List[Union[str, List[str]]]]]], 
-    use_case: str
+    data: Dict[str, Any],
+    evidence_catalog: Optional[Union[List[str], Dict[str, List[Union[str, List[str]]]]]],
+    use_case: str,
 ) -> NormalizationResult:
     """
     Stage 3: Normalizes specific fields (like evidence aliases).
@@ -130,7 +145,7 @@ def normalize_fields(
     """
     normalized_data = dict(data)
     normalizations = []
-    
+
     evidence = normalized_data.get("evidence", [])
     if isinstance(evidence, list) and evidence_catalog is not None:
         catalog_set = set()
@@ -140,33 +155,30 @@ def normalize_fields(
             catalog_set = set(evidence_catalog.keys())
         else:
             catalog_set = set(evidence_catalog)
-            
+
         new_evidence = []
         any_normalized = False
         for item in evidence:
             if not isinstance(item, str):
                 new_evidence.append(item)
                 continue
-            
+
             norm_item = _normalize_evidence_item(item, catalog_set, catalog_map)
             if norm_item != item:
                 any_normalized = True
             new_evidence.append(norm_item.upper())
-            
+
         if any_normalized:
             normalized_data["evidence"] = new_evidence
             normalizations.append("evidence_alias_normalized")
-            
-    return NormalizationResult(
-        data=normalized_data,
-        normalizations_applied=normalizations
-    )
+
+    return NormalizationResult(data=normalized_data, normalizations_applied=normalizations)
 
 
 def sanitize_evidence(
-    data: Dict[str, Any], 
-    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]], 
-    strict: bool
+    data: Dict[str, Any],
+    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]],
+    strict: bool,
 ) -> SanitizationResult:
     """
     Stage 4: Applies security filters and consistency checks.
@@ -175,7 +187,7 @@ def sanitize_evidence(
     sanitized_data = dict(data)
     normalizations = []
     warnings = []
-    
+
     evidence = sanitized_data.get("evidence", [])
     if not isinstance(evidence, list):
         return SanitizationResult(data=sanitized_data)
@@ -203,7 +215,7 @@ def sanitize_evidence(
             text_blobs.append(val)
         elif isinstance(val, list):
             text_blobs.extend([e for e in val if isinstance(e, str)])
-            
+
     if "sections" in sanitized_data and isinstance(sanitized_data["sections"], list):
         for s in sanitized_data["sections"]:
             if isinstance(s, dict) and "content" in s:
@@ -214,7 +226,7 @@ def sanitize_evidence(
         for item in evidence:
             if not isinstance(item, str):
                 continue
-            
+
             found = False
             pattern = rf"\b{re.escape(_normalize_for_matching(item))}\b"
             if re.search(pattern, full_text):
@@ -225,9 +237,11 @@ def sanitize_evidence(
                     if re.search(label_pattern, full_text):
                         found = True
                         break
-            
+
             if not found:
-                warnings.append(f"Orphan evidence: '{item}' present in evidence but never mentioned in text.")
+                warnings.append(
+                    f"Orphan evidence: '{item}' present in evidence but never mentioned in text."
+                )
 
     # 3. Secure Filter (Silently remove non-catalog items, AC4)
     if evidence_catalog is not None:
@@ -243,9 +257,7 @@ def sanitize_evidence(
             warnings.append(f"[evidence.{i}] Item contains spaces: '{item}'")
 
     return SanitizationResult(
-        data=sanitized_data,
-        normalizations_applied=normalizations,
-        warnings=warnings
+        data=sanitized_data, normalizations_applied=normalizations, warnings=warnings
     )
 
 
@@ -266,23 +278,37 @@ def validate_output(
         parse_res = parse_json(raw_output, schema_version)
         if not parse_res.success:
             if use_case.startswith("natal"):
-                increment_counter("natal_validation_fail_total", labels={"use_case": use_case, "reason": "json_error", "schema_version": schema_version})
+                increment_counter(
+                    "natal_validation_fail_total",
+                    labels={
+                        "use_case": use_case,
+                        "reason": "json_error",
+                        "schema_version": schema_version,
+                    },
+                )
             return ValidationResult(
-                valid=False, 
-                errors=[parse_res.error_message] if parse_res.error_message else [], 
-                error_category="parse_error"
+                valid=False,
+                errors=[parse_res.error_message] if parse_res.error_message else [],
+                error_category="parse_error",
             )
 
         # Stage 2: Schema
         schema_res = validate_schema(parse_res.data, json_schema)
         if not schema_res.valid:
             if use_case.startswith("natal"):
-                increment_counter("natal_validation_fail_total", labels={"use_case": use_case, "reason": "schema_error", "schema_version": schema_version})
+                increment_counter(
+                    "natal_validation_fail_total",
+                    labels={
+                        "use_case": use_case,
+                        "reason": "schema_error",
+                        "schema_version": schema_version,
+                    },
+                )
             return ValidationResult(
-                valid=False, 
-                parsed=parse_res.data, 
-                errors=schema_res.errors, 
-                error_category="schema_error"
+                valid=False,
+                parsed=parse_res.data,
+                errors=schema_res.errors,
+                error_category="schema_error",
             )
 
         # Stage 3: Normalize
@@ -292,19 +318,32 @@ def validate_output(
         sanit_res = sanitize_evidence(norm_res.data, evidence_catalog, strict)
 
         # Aggregation
-        applied = parse_res.normalizations_applied + norm_res.normalizations_applied + sanit_res.normalizations_applied
-        
+        applied = (
+            parse_res.normalizations_applied
+            + norm_res.normalizations_applied
+            + sanit_res.normalizations_applied
+        )
+
         if use_case.startswith("natal"):
-            increment_counter("natal_validation_pass_total", labels={"use_case": use_case, "schema_version": schema_version})
-            filtered_count = len(norm_res.data.get("evidence", [])) - len(sanit_res.data.get("evidence", []))
+            increment_counter(
+                "natal_validation_pass_total",
+                labels={"use_case": use_case, "schema_version": schema_version},
+            )
+            filtered_count = len(norm_res.data.get("evidence", [])) - len(
+                sanit_res.data.get("evidence", [])
+            )
             if filtered_count > 0:
-                increment_counter("natal_invalid_evidence_total", value=float(filtered_count), labels={"use_case": use_case, "schema_version": schema_version})
+                increment_counter(
+                    "natal_invalid_evidence_total",
+                    value=float(filtered_count),
+                    labels={"use_case": use_case, "schema_version": schema_version},
+                )
 
         return ValidationResult(
             valid=True,
             parsed=sanit_res.data,
             warnings=sanit_res.warnings,
-            normalizations_applied=applied
+            normalizations_applied=applied,
         )
 
     except Exception as e:
@@ -408,7 +447,7 @@ def _normalize_evidence_item(
                     flattened_aliases.extend(a)
                 else:
                     flattened_aliases.append(a)
-            
+
             for alias in flattened_aliases:
                 if _normalize_for_matching(str(alias)) == norm_item:
                     return canonical_id

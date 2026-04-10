@@ -135,7 +135,7 @@ async def log_call(
             # From ExecutionPlan mapped to result in build_result
             # result.meta should have these if I added them to GatewayMeta
             # WAIT: I didn't add them to GatewayMeta yet.
-            
+
             # Let's check result.meta for assembly fields (I'll add them to GatewayMeta first)
             assembly_id = safe_uuid(getattr(result.meta, "assembly_id", None))
             feature = getattr(result.meta, "feature", None)

@@ -145,9 +145,7 @@ def test_admin_content_editorial_templates_and_calibration_rules() -> None:
     created_payload = create_resp.json()["data"]
     assert created_payload["active_version_id"] != active_version_id
     rollback_target_id = next(
-        version["id"]
-        for version in created_payload["versions"]
-        if version["version_number"] == 1
+        version["id"] for version in created_payload["versions"] if version["version_number"] == 1
     )
 
     rollback_resp = client.post(

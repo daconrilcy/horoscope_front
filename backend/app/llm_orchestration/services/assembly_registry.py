@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-import uuid
 import logging
 import time
-from typing import Optional, Dict, Tuple, Any
+import uuid
+from typing import Any, Dict, Optional, Tuple
 
-from sqlalchemy import select, and_, update
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ class AssemblyRegistry:
     async def _execute(self, stmt):
         """Unified executor for sync/async sessions."""
         from sqlalchemy.ext.asyncio import AsyncSession
+
         if isinstance(self.session, AsyncSession):
             return await self.session.execute(stmt)
         return self.session.execute(stmt)
@@ -60,7 +61,7 @@ class AssemblyRegistry:
             "created_at": config.created_at,
             "published_at": config.published_at,
         }
-        
+
         # Serialize relationships if loaded
         if config.feature_template:
             data["_feature_template"] = {
@@ -92,7 +93,7 @@ class AssemblyRegistry:
         feat_data = data_copy.pop("_feature_template", None)
         sub_data = data_copy.pop("_subfeature_template", None)
         pers_data = data_copy.pop("_persona", None)
-        
+
         config = PromptAssemblyConfigModel(**data_copy)
         if feat_data:
             config.feature_template = LlmPromptVersionModel(**feat_data)
@@ -100,7 +101,7 @@ class AssemblyRegistry:
             config.subfeature_template = LlmPromptVersionModel(**sub_data)
         if pers_data:
             config.persona = LlmPersonaModel(**pers_data)
-            
+
         return config
 
     async def get_active_config(
@@ -112,7 +113,7 @@ class AssemblyRegistry:
         """
         cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
         now = time.time()
-        
+
         # AC8: Cache lookup
         if cache_key in _ASSEMBLY_CACHE:
             data, expiry = _ASSEMBLY_CACHE[cache_key]
@@ -156,7 +157,7 @@ class AssemblyRegistry:
         if resolved_config:
             # AC8: Update cache with serialized data
             _ASSEMBLY_CACHE[cache_key] = (self._serialize_config(resolved_config), now + CACHE_TTL)
-            
+
         return resolved_config
 
     def get_active_config_sync(
@@ -168,7 +169,7 @@ class AssemblyRegistry:
         """
         cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
         now = time.time()
-        
+
         if cache_key in _ASSEMBLY_CACHE:
             data, expiry = _ASSEMBLY_CACHE[cache_key]
             if now < expiry:
@@ -202,6 +203,7 @@ class AssemblyRegistry:
             )
             # Use synchronous execute
             from sqlalchemy.orm import Session
+
             if not isinstance(self.session, Session):
                 # If we somehow have an AsyncSession here, we can't do sync call
                 # but in practice LLMGateway.execute_request uses SessionLocal()
@@ -216,7 +218,7 @@ class AssemblyRegistry:
 
         if resolved_config:
             _ASSEMBLY_CACHE[cache_key] = (self._serialize_config(resolved_config), now + CACHE_TTL)
-            
+
         return resolved_config
 
     async def get_config_by_id(self, assembly_id: uuid.UUID) -> Optional[PromptAssemblyConfigModel]:
@@ -244,6 +246,7 @@ class AssemblyRegistry:
 
         # 1. Archive current active config for this target
         from sqlalchemy import update
+
         archive_stmt = (
             update(PromptAssemblyConfigModel)
             .where(
@@ -253,7 +256,7 @@ class AssemblyRegistry:
                     PromptAssemblyConfigModel.plan == config.plan,
                     PromptAssemblyConfigModel.locale == config.locale,
                     PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
-                    PromptAssemblyConfigModel.id != config_id
+                    PromptAssemblyConfigModel.id != config_id,
                 )
             )
             .values(status=PromptStatus.ARCHIVED)
@@ -264,24 +267,34 @@ class AssemblyRegistry:
         # 2. Publish this config
         config.status = PromptStatus.PUBLISHED
         from datetime import datetime, timezone
+
         config.published_at = datetime.now(timezone.utc)
-        
+
         # 3. Handle session commit/flush
         from sqlalchemy.ext.asyncio import AsyncSession
+
         if isinstance(self.session, AsyncSession):
             await self.session.commit()
         else:
             self.session.commit()
-            
+
         # H1: Invalidate cache on publish
         self.invalidate_cache()
-            
+
         return config, archived_count
 
-    async def rollback_config(self, feature: str, subfeature: Optional[str], plan: Optional[str], locale: str, target_id: uuid.UUID) -> PromptAssemblyConfigModel:
+    async def rollback_config(
+        self,
+        feature: str,
+        subfeature: Optional[str],
+        plan: Optional[str],
+        locale: str,
+        target_id: uuid.UUID,
+    ) -> PromptAssemblyConfigModel:
         """
         Rollback to a specific archived configuration.
         """
+
         # L2 Fix: Single transaction for atomicity
         # M4 Fix: Use direct update for the archive step to avoid issues with detached instances
         async def _do_rollback():
@@ -300,14 +313,15 @@ class AssemblyRegistry:
                 .values(status=PromptStatus.ARCHIVED)
             )
             await self._execute(archive_stmt)
-                
+
             # Publish target
             target_config = await self.get_config_by_id(target_id)
             if not target_config:
                 raise ValueError(f"Target config {target_id} not found")
-                
+
             target_config.status = PromptStatus.PUBLISHED
             from datetime import datetime, timezone
+
             target_config.published_at = datetime.now(timezone.utc)
             return target_config
 
@@ -318,7 +332,7 @@ class AssemblyRegistry:
         else:
             res = await _do_rollback()
             self.session.commit()
-            
+
         # H1: Invalidate cache on rollback
         self.invalidate_cache()
         return res

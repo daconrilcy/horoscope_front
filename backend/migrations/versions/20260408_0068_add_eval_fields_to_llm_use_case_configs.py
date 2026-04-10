@@ -19,9 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     with op.batch_alter_table("llm_use_case_configs", schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column("eval_fixtures_path", sa.String(length=255), nullable=True)
-        )
+        batch_op.add_column(sa.Column("eval_fixtures_path", sa.String(length=255), nullable=True))
         batch_op.add_column(
             sa.Column(
                 "eval_failure_threshold",

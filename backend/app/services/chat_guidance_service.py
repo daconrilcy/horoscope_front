@@ -952,9 +952,15 @@ class ChatGuidanceService:
 
         # Story 66.20 High Issue 1: Resolve user plan for assembly resolution
         from types import SimpleNamespace
-        from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+
+        from app.services.effective_entitlement_resolver_service import (
+            EffectiveEntitlementResolverService,
+        )
+
         try:
-            snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+            snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
+                db, app_user_id=user_id
+            )
             user_plan = snapshot.plan_code
         except Exception:
             user_plan = "free"

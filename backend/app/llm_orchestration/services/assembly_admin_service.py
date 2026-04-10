@@ -1,32 +1,23 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-from sqlalchemy import select, and_, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_prompt import PromptStatus, LlmPromptVersionModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.llm_orchestration.admin_models import (
     PromptAssemblyConfig,
     PromptAssemblyPreview,
-    PromptAssemblyTarget,
-    ResolvedAssembly,
-    PlaceholderInfo,
-    ExecutionConfigAdmin,
 )
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
 from app.llm_orchestration.services.assembly_resolver import (
-    assemble_developer_prompt,
     build_assembly_preview,
-    resolve_assembly,
     validate_placeholders,
 )
-from app.llm_orchestration.services.prompt_renderer import PromptRenderer
-from app.llm_orchestration.policies.hard_policy import get_hard_policy
 
 
 class AssemblyAdminService:
@@ -39,6 +30,7 @@ class AssemblyAdminService:
     async def _execute(self, stmt):
         """Unified executor for sync/async sessions."""
         from sqlalchemy.ext.asyncio import AsyncSession
+
         if isinstance(self.session, AsyncSession):
             return await self.session.execute(stmt)
         return self.session.execute(stmt)
@@ -52,7 +44,7 @@ class AssemblyAdminService:
         )
         if feature:
             stmt = stmt.where(PromptAssemblyConfigModel.feature == feature)
-        
+
         result = await self._execute(stmt)
         return list(result.scalars().all())
 
@@ -60,12 +52,16 @@ class AssemblyAdminService:
         """Get a specific assembly configuration by ID."""
         return await self.registry.get_config_by_id(config_id)
 
-    async def create_draft(self, config_in: PromptAssemblyConfig, created_by: str) -> PromptAssemblyConfigModel:
+    async def create_draft(
+        self, config_in: PromptAssemblyConfig, created_by: str
+    ) -> PromptAssemblyConfigModel:
         """Create a new draft assembly configuration."""
         # AC6: Validate placeholders for BOTH templates before saving draft
-        
+
         # 1. Feature Template
-        stmt = select(LlmPromptVersionModel).where(LlmPromptVersionModel.id == config_in.feature_template_ref)
+        stmt = select(LlmPromptVersionModel).where(
+            LlmPromptVersionModel.id == config_in.feature_template_ref
+        )
         res = await self._execute(stmt)
         fv = res.scalar_one_or_none()
         if fv:
@@ -75,13 +71,17 @@ class AssemblyAdminService:
 
         # 2. Subfeature Template (if provided)
         if config_in.subfeature_template_ref:
-            stmt_sub = select(LlmPromptVersionModel).where(LlmPromptVersionModel.id == config_in.subfeature_template_ref)
+            stmt_sub = select(LlmPromptVersionModel).where(
+                LlmPromptVersionModel.id == config_in.subfeature_template_ref
+            )
             res_sub = await self._execute(stmt_sub)
             sv = res_sub.scalar_one_or_none()
             if sv:
                 invalid_sub = validate_placeholders(sv.developer_prompt, config_in.feature)
                 if invalid_sub:
-                    raise ValueError(f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}")
+                    raise ValueError(
+                        f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}"
+                    )
 
         new_config = PromptAssemblyConfigModel(
             feature=config_in.feature,
@@ -116,19 +116,30 @@ class AssemblyAdminService:
         config = await self.get_config(config_id)
         if not config:
             raise ValueError(f"Config {config_id} not found")
-            
+
         invalid = validate_placeholders(config.feature_template.developer_prompt, config.feature)
         if invalid:
             raise ValueError(f"Invalid placeholders in feature template: {', '.join(invalid)}")
-            
+
         if config.subfeature_template:
-            invalid_sub = validate_placeholders(config.subfeature_template.developer_prompt, config.feature)
+            invalid_sub = validate_placeholders(
+                config.subfeature_template.developer_prompt, config.feature
+            )
             if invalid_sub:
-                raise ValueError(f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}")
-            
+                raise ValueError(
+                    f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}"
+                )
+
         return await self.registry.publish_config(config_id)
 
-    async def rollback_config(self, feature: str, subfeature: Optional[str], plan: Optional[str], locale: str, target_id: uuid.UUID) -> PromptAssemblyConfigModel:
+    async def rollback_config(
+        self,
+        feature: str,
+        subfeature: Optional[str],
+        plan: Optional[str],
+        locale: str,
+        target_id: uuid.UUID,
+    ) -> PromptAssemblyConfigModel:
         """Rollback using registry."""
         return await self.registry.rollback_config(feature, subfeature, plan, locale, target_id)
 

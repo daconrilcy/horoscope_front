@@ -242,9 +242,7 @@ def _record_audit_event(
 
 
 def _ensure_config_texts_seeded(db: Session) -> None:
-    existing_keys = {
-        item[0] for item in db.execute(select(ConfigTextModel.key)).all()
-    }
+    existing_keys = {item[0] for item in db.execute(select(ConfigTextModel.key)).all()}
     for item in DEFAULT_CONFIG_TEXTS:
         if item["key"] in existing_keys:
             continue

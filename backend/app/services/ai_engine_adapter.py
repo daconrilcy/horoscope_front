@@ -5,13 +5,13 @@
 """
 CANONICAL LLM APPLICATION LAYER
 
-Ce module constitue le point d'entrée unique pour les services métier (Chat, Guidance, 
+Ce module constitue le point d'entrée unique pour les services métier (Chat, Guidance,
 et prochainement Natal) souhaitant exécuter un appel LLM orchestré.
 
 RESPONSABILITÉS :
 1. Construire le contrat canonique LLMExecutionRequest à partir des entrées métier.
 2. Appeler le LLMGateway via sa méthode execute_request().
-3. Mapper les exceptions de plateforme (GatewayError, UpstreamError) en exceptions 
+3. Mapper les exceptions de plateforme (GatewayError, UpstreamError) en exceptions
    applicatives (AIEngineAdapterError) avec les codes HTTP appropriés.
 
 NON-RÔLES :
@@ -103,7 +103,7 @@ def _build_guidance_request(
     (Story 66.3 AC4)
     """
     normalized_context = dict(context)
-    
+
     situation = (normalized_context.get("situation") or "").strip()
     objective = (normalized_context.get("objective") or "").strip()
     time_horizon = (normalized_context.get("time_horizon") or "").strip()
@@ -150,7 +150,7 @@ def _build_guidance_request(
         natal_data=normalized_context.get("natal_data"),
         chart_json=normalized_context.get("chart_json"),
         astro_context=normalized_context.get("astro_context"),
-        extra_context=extra_context
+        extra_context=extra_context,
     )
 
     return LLMExecutionRequest(
@@ -158,7 +158,7 @@ def _build_guidance_request(
         context=exec_context,
         user_id=user_id,
         request_id=request_id,
-        trace_id=trace_id
+        trace_id=trace_id,
     )
 
 
@@ -507,7 +507,7 @@ class AIEngineAdapter:
         trace_id: str,
         locale: str = "fr-FR",
         db: Optional[Session] = None,
-        entitlement_result: Any = None, # Story 66.15: passing entitlement to get plan
+        entitlement_result: Any = None,  # Story 66.15: passing entitlement to get plan
     ) -> Any:  # Returns GatewayResult
         """
         Generate a chat reply via the AI Engine.
@@ -549,7 +549,7 @@ class AIEngineAdapter:
 
         try:
             gateway = LLMGateway()
-            
+
             # 1. Prepare User Input
             last_user_msg = ""
             for msg in reversed(messages):
@@ -569,16 +569,16 @@ class AIEngineAdapter:
                 plan=plan,
                 locale=locale,
                 message=last_user_msg,
-                conversation_id=str(context.get("conversation_id")) 
-                if context.get("conversation_id") else None,
+                conversation_id=str(context.get("conversation_id"))
+                if context.get("conversation_id")
+                else None,
             )
 
             # 2. Prepare Context
             history = [
-                ExecutionMessage(role=m["role"], content=m["content"]) 
-                for m in messages[:-1]
+                ExecutionMessage(role=m["role"], content=m["content"]) for m in messages[:-1]
             ]
-            
+
             extra_context = {**context}
             # Remove keys already handled in request or not relevant for extra_context
             for key in ["conversation_id", "history", "chat_turn_stage"]:
@@ -599,7 +599,7 @@ class AIEngineAdapter:
                 natal_data=context.get("natal_data"),
                 chart_json=context.get("chart_json"),
                 astro_context=context.get("astro_context"),
-                extra_context=extra_context
+                extra_context=extra_context,
             )
 
             # 3. Build Request
@@ -608,7 +608,7 @@ class AIEngineAdapter:
                 context=exec_context,
                 user_id=user_id,
                 request_id=request_id,
-                trace_id=trace_id
+                trace_id=trace_id,
             )
 
             # 4. Execute
@@ -675,7 +675,7 @@ class AIEngineAdapter:
         trace_id: str,
         locale: str = "fr-FR",
         db: Optional[Session] = None,
-        plan: str = "free", # Story 66.15: passing plan
+        plan: str = "free",  # Story 66.15: passing plan
     ) -> Any:
         """
         Generate guidance via the AI Engine.
@@ -704,9 +704,9 @@ class AIEngineAdapter:
                 locale=locale,
                 user_id=user_id,
                 request_id=request_id,
-                trace_id=trace_id
+                trace_id=trace_id,
             )
-            
+
             # Story 66.15 AC2: populate feature, subfeature, plan
             request.user_input.feature = "guidance"
             # subfeature is the part after 'guidance_'
@@ -716,7 +716,7 @@ class AIEngineAdapter:
                 request.user_input.subfeature = "event"
             else:
                 request.user_input.subfeature = use_case
-            
+
             request.user_input.plan = plan
 
             result = await gateway.execute_request(request=request, db=db)
@@ -878,7 +878,7 @@ class AIEngineAdapter:
 
             # 2. Validation métier de longueur (D4)
             min_sentences = 7 if plan == "free" else 10
-            
+
             # 3. Construction du prompt via le builder existant (D2)
             base_question = AstrologerPromptBuilder().build(
                 common_context=common_context,
@@ -895,17 +895,21 @@ class AIEngineAdapter:
 
             # 4. Boucle de retry métier (D4)
             final_narrator_result: NarratorResult | None = None
-            
+
             for attempt in range(1, 3):  # MAX_NARRATION_ATTEMPTS = 2
-                question = base_question if attempt == 1 else (
+                question = (
                     base_question
-                    + f"\n\nCORRECTION OBLIGATOIRE : daily_synthesis trop courte. "
-                      f"Assure-toi d'au moins {min_sentences} phrases complètes."
+                    if attempt == 1
+                    else (
+                        base_question
+                        + f"\n\nCORRECTION OBLIGATOIRE : daily_synthesis trop courte. "
+                        f"Assure-toi d'au moins {min_sentences} phrases complètes."
+                    )
                 )
 
                 # 5. Build Request
                 user_input = ExecutionUserInput(
-                    use_case=feature, # feature as use_case for now
+                    use_case=feature,  # feature as use_case for now
                     feature=feature,
                     subfeature=subfeature,
                     plan=plan,
@@ -914,12 +918,12 @@ class AIEngineAdapter:
                 )
 
                 exec_context = ExecutionContext(
-                    natal_data=None, # Already in common_context -> question
-                    chart_json=None, # Already in common_context -> question
+                    natal_data=None,  # Already in common_context -> question
+                    chart_json=None,  # Already in common_context -> question
                     extra_context={
                         "variant_code": variant_code,
                         "astrologer_profile_key": astrologer_profile_key,
-                    }
+                    },
                 )
 
                 request = LLMExecutionRequest(
@@ -927,28 +931,25 @@ class AIEngineAdapter:
                     context=exec_context,
                     user_id=user_id,
                     request_id=request_id,
-                    trace_id=trace_id
+                    trace_id=trace_id,
                 )
 
                 # 6. Execute
                 result = await gateway.execute_request(request=request, db=db)
-                
+
                 # Fallback estimation if usage is zero but output exists
                 if result.usage.output_tokens == 0 and result.raw_output:
-                    result.usage.output_tokens = (
-                        AIEngineAdapter.estimate_tokens(result.raw_output)
-                    )
+                    result.usage.output_tokens = AIEngineAdapter.estimate_tokens(result.raw_output)
 
                 # 7. Map to legacy NarratorResult (D3)
-                final_narrator_result = (
-                    AIEngineAdapter._map_gateway_result_to_narrator_result(result)
+                final_narrator_result = AIEngineAdapter._map_gateway_result_to_narrator_result(
+                    result
                 )
-                
+
                 if (
-                    final_narrator_result 
-                    and AIEngineAdapter._count_sentences(
-                        final_narrator_result.daily_synthesis
-                    ) >= min_sentences
+                    final_narrator_result
+                    and AIEngineAdapter._count_sentences(final_narrator_result.daily_synthesis)
+                    >= min_sentences
                 ):
                     return final_narrator_result
 
@@ -956,13 +957,14 @@ class AIEngineAdapter:
 
         except Exception as err:
             from app.llm_orchestration.models import GatewayError
+
             if isinstance(err, GatewayError):
                 if variant_code == "summary_only" or variant_code == "full":
                     uc_to_report = "horoscope_daily"
                 else:
                     uc_to_report = "daily_prediction"
                 _handle_gateway_error(err, request_id, uc_to_report)
-            
+
             logger.error(
                 "ai_engine_adapter_narration_failed request_id=%s error=%s",
                 request_id,
@@ -977,12 +979,12 @@ class AIEngineAdapter:
         """
         if not result.structured_output:
             return None
-        
+
         data = result.structured_output
         synthesis = data.get("daily_synthesis", "")
         if not synthesis:
             return None
-            
+
         advice_data = data.get("daily_advice")
         daily_advice = None
         if isinstance(advice_data, dict):
@@ -1000,8 +1002,7 @@ class AIEngineAdapter:
         if isinstance(tw_raw, dict):
             allowed_keys = {"nuit", "matin", "apres_midi", "soiree"}
             time_window_narratives = {
-                k: as_string(v) for k, v in tw_raw.items() 
-                if k in allowed_keys and as_string(v)
+                k: as_string(v) for k, v in tw_raw.items() if k in allowed_keys and as_string(v)
             }
 
         tp_raw = data.get("turning_point_narratives")
@@ -1015,9 +1016,8 @@ class AIEngineAdapter:
             time_window_narratives=time_window_narratives,
             turning_point_narratives=turning_point_narratives,
             daily_advice=daily_advice,
-            main_turning_point_narrative=as_string(
-                data.get("main_turning_point_narrative")
-            ) or None,
+            main_turning_point_narrative=as_string(data.get("main_turning_point_narrative"))
+            or None,
         )
 
     @staticmethod

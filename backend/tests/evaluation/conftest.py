@@ -1,18 +1,24 @@
+from pathlib import Path
+
 import pytest
 import yaml
-from pathlib import Path
+
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "evaluation: marks tests as part of the evaluation matrix")
 
+
 from unittest.mock import patch
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.infra.db.base import Base
 
 # Setup in-memory DB for validation
 engine = create_engine("sqlite:///:memory:")
 TestingSessionLocal = sessionmaker(bind=engine)
+
 
 @pytest.fixture
 def db():
@@ -26,11 +32,13 @@ def db():
     session.close()
     Base.metadata.drop_all(bind=engine)
 
+
 @pytest.fixture(scope="session")
 def evaluation_matrix():
     path = Path(__file__).parent / "evaluation_matrix.yaml"
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)["matrix"]
+
 
 @pytest.fixture
 def mock_context_by_quality():
@@ -44,18 +52,17 @@ def mock_context_by_quality():
             "natal_data": {"planets": {"sun": "aries"}},
             "chart_json": '{"planets": {}}',
             "situation": "recherche d'emploi",
-            "objective": "comprendre mon avenir"
+            "objective": "comprendre mon avenir",
         },
         "partial": {
             "locale": "fr-FR",
             "birth_date": "1990-01-01",
             "last_user_msg": "Hello",
-            "situation": "recherche d'emploi"
+            "situation": "recherche d'emploi",
         },
-        "minimal": {
-            "locale": "fr-FR"
-        }
+        "minimal": {"locale": "fr-FR"},
     }
+
 
 @pytest.fixture
 def mock_personas():
@@ -64,12 +71,12 @@ def mock_personas():
             "name": "Synthetique",
             "tone": "direct et concis",
             "style_markers": ["réponses ultra-courtes", "pas de fioritures"],
-            "boundaries": ["maximum 3 phrases"]
+            "boundaries": ["maximum 3 phrases"],
         },
         "ample": {
             "name": "Ample",
             "tone": "poétique et détaillé",
             "style_markers": ["réponses longues et riches", "métaphores complexes"],
-            "boundaries": ["minimum 10 phrases"]
-        }
+            "boundaries": ["minimum 10 phrases"],
+        },
     }

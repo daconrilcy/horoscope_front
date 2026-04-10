@@ -1,5 +1,5 @@
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy import create_engine
@@ -10,14 +10,14 @@ from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCa
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
-    GatewayError, 
-    GatewayResult, 
-    GatewayMeta, 
-    UsageInfo,
-    LLMExecutionRequest,
     ExecutionUserInput,
+    GatewayError,
+    GatewayMeta,
+    GatewayResult,
     InputValidationError,
-    UseCaseConfig
+    LLMExecutionRequest,
+    UsageInfo,
+    UseCaseConfig,
 )
 
 
@@ -68,10 +68,12 @@ async def test_persona_strategy_forbidden(db_session, monkeypatch):
 
     # Provide a persona_id, should be ignored
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="support", locale="fr", question="help", persona_id_override="some_id"),
+        user_input=ExecutionUserInput(
+            use_case="support", locale="fr", question="help", persona_id_override="some_id"
+        ),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     result = await gateway.execute_request(
         request=request,
@@ -110,16 +112,20 @@ async def test_persona_override_rejected(db_session, monkeypatch):
     db_session.commit()
 
     mock_client = MagicMock()
-    mock_client.execute = AsyncMock(return_value=_make_mock_result("natal", persona_id=str(persona_safe.id)))
+    mock_client.execute = AsyncMock(
+        return_value=_make_mock_result("natal", persona_id=str(persona_safe.id))
+    )
 
     gateway = LLMGateway(responses_client=mock_client)
 
     # Request unauthorized persona_id
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal", locale="fr", question="me", persona_id_override=str(uuid.uuid4())),
+        user_input=ExecutionUserInput(
+            use_case="natal", locale="fr", question="me", persona_id_override=str(uuid.uuid4())
+        ),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     result = await gateway.execute_request(
         request=request,
@@ -163,10 +169,12 @@ async def test_persona_override_authorized(db_session, monkeypatch):
 
     # Request p2 specifically
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal", locale="fr", question="me", persona_id_override=str(p2.id)),
+        user_input=ExecutionUserInput(
+            use_case="natal", locale="fr", question="me", persona_id_override=str(p2.id)
+        ),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     result = await gateway.execute_request(
         request=request,
@@ -204,16 +212,16 @@ async def test_input_validation_failure(db_session, monkeypatch):
     }
     # Create use_case correctly in DB
     use_case_config = LlmUseCaseConfigModel(
-        key="chat", 
-        display_name="C", 
-        description="D", 
+        key="chat",
+        display_name="C",
+        description="D",
         input_schema=schema,
         interaction_mode="chat",
-        user_question_policy="optional"
+        user_question_policy="optional",
     )
     db_session.add(use_case_config)
-    db_session.flush() # Ensure it has an id if needed
-    
+    db_session.flush()  # Ensure it has an id if needed
+
     p = LlmPromptVersionModel(
         use_case_key="chat",
         status=PromptStatus.PUBLISHED,
@@ -233,9 +241,9 @@ async def test_input_validation_failure(db_session, monkeypatch):
         user_input=ExecutionUserInput(use_case="chat", locale="fr", message="hi"),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
-    
+
     # We must skip common context to avoid birth profile errors in this unit test
     request.flags.skip_common_context = True
 
@@ -244,7 +252,10 @@ async def test_input_validation_failure(db_session, monkeypatch):
 
     # Direct test of _validate_input
     with pytest.raises(InputValidationError) as exc:
-        gateway._validate_input(UseCaseConfig(model="m", developer_prompt="p", input_schema=schema), user_input={"message": "hi"})
+        gateway._validate_input(
+            UseCaseConfig(model="m", developer_prompt="p", input_schema=schema),
+            user_input={"message": "hi"},
+        )
     assert "Input validation failed" in str(exc.value)
 
     # Now the full test should also pass if resolution is correct

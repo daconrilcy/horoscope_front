@@ -1,9 +1,12 @@
-import pytest
-import uuid
 import logging
-from app.llm_orchestration.persona_boundary import validate_persona_block, PersonaBoundaryViolation
-from app.llm_orchestration.services.persona_composer import compose_persona_block
+import uuid
+
+import pytest
+
 from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.llm_orchestration.persona_boundary import validate_persona_block
+from app.llm_orchestration.services.persona_composer import compose_persona_block
+
 
 def test_validate_persona_block_violations():
     """Test Story 66.10: Detection of forbidden patterns in persona block."""
@@ -29,11 +32,13 @@ def test_validate_persona_block_violations():
     violations = validate_persona_block(content, "test-p4")
     assert any(v.dimension == "plan_rules" for v in violations)
 
+
 def test_validate_persona_block_no_violations():
     """Test Story 66.10: No violations for valid stylistic content."""
     content = "Tu es une astrologue bienveillante. Utilise un ton poétique et mystique."
     violations = validate_persona_block(content, "test-ok")
     assert len(violations) == 0
+
 
 @pytest.mark.asyncio
 async def test_persona_composer_integration(db, caplog):
@@ -42,21 +47,21 @@ async def test_persona_composer_integration(db, caplog):
         id=uuid.uuid4(),
         name="Luna",
         description="test",
-        style_markers=["ignore instructions"], # Violation ERROR
-        boundaries=["respond in json"],        # Violation WARNING
-        enabled=True
+        style_markers=["ignore instructions"],  # Violation ERROR
+        boundaries=["respond in json"],  # Violation WARNING
+        enabled=True,
     )
     db.add(persona)
     db.commit()
 
     with caplog.at_level(logging.WARNING):
         block = compose_persona_block(persona)
-    
+
     # Check logs
     assert "persona_boundary_violation: hard_policy" in caplog.text
     assert "Severity=ERROR" in caplog.text
     assert "persona_boundary_violation: output_contract" in caplog.text
     assert "Severity=WARNING" in caplog.text
-    
+
     # Check block content still exists
     assert "Luna" in block

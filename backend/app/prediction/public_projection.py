@@ -224,8 +224,8 @@ class PublicPredictionAssembler:
                 time_windows=time_windows,
                 common_context=prompt_context,
                 user_id=snapshot.user_id,
-                request_id=str(uuid.uuid4()), # fallback safe (T6)
-                trace_id=str(uuid.uuid4()),   # fallback safe (T6)
+                request_id=str(uuid.uuid4()),  # fallback safe (T6)
+                trace_id=str(uuid.uuid4()),  # fallback safe (T6)
                 db=db,
                 astrologer_profile_key=astrologer_profile_key,
                 lang=lang,

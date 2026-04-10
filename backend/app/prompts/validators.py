@@ -13,8 +13,7 @@ from app.prompts.exceptions import ConfigurationError
 logger = logging.getLogger(__name__)
 
 
-from typing import Any, Optional, Literal
-
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel
 
@@ -32,27 +31,29 @@ def validate_template_content(template_text: str) -> list[ArchitectureViolation]
     """
     violations = []
     text_lower = template_text.lower()
-    
+
     # Patterns for execution concerns
     patterns = {
         "model_reference": [r"use model", r"utilise le modèle", r"gpt-", r"claude-", r"o1-"],
         "provider_reference": [r"provider", r"openai", r"anthropic"],
     }
-    
+
     for v_type, p_list in patterns.items():
         for p in p_list:
             match = re.search(p, text_lower)
             if match:
                 start = max(0, match.start() - 20)
                 end = min(len(template_text), match.end() + 20)
-                violations.append(ArchitectureViolation(
-                    entity="LlmPromptVersion",
-                    violation_type=f"template_content_violation:{v_type}",
-                    severity="WARNING",
-                    excerpt=f"...{template_text[start:end]}..."
-                ))
+                violations.append(
+                    ArchitectureViolation(
+                        entity="LlmPromptVersion",
+                        violation_type=f"template_content_violation:{v_type}",
+                        severity="WARNING",
+                        excerpt=f"...{template_text[start:end]}...",
+                    )
+                )
                 break
-                
+
     return violations
 
 
@@ -62,30 +63,34 @@ def validate_plan_rules_content(plan_rules_text: str) -> list[ArchitectureViolat
     """
     violations = []
     text_lower = plan_rules_text.lower()
-    
+
     # Patterns for feature selection
     patterns = {
         "feature_selection": [r"si premium", r"if premium", r"utilise la feature", r"use case"],
     }
-    
+
     for v_type, p_list in patterns.items():
         for p in p_list:
             match = re.search(p, text_lower)
             if match:
                 start = max(0, match.start() - 20)
                 end = min(len(plan_rules_text), match.end() + 20)
-                violations.append(ArchitectureViolation(
-                    entity="PlanRule",
-                    violation_type=f"plan_rules_violation:{v_type}",
-                    severity="WARNING",
-                    excerpt=f"...{plan_rules_text[start:end]}..."
-                ))
+                violations.append(
+                    ArchitectureViolation(
+                        entity="PlanRule",
+                        violation_type=f"plan_rules_violation:{v_type}",
+                        severity="WARNING",
+                        excerpt=f"...{plan_rules_text[start:end]}...",
+                    )
+                )
                 break
-                
+
     return violations
 
 
-def validate_use_case_naming(use_case: str, output_schema: Optional[dict[str, Any]] = None) -> list[str]:
+def validate_use_case_naming(
+    use_case: str, output_schema: Optional[dict[str, Any]] = None
+) -> list[str]:
     """
     Detects use_case suffix '_free'/'_full' and issues a warning if output schema is identical
     or not provided (Story 66.9 AC4).

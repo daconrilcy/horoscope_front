@@ -54,10 +54,10 @@ async def list_assembly_configs(
     """List all assembly configurations."""
     service = AssemblyAdminService(db)
     configs = await service.list_configs(feature=feature)
-    
+
     return {
         "data": [PromptAssemblyConfig.model_validate(c) for c in configs],
-        "meta": {"request_id": request.state.request_id}
+        "meta": {"request_id": request.state.request_id},
     }
 
 
@@ -71,7 +71,7 @@ async def create_assembly_config(
     """Create a new assembly configuration draft."""
     service = AssemblyAdminService(db)
     new_config = await service.create_draft(config_in, created_by=admin.email)
-    
+
     # Audit log
     audit_service = AuditService(db)
     await audit_service.log_event(
@@ -84,13 +84,13 @@ async def create_assembly_config(
                 "feature": new_config.feature,
                 "subfeature": new_config.subfeature,
                 "plan": new_config.plan,
-            }
-        )
+            },
+        ),
     )
-    
+
     return {
         "data": PromptAssemblyConfig.model_validate(new_config),
-        "meta": {"request_id": request.state.request_id}
+        "meta": {"request_id": request.state.request_id},
     }
 
 
@@ -106,10 +106,10 @@ async def get_assembly_config(
     config = await service.get_config(config_id)
     if not config:
         raise HTTPException(status_code=404, detail="Configuration not found")
-        
+
     return {
         "data": PromptAssemblyConfig.model_validate(config),
-        "meta": {"request_id": request.state.request_id}
+        "meta": {"request_id": request.state.request_id},
     }
 
 
@@ -126,7 +126,7 @@ async def publish_assembly_config(
         config, archived_count = await service.publish_config(config_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    
+
     # Audit log
     audit_service = AuditService(db)
     await audit_service.log_event(
@@ -140,18 +140,18 @@ async def publish_assembly_config(
                 "subfeature": config.subfeature,
                 "plan": config.plan,
                 "archived_count": archived_count,
-            }
-        )
+            },
+        ),
     )
-    
+
     return {
         "data": DraftPublishResponse(
             assembly_id=config.id,
             status=str(config.status),
             published_at=config.published_at,
-            archived_count=archived_count
+            archived_count=archived_count,
         ),
-        "meta": {"request_id": request.state.request_id}
+        "meta": {"request_id": request.state.request_id},
     }
 
 
@@ -169,17 +169,17 @@ async def rollback_assembly_config(
         target_config = await service.get_config(config_id)
         if not target_config:
             raise HTTPException(status_code=404, detail="Configuration not found")
-            
+
         config = await service.rollback_config(
             feature=target_config.feature,
             subfeature=target_config.subfeature,
             plan=target_config.plan,
             locale=target_config.locale,
-            target_id=config_id
+            target_id=config_id,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
+
     # Audit log
     audit_service = AuditService(db)
     await audit_service.log_event(
@@ -192,13 +192,13 @@ async def rollback_assembly_config(
                 "feature": config.feature,
                 "subfeature": config.subfeature,
                 "plan": config.plan,
-            }
-        )
+            },
+        ),
     )
-    
+
     return {
         "data": PromptAssemblyConfig.model_validate(config),
-        "meta": {"request_id": request.state.request_id}
+        "meta": {"request_id": request.state.request_id},
     }
 
 
@@ -215,8 +215,5 @@ async def preview_assembly_config(
         preview = await service.get_assembly_preview(config_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-        
-    return {
-        "data": preview,
-        "meta": {"request_id": request.state.request_id}
-    }
+
+    return {"data": preview, "meta": {"request_id": request.state.request_id}}

@@ -246,11 +246,16 @@ def get_user_detail(
         ).where(UserTokenUsageLogModel.user_id == user_id)
     ).one()
 
-    messages_count = db.scalar(
-        select(func.count(ChatMessageModel.id))
-        .join(ChatConversationModel, ChatConversationModel.id == ChatMessageModel.conversation_id)
-        .where(ChatConversationModel.user_id == user_id)
-    ) or 0
+    messages_count = (
+        db.scalar(
+            select(func.count(ChatMessageModel.id))
+            .join(
+                ChatConversationModel, ChatConversationModel.id == ChatMessageModel.conversation_id
+            )
+            .where(ChatConversationModel.user_id == user_id)
+        )
+        or 0
+    )
 
     natal_counts = db.execute(
         select(

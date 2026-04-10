@@ -1,8 +1,8 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
-from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
-from app.services.ai_engine_adapter import AIEngineAdapter, build_opening_chat_user_data_block
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+from app.services.ai_engine_adapter import AIEngineAdapter
+
 
 @pytest.mark.asyncio
 async def test_generate_chat_reply_v2_omits_none_conversation_id(
@@ -31,6 +31,7 @@ async def test_generate_chat_reply_v2_omits_none_conversation_id(
 
     assert result.raw_output == "ok"
 
+
 @pytest.mark.asyncio
 async def test_generate_chat_reply_v2_converts_conversation_id_to_string(
     monkeypatch: pytest.MonkeyPatch,
@@ -57,6 +58,7 @@ async def test_generate_chat_reply_v2_converts_conversation_id_to_string(
     )
 
     assert result.raw_output == "ok"
+
 
 @pytest.mark.asyncio
 async def test_generate_chat_reply_opening_turn_builds_minimal_user_data_block(

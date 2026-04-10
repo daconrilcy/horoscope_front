@@ -38,29 +38,32 @@ def get_entitlement_matrix(
     """
     plans = db.scalars(select(PlanCatalogModel).order_by(PlanCatalogModel.id)).all()
     features = db.scalars(select(FeatureCatalogModel).order_by(FeatureCatalogModel.id)).all()
-    
+
     # Load all bindings with their quotas
-    bindings = db.scalars(
-        select(PlanFeatureBindingModel)
-        .options(joinedload(PlanFeatureBindingModel.quotas))
-    ).unique().all()
+    bindings = (
+        db.scalars(
+            select(PlanFeatureBindingModel).options(joinedload(PlanFeatureBindingModel.quotas))
+        )
+        .unique()
+        .all()
+    )
 
     cells = {}
     for b in bindings:
         key = f"{b.plan_id}:{b.feature_id}"
-        
+
         # Take the first quota if available (MVP simplification)
         quota = b.quotas[0] if b.quotas else None
-        
-        is_incoherent = (b.access_mode == AccessMode.QUOTA and (not quota or quota.quota_limit <= 0))
-        
+
+        is_incoherent = b.access_mode == AccessMode.QUOTA and (not quota or quota.quota_limit <= 0)
+
         cells[key] = {
             "access_mode": b.access_mode.value,
             "is_enabled": b.is_enabled,
             "variant_code": b.variant_code,
             "quota_limit": quota.quota_limit if quota else None,
             "period": f"{quota.period_value} {quota.period_unit.value}" if quota else None,
-            "is_incoherent": is_incoherent
+            "is_incoherent": is_incoherent,
         }
 
     return {
@@ -72,7 +75,7 @@ def get_entitlement_matrix(
             {"id": f.id, "code": f.feature_code, "name": f.feature_name, "is_metered": f.is_metered}
             for f in features
         ],
-        "cells": cells
+        "cells": cells,
     }
 
 
@@ -90,8 +93,10 @@ def update_entitlement(
     """
     binding = db.scalar(
         select(PlanFeatureBindingModel)
-        .where(PlanFeatureBindingModel.plan_id == plan_id, 
-               PlanFeatureBindingModel.feature_id == feature_id)
+        .where(
+            PlanFeatureBindingModel.plan_id == plan_id,
+            PlanFeatureBindingModel.feature_id == feature_id,
+        )
         .options(joinedload(PlanFeatureBindingModel.quotas))
     )
     if not binding:
@@ -100,7 +105,7 @@ def update_entitlement(
     before = {
         "access_mode": binding.access_mode.value,
         "is_enabled": binding.is_enabled,
-        "quota_limit": binding.quotas[0].quota_limit if binding.quotas else None
+        "quota_limit": binding.quotas[0].quota_limit if binding.quotas else None,
     }
 
     # Apply updates
@@ -129,8 +134,8 @@ def update_entitlement(
                 "after": {
                     "access_mode": binding.access_mode.value,
                     "is_enabled": binding.is_enabled,
-                    "quota_limit": binding.quotas[0].quota_limit if binding.quotas else None
-                }
+                    "quota_limit": binding.quotas[0].quota_limit if binding.quotas else None,
+                },
             },
         ),
     )

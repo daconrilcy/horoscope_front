@@ -39,8 +39,8 @@ from app.infra.db.models.canonical_entitlement_mutation_audit_review_event impor
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
-from app.infra.db.models.consultation_template import ConsultationTemplateModel
 from app.infra.db.models.config_text import ConfigTextModel
+from app.infra.db.models.consultation_template import ConsultationTemplateModel
 from app.infra.db.models.consultation_third_party import (
     ConsultationThirdPartyProfileModel,
     ConsultationThirdPartyUsageModel,
@@ -51,8 +51,8 @@ from app.infra.db.models.daily_prediction import (
     DailyPredictionTimeBlockModel,
     DailyPredictionTurningPointModel,
 )
-from app.infra.db.models.email_log import EmailLogModel
 from app.infra.db.models.editorial_template import EditorialTemplateVersionModel
+from app.infra.db.models.email_log import EmailLogModel
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.enterprise_billing import (

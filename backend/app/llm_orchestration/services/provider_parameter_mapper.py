@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from typing import Any, Optional
+
 from app.llm_orchestration.execution_profiles_types import (
-    ReasoningProfile,
-    VerbosityProfile,
     OutputMode,
+    ReasoningProfile,
     ToolMode,
+    VerbosityProfile,
 )
+
 
 class ProviderParameterMapper:
     """
@@ -30,7 +32,7 @@ class ProviderParameterMapper:
             return ProviderParameterMapper.map_for_anthropic(
                 reasoning_profile, verbosity_profile, output_mode, tool_mode
             )
-        
+
         raise NotImplementedError(
             f"No parameter mapping for provider: {provider}. "
             f"Please implement map_for_{provider}() in ProviderParameterMapper."
@@ -87,24 +89,31 @@ class ProviderParameterMapper:
             # Extended thinking requires higher max_tokens usually
         elif reasoning_profile == "medium":
             params["thinking"] = {"type": "enabled", "budget_tokens": 4000}
-        
+
         # 2. Tool mode
         if tool_mode == "none":
             params["tool_choice"] = {"type": "none"}
         elif tool_mode == "required":
-            params["tool_choice"] = {"type": "any"} # Anthropic 'any' means at least one tool must be used
+            params["tool_choice"] = {
+                "type": "any"
+            }  # Anthropic 'any' means at least one tool must be used
 
         return params
 
     @staticmethod
-    def resolve_verbosity_instruction(verbosity_profile: VerbosityProfile) -> tuple[str, Optional[int]]:
+    def resolve_verbosity_instruction(
+        verbosity_profile: VerbosityProfile,
+    ) -> tuple[str, Optional[int]]:
         """
         Translates verbosity profile into a textual instruction and a recommended max_tokens (Story 66.18 D3, D4).
         """
         if verbosity_profile == "concise":
             return "Réponds de façon très concise et directe, va droit à l'essentiel.", 800
         elif verbosity_profile == "detailed":
-            return "Fournis une réponse riche, détaillée et nuancée avec des explications approfondies.", 4000
-        
+            return (
+                "Fournis une réponse riche, détaillée et nuancée avec des explications approfondies.",
+                4000,
+            )
+
         # Balanced / Default
         return "", None

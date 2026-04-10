@@ -32,6 +32,7 @@ from app.llm_orchestration.models import (
     OutputValidationError,
     UnknownUseCaseError,
 )
+from app.services.ai_engine_adapter import AIEngineAdapterError
 from app.services.disclaimer_registry import get_disclaimers
 from app.services.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
@@ -39,7 +40,6 @@ from app.services.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementResult,
     NatalChartLongQuotaExceededError,
 )
-from app.services.ai_engine_adapter import AIEngineAdapterError
 from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -215,7 +215,7 @@ async def interpret_natal_chart(
         elif "config" in code:
             status_code = 500
             code = "gateway_config_error"
-        
+
         return _create_error_response(status_code, code, str(e), request_id)
     except UnknownUseCaseError as e:
         db.rollback()

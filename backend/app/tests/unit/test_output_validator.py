@@ -4,14 +4,11 @@ from app.llm_orchestration.services.output_validator import validate_output
 def test_normalize_fields_nested_lists():
     """Test normalization with nested lists in catalog_map (defensive logic)."""
     from app.llm_orchestration.services.output_validator import normalize_fields
-    
+
     data = {"evidence": ["Alias A", "Alias B"]}
     # Nested list: ["Alias A", ["Subalias A1", "Subalias A2"]]
-    catalog = {
-        "ID_A": ["Alias A", ["Subalias A1", "Subalias A2"]],
-        "ID_B": ["Alias B"]
-    }
-    
+    catalog = {"ID_A": ["Alias A", ["Subalias A1", "Subalias A2"]], "ID_B": ["Alias B"]}
+
     res = normalize_fields(data, evidence_catalog=catalog, use_case="test")
     assert res.data["evidence"] == ["ID_A", "ID_B"]
     assert "evidence_alias_normalized" in res.normalizations_applied

@@ -60,17 +60,23 @@ def get_kpis_snapshot(
         total_users = db.scalar(select(func.count(UserModel.id)))
 
         # 2. Utilisateurs actifs (ayant eu une génération dans les 7j / 30j)
-        active_7j = db.scalar(
-            select(func.count(func.distinct(UserTokenUsageLogModel.user_id))).where(
-                UserTokenUsageLogModel.created_at >= now - timedelta(days=7)
+        active_7j = (
+            db.scalar(
+                select(func.count(func.distinct(UserTokenUsageLogModel.user_id))).where(
+                    UserTokenUsageLogModel.created_at >= now - timedelta(days=7)
+                )
             )
-        ) or 0
+            or 0
+        )
 
-        active_30j = db.scalar(
-            select(func.count(func.distinct(UserTokenUsageLogModel.user_id))).where(
-                UserTokenUsageLogModel.created_at >= now - timedelta(days=30)
+        active_30j = (
+            db.scalar(
+                select(func.count(func.distinct(UserTokenUsageLogModel.user_id))).where(
+                    UserTokenUsageLogModel.created_at >= now - timedelta(days=30)
+                )
             )
-        ) or 0
+            or 0
+        )
 
         # 3. Abonnements actifs par plan
         sub_stmt = (
@@ -91,11 +97,14 @@ def get_kpis_snapshot(
         mrr_cents = db.scalar(mrr_stmt) or 0
 
         # 5. Essais en cours
-        trials_count = db.scalar(
-            select(func.count(UserSubscriptionModel.id)).where(
-                UserSubscriptionModel.status == "trial"
+        trials_count = (
+            db.scalar(
+                select(func.count(UserSubscriptionModel.id)).where(
+                    UserSubscriptionModel.status == "trial"
+                )
             )
-        ) or 0
+            or 0
+        )
 
         return {
             "data": {

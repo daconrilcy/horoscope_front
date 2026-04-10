@@ -46,7 +46,7 @@ class LengthBudget(BaseModel):
 class LlmPersona(BaseModel):
     """
     Serializable admin view of an LLM persona.
-    
+
     Source of truth for: stylistic voice and tone.
     See: ARCHITECTURE.md
     """
@@ -103,7 +103,7 @@ class LlmPersonaUpdate(BaseModel):
 class LlmPromptVersion(BaseModel):
     """
     Serializable admin view of a prompt version.
-    
+
     Source of truth for: prompt block textual content.
     See: ARCHITECTURE.md
     """
@@ -183,26 +183,26 @@ class ExecutionConfigAdmin(BaseModel):
     @model_validator(mode="after")
     def validate_provider_params(self) -> "ExecutionConfigAdmin":
         is_reasoning = is_reasoning_model(self.model)
-        
+
         if is_reasoning:
             if self.temperature is not None:
                 raise ValueError("Temperature must be None for reasoning models")
         else:
             if self.reasoning_effort is not None:
                 raise ValueError("Reasoning effort is only supported for reasoning models")
-                
+
         if self.fallback_use_case:
             # We don't strictly validate fallback_use_case as reasoning or not here
             # because it's a full use case redirection, not just a model swap.
             pass
-                
+
         return self
 
 
 class PromptAssemblyConfig(BaseModel):
     """
     Pydantic model for reading/writing assembly configurations.
-    
+
     Source of truth for: prompt composition selection and block activation.
     See: ARCHITECTURE.md
     """
@@ -244,20 +244,20 @@ class ResolvedAssembly(BaseModel):
     """Intermediate artifact between admin config and execution plan."""
 
     target: PromptAssemblyTarget
-    
+
     feature_template_id: uuid.UUID
     feature_template_prompt: str
-    
+
     subfeature_template_id: Optional[uuid.UUID] = None
     subfeature_template_prompt: Optional[str] = None
-    
+
     template_source: Literal["explicit_subfeature", "fallback_default"]
-    
+
     persona_ref: Optional[uuid.UUID] = None
     persona_block: Optional[str] = None
-    
+
     plan_rules_content: Optional[str] = None
-    
+
     execution_config: ExecutionConfigAdmin
     output_contract_ref: Optional[str] = None
     length_budget: Optional[LengthBudget] = None
@@ -296,32 +296,32 @@ class PromptAssemblyPreview(BaseModel):
     """Full preview of a rendered assembly config."""
 
     target: PromptAssemblyTarget
-    
+
     # Prompt blocks
     feature_block: str
     subfeature_block: Optional[str] = None
     persona_block: Optional[str] = None
     plan_rules_block: Optional[str] = None
-    
+
     template_source: str
-    
+
     # Final rendered prompt (concatenated blocks + rendered variables)
     rendered_developer_prompt: str
-    
+
     # Separated layers
     hard_policy_block: str  # Immutable layer
     output_contract_ref: Optional[str] = None
-    
+
     # Available variables for the feature
     available_variables: List[PlaceholderInfo]
-    
+
     # Resolution status for each variable (Story 66.13)
     placeholder_resolution_status: List[PlaceholderResolutionStatus] = Field(default_factory=list)
-    
+
     # Execution parameters
     resolved_execution_config: ExecutionConfigAdmin
     length_budget: Optional[LengthBudget] = None
-    
+
     draft_preview: bool = True
 
 

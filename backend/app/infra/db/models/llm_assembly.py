@@ -17,8 +17,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
-from app.infra.db.models.llm_prompt import PromptStatus, LlmPromptVersionModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 
 def utc_now() -> datetime:

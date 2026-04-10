@@ -302,10 +302,7 @@ class TestNatalInterpretationEndpointV2:
         ):
             response = test_client.post(
                 "/v1/natal/interpretation",
-                json={
-                    "use_case_level": "complete",
-                    "persona_id": str(uuid.uuid4())
-                }
+                json={"use_case_level": "complete", "persona_id": str(uuid.uuid4())},
             )
         assert response.status_code == 422
         assert response.json()["error"]["code"] == "natal_input_invalid"

@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.infra.db.base import Base
@@ -9,14 +9,12 @@ from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, Llm
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
-    GatewayConfigError,
+    ExecutionUserInput,
     GatewayError,
     GatewayMeta,
     GatewayResult,
-    UsageInfo,
     LLMExecutionRequest,
-    ExecutionUserInput,
-    ExecutionContext,
+    UsageInfo,
 )
 
 
@@ -92,7 +90,7 @@ async def test_check_1_fallback_priority(db_session):
         user_input=ExecutionUserInput(use_case="primary", locale="fr", question="Hello"),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     result = await gateway.execute_request(
         request=request,
@@ -136,7 +134,7 @@ async def test_check_3_repair_call_stable_prompt(db_session):
         user_input=ExecutionUserInput(use_case="test", locale="fr", question="Hello"),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     await gateway.execute_request(
         request=request,
@@ -191,10 +189,12 @@ async def test_check_4_repair_limit_and_anti_loop(db_session):
     db_session.commit()
 
     mock_client = MagicMock()
+
     # Use a lambda to avoid StopAsyncIteration
     # Use a lambda to avoid StopAsyncIteration
     async def mock_execute(**kwargs):
         return create_mock_result(kwargs.get("use_case", "unknown"), "INVALID")
+
     mock_client.execute.side_effect = mock_execute
 
     gateway = LLMGateway(responses_client=mock_client)
@@ -202,7 +202,7 @@ async def test_check_4_repair_limit_and_anti_loop(db_session):
         user_input=ExecutionUserInput(use_case="A", locale="fr", question="Hello"),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
 
     with pytest.raises(GatewayError) as exc:
@@ -224,9 +224,7 @@ async def test_check_2_fail_fast_missing_vars(db_session):
     # Missing locale/use_case in ExecutionUserInput will be caught by Pydantic if we use models
     # But let's check UnknownUseCaseError
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="unknown", locale="fr"),
-        request_id="r",
-        trace_id="t"
+        user_input=ExecutionUserInput(use_case="unknown", locale="fr"), request_id="r", trace_id="t"
     )
     with pytest.raises(GatewayError) as exc:
         await gateway.execute_request(request=request, db=db_session)

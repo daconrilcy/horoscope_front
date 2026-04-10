@@ -21,6 +21,7 @@ def test_output_contract_validation():
     result = validate_schema(data, ASTRO_RESPONSE_V3_JSON_SCHEMA)
     assert result.valid, f"LLM response fixture does not match runtime contract: {result.errors}"
 
+
 @pytest.mark.evaluation
 def test_output_contract_invalid_fixture():
     """Checks that validation fails for corrupted fixtures against the real schema."""

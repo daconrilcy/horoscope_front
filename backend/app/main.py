@@ -142,9 +142,11 @@ def _ensure_llm_registry_seeded() -> None:
             ).scalar_one_or_none()
 
             # Check for Horoscope Daily (Story 66.19)
-            horoscope_daily_uc = db.query(LlmUseCaseConfigModel).filter(
-                LlmUseCaseConfigModel.key == "horoscope_daily"
-            ).one_or_none()
+            horoscope_daily_uc = (
+                db.query(LlmUseCaseConfigModel)
+                .filter(LlmUseCaseConfigModel.key == "horoscope_daily")
+                .one_or_none()
+            )
             active_horoscope_prompt = db.execute(
                 select(LlmPromptVersionModel).where(
                     LlmPromptVersionModel.use_case_key == "horoscope_daily",
@@ -159,8 +161,8 @@ def _ensure_llm_registry_seeded() -> None:
                 or "chart_json" not in (short_use_case.required_prompt_placeholders or [])
             )
             missing_registry = (
-                use_case_count == 0 
-                or prompt_count == 0 
+                use_case_count == 0
+                or prompt_count == 0
                 or active_short_prompt is None
                 or horoscope_daily_uc is None
             )
@@ -236,10 +238,11 @@ def _ensure_llm_registry_seeded() -> None:
         seed_prompts()
         seed_natal_v3_prompts()
         seed_chat_prompt_v2()
-        
+
         from app.llm_orchestration.seeds.seed_horoscope_narrator_assembly import (
             seed_horoscope_narrator_assembly,
         )
+
         with SessionLocal() as db:
             seed_horoscope_narrator_assembly(db)
     except IntegrityError:

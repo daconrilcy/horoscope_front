@@ -8,7 +8,7 @@ from app.infra.db.base import Base
 from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
 @pytest.fixture

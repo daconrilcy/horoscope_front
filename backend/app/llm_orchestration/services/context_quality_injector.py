@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +19,7 @@ CONTEXT_QUALITY_INSTRUCTIONS: dict[str, dict[str, str]] = {
         "minimal": "[CONTEXTE GUIDANCE MINIMAL] Tu ignores presque tout de la situation actuelle. Pose des questions ouvertes et reste très général dans tes prédictions.",
     },
 }
+
 
 class ContextQualityInjector:
     """
@@ -42,8 +42,10 @@ class ContextQualityInjector:
         # Get specific or generic instruction
         # Normalize feature key
         feat_key = feature.split("_")[0] if "_" in feature else feature
-        instructions = CONTEXT_QUALITY_INSTRUCTIONS.get(feat_key, CONTEXT_QUALITY_INSTRUCTIONS["generic"])
-        
+        instructions = CONTEXT_QUALITY_INSTRUCTIONS.get(
+            feat_key, CONTEXT_QUALITY_INSTRUCTIONS["generic"]
+        )
+
         instruction = instructions.get(context_quality)
         if not instruction:
             # Try generic if feature-specific didn't have the level

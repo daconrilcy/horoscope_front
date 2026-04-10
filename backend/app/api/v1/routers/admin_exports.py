@@ -36,11 +36,11 @@ def _generate_csv_response(rows: list[dict[str, Any]], fieldnames: list[str], fi
     writer.writeheader()
     writer.writerows(rows)
     output.seek(0)
-    
+
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -117,8 +117,15 @@ def export_users(
 
     # 2. Return CSV
     fieldnames = [
-        "id", "email", "role", "is_suspended", "email_unsubscribed", 
-        "created_at", "plan_code", "subscription_status", "stripe_customer_id"
+        "id",
+        "email",
+        "role",
+        "is_suspended",
+        "email_unsubscribed",
+        "created_at",
+        "plan_code",
+        "subscription_status",
+        "stripe_customer_id",
     ]
     return _generate_csv_response(rows, fieldnames, "users_export.csv")
 
@@ -175,12 +182,19 @@ def export_generations(
         return StreamingResponse(
             iter([json.dumps(rows, indent=2)]),
             media_type="application/json",
-            headers={"Content-Disposition": "attachment; filename=generations_export.json"}
+            headers={"Content-Disposition": "attachment; filename=generations_export.json"},
         )
-    
+
     fieldnames = [
-        "id", "created_at", "use_case", "model", "status", 
-        "tokens_prompt", "tokens_completion", "latency_ms", "request_id"
+        "id",
+        "created_at",
+        "use_case",
+        "model",
+        "status",
+        "tokens_prompt",
+        "tokens_completion",
+        "latency_ms",
+        "request_id",
     ]
     return _generate_csv_response(rows, fieldnames, "generations_export.csv")
 
@@ -229,7 +243,12 @@ def export_billing(
 
     # 2. Return CSV
     fieldnames = [
-        "user_id", "email", "plan_code", "subscription_status", 
-        "monthly_price_cents", "started_at", "failure_reason"
+        "user_id",
+        "email",
+        "plan_code",
+        "subscription_status",
+        "monthly_price_cents",
+        "started_at",
+        "failure_reason",
     ]
     return _generate_csv_response(rows, fieldnames, "billing_export.csv")

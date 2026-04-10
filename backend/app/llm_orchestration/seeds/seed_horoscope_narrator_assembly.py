@@ -18,9 +18,10 @@ from app.llm_orchestration.narrator_contract import NARRATOR_OUTPUT_SCHEMA
 
 logger = logging.getLogger(__name__)
 
+
 def seed_horoscope_narrator_assembly(db: Session) -> None:
     """Seeds canonical assembly for horoscope_daily and daily_prediction."""
-    
+
     # 1. Output Schema
     stmt_schema = select(LlmOutputSchemaModel).where(
         LlmOutputSchemaModel.name == "NarratorResult_v1"
@@ -28,9 +29,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
     narrator_schema = db.execute(stmt_schema).scalar_one_or_none()
     if not narrator_schema:
         narrator_schema = LlmOutputSchemaModel(
-            name="NarratorResult_v1",
-            json_schema=NARRATOR_OUTPUT_SCHEMA,
-            version=1
+            name="NarratorResult_v1", json_schema=NARRATOR_OUTPUT_SCHEMA, version=1
         )
         db.add(narrator_schema)
         db.flush()
@@ -47,7 +46,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             "key": "daily_prediction",
             "display_name": "Prédictions Quotidiennes Canoniques",
             "description": "Narration détaillée des prédictions du jour.",
-        }
+        },
     ]
 
     for uc_data in use_cases:
@@ -63,11 +62,11 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                 interaction_mode="structured",
                 user_question_policy="none",
                 safety_profile="astrology",
-                required_prompt_placeholders=["question"] # standard placeholder
+                required_prompt_placeholders=["question"],  # standard placeholder
             )
             db.add(uc)
             db.flush()
-            logger.info("seed_narrator: created use case %s", uc_data['key'])
+            logger.info("seed_narrator: created use case %s", uc_data["key"])
 
     # 3. Prompt Versions (System Prompts)
     system_prompt_fr = (
@@ -87,7 +86,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
     for uc_key in ["horoscope_daily", "daily_prediction"]:
         stmt_pv = select(LlmPromptVersionModel).where(
             LlmPromptVersionModel.use_case_key == uc_key,
-            LlmPromptVersionModel.status == PromptStatus.PUBLISHED
+            LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
         )
         pv = db.execute(stmt_pv).scalar_one_or_none()
         if not pv:
@@ -99,7 +98,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                 temperature=0.7,
                 max_output_tokens=3000 if uc_key == "horoscope_daily" else 1600,
                 created_by="system",
-                published_at=db.execute(select(func.now())).scalar()
+                published_at=db.execute(select(func.now())).scalar(),
             )
             db.add(pv)
             db.flush()
@@ -116,13 +115,13 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             "name": "Daily Prediction Narration Standard",
             "feature": "daily_prediction",
             "max_output_tokens": 1600,
-        }
+        },
     ]
 
     for prof_data in profiles:
         stmt_prof = select(LlmExecutionProfileModel).where(
             LlmExecutionProfileModel.feature == prof_data["feature"],
-            LlmExecutionProfileModel.status == PromptStatus.PUBLISHED
+            LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
         )
         prof = db.execute(stmt_prof).scalar_one_or_none()
         if not prof:
@@ -137,11 +136,11 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                 max_output_tokens=prof_data["max_output_tokens"],
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
-                published_at=db.execute(select(func.now())).scalar()
+                published_at=db.execute(select(func.now())).scalar(),
             )
             db.add(prof)
             db.flush()
-            logger.info("seed_narrator: created execution profile for %s", prof_data['feature'])
+            logger.info("seed_narrator: created execution profile for %s", prof_data["feature"])
 
     # 5. Assembly Configs
     # We need a persona
@@ -150,22 +149,22 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
 
     assemblies = [
         {
-            "feature": "horoscope_daily", 
-            "subfeature": "narration", 
-            "plan": "free", 
-            "max_tokens": 1300
+            "feature": "horoscope_daily",
+            "subfeature": "narration",
+            "plan": "free",
+            "max_tokens": 1300,
         },
         {
-            "feature": "horoscope_daily", 
-            "subfeature": "narration", 
-            "plan": "premium", 
-            "max_tokens": 3000
+            "feature": "horoscope_daily",
+            "subfeature": "narration",
+            "plan": "premium",
+            "max_tokens": 3000,
         },
         {
-            "feature": "daily_prediction", 
-            "subfeature": "narration", 
-            "plan": None, 
-            "max_tokens": 1600
+            "feature": "daily_prediction",
+            "subfeature": "narration",
+            "plan": None,
+            "max_tokens": 1600,
         },
     ]
 
@@ -174,20 +173,24 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             PromptAssemblyConfigModel.feature == ass_data["feature"],
             PromptAssemblyConfigModel.subfeature == ass_data["subfeature"],
             PromptAssemblyConfigModel.plan == ass_data["plan"],
-            PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED
+            PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
         )
         ass = db.execute(stmt_ass).scalar_one_or_none()
         if not ass:
             # Find template and profile
-            pv = db.execute(select(LlmPromptVersionModel).where(
-                LlmPromptVersionModel.use_case_key == ass_data["feature"],
-                LlmPromptVersionModel.status == PromptStatus.PUBLISHED
-            )).scalar_one()
-            
-            prof = db.execute(select(LlmExecutionProfileModel).where(
-                LlmExecutionProfileModel.feature == ass_data["feature"],
-                LlmExecutionProfileModel.status == PromptStatus.PUBLISHED
-            )).scalar_one()
+            pv = db.execute(
+                select(LlmPromptVersionModel).where(
+                    LlmPromptVersionModel.use_case_key == ass_data["feature"],
+                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+                )
+            ).scalar_one()
+
+            prof = db.execute(
+                select(LlmExecutionProfileModel).where(
+                    LlmExecutionProfileModel.feature == ass_data["feature"],
+                    LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
+                )
+            ).scalar_one()
 
             ass = PromptAssemblyConfigModel(
                 feature=ass_data["feature"],
@@ -201,23 +204,23 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                     "model": "gpt-4o",
                     "temperature": 0.7,
                     "max_output_tokens": ass_data["max_tokens"],
-                    "timeout_seconds": 60
+                    "timeout_seconds": 60,
                 },
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
-                published_at=db.execute(select(func.now())).scalar()
+                published_at=db.execute(select(func.now())).scalar(),
             )
             db.add(ass)
             logger.info(
-                "seed_narrator: created assembly for %s / %s",
-                ass_data['feature'],
-                ass_data['plan']
+                "seed_narrator: created assembly for %s / %s", ass_data["feature"], ass_data["plan"]
             )
 
     db.commit()
 
+
 if __name__ == "__main__":
     from app.infra.db.session import SessionLocal
+
     with SessionLocal() as session:
         seed_horoscope_narrator_assembly(session)
         print("Horoscope narrator assembly seed completed.")

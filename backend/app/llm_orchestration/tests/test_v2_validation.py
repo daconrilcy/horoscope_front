@@ -1,11 +1,14 @@
 import uuid
-import pytest
 from unittest.mock import AsyncMock, patch
-from app.infra.db.models import LlmUseCaseConfigModel, LlmPromptVersionModel
+
+import pytest
+
+from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo, PromptRenderError
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, PromptRenderError, UsageInfo
 from app.services.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
+
 
 @pytest.mark.asyncio
 async def test_security_allowlist_blocks_internal_vars(db):
@@ -16,10 +19,10 @@ async def test_security_allowlist_blocks_internal_vars(db):
     """
     # 1. Create use case and prompt using internal variable
     uc = LlmUseCaseConfigModel(
-        key="leak_test", 
-        display_name="Test", 
+        key="leak_test",
+        display_name="Test",
         description="Test",
-        required_prompt_placeholders=["messages"]
+        required_prompt_placeholders=["messages"],
     )
     db.add(uc)
     prompt = LlmPromptVersionModel(
@@ -44,12 +47,12 @@ async def test_security_allowlist_blocks_internal_vars(db):
         raw_output='{"message": "composed_output"}',
         structured_output={"message": "composed_output"},
         usage=UsageInfo(),
-        meta=GatewayMeta(latency_ms=1, model="gpt-4o-mini")
+        meta=GatewayMeta(latency_ms=1, model="gpt-4o-mini"),
     )
     gateway.client = AsyncMock()
     gateway.client.execute.return_value = mock_res
 
-    # Should raise PromptRenderError because 'messages' is NOT in authorized_vars 
+    # Should raise PromptRenderError because 'messages' is NOT in authorized_vars
     # but IS in required_prompt_placeholders
     with pytest.raises(PromptRenderError):
         await gateway.execute(
@@ -60,6 +63,7 @@ async def test_security_allowlist_blocks_internal_vars(db):
             trace_id="tr1",
             db=db,
         )
+
 
 @pytest.mark.asyncio
 async def test_error_mapping_reaches_client_v2(db):
@@ -89,13 +93,16 @@ async def test_error_mapping_reaches_client_v2(db):
 
     # 1.5 Seed dummy assembly to satisfy Story 66.20 enforcement
     from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+
     asm = PromptAssemblyConfigModel(
-        feature="chat", subfeature="astrologer", plan="free",
+        feature="chat",
+        subfeature="astrologer",
+        plan="free",
         locale="fr-FR",
         feature_template_ref=prompt.id,
         execution_config={"model": "gpt-4o-mini"},
         status=PromptStatus.PUBLISHED,
-        created_by="test"
+        created_by="test",
     )
     db.add(asm)
     db.commit()
@@ -116,4 +123,4 @@ async def test_error_mapping_reaches_client_v2(db):
     except AIEngineAdapterError as err:
         # Assert
         assert err.code == "prompt_render_error"
-        assert err.status_code == 400 # Story 66.3 changed it to 400
+        assert err.status_code == 400  # Story 66.3 changed it to 400

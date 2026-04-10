@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 from sqlalchemy import create_engine
@@ -23,7 +23,8 @@ def db_session():
         Base.metadata.drop_all(bind=test_engine)
 
 
-from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
 
 def _make_mock_result(model: str) -> GatewayResult:
     """Helper : crée un GatewayResult mock minimal."""
@@ -34,7 +35,7 @@ def _make_mock_result(model: str) -> GatewayResult:
         raw_output="{}",
         structured_output={},
         usage=UsageInfo(),
-        meta=GatewayMeta(latency_ms=10, model=model)
+        meta=GatewayMeta(latency_ms=10, model=model),
     )
 
 

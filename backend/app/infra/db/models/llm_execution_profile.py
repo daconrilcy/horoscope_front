@@ -29,32 +29,32 @@ class LlmExecutionProfileModel(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False)  # Admin label
-    
+
     provider: Mapped[str] = mapped_column(String(50), nullable=False, default="openai")
     model: Mapped[str] = mapped_column(String(100), nullable=False)
-    
+
     # Internal stable profiles (Story 66.11 D4)
     reasoning_profile: Mapped[str] = mapped_column(String(20), nullable=False, default="off")
     verbosity_profile: Mapped[str] = mapped_column(String(20), nullable=False, default="balanced")
     output_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="free_text")
     tool_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="none")
-    
+
     max_output_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     timeout_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
-    
+
     fallback_profile_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("llm_execution_profiles.id"), nullable=True
     )
-    
+
     # Target (waterfall resolution)
     feature: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     subfeature: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     plan: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    
+
     status: Mapped[PromptStatus] = mapped_column(
         String(20), nullable=False, default=PromptStatus.DRAFT
     )
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
     )

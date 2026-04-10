@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -27,7 +26,7 @@ class AdminUserSearchResponse(BaseModel):
 class AdminUserQuota(BaseModel):
     feature_code: str
     used: int
-    limit: int | None # None if unlimited
+    limit: int | None  # None if unlimited
     period: str
 
 
@@ -69,9 +68,9 @@ class AdminUserDetail(BaseModel):
     role: str
     created_at: datetime
     is_active: bool
-    is_suspended: bool = False # Story 65.9
-    is_locked: bool = False # Story 65.9
-    
+    is_suspended: bool = False  # Story 65.9
+    is_locked: bool = False  # Story 65.9
+
     # Subscription & Billing
     plan_code: str | None
     subscription_status: str | None
@@ -79,7 +78,7 @@ class AdminUserDetail(BaseModel):
     payment_method_summary: str | None
     last_invoice_amount_cents: int | None
     last_invoice_date: datetime | None
-    
+
     # Related data summaries
     activity_summary: AdminUserActivitySummary
     quotas: list[AdminUserQuota]

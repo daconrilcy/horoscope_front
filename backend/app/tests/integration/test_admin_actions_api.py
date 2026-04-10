@@ -34,6 +34,7 @@ from app.main import app
 
 client = TestClient(app)
 
+
 @pytest.fixture(autouse=True)
 def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     database_url = f"sqlite:///{(tmp_path / 'test-admin-actions.db').as_posix()}"
@@ -56,24 +57,26 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     finally:
         test_engine.dispose()
 
+
 @pytest.fixture
 def admin_token():
     with db_session_module.SessionLocal() as db:
         from app.core.security import hash_password
+
         admin = UserModel(
             email="admin-actions@example.com",
             password_hash=hash_password("admin123"),
             role="admin",
-            astrologer_profile="standard"
+            astrologer_profile="standard",
         )
         db.add(admin)
         db.commit()
-    
-    response = client.post("/v1/auth/login", json={
-        "email": "admin-actions@example.com",
-        "password": "admin123"
-    })
+
+    response = client.post(
+        "/v1/auth/login", json={"email": "admin-actions@example.com", "password": "admin123"}
+    )
     return response.json()["data"]["tokens"]["access_token"]
+
 
 def test_suspend_unsuspend_user(admin_token):
     with db_session_module.SessionLocal() as db:
@@ -88,7 +91,7 @@ def test_suspend_unsuspend_user(admin_token):
         headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == 200
-    
+
     with db_session_module.SessionLocal() as db:
         user = db.get(UserModel, user_id)
         assert user.is_suspended is True
@@ -105,17 +108,18 @@ def test_suspend_unsuspend_user(admin_token):
         headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == 200
-    
+
     with db_session_module.SessionLocal() as db:
         user = db.get(UserModel, user_id)
         assert user.is_suspended is False
+
 
 def test_reset_quota(admin_token):
     with db_session_module.SessionLocal() as db:
         user = UserModel(email="user-quota@test.com", password_hash="x", role="user")
         db.add(user)
         db.flush()
-        
+
         now = datetime.now(UTC)
         counter = FeatureUsageCounterModel(
             user_id=user.id,
@@ -126,19 +130,19 @@ def test_reset_quota(admin_token):
             reset_mode=ResetMode.CALENDAR,
             window_start=now,
             window_end=now + timedelta(days=1),
-            used_count=10
+            used_count=10,
         )
         db.add(counter)
         db.commit()
         user_id = user.id
 
     response = client.post(
-        f"/v1/admin/users/{user_id}/reset-quota", 
+        f"/v1/admin/users/{user_id}/reset-quota",
         json={"feature_code": "chat"},
-        headers={"Authorization": f"Bearer {admin_token}"}
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == 200
-    
+
     with db_session_module.SessionLocal() as db:
         counter = db.scalar(
             select(FeatureUsageCounterModel).where(FeatureUsageCounterModel.user_id == user_id)

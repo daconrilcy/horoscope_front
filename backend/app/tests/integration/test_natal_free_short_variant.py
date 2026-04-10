@@ -210,9 +210,7 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
             usage=mock_usage,
         )
 
-        with patch(
-            "app.llm_orchestration.gateway.LLMGateway.execute_request"
-        ) as mock_execute:
+        with patch("app.llm_orchestration.gateway.LLMGateway.execute_request") as mock_execute:
             mock_execute.return_value = mock_res
 
             response = client.post(

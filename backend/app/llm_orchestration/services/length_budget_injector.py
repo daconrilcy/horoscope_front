@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Optional
 from app.llm_orchestration.admin_models import LengthBudget
+
 
 class LengthBudgetInjector:
     """
@@ -14,13 +14,13 @@ class LengthBudgetInjector:
         parts = []
         if budget.target_response_length:
             parts.append(f"Cible : {budget.target_response_length}.")
-        
+
         for section in budget.section_budgets:
             parts.append(f"Section '{section.section_name}' : {section.target}.")
-            
+
         if not parts:
             return ""
-            
+
         return f"\n\n[CONSIGNE DE LONGUEUR] {' '.join(parts)}"
 
     @staticmethod
@@ -29,5 +29,5 @@ class LengthBudgetInjector:
         instruction = LengthBudgetInjector.resolve_length_instruction(budget)
         if not instruction:
             return developer_prompt
-            
+
         return f"{developer_prompt}{instruction}"

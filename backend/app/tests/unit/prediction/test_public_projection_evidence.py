@@ -4,12 +4,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.prediction.llm_narrator import NarratorResult
 from app.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
     PersistedTimeBlock,
 )
-from app.prediction.llm_narrator import NarratorResult
 from app.prediction.public_projection import PublicPredictionAssembler
 from app.prediction.schemas import (
     V3EvidencePack,
@@ -296,7 +296,7 @@ async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short()
         daily_synthesis="Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6. Phrase 7.",
         astro_events_intro="Nouvelle intro",
         time_window_narratives={},
-        turning_point_narratives=[]
+        turning_point_narratives=[],
     )
 
     with (

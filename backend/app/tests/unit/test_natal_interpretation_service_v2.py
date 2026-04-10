@@ -7,13 +7,9 @@ Couverture story 30-5:
 
 from __future__ import annotations
 
-import json
-import uuid
-from typing import Any, Dict, List, Literal, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from sqlalchemy.orm import Session
 
 from app.domain.astrology.natal_calculation import (
     AspectResult,

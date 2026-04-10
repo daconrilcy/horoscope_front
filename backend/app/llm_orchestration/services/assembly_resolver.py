@@ -19,9 +19,11 @@ from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 
 logger = logging.getLogger(__name__)
 
+
 class PlanRule(BaseModel):
     instruction: Optional[str] = None
     max_output_tokens_override: Optional[int] = None
+
 
 from app.llm_orchestration.placeholder_policy import PlaceholderDef
 
@@ -81,22 +83,24 @@ def validate_placeholders(template: str, feature: str) -> list[str]:
     feat_key = feature.split("_")[0] if "_" in feature else feature
     allowed_defs = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
     allowed_names = {d.name for d in allowed_defs}
-    
+
     # Allow some universal placeholders if not explicitly in list
     universal = {"locale", "use_case", "persona_name", "last_user_msg"}
-    
+
     invalid = [p for p in found if p not in allowed_names and p not in universal]
     return invalid
 
 
-def build_assembly_preview(config: PromptAssemblyConfigModel, simulated_context_quality: str = "full") -> PromptAssemblyPreview:
+def build_assembly_preview(
+    config: PromptAssemblyConfigModel, simulated_context_quality: str = "full"
+) -> PromptAssemblyPreview:
     """
     Builds a full preview of an assembly rendering (AC7, AC12).
     Now supports simulated context quality (Story 66.14 AC6).
     """
     resolved = resolve_assembly(config, context_quality=simulated_context_quality)
     rendered_prompt = assemble_developer_prompt(resolved, config)
-    
+
     # AC4: Hard policy is visible but separate
     # M2 Fix: Default safety_profile to astrology
     safety_profile = "astrology"
@@ -104,17 +108,17 @@ def build_assembly_preview(config: PromptAssemblyConfigModel, simulated_context_
 
     # AC7: Available variables extraction
     found_placeholders = PromptRenderer.extract_placeholders(rendered_prompt)
-    
+
     variables = []
     resolution_statuses = []
-    
+
     # Mock some context for preview resolution
     mock_vars = {
-        "locale": "fr-FR", 
+        "locale": "fr-FR",
         "context_quality": simulated_context_quality,
-        "use_case": config.feature_template.use_case_key
+        "use_case": config.feature_template.use_case_key,
     }
-    
+
     # Feature-specific mock context
     if config.feature == "chat":
         mock_vars["last_user_msg"] = "Hello Luna!"
@@ -128,18 +132,15 @@ def build_assembly_preview(config: PromptAssemblyConfigModel, simulated_context_
 
     for p in found_placeholders:
         # 1. Available variables info
-        variables.append(PlaceholderInfo(
-            name=p,
-            type="string",
-            origin="context",
-            example=f"example_{p}"
-        ))
-        
+        variables.append(
+            PlaceholderInfo(name=p, type="string", origin="context", example=f"example_{p}")
+        )
+
         # 2. Resolution status (Story 66.13 AC5)
         p_def = placeholder_defs.get(p)
         status = "unknown"
         val_preview = None
-        
+
         if p in mock_vars:
             status = "resolved"
             val_preview = str(mock_vars[p])[:10]
@@ -151,13 +152,12 @@ def build_assembly_preview(config: PromptAssemblyConfigModel, simulated_context_
             elif p_def.classification == "optional_with_fallback":
                 status = "fallback_used"
                 val_preview = (p_def.fallback or "")[:10]
-        
+
         from app.llm_orchestration.admin_models import PlaceholderResolutionStatus
-        resolution_statuses.append(PlaceholderResolutionStatus(
-            name=p,
-            status=status,
-            value_preview=val_preview
-        ))
+
+        resolution_statuses.append(
+            PlaceholderResolutionStatus(name=p, status=status, value_preview=val_preview)
+        )
 
     from app.infra.db.models.llm_prompt import PromptStatus
 
@@ -175,11 +175,13 @@ def build_assembly_preview(config: PromptAssemblyConfigModel, simulated_context_
         placeholder_resolution_status=resolution_statuses,
         resolved_execution_config=resolved.execution_config,
         length_budget=resolved.length_budget,
-        draft_preview=(config.status != PromptStatus.PUBLISHED)
+        draft_preview=(config.status != PromptStatus.PUBLISHED),
     )
 
 
-def resolve_assembly(config: PromptAssemblyConfigModel, context_quality: str = "full") -> ResolvedAssembly:
+def resolve_assembly(
+    config: PromptAssemblyConfigModel, context_quality: str = "full"
+) -> ResolvedAssembly:
     """
     Orchestrates the resolution of an assembly config into a ResolvedAssembly artifact.
     Implements AC1, AC2, AC11.
@@ -214,19 +216,21 @@ def resolve_assembly(config: PromptAssemblyConfigModel, context_quality: str = "
     # 3. Resolve Plan Rules (AC11)
     plan_rules_content = None
     exec_dict = config.execution_config
-    
+
     if config.plan_rules_enabled and config.plan_rules_ref:
         rule = PLAN_RULES_REGISTRY.get(config.plan_rules_ref)
         if rule:
             plan_rules_content = rule.instruction
-            
+
             # Story 66.17 AC4: Plan rules guard
             from app.prompts.validators import validate_plan_rules_content
+
             arch_violations = validate_plan_rules_content(plan_rules_content)
             for v in arch_violations:
                 logger.warning(
                     "plan_rules_violation: %s detected in plan rules. Excerpt: %s",
-                    v.violation_type, v.excerpt
+                    v.violation_type,
+                    v.excerpt,
                 )
 
             if rule.max_output_tokens_override is not None:
@@ -246,6 +250,7 @@ def resolve_assembly(config: PromptAssemblyConfigModel, context_quality: str = "
     length_budget = None
     if config.length_budget:
         from app.llm_orchestration.admin_models import LengthBudget
+
         length_budget = LengthBudget(**config.length_budget)
 
     return ResolvedAssembly(
@@ -273,33 +278,37 @@ def assemble_developer_prompt(resolved: ResolvedAssembly, config: PromptAssembly
     Persona is handled separately in LLMGateway layers.
     """
     blocks = []
-    
+
     if config.feature_enabled:
         blocks.append(resolved.feature_template_prompt)
-        
+
     if config.subfeature_enabled and resolved.subfeature_template_prompt:
         blocks.append(resolved.subfeature_template_prompt)
-        
+
     if config.plan_rules_enabled and resolved.plan_rules_content:
         blocks.append(resolved.plan_rules_content)
-        
+
     prompt = "\n\n".join(blocks)
 
     # Story 66.12: Length Budget injection
     if resolved.length_budget:
         from app.llm_orchestration.services.length_budget_injector import LengthBudgetInjector
+
         prompt = LengthBudgetInjector.inject_into_developer_prompt(prompt, resolved.length_budget)
 
     # Story 66.14: Context Quality injection (compensation instructions)
     # We use 'full' as default if not provided yet (resolved in gateway)
     context_quality = "full"
     injected = False
-    if hasattr(resolved, 'context_quality'): # Should be there if coming from build_assembly_preview
+    if hasattr(
+        resolved, "context_quality"
+    ):  # Should be there if coming from build_assembly_preview
         context_quality = resolved.context_quality
         from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
+
         prompt, injected = ContextQualityInjector.inject(prompt, config.feature, context_quality)
-    
+
     # Store injection status in resolved object if possible (it's a Pydantic model)
     # Actually, ResolvedAssembly doesn't have this field yet.
-    
+
     return prompt

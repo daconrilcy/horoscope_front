@@ -21,8 +21,8 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import engine
 from app.main import app
+from app.prediction.llm_narrator import NarratorResult
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
-from app.prediction.llm_narrator import NarratorResult, NarratorAdvice
 from app.services.billing_service import BillingService
 from app.services.daily_prediction_service import ServiceResult
 
@@ -161,20 +161,20 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
             with patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls:
                 mock_service = mock_service_cls.return_value
-                mock_service.get_or_compute.return_value = mock_result  
+                mock_service.get_or_compute.return_value = mock_result
 
                 # AC9: Ensure canonical path is used
-                with (
-                    patch("app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration") as mock_adapter
-                ):
+                with patch(
+                    "app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration"
+                ) as mock_adapter:
                     mock_adapter.return_value = NarratorResult(
                         daily_synthesis="Synthèse du jour canonique.",
                         astro_events_intro="Intro canonique.",
                         time_window_narratives={},
-                        turning_point_narratives=[]
+                        turning_point_narratives=[],
                     )
 
-                    response = client.get("/v1/predictions/daily")      
+                    response = client.get("/v1/predictions/daily")
                     assert response.status_code == 200
                     _, kwargs = mock_adapter.call_args
                     assert kwargs["variant_code"] == "summary_only"
@@ -228,21 +228,23 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
             with patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls:
                 mock_service = mock_service_cls.return_value
-                mock_service.get_or_compute.return_value = mock_result  
+                mock_service.get_or_compute.return_value = mock_result
 
                 with (
-                    patch("app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration") as mock_adapter,
-                    patch("app.prediction.llm_narrator.LLMNarrator.narrate") as mock_narrate
+                    patch(
+                        "app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration"
+                    ) as mock_adapter,
+                    patch("app.prediction.llm_narrator.LLMNarrator.narrate") as mock_narrate,
                 ):
                     mock_adapter.return_value = NarratorResult(
                         daily_synthesis="Synthèse du jour canonique.",
                         astro_events_intro="Intro canonique.",
                         time_window_narratives={},
-                        turning_point_narratives=[]
+                        turning_point_narratives=[],
                     )
                     mock_narrate.return_value = None
 
-                    response = client.get("/v1/predictions/daily")      
+                    response = client.get("/v1/predictions/daily")
                     assert response.status_code == 200
                     _, kwargs = mock_adapter.call_args
                     assert kwargs["variant_code"] == "full"
@@ -316,7 +318,9 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
         patch("app.prediction.public_projection.settings") as mock_settings_proj,
         patch("app.prompts.common_context.CommonContextBuilder.build") as mock_ctx_build,
         patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls,
-        patch("app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration") as mock_adapter,
+        patch(
+            "app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration"
+        ) as mock_adapter,
     ):
         mock_settings_router.llm_narrator_enabled = True
         mock_settings_router.ruleset_version = "2.0.0"
@@ -336,7 +340,7 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
             daily_synthesis="Synthèse du jour en plusieurs phrases.",
             astro_events_intro="Introduction narrative.",
             time_window_narratives={},
-            turning_point_narratives=[]
+            turning_point_narratives=[],
         )
 
         response = client.get("/v1/predictions/daily")

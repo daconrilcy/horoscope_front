@@ -9,14 +9,14 @@ from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, Llm
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
+    ExecutionContext,
+    ExecutionUserInput,
     GatewayConfigError,
     GatewayMeta,
     GatewayResult,
     InputValidationError,
-    UsageInfo,
     LLMExecutionRequest,
-    ExecutionUserInput,
-    ExecutionContext,
+    UsageInfo,
 )
 from app.prompts.catalog import NATAL_FREE_SHORT_SCHEMA
 
@@ -73,7 +73,7 @@ async def test_structured_mode_no_question(db_session):
         user_input=ExecutionUserInput(use_case="test_none", locale="fr", question="Ignored?"),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     await gateway.execute_request(
         request=request,
@@ -118,7 +118,7 @@ async def test_structured_mode_optional_question(db_session):
         user_input=ExecutionUserInput(use_case="test_opt", locale="fr", question="How am I?"),
         request_id="r1",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     await gateway.execute_request(
         request=request1,
@@ -134,7 +134,7 @@ async def test_structured_mode_optional_question(db_session):
         user_input=ExecutionUserInput(use_case="test_opt", locale="fr"),
         request_id="r2",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     await gateway.execute_request(
         request=request2,
@@ -174,7 +174,7 @@ async def test_structured_mode_required_question(db_session):
         user_input=ExecutionUserInput(use_case="test_req", locale="fr"),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     with pytest.raises(InputValidationError) as exc:
         await gateway.execute_request(
@@ -209,17 +209,14 @@ async def test_chat_mode_with_history(db_session):
 
     gateway = LLMGateway(responses_client=mock_client)
 
-    history = [
-        {"role": "user", "content": "Hello"}, 
-        {"role": "assistant", "content": "Hi there"}
-    ]
+    history = [{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi there"}]
 
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="test_chat", locale="fr", question="How are you?"),
         context=ExecutionContext(history=history),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     await gateway.execute_request(
         request=request,
@@ -261,7 +258,7 @@ async def test_schema_blocking_paid_use_case(db_session):
         user_input=ExecutionUserInput(use_case="natal_interpretation", locale="fr"),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     with pytest.raises(GatewayConfigError) as exc:
         await gateway.execute_request(
@@ -299,7 +296,7 @@ async def test_schema_name_in_payload(db_session):
         user_input=ExecutionUserInput(use_case="test_schema", locale="fr"),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     await gateway.execute_request(
         request=request,
@@ -335,7 +332,7 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
         context=ExecutionContext(chart_json='{"meta": {"birth_date": "2017-03-14"}}'),
         request_id="r",
         trace_id="t",
-        user_id=1
+        user_id=1,
     )
     await gateway.execute_request(
         request=request,

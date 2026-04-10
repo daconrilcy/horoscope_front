@@ -17,21 +17,23 @@ from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
 
 @pytest.mark.evaluation
 @pytest.mark.asyncio
-async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_quality, mock_personas):
+async def test_prompt_resolution_matrix(
+    db, evaluation_matrix, mock_context_by_quality, mock_personas
+):
     """
     Evaluates prompt resolution for every combination in the matrix.
     Checks: absence of {{}}, context quality handling, runtime schema resolution,
     and length-budget propagation in the assembly path.
     """
     results = []
-    
+
     for case in evaluation_matrix:
         feat = case["feature"]
         plan = case["plan"]
         subfeat = case.get("subfeature")
         persona_type = case["persona"]
         cq = case["context_quality"]
-        
+
         # 1. Setup DB data for this combination
         # Clear previous to avoid unique constraints
         db.query(PromptAssemblyConfigModel).delete()
@@ -40,7 +42,7 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
         db.query(LlmPersonaModel).delete()
         db.query(LlmExecutionProfileModel).delete()
         db.commit()
-        
+
         # Create Persona
         p_data = mock_personas[persona_type]
         persona = LlmPersonaModel(
@@ -49,13 +51,15 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             description="test",
             style_markers=p_data["style_markers"],
             boundaries=p_data["boundaries"],
-            enabled=True
+            enabled=True,
         )
         db.add(persona)
-        
+
         # Create Template
         uc_key = f"{feat}_test"
-        uc = LlmUseCaseConfigModel(key=uc_key, display_name=uc_key, description="test", safety_profile="astrology")
+        uc = LlmUseCaseConfigModel(
+            key=uc_key, display_name=uc_key, description="test", safety_profile="astrology"
+        )
         db.add(uc)
         v = LlmPromptVersionModel(
             id=uuid.uuid4(),
@@ -63,10 +67,10 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             developer_prompt=f"BASE PROMPT FOR {feat} {{#context_quality:minimal}}MINIMAL{{/context_quality}}",
             model="gpt-4o",
             status=PromptStatus.PUBLISHED,
-            created_by="eval"
+            created_by="eval",
         )
         db.add(v)
-        
+
         # Create Profile
         prof = LlmExecutionProfileModel(
             id=uuid.uuid4(),
@@ -74,20 +78,21 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             provider="openai",
             model="gpt-4o",
             status=PromptStatus.PUBLISHED,
-            created_by="eval"
+            created_by="eval",
         )
         db.add(prof)
-        
+
         # Create Output Schema for paid cases so the gateway resolves a real contract.
         schema_id = None
         if feat == "natal" and plan == "premium":
             from app.infra.db.models import LlmOutputSchemaModel
             from app.llm_orchestration.seeds.use_cases_seed import ASTRO_RESPONSE_V3_JSON_SCHEMA
+
             schema = LlmOutputSchemaModel(
                 id=uuid.uuid4(),
                 name=f"Schema {feat}",
                 json_schema=ASTRO_RESPONSE_V3_JSON_SCHEMA,
-                version=1
+                version=1,
             )
             db.add(schema)
             schema_id = str(schema.id)
@@ -108,36 +113,32 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             output_contract_ref=schema_id,
             length_budget={
                 "target_response_length": "standard" if plan == "premium" else "concise",
-                "global_max_tokens": 2000 if plan == "premium" else 500
+                "global_max_tokens": 2000 if plan == "premium" else 500,
             },
             status=PromptStatus.PUBLISHED,
-            created_by="eval"
+            created_by="eval",
         )
         db.add(assembly)
         db.commit()
-        
+
         # 2. Resolve via Gateway
         gateway = LLMGateway()
         # Mock Context Quality resolution (usually handled by CommonContextBuilder)
         # We simulate it by passing the quality level in render_vars
-        
+
         # Build request
         ctx_data = mock_context_by_quality[cq]
         request = LLMExecutionRequest(
             user_input=ExecutionUserInput(
-                use_case=uc_key,
-                feature=feat,
-                subfeature=subfeat,
-                plan=plan,
-                locale="fr-FR"
+                use_case=uc_key, feature=feat, subfeature=subfeat, plan=plan, locale="fr-FR"
             ),
             request_id="eval-req",
-            trace_id="eval-trace"
+            trace_id="eval-trace",
         )
-        
+
         # We need to mock CommonContextBuilder.build to return our desired quality
         from app.prompts.common_context import PromptCommonContext, QualifiedContext
-        
+
         mock_payload = PromptCommonContext(
             natal_interpretation="test",
             natal_data={"test": "data"},
@@ -146,9 +147,9 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             period_covered="today",
             today_date="today",
             use_case_name=uc_key,
-            use_case_key=uc_key
+            use_case_key=uc_key,
         )
-        
+
         # We manually compute missing fields to satisfy _validate_quality
         missing = []
         if cq == "partial":
@@ -160,33 +161,38 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
             mock_payload.natal_interpretation = None
 
         mock_qualified = QualifiedContext(
-            payload=mock_payload,
-            source="db",
-            missing_fields=missing,
-            context_quality=cq
+            payload=mock_payload, source="db", missing_fields=missing, context_quality=cq
         )
-        
+
         with MagicMock():
             import app.llm_orchestration.gateway as gateway_module
+
             # We patch it directly in the module
             original_build = gateway_module.CommonContextBuilder.build
             gateway_module.CommonContextBuilder.build = MagicMock(return_value=mock_qualified)
-            
+
             try:
-                plan_resolved, _ = await gateway._resolve_plan(request, db, context_override=ctx_data)
-                
+                plan_resolved, _ = await gateway._resolve_plan(
+                    request, db, context_override=ctx_data
+                )
+
                 # 3. Assertions (Story 66.16 Medium 2 fix)
                 prompt = plan_resolved.rendered_developer_prompt
-                
+
                 # Check Placeholders
                 placeholders_ok = "{{" not in prompt and "}}" not in prompt
-                
+
                 # Check Context Quality
-                cq_ok = (cq == "minimal" and ("MINIMAL" in prompt or "[CONTEXTE" in prompt)) or (cq == "full")
-                
+                cq_ok = (cq == "minimal" and ("MINIMAL" in prompt or "[CONTEXTE" in prompt)) or (
+                    cq == "full"
+                )
+
                 # Check Persona
-                persona_ok = p_data["name"] in (plan_resolved.persona_block or "") or p_data["name"] in prompt
-                
+                persona_ok = (
+                    p_data["name"] in (plan_resolved.persona_block or "")
+                    or p_data["name"] in prompt
+                )
+
                 # Check Length Budget Consistency (Story 66.12/66.18)
                 expected_tokens = 500 if plan == "free" else 2000
                 length_ok = (
@@ -194,7 +200,7 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
                     and plan_resolved.max_output_tokens_source == "length_budget"
                     and "[CONSIGNE DE LONGUEUR]" in prompt
                 )
-                
+
                 # Check Output Contract resolution (AC3)
                 schema_ok = True
                 if feat == "natal" and plan == "premium":
@@ -203,24 +209,26 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
                         and plan_resolved.response_format is not None
                         and plan_resolved.response_format.type == "json_schema"
                     )
-                
-                results.append({
-                    "case": f"{feat}/{plan}/{persona_type}/{cq}",
-                    "placeholders": placeholders_ok,
-                    "context_quality": cq_ok,
-                    "persona": persona_ok,
-                    "output_contract": schema_ok,
-                    "length_budget": length_ok,
-                    "differentiation_plan": True
-                })
-                
+
+                results.append(
+                    {
+                        "case": f"{feat}/{plan}/{persona_type}/{cq}",
+                        "placeholders": placeholders_ok,
+                        "context_quality": cq_ok,
+                        "persona": persona_ok,
+                        "output_contract": schema_ok,
+                        "length_budget": length_ok,
+                        "differentiation_plan": True,
+                    }
+                )
+
                 assert placeholders_ok, f"Surviving placeholders in {feat}/{plan}"
                 if cq == "minimal":
                     assert cq_ok, f"Context quality instruction missing in {feat}/{plan}"
                 assert length_ok, f"Length budget inconsistent in {feat}/{plan}"
                 if feat == "natal" and plan == "premium":
                     assert schema_ok, f"Output schema missing for paid {feat}/{plan}"
-                
+
             finally:
                 # Restore
                 gateway_module.CommonContextBuilder.build = original_build
@@ -228,4 +236,6 @@ async def test_prompt_resolution_matrix(db, evaluation_matrix, mock_context_by_q
     # Final result report summary (will be used by report generator later)
     print("\nEVALUATION MATRIX SUMMARY:")
     for r in results:
-        print(f"{r['case']}: Placeholders={'✅' if r['placeholders'] else '❌'}, CQ={'✅' if r['context_quality'] else '❌'}, Persona={'✅' if r['persona'] else '❌'}")
+        print(
+            f"{r['case']}: Placeholders={'✅' if r['placeholders'] else '❌'}, CQ={'✅' if r['context_quality'] else '❌'}, Persona={'✅' if r['persona'] else '❌'}"
+        )

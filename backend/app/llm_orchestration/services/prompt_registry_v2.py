@@ -114,15 +114,17 @@ class PromptRegistryV2:
 
         # Story 66.9 AC4: Validate use case naming on publish
         try:
-            from app.prompts.validators import validate_use_case_naming, validate_template_content
+            from app.prompts.validators import validate_template_content, validate_use_case_naming
+
             # Try to get output_schema from UseCaseConfig if possible (Medium 2 fix)
             stmt_uc = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key)
             db_uc = db.execute(stmt_uc).scalar_one_or_none()
-            
+
             output_schema = None
             if db_uc and db_uc.output_schema_id:
                 # We need LlmOutputSchemaModel
                 from app.infra.db.models import LlmOutputSchemaModel
+
                 schema_model = db.get(LlmOutputSchemaModel, uuid.UUID(db_uc.output_schema_id))
                 if schema_model:
                     output_schema = schema_model.json_schema
@@ -130,13 +132,14 @@ class PromptRegistryV2:
             warnings = validate_use_case_naming(use_case_key, output_schema=output_schema)
             for w in warnings:
                 logger.warning("prompt_registry_v2_naming_warning: %s", w)
-                
+
             # Story 66.17 AC2: Template content guard
             arch_violations = validate_template_content(version.developer_prompt)
             for v in arch_violations:
                 logger.warning(
                     "template_content_violation: %s detected in prompt template. Excerpt: %s",
-                    v.violation_type, v.excerpt
+                    v.violation_type,
+                    v.excerpt,
                 )
         except Exception as e:
             logger.debug("prompt_registry_v2_validation_skipped: %s", e)

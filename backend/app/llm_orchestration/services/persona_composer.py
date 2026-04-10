@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 TONE_MAPPINGS = {
     "warm": "chaleureux et empathique",
-    "calm": "chaleureux et empathique", # Legacy mapping (calm -> warm)
+    "calm": "chaleureux et empathique",  # Legacy mapping (calm -> warm)
     "direct": "direct et factuel",
     "mystical": "mystique et inspirant",
     "rational": "rationnel et analytique",
@@ -67,6 +67,7 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
         # 3. Boundary validation (Story 66.10 AC2, AC3, AC4)
         try:
             from app.llm_orchestration.persona_boundary import validate_persona_block
+
             violations = validate_persona_block(block, str(persona.id))
             for v in violations:
                 msg = f"persona_boundary_violation: {v.dimension} detected in persona block id={v.persona_id}. Severity={v.severity}. Excerpt: {v.excerpt}"
@@ -158,6 +159,7 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
     # 3. Boundary validation (Story 66.10 AC2, AC3, AC4)
     try:
         from app.llm_orchestration.persona_boundary import validate_persona_block
+
         violations = validate_persona_block(block, str(persona.id))
         for v in violations:
             msg = f"persona_boundary_violation: {v.dimension} detected in persona block id={v.persona_id}. Severity={v.severity}. Excerpt: {v.excerpt}"

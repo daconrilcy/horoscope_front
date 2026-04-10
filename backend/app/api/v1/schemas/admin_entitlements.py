@@ -31,7 +31,7 @@ class AdminEntitlementCell(BaseModel):
 class AdminEntitlementMatrixResponse(BaseModel):
     plans: list[AdminEntitlementPlan]
     features: list[AdminEntitlementFeature]
-    cells: dict[str, AdminEntitlementCell] # Key: "plan_id:feature_id"
+    cells: dict[str, AdminEntitlementCell]  # Key: "plan_id:feature_id"
 
 
 class AdminEntitlementUpdate(BaseModel):

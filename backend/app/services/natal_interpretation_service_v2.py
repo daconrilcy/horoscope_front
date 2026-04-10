@@ -23,7 +23,7 @@ from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
 from app.infra.observability.metrics import observe_duration
-from app.llm_orchestration.models import GatewayResult, InputValidationError, NatalExecutionInput
+from app.llm_orchestration.models import GatewayResult, NatalExecutionInput
 from app.llm_orchestration.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
@@ -390,8 +390,13 @@ class NatalInterpretationServiceV2:
             )
 
         # 3.5 Resolve Plan (Story 66.20)
-        from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-        entitlements = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+        from app.services.effective_entitlement_resolver_service import (
+            EffectiveEntitlementResolverService,
+        )
+
+        entitlements = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
+            db, app_user_id=user_id
+        )
         user_plan = entitlements.plan_code
 
         # 4. Call AIEngineAdapter (Story 66.7)
@@ -425,7 +430,7 @@ class NatalInterpretationServiceV2:
             variant_code=variant_code,
             user_id=user_id,
             request_id=request_id,
-            trace_id=trace_id
+            trace_id=trace_id,
         )
 
         gateway_result = await AIEngineAdapter.generate_natal_interpretation(
@@ -645,8 +650,13 @@ class NatalInterpretationServiceV2:
         use_case_key = "natal_long_free"
 
         # 3.5 Resolve Plan (Story 66.20)
-        from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-        entitlements = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=user_id)
+        from app.services.effective_entitlement_resolver_service import (
+            EffectiveEntitlementResolverService,
+        )
+
+        entitlements = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
+            db, app_user_id=user_id
+        )
         user_plan = entitlements.plan_code
 
         natal_input = NatalExecutionInput(
@@ -665,7 +675,7 @@ class NatalInterpretationServiceV2:
             variant_code="free_short",
             user_id=user_id,
             request_id=request_id,
-            trace_id=trace_id
+            trace_id=trace_id,
         )
 
         gateway_result = await AIEngineAdapter.generate_natal_interpretation(

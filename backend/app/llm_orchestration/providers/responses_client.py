@@ -129,7 +129,7 @@ class ResponsesClient:
                 if fmt.get("type") == "json_schema" and "json_schema" in fmt:
                     nested = fmt.pop("json_schema")
                     fmt.update(nested)
-                    
+
                     # Ensure strict schemas have additionalProperties: False
                     def _enforce_strict(s: dict):
                         if isinstance(s, dict):
@@ -142,7 +142,7 @@ class ResponsesClient:
                             for item in s:
                                 if isinstance(item, (dict, list)):
                                     _enforce_strict(item)
-                                    
+
                     if fmt.get("strict") is True and "schema" in fmt:
                         _enforce_strict(fmt["schema"])
 

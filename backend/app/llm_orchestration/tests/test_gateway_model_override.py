@@ -1,8 +1,11 @@
 import os
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
 
 @pytest.mark.asyncio
 async def test_gateway_model_override_from_env():
@@ -17,7 +20,7 @@ async def test_gateway_model_override_from_env():
             use_case=use_case,
             request_id="req1",
             trace_id="tr1",
-            raw_output='{"message": "hello"}', # Valid JSON
+            raw_output='{"message": "hello"}',  # Valid JSON
             usage=UsageInfo(),
             meta=GatewayMeta(latency_ms=10, model=override_model, prompt_version_id="v1"),
         )
@@ -36,6 +39,7 @@ async def test_gateway_model_override_from_env():
         assert result.meta.model == override_model
         assert result.meta.model_override_active is True
 
+
 @pytest.mark.asyncio
 async def test_gateway_uses_default_model_when_no_env_override():
     """Vérifie que le modèle par défaut est utilisé en l'absence de surcharge."""
@@ -48,7 +52,7 @@ async def test_gateway_uses_default_model_when_no_env_override():
             use_case=use_case,
             request_id="req1",
             trace_id="tr1",
-            raw_output='{"message": "hello"}', # Valid JSON
+            raw_output='{"message": "hello"}',  # Valid JSON
             usage=UsageInfo(),
             meta=GatewayMeta(latency_ms=10, model=default_model, prompt_version_id="v1"),
         )
@@ -66,6 +70,7 @@ async def test_gateway_uses_default_model_when_no_env_override():
         )
         assert result.meta.model_override_active is False
 
+
 @pytest.mark.asyncio
 async def test_gateway_model_override_with_robust_normalization():
     """Vérifie que la normalisation de la clé d'env est robuste (ex: natal-long-free)."""
@@ -79,7 +84,7 @@ async def test_gateway_model_override_with_robust_normalization():
             use_case=use_case,
             request_id="req1",
             trace_id="tr1",
-            raw_output='{"message": "hello"}', # Valid JSON
+            raw_output='{"message": "hello"}',  # Valid JSON
             usage=UsageInfo(),
             meta=GatewayMeta(latency_ms=10, model=override_model, prompt_version_id="v1"),
         )

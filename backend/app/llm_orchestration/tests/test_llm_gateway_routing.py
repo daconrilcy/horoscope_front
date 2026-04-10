@@ -1,14 +1,19 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 from app.services.ai_engine_adapter import AIEngineAdapter, reset_test_generators
-from app.llm_orchestration.models import GatewayResult, UsageInfo, GatewayMeta
+
 
 @pytest.mark.asyncio
 async def test_routing_v2_always_uses_gateway():
     # Ensure no test generators are interfering
     reset_test_generators()
-    
-    with patch("app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock) as mock_execute:
+
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_execute:
         mock_execute.return_value = GatewayResult(
             use_case="chat_astrologer",
             request_id="r1",

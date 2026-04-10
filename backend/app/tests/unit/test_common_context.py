@@ -5,15 +5,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.prompts.common_context import CommonContextBuilder
-
-
-from app.prompts.common_context import CommonContextBuilder, QualifiedContext, PromptCommonContext
+from app.prompts.common_context import CommonContextBuilder, PromptCommonContext, QualifiedContext
 
 
 def test_qualified_context_compute_quality():
     """Test transitions between full, partial, and minimal quality."""
-    
+
     # 1. Full Quality
     full_payload = PromptCommonContext(
         today_date="mardi 7 avril 2026",
@@ -21,9 +18,9 @@ def test_qualified_context_compute_quality():
         use_case_key="test",
         astrologer_profile={"name": "Luna"},
         natal_interpretation="Some interp",
-        natal_data={"planets": []}, # Added
+        natal_data={"planets": []},  # Added
         precision_level="précision complète",
-        period_covered="daily"
+        period_covered="daily",
     )
     ctx_full = QualifiedContext(payload=full_payload, source="daily")
     assert ctx_full.context_quality == "full"
@@ -37,7 +34,7 @@ def test_qualified_context_compute_quality():
         astrologer_profile={"name": "Luna"},
         natal_data={"planets": []},
         precision_level="précision complète",
-        period_covered="daily"
+        period_covered="daily",
     )
     ctx_partial = QualifiedContext(payload=partial_payload, source="daily")
     assert ctx_partial.context_quality == "partial"
@@ -49,9 +46,9 @@ def test_qualified_context_compute_quality():
         use_case_name="test",
         use_case_key="test",
         natal_interpretation="Some interp",
-        astrologer_profile={}, # Missing content
+        astrologer_profile={},  # Missing content
         precision_level="unknown",
-        period_covered="daily"
+        period_covered="daily",
     )
     ctx_minimal = QualifiedContext(payload=minimal_payload, source="daily")
     assert ctx_minimal.context_quality == "minimal"

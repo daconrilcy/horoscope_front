@@ -10,7 +10,7 @@ from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCa
 from app.infra.db.models.llm_persona import PersonaTone, PersonaVerbosity
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
 @pytest.fixture

@@ -1,19 +1,21 @@
 from __future__ import annotations
 
 import logging
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
-from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 logger = logging.getLogger(__name__)
 
+
 def seed_66_20_taxonomy(db: Session) -> None:
     """Finalize canonical taxonomy for chat, guidance and natal (Story 66.20)."""
-    
+
     # 1. Get default persona
     stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled == True)
     persona = db.execute(stmt_persona).scalars().first()
@@ -28,7 +30,6 @@ def seed_66_20_taxonomy(db: Session) -> None:
         # CHAT
         ("chat", "astrologer", "free", "chat_astrologer"),
         ("chat", "astrologer", "premium", "chat_astrologer"),
-        
         # GUIDANCE
         ("guidance", "daily", "free", "guidance_daily"),
         ("guidance", "daily", "premium", "guidance_daily"),
@@ -38,7 +39,6 @@ def seed_66_20_taxonomy(db: Session) -> None:
         ("guidance", "contextual", "premium", "guidance_contextual"),
         ("guidance", "event", "free", "event_guidance"),
         ("guidance", "event", "premium", "event_guidance"),
-
         # NATAL
         ("natal", "natal_interpretation", "free", "natal_interpretation_short"),
         ("natal", "natal_interpretation", "premium", "natal_interpretation"),
@@ -54,12 +54,16 @@ def seed_66_20_taxonomy(db: Session) -> None:
 
     for f, sf, p, t_key in target_assemblies:
         # A. Find template
-        stmt_t = select(LlmPromptVersionModel).where(
-            LlmPromptVersionModel.use_case_key == t_key,
-            LlmPromptVersionModel.status == PromptStatus.PUBLISHED
-        ).order_by(LlmPromptVersionModel.created_at.desc())
+        stmt_t = (
+            select(LlmPromptVersionModel)
+            .where(
+                LlmPromptVersionModel.use_case_key == t_key,
+                LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+            )
+            .order_by(LlmPromptVersionModel.created_at.desc())
+        )
         template = db.execute(stmt_t).scalars().first()
-        
+
         if not template:
             logger.warning(f"seed_66_20_taxonomy: template {t_key} not found for {f}/{sf}")
             continue
@@ -69,10 +73,10 @@ def seed_66_20_taxonomy(db: Session) -> None:
             PromptAssemblyConfigModel.feature == f,
             PromptAssemblyConfigModel.subfeature == sf,
             PromptAssemblyConfigModel.plan == p,
-            PromptAssemblyConfigModel.locale == "fr-FR"
+            PromptAssemblyConfigModel.locale == "fr-FR",
         )
         existing = db.execute(stmt_exists).scalar_one_or_none()
-        
+
         if not existing:
             new_asm = PromptAssemblyConfigModel(
                 feature=f,
@@ -85,7 +89,7 @@ def seed_66_20_taxonomy(db: Session) -> None:
                     "model": template.model or "gpt-4o",
                     "temperature": template.temperature or 0.7,
                     "max_output_tokens": template.max_output_tokens or 2000,
-                    "timeout_seconds": 60
+                    "timeout_seconds": 60,
                 },
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
@@ -109,10 +113,10 @@ def seed_66_20_taxonomy(db: Session) -> None:
         stmt_p = select(LlmExecutionProfileModel).where(
             LlmExecutionProfileModel.feature == f,
             LlmExecutionProfileModel.subfeature == sf,
-            LlmExecutionProfileModel.plan == p
+            LlmExecutionProfileModel.plan == p,
         )
         profile = db.execute(stmt_p).scalar_one_or_none()
-        
+
         if not profile:
             new_profile = LlmExecutionProfileModel(
                 name=f"Profile {f} {sf or ''} {p or ''}".strip(),
@@ -126,7 +130,7 @@ def seed_66_20_taxonomy(db: Session) -> None:
                 output_mode="structured_json" if f in ["guidance", "natal"] else "free_text",
                 timeout_seconds=60,
                 status=PromptStatus.PUBLISHED,
-                created_by="system"
+                created_by="system",
             )
             db.add(new_profile)
             logger.info(f"seed_66_20_taxonomy: created profile {f}/{sf or ''}/{p or ''}")
@@ -137,7 +141,9 @@ def seed_66_20_taxonomy(db: Session) -> None:
 
     db.commit()
 
+
 if __name__ == "__main__":
     from app.infra.db.session import SessionLocal
+
     with SessionLocal() as session:
         seed_66_20_taxonomy(session)
