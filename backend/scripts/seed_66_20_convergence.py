@@ -41,7 +41,7 @@ def seed_66_20_convergence():
             existing = db.execute(
                 select(LlmExecutionProfileModel).where(
                     LlmExecutionProfileModel.name == p_data["name"],
-                    LlmExecutionProfileModel.feature == None,
+                    LlmExecutionProfileModel.feature.is_(None),
                 )
             ).scalar_one_or_none()
 
@@ -127,6 +127,7 @@ def seed_66_20_convergence():
             ("guidance", "daily", "premium", "guidance_daily", "premium"),
             ("guidance", "weekly", "free", "guidance_weekly", "standard"),
             ("guidance", "weekly", "premium", "guidance_weekly", "premium"),
+            ("guidance", "contextual", "free", "guidance_contextual", "standard"),
             ("guidance", "contextual", "premium", "guidance_contextual", "premium"),
             # NATAL
             ("natal", "natal_interpretation", "free", "natal_long_free", "standard"),

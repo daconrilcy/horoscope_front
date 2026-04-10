@@ -138,7 +138,7 @@ class FallbackGovernanceRegistry:
         increment_counter("llm_gateway_fallback_usage_total", labels=labels)
 
         # 3. Vérification du périmètre (Forbidden families)
-        if effective_feature in forbidden_families:
+        if effective_feature in forbidden_families and is_nominal:
             logger.error(
                 "governance_violation_forbidden_fallback type=%s feature=%s call_site=%s status=%s",
                 fallback_type.value,

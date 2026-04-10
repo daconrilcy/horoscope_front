@@ -165,6 +165,14 @@ def _make_empty_complete_gateway_result() -> GatewayResult:
 PERSONA_ID = "12345678-1234-5678-1234-567812345678"
 
 
+def _patch_entitlement_snapshot(plan_code: str = "premium"):
+    return patch(
+        "app.services.effective_entitlement_resolver_service."
+        "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
+        return_value=MagicMock(plan_code=plan_code),
+    )
+
+
 def _make_db_mock(has_persona: bool = True) -> MagicMock:
     """
     Retourne un mock de Session SQLAlchemy avec:
@@ -229,6 +237,7 @@ class TestNatalInterpretationServiceV2UserInput:
                 "app.services.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
+            _patch_entitlement_snapshot(),
             patch(
                 "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
                 return_value=mock_persisted,
@@ -285,6 +294,7 @@ class TestNatalInterpretationServiceV2UserInput:
                 "app.services.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
+            _patch_entitlement_snapshot(),
             patch(
                 "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
                 return_value=mock_persisted,
@@ -337,6 +347,7 @@ class TestNatalInterpretationServiceV2UserInput:
                 "app.services.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
+            _patch_entitlement_snapshot(),
             patch(
                 "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
                 return_value=mock_persisted,
@@ -389,6 +400,7 @@ class TestNatalInterpretationServiceV2SchemaVersion:
                 "app.services.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
+            _patch_entitlement_snapshot(),
             patch(
                 "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
                 return_value=mock_persisted,
@@ -448,6 +460,7 @@ class TestNatalInterpretationServiceV2Modules:
                 "app.services.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
+            _patch_entitlement_snapshot(),
         ):
             resp = await NatalInterpretationServiceV2.interpret(
                 db=db,

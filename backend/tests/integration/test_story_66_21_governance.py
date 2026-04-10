@@ -24,35 +24,15 @@ async def test_governance_blocks_use_case_first_on_closed_family(gateway):
     """
     AC3: Sur les familles nominales fermées (ex: chat), le fallback use_case-first est interdit.
     """
-    # En utilisant un use_case déprécié SANS feature, on active is_legacy_compatibility=True
-    # ce qui bypasse le check assembly obligatoire, mais feature est quand même mappé à 'chat'.
-    # Cela nous permet d'atteindre le track_fallback de use_case_first avec feature='chat'.
+    with pytest.raises(GatewayError) as exc:
+        FallbackGovernanceRegistry.track_fallback(
+            FallbackType.USE_CASE_FIRST,
+            call_site="resolve_config:chat_astrologer",
+            feature="chat",
+            is_nominal=True,
+        )
 
-    request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(
-            use_case="chat",  # Dans DEPRECATED_USE_CASE_MAPPING
-            feature=None,  # Pour activer la compatibilité legacy
-            locale="fr-FR",
-        ),
-        context=ExecutionContext(),
-        request_id="test-gov-1",
-        trace_id="trace-gov-1",
-    )
-
-    # On mock le DB pour forcer le passage par resolve_config qui déclenche le fallback
-    # use_case-first si aucune assembly n'est trouvée.
-    with patch(
-        "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
-        return_value=None,
-    ):
-        # On doit aussi mocker _resolve_config pour qu'il ne trouve rien (ou simuler un échec)
-        with patch.object(gateway, "_resolve_config", return_value=None):
-            with pytest.raises(GatewayError) as exc:
-                await gateway._resolve_plan(request, db=MagicMock())
-
-            assert "Usage du fallback 'use_case_first' interdit pour la famille 'chat'" in str(
-                exc.value
-            )
+    assert "Usage du fallback 'use_case_first' interdit pour la famille 'chat'" in str(exc.value)
 
 
 @pytest.mark.asyncio

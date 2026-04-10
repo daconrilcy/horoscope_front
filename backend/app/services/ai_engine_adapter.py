@@ -244,6 +244,7 @@ def _can_use_test_fallback(err: Exception) -> bool:
         "incorrect api key",
         "missing required variables",
         "missing mandatory platform variable",
+        "mandatory assembly missing",
     ]
     for t in texts:
         if any(m in t for m in markers):

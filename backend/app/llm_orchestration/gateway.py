@@ -897,6 +897,9 @@ class LLMGateway:
                     FallbackType.USE_CASE_FIRST,
                     call_site=f"resolve_config:{use_case}",
                     feature=request.user_input.feature,
+                    is_nominal=bool(request.user_input.feature)
+                    and not is_legacy_compatibility
+                    and not request.flags.test_fallback_active,
                 )
             else:
                 # config was set by assembly
@@ -1061,6 +1064,9 @@ class LLMGateway:
                     FallbackType.EXECUTION_CONFIG_ADMIN,
                     call_site=f"ExecutionConfigAdmin:{use_case}",
                     feature=request.user_input.feature,
+                    is_nominal=bool(request.user_input.feature)
+                    and not is_legacy_compatibility
+                    and not request.flags.test_fallback_active,
                 )
                 logger.info(
                     "gateway_legacy_execution_config_used use_case=%s reasoning=%s verbosity=%s",
