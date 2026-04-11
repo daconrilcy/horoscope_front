@@ -1,6 +1,6 @@
 import pytest
+from sqlalchemy import select
 from unittest.mock import AsyncMock, patch
-from sqlalchemy.orm import Session
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
     ContextCompensationStatus,
@@ -15,7 +15,7 @@ from app.prompts.common_context import QualifiedContext, PromptCommonContext
 
 
 @pytest.mark.asyncio
-async def test_integrated_template_handled_propagation():
+async def test_integrated_template_handled_propagation(db):
     """
     Reproduction test for Story 66.27.
     Tests that a template with {{#context_quality:partial}} results in TEMPLATE_HANDLED
@@ -84,10 +84,6 @@ async def test_integrated_template_handled_propagation():
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response
-
-                        # We need a DB session but we mocked all DB-touching registry calls
-                        db = AsyncMock(spec=Session)
-
                         result = await gateway.execute_request(request, db=db)
 
                 # 1. Validate snapshot in result
@@ -95,28 +91,15 @@ async def test_integrated_template_handled_propagation():
                 assert obs.context_quality == "partial"
                 assert obs.context_compensation_status == ContextCompensationStatus.TEMPLATE_HANDLED
 
-                # 2. Validate DB persistence (Story 66.27 AC4)
+                # 2. Validate real DB persistence (Story 66.27 AC4)
                 from app.infra.db.models.llm_observability import LlmCallLogModel
-                from sqlalchemy import select
 
                 stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == "test-66-27")
-                # We need to use the real db session or the mock one if it captured the add
-                # Since we used a mock DB, we should check if db.add was called with a log entry
-                # that has the right status.
-
-                # Find the call to db.add
-                log_entry = None
-                for call in db.add.call_args_list:
-                    obj = call.args[0]
-                    if isinstance(obj, LlmCallLogModel) and obj.request_id == "test-66-27":
-                        log_entry = obj
-                        break
-
-                assert log_entry is not None, "LlmCallLogModel should have been added to DB"
+                log_entry = db.execute(stmt).scalar_one()
                 assert log_entry.context_compensation_status == "template_handled"
 
 @pytest.mark.asyncio
-async def test_integrated_injector_applied_propagation():
+async def test_integrated_injector_applied_propagation(db):
     """Tests that a template without blocks results in INJECTOR_APPLIED when quality is degraded."""
     gateway = LLMGateway()
     request = LLMExecutionRequest(
@@ -174,27 +157,24 @@ async def test_integrated_injector_applied_propagation():
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response
-                        db = AsyncMock(spec=Session)
                         result = await gateway.execute_request(request, db=db)
 
                 obs = result.meta.obs_snapshot
                 assert obs.context_quality == "partial"
                 assert obs.context_compensation_status == ContextCompensationStatus.INJECTOR_APPLIED
 
-                # 2. Validate DB persistence
+                # 2. Validate real DB persistence
                 from app.infra.db.models.llm_observability import LlmCallLogModel
-                log_entry = None
-                for call in db.add.call_args_list:
-                    obj = call.args[0]
-                    if isinstance(obj, LlmCallLogModel) and obj.request_id == "test-66-27-injected":
-                        log_entry = obj
-                        break
-                assert log_entry is not None
+
+                stmt = select(LlmCallLogModel).where(
+                    LlmCallLogModel.request_id == "test-66-27-injected"
+                )
+                log_entry = db.execute(stmt).scalar_one()
                 assert log_entry.context_compensation_status == "injector_applied"
 
 
 @pytest.mark.asyncio
-async def test_integrated_not_needed_propagation():
+async def test_integrated_not_needed_propagation(db):
     """Tests that full quality results in NOT_NEEDED."""
     gateway = LLMGateway()
     request = LLMExecutionRequest(
@@ -252,20 +232,15 @@ async def test_integrated_not_needed_propagation():
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response
-                        db = AsyncMock(spec=Session)
                         result = await gateway.execute_request(request, db=db)
 
                 obs = result.meta.obs_snapshot
                 assert obs.context_quality == "full"
                 assert obs.context_compensation_status == ContextCompensationStatus.NOT_NEEDED
 
-                # 2. Validate DB persistence
+                # 2. Validate real DB persistence
                 from app.infra.db.models.llm_observability import LlmCallLogModel
-                log_entry = None
-                for call in db.add.call_args_list:
-                    obj = call.args[0]
-                    if isinstance(obj, LlmCallLogModel) and obj.request_id == "test-66-27-full":
-                        log_entry = obj
-                        break
-                assert log_entry is not None
+
+                stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == "test-66-27-full")
+                log_entry = db.execute(stmt).scalar_one()
                 assert log_entry.context_compensation_status == "not_needed"
