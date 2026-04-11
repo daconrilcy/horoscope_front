@@ -175,3 +175,52 @@ def test_cache_ttl(db):
     PromptRegistryV2.invalidate_cache("test_uc")
     p3 = PromptRegistryV2.get_active_prompt(db, "test_uc")
     assert p3.developer_prompt == "P1-MODIFIED"
+
+
+def test_publish_prompt_forbidden_for_legacy_daily_prediction(db):
+    uc = LlmUseCaseConfigModel(
+        key="daily_prediction",
+        display_name="Legacy Daily",
+        description="Legacy daily narrator alias",
+    )
+    db.add(uc)
+    db.commit()
+
+    version = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key="daily_prediction",
+        status=PromptStatus.DRAFT,
+        developer_prompt="Legacy daily prompt",
+        model="gpt-4o-mini",
+        created_by="test-user",
+    )
+    db.add(version)
+    db.commit()
+
+    with pytest.raises(ValueError, match="forbidden for nominal use"):
+        PromptRegistryV2.publish_prompt(db, version.id)
+
+
+def test_rollback_prompt_forbidden_for_legacy_daily_prediction(db):
+    uc = LlmUseCaseConfigModel(
+        key="daily_prediction",
+        display_name="Legacy Daily",
+        description="Legacy daily narrator alias",
+    )
+    db.add(uc)
+    db.commit()
+
+    archived = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key="daily_prediction",
+        status=PromptStatus.ARCHIVED,
+        developer_prompt="Legacy daily prompt",
+        model="gpt-4o-mini",
+        created_by="test-user",
+        published_at=datetime.now(),
+    )
+    db.add(archived)
+    db.commit()
+
+    with pytest.raises(ValueError, match="forbidden for nominal use"):
+        PromptRegistryV2.rollback_prompt(db, "daily_prediction")

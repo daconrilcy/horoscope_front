@@ -254,7 +254,7 @@ Pattern récent à réutiliser :
 
 ### Agent Model Used
 
-Gemini 2.0 Flash
+GPT-5 Codex
 
 ### Implementation Plan
 
@@ -277,11 +277,16 @@ Rationale: `daily_prediction` is currently a legacy alias for the daily narrator
 
 ### Completion Notes List
 
-- Story créée à partir du brief utilisateur, du workflow `bmad-create-story`, de l’epic 66, de la doc canonique LLM et de l’état réel du code.
-- La story force une décision d’architecture explicite mais laisse ouvertes les deux variantes d’implémentation tant que le résultat ferme complètement le transitoire.
-- Le point central à corriger est la coexistence actuelle entre `daily_prediction` famille active, `plan=None` nominal, inférence partielle vers `horoscope_daily` et observabilité `transitional_governance`.
-- `sprint-status.yaml` n’a pas été modifié car aucune entrée `66-28-*` n’y existe encore à la date de création.
+- L’option B a été mise en oeuvre : `daily_prediction` est absorbé dans `horoscope_daily` comme alias legacy borné.
+- Les artefacts runtime legacy `daily_prediction` ont été déclassés ou archivés ; aucune publication nominale nouvelle ne doit plus pouvoir ressusciter cette famille.
+- Les routes admin `create/update/publish/rollback` et `PromptRegistryV2` bloquent explicitement les usages nominaux interdits de `daily_prediction` avec contrat d’erreur `forbidden_feature`.
+- La matrice d’évaluation et les fixtures de contrat ne portent plus `daily_prediction` comme famille active distincte.
+- Des tests ciblés couvrent désormais le verrou `publish/rollback` legacy aux niveaux route admin et registry.
+- `sprint-status.yaml` n’a pas été modifié car aucune entrée `66-28-*` n’y existe encore à la date de clôture.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/66-28-fermeture-canonique-daily-prediction-ou-suppression-statut-transitoire.md`
+- `backend/app/tests/integration/test_admin_llm_natal_prompts.py`
+- `backend/app/llm_orchestration/tests/test_prompt_registry_v2.py`
+- `docs/llm-prompt-generation-by-feature.md`
