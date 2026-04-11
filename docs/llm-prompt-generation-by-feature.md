@@ -118,6 +118,7 @@ flowchart TD
 | `66.25` | observabilité | snapshot canonique unique dans `obs_snapshot` |
 | `66.26` | gouvernance documentaire | doc et template PR deviennent obligatoires |
 | `66.27` | propagation `context_quality` | `context_quality_handled_by_template` est figé dans le plan puis relayé jusqu'au snapshot et à la persistance |
+| `66.28` | fermeture canonique daily | `daily_prediction` est absorbé dans `horoscope_daily`, les reliquats d'évaluation sont supprimés et les publications admin legacy sont bloquées |
 
 ## Familles et points d'entrée réels
 
@@ -276,6 +277,7 @@ Conséquence importante :
 - `horoscope_daily` (nommé ainsi depuis Story 66.19) absorbe désormais systématiquement les anciennes `daily_prediction`.
 - Le gateway normalise le `plan` en `free` s'il est absent.
 - La famille est désormais considérée comme nominale fermée.
+- l'alias `daily_prediction` n'est toléré qu'en compatibilité d'entrée ; il ne peut plus être republié nominalement via l'admin.
 
 ## Taxonomie canonique natal
 
@@ -419,6 +421,7 @@ Points structurants observés :
 - `TEST_LOCAL` est interdit en production ;
 - un fallback `à retirer` sur un chemin nominal lève une `GatewayError`, même si la famille n'est pas explicitement listée comme interdite ;
 - chaque fallback passe par la métrique `llm_gateway_fallback_usage_total`.
+- l'alias legacy `daily_prediction` peut encore être accepté en entrée, mais il est remappé immédiatement vers `horoscope_daily` et ne peut plus être réactivé via `publish` ou `rollback` admin.
 
 ## Observabilité runtime
 
@@ -578,6 +581,6 @@ Toute mention de vérification ci-dessous atteste d'une **revue manuelle effecti
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-11`
-- **Référence stable (Commit SHA)** : `a511293c`
+- **Référence stable (Commit SHA)** : `8b48912a`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.
