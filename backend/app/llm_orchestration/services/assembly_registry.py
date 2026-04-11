@@ -54,6 +54,7 @@ class AssemblyRegistry:
             "plan_rules_ref": config.plan_rules_ref,
             "execution_config": config.execution_config,
             "output_contract_ref": config.output_contract_ref,
+            "input_schema": config.input_schema,
             "interaction_mode": config.interaction_mode,
             "user_question_policy": config.user_question_policy,
             "fallback_use_case": config.fallback_use_case,

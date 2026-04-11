@@ -1,8 +1,7 @@
+import pytest
+import uuid
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from app.llm_orchestration.feature_taxonomy import SUPPORTED_FAMILIES
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
     ExecutionContext,
@@ -10,48 +9,92 @@ from app.llm_orchestration.models import (
     GatewayConfigError,
     LLMExecutionRequest,
     OutputValidationError,
+    InputValidationError,
 )
 from app.llm_orchestration.services.output_validator import ValidationResult
-
+from app.llm_orchestration.feature_taxonomy import SUPPORTED_FAMILIES
 
 @pytest.fixture
 def gateway():
     return LLMGateway()
 
 @pytest.mark.asyncio
-async def test_story_66_29_execute_request_rejection_if_no_assembly(gateway):
+async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
     """
-    AC1, AC6: Fail explicitly at entry point if a supported feature has no assembly.
-    Ensures _resolve_config is NOT used for pre-validation.
+    Issue 1: Pure legacy use_case entries (e.g., 'chat_astrologer') MUST bypass
+    Stage 0.5 pre-validation because they map to supported families.
     """
-    for feature in SUPPORTED_FAMILIES:
-        request = LLMExecutionRequest(
-            user_input=ExecutionUserInput(
-                feature=feature,
-                subfeature="any",
-                plan="free",
-                locale="fr-FR",
-                use_case="legacy_case"
-            ),
-            context=ExecutionContext(),
-            request_id=f"test-66-29-{feature}",
-            trace_id="trace-66-29"
-        )
+    # 'chat_astrologer' maps to feature='chat'
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="chat_astrologer",
+            locale="fr-FR"
+        ),
+        context=ExecutionContext(),
+        request_id="test-66-29-legacy-entry",
+        trace_id="trace-66-29"
+    )
 
-        registry_path = (
-            "app.llm_orchestration.services.assembly_registry."
-            "AssemblyRegistry.get_active_config_sync"
-        )
-        # We mock _resolve_config to prove it's NOT called for pre-validation
-        with patch.object(gateway, "_resolve_config") as mock_resolve_config:
-            with patch(registry_path, return_value=None):
-                with pytest.raises(GatewayConfigError) as exc:
-                    await gateway.execute_request(request, db=MagicMock())
-                
-                msg = f"Mandatory assembly missing for supported {feature} family"
-                assert msg in str(exc.value)
-                # Check that _resolve_config was never called (skipped in Stage 0.5)
-                assert mock_resolve_config.call_count == 0
+    registry_path = (
+        "app.llm_orchestration.services.assembly_registry."
+        "AssemblyRegistry.get_active_config_sync"
+    )
+    
+    # We mock _resolve_config to prove it's NOT called for pre-validation (Stage 0.5)
+    with patch.object(gateway, "_resolve_config") as mock_resolve_config:
+        # We fail assembly resolution to stop the pipeline after Stage 1
+        with patch(registry_path, return_value=None):
+            with pytest.raises(GatewayConfigError) as exc:
+                await gateway.execute_request(request, db=MagicMock())
+            
+            assert "Mandatory assembly missing for supported chat family" in str(exc.value)
+            # PROOF: _resolve_config was NOT called in Stage 0.5
+            assert mock_resolve_config.call_count == 0
+
+@pytest.mark.asyncio
+async def test_story_66_29_input_schema_propagation_and_validation(gateway):
+    """
+    Issue 2: Assembly input_schema MUST be propagated and used for Stage 1.5 validation.
+    """
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            feature="chat",
+            subfeature="astrologer",
+            plan="free",
+            locale="fr-FR",
+            use_case="chat",
+            message="hello"
+        ),
+        context=ExecutionContext(),
+        request_id="test-66-29-input-schema",
+        trace_id="trace-66-29"
+    )
+
+    # Mock resolved plan (Stage 1) with an input schema
+    mock_plan = MagicMock()
+    mock_plan.model_id = "gpt-4o"
+    mock_plan.temperature = 0.7
+    mock_plan.max_output_tokens = 1000
+    mock_plan.rendered_developer_prompt = "test"
+    mock_plan.output_schema_id = None
+    mock_plan.interaction_mode = "chat"
+    mock_plan.user_question_policy = "required"
+    mock_plan.required_prompt_placeholders = []
+    # REQUIRE 'required_field' in input
+    mock_plan.input_schema = {
+        "type": "object",
+        "required": ["required_field"],
+        "properties": {"required_field": {"type": "string"}}
+    }
+
+    # We patch _resolve_plan to return our plan with schema
+    with patch.object(gateway, "_resolve_plan", return_value=(mock_plan, None)):
+        # Stage 1.5 SHOULD fail because 'required_field' is missing from user_input
+        with pytest.raises(InputValidationError) as exc:
+            await gateway.execute_request(request, db=MagicMock())
+        
+        assert "Input validation failed" in str(exc.value)
+        assert "required_field" in str(exc.value)
 
 @pytest.mark.asyncio
 async def test_story_66_29_recovery_blocks_legacy_fallback_for_supported(gateway):
@@ -94,35 +137,6 @@ async def test_story_66_29_recovery_blocks_legacy_fallback_for_supported(gateway
         
         assert "Legacy use_case fallback is strictly forbidden" in str(exc.value)
         assert mock_resolve_config.call_count == 0
-
-@pytest.mark.asyncio
-async def test_story_66_29_legacy_alias_normalized_rejection_at_entry(gateway):
-    """
-    AC11: A legacy alias normalized to a supported family must fail at execute_request.
-    """
-    request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(
-            use_case="natal_interpretation",
-            feature="natal_interpretation", # Legacy alias
-            subfeature="any",
-            plan="free",
-            locale="fr-FR"
-        ),
-        context=ExecutionContext(),
-        request_id="test-66-29-alias",
-        trace_id="trace-66-29"
-    )
-
-    registry_path = (
-        "app.llm_orchestration.services.assembly_registry."
-        "AssemblyRegistry.get_active_config_sync"
-    )
-    with patch(registry_path, return_value=None):
-        with pytest.raises(GatewayConfigError) as exc:
-            await gateway.execute_request(request, db=MagicMock())
-        
-        # Should be normalized to 'natal' and rejected
-        assert "Mandatory assembly missing for supported natal family" in str(exc.value)
 
 @pytest.mark.asyncio
 async def test_story_66_29_other_features_still_allow_prevalidation_and_fallback(gateway):

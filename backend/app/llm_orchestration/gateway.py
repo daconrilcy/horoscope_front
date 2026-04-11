@@ -755,34 +755,14 @@ class LLMGateway:
         user_id = request.user_id
         resolved_assembly = None
 
-        # 0. Compatibility fallback for deprecated use cases (Story 66.9 AC5, 66.20)
+        # Story 66.29: Legacy mapping was moved to execute_request (Issue 1)
+        # We assume taxonomy is already normalized here.
         is_legacy_compatibility = False
         from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
 
-        if use_case in DEPRECATED_USE_CASE_MAPPING and not request.user_input.feature:
+        if use_case in DEPRECATED_USE_CASE_MAPPING and not request.flags.is_repair_call:
+            # We still keep the flag for observability
             is_legacy_compatibility = True
-            mapping = DEPRECATED_USE_CASE_MAPPING[use_case]
-            request.user_input.feature = normalize_feature(mapping["feature"])
-            request.user_input.subfeature = normalize_subfeature(
-                request.user_input.feature, mapping.get("subfeature")
-            )
-            # Story 66.28: Ensure plan is also normalized when redirected
-            request.user_input.plan = self._normalize_plan_for_assembly(mapping.get("plan"))
-
-            FallbackGovernanceRegistry.track_fallback(
-                FallbackType.DEPRECATED_USE_CASE,
-                call_site=f"mapping:{use_case}",
-                feature=request.user_input.feature,
-            )
-
-            logger.warning(
-                "DEPRECATION WARNING: Use case '%s' is deprecated. "
-                "Please use canonical taxonomy: feature='%s', subfeature='%s', plan='%s'.",
-                use_case,
-                request.user_input.feature,
-                request.user_input.subfeature,
-                request.user_input.plan,
-            )
 
         # Use provided context_dict or build from request
         if context_override is not None:
@@ -884,6 +864,7 @@ class LLMGateway:
                             interaction_mode=assembly_db.interaction_mode,
                             user_question_policy=assembly_db.user_question_policy,
                             output_schema_id=resolved_assembly.output_contract_ref,
+                            input_schema=assembly_db.input_schema,  # Story 66.29: Carry input schema (Issue 2)
                             reasoning_effort=resolved_assembly.execution_config.reasoning_effort,
                             verbosity=resolved_assembly.execution_config.verbosity,
                             fallback_use_case=resolved_assembly.execution_config.fallback_use_case,
@@ -1750,6 +1731,31 @@ class LLMGateway:
 
         try:
             # Story 66.23: Early taxonomy normalization and validation (AC1, AC2, AC10)
+            # Story 66.29: Move legacy mapping here to ensure it bypasses Stage 0.5 (Issue 1)
+            from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
+
+            if use_case in DEPRECATED_USE_CASE_MAPPING and not request.user_input.feature:
+                mapping = DEPRECATED_USE_CASE_MAPPING[use_case]
+                request.user_input.feature = normalize_feature(mapping["feature"])
+                request.user_input.subfeature = normalize_subfeature(
+                    request.user_input.feature, mapping.get("subfeature")
+                )
+                request.user_input.plan = self._normalize_plan_for_assembly(mapping.get("plan"))
+
+                FallbackGovernanceRegistry.track_fallback(
+                    FallbackType.DEPRECATED_USE_CASE,
+                    call_site=f"mapping:{use_case}",
+                    feature=request.user_input.feature,
+                )
+                logger.warning(
+                    "DEPRECATION WARNING: Use case '%s' is deprecated. "
+                    "Mapped to: feature='%s', subfeature='%s', plan='%s'.",
+                    use_case,
+                    request.user_input.feature,
+                    request.user_input.subfeature,
+                    request.user_input.plan,
+                )
+
             if request.user_input.feature:
                 old_f = request.user_input.feature
                 request.user_input.feature = normalize_feature(request.user_input.feature)
@@ -1765,7 +1771,6 @@ class LLMGateway:
                         subfeature=request.user_input.subfeature,
                         is_nominal=False,
                     )
-                    # Use LEGACY_DAILY_FEATURE for more precise tracking if needed
                     FallbackGovernanceRegistry.track_fallback(
                         FallbackType.DEPRECATED_FEATURE_ALIAS,
                         call_site=f"normalize_feature:{old_f}",
