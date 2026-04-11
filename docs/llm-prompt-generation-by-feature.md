@@ -578,6 +578,6 @@ Toute mention de vérification ci-dessous atteste d'une **revue manuelle effecti
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-11`
-- **Référence stable (Commit SHA)** : `7aa27030`
+- **Référence stable (Commit SHA)** : `a511293c`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.
