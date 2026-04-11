@@ -1,6 +1,6 @@
 # Génération des Prompts LLM par Feature
 
-Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.25.
+Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.26.
 
 Objectifs :
 
@@ -20,7 +20,8 @@ Le document couvre :
 - la gestion des placeholders ;
 - l'adaptation à `context_quality` ;
 - la traduction des profils internes stables vers les paramètres provider ;
-- la gouvernance des fallbacks de compatibilité encore actifs.
+- la gouvernance des fallbacks de compatibilité encore actifs ;
+- la discipline de maintenance documentaire et de revue PR associée à cette doctrine.
 
 Il décrit le fonctionnement réel du backend autour de :
 
@@ -120,7 +121,7 @@ Les features marquées `transitional_governance` sont en cours de convergence. E
 
 **Features concernées :** `daily_prediction`.
 
-## Stories 66.9 à 66.25
+## Stories 66.9 à 66.26
 
 | Story | Apport canonique | Impact dans le processus |
 |---|---|---|
@@ -141,6 +142,7 @@ Les features marquées `transitional_governance` sont en cours de convergence. E
 | `66.23` | Normalisation taxonomie natal | `feature="natal"` comme unique identifiant canonique, rejet nominal de `feature="natal_interpretation"` en admin/publication/registries, taxonomie des subfeatures natal non préfixée (`interpretation`, `short`, `full`, etc.), compatibilité alias bornée et télémétrée via `legacy_feature_alias_used` |
 | `66.24` | Extension matrice d'évaluation | extension aux chemins `horoscope_daily` et `daily_prediction`, introduction du discriminant structurel `pipeline_kind` (`nominal_canonical` vs `transitional_governance`) et d'un gating global de campagne |
 | `66.25` | Observabilité opérationnelle runtime | ajout d'un snapshot canonique `ExecutionObservabilitySnapshot`, propagation de `execution_path_kind`, `fallback_kind`, du triplet provider, de `context_compensation_status` et de la source finale de `max_output_tokens` |
+| `66.26` | Gouvernance documentaire opérationnelle | maintenance du document rendue obligatoire et traçable, périmètre de revue documentaire borné, règle de contribution PR alignée avec le document, preuve documentaire stabilisée sur une référence non flottante |
 
 ## Couverture réelle par famille
 
