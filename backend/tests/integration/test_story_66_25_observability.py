@@ -256,3 +256,60 @@ async def test_observability_snapshot_template_handled(gateway):
                 obs = result.meta.obs_snapshot
                 assert obs.context_quality == "minimal"
                 assert obs.context_compensation_status == ContextCompensationStatus.TEMPLATE_HANDLED
+
+@pytest.mark.asyncio
+async def test_observability_snapshot_legacy_path_length_budget(gateway):
+    """
+    Vérifie que le chemin legacy utilise la bonne taxonomie pour max_output_tokens_source.
+    """
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="legacy_case",
+            feature="legacy_feat",
+            locale="fr-FR",
+        ),
+        context=ExecutionContext(),
+        request_id="test-obs-6",
+        trace_id="trace-obs-6",
+    )
+
+    mock_config = UseCaseConfig(
+        model="gpt-4o",
+        developer_prompt="Prompt",
+    )
+
+    from app.llm_orchestration.models import ResolvedExecutionPlan
+    # Plan representing a legacy resolution with length_budget_global
+    plan = ResolvedExecutionPlan(
+        feature="legacy_feat",
+        model_id="gpt-4o",
+        model_source="config",
+        provider="openai",
+        requested_provider="openai",
+        rendered_developer_prompt="Prompt",
+        system_core="System core",
+        interaction_mode="structured",
+        user_question_policy="none",
+        temperature=0.7,
+        max_output_tokens=500,
+        max_output_tokens_source="length_budget_global", # Correct label now
+        context_quality="full"
+    )
+
+    mock_response = GatewayResult(
+        use_case="legacy_case",
+        request_id="test-obs-6",
+        trace_id="trace-obs-6",
+        raw_output='{"ok": true}',
+        usage=UsageInfo(),
+        meta=GatewayMeta(latency_ms=100, model="gpt-4o")
+    )
+
+    with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
+        with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
+            with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
+                result = await gateway.execute_request(request)
+                
+                obs = result.meta.obs_snapshot
+                assert obs.max_output_tokens_source == MaxTokensSource.LENGTH_BUDGET_GLOBAL
+                assert obs.max_output_tokens_final == 500

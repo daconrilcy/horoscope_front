@@ -1141,7 +1141,7 @@ class LLMGateway:
                 and resolved_assembly.length_budget.global_max_tokens
             ):
                 max_output_tokens = resolved_assembly.length_budget.global_max_tokens
-                max_output_tokens_source = "length_budget"
+                max_output_tokens_source = "length_budget_global"
 
         # Apply translated params to config if applicable
         if translated_params:
