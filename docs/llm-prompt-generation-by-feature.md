@@ -1081,26 +1081,29 @@ Ce document doit être lu comme la référence de mise en oeuvre. Si le code div
 
 ## Maintenance de cette documentation
 
-Ce document doit être maintenu comme une référence d'architecture vivante.
+Ce document constitue une **règle d'ingénierie explicite**. Sa maintenance est **obligatoire** et **traçable**.
 
-### Discipline de mise à jour
+### Discipline de mise à jour et règle de PR
 
-Toute story ou PR qui modifie l'un des points suivants doit mettre à jour ce document :
+Toute Pull Request modifiant la structure ou la gouvernance du pipeline LLM doit :
+1. Soit mettre à jour ce document dans le même change set pour refléter la nouvelle réalité technique.
+2. Soit justifier explicitement dans la description de la PR pourquoi ce document reste valide sans changement (ex: refactoring purement local, changement cosmétique sans impact structurel).
 
-- la doctrine d'abonnement ;
-- la taxonomie canonique `feature/subfeature/plan` ;
-- l'ordre canonique des transformations textuelles ;
-- la source de vérité d'une couche ;
-- la résolution d'un profil d'exécution ;
-- la politique de placeholders ;
-- le rôle de `context_quality` ;
-- les fallbacks de compatibilité ;
-- le support runtime effectif des providers.
+### Zones à impact documentaire obligatoire
 
-### Vérification
+La revue de ce document est **obligatoire** pour toute modification portant sur :
+- **Gateway & Orchestration** : `_resolve_plan()`, `execute_request()`, `_call_provider()`, `_handle_repair_or_fallback()`.
+- **Composition & Rendu** : `_build_messages()`, `PromptRenderer`, `PromptAssemblyConfig`, `ContextQualityInjector`, budgets de longueur.
+- **Paramétrage & Fallbacks** : `ProviderParameterMapper`, `FallbackGovernanceRegistry`, `NOMINAL_SUPPORTED_PROVIDERS`.
+- **Taxonomie & Profils** : Taxonomie canonique `feature/subfeature/plan`, résolution `ExecutionProfile`.
+- **Doctrine & Contrats** : Toute logique modifiant la source de vérité décrite dans les sections précédentes.
+
+### Vérification et Traçabilité
+
+Toute mention de vérification ci-dessous atteste d'une **revue manuelle effective** contre le code réel à la référence indiquée. Les références flottantes (`HEAD`, `main`, etc.) sont interdites.
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
-- date : `2026-04-11`
-- commit / tag : `HEAD`
+- **Date** : `2026-04-11`
+- **Référence stable (Commit SHA)** : `d8ec8a3add41e8946cc0fee3885bcb92998fc8a3`
 
-Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation.
+Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.
