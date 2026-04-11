@@ -8,6 +8,7 @@ from app.infra.db.base import Base
 from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
 @pytest.fixture
@@ -21,9 +22,6 @@ def db_session():
     finally:
         session.close()
         Base.metadata.drop_all(bind=test_engine)
-
-
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
 def _make_mock_result(model: str) -> GatewayResult:

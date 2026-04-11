@@ -101,7 +101,7 @@ def log_governance_event(
 ) -> None:
     """
     Emits unified governance metrics (AC6, Story 66.23 AC10).
-    event_type: publish_rejected | runtime_rejected | non_nominal_tolerated 
+    event_type: publish_rejected | runtime_rejected | non_nominal_tolerated
                 | legacy_feature_alias_used
     """
     labels = {

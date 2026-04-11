@@ -28,7 +28,6 @@ def test_output_contract_validation(feature, plan, quality):
     (Story 66.24: extended to daily paths, free plans and degraded modes)
     """
     from app.llm_orchestration.narrator_contract import NARRATOR_OUTPUT_SCHEMA
-    from app.llm_orchestration.seeds.use_cases_seed import ASTRO_RESPONSE_V1_JSON_SCHEMA
 
     # Schema selection logic based on feature and plan
     if feature == "natal":
@@ -52,9 +51,10 @@ def test_output_contract_validation(feature, plan, quality):
         data = json.load(f)
 
     result = validate_schema(data, schema)
-    assert (
-        result.valid
-    ), f"LLM response fixture for {feature}/{plan}/{quality} does not match runtime contract: {result.errors}"
+    assert result.valid, (
+        f"LLM response fixture for {feature}/{plan}/{quality} "
+        f"does not match runtime contract: {result.errors}"
+    )
 
 
 @pytest.mark.evaluation

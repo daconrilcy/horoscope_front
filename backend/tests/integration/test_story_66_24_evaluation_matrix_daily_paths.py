@@ -24,7 +24,9 @@ def test_daily_paths_are_present_in_evaluation_matrix() -> None:
 
     assert "horoscope_daily" in by_feature
     assert "daily_prediction" in by_feature
-    assert any(case["pipeline_kind"] == "nominal_canonical" for case in by_feature["horoscope_daily"])
+    assert any(
+        case["pipeline_kind"] == "nominal_canonical" for case in by_feature["horoscope_daily"]
+    )
     assert all(
         case["pipeline_kind"] == "transitional_governance"
         for case in by_feature["daily_prediction"]

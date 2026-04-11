@@ -6,7 +6,8 @@ from pathlib import Path
 def generate_markdown_report(results: list[dict]) -> str:
     """Generates a markdown table and gating status (Story 66.24 AC8)."""
     header = (
-        "| Combination | Pipeline | Placeholders | CQ | Persona | Contract | Length | Diff. Plan | Status |\n"
+        "| Combination | Pipeline | Placeholders | CQ | Persona | Contract | "
+        "Length | Diff. Plan | Status |\n"
     )
     separator = "|---|---|---|---|---|---|---|---|---|\n"
     rows = []

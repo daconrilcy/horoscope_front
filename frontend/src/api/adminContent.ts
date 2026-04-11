@@ -302,11 +302,11 @@ export function useEditorialTemplates() {
   })
 }
 
-export function useEditorialTemplate(templateCode: string, enabled = true) {
+export function useEditorialTemplate(templateCode: string | null, enabled = true) {
   return useQuery({
     queryKey: ["admin-editorial-template", templateCode],
-    queryFn: () => getEditorialTemplate(templateCode),
-    enabled,
+    queryFn: () => getEditorialTemplate(templateCode!),
+    enabled: enabled && !!templateCode,
   })
 }
 

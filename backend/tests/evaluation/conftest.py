@@ -1,19 +1,17 @@
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import yaml
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.infra.db.base import Base
 
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "evaluation: marks tests as part of the evaluation matrix")
 
-
-from unittest.mock import patch
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-from app.infra.db.base import Base
 
 # Setup in-memory DB for validation
 engine = create_engine("sqlite:///:memory:")

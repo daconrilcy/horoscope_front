@@ -105,13 +105,15 @@ class ProviderParameterMapper:
         verbosity_profile: VerbosityProfile,
     ) -> tuple[str, Optional[int]]:
         """
-        Translates verbosity profile into a textual instruction and a recommended max_tokens (Story 66.18 D3, D4).
+        Translates verbosity profile into a textual instruction
+        and a recommended max_tokens (Story 66.18 D3, D4).
         """
         if verbosity_profile == "concise":
             return "Réponds de façon très concise et directe, va droit à l'essentiel.", 800
         elif verbosity_profile == "detailed":
             return (
-                "Fournis une réponse riche, détaillée et nuancée avec des explications approfondies.",
+                "Fournis une réponse riche, détaillée et nuancée "
+                "avec des explications approfondies.",
                 4000,
             )
 

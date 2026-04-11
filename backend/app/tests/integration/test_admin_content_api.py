@@ -219,10 +219,6 @@ def test_admin_content_rejects_invalid_calibration_value_and_noop_rollback() -> 
 
     templates_resp = client.get("/v1/admin/content/editorial-templates", headers=headers)
     template_code = templates_resp.json()["data"][0]["template_code"]
-    detail_resp = client.get(
-        f"/v1/admin/content/editorial-templates/{template_code}",
-        headers=headers,
-    )
     create_resp = client.post(
         f"/v1/admin/content/editorial-templates/{template_code}/versions",
         headers=headers,

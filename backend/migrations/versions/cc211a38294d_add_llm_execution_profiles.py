@@ -48,8 +48,9 @@ def upgrade() -> None:
     with op.batch_alter_table("llm_execution_profiles", schema=None) as batch_op:
         batch_op.create_index("ix_llm_execution_profiles_feature", ["feature"], unique=False)
         batch_op.create_index("ix_llm_execution_profiles_status", ["status"], unique=False)
-        # Note: ix_llm_execution_profile_active_unique is expression-based and usually manually added
-        # but for SQLite/Alembic we can try simple columns or just rely on SQLAlchemy create_all for local dev
+        # Note: ix_llm_execution_profile_active_unique is expression-based
+        # and usually manually added but for SQLite/Alembic we can try
+        # simple columns or just rely on SQLAlchemy create_all for local dev
     # ### end Alembic commands ###
 
 

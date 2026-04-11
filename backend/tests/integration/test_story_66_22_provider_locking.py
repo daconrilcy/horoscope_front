@@ -134,7 +134,6 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
-
         with pytest.raises(ValueError) as exc:
             await gateway._resolve_plan(request, db=db_mock)
 
@@ -243,7 +242,6 @@ async def test_gateway_nominal_path_accepts_openai():
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
-
         plan, _ = await gateway._resolve_plan(request, db=db_mock)
         assert plan.provider == "openai"
         assert plan.model_id == "gpt-4o"
@@ -303,7 +301,7 @@ async def test_gateway_non_nominal_accepts_fallback_and_logs():
         ),
         patch(
             "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
-            return_value=MagicMock(), # Mock assembly
+            return_value=MagicMock(),  # Mock assembly
         ),
         patch("app.llm_orchestration.gateway.resolve_assembly", return_value=MagicMock()),
         patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="Prompt"),

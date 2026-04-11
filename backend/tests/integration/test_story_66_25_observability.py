@@ -1,25 +1,27 @@
-import uuid
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import MagicMock, patch
+
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
-    ExecutionContext,
-    ExecutionUserInput,
-    ExecutionFlags,
-    LLMExecutionRequest,
-    GatewayResult,
-    UsageInfo,
-    GatewayMeta,
-    ExecutionPathKind,
     ContextCompensationStatus,
+    ExecutionContext,
+    ExecutionPathKind,
+    ExecutionUserInput,
+    FallbackType,
+    GatewayMeta,
+    GatewayResult,
+    LLMExecutionRequest,
     MaxTokensSource,
+    UsageInfo,
     UseCaseConfig,
-    FallbackType
 )
+
 
 @pytest.fixture
 def gateway():
     return LLMGateway()
+
 
 @pytest.mark.asyncio
 async def test_observability_snapshot_canonical_assembly(gateway):
@@ -45,8 +47,13 @@ async def test_observability_snapshot_canonical_assembly(gateway):
         request_id="test-obs-1",
         trace_id="trace-obs-1",
         raw_output='{"response": "hello"}',
-        usage=UsageInfo(input_tokens=10, output_tokens=5, total_tokens=15, estimated_cost_usd=0.0001),
-        meta=GatewayMeta(latency_ms=100, model="gpt-4o")
+        usage=UsageInfo(
+            input_tokens=10,
+            output_tokens=5,
+            total_tokens=15,
+            estimated_cost_usd=0.0001,
+        ),
+        meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
     # Mock config to avoid Stage 0.5 failure
@@ -58,6 +65,7 @@ async def test_observability_snapshot_canonical_assembly(gateway):
     with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan") as mock_resolve:
             from app.llm_orchestration.models import ResolvedExecutionPlan
+
             plan = ResolvedExecutionPlan(
                 feature="chat",
                 model_id="gpt-4o",
@@ -71,18 +79,19 @@ async def test_observability_snapshot_canonical_assembly(gateway):
                 temperature=0.7,
                 max_output_tokens=2000,
                 max_output_tokens_source="execution_profile",
-                context_quality="full"
+                context_quality="full",
             )
             mock_resolve.return_value = (plan, None)
 
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)
-                
+
                 obs = result.meta.obs_snapshot
                 assert obs is not None
                 assert obs.pipeline_kind == "nominal_canonical"
                 assert obs.execution_path_kind == ExecutionPathKind.CANONICAL_ASSEMBLY
                 assert obs.context_compensation_status == ContextCompensationStatus.NOT_NEEDED
+
 
 @pytest.mark.asyncio
 async def test_observability_snapshot_non_nominal_provider(gateway):
@@ -106,6 +115,7 @@ async def test_observability_snapshot_non_nominal_provider(gateway):
     )
 
     from app.llm_orchestration.models import ResolvedExecutionPlan
+
     plan = ResolvedExecutionPlan(
         feature="non_nominal",
         model_id="gpt-4o",
@@ -120,7 +130,7 @@ async def test_observability_snapshot_non_nominal_provider(gateway):
         temperature=0.7,
         max_output_tokens=1000,
         max_output_tokens_source="unset",
-        context_quality="full"
+        context_quality="full",
     )
 
     mock_response = GatewayResult(
@@ -129,18 +139,19 @@ async def test_observability_snapshot_non_nominal_provider(gateway):
         trace_id="trace-obs-2",
         raw_output='{"ok": true}',
         usage=UsageInfo(),
-        meta=GatewayMeta(latency_ms=100, model="gpt-4o")
+        meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
     with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)
-                
+
                 obs = result.meta.obs_snapshot
                 assert obs.pipeline_kind == "transitional_governance"
                 assert obs.execution_path_kind == ExecutionPathKind.NON_NOMINAL_PROVIDER_TOLERATED
                 assert obs.fallback_kind == FallbackType.PROVIDER_OPENAI
+
 
 @pytest.mark.asyncio
 async def test_observability_snapshot_context_compensation_injected(gateway):
@@ -164,6 +175,7 @@ async def test_observability_snapshot_context_compensation_injected(gateway):
     )
 
     from app.llm_orchestration.models import ResolvedExecutionPlan
+
     plan = ResolvedExecutionPlan(
         feature="natal",
         model_id="gpt-4o",
@@ -178,7 +190,7 @@ async def test_observability_snapshot_context_compensation_injected(gateway):
         max_output_tokens=1000,
         max_output_tokens_source="unset",
         context_quality="partial",
-        context_quality_instruction_injected=True
+        context_quality_instruction_injected=True,
     )
 
     mock_response = GatewayResult(
@@ -187,16 +199,17 @@ async def test_observability_snapshot_context_compensation_injected(gateway):
         trace_id="trace-obs-3",
         raw_output='{"ok": true}',
         usage=UsageInfo(),
-        meta=GatewayMeta(latency_ms=100, model="gpt-4o")
+        meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
     with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)
-                
+
                 obs = result.meta.obs_snapshot
                 assert obs.context_compensation_status == ContextCompensationStatus.INJECTOR_APPLIED
+
 
 @pytest.mark.asyncio
 async def test_observability_snapshot_template_handled(gateway):
@@ -221,6 +234,7 @@ async def test_observability_snapshot_template_handled(gateway):
     )
 
     from app.llm_orchestration.models import ResolvedExecutionPlan
+
     plan = ResolvedExecutionPlan(
         feature="natal",
         model_id="gpt-4o",
@@ -236,7 +250,7 @@ async def test_observability_snapshot_template_handled(gateway):
         max_output_tokens_source="unset",
         context_quality="minimal",
         context_quality_instruction_injected=False,
-        context_quality_handled_by_template=True
+        context_quality_handled_by_template=True,
     )
 
     mock_response = GatewayResult(
@@ -245,17 +259,18 @@ async def test_observability_snapshot_template_handled(gateway):
         trace_id="trace-obs-4",
         raw_output='{"ok": true}',
         usage=UsageInfo(),
-        meta=GatewayMeta(latency_ms=100, model="gpt-4o")
+        meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
     with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)
-                
+
                 obs = result.meta.obs_snapshot
                 assert obs.context_quality == "minimal"
                 assert obs.context_compensation_status == ContextCompensationStatus.TEMPLATE_HANDLED
+
 
 @pytest.mark.asyncio
 async def test_observability_snapshot_legacy_path_length_budget(gateway):
@@ -279,6 +294,7 @@ async def test_observability_snapshot_legacy_path_length_budget(gateway):
     )
 
     from app.llm_orchestration.models import ResolvedExecutionPlan
+
     # Plan representing a legacy resolution with length_budget_global
     plan = ResolvedExecutionPlan(
         feature="legacy_feat",
@@ -292,8 +308,8 @@ async def test_observability_snapshot_legacy_path_length_budget(gateway):
         user_question_policy="none",
         temperature=0.7,
         max_output_tokens=500,
-        max_output_tokens_source="length_budget_global", # Correct label now
-        context_quality="full"
+        max_output_tokens_source="length_budget_global",  # Correct label now
+        context_quality="full",
     )
 
     mock_response = GatewayResult(
@@ -302,14 +318,14 @@ async def test_observability_snapshot_legacy_path_length_budget(gateway):
         trace_id="trace-obs-6",
         raw_output='{"ok": true}',
         usage=UsageInfo(),
-        meta=GatewayMeta(latency_ms=100, model="gpt-4o")
+        meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
     with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)
-                
+
                 obs = result.meta.obs_snapshot
                 assert obs.max_output_tokens_source == MaxTokensSource.LENGTH_BUDGET_GLOBAL
                 assert obs.max_output_tokens_final == 500

@@ -14,8 +14,8 @@ LEGACY_NATAL_FEATURE = "natal_interpretation"
 # Example: feature=natal, subfeature=interpretation instead of natal_interpretation.
 NATAL_SUBFEATURES = [
     "interpretation",  # Deep dive / standard
-    "short",           # Concise version
-    "full",            # Exhaustive version
+    "short",  # Concise version
+    "full",  # Exhaustive version
     "psy_profile",
     "shadow_integration",
     "leadership_workstyle",

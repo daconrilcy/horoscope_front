@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, List, Optional
@@ -36,22 +37,22 @@ from app.llm_orchestration.admin_models import (
     LlmPromptVersionCreate,
     LlmUseCaseConfig,
 )
+from app.llm_orchestration.persona_boundary import (
+    PersonaBoundaryViolation,
+    validate_persona_block,
+)
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
 from app.llm_orchestration.services.eval_harness import run_eval
 from app.llm_orchestration.services.observability_service import purge_expired_logs
+from app.llm_orchestration.services.persona_composer import compose_persona_block
 from app.llm_orchestration.services.prompt_lint import PromptLint
 from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
 from app.llm_orchestration.services.replay_service import replay
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])
-
-
-from app.llm_orchestration.persona_boundary import (
-    PersonaBoundaryViolation,
-    validate_persona_block,
-)
-from app.llm_orchestration.services.persona_composer import compose_persona_block
 
 
 class ResponseMeta(BaseModel):

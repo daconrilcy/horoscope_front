@@ -69,7 +69,8 @@ PERSONA_BOUNDARY_POLICY = {
 }
 
 # Note Dev: Les patterns interdits sont des heuristiques (L4 fix).
-# Préférer des expressions composées (verbe + objet) aux mots simples pour limiter les faux positifs.
+# Préférer des expressions composées (verbe + objet) aux mots simples
+# pour limiter les faux positifs.
 
 
 def validate_persona_block(persona_content: str, persona_id: str) -> list[PersonaBoundaryViolation]:

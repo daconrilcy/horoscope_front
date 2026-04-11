@@ -65,7 +65,10 @@ async def test_prompt_resolution_matrix(
         v = LlmPromptVersionModel(
             id=uuid.uuid4(),
             use_case_key=uc_key,
-            developer_prompt=f"BASE PROMPT FOR {feat} {{#context_quality:minimal}}MINIMAL{{/context_quality}}",
+            developer_prompt=(
+                f"BASE PROMPT FOR {feat} "
+                "{{#context_quality:minimal}}MINIMAL{{/context_quality}}"
+            ),
             model="gpt-4o",
             status=PromptStatus.PUBLISHED,
             created_by="eval",
@@ -185,9 +188,7 @@ async def test_prompt_resolution_matrix(
                 cq_ok = (
                     cq == "minimal"
                     and (
-                        "MINIMAL" in prompt
-                        or "[CONTEXTE" in prompt
-                        or "dégradé" in prompt.lower()
+                        "MINIMAL" in prompt or "[CONTEXTE" in prompt or "dégradé" in prompt.lower()
                     )
                 ) or (cq in ["full", "partial"])
 
@@ -206,14 +207,20 @@ async def test_prompt_resolution_matrix(
                 )
 
                 if not length_ok:
-                    print(f"DEBUG: feat={feat}, plan={plan}, tokens={plan_resolved.max_output_tokens}, source={plan_resolved.max_output_tokens_source}")
+                    print(
+                        f"DEBUG: feat={feat}, plan={plan}, "
+                        f"tokens={plan_resolved.max_output_tokens}, "
+                        f"source={plan_resolved.max_output_tokens_source}"
+                    )
                     print(f"DEBUG PROMPT: {prompt}")
 
                 # Check Output Contract resolution (AC3)
 
                 schema_ok = True
-                # Story 66.24: Currently only natal has a published schema in the registry for this eval
-                # horoscope_daily is still in structured mode but uses a narrator schema not yet in seeds
+                # Story 66.24: Currently only natal has a published schema
+                # in the registry for this eval.
+                # horoscope_daily is still in structured mode but uses a
+                # narrator schema not yet in seeds
                 if feat == "natal" and plan == "premium":
                     schema_ok = (
                         plan_resolved.output_schema is not None
@@ -224,9 +231,7 @@ async def test_prompt_resolution_matrix(
                 # Check Pipeline Maturity (Story 66.24 AC2)
                 CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
                 actual_pipeline_kind = (
-                    "nominal_canonical"
-                    if feat in CANONICAL_FAMILIES
-                    else "transitional_governance"
+                    "nominal_canonical" if feat in CANONICAL_FAMILIES else "transitional_governance"
                 )
 
                 # Cross-check with matrix expectation
@@ -247,7 +252,10 @@ async def test_prompt_resolution_matrix(
                     }
                 )
 
-                assert pipeline_ok, f"Pipeline kind mismatch for {feat}: expected {expected_pipeline_kind}, got {actual_pipeline_kind}"
+                assert pipeline_ok, (
+                    f"Pipeline kind mismatch for {feat}: "
+                    f"expected {expected_pipeline_kind}, got {actual_pipeline_kind}"
+                )
                 assert placeholders_ok, f"Surviving placeholders in {feat}/{plan}"
                 if cq == "minimal":
                     assert cq_ok, f"Context quality instruction missing in {feat}/{plan}"
@@ -262,9 +270,12 @@ async def test_prompt_resolution_matrix(
     # Final result report summary (will be used by report generator later)
     print("\nEVALUATION MATRIX SUMMARY:")
     for r in results:
-        print(
-            f"{r['case']}: Placeholders={'✅' if r['placeholders'] else '❌'}, CQ={'✅' if r['context_quality'] else '❌'}, Persona={'✅' if r['persona'] else '❌'}"
+        msg = (
+            f"{r['case']}: Placeholders={'✅' if r['placeholders'] else '❌'}, "
+            f"CQ={'✅' if r['context_quality'] else '❌'}, "
+            f"Persona={'✅' if r['persona'] else '❌'}"
         )
+        print(msg)
 
     # Story 66.24: Generate markdown report file
     from tests.evaluation.report_generator import generate_markdown_report

@@ -13,6 +13,7 @@ from app.llm_orchestration.admin_models import (
     PromptAssemblyTarget,
     ResolvedAssembly,
 )
+from app.llm_orchestration.placeholder_policy import PlaceholderDef
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
 from app.llm_orchestration.services.persona_composer import compose_persona_block
 from app.llm_orchestration.services.prompt_renderer import PromptRenderer
@@ -24,8 +25,6 @@ class PlanRule(BaseModel):
     instruction: Optional[str] = None
     max_output_tokens_override: Optional[int] = None
 
-
-from app.llm_orchestration.placeholder_policy import PlaceholderDef
 
 # AC6: Placeholder allowlist indexed by feature (Extended in Story 66.13 D1)
 PLACEHOLDER_ALLOWLIST: dict[str, list[PlaceholderDef]] = {
@@ -55,7 +54,8 @@ PLACEHOLDER_ALLOWLIST: dict[str, list[PlaceholderDef]] = {
 # AC11: Plan Rules Registry
 PLAN_RULES_REGISTRY: dict[str, PlanRule] = {
     "premium_depth": PlanRule(
-        instruction="Pour ce compte premium, inclure une analyse approfondie des maisons angulaires.",
+        instruction="Pour ce compte premium, inclure une analyse approfondie "
+        "des maisons angulaires.",
         max_output_tokens_override=None,
     ),
     "free_limit": PlanRule(
@@ -63,11 +63,17 @@ PLAN_RULES_REGISTRY: dict[str, PlanRule] = {
         max_output_tokens_override=800,
     ),
     "plan_free_concise": PlanRule(
-        instruction="CONSIGNE ABONNEMENT FREE : Sois très concis et direct. Limite-toi à l'essentiel (environ 5 à 7 phrases pour la synthèse).",
+        instruction=(
+            "CONSIGNE ABONNEMENT FREE : Sois très concis et direct. "
+            "Limite-toi à l'essentiel (environ 5 à 7 phrases pour la synthèse)."
+        ),
         max_output_tokens_override=1000,
     ),
     "plan_premium_full": PlanRule(
-        instruction="CONSIGNE ABONNEMENT PREMIUM : Fournis une analyse riche, détaillée et nuancée (au moins 10 à 12 phrases pour la synthèse).",
+        instruction=(
+            "CONSIGNE ABONNEMENT PREMIUM : Fournis une analyse riche, "
+            "détaillée et nuancée (au moins 10 à 12 phrases pour la synthèse)."
+        ),
         max_output_tokens_override=None,
     ),
 }

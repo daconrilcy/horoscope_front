@@ -1176,8 +1176,7 @@ class LLMGateway:
 
         cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
         context_quality_injected = False
-        # AC 66.25: Explicit detection of template handling
-        context_quality_handled_by_template = "{{#context_quality:" in config.developer_prompt
+        context_quality_handled_by_template = False
 
         if request.flags.is_repair_call:
             rendered_developer_prompt = (
@@ -1197,7 +1196,11 @@ class LLMGateway:
                     ContextQualityInjector,
                 )
 
-                current_prompt, context_quality_injected = ContextQualityInjector.inject(
+                (
+                    current_prompt,
+                    context_quality_injected,
+                    context_quality_handled_by_template,
+                ) = ContextQualityInjector.inject(
                     current_prompt, request.user_input.feature, cq_level
                 )
 
@@ -1309,6 +1312,7 @@ class LLMGateway:
             verbosity=config.verbosity,
             context_quality=cq_level,
             context_quality_instruction_injected=context_quality_injected,
+            context_quality_handled_by_template=context_quality_handled_by_template,
         )
         return plan, qualified_ctx
 
@@ -1605,9 +1609,7 @@ class LLMGateway:
         # 1. Pipeline Kind (Gouvernance)
         CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
         pipeline_kind = (
-            "nominal_canonical"
-            if plan.feature in CANONICAL_FAMILIES
-            else "transitional_governance"
+            "nominal_canonical" if plan.feature in CANONICAL_FAMILIES else "transitional_governance"
         )
 
         # 2. Execution Path Kind (Réalité runtime)

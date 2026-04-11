@@ -247,7 +247,8 @@ async def test_input_validation_failure(db_session, monkeypatch):
     # We must skip common context to avoid birth profile errors in this unit test
     request.flags.skip_common_context = True
 
-    # Use monkeypatch to ensure _resolve_config is NOT falling back to stub if we want to test DB resolution
+    # Use monkeypatch to ensure _resolve_config is NOT falling back to stub
+    # if we want to test DB resolution.
     # Actually, the real LLMGateway should find it in db_session if provided.
 
     # Direct test of _validate_input

@@ -110,22 +110,14 @@ def test_build_result_fallback_path():
     gateway = LLMGateway()
     plan = ResolvedExecutionPlan(
         model_id="m",
-        model_source="config",
-        rendered_developer_prompt="...",
+        model_source="stub",
+        provider="openai",
         system_core="...",
         interaction_mode="chat",
         user_question_policy="none",
         temperature=0.7,
         max_output_tokens=100,
         context_quality="full",
-    )
-    provider_res = GatewayResult(
-        use_case="uc",
-        request_id="r",
-        trace_id="t",
-        raw_output="...",
-        usage=UsageInfo(),
-        meta=GatewayMeta(latency_ms=0, model="m"),
     )
     # Simulated fallback
     fallback_res = GatewayResult(

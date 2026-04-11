@@ -6,6 +6,7 @@ from app.infra.db.models import LlmUseCaseConfigModel
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.llm_orchestration.admin_models import ExecutionConfigAdmin, PromptAssemblyConfig
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
     ExecutionContext,
@@ -14,6 +15,7 @@ from app.llm_orchestration.models import (
     InputValidationError,
     LLMExecutionRequest,
 )
+from app.llm_orchestration.services.assembly_admin_service import AssemblyAdminService
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
 from app.llm_orchestration.services.assembly_resolver import (
     assemble_developer_prompt,
@@ -240,10 +242,6 @@ async def test_gateway_assembly_priority_id(db):
     plan2, _ = await gateway._resolve_plan(req2, db)
     assert plan2.model_id == "m2"
     assert plan2.assembly_id == str(c2.id)
-
-
-from app.llm_orchestration.admin_models import ExecutionConfigAdmin, PromptAssemblyConfig
-from app.llm_orchestration.services.assembly_admin_service import AssemblyAdminService
 
 
 @pytest.mark.asyncio

@@ -70,7 +70,10 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
 
             violations = validate_persona_block(block, str(persona.id))
             for v in violations:
-                msg = f"persona_boundary_violation: {v.dimension} detected in persona block id={v.persona_id}. Severity={v.severity}. Excerpt: {v.excerpt}"
+                msg = (
+                    f"persona_boundary_violation: {v.dimension} detected in persona block "
+                    f"id={v.persona_id}. Severity={v.severity}. Excerpt: {v.excerpt}"
+                )
                 if v.severity == "ERROR":
                     logger.error(msg)
                 else:
@@ -162,7 +165,10 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
 
         violations = validate_persona_block(block, str(persona.id))
         for v in violations:
-            msg = f"persona_boundary_violation: {v.dimension} detected in persona block id={v.persona_id}. Severity={v.severity}. Excerpt: {v.excerpt}"
+            msg = (
+                f"persona_boundary_violation: {v.dimension} detected in persona block "
+                f"id={v.persona_id}. Severity={v.severity}. Excerpt: {v.excerpt}"
+            )
             if v.severity == "ERROR":
                 logger.error(msg)
             else:

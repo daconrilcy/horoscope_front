@@ -31,8 +31,23 @@ def _get_confirmation_html(success: bool, message: str) -> str:
         <meta charset="utf-8">
         <title>{title}</title>
         <style>
-            body {{ font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4edf6; margin: 0; }}
-            .card {{ background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }}
+            body {{
+                font-family: sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background: #f4edf6;
+                margin: 0;
+            }}
+            .card {{
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                text-align: center;
+                max-width: 400px;
+            }}
             h1 {{ color: #111938; }}
             p {{ color: #666; }}
         </style>

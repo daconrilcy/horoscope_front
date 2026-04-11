@@ -591,8 +591,10 @@ class BillingService:
         exposed_status = "active" if is_active else "inactive"
 
         app_plan_code = profile.entitlement_plan
-        # Expose plan only when active, or when an explicit paid plan is set (e.g. past_due grace period).
-        # Inactive + free entitlement means the subscription never activated — no plan to expose.
+        # Expose plan only when active, or when an explicit paid plan is set
+        # (e.g. past_due grace period).
+        # Inactive + free entitlement means the subscription never activated
+        # — no plan to expose.
         show_plan = app_plan_code and (is_active or app_plan_code not in {"", "free"})
         if show_plan:
             plan_model = BillingService._get_plan_by_code(db, app_plan_code)

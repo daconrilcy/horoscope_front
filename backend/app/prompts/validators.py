@@ -2,7 +2,9 @@
 
 import logging
 import re
+from typing import Any, Literal, Optional
 
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,11 +13,6 @@ from app.prompts.catalog import PROMPT_CATALOG
 from app.prompts.exceptions import ConfigurationError
 
 logger = logging.getLogger(__name__)
-
-
-from typing import Any, Literal, Optional
-
-from pydantic import BaseModel
 
 
 class ArchitectureViolation(BaseModel):
@@ -105,8 +102,8 @@ def validate_use_case_naming(
 
         # AC4: Avertissement explicite car le contrat semble identique ou absent
         warnings.append(
-            f"use_case suffix '_free'/'_full' detected for '{use_case}' without distinct output schema — "
-            "prefer plan_rules in PromptAssemblyConfig"
+            f"use_case suffix '_free'/'_full' detected for '{use_case}' "
+            "without distinct output schema — prefer plan_rules in PromptAssemblyConfig"
         )
     return warnings
 
