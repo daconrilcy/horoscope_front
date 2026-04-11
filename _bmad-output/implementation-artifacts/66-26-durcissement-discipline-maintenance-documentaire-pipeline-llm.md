@@ -159,6 +159,8 @@ Gemini 2.0 Flash
 - Remplacement de `HEAD` par le commit SHA actuel dans le document d'architecture.
 - Création du dossier `.github/` et du fichier `pull_request_template.md` avec la règle de gouvernance LLM.
 - Ajout de tests d'intégration pour vérifier la conformité de la documentation et du template PR.
+- Durcissement post-review du périmètre documentaire pour inclure explicitement `context_quality` dans le document et dans le template PR.
+- Renforcement du garde-fou d'intégration sur le bloc de preuve documentaire avec validation d'un format stable et répétable (date ISO + référence stable non flottante).
 
 ### File List
 
@@ -169,7 +171,10 @@ Gemini 2.0 Flash
 ### Change Log
 
 - 2026-04-11: Implémentation de la story 66.26 (Gouvernance documentaire LLM)
+- 2026-04-11: Correctif post-review sur `context_quality` et durcissement du test AC9.
 
 ### Review Findings
 
 - [x] [Review][Patch] Link format in PR template [.github/pull_request_template.md] — remove leading slash for relative links.
+- [x] [Review][Patch] Ajouter `context_quality` au périmètre explicite de revue documentaire dans le document et le template PR.
+- [x] [Review][Patch] Rendre le garde-fou AC9 moins dépendant d'un wording exact et plus robuste sur le format de preuve documentaire.

@@ -1,4 +1,19 @@
+import re
 from pathlib import Path
+
+
+def _extract_verification_block(content: str) -> str:
+    marker = "Dernière vérification manuelle contre le pipeline réel du gateway"
+    assert marker in content
+    return content.split(marker, maxsplit=1)[1].split("Si le code diverge", maxsplit=1)[0]
+
+
+def _find_line(block: str, prefix: str) -> str:
+    for raw_line in block.splitlines():
+        line = raw_line.strip()
+        if line.startswith(prefix):
+            return line
+    raise AssertionError(f"Ligne attendue introuvable dans le bloc de vérification: {prefix}")
 
 def test_llm_pipeline_documentation_governance_rules():
     """
@@ -13,19 +28,30 @@ def test_llm_pipeline_documentation_governance_rules():
     content = doc_path.read_text(encoding="utf-8")
     
     # AC1, AC6, AC9 : Référence stable et format normatif
-    check_block_marker = "Dernière vérification manuelle contre le pipeline réel du gateway"
-    assert check_block_marker in content
-    
-    # Extraire le bloc de vérification finale
-    verification_block = content.split(check_block_marker)[-1].split("Si le code diverge")[0]
-    
-    # AC1, AC9 : Format stable et répétable (Date + Référence stable)
-    assert "- **Date** :" in verification_block
-    assert "- **Référence stable (Commit SHA)** :" in verification_block
-    
-    # AC1, AC6 : Pas de HEAD dans le bloc de vérification
-    assert "HEAD" not in verification_block, \
+    verification_block = _extract_verification_block(content)
+
+    date_line = _find_line(verification_block, "- **Date** :")
+    reference_line = _find_line(verification_block, "- **Référence stable")
+
+    # AC1, AC9 : Format stable et répétable avec valeurs auditables
+    assert re.fullmatch(r"- \*\*Date\*\* : `\d{4}-\d{2}-\d{2}`", date_line), (
+        "La ligne de date doit utiliser un format stable ISO `YYYY-MM-DD`."
+    )
+    assert re.fullmatch(
+        r"- \*\*Référence stable(?: \(Commit SHA\))?\*\* : `(?:[0-9a-f]{7,40}|v[0-9A-Za-z._-]+)`",
+        reference_line,
+    ), "La référence stable doit être un SHA git ou un tag explicite dans un format répétable."
+
+    # AC1, AC6 : Pas de référence flottante dans le bloc de vérification
+    assert "HEAD" not in verification_block, (
         "Le bloc de vérification finale ne doit plus accepter 'HEAD' comme référence stable."
+    )
+    forbidden_floating_refs = ["main", "master", "branche courante", "current branch"]
+    lowered_block = verification_block.lower()
+    for floating_ref in forbidden_floating_refs:
+        assert floating_ref not in lowered_block, (
+            f"Le bloc de vérification ne doit pas contenir la référence flottante '{floating_ref}'."
+        )
 
     # AC2, AC7 : Obligation explicite
     assert "Maintenance de cette documentation" in content
