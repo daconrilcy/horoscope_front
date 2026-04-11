@@ -41,14 +41,16 @@ Il décrit le fonctionnement réel du backend autour de :
 Le pipeline cible exécuté aujourd'hui est :
 
 1. les services métier construisent un `LLMExecutionRequest` canonique ;
-2. le gateway normalise tôt `feature`, `subfeature` et `plan` ;
-3. le gateway tente une résolution assembly si `feature/subfeature/plan` est présent ;
-4. les familles supportées `chat`, `guidance`, `natal`, `horoscope_daily` échouent explicitement si aucune assembly canonique active n'est trouvée (le fallback `use_case-first` est éteint sur ce périmètre) ;
-5. le gateway résout ensuite le `ExecutionProfile` depuis l'assembly ou par waterfall ;
-6. le prompt est transformé dans cet ordre : assembly déjà concaténée, injection `context_quality`, injection de verbosité, rendu des placeholders ;
-7. l'appel provider passe aujourd'hui nominalement uniquement par `openai` ;
-8. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy (uniquement hors périmètre supporté) ;
-9. le résultat final publie un snapshot d'observabilité canonique.
+2. le gateway normalise tôt `feature`, `subfeature`, `plan` et les alias legacy `use_case -> feature` quand une entrée dépréciée vise une famille supportée ;
+3. la prévalidation Stage 0.5 par `UseCaseConfig` n'existe plus que pour les features hors périmètre supporté ;
+4. `_resolve_plan()` tente une résolution assembly si `feature/subfeature/plan` est présent ;
+5. les familles supportées `chat`, `guidance`, `natal`, `horoscope_daily` échouent explicitement si aucune assembly canonique active n'est trouvée ; le fallback `use_case-first` est éteint sur ce périmètre ;
+6. le gateway reconstruit ensuite une config dérivée du plan résolu et valide l'`input_schema` canonique en Stage 1.5 ;
+7. le gateway résout ensuite le `ExecutionProfile` depuis l'assembly ou par waterfall ;
+8. le prompt est transformé dans cet ordre : assembly déjà concaténée, injection `context_quality`, injection de verbosité, rendu des placeholders ;
+9. l'appel provider passe aujourd'hui nominalement uniquement par `openai` ;
+10. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy uniquement hors périmètre supporté ;
+11. le résultat final publie un snapshot d'observabilité canonique.
 
 Le `use_case` existe encore, mais il n'est plus la source canonique de variation sur les familles convergées. Il sert surtout de clé de compatibilité, de routage legacy, de sélection de schéma et de fallback résiduel pour les features hors périmètre supporté.
 
@@ -58,29 +60,33 @@ Le `use_case` existe encore, mais il n'est plus la source canonique de variation
 flowchart TD
     A["Service métier<br/>AIEngineAdapter / Service V2"] --> B["Construit LLMExecutionRequest"]
     B --> C["LLMGateway.execute_request()"]
-    C --> D["Normalisation taxonomie<br/>feature / subfeature / plan"]
-    D --> E["Validation rapide input schema"]
-    E --> F["_resolve_plan()"]
+    C --> D["Normalisation taxonomie<br/>feature / subfeature / plan<br/>+ mapping legacy use_case"]
+    D --> E{"Feature supportée ?"}
+    E -->|Oui| F["Skip Stage 0.5"]
+    E -->|Non| G["Validation rapide input schema<br/>via UseCaseConfig legacy"]
+    F --> H["_resolve_plan()"]
+    G --> H
 
-    F --> G{"Assembly active ?"}
-    G -->|Oui| H["resolve_assembly() + assemble_developer_prompt()"]
-    G -->|Non| I{"Feature supportée ?"}
-    I -->|Oui| J["Échec explicite (AC6)"]
-    I -->|Non| K["resolve_config() / use_case-first"]
+    H --> I{"Assembly active ?"}
+    I -->|Oui| J["resolve_assembly() + assemble_developer_prompt()"]
+    I -->|Non| K{"Feature supportée ?"}
+    K -->|Oui| L["Échec explicite de configuration<br/>+ telemetry de rejet dédiée"]
+    K -->|Non| M["resolve_config() / use_case-first"]
 
-    H --> L["ExecutionProfileRegistry"]
-    K --> L
+    J --> N["Validation input schema canonique<br/>depuis le plan résolu"]
+    M --> N
 
-    L --> M["Arbitrage provider / model / max_output_tokens"]
-    M --> N["Transformations texte<br/>context_quality -> verbosity -> render"]
-    N --> O["ResolvedExecutionPlan"]
-    O --> P["_build_messages()"]
-    P --> Q["_call_provider()"]
-    Q --> R["validate_output()"]
-    R --> S{"Sortie valide ?"}
-    S -->|Oui| T["_build_result() + obs_snapshot"]
-    S -->|Non| U["_handle_repair_or_fallback()"]
-    U --> T
+    N --> O["ExecutionProfileRegistry"]
+    O --> P["Arbitrage provider / model / max_output_tokens"]
+    P --> Q["Transformations texte<br/>context_quality -> verbosity -> render"]
+    Q --> R["ResolvedExecutionPlan"]
+    R --> S["_build_messages()"]
+    S --> T["_call_provider()"]
+    T --> U["validate_output()"]
+    U --> V{"Sortie valide ?"}
+    V -->|Oui| W["_build_result() + obs_snapshot"]
+    V -->|Non| X["_handle_repair_or_fallback()"]
+    X --> W
 ```
 
 ## Source de vérité par couche
@@ -158,72 +164,75 @@ flowchart LR
 
 L'ordre réel, tel qu'il ressort de `execute_request()` et `_resolve_plan()`, est le suivant :
 
-1. normalisation précoce de `feature` et `subfeature` si la requête est déjà taxonomisée ;
-2. normalisation précoce du `plan` via `_normalize_plan_for_assembly()` ;
-3. résolution rapide d'une `UseCaseConfig` pour valider l'input schema une première fois ;
-4. exécution de `_resolve_plan()` :
-5. fallback de compatibilité `DEPRECATED_USE_CASE_MAPPING` si le `use_case` est déprécié et qu'aucune `feature` n'a été fournie ;
-6. enrichissement éventuel du common context via `CommonContextBuilder` ;
-7. tentative de résolution assembly via `AssemblyRegistry` ;
-8. blocage si famille nominale fermée sans assembly active ;
-9. fallback `use_case-first` via `_resolve_config()` si aucune assembly n'est retenue ;
-10. résolution du `ExecutionProfile` par référence assembly, puis waterfall `feature+subfeature+plan`, puis `feature+subfeature`, puis `feature` ;
-11. arbitrage provider, modèle, timeout et `max_output_tokens` ;
-12. résolution de la persona si le chemin n'est pas déjà assembly ;
-13. résolution du schéma de sortie ;
-14. transformations du prompt dans cet ordre :
-15. injecteur `context_quality` ;
-16. consigne de verbosité ;
-17. rendu `PromptRenderer.render()` avec blocs `{{#context_quality:...}}` puis placeholders ;
-18. gel du `ResolvedExecutionPlan` ;
-19. composition des messages ;
-20. appel provider ;
-21. validation de sortie ;
-22. réparation éventuelle puis fallback `fallback_use_case` éventuel ;
-23. construction du `GatewayResult` final et du snapshot d'observabilité.
+1. lecture du `use_case`, de la taxonomie fournie et des flags de visite/réparation ;
+2. mapping de compatibilité `DEPRECATED_USE_CASE_MAPPING` si le `use_case` est déprécié et qu'aucune `feature` n'a été fournie ;
+3. normalisation précoce de `feature`, `subfeature` et `plan` ;
+4. blocage des boucles de fallback (`visited_use_cases`) ;
+5. merge du `context_dict` ;
+6. Stage 0.5 : prévalidation `UseCaseConfig` seulement si la feature n'appartient pas au périmètre supporté ;
+7. exécution de `_resolve_plan()` ;
+8. enrichissement éventuel du common context via `CommonContextBuilder` ;
+9. tentative de résolution assembly via `AssemblyRegistry` ;
+10. blocage explicite si famille supportée sans assembly active ;
+11. fallback `use_case-first` via `_resolve_config()` seulement hors périmètre supporté ;
+12. résolution du `ExecutionProfile` par référence assembly, puis waterfall `feature+subfeature+plan`, puis `feature+subfeature`, puis `feature` ;
+13. arbitrage provider, modèle, timeout et `max_output_tokens` ;
+14. résolution du schéma de sortie et du bloc persona si nécessaire ;
+15. gel du `ResolvedExecutionPlan` ;
+16. Stage 1.5 : reconstruction d'une config dérivée du plan et validation de l'`input_schema` canonique ;
+17. composition des messages ;
+18. appel provider ;
+19. validation de sortie ;
+20. réparation éventuelle puis fallback `fallback_use_case` éventuel, uniquement hors périmètre supporté ;
+21. construction du `GatewayResult` final et du snapshot d'observabilité.
 
-### Diagramme détaillé de `_resolve_plan()`
+### Diagramme détaillé de `execute_request()` + `_resolve_plan()`
 
 ```mermaid
 flowchart TD
-    A["LLMExecutionRequest"] --> B["Normaliser feature/subfeature"]
-    B --> C["Normaliser plan -> free/premium"]
-    C --> D{"use_case déprécié<br/>et feature absente ?"}
-    D -->|Oui| E["DEPRECATED_USE_CASE_MAPPING"]
-    D -->|Non| F["Continuer"]
-    E --> F
+    A["LLMExecutionRequest"] --> B{"use_case legacy<br/>et feature absente ?"}
+    B -->|Oui| C["DEPRECATED_USE_CASE_MAPPING"]
+    B -->|Non| D["Continuer"]
+    C --> D
+    D --> E["Normaliser feature/subfeature/plan"]
+    E --> F{"Feature supportée ?"}
+    F -->|Non| G["Stage 0.5<br/>_resolve_config() + validate_input()"]
+    F -->|Oui| H["Skip Stage 0.5"]
+    G --> I["_resolve_plan()"]
+    H --> I
 
-    F --> G["Construire/merger common context"]
-    G --> H{"assembly_config_id ou feature ?"}
-    H -->|Oui| I["AssemblyRegistry.get_active_config_sync()"]
-    H -->|Non| J["Pas de branche assembly"]
+    I --> J["Construire/merger common context"]
+    J --> K{"assembly_config_id ou feature ?"}
+    K -->|Oui| L["AssemblyRegistry.get_active_config_sync()"]
+    K -->|Non| M["Pas de branche assembly"]
 
-    I --> K{"Assembly trouvée ?"}
-    K -->|Oui| L["resolve_assembly()"]
-    K -->|Non| M{"Feature supportée ?"}
-    M -->|Oui| N["GatewayConfigError (AC6)"]
-    M -->|Non| O["_resolve_config()"]
+    L --> N{"Assembly trouvée ?"}
+    N -->|Oui| O["resolve_assembly()"]
+    N -->|Non| P{"Feature supportée ?"}
+    P -->|Oui| Q["GatewayConfigError + supported_perimeter_rejection"]
+    P -->|Non| R["_resolve_config()"]
 
-    J --> PP{"Feature supportée ?"}
-    PP -->|Oui| N
-    PP -->|Non| O
-    L --> Q["UseCaseConfig dérivée de l'assembly"]
-    O --> R["UseCaseConfig legacy/config/stub"]
+    M --> S{"Feature supportée ?"}
+    S -->|Oui| Q
+    S -->|Non| R
+    O --> T["UseCaseConfig dérivée de l'assembly"]
+    R --> U["UseCaseConfig legacy/config/stub"]
 
-    Q --> S["ExecutionProfileRegistry"]
-    R --> S
-
-    R --> S{"Profile trouvé ?"}
-    S -->|Oui| T["provider/model/reasoning/verbosity/output/tool"]
-    S -->|Non| U["resolve_model() fallback"]
-
-    T --> V["Verrou provider + max_output_tokens"]
+    T --> V["ExecutionProfileRegistry"]
     U --> V
-    V --> W["Résoudre persona + schema"]
-    W --> X["Injecter context_quality"]
-    X --> Y["Injecter verbosité"]
-    Y --> Z["PromptRenderer.render()"]
-    Z --> AA["ResolvedExecutionPlan"]
+
+    V --> W{"Profile trouvé ?"}
+    W -->|Oui| X["provider/model/reasoning/verbosity/output/tool"]
+    W -->|Non| Y["resolve_model() fallback<br/>hors périmètre supporté"]
+
+    X --> Z["Verrou provider + max_output_tokens"]
+    Y --> Z
+    Z --> AA["Résoudre persona + schema"]
+    AA --> AB["Injecter context_quality"]
+    AB --> AC["Injecter verbosité"]
+    AC --> AD["PromptRenderer.render()"]
+    AD --> AE["ResolvedExecutionPlan"]
+    AE --> AF["Stage 1.5 validate_input()"]
 ```
 
 ## Assemblies et composition
@@ -422,11 +431,13 @@ Le registre de gouvernance est `FallbackGovernanceRegistry`.
 Points structurants observés :
 
 - `USE_CASE_FIRST` est `à retirer` sur `chat`, `guidance`, `natal`, `horoscope_daily` ;
+- sur ces familles supportées, l'absence d'assembly canonique obligatoire n'est plus racontée comme un fallback : c'est un rejet explicite de configuration avec télémétrie dédiée ;
 - `NARRATOR_LEGACY` est interdit sur `horoscope_daily` ;
 - `TEST_LOCAL` est interdit en production ;
 - un fallback `à retirer` sur un chemin nominal lève une `GatewayError`, même si la famille n'est pas explicitement listée comme interdite ;
-- chaque fallback passe par la métrique `llm_gateway_fallback_usage_total`.
+- chaque fallback réel passe par la métrique `llm_gateway_fallback_usage_total`.
 - l'alias legacy `daily_prediction` peut encore être accepté en entrée, mais il est remappé immédiatement vers `horoscope_daily` et ne peut plus être réactivé via `publish` ou `rollback` admin.
+- l'input schema canonique des assemblies supportées est désormais persisté dans `llm_assembly_configs.input_schema`, backfillé par la migration `8b2d52442493` et réaligné par `seed_66_20_taxonomy()`.
 
 ## Observabilité runtime
 
@@ -477,6 +488,11 @@ Pour l'axe `context_compensation_status`, la lecture correcte est désormais :
 - `legacy_execution_profile_fallback`
 - `repair`
 - `non_nominal_provider_tolerated`
+
+Important :
+
+- un chemin supporté rejeté faute d'assembly canonique obligatoire n'émet pas de `GatewayResult` de succès avec `legacy_use_case_fallback` ;
+- ce scénario est visible via l'erreur explicite et la télémétrie de rejet (`supported_perimeter_rejection`), pas via un faux chemin nominal.
 
 #### `fallback_kind`
 
