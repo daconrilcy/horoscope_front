@@ -158,6 +158,17 @@ async def log_call(
         fallback_triggered = False
         evidence_warnings = 0
 
+        # --- Story 66.25: Operational Observability Init ---
+        pipeline_kind = None
+        execution_path_kind = None
+        fallback_kind = None
+        requested_provider = None
+        resolved_provider = None
+        executed_provider = None
+        context_compensation_status = None
+        max_output_tokens_source = None
+        max_output_tokens_final = None
+
         if result:
             status = map_status_to_enum(result.meta.validation_status)
 

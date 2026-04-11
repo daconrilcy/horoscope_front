@@ -312,7 +312,9 @@ def assemble_developer_prompt(resolved: ResolvedAssembly, config: PromptAssembly
         context_quality = resolved.context_quality
         from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
 
-        prompt, injected = ContextQualityInjector.inject(prompt, config.feature, context_quality)
+        prompt, injected, handled = ContextQualityInjector.inject(
+            prompt, config.feature, context_quality
+        )
 
     # Store injection status in resolved object if possible (it's a Pydantic model)
     # Actually, ResolvedAssembly doesn't have this field yet.

@@ -90,18 +90,30 @@ async def test_integrated_template_handled_propagation():
 
                         result = await gateway.execute_request(request, db=db)
 
-                # BUG EXPECTED HERE:
-                # obs_snapshot.context_compensation_status will be UNKNOWN or something else
-                # instead of TEMPLATE_HANDLED because context_quality_handled_by_template
-                # was never set to True in _resolve_plan.
-
+                # 1. Validate snapshot in result
                 obs = result.meta.obs_snapshot
-                print(f"\nContext Quality: {obs.context_quality}")
-                print(f"Compensation Status: {obs.context_compensation_status}")
-
                 assert obs.context_quality == "partial"
                 assert obs.context_compensation_status == ContextCompensationStatus.TEMPLATE_HANDLED
 
+                # 2. Validate DB persistence (Story 66.27 AC4)
+                from app.infra.db.models.llm_observability import LlmCallLogModel
+                from sqlalchemy import select
+
+                stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == "test-66-27")
+                # We need to use the real db session or the mock one if it captured the add
+                # Since we used a mock DB, we should check if db.add was called with a log entry
+                # that has the right status.
+
+                # Find the call to db.add
+                log_entry = None
+                for call in db.add.call_args_list:
+                    obj = call.args[0]
+                    if isinstance(obj, LlmCallLogModel) and obj.request_id == "test-66-27":
+                        log_entry = obj
+                        break
+
+                assert log_entry is not None, "LlmCallLogModel should have been added to DB"
+                assert log_entry.context_compensation_status == "template_handled"
 
 @pytest.mark.asyncio
 async def test_integrated_injector_applied_propagation():
@@ -169,6 +181,17 @@ async def test_integrated_injector_applied_propagation():
                 assert obs.context_quality == "partial"
                 assert obs.context_compensation_status == ContextCompensationStatus.INJECTOR_APPLIED
 
+                # 2. Validate DB persistence
+                from app.infra.db.models.llm_observability import LlmCallLogModel
+                log_entry = None
+                for call in db.add.call_args_list:
+                    obj = call.args[0]
+                    if isinstance(obj, LlmCallLogModel) and obj.request_id == "test-66-27-injected":
+                        log_entry = obj
+                        break
+                assert log_entry is not None
+                assert log_entry.context_compensation_status == "injector_applied"
+
 
 @pytest.mark.asyncio
 async def test_integrated_not_needed_propagation():
@@ -235,3 +258,14 @@ async def test_integrated_not_needed_propagation():
                 obs = result.meta.obs_snapshot
                 assert obs.context_quality == "full"
                 assert obs.context_compensation_status == ContextCompensationStatus.NOT_NEEDED
+
+                # 2. Validate DB persistence
+                from app.infra.db.models.llm_observability import LlmCallLogModel
+                log_entry = None
+                for call in db.add.call_args_list:
+                    obj = call.args[0]
+                    if isinstance(obj, LlmCallLogModel) and obj.request_id == "test-66-27-full":
+                        log_entry = obj
+                        break
+                assert log_entry is not None
+                assert log_entry.context_compensation_status == "not_needed"

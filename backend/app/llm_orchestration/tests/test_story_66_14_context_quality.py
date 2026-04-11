@@ -27,12 +27,12 @@ def test_context_quality_injector_generic():
     prompt = "Base prompt"
 
     # 1. Minimal quality
-    augmented, injected = ContextQualityInjector.inject(prompt, "any_feat", "minimal")
+    augmented, injected, handled = ContextQualityInjector.inject(prompt, "any_feat", "minimal")
     assert injected is True
     assert "[CONTEXTE LIMITÉ]" in augmented
 
     # 2. Full quality
-    augmented, injected = ContextQualityInjector.inject(prompt, "any_feat", "full")
+    augmented, injected, handled = ContextQualityInjector.inject(prompt, "any_feat", "full")
     assert injected is False
     assert augmented == prompt
 
@@ -42,7 +42,7 @@ def test_context_quality_injector_specific():
     prompt = "Base prompt"
 
     # Natal specific
-    augmented, injected = ContextQualityInjector.inject(prompt, "natal", "minimal")
+    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "minimal")
     assert injected is True
     assert "[CONTEXTE NATAL LIMITÉ]" in augmented
 
@@ -51,7 +51,7 @@ def test_context_quality_injector_no_duplicate():
     """Test Story 66.14: No automatic injection if template already handles it."""
     prompt = "Base. {{#context_quality:minimal}}Manual warning{{/context_quality}}"
 
-    augmented, injected = ContextQualityInjector.inject(prompt, "natal", "minimal")
+    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "minimal")
     assert injected is False
     assert augmented == prompt
 
