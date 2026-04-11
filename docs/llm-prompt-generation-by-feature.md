@@ -1093,7 +1093,7 @@ Toute Pull Request modifiant la structure ou la gouvernance du pipeline LLM doit
 
 La revue de ce document est **obligatoire** pour toute modification portant sur :
 - **Gateway & Orchestration** : `_resolve_plan()`, `execute_request()`, `_call_provider()`, `_handle_repair_or_fallback()`.
-- **Composition & Rendu** : `_build_messages()`, `PromptRenderer`, `PromptAssemblyConfig`, `ContextQualityInjector`, budgets de longueur.
+- **Composition & Rendu** : `_build_messages()`, `PromptRenderer`, `PromptAssemblyConfig`, `context_quality`, `ContextQualityInjector`, budgets de longueur.
 - **Paramétrage & Fallbacks** : `ProviderParameterMapper`, `FallbackGovernanceRegistry`, `NOMINAL_SUPPORTED_PROVIDERS`.
 - **Taxonomie & Profils** : Taxonomie canonique `feature/subfeature/plan`, résolution `ExecutionProfile`.
 - **Doctrine & Contrats** : Toute logique modifiant la source de vérité décrite dans les sections précédentes.

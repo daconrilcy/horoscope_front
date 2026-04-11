@@ -14,7 +14,7 @@ Cette PR modifie-t-elle la structure, les providers, les fallbacks ou la composi
 ### Rappel des zones à impact obligatoire
 La revue de la documentation est requise pour toute modification de :
 - `_resolve_plan()`, `execute_request()`, `_call_provider()`, `_handle_repair_or_fallback()`.
-- `_build_messages()`, `PromptRenderer`, `PromptAssemblyConfig`, `ContextQualityInjector`, budgets de longueur.
+- `_build_messages()`, `PromptRenderer`, `PromptAssemblyConfig`, `context_quality`, `ContextQualityInjector`, budgets de longueur.
 - `ProviderParameterMapper`, `FallbackGovernanceRegistry`, `NOMINAL_SUPPORTED_PROVIDERS`.
 - Taxonomie canonique `feature/subfeature/plan`, résolution `ExecutionProfile`.
 
