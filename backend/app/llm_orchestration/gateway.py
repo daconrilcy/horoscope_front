@@ -1058,7 +1058,7 @@ class LLMGateway:
                         model_id,
                     )
                     model_id = resolve_model(use_case, fallback_model=config.model)
-                    profile_source = "fallback_resolve_model"
+                    profile_source = "fallback_provider_unsupported"
                     provider = "openai"
                     translated_params = {}
 
@@ -1618,10 +1618,12 @@ class LLMGateway:
             path_kind = ExecutionPathKind.CANONICAL_ASSEMBLY
         elif plan.execution_profile_source == "fallback_resolve_model":
             path_kind = ExecutionPathKind.LEGACY_EXECUTION_PROFILE_FALLBACK
+        elif plan.execution_profile_source == "fallback_provider_unsupported":
+            path_kind = ExecutionPathKind.NON_NOMINAL_PROVIDER_TOLERATED
 
         # Story 66.22 AC5: Tolerance of non-nominal provider
         if (
-            plan.execution_profile_source == "fallback_resolve_model"
+            plan.execution_profile_source == "fallback_provider_unsupported"
             and plan.provider == "openai"
             and plan.requested_provider != "openai"
         ):
@@ -1635,20 +1637,31 @@ class LLMGateway:
             fallback_kind = FallbackType.TEST_LOCAL
         elif plan.execution_profile_source == "fallback_resolve_model":
             fallback_kind = FallbackType.RESOLVE_MODEL
+        elif plan.execution_profile_source == "fallback_provider_unsupported":
+            fallback_kind = FallbackType.PROVIDER_OPENAI
 
-        # 4. Context Compensation Status
+        # 4. Context Compensation Status (Story 66.25 AC6)
         comp_status = ContextCompensationStatus.UNKNOWN
         if plan.context_quality == "unknown":
             comp_status = ContextCompensationStatus.UNKNOWN
-        elif plan.context_quality == "nominal":
+        elif plan.context_quality == "full":
             comp_status = ContextCompensationStatus.NOT_NEEDED
         elif plan.context_quality_instruction_injected:
             comp_status = ContextCompensationStatus.INJECTOR_APPLIED
         else:
-            # If not injected but not nominal, maybe handled by template blocks
-            # renderer doesn't return this info yet, but we can infer it if blocks were used
-            prompt = plan.rendered_developer_prompt
-            if "{{#if_nominal}}" in prompt or "{{#if_low}}" in prompt:
+            # Detect explicit template handling: syntax is {{#context_quality:LEVEL}}
+            # We look at plan.rendered_developer_prompt BEFORE Stage 1 completion
+            # Actually we can check if the marker existed in the config prompt
+            # OR check if we are in a degraded state (partial/minimal) but not injected
+            if plan.context_quality in ["partial", "minimal"]:
+                 # If not injected by injector, it must be template-handled or unknown
+                 # In prompt_renderer.py, these blocks are resolved.
+                 # Let's check the original config/assembly prompt if available,
+                 # but plan.rendered_developer_prompt is already rendered.
+                 # We can use a heuristic: if injector didn't apply, it's either
+                 # handled by template or the dev didn't care.
+                 # The injector explicitly skips if {{#context_quality: is present.
+                 # So if not injected and NOT full, it IS template handled.
                  comp_status = ContextCompensationStatus.TEMPLATE_HANDLED
             else:
                  comp_status = ContextCompensationStatus.UNKNOWN
