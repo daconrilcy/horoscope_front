@@ -120,7 +120,7 @@ Les features marquées `transitional_governance` sont en cours de convergence. E
 
 **Features concernées :** `daily_prediction`.
 
-## Stories 66.9 à 66.23
+## Stories 66.9 à 66.25
 
 | Story | Apport canonique | Impact dans le processus |
 |---|---|---|
@@ -845,9 +845,13 @@ Depuis la story 66.25, ces axes ne sont plus seulement déduits à partir de cha
 
 ### Axes de lecture
 
-- **chemin d'exécution** : nominal, repaired, fallback, etc. ;
-- **qualité de contexte** : `full`, `partial`, `minimal`, `unknown` ;
-- **transformations appliquées** : normalisations, filtrages, adaptations.
+- **gouvernance attendue** : `pipeline_kind` ;
+- **chemin runtime structurel observé** : `execution_path_kind` ;
+- **cause principale de fallback** : `fallback_kind` ;
+- **qualité de contexte** : `context_quality` ;
+- **mode de compensation de contexte** : `context_compensation_status` ;
+- **provider demandé / résolu / exécuté** : triplet provider runtime ;
+- **source finale de borne de sortie** : `max_output_tokens_source` + `max_output_tokens_final`.
 
 Cette séparation permet de distinguer :
 
@@ -897,6 +901,7 @@ Les valeurs actuellement exposées sont :
 - `non_nominal_provider_tolerated`
 
 `execution_path_kind` doit être lu comme un discriminant synthétique de runtime. Il ne se limite pas à un simple chemin interne de résolution ; il capture le chemin structurel dominant réellement observé par l’exploitation.
+Il ne prétend pas représenter la totalité des micro-étapes internes du gateway, mais uniquement le chemin structurel dominant exposé à l’exploitation.
 
 #### `fallback_kind`
 
@@ -906,6 +911,8 @@ La lecture attendue est :
 
 - `fallback_kind=null` : pas de fallback réel observé ;
 - `fallback_kind` renseigné : le snapshot expose le fallback structurellement dominant, aligné sur la gouvernance 66.21.
+
+En cas de plusieurs mécanismes de compatibilité successifs, le snapshot ne conserve qu’un `fallback_kind` résumé et priorisé selon la hiérarchie déterminée par le gateway. Il s’agit d’une lecture d’exploitation synthétique, pas d’un journal exhaustif de tous les mécanismes intermédiaires.
 
 #### Provider triplet
 
