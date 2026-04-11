@@ -518,10 +518,10 @@ Elle vérifie notamment :
 - stabilité des contrats ;
 - cohérence entre gouvernance attendue et chemin observé.
 
-Depuis 66.24 :
+Depuis 66.24 (mis à jour en 66.28) :
 
 - `horoscope_daily` est évalué comme `nominal_canonical` ;
-- `daily_prediction` est évalué dans les mêmes campagnes mais marqué `transitional_governance` ;
+- `daily_prediction` a été absorbé dans `horoscope_daily` et n'apparaît plus comme famille autonome ;
 - un chemin obligatoire manquant rend la campagne incomplète ou bloquante.
 
 ## Où mettre une nouvelle règle

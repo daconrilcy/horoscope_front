@@ -19,7 +19,7 @@ def generate_markdown_report(results: list[dict]) -> str:
     transitional_failures = 0
 
     # Coverage checklist (AC8 Requirement: all daily active paths must be present)
-    required_features = {"chat", "guidance", "natal", "horoscope_daily", "daily_prediction"}
+    required_features = {"chat", "guidance", "natal", "horoscope_daily"}
     found_features = {r["case"].split("/")[0] for r in results}
     missing_features = required_features - found_features
 

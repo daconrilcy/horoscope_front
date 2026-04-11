@@ -282,6 +282,7 @@ class ResolvedExecutionPlan(BaseModel):
     model_id: str
     model_source: Literal["os_granular", "os_legacy", "config", "stub", "assembly"]
     model_override_active: bool = False
+    is_legacy_compatibility: bool = False  # Track if redirected from DEPRECATED_USE_CASE_MAPPING
 
     # Execution Profile (Story 66.11)
     execution_profile_id: Optional[str] = None

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
@@ -20,7 +20,26 @@ logger = logging.getLogger(__name__)
 
 
 def seed_horoscope_narrator_assembly(db: Session) -> None:
-    """Seeds canonical assembly for horoscope_daily and daily_prediction."""
+    """Seeds canonical assembly for horoscope_daily and cleans up legacy daily_prediction."""
+
+    # 0. Cleanup Legacy daily_prediction (Story 66.28 Absorption)
+    # We remove these to ensure only horoscope_daily is used.
+    # Order: Assembly -> Version -> Profile -> UseCase
+    legacy_key = "daily_prediction"
+
+    db.execute(
+        delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.feature == legacy_key)
+    )
+    db.execute(
+        delete(LlmPromptVersionModel).where(LlmPromptVersionModel.use_case_key == legacy_key)
+    )
+    db.execute(
+        delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.feature == legacy_key)
+    )
+    db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == legacy_key))
+
+    db.flush()
+    logger.info("seed_narrator: cleaned up legacy %s artifacts", legacy_key)
 
     # 1. Output Schema
     stmt_schema = select(LlmOutputSchemaModel).where(

@@ -89,6 +89,7 @@ class FallbackGovernanceRegistry:
             return "guidance"
         if use_case.startswith("natal") or "natal" in use_case:
             return "natal"
+        # Story 66.28: daily_prediction is now absorbed into horoscope_daily
         if use_case.startswith("horoscope_daily") or use_case == "daily_prediction":
             return "horoscope_daily"
 

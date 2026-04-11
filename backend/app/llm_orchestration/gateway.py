@@ -765,7 +765,8 @@ class LLMGateway:
             request.user_input.subfeature = normalize_subfeature(
                 request.user_input.feature, mapping.get("subfeature")
             )
-            request.user_input.plan = mapping["plan"]
+            # Story 66.28: Ensure plan is also normalized when redirected
+            request.user_input.plan = self._normalize_plan_for_assembly(mapping.get("plan"))
 
             FallbackGovernanceRegistry.track_fallback(
                 FallbackType.DEPRECATED_USE_CASE,
@@ -777,9 +778,9 @@ class LLMGateway:
                 "DEPRECATION WARNING: Use case '%s' is deprecated. "
                 "Please use canonical taxonomy: feature='%s', subfeature='%s', plan='%s'.",
                 use_case,
-                mapping["feature"],
-                mapping.get("subfeature"),
-                mapping["plan"],
+                request.user_input.feature,
+                request.user_input.subfeature,
+                request.user_input.plan,
             )
 
         # Use provided context_dict or build from request
@@ -1270,6 +1271,7 @@ class LLMGateway:
             feature=request.user_input.feature,
             subfeature=request.user_input.subfeature,
             plan=request.user_input.plan,
+            is_legacy_compatibility=is_legacy_compatibility,
             feature_template_id=(
                 str(resolved_assembly.feature_template_id) if resolved_assembly else None
             ),
@@ -1638,6 +1640,8 @@ class LLMGateway:
         # 3. Fallback Kind
         fallback_kind = None
         if recovery.fallback_reason:
+            fallback_kind = FallbackType.DEPRECATED_USE_CASE
+        elif plan.is_legacy_compatibility:
             fallback_kind = FallbackType.DEPRECATED_USE_CASE
         elif plan.model_source == "stub":
             fallback_kind = FallbackType.TEST_LOCAL

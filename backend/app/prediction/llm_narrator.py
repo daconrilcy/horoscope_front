@@ -40,7 +40,8 @@ class LLMNarrator:
     """
 
     TIMEOUT_SECONDS = 60.0
-    DEFAULT_MAX_COMPLETION_TOKENS = PROMPT_CATALOG["daily_prediction"].max_tokens
+    # Story 66.28: daily_prediction is absorbed into horoscope_daily
+    DEFAULT_MAX_COMPLETION_TOKENS = PROMPT_CATALOG["horoscope_daily"].max_tokens
     MIN_DAILY_SYNTHESIS_SENTENCES = 10
     MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 7
     MAX_NARRATION_ATTEMPTS = 2

@@ -1,9 +1,15 @@
 import pytest
 from sqlalchemy.orm import Session
+from unittest.mock import AsyncMock, patch
 
 from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
-
+from app.llm_orchestration.models import (
+    ExecutionUserInput, 
+    LLMExecutionRequest, 
+    GatewayResult, 
+    GatewayMeta, 
+    UsageInfo
+)
 
 @pytest.mark.asyncio
 async def test_daily_path_is_nominal_canonical(db: Session):
@@ -37,33 +43,31 @@ async def test_daily_path_is_nominal_canonical(db: Session):
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case="daily_prediction",  # Old use case
-            feature="daily_prediction",  # Old feature
-            subfeature="narration",  # Subfeature
-            plan=None,  # Old plan (implicit)
+            feature=None,                 # No feature passed (legacy style)
+            plan=None,                    # Old plan (implicit)
         ),
         request_id="req-66-28",
         trace_id="tr-66-28",
     )
 
-    # We don't actually need to execute the full request (which would call OpenAI).
-    # We just need to check how the plan is resolved.
+    # Mock the actual provider call to avoid OpenAI usage
+    with patch.object(gateway, "_call_provider", new_callable=AsyncMock) as mock_call:
+        mock_call.return_value = GatewayResult(
+            use_case="daily_prediction",
+            request_id="req-66-28",
+            trace_id="tr-66-28",
+            raw_output='{"daily_synthesis": "..."}',
+            structured_output={},
+            usage=UsageInfo(),
+            meta=GatewayMeta(latency_ms=0, model="test"),
+        )
 
-    # 1. Early normalization check
-    from app.llm_orchestration.feature_taxonomy import normalize_feature, normalize_subfeature
+        result = await gateway.execute_request(request, db=db)
 
-    f = normalize_feature(request.user_input.feature)
-    _sf = normalize_subfeature(f, request.user_input.subfeature)
+        # 1. Verify Taxonomy redirection
+        assert result.meta.feature == "horoscope_daily"
+        assert result.meta.plan == "free"
 
-    assert f == "horoscope_daily"
-    # 2. Pipeline Kind check in _resolve_plan
-    # We can use the gateway's internal logic
-    plan, _ = await gateway._resolve_plan(request, db)
-
-    # Verify the plan has the right taxonomy
-    assert plan.feature == "horoscope_daily"
-    assert plan.plan == "free"
-
-    # Verify the pipeline kind
-    # We use the same set as in gateway._build_result
-    canonical_families = {"chat", "guidance", "natal", "horoscope_daily"}
-    assert plan.feature in canonical_families
+        # 2. Verify Governance (The real closure proof)
+        assert result.meta.obs_snapshot.pipeline_kind == "nominal_canonical"
+        assert result.meta.obs_snapshot.fallback_kind.value == "deprecated_use_case"

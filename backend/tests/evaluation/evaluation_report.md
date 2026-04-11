@@ -1,12 +1,11 @@
 # LLM Orchestration Evaluation Report (Story 66.24 Matrix)
 
-## Gating Status: 🔴 INCOMPLETE (Missing paths)
+## Gating Status: 🔴 FAILED
 
 - **Total Combinations**: 11
 - **Passed**: 0/11
 - **Nominal Failures**: 11 (BLOCQUANT)
 - **Transitional Failures**: 0 (ALERTE)
-- **Missing Mandatory Features**: daily_prediction (BLOCQUANT)
 
 | Combination | Pipeline | Placeholders | CQ | Persona | Contract | Length | Diff. Plan | Status |
 |---|---|---|---|---|---|---|---|---|
