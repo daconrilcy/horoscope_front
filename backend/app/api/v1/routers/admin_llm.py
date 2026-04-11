@@ -547,6 +547,18 @@ def update_use_case_config(
             details={},
         )
 
+    # Story 66.28: Block modification of forbidden nominal features (AC5)
+    from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
+
+    if not is_nominal_feature_allowed(key):
+        return _error_response(
+            status_code=403,
+            request_id=request_id,
+            code="forbidden_feature",
+            message=f"use case {key} is legacy and frozen. No modifications allowed.",
+            details={},
+        )
+
     update_details = {}
 
     if payload.persona_id is not None:
@@ -852,6 +864,18 @@ def create_prompt_draft(
             request_id=request_id,
             code="use_case_not_found",
             message=f"use case {key} not found",
+            details={},
+        )
+
+    # Story 66.28: Block resurrection of forbidden nominal features (AC5)
+    from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
+
+    if not is_nominal_feature_allowed(key):
+        return _error_response(
+            status_code=403,
+            request_id=request_id,
+            code="forbidden_feature",
+            message=f"use case {key} is legacy and frozen. No new drafts allowed.",
             details={},
         )
 

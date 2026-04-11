@@ -113,8 +113,8 @@ if __name__ == "__main__":
             "pipeline_ok": True,
         },
         {
-            "case": "daily_prediction/free/synthetique/minimal",
-            "pipeline_kind": "transitional_governance",
+            "case": "horoscope_daily/free/synthetique/minimal",
+            "pipeline_kind": "nominal_canonical",
             "placeholders": True,
             "context_quality": True,
             "persona": True,

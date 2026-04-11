@@ -17,9 +17,7 @@ from app.llm_orchestration.services.output_validator import validate_schema
         ("horoscope_daily", "premium", "full"),
         ("horoscope_daily", "premium", "minimal"),
         ("horoscope_daily", "free", "partial"),
-        ("daily_prediction", "premium", "full"),
-        ("daily_prediction", "premium", "minimal"),
-        ("daily_prediction", "free", "minimal"),
+        ("horoscope_daily", "free", "minimal"),
     ],
 )
 def test_output_contract_validation(feature, plan, quality):

@@ -98,6 +98,11 @@ class PromptRegistryV2:
 
         use_case_key = version.use_case_key
 
+        # Story 66.28: Block resurrection of forbidden nominal features (AC5)
+        from app.llm_orchestration.feature_taxonomy import assert_nominal_feature_allowed
+
+        assert_nominal_feature_allowed(use_case_key)
+
         # 2. Archive currently published version
         db.execute(
             update(LlmPromptVersionModel)
