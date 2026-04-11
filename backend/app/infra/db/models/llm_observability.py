@@ -91,6 +91,17 @@ class LlmCallLogModel(Base):
 
     evidence_warnings_count: Mapped[int] = mapped_column(Integer, default=0)
 
+    # Operational Observability (Story 66.25)
+    pipeline_kind: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    execution_path_kind: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    fallback_kind: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    requested_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    resolved_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    executed_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    context_compensation_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    max_output_tokens_source: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    max_output_tokens_final: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )

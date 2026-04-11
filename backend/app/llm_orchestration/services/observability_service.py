@@ -190,6 +190,55 @@ async def log_call(
             fallback_triggered = result.meta.fallback_triggered
             evidence_warnings = count_evidence_warnings(result.structured_output)
 
+            # --- Story 66.25: Operational Observability ---
+            obs = getattr(result.meta, "obs_snapshot", None)
+            if obs:
+                pipeline_kind = obs.pipeline_kind
+                execution_path_kind = (
+                    obs.execution_path_kind.value
+                    if hasattr(obs.execution_path_kind, "value")
+                    else obs.execution_path_kind
+                )
+                fallback_kind = (
+                    obs.fallback_kind.value
+                    if obs.fallback_kind and hasattr(obs.fallback_kind, "value")
+                    else obs.fallback_kind
+                )
+                requested_provider = obs.requested_provider
+                resolved_provider = obs.resolved_provider
+                executed_provider = obs.executed_provider
+                context_compensation_status = (
+                    obs.context_compensation_status.value
+                    if hasattr(obs.context_compensation_status, "value")
+                    else obs.context_compensation_status
+                )
+                max_output_tokens_source = (
+                    obs.max_output_tokens_source.value
+                    if hasattr(obs.max_output_tokens_source, "value")
+                    else obs.max_output_tokens_source
+                )
+                max_output_tokens_final = obs.max_output_tokens_final
+
+                # Increment specific metrics (AC8)
+                increment_counter(
+                    "llm_obs_pipeline_total",
+                    labels={
+                        "pipeline_kind": pipeline_kind,
+                        "path_kind": execution_path_kind,
+                        "provider": executed_provider,
+                    },
+                )
+            else:
+                pipeline_kind = None
+                execution_path_kind = None
+                fallback_kind = None
+                requested_provider = None
+                resolved_provider = None
+                executed_provider = None
+                context_compensation_status = None
+                max_output_tokens_source = None
+                max_output_tokens_final = None
+
         transaction = db.begin_nested() if db.in_transaction() else db.begin()
         with transaction:
             log_entry = LlmCallLogModel(
@@ -215,9 +264,19 @@ async def log_call(
                 input_hash=input_hash,
                 environment=settings.app_env,
                 evidence_warnings_count=evidence_warnings,
+                # AC 66.25
+                pipeline_kind=pipeline_kind,
+                execution_path_kind=execution_path_kind,
+                fallback_kind=fallback_kind,
+                requested_provider=requested_provider,
+                resolved_provider=resolved_provider,
+                executed_provider=executed_provider,
+                context_compensation_status=context_compensation_status,
+                max_output_tokens_source=max_output_tokens_source,
+                max_output_tokens_final=max_output_tokens_final,
             )
-
             db.add(log_entry)
+
             db.flush()  # Generate log_entry.id inside an isolated transaction scope.
 
             if user_input:

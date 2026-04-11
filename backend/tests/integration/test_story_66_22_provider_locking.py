@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,6 +10,7 @@ from app.llm_orchestration.models import (
     ExecutionContext,
     ExecutionUserInput,
     LLMExecutionRequest,
+    UseCaseConfig,
 )
 
 
@@ -40,7 +42,7 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case="any_case",
-            feature="other",
+            feature="chat",  # Nominal family (Story 66.25)
             plan="free",
             locale="fr-FR",
         ),
@@ -75,6 +77,48 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
     mock_config.fallback_use_case = None
     mock_config.safety_profile = "astrology"
 
+    mock_config = UseCaseConfig(
+        model="gpt-4",
+        developer_prompt="stub",
+        required_prompt_placeholders=[],
+        output_schema_id=None,
+        prompt_version_id="stub",
+        interaction_mode="chat",
+        user_question_policy="none",
+        temperature=0.7,
+        max_output_tokens=100,
+        reasoning_effort=None,
+        verbosity=None,
+        input_schema=None,
+        fallback_use_case=None,
+        safety_profile="astrology",
+    )
+
+    mock_assembly_db = MagicMock()
+    # Configure mock_assembly_db to have valid string values for UseCaseConfig
+    mock_assembly_db.id = uuid.uuid4()
+    mock_assembly_db.interaction_mode = "chat"
+    mock_assembly_db.user_question_policy = "none"
+    mock_assembly_db.output_schema_id = None
+
+    mock_resolved = MagicMock()
+    mock_resolved.feature_template_id = uuid.uuid4()
+    mock_resolved.subfeature_template_id = None
+    mock_resolved.template_source = "explicit_subfeature"
+    mock_resolved.execution_config.model = "gpt-4"
+    mock_resolved.execution_config.temperature = 0.7
+    mock_resolved.execution_config.max_output_tokens = 100
+    mock_resolved.execution_config.timeout_seconds = 30
+    mock_resolved.execution_config.reasoning_effort = None
+    mock_resolved.execution_config.verbosity = None
+    mock_resolved.execution_config.fallback_use_case = None
+    mock_resolved.persona_block = "Persona"
+    mock_resolved.persona_ref = None
+    mock_resolved.output_contract_ref = None
+
+    db_mock = MagicMock()
+    db_mock.execute().scalar_one_or_none.return_value = None
+
     with (
         patch(
             "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
@@ -82,14 +126,17 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
         ),
         patch(
             "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
-            return_value=None,
+            return_value=mock_assembly_db,
         ),
+        patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved),
+        patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="Prompt"),
         patch.object(gateway, "_resolve_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
+
         with pytest.raises(ValueError) as exc:
-            await gateway._resolve_plan(request, db=MagicMock())
+            await gateway._resolve_plan(request, db=db_mock)
 
         assert "Provider 'anthropic' is not nominally supported by the platform" in str(exc.value)
 
@@ -104,7 +151,7 @@ async def test_gateway_nominal_path_accepts_openai():
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case="any_case",
-            feature="other",
+            feature="chat",  # Nominal family (Story 66.25)
             plan="free",
             locale="fr-FR",
         ),
@@ -139,6 +186,48 @@ async def test_gateway_nominal_path_accepts_openai():
     mock_config.fallback_use_case = None
     mock_config.safety_profile = "astrology"
 
+    mock_config = UseCaseConfig(
+        model="gpt-4",
+        developer_prompt="stub",
+        required_prompt_placeholders=[],
+        output_schema_id=None,
+        prompt_version_id="stub",
+        interaction_mode="chat",
+        user_question_policy="none",
+        temperature=0.7,
+        max_output_tokens=100,
+        reasoning_effort=None,
+        verbosity=None,
+        input_schema=None,
+        fallback_use_case=None,
+        safety_profile="astrology",
+    )
+
+    mock_assembly_db = MagicMock()
+    # Configure mock_assembly_db to have valid string values for UseCaseConfig
+    mock_assembly_db.id = uuid.uuid4()
+    mock_assembly_db.interaction_mode = "chat"
+    mock_assembly_db.user_question_policy = "none"
+    mock_assembly_db.output_schema_id = None
+
+    mock_resolved = MagicMock()
+    mock_resolved.feature_template_id = uuid.uuid4()
+    mock_resolved.subfeature_template_id = None
+    mock_resolved.template_source = "explicit_subfeature"
+    mock_resolved.execution_config.model = "gpt-4"
+    mock_resolved.execution_config.temperature = 0.7
+    mock_resolved.execution_config.max_output_tokens = 100
+    mock_resolved.execution_config.timeout_seconds = 30
+    mock_resolved.execution_config.reasoning_effort = None
+    mock_resolved.execution_config.verbosity = None
+    mock_resolved.execution_config.fallback_use_case = None
+    mock_resolved.persona_block = "Persona"
+    mock_resolved.persona_ref = None
+    mock_resolved.output_contract_ref = None
+
+    db_mock = MagicMock()
+    db_mock.execute().scalar_one_or_none.return_value = None
+
     with (
         patch(
             "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
@@ -146,13 +235,16 @@ async def test_gateway_nominal_path_accepts_openai():
         ),
         patch(
             "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
-            return_value=None,
+            return_value=mock_assembly_db,
         ),
+        patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved),
+        patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="Prompt"),
         patch.object(gateway, "_resolve_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
-        plan, _ = await gateway._resolve_plan(request, db=MagicMock())
+
+        plan, _ = await gateway._resolve_plan(request, db=db_mock)
         assert plan.provider == "openai"
         assert plan.model_id == "gpt-4o"
 
@@ -211,8 +303,10 @@ async def test_gateway_non_nominal_accepts_fallback_and_logs():
         ),
         patch(
             "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
-            return_value=None,
+            return_value=MagicMock(), # Mock assembly
         ),
+        patch("app.llm_orchestration.gateway.resolve_assembly", return_value=MagicMock()),
+        patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="Prompt"),
         patch.object(gateway, "_resolve_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),

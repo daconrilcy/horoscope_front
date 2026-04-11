@@ -30,6 +30,61 @@ class FallbackType(str, Enum):
     DEPRECATED_FEATURE_ALIAS = "deprecated_feature_alias"
 
 
+class ExecutionPathKind(str, Enum):
+    """Discriminants structurels du chemin d'exécution LLM (Story 66.25)."""
+
+    CANONICAL_ASSEMBLY = "canonical_assembly"
+    LEGACY_USE_CASE_FALLBACK = "legacy_use_case_fallback"
+    LEGACY_EXECUTION_PROFILE_FALLBACK = "legacy_execution_profile_fallback"
+    REPAIR = "repair"
+    NON_NOMINAL_PROVIDER_TOLERATED = "non_nominal_provider_tolerated"
+    UNKNOWN = "unknown"
+
+
+class ContextCompensationStatus(str, Enum):
+    """Statut du traitement de la qualité du contexte (Story 66.25)."""
+
+    NOT_NEEDED = "not_needed"
+    TEMPLATE_HANDLED = "template_handled"
+    INJECTOR_APPLIED = "injector_applied"
+    UNKNOWN = "unknown"
+
+
+class MaxTokensSource(str, Enum):
+    """Source canonique d'arbitrage de max_output_tokens (Story 66.25)."""
+
+    LENGTH_BUDGET_GLOBAL = "length_budget_global"
+    EXECUTION_PROFILE = "execution_profile"
+    VERBOSITY_FALLBACK = "verbosity_fallback"
+    UNSET = "unset"
+
+
+class ExecutionObservabilitySnapshot(BaseModel):
+    """
+    Snapshot canonique d'observabilité produit à la source d'exécution (Story 66.25).
+    Regroupe les discriminants structurels pour les logs, métriques et dashboards.
+    """
+
+    pipeline_kind: Literal["nominal_canonical", "transitional_governance"]
+    execution_path_kind: ExecutionPathKind
+    fallback_kind: Optional[FallbackType] = None
+
+    # Provider triplet
+    requested_provider: str
+    resolved_provider: str
+    executed_provider: str
+
+    # Context treatment
+    context_quality: str
+    context_compensation_status: ContextCompensationStatus
+
+    # Tokens arbitrage
+    max_output_tokens_source: MaxTokensSource
+    max_output_tokens_final: int
+
+    model_config = ConfigDict(frozen=True)
+
+
 # Shared reasoning-model detection — single source of truth for gateway and provider.
 # L1 fix: "gpt-5-" prefix (with dash) avoids false match on hypothetical "gpt-50", "gpt-500".
 _REASONING_MODEL_PREFIXES = ("o1-", "o3-", "o4-", "gpt-5-")
@@ -235,6 +290,7 @@ class ResolvedExecutionPlan(BaseModel):
     verbosity_profile: Optional[str] = None
     output_mode: Optional[str] = None
     tool_mode: Optional[str] = None
+    requested_provider: str = "openai"
     provider: str = "openai"
     timeout_seconds: int = 30
     translated_provider_params: Dict[str, Any] = Field(default_factory=dict)
@@ -350,6 +406,9 @@ class GatewayMeta(BaseModel):
     provider: Optional[str] = None
     translated_provider_params: Dict[str, Any] = Field(default_factory=dict)
 
+    # Operational Observability (Story 66.25)
+    obs_snapshot: Optional[ExecutionObservabilitySnapshot] = None
+
 
 class GatewayResult(BaseModel):
     """Result from the LLM Gateway."""
@@ -459,6 +518,7 @@ ExecutionOverrides.model_rebuild()
 NatalExecutionInput.model_rebuild()
 LLMExecutionRequest.model_rebuild()
 ResponseFormatConfig.model_rebuild()
+ExecutionObservabilitySnapshot.model_rebuild()
 ResolvedExecutionPlan.model_rebuild()
 RecoveryResult.model_rebuild()
 UsageInfo.model_rebuild()

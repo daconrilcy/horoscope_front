@@ -18,9 +18,12 @@ from app.llm_orchestration.feature_taxonomy import (
     normalize_subfeature,
 )
 from app.llm_orchestration.models import (
+    ContextCompensationStatus,
     ExecutionContext,
     ExecutionFlags,
     ExecutionMessage,
+    ExecutionObservabilitySnapshot,
+    ExecutionPathKind,
     ExecutionUserInput,
     FallbackType,
     GatewayConfigError,
@@ -28,6 +31,7 @@ from app.llm_orchestration.models import (
     GatewayResult,
     InputValidationError,
     LLMExecutionRequest,
+    MaxTokensSource,
     OutputValidationError,
     RecoveryResult,
     ResolvedExecutionPlan,
@@ -962,11 +966,12 @@ class LLMGateway:
                     "gateway_execution_profile_resolution_failed use_case=%s error=%s", use_case, e
                 )
 
-        # 0.8 Final Model & Provider merge (Story 66.11 D4, D6, 66.18)
+        # 0.8 Final Model & Provider merge (Story 66.11 D4, D6, 66.18, 66.25)
         provider = "openai"
+        requested_provider = "openai"  # Default if no profile
         timeout_seconds = config.timeout_seconds
         max_output_tokens = config.max_output_tokens
-        max_output_tokens_source = "config"
+        max_output_tokens_source = "unset"
         translated_params = {}
         verbosity_instruction = ""
 
@@ -978,9 +983,10 @@ class LLMGateway:
             # Profile overrides config/assembly model
             model_id = profile_db.model
             provider = profile_db.provider
+            requested_provider = provider  # Initial resolved from profile
             timeout_seconds = profile_db.timeout_seconds
 
-            # Resolve max_output_tokens priority (Story 66.18 D4)
+            # Resolve max_output_tokens priority (Story 66.18 D4, 66.25 AC5)
             # 1. Length Budget (highest)
             if (
                 resolved_assembly
@@ -988,7 +994,7 @@ class LLMGateway:
                 and resolved_assembly.length_budget.global_max_tokens
             ):
                 max_output_tokens = resolved_assembly.length_budget.global_max_tokens
-                max_output_tokens_source = "length_budget"
+                max_output_tokens_source = "length_budget_global"
             # 2. Execution Profile
             elif profile_db.max_output_tokens:
                 max_output_tokens = profile_db.max_output_tokens
@@ -1002,7 +1008,7 @@ class LLMGateway:
                 )
                 if rec_tokens:
                     max_output_tokens = rec_tokens
-                    max_output_tokens_source = "verbosity_default"
+                    max_output_tokens_source = "verbosity_fallback"
 
             # Story 66.22 AC4/AC5: Enforce supported providers on nominal paths
             from app.llm_orchestration.supported_providers import is_provider_supported
@@ -1275,6 +1281,7 @@ class LLMGateway:
             verbosity_profile=profile_db.verbosity_profile if profile_db else None,
             output_mode=profile_db.output_mode if profile_db else None,
             tool_mode=profile_db.tool_mode if profile_db else None,
+            requested_provider=requested_provider,
             provider=provider,
             translated_provider_params=translated_params,
             timeout_seconds=timeout_seconds,
@@ -1590,6 +1597,83 @@ class LLMGateway:
         result.meta.tool_mode = plan.tool_mode
         result.meta.provider = plan.provider
         result.meta.translated_provider_params = plan.translated_provider_params
+
+        # --- Story 66.25: Operational Observability Snapshot ---
+
+        # 1. Pipeline Kind (Gouvernance)
+        CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
+        pipeline_kind = (
+            "nominal_canonical"
+            if plan.feature in CANONICAL_FAMILIES
+            else "transitional_governance"
+        )
+
+        # 2. Execution Path Kind (Réalité runtime)
+        path_kind = ExecutionPathKind.UNKNOWN
+        if recovery.repair_attempts > 0:
+            path_kind = ExecutionPathKind.REPAIR
+        elif recovery.fallback_reason:
+            path_kind = ExecutionPathKind.LEGACY_USE_CASE_FALLBACK
+        elif plan.model_source == "assembly":
+            path_kind = ExecutionPathKind.CANONICAL_ASSEMBLY
+        elif plan.execution_profile_source == "fallback_resolve_model":
+            path_kind = ExecutionPathKind.LEGACY_EXECUTION_PROFILE_FALLBACK
+
+        # Story 66.22 AC5: Tolerance of non-nominal provider
+        if (
+            plan.execution_profile_source == "fallback_resolve_model"
+            and plan.provider == "openai"
+            and plan.requested_provider != "openai"
+        ):
+            path_kind = ExecutionPathKind.NON_NOMINAL_PROVIDER_TOLERATED
+
+        # 3. Fallback Kind
+        fallback_kind = None
+        if recovery.fallback_reason:
+            fallback_kind = FallbackType.DEPRECATED_USE_CASE
+        elif plan.model_source == "stub":
+            fallback_kind = FallbackType.TEST_LOCAL
+        elif plan.execution_profile_source == "fallback_resolve_model":
+            fallback_kind = FallbackType.RESOLVE_MODEL
+
+        # 4. Context Compensation Status
+        comp_status = ContextCompensationStatus.UNKNOWN
+        if plan.context_quality == "unknown":
+            comp_status = ContextCompensationStatus.UNKNOWN
+        elif plan.context_quality == "nominal":
+            comp_status = ContextCompensationStatus.NOT_NEEDED
+        elif plan.context_quality_instruction_injected:
+            comp_status = ContextCompensationStatus.INJECTOR_APPLIED
+        else:
+            # If not injected but not nominal, maybe handled by template blocks
+            # renderer doesn't return this info yet, but we can infer it if blocks were used
+            prompt = plan.rendered_developer_prompt
+            if "{{#if_nominal}}" in prompt or "{{#if_low}}" in prompt:
+                 comp_status = ContextCompensationStatus.TEMPLATE_HANDLED
+            else:
+                 comp_status = ContextCompensationStatus.UNKNOWN
+
+        # 5. Tokens Arbitrage
+        tokens_source = MaxTokensSource.UNSET
+        if plan.max_output_tokens_source == "length_budget_global":
+            tokens_source = MaxTokensSource.LENGTH_BUDGET_GLOBAL
+        elif plan.max_output_tokens_source == "execution_profile":
+            tokens_source = MaxTokensSource.EXECUTION_PROFILE
+        elif plan.max_output_tokens_source == "verbosity_fallback":
+            tokens_source = MaxTokensSource.VERBOSITY_FALLBACK
+
+        result.meta.obs_snapshot = ExecutionObservabilitySnapshot(
+            pipeline_kind=pipeline_kind,
+            execution_path_kind=path_kind,
+            fallback_kind=fallback_kind,
+            requested_provider=plan.requested_provider,
+            resolved_provider=plan.provider,
+            executed_provider=plan.provider,  # Same as resolved in current Stage 3
+            context_quality=plan.context_quality,
+            context_compensation_status=comp_status,
+            max_output_tokens_source=tokens_source,
+            max_output_tokens_final=plan.max_output_tokens,
+        )
 
         return result
 

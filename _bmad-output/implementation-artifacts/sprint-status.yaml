@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-10T23:00:00+02:00'
+last_updated: '2026-04-11T00:00:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -610,3 +610,4 @@ development_status:
   66-22-verrouillage-des-providers-supportes-entre-admin-runtime: done
   66-23-normalisation-canonique-identifiants-feature-natal: done
   66-24-extension-matrice-evaluation-chemins-non-converges: done
+  66-25-renforcement-observabilite-operationnelle-pipeline-canonique-compatibilites: ready-for-dev
