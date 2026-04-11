@@ -18,9 +18,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     with op.batch_alter_table('llm_call_logs', schema=None) as batch_op:
-        # provider might already exist in some environments or not
-        # To be safe, we check if we need to add it or if it was missed in previous migrations
-        # But here we just follow autogenerate for the new fields
+        # Story 66.25: New observability fields
+        batch_op.add_column(sa.Column('provider', sa.String(length=32), nullable=True))
         batch_op.add_column(sa.Column('pipeline_kind', sa.String(length=32), nullable=True))
         batch_op.add_column(sa.Column('execution_path_kind', sa.String(length=40), nullable=True))
         batch_op.add_column(sa.Column('fallback_kind', sa.String(length=40), nullable=True))
@@ -43,3 +42,4 @@ def downgrade() -> None:
         batch_op.drop_column('fallback_kind')
         batch_op.drop_column('execution_path_kind')
         batch_op.drop_column('pipeline_kind')
+        batch_op.drop_column('provider')
