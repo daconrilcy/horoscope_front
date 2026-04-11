@@ -166,6 +166,11 @@ class PromptRegistryV2:
         """
         Rollback to a specific historical version or the most recent archived version.
         """
+        # Story 66.28: Block resurrection of forbidden nominal features (AC5)
+        from app.llm_orchestration.feature_taxonomy import assert_nominal_feature_allowed
+
+        assert_nominal_feature_allowed(use_case_key)
+
         current_published = PromptRegistryV2.get_active_prompt(db, use_case_key)
 
         if target_version_id is not None:

@@ -984,6 +984,16 @@ async def publish_prompt(
             },
         }
     except ValueError as err:
+        from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
+
+        if not is_nominal_feature_allowed(key):
+            return _error_response(
+                status_code=403,
+                request_id=request_id,
+                code="forbidden_feature",
+                message=str(err),
+                details={},
+            )
         return _error_response(
             status_code=404,
             request_id=request_id,
@@ -1032,6 +1042,16 @@ def rollback_prompt(
             "meta": {"request_id": request_id},
         }
     except ValueError as err:
+        from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
+
+        if not is_nominal_feature_allowed(key):
+            return _error_response(
+                status_code=403,
+                request_id=request_id,
+                code="forbidden_feature",
+                message=str(err),
+                details={},
+            )
         return _error_response(
             status_code=422,
             request_id=request_id,
