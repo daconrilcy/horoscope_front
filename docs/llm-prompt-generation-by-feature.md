@@ -46,7 +46,7 @@ Le pipeline cible exécuté aujourd'hui est :
 4. `_resolve_plan()` tente une résolution assembly si `feature/subfeature/plan` est présent ;
 5. les familles supportées `chat`, `guidance`, `natal`, `horoscope_daily` échouent explicitement si aucune assembly canonique active n'est trouvée ; le fallback `use_case-first` est éteint sur ce périmètre ;
 6. le gateway reconstruit ensuite une config dérivée du plan résolu et valide l'`input_schema` canonique en Stage 1.5 ;
-7. le gateway résout ensuite le `ExecutionProfile` depuis l'assembly ou par waterfall ;
+7. le gateway résout ensuite le `ExecutionProfile` depuis l'assembly ou par waterfall. Sur le périmètre supporté (`chat`, `guidance`, `natal`, `horoscope_daily`), tout échec de résolution (profil manquant, provider non supporté, mapping impossible) lève une `GatewayConfigError` ; le fallback historique `resolve_model()` est strictement interdit.
 8. le prompt est transformé dans cet ordre : assembly déjà concaténée, injection `context_quality`, injection de verbosité, rendu des placeholders ;
 9. l'appel provider passe aujourd'hui nominalement uniquement par `openai` ;
 10. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy uniquement hors périmètre supporté ;
@@ -223,11 +223,13 @@ flowchart TD
 
     V --> W{"Profile trouvé ?"}
     W -->|Oui| X["provider/model/reasoning/verbosity/output/tool"]
-    W -->|Non| Y["resolve_model() fallback<br/>hors périmètre supporté"]
+    W -->|Non| Y{"Feature supportée ?"}
+    Y -->|Oui| L
+    Y -->|Non| Z["resolve_model() fallback<br/>hors périmètre supporté"]
 
-    X --> Z["Verrou provider + max_output_tokens"]
-    Y --> Z
-    Z --> AA["Résoudre persona + schema"]
+    X --> AA["Verrou provider + max_output_tokens"]
+    Z --> AA
+    AA --> AB["Résoudre persona + schema"]
     AA --> AB["Injecter context_quality"]
     AB --> AC["Injecter verbosité"]
     AC --> AD["PromptRenderer.render()"]

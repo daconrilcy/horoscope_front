@@ -864,7 +864,8 @@ class LLMGateway:
                             interaction_mode=assembly_db.interaction_mode,
                             user_question_policy=assembly_db.user_question_policy,
                             output_schema_id=resolved_assembly.output_contract_ref,
-                            input_schema=assembly_db.input_schema,  # Story 66.29: Carry input schema (Issue 2)
+                            # Story 66.29: Carry input schema (Issue 2)
+                            input_schema=assembly_db.input_schema,
                             reasoning_effort=resolved_assembly.execution_config.reasoning_effort,
                             verbosity=resolved_assembly.execution_config.verbosity,
                             fallback_use_case=resolved_assembly.execution_config.fallback_use_case,
@@ -972,6 +973,12 @@ class LLMGateway:
         translated_params = {}
         verbosity_instruction = ""
 
+        is_nominal = (
+            is_supported_feature(request.user_input.feature)
+            if request.user_input.feature
+            else False
+        ) and not request.flags.test_fallback_active
+
         if profile_db:
             from app.llm_orchestration.services.provider_parameter_mapper import (
                 ProviderParameterMapper,
@@ -1010,12 +1017,6 @@ class LLMGateway:
             # Story 66.22 AC4/AC5: Enforce supported providers on nominal paths
             from app.llm_orchestration.supported_providers import is_provider_supported
 
-            is_nominal = (
-                request.user_input.feature in {"chat", "guidance", "natal", "horoscope_daily"}
-                and not is_legacy_compatibility
-                and not request.flags.test_fallback_active
-            )
-
             if not is_provider_supported(provider):
                 if is_nominal:
                     # AC4: Explicit failure on nominal path
@@ -1031,8 +1032,9 @@ class LLMGateway:
                         use_case,
                         request.user_input.feature,
                     )
-                    raise ValueError(
-                        f"Provider '{provider}' is not nominally supported by the platform."
+                    raise GatewayConfigError(
+                        f"Provider '{provider}' is not nominally supported by the platform.",
+                        error_code="unsupported_execution_provider",
                     )
                 else:
                     # AC5: Fallback on non-nominal/test paths
@@ -1068,15 +1070,34 @@ class LLMGateway:
                     output_mode=profile_db.output_mode,
                     tool_mode=profile_db.tool_mode,
                 )
-            except NotImplementedError as e:
-                # High #1 & #2: Fallback if provider/params mapping not implemented
+            except Exception as e:
+                # AC4: Explicit failure on nominal path if mapping fails
+                if is_nominal:
+                    log_governance_event(
+                        event_type="runtime_rejected",
+                        provider=provider,
+                        feature=request.user_input.feature,
+                        is_nominal=True,
+                    )
+                    logger.error(
+                        "gateway_nominal_provider_mapping_failed provider=%s feature=%s error=%s",
+                        provider,
+                        request.user_input.feature,
+                        e,
+                    )
+                    raise GatewayConfigError(
+                        f"Provider mapping failed for '{provider}' on supported path: {e}",
+                        error_code="provider_mapping_failed",
+                    )
+
+                # High #1 & #2: Fallback if provider/params mapping fails (Legacy)
                 FallbackGovernanceRegistry.track_fallback(
                     FallbackType.PROVIDER_OPENAI,
                     call_site=f"provider_fallback:{provider}",
                     feature=request.user_input.feature,
                 )
                 logger.warning(
-                    "gateway_provider_mapping_not_implemented provider=%s error=%s. "
+                    "gateway_provider_mapping_failed provider=%s error=%s. "
                     "Falling back to resolve_model/openai.",
                     provider,
                     e,
@@ -1103,6 +1124,22 @@ class LLMGateway:
                 max_output_tokens_source,
             )
         else:
+            # Story 66.30 AC3: Explicit failure if missing profile on supported path
+            if (
+                is_supported_feature(request.user_input.feature)
+                and not request.flags.test_fallback_active
+            ):
+                log_governance_event(
+                    event_type="runtime_rejected",
+                    feature=request.user_input.feature,
+                    is_nominal=True,
+                )
+                raise GatewayConfigError(
+                    f"No ExecutionProfile found for supported feature "
+                    f"'{request.user_input.feature}'.",
+                    error_code="missing_execution_profile",
+                )
+
             # Legacy/Fallback resolution
             model_id = resolve_model(use_case, fallback_model=config.model)
             profile_source = "fallback_resolve_model"
@@ -1111,6 +1148,7 @@ class LLMGateway:
                 FallbackType.RESOLVE_MODEL,
                 call_site=f"resolve_model:{use_case}",
                 feature=request.user_input.feature,
+                is_nominal=is_nominal,
             )
 
             # Story 66.18 AC6: Compatibility for raw ExecutionConfigAdmin

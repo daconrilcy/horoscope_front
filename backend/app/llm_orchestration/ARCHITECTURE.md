@@ -36,7 +36,10 @@ La transformation du prompt suit un ordre séquentiel strict. Les étapes 2 et 3
 
 1. **Qualification du contexte** (`CommonContextBuilder`)
 2. **Résolution de l'Assembly** (Sélection des IDs et activation des flags)
-3. **Résolution du Profil d'Exécution** (Choix du moteur et paramètres techniques)
+3. **Résolution du Profil d'Exécution** (Choix du moteur et paramètres techniques) :
+   - Pour les familles supportées (`chat`, `guidance`, `natal`, `horoscope_daily`) en **production nominale**, la résolution d'un `ExecutionProfile` est **obligatoire**.
+   - Tout échec de résolution (profil manquant, provider non supporté, mapping impossible) doit lever une `GatewayConfigError`.
+   - Le fallback historique `resolve_model()` est strictement interdit sur ce périmètre nominal. Il reste toléré pour les familles hors support ou en mode test local.
 4. **Assemblage et Mutations du Prompt Developer** (Opérées par le Gateway) :
    - a. Injection des instructions de compensation `context_quality` (via `ContextQualityInjector`)
    - b. Injection des instructions de verbosité (via `verbosity_profile`)

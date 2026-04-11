@@ -35,9 +35,10 @@ class FallbackGovernanceRegistry:
             "extinction_criteria": "Migration 100% des features vers assembly.",
         },
         FallbackType.RESOLVE_MODEL: {
-            "status": FallbackStatus.TRANSITORY,
+            "status": FallbackStatus.TO_REMOVE,
             "justification": "Filet de sécurité si ExecutionProfile est manquant.",
             "perimeter": "Chemins sans ExecutionProfile explicite.",
+            "forbidden_families": SUPPORTED_FAMILIES,
             "extinction_criteria": "Généralisation des ExecutionProfile sur tous les parcours.",
         },
         FallbackType.EXECUTION_CONFIG_ADMIN: {
@@ -49,6 +50,7 @@ class FallbackGovernanceRegistry:
             "status": FallbackStatus.TOLERATED,
             "justification": "Limitation runtime assumée (OpenAI-only).",
             "perimeter": "Runtime actuel.",
+            "forbidden_families": SUPPORTED_FAMILIES,  # Story 66.30 AC4
             "extinction_criteria": "Activation multi-provider réelle.",
         },
         FallbackType.NARRATOR_LEGACY: {

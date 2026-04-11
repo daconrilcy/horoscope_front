@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-11T14:25:00+02:00'
+last_updated: '2026-04-12T00:00:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -615,3 +615,4 @@ development_status:
   66-27-propagation-complete-context-quality-handled-by-template-observabilite: ready-for-dev
   66-28-fermeture-canonique-daily-prediction-ou-suppression-statut-transitoire: done
   66-29-extinction-definitive-fallback-use-case-first-tous-chemins-supportes: done
+  66-30-suppression-fallback-resolve-model-source-finale-verite-execution: done

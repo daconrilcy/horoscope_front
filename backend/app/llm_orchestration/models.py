@@ -472,9 +472,15 @@ class EvalReport(BaseModel):
 class GatewayError(Exception):
     """Base error for LLM Gateway."""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        message: str,
+        details: Optional[Dict[str, Any]] = None,
+        error_code: Optional[str] = None,
+    ):
         self.message = message
         self.details = details or {}
+        self.error_code = error_code
         super().__init__(self.message)
 
 
