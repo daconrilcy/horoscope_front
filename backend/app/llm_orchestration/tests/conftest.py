@@ -13,6 +13,10 @@ TestingSessionLocal = sessionmaker(bind=engine)
 
 @pytest.fixture
 def db():
+    from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+
+    # Invalidate cache before and after to ensure clean state
+    AssemblyRegistry(None).invalidate_cache()
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
     # Ensure v2 is enabled for these tests
@@ -22,3 +26,4 @@ def db():
         yield session
     session.close()
     Base.metadata.drop_all(bind=engine)
+    AssemblyRegistry(None).invalidate_cache()

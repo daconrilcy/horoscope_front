@@ -42,11 +42,6 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             "display_name": "Horoscope Quotidien Canonique",
             "description": "Narration de l'horoscope quotidien (free/premium).",
         },
-        {
-            "key": "daily_prediction",
-            "display_name": "Prédictions Quotidiennes Canoniques",
-            "description": "Narration détaillée des prédictions du jour.",
-        },
     ]
 
     for uc_data in use_cases:
@@ -83,7 +78,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
         "Pas de markdown."
     )
 
-    for uc_key in ["horoscope_daily", "daily_prediction"]:
+    for uc_key in ["horoscope_daily"]:
         stmt_pv = select(LlmPromptVersionModel).where(
             LlmPromptVersionModel.use_case_key == uc_key,
             LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
@@ -96,7 +91,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                 developer_prompt=system_prompt_fr,
                 model="gpt-4o",
                 temperature=0.7,
-                max_output_tokens=3000 if uc_key == "horoscope_daily" else 1600,
+                max_output_tokens=3000,
                 created_by="system",
                 published_at=db.execute(select(func.now())).scalar(),
             )
@@ -110,11 +105,6 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             "name": "Horoscope Narration Standard",
             "feature": "horoscope_daily",
             "max_output_tokens": 3000,
-        },
-        {
-            "name": "Daily Prediction Narration Standard",
-            "feature": "daily_prediction",
-            "max_output_tokens": 1600,
         },
     ]
 
@@ -147,6 +137,10 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
     stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled)
     persona = db.execute(stmt_persona).scalars().first()
 
+    if not persona:
+        logger.error("seed_narrator: No active persona found. Cannot seed assemblies.")
+        return
+
     assemblies = [
         {
             "feature": "horoscope_daily",
@@ -159,12 +153,6 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             "subfeature": "narration",
             "plan": "premium",
             "max_tokens": 3000,
-        },
-        {
-            "feature": "daily_prediction",
-            "subfeature": "narration",
-            "plan": None,
-            "max_tokens": 1600,
         },
     ]
 

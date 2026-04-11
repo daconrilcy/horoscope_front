@@ -33,7 +33,10 @@ async def test_resolve_plan_source_config(db):
 async def test_resolve_plan_source_os_granular(db):
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_long_free"), request_id="r", trace_id="t"
+        user_input=ExecutionUserInput(use_case="natal_long_free"),
+        context={"chart_json": "{}"},
+        request_id="r",
+        trace_id="t",
     )
 
     with patch.dict(os.environ, {"OPENAI_ENGINE_NATAL_LONG_FREE": "gpt-override"}):
@@ -87,6 +90,7 @@ async def test_resolve_plan_overrides(db):
     gateway = LLMGateway()
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="natal_long_free"),
+        context={"chart_json": "{}"},
         overrides=ExecutionOverrides(interaction_mode="chat"),
         request_id="r",
         trace_id="t",
@@ -103,7 +107,7 @@ async def test_resolve_plan_repair_short_circuit(db):
     request = LLMGateway._legacy_dicts_to_request(
         use_case="natal_long_free",
         user_input={},
-        context={},
+        context={"chart_json": "{}"},
         request_id="r",
         trace_id="t",
         is_repair_call=True,

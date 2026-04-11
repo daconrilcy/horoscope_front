@@ -111,12 +111,12 @@ async def test_generate_horoscope_narration_routing_premium(db):
 
 @pytest.mark.asyncio
 async def test_generate_horoscope_narration_routing_default(db):
-    """Test AC4: variant_code=None -> daily_prediction."""
+    """Test AC4: variant_code=None -> horoscope_daily/free (Story 66.28 closure)."""
     with patch(
         "app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock
     ) as mock_exec:
         mock_exec.return_value = GatewayResult(
-            use_case="daily_prediction",
+            use_case="horoscope_daily",
             request_id="req-4",
             trace_id="tr-4",
             raw_output="{}",
@@ -144,8 +144,8 @@ async def test_generate_horoscope_narration_routing_default(db):
 
         args, kwargs = mock_exec.call_args
         request = kwargs["request"]
-        assert request.user_input.feature == "daily_prediction"
-        assert request.user_input.plan is None
+        assert request.user_input.feature == "horoscope_daily"
+        assert request.user_input.plan == "free"
 
 
 @pytest.mark.asyncio

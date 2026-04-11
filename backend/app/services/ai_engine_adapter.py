@@ -869,13 +869,24 @@ class AIEngineAdapter:
         try:
             gateway = LLMGateway()
 
-            # 1. Routage canonique (D1)
+            # 1. Routage canonique (D1) - Story 66.28 Absorption de daily_prediction
+            feature = "horoscope_daily"
+            subfeature = "narration"
             if variant_code == "summary_only":
-                feature, subfeature, plan = "horoscope_daily", "narration", "free"
+                plan = "free"
             elif variant_code == "full":
-                feature, subfeature, plan = "horoscope_daily", "narration", "premium"
+                plan = "premium"
+            elif variant_code is None:
+                # Anciennement daily_prediction / plan=None
+                # Story 66.28 AC3 : plan explicite cohérent avec normalisation gateway
+                plan = "free"
+                logger.info(
+                    "ai_engine_adapter_legacy_daily_prediction_route_used request_id=%s",
+                    request_id,
+                )
             else:
-                feature, subfeature, plan = "daily_prediction", "narration", None
+                # AC de Story 66.28 : Ne pas laisser de chemin non validé
+                raise ValueError(f"Invalid variant_code for daily narration: {variant_code}")
 
             # 2. Validation métier de longueur (D4)
             min_sentences = 7 if plan == "free" else 10
@@ -960,11 +971,7 @@ class AIEngineAdapter:
             from app.llm_orchestration.models import GatewayError
 
             if isinstance(err, GatewayError):
-                if variant_code == "summary_only" or variant_code == "full":
-                    uc_to_report = "horoscope_daily"
-                else:
-                    uc_to_report = "daily_prediction"
-                _handle_gateway_error(err, request_id, uc_to_report)
+                _handle_gateway_error(err, request_id, "horoscope_daily")
 
             logger.error(
                 "ai_engine_adapter_narration_failed request_id=%s error=%s",

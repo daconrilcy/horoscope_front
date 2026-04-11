@@ -117,6 +117,7 @@ flowchart TD
 | `66.24` | matrice daily | `pipeline_kind` distingue nominal et transitoire |
 | `66.25` | observabilité | snapshot canonique unique dans `obs_snapshot` |
 | `66.26` | gouvernance documentaire | doc et template PR deviennent obligatoires |
+| `66.27` | propagation `context_quality` | `context_quality_handled_by_template` est figé dans le plan puis relayé jusqu'au snapshot et à la persistance |
 
 ## Familles et points d'entrée réels
 
@@ -125,8 +126,7 @@ flowchart TD
 | `chat` | `AIEngineAdapter.generate_chat_reply()` | `feature="chat"`, `subfeature="astrologer"` | `nominal_canonical` |
 | `guidance` | `AIEngineAdapter.generate_guidance()` | `feature="guidance"`, `subfeature` dérivée du `use_case` | `nominal_canonical` |
 | `natal` | `AIEngineAdapter.generate_natal_interpretation()` | `feature="natal"`, `subfeature` issue du `use_case_key` puis normalisée | `nominal_canonical` |
-| `horoscope_daily` | `AIEngineAdapter.generate_horoscope_narration()` avec `variant_code in {"summary_only","full"}` | `feature="horoscope_daily"`, `subfeature="narration"` | `nominal_canonical` |
-| `daily_prediction` | `AIEngineAdapter.generate_horoscope_narration()` sinon | `feature="daily_prediction"`, `subfeature="narration"`, `plan=None` puis normalisé en `free` | `transitional_governance` |
+| `horoscope_daily` | `AIEngineAdapter.generate_horoscope_narration()` | `feature="horoscope_daily"`, `subfeature="narration"` | `nominal_canonical` |
 | `support` | aucune orchestration LLM dédiée identifiée dans ce pipeline | aucune | ne pas documenter comme famille LLM active |
 
 ### Diagramme de routage par famille
@@ -142,15 +142,12 @@ flowchart LR
     C --> G["feature=chat<br/>subfeature=astrologer"]
     D --> H["feature=guidance<br/>subfeature=daily|weekly|contextual|event"]
     E --> I["feature=natal<br/>subfeature canonique"]
-    F --> J{"variant_code"}
-    J -->|summary_only/full| K["feature=horoscope_daily<br/>subfeature=narration"]
-    J -->|autre| L["feature=daily_prediction<br/>subfeature=narration"]
+    F --> K["feature=horoscope_daily<br/>subfeature=narration"]
 
     G --> M["LLMGateway.execute_request()"]
     H --> M
     I --> M
     K --> M
-    L --> M
 ```
 
 ## Ordre exact de résolution dans le gateway
@@ -276,9 +273,9 @@ Normalisation runtime actuellement codée dans `_normalize_plan_for_assembly()` 
 
 Conséquence importante :
 
-- `daily_prediction` arrive souvent avec `plan=None` côté adapter ;
-- le gateway le normalise quand même en `free` pour la résolution assembly/execution profile ;
-- cela n'en fait pas pour autant une famille nominale fermée.
+- `horoscope_daily` (nommé ainsi depuis Story 66.19) absorbe désormais systématiquement les anciennes `daily_prediction`.
+- Le gateway normalise le `plan` en `free` s'il est absent.
+- La famille est désormais considérée comme nominale fermée.
 
 ## Taxonomie canonique natal
 
@@ -326,7 +323,15 @@ Le runtime essaye d'éviter la double compensation :
 
 ### Observabilité et Propagation
 
-Le code calcule et propage `context_quality_handled_by_template` dans `_resolve_plan()`. Ce booléen est figé dans le `ResolvedExecutionPlan` et sert de source de vérité pour l'observabilité. En conséquence, le runtime expose fidèlement l'état `template_handled` dans `obs_snapshot.context_compensation_status` lorsqu'un template gère explicitement le niveau de qualité dégradé.
+Depuis 66.27, `ContextQualityInjector.inject()` ne se contente plus de signaler si une compensation a été injectée ; il remonte aussi si le niveau de qualité dégradé est déjà pris en charge par le prompt/template courant.
+
+Le code calcule et propage donc `context_quality_handled_by_template` dans `_resolve_plan()`. Ce booléen est figé dans le `ResolvedExecutionPlan` et sert de source de vérité pour l'observabilité.
+
+Conséquences runtime observées :
+
+- `template_handled` est publié dans `obs_snapshot.context_compensation_status` quand le template courant gère explicitement `partial` ou `minimal` ;
+- `injector_applied` est publié uniquement lorsqu'une consigne de compensation a réellement été ajoutée ;
+- la persistance `llm_call_logs.context_compensation_status` relaie la valeur du snapshot canonique, sans recalcul concurrent dans la couche d'observabilité.
 
 ## Profils d'exécution
 
@@ -443,12 +448,19 @@ Champs observés :
 | `context_compensation_status` | compensation de contexte observée |
 | `max_output_tokens_source` | source finale de l'arbitrage de sortie |
 
+Pour l'axe `context_compensation_status`, la lecture correcte est désormais :
+
+- `not_needed` : `context_quality=full` ;
+- `template_handled` : le prompt courant gère déjà explicitement le niveau dégradé ;
+- `injector_applied` : une consigne additionnelle a été injectée ;
+- `unknown` : l'information n'est pas déterminable sur le chemin considéré.
+
 ### Taxonomies actuellement exposées
 
 #### `pipeline_kind`
 
 - `nominal_canonical` pour `chat`, `guidance`, `natal`, `horoscope_daily`
-- `transitional_governance` pour le reste, notamment `daily_prediction`
+- `transitional_governance` pour le reste (ex: use cases legacy non encore migrés)
 
 #### `execution_path_kind`
 
@@ -566,6 +578,6 @@ Toute mention de vérification ci-dessous atteste d'une **revue manuelle effecti
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-11`
-- **Référence stable (Commit SHA)** : `68c93e778cef664f8f2eeb800344deb98150c2fe`
+- **Référence stable (Commit SHA)** : `7b622be8`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.

@@ -47,13 +47,24 @@ NatalSubfeature = Literal[
 ]
 
 
+# Story 66.28: Forbidden nominal feature identifier (historical drift).
+# This key was previously used for the daily domain before absorption.
+LEGACY_DAILY_FEATURE = "daily_prediction"
+
+
 def normalize_feature(feature: str) -> str:
     """
     Normalize a feature identifier to its canonical form (AC1, AC4).
     If it's the legacy natal feature, it returns 'natal'.
+    Story 66.28: daily_prediction is now an alias for horoscope_daily.
     """
+    if not feature:
+        return feature
+    feature = feature.strip()
     if feature == LEGACY_NATAL_FEATURE:
         return NATAL_CANONICAL_FEATURE
+    if feature == LEGACY_DAILY_FEATURE:
+        return "horoscope_daily"
     return feature
 
 
@@ -69,9 +80,12 @@ def normalize_subfeature(feature: str, subfeature: str | None) -> str | None:
 def is_nominal_feature_allowed(feature: str) -> bool:
     """
     Check if a feature identifier is allowed for nominal use (AC2, AC5).
-    'natal_interpretation' is strictly forbidden as a nominal feature.
+    'natal_interpretation' and 'daily_prediction' are strictly forbidden as nominal features.
     """
-    return feature != LEGACY_NATAL_FEATURE
+    if not feature:
+        return True
+    feature = feature.strip()
+    return feature not in {LEGACY_NATAL_FEATURE, LEGACY_DAILY_FEATURE}
 
 
 def assert_nominal_feature_allowed(feature: str) -> None:
@@ -79,11 +93,12 @@ def assert_nominal_feature_allowed(feature: str) -> None:
     Raise ValueError if the feature is not allowed for nominal use (AC5).
     """
     if not is_nominal_feature_allowed(feature):
-        raise ValueError(
-            f"Feature identifier '{feature}' is forbidden for nominal use. "
-            f"Use feature='{NATAL_CANONICAL_FEATURE}' instead."
-        )
-
+        msg = f"Feature identifier '{feature}' is forbidden for nominal use."
+        if feature == LEGACY_NATAL_FEATURE:
+            msg += f" Use feature='{NATAL_CANONICAL_FEATURE}' instead."
+        elif feature == LEGACY_DAILY_FEATURE:
+            msg += " Use feature='horoscope_daily' instead."
+        raise ValueError(msg)
 
 def is_natal_subfeature_canonical(subfeature: str) -> bool:
     """Check if a subfeature is part of the canonical natal taxonomy."""

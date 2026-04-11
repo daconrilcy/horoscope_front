@@ -111,6 +111,7 @@ def test_build_result_fallback_path():
     plan = ResolvedExecutionPlan(
         model_id="m",
         model_source="stub",
+        rendered_developer_prompt="...",
         provider="openai",
         system_core="...",
         interaction_mode="chat",

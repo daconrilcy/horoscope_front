@@ -747,6 +747,8 @@ class LLMGateway:
             request.user_input.subfeature = normalize_subfeature(
                 request.user_input.feature, request.user_input.subfeature
             )
+            # Story 66.28: Normalize plan early (AC3)
+            request.user_input.plan = self._normalize_plan_for_assembly(request.user_input.plan)
 
         use_case = request.user_input.use_case
         user_id = request.user_id
@@ -1728,15 +1730,13 @@ class LLMGateway:
                         subfeature=request.user_input.subfeature,
                         is_nominal=False,
                     )
+                    # Use LEGACY_DAILY_FEATURE for more precise tracking if needed
                     FallbackGovernanceRegistry.track_fallback(
                         FallbackType.DEPRECATED_FEATURE_ALIAS,
                         call_site=f"normalize_feature:{old_f}",
                         feature=request.user_input.feature,
                         is_nominal=False,
                     )
-
-            # Story 66.20: Early normalization of plan for all stages (AC2, AC3)
-            request.user_input.plan = self._normalize_plan_for_assembly(request.user_input.plan)
 
             if use_case in visited and not is_repair_call:
                 raise GatewayError(

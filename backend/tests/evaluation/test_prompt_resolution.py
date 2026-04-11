@@ -141,6 +141,7 @@ async def test_prompt_resolution_matrix(
             user_input=ExecutionUserInput(
                 use_case=uc_key, feature=feat, subfeature=subfeat, plan=plan, locale="fr-FR"
             ),
+            user_id=1,
             request_id="eval-req",
             trace_id="eval-trace",
         )

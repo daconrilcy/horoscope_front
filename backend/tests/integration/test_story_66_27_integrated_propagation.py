@@ -1,17 +1,19 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from sqlalchemy import select
-from unittest.mock import AsyncMock, patch
+
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
     ContextCompensationStatus,
     ExecutionContext,
     ExecutionUserInput,
-    LLMExecutionRequest,
-    GatewayResult,
-    UsageInfo,
     GatewayMeta,
+    GatewayResult,
+    LLMExecutionRequest,
+    UsageInfo,
 )
-from app.prompts.common_context import QualifiedContext, PromptCommonContext
+from app.prompts.common_context import PromptCommonContext, QualifiedContext
 
 
 @pytest.mark.asyncio
@@ -55,7 +57,9 @@ async def test_integrated_template_handled_propagation(db):
 
     mock_config = UseCaseConfig(
         model="gpt-4o",
-        developer_prompt="Base prompt. {{#context_quality:partial}}Partial handling here.{{/context_quality}}",
+        developer_prompt=(
+            "Base prompt. {{#context_quality:partial}}Partial handling here.{{/context_quality}}"
+        ),
         required_prompt_placeholders=[],
     )
 
@@ -97,6 +101,7 @@ async def test_integrated_template_handled_propagation(db):
                 stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == "test-66-27")
                 log_entry = db.execute(stmt).scalar_one()
                 assert log_entry.context_compensation_status == "template_handled"
+
 
 @pytest.mark.asyncio
 async def test_integrated_injector_applied_propagation(db):
@@ -241,6 +246,8 @@ async def test_integrated_not_needed_propagation(db):
                 # 2. Validate real DB persistence
                 from app.infra.db.models.llm_observability import LlmCallLogModel
 
-                stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == "test-66-27-full")
+                stmt = select(LlmCallLogModel).where(
+                    LlmCallLogModel.request_id == "test-66-27-full"
+                )
                 log_entry = db.execute(stmt).scalar_one()
                 assert log_entry.context_compensation_status == "not_needed"
