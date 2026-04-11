@@ -242,9 +242,11 @@ def _ensure_llm_registry_seeded() -> None:
         from app.llm_orchestration.seeds.seed_horoscope_narrator_assembly import (
             seed_horoscope_narrator_assembly,
         )
+        from app.llm_orchestration.seeds.seed_66_20_taxonomy import seed_66_20_taxonomy
 
         with SessionLocal() as db:
             seed_horoscope_narrator_assembly(db)
+            seed_66_20_taxonomy(db)
     except IntegrityError:
         logger.debug("llm_registry_auto_heal_concurrent_skip")
     except Exception as e:
