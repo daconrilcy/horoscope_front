@@ -1482,36 +1482,54 @@ class LLMGateway:
             except Exception as e:
                 logger.warning("gateway_repair_failed use_case=%s error=%s", use_case, str(e))
 
-        context_dict = request.context.model_dump()
-        extra = context_dict.pop("extra_context", {})
-        context_dict.update(extra)
-        config = await self._resolve_config(db, use_case, context_dict)
+        # Stage 5.2: Legacy Fallback (ONLY for non-supported features)
+        if not validation_result.valid:
+            # Story 66.29: Ensure supported features NEVER fall back to a legacy use_case.
+            if is_supported_feature(request.user_input.feature):
+                if is_repair_call and use_case.startswith("natal"):
+                    increment_counter(
+                        "natal_repair_fail_total",
+                        labels={"use_case": use_case, "schema_version": plan.output_schema_version},
+                    )
+                raise OutputValidationError(
+                    f"Output validation failed for supported "
+                    f"feature '{request.user_input.feature}'. "
+                    "Legacy use_case fallback is strictly forbidden.",
+                    details={"errors": validation_result.errors},
+                )
 
-        if not validation_result.valid and config.fallback_use_case:
-            logger.warning(
-                "gateway_step:fallback_invoked use_case=%s fallback=%s",
-                use_case,
-                config.fallback_use_case,
-            )
-            increment_counter(
-                "llm_fallback_invoked_total",
-                labels={"use_case": use_case, "schema_version": plan.output_schema_version},
-            )
-            fallback_request = request.model_copy(deep=True)
-            fallback_request.user_input.use_case = config.fallback_use_case
-            fallback_request.flags.visited_use_cases = request.flags.visited_use_cases + [use_case]
-            fallback_request.request_id = f"{request.request_id}-fallback"
+            context_dict = request.context.model_dump()
+            extra = context_dict.pop("extra_context", {})
+            context_dict.update(extra)
+            config = await self._resolve_config(db, use_case, context_dict)
 
-            fallback_result = await self.execute_request(fallback_request, db=db)
-            return RecoveryResult(
-                result=fallback_result,
-                repair_attempts=0,
-                fallback_reason=(
-                    str(validation_result.errors[0])
-                    if validation_result.errors
-                    else "validation_failed"
-                ),
-            )
+            if config.fallback_use_case:
+                logger.warning(
+                    "gateway_step:fallback_invoked use_case=%s fallback=%s",
+                    use_case,
+                    config.fallback_use_case,
+                )
+                increment_counter(
+                    "llm_fallback_invoked_total",
+                    labels={"use_case": use_case, "schema_version": plan.output_schema_version},
+                )
+                fallback_request = request.model_copy(deep=True)
+                fallback_request.user_input.use_case = config.fallback_use_case
+                fallback_request.flags.visited_use_cases = request.flags.visited_use_cases + [
+                    use_case
+                ]
+                fallback_request.request_id = f"{request.request_id}-fallback"
+
+                fallback_result = await self.execute_request(fallback_request, db=db)
+                return RecoveryResult(
+                    result=fallback_result,
+                    repair_attempts=0,
+                    fallback_reason=(
+                        str(validation_result.errors[0])
+                        if validation_result.errors
+                        else "validation_failed"
+                    ),
+                )
 
         if not validation_result.valid:
             if is_repair_call and use_case.startswith("natal"):
@@ -1773,32 +1791,32 @@ class LLMGateway:
             context_dict.update(extra)
 
             # Stage 0.5: Fast Validate Input (Story 66.4 AC8)
-            # We need config before the full Stage 1 (which includes prompt rendering)
-            # to fail fast if the user input is invalid.
-            # We must use context_dict here to ensure correct resolution (e.g. overrides)
-            config = await self._resolve_config(db, use_case, context_dict)
-            self._validate_input(config, user_input_dict)
+            # Story 66.29: For supported features, skip use_case-based pre-validation.
+            # They MUST be validated after assembly resolution in Stage 1.5.
+            if not is_supported_feature(request.user_input.feature):
+                config = await self._resolve_config(db, use_case, context_dict)
+                self._validate_input(config, user_input_dict)
+            else:
+                config = None
 
             # Stage 1: Resolve Plan (Now includes QualifiedContext)
             try:
                 plan, qualified_ctx = await self._resolve_plan(
                     request, db, config_override=None, context_override=context_dict
                 )
-                # If assembly was used, config is within plan. We need to sync back to 'config'
-                # variable for Stage 1.5 validation if it depends on the exact model resolved.
-                if plan.model_source == "assembly":
-                    # Re-map config from plan for validation
-                    config = UseCaseConfig(
-                        model=plan.model_id,
-                        temperature=plan.temperature,
-                        max_output_tokens=plan.max_output_tokens,
-                        developer_prompt=plan.rendered_developer_prompt,
-                        output_schema_id=plan.output_schema_id,
-                        input_schema=plan.input_schema,
-                        interaction_mode=plan.interaction_mode,
-                        user_question_policy=plan.user_question_policy,
-                        required_prompt_placeholders=plan.required_prompt_placeholders,
-                    )
+                # Story 66.29: Sync config for Stage 1.5 validation (Mandatory for ALL paths now)
+                # Re-map config from plan for validation
+                config = UseCaseConfig(
+                    model=plan.model_id,
+                    temperature=plan.temperature,
+                    max_output_tokens=plan.max_output_tokens,
+                    developer_prompt=plan.rendered_developer_prompt,
+                    output_schema_id=plan.output_schema_id,
+                    input_schema=plan.input_schema,
+                    interaction_mode=plan.interaction_mode,
+                    user_question_policy=plan.user_question_policy,
+                    required_prompt_placeholders=plan.required_prompt_placeholders,
+                )
             except Exception as e:
                 logger.error("gateway_step_failed:resolve_plan use_case=%s error=%s", use_case, e)
                 raise

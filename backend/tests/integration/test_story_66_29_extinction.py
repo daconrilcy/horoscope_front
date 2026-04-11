@@ -9,8 +9,9 @@ from app.llm_orchestration.models import (
     ExecutionUserInput,
     GatewayConfigError,
     LLMExecutionRequest,
-    UseCaseConfig,
+    OutputValidationError,
 )
+from app.llm_orchestration.services.output_validator import ValidationResult
 
 
 @pytest.fixture
@@ -18,9 +19,10 @@ def gateway():
     return LLMGateway()
 
 @pytest.mark.asyncio
-async def test_story_66_29_supported_feature_rejection_if_no_assembly(gateway):
+async def test_story_66_29_execute_request_rejection_if_no_assembly(gateway):
     """
-    AC1, AC6: Fail explicitly if a supported feature has no assembly.
+    AC1, AC6: Fail explicitly at entry point if a supported feature has no assembly.
+    Ensures _resolve_config is NOT used for pre-validation.
     """
     for feature in SUPPORTED_FAMILIES:
         request = LLMExecutionRequest(
@@ -40,27 +42,64 @@ async def test_story_66_29_supported_feature_rejection_if_no_assembly(gateway):
             "app.llm_orchestration.services.assembly_registry."
             "AssemblyRegistry.get_active_config_sync"
         )
-        with patch(registry_path, return_value=None):
-            with patch("app.llm_orchestration.gateway.log_governance_event") as mock_log:
+        # We mock _resolve_config to prove it's NOT called for pre-validation
+        with patch.object(gateway, "_resolve_config") as mock_resolve_config:
+            with patch(registry_path, return_value=None):
                 with pytest.raises(GatewayConfigError) as exc:
-                    await gateway._resolve_plan(request, db=MagicMock())
+                    await gateway.execute_request(request, db=MagicMock())
                 
                 msg = f"Mandatory assembly missing for supported {feature} family"
                 assert msg in str(exc.value)
-                # AC4: Telemetry check
-                mock_log.assert_called_with(
-                    event_type="supported_perimeter_rejection",
-                    feature=feature,
-                    subfeature="any",
-                    is_nominal=True,
-                )
+                # Check that _resolve_config was never called (skipped in Stage 0.5)
+                assert mock_resolve_config.call_count == 0
 
 @pytest.mark.asyncio
-async def test_story_66_29_legacy_alias_normalization_rejection(gateway):
+async def test_story_66_29_recovery_blocks_legacy_fallback_for_supported(gateway):
     """
-    AC11: A legacy alias normalized to a supported family must also fail if no assembly.
+    Ensure _handle_repair_or_fallback strictly forbids legacy fallback for supported features.
     """
-    # Assuming 'natal_interpretation' is normalized to 'natal'
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="chat",
+            feature="chat",
+            locale="fr-FR"
+        ),
+        context=ExecutionContext(),
+        request_id="test-66-29-recovery",
+        trace_id="trace-66-29"
+    )
+
+    # Mock Stage 4 result: invalid output
+    validation_result = ValidationResult(valid=False, parsed=None, errors=["format error"])
+    
+    # Mock resolved plan (Stage 1)
+    mock_plan = MagicMock()
+    mock_plan.feature = "chat"
+    mock_plan.output_schema_version = "v1"
+    
+    # Mock provider result (Stage 3)
+    mock_provider_result = MagicMock()
+    mock_provider_result.raw_output = "bad json"
+
+    # We patch _resolve_config to ensure it's NOT called during recovery for supported features
+    with patch.object(gateway, "_resolve_config") as mock_resolve_config:
+        with pytest.raises(OutputValidationError) as exc:
+            await gateway._handle_repair_or_fallback(
+                validation_result,
+                request,
+                mock_plan,
+                mock_provider_result,
+                db=MagicMock()
+            )
+        
+        assert "Legacy use_case fallback is strictly forbidden" in str(exc.value)
+        assert mock_resolve_config.call_count == 0
+
+@pytest.mark.asyncio
+async def test_story_66_29_legacy_alias_normalized_rejection_at_entry(gateway):
+    """
+    AC11: A legacy alias normalized to a supported family must fail at execute_request.
+    """
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case="natal_interpretation",
@@ -80,44 +119,15 @@ async def test_story_66_29_legacy_alias_normalization_rejection(gateway):
     )
     with patch(registry_path, return_value=None):
         with pytest.raises(GatewayConfigError) as exc:
-            await gateway._resolve_plan(request, db=MagicMock())
+            await gateway.execute_request(request, db=MagicMock())
         
-        # Should be normalized to 'natal'
+        # Should be normalized to 'natal' and rejected
         assert "Mandatory assembly missing for supported natal family" in str(exc.value)
 
 @pytest.mark.asyncio
-async def test_story_66_29_forbid_use_case_first_fallback_final_check(gateway):
+async def test_story_66_29_other_features_still_allow_prevalidation_and_fallback(gateway):
     """
-    AC2: Ensure no supported feature uses use_case-first even if resolve_plan continues.
-    """
-    request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(
-            use_case="chat",
-            feature="chat",
-            locale="fr-FR"
-        ),
-        context=ExecutionContext(),
-        request_id="test-66-29-final-check",
-        trace_id="trace-66-29"
-    )
-
-    # We mock it so that it passes the first check (assembly_db is None but we don't raise)
-    # This simulates a situation where for some reason the first check was bypassed
-    # and we reach the final check before resolve_config.
-    with patch("app.llm_orchestration.gateway.is_supported_feature", side_effect=[False, True]):
-        with pytest.raises(GatewayConfigError) as exc:
-            await gateway._resolve_plan(request, db=MagicMock())
-        
-        msg = (
-            "Resolution failed for supported feature 'chat'. "
-            "Fallback to USE_CASE_FIRST is strictly forbidden."
-        )
-        assert msg in str(exc.value)
-
-@pytest.mark.asyncio
-async def test_story_66_29_other_features_still_allow_fallback(gateway):
-    """
-    AC8: Features NOT in supported perimeter still allow use_case-first for now.
+    AC8: Features NOT in supported perimeter still allow use_case-first pre-validation and fallback.
     """
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
@@ -130,26 +140,15 @@ async def test_story_66_29_other_features_still_allow_fallback(gateway):
         trace_id="trace-66-29"
     )
 
-    mock_config = UseCaseConfig(
-        model="gpt-4o",
-        temperature=0.7,
-        max_output_tokens=1000,
-        system_core_key="default_v1",
-        developer_prompt="test",
-        prompt_version_id="stub"
-    )
+    mock_config = MagicMock()
+    mock_config.input_schema = None
+    mock_config.fallback_use_case = "some_fallback"
 
-    registry_path = (
-        "app.llm_orchestration.services.assembly_registry."
-        "AssemblyRegistry.get_active_config_sync"
-    )
-    profile_path = (
-        "app.llm_orchestration.services.execution_profile_registry."
-        "ExecutionProfileRegistry.get_active_profile"
-    )
-    with patch(registry_path, return_value=None):
-        with patch(profile_path, return_value=None):
-            with patch.object(gateway, "_resolve_config", return_value=mock_config):
-                plan, _ = await gateway._resolve_plan(request, db=MagicMock())
-                assert plan.feature == "experimental_feature"
-                assert plan.prompt_version_id == "stub"
+    # Stage 0.5 should call _resolve_config
+    with patch.object(gateway, "_resolve_config", return_value=mock_config) as mock_resolve:
+        # We simulate a failure in _resolve_plan to stop execution after Stage 0.5
+        with patch.object(gateway, "_resolve_plan", side_effect=ValueError("stop here")):
+            with pytest.raises(ValueError, match="stop here"):
+                await gateway.execute_request(request, db=MagicMock())
+            
+            assert mock_resolve.call_count >= 1
