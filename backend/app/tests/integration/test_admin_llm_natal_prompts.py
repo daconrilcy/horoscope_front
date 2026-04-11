@@ -50,7 +50,7 @@ class TestAdminLlmNatalPrompts:
     """Tests pour la gestion des prompts nataux."""
 
     def test_create_prompt_draft_valid(self, test_client, mock_db):
-        key = "natal_interpretation"
+        key = "natal"
         uc_mock = LlmUseCaseConfigModel(
             key=key,
             display_name="Natal",
@@ -86,7 +86,7 @@ class TestAdminLlmNatalPrompts:
         assert response.json()["data"]["status"] == "draft"
 
     def test_create_prompt_draft_invalid_lint(self, test_client, mock_db):
-        key = "natal_interpretation"
+        key = "natal"
         uc_mock = LlmUseCaseConfigModel(
             key=key,
             display_name="Natal",
