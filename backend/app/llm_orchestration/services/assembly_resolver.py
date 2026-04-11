@@ -271,6 +271,7 @@ def resolve_assembly(
         plan_rules_content=plan_rules_content,
         execution_config=execution_config,
         output_contract_ref=config.output_contract_ref,
+        input_schema=config.input_schema,
         length_budget=length_budget,
         context_quality=context_quality,
         policy_layer_content=policy_layer_content,

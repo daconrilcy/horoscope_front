@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +72,10 @@ def seed_66_20_taxonomy(db: Session) -> None:
             logger.warning(f"seed_66_20_taxonomy: template {t_key} not found for {f}/{sf}")
             continue
 
+        # A.2 Find Use Case Config for extra metadata (Story 66.29)
+        stmt_ucc = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == t_key)
+        ucc = db.execute(stmt_ucc).scalar_one_or_none()
+
         # B. Upsert Assembly
         stmt_exists = select(PromptAssemblyConfigModel).where(
             PromptAssemblyConfigModel.feature == f,
@@ -91,6 +99,10 @@ def seed_66_20_taxonomy(db: Session) -> None:
                     "max_output_tokens": template.max_output_tokens or 2000,
                     "timeout_seconds": 60,
                 },
+                output_contract_ref=ucc.output_schema_id if ucc else None,
+                input_schema=ucc.input_schema if ucc else None,
+                interaction_mode=ucc.interaction_mode if ucc else "structured",
+                user_question_policy=ucc.user_question_policy if ucc else "none",
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
             )
@@ -98,6 +110,11 @@ def seed_66_20_taxonomy(db: Session) -> None:
             logger.info(f"seed_66_20_taxonomy: created assembly {f}/{sf}/{p}")
         else:
             existing.feature_template_ref = template.id
+            if ucc:
+                existing.output_contract_ref = ucc.output_schema_id
+                existing.input_schema = ucc.input_schema
+                existing.interaction_mode = ucc.interaction_mode
+                existing.user_question_policy = ucc.user_question_policy
             existing.status = PromptStatus.PUBLISHED
             logger.info(f"seed_66_20_taxonomy: updated assembly {f}/{sf}/{p}")
 

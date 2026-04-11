@@ -234,6 +234,7 @@ class PromptAssemblyConfig(BaseModel):
 
     execution_config: ExecutionConfigAdmin
     output_contract_ref: Optional[str] = None
+    input_schema: Optional[Dict[str, Any]] = None
     length_budget: Optional[LengthBudget] = None
 
     interaction_mode: str = "structured"
@@ -278,6 +279,7 @@ class ResolvedAssembly(BaseModel):
 
     execution_config: ExecutionConfigAdmin
     output_contract_ref: Optional[str] = None
+    input_schema: Optional[Dict[str, Any]] = None
     length_budget: Optional[LengthBudget] = None
     context_quality: str = "full"
     context_quality_instruction_injected: bool = False

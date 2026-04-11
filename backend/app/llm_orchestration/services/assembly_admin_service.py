@@ -98,6 +98,10 @@ class AssemblyAdminService:
             plan_rules_ref=config_in.plan_rules_ref,
             execution_config=config_in.execution_config.model_dump(),
             output_contract_ref=config_in.output_contract_ref,
+            input_schema=config_in.input_schema,
+            length_budget=(
+                config_in.length_budget.model_dump() if config_in.length_budget else None
+            ),
             interaction_mode=config_in.interaction_mode,
             user_question_policy=config_in.user_question_policy,
             fallback_use_case=config_in.fallback_use_case,
