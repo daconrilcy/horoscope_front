@@ -43,14 +43,14 @@ Le pipeline cible exécuté aujourd'hui est :
 1. les services métier construisent un `LLMExecutionRequest` canonique ;
 2. le gateway normalise tôt `feature`, `subfeature` et `plan` ;
 3. le gateway tente une résolution assembly si `feature/subfeature/plan` est présent ;
-4. les familles nominales `chat`, `guidance`, `natal`, `horoscope_daily` échouent si aucune assembly active n'est trouvée ;
+4. les familles supportées `chat`, `guidance`, `natal`, `horoscope_daily` échouent explicitement si aucune assembly canonique active n'est trouvée (le fallback `use_case-first` est éteint sur ce périmètre) ;
 5. le gateway résout ensuite le `ExecutionProfile` depuis l'assembly ou par waterfall ;
 6. le prompt est transformé dans cet ordre : assembly déjà concaténée, injection `context_quality`, injection de verbosité, rendu des placeholders ;
 7. l'appel provider passe aujourd'hui nominalement uniquement par `openai` ;
-8. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy ;
+8. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy (uniquement hors périmètre supporté) ;
 9. le résultat final publie un snapshot d'observabilité canonique.
 
-Le `use_case` existe encore, mais il n'est plus la source canonique de variation sur les familles convergées. Il sert surtout de clé de compatibilité, de routage legacy, de sélection de schéma et de fallback résiduel.
+Le `use_case` existe encore, mais il n'est plus la source canonique de variation sur les familles convergées. Il sert surtout de clé de compatibilité, de routage legacy, de sélection de schéma et de fallback résiduel pour les features hors périmètre supporté.
 
 ## Vue d'ensemble
 
@@ -64,21 +64,23 @@ flowchart TD
 
     F --> G{"Assembly active ?"}
     G -->|Oui| H["resolve_assembly() + assemble_developer_prompt()"]
-    G -->|Non| I["resolve_config() / use_case-first"]
+    G -->|Non| I{"Feature supportée ?"}
+    I -->|Oui| J["Échec explicite (AC6)"]
+    I -->|Non| K["resolve_config() / use_case-first"]
 
-    H --> J["ExecutionProfileRegistry"]
-    I --> J
+    H --> L["ExecutionProfileRegistry"]
+    K --> L
 
-    J --> K["Arbitrage provider / model / max_output_tokens"]
-    K --> L["Transformations texte<br/>context_quality -> verbosity -> render"]
-    L --> M["ResolvedExecutionPlan"]
-    M --> N["_build_messages()"]
-    N --> O["_call_provider()"]
-    O --> P["validate_output()"]
-    P --> Q{"Sortie valide ?"}
-    Q -->|Oui| R["_build_result() + obs_snapshot"]
-    Q -->|Non| S["_handle_repair_or_fallback()"]
-    S --> R
+    L --> M["Arbitrage provider / model / max_output_tokens"]
+    M --> N["Transformations texte<br/>context_quality -> verbosity -> render"]
+    N --> O["ResolvedExecutionPlan"]
+    O --> P["_build_messages()"]
+    P --> Q["_call_provider()"]
+    Q --> R["validate_output()"]
+    R --> S{"Sortie valide ?"}
+    S -->|Oui| T["_build_result() + obs_snapshot"]
+    S -->|Non| U["_handle_repair_or_fallback()"]
+    U --> T
 ```
 
 ## Source de vérité par couche
@@ -119,6 +121,7 @@ flowchart TD
 | `66.26` | gouvernance documentaire | doc et template PR deviennent obligatoires |
 | `66.27` | propagation `context_quality` | `context_quality_handled_by_template` est figé dans le plan puis relayé jusqu'au snapshot et à la persistance |
 | `66.28` | fermeture canonique daily | `daily_prediction` est absorbé dans `horoscope_daily`, les reliquats d'évaluation sont supprimés et les publications admin legacy sont bloquées |
+| `66.29` | extinction fallback | fermeture définitive du fallback `use_case-first` sur le périmètre supporté (`chat`, `guidance`, `natal`, `horoscope_daily`) |
 
 ## Familles et points d'entrée réels
 
@@ -197,16 +200,18 @@ flowchart TD
 
     I --> K{"Assembly trouvée ?"}
     K -->|Oui| L["resolve_assembly()"]
-    K -->|Non| M{"Famille nominale fermée ?"}
-    M -->|Oui| N["GatewayConfigError"]
+    K -->|Non| M{"Feature supportée ?"}
+    M -->|Oui| N["GatewayConfigError (AC6)"]
     M -->|Non| O["_resolve_config()"]
 
-    J --> O
-    L --> P["UseCaseConfig dérivée de l'assembly"]
-    O --> Q["UseCaseConfig legacy/config/stub"]
+    J --> PP{"Feature supportée ?"}
+    PP -->|Oui| N
+    PP -->|Non| O
+    L --> Q["UseCaseConfig dérivée de l'assembly"]
+    O --> R["UseCaseConfig legacy/config/stub"]
 
-    P --> R["ExecutionProfileRegistry"]
-    Q --> R
+    Q --> S["ExecutionProfileRegistry"]
+    R --> S
 
     R --> S{"Profile trouvé ?"}
     S -->|Oui| T["provider/model/reasoning/verbosity/output/tool"]

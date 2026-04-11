@@ -52,6 +52,21 @@ NatalSubfeature = Literal[
 LEGACY_DAILY_FEATURE = "daily_prediction"
 
 
+# Story 66.29: Centralized rule for supported families.
+# Any feature in this set MUST use canonical assembly resolution and execution.
+SUPPORTED_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
+
+
+def is_supported_feature(feature: str | None) -> bool:
+    """
+    Checks if a feature belongs to the supported perimeter where
+    canonical assembly is mandatory. (Story 66.29 AC6)
+    """
+    if not feature:
+        return False
+    return normalize_feature(feature) in SUPPORTED_FAMILIES
+
+
 def normalize_feature(feature: str) -> str:
     """
     Normalize a feature identifier to its canonical form (AC1, AC4).

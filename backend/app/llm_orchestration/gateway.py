@@ -14,6 +14,7 @@ from app.infra.observability.metrics import increment_counter
 from app.llm_orchestration.admin_models import ResolvedAssembly
 from app.llm_orchestration.feature_taxonomy import (
     assert_nominal_feature_allowed,
+    is_supported_feature,
     normalize_feature,
     normalize_subfeature,
 )
@@ -840,17 +841,22 @@ class LLMGateway:
                             locale=request.user_input.locale,
                         )
 
-                    # Story 66.20: Enforce mandatory assembly for nominal families
-                    CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
-                    if (
-                        not assembly_db
-                        and not is_legacy_compatibility
-                        and request.user_input.feature in CANONICAL_FAMILIES
-                    ):
+                    # Story 66.29: Enforce mandatory assembly for ALL supported features. (AC1, AC6)
+                    # Legacy aliases no longer bypass this rule for supported families.
+                    if not assembly_db and is_supported_feature(request.user_input.feature):
                         msg = (
-                            f"Mandatory assembly missing for nominal {request.user_input.feature} "
-                            f"family. Taxonomy: {request.user_input.feature}/"
-                            f"{request.user_input.subfeature}/{request.user_input.plan}"
+                            f"Mandatory assembly missing for supported "
+                            f"{request.user_input.feature} family. Taxonomy: "
+                            f"{request.user_input.feature}/"
+                            f"{request.user_input.subfeature}/{request.user_input.plan}. "
+                            "Direct use_case-first resolution is strictly forbidden."
+                        )
+                        # Story 66.29 AC4: Dedicated telemetry for rejection
+                        log_governance_event(
+                            event_type="supported_perimeter_rejection",
+                            feature=request.user_input.feature,
+                            subfeature=request.user_input.subfeature,
+                            is_nominal=True,
                         )
                         raise GatewayConfigError(msg)
                     if assembly_db:
@@ -905,6 +911,13 @@ class LLMGateway:
                     )
 
             if not config:
+                # Story 66.29: Ensure no supported feature uses use_case-first (AC1, AC2)
+                if is_supported_feature(request.user_input.feature):
+                    raise GatewayConfigError(
+                        f"Resolution failed for supported feature '{request.user_input.feature}'. "
+                        "Fallback to USE_CASE_FIRST is strictly forbidden."
+                    )
+
                 if db:
                     try:
                         config = await self._resolve_config(db, use_case, context_dict)

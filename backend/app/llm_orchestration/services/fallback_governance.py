@@ -3,6 +3,7 @@ import re
 from typing import Any, Dict, Optional, Set
 
 from app.infra.observability.metrics import increment_counter
+from app.llm_orchestration.feature_taxonomy import SUPPORTED_FAMILIES
 from app.llm_orchestration.models import FallbackStatus, FallbackType
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class FallbackGovernanceRegistry:
         FallbackType.USE_CASE_FIRST: {
             "status": FallbackStatus.TO_REMOVE,  # Par défaut, restreint
             "justification": "Éteindre la concurrence avec le pipeline canonique.",
-            "forbidden_families": {"chat", "guidance", "natal", "horoscope_daily"},
+            "forbidden_families": SUPPORTED_FAMILIES,
             "extinction_criteria": "Migration 100% des features vers assembly.",
         },
         FallbackType.RESOLVE_MODEL: {

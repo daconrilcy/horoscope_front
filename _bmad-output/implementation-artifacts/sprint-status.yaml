@@ -614,3 +614,4 @@ development_status:
   66-26-durcissement-discipline-maintenance-documentaire-pipeline-llm: done
   66-27-propagation-complete-context-quality-handled-by-template-observabilite: ready-for-dev
   66-28-fermeture-canonique-daily-prediction-ou-suppression-statut-transitoire: done
+  66-29-extinction-definitive-fallback-use-case-first-tous-chemins-supportes: done
