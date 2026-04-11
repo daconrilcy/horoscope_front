@@ -103,7 +103,7 @@ flowchart TD
 | Garde-fous | `FallbackGovernanceRegistry`, `supported_providers.py` | blocage des fallbacks et des providers interdits | composition métier du prompt |
 | Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante | persistance admin |
 
-## Stories 66.9 à 66.26
+## Stories 66.9 à 66.29
 
 | Story | Apport canonique | Impact runtime observable |
 |---|---|---|
@@ -357,7 +357,7 @@ Le profil d'exécution est résolu dans cet ordre :
 2. waterfall `feature + subfeature + plan` ;
 3. waterfall `feature + subfeature` ;
 4. waterfall `feature` ;
-5. fallback `resolve_model()`.
+5. fallback `resolve_model()` uniquement hors périmètre supporté.
 
 Les abstractions internes stables exposées sont :
 
@@ -493,6 +493,15 @@ Important :
 
 - un chemin supporté rejeté faute d'assembly canonique obligatoire n'émet pas de `GatewayResult` de succès avec `legacy_use_case_fallback` ;
 - ce scénario est visible via l'erreur explicite et la télémétrie de rejet (`supported_perimeter_rejection`), pas via un faux chemin nominal.
+
+### Rejets canoniques
+
+Lorsqu'un chemin supporté échoue faute d'assembly canonique obligatoire :
+
+- le runtime lève une erreur explicite de configuration au lieu de produire un `GatewayResult` nominal ;
+- le scénario n'est donc pas encodé comme `execution_path_kind` de succès ;
+- la lecture ops passe par la télémétrie de rejet dédiée, en particulier l'événement `supported_perimeter_rejection` et les logs structurés associés ;
+- l'absence volontaire de `execution_path_kind` dédié évite de confondre un rejet canonique avec un chemin d'exécution réellement complété.
 
 #### `fallback_kind`
 
