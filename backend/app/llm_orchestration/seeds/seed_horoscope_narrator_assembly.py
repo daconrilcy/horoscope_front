@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
@@ -23,23 +23,34 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
     """Seeds canonical assembly for horoscope_daily and cleans up legacy daily_prediction."""
 
     # 0. Cleanup Legacy daily_prediction (Story 66.28 Absorption)
-    # We remove these to ensure only horoscope_daily is used.
-    # Order: Assembly -> Version -> Profile -> UseCase
+    # AC: suppression définitive de son statut transitoire.
+    # We use update(status=ARCHIVED) instead of DELETE to avoid breaking historical FKs in llm_call_logs.
     legacy_key = "daily_prediction"
 
+    # 1. Assemblies
     db.execute(
-        delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.feature == legacy_key)
+        update(PromptAssemblyConfigModel)
+        .where(PromptAssemblyConfigModel.feature == legacy_key)
+        .values(status=PromptStatus.ARCHIVED)
     )
+    # 2. Prompt Versions
     db.execute(
-        delete(LlmPromptVersionModel).where(LlmPromptVersionModel.use_case_key == legacy_key)
+        update(LlmPromptVersionModel)
+        .where(LlmPromptVersionModel.use_case_key == legacy_key)
+        .values(status=PromptStatus.ARCHIVED)
     )
+    # 3. Execution Profiles
     db.execute(
-        delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.feature == legacy_key)
+        update(LlmExecutionProfileModel)
+        .where(LlmExecutionProfileModel.feature == legacy_key)
+        .values(status=PromptStatus.ARCHIVED)
     )
-    db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == legacy_key))
+    # 4. Use Case Configs
+    # Note: UseCaseConfigModel doesn't have a status, but archiving its versions and assemblies
+    # effectively disables it for the gateway.
 
     db.flush()
-    logger.info("seed_narrator: cleaned up legacy %s artifacts", legacy_key)
+    logger.info("seed_narrator: archived legacy %s artifacts", legacy_key)
 
     # 1. Output Schema
     stmt_schema = select(LlmOutputSchemaModel).where(
@@ -140,7 +151,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                 provider="openai",
                 model="gpt-4o",
                 reasoning_profile="off",
-                verbosity_profile="detailed",
+                verbosity_profile="balanced",
                 output_mode="structured_json",
                 max_output_tokens=prof_data["max_output_tokens"],
                 status=PromptStatus.PUBLISHED,

@@ -52,11 +52,26 @@ async def test_daily_path_is_nominal_canonical(db: Session):
 
     # Mock the actual provider call to avoid OpenAI usage
     with patch.object(gateway, "_call_provider", new_callable=AsyncMock) as mock_call:
+        valid_payload = {
+            "daily_synthesis": "P1. P2. P3. P4. P5. P6. P7. P8. P9. P10.",
+            "astro_events_intro": "intro",
+            "time_window_narratives": {
+                "nuit": "...",
+                "matin": "...",
+                "apres_midi": "...",
+                "soiree": "...",
+            },
+            "turning_point_narratives": ["tp1"],
+            "main_turning_point_narrative": "mtp",
+            "daily_advice": {"advice": "a", "emphasis": "e"},
+        }
+        import json
+
         mock_call.return_value = GatewayResult(
             use_case="daily_prediction",
             request_id="req-66-28",
             trace_id="tr-66-28",
-            raw_output='{"daily_synthesis": "..."}',
+            raw_output=json.dumps(valid_payload),
             structured_output={},
             usage=UsageInfo(),
             meta=GatewayMeta(latency_ms=0, model="test"),
