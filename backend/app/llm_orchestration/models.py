@@ -479,8 +479,10 @@ class GatewayError(Exception):
         error_code: Optional[str] = None,
     ):
         self.message = message
-        self.details = details or {}
         self.error_code = error_code
+        self.details = details or {}
+        if self.error_code and "error_code" not in self.details:
+            self.details["error_code"] = self.error_code
         super().__init__(self.message)
 
 

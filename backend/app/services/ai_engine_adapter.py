@@ -334,8 +334,11 @@ def _handle_gateway_error(
             details=err.details,
         ) from err
     if isinstance(err, GatewayConfigError):
+        code = "gateway_config_error"
+        if err.error_code:
+            code = err.error_code
         raise AIEngineAdapterError(
-            code="gateway_config_error",
+            code=code,
             message=str(err),
             status_code=500,
             details=err.details,

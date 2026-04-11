@@ -429,5 +429,5 @@ class ResolvedExecutionProfile(BaseModel):
     tool_mode: ToolMode
     max_output_tokens: Optional[int] = None
     timeout_seconds: int = 30
-    source: Literal["explicit", "waterfall", "assembly_ref", "fallback_resolve_model"]
+    source: Literal["explicit", "waterfall", "assembly_ref"]
     translated_provider_params: Dict[str, Any] = Field(default_factory=dict)

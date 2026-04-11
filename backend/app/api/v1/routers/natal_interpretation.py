@@ -224,7 +224,10 @@ async def interpret_natal_chart(
     except GatewayConfigError as e:
         db.rollback()
         logger.error(f"Gateway configuration error: {e}")
-        return _create_error_response(500, "gateway_config_error", str(e), request_id)
+        code = "gateway_config_error"
+        if e.error_code:
+            code = e.error_code
+        return _create_error_response(500, code, str(e), request_id)
     except InputValidationError as e:
         db.rollback()
         # Note: Local catch here to ensure 422 response for natal interpretation,

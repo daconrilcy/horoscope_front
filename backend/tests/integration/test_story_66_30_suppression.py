@@ -63,6 +63,62 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
                                 await gateway._resolve_plan(request, db=MagicMock())
                             
                             assert excinfo.value.error_code == "missing_execution_profile"
+                            assert excinfo.value.details["error_code"] == "missing_execution_profile"
+
+@pytest.mark.asyncio
+async def test_story_66_30_legacy_alias_normalization_on_supported_perimeter(gateway):
+    """
+    Story 66.30: A legacy alias (e.g. 'daily_prediction' -> 'horoscope_daily')
+    on supported perimeter MUST also fail if no profile found.
+    """
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="daily_prediction", # Legacy alias
+        ),
+        context=ExecutionContext(),
+        request_id="test-66-30-legacy-alias",
+        trace_id="trace-66-30",
+    )
+
+    # Mock assembly
+    mock_assembly_db = MagicMock()
+    mock_assembly_db.id = uuid.uuid4()
+    mock_assembly_db.interaction_mode = "structured"
+    mock_assembly_db.user_question_policy = "none"
+    mock_assembly_db.input_schema = None
+
+    mock_resolved_assembly = MagicMock()
+    mock_resolved_assembly.execution_config.model = "gpt-4o"
+    mock_resolved_assembly.execution_config.temperature = 0.7
+    mock_resolved_assembly.execution_config.max_output_tokens = 1000
+    mock_resolved_assembly.execution_config.timeout_seconds = 30
+    mock_resolved_assembly.execution_config.fallback_use_case = None
+    mock_resolved_assembly.execution_config.reasoning_effort = "medium"
+    mock_resolved_assembly.execution_config.verbosity = "normal"
+    mock_resolved_assembly.output_contract_ref = None
+    mock_resolved_assembly.persona_block = "test persona"
+    mock_resolved_assembly.persona_ref = None
+    mock_resolved_assembly.length_budget = None
+    mock_resolved_assembly.template_source = "test-source"
+    
+    with patch("app.llm_orchestration.gateway.normalize_feature", return_value="horoscope_daily"):
+        with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=True):
+            with patch("app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync", return_value=mock_assembly_db):
+                with patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved_assembly):
+                    with patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="test prompt"):
+                        # CRITICAL: Ensure profile resolution returns None
+                        with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id", return_value=None):
+                            with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile", return_value=None):
+                                
+                                # We call execute_request because normalization happens there
+                                with pytest.raises(GatewayConfigError, match="No ExecutionProfile found") as excinfo:
+                                    await gateway.execute_request(request, db=MagicMock())
+                                
+                                assert excinfo.value.error_code == "missing_execution_profile"
+                                assert excinfo.value.details["error_code"] == "missing_execution_profile"
+
+
+
 
 @pytest.mark.asyncio
 async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):

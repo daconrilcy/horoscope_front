@@ -98,9 +98,10 @@ def log_governance_event(
     feature: str | None = None,
     subfeature: str | None = None,
     is_nominal: bool = True,
+    reason: str | None = None,
 ) -> None:
     """
-    Emits unified governance metrics (AC6, Story 66.23 AC10).
+    Emits unified governance metrics (AC6, Story 66.23 AC10, 66.30 AC8).
     event_type: publish_rejected | runtime_rejected | non_nominal_tolerated
                 | legacy_feature_alias_used
     """
@@ -108,18 +109,19 @@ def log_governance_event(
         "event_type": event_type,
         "provider": provider or "unknown",
         "feature": feature or "unknown",
-        "subfeature": subfeature or "none",
+        "subfeature": subfeature or "unknown",
         "is_nominal": str(is_nominal).lower(),
-        "environment": settings.app_env,
+        "reason": reason or "unknown",
     }
     increment_counter("llm_governance_event_total", labels=labels)
     logger.info(
-        "llm_governance_event type=%s provider=%s feature=%s subfeature=%s is_nominal=%s",
+        "llm_governance_event type=%s provider=%s feature=%s subfeature=%s is_nominal=%s reason=%s",
         event_type,
         provider,
         feature,
         subfeature,
         is_nominal,
+        reason,
     )
 
 
@@ -176,11 +178,6 @@ async def log_call(
                 status = LlmValidationStatus.ERROR
 
             # Resolve Assembly metadata if present (Story 66.8 AC10)
-            # From ExecutionPlan mapped to result in build_result
-            # result.meta should have these if I added them to GatewayMeta
-            # WAIT: I didn't add them to GatewayMeta yet.
-
-            # Let's check result.meta for assembly fields (I'll add them to GatewayMeta first)
             assembly_id = safe_uuid(getattr(result.meta, "assembly_id", None))
             feature = getattr(result.meta, "feature", None)
             subfeature = getattr(result.meta, "subfeature", None)
@@ -239,16 +236,6 @@ async def log_call(
                         "provider": executed_provider,
                     },
                 )
-            else:
-                pipeline_kind = None
-                execution_path_kind = None
-                fallback_kind = None
-                requested_provider = None
-                resolved_provider = None
-                executed_provider = None
-                context_compensation_status = None
-                max_output_tokens_source = None
-                max_output_tokens_final = None
 
         transaction = db.begin_nested() if db.in_transaction() else db.begin()
         with transaction:

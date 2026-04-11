@@ -1025,6 +1025,7 @@ class LLMGateway:
                         provider=provider,
                         feature=request.user_input.feature,
                         is_nominal=True,
+                        reason="unsupported_execution_provider",
                     )
                     logger.error(
                         "gateway_nominal_provider_not_supported provider=%s use_case=%s feature=%s",
@@ -1078,6 +1079,7 @@ class LLMGateway:
                         provider=provider,
                         feature=request.user_input.feature,
                         is_nominal=True,
+                        reason="provider_mapping_failed",
                     )
                     logger.error(
                         "gateway_nominal_provider_mapping_failed provider=%s feature=%s error=%s",
@@ -1133,6 +1135,7 @@ class LLMGateway:
                     event_type="runtime_rejected",
                     feature=request.user_input.feature,
                     is_nominal=True,
+                    reason="missing_execution_profile",
                 )
                 raise GatewayConfigError(
                     f"No ExecutionProfile found for supported feature "
