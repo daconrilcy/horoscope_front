@@ -43,7 +43,7 @@ async def test_verbosity_profile_injection(db):
     assert "concise" in plan.rendered_developer_prompt
     # Default tokens for concise is 800
     assert plan.max_output_tokens == 800
-    assert plan.max_output_tokens_source == "verbosity_default"
+    assert plan.max_output_tokens_source == "verbosity_fallback"
 
 
 @pytest.mark.asyncio
@@ -130,7 +130,7 @@ async def test_max_tokens_priority(db):
 
     # LengthBudget wins over Profile
     assert plan.max_output_tokens == 500
-    assert plan.max_output_tokens_source == "length_budget"
+    assert plan.max_output_tokens_source == "length_budget_global"
 
 
 @pytest.mark.asyncio
@@ -209,7 +209,7 @@ async def test_unsupported_profile_provider_falls_back_to_openai(db):
     plan, _ = await gateway._resolve_plan(request, db)
 
     assert plan.provider == "openai"
-    assert plan.execution_profile_source == "fallback_resolve_model"
+    assert plan.execution_profile_source == "fallback_provider_unsupported"
     # High #2 Fix: No translated params from unsupported profile
     # But we might have default params from reasoning model if it was auto-resolved to one
     if plan.model_id in ["gpt-4o", "gpt-4o-mini"]:

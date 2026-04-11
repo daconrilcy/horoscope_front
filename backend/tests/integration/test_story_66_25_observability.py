@@ -235,7 +235,8 @@ async def test_observability_snapshot_template_handled(gateway):
         max_output_tokens=1000,
         max_output_tokens_source="unset",
         context_quality="minimal",
-        context_quality_instruction_injected=False
+        context_quality_instruction_injected=False,
+        context_quality_handled_by_template=True
     )
 
     mock_response = GatewayResult(

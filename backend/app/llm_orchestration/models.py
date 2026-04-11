@@ -326,6 +326,7 @@ class ResolvedExecutionPlan(BaseModel):
     # Quality metadata
     context_quality: str = "unknown"
     context_quality_instruction_injected: bool = False
+    context_quality_handled_by_template: bool = False
 
     model_config = ConfigDict(frozen=True)
 

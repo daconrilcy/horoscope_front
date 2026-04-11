@@ -201,7 +201,7 @@ async def test_prompt_resolution_matrix(
                 expected_tokens = 500 if plan == "free" else 2000
                 length_ok = (
                     plan_resolved.max_output_tokens == expected_tokens
-                    and plan_resolved.max_output_tokens_source == "length_budget"
+                    and plan_resolved.max_output_tokens_source == "length_budget_global"
                     and "[CONSIGNE DE LONGUEUR]" in prompt
                 )
 
@@ -242,7 +242,7 @@ async def test_prompt_resolution_matrix(
                         "context_quality": cq_ok,
                         "persona": persona_ok,
                         "output_contract": schema_ok,
-                        "length_budget": length_ok,
+                        "length_budget_global": length_ok,
                         "differentiation_plan": True,
                     }
                 )

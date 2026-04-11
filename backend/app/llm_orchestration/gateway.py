@@ -1176,6 +1176,8 @@ class LLMGateway:
 
         cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
         context_quality_injected = False
+        # AC 66.25: Explicit detection of template handling
+        context_quality_handled_by_template = "{{#context_quality:" in config.developer_prompt
 
         if request.flags.is_repair_call:
             rendered_developer_prompt = (
@@ -1648,23 +1650,10 @@ class LLMGateway:
             comp_status = ContextCompensationStatus.NOT_NEEDED
         elif plan.context_quality_instruction_injected:
             comp_status = ContextCompensationStatus.INJECTOR_APPLIED
+        elif plan.context_quality_handled_by_template:
+            comp_status = ContextCompensationStatus.TEMPLATE_HANDLED
         else:
-            # Detect explicit template handling: syntax is {{#context_quality:LEVEL}}
-            # We look at plan.rendered_developer_prompt BEFORE Stage 1 completion
-            # Actually we can check if the marker existed in the config prompt
-            # OR check if we are in a degraded state (partial/minimal) but not injected
-            if plan.context_quality in ["partial", "minimal"]:
-                 # If not injected by injector, it must be template-handled or unknown
-                 # In prompt_renderer.py, these blocks are resolved.
-                 # Let's check the original config/assembly prompt if available,
-                 # but plan.rendered_developer_prompt is already rendered.
-                 # We can use a heuristic: if injector didn't apply, it's either
-                 # handled by template or the dev didn't care.
-                 # The injector explicitly skips if {{#context_quality: is present.
-                 # So if not injected and NOT full, it IS template handled.
-                 comp_status = ContextCompensationStatus.TEMPLATE_HANDLED
-            else:
-                 comp_status = ContextCompensationStatus.UNKNOWN
+            comp_status = ContextCompensationStatus.UNKNOWN
 
         # 5. Tokens Arbitrage
         tokens_source = MaxTokensSource.UNSET
