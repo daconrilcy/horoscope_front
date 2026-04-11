@@ -57,62 +57,62 @@ Le problème n’est donc plus de découvrir les mécanismes de gouvernance. Le 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Introduire un snapshot canonique d’observabilité d’exécution (AC1, AC2, AC3, AC4, AC5, AC10)
-  - [ ] Définir une petite structure dédiée, par exemple `ExecutionObservabilitySnapshot`, dans `backend/app/llm_orchestration/models.py` ou un module dédié voisin.
-  - [ ] Y porter une taxonomie fermée pour `execution_path_kind`, `fallback_kind`, `context_compensation_status` et `max_output_tokens_source`.
-  - [ ] Garantir que cette structure est calculée une seule fois au moment où le plan d’exécution est suffisamment déterminé.
-  - [ ] Interdire les redéfinitions locales concurrentes des mêmes taxonomies dans le gateway, l’observabilité et les dashboards.
+- [x] Task 1: Introduire un snapshot canonique d’observabilité d’exécution (AC1, AC2, AC3, AC4, AC5, AC10)
+  - [x] Définir une petite structure dédiée, par exemple `ExecutionObservabilitySnapshot`, dans `backend/app/llm_orchestration/models.py` ou un module dédié voisin.
+  - [x] Y porter une taxonomie fermée pour `execution_path_kind`, `fallback_kind`, `context_compensation_status` et `max_output_tokens_source`.
+  - [x] Garantir que cette structure est calculée une seule fois au moment où le plan d’exécution est suffisamment déterminé.
+  - [x] Interdire les redéfinitions locales concurrentes des mêmes taxonomies dans le gateway, l’observabilité et les dashboards.
 
-- [ ] Task 2: Calculer explicitement le discriminant de chemin runtime (AC1, AC2, AC6, AC10)
-  - [ ] Introduire `execution_path_kind` comme lecture structurelle du chemin réellement exécuté, distincte de `pipeline_kind`.
-  - [ ] Couvrir a minima les valeurs `canonical_assembly`, `legacy_use_case_fallback`, `legacy_execution_profile_fallback`, `repair` et `non_nominal_provider_tolerated`.
-  - [ ] Aligner ce calcul sur les signaux déjà présents dans `LLMGateway.execute_request()`, `RecoveryResult`, la gouvernance des fallbacks et le verrou provider.
-  - [ ] Vérifier que `execution_path_kind` n’écrase pas la sémantique historique de `execution_path` tant que la migration n’est pas terminée ; prévoir coexistence contrôlée ou remplacement explicite.
-  - [ ] Si l’équipe juge que `repair` et `non_nominal_provider_tolerated` doivent sortir de cet axe, documenter explicitement l’alternative (`recovery_status`, `provider_execution_mode`) tout en conservant une lecture synthétique unique depuis le snapshot canonique.
+- [x] Task 2: Calculer explicitement le discriminant de chemin runtime (AC1, AC2, AC6, AC10)
+  - [x] Introduire `execution_path_kind` comme lecture structurelle du chemin réellement exécuté, distincte de `pipeline_kind`.
+  - [x] Couvrir a minima les valeurs `canonical_assembly`, `legacy_use_case_fallback`, `legacy_execution_profile_fallback`, `repair` et `non_nominal_provider_tolerated`.
+  - [x] Aligner ce calcul sur les signaux déjà présents dans `LLMGateway.execute_request()`, `RecoveryResult`, la gouvernance des fallbacks et le verrou provider.
+  - [x] Vérifier que `execution_path_kind` n’écrase pas la sémantique historique de `execution_path` tant que la migration n’est pas terminée ; prévoir coexistence contrôlée ou remplacement explicite.
+  - [x] Si l’équipe juge que `repair` et `non_nominal_provider_tolerated` doivent sortir de cet axe, documenter explicitement l’alternative (`recovery_status`, `provider_execution_mode`) tout en conservant une lecture synthétique unique depuis le snapshot canonique.
 
-- [ ] Task 3: Rendre le fallback lisible comme cause explicite (AC1, AC2, AC6, AC7, AC10)
-  - [ ] Introduire `fallback_kind` comme champ nullable distinct du simple booléen `fallback_triggered`.
-  - [ ] Réutiliser la gouvernance 66.21 pour les types attendus, par exemple `deprecated_use_case_mapping`, `use_case_first_resolution`, `resolve_model`, `openai_runtime_compat`, `test_local`, `legacy_feature_alias`.
-  - [ ] Garantir l’absence de `fallback_kind` sur un chemin canonique strict sans fallback.
-  - [ ] Aligner les valeurs avec `llm_gateway_fallback_usage_total` pour éviter toute divergence entre labels de métriques et champs de résultat.
-  - [ ] Définir explicitement si `fallback_kind` est mono-valeur ou multi-valeur. Si mono-valeur, documenter une règle de priorité stable représentant le fallback structurellement le plus significatif ; si multi-valeur, ajouter un champ résumé primaire pour les dashboards.
+- [x] Task 3: Rendre le fallback lisible comme cause explicite (AC1, AC2, AC6, AC7, AC10)
+  - [x] Introduire `fallback_kind` comme champ nullable distinct du simple booléen `fallback_triggered`.
+  - [x] Réutiliser la gouvernance 66.21 pour les types attendus, par exemple `deprecated_use_case_mapping`, `use_case_first_resolution`, `resolve_model`, `openai_runtime_compat`, `test_local`, `legacy_feature_alias`.
+  - [x] Garantir l’absence de `fallback_kind` sur un chemin canonique strict sans fallback.
+  - [x] Aligner les valeurs avec `llm_gateway_fallback_usage_total` pour éviter toute divergence entre labels de métriques et champs de résultat.
+  - [x] Définir explicitement si `fallback_kind` est mono-valeur ou multi-valeur. Si mono-valeur, documenter une règle de priorité stable représentant le fallback structurellement le plus significatif ; si multi-valeur, ajouter un champ résumé primaire pour les dashboards.
 
-- [ ] Task 4: Exposer le triplet provider demandé / résolu / exécuté (AC1, AC3, AC6, AC7, AC8)
-  - [ ] Identifier le point de vérité de `requested_provider` comme provider demandé par la couche d’entrée ou, à défaut, premier provider explicitement résolu avant toute tolérance runtime.
-  - [ ] Récupérer `resolved_provider` depuis le `ResolvedExecutionPlan` final avant toute tolérance runtime non nominale.
-  - [ ] Renseigner `executed_provider` avec le provider techniquement appelé par `_call_provider()` ou son équivalent.
-  - [ ] Garantir qu’un fallback runtime OpenAI non nominal ne masque plus le provider demandé/résolu initial.
+- [x] Task 4: Exposer le triplet provider demandé / résolu / exécuté (AC1, AC3, AC6, AC7, AC8)
+  - [x] Identifier le point de vérité de `requested_provider` comme provider demandé par la couche d’entrée ou, à défaut, premier provider explicitement résolu avant toute tolérance runtime.
+  - [x] Récupérer `resolved_provider` depuis le `ResolvedExecutionPlan` final avant toute tolérance runtime non nominale.
+  - [x] Renseigner `executed_provider` avec le provider techniquement appelé par `_call_provider()` ou son équivalent.
+  - [x] Garantir qu’un fallback runtime OpenAI non nominal ne masque plus le provider demandé/résolu initial.
 
-- [ ] Task 5: Rendre visible le traitement effectif de `context_quality` (AC1, AC4, AC6, AC7, AC8)
-  - [ ] Introduire `context_compensation_status` avec les valeurs `not_needed`, `template_handled`, `injector_applied`, `unknown`.
-  - [ ] Déterminer ce statut à partir des blocs `context_quality` gérés par le renderer et de l’injection éventuelle du `ContextQualityInjector`.
-  - [ ] Conserver `context_quality_instruction_injected` uniquement comme signal technique dérivé ou le faire converger vers ce nouveau champ, sans double vérité durable.
-  - [ ] Vérifier les cas `full`, `partial` et `minimal` avec et sans gestion template explicite.
-  - [ ] Verrouiller l’exclusivité entre `template_handled` et `injector_applied` ; si le template gère explicitement `context_quality`, l’injecteur ne doit pas ajouter une seconde compensation.
+- [x] Task 5: Rendre visible le traitement effectif de `context_quality` (AC1, AC4, AC6, AC7, AC8)
+  - [x] Introduire `context_compensation_status` avec les valeurs `not_needed`, `template_handled`, `injector_applied`, `unknown`.
+  - [x] Déterminer ce statut à partir des blocs `context_quality` gérés par le renderer et de l’injection éventuelle du `ContextQualityInjector`.
+  - [x] Conserver `context_quality_instruction_injected` uniquement comme signal technique dérivé ou le faire converger vers ce nouveau champ, sans double vérité durable.
+  - [x] Vérifier les cas `full`, `partial` et `minimal` avec et sans gestion template explicite.
+  - [x] Verrouiller l’exclusivité entre `template_handled` et `injector_applied` ; si le template gère explicitement `context_quality`, l’injecteur ne doit pas ajouter une seconde compensation.
 
-- [ ] Task 6: Normaliser la source finale de `max_output_tokens` (AC1, AC5, AC6, AC7, AC8)
-  - [ ] Faire converger les valeurs existantes `length_budget`, `execution_profile`, `verbosity_default` vers une taxonomie canonique stable telle que `length_budget_global`, `execution_profile`, `verbosity_fallback`, `unset`.
-  - [ ] Exposer aussi `max_output_tokens_final` dans `GatewayMeta` ou dans le snapshot propagé.
-  - [ ] Calculer ce champ uniquement à l’endroit où l’arbitrage final est décidé, sans reconstruction avale en dashboard, export ou reporting.
-  - [ ] Préserver la compatibilité des assertions existantes de 66.18, ou documenter explicitement une migration de labels de test/rapport.
+- [x] Task 6: Normaliser la source finale de `max_output_tokens` (AC1, AC5, AC6, AC7, AC8)
+  - [x] Faire converger les valeurs existantes `length_budget`, `execution_profile`, `verbosity_default` vers une taxonomie canonique stable telle que `length_budget_global`, `execution_profile`, `verbosity_fallback`, `unset`.
+  - [x] Exposer aussi `max_output_tokens_final` dans `GatewayMeta` ou dans le snapshot propagé.
+  - [x] Calculer ce champ uniquement à l’endroit où l’arbitrage final est décidé, sans reconstruction avale en dashboard, export ou reporting.
+  - [x] Préserver la compatibilité des assertions existantes de 66.18, ou documenter explicitement une migration de labels de test/rapport.
 
-- [ ] Task 7: Propager le snapshot vers `GatewayResult`, logs et persistance d’observabilité (AC1, AC6, AC7)
-  - [ ] Étendre `GatewayMeta` et, si nécessaire, `GatewayResult.to_log_dict()` pour exposer le snapshot complet.
-  - [ ] Mettre à jour `backend/app/llm_orchestration/services/observability_service.py` et le modèle persistant associé pour stocker les nouveaux champs utiles au diagnostic.
-  - [ ] Vérifier que les champs sont disponibles sans lecture du prompt brut ni parsing textuel libre.
-  - [ ] Éviter toute duplication entre métadonnées de résultat, log structuré et stockage DB.
+- [x] Task 7: Propager le snapshot vers `GatewayResult`, logs et persistance d’observabilité (AC1, AC6, AC7)
+  - [x] Étendre `GatewayMeta` et, si nécessaire, `GatewayResult.to_log_dict()` pour exposer le snapshot complet.
+  - [x] Mettre à jour `backend/app/llm_orchestration/services/observability_service.py` et le modèle persistant associé pour stocker les nouveaux champs utiles au diagnostic.
+  - [x] Vérifier que les champs sont disponibles sans lecture du prompt brut ni parsing textuel libre.
+  - [x] Éviter toute duplication entre métadonnées de résultat, log structuré et stockage DB.
 
-- [ ] Task 8: Mettre à jour métriques, dashboards et reporting d’évaluation (AC7, AC8, AC9, AC10)
-  - [ ] Étendre les métriques ou labels existants de manière compatible avec `llm_gateway_requests_total`, `llm_gateway_fallback_usage_total` et `llm_governance_event_total`.
-  - [ ] Mettre à jour `backend/tests/evaluation/report_generator.py` et les artefacts de campagne pour rendre visible au moins `pipeline_kind × execution_path_kind`.
-  - [ ] Préparer les agrégats opérationnels nécessaires pour `feature × execution_path_kind`, `feature × fallback_kind`, `feature × context_quality`, `feature × context_compensation_status`, `feature × executed_provider` et `feature × max_output_tokens_source`.
-  - [ ] Documenter explicitement toute nouvelle dépendance dashboard ou export.
+- [x] Task 8: Mettre à jour métriques, dashboards et reporting d’évaluation (AC7, AC8, AC9, AC10)
+  - [x] Étendre les métriques ou labels existants de manière compatible avec `llm_gateway_requests_total`, `llm_gateway_fallback_usage_total` et `llm_governance_event_total`.
+  - [x] Mettre à jour `backend/tests/evaluation/report_generator.py` et les artefacts de campagne pour rendre visible au moins `pipeline_kind × execution_path_kind`.
+  - [x] Préparer les agrégats opérationnels nécessaires pour `feature × execution_path_kind`, `feature × fallback_kind`, `feature × context_quality`, `feature × context_compensation_status`, `feature × executed_provider` et `feature × max_output_tokens_source`.
+  - [x] Documenter explicitement toute nouvelle dépendance dashboard ou export.
 
-- [ ] Task 9: Ajouter la couverture de non-régression dédiée (AC1 à AC10)
-  - [ ] Créer une suite dédiée, par exemple `backend/tests/integration/test_story_66_25_execution_observability.py`.
-  - [ ] Couvrir au minimum : chemin canonique nominal, mapping `deprecated_use_case`, fallback `resolve_model()`, tolérance provider OpenAI non nominale, contexte `full`, contexte `partial` géré par template, contexte `minimal` compensé par injecteur, et les trois variantes d’arbitrage `max_output_tokens`.
-  - [ ] Vérifier la cohérence entre `GatewayResult.meta`, logs/événements et reporting d’évaluation.
-  - [ ] Protéger la sémantique de `pipeline_kind` introduite par 66.24.
+- [x] Task 9: Ajouter la couverture de non-régression dédiée (AC1 à AC10)
+  - [x] Créer une suite dédiée, par exemple `backend/tests/integration/test_story_66_25_execution_observability.py`.
+  - [x] Couvrir au minimum : chemin canonique nominal, mapping `deprecated_use_case`, fallback `resolve_model()`, tolérance provider OpenAI non nominale, contexte `full`, contexte `partial` géré par template, contexte `minimal` compensé par injecteur, et les trois variantes d’arbitrage `max_output_tokens`.
+  - [x] Vérifier la cohérence entre `GatewayResult.meta`, logs/événements et reporting d’évaluation.
+  - [x] Protéger la sémantique de `pipeline_kind` introduite par 66.24.
 
 ## Dev Notes
 
@@ -242,6 +242,22 @@ GPT-5 Codex
 
 ### Completion Notes List
 
+- Implémentation du snapshot canonique `ExecutionObservabilitySnapshot` dans le gateway avec projection vers `GatewayMeta`, persistance DB et télémétrie structurée.
+- Ajout des taxonomies fermées pour `execution_path_kind`, `context_compensation_status` et `max_output_tokens_source`, avec alignement des labels legacy vers la taxonomie `66.25`.
+- Exposition et persistance du triplet `requested_provider / resolved_provider / executed_provider` ainsi que de `fallback_kind`.
+- Ajout de tests d’intégration ciblés sur l’observabilité runtime, dont le cas legacy `length_budget_global`.
+
 ### File List
 
 - `_bmad-output/implementation-artifacts/66-25-renforcement-observabilite-operationnelle-pipeline-canonique-compatibilites.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `backend/app/infra/db/models/llm_observability.py`
+- `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/models.py`
+- `backend/app/llm_orchestration/services/observability_service.py`
+- `backend/migrations/versions/8a839be9fea4_add_story_66_25_observability_fields.py`
+- `backend/tests/evaluation/report_generator.py`
+- `backend/tests/evaluation/test_prompt_resolution.py`
+- `backend/tests/integration/test_story_66_22_provider_locking.py`
+- `backend/tests/integration/test_story_66_25_observability.py`
+- `backend/app/llm_orchestration/tests/test_story_66_18_stable_profiles.py`

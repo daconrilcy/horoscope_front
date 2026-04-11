@@ -1,6 +1,6 @@
 # Génération des Prompts LLM par Feature
 
-Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.24.
+Ce document décrit le processus canonique actuellement utilisé pour construire un prompt LLM dans la plateforme, tel qu'il résulte des stories 66.9 à 66.25.
 
 Objectifs :
 
@@ -140,6 +140,7 @@ Les features marquées `transitional_governance` sont en cours de convergence. E
 | `66.22` | Verrouillage des providers supportés | registre canonique `NOMINAL_SUPPORTED_PROVIDERS`, blocage des providers non supportés sur chemins nominaux, fallback OpenAI borné aux chemins non nominaux |
 | `66.23` | Normalisation taxonomie natal | `feature="natal"` comme unique identifiant canonique, rejet nominal de `feature="natal_interpretation"` en admin/publication/registries, taxonomie des subfeatures natal non préfixée (`interpretation`, `short`, `full`, etc.), compatibilité alias bornée et télémétrée via `legacy_feature_alias_used` |
 | `66.24` | Extension matrice d'évaluation | extension aux chemins `horoscope_daily` et `daily_prediction`, introduction du discriminant structurel `pipeline_kind` (`nominal_canonical` vs `transitional_governance`) et d'un gating global de campagne |
+| `66.25` | Observabilité opérationnelle runtime | ajout d'un snapshot canonique `ExecutionObservabilitySnapshot`, propagation de `execution_path_kind`, `fallback_kind`, du triplet provider, de `context_compensation_status` et de la source finale de `max_output_tokens` |
 
 ## Couverture réelle par famille
 
@@ -840,6 +841,8 @@ Elle ne doit pas influencer :
 
 La lecture des réponses LLM ne repose pas uniquement sur le contenu retourné. Les métadonnées exposent plusieurs axes orthogonaux.
 
+Depuis la story 66.25, ces axes ne sont plus seulement déduits à partir de champs partiels ou de messages de log. Le gateway produit un snapshot canonique unique, `ExecutionObservabilitySnapshot`, puis le projette vers `GatewayMeta`, la persistance d’observabilité et la télémétrie.
+
 ### Axes de lecture
 
 - **chemin d'exécution** : nominal, repaired, fallback, etc. ;
@@ -851,6 +854,105 @@ Cette séparation permet de distinguer :
 - un incident technique ;
 - une dégradation liée à la qualité des données ;
 - une transformation volontaire du pipeline.
+
+### Snapshot canonique 66.25
+
+Le snapshot runtime exposé par le gateway porte les champs suivants :
+
+- `pipeline_kind`
+- `execution_path_kind`
+- `fallback_kind`
+- `requested_provider`
+- `resolved_provider`
+- `executed_provider`
+- `context_quality`
+- `context_compensation_status`
+- `max_output_tokens_source`
+- `max_output_tokens_final`
+
+Règle d’architecture :
+
+- ces champs sont calculés une seule fois au moment où le `ResolvedExecutionPlan` final est suffisamment déterminé ;
+- les couches aval ne doivent pas les recalculer localement ;
+- logs, DB, métriques et reporting doivent consommer cette source de vérité, pas reconstruire ces axes à partir d’heuristiques.
+
+### Différence entre `pipeline_kind`, `execution_path_kind` et `fallback_kind`
+
+- `pipeline_kind` classe la gouvernance de la famille ou de la cellule de matrice ;
+- `execution_path_kind` décrit le chemin runtime structurel effectivement emprunté pour la requête ;
+- `fallback_kind` décrit la cause principale de fallback lorsqu’un fallback réel est survenu.
+
+Ces trois axes sont complémentaires. Ils ne doivent pas être réutilisés comme substituts les uns des autres.
+
+### Taxonomie runtime exposée
+
+#### `execution_path_kind`
+
+Les valeurs actuellement exposées sont :
+
+- `canonical_assembly`
+- `legacy_use_case_fallback`
+- `legacy_execution_profile_fallback`
+- `repair`
+- `non_nominal_provider_tolerated`
+
+`execution_path_kind` doit être lu comme un discriminant synthétique de runtime. Il ne se limite pas à un simple chemin interne de résolution ; il capture le chemin structurel dominant réellement observé par l’exploitation.
+
+#### `fallback_kind`
+
+Quand un fallback réel est utilisé, le snapshot expose `fallback_kind` avec la taxonomie issue de la gouvernance des fallbacks. Le champ est nullable et reste vide sur un chemin canonique strict sans fallback.
+
+La lecture attendue est :
+
+- `fallback_kind=null` : pas de fallback réel observé ;
+- `fallback_kind` renseigné : le snapshot expose le fallback structurellement dominant, aligné sur la gouvernance 66.21.
+
+#### Provider triplet
+
+Le provider n’est plus lu comme un champ unique ambigu.
+
+- `requested_provider` : provider demandé par la couche d’entrée ou, à défaut, premier provider explicitement résolu avant toute tolérance runtime ;
+- `resolved_provider` : provider porté par le `ResolvedExecutionPlan` final ;
+- `executed_provider` : provider techniquement appelé par le gateway.
+
+Sur un chemin nominal OpenAI, les trois valeurs coïncident. Sur un chemin non nominal tolérant un fallback provider, la divergence doit rester visible.
+
+#### `context_compensation_status`
+
+Pour compléter `context_quality`, le snapshot expose :
+
+- `not_needed`
+- `template_handled`
+- `injector_applied`
+- `unknown`
+
+Règles :
+
+- `full` implique normalement `not_needed` ;
+- `template_handled` et `injector_applied` sont mutuellement exclusifs ;
+- `unknown` doit rester un état de repli technique, pas une lecture nominale du pipeline.
+
+#### `max_output_tokens_source`
+
+La source finale de `max_output_tokens` utilise désormais la taxonomie canonique :
+
+- `length_budget_global`
+- `execution_profile`
+- `verbosity_fallback`
+- `unset`
+
+Cette valeur est figée au moment de l’arbitrage final dans le gateway, en même temps que `max_output_tokens_final`. Les dashboards, exports et rapports ne doivent jamais la reconstruire depuis plusieurs signaux techniques.
+
+### Projection observability
+
+Le snapshot 66.25 est projeté vers plusieurs surfaces :
+
+- `GatewayMeta`, pour une lecture directe au niveau du résultat d’exécution ;
+- la table d’observabilité `llm_call_logs`, pour le diagnostic et l’analyse aval ;
+- les métriques structurées, notamment `llm_obs_pipeline_total` et les métriques historiques de gouvernance/fallback ;
+- les rapports d’évaluation, qui peuvent désormais recroiser `pipeline_kind` et `execution_path_kind`.
+
+Le principe à retenir est simple : une vérité runtime, plusieurs projections, aucune redéfinition locale.
 
 ### Télémétrie provider 66.22
 
@@ -873,14 +975,16 @@ Cette métrique ne remplace pas `llm_gateway_requests_total` ni `llm_gateway_fal
 
 Exemple :
 
-- `execution_path = repaired`
+- `execution_path_kind = repair`
 - `context_quality = minimal`
+- `context_compensation_status = injector_applied`
 - `normalizations_applied = ["evidence_alias_normalized", "evidence_filtered_non_catalog"]`
 
 Lecture :
 
 - le premier appel provider a produit une sortie invalide ;
 - le contexte disponible était partiel au point de tomber en `minimal` ;
+- une compensation explicite a été injectée pour tenir compte du contexte dégradé ;
 - la sortie finale a été réparée puis normalisée avant restitution.
 
 ## Matrice d'évaluation
@@ -910,6 +1014,12 @@ Depuis la story 66.24, la matrice est explicitement alignée sur l'architecture 
 - le discriminant `pipeline_kind` est porté par les cas de matrice et recroisé dans les tests avec une classification calculée ;
 - les rapports distinguent les échecs nominaux des alertes transitoires ;
 - le statut global de campagne devient bloquant si un chemin requis (`chat`, `guidance`, `natal`, `horoscope_daily`, `daily_prediction`) est absent.
+
+Depuis la story 66.25, cette lecture d’évaluation peut être croisée avec l’observabilité runtime :
+
+- `pipeline_kind` continue de classer la gouvernance attendue ;
+- `execution_path_kind` permet de vérifier le chemin réellement exécuté ;
+- les campagnes et rapports n’ont plus besoin de déduire ce chemin depuis plusieurs signaux partiels.
 
 Le reporting de campagne expose désormais :
 
@@ -983,7 +1093,7 @@ Toute story ou PR qui modifie l'un des points suivants doit mettre à jour ce do
 ### Vérification
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
-- date : `2026-04-10`
-- commit / tag : `7c9062b7`
+- date : `2026-04-11`
+- commit / tag : `HEAD`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation.
