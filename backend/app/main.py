@@ -75,6 +75,7 @@ from app.llm_orchestration.models import InputValidationError
 from app.services.pricing_experiment_service import PricingExperimentService
 from app.startup.canonical_db_validation import run_canonical_db_startup_validation
 from app.startup.feature_scope_validation import run_feature_scope_startup_validation
+from app.startup.llm_coherence_validation import run_llm_coherence_startup_validation
 from app.startup.stripe_portal_validation import run_stripe_portal_startup_validation
 
 logger = logging.getLogger(__name__)
@@ -239,10 +240,10 @@ def _ensure_llm_registry_seeded() -> None:
         seed_natal_v3_prompts()
         seed_chat_prompt_v2()
 
+        from app.llm_orchestration.seeds.seed_66_20_taxonomy import seed_66_20_taxonomy
         from app.llm_orchestration.seeds.seed_horoscope_narrator_assembly import (
             seed_horoscope_narrator_assembly,
         )
-        from app.llm_orchestration.seeds.seed_66_20_taxonomy import seed_66_20_taxonomy
 
         with SessionLocal() as db:
             seed_horoscope_narrator_assembly(db)
@@ -402,6 +403,8 @@ async def _app_lifespan(_: FastAPI):
     with SessionLocal() as db:
         validate_catalog_vs_db(db)
         run_canonical_db_startup_validation(settings.canonical_db_validation_mode, db)
+        # Story 66.31: Validate LLM configuration coherence at startup
+        await run_llm_coherence_startup_validation(settings.llm_coherence_validation_mode, db)
 
     yield
     shutdown_scheduler()

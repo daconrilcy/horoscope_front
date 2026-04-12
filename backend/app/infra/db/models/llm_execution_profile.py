@@ -66,63 +66,19 @@ class LlmExecutionProfileModel(Base):
         """
         AC3.1: Enforce provider support when transition to PUBLISHED.
         AC5: Reject legacy nominal features on publication.
+        (Story 66.31: Integration with central validator)
         """
         if value == PromptStatus.PUBLISHED:
-            from app.llm_orchestration.feature_taxonomy import (
-                NATAL_CANONICAL_FEATURE,
-                assert_nominal_feature_allowed,
-                is_natal_subfeature_canonical,
-                is_supported_feature,
+            from app.llm_orchestration.services.config_coherence_validator import (
+                validate_execution_profile,
             )
-            from app.llm_orchestration.services.observability_service import log_governance_event
-            from app.llm_orchestration.supported_providers import is_provider_supported
+            
+            result = validate_execution_profile(self)
+            if not result.is_valid:
+                # We raise the first error message for simplicity in model validator
+                # but we could also raise a more structured exception if needed.
+                raise ValueError(result.errors[0].message)
 
-            # AC2, AC5: Validate feature taxonomy
-            if self.feature:
-                assert_nominal_feature_allowed(self.feature)
-
-                # AC6: Ensure subfeature is canonical if feature is natal
-                if self.feature == NATAL_CANONICAL_FEATURE and self.subfeature:
-                    if not is_natal_subfeature_canonical(self.subfeature):
-                        raise ValueError(
-                            f"Subfeature '{self.subfeature}' is not canonical "
-                            f"for feature '{self.feature}'."
-                        )
-
-            # AC3.1, AC5: Enforce provider support when transition to PUBLISHED.
-            # We strictly reject on nominal paths, but tolerate on non-nominal/test paths.
-            is_nominal = is_supported_feature(self.feature)
-            provider_to_check = self.provider or "openai"
-
-            if not is_provider_supported(provider_to_check):
-                if is_nominal:
-                    log_governance_event(
-                        event_type="publish_rejected",
-                        provider=provider_to_check,
-                        feature=self.feature,
-                        is_nominal=True,
-                    )
-                    raise ValueError(
-                        f"ExecutionProfile cannot be published for nominal feature "
-                        f"'{self.feature}': Provider '{provider_to_check}' "
-                        "is not nominally supported."
-                    )
-                else:
-                    # Non-nominal: we allow but log a warning (AC5)
-                    log_governance_event(
-                        event_type="non_nominal_publish_tolerated",
-                        provider=provider_to_check,
-                        feature=self.feature,
-                        is_nominal=False,
-                    )
-                    import logging
-
-                    logging.getLogger(__name__).warning(
-                        "ExecutionProfile published with non-nominal provider '%s' "
-                        "for feature '%s'. This will trigger fallback at runtime.",
-                        provider_to_check,
-                        self.feature,
-                    )
         return value
 
     # Relationship for fallback

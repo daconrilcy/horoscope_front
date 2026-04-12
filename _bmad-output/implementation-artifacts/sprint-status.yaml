@@ -616,3 +616,4 @@ development_status:
   66-28-fermeture-canonique-daily-prediction-ou-suppression-statut-transitoire: done
   66-29-extinction-definitive-fallback-use-case-first-tous-chemins-supportes: done
   66-30-suppression-fallback-resolve-model-source-finale-verite-execution: done
+  66-31-validation-fail-fast-coherence-configuration-publish-boot-runtime: done

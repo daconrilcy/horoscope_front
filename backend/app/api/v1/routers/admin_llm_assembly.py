@@ -126,8 +126,18 @@ async def publish_assembly_config(
         config, archived_count = await service.publish_config(config_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-
-    # Audit log
+    except Exception as e:
+        from app.llm_orchestration.services.config_coherence_validator import CoherenceError
+        if isinstance(e, CoherenceError):
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "coherence_validation_failed",
+                    "message": str(e),
+                    "errors": [err.model_dump() for err in e.result.errors]
+                }
+            )
+        raise e
     audit_service = AuditService(db)
     await audit_service.log_event(
         admin.id,

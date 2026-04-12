@@ -161,32 +161,21 @@ class AssemblyAdminService:
     async def publish_config(self, config_id: uuid.UUID) -> Tuple[PromptAssemblyConfigModel, int]:
         """
         Publish a configuration using registry.
+        (Story 66.31: with central coherence validation)
         """
-        # AC6: Re-validate ALL templates before publishing
         config = await self.get_config(config_id)
         if not config:
             raise ValueError(f"Config {config_id} not found")
 
-        # Story 66.23: Reject legacy nominal features on publication (AC5)
-        from app.llm_orchestration.feature_taxonomy import assert_nominal_feature_allowed
-
-        assert_nominal_feature_allowed(config.feature)
-
-        # Story 66.22 AC3: Validate provider support on publication
-        await self._validate_provider_support(config)
-
-        invalid = validate_placeholders(config.feature_template.developer_prompt, config.feature)
-        if invalid:
-            raise ValueError(f"Invalid placeholders in feature template: {', '.join(invalid)}")
-
-        if config.subfeature_template:
-            invalid_sub = validate_placeholders(
-                config.subfeature_template.developer_prompt, config.feature
-            )
-            if invalid_sub:
-                raise ValueError(
-                    f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}"
-                )
+        # Story 66.31: Centralized coherence validation
+        from app.llm_orchestration.services.config_coherence_validator import ConfigCoherenceValidator, CoherenceError
+        
+        validator = ConfigCoherenceValidator(self.session)
+        result = await validator.validate_assembly(config)
+        
+        if not result.is_valid:
+            # We raise CoherenceError which will be caught by the router to return structured errors
+            raise CoherenceError(result)
 
         return await self.registry.publish_config(config_id)
 
