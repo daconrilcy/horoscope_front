@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.sensitive_data import Sink, sanitize_payload
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.observability.metrics import increment_counter
+from app.schemas.audit_details import to_safe_details
 
 logger = logging.getLogger(__name__)
 
@@ -147,8 +148,10 @@ class AuditService:
                 message="status is invalid",
                 details={"field": "status"},
             )
-        # AC8: Sanitize details using AUDIT_TRAIL policy
-        sanitized_details = sanitize_payload(payload.details, Sink.AUDIT_TRAIL)
+        # AC8: Ensure details are safe and bounded
+        safe_details = to_safe_details(payload.details)
+        # Sanitize details using AUDIT_TRAIL policy
+        sanitized_details = sanitize_payload(safe_details, Sink.AUDIT_TRAIL)
 
         event = AuditEventModel(
             request_id=payload.request_id,

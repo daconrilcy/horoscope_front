@@ -119,7 +119,8 @@ function ReplayModal({
 }
 
 function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
-  // AC10: Defense-in-depth: Mask common sensitive keys in the UI as a safety net
+  // AC10: Defense-in-depth: Mask sensitive keys in the UI as a safety net
+  // Finding Fix: Broaden the list of keys to mask
   const SENSITIVE_KEYS_TO_MASK = [
     "password",
     "token",
@@ -128,6 +129,18 @@ function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
     "apikey",
     "authorization",
     "credentials",
+    "email",
+    "phone",
+    "address",
+    "user_id",
+    "target_id",
+    "profile_id",
+    "account",
+    "birth_data",
+    "birth_date",
+    "birthdate",
+    "natal_data",
+    "chart_json",
   ]
 
   const sanitizeDetails = (details: Record<string, unknown>): Record<string, unknown> => {
@@ -136,6 +149,12 @@ function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
       const lowerKey = key.toLowerCase()
       if (SENSITIVE_KEYS_TO_MASK.some((s) => lowerKey.includes(s))) {
         sanitized[key] = "[MASKED_UI]"
+      } else if (typeof sanitized[key] === "string") {
+        // Additional heuristic: mask email-like strings even in unknown keys
+        const val = sanitized[key] as string
+        if (val.includes("@") && val.includes(".")) {
+          sanitized[key] = "[MASKED_UI_EMAIL]"
+        }
       }
     })
     return sanitized

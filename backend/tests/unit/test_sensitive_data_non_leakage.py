@@ -28,7 +28,8 @@ def test_classify_field():
     assert classify_field("birth_date") == DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA
     assert classify_field("content") == DataCategory.USER_AUTHORED_CONTENT
     assert classify_field("user_id") == DataCategory.CORRELABLE_BUSINESS_IDENTIFIER
-    assert classify_field("request_id") == DataCategory.OPERATIONAL_METADATA
+    # Fix Medium Finding: request_id should be TECHNICAL_CORRELATION_IDENTIFIER
+    assert classify_field("request_id") == DataCategory.TECHNICAL_CORRELATION_IDENTIFIER
     assert classify_field("unknown_field") == DataCategory.USER_AUTHORED_CONTENT  # Default
 
 
@@ -42,9 +43,10 @@ def test_get_policy_action():
         == PolicyAction.HASHED
     )
     assert get_policy_action(Sink.ADMIN_API, DataCategory.DIRECT_IDENTIFIER) == PolicyAction.MASKED
+    # Fix Medium Finding: AUDIT_TRAIL CORRELABLE_BUSINESS_IDENTIFIER should be MASKED
     assert (
-        get_policy_action(Sink.AUDIT_TRAIL, DataCategory.USER_AUTHORED_CONTENT)
-        == PolicyAction.FORBIDDEN
+        get_policy_action(Sink.AUDIT_TRAIL, DataCategory.CORRELABLE_BUSINESS_IDENTIFIER)
+        == PolicyAction.MASKED
     )
 
 
@@ -69,6 +71,7 @@ def test_sanitize_payload_structured_logs():
     assert "password" not in sanitized
     assert sanitized["email"] == "[REDACTED]"
     assert sanitized["content"] == "[REDACTED]"
+    # CORRELABLE_BUSINESS_IDENTIFIER is MASKED in structured logs
     assert sanitized["user_id"] == "[MASKED]"
 
 
@@ -77,26 +80,39 @@ def test_sanitize_payload_llm_call_logs():
         "use_case": "chat",
         "content": "Sensitive content",
         "user_id": 456,
+        "request_id": "req-123",
     }
     sanitized = sanitize_payload(payload, Sink.LLM_CALL_LOGS)
 
     assert sanitized["use_case"] == "chat"
     assert len(sanitized["content"]) > 10  # Hashed
     assert len(sanitized["user_id"]) > 10  # Hashed
+    assert sanitized["request_id"] == "req-123"  # ALLOWED (Technical identifier)
 
 
 def test_logging_filter(caplog):
     logger = logging.getLogger("test_logger")
-    logger.addFilter(SensitiveDataFilter())
+    # AC11 Terminal safety filter
+    log_filter = SensitiveDataFilter()
+    logger.addFilter(log_filter)
 
-    with caplog.at_level(logging.INFO):
-        # Test sanitization of dict message
-        logger.info({"password": "secret_pass", "use_case": "test"})
+    try:
+        with caplog.at_level(logging.INFO, logger="test_logger"):
+            # 1. Test sanitization of dict message
+            logger.info({"password": "secret_pass", "use_case": "test"})
+            assert "secret_pass" not in caplog.text
+            assert "'use_case': 'test'" in caplog.text
 
-    assert "secret_pass" not in caplog.text
-    # Wait, policy for SECRET_CREDENTIAL in logs is FORBIDDEN (removed)
-    assert "[REDACTED]" not in caplog.text
-    assert "'use_case': 'test'" in caplog.text
+            caplog.clear()
+
+            # 2. Test fix for High Finding: Positional arguments (tuple)
+            logger.info("User login attempt for %s with password %s", "test@user.com", "secret123")
+            assert "secret123" not in caplog.text
+            assert "[REDACTED]" in caplog.text
+            assert "test@user.com" not in caplog.text
+            assert "t...@user.com" in caplog.text
+    finally:
+        logger.removeFilter(log_filter)
 
 
 engine = create_engine("sqlite:///:memory:")
@@ -127,6 +143,7 @@ def test_audit_service_sanitization(db):
             "password": "should-be-gone",
             "content": "should-be-redacted",
             "use_case": "allowed",
+            "user_id": 12345,  # Fix Medium Finding: should be masked
         },
     )
 
@@ -135,3 +152,4 @@ def test_audit_service_sanitization(db):
     assert "password" not in event.details
     assert "content" not in event.details
     assert event.details["use_case"] == "allowed"
+    assert event.details["user_id"] == "[MASKED]"

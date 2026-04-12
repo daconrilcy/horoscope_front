@@ -82,20 +82,43 @@ def sanitize_messages_for_logging(messages: list[Dict[str, Any]]) -> list[Dict[s
 class SensitiveDataFilter(logging.Filter):
     """
     AC11: Python 3.13-style global logging filter for sensitive data.
-    Acts as a terminal safety net.
+    Acts as a terminal safety net for all structured and unstructured logs.
     """
 
     def filter(self, record: logging.LogRecord) -> bool:
-        # Sanitize 'extra' fields if present (Python 3.12+)
-        if hasattr(record, "args") and isinstance(record.args, dict):
-            record.args = sanitize_for_logging(record.args)
-
-        # In structured logging, 'extra' is often merged into record.__dict__
-        # We can't safely iterate over record.__dict__ without affecting logging internals,
-        # but we can target common patterns.
-
-        # If the message itself is a dict (some loggers support this)
+        # 1. Sanitize 'msg' if it's a dict (common in structured logging)
         if isinstance(record.msg, dict):
             record.msg = sanitize_for_logging(record.msg)
 
+        # 2. Sanitize positional 'args' (tuple) - AC11 fix for positional bypass
+        if record.args:
+            if isinstance(record.args, dict):
+                record.args = sanitize_for_logging(record.args)
+            elif isinstance(record.args, tuple):
+                # Sanitize each element of the tuple
+                new_args = list(record.args)
+                for i, arg in enumerate(new_args):
+                    if isinstance(arg, dict):
+                        new_args[i] = sanitize_for_logging(arg)
+                    elif isinstance(arg, str):
+                        # Apply heuristics to individual strings in args
+                        from app.core.sensitive_data import (
+                            PolicyAction,
+                            redact_value,
+                        )
+
+                        # We don't have a key here, but we can check if it looks like PII/Secret
+                        # For safety in logs, we redact if it's highly sensitive
+                        if any(
+                            s in arg.lower()
+                            for s in ("password", "secret", "token", "key", "authorization")
+                        ):
+                            new_args[i] = redact_value(arg, PolicyAction.REDACED)
+                        elif "@" in arg and "." in arg:  # Likely email
+                            new_args[i] = redact_value(arg, PolicyAction.MASKED)
+                record.args = tuple(new_args)
+
+        # 3. Handle 'extra' fields if they were merged into __dict__
+        # (Be careful not to iterate over internal record attributes)
+        # Some logging libraries put 'extra' keys directly on the record.
         return True

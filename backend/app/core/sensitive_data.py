@@ -50,8 +50,6 @@ OPERATIONAL_FIELDS: Set[str] = {
     "validation_status",
     "repair_attempted",
     "fallback_triggered",
-    "request_id",
-    "trace_id",
     "environment",
     "evidence_warnings_count",
     "pipeline_kind",
@@ -133,7 +131,7 @@ SINK_POLICY: Dict[Sink, Dict[DataCategory, PolicyAction]] = {
         DataCategory.SECRET_CREDENTIAL: PolicyAction.FORBIDDEN,
         DataCategory.DIRECT_IDENTIFIER: PolicyAction.MASKED,
         DataCategory.TECHNICAL_CORRELATION_IDENTIFIER: PolicyAction.ALLOWED,
-        DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.ALLOWED,
+        DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.MASKED,  # Medium Finding fix
         DataCategory.USER_AUTHORED_CONTENT: PolicyAction.FORBIDDEN,
         DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.FORBIDDEN,
         DataCategory.OPERATIONAL_METADATA: PolicyAction.ALLOWED,
@@ -152,6 +150,8 @@ FIELD_CLASSIFICATION: Dict[str, DataCategory] = {
     "email": DataCategory.DIRECT_IDENTIFIER,
     "phone": DataCategory.DIRECT_IDENTIFIER,
     "address": DataCategory.DIRECT_IDENTIFIER,
+    "request_id": DataCategory.TECHNICAL_CORRELATION_IDENTIFIER,
+    "trace_id": DataCategory.TECHNICAL_CORRELATION_IDENTIFIER,
     "user_id": DataCategory.CORRELABLE_BUSINESS_IDENTIFIER,
     "target_id": DataCategory.CORRELABLE_BUSINESS_IDENTIFIER,
     "profile_id": DataCategory.CORRELABLE_BUSINESS_IDENTIFIER,
@@ -175,13 +175,14 @@ FIELD_CLASSIFICATION: Dict[str, DataCategory] = {
 
 def classify_field(field_name: str) -> DataCategory:
     """Classifies a field name into a DataCategory."""
-    if field_name in OPERATIONAL_FIELDS:
-        return DataCategory.OPERATIONAL_METADATA
-
-    # Check mapping
+    # Priority 1: Check explicit classification mapping
     field_lower = field_name.lower()
     if field_lower in FIELD_CLASSIFICATION:
         return FIELD_CLASSIFICATION[field_lower]
+
+    # Priority 2: Check operational allowlist
+    if field_name in OPERATIONAL_FIELDS:
+        return DataCategory.OPERATIONAL_METADATA
 
     # Heuristics for unknown fields
     if any(s in field_lower for s in ("password", "secret", "token", "key", "credential")):
