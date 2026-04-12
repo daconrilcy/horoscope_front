@@ -243,6 +243,9 @@ GPT-5 Codex
 - Les modèles admin ne publient plus `fallback_resolve_model` comme source valide du profil résolu.
 - L'observabilité publie désormais un événement structuré `runtime_rejected` enrichi par `reason` et incrémente le compteur dédié `llm_runtime_rejection_total`.
 - Les tests couvrent le profil manquant, le provider unsupported, l'échec de mapping provider, le fallback legacy hors support et l'alias legacy normalisé `daily_prediction -> horoscope_daily`.
+- `ResolvedExecutionPlan` rejette désormais explicitement toute source `fallback_resolve_model` ou `fallback_provider_unsupported` sur le périmètre supporté, même si un plan incohérent est injecté par erreur ou par mock.
+- La règle de périmètre supporté est réalignée sur `is_supported_feature()` dans les zones critiques encore dupliquées.
+- Garde-fou de maintenance ajouté : aucune future PR ne doit réintroduire une valeur legacy interdite dans les enums, fixtures admin, plans mockés, snapshots ou assertions de tests pour `chat`, `guidance`, `natal`, `horoscope_daily`.
 
 ### File List
 
@@ -255,5 +258,9 @@ GPT-5 Codex
 - `backend/app/services/ai_engine_adapter.py`
 - `backend/app/api/v1/routers/natal_interpretation.py`
 - `backend/tests/integration/test_story_66_30_suppression.py`
+- `backend/app/llm_orchestration/tests/test_resolved_execution_plan.py`
+- `backend/tests/evaluation/test_prompt_resolution.py`
+- `backend/app/infra/db/models/llm_execution_profile.py`
+- `backend/app/llm_orchestration/services/prompt_renderer.py`
 - `docs/llm-prompt-generation-by-feature.md`
 - `backend/app/llm_orchestration/ARCHITECTURE.md`

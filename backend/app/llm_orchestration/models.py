@@ -2,7 +2,7 @@ import uuid
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 EVIDENCE_ID_REGEX = r"^[A-Z0-9_\.:-]{3,80}$"
 
@@ -330,6 +330,28 @@ class ResolvedExecutionPlan(BaseModel):
     context_quality_handled_by_template: bool = False
 
     model_config = ConfigDict(frozen=True)
+
+    @model_validator(mode="after")
+    def validate_supported_perimeter_execution_profile_source(self) -> "ResolvedExecutionPlan":
+        """
+        Story 66.30: supported families must never publish a legacy execution-profile
+        fallback as a successful runtime plan.
+        """
+        from app.llm_orchestration.feature_taxonomy import is_supported_feature
+
+        legacy_execution_profile_sources = {
+            "fallback_resolve_model",
+            "fallback_provider_unsupported",
+        }
+        if (
+            is_supported_feature(self.feature)
+            and self.execution_profile_source in legacy_execution_profile_sources
+        ):
+            raise ValueError(
+                "Supported perimeter execution plans cannot use legacy execution-profile "
+                f"source '{self.execution_profile_source}'."
+            )
+        return self
 
     def to_log_dict(self) -> Dict[str, Any]:
         """Returns a filtered dict for logging, excluding verbose artifacts."""

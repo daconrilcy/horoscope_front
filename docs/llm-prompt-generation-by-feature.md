@@ -382,6 +382,7 @@ Sur le périmètre supporté :
 - provider non supporté -> `GatewayConfigError` avec `error_code="unsupported_execution_provider"` ;
 - échec de mapping provider -> `GatewayConfigError` avec `error_code="provider_mapping_failed"` ;
 - ces rejets publient un événement `runtime_rejected` et incrémentent le compteur dédié `llm_runtime_rejection_total`.
+- un `ResolvedExecutionPlan` supporté ne peut plus être construit avec `execution_profile_source="fallback_resolve_model"` ou `"fallback_provider_unsupported"`, même via mock ou injection incohérente.
 
 ## Verrou provider
 
@@ -506,6 +507,14 @@ Important :
 - un chemin supporté rejeté faute d'`ExecutionProfile` valide n'émet pas de `GatewayResult` de succès avec `legacy_execution_profile_fallback` ni `non_nominal_provider_tolerated` ;
 - ce scénario est visible via l'erreur explicite et la télémétrie de rejet (`supported_perimeter_rejection`), pas via un faux chemin nominal.
 
+### Garde-fou de maintenance
+
+Toute future PR doit préserver l'invariant suivant :
+
+- aucune valeur legacy interdite (`fallback_resolve_model`, `fallback_provider_unsupported`, `legacy_execution_profile_fallback`, `non_nominal_provider_tolerated`) ne doit réapparaître comme état acceptable pour `chat`, `guidance`, `natal`, `horoscope_daily` ;
+- cette interdiction vaut autant pour les enums et modèles runtime que pour les fixtures admin, plans mockés, snapshots d'observabilité et assertions de tests ;
+- si une compatibilité hors support est encore testée, elle doit rester explicitement bornée à un chemin non nominal ou legacy hors périmètre supporté.
+
 ### Rejets canoniques
 
 Lorsqu'un chemin supporté échoue faute d'assembly canonique obligatoire ou faute d'`ExecutionProfile` exploitable :
@@ -623,6 +632,6 @@ Toute mention de vérification ci-dessous atteste d'une **revue manuelle effecti
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-12`
-- **Référence stable (Commit SHA)** : `d950c901`
+- **Référence stable (Commit SHA)** : `affb4f69`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.

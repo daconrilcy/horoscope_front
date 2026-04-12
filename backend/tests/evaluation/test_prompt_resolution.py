@@ -12,6 +12,7 @@ from app.infra.db.models.llm_prompt import (
     LlmUseCaseConfigModel,
     PromptStatus,
 )
+from app.llm_orchestration.feature_taxonomy import is_supported_feature
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
 
@@ -230,9 +231,8 @@ async def test_prompt_resolution_matrix(
                     )
 
                 # Check Pipeline Maturity (Story 66.24 AC2)
-                CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
                 actual_pipeline_kind = (
-                    "nominal_canonical" if feat in CANONICAL_FAMILIES else "transitional_governance"
+                    "nominal_canonical" if is_supported_feature(feat) else "transitional_governance"
                 )
 
                 # Cross-check with matrix expectation

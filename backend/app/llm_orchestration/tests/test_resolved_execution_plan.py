@@ -3,6 +3,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
@@ -83,6 +84,22 @@ def test_plan_to_log_dict_filtering():
 
     # Verify serializable
     json.dumps(log_dict)
+
+
+def test_supported_perimeter_plan_rejects_legacy_execution_profile_source():
+    with pytest.raises(ValidationError, match="legacy execution-profile source"):
+        ResolvedExecutionPlan(
+            feature="chat",
+            model_id="gpt-4o",
+            model_source="config",
+            execution_profile_source="fallback_provider_unsupported",
+            rendered_developer_prompt="Prompt",
+            system_core="System",
+            interaction_mode="chat",
+            user_question_policy="required",
+            temperature=0.7,
+            max_output_tokens=1000,
+        )
 
 
 @pytest.mark.asyncio

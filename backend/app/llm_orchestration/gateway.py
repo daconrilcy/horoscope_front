@@ -1664,10 +1664,21 @@ class LLMGateway:
         # --- Story 66.25: Operational Observability Snapshot ---
 
         # 1. Pipeline Kind (Gouvernance)
-        CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
-        pipeline_kind = (
-            "nominal_canonical" if plan.feature in CANONICAL_FAMILIES else "transitional_governance"
-        )
+        supported_feature = is_supported_feature(plan.feature)
+        pipeline_kind = "nominal_canonical" if supported_feature else "transitional_governance"
+
+        if supported_feature and plan.execution_profile_source in {
+            "fallback_resolve_model",
+            "fallback_provider_unsupported",
+        }:
+            raise GatewayError(
+                "Supported perimeter plan cannot be published with a legacy "
+                "execution-profile fallback source.",
+                details={
+                    "feature": plan.feature,
+                    "execution_profile_source": plan.execution_profile_source,
+                },
+            )
 
         # 2. Execution Path Kind (Réalité runtime)
         path_kind = ExecutionPathKind.UNKNOWN

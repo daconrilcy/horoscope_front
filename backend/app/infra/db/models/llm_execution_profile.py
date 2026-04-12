@@ -72,6 +72,7 @@ class LlmExecutionProfileModel(Base):
                 NATAL_CANONICAL_FEATURE,
                 assert_nominal_feature_allowed,
                 is_natal_subfeature_canonical,
+                is_supported_feature,
             )
             from app.llm_orchestration.services.observability_service import log_governance_event
             from app.llm_orchestration.supported_providers import is_provider_supported
@@ -90,8 +91,7 @@ class LlmExecutionProfileModel(Base):
 
             # AC3.1, AC5: Enforce provider support when transition to PUBLISHED.
             # We strictly reject on nominal paths, but tolerate on non-nominal/test paths.
-            CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
-            is_nominal = self.feature in CANONICAL_FAMILIES
+            is_nominal = is_supported_feature(self.feature)
             provider_to_check = self.provider or "openai"
 
             if not is_provider_supported(provider_to_check):

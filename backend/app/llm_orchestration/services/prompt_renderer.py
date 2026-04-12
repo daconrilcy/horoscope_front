@@ -2,6 +2,7 @@ import logging
 import re
 from typing import Any, Dict, List
 
+from app.llm_orchestration.feature_taxonomy import is_supported_feature
 from app.llm_orchestration.models import PromptRenderError
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,6 @@ class PromptRenderer:
 
         # Universal placeholders (Story 66.13 AC6)
         universal = {"locale", "use_case", "persona_name", "last_user_msg"}
-        CANONICAL_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}
 
         for p_name in found_placeholders:
             p_def = placeholder_defs.get(p_name)
@@ -77,7 +77,7 @@ class PromptRenderer:
             if not p_def and p_name not in universal:
                 # Unknown placeholder (AC4) - NOT authorized for this feature
                 is_blocking = (
-                    effective_feature in CANONICAL_FAMILIES or p_name in required_variables
+                    is_supported_feature(effective_feature) or p_name in required_variables
                 )
 
                 if is_blocking:
