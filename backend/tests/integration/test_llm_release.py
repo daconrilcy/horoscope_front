@@ -140,6 +140,79 @@ async def test_llm_release_lifecycle():
         db.close()
 
 @pytest.mark.asyncio
+async def test_snapshot_validation_independence():
+    """
+    Test Finding 5: Snapshot validation should be independent of live tables.
+    """
+    db = SessionLocal()
+    try:
+        service = ReleaseService(db)
+        version = f"test-indep-{uuid.uuid4().hex[:8]}"
+        
+        # 1. Build Snapshot
+        snapshot = await service.build_snapshot(version=version, created_by="test_admin")
+        
+        # 2. Break live tables (archive all profiles)
+        db.execute(update(LlmExecutionProfileModel).values(status="archived"))
+        db.commit()
+        ExecutionProfileRegistry.invalidate_cache()
+        
+        # 3. Validate Snapshot - should still pass because it uses the bundle!
+        val_result = await service.validate_snapshot(snapshot.id)
+        assert val_result.is_valid is True
+        
+        # 4. Cleanup and verify live resolution fails (as a control)
+        # Note: we need to use a new registry to avoid cache
+        from app.llm_orchestration.services.config_coherence_validator import ConfigCoherenceValidator
+        registry = AssemblyRegistry(db)
+        target_keys = list(snapshot.manifest["targets"].keys())
+        target_key = target_keys[0]
+        f, sf, p, loc = target_key.split(":")
+        sf = sf if sf != "None" else None
+        p = p if p != "None" else None
+        
+        # Without an active snapshot, live resolution of profile should fail validation
+        assembly = db.query(PromptAssemblyConfigModel).filter(PromptAssemblyConfigModel.feature == f).first()
+        validator = ConfigCoherenceValidator(db)
+        res_live = await validator.validate_assembly(assembly)
+        assert res_live.is_valid is False # Because profiles are archived
+        
+    finally:
+        # Restore profiles for other tests
+        db.execute(update(LlmExecutionProfileModel).values(status="published"))
+        db.commit()
+        db.close()
+
+@pytest.mark.asyncio
+async def test_startup_validation_uses_snapshot():
+    """
+    Test Finding 6: Startup validation should prioritize the active snapshot.
+    """
+    db = SessionLocal()
+    try:
+        service = ReleaseService(db)
+        snapshot = await service.build_snapshot(version="startup-test", created_by="test_admin")
+        await service.activate_snapshot(snapshot.id, activated_by="test_admin")
+        
+        from app.llm_orchestration.services.config_coherence_validator import ConfigCoherenceValidator
+        validator = ConfigCoherenceValidator(db)
+        
+        # Break live tables
+        db.execute(update(LlmExecutionProfileModel).values(status="archived"))
+        db.commit()
+        ExecutionProfileRegistry.invalidate_cache()
+        
+        # Startup validation should still pass because it validates the snapshot!
+        results = await validator.scan_active_configurations()
+        assert len(results) == 0 # All valid
+        
+    finally:
+        db.execute(update(LlmExecutionProfileModel).values(status="published"))
+        db.execute(delete(LlmActiveReleaseModel))
+        db.commit()
+        db.close()
+
+@pytest.mark.asyncio
 async def test_non_fr_locale_resolution():
     """Test Finding 4: Profile resolution should respect locale in snapshots."""
     db = SessionLocal()

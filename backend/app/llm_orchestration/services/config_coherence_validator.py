@@ -131,9 +131,12 @@ class ConfigCoherenceValidator:
             return await self.session.execute(stmt)
         return self.session.execute(stmt)
 
-    async def validate_assembly(self, config: PromptAssemblyConfigModel) -> ValidationResult:
+    async def validate_assembly(
+        self, config: PromptAssemblyConfigModel, bundle: Optional[Dict[str, Any]] = None
+    ) -> ValidationResult:
         """
         Validate a single assembly configuration.
+        Story 66.32: Support optional snapshot bundle for self-sufficient validation (Finding 5).
         """
         result = ValidationResult(is_valid=True)
         feature = config.feature
@@ -148,7 +151,9 @@ class ConfigCoherenceValidator:
             )
 
         # 1. Execution Profile Validation (AC2)
-        profile, profile_error_code = await self._resolve_and_validate_profile(config, is_supported)
+        profile, profile_error_code = await self._resolve_and_validate_profile(
+            config, is_supported, bundle
+        )
         if profile_error_code:
             result.add_error(
                 profile_error_code,
@@ -168,7 +173,7 @@ class ConfigCoherenceValidator:
 
         # 3. Output Contract Validation (AC3)
         if config.output_contract_ref:
-            res_contract = await self._validate_output_contract(config, profile)
+            res_contract = await self._validate_output_contract(config, profile, bundle)
             contract_valid, contract_error_code = res_contract
             if not contract_valid:
                 result.add_error(
@@ -182,7 +187,7 @@ class ConfigCoherenceValidator:
 
         # 5. Persona Validation (AC6)
         if config.persona_enabled and config.persona_ref:
-            await self._validate_persona(config, result)
+            await self._validate_persona(config, result, bundle)
 
         # 6. Plan Rules & Length Budget (AC7)
         if config.plan_rules_enabled and config.plan_rules_ref:
@@ -194,13 +199,35 @@ class ConfigCoherenceValidator:
         return result
 
     async def _resolve_and_validate_profile(
-        self, config: PromptAssemblyConfigModel, is_supported: bool
+        self,
+        config: PromptAssemblyConfigModel,
+        is_supported: bool,
+        bundle: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Optional[LlmExecutionProfileModel], Optional[str]]:
         """
         AC2: execution_profile_ref vs waterfall.
         Returns (Profile, error_code)
         """
-        # Case 1: Explicit reference
+        # Story 66.32: Try from bundle first (Finding 5)
+        if bundle and "profile" in bundle:
+            profile_data = bundle["profile"]
+            # Check if this profile matches the explicit ref or is the one for this target
+            if config.execution_profile_ref:
+                if profile_data.get("id") == str(config.execution_profile_ref):
+                    from app.infra.db.utils import reconstruct_orm
+
+                    profile = reconstruct_orm(LlmExecutionProfileModel, profile_data)
+                    if profile.status == PromptStatus.PUBLISHED:
+                        return profile, None
+            else:
+                # Waterfall case - the bundle already contains the correctly resolved profile
+                from app.infra.db.utils import reconstruct_orm
+
+                profile = reconstruct_orm(LlmExecutionProfileModel, profile_data)
+                if profile.status == PromptStatus.PUBLISHED:
+                    return profile, None
+
+        # Case 1: Explicit reference (Live DB)
         if config.execution_profile_ref:
             stmt = select(LlmExecutionProfileModel).where(
                 LlmExecutionProfileModel.id == config.execution_profile_ref
@@ -213,7 +240,7 @@ class ConfigCoherenceValidator:
 
             return profile, None
 
-        # Case 2: Waterfall resolution
+        # Case 2: Waterfall resolution (Live DB)
         profile = await self._resolve_profile_via_waterfall(
             feature=config.feature,
             subfeature=config.subfeature,
@@ -265,12 +292,22 @@ class ConfigCoherenceValidator:
         return None
 
     async def _validate_output_contract(
-        self, config: PromptAssemblyConfigModel, profile: Optional[LlmExecutionProfileModel]
+        self,
+        config: PromptAssemblyConfigModel,
+        profile: Optional[LlmExecutionProfileModel],
+        bundle: Optional[Dict[str, Any]] = None,
     ) -> Tuple[bool, Optional[str]]:
         """
         AC3: Output contract validity and compatibility.
         """
         contract_ref = config.output_contract_ref
+        
+        # Story 66.32: Try from bundle first (Finding 5)
+        if bundle and "schema" in bundle:
+            schema_data = bundle["schema"]
+            if schema_data.get("id") == contract_ref or schema_data.get("name") == contract_ref:
+                return True, None
+
         contract = None
 
         try:
@@ -323,10 +360,31 @@ class ConfigCoherenceValidator:
                     {"placeholders": invalid_sub, "template": "subfeature"},
                 )
 
-    async def _validate_persona(self, config: PromptAssemblyConfigModel, result: ValidationResult):
+    async def _validate_persona(
+        self,
+        config: PromptAssemblyConfigModel,
+        result: ValidationResult,
+        bundle: Optional[Dict[str, Any]] = None,
+    ):
         """
         AC6: Persona existence and authorization.
         """
+        # Story 66.32: Try from bundle first (Finding 5)
+        # Note: Persona is currently nested inside assembly in the bundle
+        # But build_bundle doesn't have a top-level 'persona' key.
+        # Actually AssemblyRegistry._serialize_config includes _persona if loaded.
+        # And build_bundle calls _serialize_config.
+        
+        # Let's check the reconstructed config persona first
+        if config.persona:
+            if not config.persona.enabled:
+                result.add_error(
+                    "persona_not_allowed",
+                    f"Persona '{config.persona.name}' is disabled.",
+                    {"persona_id": str(config.persona_ref)},
+                )
+            return
+
         stmt = select(LlmPersonaModel).where(LlmPersonaModel.id == config.persona_ref)
         res = await self._execute(stmt)
         persona = res.scalar_one_or_none()
@@ -422,7 +480,44 @@ class ConfigCoherenceValidator:
     ) -> List[Tuple[PromptAssemblyConfigModel, ValidationResult]]:
         """
         AC10: Scan only active published configurations for boot runtime validation.
+        Story 66.32: Prioritize active release snapshot if available (Finding 6).
         """
+        from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+        from app.llm_orchestration.services.release_service import ReleaseService
+
+        active_snapshot_id = await ReleaseService.get_active_release_id(self.session)
+
+        if active_snapshot_id:
+            # Validate the snapshot manifest instead of live tables
+            from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+
+            if isinstance(self.session, AsyncSession):
+                snapshot = await self.session.get(LlmReleaseSnapshotModel, active_snapshot_id)
+            else:
+                snapshot = self.session.get(LlmReleaseSnapshotModel, active_snapshot_id)
+
+            if snapshot:
+                logger.info(
+                    "scan_active_configurations: validating active snapshot %s", snapshot.version
+                )
+                results = []
+                manifest = snapshot.manifest
+                targets = manifest.get("targets", {})
+                registry = AssemblyRegistry(self.session)
+
+                for target_key, bundle in targets.items():
+                    assembly_data = bundle.get("assembly")
+                    if not assembly_data:
+                        continue
+
+                    assembly = registry._reconstruct_config(assembly_data)
+                    # Important: Pass the bundle for transitive validation (Finding 5)
+                    val_result = await self.validate_assembly(assembly, bundle=bundle)
+                    if not val_result.is_valid:
+                        results.append((assembly, val_result))
+                return results
+
+        # Fallback to legacy live table scanning if no snapshot is active
         stmt = (
             select(PromptAssemblyConfigModel)
             .where(PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED)

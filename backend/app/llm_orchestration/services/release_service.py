@@ -202,8 +202,8 @@ class ReleaseService:
             registry = AssemblyRegistry(self.session)
             assembly = registry._reconstruct_config(assembly_data)
 
-            # Validate
-            target_res = await validator.validate_assembly(assembly)
+            # Validate using the bundle for transitive dependencies (Finding 5)
+            target_res = await validator.validate_assembly(assembly, bundle=bundle)
             if not target_res.is_valid:
                 for err in target_res.errors:
                     result.add_error(
