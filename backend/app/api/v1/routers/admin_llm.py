@@ -17,6 +17,7 @@ from app.api.dependencies.auth import (
     require_admin_user,
 )
 from app.core.request_id import resolve_request_id
+from app.core.sensitive_data import Sink, sanitize_payload
 from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.llm_observability import LlmCallLogModel
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
@@ -199,13 +200,15 @@ def _error_response(
     message: str,
     details: dict[str, Any],
 ) -> JSONResponse:
+    # AC13: Sanitize error details
+    sanitized_details = sanitize_payload(details, Sink.ADMIN_API)
     return JSONResponse(
         status_code=status_code,
         content={
             "error": {
                 "code": code,
                 "message": message,
-                "details": details,
+                "details": sanitized_details,
                 "request_id": request_id,
             }
         },

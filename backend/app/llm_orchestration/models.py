@@ -473,12 +473,14 @@ class GatewayResult(BaseModel):
 
     def to_log_dict(self) -> Dict[str, Any]:
         """
-        Returns a JSON-serializable dict for logging, excluding verbose artifacts.
-        (AC10: include assembly metadata)
+        Returns a JSON-serializable dict for logging, excluding verbose and sensitive artifacts.
+        AC11: Terminal safety for logging.
         """
         dump = self.model_dump()
-        # If we have assembly metadata in meta (implied via build_result)
-        # the dump already contains them.
+        # AC11: Redact sensitive content
+        dump["raw_output"] = "[REDACTED]"
+        if dump.get("structured_output"):
+            dump["structured_output"] = {"status": "redacted_for_logging"}
         return dump
 
 
@@ -488,7 +490,7 @@ class ReplayResult(BaseModel):
     use_case: str
     prompt_version_id: str
     persona_id: Optional[str] = None
-    raw_output: str
+    raw_output: Optional[str] = None
     structured_output: Optional[Dict[str, Any]] = None
     validation_status: str
     latency_ms: int

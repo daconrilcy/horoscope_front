@@ -11,8 +11,9 @@ async def test_raises_prompt_render_error_if_var_missing(db):
     gateway = LLMGateway()
 
     # Seed a dummy config with a required variable
-    from app.llm_orchestration.models import UseCaseConfig
     from unittest.mock import patch
+
+    from app.llm_orchestration.models import UseCaseConfig
 
     dummy_config = UseCaseConfig(
         model="m", developer_prompt="Hello {{name}}", required_prompt_placeholders=["name"]

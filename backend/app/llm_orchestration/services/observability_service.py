@@ -10,8 +10,8 @@ from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
-from app.ai_engine.services.log_sanitizer import sanitize_for_logging
 from app.core.config import settings
+from app.core.sensitive_data import Sink, sanitize_payload
 from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel
 from app.infra.db.models.llm_observability import (
     LlmCallLogModel,
@@ -61,10 +61,11 @@ def _resolve_existing_fk_uuid(db: Session, model: type[Any], raw_value: Any) -> 
 def compute_input_hash(user_input: Dict[str, Any]) -> str:
     """
     Computes a SHA-256 hash of the sanitized user input.
-    Keys are sorted to ensure reproducibility.
+    Uses LLM_CALL_LOGS sink policy (Hashing) for maximum safety.
     """
-    sanitized = sanitize_for_logging(user_input)
-    # Sort keys for consistent hashing
+    # AC12: Hashing is allowed for correlation.
+    # We sanitize first to ensure stability even if some fields are redacted.
+    sanitized = sanitize_payload(user_input, Sink.LLM_CALL_LOGS)
     serialized = json.dumps(sanitized, sort_keys=True)
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 

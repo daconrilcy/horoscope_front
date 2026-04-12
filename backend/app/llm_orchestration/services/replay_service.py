@@ -103,8 +103,8 @@ async def replay(
         use_case=result.use_case,
         prompt_version_id=result.meta.prompt_version_id,
         persona_id=result.meta.persona_id,
-        raw_output=result.raw_output,
-        structured_output=result.structured_output,
+        raw_output=None,  # AC7: Strict non-textual default
+        structured_output=None,  # AC7: Strict non-textual default
         validation_status=new_val,
         latency_ms=result.meta.latency_ms,
         tokens_in=result.usage.input_tokens,

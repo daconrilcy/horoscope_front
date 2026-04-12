@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from openai import RateLimitError
 
-from app.ai_engine.exceptions import UpstreamRateLimitError
 from app.llm_orchestration.providers.responses_client import ResponsesClient
 
 

@@ -669,8 +669,45 @@ Champs observés :
 | provider triplet | provider demandé, résolu, exécuté |
 | `context_compensation_status` | compensation de contexte observée |
 | `max_output_tokens_source` | source finale de l'arbitrage de sortie |
-| `active_snapshot_id/version` | release active réellement exécutée |
-| `manifest_entry_id` | entrée de manifest exacte utilisée pour cette exécution |
+- `active_snapshot_id/version` : release active réellement exécutée
+- `manifest_entry_id` : entrée de manifest exacte utilisée pour cette exécution
+
+## Protection des données sensibles (Story 66.34)
+
+L'application applique une politique de rédaction et de classification stricte pour éviter toute fuite de données sensibles (PII, secrets, contenu utilisateur) dans les logs, les snapshots et les interfaces d'administration.
+
+### 1. Taxonomie des données
+Les données sont classées en catégories ordonnées par sensibilité :
+- `SECRET_CREDENTIAL` : mots de passe, clés API, tokens. Action : `FORBIDDEN` (jamais stocké).
+- `DIRECT_IDENTIFIER` : email, téléphone, adresse. Action : `REDACED` ou `MASKED`.
+- `USER_AUTHORED_CONTENT` : messages du chat, questions, prompts, réponses LLM. Action : `ENCRYPTED_ISOLATED` dans les snapshots de replay, `REDACED` ailleurs.
+- `DERIVED_SENSITIVE_DOMAIN_DATA` : données de naissance, thèmes astraux. Action : `REDACED` dans les logs et admin.
+- `CORRELABLE_BUSINESS_IDENTIFIER` : `user_id`, `conversation_id`. Action : `MASKED` ou `HASHED`.
+- `TECHNICAL_CORRELATION_IDENTIFIER` : `request_id`, `trace_id`. Action : `ALLOWED`.
+- `OPERATIONAL_METADATA` : use case, feature, latence, usage tokens. Action : `ALLOWED` (Allowlist positive).
+
+### 2. Matrice de traitement par Sink (Sûreté Multi-couche)
+
+| Sink | Politique dominante | Mécanisme |
+|---|---|---|
+| **Structured Logs** | Rédaction agressive | `logging.Filter` + allowlist positive |
+| **LLM Call Logs (DB)** | Métadonnées uniquement | `OPERATIONAL_FIELDS` allowlist |
+| **Obs Snapshot** | Métadonnées uniquement | Filtrage à la source dans le Gateway |
+| **Replay Snapshots** | Isolation chiffrée | Chiffrement AES-GCM, accès restreint, expiration courte |
+| **Admin API / Dashboard** | Masquage / Rédaction | DTOs dédiés + Sanitize policy |
+| **Audit Trail** | Masquage des identifiants | `AuditService` sanitization systématique |
+
+### 3. Règles de durcissement
+- **Allowlist positive AC3** : Seuls les champs explicitement listés dans `OPERATIONAL_FIELDS` sont admis dans les logs d'appels LLM et les snapshots d'observabilité. Tout champ inconnu est considéré comme sensible par défaut.
+- **Hashing de corrélation AC12** : L'`input_hash` est calculé sur une version anonymisée et hachée (SHA-256) de l'entrée utilisateur pour permettre la détection de doublons sans stocker le texte.
+- **Isolation du Replay AC7** : Le replay ne renvoie jamais le contenu brut (`raw_output`, `structured_output`) ou les diffs textuels par défaut. L'accès aux snapshots chiffrés est limité à l'environnement de non-production.
+- **Filtre Terminal AC11** : Un `SensitiveDataFilter` global (Python 3.13 style) agit comme filet de sécurité final sur toutes les sorties `logging`.
+
+### 4. Application et Vérification
+- Le module central de vérité est `backend/app/core/sensitive_data.py`.
+- La conformité est vérifiée par des tests de non-fuite (`test_sensitive_data_non_leakage`).
+- Toute nouvelle métadonnée utile au debug doit être explicitement ajoutée à l'allowlist positive pour être persistée.
+
 | `executed_provider_mode` | mode réel d'exécution provider (`nominal`, `circuit_open`, `degraded` ou équivalent stable) |
 | `attempt_count` | nombre total de tentatives réellement consommées |
 | `provider_error_code` | taxonomie finale de l'échec provider ou du rejet runtime |

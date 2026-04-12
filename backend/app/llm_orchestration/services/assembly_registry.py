@@ -13,7 +13,7 @@ from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
-from app.infra.db.utils import serialize_orm, reconstruct_orm
+from app.infra.db.utils import reconstruct_orm, serialize_orm
 from app.llm_orchestration.feature_taxonomy import (
     assert_nominal_feature_allowed,
     normalize_feature,
@@ -73,7 +73,10 @@ class AssemblyRegistry:
         return data
 
     def _reconstruct_config(self, data: Dict[str, Any]) -> PromptAssemblyConfigModel:
-        """Reconstruct a detached ORM instance from serialized dict with automatic type conversion."""
+        """
+        Reconstruct a detached ORM instance from serialized dict
+        with automatic type conversion.
+        """
         data_copy = data.copy()
 
         # 1. Pop nested data and metadata to avoid constructor errors

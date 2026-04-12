@@ -18,7 +18,7 @@ from app.infra.db.models.llm_release import (
     LlmReleaseSnapshotModel,
     ReleaseStatus,
 )
-from app.infra.db.utils import reconstruct_orm, serialize_orm
+from app.infra.db.utils import serialize_orm
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
 from app.llm_orchestration.services.config_coherence_validator import (
     ConfigCoherenceValidator,

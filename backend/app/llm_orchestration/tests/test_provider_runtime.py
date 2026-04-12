@@ -1,18 +1,16 @@
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from openai import RateLimitError, APITimeoutError
+from openai import APITimeoutError, RateLimitError
 
 from app.ai_engine.exceptions import (
-    UpstreamRateLimitError,
-    UpstreamTimeoutError,
-    UpstreamCircuitOpenError,
     RetryBudgetExhaustedError,
+    UpstreamCircuitOpenError,
+    UpstreamRateLimitError,
 )
-from app.llm_orchestration.models import GatewayResult, UsageInfo, GatewayMeta
-from app.llm_orchestration.providers.provider_runtime_manager import ProviderRuntimeManager
+from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 from app.llm_orchestration.providers.circuit_breaker import _breakers
+from app.llm_orchestration.providers.provider_runtime_manager import ProviderRuntimeManager
 
 
 @pytest.fixture(autouse=True)

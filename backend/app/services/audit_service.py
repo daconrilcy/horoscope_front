@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.sensitive_data import Sink, sanitize_payload
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.observability.metrics import increment_counter
 
@@ -146,6 +147,9 @@ class AuditService:
                 message="status is invalid",
                 details={"field": "status"},
             )
+        # AC8: Sanitize details using AUDIT_TRAIL policy
+        sanitized_details = sanitize_payload(payload.details, Sink.AUDIT_TRAIL)
+
         event = AuditEventModel(
             request_id=payload.request_id,
             actor_user_id=payload.actor_user_id,
@@ -154,7 +158,7 @@ class AuditService:
             target_type=payload.target_type,
             target_id=payload.target_id,
             status=payload.status,
-            details=payload.details,
+            details=sanitized_details,
         )
         db.add(event)
         db.flush()

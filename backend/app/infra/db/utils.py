@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, Type
 
-from sqlalchemy import DateTime, UUID, inspect
+from sqlalchemy import inspect
 
 
 def serialize_orm(obj: Any) -> Dict[str, Any]:

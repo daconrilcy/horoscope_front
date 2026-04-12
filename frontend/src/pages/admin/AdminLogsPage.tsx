@@ -119,6 +119,28 @@ function ReplayModal({
 }
 
 function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
+  // AC10: Defense-in-depth: Mask common sensitive keys in the UI as a safety net
+  const SENSITIVE_KEYS_TO_MASK = [
+    "password",
+    "token",
+    "secret",
+    "api_key",
+    "apikey",
+    "authorization",
+    "credentials",
+  ]
+
+  const sanitizeDetails = (details: Record<string, unknown>): Record<string, unknown> => {
+    const sanitized = { ...details }
+    Object.keys(sanitized).forEach((key) => {
+      const lowerKey = key.toLowerCase()
+      if (SENSITIVE_KEYS_TO_MASK.some((s) => lowerKey.includes(s))) {
+        sanitized[key] = "[MASKED_UI]"
+      }
+    })
+    return sanitized
+  }
+
   return (
     <div className="modal-overlay" role="presentation">
       <div
@@ -150,7 +172,9 @@ function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
             <span>{log.status}</span>
           </div>
         </div>
-        <pre className="audit-details-json">{JSON.stringify(log.details, null, 2)}</pre>
+        <pre className="audit-details-json">
+          {JSON.stringify(sanitizeDetails(log.details), null, 2)}
+        </pre>
         <div className="modal-actions">
           <button className="action-button action-button--primary" onClick={onClose}>
             Fermer

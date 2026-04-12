@@ -21,7 +21,8 @@ async def run_llm_coherence_startup_validation(
         return
 
     logger.info(
-        "llm_coherence_startup_validation mode=%s - scanning active snapshot or published configurations",
+        "llm_coherence_startup_validation mode=%s - scanning active snapshot "
+        "or published configurations",
         mode,
     )
 

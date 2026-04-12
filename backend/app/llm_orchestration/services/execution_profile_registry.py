@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import uuid
 from threading import Lock
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
