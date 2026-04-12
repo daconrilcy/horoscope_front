@@ -109,7 +109,7 @@ flowchart TD
 | Release runtime | `LlmReleaseSnapshotModel`, `LlmActiveReleaseModel`, `ReleaseService` | figer et activer atomiquement le bundle `assembly/profile/schema/persona` réellement servi ; sur le périmètre nominal supporté, cette release active est obligatoire | édition directe d'artefacts vivants au moment de l'exécution |
 | Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante, y compris la release active et l'entrée de manifest utilisée | persistance admin |
 
-## Stories 66.9 à 66.32
+## Stories 66.9 à 66.33
 
 | Story | Apport canonique | Impact runtime observable |
 |---|---|---|
@@ -137,6 +137,7 @@ flowchart TD
 | `66.30` | extinction fallback d'exécution | `ExecutionProfile` devient obligatoire sur le périmètre supporté ; `resolve_model()` ne survit plus qu'hors support avec rejet explicite, `error_code` stable et compteur dédié |
 | `66.31` | validation fail-fast de cohérence | publish et startup bloquent désormais les incohérences de configuration sur l'état publié actif, avec `error_code` structurés et scan startup borné à la cible runtime réellement résoluble |
 | `66.32` | release snapshot atomique | le runtime nominal lit désormais un snapshot de release actif, activable et rollbackable, avec propagation de `active_snapshot_id/version` et `manifest_entry_id` dans le plan et l'observabilité |
+| `66.33` | durcissement runtime provider OpenAI | `_call_provider()` passe désormais par `ProviderRuntimeManager`, avec retries applicatifs bornés, breaker `provider:family`, timeouts par famille, taxonomie d'erreurs enrichie et observabilité provider-centric propagée jusqu'au snapshot canonique |
 
 ## Familles et points d'entrée réels
 
@@ -533,6 +534,19 @@ Le runtime provider n'est plus écrasé en un unique `llm_unavailable`.
 - `UpstreamTimeoutError` conserve `504`.
 - Les erreurs `bad_request`, `auth/config`, `connection_error` et `server_error` restent distinguables via `details` et la taxonomie adapter/runtime.
 
+#### Matrice canonique de mapping
+
+| Exception interne | HTTP status | Code API | Retryable côté client produit |
+|---|---|---|---|
+| `UpstreamRateLimitError` | `429` | `rate_limit_exceeded` | oui, selon `retry_after_ms` |
+| `UpstreamTimeoutError` | `504` | `upstream_timeout` | oui |
+| `UpstreamCircuitOpenError` | `503` | `upstream_circuit_open` | oui |
+| `RetryBudgetExhaustedError` | `502` | `retry_budget_exhausted` | oui, avec backoff produit borné |
+| `UpstreamConnectionError` | `502` | `upstream_connection_error` | oui |
+| `UpstreamBadRequestError` | `400` | `upstream_error` | non |
+| `UpstreamAuthError` | `502` | `upstream_error` | non, incident serveur/configuration |
+| `UpstreamServerError` | `502` | `upstream_error` | oui, si la politique produit décide de retenter |
+
 ### 6. Observabilité Opérationnelle
 Le snapshot d'observabilité et les logs `llm_call_logs` sont enrichis :
 - `executed_provider_mode` : nominal ou dégradé.
@@ -541,6 +555,17 @@ Le snapshot d'observabilité et les logs `llm_call_logs` sont enrichis :
 - `breaker_state` / `breaker_scope` : état du circuit au moment de l'appel.
 - Ces champs sont aussi persistés sur le chemin d'erreur `log_call(error=...)`, y compris pour `circuit_open`.
 - Un résultat servi en mode dégradé ne doit jamais compter comme succès nominal provider.
+
+### 7. Mode dégradé réellement autorisé
+La story 66.33 introduit le vocabulaire `nominal` / `dégradé`, mais le contrat produit actuel reste volontairement strict sur le périmètre nominal :
+- pour `chat`, `guidance`, `natal` et `horoscope_daily`, les incidents provider (`rate_limit`, `timeout`, `circuit_open`, `retry_budget_exhausted`) remontent aujourd'hui prioritairement comme erreurs explicites ;
+- aucun chemin nominal documenté ne doit inventer une réponse de remplacement silencieuse pour masquer un incident OpenAI ;
+- un futur mode dégradé produit restera possible, mais il devra être documenté famille par famille, avec contrat de surface explicite et comptage séparé des succès nominaux.
+
+Autrement dit, à date :
+- `executed_provider_mode=nominal` signifie appel OpenAI réellement exécuté ;
+- `executed_provider_mode=circuit_open` ou un code voisin décrit un court-circuit runtime explicite ;
+- un mode dégradé productisé par famille n'est pas encore une voie nominale décrite pour `chat`, `guidance`, `natal` ou `horoscope_daily`.
 
 ## Verrou provider
 
@@ -628,6 +653,11 @@ Champs observés :
 - `active_snapshot_id`
 - `active_snapshot_version`
 - `manifest_entry_id`
+- `executed_provider_mode`
+- `attempt_count`
+- `provider_error_code`
+- `breaker_state`
+- `breaker_scope`
 
 ### Axes de lecture
 
@@ -641,6 +671,10 @@ Champs observés :
 | `max_output_tokens_source` | source finale de l'arbitrage de sortie |
 | `active_snapshot_id/version` | release active réellement exécutée |
 | `manifest_entry_id` | entrée de manifest exacte utilisée pour cette exécution |
+| `executed_provider_mode` | mode réel d'exécution provider (`nominal`, `circuit_open`, `degraded` ou équivalent stable) |
+| `attempt_count` | nombre total de tentatives réellement consommées |
+| `provider_error_code` | taxonomie finale de l'échec provider ou du rejet runtime |
+| `breaker_state/scope` | état et granularité du breaker ayant piloté la décision runtime |
 
 Pour l'axe `context_compensation_status`, la lecture correcte est désormais :
 
