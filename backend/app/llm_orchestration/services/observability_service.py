@@ -114,6 +114,17 @@ def log_governance_event(
         "reason": reason or "unknown",
     }
     increment_counter("llm_governance_event_total", labels=labels)
+    if event_type == "runtime_rejected":
+        increment_counter(
+            "llm_runtime_rejection_total",
+            labels={
+                "feature": feature or "unknown",
+                "subfeature": subfeature or "unknown",
+                "provider": provider or "unknown",
+                "is_nominal": str(is_nominal).lower(),
+                "reason": reason or "unknown",
+            },
+        )
     logger.info(
         "llm_governance_event type=%s provider=%s feature=%s subfeature=%s is_nominal=%s reason=%s",
         event_type,

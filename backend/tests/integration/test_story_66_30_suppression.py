@@ -1,23 +1,78 @@
-import pytest
 import uuid
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
     ExecutionContext,
-    ExecutionUserInput,
-    LLMExecutionRequest,
-    GatewayConfigError,
     ExecutionFlags,
+    ExecutionUserInput,
+    GatewayConfigError,
+    LLMExecutionRequest,
 )
+from app.llm_orchestration.services.observability_service import log_governance_event
+
 
 @pytest.fixture
 def gateway():
     return LLMGateway()
 
+
+def test_story_66_30_runtime_rejection_emits_dedicated_counter():
+    """
+    Story 66.30: runtime_rejected MUST increment both the unified governance
+    counter and the dedicated rejection counter with a discriminant reason.
+    """
+    calls = []
+
+    def _spy_increment_counter(
+        name: str, value: float = 1.0, labels: dict[str, str] | None = None
+    ) -> None:
+        calls.append((name, value, labels or {}))
+
+    with patch(
+        "app.llm_orchestration.services.observability_service.increment_counter",
+        side_effect=_spy_increment_counter,
+    ):
+        log_governance_event(
+            event_type="runtime_rejected",
+            feature="chat",
+            subfeature="astrologer",
+            provider="openai",
+            is_nominal=True,
+            reason="missing_execution_profile",
+        )
+
+    assert (
+        "llm_governance_event_total",
+        1.0,
+        {
+            "event_type": "runtime_rejected",
+            "provider": "openai",
+            "feature": "chat",
+            "subfeature": "astrologer",
+            "is_nominal": "true",
+            "reason": "missing_execution_profile",
+        },
+    ) in calls
+    assert (
+        "llm_runtime_rejection_total",
+        1.0,
+        {
+            "feature": "chat",
+            "subfeature": "astrologer",
+            "provider": "openai",
+            "is_nominal": "true",
+            "reason": "missing_execution_profile",
+        },
+    ) in calls
+
+
 @pytest.mark.asyncio
 async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
     """
-    Story 66.30: A supported feature (e.g., 'chat') without an 
+    Story 66.30: A supported feature (e.g., 'chat') without an
     ExecutionProfile MUST fail instead of falling back to resolve_model().
     """
     request = LLMExecutionRequest(
@@ -50,20 +105,41 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
     mock_resolved_assembly.persona_ref = None
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
-    
+
     with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=True):
-        with patch("app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync", return_value=mock_assembly_db):
-            with patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved_assembly):
-                with patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="test prompt"):
+        with patch(
+            "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
+            return_value=mock_assembly_db,
+        ):
+            with patch(
+                "app.llm_orchestration.gateway.resolve_assembly",
+                return_value=mock_resolved_assembly,
+            ):
+                with patch(
+                    "app.llm_orchestration.gateway.assemble_developer_prompt",
+                    return_value="test prompt",
+                ):
                     # CRITICAL: Ensure profile resolution returns None
-                    with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id", return_value=None):
-                        with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile", return_value=None):
-                            
-                            with pytest.raises(GatewayConfigError, match="No ExecutionProfile found") as excinfo:
+                    with patch(
+                        "app.llm_orchestration.services.execution_profile_registry."
+                        "ExecutionProfileRegistry.get_profile_by_id",
+                        return_value=None,
+                    ):
+                        with patch(
+                            "app.llm_orchestration.services.execution_profile_registry."
+                            "ExecutionProfileRegistry.get_active_profile",
+                            return_value=None,
+                        ):
+                            with pytest.raises(
+                                GatewayConfigError, match="No ExecutionProfile found"
+                            ) as excinfo:
                                 await gateway._resolve_plan(request, db=MagicMock())
-                            
+
                             assert excinfo.value.error_code == "missing_execution_profile"
-                            assert excinfo.value.details["error_code"] == "missing_execution_profile"
+                            assert (
+                                excinfo.value.details["error_code"] == "missing_execution_profile"
+                            )
+
 
 @pytest.mark.asyncio
 async def test_story_66_30_legacy_alias_normalization_on_supported_perimeter(gateway):
@@ -73,7 +149,7 @@ async def test_story_66_30_legacy_alias_normalization_on_supported_perimeter(gat
     """
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
-            use_case="daily_prediction", # Legacy alias
+            use_case="daily_prediction",  # Legacy alias
         ),
         context=ExecutionContext(),
         request_id="test-66-30-legacy-alias",
@@ -100,30 +176,52 @@ async def test_story_66_30_legacy_alias_normalization_on_supported_perimeter(gat
     mock_resolved_assembly.persona_ref = None
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
-    
-    with patch("app.llm_orchestration.gateway.normalize_feature", return_value="horoscope_daily"):
+
+    with patch(
+        "app.llm_orchestration.gateway.normalize_feature",
+        return_value="horoscope_daily",
+    ):
         with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=True):
-            with patch("app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync", return_value=mock_assembly_db):
-                with patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved_assembly):
-                    with patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="test prompt"):
+            with patch(
+                "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
+                return_value=mock_assembly_db,
+            ):
+                with patch(
+                    "app.llm_orchestration.gateway.resolve_assembly",
+                    return_value=mock_resolved_assembly,
+                ):
+                    with patch(
+                        "app.llm_orchestration.gateway.assemble_developer_prompt",
+                        return_value="test prompt",
+                    ):
                         # CRITICAL: Ensure profile resolution returns None
-                        with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id", return_value=None):
-                            with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile", return_value=None):
-                                
+                        with patch(
+                            "app.llm_orchestration.services.execution_profile_registry."
+                            "ExecutionProfileRegistry.get_profile_by_id",
+                            return_value=None,
+                        ):
+                            with patch(
+                                "app.llm_orchestration.services.execution_profile_registry."
+                                "ExecutionProfileRegistry.get_active_profile",
+                                return_value=None,
+                            ):
                                 # We call execute_request because normalization happens there
-                                with pytest.raises(GatewayConfigError, match="No ExecutionProfile found") as excinfo:
+                                with pytest.raises(
+                                    GatewayConfigError, match="No ExecutionProfile found"
+                                ) as excinfo:
                                     await gateway.execute_request(request, db=MagicMock())
-                                
+
                                 assert excinfo.value.error_code == "missing_execution_profile"
-                                assert excinfo.value.details["error_code"] == "missing_execution_profile"
-
-
+                                assert (
+                                    excinfo.value.details["error_code"]
+                                    == "missing_execution_profile"
+                                )
 
 
 @pytest.mark.asyncio
 async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
     """
-    Story 66.30: A supported feature with an ExecutionProfile 
+    Story 66.30: A supported feature with an ExecutionProfile
     demanding an unsupported provider MUST fail instead of falling back.
     """
     request = LLMExecutionRequest(
@@ -146,7 +244,7 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
     mock_profile.verbosity_profile = "normal"
     mock_profile.output_mode = "text"
     mock_profile.tool_mode = "none"
-    
+
     mock_assembly_db = MagicMock()
     mock_assembly_db.id = uuid.uuid4()
     mock_assembly_db.interaction_mode = "chat"
@@ -166,23 +264,41 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
     mock_resolved_assembly.persona_ref = None
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
-    
+
     with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=True):
-        with patch("app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync", return_value=mock_assembly_db):
-            with patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved_assembly):
-                with patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="test prompt"):
-                    with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile", return_value=mock_profile):
-                        with patch("app.llm_orchestration.supported_providers.is_provider_supported", return_value=False):
-                            
-                            with pytest.raises(GatewayConfigError, match="is not nominally supported") as excinfo:
+        with patch(
+            "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
+            return_value=mock_assembly_db,
+        ):
+            with patch(
+                "app.llm_orchestration.gateway.resolve_assembly",
+                return_value=mock_resolved_assembly,
+            ):
+                with patch(
+                    "app.llm_orchestration.gateway.assemble_developer_prompt",
+                    return_value="test prompt",
+                ):
+                    with patch(
+                        "app.llm_orchestration.services.execution_profile_registry."
+                        "ExecutionProfileRegistry.get_active_profile",
+                        return_value=mock_profile,
+                    ):
+                        with patch(
+                            "app.llm_orchestration.supported_providers.is_provider_supported",
+                            return_value=False,
+                        ):
+                            with pytest.raises(
+                                GatewayConfigError, match="is not nominally supported"
+                            ) as excinfo:
                                 await gateway._resolve_plan(request, db=MagicMock())
-                                
+
                             assert excinfo.value.error_code == "unsupported_execution_provider"
+
 
 @pytest.mark.asyncio
 async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gateway):
     """
-    Story 66.30: A supported feature where ProviderParameterMapper.map 
+    Story 66.30: A supported feature where ProviderParameterMapper.map
     fails MUST fail instead of falling back.
     """
     request = LLMExecutionRequest(
@@ -205,7 +321,7 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
     mock_profile.verbosity_profile = "normal"
     mock_profile.output_mode = "text"
     mock_profile.tool_mode = "none"
-    
+
     mock_assembly_db = MagicMock()
     mock_assembly_db.id = uuid.uuid4()
     mock_assembly_db.interaction_mode = "chat"
@@ -225,24 +341,48 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
     mock_resolved_assembly.persona_ref = None
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
-    
+
     with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=True):
-        with patch("app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync", return_value=mock_assembly_db):
-            with patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved_assembly):
-                with patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="test prompt"):
-                    with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile", return_value=mock_profile):
-                        with patch("app.llm_orchestration.supported_providers.is_provider_supported", return_value=True):
-                            with patch("app.llm_orchestration.services.provider_parameter_mapper.ProviderParameterMapper.map", side_effect=NotImplementedError("Not implemented")):
-                                
-                                with pytest.raises(GatewayConfigError, match="Provider mapping failed") as excinfo:
+        with patch(
+            "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
+            return_value=mock_assembly_db,
+        ):
+            with patch(
+                "app.llm_orchestration.gateway.resolve_assembly",
+                return_value=mock_resolved_assembly,
+            ):
+                with patch(
+                    "app.llm_orchestration.gateway.assemble_developer_prompt",
+                    return_value="test prompt",
+                ):
+                    with patch(
+                        "app.llm_orchestration.services.execution_profile_registry."
+                        "ExecutionProfileRegistry.get_active_profile",
+                        return_value=mock_profile,
+                    ):
+                        with patch(
+                            "app.llm_orchestration.supported_providers.is_provider_supported",
+                            return_value=True,
+                        ):
+                            with patch(
+                                "app.llm_orchestration.services.provider_parameter_mapper.ProviderParameterMapper.map",
+                                side_effect=NotImplementedError("Not implemented"),
+                            ):
+                                with pytest.raises(
+                                    GatewayConfigError, match="Provider mapping failed"
+                                ) as excinfo:
                                     await gateway._resolve_plan(request, db=MagicMock())
-                                    
+
                                 assert excinfo.value.error_code == "provider_mapping_failed"
+                                assert (
+                                    excinfo.value.details["error_code"] == "provider_mapping_failed"
+                                )
+
 
 @pytest.mark.asyncio
 async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
     """
-    Story 66.30: Features OUTSIDE supported perimeter (e.g., 'experimental') 
+    Story 66.30: Features OUTSIDE supported perimeter (e.g., 'experimental')
     STILL tolerate resolve_model() fallback IF NOT NOMINAL.
     """
     request = LLMExecutionRequest(
@@ -251,11 +391,11 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
             use_case="experimental_test",
         ),
         context=ExecutionContext(),
-        flags=ExecutionFlags(test_fallback_active=True), # NOT NOMINAL
+        flags=ExecutionFlags(test_fallback_active=True),  # NOT NOMINAL
         request_id="test-66-30-fallback-tolerated",
         trace_id="trace-66-30",
     )
-    
+
     # Mock is_supported_feature to return False
     with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=False):
         # Mock resolve_config and resolve_model
@@ -274,13 +414,20 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
         mock_config.interaction_mode = "structured"
         mock_config.user_question_policy = "none"
         mock_config.required_prompt_placeholders = []
-        
-        with patch("app.llm_orchestration.gateway.LLMGateway._resolve_config", return_value=mock_config):
-            with patch("app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile", return_value=None):
-                with patch("app.llm_orchestration.gateway.resolve_model", return_value="gpt-4o-fallback") as mock_resolve:
-                    
+
+        with patch(
+            "app.llm_orchestration.gateway.LLMGateway._resolve_config", return_value=mock_config
+        ):
+            with patch(
+                "app.llm_orchestration.services.execution_profile_registry."
+                "ExecutionProfileRegistry.get_active_profile",
+                return_value=None,
+            ):
+                with patch(
+                    "app.llm_orchestration.gateway.resolve_model", return_value="gpt-4o-fallback"
+                ) as mock_resolve:
                     result, _ = await gateway._resolve_plan(request, db=MagicMock())
-                    
+
                     assert result.execution_profile_source == "fallback_resolve_model"
                     assert result.model_id == "gpt-4o-fallback"
                     assert mock_resolve.called

@@ -74,39 +74,39 @@ Conséquence directe :
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Fermer la résolution finale implicite dans le gateway (AC1, AC2, AC3, AC4, AC5)
-  - [ ] Inspecter dans [backend/app/llm_orchestration/gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) tous les appels à `resolve_model()` encore utilisés après résolution assembly/config.
-  - [ ] Séparer explicitement les cas "profil absent", "provider unsupported" et "mapping provider non implémenté", puis convertir ces cas en erreurs explicites sur les chemins supportés.
-  - [ ] Auditer aussi tous les chemins qui construisent encore une `UseCaseConfig` stub, dérivée ou legacy sans `ExecutionProfile` exploitable, afin d'éviter un faux plan d'exécution déjà dégradé avant l'appel à `resolve_model()`.
-  - [ ] Préserver uniquement une compatibilité legacy bornée hors périmètre supporté, sans la laisser réapparaître comme issue nominale.
-  - [ ] Stabiliser les `error_code` et les détails structurés pour exploitation ops/tests.
+- [x] Task 1: Fermer la résolution finale implicite dans le gateway (AC1, AC2, AC3, AC4, AC5)
+  - [x] Inspecter dans [backend/app/llm_orchestration/gateway.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/gateway.py) tous les appels à `resolve_model()` encore utilisés après résolution assembly/config.
+  - [x] Séparer explicitement les cas "profil absent", "provider unsupported" et "mapping provider non implémenté", puis convertir ces cas en erreurs explicites sur les chemins supportés.
+  - [x] Auditer aussi tous les chemins qui construisent encore une `UseCaseConfig` stub, dérivée ou legacy sans `ExecutionProfile` exploitable, afin d'éviter un faux plan d'exécution déjà dégradé avant l'appel à `resolve_model()`.
+  - [x] Préserver uniquement une compatibilité legacy bornée hors périmètre supporté, sans la laisser réapparaître comme issue nominale.
+  - [x] Stabiliser les `error_code` et les détails structurés pour exploitation ops/tests.
 
-- [ ] Task 2: Réaligner la gouvernance, la taxonomie et les modèles admin (AC6, AC7, AC8, AC12)
-  - [ ] Mettre à jour [backend/app/llm_orchestration/services/fallback_governance.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/services/fallback_governance.py) pour que `FallbackType.RESOLVE_MODEL` ne soit plus considéré comme fallback toléré sur le périmètre supporté.
-  - [ ] Réaligner [backend/app/llm_orchestration/models.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/models.py) et [backend/app/llm_orchestration/admin_models.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/admin_models.py) afin que `execution_profile_source` et les taxonomies associées ne normalisent plus `fallback_resolve_model` comme issue canonique supportée.
-  - [ ] Vérifier `_build_result()` et `obs_snapshot` pour distinguer proprement réussite canonique et rejet explicite.
-  - [ ] Centraliser la règle de périmètre supporté si elle est encore dupliquée entre gateway, gouvernance, observabilité, admin, seeds et tests.
-  - [ ] Introduire la télémétrie de rejet dédiée selon un format stable : événement structuré, compteur dédié, et absence de requalification en chemin de succès.
+- [x] Task 2: Réaligner la gouvernance, la taxonomie et les modèles admin (AC6, AC7, AC8, AC12)
+  - [x] Mettre à jour [backend/app/llm_orchestration/services/fallback_governance.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/services/fallback_governance.py) pour que `FallbackType.RESOLVE_MODEL` ne soit plus considéré comme fallback toléré sur le périmètre supporté.
+  - [x] Réaligner [backend/app/llm_orchestration/models.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/models.py) et [backend/app/llm_orchestration/admin_models.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/admin_models.py) afin que `execution_profile_source` et les taxonomies associées ne normalisent plus `fallback_resolve_model` comme issue canonique supportée.
+  - [x] Vérifier `_build_result()` et `obs_snapshot` pour distinguer proprement réussite canonique et rejet explicite.
+  - [x] Centraliser la règle de périmètre supporté si elle est encore dupliquée entre gateway, gouvernance, observabilité, admin, seeds et tests.
+  - [x] Introduire la télémétrie de rejet dédiée selon un format stable : événement structuré, compteur dédié, et absence de requalification en chemin de succès.
 
-- [ ] Task 3: Réaligner la documentation canonique et les lectures de plateforme (AC7, AC8, AC9, AC10, AC12)
-  - [ ] Corriger [docs/llm-prompt-generation-by-feature.md](/c:/dev/horoscope_front/docs/llm-prompt-generation-by-feature.md) dans les sections pipeline, profils d'exécution, verrou provider, observabilité et matrice d'évaluation.
-  - [ ] Retirer du diagramme nominal toute branche `ExecutionProfile -> resolve_model()` sur les chemins supportés.
-  - [ ] Documenter explicitement ce qui reste éventuellement permis hors support et pourquoi.
-  - [ ] Vérifier la cohérence avec [backend/app/llm_orchestration/ARCHITECTURE.md](/c:/dev/horoscope_front/backend/app/llm_orchestration/ARCHITECTURE.md), qui pose déjà `ExecutionProfile` comme source de vérité technique.
+- [x] Task 3: Réaligner la documentation canonique et les lectures de plateforme (AC7, AC8, AC9, AC10, AC12)
+  - [x] Corriger [docs/llm-prompt-generation-by-feature.md](/c:/dev/horoscope_front/docs/llm-prompt-generation-by-feature.md) dans les sections pipeline, profils d'exécution, verrou provider, observabilité et matrice d'évaluation.
+  - [x] Retirer du diagramme nominal toute branche `ExecutionProfile -> resolve_model()` sur les chemins supportés.
+  - [x] Documenter explicitement ce qui reste éventuellement permis hors support et pourquoi.
+  - [x] Vérifier la cohérence avec [backend/app/llm_orchestration/ARCHITECTURE.md](/c:/dev/horoscope_front/backend/app/llm_orchestration/ARCHITECTURE.md), qui pose déjà `ExecutionProfile` comme source de vérité technique.
 
-- [ ] Task 4: Ajouter la couverture de non-régression ciblée (AC3, AC4, AC5, AC8, AC11, AC12)
-  - [ ] Étendre ou créer des tests d'intégration autour de [backend/tests/integration/test_story_66_29_extinction.py](/c:/dev/horoscope_front/backend/tests/integration/test_story_66_29_extinction.py) pour couvrir explicitement l'absence d'`ExecutionProfile`.
-  - [ ] Ajouter des tests sur les chemins `provider unsupported` et `provider mapping not implemented` pour prouver l'absence de fallback `resolve_model()` sur familles supportées.
-  - [ ] Réaligner les tests qui attendent encore `execution_profile_source == "fallback_resolve_model"` ou `fallback_provider_unsupported` sur un chemin supporté.
-  - [ ] Ajouter un cas de non-régression sur alias legacy normalisé, en particulier un alias daily remappé vers `horoscope_daily`, pour prouver qu'un alias d'entrée n'ouvre pas une échappatoire vers `resolve_model()`.
-  - [ ] Ajouter au besoin une suite dédiée 66.30 couvrant `chat`, `guidance`, `natal`, `horoscope_daily` et un cas legacy hors support explicitement autorisé.
+- [x] Task 4: Ajouter la couverture de non-régression ciblée (AC3, AC4, AC5, AC8, AC11, AC12)
+  - [x] Étendre ou créer des tests d'intégration autour de [backend/tests/integration/test_story_66_29_extinction.py](/c:/dev/horoscope_front/backend/tests/integration/test_story_66_29_extinction.py) pour couvrir explicitement l'absence d'`ExecutionProfile`.
+  - [x] Ajouter des tests sur les chemins `provider unsupported` et `provider mapping not implemented` pour prouver l'absence de fallback `resolve_model()` sur familles supportées.
+  - [x] Réaligner les tests qui attendent encore `execution_profile_source == "fallback_resolve_model"` ou `fallback_provider_unsupported` sur un chemin supporté.
+  - [x] Ajouter un cas de non-régression sur alias legacy normalisé, en particulier un alias daily remappé vers `horoscope_daily`, pour prouver qu'un alias d'entrée n'ouvre pas une échappatoire vers `resolve_model()`.
+  - [x] Ajouter au besoin une suite dédiée 66.30 couvrant `chat`, `guidance`, `natal`, `horoscope_daily` et un cas legacy hors support explicitement autorisé.
 
-- [ ] Task 5: Vérification locale obligatoire (AC1 à AC12)
-  - [ ] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
-  - [ ] Dans `backend/`, exécuter `ruff format .` puis `ruff check .`.
-  - [ ] Exécuter `pytest -q`.
-  - [ ] Exécuter au minimum les suites ciblées liées à 66.11, 66.18, 66.20, 66.22, 66.25, 66.29 et à la nouvelle story 66.30.
-  - [ ] Vérifier que les snapshots/metrics reflètent bien "profil explicite canonique" ou "rejet explicite", jamais `fallback_resolve_model` sur chemin supporté.
+- [x] Task 5: Vérification locale obligatoire (AC1 à AC12)
+  - [x] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
+  - [x] Dans `backend/`, exécuter `ruff format .` puis `ruff check .`.
+  - [x] Exécuter `pytest -q`.
+  - [x] Exécuter au minimum les suites ciblées liées à 66.11, 66.18, 66.20, 66.22, 66.25, 66.29 et à la nouvelle story 66.30.
+  - [x] Vérifier que les snapshots/metrics reflètent bien "profil explicite canonique" ou "rejet explicite", jamais `fallback_resolve_model` sur chemin supporté.
 
 ## Dev Notes
 
@@ -238,11 +238,22 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story créée pour fermer le reliquat restant après 66.29 : `resolve_model()` encore utilisé comme vérité finale d'exécution quand le `ExecutionProfile` manque ou n'est pas exploitable.
-- Le cœur de la story n'est pas la composition assembly mais l'obligation d'un `ExecutionProfile` explicite sur tous les chemins supportés.
-- La story impose une fermeture end-to-end : runtime, gouvernance, observabilité, admin models, tests et documentation.
-- La compatibilité legacy éventuelle avec `resolve_model()` est explicitement bornée hors périmètre supporté.
+- Implémentation terminée : le périmètre supporté échoue désormais explicitement si aucun `ExecutionProfile` exploitable n'est résolu, sans retour vers `resolve_model()`.
+- Les erreurs `missing_execution_profile`, `unsupported_execution_provider` et `provider_mapping_failed` sont propagées end-to-end avec `error_code` stable et `details` structurés.
+- Les modèles admin ne publient plus `fallback_resolve_model` comme source valide du profil résolu.
+- L'observabilité publie désormais un événement structuré `runtime_rejected` enrichi par `reason` et incrémente le compteur dédié `llm_runtime_rejection_total`.
+- Les tests couvrent le profil manquant, le provider unsupported, l'échec de mapping provider, le fallback legacy hors support et l'alias legacy normalisé `daily_prediction -> horoscope_daily`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/66-30-suppression-fallback-resolve-model-source-finale-verite-execution.md`
+- `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/models.py`
+- `backend/app/llm_orchestration/admin_models.py`
+- `backend/app/llm_orchestration/services/fallback_governance.py`
+- `backend/app/llm_orchestration/services/observability_service.py`
+- `backend/app/services/ai_engine_adapter.py`
+- `backend/app/api/v1/routers/natal_interpretation.py`
+- `backend/tests/integration/test_story_66_30_suppression.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `backend/app/llm_orchestration/ARCHITECTURE.md`

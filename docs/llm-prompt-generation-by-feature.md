@@ -103,7 +103,7 @@ flowchart TD
 | Garde-fous | `FallbackGovernanceRegistry`, `supported_providers.py` | blocage des fallbacks et des providers interdits | composition métier du prompt |
 | Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante | persistance admin |
 
-## Stories 66.9 à 66.29
+## Stories 66.9 à 66.30
 
 | Story | Apport canonique | Impact runtime observable |
 |---|---|---|
@@ -128,6 +128,7 @@ flowchart TD
 | `66.27` | propagation `context_quality` | `context_quality_handled_by_template` est figé dans le plan puis relayé jusqu'au snapshot et à la persistance |
 | `66.28` | fermeture canonique daily | `daily_prediction` est absorbé dans `horoscope_daily`, les reliquats d'évaluation sont supprimés et les publications admin legacy sont bloquées |
 | `66.29` | extinction fallback | fermeture définitive du fallback `use_case-first` sur le périmètre supporté (`chat`, `guidance`, `natal`, `horoscope_daily`) |
+| `66.30` | extinction fallback d'exécution | `ExecutionProfile` devient obligatoire sur le périmètre supporté ; `resolve_model()` ne survit plus qu'hors support avec rejet explicite, `error_code` stable et compteur dédié |
 
 ## Familles et points d'entrée réels
 
@@ -224,17 +225,17 @@ flowchart TD
     V --> W{"Profile trouvé ?"}
     W -->|Oui| X["provider/model/reasoning/verbosity/output/tool"]
     W -->|Non| Y{"Feature supportée ?"}
-    Y -->|Oui| L
-    Y -->|Non| Z["resolve_model() fallback<br/>hors périmètre supporté"]
+    Y -->|Oui| Z["GatewayConfigError + runtime_rejected<br/>reason=missing_execution_profile"]
+    Y -->|Non| AA["resolve_model() fallback<br/>hors périmètre supporté"]
 
-    X --> AA["Verrou provider + max_output_tokens"]
-    Z --> AA
-    AA --> AB["Résoudre persona + schema"]
-    AA --> AB["Injecter context_quality"]
-    AB --> AC["Injecter verbosité"]
-    AC --> AD["PromptRenderer.render()"]
-    AD --> AE["ResolvedExecutionPlan"]
-    AE --> AF["Stage 1.5 validate_input()"]
+    X --> AB["Verrou provider + max_output_tokens"]
+    AA --> AB
+    AB --> AC["Résoudre persona + schema"]
+    AC --> AD["Injecter context_quality"]
+    AD --> AE["Injecter verbosité"]
+    AE --> AF["PromptRenderer.render()"]
+    AF --> AG["ResolvedExecutionPlan"]
+    AG --> AH["Stage 1.5 validate_input()"]
 ```
 
 ## Assemblies et composition
@@ -359,7 +360,7 @@ Le profil d'exécution est résolu dans cet ordre :
 2. waterfall `feature + subfeature + plan` ;
 3. waterfall `feature + subfeature` ;
 4. waterfall `feature` ;
-5. fallback `resolve_model()` uniquement hors périmètre supporté.
+5. fallback `resolve_model()` uniquement hors périmètre supporté et seulement pour une compatibilité legacy explicitement bornée par la gouvernance centrale.
 
 Les abstractions internes stables exposées sont :
 
@@ -374,6 +375,13 @@ Le mapper provider traduit ensuite ces profils :
 
 - OpenAI : `reasoning_effort`, `response_format`, `tool_choice`
 - Anthropic : mapping préparé dans le code, mais non nominalement supporté par la plateforme
+
+Sur le périmètre supporté :
+
+- absence de profil -> `GatewayConfigError` avec `error_code="missing_execution_profile"` ;
+- provider non supporté -> `GatewayConfigError` avec `error_code="unsupported_execution_provider"` ;
+- échec de mapping provider -> `GatewayConfigError` avec `error_code="provider_mapping_failed"` ;
+- ces rejets publient un événement `runtime_rejected` et incrémentent le compteur dédié `llm_runtime_rejection_total`.
 
 ## Verrou provider
 
@@ -397,7 +405,7 @@ flowchart TD
     B --> C{"provider dans NOMINAL_SUPPORTED_PROVIDERS ?"}
     C -->|Oui| D["ProviderParameterMapper.map()"]
     C -->|Non| E{"Chemin nominal ?"}
-    E -->|Oui| F["Échec explicite"]
+    E -->|Oui| F["GatewayConfigError<br/>error_code=unsupported_execution_provider<br/>+ runtime_rejected"]
     E -->|Non| G["log_governance_event(non_nominal_tolerated)"]
     G --> H["Fallback vers resolve_model() + provider=openai"]
     D --> I["_call_provider()"]
@@ -434,6 +442,7 @@ Points structurants observés :
 
 - `USE_CASE_FIRST` est `à retirer` sur `chat`, `guidance`, `natal`, `horoscope_daily` ;
 - sur ces familles supportées, l'absence d'assembly canonique obligatoire n'est plus racontée comme un fallback : c'est un rejet explicite de configuration avec télémétrie dédiée ;
+- `RESOLVE_MODEL` est désormais `à retirer` sur `chat`, `guidance`, `natal`, `horoscope_daily` ;
 - `NARRATOR_LEGACY` est interdit sur `horoscope_daily` ;
 - `TEST_LOCAL` est interdit en production ;
 - un fallback `à retirer` sur un chemin nominal lève une `GatewayError`, même si la famille n'est pas explicitement listée comme interdite ;
@@ -494,15 +503,16 @@ Pour l'axe `context_compensation_status`, la lecture correcte est désormais :
 Important :
 
 - un chemin supporté rejeté faute d'assembly canonique obligatoire n'émet pas de `GatewayResult` de succès avec `legacy_use_case_fallback` ;
+- un chemin supporté rejeté faute d'`ExecutionProfile` valide n'émet pas de `GatewayResult` de succès avec `legacy_execution_profile_fallback` ni `non_nominal_provider_tolerated` ;
 - ce scénario est visible via l'erreur explicite et la télémétrie de rejet (`supported_perimeter_rejection`), pas via un faux chemin nominal.
 
 ### Rejets canoniques
 
-Lorsqu'un chemin supporté échoue faute d'assembly canonique obligatoire :
+Lorsqu'un chemin supporté échoue faute d'assembly canonique obligatoire ou faute d'`ExecutionProfile` exploitable :
 
 - le runtime lève une erreur explicite de configuration au lieu de produire un `GatewayResult` nominal ;
 - le scénario n'est donc pas encodé comme `execution_path_kind` de succès ;
-- la lecture ops passe par la télémétrie de rejet dédiée, en particulier l'événement `supported_perimeter_rejection` et les logs structurés associés ;
+- la lecture ops passe par la télémétrie de rejet dédiée, en particulier l'événement structuré (`supported_perimeter_rejection` ou `runtime_rejected`), les logs structurés associés, et pour 66.30 le compteur dédié `llm_runtime_rejection_total` avec un label `reason` discriminant ;
 - l'absence volontaire de `execution_path_kind` dédié évite de confondre un rejet canonique avec un chemin d'exécution réellement complété.
 
 #### `fallback_kind`
@@ -612,7 +622,7 @@ Toute mention de vérification ci-dessous atteste d'une **revue manuelle effecti
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
-- **Date** : `2026-04-11`
-- **Référence stable (Commit SHA)** : `8b48912a`
+- **Date** : `2026-04-12`
+- **Référence stable (Commit SHA)** : `d950c901`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.
