@@ -72,7 +72,7 @@ class LlmExecutionProfileModel(Base):
             from app.llm_orchestration.services.config_coherence_validator import (
                 validate_execution_profile,
             )
-            
+
             result = validate_execution_profile(self)
             if not result.is_valid:
                 # We raise the first error message for simplicity in model validator

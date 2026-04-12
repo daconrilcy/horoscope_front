@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.utils import reconstruct_orm
 from app.llm_orchestration.feature_taxonomy import (
     assert_nominal_feature_allowed,
     normalize_feature,
@@ -19,6 +21,7 @@ from app.llm_orchestration.feature_taxonomy import (
 logger = logging.getLogger(__name__)
 
 # Simple in-memory cache for published profiles
+# Story 66.32 AC14: Partition cache by active_snapshot_id
 _profile_cache: dict[str, LlmExecutionProfileModel] = {}
 _cache_lock = Lock()
 
@@ -29,54 +32,96 @@ class ExecutionProfileRegistry:
     """
 
     @staticmethod
+    def _get_active_release_snapshot(db: Session) -> Optional[LlmReleaseSnapshotModel]:
+        """Fetch the currently active release snapshot."""
+        from sqlalchemy import desc
+
+        from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
+
+        stmt = (
+            select(LlmReleaseSnapshotModel)
+            .join(LlmActiveReleaseModel)
+            .order_by(desc(LlmActiveReleaseModel.activated_at))
+            .limit(1)
+        )
+        return db.execute(stmt).scalar_one_or_none()
+
+    @staticmethod
     def get_active_profile(
         db: Session, feature: str, subfeature: Optional[str] = None, plan: Optional[str] = None
     ) -> Optional[LlmExecutionProfileModel]:
         """
-        Resolves the active execution profile using waterfall:
-        feature + subfeature + plan -> feature + subfeature -> feature
+        Resolves the active execution profile using waterfall.
+        AC10: Use the active snapshot manifest if available.
         """
         # Story 66.23: Hardened taxonomy resolution
-        # AC4, AC10: Reject legacy nominal keys before any normalization
         assert_nominal_feature_allowed(feature)
 
         feature = normalize_feature(feature)
         subfeature = normalize_subfeature(feature, subfeature)
 
-        cache_key = f"{feature}:{subfeature}:{plan}"
+        # Story 66.32 AC10, AC14: Resolve active snapshot first
+        snapshot = ExecutionProfileRegistry._get_active_release_snapshot(db)
+        snapshot_id = str(snapshot.id) if snapshot else "none"
+
+        cache_key = f"{snapshot_id}:{feature}:{subfeature}:{plan}"
 
         with _cache_lock:
             if cache_key in _profile_cache:
                 return _profile_cache[cache_key]
 
-        # Waterfall steps
-        candidates = [
-            # 1. Full match
-            (feature, subfeature, plan),
-            # 2. Feature + Subfeature
-            (feature, subfeature, None) if subfeature else None,
-            # 3. Feature only
-            (feature, None, None),
-        ]
+        resolved_profile = None
 
-        for candidate in candidates:
-            if candidate is None:
-                continue
+        if snapshot:
+            # AC10: Resolve from snapshot manifest
+            manifest = snapshot.manifest
+            targets = manifest.get("targets", {})
 
-            f, sf, p = candidate
-            stmt = select(LlmExecutionProfileModel).where(
-                LlmExecutionProfileModel.feature == f,
-                LlmExecutionProfileModel.subfeature == sf,
-                LlmExecutionProfileModel.plan == p,
-                LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
-            )
-            profile = db.execute(stmt).scalar_one_or_none()
-            if profile:
-                with _cache_lock:
-                    _profile_cache[cache_key] = profile
-                return profile
+            # Waterfall resolution within snapshot
+            # Note: Profiles in snapshot are bundled with assemblies.
+            # But the gateway might ask for a profile independently.
+            # We look for ANY target in the snapshot that matches this waterfall and has a profile.
+            search_patterns = [
+                f"{feature}:{subfeature}:{plan}:fr-FR",  # locale default for profile lookup
+                f"{feature}:{subfeature}:None:fr-FR",
+                f"{feature}:None:None:fr-FR",
+            ]
 
-        return None
+            for key in search_patterns:
+                bundle = targets.get(key)
+                if bundle and "profile" in bundle:
+                    data = bundle["profile"]
+                    resolved_profile = reconstruct_orm(LlmExecutionProfileModel, data)
+                    break
+        else:
+            # Legacy resolution from tables
+            candidates = [
+                (feature, subfeature, plan),
+                (feature, subfeature, None) if subfeature else None,
+                (feature, None, None),
+            ]
+
+            for candidate in candidates:
+                if candidate is None:
+                    continue
+
+                f, sf, p = candidate
+                stmt = select(LlmExecutionProfileModel).where(
+                    LlmExecutionProfileModel.feature == f,
+                    LlmExecutionProfileModel.subfeature == sf,
+                    LlmExecutionProfileModel.plan == p,
+                    LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
+                )
+                profile = db.execute(stmt).scalar_one_or_none()
+                if profile:
+                    resolved_profile = profile
+                    break
+
+        if resolved_profile:
+            with _cache_lock:
+                _profile_cache[cache_key] = resolved_profile
+
+        return resolved_profile
 
     @staticmethod
     def get_profile_by_id(db: Session, profile_id: uuid.UUID) -> Optional[LlmExecutionProfileModel]:

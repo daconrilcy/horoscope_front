@@ -181,9 +181,21 @@ async def log_call(
         context_compensation_status = None
         max_output_tokens_source = None
         max_output_tokens_final = None
+        active_snapshot_id = None
+        active_snapshot_version = None
+        manifest_entry_id = None
 
         if result:
             status = map_status_to_enum(result.meta.validation_status)
+
+            # Story 66.32 AC12: Resolve Snapshot info
+            active_snapshot_id = safe_uuid(
+                getattr(result.meta.obs_snapshot, "active_snapshot_id", None)
+            )
+            active_snapshot_version = getattr(
+                result.meta.obs_snapshot, "active_snapshot_version", None
+            )
+            manifest_entry_id = getattr(result.meta.obs_snapshot, "manifest_entry_id", None)
 
             if error:  # Force error status if exception occurred
                 status = LlmValidationStatus.ERROR
@@ -283,6 +295,10 @@ async def log_call(
                 context_compensation_status=context_compensation_status,
                 max_output_tokens_source=max_output_tokens_source,
                 max_output_tokens_final=max_output_tokens_final,
+                # Story 66.32
+                active_snapshot_id=active_snapshot_id,
+                active_snapshot_version=active_snapshot_version,
+                manifest_entry_id=manifest_entry_id,
             )
             db.add(log_entry)
 

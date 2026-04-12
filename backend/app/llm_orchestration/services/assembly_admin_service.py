@@ -168,11 +168,14 @@ class AssemblyAdminService:
             raise ValueError(f"Config {config_id} not found")
 
         # Story 66.31: Centralized coherence validation
-        from app.llm_orchestration.services.config_coherence_validator import ConfigCoherenceValidator, CoherenceError
-        
+        from app.llm_orchestration.services.config_coherence_validator import (
+            CoherenceError,
+            ConfigCoherenceValidator,
+        )
+
         validator = ConfigCoherenceValidator(self.session)
         result = await validator.validate_assembly(config)
-        
+
         if not result.is_valid:
             # We raise CoherenceError which will be caught by the router to return structured errors
             raise CoherenceError(result)

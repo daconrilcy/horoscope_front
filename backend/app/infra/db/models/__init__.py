@@ -73,6 +73,7 @@ from app.infra.db.models.llm_observability import LlmCallLogModel, LlmReplaySnap
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
 from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
@@ -166,6 +167,8 @@ __all__ = [
     "GeocodingQueryCacheModel",
     "LlmCallLogModel",
     "LlmReplaySnapshotModel",
+    "LlmActiveReleaseModel",
+    "LlmReleaseSnapshotModel",
     "PromptAssemblyConfigModel",
     "LlmExecutionProfileModel",
     "LlmOutputSchemaModel",

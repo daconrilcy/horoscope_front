@@ -8,9 +8,9 @@ from app.llm_orchestration.services.config_coherence_validator import ConfigCohe
 
 logger = logging.getLogger(__name__)
 
+
 async def run_llm_coherence_startup_validation(
-    mode: str, 
-    session: Union[AsyncSession, Session]
+    mode: str, session: Union[AsyncSession, Session]
 ) -> None:
     """
     Scan all active published LLM configurations for coherence at startup.
@@ -20,14 +20,11 @@ async def run_llm_coherence_startup_validation(
         logger.info("llm_coherence_startup_validation mode=off - skipping")
         return
 
-    logger.info(
-        "llm_coherence_startup_validation mode=%s - scanning active configurations", 
-        mode
-    )
-    
+    logger.info("llm_coherence_startup_validation mode=%s - scanning active configurations", mode)
+
     validator = ConfigCoherenceValidator(session)
     results = await validator.scan_active_configurations()
-    
+
     invalid_count = len(results)
     if invalid_count == 0:
         logger.info(
@@ -56,7 +53,4 @@ async def run_llm_coherence_startup_validation(
         logger.critical(error_msg)
         raise RuntimeError(error_msg)
     else:
-        logger.warning(
-            "llm_coherence_startup_validation completed with %d warnings", 
-            invalid_count
-        )
+        logger.warning("llm_coherence_startup_validation completed with %d warnings", invalid_count)

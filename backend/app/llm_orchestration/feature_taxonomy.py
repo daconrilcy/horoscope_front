@@ -115,6 +115,7 @@ def assert_nominal_feature_allowed(feature: str) -> None:
             msg += " Use feature='horoscope_daily' instead."
         raise ValueError(msg)
 
+
 def is_natal_subfeature_canonical(subfeature: str) -> bool:
     """Check if a subfeature is part of the canonical natal taxonomy."""
     return subfeature in NATAL_SUBFEATURES

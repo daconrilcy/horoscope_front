@@ -82,14 +82,14 @@ def validate_execution_profile(profile: LlmExecutionProfileModel) -> ValidationR
                 "unsupported_execution_provider",
                 f"Provider '{profile.provider}' is not nominally supported "
                 f"for feature '{feature}'.",
-                {"provider": profile.provider, "feature": feature}
+                {"provider": profile.provider, "feature": feature},
             )
         elif not feature:
             # Generic profiles also need to use supported providers for nominal familias
             result.add_error(
                 "unsupported_execution_provider",
                 f"Provider '{profile.provider}' is not in the supported providers list.",
-                {"provider": profile.provider}
+                {"provider": profile.provider},
             )
 
     # AC8: No legacy dependency on nominal families
@@ -98,7 +98,7 @@ def validate_execution_profile(profile: LlmExecutionProfileModel) -> ValidationR
             result.add_error(
                 "legacy_dependency_forbidden",
                 f"Feature identifier '{profile.feature}' is forbidden for nominal use.",
-                {"feature": profile.feature}
+                {"feature": profile.feature},
             )
 
         # AC6: Ensure subfeature is canonical if feature is natal
@@ -107,7 +107,7 @@ def validate_execution_profile(profile: LlmExecutionProfileModel) -> ValidationR
                 result.add_error(
                     "legacy_dependency_forbidden",
                     f"Subfeature '{profile.subfeature}' is not canonical for '{profile.feature}'.",
-                    {"feature": profile.feature, "subfeature": profile.subfeature}
+                    {"feature": profile.feature, "subfeature": profile.subfeature},
                 )
 
     return result
@@ -126,6 +126,7 @@ class ConfigCoherenceValidator:
     async def _execute(self, stmt):
         """Unified executor for sync/async sessions."""
         from sqlalchemy.ext.asyncio import AsyncSession
+
         if isinstance(self.session, AsyncSession):
             return await self.session.execute(stmt)
         return self.session.execute(stmt)
@@ -143,7 +144,7 @@ class ConfigCoherenceValidator:
             result.add_error(
                 "legacy_dependency_forbidden",
                 f"Feature identifier '{feature}' is forbidden for nominal use.",
-                {"feature": feature}
+                {"feature": feature},
             )
 
         # 1. Execution Profile Validation (AC2)
@@ -152,9 +153,9 @@ class ConfigCoherenceValidator:
             result.add_error(
                 profile_error_code,
                 self._get_error_message(profile_error_code),
-                {"feature": feature, "subfeature": config.subfeature, "plan": config.plan}
+                {"feature": feature, "subfeature": config.subfeature, "plan": config.plan},
             )
-        
+
         # 2. Provider Support (AC4)
         if profile:
             if not is_provider_supported(profile.provider):
@@ -162,7 +163,7 @@ class ConfigCoherenceValidator:
                     result.add_error(
                         "unsupported_execution_provider",
                         f"Provider '{profile.provider}' is not supported for feature '{feature}'.",
-                        {"provider": profile.provider, "feature": feature}
+                        {"provider": profile.provider, "feature": feature},
                     )
 
         # 3. Output Contract Validation (AC3)
@@ -173,7 +174,7 @@ class ConfigCoherenceValidator:
                 result.add_error(
                     contract_error_code,
                     self._get_error_message(contract_error_code),
-                    {"output_contract_ref": config.output_contract_ref}
+                    {"output_contract_ref": config.output_contract_ref},
                 )
 
         # 4. Placeholders Validation (AC5)
@@ -283,9 +284,7 @@ class ConfigCoherenceValidator:
             contract = res.scalar_one_or_none()
 
         if contract is None:
-            stmt = select(LlmOutputSchemaModel).where(
-                LlmOutputSchemaModel.name == contract_ref
-            )
+            stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == contract_ref)
             res = await self._execute(stmt)
             contract = res.scalar_one_or_none()
 
@@ -309,9 +308,9 @@ class ConfigCoherenceValidator:
                 result.add_error(
                     "placeholder_policy_violation",
                     f"Invalid placeholders in feature template: {', '.join(invalid)}",
-                    {"placeholders": invalid, "template": "feature"}
+                    {"placeholders": invalid, "template": "feature"},
                 )
-        
+
         # Subfeature Template
         if config.subfeature_template_ref and config.subfeature_template:
             invalid_sub = validate_placeholders(
@@ -321,7 +320,7 @@ class ConfigCoherenceValidator:
                 result.add_error(
                     "placeholder_policy_violation",
                     f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}",
-                    {"placeholders": invalid_sub, "template": "subfeature"}
+                    {"placeholders": invalid_sub, "template": "subfeature"},
                 )
 
     async def _validate_persona(self, config: PromptAssemblyConfigModel, result: ValidationResult):
@@ -336,7 +335,7 @@ class ConfigCoherenceValidator:
             result.add_error(
                 "persona_not_allowed",
                 "Persona referenced does not exist.",
-                {"persona_id": str(config.persona_ref)}
+                {"persona_id": str(config.persona_ref)},
             )
             return
 
@@ -344,7 +343,7 @@ class ConfigCoherenceValidator:
             result.add_error(
                 "persona_not_allowed",
                 f"Persona '{persona.name}' is disabled.",
-                {"persona_id": str(config.persona_ref)}
+                {"persona_id": str(config.persona_ref)},
             )
 
     def _validate_plan_rules(self, config: PromptAssemblyConfigModel, result: ValidationResult):
@@ -358,14 +357,13 @@ class ConfigCoherenceValidator:
         if rule.instruction:
             violations = validate_plan_rules_content(rule.instruction)
             is_feat_violation = any(
-                v.violation_type == "plan_rules_violation:feature_selection"
-                for v in violations
+                v.violation_type == "plan_rules_violation:feature_selection" for v in violations
             )
             if is_feat_violation:
                 result.add_error(
                     "plan_rules_scope_violation",
                     "Plan rules attempt to modify forbidden taxonomic scope (feature selection).",
-                    {"plan_rules_ref": config.plan_rules_ref}
+                    {"plan_rules_ref": config.plan_rules_ref},
                 )
 
     def _validate_length_budget(self, config: PromptAssemblyConfigModel, result: ValidationResult):
@@ -381,7 +379,7 @@ class ConfigCoherenceValidator:
             result.add_error(
                 "length_budget_scope_violation",
                 f"LengthBudget global_max_tokens ({global_max}) exceeds technical ceiling.",
-                {"global_max_tokens": global_max}
+                {"global_max_tokens": global_max},
             )
 
     def _get_error_message(self, error_code: str) -> str:
@@ -406,9 +404,7 @@ class ConfigCoherenceValidator:
             "placeholder_policy_violation": (
                 "Les placeholders utilisés violent la politique de la famille canonique."
             ),
-            "persona_not_allowed": (
-                "La persona référencée n'est pas autorisée ou est désactivée."
-            ),
+            "persona_not_allowed": ("La persona référencée n'est pas autorisée ou est désactivée."),
             "plan_rules_scope_violation": (
                 "Les plan_rules tentent de modifier le périmètre taxonomique interdit."
             ),
@@ -417,22 +413,24 @@ class ConfigCoherenceValidator:
             ),
             "legacy_dependency_forbidden": (
                 "Une dépendance legacy interdite a été détectée sur une famille nominale fermée."
-            )
+            ),
         }
         return messages.get(error_code, "Unknown coherence error.")
 
     async def scan_active_configurations(
-        self
+        self,
     ) -> List[Tuple[PromptAssemblyConfigModel, ValidationResult]]:
         """
         AC10: Scan only active published configurations for boot runtime validation.
         """
-        stmt = select(PromptAssemblyConfigModel).where(
-            PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED
-        ).options(
-            selectinload(PromptAssemblyConfigModel.feature_template),
-            selectinload(PromptAssemblyConfigModel.subfeature_template),
-            selectinload(PromptAssemblyConfigModel.persona),
+        stmt = (
+            select(PromptAssemblyConfigModel)
+            .where(PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED)
+            .options(
+                selectinload(PromptAssemblyConfigModel.feature_template),
+                selectinload(PromptAssemblyConfigModel.subfeature_template),
+                selectinload(PromptAssemblyConfigModel.persona),
+            )
         )
 
         res = await self._execute(stmt)

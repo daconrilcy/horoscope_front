@@ -5,13 +5,15 @@ import time
 import uuid
 from typing import Any, Dict, Optional, Tuple
 
-from sqlalchemy import and_, select, update
+from sqlalchemy import and_, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.utils import serialize_orm, reconstruct_orm
 from app.llm_orchestration.feature_taxonomy import (
     assert_nominal_feature_allowed,
     normalize_feature,
@@ -22,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 # AC8: TTL Cache for resolved configs
 # M4 Fix: Store serialized dicts instead of ORM instances
+# Story 66.32 AC14: Partition cache by active_snapshot_id
 _ASSEMBLY_CACHE: Dict[str, Tuple[Dict[str, Any], float]] = {}
 CACHE_TTL = 60.0
 
@@ -42,136 +45,154 @@ class AssemblyRegistry:
 
     def _serialize_config(self, config: PromptAssemblyConfigModel) -> Dict[str, Any]:
         """Convert ORM model to a serializable dict for cache (including relationships)."""
-        data = {
-            "id": config.id,
-            "feature": config.feature,
-            "subfeature": config.subfeature,
-            "plan": config.plan,
-            "locale": config.locale,
-            "feature_template_ref": config.feature_template_ref,
-            "subfeature_template_ref": config.subfeature_template_ref,
-            "persona_ref": config.persona_ref,
-            "plan_rules_ref": config.plan_rules_ref,
-            "execution_config": config.execution_config,
-            "output_contract_ref": config.output_contract_ref,
-            "input_schema": config.input_schema,
-            "interaction_mode": config.interaction_mode,
-            "user_question_policy": config.user_question_policy,
-            "fallback_use_case": config.fallback_use_case,
-            "feature_enabled": config.feature_enabled,
-            "subfeature_enabled": config.subfeature_enabled,
-            "persona_enabled": config.persona_enabled,
-            "plan_rules_enabled": config.plan_rules_enabled,
-            "status": config.status,
-            "created_by": config.created_by,
-            "created_at": config.created_at,
-            "published_at": config.published_at,
-        }
+        # Story 66.32: Robust serialization for Manifest and Cache
+        data = serialize_orm(config)
 
-        # Serialize relationships if loaded
+        # Serialize relationships if loaded (recursive serialization)
         if config.feature_template:
-            data["_feature_template"] = {
-                "id": config.feature_template.id,
-                "use_case_key": config.feature_template.use_case_key,
-                "developer_prompt": config.feature_template.developer_prompt,
-                "model": config.feature_template.model,
-            }
+            data["_feature_template"] = serialize_orm(config.feature_template)
         if config.subfeature_template:
-            data["_subfeature_template"] = {
-                "id": config.subfeature_template.id,
-                "use_case_key": config.subfeature_template.use_case_key,
-                "developer_prompt": config.subfeature_template.developer_prompt,
-                "model": config.subfeature_template.model,
-            }
+            data["_subfeature_template"] = serialize_orm(config.subfeature_template)
         if config.persona:
-            data["_persona"] = {
-                "id": config.persona.id,
-                "name": config.persona.name,
-                "description": config.persona.description,
-                "tone": config.persona.tone,
-                "verbosity": config.persona.verbosity,
-                "style_markers": config.persona.style_markers,
-                "boundaries": config.persona.boundaries,
-                "allowed_topics": config.persona.allowed_topics,
-                "disallowed_topics": config.persona.disallowed_topics,
-                "formatting": config.persona.formatting,
-            }
+            data["_persona"] = serialize_orm(config.persona)
         return data
 
     def _reconstruct_config(self, data: Dict[str, Any]) -> PromptAssemblyConfigModel:
-        """Reconstruct a detached ORM instance from serialized dict."""
+        """Reconstruct a detached ORM instance from serialized dict with automatic type conversion."""
         data_copy = data.copy()
+
+        # 1. Pop nested data to avoid constructor errors
         feat_data = data_copy.pop("_feature_template", None)
         sub_data = data_copy.pop("_subfeature_template", None)
         pers_data = data_copy.pop("_persona", None)
 
-        config = PromptAssemblyConfigModel(**data_copy)
+        # 2. Reconstruct main object
+        config = reconstruct_orm(PromptAssemblyConfigModel, data_copy)
+
+        # 3. Reconstruct relationships
         if feat_data:
-            config.feature_template = LlmPromptVersionModel(**feat_data)
+            config.feature_template = reconstruct_orm(LlmPromptVersionModel, feat_data)
         if sub_data:
-            config.subfeature_template = LlmPromptVersionModel(**sub_data)
+            config.subfeature_template = reconstruct_orm(LlmPromptVersionModel, sub_data)
         if pers_data:
-            config.persona = LlmPersonaModel(**pers_data)
+            config.persona = reconstruct_orm(LlmPersonaModel, pers_data)
 
         return config
+
+
+    async def _get_active_release_snapshot(self) -> Optional[LlmReleaseSnapshotModel]:
+        """Fetch the currently active release snapshot."""
+        from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
+
+        stmt = (
+            select(LlmReleaseSnapshotModel)
+            .join(LlmActiveReleaseModel)
+            .order_by(desc(LlmActiveReleaseModel.activated_at))
+            .limit(1)
+        )
+        result = await self._execute(stmt)
+        return result.scalar_one_or_none()
+
+    def _get_active_release_snapshot_sync(self) -> Optional[LlmReleaseSnapshotModel]:
+        """Fetch the currently active release snapshot (Sync)."""
+        from sqlalchemy.orm import Session
+
+        if not isinstance(self.session, Session):
+            return None
+        from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
+
+        stmt = (
+            select(LlmReleaseSnapshotModel)
+            .join(LlmActiveReleaseModel)
+            .order_by(desc(LlmActiveReleaseModel.activated_at))
+            .limit(1)
+        )
+        return self.session.execute(stmt).scalar_one_or_none()
 
     async def get_active_config(
         self, feature: str, subfeature: Optional[str], plan: Optional[str], locale: str = "fr-FR"
     ) -> Optional[PromptAssemblyConfigModel]:
         """
-        Resolve the best matching active (PUBLISHED) assembly config using waterfall logic.
+        Resolve the best matching active assembly config.
+        AC10: Use the active snapshot manifest if available.
         Waterfall: (feature, subfeature, plan) -> (feature, subfeature, None)
                    -> (feature, None, None)
         """
         # Story 66.23: Hardened taxonomy resolution
-        # AC4, AC10: Reject legacy nominal keys before any normalization
         assert_nominal_feature_allowed(feature)
 
         feature = normalize_feature(feature)
         subfeature = normalize_subfeature(feature, subfeature)
 
-        cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
+        # Story 66.32 AC10, AC14: Resolve active snapshot first
+        snapshot = await self._get_active_release_snapshot()
+        snapshot_id = str(snapshot.id) if snapshot else "none"
+
+        cache_key = f"{snapshot_id}:{feature}:{subfeature or ''}:{plan or ''}:{locale}"
         now = time.time()
 
         # AC8: Cache lookup
         if cache_key in _ASSEMBLY_CACHE:
             data, expiry = _ASSEMBLY_CACHE[cache_key]
             if now < expiry:
-                # Return a detached instance
                 return self._reconstruct_config(data)
             del _ASSEMBLY_CACHE[cache_key]
 
-        # Search patterns in order of priority
-        search_patterns = [
-            (feature, subfeature, plan),
-            (feature, subfeature, None),
-            (feature, None, None),
-        ]
-
+        # Resolution Logic
         resolved_config = None
-        for f, sf, p in search_patterns:
-            stmt = (
-                select(PromptAssemblyConfigModel)
-                .where(
-                    and_(
-                        PromptAssemblyConfigModel.feature == f,
-                        PromptAssemblyConfigModel.subfeature == sf,
-                        PromptAssemblyConfigModel.plan == p,
-                        PromptAssemblyConfigModel.locale == locale,
-                        PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+
+        if snapshot:
+            # AC10: Resolve from snapshot manifest
+            manifest = snapshot.manifest
+            targets = manifest.get("targets", {})
+
+            # Waterfall resolution within snapshot
+            search_patterns = [
+                f"{feature}:{subfeature}:{plan}:{locale}",
+                f"{feature}:{subfeature}:None:{locale}",
+                f"{feature}:None:None:{locale}",
+            ]
+
+            for key in search_patterns:
+                bundle = targets.get(key)
+                if bundle and "assembly" in bundle:
+                    resolved_config = self._reconstruct_config(bundle["assembly"])
+                    # Attach the snapshot ID for observability (AC12)
+                    setattr(resolved_config, "_active_snapshot_id", snapshot.id)
+                    setattr(resolved_config, "_active_snapshot_version", snapshot.version)
+                    setattr(resolved_config, "_manifest_entry_id", key)
+                    break
+        else:
+            # Legacy resolution from tables (only if no active snapshot)
+            search_patterns = [
+                (feature, subfeature, plan),
+                (feature, subfeature, None),
+                (feature, None, None),
+            ]
+
+            for f, sf, p in search_patterns:
+                stmt = (
+                    select(PromptAssemblyConfigModel)
+                    .where(
+                        and_(
+                            PromptAssemblyConfigModel.feature == f,
+                            PromptAssemblyConfigModel.subfeature == sf,
+                            PromptAssemblyConfigModel.plan == p,
+                            PromptAssemblyConfigModel.locale == locale,
+                            PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+                        )
+                    )
+                    .options(
+                        selectinload(PromptAssemblyConfigModel.feature_template),
+                        selectinload(PromptAssemblyConfigModel.subfeature_template),
+                        selectinload(PromptAssemblyConfigModel.persona),
                     )
                 )
-                .options(
-                    selectinload(PromptAssemblyConfigModel.feature_template),
-                    selectinload(PromptAssemblyConfigModel.subfeature_template),
-                    selectinload(PromptAssemblyConfigModel.persona),
-                )
-            )
-            result = await self._execute(stmt)
-            config = result.scalar_one_or_none()
-            if config:
-                resolved_config = config
-                break
+                result = await self._execute(stmt)
+                config = result.scalar_one_or_none()
+                if config:
+                    resolved_config = config
+                    break
 
         if resolved_config:
             # AC8: Update cache with serialized data
@@ -183,17 +204,18 @@ class AssemblyRegistry:
         self, feature: str, subfeature: Optional[str], plan: Optional[str], locale: str = "fr-FR"
     ) -> Optional[PromptAssemblyConfigModel]:
         """
-        Synchronous version of get_active_config for callers with a standard Session.
-        (Story 66.20 Medium Issue Fix)
+        Synchronous version of get_active_config.
         """
-        # Story 66.23: Hardened taxonomy resolution
-        # AC4, AC10: Reject legacy nominal keys before any normalization
         assert_nominal_feature_allowed(feature)
 
         feature = normalize_feature(feature)
         subfeature = normalize_subfeature(feature, subfeature)
 
-        cache_key = f"{feature}:{subfeature or ''}:{plan or ''}:{locale}"
+        # Story 66.32 AC10, AC14: Resolve active snapshot first
+        snapshot = self._get_active_release_snapshot_sync()
+        snapshot_id = str(snapshot.id) if snapshot else "none"
+
+        cache_key = f"{snapshot_id}:{feature}:{subfeature or ''}:{plan or ''}:{locale}"
         now = time.time()
 
         if cache_key in _ASSEMBLY_CACHE:
@@ -202,45 +224,59 @@ class AssemblyRegistry:
                 return self._reconstruct_config(data)
             del _ASSEMBLY_CACHE[cache_key]
 
-        search_patterns = [
-            (feature, subfeature, plan),
-            (feature, subfeature, None),
-            (feature, None, None),
-        ]
-
         resolved_config = None
-        for f, sf, p in search_patterns:
-            stmt = (
-                select(PromptAssemblyConfigModel)
-                .where(
-                    and_(
-                        PromptAssemblyConfigModel.feature == f,
-                        PromptAssemblyConfigModel.subfeature == sf,
-                        PromptAssemblyConfigModel.plan == p,
-                        PromptAssemblyConfigModel.locale == locale,
-                        PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+
+        if snapshot:
+            manifest = snapshot.manifest
+            targets = manifest.get("targets", {})
+            search_patterns = [
+                f"{feature}:{subfeature}:{plan}:{locale}",
+                f"{feature}:{subfeature}:None:{locale}",
+                f"{feature}:None:None:{locale}",
+            ]
+            for key in search_patterns:
+                bundle = targets.get(key)
+                if bundle and "assembly" in bundle:
+                    resolved_config = self._reconstruct_config(bundle["assembly"])
+                    setattr(resolved_config, "_active_snapshot_id", snapshot.id)
+                    setattr(resolved_config, "_active_snapshot_version", snapshot.version)
+                    setattr(resolved_config, "_manifest_entry_id", key)
+                    break
+        else:
+            search_patterns = [
+                (feature, subfeature, plan),
+                (feature, subfeature, None),
+                (feature, None, None),
+            ]
+
+            for f, sf, p in search_patterns:
+                stmt = (
+                    select(PromptAssemblyConfigModel)
+                    .where(
+                        and_(
+                            PromptAssemblyConfigModel.feature == f,
+                            PromptAssemblyConfigModel.subfeature == sf,
+                            PromptAssemblyConfigModel.plan == p,
+                            PromptAssemblyConfigModel.locale == locale,
+                            PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+                        )
+                    )
+                    .options(
+                        selectinload(PromptAssemblyConfigModel.feature_template),
+                        selectinload(PromptAssemblyConfigModel.subfeature_template),
+                        selectinload(PromptAssemblyConfigModel.persona),
                     )
                 )
-                .options(
-                    selectinload(PromptAssemblyConfigModel.feature_template),
-                    selectinload(PromptAssemblyConfigModel.subfeature_template),
-                    selectinload(PromptAssemblyConfigModel.persona),
-                )
-            )
-            # Use synchronous execute
-            from sqlalchemy.orm import Session
+                from sqlalchemy.orm import Session
 
-            if not isinstance(self.session, Session):
-                # If we somehow have an AsyncSession here, we can't do sync call
-                # but in practice LLMGateway.execute_request uses SessionLocal()
-                # or is passed a Session from FastAPI dependency.
-                logger.warning("assembly_registry_get_sync_with_async_session_fallback")
-                return None
+                if not isinstance(self.session, Session):
+                    logger.warning("assembly_registry_get_sync_with_async_session_fallback")
+                    return None
 
-            config = self.session.execute(stmt).scalar_one_or_none()
-            if config:
-                resolved_config = config
-                break
+                config = self.session.execute(stmt).scalar_one_or_none()
+                if config:
+                    resolved_config = config
+                    break
 
         if resolved_config:
             _ASSEMBLY_CACHE[cache_key] = (self._serialize_config(resolved_config), now + CACHE_TTL)
@@ -363,7 +399,8 @@ class AssemblyRegistry:
         self.invalidate_cache()
         return res
 
-    def invalidate_cache(self) -> None:
+    @staticmethod
+    def invalidate_cache() -> None:
         """H1: Clears the in-memory assembly configuration cache."""
         _ASSEMBLY_CACHE.clear()
         logger.info("assembly_registry_cache_invalidated")

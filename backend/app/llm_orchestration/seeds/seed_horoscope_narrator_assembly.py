@@ -24,7 +24,8 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
 
     # 0. Cleanup Legacy daily_prediction (Story 66.28 Absorption)
     # AC: suppression définitive de son statut transitoire.
-    # We use update(status=ARCHIVED) instead of DELETE to avoid breaking historical FKs in llm_call_logs.
+    # We use update(status=ARCHIVED) instead of DELETE to avoid
+    # breaking historical FKs in llm_call_logs.
     legacy_key = "daily_prediction"
 
     # 1. Assemblies

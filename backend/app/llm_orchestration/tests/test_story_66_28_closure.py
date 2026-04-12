@@ -1,15 +1,17 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from sqlalchemy.orm import Session
-from unittest.mock import AsyncMock, patch
 
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
-    ExecutionUserInput, 
-    LLMExecutionRequest, 
-    GatewayResult, 
-    GatewayMeta, 
-    UsageInfo
+    ExecutionUserInput,
+    GatewayMeta,
+    GatewayResult,
+    LLMExecutionRequest,
+    UsageInfo,
 )
+
 
 @pytest.mark.asyncio
 async def test_daily_path_is_nominal_canonical(db: Session):
@@ -43,8 +45,8 @@ async def test_daily_path_is_nominal_canonical(db: Session):
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case="daily_prediction",  # Old use case
-            feature=None,                 # No feature passed (legacy style)
-            plan=None,                    # Old plan (implicit)
+            feature=None,  # No feature passed (legacy style)
+            plan=None,  # Old plan (implicit)
         ),
         request_id="req-66-28",
         trace_id="tr-66-28",

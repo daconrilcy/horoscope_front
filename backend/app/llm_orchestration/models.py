@@ -82,6 +82,11 @@ class ExecutionObservabilitySnapshot(BaseModel):
     max_output_tokens_source: MaxTokensSource
     max_output_tokens_final: int
 
+    # Release Snapshot Traceability (Story 66.32 AC12)
+    active_snapshot_id: Optional[uuid.UUID] = None
+    active_snapshot_version: Optional[str] = None
+    manifest_entry_id: Optional[str] = None
+
     model_config = ConfigDict(frozen=True)
 
 
@@ -328,6 +333,11 @@ class ResolvedExecutionPlan(BaseModel):
     context_quality: str = "unknown"
     context_quality_instruction_injected: bool = False
     context_quality_handled_by_template: bool = False
+
+    # Release Snapshot Traceability (Story 66.32 AC12)
+    active_snapshot_id: Optional[uuid.UUID] = None
+    active_snapshot_version: Optional[str] = None
+    manifest_entry_id: Optional[str] = None
 
     model_config = ConfigDict(frozen=True)
 

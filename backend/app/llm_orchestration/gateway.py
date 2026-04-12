@@ -885,6 +885,17 @@ class LLMGateway:
                         # Store assembly metadata for ResolvedExecutionPlan
                         context_dict["_assembly_resolved"] = resolved_assembly
                         context_dict["_assembly_db_id"] = str(assembly_db.id)
+
+                        # Story 66.32 AC12: Propagate snapshot ID and version from registry
+                        context_dict["_active_snapshot_id"] = getattr(
+                            assembly_db, "_active_snapshot_id", None
+                        )
+                        context_dict["_active_snapshot_version"] = getattr(
+                            assembly_db, "_active_snapshot_version", None
+                        )
+                        context_dict["_manifest_entry_id"] = getattr(
+                            assembly_db, "_manifest_entry_id", None
+                        )
                 except GatewayConfigError:
                     raise
                 except Exception as e:
