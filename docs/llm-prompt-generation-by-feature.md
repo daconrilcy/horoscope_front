@@ -47,7 +47,7 @@ Le pipeline cible exécuté aujourd'hui est :
 5. les familles supportées `chat`, `guidance`, `natal`, `horoscope_daily` échouent explicitement si aucune assembly canonique active n'est trouvée ; le fallback `use_case-first` est éteint sur ce périmètre ;
 6. le gateway reconstruit ensuite une config dérivée du plan résolu et valide l'`input_schema` canonique en Stage 1.5 ;
 7. le gateway résout ensuite le `ExecutionProfile` depuis l'assembly ou par waterfall. Sur le périmètre supporté (`chat`, `guidance`, `natal`, `horoscope_daily`), tout échec de résolution (profil manquant, provider non supporté, mapping impossible) lève une `GatewayConfigError` ; le fallback historique `resolve_model()` est strictement interdit.
-8. au publish et au boot, un validateur de cohérence central contrôle aussi `execution_profile_ref`, waterfall, contrat de sortie, placeholders, persona et `LengthBudget` ; depuis 66.32, au startup, le scan priorise le snapshot de release actif et ne retombe sur l'état publié vivant qu'en absence de snapshot actif ;
+8. au publish et au boot, un validateur de cohérence central contrôle aussi `execution_profile_ref`, waterfall, contrat de sortie, placeholders, persona et `LengthBudget` ; depuis 66.32, au startup, le scan priorise le snapshot de release actif ; sur le périmètre nominal supporté, l’absence de snapshot actif est un état invalide de configuration, pas un second mode nominal de vérité ;
 9. le prompt est transformé dans cet ordre : assembly déjà concaténée, injection `context_quality`, injection de verbosité, rendu des placeholders ;
 10. l'appel provider passe aujourd'hui nominalement uniquement par `openai` ;
 11. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy uniquement hors périmètre supporté ;
@@ -102,8 +102,8 @@ flowchart TD
 | Exécution | `ExecutionProfileRegistry` + `ProviderParameterMapper` | provider, modèle, reasoning, verbosity, output mode, tool mode | contenu métier des prompts |
 | Rendu | `PromptRenderer` | blocs `context_quality`, placeholders, validation de placeholders | choix du provider |
 | Garde-fous | `FallbackGovernanceRegistry`, `supported_providers.py` | blocage des fallbacks et des providers interdits | composition métier du prompt |
-| Cohérence publish/boot | `ConfigCoherenceValidator`, `run_llm_coherence_startup_validation()` | bloquer une config incohérente avant exécution ou au démarrage runtime, d'abord sur le snapshot actif s'il existe | simulation complète du métier ou fallback runtime |
-| Release runtime | `LlmReleaseSnapshotModel`, `LlmActiveReleaseModel`, `ReleaseService` | figer et activer atomiquement le bundle `assembly/profile/schema/persona` réellement servi | édition directe d'artefacts vivants au moment de l'exécution |
+| Cohérence publish/boot | `ConfigCoherenceValidator`, `run_llm_coherence_startup_validation()` | bloquer une config incohérente avant exécution ou au démarrage runtime, sur le snapshot actif pour le périmètre nominal supporté | simulation complète du métier ou fallback runtime |
+| Release runtime | `LlmReleaseSnapshotModel`, `LlmActiveReleaseModel`, `ReleaseService` | figer et activer atomiquement le bundle `assembly/profile/schema/persona` réellement servi ; sur le périmètre nominal supporté, cette release active est obligatoire | édition directe d'artefacts vivants au moment de l'exécution |
 | Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante, y compris la release active et l'entrée de manifest utilisée | persistance admin |
 
 ## Stories 66.9 à 66.32
@@ -401,13 +401,14 @@ Depuis 66.32, ce scan startup suit une hiérarchie explicite :
 
 - s'il existe un `active_snapshot_id`, le boot revalide d'abord le manifest complet du snapshot actif ;
 - cette revalidation travaille sur le bundle figé du snapshot pour `assembly`, `profile`, `schema` et `persona`, sans fallback silencieux vers les tables vivantes sur le périmètre supporté ;
-- le scan des tables publiées “les plus récentes par cible” ne reste qu'un fallback d'absence de snapshot actif.
+- le scan des tables publiées “les plus récentes par cible” ne reste qu'un fallback pour les chemins hors périmètre supporté ou pour une phase transitoire explicitement non nominale.
 
 Le scan startup reste volontairement borné :
 
 - il ne parcourt pas l'historique complet ;
 - il ignore les snapshots non actifs, les archives, brouillons et anciennes versions `published` non retenues comme état actif ;
-- s'il n'y a pas de snapshot actif, il déduplique par cible runtime (`feature`, `subfeature`, `plan`, `locale`) et ne valide que la version publiée la plus récente par cible ;
+- s'il n'y a pas de snapshot actif, il ne peut pas considérer le périmètre nominal supporté comme correctement configuré ;
+- hors périmètre nominal supporté, il peut encore dédupliquer par cible runtime (`feature`, `subfeature`, `plan`, `locale`) et ne valider que la version publiée la plus récente par cible ;
 - il ne contrôle donc que les artefacts effectivement résolubles par le runtime nominal courant.
 
 ### Ce que valide concrètement 66.31 puis 66.32
@@ -435,6 +436,28 @@ Depuis 66.32, le périmètre nominal convergé (`chat`, `guidance`, `natal`, `ho
 - `ReleaseService` expose `build_snapshot`, `validate_snapshot`, `activate_snapshot` et `rollback` ;
 - l'activation invalide les caches runtime post-commit ;
 - le rollback `N-1` réactive le snapshot précédent au lieu de republier manuellement chaque artefact.
+
+Sur le périmètre nominal convergé, cette release active n'est pas optionnelle :
+
+- `chat`, `guidance`, `natal` et `horoscope_daily` doivent disposer d'un snapshot actif pour être considérés comme exécutablement cohérents ;
+- l'absence de snapshot actif y est un défaut de configuration à rejeter au boot et au runtime ;
+- il n'y a donc plus deux modes de vérité nominaux, mais une seule vérité runtime canonique : la release active.
+
+### Nature du gel par artefact
+
+Le manifest ne se contente pas de stocker des pointeurs abstraits. Il capture, artefact par artefact, ce qui est nécessaire pour rejouer fidèlement l'exécution :
+
+- `PromptAssemblyConfigModel` : copie figée complète de l'assembly runtime, y compris ses références et dépendances de composition sérialisées ;
+- `LlmExecutionProfileModel` : copie figée complète du profil effectivement résolu pour la cible, même si ce profil existe aussi comme artefact versionné en table ;
+- `LlmOutputSchemaModel` : copie figée complète du contrat runtime nécessaire à l'exécution, stockée comme bundle `schema` ;
+- `LlmPersonaModel` : copie figée complète de la persona runtime nécessaire à l'exécution, portée dans l'assembly sérialisée ;
+- `LlmPromptVersionModel` transitivement requis : contenu figé déjà capturé dans les blocs de template sérialisés de l'assembly.
+
+Autrement dit :
+
+- le runtime peut s'appuyer sur des IDs immutables comme métadonnées de traçabilité ;
+- mais le rollback fidèle ne dépend pas d'une relecture live de ces objets sur le périmètre nominal supporté ;
+- la règle de sûreté est “bundle exécutable auto-suffisant”, pas “liste de références à recharger plus tard”.
 
 Conséquences de lecture runtime :
 

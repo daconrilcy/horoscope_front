@@ -76,6 +76,7 @@ Le pointeur d’activation introduit par 66.32 couvre **au minimum et obligatoir
 Pour ce périmètre supporté :
 
 - le runtime doit lire **uniquement** le snapshot actif ;
+- l’absence de snapshot actif sur ce périmètre n’est pas un mode nominal alternatif : c’est un état invalide de configuration à rejeter au boot et à l’exécution ;
 - aucun resolver ne peut continuer à lire “le dernier `published` par cible” directement dans les tables vivantes ;
 - aucun chemin hybride “snapshot pour une partie, tables vivantes pour une autre” n’est autorisé.
 
@@ -103,6 +104,7 @@ Pour toute release snapshot activable, les invariants suivants doivent être vra
 - toute exécution, validation startup ou audit expose l’identifiant exact de release snapshot utilisé.
 - un snapshot est **immutable** : son manifest, ses métadonnées critiques, son contenu figé éventuel et son historique de dépendances ne sont jamais réécrits après création ; activation et rollback ajoutent des événements, ils ne modifient pas le contenu du snapshot.
 - toute donnée cacheable utilisée sur le périmètre supporté est partitionnée par `active_snapshot_id` ; une lecture issue d’un cache d’un snapshot précédent après activation/rollback est une violation d’invariant.
+- sur le périmètre supporté, “pas de snapshot actif” n’est pas une branche de secours acceptable ; la release canonique active est obligatoire et unique.
 
 ## Stratégie par type d’artefact
 
@@ -122,6 +124,12 @@ le snapshot peut s’appuyer sur des **références immutables d’artefacts ver
 - le contenu référencé ne soit jamais modifié in-place après publication ;
 - la résolution runtime se fasse exclusivement à partir de cette référence figée dans le manifest.
 
+Concrètement pour 66.32 :
+
+- `PromptAssemblyConfigModel` est porté dans le snapshot par **copie figée complète** du contenu assembly réellement servi au runtime ;
+- `LlmExecutionProfileModel` est porté dans le snapshot par **copie figée complète** du profil résolu pour la cible, même si ce profil existe aussi comme artefact versionné en table ;
+- `LlmPromptVersionModel` référencé transitivement par l’assembly est porté via son contenu figé déjà capturé dans l’assembly sérialisée (`feature_template`, `subfeature_template` et dépendances de rendu nécessaires).
+
 ### Artefacts nécessitant une fermeture explicite
 
 Pour les artefacts qui sont aujourd’hui encore trop vivants ou insuffisamment gouvernés :
@@ -135,23 +143,29 @@ la story impose une décision explicite par type :
 2. soit le snapshot embarque une **copie figée suffisante** de son contenu pour garantir un rollback fidèle ;
 3. toute solution hybride ou implicite est interdite.
 
+Concrètement pour 66.32 :
+
+- `LlmPersonaModel` doit être porté par **copie figée complète** du contenu runtime nécessaire à l’exécution, incluse dans l’assembly sérialisée du snapshot ;
+- `LlmOutputSchemaModel` doit être porté par **copie figée complète** du contrat runtime nécessaire à l’exécution, incluse comme bundle `schema` du snapshot ;
+- ni la persona ni le contrat de sortie ne peuvent être relus depuis la table live pour compléter un snapshot incomplet sur le périmètre supporté.
+
 Autrement dit, AC7 n’est pas un simple souhait d’alignement. C’est un invariant de conception : aucun artefact mutable non versionné ne peut rester une dépendance vivante d’une release activable sur le périmètre supporté.
 
 ## Acceptance Criteria
 
 1. **AC1 — Snapshot cohérent immutable** : le backend introduit un artefact de release snapshot immutable représentant l’ensemble cohérent `assembly/profile/contract/persona` réellement servi au runtime. Le snapshot contient un identifiant stable (`snapshot_id`, `release_id`, `bundle_id` ou équivalent), une version lisible, sa date de création, son auteur, et un manifest explicite des références résolues par cible runtime.
-2. **AC2 — Périmètre snapshot explicite et non hybride** : la documentation et le code déclarent explicitement si le snapshot actif couvre seulement le périmètre nominal convergé (`chat`, `guidance`, `natal`, `horoscope_daily`) ou également des chemins legacy hors support. Sur le périmètre nominal convergé, aucun resolver runtime ne peut rester branché sur les tables vivantes hors snapshot.
-3. **AC3 — Fermeture transitive du manifest** : construire un snapshot ne consiste pas à stocker uniquement des assemblies. Le manifest doit fermer explicitement les dépendances nécessaires à l’exécution réelle : `execution_profile_ref`, `output_contract_ref`, `persona_ref`, références de templates/prompt versions, et tout identifiant indispensable pour reconstituer exactement la configuration runtime.
-4. **AC4 — Décision explicite par type d’artefact** : la story impose et documente, pour chaque type d’artefact embarqué dans le snapshot, s’il est porté par référence immutable vers un artefact réellement versionné ou par contenu figé embarqué dans le snapshot. `LlmPersonaModel` et `LlmOutputSchemaModel` ne peuvent pas rester des dépendances vivantes non gouvernées du snapshot actif.
+2. **AC2 — Périmètre snapshot explicite et non hybride** : la documentation et le code déclarent explicitement si le snapshot actif couvre seulement le périmètre nominal convergé (`chat`, `guidance`, `natal`, `horoscope_daily`) ou également des chemins legacy hors support. Sur le périmètre nominal convergé, aucun resolver runtime ne peut rester branché sur les tables vivantes hors snapshot, et l’absence de snapshot actif est un état invalide, pas un mode alternatif admis.
+3. **AC3 — Fermeture transitive du manifest** : construire un snapshot ne consiste pas à stocker uniquement des assemblies. Le manifest doit fermer explicitement les dépendances nécessaires à l’exécution réelle : `execution_profile_ref`, `output_contract_ref`, `persona_ref`, références de templates/prompt versions, et tout identifiant indispensable pour reconstituer exactement la configuration runtime. Sur le périmètre supporté, cette fermeture doit être suffisante pour exécuter et revalider sans relecture opportuniste des tables live.
+4. **AC4 — Décision explicite par type d’artefact** : la story impose et documente, pour chaque type d’artefact embarqué dans le snapshot, s’il est porté par référence immutable vers un artefact réellement versionné ou par contenu figé embarqué dans le snapshot. `PromptAssemblyConfigModel`, `LlmExecutionProfileModel`, `LlmPersonaModel` et `LlmOutputSchemaModel` doivent être explicitement qualifiés artefact par artefact ; `LlmPersonaModel` et `LlmOutputSchemaModel` ne peuvent pas rester des dépendances vivantes non gouvernées du snapshot actif.
 5. **AC5 — Validation préalable obligatoire à l’activation** : un snapshot candidat doit obtenir un statut explicite de validation (`validated=true`, `status=validated`, ou équivalent stable) avant toute activation. Un snapshot non validé ne peut jamais devenir actif via l’admin.
 6. **AC6 — Validation avant activation** : la création d’un snapshot candidat réutilise le validateur central de cohérence introduit par 66.31, mais l’applique au manifest complet de release. Un snapshot incomplet, incohérent ou contenant une dépendance mutable non figée n’est pas activable.
 7. **AC7 — Activation atomique par pointeur unique** : l’activation runtime d’une nouvelle version se fait par un basculement transactionnel unique d’un pointeur d’activation (`active_snapshot_id` ou équivalent) global ou de périmètre explicitement défini. Le runtime ne doit jamais pouvoir observer un état partiellement basculé où certaines tables sont en `N` et d’autres en `N-1`.
 8. **AC8 — Rollback `N-1` sans bricolage manuel** : le système expose une opération de rollback qui réactive le snapshot actif précédent (`N-1`) ou un snapshot explicitement ciblé, sans republier manuellement assembly, profile, contract et persona. Le rollback doit être transactionnel et idempotent.
 9. **AC9 — Rollback seulement vers un snapshot encore activable** : un rollback ne peut cibler qu’un snapshot ayant un statut explicite `activable` ou `previously_activated_and_still_valid` (nom stable équivalent accepté). Si le snapshot `N-1` est corrompu, invalidé, devenu incompatible ou non activable, l’API échoue explicitement avec un `error_code` stable ; aucun rollback best effort n’est autorisé.
-10. **AC10 — Le runtime lit le snapshot actif** : le gateway, les registries et les validations startup ne déduisent plus l’état actif uniquement depuis `status == published` sur plusieurs tables autonomes. Sur le périmètre couvert, ils résolvent la release active à partir du snapshot/pointeur d’activation et n’utilisent les tables sources que comme backing store des artefacts versionnés de ce snapshot.
+10. **AC10 — Le runtime lit le snapshot actif** : le gateway, les registries et les validations startup ne déduisent plus l’état actif uniquement depuis `status == published` sur plusieurs tables autonomes. Sur le périmètre couvert, ils résolvent la release active à partir du snapshot/pointeur d’activation et n’utilisent les tables sources que comme backing store des artefacts versionnés de ce snapshot. Sur le périmètre nominal convergé, si aucun snapshot actif n’est présent, le runtime doit échouer explicitement.
 11. **AC11 — Fermeture explicite des resolvers legacy “latest published”** : sur le périmètre supporté couvert par le snapshot, aucun resolver runtime ne peut interroger directement “latest published by target” une fois le snapshot actif introduit. Cette fermeture doit être testable et vérifiée par les suites de non-régression.
 12. **AC12 — Observabilité de la version réellement exécutée** : chaque exécution publie dans `ResolvedExecutionPlan`, `GatewayMeta`, `obs_snapshot`, logs structurés et événements de gouvernance au minimum : `active_snapshot_id`, `active_snapshot_version` et un identifiant stable de l’entrée de manifest réellement utilisée (`manifest_entry_id`, `target_entry_id`, ou hash de dépendances résolues). Les dashboards et incidents peuvent donc répondre sans ambiguïté à “quelle release tournait ?” et “quelle entrée de cette release a servi à cette exécution ?”.
-13. **AC13 — Startup validation alignée sur la release active** : la validation startup ne scanne plus seulement “les dernières versions publiées par cible”, mais la release snapshot actuellement activée. L’activation admin exige une validation préalable ; le startup revalide défensivement le snapshot actif mais ne remplace jamais la validation d’activation. En mode `strict`, un snapshot actif invalide bloque le boot ; en `warn`, il le journalise ; en `off`, il reste désactivable explicitement.
+13. **AC13 — Startup validation alignée sur la release active** : la validation startup ne scanne plus seulement “les dernières versions publiées par cible”, mais la release snapshot actuellement activée. L’activation admin exige une validation préalable ; le startup revalide défensivement le snapshot actif mais ne remplace jamais la validation d’activation. En mode `strict`, un snapshot actif invalide ou absent sur le périmètre nominal convergé bloque le boot ; en `warn`, il le journalise ; en `off`, il reste désactivable explicitement.
 14. **AC14 — Caches et registries cohérents** : `AssemblyRegistry`, `ExecutionProfileRegistry` et toute cache runtime concernée sont invalidés ou rechargés **post-commit** à l’activation/rollback d’un snapshot. Toute clé de cache dépendant d’un état résolu sur le périmètre supporté est indexée par `active_snapshot_id`.
 15. **AC15 — API admin de release dédiée** : l’admin expose un workflow explicite du type `build snapshot` / `validate snapshot` / `activate snapshot` / `rollback snapshot`, distinct des simples endpoints CRUD/publish unitaires. Les réponses d’API et audits transportent des IDs de snapshot stables et non seulement des IDs d’artefacts isolés.
 16. **AC16 — Audit trail de release et non-réécriture historique** : chaque activation et rollback enregistre un événement structuré avec au minimum `from_snapshot_id`, `to_snapshot_id`, auteur, raison éventuelle, date et résumé du manifest. Le contenu d’un snapshot et les liens historiques de bascule ne sont jamais mutés rétroactivement ; l’historique est append-only.
