@@ -55,21 +55,46 @@ class AssemblyRegistry:
             data["_subfeature_template"] = serialize_orm(config.subfeature_template)
         if config.persona:
             data["_persona"] = serialize_orm(config.persona)
+
+        # Story 66.32 AC12: Persist runtime observability metadata in serialized data
+        for attr in ["_active_snapshot_id", "_active_snapshot_version", "_manifest_entry_id", "_snapshot_bundle"]:
+            if hasattr(config, attr):
+                val = getattr(config, attr)
+                # Ensure UUIDs are stringified for JSON compatibility if needed
+                if attr == "_active_snapshot_id" and isinstance(val, uuid.UUID):
+                    val = str(val)
+                data[attr] = val
+
         return data
 
     def _reconstruct_config(self, data: Dict[str, Any]) -> PromptAssemblyConfigModel:
         """Reconstruct a detached ORM instance from serialized dict with automatic type conversion."""
         data_copy = data.copy()
 
-        # 1. Pop nested data to avoid constructor errors
+        # 1. Pop nested data and metadata to avoid constructor errors
         feat_data = data_copy.pop("_feature_template", None)
         sub_data = data_copy.pop("_subfeature_template", None)
         pers_data = data_copy.pop("_persona", None)
+        
+        # Metadata fields
+        meta = {}
+        for attr in ["_active_snapshot_id", "_active_snapshot_version", "_manifest_entry_id", "_snapshot_bundle"]:
+            if attr in data_copy:
+                meta[attr] = data_copy.pop(attr)
 
         # 2. Reconstruct main object
         config = reconstruct_orm(PromptAssemblyConfigModel, data_copy)
 
-        # 3. Reconstruct relationships
+        # 3. Restore metadata
+        for attr, val in meta.items():
+            if attr == "_active_snapshot_id" and isinstance(val, str):
+                try:
+                    val = uuid.UUID(val)
+                except ValueError:
+                    pass
+            setattr(config, attr, val)
+
+        # 4. Reconstruct relationships
         if feat_data:
             config.feature_template = reconstruct_orm(LlmPromptVersionModel, feat_data)
         if sub_data:
@@ -157,6 +182,8 @@ class AssemblyRegistry:
                 bundle = targets.get(key)
                 if bundle and "assembly" in bundle:
                     resolved_config = self._reconstruct_config(bundle["assembly"])
+                    # Story 66.32: Attach the snapshot bundle for transitive resolution (AC4)
+                    setattr(resolved_config, "_snapshot_bundle", bundle)
                     # Attach the snapshot ID for observability (AC12)
                     setattr(resolved_config, "_active_snapshot_id", snapshot.id)
                     setattr(resolved_config, "_active_snapshot_version", snapshot.version)
@@ -238,6 +265,8 @@ class AssemblyRegistry:
                 bundle = targets.get(key)
                 if bundle and "assembly" in bundle:
                     resolved_config = self._reconstruct_config(bundle["assembly"])
+                    # Story 66.32: Attach the snapshot bundle for transitive resolution (AC4)
+                    setattr(resolved_config, "_snapshot_bundle", bundle)
                     setattr(resolved_config, "_active_snapshot_id", snapshot.id)
                     setattr(resolved_config, "_active_snapshot_version", snapshot.version)
                     setattr(resolved_config, "_manifest_entry_id", key)

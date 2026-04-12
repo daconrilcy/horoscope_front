@@ -563,12 +563,36 @@ class LLMGateway:
         return persona_block, resolved_persona_id, persona_name
 
     def _resolve_schema(
-        self, db: Optional[Session], config: UseCaseConfig, use_case: str
+        self,
+        db: Optional[Session],
+        config: UseCaseConfig,
+        use_case: str,
+        context: Optional[Dict[str, Any]] = None,
     ) -> tuple[Optional[Dict[str, Any]], str, Optional[str]]:
         """Resolves output schema and returns (schema_dict, schema_name, schema_version)."""
         schema_dict = None
         schema_name = use_case
         schema_version = "v1"
+
+        # Story 66.32: Transitive resolution from snapshot bundle (AC4)
+        if context and context.get("_assembly_resolved"):
+            resolved_assembly = context["_assembly_resolved"]
+            # Check if we have an in-memory detached assembly with a snapshot bundle
+            if hasattr(resolved_assembly, "_snapshot_bundle"):
+                bundle = getattr(resolved_assembly, "_snapshot_bundle")
+                if bundle and "schema" in bundle:
+                    schema_data = bundle["schema"]
+                    if schema_data.get("id") == config.output_schema_id or schema_data.get("name") == config.output_schema_id:
+                        schema_dict = schema_data["json_schema"]
+                        schema_name = re.sub(r"[^a-z0-9_-]", "_", schema_data["name"].lower())
+                        ver = schema_data.get("version", 1)
+                        if ver == 3 or "v3" in schema_name:
+                            schema_version = "v3"
+                        elif ver == 2 or "v2" in schema_name:
+                            schema_version = "v2"
+                        else:
+                            schema_version = f"v{ver}"
+                        return schema_dict, schema_name, schema_version
 
         if db and config.output_schema_id:
             try:
@@ -885,6 +909,10 @@ class LLMGateway:
                         # Store assembly metadata for ResolvedExecutionPlan
                         context_dict["_assembly_resolved"] = resolved_assembly
                         context_dict["_assembly_db_id"] = str(assembly_db.id)
+                        
+                        # Story 66.32 AC4: Propagate snapshot bundle for transitive resolution
+                        if hasattr(assembly_db, "_snapshot_bundle"):
+                            setattr(resolved_assembly, "_snapshot_bundle", getattr(assembly_db, "_snapshot_bundle"))
 
                         # Story 66.32 AC12: Propagate snapshot ID and version from registry
                         context_dict["_active_snapshot_id"] = getattr(
@@ -945,17 +973,10 @@ class LLMGateway:
                 )
 
                 # 1. Try from assembly if present
-                if source_base == "assembly" and context_dict.get("_assembly_db_id"):
-                    # We need the actual assembly model to get execution_profile_ref
-                    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-
-                    stmt = select(PromptAssemblyConfigModel).where(
-                        PromptAssemblyConfigModel.id == uuid.UUID(context_dict["_assembly_db_id"])
-                    )
-                    assembly_model = db.execute(stmt).scalar_one_or_none()
-                    if assembly_model and assembly_model.execution_profile_ref:
+                if source_base == "assembly" and assembly_db:
+                    if assembly_db.execution_profile_ref:
                         profile_db = ExecutionProfileRegistry.get_profile_by_id(
-                            db, assembly_model.execution_profile_ref
+                            db, assembly_db.execution_profile_ref, assembly=assembly_db
                         )
                         if profile_db:
                             profile_source = "assembly_ref"
@@ -967,6 +988,7 @@ class LLMGateway:
                         feature=request.user_input.feature,
                         subfeature=request.user_input.subfeature,
                         plan=request.user_input.plan,
+                        locale=request.user_input.locale,
                     )
                     if profile_db:
                         profile_source = "waterfall"
@@ -1221,7 +1243,9 @@ class LLMGateway:
                 db, config, context_dict, use_case
             )
 
-        output_schema, schema_name, schema_version = self._resolve_schema(db, config, use_case)
+        output_schema, schema_name, schema_version = self._resolve_schema(
+            db, config, use_case, context=context_dict
+        )
 
         cq_level = qualified_ctx.context_quality if qualified_ctx else "unknown"
         context_quality_injected = False
@@ -1363,6 +1387,10 @@ class LLMGateway:
             context_quality=cq_level,
             context_quality_instruction_injected=context_quality_injected,
             context_quality_handled_by_template=context_quality_handled_by_template,
+            # Story 66.32 AC12: Propagate snapshot metadata to plan
+            active_snapshot_id=context_dict.get("_active_snapshot_id"),
+            active_snapshot_version=context_dict.get("_active_snapshot_version"),
+            manifest_entry_id=context_dict.get("_manifest_entry_id"),
         )
         return plan, qualified_ctx
 
@@ -1758,6 +1786,10 @@ class LLMGateway:
             context_compensation_status=comp_status,
             max_output_tokens_source=tokens_source,
             max_output_tokens_final=plan.max_output_tokens,
+            # Story 66.32 AC12: Propagate snapshot metadata to observability
+            active_snapshot_id=plan.active_snapshot_id,
+            active_snapshot_version=plan.active_snapshot_version,
+            manifest_entry_id=plan.manifest_entry_id,
         )
 
         return result

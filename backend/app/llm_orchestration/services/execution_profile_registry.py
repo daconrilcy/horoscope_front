@@ -48,7 +48,11 @@ class ExecutionProfileRegistry:
 
     @staticmethod
     def get_active_profile(
-        db: Session, feature: str, subfeature: Optional[str] = None, plan: Optional[str] = None
+        db: Session,
+        feature: str,
+        subfeature: Optional[str] = None,
+        plan: Optional[str] = None,
+        locale: str = "fr-FR",
     ) -> Optional[LlmExecutionProfileModel]:
         """
         Resolves the active execution profile using waterfall.
@@ -64,7 +68,7 @@ class ExecutionProfileRegistry:
         snapshot = ExecutionProfileRegistry._get_active_release_snapshot(db)
         snapshot_id = str(snapshot.id) if snapshot else "none"
 
-        cache_key = f"{snapshot_id}:{feature}:{subfeature}:{plan}"
+        cache_key = f"{snapshot_id}:{feature}:{subfeature}:{plan}:{locale}"
 
         with _cache_lock:
             if cache_key in _profile_cache:
@@ -79,12 +83,10 @@ class ExecutionProfileRegistry:
 
             # Waterfall resolution within snapshot
             # Note: Profiles in snapshot are bundled with assemblies.
-            # But the gateway might ask for a profile independently.
-            # We look for ANY target in the snapshot that matches this waterfall and has a profile.
             search_patterns = [
-                f"{feature}:{subfeature}:{plan}:fr-FR",  # locale default for profile lookup
-                f"{feature}:{subfeature}:None:fr-FR",
-                f"{feature}:None:None:fr-FR",
+                f"{feature}:{subfeature}:{plan}:{locale}",
+                f"{feature}:{subfeature}:None:{locale}",
+                f"{feature}:None:None:{locale}",
             ]
 
             for key in search_patterns:
@@ -124,8 +126,20 @@ class ExecutionProfileRegistry:
         return resolved_profile
 
     @staticmethod
-    def get_profile_by_id(db: Session, profile_id: uuid.UUID) -> Optional[LlmExecutionProfileModel]:
-        """Direct resolution by ID (used for assembly_ref)."""
+    def get_profile_by_id(
+        db: Session, profile_id: uuid.UUID, assembly: Optional[Any] = None
+    ) -> Optional[LlmExecutionProfileModel]:
+        """
+        Direct resolution by ID.
+        Story 66.32: Support transitive resolution from assembly bundle.
+        """
+        if assembly and hasattr(assembly, "_snapshot_bundle"):
+            bundle = getattr(assembly, "_snapshot_bundle")
+            if bundle and "profile" in bundle:
+                data = bundle["profile"]
+                if data.get("id") == str(profile_id):
+                    return reconstruct_orm(LlmExecutionProfileModel, data)
+
         stmt = select(LlmExecutionProfileModel).where(
             LlmExecutionProfileModel.id == profile_id,
             LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
