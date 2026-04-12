@@ -2,7 +2,13 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.infra.db.base import Base
-from app.infra.db.models import LlmOutputSchemaModel, LlmUseCaseConfigModel, UserModel
+from app.infra.db.models import (
+    LlmOutputSchemaModel,
+    LlmUseCaseConfigModel,
+    UserModel,
+)
+from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
@@ -87,3 +93,44 @@ def test_admin_use_case_update_config():
     )
     assert resp.status_code == 422
     assert resp.json()["error"]["code"] == "invalid_safety_profile"
+
+
+def test_admin_assembly_publish_returns_structured_coherence_error():
+    _cleanup_tables()
+    admin_token = _register_admin_and_token()
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    with SessionLocal() as db:
+        uc = LlmUseCaseConfigModel(key="chat", display_name="Chat", description="Test")
+        db.add(uc)
+        db.commit()
+        prompt = LlmPromptVersionModel(
+            use_case_key="chat",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="{{last_user_msg}}",
+            model="gpt-4o",
+            created_by="test",
+        )
+        db.add(prompt)
+        db.commit()
+        db.refresh(prompt)
+
+        assembly = PromptAssemblyConfigModel(
+            feature="chat",
+            subfeature="astrologer",
+            plan="free",
+            locale="fr-FR",
+            feature_template_ref=prompt.id,
+            execution_config={"model": "gpt-4o", "max_output_tokens": 256},
+            status=PromptStatus.DRAFT,
+            created_by="test",
+        )
+        db.add(assembly)
+        db.commit()
+        assembly_id = assembly.id
+
+    resp = client.post(f"/v1/admin/llm/assembly/configs/{assembly_id}/publish", headers=headers)
+    assert resp.status_code == 400
+    payload = resp.json()
+    assert payload["error"]["code"] == "coherence_validation_failed"
+    assert payload["error"]["details"]["errors"][0]["error_code"] == "missing_execution_profile"

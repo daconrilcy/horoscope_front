@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session, selectinload
@@ -23,33 +24,46 @@ from app.llm_orchestration.services.assembly_resolver import (
     PLAN_RULES_REGISTRY,
     validate_placeholders,
 )
+from app.llm_orchestration.services.execution_profile_registry import (
+    ExecutionProfileRegistry,
+)
 from app.llm_orchestration.supported_providers import is_provider_supported
 from app.prompts.validators import validate_plan_rules_content
 
 logger = logging.getLogger(__name__)
 gov_logger = logging.getLogger("app.llm_orchestration.governance")
 
+
 class ValidationError(BaseModel):
     error_code: str
     message: str
-    details: Dict[str, Any] = {}
+    details: Dict[str, Any] = Field(default_factory=dict)
+
 
 class ValidationResult(BaseModel):
     is_valid: bool
-    errors: List[ValidationError] = []
+    errors: List[ValidationError] = Field(default_factory=list)
 
-    def add_error(self, error_code: str, message: str, details: Dict[str, Any] = {}):
+    def add_error(
+        self,
+        error_code: str,
+        message: str,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
         self.errors.append(ValidationError(error_code=error_code, message=message, details=details))
         self.is_valid = False
         gov_logger.error(
             f"coherence_validation_error: code={error_code} message={message} details={details}"
         )
 
+
 class CoherenceError(Exception):
     """Exception raised when a coherence validation fails."""
+
     def __init__(self, result: ValidationResult):
         self.result = result
         super().__init__(f"Coherence validation failed with {len(result.errors)} errors.")
+
 
 def validate_execution_profile(profile: LlmExecutionProfileModel) -> ValidationResult:
     """
@@ -58,13 +72,13 @@ def validate_execution_profile(profile: LlmExecutionProfileModel) -> ValidationR
     (Story 66.31 AC4)
     """
     result = ValidationResult(is_valid=True)
-    
+
     # AC4: Provider support
     if not is_provider_supported(profile.provider):
         # We check if it's a supported feature perimeter if feature is set
         feature = profile.feature
         if feature and is_supported_feature(feature):
-                result.add_error(
+            result.add_error(
                 "unsupported_execution_provider",
                 f"Provider '{profile.provider}' is not nominally supported "
                 f"for feature '{feature}'.",
@@ -81,22 +95,23 @@ def validate_execution_profile(profile: LlmExecutionProfileModel) -> ValidationR
     # AC8: No legacy dependency on nominal families
     if profile.feature:
         if not is_nominal_feature_allowed(profile.feature):
-                result.add_error(
+            result.add_error(
                 "legacy_dependency_forbidden",
                 f"Feature identifier '{profile.feature}' is forbidden for nominal use.",
                 {"feature": profile.feature}
             )
-        
+
         # AC6: Ensure subfeature is canonical if feature is natal
         if profile.feature == NATAL_CANONICAL_FEATURE and profile.subfeature:
             if not is_natal_subfeature_canonical(profile.subfeature):
-                 result.add_error(
+                result.add_error(
                     "legacy_dependency_forbidden",
                     f"Subfeature '{profile.subfeature}' is not canonical for '{profile.feature}'.",
                     {"feature": profile.feature, "subfeature": profile.subfeature}
                 )
 
     return result
+
 
 class ConfigCoherenceValidator:
     """
@@ -122,10 +137,10 @@ class ConfigCoherenceValidator:
         result = ValidationResult(is_valid=True)
         feature = config.feature
         is_supported = is_supported_feature(feature)
-        
+
         # AC8: No legacy dependency on nominal families
         if not is_nominal_feature_allowed(feature):
-             result.add_error(
+            result.add_error(
                 "legacy_dependency_forbidden",
                 f"Feature identifier '{feature}' is forbidden for nominal use.",
                 {"feature": feature}
@@ -155,7 +170,7 @@ class ConfigCoherenceValidator:
             res_contract = await self._validate_output_contract(config, profile)
             contract_valid, contract_error_code = res_contract
             if not contract_valid:
-                 result.add_error(
+                result.add_error(
                     contract_error_code,
                     self._get_error_message(contract_error_code),
                     {"output_contract_ref": config.output_contract_ref}
@@ -171,7 +186,7 @@ class ConfigCoherenceValidator:
         # 6. Plan Rules & Length Budget (AC7)
         if config.plan_rules_enabled and config.plan_rules_ref:
             self._validate_plan_rules(config, result)
-        
+
         if config.length_budget:
             self._validate_length_budget(config, result)
 
@@ -191,28 +206,62 @@ class ConfigCoherenceValidator:
             )
             res = await self._execute(stmt)
             profile = res.scalar_one_or_none()
-            
+
             if not profile or profile.status != PromptStatus.PUBLISHED:
                 return None, "invalid_execution_profile_ref"
-            
+
             return profile, None
 
         # Case 2: Waterfall resolution
-        from app.llm_orchestration.services.execution_profile_registry import (
-            ExecutionProfileRegistry,
-        )
-        registry = ExecutionProfileRegistry(self.session)
-        
-        profile = await registry.resolve_profile(
+        profile = await self._resolve_profile_via_waterfall(
             feature=config.feature,
             subfeature=config.subfeature,
-            plan=config.plan
+            plan=config.plan,
         )
-        
+
         if not profile and is_supported:
             return None, "missing_execution_profile"
-        
+
         return profile, None
+
+    async def _resolve_profile_via_waterfall(
+        self,
+        *,
+        feature: str,
+        subfeature: Optional[str],
+        plan: Optional[str],
+    ) -> Optional[LlmExecutionProfileModel]:
+        if isinstance(self.session, Session):
+            return ExecutionProfileRegistry.get_active_profile(
+                self.session,
+                feature=feature,
+                subfeature=subfeature,
+                plan=plan,
+            )
+
+        candidates = [
+            (feature, subfeature, plan),
+            (feature, subfeature, None) if subfeature else None,
+            (feature, None, None),
+        ]
+
+        for candidate in candidates:
+            if candidate is None:
+                continue
+
+            cand_feature, cand_subfeature, cand_plan = candidate
+            stmt = select(LlmExecutionProfileModel).where(
+                LlmExecutionProfileModel.feature == cand_feature,
+                LlmExecutionProfileModel.subfeature == cand_subfeature,
+                LlmExecutionProfileModel.plan == cand_plan,
+                LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
+            )
+            res = await self._execute(stmt)
+            profile = res.scalar_one_or_none()
+            if profile:
+                return profile
+
+        return None
 
     async def _validate_output_contract(
         self, config: PromptAssemblyConfigModel, profile: Optional[LlmExecutionProfileModel]
@@ -220,15 +269,29 @@ class ConfigCoherenceValidator:
         """
         AC3: Output contract validity and compatibility.
         """
-        stmt = select(LlmOutputSchemaModel).where(
-            LlmOutputSchemaModel.name == config.output_contract_ref
-        )
-        res = await self._execute(stmt)
-        contract = res.scalar_one_or_none()
-        
+        contract_ref = config.output_contract_ref
+        contract = None
+
+        try:
+            contract_id = uuid.UUID(contract_ref)
+        except (TypeError, ValueError):
+            contract_id = None
+
+        if contract_id is not None:
+            stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.id == contract_id)
+            res = await self._execute(stmt)
+            contract = res.scalar_one_or_none()
+
+        if contract is None:
+            stmt = select(LlmOutputSchemaModel).where(
+                LlmOutputSchemaModel.name == contract_ref
+            )
+            res = await self._execute(stmt)
+            contract = res.scalar_one_or_none()
+
         if not contract:
             return False, "invalid_output_contract_ref"
-        
+
         return True, None
 
     async def _validate_templates_placeholders(
@@ -268,19 +331,19 @@ class ConfigCoherenceValidator:
         stmt = select(LlmPersonaModel).where(LlmPersonaModel.id == config.persona_ref)
         res = await self._execute(stmt)
         persona = res.scalar_one_or_none()
-        
+
         if not persona:
             result.add_error(
-                "persona_not_allowed", 
-                "Persona referenced does not exist.", 
+                "persona_not_allowed",
+                "Persona referenced does not exist.",
                 {"persona_id": str(config.persona_ref)}
             )
             return
 
         if not persona.enabled:
-             result.add_error(
-                "persona_not_allowed", 
-                f"Persona '{persona.name}' is disabled.", 
+            result.add_error(
+                "persona_not_allowed",
+                f"Persona '{persona.name}' is disabled.",
                 {"persona_id": str(config.persona_ref)}
             )
 
@@ -295,7 +358,7 @@ class ConfigCoherenceValidator:
         if rule.instruction:
             violations = validate_plan_rules_content(rule.instruction)
             is_feat_violation = any(
-                v.violation_type == "plan_rules_violation:feature_selection" 
+                v.violation_type == "plan_rules_violation:feature_selection"
                 for v in violations
             )
             if is_feat_violation:
@@ -312,10 +375,10 @@ class ConfigCoherenceValidator:
         budget = config.length_budget
         if not budget:
             return
-            
+
         global_max = budget.get("global_max_tokens")
         if global_max and global_max > 128000:
-             result.add_error(
+            result.add_error(
                 "length_budget_scope_violation",
                 f"LengthBudget global_max_tokens ({global_max}) exceeds technical ceiling.",
                 {"global_max_tokens": global_max}
@@ -371,14 +434,30 @@ class ConfigCoherenceValidator:
             selectinload(PromptAssemblyConfigModel.subfeature_template),
             selectinload(PromptAssemblyConfigModel.persona),
         )
-        
+
         res = await self._execute(stmt)
         configs = res.scalars().all()
-        
-        results = []
+
+        latest_by_target: Dict[
+            Tuple[str, Optional[str], Optional[str], str],
+            PromptAssemblyConfigModel,
+        ] = {}
         for config in configs:
+            target = (config.feature, config.subfeature, config.plan, config.locale)
+            previous = latest_by_target.get(target)
+            if previous is None:
+                latest_by_target[target] = config
+                continue
+
+            previous_published = previous.published_at or previous.created_at
+            current_published = config.published_at or config.created_at
+            if current_published >= previous_published:
+                latest_by_target[target] = config
+
+        results = []
+        for config in latest_by_target.values():
             val_result = await self.validate_assembly(config)
             if not val_result.is_valid:
                 results.append((config, val_result))
-        
+
         return results

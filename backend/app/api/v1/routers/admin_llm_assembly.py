@@ -4,6 +4,7 @@ import uuid
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
@@ -42,6 +43,27 @@ class AssemblyPreviewResponse(BaseModel):
 class AssemblyPublishApiResponse(BaseModel):
     data: DraftPublishResponse
     meta: ResponseMeta
+
+
+def _error_response(
+    *,
+    status_code: int,
+    request_id: str,
+    code: str,
+    message: str,
+    details: dict,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": {
+                "code": code,
+                "message": message,
+                "details": details,
+                "request_id": request_id,
+            }
+        },
+    )
 
 
 @router.get("/configs", response_model=AssemblyConfigListResponse)
@@ -128,14 +150,14 @@ async def publish_assembly_config(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         from app.llm_orchestration.services.config_coherence_validator import CoherenceError
+
         if isinstance(e, CoherenceError):
-            raise HTTPException(
+            return _error_response(
                 status_code=400,
-                detail={
-                    "error_code": "coherence_validation_failed",
-                    "message": str(e),
-                    "errors": [err.model_dump() for err in e.result.errors]
-                }
+                request_id=request.state.request_id,
+                code="coherence_validation_failed",
+                message="assembly coherence validation failed",
+                details={"errors": [err.model_dump() for err in e.result.errors]},
             )
         raise e
     audit_service = AuditService(db)

@@ -47,10 +47,11 @@ Le pipeline cible exécuté aujourd'hui est :
 5. les familles supportées `chat`, `guidance`, `natal`, `horoscope_daily` échouent explicitement si aucune assembly canonique active n'est trouvée ; le fallback `use_case-first` est éteint sur ce périmètre ;
 6. le gateway reconstruit ensuite une config dérivée du plan résolu et valide l'`input_schema` canonique en Stage 1.5 ;
 7. le gateway résout ensuite le `ExecutionProfile` depuis l'assembly ou par waterfall. Sur le périmètre supporté (`chat`, `guidance`, `natal`, `horoscope_daily`), tout échec de résolution (profil manquant, provider non supporté, mapping impossible) lève une `GatewayConfigError` ; le fallback historique `resolve_model()` est strictement interdit.
-8. le prompt est transformé dans cet ordre : assembly déjà concaténée, injection `context_quality`, injection de verbosité, rendu des placeholders ;
-9. l'appel provider passe aujourd'hui nominalement uniquement par `openai` ;
-10. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy uniquement hors périmètre supporté ;
-11. le résultat final publie un snapshot d'observabilité canonique.
+8. au publish et au boot, un validateur de cohérence central contrôle aussi `execution_profile_ref`, waterfall, contrat de sortie, placeholders, persona et `LengthBudget` ; au startup, le scan porte uniquement sur l'état publié actif réellement résoluble ;
+9. le prompt est transformé dans cet ordre : assembly déjà concaténée, injection `context_quality`, injection de verbosité, rendu des placeholders ;
+10. l'appel provider passe aujourd'hui nominalement uniquement par `openai` ;
+11. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy uniquement hors périmètre supporté ;
+12. le résultat final publie un snapshot d'observabilité canonique.
 
 Le `use_case` existe encore, mais il n'est plus la source canonique de variation sur les familles convergées. Il sert surtout de clé de compatibilité, de routage legacy, de sélection de schéma et de fallback résiduel pour les features hors périmètre supporté.
 
@@ -101,6 +102,7 @@ flowchart TD
 | Exécution | `ExecutionProfileRegistry` + `ProviderParameterMapper` | provider, modèle, reasoning, verbosity, output mode, tool mode | contenu métier des prompts |
 | Rendu | `PromptRenderer` | blocs `context_quality`, placeholders, validation de placeholders | choix du provider |
 | Garde-fous | `FallbackGovernanceRegistry`, `supported_providers.py` | blocage des fallbacks et des providers interdits | composition métier du prompt |
+| Cohérence publish/boot | `ConfigCoherenceValidator`, `run_llm_coherence_startup_validation()` | bloquer une config incohérente avant exécution ou au démarrage runtime | simulation complète du métier ou fallback runtime |
 | Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante | persistance admin |
 
 ## Stories 66.9 à 66.30
@@ -129,6 +131,7 @@ flowchart TD
 | `66.28` | fermeture canonique daily | `daily_prediction` est absorbé dans `horoscope_daily`, les reliquats d'évaluation sont supprimés et les publications admin legacy sont bloquées |
 | `66.29` | extinction fallback | fermeture définitive du fallback `use_case-first` sur le périmètre supporté (`chat`, `guidance`, `natal`, `horoscope_daily`) |
 | `66.30` | extinction fallback d'exécution | `ExecutionProfile` devient obligatoire sur le périmètre supporté ; `resolve_model()` ne survit plus qu'hors support avec rejet explicite, `error_code` stable et compteur dédié |
+| `66.31` | validation fail-fast de cohérence | publish et startup bloquent désormais les incohérences de configuration sur l'état publié actif, avec `error_code` structurés et scan startup borné à la cible runtime réellement résoluble |
 
 ## Familles et points d'entrée réels
 
@@ -383,6 +386,54 @@ Sur le périmètre supporté :
 - échec de mapping provider -> `GatewayConfigError` avec `error_code="provider_mapping_failed"` ;
 - ces rejets publient un événement `runtime_rejected` et incrémentent le compteur dédié `llm_runtime_rejection_total`.
 - un `ResolvedExecutionPlan` supporté ne peut plus être construit avec `execution_profile_source="fallback_resolve_model"` ou `"fallback_provider_unsupported"`, même via mock ou injection incohérente.
+
+## Validation fail-fast publish et startup
+
+Depuis 66.31, la doctrine n'est plus seulement documentaire. Une validation centrale `ConfigCoherenceValidator` est exécutée :
+
+- au publish d'une assembly via `AssemblyAdminService.publish_config()` ;
+- au boot runtime via `run_llm_coherence_startup_validation()` appelé depuis `main.py` ;
+- avec un mode startup `strict|warn|off` piloté par `LLM_COHERENCE_VALIDATION_MODE`.
+
+Le scan startup est volontairement borné :
+
+- il ne parcourt pas l'historique complet ;
+- il ignore les archives, brouillons et anciennes versions `published` non retenues comme état actif ;
+- il déduplique par cible runtime (`feature`, `subfeature`, `plan`, `locale`) et ne valide que la version publiée la plus récente par cible ;
+- il ne contrôle donc que les artefacts effectivement résolubles par le runtime nominal courant.
+
+### Ce que valide concrètement 66.31
+
+- `execution_profile_ref` explicite si présent, sinon waterfall canonique `feature+subfeature+plan -> feature+subfeature -> feature` ;
+- absence de retour à `resolve_model()` comme issue de validation sur le périmètre supporté ;
+- `output_contract_ref` résolu par UUID ou par nom, pour rester aligné avec les seeds et avec la résolution runtime ;
+- placeholders validés statiquement contre l'allowlist et la structure attendue de la famille canonique, sans mini-runtime ;
+- persona existante et activée lorsqu'elle est référencée ;
+- invariants `plan_rules` / `LengthBudget` ;
+- interdiction des dépendances legacy sur les familles nominales fermées.
+
+### Taxonomie minimale des erreurs de cohérence
+
+Les erreurs stables attendues côté publish/startup sont au minimum :
+
+- `missing_execution_profile`
+- `invalid_execution_profile_ref`
+- `unsupported_execution_provider`
+- `missing_output_contract`
+- `invalid_output_contract_ref`
+- `placeholder_policy_violation`
+- `persona_not_allowed`
+- `plan_rules_scope_violation`
+- `length_budget_scope_violation`
+- `legacy_dependency_forbidden`
+
+### Surface API admin
+
+En cas de rejet au publish assembly, l'API admin renvoie un payload d'erreur structuré dédié :
+
+- `error.code = "coherence_validation_failed"` ;
+- `error.details.errors[*].error_code` contient les codes de cohérence détaillés ;
+- cette erreur reste distincte des rejets runtime et ne doit pas être interprétée comme un `execution_path_kind` nominal.
 
 ## Verrou provider
 
