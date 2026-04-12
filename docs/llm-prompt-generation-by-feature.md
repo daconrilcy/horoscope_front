@@ -674,39 +674,102 @@ Champs observés :
 
 ## Protection des données sensibles (Story 66.34)
 
-L'application applique une politique de rédaction et de classification stricte pour éviter toute fuite de données sensibles (PII, secrets, contenu utilisateur) dans les logs, les snapshots et les interfaces d'administration.
+L'application applique désormais une politique runtime unique de classification et de rédaction pour empêcher qu'un prompt, une sortie LLM, une donnée natale, un identifiant métier corrélable ou un secret soit recopié par erreur dans une surface d'exploitation.
 
-### 1. Taxonomie des données
-Les données sont classées en catégories ordonnées par sensibilité :
-- `SECRET_CREDENTIAL` : mots de passe, clés API, tokens. Action : `FORBIDDEN` (jamais stocké).
-- `DIRECT_IDENTIFIER` : email, téléphone, adresse. Action : `REDACED` ou `MASKED`.
-- `USER_AUTHORED_CONTENT` : messages du chat, questions, prompts, réponses LLM. Action : `ENCRYPTED_ISOLATED` dans les snapshots de replay, `REDACED` ailleurs.
-- `DERIVED_SENSITIVE_DOMAIN_DATA` : données de naissance, thèmes astraux. Action : `REDACED` dans les logs et admin.
-- `CORRELABLE_BUSINESS_IDENTIFIER` : `user_id`, `conversation_id`. Action : `MASKED` ou `HASHED`.
-- `TECHNICAL_CORRELATION_IDENTIFIER` : `request_id`, `trace_id`. Action : `ALLOWED`.
-- `OPERATIONAL_METADATA` : use case, feature, latence, usage tokens. Action : `ALLOWED` (Allowlist positive).
+### 1. Source de vérité centrale
 
-### 2. Matrice de traitement par Sink (Sûreté Multi-couche)
+Le module de référence est `backend/app/core/sensitive_data.py`.
 
-| Sink | Politique dominante | Mécanisme |
-|---|---|---|
-| **Structured Logs** | Rédaction agressive | `logging.Filter` + allowlist positive |
-| **LLM Call Logs (DB)** | Métadonnées uniquement | `OPERATIONAL_FIELDS` allowlist |
-| **Obs Snapshot** | Métadonnées uniquement | Filtrage à la source dans le Gateway |
-| **Replay Snapshots** | Isolation chiffrée | Chiffrement AES-GCM, accès restreint, expiration courte |
-| **Admin API / Dashboard** | Masquage / Rédaction | DTOs dédiés + Sanitize policy |
-| **Audit Trail** | Masquage des identifiants | `AuditService` sanitization systématique |
+Il porte :
+- la taxonomie des catégories de données ;
+- la matrice `sink -> traitement` ;
+- l'allowlist positive `OPERATIONAL_FIELDS` des métadonnées explicitement autorisées ;
+- les helpers de classification, transformation et sanitation réutilisés par logs, audit, observabilité et admin.
 
-### 3. Règles de durcissement
-- **Allowlist positive AC3** : Seuls les champs explicitement listés dans `OPERATIONAL_FIELDS` sont admis dans les logs d'appels LLM et les snapshots d'observabilité. Tout champ inconnu est considéré comme sensible par défaut.
-- **Hashing de corrélation AC12** : L'`input_hash` est calculé sur une version anonymisée et hachée (SHA-256) de l'entrée utilisateur pour permettre la détection de doublons sans stocker le texte.
-- **Isolation du Replay AC7** : Le replay ne renvoie jamais le contenu brut (`raw_output`, `structured_output`) ou les diffs textuels par défaut. L'accès aux snapshots chiffrés est limité à l'environnement de non-production.
-- **Filtre Terminal AC11** : Un `SensitiveDataFilter` global (Python 3.13 style) agit comme filet de sécurité final sur toutes les sorties `logging`.
+Les catégories actuellement codées sont :
+- `secret_credential`
+- `direct_identifier`
+- `technical_correlation_identifier`
+- `correlable_business_identifier`
+- `user_authored_content`
+- `derived_sensitive_domain_data`
+- `operational_metadata`
 
-### 4. Application et Vérification
-- Le module central de vérité est `backend/app/core/sensitive_data.py`.
-- La conformité est vérifiée par des tests de non-fuite (`test_sensitive_data_non_leakage`).
-- Toute nouvelle métadonnée utile au debug doit être explicitement ajoutée à l'allowlist positive pour être persistée.
+Règle de lecture :
+- un champ inconnu n'est pas promu en métadonnée ops par défaut ;
+- l'autorisation en clair repose sur l'allowlist positive, pas sur l'idée qu'un champ "aide au debug".
+
+### 2. Matrice de traitement par sink
+
+| Sink | Règle effective |
+|---|---|
+| `structured_logs` | secrets supprimés, identifiants directs redacts, IDs métier masqués, contenu utilisateur redacted |
+| `obs_snapshot` | uniquement métadonnées ops ou identifiants techniques de corrélation explicitement admis |
+| `llm_call_logs` | uniquement métadonnées ops + empreintes irréversibles autorisées (`hash`) |
+| `llm_replay_snapshots` | seul store pouvant contenir du rejouable sensible, sous forme chiffrée et isolée |
+| `admin_api` | payloads de sortie assainis via `sanitize_payload(..., Sink.ADMIN_API)` |
+| `audit_trail` | détails sanitisés avant persistance, identifiants métier masqués, contenu utilisateur interdit |
+
+Conséquences structurantes :
+- `llm_call_logs` reste un journal d'exploitation sans contenu utilisateur en clair ;
+- `LlmReplaySnapshotModel` reste la seule zone de stockage rejouable ;
+- `obs_snapshot` et `GatewayMeta` restent des transports de métadonnées, pas de contenu.
+
+### 3. Frontière explicite entre exploitation et replay
+
+La frontière d'architecture est désormais la suivante :
+- `llm_call_logs` : corrélation ops, statuts, latence, coûts, taxonomie provider, discriminants runtime ;
+- `llm_replay_snapshots` : input rejouable sensible, chiffré, TTL court, hors dashboards ;
+- audit/admin : références sûres et détails bornés, jamais dump opportuniste du payload source.
+
+Le replay admin ne renvoie plus par défaut :
+- `raw_output`
+- `structured_output`
+- aperçu textuel
+- diff textuel de contenu
+
+La réponse nominale de replay reste limitée à des métadonnées ops et à un diff non textuel de statut/validation.
+
+### 4. Audit et admin
+
+Le contrat audit a été durci de deux façons :
+- les événements LLM sensibles utilisent des DTOs safe dédiés, par exemple `LlmPromptAuditDetails` et `NatalInterpretationAuditDetails` dans `backend/app/schemas/audit_details.py` ;
+- les call sites legacy qui passent encore un `dict` libre sont normalisés en structure JSON bornée avant sanitation, sans exécuter de sérialisation riche arbitraire.
+
+Côté admin :
+- les erreurs API passent par `_error_response(... sanitize_payload(..., Sink.ADMIN_API))` ;
+- `AdminLogsPage` applique un masquage récursif de défense en profondeur sur les `details` d'audit avant affichage ;
+- cette défense UI ne remplace pas le contrat backend, elle ne fait qu'ajouter un garde-fou terminal.
+
+### 5. Logging runtime
+
+Le filet terminal `SensitiveDataFilter` couvre maintenant :
+- les messages structurés passés comme `dict` ;
+- les arguments positionnels (`logger.info("%s", value)`) ;
+- les champs `extra={...}` fusionnés dans le `LogRecord`.
+
+Ce filtre reste volontairement un garde-fou final.
+La hiérarchie de confiance est :
+1. serializers et DTOs bornés par sink ;
+2. sanitation explicite avant persistance / restitution ;
+3. filtre global logging en dernier recours.
+
+### 6. Hashing, non-fuite et maintenance
+
+`compute_input_hash()` s'appuie sur la politique `Sink.LLM_CALL_LOGS` avant calcul du SHA-256 pour éviter qu'un hash serve de prétexte à persister l'entrée brute.
+
+La vérification locale de cette story s'appuie au minimum sur :
+- `backend/tests/unit/test_sensitive_data_non_leakage.py`
+
+Cette suite couvre notamment :
+- la distinction entre identifiants techniques et identifiants métier corrélables ;
+- l'absence de whitelist implicite pour des conteneurs génériques comme `payload` ou `details` ;
+- la sanitation des champs `extra=` dans le logging ;
+- l'absence de fuite dans l'audit après sanitation.
+
+Règle de maintenance :
+- toute nouvelle métadonnée ops doit être ajoutée explicitement à `OPERATIONAL_FIELDS` ;
+- toute nouvelle surface admin, audit ou replay doit choisir son sink et sa stratégie de traitement avant d'exposer un champ.
 
 | `executed_provider_mode` | mode réel d'exécution provider (`nominal`, `circuit_open`, `degraded` ou équivalent stable) |
 | `attempt_count` | nombre total de tentatives réellement consommées |

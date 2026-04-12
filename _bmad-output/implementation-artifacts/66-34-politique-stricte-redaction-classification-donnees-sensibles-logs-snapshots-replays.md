@@ -1,6 +1,6 @@
 # Story 66.34: Politique stricte de redaction et de classification des données sensibles dans logs, snapshots et replays
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -169,6 +169,12 @@ Inférences à expliciter dans la story :
   - [ ] Exécuter `pytest -q`.
   - [ ] Exécuter au minimum les suites ciblées observabilité/replay/admin/front liées à cette story.
 
+### Review Findings
+
+- [x] [Review][Patch] Heuristique `container_keys` trop permissive réautorise des scalaires bruts sous `payload`/`data`/`details` [backend/app/core/sensitive_data.py:200]
+- [x] [Review][Patch] `GenericSafeAuditDetails` n'impose pas réellement une structure bornée car `extra=\"allow\"` laisse passer des clés arbitraires [backend/app/schemas/audit_details.py:64]
+- [x] [Review][Patch] Le test du chemin `extra=` ne vérifie toujours rien et laisse le bypass sans assertion de non-fuite [backend/tests/unit/test_sensitive_data_non_leakage.py:117]
+
 ## Dev Notes
 
 ### Ce que le dev doit retenir avant d'implémenter
@@ -306,10 +312,23 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story 66.34 créée pour fermer explicitement le risque de fuite entre observabilité LLM, replay et surfaces admin.
-- Le cadrage impose une classification centrale par type de donnée et par sink, avec séparation stricte entre métadonnées ops et contenu utilisateur.
-- Le scope couvre backend, audit, replay, dashboard admin et frontend `AdminLogsPage`, avec tests de non-fuite obligatoires.
+- La story 66.34 est implémentée avec une taxonomie centrale par catégorie de donnée et par sink dans `backend/app/core/sensitive_data.py`.
+- Le filtrage terminal `SensitiveDataFilter` couvre maintenant les messages structurés, les arguments positionnels et les champs `extra=` fusionnés dans les `LogRecord`.
+- Le replay admin ne réexpose plus `raw_output` ni `structured_output` en réponse nominale, et l'audit LLM passe par des DTOs safe dédiés ou une normalisation bornée.
+- La modale d'audit du cockpit admin applique un masquage récursif de défense en profondeur sur les `details`.
+- La non-régression ciblée est couverte par `backend/tests/unit/test_sensitive_data_non_leakage.py`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/66-34-politique-stricte-redaction-classification-donnees-sensibles-logs-snapshots-replays.md`
+- `backend/app/core/sensitive_data.py`
+- `backend/app/ai_engine/services/log_sanitizer.py`
+- `backend/app/services/audit_service.py`
+- `backend/app/schemas/audit_details.py`
+- `backend/app/llm_orchestration/services/replay_service.py`
+- `backend/app/llm_orchestration/models.py`
+- `backend/app/api/v1/routers/admin_llm.py`
+- `backend/app/services/natal_interpretation_service_v2.py`
+- `backend/tests/unit/test_sensitive_data_non_leakage.py`
+- `frontend/src/pages/admin/AdminLogsPage.tsx`
+- `docs/llm-prompt-generation-by-feature.md`

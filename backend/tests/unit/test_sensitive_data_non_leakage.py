@@ -90,6 +90,22 @@ def test_sanitize_payload_llm_call_logs():
     assert sanitized["request_id"] == "req-123"  # ALLOWED (Technical identifier)
 
 
+def test_sanitize_payload_does_not_whitelist_generic_container_scalar_values():
+    payload = {
+        "payload": "full prompt text",
+        "details": "user-authored diagnostic blob",
+        "user_id": 123,
+        "email": "user@example.com",
+    }
+
+    sanitized = sanitize_payload(payload, Sink.AUDIT_TRAIL)
+
+    assert "payload" not in sanitized
+    assert "details" not in sanitized
+    assert sanitized["user_id"] == "[MASKED]"
+    assert sanitized["email"] == "u...@example.com"
+
+
 def test_logging_filter(caplog):
     logger = logging.getLogger("test_logger")
     # AC11 Terminal safety filter
@@ -115,19 +131,10 @@ def test_logging_filter(caplog):
             caplog.clear()
 
             # 3. Test fix for High Finding: 'extra' fields
-            # We use a dict message to capture everything in caplog.text
             logger.info({"msg": "with_extra"}, extra={"secret_token": "hidden", "user_id": 12345})
-            # SensitiveDataFilter should have redacted record.user_id
-            # Note: caplog captures the message as it was logged.
-            # In Python, if we log a dict, it's already formatted.
-            # But the filter runs BEFORE formatting if it's attached to the handler.
-            # Here we just want to ensure NO sensitive data from 'extra' leaked into the record
-            # if it were to be serialized.
-            # Since we can't easily check the final serialized output here without a complex setup,
-            # we rely on the logic unit test.
-            # Wait, if I log a message that references extra, I can see it.
-            # But standard formatting doesn't.
-            pass
+            record = caplog.records[-1]
+            assert getattr(record, "secret_token") is None
+            assert getattr(record, "user_id") == "[MASKED]"
     finally:
         logger.removeFilter(log_filter)
 
@@ -172,6 +179,4 @@ def test_audit_service_sanitization(db):
     assert "content" not in event.details
     assert event.details["use_case"] == "allowed"
     assert event.details["user_id"] == "[MASKED]"
-    # email is MASKED in Audit Sink (n...@leak.com)
-    assert event.details["nested"]["email"] == "n...@leak.com"
-    assert "secret" not in event.details["nested"]["inner"]
+    assert "nested" not in event.details

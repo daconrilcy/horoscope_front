@@ -61,14 +61,21 @@ class LlmPromptAuditDetails(BaseSafeAuditDetails):
     action: Optional[str] = None
 
 
-class GenericSafeAuditDetails(BaseSafeAuditDetails):
-    """
-    Generic bounded structure for non-specific events.
-    M4 Finding Fix: Bounded structure for any audit event.
-    """
+def _normalize_safe_value(value: Any) -> Any:
+    """Normalizes arbitrary audit values into a bounded JSON-like structure."""
+    if isinstance(value, BaseSafeAuditDetails):
+        return value.model_dump(exclude_none=True)
 
-    model_config = ConfigDict(extra="allow")  # Explicitly allow for generic usage
-    message: Optional[str] = None
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+
+    if isinstance(value, dict):
+        return {str(key): _normalize_safe_value(inner) for key, inner in value.items()}
+
+    if isinstance(value, (list, tuple, set)):
+        return [_normalize_safe_value(item) for item in value]
+
+    return str(value)
 
 
 def to_safe_details(details: Any) -> Dict[str, Any]:
@@ -80,8 +87,6 @@ def to_safe_details(details: Any) -> Dict[str, Any]:
         return details.model_dump(exclude_none=True)
 
     if isinstance(details, dict):
-        # M4 Finding Fix: Wrap raw dicts in a generic DTO to ensure bounded structure
-        # according to the central policy even if the call site is not yet fully migrated.
-        return GenericSafeAuditDetails(**details).model_dump(exclude_none=True)
+        return {str(key): _normalize_safe_value(value) for key, value in details.items()}
 
-    return {"raw_value": str(details)}
+    return {"value": _normalize_safe_value(details)}
