@@ -105,7 +105,7 @@ flowchart TD
 | Cohérence publish/boot | `ConfigCoherenceValidator`, `run_llm_coherence_startup_validation()` | bloquer une config incohérente avant exécution ou au démarrage runtime | simulation complète du métier ou fallback runtime |
 | Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante | persistance admin |
 
-## Stories 66.9 à 66.30
+## Stories 66.9 à 66.31
 
 | Story | Apport canonique | Impact runtime observable |
 |---|---|---|
@@ -406,7 +406,7 @@ Le scan startup est volontairement borné :
 
 - `execution_profile_ref` explicite si présent, sinon waterfall canonique `feature+subfeature+plan -> feature+subfeature -> feature` ;
 - absence de retour à `resolve_model()` comme issue de validation sur le périmètre supporté ;
-- `output_contract_ref` résolu par UUID ou par nom, pour rester aligné avec les seeds et avec la résolution runtime ;
+- `output_contract_ref` résolu par UUID ou par nom, pour rester aligné avec les seeds et avec la résolution runtime, avec contrôle documentaire attendu de cohérence avec `output_mode` du profil effectivement résolu ;
 - placeholders validés statiquement contre l'allowlist et la structure attendue de la famille canonique, sans mini-runtime ;
 - persona existante et activée lorsqu'elle est référencée ;
 - invariants `plan_rules` / `LengthBudget` ;
@@ -414,7 +414,7 @@ Le scan startup est volontairement borné :
 
 ### Taxonomie minimale des erreurs de cohérence
 
-Les erreurs stables attendues côté publish/startup sont au minimum :
+Les erreurs stables de cohérence à utiliser côté publish/startup sont les suivantes :
 
 - `missing_execution_profile`
 - `invalid_execution_profile_ref`
