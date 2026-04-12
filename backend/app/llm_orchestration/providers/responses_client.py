@@ -1,38 +1,32 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
-import random
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from openai import APIConnectionError, APITimeoutError, RateLimitError
+from openai import AsyncOpenAI
 
 from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.exceptions import (
     ProviderNotConfiguredError,
-    UpstreamError,
-    UpstreamRateLimitError,
-    UpstreamTimeoutError,
 )
 from app.llm_orchestration.models import (
-    GatewayError,
     GatewayMeta,
     GatewayResult,
     UsageInfo,
     is_reasoning_model,
 )
 
-if TYPE_CHECKING:
-    from openai import AsyncOpenAI
-    from openai.types.responses import Response
-
 logger = logging.getLogger(__name__)
 
 
 class ResponsesClient:
-    """Wrapper for the OpenAI Responses API (POST /v1/responses)."""
+    """
+    Wrapper for the OpenAI Responses API (POST /v1/responses).
+    Focuses on request shaping and transport.
+    Explicitly disables SDK-level retries to allow application-level control.
+    """
 
     def __init__(self) -> None:
         self._async_client: "AsyncOpenAI | None" = None
@@ -43,14 +37,11 @@ class ResponsesClient:
 
     async def _get_async_client(self) -> "AsyncOpenAI":
         if self._async_client is None:
-            try:
-                from openai import AsyncOpenAI
-            except ImportError as err:
-                raise UpstreamError(
-                    "openai package not installed",
-                    details={"package": "openai"},
-                ) from err
-            self._async_client = AsyncOpenAI(api_key=ai_engine_settings.openai_api_key)
+            # Disable SDK-level retries (default is 2) to keep a single source of truth.
+            self._async_client = AsyncOpenAI(
+                api_key=ai_engine_settings.openai_api_key,
+                max_retries=0,
+            )
         return self._async_client
 
     @staticmethod
@@ -87,107 +78,108 @@ class ResponsesClient:
         reasoning_effort: Optional[str] = None,
         verbosity: Optional[str] = None,
         response_format: Optional[Dict[str, Any]] = None,
-    ) -> GatewayResult:
-        """Execute a request via the Responses API with retry logic."""
+    ) -> tuple[GatewayResult, Dict[str, str]]:
+        """
+        Execute a single request via the OpenAI Responses API.
+        No retries here - retries are managed by ProviderRuntimeManager.
+        Returns (GatewayResult, response_headers).
+        """
         self._ensure_configured()
         client = await self._get_async_client()
 
         start_time = time.monotonic()
 
-        async def do_create() -> "Response":
-            # 1. GPT-5 requires typed content blocks.
-            is_gpt5 = model == "gpt-5" or model.startswith("gpt-5-")
-            effective_input = self._to_typed_content_blocks(messages) if is_gpt5 else messages
+        # 1. GPT-5 requires typed content blocks.
+        is_gpt5 = model == "gpt-5" or model.startswith("gpt-5-")
+        effective_input = self._to_typed_content_blocks(messages) if is_gpt5 else messages
 
-            # 2. Base parameters
-            params: Dict[str, Any] = {
-                "model": model,
-                "input": effective_input,  # type: ignore
-                "max_output_tokens": max_output_tokens,
-            }
+        # 2. Base parameters
+        params: Dict[str, Any] = {
+            "model": model,
+            "input": effective_input,  # type: ignore
+            "max_output_tokens": max_output_tokens,
+            "timeout": timeout_seconds,
+        }
 
-            # 3. Reasoning and Temperature
-            # GPT-5 and o-series (o1, o3, o4) use reasoning config instead of temperature.
-            is_reasoning = is_reasoning_model(model)
+        # 3. Reasoning and Temperature
+        is_reasoning = is_reasoning_model(model)
+        if is_reasoning:
+            if reasoning_effort:
+                params["reasoning"] = {"effort": reasoning_effort}
+        else:
+            params["temperature"] = temperature
 
-            if is_reasoning:
-                if reasoning_effort:
-                    params["reasoning"] = {"effort": reasoning_effort}
-            else:
-                params["temperature"] = temperature
+        text_config: Dict[str, Any] = {}
+        if is_gpt5 and verbosity:
+            text_config["verbosity"] = verbosity
 
-            text_config: Dict[str, Any] = {}
-            if is_gpt5 and verbosity:
-                text_config["verbosity"] = verbosity
+        if response_format:
+            fmt = dict(response_format)
+            if fmt.get("type") == "json_schema" and "json_schema" in fmt:
+                nested = fmt.pop("json_schema")
+                fmt.update(nested)
 
-            if response_format:
-                # Responses API uses `text.format` with a flat structure, whereas
-                # Chat Completions API nests details under `json_schema`.
-                # Transform: {"type": "json_schema", "json_schema": {"name": ..., "schema": ..., "strict": ...}}  # noqa: E501
-                #        →   {"type": "json_schema", "name": ..., "schema": ..., "strict": ...}
-                fmt = dict(response_format)
-                if fmt.get("type") == "json_schema" and "json_schema" in fmt:
-                    nested = fmt.pop("json_schema")
-                    fmt.update(nested)
+                def _enforce_strict(s: dict):
+                    if isinstance(s, dict):
+                        if s.get("type") == "object":
+                            s["additionalProperties"] = False
+                        for k, v in s.items():
+                            if isinstance(v, (dict, list)):
+                                _enforce_strict(v)
+                    elif isinstance(s, list):
+                        for item in s:
+                            if isinstance(item, (dict, list)):
+                                _enforce_strict(item)
 
-                    # Ensure strict schemas have additionalProperties: False
-                    def _enforce_strict(s: dict):
-                        if isinstance(s, dict):
-                            if s.get("type") == "object":
-                                s["additionalProperties"] = False
-                            for k, v in s.items():
-                                if isinstance(v, (dict, list)):
-                                    _enforce_strict(v)
-                        elif isinstance(s, list):
-                            for item in s:
-                                if isinstance(item, (dict, list)):
-                                    _enforce_strict(item)
+                if fmt.get("strict") is True and "schema" in fmt:
+                    _enforce_strict(fmt["schema"])
 
-                    if fmt.get("strict") is True and "schema" in fmt:
-                        _enforce_strict(fmt["schema"])
+            text_config["format"] = fmt
 
-                text_config["format"] = fmt
+        if text_config:
+            params["text"] = text_config
 
-            if text_config:
-                params["text"] = text_config
+        # Add tracing headers
+        headers: Dict[str, str] = {}
+        if request_id:
+            headers["x-request-id"] = request_id
+        if trace_id:
+            headers["x-trace-id"] = trace_id
+        if use_case:
+            headers["x-use-case"] = use_case
+        if headers:
+            params["extra_headers"] = headers
 
-            # Add tracing headers for observability
-            headers: Dict[str, str] = {}
-            if request_id:
-                headers["x-request-id"] = request_id
-            if trace_id:
-                headers["x-trace-id"] = trace_id
-            if use_case:
-                headers["x-use-case"] = use_case
-            if headers:
-                params["extra_headers"] = headers
-
-            return await client.responses.create(**params)
-
+        # Execute with raw response access to get headers (AC5)
         try:
-            response = await self._execute_with_retry(
-                "responses_create", do_create, timeout_seconds=timeout_seconds
-            )
+            raw_api_response = await client.with_raw_response.responses.create(**params)
+            response = raw_api_response.parse()
+            resp_headers = dict(raw_api_response.headers)
         except Exception as err:
-            if isinstance(err, (UpstreamRateLimitError, UpstreamTimeoutError, UpstreamError)):
-                raise err
-            raise GatewayError(
-                f"Unexpected provider error: {str(err)}", details={"error": str(err)}
-            )
+            # Story 66.33 Finding High: Extract headers from exception if available
+            resp_headers = {}
+            if hasattr(err, "response") and hasattr(err.response, "headers"):
+                try:
+                    resp_headers = dict(err.response.headers)
+                except Exception:
+                    pass
+            # Re-wrap error if it carries headers to propagate them
+            setattr(err, "_provider_headers", resp_headers)
+            if hasattr(err, "code"):
+                setattr(err, "_provider_error_code", str(getattr(err, "code")))
+            raise err
 
         latency_ms = int((time.monotonic() - start_time) * 1000)
 
-        # Use the SDK convenience property which handles all output_text aggregation.
         output_text = response.output_text if hasattr(response, "output_text") else ""
 
         usage = UsageInfo(
             input_tokens=response.usage.input_tokens if response.usage else 0,
             output_tokens=response.usage.output_tokens if response.usage else 0,
             total_tokens=response.usage.total_tokens if response.usage else 0,
-            estimated_cost_usd=0.0,  # Will be calculated in gateway or service
+            estimated_cost_usd=0.0,
         )
 
-        # Parse structured output when response_format was requested
         structured_output: Any = None
         if response_format is not None and output_text:
             try:
@@ -195,7 +187,7 @@ class ResponsesClient:
             except (json.JSONDecodeError, ValueError):
                 pass
 
-        return GatewayResult(
+        result = GatewayResult(
             use_case=use_case,
             request_id=request_id,
             trace_id=trace_id,
@@ -205,62 +197,9 @@ class ResponsesClient:
             meta=GatewayMeta(
                 latency_ms=latency_ms,
                 model=response.model,
-                cached=False,  # Responses API might have cache info elsewhere
+                cached=False,
             ),
         )
+        return result, resp_headers
 
-    async def _execute_with_retry(
-        self,
-        operation: str,
-        func_factory: Any,
-        *,
-        timeout_seconds: int,
-    ) -> Any:
-        """Reuse retry logic from OpenAIClient pattern."""
-        max_retries = ai_engine_settings.max_retries
-        base_delay_ms = ai_engine_settings.retry_base_delay_ms
-        max_delay_ms = ai_engine_settings.retry_max_delay_ms
-
-        last_error: Exception | None = None
-        for attempt in range(max_retries + 1):
-            try:
-                return await asyncio.wait_for(func_factory(), timeout=timeout_seconds)
-            except asyncio.TimeoutError as err:
-                logger.warning(
-                    "responses_timeout operation=%s attempt=%d timeout=%ds",
-                    operation,
-                    attempt + 1,
-                    timeout_seconds,
-                )
-                last_error = err
-            except Exception as err:
-                # Handle OpenAI SDK-specific exceptions (non-retryable)
-                if isinstance(err, RateLimitError):
-                    raise UpstreamRateLimitError() from err
-                if isinstance(err, APITimeoutError):
-                    raise UpstreamTimeoutError(timeout_seconds) from err
-                if isinstance(err, APIConnectionError):
-                    raise UpstreamError(
-                        f"Connection error: {str(err)}",
-                        details={"kind": "connection_error"},
-                    ) from err
-
-                logger.warning(
-                    "responses_error operation=%s attempt=%d error=%s",
-                    operation,
-                    attempt + 1,
-                    str(err),
-                )
-                last_error = err
-
-            if attempt < max_retries:
-                delay_ms = min(base_delay_ms * (2**attempt), max_delay_ms)
-                jitter_ms = random.randint(0, delay_ms // 4)
-                await asyncio.sleep((delay_ms + jitter_ms) / 1000.0)
-
-        if isinstance(last_error, asyncio.TimeoutError):
-            raise UpstreamTimeoutError(timeout_seconds) from last_error
-        raise UpstreamError(
-            f"responses {operation} failed after {max_retries + 1} attempts",
-            details={"error": str(last_error)},
-        ) from last_error
+    # Removed _execute_with_retry as it's now handled by ProviderRuntimeManager

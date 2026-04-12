@@ -42,6 +42,7 @@ from app.llm_orchestration.models import (
     is_reasoning_model,
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
+from app.llm_orchestration.providers.provider_runtime_manager import ProviderRuntimeManager
 from app.llm_orchestration.providers.responses_client import ResponsesClient
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
 from app.llm_orchestration.services.assembly_resolver import (
@@ -246,6 +247,7 @@ class LLMGateway:
 
     def __init__(self, responses_client: Optional[ResponsesClient] = None) -> None:
         self.client = responses_client or ResponsesClient()
+        self.runtime_manager = ProviderRuntimeManager(self.client)
         self.renderer = PromptRenderer()
 
     def build_user_payload(
@@ -582,7 +584,10 @@ class LLMGateway:
                 bundle = getattr(resolved_assembly, "_snapshot_bundle")
                 if bundle and "schema" in bundle:
                     schema_data = bundle["schema"]
-                    if schema_data.get("id") == config.output_schema_id or schema_data.get("name") == config.output_schema_id:
+                    if (
+                        schema_data.get("id") == config.output_schema_id
+                        or schema_data.get("name") == config.output_schema_id
+                    ):
                         schema_dict = schema_data["json_schema"]
                         schema_name = re.sub(r"[^a-z0-9_-]", "_", schema_data["name"].lower())
                         ver = schema_data.get("version", 1)
@@ -909,10 +914,14 @@ class LLMGateway:
                         # Store assembly metadata for ResolvedExecutionPlan
                         context_dict["_assembly_resolved"] = resolved_assembly
                         context_dict["_assembly_db_id"] = str(assembly_db.id)
-                        
+
                         # Story 66.32 AC4: Propagate snapshot bundle for transitive resolution
                         if hasattr(assembly_db, "_snapshot_bundle"):
-                            setattr(resolved_assembly, "_snapshot_bundle", getattr(assembly_db, "_snapshot_bundle"))
+                            setattr(
+                                resolved_assembly,
+                                "_snapshot_bundle",
+                                getattr(assembly_db, "_snapshot_bundle"),
+                            )
 
                         # Story 66.32 AC12: Propagate snapshot ID and version from registry
                         context_dict["_active_snapshot_id"] = getattr(
@@ -1470,9 +1479,10 @@ class LLMGateway:
 
         # High #1 Fix: Provider routing
         if plan.provider == "openai":
-            return await self.client.execute(
+            return await self.runtime_manager.execute_with_resilience(
                 messages=messages,
                 model=plan.model_id,
+                family=plan.feature,
                 temperature=plan.temperature,
                 max_output_tokens=plan.max_output_tokens,
                 request_id=request.request_id,
@@ -1786,6 +1796,12 @@ class LLMGateway:
             context_compensation_status=comp_status,
             max_output_tokens_source=tokens_source,
             max_output_tokens_final=plan.max_output_tokens,
+            # Operational Hardening (Story 66.33 Finding Medium)
+            executed_provider_mode=result.meta.executed_provider_mode,
+            attempt_count=result.meta.attempt_count,
+            provider_error_code=result.meta.provider_error_code,
+            breaker_state=result.meta.breaker_state,
+            breaker_scope=result.meta.breaker_scope,
             # Story 66.32 AC12: Propagate snapshot metadata to observability
             active_snapshot_id=plan.active_snapshot_id,
             active_snapshot_version=plan.active_snapshot_version,

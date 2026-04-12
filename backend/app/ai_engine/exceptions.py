@@ -72,14 +72,41 @@ class ContextTooLargeError(AIEngineError):
 
 
 class UpstreamRateLimitError(AIEngineError):
-    """Raised when upstream provider returns rate limit error."""
+    """Raised when upstream provider returns rate limit error (429)."""
 
-    def __init__(self, retry_after_ms: int = 60000) -> None:
+    def __init__(
+        self,
+        retry_after_ms: int = 60000,
+        provider_request_id: str | None = None,
+        is_quota_exhausted: bool = False,
+    ) -> None:
+        error_type = "UPSTREAM_QUOTA_EXHAUSTED" if is_quota_exhausted else "UPSTREAM_RATE_LIMIT"
+        message = (
+            "upstream provider quota exhausted"
+            if is_quota_exhausted
+            else "upstream provider rate limit exceeded"
+        )
+        details = {"provider_request_id": provider_request_id} if provider_request_id else None
         super().__init__(
-            error_type="UPSTREAM_RATE_LIMIT",
-            message="upstream provider rate limit exceeded",
+            error_type=error_type,
+            message=message,
             status_code=429,
             retry_after_ms=retry_after_ms,
+            details=details,
+        )
+
+
+class UpstreamCircuitOpenError(AIEngineError):
+    """Raised when the circuit breaker is open for a provider+family."""
+
+    def __init__(self, provider: str, family: str) -> None:
+        super().__init__(
+            error_type="UPSTREAM_CIRCUIT_OPEN",
+            message=(
+                f"upstream provider {provider} is unavailable for family {family} (circuit open)"
+            ),
+            status_code=503,
+            details={"provider": provider, "family": family},
         )
 
 
@@ -93,6 +120,53 @@ class UpstreamError(AIEngineError):
             status_code=502,
             details=details,
         )
+
+
+class UpstreamConnectionError(UpstreamError):
+    """Raised when connection to upstream fails."""
+
+    def __init__(self, message: str, provider_request_id: str | None = None) -> None:
+        details = {"provider_request_id": provider_request_id} if provider_request_id else {}
+        details["kind"] = "connection_error"
+        super().__init__(message=message, details=details)
+
+
+class UpstreamBadRequestError(UpstreamError):
+    """Raised when upstream returns 400."""
+
+    def __init__(self, message: str, provider_request_id: str | None = None) -> None:
+        details = {"provider_request_id": provider_request_id} if provider_request_id else {}
+        details["kind"] = "bad_request"
+        super().__init__(message=message, details=details)
+
+
+class UpstreamAuthError(UpstreamError):
+    """Raised when upstream returns 401 or 403."""
+
+    def __init__(self, message: str, provider_request_id: str | None = None) -> None:
+        details = {"provider_request_id": provider_request_id} if provider_request_id else {}
+        details["kind"] = "auth_error"
+        super().__init__(message=message, details=details)
+
+
+class UpstreamServerError(UpstreamError):
+    """Raised when upstream returns 5xx (excluding timeout/connection)."""
+
+    def __init__(self, message: str, provider_request_id: str | None = None) -> None:
+        details = {"provider_request_id": provider_request_id} if provider_request_id else {}
+        details["kind"] = "server_error"
+        super().__init__(message=message, details=details)
+
+
+class RetryBudgetExhaustedError(UpstreamError):
+    """Raised when max retries or time budget is exceeded."""
+
+    def __init__(self, attempts: int, last_error: str) -> None:
+        super().__init__(
+            message=f"retry budget exhausted after {attempts} attempts",
+            details={"attempts": str(attempts), "last_error": last_error},
+        )
+        self.error_type = "RETRY_BUDGET_EXHAUSTED"
 
 
 class UpstreamTimeoutError(AIEngineError):

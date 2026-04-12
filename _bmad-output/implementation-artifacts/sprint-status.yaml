@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-12T00:00:00+02:00'
+last_updated: '2026-04-12T13:10:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -618,3 +618,4 @@ development_status:
   66-30-suppression-fallback-resolve-model-source-finale-verite-execution: done
   66-31-validation-fail-fast-coherence-configuration-publish-boot-runtime: done
   66-32-versionnement-atomique-et-rollback-sur-des-artefacts-de-prompting: ready-for-dev
+  66-33-durcissement-operationnel-appel-provider-openai: done

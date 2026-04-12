@@ -13,6 +13,7 @@ Chaque couche a une responsabilité unique. Ne mélangez pas les préoccupations
 | **LlmPersonaModel** | **Style et Voix** : ton, vocabulaire, empathie, densité stylistique. | Table `llm_personas` |
 | **ExecutionProfile** | **Paramètres techniques** : choix du moteur (provider, modèle), raisonnement, verbosité technique. | Table `llm_execution_profiles` |
 | **ResolvedExecutionPlan** | **Vérité finale immuable** : l'agrégation de toutes les couches à l'instant T de l'exécution. | Objet Python (frozen) |
+| **ProviderRuntimeManager** | **Robustesse Opérationnelle** : gestion des retries, circuit breaking et rate limits. | Code applicatif |
 
 ## 2. Règles de décision : "Où mettre mon instruction ?"
 
@@ -50,4 +51,7 @@ La transformation du prompt suit un ordre séquentiel strict. Les étapes 2 et 3
 6. **Résolution de la Persona**
 7. **Résolution du Schéma de sortie**
 8. **Gel du plan** -> `ResolvedExecutionPlan` est créé et devient immuable.
-9. **Appel Provider**
+9. **Appel Provider résilient** (`ProviderRuntimeManager`) :
+   - Gestion des retries applicatifs
+   - Circuit Breaker par famille
+   - Gestion des Rate Limits (Retry-After)

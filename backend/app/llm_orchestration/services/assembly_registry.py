@@ -57,7 +57,12 @@ class AssemblyRegistry:
             data["_persona"] = serialize_orm(config.persona)
 
         # Story 66.32 AC12: Persist runtime observability metadata in serialized data
-        for attr in ["_active_snapshot_id", "_active_snapshot_version", "_manifest_entry_id", "_snapshot_bundle"]:
+        for attr in [
+            "_active_snapshot_id",
+            "_active_snapshot_version",
+            "_manifest_entry_id",
+            "_snapshot_bundle",
+        ]:
             if hasattr(config, attr):
                 val = getattr(config, attr)
                 # Ensure UUIDs are stringified for JSON compatibility if needed
@@ -75,10 +80,15 @@ class AssemblyRegistry:
         feat_data = data_copy.pop("_feature_template", None)
         sub_data = data_copy.pop("_subfeature_template", None)
         pers_data = data_copy.pop("_persona", None)
-        
+
         # Metadata fields
         meta = {}
-        for attr in ["_active_snapshot_id", "_active_snapshot_version", "_manifest_entry_id", "_snapshot_bundle"]:
+        for attr in [
+            "_active_snapshot_id",
+            "_active_snapshot_version",
+            "_manifest_entry_id",
+            "_snapshot_bundle",
+        ]:
             if attr in data_copy:
                 meta[attr] = data_copy.pop(attr)
 
@@ -103,7 +113,6 @@ class AssemblyRegistry:
             config.persona = reconstruct_orm(LlmPersonaModel, pers_data)
 
         return config
-
 
     async def _get_active_release_snapshot(self) -> Optional[LlmReleaseSnapshotModel]:
         """Fetch the currently active release snapshot."""

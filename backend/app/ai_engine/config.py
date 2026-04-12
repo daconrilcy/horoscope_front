@@ -20,10 +20,25 @@ class AIEngineSettings(BaseSettings):
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model_default: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL_DEFAULT")
     timeout_seconds: int = Field(default=30, alias="AI_ENGINE_TIMEOUT_SECONDS")
+    timeout_seconds_chat: int = Field(default=30, alias="AI_ENGINE_TIMEOUT_SECONDS_CHAT")
+    timeout_seconds_guidance: int = Field(default=30, alias="AI_ENGINE_TIMEOUT_SECONDS_GUIDANCE")
+    timeout_seconds_natal: int = Field(default=120, alias="AI_ENGINE_TIMEOUT_SECONDS_NATAL")
+    timeout_seconds_horoscope_daily: int = Field(
+        default=60, alias="AI_ENGINE_TIMEOUT_SECONDS_HOROSCOPE_DAILY"
+    )
+
     max_retries: int = Field(default=2, alias="AI_ENGINE_MAX_RETRIES")
     context_max_tokens: int = Field(default=4000, alias="AI_ENGINE_CONTEXT_MAX_TOKENS")
     retry_base_delay_ms: int = Field(default=500, alias="AI_ENGINE_RETRY_BASE_DELAY_MS")
     retry_max_delay_ms: int = Field(default=5000, alias="AI_ENGINE_RETRY_MAX_DELAY_MS")
+
+    circuit_breaker_failure_threshold: int = Field(
+        default=5, alias="AI_ENGINE_CB_FAILURE_THRESHOLD"
+    )
+    circuit_breaker_recovery_timeout_sec: int = Field(
+        default=60, alias="AI_ENGINE_CB_RECOVERY_TIMEOUT_SEC"
+    )
+
     cost_per_1k_input_tokens: float = Field(
         default=0.00015, alias="AI_ENGINE_COST_PER_1K_INPUT_TOKENS"
     )

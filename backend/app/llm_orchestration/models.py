@@ -82,6 +82,13 @@ class ExecutionObservabilitySnapshot(BaseModel):
     max_output_tokens_source: MaxTokensSource
     max_output_tokens_final: int
 
+    # Operational Observability (Story 66.33 AC13)
+    executed_provider_mode: str = "nominal"
+    attempt_count: int = 1
+    provider_error_code: Optional[str] = None
+    breaker_state: Optional[str] = None
+    breaker_scope: Optional[str] = None
+
     # Release Snapshot Traceability (Story 66.32 AC12)
     active_snapshot_id: Optional[uuid.UUID] = None
     active_snapshot_version: Optional[str] = None
@@ -442,6 +449,13 @@ class GatewayMeta(BaseModel):
 
     # Operational Observability (Story 66.25)
     obs_snapshot: Optional[ExecutionObservabilitySnapshot] = None
+
+    # Operational Hardening (Story 66.33 AC13)
+    executed_provider_mode: str = "nominal"
+    attempt_count: int = 1
+    provider_error_code: Optional[str] = None
+    breaker_state: Optional[str] = None
+    breaker_scope: Optional[str] = None
 
 
 class GatewayResult(BaseModel):

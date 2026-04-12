@@ -18,22 +18,27 @@ async def test_responses_client_execute_success():
     # Arrange
     mock_response = MagicMock()
     mock_response.model = "gpt-4o-mini"
-    # raw_output in GatewayResult expects a string.
-    # ResponsesClient uses response.output_text if it has it.
     mock_response.output_text = "Hello from Responses API"
-
     mock_response.usage.input_tokens = 5
     mock_response.usage.output_tokens = 10
     mock_response.usage.total_tokens = 15
 
-    with patch("openai.AsyncOpenAI") as mock_openai_class:
+    mock_raw_response = MagicMock()
+    mock_raw_response.parse.return_value = mock_response
+    mock_raw_response.headers = {"x-request-id": "req-1"}
+
+    with patch("app.llm_orchestration.providers.responses_client.AsyncOpenAI") as mock_openai_class:
         mock_client_instance = mock_openai_class.return_value
-        mock_client_instance.responses.create = AsyncMock(return_value=mock_response)
+        # Mock with_raw_response chain
+        mock_with_raw = MagicMock()
+        mock_client_instance.with_raw_response = mock_with_raw
+        mock_with_raw.responses = MagicMock()
+        mock_with_raw.responses.create = AsyncMock(return_value=mock_raw_response)
 
         client = ResponsesClient()
 
         # Act
-        result = await client.execute(
+        result, headers = await client.execute(
             messages=[{"role": "user", "content": "hi"}],
             model="gpt-4o-mini",
             request_id="req-1",
@@ -45,29 +50,27 @@ async def test_responses_client_execute_success():
         assert result.raw_output == "Hello from Responses API"
         assert result.usage.total_tokens == 15
         assert result.meta.model == "gpt-4o-mini"
-        mock_client_instance.responses.create.assert_called_once()
+        assert headers["x-request-id"] == "req-1"
+        mock_with_raw.responses.create.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_responses_client_raises_rate_limit_immediately():
+async def test_responses_client_passes_through_rate_limit():
     # Arrange
-    with patch("openai.AsyncOpenAI") as mock_openai_class:
+    with patch("app.llm_orchestration.providers.responses_client.AsyncOpenAI") as mock_openai_class:
         mock_client_instance = mock_openai_class.return_value
+        mock_with_raw = MagicMock()
+        mock_client_instance.with_raw_response = mock_with_raw
+        mock_with_raw.responses = MagicMock()
 
-        # Create a proper RateLimitError
-        # Parameters: message, response (HTTPResponse), body
         err = RateLimitError(
             message="Rate limit reached",
             response=MagicMock(),
             body={"error": {"message": "Rate limit reached", "code": "rate_limit_exceeded"}},
         )
 
-        # Fail with rate limit
-        mock_client_instance.responses.create = AsyncMock(side_effect=err)
+        mock_with_raw.responses.create = AsyncMock(side_effect=err)
 
         client = ResponsesClient()
-        with pytest.raises(UpstreamRateLimitError):
+        with pytest.raises(RateLimitError):
             await client.execute(messages=[{"role": "user", "content": "hi"}], model="m")
-
-        # RateLimitError is non-retryable in our implementation (direct raise)
-        assert mock_client_instance.responses.create.call_count == 1

@@ -51,7 +51,13 @@ from app.ai_engine.exceptions import (
     ContextTooLargeError,
     ProviderNotConfiguredError,
     RateLimitExceededError,
+    RetryBudgetExhaustedError,
+    UpstreamAuthError,
+    UpstreamBadRequestError,
+    UpstreamCircuitOpenError,
+    UpstreamConnectionError,
     UpstreamRateLimitError,
+    UpstreamServerError,
     UpstreamTimeoutError,
 )
 from app.ai_engine.exceptions import (
@@ -313,12 +319,59 @@ def _handle_gateway_error(
         UnknownUseCaseError,
     )
 
-    if not isinstance(err, GatewayError):
-        # Should not happen if used correctly, but safeguard
-        raise ConnectionError(
-            f"llm provider unavailable (v2: unexpected error type {type(err)})"
+    # 1. Handle explicit Upstream Taxonomy (Finding High)
+    if isinstance(err, UpstreamRateLimitError):
+        raise AIEngineAdapterError(
+            code="rate_limit_exceeded",
+            message=err.message,
+            status_code=429,
+            details={"retry_after_ms": str(err.retry_after_ms or 60000), **err.details},
         ) from err
 
+    if isinstance(err, UpstreamTimeoutError):
+        raise AIEngineAdapterError(
+            code="upstream_timeout",
+            message="llm provider timeout",
+            status_code=504,
+            details=err.details,
+        ) from err
+
+    if isinstance(err, UpstreamConnectionError):
+        raise AIEngineAdapterError(
+            code="upstream_connection_error",
+            message="llm provider connection failed",
+            status_code=502,
+            details=err.details,
+        ) from err
+
+    if isinstance(err, UpstreamCircuitOpenError):
+        raise AIEngineAdapterError(
+            code="upstream_circuit_open",
+            message=err.message,
+            status_code=503,
+            details=err.details,
+        ) from err
+
+    if isinstance(err, RetryBudgetExhaustedError):
+        raise AIEngineAdapterError(
+            code="retry_budget_exhausted",
+            message=err.message,
+            status_code=502,
+            details=err.details,
+        ) from err
+
+    if isinstance(err, (UpstreamAuthError, UpstreamBadRequestError, UpstreamServerError)):
+        status = 502
+        if isinstance(err, UpstreamBadRequestError):
+            status = 400
+        raise AIEngineAdapterError(
+            code="upstream_error",
+            message=f"llm provider error: {err.error_type}",
+            status_code=status,
+            details=err.details,
+        ) from err
+
+    # 2. Handle Gateway-level logical errors
     if isinstance(err, PromptRenderError):
         raise AIEngineAdapterError(
             code="prompt_render_error",
@@ -358,22 +411,22 @@ def _handle_gateway_error(
             details=err.details,
         ) from err
 
-    # Map provider-originated GatewayError kinds
-    kind = err.details.get("kind")
-    if kind == "timeout":
-        # Raise as standard TimeoutError or map to 504
-        raise AIEngineAdapterError(
-            code="upstream_timeout",
-            message="llm provider timeout",
-            status_code=504,
-        ) from err
-    if kind == "rate_limit":
-        raise AIEngineAdapterError(
-            code="rate_limit_exceeded",
-            message="rate limit exceeded",
-            status_code=429,
-            details={"retry_after_ms": "60000"},
-        ) from err
+    # 3. Legacy mapping for provider-originated GatewayError kinds
+    if isinstance(err, GatewayError):
+        kind = err.details.get("kind")
+        if kind == "timeout":
+            raise AIEngineAdapterError(
+                code="upstream_timeout",
+                message="llm provider timeout",
+                status_code=504,
+            ) from err
+        if kind == "rate_limit":
+            raise AIEngineAdapterError(
+                code="rate_limit_exceeded",
+                message="rate limit exceeded",
+                status_code=429,
+                details={"retry_after_ms": "60000"},
+            ) from err
 
     logger.error(
         "ai_engine_adapter_gateway_error use_case=%s request_id=%s error=%s",
@@ -646,23 +699,13 @@ class AIEngineAdapter:
                     ),
                     meta=GatewayMeta(latency_ms=0, model="test-model"),
                 )
-            if isinstance(err, UpstreamRateLimitError):
-                raise AIEngineAdapterError(
-                    code="rate_limit_exceeded",
-                    message="rate limit exceeded",
-                    status_code=429,
-                    details={"retry_after_ms": str(err.retry_after_ms or 60000)},
-                ) from err
-            if isinstance(err, UpstreamTimeoutError):
-                raise AIEngineAdapterError(
-                    code="upstream_timeout",
-                    message="llm provider timeout",
-                    status_code=504,
-                ) from err
+
+            # Combined handler for all LLM-related errors (Finding High)
             from app.llm_orchestration.models import GatewayError
 
-            if isinstance(err, GatewayError):
+            if isinstance(err, (AIEngineError, GatewayError)):
                 _handle_gateway_error(err, request_id, "chat")
+
             logger.error(
                 "ai_engine_adapter_v2_unexpected_error request_id=%s error=%s",
                 request_id,
@@ -737,23 +780,13 @@ class AIEngineAdapter:
                     usage=UsageInfo(),
                     meta=GatewayMeta(latency_ms=0, model="test-model"),
                 )
-            if isinstance(err, UpstreamRateLimitError):
-                raise AIEngineAdapterError(
-                    code="rate_limit_exceeded",
-                    message="rate limit exceeded",
-                    status_code=429,
-                    details={"retry_after_ms": str(err.retry_after_ms or 60000)},
-                ) from err
-            if isinstance(err, UpstreamTimeoutError):
-                raise AIEngineAdapterError(
-                    code="upstream_timeout",
-                    message="llm provider timeout",
-                    status_code=504,
-                ) from err
+
+            # Combined handler for all LLM-related errors (Finding High)
             from app.llm_orchestration.models import GatewayError
 
-            if isinstance(err, GatewayError):
+            if isinstance(err, (AIEngineError, GatewayError)):
                 _handle_gateway_error(err, request_id, use_case)
+
             logger.error(
                 "ai_engine_adapter_v2_unexpected_error use_case=%s request_id=%s error=%s",
                 use_case,
@@ -821,23 +854,12 @@ class AIEngineAdapter:
             return result
 
         except Exception as err:
-            if isinstance(err, UpstreamRateLimitError):
-                raise AIEngineAdapterError(
-                    code="rate_limit_exceeded",
-                    message="rate limit exceeded",
-                    status_code=429,
-                    details={"retry_after_ms": str(err.retry_after_ms or 60000)},
-                ) from err
-            if isinstance(err, UpstreamTimeoutError):
-                raise AIEngineAdapterError(
-                    code="upstream_timeout",
-                    message="llm provider timeout",
-                    status_code=504,
-                ) from err
+            # Combined handler for all LLM-related errors (Finding High)
             from app.llm_orchestration.models import GatewayError
 
-            if isinstance(err, GatewayError):
+            if isinstance(err, (AIEngineError, GatewayError)):
                 _handle_gateway_error(err, natal_input.request_id, natal_input.use_case_key)
+
             logger.error(
                 "ai_engine_adapter_natal_unexpected_error use_case=%s request_id=%s error=%s",
                 natal_input.use_case_key,
@@ -971,9 +993,10 @@ class AIEngineAdapter:
             return final_narrator_result
 
         except Exception as err:
+            # Combined handler for all LLM-related errors (Finding High)
             from app.llm_orchestration.models import GatewayError
 
-            if isinstance(err, GatewayError):
+            if isinstance(err, (AIEngineError, GatewayError)):
                 _handle_gateway_error(err, request_id, "horoscope_daily")
 
             logger.error(

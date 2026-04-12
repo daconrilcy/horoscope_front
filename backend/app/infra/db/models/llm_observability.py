@@ -102,6 +102,13 @@ class LlmCallLogModel(Base):
     max_output_tokens_source: Mapped[str | None] = mapped_column(String(32), nullable=True)
     max_output_tokens_final: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # Operational Hardening (Story 66.33 AC13)
+    executed_provider_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    attempt_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    provider_error_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    breaker_state: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    breaker_scope: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
     # Release Snapshot Observability (Story 66.32 AC12)
     active_snapshot_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     active_snapshot_version: Mapped[str | None] = mapped_column(String(64), nullable=True)

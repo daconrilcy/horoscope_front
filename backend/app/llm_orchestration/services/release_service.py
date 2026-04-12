@@ -283,7 +283,6 @@ class ReleaseService:
             snapshot.activated_by = activated_by
             return snapshot
 
-
         if isinstance(self.session, AsyncSession):
             res_snapshot = await _do_activate()
             await self.session.commit()

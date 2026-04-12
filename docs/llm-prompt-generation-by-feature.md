@@ -79,11 +79,14 @@ flowchart TD
 
     N --> O["ExecutionProfileRegistry"]
     O --> P["Arbitrage provider / model / max_output_tokens"]
-    P --> Q["Transformations texte<br/>context_quality -> verbosity -> render"]
+    Q["Transformations texte<br/>context_quality -> verbosity -> render"]
     Q --> R["ResolvedExecutionPlan"]
     R --> S["_build_messages()"]
     S --> T["_call_provider()"]
-    T --> U["validate_output()"]
+    T --> T1["ProviderRuntimeManager<br/>Retries + Breaker + RateLimit"]
+    T1 --> T2["ResponsesClient.execute()"]
+    T2 --> U["validate_output()"]
+
     U --> V{"Sortie valide ?"}
     V -->|Oui| W["_build_result() + obs_snapshot"]
     V -->|Non| X["_handle_repair_or_fallback()"]
@@ -488,6 +491,56 @@ En cas de rejet au publish assembly, l'API admin renvoie un payload d'erreur str
 - `error.code = "coherence_validation_failed"` ;
 - `error.details.errors[*].error_code` contient les codes de cohérence détaillés ;
 - cette erreur reste distincte des rejets runtime et ne doit pas être interprétée comme un `execution_path_kind` nominal.
+
+## Durcissement Provider OpenAI (Story 66.33)
+
+Depuis 66.33, l'appel nominal à OpenAI est protégé par un **Provider Runtime Hardening Layer** porté par `ProviderRuntimeManager`.
+
+### 1. Politique de Retry Bornée
+- Les retries implicites du SDK OpenAI sont désactivés (`max_retries=0`).
+- Le retry est piloté par l'application avec un backoff exponentiel et jitter.
+- Classification explicite des erreurs :
+    - **Retryable** : Timeouts, erreurs de connexion, erreurs 5xx, erreurs 409 (Conflict).
+    - **Terminal** : Quota épuisé, erreurs d'authentification, Bad Request (400).
+- Budget de retry global épuisé -> `RetryBudgetExhaustedError`.
+
+### 2. Timeouts par Famille
+Le runtime n'utilise plus un timeout global unique. Les timeouts sont résolus par `feature` (famille) :
+- `chat` : 30s
+- `guidance` : 30s
+- `natal` : 120s
+- `horoscope_daily` : 60s
+- Valeur par défaut : 30s
+
+### 3. Circuit Breaker
+Un circuit breaker est maintenu par couple `provider:family` (ex: `openai:chat`).
+- État **OPEN** si le seuil d'échecs (`AI_ENGINE_CB_FAILURE_THRESHOLD`, défaut 5) est atteint.
+- Blocage immédiat des requêtes suivantes pendant une période de cooldown (`AI_ENGINE_CB_RECOVERY_TIMEOUT_SEC`, défaut 60s) -> `UpstreamCircuitOpenError`.
+- Passage en **HALF_OPEN** pour laisser passer une sonde après le cooldown.
+- L'évaluation d'ouverture repose sur une fenêtre glissante de défaillances ; un historique ancien ne doit pas garder durablement le breaker en posture défensive.
+
+### 4. Gestion fine des Rate Limits
+- Utilisation de `.with_raw_response` pour accéder aux headers HTTP.
+- Extraction du header `Retry-After` pour caler le délai de retry applicatif.
+- Distinction nette entre rate limit passager et épuisement définitif du quota.
+- Les erreurs serveur provider (`5xx`) sont séparées des timeouts, des erreurs de connexion et de `retry_budget_exhausted`.
+
+### 5. Contrat aval et taxonomie propagée
+Le runtime provider n'est plus écrasé en un unique `llm_unavailable`.
+- `UpstreamCircuitOpenError` est mappée en `503` avec `code="upstream_circuit_open"`.
+- `RetryBudgetExhaustedError` est mappée en `502` avec `code="retry_budget_exhausted"`.
+- `UpstreamRateLimitError` conserve `429` et propage `retry_after_ms`.
+- `UpstreamTimeoutError` conserve `504`.
+- Les erreurs `bad_request`, `auth/config`, `connection_error` et `server_error` restent distinguables via `details` et la taxonomie adapter/runtime.
+
+### 6. Observabilité Opérationnelle
+Le snapshot d'observabilité et les logs `llm_call_logs` sont enrichis :
+- `executed_provider_mode` : nominal ou dégradé.
+- `attempt_count` : nombre total de tentatives pour l'appel.
+- `provider_error_code` : code d'erreur brut renvoyé par OpenAI.
+- `breaker_state` / `breaker_scope` : état du circuit au moment de l'appel.
+- Ces champs sont aussi persistés sur le chemin d'erreur `log_call(error=...)`, y compris pour `circuit_open`.
+- Un résultat servi en mode dégradé ne doit jamais compter comme succès nominal provider.
 
 ## Verrou provider
 

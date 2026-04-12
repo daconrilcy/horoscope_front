@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from app.ai_engine.exceptions import UpstreamCircuitOpenError
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.user import UserModel
 from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
@@ -85,6 +86,36 @@ async def test_log_call_on_error(db):
     log = db.execute(stmt).scalar_one()
 
     assert log.validation_status == LlmValidationStatus.ERROR
+
+
+@pytest.mark.asyncio
+async def test_log_call_on_error_persists_provider_runtime_metadata(db):
+    request_id = f"req-runtime-err-{uuid.uuid4()}"
+    error = UpstreamCircuitOpenError(provider="openai", family="chat")
+    error._executed_provider_mode = "circuit_open"  # type: ignore[attr-defined]
+    error._attempt_count = 0  # type: ignore[attr-defined]
+    error._provider_error_code = error.error_type  # type: ignore[attr-defined]
+    error._breaker_state = "open"  # type: ignore[attr-defined]
+    error._breaker_scope = "openai:chat"  # type: ignore[attr-defined]
+
+    await log_call(
+        db,
+        "chat_astrologer",
+        request_id,
+        "trace-runtime-err",
+        {"message": "bonjour"},
+        error=error,
+    )
+
+    stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == request_id)
+    log = db.execute(stmt).scalar_one()
+
+    assert log.validation_status == LlmValidationStatus.ERROR
+    assert log.executed_provider_mode == "circuit_open"
+    assert log.attempt_count == 0
+    assert log.provider_error_code == "UPSTREAM_CIRCUIT_OPEN"
+    assert log.breaker_state == "open"
+    assert log.breaker_scope == "openai:chat"
 
 
 @pytest.mark.asyncio

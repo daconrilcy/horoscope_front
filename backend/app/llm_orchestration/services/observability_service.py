@@ -181,6 +181,14 @@ async def log_call(
         context_compensation_status = None
         max_output_tokens_source = None
         max_output_tokens_final = None
+
+        # --- Story 66.33: Operational Hardening Init ---
+        executed_provider_mode = "nominal"
+        attempt_count = 1
+        provider_error_code = None
+        breaker_state = None
+        breaker_scope = None
+
         active_snapshot_id = None
         active_snapshot_version = None
         manifest_entry_id = None
@@ -221,6 +229,13 @@ async def log_call(
             fallback_triggered = result.meta.fallback_triggered
             evidence_warnings = count_evidence_warnings(result.structured_output)
 
+            # --- Story 66.33: Operational Hardening ---
+            executed_provider_mode = getattr(result.meta, "executed_provider_mode", "nominal")
+            attempt_count = getattr(result.meta, "attempt_count", 1)
+            provider_error_code = getattr(result.meta, "provider_error_code", None)
+            breaker_state = getattr(result.meta, "breaker_state", None)
+            breaker_scope = getattr(result.meta, "breaker_scope", None)
+
             # --- Story 66.25: Operational Observability ---
             obs = getattr(result.meta, "obs_snapshot", None)
             if obs:
@@ -250,15 +265,25 @@ async def log_call(
                 )
                 max_output_tokens_final = obs.max_output_tokens_final
 
-                # Increment specific metrics (AC8)
-                increment_counter(
-                    "llm_obs_pipeline_total",
-                    labels={
-                        "pipeline_kind": pipeline_kind,
-                        "path_kind": execution_path_kind,
-                        "provider": executed_provider,
-                    },
-                )
+        elif error:
+            # Story 66.33 Finding High: Recover hardening metadata from exception
+            status = LlmValidationStatus.ERROR
+            executed_provider_mode = getattr(error, "_executed_provider_mode", "nominal")
+            attempt_count = getattr(error, "_attempt_count", 1)
+            provider_error_code = getattr(error, "_provider_error_code", None)
+            breaker_state = getattr(error, "_breaker_state", None)
+            breaker_scope = getattr(error, "_breaker_scope", None)
+
+        # Increment specific metrics (AC8)
+        if pipeline_kind and execution_path_kind:
+            increment_counter(
+                "llm_obs_pipeline_total",
+                labels={
+                    "pipeline_kind": pipeline_kind,
+                    "path_kind": execution_path_kind,
+                    "provider": executed_provider or "unknown",
+                },
+            )
 
         transaction = db.begin_nested() if db.in_transaction() else db.begin()
         with transaction:
@@ -295,6 +320,12 @@ async def log_call(
                 context_compensation_status=context_compensation_status,
                 max_output_tokens_source=max_output_tokens_source,
                 max_output_tokens_final=max_output_tokens_final,
+                # AC 66.33
+                executed_provider_mode=executed_provider_mode,
+                attempt_count=attempt_count,
+                provider_error_code=provider_error_code,
+                breaker_state=breaker_state,
+                breaker_scope=breaker_scope,
                 # Story 66.32
                 active_snapshot_id=active_snapshot_id,
                 active_snapshot_version=active_snapshot_version,
