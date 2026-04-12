@@ -1024,6 +1024,8 @@ def rollback_prompt(
             target_version_id=payload.target_version_id if payload else None,
         )
 
+        from app.schemas.audit_details import LlmPromptAuditDetails
+
         _record_audit_event(
             db,
             request_id=request_id,
@@ -1032,11 +1034,11 @@ def rollback_prompt(
             target_type="llm_prompt",
             target_id=str(version.id),
             status="success",
-            details={
-                "use_case_key": key,
-                "from_version": str(previous_version.id) if previous_version else None,
-                "to_version": str(version.id),
-            },
+            details=LlmPromptAuditDetails(
+                use_case_key=key,
+                from_version=str(previous_version.id) if previous_version else None,
+                to_version=str(version.id),
+            ),
         )
         db.commit()
 

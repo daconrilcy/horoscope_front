@@ -143,21 +143,33 @@ function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
     "chart_json",
   ]
 
-  const sanitizeDetails = (details: Record<string, unknown>): Record<string, unknown> => {
-    const sanitized = { ...details }
-    Object.keys(sanitized).forEach((key) => {
-      const lowerKey = key.toLowerCase()
-      if (SENSITIVE_KEYS_TO_MASK.some((s) => lowerKey.includes(s))) {
-        sanitized[key] = "[MASKED_UI]"
-      } else if (typeof sanitized[key] === "string") {
-        // Additional heuristic: mask email-like strings even in unknown keys
-        const val = sanitized[key] as string
-        if (val.includes("@") && val.includes(".")) {
+  const sanitizeDetails = (data: unknown): unknown => {
+    if (data === null || data === undefined) return data
+
+    if (Array.isArray(data)) {
+      return data.map((item) => sanitizeDetails(item))
+    }
+
+    if (typeof data === "object") {
+      const obj = data as Record<string, unknown>
+      const sanitized: Record<string, unknown> = {}
+
+      Object.keys(obj).forEach((key) => {
+        const lowerKey = key.toLowerCase()
+        const value = obj[key]
+
+        if (SENSITIVE_KEYS_TO_MASK.some((s) => lowerKey.includes(s))) {
+          sanitized[key] = "[MASKED_UI]"
+        } else if (typeof value === "string" && value.includes("@") && value.includes(".")) {
           sanitized[key] = "[MASKED_UI_EMAIL]"
+        } else {
+          sanitized[key] = sanitizeDetails(value)
         }
-      }
-    })
-    return sanitized
+      })
+      return sanitized
+    }
+
+    return data
   }
 
   return (

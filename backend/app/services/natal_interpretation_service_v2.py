@@ -858,6 +858,7 @@ class NatalInterpretationServiceV2:
             return False
 
         # Audit before delete
+        from app.schemas.audit_details import NatalInterpretationAuditDetails
         from app.services.audit_service import AuditEventCreatePayload, AuditService
 
         audit_payload = AuditEventCreatePayload(
@@ -868,14 +869,14 @@ class NatalInterpretationServiceV2:
             target_type="natal_interpretation",
             target_id=str(interpretation_id),
             status="success",
-            details={
-                "target_interpretation_id": interpretation_id,
-                "chart_id": item.chart_id,
-                "level": item.level.value,
-                "persona_id": str(item.persona_id) if item.persona_id else None,
-                "created_at": item.created_at.isoformat(),
-                "deleted_at": datetime.now(timezone.utc).isoformat(),
-            },
+            details=NatalInterpretationAuditDetails(
+                target_interpretation_id=interpretation_id,
+                chart_id=item.chart_id,
+                level=item.level.value,
+                persona_id=str(item.persona_id) if item.persona_id else None,
+                created_at=item.created_at.isoformat(),
+                deleted_at=datetime.now(timezone.utc).isoformat(),
+            ),
         )
 
         db.delete(item)

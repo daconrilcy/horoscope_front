@@ -118,7 +118,50 @@ class SensitiveDataFilter(logging.Filter):
                             new_args[i] = redact_value(arg, PolicyAction.MASKED)
                 record.args = tuple(new_args)
 
-        # 3. Handle 'extra' fields if they were merged into __dict__
-        # (Be careful not to iterate over internal record attributes)
-        # Some logging libraries put 'extra' keys directly on the record.
+        # 3. Handle 'extra' fields merged into record.__dict__
+        # AC11: Comprehensive safety net for custom fields
+        STANDARD_RECORD_ATTRS = frozenset(
+            {
+                "name",
+                "msg",
+                "args",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "message",
+                "asctime",
+            }
+        )
+        for key, value in record.__dict__.items():
+            if key not in STANDARD_RECORD_ATTRS and not key.startswith("_"):
+                from app.core.sensitive_data import (
+                    PolicyAction,
+                    Sink,
+                    classify_field,
+                    get_policy_action,
+                    redact_value,
+                )
+
+                category = classify_field(key)
+                action = get_policy_action(Sink.STRUCTURED_LOGS, category)
+                if action != PolicyAction.ALLOWED:
+                    if isinstance(value, dict):
+                        record.__dict__[key] = sanitize_for_logging(value)
+                    else:
+                        record.__dict__[key] = redact_value(value, action)
+
         return True

@@ -41,13 +41,47 @@ class AdminActionAuditDetails(BaseSafeAuditDetails):
     change_summary: Optional[str] = None
 
 
+class NatalInterpretationAuditDetails(BaseSafeAuditDetails):
+    """Safe structure for natal interpretation events."""
+
+    target_interpretation_id: int
+    chart_id: int
+    level: str
+    persona_id: Optional[str] = None
+    created_at: str
+    deleted_at: Optional[str] = None
+
+
+class LlmPromptAuditDetails(BaseSafeAuditDetails):
+    """Safe structure for LLM prompt management events."""
+
+    use_case_key: str
+    from_version: Optional[str] = None
+    to_version: str
+    action: Optional[str] = None
+
+
+class GenericSafeAuditDetails(BaseSafeAuditDetails):
+    """
+    Generic bounded structure for non-specific events.
+    M4 Finding Fix: Bounded structure for any audit event.
+    """
+
+    model_config = ConfigDict(extra="allow")  # Explicitly allow for generic usage
+    message: Optional[str] = None
+
+
 def to_safe_details(details: Any) -> Dict[str, Any]:
     """
     Ensures that audit details are converted to a safe, bounded dictionary.
-    If 'details' is already a Safe DTO, it returns its dict representation.
+    AC8: Force bounded structure.
     """
     if isinstance(details, BaseSafeAuditDetails):
         return details.model_dump(exclude_none=True)
+
     if isinstance(details, dict):
-        return details
+        # M4 Finding Fix: Wrap raw dicts in a generic DTO to ensure bounded structure
+        # according to the central policy even if the call site is not yet fully migrated.
+        return GenericSafeAuditDetails(**details).model_dump(exclude_none=True)
+
     return {"raw_value": str(details)}

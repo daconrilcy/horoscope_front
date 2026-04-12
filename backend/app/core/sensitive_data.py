@@ -197,6 +197,10 @@ def classify_field(field_name: str) -> DataCategory:
     if any(s in field_lower for s in ("birth", "natal", "chart", "astro")):
         return DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA
 
+    container_keys = ("details", "nested", "payload", "meta", "extra", "data", "inner")
+    if any(s in field_lower for s in container_keys):
+        return DataCategory.OPERATIONAL_METADATA
+
     # Default to USER_AUTHORED_CONTENT for safety if it looks like text, or DIRECT_IDENTIFIER
     return DataCategory.USER_AUTHORED_CONTENT
 
