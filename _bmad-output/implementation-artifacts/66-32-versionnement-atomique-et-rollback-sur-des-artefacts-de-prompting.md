@@ -1,6 +1,6 @@
 # Story 66.32: Versionnement atomique et rollback sûr des artefacts de prompting
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -160,58 +160,58 @@ Autrement dit, AC7 n’est pas un simple souhait d’alignement. C’est un inva
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Introduire le modèle de release snapshot LLM (AC1, AC2, AC7, AC13)
-  - [ ] Définir les nouvelles tables/modèles de snapshot et de pointeur actif dans `backend/app/infra/db/models/` et les migrations associées.
-  - [ ] Documenter explicitement le périmètre exact couvert par le pointeur d’activation : nominal convergé uniquement ou extension assumée à d’autres chemins.
-  - [ ] Décider explicitement du périmètre du snapshot : global à toute la plateforme LLM ou scoped d’une manière strictement documentée, sans ambiguïté de lecture runtime.
-  - [ ] Encoder un manifest immutable listant les targets runtime et les IDs exacts d’assembly/profile/contract/persona/templates retenus.
-  - [ ] Prévoir l’historisation (`created_by`, `created_at`, `activated_at`, `rolled_back_from`, `reason`) pour audit et runbook.
-  - [ ] Interdire toute mutation post-création du manifest et des métadonnées critiques du snapshot.
+- [x] Task 1: Introduire le modèle de release snapshot LLM (AC1, AC2, AC7, AC13)
+  - [x] Définir les nouvelles tables/modèles de snapshot et de pointeur actif dans `backend/app/infra/db/models/` et les migrations associées.
+  - [x] Documenter explicitement le périmètre exact couvert par le pointeur d’activation : nominal convergé uniquement ou extension assumée à d’autres chemins.
+  - [x] Décider explicitement du périmètre du snapshot : global à toute la plateforme LLM ou scoped d’une manière strictement documentée, sans ambiguïté de lecture runtime.
+  - [x] Encoder un manifest immutable listant les targets runtime et les IDs exacts d’assembly/profile/contract/persona/templates retenus.
+  - [x] Prévoir l’historisation (`created_by`, `created_at`, `activated_at`, `rolled_back_from`, `reason`) pour audit et runbook.
+  - [x] Interdire toute mutation post-création du manifest et des métadonnées critiques du snapshot.
 
-- [ ] Task 2: Construire et valider un snapshot candidat (AC2, AC3, AC8)
-  - [ ] Créer un service dédié de build de snapshot dans `backend/app/llm_orchestration/services/` qui collecte l’état candidat à partir des artefacts publiés/désignés.
-  - [ ] Réutiliser `ConfigCoherenceValidator` comme noyau de validation, mais en l’adaptant pour travailler sur un manifest de release complet plutôt que sur le seul état vivant de tables isolées.
-  - [ ] Imposer une stratégie explicite par type d’artefact : référence immutable pour les objets réellement versionnés, contenu figé embarqué ou versionnement explicite pour les personas et output contracts.
-  - [ ] Vérifier que le snapshot ferme transitivement toutes les dépendances runtime nécessaires, y compris les personas et contrats aujourd’hui non réellement versionnés.
-  - [ ] Produire des erreurs structurées stables pour les snapshots non activables.
-  - [ ] Introduire un statut de validation explicite nécessaire avant activation.
+- [x] Task 2: Construire et valider un snapshot candidat (AC2, AC3, AC8)
+  - [x] Créer un service dédié de build de snapshot dans `backend/app/llm_orchestration/services/` qui collecte l’état candidat à partir des artefacts publiés/désignés.
+  - [x] Réutiliser `ConfigCoherenceValidator` comme noyau de validation, mais en l’adaptant pour travailler sur un manifest de release complet plutôt que sur le seul état vivant de tables isolées.
+  - [x] Imposer une stratégie explicite par type d’artefact : référence immutable pour les objets réellement versionnés, contenu figé embarqué ou versionnement explicite pour les personas et output contracts.
+  - [x] Vérifier que le snapshot ferme transitivement toutes les dépendances runtime nécessaires, y compris les personas et contrats aujourd’hui non réellement versionnés.
+  - [x] Produire des erreurs structurées stables pour les snapshots non activables.
+  - [x] Introduire un statut de validation explicite nécessaire avant activation.
 
-- [ ] Task 3: Basculer le runtime sur la release active atomique (AC4, AC6, AC10, AC11)
-  - [ ] Introduire un résolveur central de `active_snapshot`.
-  - [ ] Faire lire `AssemblyRegistry`, `ExecutionProfileRegistry`, le gateway et la validation startup depuis ce snapshot actif au lieu de se fier uniquement aux `status == published` distribués.
-  - [ ] Supprimer ou isoler explicitement tout resolver `latest published by target` du périmètre supporté une fois le snapshot introduit.
-  - [ ] Garantir l’invalidation des caches après activation/rollback et seulement après commit réussi.
-  - [ ] Partitionner toutes les clés de cache concernées par `active_snapshot_id`.
-  - [ ] S’assurer qu’aucune lecture runtime ne peut observer un état mixte pendant une bascule.
+- [x] Task 3: Basculer le runtime sur la release active atomique (AC4, AC6, AC10, AC11)
+  - [x] Introduire un résolveur central de `active_snapshot`.
+  - [x] Faire lire `AssemblyRegistry`, `ExecutionProfileRegistry`, le gateway et la validation startup depuis ce snapshot actif au lieu de se fier uniquement aux `status == published` distribués.
+  - [x] Supprimer ou isoler explicitement tout resolver `latest published by target` du périmètre supporté une fois le snapshot introduit.
+  - [x] Garantir l’invalidation des caches après activation/rollback et seulement après commit réussi.
+  - [x] Partitionner toutes les clés de cache concernées par `active_snapshot_id`.
+  - [x] S’assurer qu’aucune lecture runtime ne peut observer un état mixte pendant une bascule.
 
-- [ ] Task 4: Exposer l’admin release et le rollback `N-1` (AC5, AC12, AC13)
-  - [ ] Ajouter des endpoints admin dédiés pour créer/valider/activer/rollback un snapshot.
-  - [ ] Implémenter le rollback `N-1` comme réactivation du snapshot précédent, sans republier manuellement les artefacts unitaires.
-  - [ ] Rejeter explicitement un rollback vers un snapshot non activable, invalide ou incompatible, avec `error_code` stable.
-  - [ ] Journaliser chaque bascule dans l’audit trail et la gouvernance LLM avec des IDs de snapshot stables.
-  - [ ] Prévoir une réponse API claire indiquant `from_snapshot`, `to_snapshot`, `activation_mode`, `warnings`.
+- [x] Task 4: Exposer l’admin release et le rollback `N-1` (AC5, AC12, AC13)
+  - [x] Ajouter des endpoints admin dédiés pour créer/valider/activer/rollback un snapshot.
+  - [x] Implémenter le rollback `N-1` comme réactivation du snapshot précédent, sans republier manuellement les artefacts unitaires.
+  - [x] Rejeter explicitement un rollback vers un snapshot non activable, invalide ou incompatible, avec `error_code` stable.
+  - [x] Journaliser chaque bascule dans l’audit trail et la gouvernance LLM avec des IDs de snapshot stables.
+  - [x] Prévoir une réponse API claire indiquant `from_snapshot`, `to_snapshot`, `activation_mode`, `warnings`.
 
-- [ ] Task 5: Propager la version réellement exécutée dans l’observabilité (AC9, AC13, AC15)
-  - [ ] Étendre `ResolvedExecutionPlan`, `GatewayMeta`, `ExecutionObservabilitySnapshot` et la persistance associée pour porter `active_snapshot_id`, `active_snapshot_version` et un identifiant stable de l’entrée de manifest réellement utilisée.
-  - [ ] Ajouter les mêmes informations aux logs startup, logs d’activation, logs de rollback et événements `publish_rejected`/`runtime_rejected` si le snapshot actif est impliqué.
-  - [ ] Vérifier que les surfaces d’exploitation peuvent corréler une exécution, un incident et une release sans introspection manuelle multi-table.
+- [x] Task 5: Propager la version réellement exécutée dans l’observabilité (AC9, AC13, AC15)
+  - [x] Étendre `ResolvedExecutionPlan`, `GatewayMeta`, `ExecutionObservabilitySnapshot` et la persistance associée pour porter `active_snapshot_id`, `active_snapshot_version` et un identifiant stable de l’entrée de manifest réellement utilisée.
+  - [x] Ajouter les mêmes informations aux logs startup, logs d’activation, logs de rollback et événements `publish_rejected`/`runtime_rejected` si le snapshot actif est impliqué.
+  - [x] Vérifier que les surfaces d’exploitation peuvent corréler une exécution, un incident et une release sans introspection manuelle multi-table.
 
-- [ ] Task 6: Réaligner la documentation et les runbooks (AC10, AC13, AC15)
-  - [ ] Mettre à jour [docs/llm-prompt-generation-by-feature.md](/c:/dev/horoscope_front/docs/llm-prompt-generation-by-feature.md) pour documenter le concept de release snapshot active.
-  - [ ] Vérifier la cohérence avec [backend/app/llm_orchestration/ARCHITECTURE.md](/c:/dev/horoscope_front/backend/app/llm_orchestration/ARCHITECTURE.md).
-  - [ ] Ajouter ou compléter un runbook incident sur “rollback release LLM” et “identifier la version active réellement exécutée”.
+- [x] Task 6: Réaligner la documentation et les runbooks (AC10, AC13, AC15)
+  - [x] Mettre à jour [docs/llm-prompt-generation-by-feature.md](/c:/dev/horoscope_front/docs/llm-prompt-generation-by-feature.md) pour documenter le concept de release snapshot active.
+  - [x] Vérifier la cohérence avec [backend/app/llm_orchestration/ARCHITECTURE.md](/c:/dev/horoscope_front/backend/app/llm_orchestration/ARCHITECTURE.md).
+  - [x] Ajouter ou compléter un runbook incident sur “rollback release LLM” et “identifier la version active réellement exécutée”.
 
-- [ ] Task 7: Ajouter la couverture de tests ciblée (AC4, AC5, AC9, AC10, AC11, AC14)
-  - [ ] Ajouter des tests unitaires du service de build/validation de snapshot.
-  - [ ] Ajouter des tests d’intégration d’activation atomique et rollback `N-1`.
-  - [ ] Ajouter un test prouvant que le runtime lit bien le snapshot actif et non un mélange de `published` récents.
-  - [ ] Ajouter un test d’observabilité prouvant que `active_snapshot_id/version` sont propagés dans la réponse et la persistance.
+- [x] Task 7: Ajouter la couverture de tests ciblée (AC4, AC5, AC9, AC10, AC11, AC14)
+  - [x] Ajouter des tests unitaires du service de build/validation de snapshot.
+  - [x] Ajouter des tests d’intégration d’activation atomique et rollback `N-1`.
+  - [x] Ajouter un test prouvant que le runtime lit bien le snapshot actif et non un mélange de `published` récents.
+  - [x] Ajouter un test d’observabilité prouvant que `active_snapshot_id/version` sont propagés dans la réponse et la persistance.
 
-- [ ] Task 8: Vérification locale obligatoire
-  - [ ] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
-  - [ ] Dans `backend/`, exécuter `ruff format .` puis `ruff check .`.
-  - [ ] Exécuter `pytest -q`.
-  - [ ] Exécuter au minimum les suites ciblées liées aux stories 66.29, 66.30, 66.31 et à la nouvelle story 66.32.
+- [x] Task 8: Vérification locale obligatoire
+  - [x] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
+  - [x] Dans `backend/`, exécuter `ruff format .` puis `ruff check .`.
+  - [x] Exécuter `pytest -q`.
+  - [x] Exécuter au minimum les suites ciblées liées aux stories 66.29, 66.30, 66.31 et à la nouvelle story 66.32.
 
 ## Dev Notes
 
@@ -344,11 +344,23 @@ GPT-5 Codex
 
 ### Completion Notes List
 
-- Story créée à partir du besoin utilisateur et réalignée sur l’état réel post-66.31 du code de publish/rollback/cohérence.
-- Le diagnostic central figé dans la story est l’absence d’une release snapshot atomique partagée entre assembly, execution profile, output contract et persona.
-- La story impose un rollback `N-1` par réactivation de snapshot, pas par bricolage multi-endpoints.
-- L’observabilité exigée inclut explicitement l’identifiant et la version du snapshot réellement exécuté.
+- Implémentation livrée avec `LlmReleaseSnapshotModel`, `LlmActiveReleaseModel`, un workflow admin dédié `build/validate/activate/rollback` et un rollback `N-1` par réactivation de snapshot.
+- Le périmètre nominal convergé (`chat`, `guidance`, `natal`, `horoscope_daily`) lit désormais le snapshot actif via `AssemblyRegistry`, `ExecutionProfileRegistry`, le gateway et la validation startup.
+- La validation de snapshot et la revalidation startup sont découplées des tables vivantes pour les dépendances gelées dans le manifest ; aucun fallback silencieux vers l’état live n’est autorisé sur le périmètre supporté.
+- `ResolvedExecutionPlan`, `obs_snapshot` et la persistance d’observabilité propagent désormais `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id`.
+- La couverture de tests 66.32 inclut build/validate/activate/rollback, indépendance vis-à-vis des tables live, startup sur snapshot actif, résolution hors `fr-FR` et activation via vraie `AsyncSession`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/66-32-versionnement-atomique-et-rollback-sur-des-artefacts-de-prompting.md`
+- `backend/app/api/v1/routers/admin_llm_release.py`
+- `backend/app/infra/db/models/llm_release.py`
+- `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/services/assembly_registry.py`
+- `backend/app/llm_orchestration/services/config_coherence_validator.py`
+- `backend/app/llm_orchestration/services/execution_profile_registry.py`
+- `backend/app/llm_orchestration/services/release_service.py`
+- `backend/app/startup/llm_coherence_validation.py`
+- `backend/tests/integration/test_llm_release.py`
+- `backend/pyproject.toml`
+- `docs/llm-prompt-generation-by-feature.md`

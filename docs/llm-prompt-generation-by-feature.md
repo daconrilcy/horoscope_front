@@ -47,11 +47,11 @@ Le pipeline cible exécuté aujourd'hui est :
 5. les familles supportées `chat`, `guidance`, `natal`, `horoscope_daily` échouent explicitement si aucune assembly canonique active n'est trouvée ; le fallback `use_case-first` est éteint sur ce périmètre ;
 6. le gateway reconstruit ensuite une config dérivée du plan résolu et valide l'`input_schema` canonique en Stage 1.5 ;
 7. le gateway résout ensuite le `ExecutionProfile` depuis l'assembly ou par waterfall. Sur le périmètre supporté (`chat`, `guidance`, `natal`, `horoscope_daily`), tout échec de résolution (profil manquant, provider non supporté, mapping impossible) lève une `GatewayConfigError` ; le fallback historique `resolve_model()` est strictement interdit.
-8. au publish et au boot, un validateur de cohérence central contrôle aussi `execution_profile_ref`, waterfall, contrat de sortie, placeholders, persona et `LengthBudget` ; au startup, le scan porte uniquement sur l'état publié actif réellement résoluble ;
+8. au publish et au boot, un validateur de cohérence central contrôle aussi `execution_profile_ref`, waterfall, contrat de sortie, placeholders, persona et `LengthBudget` ; depuis 66.32, au startup, le scan priorise le snapshot de release actif et ne retombe sur l'état publié vivant qu'en absence de snapshot actif ;
 9. le prompt est transformé dans cet ordre : assembly déjà concaténée, injection `context_quality`, injection de verbosité, rendu des placeholders ;
 10. l'appel provider passe aujourd'hui nominalement uniquement par `openai` ;
 11. la sortie est validée, éventuellement réparée, puis éventuellement basculée vers un `fallback_use_case` legacy uniquement hors périmètre supporté ;
-12. le résultat final publie un snapshot d'observabilité canonique.
+12. le résultat final publie un snapshot d'observabilité canonique qui inclut aussi l'identité de la release active réellement exécutée.
 
 Le `use_case` existe encore, mais il n'est plus la source canonique de variation sur les familles convergées. Il sert surtout de clé de compatibilité, de routage legacy, de sélection de schéma et de fallback résiduel pour les features hors périmètre supporté.
 
@@ -102,10 +102,11 @@ flowchart TD
 | Exécution | `ExecutionProfileRegistry` + `ProviderParameterMapper` | provider, modèle, reasoning, verbosity, output mode, tool mode | contenu métier des prompts |
 | Rendu | `PromptRenderer` | blocs `context_quality`, placeholders, validation de placeholders | choix du provider |
 | Garde-fous | `FallbackGovernanceRegistry`, `supported_providers.py` | blocage des fallbacks et des providers interdits | composition métier du prompt |
-| Cohérence publish/boot | `ConfigCoherenceValidator`, `run_llm_coherence_startup_validation()` | bloquer une config incohérente avant exécution ou au démarrage runtime | simulation complète du métier ou fallback runtime |
-| Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante | persistance admin |
+| Cohérence publish/boot | `ConfigCoherenceValidator`, `run_llm_coherence_startup_validation()` | bloquer une config incohérente avant exécution ou au démarrage runtime, d'abord sur le snapshot actif s'il existe | simulation complète du métier ou fallback runtime |
+| Release runtime | `LlmReleaseSnapshotModel`, `LlmActiveReleaseModel`, `ReleaseService` | figer et activer atomiquement le bundle `assembly/profile/schema/persona` réellement servi | édition directe d'artefacts vivants au moment de l'exécution |
+| Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante, y compris la release active et l'entrée de manifest utilisée | persistance admin |
 
-## Stories 66.9 à 66.31
+## Stories 66.9 à 66.32
 
 | Story | Apport canonique | Impact runtime observable |
 |---|---|---|
@@ -132,6 +133,7 @@ flowchart TD
 | `66.29` | extinction fallback | fermeture définitive du fallback `use_case-first` sur le périmètre supporté (`chat`, `guidance`, `natal`, `horoscope_daily`) |
 | `66.30` | extinction fallback d'exécution | `ExecutionProfile` devient obligatoire sur le périmètre supporté ; `resolve_model()` ne survit plus qu'hors support avec rejet explicite, `error_code` stable et compteur dédié |
 | `66.31` | validation fail-fast de cohérence | publish et startup bloquent désormais les incohérences de configuration sur l'état publié actif, avec `error_code` structurés et scan startup borné à la cible runtime réellement résoluble |
+| `66.32` | release snapshot atomique | le runtime nominal lit désormais un snapshot de release actif, activable et rollbackable, avec propagation de `active_snapshot_id/version` et `manifest_entry_id` dans le plan et l'observabilité |
 
 ## Familles et points d'entrée réels
 
@@ -179,16 +181,16 @@ L'ordre réel, tel qu'il ressort de `execute_request()` et `_resolve_plan()`, es
 9. tentative de résolution assembly via `AssemblyRegistry` ;
 10. blocage explicite si famille supportée sans assembly active ;
 11. fallback `use_case-first` via `_resolve_config()` seulement hors périmètre supporté ;
-12. résolution du `ExecutionProfile` par référence assembly, puis waterfall `feature+subfeature+plan`, puis `feature+subfeature`, puis `feature` ;
+12. résolution du `ExecutionProfile` par référence assembly, puis waterfall `feature+subfeature+plan`, puis `feature+subfeature`, puis `feature` ; sur le périmètre supporté, cette résolution lit d'abord le bundle du snapshot actif ;
 13. arbitrage provider, modèle, timeout et `max_output_tokens` ;
-14. résolution du schéma de sortie et du bloc persona si nécessaire ;
-15. gel du `ResolvedExecutionPlan` ;
+14. résolution du schéma de sortie et du bloc persona si nécessaire, avec priorité au contenu figé du snapshot actif ;
+15. gel du `ResolvedExecutionPlan`, y compris `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id` lorsque l'exécution provient d'une release active ;
 16. Stage 1.5 : reconstruction d'une config dérivée du plan et validation de l'`input_schema` canonique ;
 17. composition des messages ;
 18. appel provider ;
 19. validation de sortie ;
 20. réparation éventuelle puis fallback `fallback_use_case` éventuel, uniquement hors périmètre supporté ;
-21. construction du `GatewayResult` final et du snapshot d'observabilité.
+21. construction du `GatewayResult` final et du snapshot d'observabilité, incluant l'identité de la release active réellement exécutée.
 
 ### Diagramme détaillé de `execute_request()` + `_resolve_plan()`
 
@@ -395,14 +397,20 @@ Depuis 66.31, la doctrine n'est plus seulement documentaire. Une validation cent
 - au boot runtime via `run_llm_coherence_startup_validation()` appelé depuis `main.py` ;
 - avec un mode startup `strict|warn|off` piloté par `LLM_COHERENCE_VALIDATION_MODE`.
 
-Le scan startup est volontairement borné :
+Depuis 66.32, ce scan startup suit une hiérarchie explicite :
+
+- s'il existe un `active_snapshot_id`, le boot revalide d'abord le manifest complet du snapshot actif ;
+- cette revalidation travaille sur le bundle figé du snapshot pour `assembly`, `profile`, `schema` et `persona`, sans fallback silencieux vers les tables vivantes sur le périmètre supporté ;
+- le scan des tables publiées “les plus récentes par cible” ne reste qu'un fallback d'absence de snapshot actif.
+
+Le scan startup reste volontairement borné :
 
 - il ne parcourt pas l'historique complet ;
-- il ignore les archives, brouillons et anciennes versions `published` non retenues comme état actif ;
-- il déduplique par cible runtime (`feature`, `subfeature`, `plan`, `locale`) et ne valide que la version publiée la plus récente par cible ;
+- il ignore les snapshots non actifs, les archives, brouillons et anciennes versions `published` non retenues comme état actif ;
+- s'il n'y a pas de snapshot actif, il déduplique par cible runtime (`feature`, `subfeature`, `plan`, `locale`) et ne valide que la version publiée la plus récente par cible ;
 - il ne contrôle donc que les artefacts effectivement résolubles par le runtime nominal courant.
 
-### Ce que valide concrètement 66.31
+### Ce que valide concrètement 66.31 puis 66.32
 
 - `execution_profile_ref` explicite si présent, sinon waterfall canonique `feature+subfeature+plan -> feature+subfeature -> feature` ;
 - absence de retour à `resolve_model()` comme issue de validation sur le périmètre supporté ;
@@ -411,6 +419,29 @@ Le scan startup est volontairement borné :
 - persona existante et activée lorsqu'elle est référencée ;
 - invariants `plan_rules` / `LengthBudget` ;
 - interdiction des dépendances legacy sur les familles nominales fermées.
+
+Depuis 66.32, la nuance critique est la suivante :
+
+- la validation d'un snapshot actif ou candidat se fait sur le manifest et le bundle gelé, pas sur un recalcul opportuniste à partir des lignes live ;
+- si un bundle est fourni au validateur, l'absence d'un `profile`, `schema` ou `persona` requis dans ce bundle est une erreur de release, pas une invitation à relire la table source ;
+- cela garantit qu'une release activable reste auto-suffisante pour son périmètre nominal supporté et qu'un rollback réactive bien un état cohérent `N-1`.
+
+## Release snapshot active et rollback
+
+Depuis 66.32, le périmètre nominal convergé (`chat`, `guidance`, `natal`, `horoscope_daily`) ne lit plus une simple constellation de lignes `published`. Il lit une release active explicite :
+
+- `LlmReleaseSnapshotModel` stocke un manifest immutable des bundles runtime par cible ;
+- `LlmActiveReleaseModel` porte le pointeur d'activation courant ;
+- `ReleaseService` expose `build_snapshot`, `validate_snapshot`, `activate_snapshot` et `rollback` ;
+- l'activation invalide les caches runtime post-commit ;
+- le rollback `N-1` réactive le snapshot précédent au lieu de republier manuellement chaque artefact.
+
+Conséquences de lecture runtime :
+
+- `AssemblyRegistry` résout d'abord l'assembly depuis le snapshot actif ;
+- `ExecutionProfileRegistry` et le gateway réutilisent le bundle attaché à l'assembly résolue pour éviter tout mélange avec les tables vivantes ;
+- `ConfigCoherenceValidator.scan_active_configurations()` revalide d'abord le snapshot actif au boot ;
+- les tables sources restent un backing store d'édition et de build, pas la vérité finale de l'exécution nominale quand un snapshot actif existe.
 
 ### Taxonomie minimale des erreurs de cohérence
 
@@ -518,6 +549,9 @@ Champs observés :
 - `context_compensation_status`
 - `max_output_tokens_source`
 - `max_output_tokens_final`
+- `active_snapshot_id`
+- `active_snapshot_version`
+- `manifest_entry_id`
 
 ### Axes de lecture
 
@@ -529,6 +563,8 @@ Champs observés :
 | provider triplet | provider demandé, résolu, exécuté |
 | `context_compensation_status` | compensation de contexte observée |
 | `max_output_tokens_source` | source finale de l'arbitrage de sortie |
+| `active_snapshot_id/version` | release active réellement exécutée |
+| `manifest_entry_id` | entrée de manifest exacte utilisée pour cette exécution |
 
 Pour l'axe `context_compensation_status`, la lecture correcte est désormais :
 
