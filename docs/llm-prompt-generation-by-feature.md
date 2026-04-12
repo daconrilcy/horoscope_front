@@ -669,8 +669,19 @@ Champs observés :
 | provider triplet | provider demandé, résolu, exécuté |
 | `context_compensation_status` | compensation de contexte observée |
 | `max_output_tokens_source` | source finale de l'arbitrage de sortie |
-- `active_snapshot_id/version` : release active réellement exécutée
-- `manifest_entry_id` : entrée de manifest exacte utilisée pour cette exécution
+| `executed_provider_mode` | mode réel d'exécution provider (`nominal`, `circuit_open`, `degraded` ou équivalent stable) |
+| `attempt_count` | nombre total de tentatives réellement consommées |
+| `provider_error_code` | taxonomie finale de l'échec provider ou du rejet runtime |
+| `breaker_state/scope` | état et granularité du breaker ayant piloté la décision runtime |
+| `active_snapshot_id/version` | release active réellement exécutée |
+| `manifest_entry_id` | entrée de manifest exacte utilisée pour cette exécution |
+
+Pour l'axe `context_compensation_status`, la lecture correcte est désormais :
+
+- `not_needed` : `context_quality=full` ;
+- `template_handled` : le prompt courant gère déjà explicitement le niveau dégradé ;
+- `injector_applied` : une consigne additionnelle a été injectée ;
+- `unknown` : l'information n'est pas déterminable sur le chemin considéré.
 
 ## Protection des données sensibles (Story 66.34)
 
@@ -704,7 +715,7 @@ Règle de lecture :
 | Sink | Règle effective |
 |---|---|
 | `structured_logs` | secrets supprimés, identifiants directs redacts, IDs métier masqués, contenu utilisateur redacted |
-| `obs_snapshot` | uniquement métadonnées ops ou identifiants techniques de corrélation explicitement admis |
+| `obs_snapshot` | uniquement métadonnées ops et identifiants techniques explicitement admis, notamment `request_id`, `trace_id`, `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id` |
 | `llm_call_logs` | uniquement métadonnées ops + empreintes irréversibles autorisées (`hash`) |
 | `llm_replay_snapshots` | seul store pouvant contenir du rejouable sensible, sous forme chiffrée et isolée |
 | `admin_api` | payloads de sortie assainis via `sanitize_payload(..., Sink.ADMIN_API)` |
@@ -713,7 +724,8 @@ Règle de lecture :
 Conséquences structurantes :
 - `llm_call_logs` reste un journal d'exploitation sans contenu utilisateur en clair ;
 - `LlmReplaySnapshotModel` reste la seule zone de stockage rejouable ;
-- `obs_snapshot` et `GatewayMeta` restent des transports de métadonnées, pas de contenu.
+- `obs_snapshot` et `GatewayMeta` restent des transports de métadonnées, pas de contenu ;
+- les identifiants métier corrélables n'ont pas vocation à apparaître en clair dans `obs_snapshot`.
 
 ### 3. Frontière explicite entre exploitation et replay
 
@@ -727,8 +739,10 @@ Le replay admin ne renvoie plus par défaut :
 - `structured_output`
 - aperçu textuel
 - diff textuel de contenu
+- citation partielle
+- comparaison sémantique textuelle
 
-La réponse nominale de replay reste limitée à des métadonnées ops et à un diff non textuel de statut/validation.
+La réponse nominale de replay reste limitée à des métadonnées ops et à un diff non textuel de statut/validation ; cela exclut aussi toute preview, tout extrait de contenu et toute comparaison sémantique dérivée du texte rejoué.
 
 ### 4. Audit et admin
 
@@ -770,18 +784,6 @@ Cette suite couvre notamment :
 Règle de maintenance :
 - toute nouvelle métadonnée ops doit être ajoutée explicitement à `OPERATIONAL_FIELDS` ;
 - toute nouvelle surface admin, audit ou replay doit choisir son sink et sa stratégie de traitement avant d'exposer un champ.
-
-| `executed_provider_mode` | mode réel d'exécution provider (`nominal`, `circuit_open`, `degraded` ou équivalent stable) |
-| `attempt_count` | nombre total de tentatives réellement consommées |
-| `provider_error_code` | taxonomie finale de l'échec provider ou du rejet runtime |
-| `breaker_state/scope` | état et granularité du breaker ayant piloté la décision runtime |
-
-Pour l'axe `context_compensation_status`, la lecture correcte est désormais :
-
-- `not_needed` : `context_quality=full` ;
-- `template_handled` : le prompt courant gère déjà explicitement le niveau dégradé ;
-- `injector_applied` : une consigne additionnelle a été injectée ;
-- `unknown` : l'information n'est pas déterminable sur le chemin considéré.
 
 ### Taxonomies actuellement exposées
 
