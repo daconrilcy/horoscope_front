@@ -251,7 +251,10 @@ class ReleaseService:
             stmt_select = select(LlmActiveReleaseModel)
             res_select = await self._execute(stmt_select)
             for old_active in res_select.scalars().all():
-                self.session.delete(old_active)
+                if isinstance(self.session, AsyncSession):
+                    await self.session.delete(old_active)
+                else:
+                    self.session.delete(old_active)
 
             # Flush to ensure deletes are processed and identity map is updated
             if isinstance(self.session, AsyncSession):

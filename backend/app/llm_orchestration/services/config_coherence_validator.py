@@ -227,6 +227,10 @@ class ConfigCoherenceValidator:
                 if profile.status == PromptStatus.PUBLISHED:
                     return profile, None
 
+        # Finding 5 hardening: if bundle is provided, NEVER fall back to live DB
+        if bundle:
+            return None, "missing_execution_profile"
+
         # Case 1: Explicit reference (Live DB)
         if config.execution_profile_ref:
             stmt = select(LlmExecutionProfileModel).where(
@@ -301,12 +305,16 @@ class ConfigCoherenceValidator:
         AC3: Output contract validity and compatibility.
         """
         contract_ref = config.output_contract_ref
-        
+
         # Story 66.32: Try from bundle first (Finding 5)
         if bundle and "schema" in bundle:
             schema_data = bundle["schema"]
             if schema_data.get("id") == contract_ref or schema_data.get("name") == contract_ref:
                 return True, None
+
+        # Finding 5 hardening: if bundle is provided, NEVER fall back to live DB
+        if bundle:
+            return False, "invalid_output_contract_ref"
 
         contract = None
 
@@ -370,12 +378,7 @@ class ConfigCoherenceValidator:
         AC6: Persona existence and authorization.
         """
         # Story 66.32: Try from bundle first (Finding 5)
-        # Note: Persona is currently nested inside assembly in the bundle
-        # But build_bundle doesn't have a top-level 'persona' key.
-        # Actually AssemblyRegistry._serialize_config includes _persona if loaded.
-        # And build_bundle calls _serialize_config.
-        
-        # Let's check the reconstructed config persona first
+        # Reconstructed assembly config already has the persona object if it was in the bundle
         if config.persona:
             if not config.persona.enabled:
                 result.add_error(
@@ -383,6 +386,15 @@ class ConfigCoherenceValidator:
                     f"Persona '{config.persona.name}' is disabled.",
                     {"persona_id": str(config.persona_ref)},
                 )
+            return
+
+        # Finding 5 hardening: if bundle is provided, NEVER fall back to live DB
+        if bundle:
+            result.add_error(
+                "persona_not_allowed",
+                "Persona referenced missing from bundle.",
+                {"persona_id": str(config.persona_ref)},
+            )
             return
 
         stmt = select(LlmPersonaModel).where(LlmPersonaModel.id == config.persona_ref)

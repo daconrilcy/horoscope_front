@@ -20,7 +20,7 @@ async def run_llm_coherence_startup_validation(
         logger.info("llm_coherence_startup_validation mode=off - skipping")
         return
 
-    logger.info("llm_coherence_startup_validation mode=%s - scanning active configurations", mode)
+    logger.info("llm_coherence_startup_validation mode=%s - scanning active snapshot or published configurations", mode)
 
     validator = ConfigCoherenceValidator(session)
     results = await validator.scan_active_configurations()
