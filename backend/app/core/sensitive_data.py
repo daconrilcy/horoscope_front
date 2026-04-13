@@ -36,6 +36,10 @@ class PolicyAction(str, enum.Enum):
 # These fields are considered OPERATIONAL_METADATA and are allowed in most sinks.
 OPERATIONAL_FIELDS: Set[str] = {
     "use_case",
+    "use_case_key",
+    "from_version",
+    "to_version",
+    "target_version_id",
     "feature",
     "subfeature",
     "plan",

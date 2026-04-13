@@ -352,6 +352,19 @@ async def test_gateway_assembly_chat_mode(db):
         created_by="t",
     )
     db.add(config)
+
+    # Story 66.35: must have an ExecutionProfile for supported features
+    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+
+    profile = LlmExecutionProfileModel(
+        name="test chat profile",
+        feature="chat",
+        model="gpt-4o",
+        provider="openai",
+        status=PromptStatus.PUBLISHED,
+        created_by="t",
+    )
+    db.add(profile)
     db.commit()
 
     gateway = LLMGateway()

@@ -414,6 +414,24 @@ async def _app_lifespan(_: FastAPI):
 app = FastAPI(title="horoscope-backend", version="0.1.0", lifespan=_app_lifespan)
 
 
+@app.middleware("http")
+async def llm_simulation_middleware(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    """Story 66.35: capture simulation header for qualification runs."""
+    from app.llm_orchestration.simulation_context import simulation_error as simulation_error_ctx
+
+    header_val = request.headers.get("X-LLM-Simulate-Error") or request.headers.get(
+        "x-llm-simulate-error"
+    )
+    token = simulation_error_ctx.set(header_val)
+    try:
+        response = await call_next(request)
+        return response
+    finally:
+        simulation_error_ctx.reset(token)
+
+
 def _sanitize_metric_value(value: str) -> str:
     return value.replace("|", "_").replace("=", "_").replace(" ", "_")
 

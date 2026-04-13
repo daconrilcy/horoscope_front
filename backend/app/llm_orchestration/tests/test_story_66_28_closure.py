@@ -74,10 +74,11 @@ async def test_daily_path_is_nominal_canonical(db: Session):
             request_id="req-66-28",
             trace_id="tr-66-28",
             raw_output=json.dumps(valid_payload),
-            structured_output={},
+            structured_output=valid_payload,
             usage=UsageInfo(),
             meta=GatewayMeta(latency_ms=0, model="test"),
         )
+
 
         result = await gateway.execute_request(request, db=db)
 

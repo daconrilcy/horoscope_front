@@ -77,15 +77,16 @@ async def test_execute_request_basic(db):
     # This test uses the 'db' fixture from conftest.py
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_long_free", locale="fr-FR"),
+        user_input=ExecutionUserInput(use_case="test_natal", locale="fr-FR"),
         context=ExecutionContext(chart_json='{"planets": []}'),
         request_id="test-req",
         trace_id="test-trace",
+        flags={"test_fallback_active": True},
     )
 
     # Mock result
     mock_res = GatewayResult(
-        use_case="natal_long_free",
+        use_case="test_natal",
         request_id="test-req",
         trace_id="test-trace",
         raw_output='{"title": "test", "summary": "test", "accordion_titles": ["a"]}',
@@ -95,10 +96,10 @@ async def test_execute_request_basic(db):
 
     from unittest.mock import AsyncMock
 
-    gateway.client.execute = AsyncMock(return_value=mock_res)
+    gateway.client.execute = AsyncMock(return_value=(mock_res, {}))
 
     result = await gateway.execute_request(request, db=db)
-    assert result.use_case == "natal_long_free"
+    assert result.use_case == "test_natal"
     gateway.client.execute.assert_called_once()
 
 

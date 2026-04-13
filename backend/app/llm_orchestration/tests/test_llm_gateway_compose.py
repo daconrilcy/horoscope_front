@@ -9,26 +9,31 @@ from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 @pytest.mark.asyncio
 async def test_gateway_composes_4_layers():
     """Vérifie que les 4 couches de prompt sont bien composées."""
+    use_case = "test_natal"
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
-        return_value=GatewayResult(
-            use_case="natal_interpretation_short",
-            request_id="r1",
-            trace_id="t1",
-            raw_output='{"message": "ok"}',
-            usage=UsageInfo(),
-            meta=GatewayMeta(latency_ms=1, model="m"),
+        return_value=(
+            GatewayResult(
+                use_case=use_case,
+                request_id="r1",
+                trace_id="t1",
+                raw_output='{"message": "ok"}',
+                usage=UsageInfo(),
+                meta=GatewayMeta(latency_ms=1, model="m"),
+            ),
+            {},
         )
     )
 
     gateway = LLMGateway(responses_client=mock_client)
 
     await gateway.execute(
-        use_case="natal_interpretation_short",
+        use_case=use_case,
         user_input={"locale": "fr"},
         context={"chart_json": "{}"},
         request_id="r1",
         trace_id="t1",
+        flags={"test_fallback_active": True},
     )
 
     # Assert
@@ -47,25 +52,30 @@ async def test_gateway_composes_4_layers():
 @pytest.mark.asyncio
 async def test_gateway_context_overrides_user_input():
     """Vérifie que context a la priorité sur user_input pour les variables de rendu."""
+    use_case = "test_guidance"
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
-        return_value=GatewayResult(
-            use_case="guidance_contextual",
-            request_id="r1",
-            trace_id="t1",
-            raw_output='{"summary": "ok", "key_points": ["p1"], "advice": "go"}',
-            usage=UsageInfo(),
-            meta=GatewayMeta(latency_ms=1, model="m"),
+        return_value=(
+            GatewayResult(
+                use_case=use_case,
+                request_id="r1",
+                trace_id="t1",
+                raw_output='{"summary": "ok", "key_points": ["p1"], "advice": "go"}',
+                usage=UsageInfo(),
+                meta=GatewayMeta(latency_ms=1, model="m"),
+            ),
+            {},
         )
     )
     gateway = LLMGateway(responses_client=mock_client)
 
     await gateway.execute(
-        use_case="guidance_contextual",
+        use_case=use_case,
         user_input={"situation": "from_input", "locale": "fr", "question": "test?"},
         context={"situation": "from_context"},
         request_id="r1",
         trace_id="t1",
+        flags={"test_fallback_active": True},
     )
 
     # In _resolve_plan, render_vars = {**user_input, **context} -> context has priority
@@ -77,25 +87,30 @@ async def test_gateway_context_overrides_user_input():
 @pytest.mark.asyncio
 async def test_gateway_filters_extra_variables():
     """Vérifie que seules les variables autorisées sont injectées dans le prompt."""
+    use_case = "test_guidance"
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
-        return_value=GatewayResult(
-            use_case="guidance_daily",
-            request_id="r1",
-            trace_id="t1",
-            raw_output='{"summary": "ok", "key_points": ["p1"], "advice": "go"}',
-            usage=UsageInfo(),
-            meta=GatewayMeta(latency_ms=1, model="m"),
+        return_value=(
+            GatewayResult(
+                use_case=use_case,
+                request_id="r1",
+                trace_id="t1",
+                raw_output='{"summary": "ok", "key_points": ["p1"], "advice": "go"}',
+                usage=UsageInfo(),
+                meta=GatewayMeta(latency_ms=1, model="m"),
+            ),
+            {},
         )
     )
     gateway = LLMGateway(responses_client=mock_client)
 
     await gateway.execute(
-        use_case="guidance_daily",
+        use_case=use_case,
         user_input={"situation": "ok", "evil_var": "HACK", "locale": "fr"},
         context={},
         request_id="r1",
         trace_id="t1",
+        flags={"test_fallback_active": True},
     )
 
     args = mock_client.execute.call_args.kwargs

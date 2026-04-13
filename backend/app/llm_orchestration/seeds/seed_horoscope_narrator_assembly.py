@@ -219,6 +219,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                 feature_template_ref=pv.id,
                 persona_ref=persona.id if persona else None,
                 execution_profile_ref=prof.id,
+                output_contract_ref=str(narrator_schema.id),
                 execution_config={
                     "model": "gpt-4o",
                     "temperature": 0.7,

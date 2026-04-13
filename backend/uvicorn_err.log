@@ -1,0 +1,70 @@
+INFO:     Started server process [74116]
+INFO:     Waiting for application startup.
+WARNING: llm_registry_auto_heal use_cases=21 prompts=396 active_short=True enabled_personas=6 persona_lock=True placeholder_drift=False degraded=True
+INFO: Updated persona: Astrologue Standard
+INFO: Updated profile for: Astrologue Standard
+INFO: Updated active prompt profile for: Astrologue Standard
+INFO: Updated persona: Selene Mystique
+INFO: Updated profile for: Selene Mystique
+INFO: Updated active prompt profile for: Selene Mystique
+INFO: Updated persona: Orion Analyste
+INFO: Updated profile for: Orion Analyste
+INFO: Updated active prompt profile for: Orion Analyste
+INFO: Updated persona: Luna Empathie
+INFO: Updated profile for: Luna Empathie
+INFO: Updated active prompt profile for: Luna Empathie
+INFO: Updated persona: Atlas Direct
+INFO: Updated profile for: Atlas Direct
+INFO: Updated active prompt profile for: Atlas Direct
+INFO: Updated persona: Nox Profondeur
+INFO: Updated profile for: Nox Profondeur
+INFO: Updated active prompt profile for: Nox Profondeur
+INFO: Updating use case config for natal_interpretation_short...
+INFO: Prompt for natal_interpretation_short already published and identical. Skipping.
+INFO: Updating use case config for natal_interpretation...
+INFO: Schema for natal_interpretation is already at version 3. Skipping schema update.
+INFO: Publishing new prompt version for natal_interpretation...
+INFO: Prompt for natal_interpretation prepared for commit.
+INFO: Seed process completed successfully.
+WARNING: Lint warnings for natal_interpretation: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_interpretation
+INFO: Archived previous prompt version for natal_interpretation (id=e9989c34-076d-45b1-a6c5-550c368c15a7)
+INFO: Published GPT-5 v3 prompt for natal_interpretation (model=gpt-5, reasoning_effort=low, verbosity=high)
+WARNING: Lint warnings for natal_psy_profile: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_psy_profile
+INFO: Prompt v3 for natal_psy_profile already published and identical. Skipping.
+WARNING: Lint warnings for natal_shadow_integration: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_shadow_integration
+INFO: Prompt v3 for natal_shadow_integration already published and identical. Skipping.
+WARNING: Lint warnings for natal_leadership_workstyle: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_leadership_workstyle
+INFO: Prompt v3 for natal_leadership_workstyle already published and identical. Skipping.
+WARNING: Lint warnings for natal_creativity_joy: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_creativity_joy
+INFO: Prompt v3 for natal_creativity_joy already published and identical. Skipping.
+WARNING: Lint warnings for natal_relationship_style: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_relationship_style
+INFO: Prompt v3 for natal_relationship_style already published and identical. Skipping.
+WARNING: Lint warnings for natal_community_networks: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_community_networks
+INFO: Prompt v3 for natal_community_networks already published and identical. Skipping.
+WARNING: Lint warnings for natal_values_security: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_values_security
+INFO: Prompt v3 for natal_values_security already published and identical. Skipping.
+WARNING: Lint warnings for natal_evolution_path: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_evolution_path
+INFO: Prompt v3 for natal_evolution_path already published and identical. Skipping.
+INFO: Seed v3 completed successfully.
+INFO: Prompt chat_astrologer already up-to-date. Skipping.
+INFO: seed_narrator: archived legacy daily_prediction artifacts
+ERROR: llm_registry_auto_heal_failed error=Multiple rows were found when one or none was required
+INFO: feature_scope_registry_startup_validation_ok
+INFO: message='Request to Stripe api' method=get url=https://api.stripe.com/v1/billing_portal/configurations/bpc_1TGlBGHwm9IxTbGyDzlUqULq
+INFO: message='Stripe API response' path=https://api.stripe.com/v1/billing_portal/configurations/bpc_1TGlBGHwm9IxTbGyDzlUqULq response_code=200
+WARNING: stripe_portal_startup_validation_warn error=Stripe Customer Portal configuration is missing subscription_update prices for configured plans: price_1TElbnHwm9IxTbGyy2748MMF, price_1TH5gcHwm9IxTbGy8ibEAxDx
+INFO: Prompt catalog OK — 21 use cases validated
+INFO: canonical_db_startup_validation_ok
+INFO: llm_coherence_startup_validation mode=strict - scanning active snapshot or published configurations
+INFO: llm_coherence_startup_validation success - all active configurations are coherent
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8005 (Press CTRL+C to quit)

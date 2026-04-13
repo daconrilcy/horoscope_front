@@ -50,7 +50,7 @@ async def test_prompt_version_id_propagation():
         usage=UsageInfo(),
         meta=GatewayMeta(latency_ms=10, model="m", prompt_version_id="hardcoded-v1"),
     )
-    mock_client.execute = AsyncMock(return_value=provider_res)
+    mock_client.execute = AsyncMock(return_value=(provider_res, {}))
 
     gateway = LLMGateway(responses_client=mock_client)
 
@@ -115,7 +115,7 @@ async def test_observability_success_persists_to_db():
             usage=UsageInfo(input_tokens=10, output_tokens=20),
             meta=GatewayMeta(latency_ms=15, model="m"),
         )
-        mock_client.execute = AsyncMock(return_value=provider_res)
+        mock_client.execute = AsyncMock(return_value=(provider_res, {}))
 
         gateway = LLMGateway(responses_client=mock_client)
 
@@ -170,7 +170,7 @@ async def test_observability_success_ignores_missing_fk_references():
             usage=UsageInfo(input_tokens=3, output_tokens=5),
             meta=GatewayMeta(latency_ms=12, model="m", prompt_version_id="hardcoded-v1"),
         )
-        mock_client.execute = AsyncMock(return_value=provider_res)
+        mock_client.execute = AsyncMock(return_value=(provider_res, {}))
 
         gateway = LLMGateway(responses_client=mock_client)
         gateway._resolve_config = AsyncMock(

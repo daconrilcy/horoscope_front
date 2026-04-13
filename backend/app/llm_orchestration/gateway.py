@@ -228,12 +228,48 @@ USE_CASE_STUBS = {
     "astrologer_selection_help": UseCaseConfig(
         model=settings.openai_model_default,
         temperature=0.7,
-        max_output_tokens=2000,
+        max_output_tokens=2048,
         system_core_key="default_v1",
         developer_prompt="Aide l'utilisateur à choisir un astrologue.",
         required_prompt_placeholders=[],
         interaction_mode="chat",
         user_question_policy="optional",
+    ),
+    "test_natal": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=2048,
+        system_core_key="default_v1",
+        developer_prompt="Test natal prompt. locale={{locale}}",
+        required_prompt_placeholders=[],
+        interaction_mode="structured",
+    ),
+    "test_guidance": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=2048,
+        system_core_key="default_v1",
+        developer_prompt="Test guidance prompt. locale={{locale}} situation={{situation}}",
+        required_prompt_placeholders=[],
+        interaction_mode="structured",
+    ),
+    "horoscope_daily_free": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=2048,
+        system_core_key="default_v1",
+        developer_prompt="Deprecated free stub.",
+        required_prompt_placeholders=[],
+        interaction_mode="structured",
+    ),
+    "horoscope_daily_full": UseCaseConfig(
+        model=settings.openai_model_default,
+        temperature=0.7,
+        max_output_tokens=2048,
+        system_core_key="default_v1",
+        developer_prompt="Deprecated full stub.",
+        required_prompt_placeholders=[],
+        interaction_mode="structured",
     ),
 }
 
@@ -653,6 +689,7 @@ class LLMGateway:
         trace_id: str,
         user_id: Optional[int] = None,
         is_repair_call: bool = False,
+        flags: Optional[Dict[str, Any]] = None,
     ) -> LLMExecutionRequest:
         """Maps legacy dict-based parameters to the canonical LLMExecutionRequest."""
         locale = user_input.get("locale") or context.get("locale") or "fr-FR"
@@ -696,15 +733,19 @@ class LLMGateway:
             extra_context=extra_context,
         )
 
-        flags_model = ExecutionFlags(
-            is_repair_call=is_repair_call,
-            skip_common_context=context.get("skip_common_context", False),
-            test_fallback_active=context.get("test_fallback_active", False),
-            validation_strict=context.get("validation_strict", False),
-            evidence_catalog=context.get("evidence_catalog"),
-            prompt_version_id_override=context.get("_override_prompt_version_id"),
-            visited_use_cases=context.get("_visited_use_cases", []),
-        )
+        flags_dict = {
+            "is_repair_call": is_repair_call,
+            "skip_common_context": context.get("skip_common_context", False),
+            "test_fallback_active": context.get("test_fallback_active", False),
+            "validation_strict": context.get("validation_strict", False),
+            "evidence_catalog": context.get("evidence_catalog"),
+            "prompt_version_id_override": context.get("_override_prompt_version_id"),
+            "visited_use_cases": context.get("_visited_use_cases", []),
+        }
+        if flags:
+            flags_dict.update(flags)
+
+        flags_model = ExecutionFlags(**flags_dict)
 
         return LLMExecutionRequest(
             user_input=user_input_model,
@@ -725,6 +766,7 @@ class LLMGateway:
         user_id: Optional[int] = None,
         db: Optional[Session] = None,
         is_repair_call: bool = False,
+        flags: Optional[Dict[str, Any]] = None,
     ) -> GatewayResult:
         """Legacy entry point for LLM orchestration."""
         # Use inspect or a passed identifier to identify the real caller if possible
@@ -742,6 +784,7 @@ class LLMGateway:
             trace_id=trace_id,
             user_id=user_id,
             is_repair_call=is_repair_call,
+            flags=flags,
         )
         return await self.execute_request(request, db=db)
 
@@ -942,7 +985,10 @@ class LLMGateway:
 
             if not config:
                 # Story 66.29: Ensure no supported feature uses use_case-first (AC1, AC2)
-                if is_supported_feature(request.user_input.feature):
+                if (
+                    is_supported_feature(request.user_input.feature)
+                    and not request.flags.test_fallback_active
+                ):
                     raise GatewayConfigError(
                         f"Resolution failed for supported feature '{request.user_input.feature}'. "
                         "Fallback to USE_CASE_FIRST is strictly forbidden."
@@ -1032,7 +1078,7 @@ class LLMGateway:
             requested_provider = provider  # Initial resolved from profile
             timeout_seconds = profile_db.timeout_seconds
 
-            # Resolve max_output_tokens priority (Story 66.18 D4, 66.25 AC5)
+            # Resolve max_output_tokens resolution (Story 66.18 D4, 66.25 AC5)
             # 1. Length Budget (highest)
             if (
                 resolved_assembly

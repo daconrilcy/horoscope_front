@@ -45,18 +45,23 @@ async def test_enforce_mandatory_assembly_chat_nominal():
         with pytest.raises(GatewayConfigError) as exc:
             await gateway._resolve_plan(request, db=db)
 
-        assert "Mandatory assembly missing for nominal chat family" in str(exc.value)
+        # Message changed in Story 66.29
+        assert "Mandatory assembly missing for supported chat family" in str(exc.value)
 
 
 @pytest.mark.asyncio
 async def test_allow_legacy_fallback_for_deprecated_use_case():
-    """Test Story 66.20: deprecated use cases still allow fallback (legacy compatibility)."""
+    """
+    Test Story 66.20: legacy fallback is now BLOCKED for supported features (Story 66.29).
+    We test that it raises GatewayConfigError instead of allowing it.
+    """
     gateway = LLMGateway()
 
-    # "chat" is in DEPRECATED_USE_CASE_MAPPING
+    # "chat" is in DEPRECATED_USE_CASE_MAPPING and is a supported feature
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case="chat",  # deprecated key
+            feature="chat",   # Explicitly set feature to trigger perimeter check
             locale="fr-FR",
         ),
         context=ExecutionContext(),
@@ -68,44 +73,16 @@ async def test_allow_legacy_fallback_for_deprecated_use_case():
 
     db = MagicMock(spec=Session)
 
-    # Mock DEPRECATED_USE_CASE_MAPPING lookup sets feature="chat"
     with patch(
         "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync"
     ) as mock_get:
         mock_get.return_value = None
 
-        # Mock _resolve_config to return a valid UseCaseConfig
-        mock_config = UseCaseConfig(
-            model="gpt-4o",
-            temperature=0.7,
-            max_output_tokens=1000,
-            system_core_key="default_v1",
-            developer_prompt="Legacy prompt",
-            prompt_version_id="legacy-v1",
-        )
-
-        with (
-            patch.object(gateway, "_resolve_config", new_callable=AsyncMock) as mock_resolve_cfg,
-            patch.object(
-                gateway, "_resolve_persona", new_callable=AsyncMock
-            ) as mock_resolve_persona,
-            patch("app.llm_orchestration.gateway.get_hard_policy") as mock_hard_policy,
-            patch(
-                "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile"
-            ) as mock_get_profile,
-        ):
-            mock_resolve_cfg.return_value = mock_config
-            mock_resolve_persona.return_value = (None, None, None)
-            mock_hard_policy.return_value = "System policy"
-            mock_get_profile.return_value = None
-
-            # This should NOT raise GatewayConfigError
-            plan, _ = await gateway._resolve_plan(request, db=db)
-
-            assert plan is not None
-            assert plan.prompt_version_id == "legacy-v1"
-            assert plan.feature == "chat"
-            assert plan.plan == "free"
+        # This should now RAISE GatewayConfigError because chat is a supported feature
+        with pytest.raises(GatewayConfigError) as exc:
+            await gateway._resolve_plan(request, db=db)
+        
+        assert "Mandatory assembly missing for supported chat family" in str(exc.value)
 
 
 @pytest.mark.asyncio
@@ -138,4 +115,5 @@ async def test_natal_convergence_nominal():
         with pytest.raises(GatewayConfigError) as exc:
             await gateway._resolve_plan(request, db=db)
 
-        assert "Mandatory assembly missing for nominal natal family" in str(exc.value)
+        # Message changed in Story 66.29
+        assert "Mandatory assembly missing for supported natal family" in str(exc.value)

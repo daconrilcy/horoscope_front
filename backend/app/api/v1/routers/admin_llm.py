@@ -224,8 +224,10 @@ def _record_audit_event(
     target_type: str,
     target_id: str | None,
     status: str,
-    details: dict[str, object],
+    details: Any,
 ) -> None:
+    from app.schemas.audit_details import to_safe_details
+
     AuditService.record_event(
         db,
         payload=AuditEventCreatePayload(
@@ -236,7 +238,7 @@ def _record_audit_event(
             target_type=target_type,
             target_id=target_id,
             status=status,
-            details=details,
+            details=to_safe_details(details),
         ),
     )
 
@@ -998,9 +1000,18 @@ async def publish_prompt(
                 details={},
             )
         return _error_response(
-            status_code=404,
+            status_code=422,
             request_id=request_id,
-            code="prompt_not_found",
+            code="validation_error",
+            message=str(err),
+            details={},
+        )
+    except Exception as err:
+        logger.exception("admin_llm_publish_failed")
+        return _error_response(
+            status_code=500,
+            request_id=request_id,
+            code="publish_failed",
             message=str(err),
             details={},
         )
@@ -1034,16 +1045,16 @@ def rollback_prompt(
             target_type="llm_prompt",
             target_id=str(version.id),
             status="success",
-            details=LlmPromptAuditDetails(
-                use_case_key=key,
-                from_version=str(previous_version.id) if previous_version else None,
-                to_version=str(version.id),
-            ),
+            details={
+                "use_case_key": key,
+                "from_version": str(previous_version.id) if previous_version else None,
+                "to_version": str(version.id),
+            },
         )
         db.commit()
 
         return {
-            "data": LlmPromptVersion.model_validate(version),
+            "data": LlmPromptVersion.model_validate(version).model_dump(mode="json"),
             "meta": {"request_id": request_id},
         }
     except ValueError as err:

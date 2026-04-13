@@ -14,7 +14,7 @@ $ErrorActionPreference = "Stop"
 
 function Invoke-ApiCall {
   param(
-    [Parameter(Mandatory = $true)][ValidateSet("GET", "POST")][string]$Method,
+    [Parameter(Mandatory = $true)][ValidateSet("GET", "POST", "PUT")][string]$Method,
     [Parameter(Mandatory = $true)][string]$Url,
     [hashtable]$Headers = @{},
     [object]$Body = $null
@@ -23,10 +23,13 @@ function Invoke-ApiCall {
   $start = [System.Diagnostics.Stopwatch]::StartNew()
   try {
     if ($Method -eq "GET") {
-      $response = Invoke-WebRequest -Uri $Url -Method Get -Headers $Headers
+      $response = Invoke-WebRequest -Uri $Url -Method Get -Headers $Headers -UseBasicParsing
+    } elseif ($Method -eq "PUT") {
+      $jsonBody = if ($Body -eq $null) { "{}" } else { $Body | ConvertTo-Json -Depth 10 }
+      $response = Invoke-WebRequest -Uri $Url -Method Put -Headers $Headers -ContentType "application/json" -Body $jsonBody -UseBasicParsing
     } else {
       $jsonBody = if ($Body -eq $null) { "{}" } else { $Body | ConvertTo-Json -Depth 10 }
-      $response = Invoke-WebRequest -Uri $Url -Method Post -Headers $Headers -ContentType "application/json" -Body $jsonBody
+      $response = Invoke-WebRequest -Uri $Url -Method Post -Headers $Headers -ContentType "application/json" -Body $jsonBody -UseBasicParsing
     }
     $start.Stop()
     return [pscustomobject]@{
@@ -34,6 +37,7 @@ function Invoke-ApiCall {
       duration_ms = [math]::Round($start.Elapsed.TotalMilliseconds, 2)
       ok          = $true
       error       = $null
+      data        = if ($response.Content) { $response.Content | ConvertFrom-Json } else { $null }
     }
   } catch {
     $start.Stop()
@@ -46,6 +50,7 @@ function Invoke-ApiCall {
       duration_ms = [math]::Round($start.Elapsed.TotalMilliseconds, 2)
       ok          = $false
       error       = $_.Exception.Message
+      data        = $null
     }
   }
 }
@@ -409,15 +414,68 @@ if (-not $subscription.ok -or $subscription.status_code -ne 200) {
   Write-Warning "User for load test might not have an active subscription (status=$($subscription.status_code))"
 }
 
+# --- Story 66.35: Initialize LLM User Context ---
+function Initialize-LlmLoadUser {
+  param([hashtable]$Headers)
+  
+  Write-Host "Initializing LLM user context (birth data + natal chart)..." -ForegroundColor Cyan
+  
+  $birthPayload = @{
+    birth_date = "1990-01-15"
+    birth_time = "10:30"
+    birth_place = "Paris, France"
+    birth_timezone = "Europe/Paris"
+  }
+  $res = Invoke-ApiCall -Method PUT -Url "$BaseUrl/v1/users/me/birth-data" -Headers $Headers -Body $birthPayload
+  if (-not $res.ok) { throw "Failed to set birth data: $($res.error)" }
+  
+  $chartPayload = @{ accurate = $true }
+  $res = Invoke-ApiCall -Method POST -Url "$BaseUrl/v1/users/me/natal-chart" -Headers $Headers -Body $chartPayload
+  if (-not $res.ok) { throw "Failed to generate natal chart: $($res.error)" }
+  
+  Write-Host "LLM user context ready." -ForegroundColor Green
+}
+
+Initialize-LlmLoadUser -Headers $authHeaders
+
 # Prime privacy status endpoints.
 $null = Invoke-ApiCall -Method POST -Url "$BaseUrl/v1/privacy/export" -Headers $authHeaders
 
 $scenarioResults = @()
 $phaseDefinitions = Get-ProfilePhases -ProfileName $Profile -BaseIterations $Iterations -BaseConcurrency $Concurrency
+
+# Legacy critical scenarios
 $scenarioResults += Invoke-ScenarioByProfile -Name "billing_quota" -Method GET -Url "$BaseUrl/v1/billing/quota" -Headers $authHeaders -PhaseDefinitions $phaseDefinitions
 $scenarioResults += Invoke-ScenarioByProfile -Name "privacy_export_status" -Method GET -Url "$BaseUrl/v1/privacy/export" -Headers $authHeaders -PhaseDefinitions $phaseDefinitions
 $scenarioResults += Invoke-ScenarioByProfile -Name "privacy_delete_request" -Method POST -Url "$BaseUrl/v1/privacy/delete" -Headers $authHeaders -Body @{ confirmation = "DELETE" } -PhaseDefinitions $phaseDefinitions -AllowedStatusCodes @(200, 409)
 $scenarioResults += Invoke-ScenarioByProfile -Name "chat_conversations" -Method GET -Url "$BaseUrl/v1/chat/conversations?limit=20&offset=0" -Headers $authHeaders -PhaseDefinitions $phaseDefinitions
+
+# --- Story 66.35: LLM Gateway Scenarios ---
+$scenarioResults += Invoke-ScenarioByProfile -Name "llm_chat" -Method POST -Url "$BaseUrl/v1/chat/messages" -Headers $authHeaders -Body @{ message = "Bonjour, peux-tu m'aider ?" } -PhaseDefinitions $phaseDefinitions
+$scenarioResults += Invoke-ScenarioByProfile -Name "llm_guidance" -Method POST -Url "$BaseUrl/v1/guidance" -Headers $authHeaders -Body @{ period = "today" } -PhaseDefinitions $phaseDefinitions
+$scenarioResults += Invoke-ScenarioByProfile -Name "llm_natal" -Method POST -Url "$BaseUrl/v1/natal/interpretation" -Headers $authHeaders -Body @{ use_case_level = "short"; locale = "fr-FR" } -PhaseDefinitions $phaseDefinitions
+$scenarioResults += Invoke-ScenarioByProfile -Name "llm_horoscope_daily" -Method GET -Url "$BaseUrl/v1/predictions/daily" -Headers $authHeaders -PhaseDefinitions $phaseDefinitions
+
+# --- Story 66.35: Incident & Recovery Scenarios (Stress Only) ---
+if ($Profile -eq "stress") {
+    Write-Host "`nInjecting LLM provider incidents (Fault Injection)..." -ForegroundColor Cyan
+    
+    $incidentHeaders = $authHeaders.Clone()
+    $incidentHeaders["X-LLM-Simulate-Error"] = "rate_limit"
+    # Testing how system handles provider rate limits (should be classified as protection)
+    $scenarioResults += Invoke-ScenarioByProfile -Name "llm_stress_rate_limit" -Method POST -Url "$BaseUrl/v1/chat/messages" -Headers $incidentHeaders -Body @{ message = "Testing rate limit" } -PhaseDefinitions $phaseDefinitions -AllowedStatusCodes @(200, 429)
+    
+    $timeoutHeaders = $authHeaders.Clone()
+    $timeoutHeaders["X-LLM-Simulate-Error"] = "timeout"
+    # Testing how system handles provider timeouts (circuit breaker should eventually open)
+    $scenarioResults += Invoke-ScenarioByProfile -Name "llm_stress_timeout" -Method POST -Url "$BaseUrl/v1/chat/messages" -Headers $timeoutHeaders -Body @{ message = "Testing timeout" } -PhaseDefinitions $phaseDefinitions -AllowedStatusCodes @(200, 504, 503)
+
+    Write-Host "Waiting for circuit breaker recovery window (10s - might need longer depending on settings)..." -ForegroundColor Gray
+    Start-Sleep -Seconds 10
+    
+    # This call should succeed if breaker moved to half-open/closed
+    $scenarioResults += Invoke-ScenarioByProfile -Name "llm_recovery" -Method POST -Url "$BaseUrl/v1/chat/messages" -Headers $authHeaders -Body @{ message = "Testing recovery" } -PhaseDefinitions $phaseDefinitions
+}
 
 $effectiveB2BKey = if ($B2BApiKey) { $B2BApiKey } else { $env:B2B_API_KEY }
 $skippedScenarios = @()
@@ -435,6 +493,48 @@ if ($opsToken) {
   $opsMonitoring.post_run = Invoke-ApiCall -Method GET -Url "$BaseUrl/v1/ops/monitoring/operational-summary?window=$OpsWindow" -Headers $opsHeaders
 }
 
+# --- Story 66.35: Performance Qualification Evaluation ---
+$qualificationReports = @()
+if ($opsToken) {
+    Write-Host "`nRunning performance qualification evaluation..." -ForegroundColor Cyan
+    foreach ($res in $scenarioResults) {
+        $family = $null
+        if ($res.name -eq "llm_chat") { $family = "chat" }
+        elseif ($res.name -eq "llm_guidance") { $family = "guidance" }
+        elseif ($res.name -eq "llm_natal") { $family = "natal" }
+        elseif ($res.name -eq "llm_horoscope_daily") { $family = "horoscope_daily" }
+        
+        if ($family) {
+            $qualPayload = @{
+                family = $family
+                profile = $Profile
+                total_requests = $res.total_requests
+                success_count = $res.success_count
+                protection_count = $res.protection_count
+                error_count = $res.error_count
+                latency_p50_ms = $res.latency_ms.p50
+                latency_p95_ms = $res.latency_ms.p95
+                latency_p99_ms = $res.latency_ms.p99
+                throughput_rps = $res.throughput_rps
+                environment = "load-test"
+            }
+            $qualRes = Invoke-ApiCall -Method POST -Url "$BaseUrl/v1/ops/monitoring/performance-qualification" -Headers $opsHeaders -Body $qualPayload
+            if ($qualRes.ok) {
+                $qualificationReports += $qualRes.data.data
+                if ($qualRes.data.data.verdict -eq "no-go") {
+                    Write-Host "  [FAIL] $($family): $($qualRes.data.data.constraints -join '; ')" -ForegroundColor Red
+                } elseif ($qualRes.data.data.verdict -eq "go-with-constraints") {
+                    Write-Host "  [WARN] $($family): $($qualRes.data.data.constraints -join '; ')" -ForegroundColor Yellow
+                } else {
+                    Write-Host "  [PASS] $($family)" -ForegroundColor Green
+                }
+            } else {
+                Write-Warning "  [SKIP] $($family): evaluation failed ($($qualRes.error))"
+            }
+        }
+    }
+}
+
 $recommendations = @(New-Recommendations -ScenarioResults $scenarioResults)
 $report = [ordered]@{
   generated_at_utc = (Get-Date).ToUniversalTime().ToString("o")
@@ -447,6 +547,7 @@ $report = [ordered]@{
   scenarios        = $scenarioResults
   skipped_scenarios = $skippedScenarios
   ops_monitoring_correlation = $opsMonitoring
+  performance_qualification = $qualificationReports
   recommendations  = $recommendations
 }
 
@@ -457,3 +558,9 @@ if ($outputDir -and !(Test-Path $outputDir)) {
 
 ($report | ConvertTo-Json -Depth 8) | Set-Content -Path $OutputPath -Encoding UTF8
 Write-Output ("load_test_ok report={0}" -f (Resolve-Path $OutputPath).Path)
+
+# --- Story 66.35: Automatically generate Markdown report ---
+if (Test-Path (Join-Path $PSScriptRoot "generate-performance-report.ps1")) {
+    $mdReportPath = $OutputPath -replace "\.json$", ".md"
+    & (Join-Path $PSScriptRoot "generate-performance-report.ps1") -InputPath $OutputPath -OutputPath $mdReportPath
+}

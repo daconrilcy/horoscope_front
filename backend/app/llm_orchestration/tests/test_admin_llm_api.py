@@ -74,7 +74,7 @@ def test_admin_llm_crud_flow():
 
     # 1. Setup use case
     with SessionLocal() as db:
-        uc = LlmUseCaseConfigModel(key="chat", display_name="Chat", description="Chat use case")
+        uc = LlmUseCaseConfigModel(key="test_chat", display_name="Chat", description="Chat use case")
         db.add(uc)
         db.commit()
 
@@ -83,11 +83,11 @@ def test_admin_llm_crud_flow():
     assert resp.status_code == 200
     data = resp.json()["data"]
     assert len(data) >= 1
-    assert any(uc["key"] == "chat" for uc in data)
+    assert any(uc["key"] == "test_chat" for uc in data)
 
     # 3. Create draft
     draft_resp = client.post(
-        "/v1/admin/llm/use-cases/chat/prompts",
+        "/v1/admin/llm/use-cases/test_chat/prompts",
         headers=headers,
         json={
             "developer_prompt": "Prompt for {{locale}} and {{use_case}}",
@@ -100,14 +100,14 @@ def test_admin_llm_crud_flow():
     assert draft_resp.json()["data"]["status"] == "draft"
 
     # 4. List history
-    hist_resp = client.get("/v1/admin/llm/use-cases/chat/prompts", headers=headers)
+    hist_resp = client.get("/v1/admin/llm/use-cases/test_chat/prompts", headers=headers)
     assert hist_resp.status_code == 200
     assert len(hist_resp.json()["data"]) == 1
     assert hist_resp.json()["data"][0]["id"] == version_id
 
     # 5. Publish
     pub_resp = client.patch(
-        f"/v1/admin/llm/use-cases/chat/prompts/{version_id}/publish",
+        f"/v1/admin/llm/use-cases/test_chat/prompts/{version_id}/publish",
         headers=headers,
     )
     assert pub_resp.status_code == 200
@@ -115,12 +115,12 @@ def test_admin_llm_crud_flow():
 
     # 6. Verify active prompt in use cases list
     uc_list_resp = client.get("/v1/admin/llm/use-cases", headers=headers)
-    chat_uc = next(uc for uc in uc_list_resp.json()["data"] if uc["key"] == "chat")
+    chat_uc = next(uc for uc in uc_list_resp.json()["data"] if uc["key"] == "test_chat")
     assert chat_uc["active_prompt_version_id"] == version_id
 
     # 7. Create another draft and publish to test rollback
     draft2_resp = client.post(
-        "/v1/admin/llm/use-cases/chat/prompts",
+        "/v1/admin/llm/use-cases/test_chat/prompts",
         headers=headers,
         json={
             "developer_prompt": "Prompt V2 for {{locale}} and {{use_case}}",
@@ -128,14 +128,14 @@ def test_admin_llm_crud_flow():
         },
     )
     v2_id = draft2_resp.json()["data"]["id"]
-    client.patch(f"/v1/admin/llm/use-cases/chat/prompts/{v2_id}/publish", headers=headers)
+    client.patch(f"/v1/admin/llm/use-cases/test_chat/prompts/{v2_id}/publish", headers=headers)
 
     # 8. Rollback
-    rb_resp = client.post("/v1/admin/llm/use-cases/chat/rollback", headers=headers)
-    assert rb_resp.status_code == 200
+    rb_resp = client.post("/v1/admin/llm/use-cases/test_chat/rollback", headers=headers)
+
+    assert rb_resp.status_code == 200, f"Rollback failed: {rb_resp.json()}"
     assert rb_resp.json()["data"]["id"] == version_id
     assert rb_resp.json()["data"]["status"] == "published"
-
 
 def test_admin_llm_targeted_rollback():
     _cleanup_tables()
@@ -144,12 +144,12 @@ def test_admin_llm_targeted_rollback():
 
     with SessionLocal() as db:
         db.add(
-            LlmUseCaseConfigModel(key="natal", display_name="Natal", description="Natal use case")
+            LlmUseCaseConfigModel(key="test_natal", display_name="Natal", description="Natal use case")
         )
         db.commit()
 
     draft_one = client.post(
-        "/v1/admin/llm/use-cases/natal/prompts",
+        "/v1/admin/llm/use-cases/test_natal/prompts",
         headers=headers,
         json={
             "developer_prompt": "Prompt V1 {{locale}} {{use_case}}",
@@ -157,10 +157,10 @@ def test_admin_llm_targeted_rollback():
         },
     )
     v1_id = draft_one.json()["data"]["id"]
-    client.patch(f"/v1/admin/llm/use-cases/natal/prompts/{v1_id}/publish", headers=headers)
+    client.patch(f"/v1/admin/llm/use-cases/test_natal/prompts/{v1_id}/publish", headers=headers)
 
     draft_two = client.post(
-        "/v1/admin/llm/use-cases/natal/prompts",
+        "/v1/admin/llm/use-cases/test_natal/prompts",
         headers=headers,
         json={
             "developer_prompt": "Prompt V2 {{locale}} {{use_case}}",
@@ -168,10 +168,10 @@ def test_admin_llm_targeted_rollback():
         },
     )
     v2_id = draft_two.json()["data"]["id"]
-    client.patch(f"/v1/admin/llm/use-cases/natal/prompts/{v2_id}/publish", headers=headers)
+    client.patch(f"/v1/admin/llm/use-cases/test_natal/prompts/{v2_id}/publish", headers=headers)
 
     draft_three = client.post(
-        "/v1/admin/llm/use-cases/natal/prompts",
+        "/v1/admin/llm/use-cases/test_natal/prompts",
         headers=headers,
         json={
             "developer_prompt": "Prompt V3 {{locale}} {{use_case}}",
@@ -179,10 +179,10 @@ def test_admin_llm_targeted_rollback():
         },
     )
     v3_id = draft_three.json()["data"]["id"]
-    client.patch(f"/v1/admin/llm/use-cases/natal/prompts/{v3_id}/publish", headers=headers)
+    client.patch(f"/v1/admin/llm/use-cases/test_natal/prompts/{v3_id}/publish", headers=headers)
 
     rollback = client.post(
-        "/v1/admin/llm/use-cases/natal/rollback",
+        "/v1/admin/llm/use-cases/test_natal/rollback",
         headers=headers,
         json={"target_version_id": v1_id},
     )
@@ -201,7 +201,9 @@ def test_admin_llm_targeted_rollback():
     assert previous is not None
     assert active.status == "published"
     assert previous.status == "archived"
-    assert event.details["from_version"] == v3_id
+    print("DEBUG details:", event.details)
+    assert event.details.get("from_version") == v3_id
+
     assert event.details["to_version"] == v1_id
 
 

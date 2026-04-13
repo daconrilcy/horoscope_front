@@ -318,6 +318,17 @@ PROMPT_CATALOG: dict[str, PromptEntry] = {
         temperature=0.0,
         output_schema=None,
     ),
+    "daily_prediction": PromptEntry(
+        name="daily-prediction-legacy",
+        description="Legacy daily prediction use case",
+        use_case_key="daily_prediction",
+        engine_env_key="OPENAI_ENGINE_HOROSCOPE_DAILY_FREE",
+        max_tokens=1300,
+        temperature=0.7,
+        output_schema=HOROSCOPE_FREE_OUTPUT_SCHEMA,
+        deprecated=True,
+        deprecation_note="Migré vers feature='horoscope_daily', plan='free' via assembly.",
+    ),
 }
 
 

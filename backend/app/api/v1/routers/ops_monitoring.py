@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any
+import uuid
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
@@ -14,6 +15,7 @@ from app.api.dependencies.auth import (
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
+from app.llm_orchestration.models import PerformanceQualificationReport
 from app.services.ops_monitoring_service import (
     OpsMonitoringKpisData,
     OpsMonitoringOperationalSummaryData,
@@ -56,6 +58,28 @@ class OpsMonitoringPersonaKpisApiResponse(BaseModel):
 
 class OpsMonitoringPricingKpisApiResponse(BaseModel):
     data: OpsMonitoringPricingKpisData
+    meta: ResponseMeta
+
+
+class PerformanceQualificationRequest(BaseModel):
+    family: str
+    profile: str
+    total_requests: int
+    success_count: int
+    protection_count: int
+    error_count: int
+    latency_p50_ms: float
+    latency_p95_ms: float
+    latency_p99_ms: float
+    throughput_rps: float
+    active_snapshot_id: Optional[uuid.UUID] = None
+    active_snapshot_version: Optional[str] = None
+    manifest_entry_id: Optional[str] = None
+    environment: str = "local"
+
+
+class PerformanceQualificationApiResponse(BaseModel):
+    data: PerformanceQualificationReport
     meta: ResponseMeta
 
 
@@ -240,3 +264,50 @@ def get_pricing_experiment_kpis(
             message=error.message,
             details=error.details,
         )
+
+
+@router.post(
+    "/performance-qualification",
+    response_model=PerformanceQualificationApiResponse,
+    responses={
+        401: {"model": ErrorEnvelope},
+        403: {"model": ErrorEnvelope},
+        422: {"model": ErrorEnvelope},
+        429: {"model": ErrorEnvelope},
+    },
+)
+async def evaluate_performance_qualification(
+    request: Request,
+    body: PerformanceQualificationRequest,
+    current_user: AuthenticatedUser = Depends(require_ops_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    limit_error = _enforce_limits(
+        user=current_user, request_id=request_id, operation="performance_qualification"
+    )
+    if limit_error is not None:
+        return limit_error
+
+    from app.llm_orchestration.services.performance_qualification_service import (
+        PerformanceQualificationService,
+    )
+
+    report = await PerformanceQualificationService.evaluate_run_async(
+        family=body.family,
+        profile=body.profile,
+        total_requests=body.total_requests,
+        success_count=body.success_count,
+        protection_count=body.protection_count,
+        error_count=body.error_count,
+        latency_p50_ms=body.latency_p50_ms,
+        latency_p95_ms=body.latency_p95_ms,
+        latency_p99_ms=body.latency_p99_ms,
+        throughput_rps=body.throughput_rps,
+        db=db,
+        active_snapshot_id=body.active_snapshot_id,
+        active_snapshot_version=body.active_snapshot_version,
+        manifest_entry_id=body.manifest_entry_id,
+        environment=body.environment,
+    )
+    return {"data": report.model_dump(mode="json"), "meta": {"request_id": request_id}}

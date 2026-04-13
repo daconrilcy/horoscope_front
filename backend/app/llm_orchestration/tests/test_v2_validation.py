@@ -93,6 +93,7 @@ async def test_error_mapping_reaches_client_v2(db):
 
     # 1.5 Seed dummy assembly to satisfy Story 66.20 enforcement
     from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 
     asm = PromptAssemblyConfigModel(
         feature="chat",
@@ -105,6 +106,17 @@ async def test_error_mapping_reaches_client_v2(db):
         created_by="test",
     )
     db.add(asm)
+
+    # Need an execution profile too
+    prof = LlmExecutionProfileModel(
+        name="test profile",
+        feature="chat",
+        model="gpt-4o-mini",
+        provider="openai",
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    db.add(prof)
     db.commit()
 
     try:

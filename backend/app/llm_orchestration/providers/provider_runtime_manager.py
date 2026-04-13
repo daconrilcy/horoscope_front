@@ -97,6 +97,20 @@ class ProviderRuntimeManager:
         for attempt in range(max_retries + 1):
             attempt_count = attempt + 1
             try:
+                # --- Story 66.35: Fault Injection for qualification runs ---
+                from app.llm_orchestration.simulation_context import (
+                    simulation_error as simulation_error_ctx,
+                )
+
+                sim_err = simulation_error_ctx.get()
+                if sim_err:
+                    if sim_err == "rate_limit":
+                        raise UpstreamRateLimitError(retry_after_ms=60000)
+                    if sim_err == "timeout":
+                        raise UpstreamTimeoutError(timeout_seconds)
+                    if sim_err == "server_error":
+                        raise UpstreamServerError("Simulated server error")
+
                 # 1. Execute the call
                 result, headers = await self.client.execute(
                     messages=messages,

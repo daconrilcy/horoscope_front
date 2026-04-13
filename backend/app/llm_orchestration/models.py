@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
@@ -207,6 +208,8 @@ class ExecutionFlags(BaseModel):
     prompt_version_id_override: Optional[str] = None
     visited_use_cases: List[str] = Field(default_factory=list)
     """Usage interne plateforme uniquement — ne pas renseigner côté appelant métier."""
+    simulate_error: Optional[str] = None
+    """Story 66.35: simulate provider error (rate_limit, timeout, server_error)."""
 
 
 class ExecutionOverrides(BaseModel):
@@ -515,6 +518,58 @@ class EvalReport(BaseModel):
     failure_rate: float
     blocked_publication: bool
     results: List[EvalFixtureResult]
+
+
+class PerformanceSLO(BaseModel):
+    """
+    Objectif de performance par famille (Story 66.35).
+    Utilisé pour le verdict automatisé des campagnes de qualification.
+    """
+
+    p95_latency_ms: float
+    p99_latency_ms: float
+    min_success_rate: float
+    max_protection_rate: float
+    max_error_rate: float
+
+    model_config = ConfigDict(frozen=True)
+
+
+class PerformanceSLA(BaseModel):
+    """
+    Seuil d'exploitation déclenchant blocage ou escalade (Story 66.35).
+    """
+
+    p95_latency_max_ms: float
+    max_error_rate_threshold: float
+
+    model_config = ConfigDict(frozen=True)
+
+
+class PerformanceQualificationReport(BaseModel):
+    """
+    Rapport de capacité avant prod normalisé (Story 66.35 AC14).
+    """
+
+    active_snapshot_id: Optional[uuid.UUID] = None
+    active_snapshot_version: Optional[str] = None
+    manifest_entry_id: Optional[str] = None
+    environment: str
+    family: str
+    profile: str  # smoke, nominal, burst, stress
+    total_requests: int
+    success_count: int
+    protection_count: int
+    error_count: int
+    error_rate: float
+    latency_p50_ms: float
+    latency_p95_ms: float
+    latency_p99_ms: float
+    throughput_rps: float
+    budget_remaining: float
+    verdict: Literal["go", "no-go", "go-with-constraints"]
+    constraints: List[str] = Field(default_factory=list)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class GatewayError(Exception):

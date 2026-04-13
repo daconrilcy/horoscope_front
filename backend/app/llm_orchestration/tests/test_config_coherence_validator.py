@@ -119,7 +119,16 @@ async def test_validate_assembly_accepts_uuid_output_contract_ref(db):
 
 @pytest.mark.asyncio
 async def test_scan_active_configurations_ignores_older_published_versions(monkeypatch):
-    validator = ConfigCoherenceValidator(SimpleNamespace())
+    mock_session = SimpleNamespace(execute=None)
+    validator = ConfigCoherenceValidator(mock_session)
+
+    # Mock ReleaseService to return None (no active snapshot)
+    from app.llm_orchestration.services.release_service import ReleaseService
+
+    async def _fake_get_active_id(_db):
+        return None
+
+    monkeypatch.setattr(ReleaseService, "get_active_release_id", _fake_get_active_id)
 
     older = SimpleNamespace(
         feature="chat",
