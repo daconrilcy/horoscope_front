@@ -1,0 +1,38 @@
+name: LLM Doc Conformity
+
+on:
+  pull_request:
+
+jobs:
+  validate-llm-doc-conformity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install backend dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          cd backend
+          python -m pip install -e ".[dev]"
+
+      - name: Write PR body
+        shell: bash
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf "%s" "$PR_BODY" > "$RUNNER_TEMP/pr_body.md"
+
+      - name: Run doc conformity check
+        shell: bash
+        run: |
+          python backend/scripts/check_doc_conformity.py "$RUNNER_TEMP/pr_body.md"

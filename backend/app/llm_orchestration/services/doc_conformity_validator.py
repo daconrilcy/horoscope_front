@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import List
 
+from app.llm_orchestration.doc_conformity_manifest import (
+    AUTHORIZED_PR_REASONS,
+    DOC_PATH,
+    STRUCTURAL_FILES,
+    VERIFICATION_MARKER,
+)
 from app.llm_orchestration.feature_taxonomy import SUPPORTED_FAMILIES
 from app.llm_orchestration.golden_regression_registry import GOLDEN_THRESHOLDS_DEFAULT
+from app.llm_orchestration.models import FallbackStatus, FallbackType
 from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
 from app.llm_orchestration.supported_providers import NOMINAL_SUPPORTED_PROVIDERS
 
@@ -13,52 +19,27 @@ from app.llm_orchestration.supported_providers import NOMINAL_SUPPORTED_PROVIDER
 class DocConformityValidator:
     """
     Validator for documentation vs code conformity (Story 66.38).
-    AC1 to AC5, AC6, AC7, AC11, AC12, AC17.
     """
-
-    STRUCTURAL_FILES = {
-        "docs/llm-prompt-generation-by-feature.md",
-        ".github/pull_request_template.md",
-        "backend/app/llm_orchestration/gateway.py",
-        "backend/app/llm_orchestration/feature_taxonomy.py",
-        "backend/app/llm_orchestration/services/fallback_governance.py",
-        "backend/app/llm_orchestration/services/provider_parameter_mapper.py",
-        "backend/app/llm_orchestration/services/config_coherence_validator.py",
-        "backend/app/llm_orchestration/services/assembly_registry.py",
-        "backend/app/llm_orchestration/services/prompt_renderer.py",
-        "backend/app/llm_orchestration/services/context_quality_injector.py",
-        "backend/app/llm_orchestration/services/length_budget_injector.py",
-        "backend/app/llm_orchestration/services/assembly_resolver.py",
-        "backend/app/llm_orchestration/services/observability_service.py",
-        "backend/app/llm_orchestration/golden_regression_registry.py",
-        "backend/app/llm_orchestration/supported_providers.py",
-        "backend/app/llm_orchestration/models.py",
-    }
 
     def __init__(self, root_path: Path):
         self.root_path = root_path
-        self.doc_path = root_path / "docs" / "llm-prompt-generation-by-feature.md"
+        self.doc_path = root_path / DOC_PATH
 
-    def validate_all(self) -> List[str]:
-        """Runs all checks and returns a list of error messages."""
+    def validate_all(self) -> list[str]:
         if not self.doc_path.exists():
             return [f"Documentation file not found at {self.doc_path}"]
 
         content = self.doc_path.read_text(encoding="utf-8")
-        errors = []
-
+        errors: list[str] = []
         errors.extend(self.validate_taxonomy(content))
         errors.extend(self.validate_providers(content))
         errors.extend(self.validate_fallbacks(content))
         errors.extend(self.validate_obs_snapshot_classification(content))
-
         return errors
 
-    def validate_taxonomy(self, content: str) -> List[str]:
-        """AC2: Check if supported families match code."""
-        errors = []
-        for family in SUPPORTED_FAMILIES:
-            # Flexible pattern for table row
+    def validate_taxonomy(self, content: str) -> list[str]:
+        errors: list[str] = []
+        for family in sorted(SUPPORTED_FAMILIES):
             pattern = rf"\|[ \t]*`{family}`[ \t]*\|[^|]*\|[^|]*\|[ \t]*`nominal_canonical`[ \t]*\|"
             if not re.search(pattern, content):
                 errors.append(
@@ -66,137 +47,127 @@ class DocConformityValidator:
                 )
         return errors
 
-    def validate_providers(self, content: str) -> List[str]:
-        """AC3: Check if nominal providers match code and no extra providers are documented."""
-        errors = []
-        # Check all nominal providers from code are present
-        for provider in NOMINAL_SUPPORTED_PROVIDERS:
-            patterns = [
-                rf"nominalement uniquement par `{provider}`",
-                rf"`{provider}` seul provider nominalement supporté",
-                rf"NOMINAL_SUPPORTED_PROVIDERS = \[\"{provider}\"\]",
-            ]
-            if not any(re.search(p, content, re.IGNORECASE) for p in patterns):
-                errors.append(
-                    f"Provider error: nominal provider '{provider}' not properly documented."
-                )
+    def validate_providers(self, content: str) -> list[str]:
+        errors: list[str] = []
+        documented_providers: set[str] = set()
 
-        # Check for stale providers (if mentioned as supported but not in code)
-        for extra in ["anthropic", "google", "mistral", "cohere"]:
-            if extra in NOMINAL_SUPPORTED_PROVIDERS:
-                continue
-            # Look for mentions of being supported/nominal
-            if re.search(
-                rf"(?:nominalement supporté|nominalement uniquement par).*`{extra}`",
+        documented_providers.update(
+            re.findall(r"nominalement uniquement par `([^`]+)`", content, flags=re.IGNORECASE)
+        )
+        documented_providers.update(
+            re.findall(
+                r"`([^`]+)` seul provider nominalement (?:supporté|autorisé)",
                 content,
-                re.IGNORECASE,
-            ):
+                flags=re.IGNORECASE,
+            )
+        )
+
+        registry_match = re.search(r'NOMINAL_SUPPORTED_PROVIDERS = \[(.*?)\]', content)
+        if registry_match:
+            documented_providers.update(re.findall(r'"([^"]+)"', registry_match.group(1)))
+
+        documented_providers = {provider.strip() for provider in documented_providers if provider}
+        expected_providers = set(NOMINAL_SUPPORTED_PROVIDERS)
+
+        for provider in sorted(expected_providers - documented_providers):
+            errors.append(f"Provider error: nominal provider '{provider}' not properly documented.")
+
+        for provider in sorted(documented_providers - expected_providers):
+            errors.append(f"Provider error: unexpected nominal provider '{provider}' documented.")
+
+        return errors
+
+    def validate_fallbacks(self, content: str) -> list[str]:
+        errors: list[str] = []
+        critical_fallbacks = ["USE_CASE_FIRST", "RESOLVE_MODEL"]
+
+        for fallback_name in critical_fallbacks:
+            fallback_type = FallbackType[fallback_name]
+            governance = FallbackGovernanceRegistry.GOVERNANCE_MATRIX.get(fallback_type)
+            if not governance:
+                continue
+
+            expected_status = governance.get("status")
+            expected_families = sorted(governance.get("forbidden_families", set()))
+            if expected_status != FallbackStatus.TO_REMOVE:
+                continue
+
+            line_match = re.search(
+                rf"-\s*`{fallback_name}`\s+est(?:\s+d[ée]sormais)?\s+`([^`]+)`.*?sur\s+([^\n;]+)",
+                content,
+                flags=re.IGNORECASE,
+            )
+            if not line_match:
                 errors.append(
-                    f"Provider error: '{extra}' is documented as supported "
-                    "but is not nominal in code."
+                    f"Fallback error: '{fallback_name}' should be documented "
+                    "with status and family perimeter."
+                )
+                continue
+
+            documented_status = line_match.group(1).strip().lower()
+            if documented_status != expected_status.value:
+                errors.append(
+                    f"Fallback error: '{fallback_name}' should be documented "
+                    f"as '{expected_status.value}'."
+                )
+
+            documented_families = set(re.findall(r"`([^`]+)`", line_match.group(2)))
+            if documented_families != set(expected_families):
+                errors.append(
+                    f"Fallback error: '{fallback_name}' families mismatch. "
+                    f"Doc={sorted(documented_families)} Code={expected_families}"
                 )
 
         return errors
 
-    def validate_fallbacks(self, content: str) -> List[str]:
-        """AC4: Check if critical fallbacks match code (status + family perimeter)."""
-        errors = []
-        matrix = FallbackGovernanceRegistry.GOVERNANCE_MATRIX
-
-        critical_fallbacks = ["USE_CASE_FIRST", "RESOLVE_MODEL"]
-        for fb_name in critical_fallbacks:
-            from app.llm_orchestration.models import FallbackStatus, FallbackType
-
-            try:
-                fb_type = FallbackType[fb_name]
-                gov = matrix.get(fb_type)
-                if gov and gov.get("status") == FallbackStatus.TO_REMOVE:
-                    # Check status in doc
-                    if not re.search(
-                        rf"`{fb_name}`.*`à retirer`", content, re.IGNORECASE | re.DOTALL
-                    ):
-                        errors.append(
-                            f"Fallback error: '{fb_name}' status should be 'à retirer' in doc."
-                        )
-
-                    # AC4: Check family perimeter
-                    # For closed families (chat, guidance, etc.), it MUST be forbidden
-                    closed_families = ["chat", "guidance", "natal", "horoscope_daily"]
-                    for family in closed_families:
-                        # Check if doc says it's forbidden for this family
-                        pattern = rf"`{fb_name}`.*interdit.*`{family}`"
-                        if not re.search(pattern, content, re.IGNORECASE):
-                            errors.append(
-                                f"Fallback error: '{fb_name}' should be documented "
-                                f"as 'interdit' for family '{family}'."
-                            )
-
-            except KeyError:
-                continue
-
-        return errors
-
-    def validate_obs_snapshot_classification(self, content: str) -> List[str]:
-        """AC5: Check obs_snapshot field classification (strict, thresholded, informational)."""
-        errors = []
+    def validate_obs_snapshot_classification(self, content: str) -> list[str]:
+        errors: list[str] = []
 
         def get_section(marker: str) -> str:
-            match = re.search(rf"-[ \t]*`{marker}`[ \t]*:[ \t]*(.*)", content, re.IGNORECASE)
-            if match:
-                return match.group(1)
-            return ""
+            match = re.search(rf"-[ \t]*`{marker}`[ \t]*:[ \t]*(.*)", content, flags=re.IGNORECASE)
+            return match.group(1) if match else ""
 
-        # Strict
         strict_section = get_section("strict")
-        for field in GOLDEN_THRESHOLDS_DEFAULT.strict_obs_fields:
-            is_in_doc = f"`{field}`" in strict_section
-            if not is_in_doc and field in [
+        for field in sorted(GOLDEN_THRESHOLDS_DEFAULT.strict_obs_fields):
+            is_documented = f"`{field}`" in strict_section
+            if not is_documented and field in {
                 "requested_provider",
                 "resolved_provider",
                 "executed_provider",
-            ]:
-                is_in_doc = "triplet provider" in strict_section
-
-            if not is_in_doc:
+            }:
+                is_documented = "triplet provider" in strict_section
+            if not is_documented:
                 errors.append(
                     f"ObsSnapshot error: field '{field}' should be classified as 'strict'."
                 )
 
-        # Thresholded
-        threshold_section = get_section("thresholded")
-        for field in GOLDEN_THRESHOLDS_DEFAULT.thresholded_obs_fields:
-            if f"`{field}`" not in threshold_section:
+        thresholded_section = get_section("thresholded")
+        for field in sorted(GOLDEN_THRESHOLDS_DEFAULT.thresholded_obs_fields):
+            if f"`{field}`" not in thresholded_section:
                 errors.append(
                     f"ObsSnapshot error: field '{field}' should be classified as 'thresholded'."
                 )
 
-        # Informational
-        info_section = get_section("informational")
-        for field in GOLDEN_THRESHOLDS_DEFAULT.informational_obs_fields:
-            if f"`{field}`" not in info_section:
+        informational_section = get_section("informational")
+        for field in sorted(GOLDEN_THRESHOLDS_DEFAULT.informational_obs_fields):
+            if f"`{field}`" not in informational_section:
                 errors.append(
                     f"ObsSnapshot error: field '{field}' should be classified as 'informational'."
                 )
 
         return errors
 
-    def is_update_required(self, changed_files: List[str]) -> bool:
-        """AC6, AC8: Returns True if any structural file was changed."""
-        for cf in changed_files:
-            # Normalize path (remove leading ./ if any)
-            normalized_cf = cf.replace("\\", "/").lstrip("./")
-            if normalized_cf in self.STRUCTURAL_FILES:
-                return True
-        return False
+    def is_update_required(self, changed_files: list[str]) -> bool:
+        normalized_changed_files = {
+            changed_file.replace("\\", "/").lstrip("./") for changed_file in changed_files
+        }
+        return any(changed_file in STRUCTURAL_FILES for changed_file in normalized_changed_files)
 
     def check_verification_reference_updated(self, old_content: str, new_content: str) -> bool:
-        """AC7: Check if Date or Reference stable changed."""
-
-        def extract_ref(content: str):
-            marker = "Dernière vérification manuelle contre le pipeline réel du gateway"
-            if marker not in content:
+        def extract_ref(content: str) -> tuple[str | None, str | None]:
+            if VERIFICATION_MARKER not in content:
                 return None, None
-            block = content.split(marker, maxsplit=1)[1]
+            block = content.split(VERIFICATION_MARKER, maxsplit=1)[1]
             date_match = re.search(r"- \*\*Date\*\* : `([^`]+)`", block)
             ref_match = re.search(r"- \*\*Référence stable(?: [^*]+)?\*\* : `([^`]+)`", block)
             return (
@@ -206,24 +177,76 @@ class DocConformityValidator:
 
         old_date, old_ref = extract_ref(old_content)
         new_date, new_ref = extract_ref(new_content)
-
         if not new_date or not new_ref:
-            return False  # Invalid format in new content
-
+            return False
         return new_date != old_date or new_ref != old_ref
 
+    def parse_pr_template_state(self, pr_content: str) -> dict[str, object]:
+        checked_reasons = [
+            reason
+            for reason in AUTHORIZED_PR_REASONS
+            if re.search(rf"- \[x\] `{reason}`", pr_content, flags=re.IGNORECASE)
+        ]
+        return {
+            "oui_checked": bool(re.search(r"- \[x\] \*\*OUI\*\*", pr_content, flags=re.IGNORECASE)),
+            "checked_reasons": checked_reasons,
+        }
+
     def check_pr_template_justification(self, pr_content: str) -> bool:
-        """AC9, AC13: Check if a valid justification is provided in PR content."""
-        # Check if 'OUI' is checked
-        if re.search(r"- \[x\] \*\*OUI\*\*", pr_content, re.IGNORECASE):
+        state = self.parse_pr_template_state(pr_content)
+        if state["oui_checked"]:
             return True
+        return len(state["checked_reasons"]) == 1
 
-        # Check for authorized reasons
-        authorized_reasons = ["REF_ONLY", "FIX_TYPO", "TEST_ONLY", "DOC_ONLY", "NON_LLM"]
-        checked_reasons = []
-        for reason in authorized_reasons:
-            if re.search(rf"- \[x\] `{reason}`", pr_content, re.IGNORECASE):
-                checked_reasons.append(reason)
+    def validate_pr_template_state(
+        self,
+        pr_content: str,
+        *,
+        structural_change: bool,
+        doc_updated: bool,
+    ) -> list[str]:
+        if not structural_change:
+            return []
 
-        # Must have exactly one reason if 'OUI' is not checked
-        return len(checked_reasons) == 1
+        state = self.parse_pr_template_state(pr_content)
+        oui_checked = bool(state["oui_checked"])
+        checked_reasons = list(state["checked_reasons"])
+        errors: list[str] = []
+
+        if doc_updated:
+            if oui_checked:
+                if checked_reasons:
+                    errors.append(
+                        "PR template error: do not check a justification reason "
+                        "when 'OUI' is selected."
+                    )
+                return errors
+
+            if checked_reasons != ["DOC_ONLY"]:
+                errors.append(
+                    "PR template error: documentation update requires either "
+                    "'OUI' or the sole reason 'DOC_ONLY'."
+                )
+            return errors
+
+        if oui_checked:
+            errors.append(
+                "PR template error: 'OUI' cannot be selected when the "
+                "documentation file was not updated."
+            )
+            return errors
+
+        if len(checked_reasons) != 1:
+            errors.append(
+                "PR template error: exactly one authorized justification "
+                "reason must be selected when documentation is not updated."
+            )
+            return errors
+
+        if checked_reasons[0] == "DOC_ONLY":
+            errors.append(
+                "PR template error: 'DOC_ONLY' is not valid when the "
+                "documentation file was not updated."
+            )
+
+        return errors
