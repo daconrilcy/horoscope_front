@@ -61,10 +61,10 @@ class DocConformityValidator:
         return errors
 
     def validate_providers(self, content: str) -> List[str]:
-        """AC3: Check if nominal providers match code."""
+        """AC3: Check if nominal providers match code and no extra providers are documented."""
         errors = []
+        # Check all nominal providers from code are present
         for provider in NOMINAL_SUPPORTED_PROVIDERS:
-            # Multiple possible phrasings from the doc
             patterns = [
                 rf"nominalement uniquement par `{provider}`",
                 rf"`{provider}` seul provider nominalement supporté",
@@ -74,10 +74,26 @@ class DocConformityValidator:
                 errors.append(
                     f"Provider error: nominal provider '{provider}' not properly documented."
                 )
+
+        # Check for stale providers (if mentioned as supported but not in code)
+        for extra in ["anthropic", "google", "mistral", "cohere"]:
+            if extra in NOMINAL_SUPPORTED_PROVIDERS:
+                continue
+            # Look for mentions of being supported/nominal
+            if re.search(
+                rf"(?:nominalement supporté|nominalement uniquement par).*`{extra}`",
+                content,
+                re.IGNORECASE,
+            ):
+                errors.append(
+                    f"Provider error: '{extra}' is documented as supported "
+                    "but is not nominal in code."
+                )
+
         return errors
 
     def validate_fallbacks(self, content: str) -> List[str]:
-        """AC4: Check if critical fallbacks match code (TO_REMOVE on supported perimeter)."""
+        """AC4: Check if critical fallbacks match code (status + family perimeter)."""
         errors = []
         matrix = FallbackGovernanceRegistry.GOVERNANCE_MATRIX
 
@@ -89,12 +105,25 @@ class DocConformityValidator:
                 fb_type = FallbackType[fb_name]
                 gov = matrix.get(fb_type)
                 if gov and gov.get("status") == FallbackStatus.TO_REMOVE:
-                    # More flexible check for 'à retirer'
-                    pattern = rf"`{fb_name}`.*`à retirer`"
-                    if not re.search(pattern, content, re.IGNORECASE | re.DOTALL):
+                    # Check status in doc
+                    if not re.search(
+                        rf"`{fb_name}`.*`à retirer`", content, re.IGNORECASE | re.DOTALL
+                    ):
                         errors.append(
-                            f"Fallback error: '{fb_name}' should be documented as 'à retirer'."
+                            f"Fallback error: '{fb_name}' status should be 'à retirer' in doc."
                         )
+
+                    # AC4: Check family perimeter
+                    # For closed families (chat, guidance, etc.), it MUST be forbidden
+                    closed_families = ["chat", "guidance", "natal", "horoscope_daily"]
+                    for family in closed_families:
+                        # Check if doc says it's forbidden for this family
+                        pattern = rf"`{fb_name}`.*interdit.*`{family}`"
+                        if not re.search(pattern, content, re.IGNORECASE):
+                            errors.append(
+                                f"Fallback error: '{fb_name}' should be documented "
+                                f"as 'interdit' for family '{family}'."
+                            )
 
             except KeyError:
                 continue
@@ -102,22 +131,18 @@ class DocConformityValidator:
         return errors
 
     def validate_obs_snapshot_classification(self, content: str) -> List[str]:
-        """AC5: Check obs_snapshot field classification."""
+        """AC5: Check obs_snapshot field classification (strict, thresholded, informational)."""
         errors = []
 
         def get_section(marker: str) -> str:
-            # Find the line starting with '- `marker` :' and get its content
-            # or look for the block after it.
             match = re.search(rf"-[ \t]*`{marker}`[ \t]*:[ \t]*(.*)", content, re.IGNORECASE)
             if match:
-                # Return the rest of the line and maybe the next lines if they are indented
-                # For now, just the line is often enough if fields are listed there
                 return match.group(1)
             return ""
 
+        # Strict
         strict_section = get_section("strict")
         for field in GOLDEN_THRESHOLDS_DEFAULT.strict_obs_fields:
-            # Handle triplet provider alias
             is_in_doc = f"`{field}`" in strict_section
             if not is_in_doc and field in [
                 "requested_provider",
@@ -131,6 +156,15 @@ class DocConformityValidator:
                     f"ObsSnapshot error: field '{field}' should be classified as 'strict'."
                 )
 
+        # Thresholded
+        threshold_section = get_section("thresholded")
+        for field in GOLDEN_THRESHOLDS_DEFAULT.thresholded_obs_fields:
+            if f"`{field}`" not in threshold_section:
+                errors.append(
+                    f"ObsSnapshot error: field '{field}' should be classified as 'thresholded'."
+                )
+
+        # Informational
         info_section = get_section("informational")
         for field in GOLDEN_THRESHOLDS_DEFAULT.informational_obs_fields:
             if f"`{field}`" not in info_section:

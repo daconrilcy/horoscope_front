@@ -627,9 +627,9 @@ Le registre de gouvernance est `FallbackGovernanceRegistry`.
 
 Points structurants observés :
 
-- `USE_CASE_FIRST` est `à retirer` sur `chat`, `guidance`, `natal`, `horoscope_daily` ;
+- `USE_CASE_FIRST` est `à retirer` et **interdit** sur `chat`, `guidance`, `natal`, `horoscope_daily` ;
 - sur ces familles supportées, l'absence d'assembly canonique obligatoire n'est plus racontée comme un fallback : c'est un rejet explicite de configuration avec télémétrie dédiée ;
-- `RESOLVE_MODEL` est désormais `à retirer` sur `chat`, `guidance`, `natal`, `horoscope_daily` ;
+- `RESOLVE_MODEL` est désormais `à retirer` et **interdit** sur `chat`, `guidance`, `natal`, `horoscope_daily` ;
 - `NARRATOR_LEGACY` est interdit sur `horoscope_daily` ;
 - `TEST_LOCAL` est interdit en production ;
 - un fallback `à retirer` sur un chemin nominal lève une `GatewayError`, même si la famille n'est pas explicitement listée comme interdite ;
