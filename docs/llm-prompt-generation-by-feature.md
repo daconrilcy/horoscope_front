@@ -139,6 +139,7 @@ flowchart TD
 | `66.32` | release snapshot atomique | le runtime nominal lit désormais un snapshot de release actif, activable et rollbackable, avec propagation de `active_snapshot_id/version` et `manifest_entry_id` dans le plan et l'observabilité |
 | `66.33` | durcissement runtime provider OpenAI | `_call_provider()` passe désormais par `ProviderRuntimeManager`, avec retries applicatifs bornés, breaker `provider:family`, timeouts par famille, taxonomie d'erreurs enrichie et observabilité provider-centric propagée jusqu'au snapshot canonique |
 | `66.35` | qualification de charge et gate pré-prod | le gateway dispose désormais d'un harness de qualification par famille, d'un endpoint ops d'évaluation de qualification et d'une doctrine de corrélation stricte à la release active réellement exécutée ; un run sans corrélation release recevable est rejeté |
+| `66.36` | golden regression gate bloquant | le publish admin exécute désormais une campagne golden corrélée au snapshot actif réellement exécutable ; `fail` et `invalid` bloquent, `constrained` publie avec warning explicite |
 
 ## Familles et points d'entrée réels
 
@@ -736,6 +737,82 @@ En pratique :
 - un run sans identifiants de release complets ne vaut pas preuve ;
 - un `429`, `upstream_timeout`, `upstream_circuit_open` ou `retry_budget_exhausted` ne doit jamais être reclassé en succès nominal ;
 - un rejet de qualification pour défaut de corrélation release est un défaut de contexte ops, pas une réussite dégradée.
+
+## Golden Regression Gate (Story 66.36)
+
+La story 66.36 ajoute un second niveau de gate avant publication, complémentaire à 66.35. Là où 66.35 qualifie la capacité et la stabilité sous charge, 66.36 qualifie la non-régression structurelle et d'observabilité sur un golden set synthétique et versionné.
+
+### Point de branchement réel
+
+Le branchement effectif observé est :
+
+- `PATCH /v1/admin/llm/use-cases/{key}/prompts/{version_id}/publish`
+- appel à `GoldenRegressionService.run_campaign(...)` avant `PromptRegistryV2.publish_prompt(...)`
+
+Conséquence runtime :
+
+- `pass` : publication autorisée ;
+- `constrained` : publication autorisée avec warning `golden_regression_constrained_drift` ;
+- `fail` : publication bloquée avec réponse structurée `409` ;
+- `invalid` : publication bloquée avec réponse structurée `409`.
+
+### Source de vérité et artefacts
+
+Les artefacts versionnés introduits pour ce gate sont :
+
+- `backend/app/llm_orchestration/services/golden_regression_service.py`
+- `backend/app/llm_orchestration/golden_regression_registry.py`
+- `backend/tests/fixtures/golden/`
+
+La séparation doctrinale est désormais la suivante :
+
+- la fixture golden porte l'entrée synthétique et la baseline canonique ;
+- le registre golden porte la classification des champs `obs_snapshot` et les états legacy interdits ;
+- le rapport golden produit le verdict agrégé et les diffs safe-by-design.
+
+### Corrélation release obligatoire
+
+Un run golden recevable doit être corrélé à la release réellement exécutable, selon les mêmes invariants de traçabilité que 66.32 et 66.35 :
+
+- `active_snapshot_id`
+- `active_snapshot_version`
+- `manifest_entry_id`
+
+Le service résout d'abord le snapshot actif, puis charge le manifest de release, puis résout une entrée de manifest non ambiguë à partir des fixtures. Si cette corrélation échoue, le verdict global devient `invalid` et la publication est bloquée.
+
+### Ce que compare le gate
+
+La comparaison golden n'est pas textuelle. Elle repose sur :
+
+- `validation_status`
+- la `shape` canonique de `structured_output`
+- la présence de placeholders survivants
+- `obs_snapshot` avec classification `strict`, `thresholded`, `informational`
+- l'absence de réapparition de chemins legacy interdits
+
+La comparaison applique une canonicalisation explicite avant diff pour neutraliser les variations d'ordre ou de structure non pertinentes au verdict.
+
+### Anti-réapparition legacy
+
+Sur le périmètre nominal supporté, le gate considère comme bloquants :
+
+- `legacy_use_case_fallback`
+- `legacy_execution_profile_fallback`
+- `non_nominal_provider_tolerated`
+- `fallback_resolve_model`
+- `fallback_provider_unsupported`
+- tout `fallback_kind` interdit par le registre golden
+
+Cette règle vaut autant pour les champs d'observabilité que pour `execution_profile_source`.
+
+### Règle de lecture ops
+
+Un publish supporté ne doit plus être considéré recevable si :
+
+- la campagne golden n'a pas été exécutée ;
+- la campagne retourne `fail` ;
+- la campagne retourne `invalid` faute de corrélation release exploitable ;
+- un run laisse réapparaître un chemin legacy interdit, même si la structure de sortie semble nominale.
 
 ### Axes de lecture
 

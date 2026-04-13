@@ -74,7 +74,9 @@ def test_admin_llm_crud_flow():
 
     # 1. Setup use case
     with SessionLocal() as db:
-        uc = LlmUseCaseConfigModel(key="test_chat", display_name="Chat", description="Chat use case")
+        uc = LlmUseCaseConfigModel(
+            key="test_chat", display_name="Chat", description="Chat use case"
+        )
         db.add(uc)
         db.commit()
 
@@ -137,6 +139,7 @@ def test_admin_llm_crud_flow():
     assert rb_resp.json()["data"]["id"] == version_id
     assert rb_resp.json()["data"]["status"] == "published"
 
+
 def test_admin_llm_targeted_rollback():
     _cleanup_tables()
     admin_token = _register_user("admin-rollback@example.com", "admin")
@@ -144,7 +147,9 @@ def test_admin_llm_targeted_rollback():
 
     with SessionLocal() as db:
         db.add(
-            LlmUseCaseConfigModel(key="test_natal", display_name="Natal", description="Natal use case")
+            LlmUseCaseConfigModel(
+                key="test_natal", display_name="Natal", description="Natal use case"
+            )
         )
         db.commit()
 

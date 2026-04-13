@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -10,7 +10,6 @@ from app.llm_orchestration.models import (
     ExecutionUserInput,
     GatewayConfigError,
     LLMExecutionRequest,
-    UseCaseConfig,
 )
 
 
@@ -61,7 +60,7 @@ async def test_allow_legacy_fallback_for_deprecated_use_case():
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case="chat",  # deprecated key
-            feature="chat",   # Explicitly set feature to trigger perimeter check
+            feature="chat",  # Explicitly set feature to trigger perimeter check
             locale="fr-FR",
         ),
         context=ExecutionContext(),
@@ -81,7 +80,7 @@ async def test_allow_legacy_fallback_for_deprecated_use_case():
         # This should now RAISE GatewayConfigError because chat is a supported feature
         with pytest.raises(GatewayConfigError) as exc:
             await gateway._resolve_plan(request, db=db)
-        
+
         assert "Mandatory assembly missing for supported chat family" in str(exc.value)
 
 

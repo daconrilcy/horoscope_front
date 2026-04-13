@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.admin_models import (
-    LlmExecutionProfileCreate,
     PromptAssemblyConfig,
 )
 from app.llm_orchestration.feature_taxonomy import (
@@ -146,16 +145,16 @@ async def test_execution_profile_admin_hardening():
     """Test Story 66.23: ExecutionProfile validation REJETTE les clés legacy (AC11)."""
     # Ici on teste via le validateur SQLAlchemy injecté dans le modèle
     from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-    
+
     prof = LlmExecutionProfileModel(
         name="Test",
         feature=LEGACY_NATAL_FEATURE,
         model="m",
-        provider="openai", # Must have provider to publish
-        created_by="t"
+        provider="openai",  # Must have provider to publish
+        created_by="t",
     )
-    
+
     with pytest.raises(ValueError) as exc:
         prof.status = PromptStatus.PUBLISHED
-    
+
     assert "forbidden for nominal use" in str(exc.value)

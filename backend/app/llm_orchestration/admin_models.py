@@ -160,6 +160,7 @@ class LlmUseCaseConfig(BaseModel):
     allowed_persona_ids: List[str] = Field(default_factory=list)
     eval_fixtures_path: Optional[str] = None
     eval_failure_threshold: Optional[float] = None
+    golden_set_path: Optional[str] = None
     active_prompt_version_id: Optional[uuid.UUID] = None
 
     model_config = ConfigDict(from_attributes=True)

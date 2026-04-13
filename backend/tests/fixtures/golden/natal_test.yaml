@@ -1,0 +1,28 @@
+- fixture_id: "natal-nominal-01"
+  family: "natal"
+  input:
+    use_case: "natal"
+    feature: "natal"
+    subfeature: "interpretation"
+    plan: "free"
+    chart_json: "{}"
+    natal_data: {}
+    evidence_catalog: []
+    level: "short"
+    user_id: 123
+  baseline:
+    validation_status: "valid"
+    output_shape:
+      interpretation: "str"
+      key_points: ["str"]
+    obs_snapshot:
+      pipeline_kind: "nominal_canonical"
+      execution_path_kind: "canonical_assembly"
+      fallback_kind: null
+      requested_provider: "openai"
+      resolved_provider: "openai"
+      executed_provider: "openai"
+      context_compensation_status: "injector_applied"
+      max_output_tokens_source: "execution_profile"
+      max_output_tokens_final: 1000
+      manifest_entry_id: "natal:interpretation:free:fr-FR"

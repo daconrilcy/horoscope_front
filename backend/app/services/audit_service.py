@@ -8,7 +8,7 @@ permettant la traçabilité des actions effectuées dans l'application.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -118,7 +118,7 @@ class AuditService:
             target_id=None if model.target_id is None else str(model.target_id),
             status=str(model.status or ""),
             details=model.details or {},
-            created_at=model.created_at or datetime.utcnow(),
+            created_at=model.created_at or datetime.now(timezone.utc),
         )
 
     @staticmethod

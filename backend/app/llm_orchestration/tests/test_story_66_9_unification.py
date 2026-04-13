@@ -36,13 +36,14 @@ async def test_deprecated_use_case_redirection(db):
     db.add(uc_config)
 
     from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+
     prof = LlmExecutionProfileModel(
         name="test",
         feature="horoscope_daily",
         model="gpt-4o",
         provider="openai",
         status=PromptStatus.PUBLISHED,
-        created_by="test"
+        created_by="test",
     )
     db.add(prof)
 
@@ -76,7 +77,8 @@ async def test_deprecated_use_case_redirection(db):
 
     # Mock the actual provider call to avoid OpenAI usage
     with patch.object(gateway, "_call_provider", new_callable=AsyncMock) as mock_call:
-        from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
+        from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
         mock_call.return_value = GatewayResult(
             use_case="horoscope_daily_free",
             request_id="req-dep",
@@ -87,8 +89,11 @@ async def test_deprecated_use_case_redirection(db):
         )
         with patch.object(gateway, "_validate_and_normalize") as mock_val:
             from app.llm_orchestration.services.output_validator import ValidationResult
-            mock_val.return_value = ValidationResult(valid=True, parsed={}, errors=[], normalizations_applied=[])
-            
+
+            mock_val.return_value = ValidationResult(
+                valid=True, parsed={}, errors=[], normalizations_applied=[]
+            )
+
             # Execute full request to trigger mapping in execute_request
             result = await gateway.execute_request(request, db)
 
@@ -109,7 +114,8 @@ async def test_naming_validation_on_publish(db, caplog):
     # 1. Setup draft version with _free suffix
     version = LlmPromptVersionModel(
         id=uuid.uuid4(),
-        use_case_key="horoscope_daily_free", # Use a key that is actually in catalog but marked deprecated
+        use_case_key="horoscope_daily_free",  # Use a key that is actually in catalog
+        # but marked deprecated
         developer_prompt="PROMPT",
         status=PromptStatus.DRAFT,
         model="gpt-4o",
@@ -151,13 +157,14 @@ async def test_deprecated_full_redirection(db):
         db.add(uc_config)
 
     from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+
     prof = LlmExecutionProfileModel(
         name="test full",
         feature="horoscope_daily",
         model="gpt-4o-premium",
         provider="openai",
         status=PromptStatus.PUBLISHED,
-        created_by="test"
+        created_by="test",
     )
     db.add(prof)
 
@@ -185,8 +192,10 @@ async def test_deprecated_full_redirection(db):
     )
 
     from unittest.mock import AsyncMock, patch
+
     with patch.object(gateway, "_call_provider", new_callable=AsyncMock) as mock_call:
-        from app.llm_orchestration.models import GatewayResult, GatewayMeta, UsageInfo
+        from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+
         mock_call.return_value = GatewayResult(
             use_case="horoscope_daily_full",
             request_id="req-full",
@@ -197,8 +206,11 @@ async def test_deprecated_full_redirection(db):
         )
         with patch.object(gateway, "_validate_and_normalize") as mock_val:
             from app.llm_orchestration.services.output_validator import ValidationResult
-            mock_val.return_value = ValidationResult(valid=True, parsed={}, errors=[], normalizations_applied=[])
-            
+
+            mock_val.return_value = ValidationResult(
+                valid=True, parsed={}, errors=[], normalizations_applied=[]
+            )
+
             result = await gateway.execute_request(request, db)
 
     assert request.user_input.feature == "horoscope_daily"

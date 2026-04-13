@@ -59,6 +59,7 @@ class LlmUseCaseConfigModel(Base):
     allowed_persona_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
     eval_fixtures_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     eval_failure_threshold: Mapped[float] = mapped_column(Float, default=0.20)
+    golden_set_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
 
 class LlmPromptVersionModel(Base):

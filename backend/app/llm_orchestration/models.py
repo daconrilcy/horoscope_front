@@ -572,6 +572,38 @@ class PerformanceQualificationReport(BaseModel):
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class GoldenRegressionResult(BaseModel):
+    """
+    Résultat individuel d'une fixture golden (Story 66.36 AC12).
+    """
+
+    fixture_id: str
+    family: str
+    verdict: Literal["pass", "fail", "constrained", "invalid"]
+    diffs_structure: Dict[str, Any] = Field(default_factory=dict)
+    diffs_obs: Dict[str, Any] = Field(default_factory=dict)
+    legacy_errors: List[str] = Field(default_factory=list)
+    details: Optional[str] = None
+
+
+class GoldenRegressionReport(BaseModel):
+    """
+    Rapport global de campagne de non-régression golden (Story 66.36 AC12).
+    """
+
+    active_snapshot_id: Optional[uuid.UUID] = None
+    active_snapshot_version: Optional[str] = None
+    manifest_entry_id: Optional[str] = None
+    environment: str
+    verdict: Literal["pass", "fail", "constrained", "invalid"]
+    total: int
+    passed: int
+    failed: int
+    constrained: int
+    results: List[GoldenRegressionResult] = Field(default_factory=list)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 class GatewayError(Exception):
     """Base error for LLM Gateway."""
 
@@ -640,3 +672,5 @@ GatewayResult.model_rebuild()
 ReplayResult.model_rebuild()
 EvalFixtureResult.model_rebuild()
 EvalReport.model_rebuild()
+GoldenRegressionResult.model_rebuild()
+GoldenRegressionReport.model_rebuild()

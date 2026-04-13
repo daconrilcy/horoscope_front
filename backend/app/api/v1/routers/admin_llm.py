@@ -118,6 +118,7 @@ class UseCaseUpdatePayload(BaseModel):
     fallback_use_case_key: Optional[str] = None
     eval_fixtures_path: Optional[str] = None
     eval_failure_threshold: Optional[float] = None
+    golden_set_path: Optional[str] = None
 
 
 class PersonaAssociationPayload(BaseModel):
@@ -525,6 +526,9 @@ def list_use_cases(
                 safety_profile=uc.safety_profile,
                 fallback_use_case_key=uc.fallback_use_case_key,
                 allowed_persona_ids=uc.allowed_persona_ids,
+                eval_fixtures_path=uc.eval_fixtures_path,
+                eval_failure_threshold=uc.eval_failure_threshold,
+                golden_set_path=uc.golden_set_path,
                 active_prompt_version_id=active_prompt.id if active_prompt else None,
             )
         )
@@ -654,6 +658,10 @@ def update_use_case_config(
         uc.eval_failure_threshold = payload.eval_failure_threshold
         update_details["eval_failure_threshold"] = uc.eval_failure_threshold
 
+    if payload.golden_set_path is not None:
+        uc.golden_set_path = payload.golden_set_path
+        update_details["golden_set_path"] = uc.golden_set_path
+
     db.commit()
     db.refresh(uc)
 
@@ -694,6 +702,9 @@ def update_use_case_config(
         safety_profile=uc.safety_profile,
         fallback_use_case_key=uc.fallback_use_case_key,
         allowed_persona_ids=uc.allowed_persona_ids,
+        eval_fixtures_path=uc.eval_fixtures_path,
+        eval_failure_threshold=uc.eval_failure_threshold,
+        golden_set_path=uc.golden_set_path,
         active_prompt_version_id=active_prompt.id if active_prompt else None,
     )
 
@@ -778,6 +789,9 @@ def associate_persona(
         safety_profile=uc.safety_profile,
         fallback_use_case_key=uc.fallback_use_case_key,
         allowed_persona_ids=uc.allowed_persona_ids,
+        eval_fixtures_path=uc.eval_fixtures_path,
+        eval_failure_threshold=uc.eval_failure_threshold,
+        golden_set_path=uc.golden_set_path,
         active_prompt_version_id=active_prompt.id if active_prompt else None,
     )
 
@@ -966,8 +980,38 @@ async def publish_prompt(
                 details=eval_report.model_dump(),
             )
 
+    golden_report = None
+    if uc.golden_set_path:
+        from app.llm_orchestration.services.golden_regression_service import (
+            GoldenRegressionService,
+        )
+
+        golden_report = await GoldenRegressionService.run_campaign(
+            use_case_key=key,
+            prompt_version_id=str(version_id),
+            golden_set_path=uc.golden_set_path,
+            db=db,
+        )
+        # AC21: Block on 'fail' or 'invalid' (High fix)
+        if golden_report.verdict in ("fail", "invalid"):
+            return _error_response(
+                status_code=409,
+                request_id=request_id,
+                code="golden_regression_failed",
+                message=(
+                    f"Golden regression campaign {golden_report.verdict} "
+                    "(Blocking drift or invalid context detected)"
+                ),
+                details=golden_report.model_dump(),
+            )
+
     try:
         version = PromptRegistryV2.publish_prompt(db, version_id)
+
+        # Operational Policy for 'constrained' (Medium fix)
+        warnings = []
+        if golden_report and golden_report.verdict == "constrained":
+            warnings.append("golden_regression_constrained_drift")
 
         _record_audit_event(
             db,
@@ -977,7 +1021,12 @@ async def publish_prompt(
             target_type="llm_prompt",
             target_id=str(version.id),
             status="success",
-            details={"use_case_key": key, "eval_run": eval_report is not None},
+            details={
+                "use_case_key": key,
+                "eval_run": eval_report is not None,
+                "golden_campaign": golden_report is not None,
+                "golden_verdict": golden_report.verdict if golden_report else None,
+            },
         )
         db.commit()
 
@@ -985,9 +1034,12 @@ async def publish_prompt(
             "data": LlmPromptVersion.model_validate(version),
             "meta": {
                 "request_id": request_id,
+                "warnings": warnings,
                 "eval_report": eval_report.model_dump() if eval_report else None,
+                "golden_report": golden_report.model_dump() if golden_report else None,
             },
         }
+
     except ValueError as err:
         from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
 
@@ -1034,8 +1086,6 @@ def rollback_prompt(
             key,
             target_version_id=payload.target_version_id if payload else None,
         )
-
-        from app.schemas.audit_details import LlmPromptAuditDetails
 
         _record_audit_event(
             db,

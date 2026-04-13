@@ -79,7 +79,6 @@ async def test_daily_path_is_nominal_canonical(db: Session):
             meta=GatewayMeta(latency_ms=0, model="test"),
         )
 
-
         result = await gateway.execute_request(request, db=db)
 
         # 1. Verify Taxonomy redirection
