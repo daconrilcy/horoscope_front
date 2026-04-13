@@ -138,6 +138,7 @@ flowchart TD
 | `66.31` | validation fail-fast de cohérence | publish et startup bloquent désormais les incohérences de configuration sur l'état publié actif, avec `error_code` structurés et scan startup borné à la cible runtime réellement résoluble |
 | `66.32` | release snapshot atomique | le runtime nominal lit désormais un snapshot de release actif, activable et rollbackable, avec propagation de `active_snapshot_id/version` et `manifest_entry_id` dans le plan et l'observabilité |
 | `66.33` | durcissement runtime provider OpenAI | `_call_provider()` passe désormais par `ProviderRuntimeManager`, avec retries applicatifs bornés, breaker `provider:family`, timeouts par famille, taxonomie d'erreurs enrichie et observabilité provider-centric propagée jusqu'au snapshot canonique |
+| `66.35` | qualification de charge et gate pré-prod | le gateway dispose désormais d'un harness de qualification par famille, d'un endpoint de verdict ops et d'une doctrine de corrélation stricte à la release active réellement exécutée ; un run sans `active_snapshot_id`, `active_snapshot_version` ou `manifest_entry_id` recevable est rejeté |
 
 ## Familles et points d'entrée réels
 
@@ -659,6 +660,69 @@ Champs observés :
 - `breaker_state`
 - `breaker_scope`
 
+## Qualification de charge et capacité (Story 66.35)
+
+La story 66.35 ajoute une couche de qualification d'exploitabilité au-dessus du runtime déjà documenté par 66.25, 66.32 et 66.33. Cette couche ne change pas la taxonomie nominale du gateway ; elle transforme les signaux existants en verdict machine-évaluable avant promotion production.
+
+### Endpoint et contrat de qualification
+
+L'entrée ops dédiée est :
+
+- `POST /v1/ops/monitoring/performance-qualification`
+
+Le contrat actuellement observé est le suivant :
+
+- l'évaluation reçoit les compteurs de run (`total_requests`, `success_count`, `protection_count`, `error_count`), les percentiles de latence et le débit ;
+- le contrôleur traduit un contexte de qualification invalide en réponse structurée `422` avec `code=invalid_qualification_context` ;
+- le service rejette explicitement un run si `active_snapshot_id` ou `active_snapshot_version` ne peuvent pas être résolus ;
+- `manifest_entry_id` n'est accepté implicite que si le snapshot actif ne contient qu'une seule entrée de manifest ; sur un snapshot multi-cibles, il doit être fourni explicitement, sinon la qualification est rejetée ;
+- un manifest invalide ou non exploitable n'est pas traité comme une qualification partielle ; il déclenche un rejet métier explicite.
+
+### Corrélation release exigée
+
+La règle d'exploitation est désormais :
+
+- aucun rapport de qualification recevable ne doit être produit sans `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id` ;
+- `active_snapshot_id/version` décrivent la release active réellement exécutée ;
+- `manifest_entry_id` identifie l'entrée exacte du manifest figé par la release ;
+- une corrélation partielle n'est pas "mieux que rien" ; elle invalide le run ;
+- cette exigence vaut même si les métriques de latence et d'erreur semblent bonnes.
+
+### Ce que 66.35 qualifie réellement
+
+Le périmètre qualifié est le périmètre nominal supporté :
+
+- `chat`
+- `guidance`
+- `natal`
+- `horoscope_daily`
+
+La qualification vise :
+
+- charge nominale par famille ;
+- burst court ;
+- stress avec protections runtime et recovery ;
+- consommation de budget d'erreurs ;
+- verdict `go / no-go / go-with-constraints`.
+
+Elle ne doit pas être interprétée comme la preuve d'un fallback fonctionnel nominal. Sur ces familles, les incidents provider restent prioritairement visibles comme erreurs explicites ou protections runtime canoniques.
+
+### Lecture correcte d'un run qualifié
+
+Un run de qualification doit être lu conjointement avec :
+
+- le snapshot canonique `obs_snapshot` ;
+- les axes `executed_provider_mode`, `attempt_count`, `provider_error_code`, `breaker_state`, `breaker_scope` ;
+- la release active (`active_snapshot_id`, `active_snapshot_version`) ;
+- l'entrée de manifest (`manifest_entry_id`) ;
+- le verdict du rapport de capacité.
+
+En pratique :
+
+- un run sans identifiants de release complets ne vaut pas preuve ;
+- un `429`, `upstream_timeout`, `upstream_circuit_open` ou `retry_budget_exhausted` ne doit jamais être reclassé en succès nominal ;
+- un rejet de qualification pour défaut de corrélation release est un défaut de contexte ops, pas une réussite dégradée.
+
 ### Axes de lecture
 
 | Axe | Sens |
@@ -930,7 +994,7 @@ Toute mention de vérification ci-dessous atteste d'une **revue manuelle effecti
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
-- **Date** : `2026-04-12`
-- **Référence stable (Commit SHA)** : `affb4f69`
+- **Date** : `2026-04-13`
+- **Référence stable (Commit SHA)** : `f1231546`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.

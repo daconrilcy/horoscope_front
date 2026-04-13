@@ -1,3 +1,5 @@
+import pytest
+
 from app.llm_orchestration.services.performance_qualification_service import (
     PerformanceQualificationService,
 )
@@ -91,3 +93,37 @@ def test_evaluate_run_budget_consumption():
     assert report.verdict == "go-with-constraints"
     assert report.budget_remaining == 0.0
     assert "SLO Warning: error rate" in report.constraints[0]
+
+
+def test_resolve_manifest_entry_id_accepts_explicit_value():
+    manifest_entry_id = PerformanceQualificationService._resolve_manifest_entry_id(
+        {"targets": {"chat:None:free:fr-FR": {}}},
+        "chat:None:free:fr-FR",
+    )
+    assert manifest_entry_id == "chat:None:free:fr-FR"
+
+
+def test_resolve_manifest_entry_id_derives_single_target():
+    manifest_entry_id = PerformanceQualificationService._resolve_manifest_entry_id(
+        {"targets": {"chat:None:free:fr-FR": {}}},
+        None,
+    )
+    assert manifest_entry_id == "chat:None:free:fr-FR"
+
+
+def test_resolve_manifest_entry_id_rejects_multi_target_manifest_without_id():
+    with pytest.raises(ValueError, match="manifest_entry_id is required"):
+        PerformanceQualificationService._resolve_manifest_entry_id(
+            {
+                "targets": {
+                    "chat:None:free:fr-FR": {},
+                    "guidance:None:premium:fr-FR": {},
+                }
+            },
+            None,
+        )
+
+
+def test_resolve_manifest_entry_id_rejects_invalid_manifest_shape():
+    with pytest.raises(ValueError, match="manifest is invalid"):
+        PerformanceQualificationService._resolve_manifest_entry_id(["not-a-dict"], None)

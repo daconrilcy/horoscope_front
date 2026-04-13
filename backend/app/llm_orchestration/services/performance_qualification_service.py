@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Mapping
 from typing import Literal, Optional
 
 from sqlalchemy import select
@@ -16,6 +17,27 @@ from app.llm_orchestration.performance_registry import (
 
 
 class PerformanceQualificationService:
+    @staticmethod
+    def _resolve_manifest_entry_id(manifest: object, manifest_entry_id: Optional[str]) -> str:
+        if manifest_entry_id:
+            return manifest_entry_id
+
+        if not isinstance(manifest, Mapping):
+            raise ValueError("Qualification rejected: active snapshot manifest is invalid.")
+
+        targets = manifest.get("targets")
+        if not isinstance(targets, Mapping) or not targets:
+            raise ValueError(
+                "Qualification rejected: active snapshot manifest does not expose targets."
+            )
+
+        if len(targets) == 1:
+            return str(next(iter(targets)))
+
+        raise ValueError(
+            "Qualification rejected: manifest_entry_id is required for multi-target snapshots."
+        )
+
     @staticmethod
     async def evaluate_run_async(
         family: str,
@@ -41,13 +63,13 @@ class PerformanceQualificationService:
             from app.llm_orchestration.services.release_service import ReleaseService
 
             active_snapshot_id = await ReleaseService.get_active_release_id(db)
-        
+
         if not active_snapshot_id:
             raise ValueError("Qualification rejected: No active snapshot ID could be resolved.")
 
-        if db and active_snapshot_id and not active_snapshot_version:
+        snapshot = None
+        if db and active_snapshot_id and (not active_snapshot_version or not manifest_entry_id):
             from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
-            from sqlalchemy import select
 
             stmt = select(LlmReleaseSnapshotModel).where(
                 LlmReleaseSnapshotModel.id == active_snapshot_id
@@ -55,19 +77,16 @@ class PerformanceQualificationService:
             snapshot = db.execute(stmt).scalar_one_or_none()
             if snapshot:
                 active_snapshot_version = snapshot.version
-                
-                # Story 66.35 AC9/AC14: Resolve manifest_entry_id from manifest
-                if not manifest_entry_id and snapshot.manifest:
-                    targets = snapshot.manifest.get("targets", {})
-                    # Reverse lookup to find manifest entry key for this run context
-                    # If this is a load test run, we expect the context to have 
-                    # provided entry id or we derive from current state if needed.
-                    # As manifest resolution is complex, we assume manifest_entry_id 
-                    # is passed or is derived from context.
-                    pass
-        
+
         if not active_snapshot_version:
-            raise ValueError("Qualification rejected: No active snapshot version could be resolved.")
+            raise ValueError(
+                "Qualification rejected: No active snapshot version could be resolved."
+            )
+
+        manifest_entry_id = PerformanceQualificationService._resolve_manifest_entry_id(
+            snapshot.manifest if snapshot is not None else None,
+            manifest_entry_id,
+        )
 
         return PerformanceQualificationService.evaluate_run(
             family=family,

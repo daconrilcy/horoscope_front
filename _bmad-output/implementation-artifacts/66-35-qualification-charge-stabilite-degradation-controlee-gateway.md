@@ -223,9 +223,15 @@ Inférences à expliciter dans la story :
 
 ### Review Findings
 
-- [ ] [Review][Patch] Rejet de qualification non contractuel en `500` au lieu d'une erreur métier structurée [backend/app/llm_orchestration/services/performance_qualification_service.py:45]
-- [ ] [Review][Patch] Corrélation release encore incomplète: `active_snapshot_version` et `manifest_entry_id` restent facultatifs dans un rapport pourtant annoncé comme recevable [backend/app/llm_orchestration/services/performance_qualification_service.py:48]
-- [ ] [Review][Patch] `.gitignore` a été enregistré en binaire/UTF-16 avec caractères NUL, ce qui fragilise les nouvelles règles d'ignore [/.gitignore:32]
+- [x] [Review][Patch] Rejet de qualification non contractuel en `500` au lieu d'une erreur métier structurée [backend/app/llm_orchestration/services/performance_qualification_service.py:45]
+- [x] [Review][Patch] Corrélation release encore incomplète: `active_snapshot_version` et `manifest_entry_id` restent facultatifs dans un rapport pourtant annoncé comme recevable [backend/app/llm_orchestration/services/performance_qualification_service.py:48]
+- [x] [Review][Patch] `.gitignore` a été enregistré en binaire/UTF-16 avec caractères NUL, ce qui fragilise les nouvelles règles d'ignore [/.gitignore:32]
+
+### Review Findings (Follow-up)
+
+- [x] [Review][Patch] `manifest_entry_id` reste non résolu malgré le bloc annoncé AC9/AC14: la branche `snapshot.manifest` se termine par `pass`, ce qui laisse encore une corrélation partielle [backend/app/llm_orchestration/services/performance_qualification_service.py:59]
+- [x] [Review][Patch] Un `snapshot.manifest` mal typé peut refaire sortir la qualification en erreur non contrôlée via `.get(...)` sans garde de type [backend/app/llm_orchestration/services/performance_qualification_service.py:60]
+- [x] [Review][Patch] `.gitignore` reste encodé avec caractères NUL/UTF-16 sur les règles `uvicorn.log`, donc le nettoyage repo n'est pas proprement finalisé [/.gitignore:34]
 
 ## Dev Agent Record
 
@@ -239,6 +245,7 @@ Gemini-CLI
 - Integration with load test: `scripts/load-test-critical.ps1`
 - Automated Markdown report: `scripts/generate-performance-report.ps1`
 - Fault Injection mechanism: `backend/app/llm_orchestration/providers/provider_runtime_manager.py`
+- Post-review hardening of qualification correlation and repo hygiene: `backend/app/llm_orchestration/services/performance_qualification_service.py`, `.gitignore`
 
 ### Completion Notes List
 
@@ -250,10 +257,15 @@ Gemini-CLI
 - Corrigé des régressions dans les tests existants liées au changement de signature de `ResponsesClient.execute`.
 - Intégré l'évaluation automatisée dans l'endpoint `POST /v1/ops/monitoring/performance-qualification`.
 - Corrigé un bug de configuration au démarrage lié au use case `daily_prediction` manquant dans le catalogue.
+- Durci la qualification post-review pour exiger une corrélation runtime complète à la release active: `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id`.
+- Borné la dérivation de `manifest_entry_id` au seul cas mono-cible et transformé les manifests invalides en rejet métier structuré au lieu d'une erreur non contrôlée.
+- Réécrit `.gitignore` en ASCII propre et retiré les `__pycache__`/`.pyc` du commit afin de rétablir une hygiène de repo compatible avec la story 66.35.
+- Ajouté des tests unitaires ciblés sur la résolution stricte de `manifest_entry_id` et le rejet des manifests invalides.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/66-35-qualification-charge-stabilite-degradation-controlee-gateway.md`
+- `.gitignore`
 - `backend/app/llm_orchestration/models.py`
 - `backend/app/llm_orchestration/performance_registry.py`
 - `backend/app/llm_orchestration/services/performance_qualification_service.py`
@@ -267,3 +279,4 @@ Gemini-CLI
 - `backend/app/llm_orchestration/tests/test_performance_qualification.py`
 - `backend/app/llm_orchestration/tests/test_incident_simulation.py`
 - `backend/app/llm_orchestration/tests/test_gateway_regressions_fix.py`
+- `docs/llm-prompt-generation-by-feature.md`
