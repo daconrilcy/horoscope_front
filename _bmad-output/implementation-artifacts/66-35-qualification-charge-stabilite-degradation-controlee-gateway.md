@@ -221,6 +221,12 @@ Inférences à expliciter dans la story :
   - [x] Exécuter les suites ciblées liées au gateway runtime, à l'observabilité et au harness de charge.
   - [x] Exécuter la campagne de qualification retenue et générer le rapport de capacité.
 
+### Review Findings
+
+- [ ] [Review][Patch] Rejet de qualification non contractuel en `500` au lieu d'une erreur métier structurée [backend/app/llm_orchestration/services/performance_qualification_service.py:45]
+- [ ] [Review][Patch] Corrélation release encore incomplète: `active_snapshot_version` et `manifest_entry_id` restent facultatifs dans un rapport pourtant annoncé comme recevable [backend/app/llm_orchestration/services/performance_qualification_service.py:48]
+- [ ] [Review][Patch] `.gitignore` a été enregistré en binaire/UTF-16 avec caractères NUL, ce qui fragilise les nouvelles règles d'ignore [/.gitignore:32]
+
 ## Dev Agent Record
 
 ### Agent Model Used

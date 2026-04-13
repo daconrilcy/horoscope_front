@@ -48,12 +48,17 @@ class PerformanceQualificationService:
         if db and active_snapshot_id and not active_snapshot_version:
             from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
 
-            stmt = select(LlmReleaseSnapshotModel.version).where(
+            stmt = select(LlmReleaseSnapshotModel).where(
                 LlmReleaseSnapshotModel.id == active_snapshot_id
             )
-            # Use execute sync because db is a Session, but ReleaseService.get_active_release_id
-            # handled the sync/async dispatch correctly.
-            active_snapshot_version = db.execute(stmt).scalar_one_or_none()
+            snapshot = db.execute(stmt).scalar_one_or_none()
+            if snapshot:
+                active_snapshot_version = snapshot.version
+                # In a real manifest implementation, manifest_entry_id would be resolved here too
+                # For now, we ensure we have at least snapshot version
+        
+        if not active_snapshot_version:
+            raise ValueError("Qualification rejected: No active snapshot version could be resolved.")
 
         return PerformanceQualificationService.evaluate_run(
             family=family,

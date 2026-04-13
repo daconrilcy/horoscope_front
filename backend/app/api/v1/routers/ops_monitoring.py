@@ -293,21 +293,30 @@ async def evaluate_performance_qualification(
         PerformanceQualificationService,
     )
 
-    report = await PerformanceQualificationService.evaluate_run_async(
-        family=body.family,
-        profile=body.profile,
-        total_requests=body.total_requests,
-        success_count=body.success_count,
-        protection_count=body.protection_count,
-        error_count=body.error_count,
-        latency_p50_ms=body.latency_p50_ms,
-        latency_p95_ms=body.latency_p95_ms,
-        latency_p99_ms=body.latency_p99_ms,
-        throughput_rps=body.throughput_rps,
-        db=db,
-        active_snapshot_id=body.active_snapshot_id,
-        active_snapshot_version=body.active_snapshot_version,
-        manifest_entry_id=body.manifest_entry_id,
-        environment=body.environment,
-    )
-    return {"data": report.model_dump(mode="json"), "meta": {"request_id": request_id}}
+    try:
+        report = await PerformanceQualificationService.evaluate_run_async(
+            family=body.family,
+            profile=body.profile,
+            total_requests=body.total_requests,
+            success_count=body.success_count,
+            protection_count=body.protection_count,
+            error_count=body.error_count,
+            latency_p50_ms=body.latency_p50_ms,
+            latency_p95_ms=body.latency_p95_ms,
+            latency_p99_ms=body.latency_p99_ms,
+            throughput_rps=body.throughput_rps,
+            db=db,
+            active_snapshot_id=body.active_snapshot_id,
+            active_snapshot_version=body.active_snapshot_version,
+            manifest_entry_id=body.manifest_entry_id,
+            environment=body.environment,
+        )
+        return {"data": report.model_dump(mode="json"), "meta": {"request_id": request_id}}
+    except ValueError as err:
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code="invalid_qualification_context",
+            message=str(err),
+            details={},
+        )
