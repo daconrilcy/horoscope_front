@@ -770,6 +770,8 @@ La séparation doctrinale est désormais la suivante :
 - le registre golden porte la classification des champs `obs_snapshot` et les états legacy interdits ;
 - le rapport golden produit le verdict agrégé et les diffs safe-by-design.
 
+À date, le golden set effectivement introduit reste minimal et sert de socle versionné pour le gate. Il n'est pas encore la couverture exhaustive finale de toutes les variantes métier de `chat`, `guidance`, `natal` et `horoscope_daily`, mais le contrat de campagne et le point de branchement bloquant sont désormais en place.
+
 ### Corrélation release obligatoire
 
 Un run golden recevable doit être corrélé à la release réellement exécutable, selon les mêmes invariants de traçabilité que 66.32 et 66.35 :
@@ -792,6 +794,27 @@ La comparaison golden n'est pas textuelle. Elle repose sur :
 
 La comparaison applique une canonicalisation explicite avant diff pour neutraliser les variations d'ordre ou de structure non pertinentes au verdict.
 
+En pratique, la couche de canonicalisation actuellement observée :
+
+- trie les clés des objets pour stabiliser les diffs structurels ;
+- compare la shape et non le wording éditorial ;
+- traite les placeholders survivants comme une dérive bloquante ;
+- ne transforme pas le rapport en diff textuel de contenu.
+
+### Classification `obs_snapshot`
+
+Le registre golden applique désormais une classification explicite des champs d'observabilité :
+
+- `strict` : `pipeline_kind`, `execution_path_kind`, `fallback_kind`, triplet provider, `context_compensation_status`, `max_output_tokens_source` ;
+- `thresholded` : `max_output_tokens_final` avec tolérance versionnée ;
+- `informational` : `executed_provider_mode`, `attempt_count`, `provider_error_code`, `breaker_state`, `breaker_scope`, `active_snapshot_id`, `active_snapshot_version`, `manifest_entry_id`.
+
+Règle de lecture :
+
+- un écart `strict` est bloquant ;
+- un écart `thresholded` peut produire un verdict `constrained` ;
+- un champ `informational` enrichit le rapport mais ne bloque pas à lui seul.
+
 ### Anti-réapparition legacy
 
 Sur le périmètre nominal supporté, le gate considère comme bloquants :
@@ -804,6 +827,16 @@ Sur le périmètre nominal supporté, le gate considère comme bloquants :
 - tout `fallback_kind` interdit par le registre golden
 
 Cette règle vaut autant pour les champs d'observabilité que pour `execution_profile_source`.
+
+### Rapport safe-by-design
+
+Le rapport de golden regression reste aligné sur la politique de minimisation de 66.34 :
+
+- pas de prompt brut ;
+- pas de `raw_output` ;
+- pas de dump complet de `structured_output` ;
+- pas de contenu utilisateur rejouable dans la réponse admin nominale ;
+- seulement des identifiants de fixture, verdicts, diffs structurels bornés, diffs `obs_snapshot` et erreurs legacy.
 
 ### Règle de lecture ops
 
@@ -1025,6 +1058,13 @@ Elle vérifie notamment :
 - différenciation de persona ;
 - stabilité des contrats ;
 - cohérence entre gouvernance attendue et chemin observé.
+
+Depuis 66.36, cette matrice n'est plus seulement une grille de qualification documentaire. Une partie de ses invariants est désormais exécutée avant publication via la campagne golden :
+
+- comparaison structurelle machine-readable ;
+- comparaison `obs_snapshot` classifiée ;
+- corrélation obligatoire à la release active ;
+- rejet bloquant de toute réapparition legacy interdite.
 
 Depuis 66.24 (mis à jour en 66.28) :
 

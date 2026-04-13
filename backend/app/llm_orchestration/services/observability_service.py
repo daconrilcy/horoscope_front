@@ -318,6 +318,7 @@ async def log_call(
                 requested_provider=requested_provider,
                 resolved_provider=resolved_provider,
                 executed_provider=executed_provider,
+                context_quality=context_quality,
                 context_compensation_status=context_compensation_status,
                 max_output_tokens_source=max_output_tokens_source,
                 max_output_tokens_final=max_output_tokens_final,

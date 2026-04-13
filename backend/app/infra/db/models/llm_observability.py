@@ -98,6 +98,7 @@ class LlmCallLogModel(Base):
     requested_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
     resolved_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
     executed_provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    context_quality: Mapped[str | None] = mapped_column(String(32), nullable=True)
     context_compensation_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     max_output_tokens_source: Mapped[str | None] = mapped_column(String(32), nullable=True)
     max_output_tokens_final: Mapped[int | None] = mapped_column(Integer, nullable=True)

@@ -55,6 +55,7 @@ from app.api.v1.routers.ops_entitlement_mutation_audits import (
 )
 from app.api.v1.routers.ops_feature_flags import router as ops_feature_flags_router
 from app.api.v1.routers.ops_monitoring import router as ops_monitoring_router
+from app.api.v1.routers.ops_monitoring_llm import router as ops_monitoring_llm_router
 from app.api.v1.routers.ops_persona import router as ops_persona_router
 from app.api.v1.routers.predictions import router as predictions_router
 from app.api.v1.routers.privacy import router as privacy_router
@@ -716,6 +717,7 @@ app.include_router(enterprise_credentials_router)
 app.include_router(guidance_router)
 app.include_router(natal_interpretation_router)
 app.include_router(ops_monitoring_router)
+app.include_router(ops_monitoring_llm_router)
 app.include_router(ops_feature_flags_router)
 app.include_router(ops_persona_router)
 app.include_router(ops_entitlement_mutation_audits_router)
