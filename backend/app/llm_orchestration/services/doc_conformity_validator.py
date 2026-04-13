@@ -51,11 +51,9 @@ class DocConformityValidator:
     def validate_taxonomy(self, content: str) -> List[str]:
         """AC2: Check if supported families match code."""
         errors = []
-        # Look for the table under 'Familles et points d'entrée réels'
-        # Or look for where families are mentioned.
-        # Simple check: each supported family must be mentioned as a canonical family.
         for family in SUPPORTED_FAMILIES:
-            pattern = rf"\| `{family}` \|.*\|.*\| `nominal_canonical` \|"
+            # Flexible pattern for table row
+            pattern = rf"\|[ \t]*`{family}`[ \t]*\|[^|]*\|[^|]*\|[ \t]*`nominal_canonical`[ \t]*\|"
             if not re.search(pattern, content):
                 errors.append(
                     f"Taxonomy error: family '{family}' not found as 'nominal_canonical' in doc."
@@ -66,17 +64,16 @@ class DocConformityValidator:
         """AC3: Check if nominal providers match code."""
         errors = []
         for provider in NOMINAL_SUPPORTED_PROVIDERS:
-            # Check if mentioned as only nominal provider
-            pattern = rf"nominalement uniquement par `{provider}`"
-            if (
-                not re.search(pattern, content)
-                and f"`{provider}` seul provider nominalement supporté" not in content
-            ):
-                # Fallback check for another phrasing
-                if not re.search(rf"NOMINAL_SUPPORTED_PROVIDERS = \[\"{provider}\"\]", content):
-                    errors.append(
-                        f"Provider error: nominal provider '{provider}' not properly documented."
-                    )
+            # Multiple possible phrasings from the doc
+            patterns = [
+                rf"nominalement uniquement par `{provider}`",
+                rf"`{provider}` seul provider nominalement supporté",
+                rf"NOMINAL_SUPPORTED_PROVIDERS = \[\"{provider}\"\]",
+            ]
+            if not any(re.search(p, content, re.IGNORECASE) for p in patterns):
+                errors.append(
+                    f"Provider error: nominal provider '{provider}' not properly documented."
+                )
         return errors
 
     def validate_fallbacks(self, content: str) -> List[str]:
@@ -84,19 +81,17 @@ class DocConformityValidator:
         errors = []
         matrix = FallbackGovernanceRegistry.GOVERNANCE_MATRIX
 
-        # We check specific ones mentioned in the story and doc
         critical_fallbacks = ["USE_CASE_FIRST", "RESOLVE_MODEL"]
         for fb_name in critical_fallbacks:
-            # Find in matrix (mapping string name to Enum is easier via value)
-            # Actually FallbackType is an Enum, we can search by name if we have it
             from app.llm_orchestration.models import FallbackStatus, FallbackType
 
             try:
                 fb_type = FallbackType[fb_name]
                 gov = matrix.get(fb_type)
                 if gov and gov.get("status") == FallbackStatus.TO_REMOVE:
-                    # Check if name and 'à retirer' are in the same vicinity
-                    if not re.search(rf"`{fb_name}`.*`à retirer`", content, re.IGNORECASE):
+                    # More flexible check for 'à retirer'
+                    pattern = rf"`{fb_name}`.*`à retirer`"
+                    if not re.search(pattern, content, re.IGNORECASE | re.DOTALL):
                         errors.append(
                             f"Fallback error: '{fb_name}' should be documented as 'à retirer'."
                         )
@@ -109,24 +104,39 @@ class DocConformityValidator:
     def validate_obs_snapshot_classification(self, content: str) -> List[str]:
         """AC5: Check obs_snapshot field classification."""
         errors = []
-        # Check 'strict' fields
-        for field in GOLDEN_THRESHOLDS_DEFAULT.strict_obs_fields:
-            pattern = rf"- `strict` :.*`{field}`"
-            if not re.search(pattern, content):
-                # Try with comma or other separators
-                if f"`{field}`" not in content or "classification `strict`" not in content:
-                    errors.append(
-                        f"ObsSnapshot error: field '{field}' should be classified as 'strict'."
-                    )
 
-        # Check 'informational' fields
+        def get_section(marker: str) -> str:
+            # Find the line starting with '- `marker` :' and get its content
+            # or look for the block after it.
+            match = re.search(rf"-[ \t]*`{marker}`[ \t]*:[ \t]*(.*)", content, re.IGNORECASE)
+            if match:
+                # Return the rest of the line and maybe the next lines if they are indented
+                # For now, just the line is often enough if fields are listed there
+                return match.group(1)
+            return ""
+
+        strict_section = get_section("strict")
+        for field in GOLDEN_THRESHOLDS_DEFAULT.strict_obs_fields:
+            # Handle triplet provider alias
+            is_in_doc = f"`{field}`" in strict_section
+            if not is_in_doc and field in [
+                "requested_provider",
+                "resolved_provider",
+                "executed_provider",
+            ]:
+                is_in_doc = "triplet provider" in strict_section
+
+            if not is_in_doc:
+                errors.append(
+                    f"ObsSnapshot error: field '{field}' should be classified as 'strict'."
+                )
+
+        info_section = get_section("informational")
         for field in GOLDEN_THRESHOLDS_DEFAULT.informational_obs_fields:
-            pattern = rf"- `informational` :.*`{field}`"
-            if not re.search(pattern, content):
-                if f"`{field}`" not in content or "classification `informational`" not in content:
-                    errors.append(
-                        f"ObsSnapshot error: field '{field}' should be classified as 'informational'."
-                    )
+            if f"`{field}`" not in info_section:
+                errors.append(
+                    f"ObsSnapshot error: field '{field}' should be classified as 'informational'."
+                )
 
         return errors
 
@@ -161,3 +171,19 @@ class DocConformityValidator:
             return False  # Invalid format in new content
 
         return new_date != old_date or new_ref != old_ref
+
+    def check_pr_template_justification(self, pr_content: str) -> bool:
+        """AC9, AC13: Check if a valid justification is provided in PR content."""
+        # Check if 'OUI' is checked
+        if re.search(r"- \[x\] \*\*OUI\*\*", pr_content, re.IGNORECASE):
+            return True
+
+        # Check for authorized reasons
+        authorized_reasons = ["REF_ONLY", "FIX_TYPO", "TEST_ONLY", "DOC_ONLY", "NON_LLM"]
+        checked_reasons = []
+        for reason in authorized_reasons:
+            if re.search(rf"- \[x\] `{reason}`", pr_content, re.IGNORECASE):
+                checked_reasons.append(reason)
+
+        # Must have exactly one reason if 'OUI' is not checked
+        return len(checked_reasons) == 1

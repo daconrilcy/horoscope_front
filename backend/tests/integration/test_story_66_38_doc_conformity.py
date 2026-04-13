@@ -98,6 +98,33 @@ Si le code diverge
     assert validator.check_verification_reference_updated(old_content, new_content_updated_ref)
 
 
+def test_doc_conformity_check_pr_template_justification():
+    validator = DocConformityValidator(Path("/tmp"))
+
+    # Valid: OUI checked
+    pr_oui = "- [x] **OUI** : J'ai mis à jour doc.md"
+    assert validator.check_pr_template_justification(pr_oui)
+
+    # Valid: One reason checked
+    pr_reason = "- [x] `REF_ONLY` : Justification."
+    assert validator.check_pr_template_justification(pr_reason)
+
+    # Invalid: Multiple reasons checked
+    pr_multi = """
+- [x] `REF_ONLY`
+- [x] `FIX_TYPO`
+    """
+    assert not validator.check_pr_template_justification(pr_multi)
+
+    # Invalid: No boxes checked
+    pr_none = "- [ ] `REF_ONLY`"
+    assert not validator.check_pr_template_justification(pr_none)
+
+    # Invalid: Reason checked but not in authorized list (should not happen with template but for robustness)
+    pr_bad_reason = "- [x] `UNKNOWN_REASON`"
+    assert not validator.check_pr_template_justification(pr_bad_reason)
+
+
 def test_taxonomy_mismatch_fails_validation():
     root = Path(__file__).resolve().parents[3]
     validator = DocConformityValidator(root)
