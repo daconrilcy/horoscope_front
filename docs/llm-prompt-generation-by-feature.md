@@ -109,7 +109,7 @@ flowchart TD
 | Release runtime | `LlmReleaseSnapshotModel`, `LlmActiveReleaseModel`, `ReleaseService` | figer et activer atomiquement le bundle `assembly/profile/schema/persona` réellement servi ; sur le périmètre nominal supporté, cette release active est obligatoire | édition directe d'artefacts vivants au moment de l'exécution |
 | Vérité finale | `ResolvedExecutionPlan` | agrégation immuable de l'exécution courante, y compris la release active et l'entrée de manifest utilisée | persistance admin |
 
-## Stories 66.9 à 66.33
+## Stories 66.9 à 66.35
 
 | Story | Apport canonique | Impact runtime observable |
 |---|---|---|
@@ -138,7 +138,7 @@ flowchart TD
 | `66.31` | validation fail-fast de cohérence | publish et startup bloquent désormais les incohérences de configuration sur l'état publié actif, avec `error_code` structurés et scan startup borné à la cible runtime réellement résoluble |
 | `66.32` | release snapshot atomique | le runtime nominal lit désormais un snapshot de release actif, activable et rollbackable, avec propagation de `active_snapshot_id/version` et `manifest_entry_id` dans le plan et l'observabilité |
 | `66.33` | durcissement runtime provider OpenAI | `_call_provider()` passe désormais par `ProviderRuntimeManager`, avec retries applicatifs bornés, breaker `provider:family`, timeouts par famille, taxonomie d'erreurs enrichie et observabilité provider-centric propagée jusqu'au snapshot canonique |
-| `66.35` | qualification de charge et gate pré-prod | le gateway dispose désormais d'un harness de qualification par famille, d'un endpoint de verdict ops et d'une doctrine de corrélation stricte à la release active réellement exécutée ; un run sans `active_snapshot_id`, `active_snapshot_version` ou `manifest_entry_id` recevable est rejeté |
+| `66.35` | qualification de charge et gate pré-prod | le gateway dispose désormais d'un harness de qualification par famille, d'un endpoint ops d'évaluation de qualification et d'une doctrine de corrélation stricte à la release active réellement exécutée ; un run sans corrélation release recevable est rejeté |
 
 ## Familles et points d'entrée réels
 
@@ -550,7 +550,7 @@ Le runtime provider n'est plus écrasé en un unique `llm_unavailable`.
 
 ### 6. Observabilité Opérationnelle
 Le snapshot d'observabilité et les logs `llm_call_logs` sont enrichis :
-- `executed_provider_mode` : nominal ou dégradé.
+- `executed_provider_mode` : mode réel d'exécution provider observé à runtime.
 - `attempt_count` : nombre total de tentatives pour l'appel.
 - `provider_error_code` : code d'erreur brut renvoyé par OpenAI.
 - `breaker_state` / `breaker_scope` : état du circuit au moment de l'appel.
@@ -566,6 +566,7 @@ La story 66.33 introduit le vocabulaire `nominal` / `dégradé`, mais le contrat
 Autrement dit, à date :
 - `executed_provider_mode=nominal` signifie appel OpenAI réellement exécuté ;
 - `executed_provider_mode=circuit_open` ou un code voisin décrit un court-circuit runtime explicite ;
+- sur le périmètre nominal supporté, un éventuel libellé `degraded` ne doit pas être lu comme un fallback fonctionnel produit ; il ne décrit au mieux qu'un état technique générique à corréler avec la télémétrie canonique.
 - un mode dégradé productisé par famille n'est pas encore une voie nominale décrite pour `chat`, `guidance`, `natal` ou `horoscope_daily`.
 
 ## Verrou provider
@@ -675,18 +676,31 @@ Le contrat actuellement observé est le suivant :
 - l'évaluation reçoit les compteurs de run (`total_requests`, `success_count`, `protection_count`, `error_count`), les percentiles de latence et le débit ;
 - le contrôleur traduit un contexte de qualification invalide en réponse structurée `422` avec `code=invalid_qualification_context` ;
 - le service rejette explicitement un run si `active_snapshot_id` ou `active_snapshot_version` ne peuvent pas être résolus ;
-- `manifest_entry_id` n'est accepté implicite que si le snapshot actif ne contient qu'une seule entrée de manifest ; sur un snapshot multi-cibles, il doit être fourni explicitement, sinon la qualification est rejetée ;
+- `manifest_entry_id` doit être résolu de manière non ambiguë ; il peut être fourni explicitement, ou implicitement déduit seulement si le snapshot actif ne contient qu'une seule entrée de manifest ; sur un snapshot multi-cibles, l'absence de valeur explicite invalide la qualification ;
 - un manifest invalide ou non exploitable n'est pas traité comme une qualification partielle ; il déclenche un rejet métier explicite.
 
 ### Corrélation release exigée
 
 La règle d'exploitation est désormais :
 
-- aucun rapport de qualification recevable ne doit être produit sans `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id` ;
+- aucun rapport de qualification recevable ne doit être produit sans résolution non ambiguë de `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id` ;
 - `active_snapshot_id/version` décrivent la release active réellement exécutée ;
 - `manifest_entry_id` identifie l'entrée exacte du manifest figé par la release ;
 - une corrélation partielle n'est pas "mieux que rien" ; elle invalide le run ;
 - cette exigence vaut même si les métriques de latence et d'erreur semblent bonnes.
+
+### Source de vérité des seuils
+
+La doctrine de qualification n'est pas seulement narrative. À date, la source de vérité versionnée des seuils utilisés par le verdict vit dans :
+
+- [backend/app/llm_orchestration/performance_registry.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/performance_registry.py) pour les `PERFORMANCE_SLO_REGISTRY` et `PERFORMANCE_SLA_REGISTRY` par famille ;
+- [backend/app/llm_orchestration/services/performance_qualification_service.py](/c:/dev/horoscope_front/backend/app/llm_orchestration/services/performance_qualification_service.py) pour l'application de ces seuils au run, le calcul du budget d'erreurs et la production du verdict.
+
+En conséquence :
+
+- le `pass / fail / constrained-pass` n'est pas décidé par lecture manuelle du rapport ;
+- le rapport lisible doit être interprété comme la projection d'une décision déjà calculée par le code ;
+- toute évolution des thresholds SLO/SLA ou du budget d'erreurs doit passer par ces artefacts versionnés.
 
 ### Ce que 66.35 qualifie réellement
 
@@ -733,7 +747,7 @@ En pratique :
 | provider triplet | provider demandé, résolu, exécuté |
 | `context_compensation_status` | compensation de contexte observée |
 | `max_output_tokens_source` | source finale de l'arbitrage de sortie |
-| `executed_provider_mode` | mode réel d'exécution provider (`nominal`, `circuit_open`, `degraded` ou équivalent stable) |
+| `executed_provider_mode` | mode réel d'exécution provider (`nominal`, `circuit_open` ou autre valeur technique stable) ; sur le périmètre supporté, une valeur `degraded` éventuelle ne vaut pas fallback produit |
 | `attempt_count` | nombre total de tentatives réellement consommées |
 | `provider_error_code` | taxonomie finale de l'échec provider ou du rejet runtime |
 | `breaker_state/scope` | état et granularité du breaker ayant piloté la décision runtime |
