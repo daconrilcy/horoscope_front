@@ -41,6 +41,9 @@ class PerformanceQualificationService:
             from app.llm_orchestration.services.release_service import ReleaseService
 
             active_snapshot_id = await ReleaseService.get_active_release_id(db)
+        
+        if not active_snapshot_id:
+            raise ValueError("Qualification rejected: No active snapshot ID could be resolved.")
 
         if db and active_snapshot_id and not active_snapshot_version:
             from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
