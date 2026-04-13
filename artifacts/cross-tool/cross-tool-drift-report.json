@@ -1,0 +1,138 @@
+{
+  "dataset_id": "golden-pro-v1",
+  "generated_at": "2026-02-28T09:53:47.937341Z",
+  "dev_only": true,
+  "summary": {
+    "cases_count": 2,
+    "passed_cases": 2,
+    "failed_cases": 0,
+    "failed_metrics": 0,
+    "max_delta_degrees": 0.0,
+    "drift_by_metric": {}
+  },
+  "cases": [
+    {
+      "case_id": "golden-pro-001",
+      "status": "passed",
+      "max_delta_degrees": 0.0,
+      "metrics": {
+        "asc": {
+          "expected": 147.033682,
+          "actual": 147.033682,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.05,
+          "within_tolerance": true
+        },
+        "cusp_1": {
+          "expected": 147.033682,
+          "actual": 147.033682,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.05,
+          "within_tolerance": true
+        },
+        "cusp_10": {
+          "expected": 47.009905,
+          "actual": 47.009905,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.05,
+          "within_tolerance": true
+        },
+        "mc": {
+          "expected": 47.009905,
+          "actual": 47.009905,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.05,
+          "within_tolerance": true
+        },
+        "mercury": {
+          "expected": 123.125606,
+          "actual": 123.125606,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.01,
+          "within_tolerance": true
+        },
+        "moon": {
+          "expected": 154.960685,
+          "actual": 154.960685,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.01,
+          "within_tolerance": true
+        },
+        "sun": {
+          "expected": 102.200902,
+          "actual": 102.200902,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.01,
+          "within_tolerance": true
+        }
+      },
+      "failures": []
+    },
+    {
+      "case_id": "golden-pro-002",
+      "status": "passed",
+      "max_delta_degrees": 0.0,
+      "metrics": {
+        "asc": {
+          "expected": 103.899862,
+          "actual": 103.899862,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.05,
+          "within_tolerance": true
+        },
+        "cusp_1": {
+          "expected": 103.899862,
+          "actual": 103.899862,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.05,
+          "within_tolerance": true
+        },
+        "cusp_10": {
+          "expected": 345.300643,
+          "actual": 345.300643,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.05,
+          "within_tolerance": true
+        },
+        "mc": {
+          "expected": 345.300643,
+          "actual": 345.300643,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.05,
+          "within_tolerance": true
+        },
+        "mercury": {
+          "expected": 337.577891,
+          "actual": 337.577891,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.01,
+          "within_tolerance": true
+        },
+        "moon": {
+          "expected": 65.366095,
+          "actual": 65.366095,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.01,
+          "within_tolerance": true
+        },
+        "sun": {
+          "expected": 0.986544,
+          "actual": 0.986544,
+          "delta_degrees": 0.0,
+          "tolerance_degrees": 0.01,
+          "within_tolerance": true
+        }
+      },
+      "failures": []
+    }
+  ],
+  "compared_settings": [
+    {
+      "engine": "swisseph",
+      "ephe": "swisseph-moshier-integrated",
+      "frame": "geocentric",
+      "zodiac": "tropical",
+      "house_system": "placidus"
+    }
+  ]
+}
