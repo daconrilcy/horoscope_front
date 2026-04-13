@@ -871,6 +871,105 @@ Pour l'axe `context_compensation_status`, la lecture correcte est désormais :
 - `injector_applied` : une consigne additionnelle a été injectée ;
 - `unknown` : l'information n'est pas déterminable sur le chemin considéré.
 
+### Couche d'exploitation ops dédiée (Story 66.37)
+
+Depuis 66.37, l'observabilité LLM ne se limite plus au dashboard admin agrégé par `use_case`.
+
+Une surface read-only dédiée est exposée via :
+
+- `GET /v1/ops/monitoring/llm/dashboard`
+
+Cette surface lit exclusivement `llm_call_logs` comme vérité consolidée d'exploitation. Elle ne repose pas sur `metrics.py`, qui reste limité aux signaux `instance_local`.
+
+Le read model ops expose actuellement :
+
+- des vues 1D : `family`, `plan`, `persona`, `pipeline_kind`, `active_snapshot_version`, `active_snapshot_id`, `manifest_entry_id` ;
+- des vues croisées : `family × execution_path_kind`, `family × fallback_kind`, `family × requested_provider/resolved_provider/executed_provider`, `family × context_quality`, `family × max_output_tokens_source` ;
+- pour chaque bucket : volume, `avg`, `p50`, `p95`, `p99`, taux d'échec, taux de repair, taux de fallback.
+
+Règles de lecture importantes :
+
+- la dimension `persona` côté ops est portée par `persona_id` ;
+- un `display_value` peut afficher `LlmPersonaModel.name` en dashboard, mais ce libellé éditorial ne doit pas participer au label set des alertes ;
+- `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id` sont propagés pour corréler une dérive à la release réellement exécutée ;
+- la surface reste safe-by-design : pas de prompt, pas de `raw_output`, pas de dump `structured_output`.
+
+### Alertes d'exploitation LLM
+
+66.37 introduit aussi une première couche d'alertes structurées calculées sur la fenêtre demandée à partir de `llm_call_logs`.
+
+Décision d'architecture à date :
+
+- les alertes 66.37 sont aujourd'hui calculées à la demande par le read model ops ;
+- aucun `alert event` append-only dédié à 66.37 n'est encore persisté dans cette première version ;
+- si une persistance d'événements d'alerte est ajoutée plus tard, elle devra réutiliser le pattern idempotent déjà employé côté ops canonique, et non un scheduler opportuniste embarqué dans FastAPI.
+
+Classes actuellement exposées :
+
+- `llm_repair_rate_hike` : hausse du taux de repairs sur `family × plan × persona × pipeline_kind` ;
+- `llm_nominal_fallback_detected` : `fallback_kind` observé sur le périmètre nominal `chat`, `guidance`, `natal`, `horoscope_daily` ;
+- `llm_provider_divergence` : divergence sur le triplet `requested/resolved/executed_provider` ;
+- `llm_impossible_state_detected` : combinaison runtime interdite par contrat ;
+- `llm_unknown_path_violation` : apparition d'un `unknown` non permis par contrat.
+
+Doctrine d'implémentation actuelle :
+
+- la baseline repairs compare la fenêtre courante à la fenêtre précédente de même taille ;
+- le déclenchement exige un volume minimal, un seuil absolu de taux, et un écart relatif ou absolu suffisant ;
+- les labels d'alerte restent canoniques et bornés ;
+- les annotations restent limitées à `summary`, `description`, `runbook_url`.
+
+Table de triage actuellement documentée :
+
+| Classe | Sévérité actuelle | Lecture ops |
+|---|---|---|
+| `llm_repair_rate_hike` | `high` | dérive de qualité de sortie confirmée par seuil + baseline |
+| `llm_nominal_fallback_detected` | `high` | compatibilité anormale observée sur périmètre nominal |
+| `llm_provider_divergence` | `high` | divergence runtime sur triplet provider |
+| `llm_unknown_path_violation` | `high` | violation de contrat sur chemin observé |
+| `llm_impossible_state_detected` | `critical` | état interdit par contrat, à investiguer immédiatement |
+
+Politique anti-bruit actuelle :
+
+- pas de firing unitaire sur simple métrique locale d'instance ;
+- calcul sur fenêtre explicite (`1h`, `24h`, `7d`) à partir de `llm_call_logs` ;
+- volume minimal et delta minimal pour les repairs ;
+- pas encore de mécanisme `for`/`keep_firing_for` persisté dans l'application elle-même.
+
+Cette dernière limite est volontaire : dans l'état courant, l'anti-flapping repose d'abord sur les règles de calcul du read model ; une couche de persistance ou d'orchestration externe devra porter les politiques temporelles plus avancées si le besoin apparaît.
+
+### Contrat unique des états permis et interdits
+
+La source de vérité des états d'exploitation autorisés/interdits est centralisée dans `backend/app/llm_orchestration/policies/ops_contract.py`.
+
+Ce module gouverne :
+
+- les chemins `unknown` encore tolérés ;
+- les combinaisons `pipeline_kind` / `execution_path_kind` / `fallback_kind` impossibles ;
+- les seuils contractuels de repairs ;
+- la canonicalisation du label `persona` pour l'alerting.
+
+Conséquence : une logique d'anomalie ne doit pas réinventer ses propres règles dans plusieurs services. Toute évolution du contrat ops doit partir de ce module unique.
+
+### Place des rejets canoniques dans la lecture ops
+
+La surface `GET /v1/ops/monitoring/llm/dashboard` documente des exécutions effectivement persistées dans `llm_call_logs` et les anomalies dérivées de ces exécutions.
+
+Elle ne doit pas être lue comme la source primaire des rejets canoniques bloquants. Les cas `runtime_rejected` et `supported_perimeter_rejection` restent portés par leur télémétrie structurée dédiée :
+
+- événements structurés de rejet ;
+- logs structurés associés ;
+- compteur discriminant `llm_runtime_rejection_total` avec `reason`.
+
+Règle de lecture :
+
+- un `fallback_observed` correspond à une exécution complétée avec compatibilité observée ;
+- un `runtime_rejected` correspond à un rejet canonique et n'est pas reclassé en faux chemin nominal ;
+- un `impossible_state_detected` correspond à une combinaison persistée mais interdite par contrat ;
+- un `unknown_contract_violation` correspond à un état observé non permis par le contrat versionné.
+
+Autrement dit, la surface ops 66.37 complète la lecture des rejets canoniques, mais ne remplace pas la télémétrie spécifique qui les porte déjà.
+
 ## Protection des données sensibles (Story 66.34)
 
 L'application applique désormais une politique runtime unique de classification et de rédaction pour empêcher qu'un prompt, une sortie LLM, une donnée natale, un identifiant métier corrélable ou un secret soit recopié par erreur dans une surface d'exploitation.
