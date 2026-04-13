@@ -102,6 +102,13 @@ try {
     }
   }
 
+  Invoke-Step -Name "LLM Documentation conformity check" -Action {
+    Set-Location $root
+    Invoke-ExternalChecked -Label "python backend/scripts/check_doc_conformity.py" -Command {
+      python backend/scripts/check_doc_conformity.py
+    }
+  }
+
   Invoke-Step -Name "Canonical entitlement DB consistency CLI" -Action {
     if ($canonicalDbReady) {
       Set-Location $root

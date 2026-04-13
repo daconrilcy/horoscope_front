@@ -1199,7 +1199,18 @@ Depuis 66.24 (mis à jour en 66.28) :
 
 ## Maintenance de cette documentation
 
-Ce document constitue une **règle d'ingénierie explicite**. Sa maintenance est **obligatoire** et **traçable**.
+Ce document constitue une **règle d'ingénierie explicite**. Sa maintenance est **obligatoire**, **traçable** et désormais **partiellement automatisée** (Story 66.38).
+
+### Contrôles automatiques (CI/Quality Gate)
+
+Le pipeline de CI et le quality gate local (`scripts/quality-gate.ps1`) exécutent désormais les contrôles suivants :
+- **Lint de conformité** : Vérifie l'alignement entre ce document et le code réel pour :
+  - La taxonomie canonique (`SUPPORTED_FAMILIES`).
+  - Le provider nominal supporté (`NOMINAL_SUPPORTED_PROVIDERS`).
+  - Le statut des fallbacks critiques (`FallbackGovernanceRegistry`).
+  - La classification des champs `obs_snapshot` (`GoldenRegressionRegistry`).
+- **Détection d'impact** : Si un fichier structurel du pipeline LLM est modifié, la CI exige une mise à jour de la section de vérification ci-dessous (Date et Référence stable).
+- **Validation du template PR** : Vérifie qu'un motif de justification autorisé est fourni en cas d'absence de mise à jour documentaire.
 
 ### Discipline de mise à jour et règle de PR
 
