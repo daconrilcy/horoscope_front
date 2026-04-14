@@ -263,7 +263,7 @@ describe("SettingsPage", () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByText("Basic")).toBeInTheDocument()
+        expect(screen.getByRole("heading", { name: "Basic", level: 4 })).toBeInTheDocument()
         expect(screen.getByText("Plan actuel")).toBeInTheDocument()
       })
     })

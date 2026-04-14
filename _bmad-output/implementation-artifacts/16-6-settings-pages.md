@@ -207,6 +207,7 @@ Claude Opus 4.5
 - Ajouté styles CSS pour settings, modal, et boutons danger
 - Tests complets : 18 tests pour SettingsPage couvrant tous les ACs
 - Correction des tests existants (DashboardPage, App, router) pour compatibilité
+- 2026-04-14 : test frontend AC4 de la page abonnement re-stabilisé dans `frontend/src/tests/SettingsPage.test.tsx` en ciblant explicitement le heading `h4` du plan `Basic`, afin d'éviter l'ambiguïté créée par le rendu simultané du résumé d'abonnement et de la carte de plan.
 
 ### File List
 - frontend/src/pages/SettingsPage.tsx (modifié)
@@ -265,3 +266,4 @@ Claude Opus 4.5
   - MEDIUM-3: DeleteAccountModal — aria-live="polite" ajouté au paragraphe processing pour annonce aux lecteurs d'écran
   - LOW-1: AccountSettings — formatDate retourne "—" au lieu du isoDate brut si date invalide
   - LOW-2: DeleteAccountModal — handleFirstConfirm/handleFinalConfirm wrappés dans useCallback; isMountedRef ajouté pour protéger le catch asynchrone contre les setState sur composant démonté; normalizeConfirmInput extraite hors du composant
+- 2026-04-14: Correctif de maintenance test-only sur `SettingsPage.test.tsx` : l'assertion AC4 "Basic" utilise désormais `getByRole("heading", { name: "Basic", level: 4 })` au lieu d'un `getByText("Basic")` ambigu après enrichissement du résumé d'abonnement.
