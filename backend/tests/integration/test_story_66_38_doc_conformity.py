@@ -130,7 +130,7 @@ def test_validate_pr_template_state_accepts_single_reason_without_doc_update() -
     validator = DocConformityValidator(Path("/tmp"))
     assert (
         validator.validate_pr_template_state(
-            "- [x] `REF_ONLY`",
+            "- [x] `NON_LLM`",
             structural_change=True,
             doc_updated=False,
         )
@@ -213,13 +213,17 @@ def test_script_pr_body_validation(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(
         script,
-        "get_changed_files",
-        lambda: ["backend/app/llm_orchestration/gateway.py"],
+        "resolve_git_context",
+        lambda v: script.GitResolutionResult(
+            mode="test",
+            changed_files=["backend/app/llm_orchestration/gateway.py"],
+            structural_files_detected=["backend/app/llm_orchestration/gateway.py"],
+        ),
     )
     monkeypatch.delenv("DOC_CONFORMITY_PR_BODY", raising=False)
     assert script.main() == 1
 
-    monkeypatch.setenv("DOC_CONFORMITY_PR_BODY", "- [x] `REF_ONLY` : some refactoring")
+    monkeypatch.setenv("DOC_CONFORMITY_PR_BODY", "- [x] `NON_LLM` : some refactoring")
     assert script.main() == 0
 
     monkeypatch.setenv("DOC_CONFORMITY_PR_BODY", "- [x] **OUI**")
@@ -242,11 +246,15 @@ def test_script_requires_pr_section_when_doc_updated_and_pr_context_exists(
 
     monkeypatch.setattr(
         script,
-        "get_changed_files",
-        lambda: [
-            "backend/app/llm_orchestration/gateway.py",
-            "docs/llm-prompt-generation-by-feature.md",
-        ],
+        "resolve_git_context",
+        lambda v: script.GitResolutionResult(
+            mode="test",
+            changed_files=[
+                "backend/app/llm_orchestration/gateway.py",
+                "docs/llm-prompt-generation-by-feature.md",
+            ],
+            structural_files_detected=["backend/app/llm_orchestration/gateway.py"],
+        ),
     )
 
     pr_body_file = tmp_path / "pr_body.md"
@@ -291,4 +299,8 @@ def test_get_changed_files_prefers_merge_base_with_explicit_base_ref(
     monkeypatch.setattr(script, "_run_git_text", fake_run_git_text)
     monkeypatch.setattr(script, "_run_git_lines", fake_run_git_lines)
 
-    assert script.get_changed_files() == ["backend/app/llm_orchestration/gateway.py"]
+    validator = DocConformityValidator(root)
+    result = script.resolve_git_context(validator)
+    assert result.mode == "merge_base"
+    assert result.base_commit == "merge-base-sha"
+    assert result.changed_files == ["backend/app/llm_orchestration/gateway.py"]

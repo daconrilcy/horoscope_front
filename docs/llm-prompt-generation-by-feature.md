@@ -1210,7 +1210,7 @@ Ce document constitue une **règle d'ingénierie explicite**. Sa maintenance est
 
 ### Contrôles automatiques (CI/Quality Gate)
 
-Depuis 66.38, le contrôle documentaire exécutable repose sur trois briques explicites :
+Depuis 66.38 et son durcissement en 66.39, le contrôle documentaire exécutable repose sur trois briques explicites :
 
 - le manifeste unique `backend/app/llm_orchestration/doc_conformity_manifest.py` ;
 - le script local/CI `backend/scripts/check_doc_conformity.py` ;
@@ -1231,21 +1231,28 @@ Le pipeline de CI et le quality gate local (`scripts/quality-gate.ps1`) exécute
   - provider nominal via `NOMINAL_SUPPORTED_PROVIDERS`, avec rejet des providers nominaux documentés en trop ;
   - fallbacks structurants `USE_CASE_FIRST` et `RESOLVE_MODEL`, avec contrôle du statut doctrinal et du périmètre de familles interdites ;
   - classification `obs_snapshot` sur les trois classes `strict`, `thresholded`, `informational` à partir de `OBS_SNAPSHOT_CLASSIFICATION_DEFAULT`, dérivée du registre golden versionné.
-- **Détection d'impact structurel** :
-  - le script calcule d'abord le changeset à partir d'un merge-base avec la branche de base quand cette référence est disponible ;
-  - en CI, le workflow transmet explicitement `github.base_ref` au script via `DOC_CONFORMITY_BASE_REF` ;
-  - en local ou en contexte Git atypique, le script retombe de façon déterministe sur des fallbacks bornés (`origin/main`, `main`, puis `HEAD~1` ou `HEAD`) ;
-  - il ajoute aussi les changements `staged`, `unstaged` et `untracked` pour que le gate local couvre le working tree, pas seulement les commits déjà créés ;
-  - si un fichier structurant est touché, ce document doit être mis à jour dans le même changeset, sauf justification bornée explicitement autorisée.
+- **Détection d'impact structurel (Multi-contexte)** :
+  - le script résout le contexte Git de manière déterministe (`merge_base`, `head_prev`, `diff_tree` ou mode dégradé `no_history`) ;
+  - il agrège systématiquement les changements `staged`, `unstaged` et `untracked` du working tree local ;
+  - en CI, il utilise `DOC_CONFORMITY_BASE_REF` ou `GITHUB_BASE_REF` pour identifier la base de comparaison ;
+  - un mode diagnostic (via la sortie standard) ou une sortie machine-readable (`--json`) expose explicitement le mode de résolution, la base retenue et les fichiers structurels détectés.
 - **Validation du bloc de preuve documentaire** :
-  - si ce document est modifié sur un change structurel, le contrôle exige qu'au minimum la `Date` et/ou la `Référence stable` du bloc final changent effectivement ;
-  - un simple changement cosmétique dans la section de preuve ne satisfait pas le gate.
-- **Validation du template PR** :
-  - le workflow PR lit le corps de la pull request et vérifie la cohérence entre fichiers touchés, mise à jour documentaire et justification déclarée ;
-  - en contexte PR, la section de gouvernance documentaire doit être explicitement renseignée ; un corps vide ou une section laissée sans réponse fait désormais échouer le contrôle ;
-  - les motifs autorisés sont bornés à `REF_ONLY`, `FIX_TYPO`, `TEST_ONLY`, `DOC_ONLY`, `NON_LLM` ;
-  - `DOC_ONLY` n'est recevable que si ce document a effectivement été mis à jour ;
-  - en l'absence de mise à jour documentaire sur un change structurel, exactement un motif autorisé doit être sélectionné.
+  - si ce document est modifié sur un change structurel, le contrôle exige qu'au minimum la `Date` ou la `Référence stable` du bloc final change effectivement par rapport à la version de base ;
+  - la comparaison porte sur les champs structurés extraits du bloc canonique, et non sur un diff textuel libre.
+- **Validation du template PR (Sémantique et Stricte)** :
+  - le workflow PR valide la cohérence entre fichiers touchés, mise à jour documentaire et justification déclarée ;
+  - les motifs autorisés (`REF_ONLY`, `FIX_TYPO`, `TEST_ONLY`, `DOC_ONLY`, `NON_LLM`) font l'objet d'une validation sémantique (ex: `TEST_ONLY` interdit si des fichiers non-test sont touchés, `DOC_ONLY` exige une MAJ doc) ;
+  - tout état contradictoire (ex: `OUI` coché avec un motif de justification) est rejeté.
+
+### Sortie Machine-Readable et Diagnostic
+
+Le script `check_doc_conformity.py` supporte l'option `--json` pour un usage par des outils tiers ou d'autres étapes de CI. Cette sortie contient :
+- `status` ("ok" ou "fail") ;
+- `git_context` complet (mode, base_ref, base_commit, fichiers détectés) ;
+- `doc_changed` (booléen) ;
+- `verification_block_updated` (booléen ou null) ;
+- `pr_section_status` ("valid", "invalid", "required_missing", "not_required") ;
+- `errors[]` (liste d'objets structurés avec code, message et règle).
 
 ### Discipline de mise à jour et règle de PR
 
@@ -1294,7 +1301,7 @@ Toute mention de vérification ci-dessous atteste d'une **revue manuelle effecti
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
-- **Date** : `2026-04-13`
-- **Référence stable (Commit SHA)** : `deb8cc6f`
+- **Date** : `2026-04-14`
+- **Référence stable (Commit SHA)** : `story-66-39-hardened`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.

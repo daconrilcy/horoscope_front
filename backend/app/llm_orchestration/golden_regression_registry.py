@@ -91,6 +91,4 @@ GOLDEN_REGISTRY: Dict[str, GoldenRegressionThresholds] = {
     "horoscope_daily": GOLDEN_THRESHOLDS_DEFAULT,
 }
 
-OBS_SNAPSHOT_CLASSIFICATION_DEFAULT = get_obs_snapshot_classification(
-    GOLDEN_THRESHOLDS_DEFAULT
-)
+OBS_SNAPSHOT_CLASSIFICATION_DEFAULT = get_obs_snapshot_classification(GOLDEN_THRESHOLDS_DEFAULT)

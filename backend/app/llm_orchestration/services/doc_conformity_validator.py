@@ -24,7 +24,7 @@ from app.llm_orchestration.supported_providers import NOMINAL_SUPPORTED_PROVIDER
 
 class DocConformityValidator:
     """
-    Validator for documentation vs code conformity (Story 66.38).
+    Validator for documentation vs code conformity (Story 66.38 & 66.39).
     """
 
     def __init__(self, root_path: Path):
@@ -49,7 +49,8 @@ class DocConformityValidator:
             pattern = rf"\|[ \t]*`{family}`[ \t]*\|[^|]*\|[^|]*\|[ \t]*`nominal_canonical`[ \t]*\|"
             if not re.search(pattern, content):
                 errors.append(
-                    f"Taxonomy error: family '{family}' not found as 'nominal_canonical' in doc."
+                    f"Taxonomy error: family '{family}' not found as 'nominal_canonical' in doc. "
+                    "Ensure the feature is correctly documented in the taxonomy table."
                 )
 
         alias_expectations = {
@@ -60,8 +61,8 @@ class DocConformityValidator:
             alias_pattern = rf"`{alias}`.*?`{canonical}`|`{canonical}`.*?`{alias}`"
             if not re.search(alias_pattern, content, flags=re.IGNORECASE | re.DOTALL):
                 errors.append(
-                    f"Taxonomy error: legacy alias '{alias}' should be documented "
-                    f"with its canonical mapping to '{canonical}'."
+                    f"Taxonomy error: legacy alias '{alias}' is missing its documented "
+                    f"mapping to '{canonical}'. (Requirement: documented for reviewability)."
                 )
         return errors
 
@@ -80,7 +81,7 @@ class DocConformityValidator:
             )
         )
 
-        registry_match = re.search(r'NOMINAL_SUPPORTED_PROVIDERS = \[(.*?)\]', content)
+        registry_match = re.search(r"NOMINAL_SUPPORTED_PROVIDERS = \[(.*?)\]", content)
         if registry_match:
             documented_providers.update(re.findall(r'"([^"]+)"', registry_match.group(1)))
 
@@ -88,10 +89,16 @@ class DocConformityValidator:
         expected_providers = set(NOMINAL_SUPPORTED_PROVIDERS)
 
         for provider in sorted(expected_providers - documented_providers):
-            errors.append(f"Provider error: nominal provider '{provider}' not properly documented.")
+            errors.append(
+                f"Provider error: nominal provider '{provider}' is NOT documented. "
+                f"The doc must explicitly mention it as nominal/authorized."
+            )
 
         for provider in sorted(documented_providers - expected_providers):
-            errors.append(f"Provider error: unexpected nominal provider '{provider}' documented.")
+            errors.append(
+                f"Provider error: unexpected nominal provider '{provider}' found in doc "
+                "but not in code (NOMINAL_SUPPORTED_PROVIDERS)."
+            )
 
         return errors
 
@@ -117,23 +124,23 @@ class DocConformityValidator:
             )
             if not line_match:
                 errors.append(
-                    f"Fallback error: '{fallback_name}' should be documented "
-                    "with status and family perimeter."
+                    f"Fallback error: '{fallback_name}' is missing mandatory documentation "
+                    "about its status and family perimeter."
                 )
                 continue
 
             documented_status = line_match.group(1).strip().lower()
             if documented_status != expected_status.value:
                 errors.append(
-                    f"Fallback error: '{fallback_name}' should be documented "
-                    f"as '{expected_status.value}'."
+                    f"Fallback error: '{fallback_name}' status mismatch. "
+                    f"Expected: '{expected_status.value}', Found: '{documented_status}'."
                 )
 
             documented_families = set(re.findall(r"`([^`]+)`", line_match.group(2)))
             if documented_families != set(expected_families):
                 errors.append(
-                    f"Fallback error: '{fallback_name}' families mismatch. "
-                    f"Doc={sorted(documented_families)} Code={expected_families}"
+                    f"Fallback error: '{fallback_name}' forbidden families mismatch. "
+                    f"Doc={sorted(documented_families)} vs Code={expected_families}."
                 )
 
         return errors
@@ -156,21 +163,23 @@ class DocConformityValidator:
                 is_documented = "triplet provider" in strict_section
             if not is_documented:
                 errors.append(
-                    f"ObsSnapshot error: field '{field}' should be classified as 'strict'."
+                    f"ObsSnapshot error: field '{field}' MUST be classified as 'strict' in doc."
                 )
 
         thresholded_section = get_section("thresholded")
         for field in sorted(OBS_SNAPSHOT_CLASSIFICATION_DEFAULT["thresholded"]):
             if f"`{field}`" not in thresholded_section:
                 errors.append(
-                    f"ObsSnapshot error: field '{field}' should be classified as 'thresholded'."
+                    "ObsSnapshot error: field "
+                    f"'{field}' MUST be classified as 'thresholded' in doc."
                 )
 
         informational_section = get_section("informational")
         for field in sorted(OBS_SNAPSHOT_CLASSIFICATION_DEFAULT["informational"]):
             if f"`{field}`" not in informational_section:
                 errors.append(
-                    f"ObsSnapshot error: field '{field}' should be classified as 'informational'."
+                    "ObsSnapshot error: field "
+                    f"'{field}' MUST be classified as 'informational' in doc."
                 )
 
         return errors
@@ -182,22 +191,27 @@ class DocConformityValidator:
         return any(changed_file in STRUCTURAL_FILES for changed_file in normalized_changed_files)
 
     def check_verification_reference_updated(self, old_content: str, new_content: str) -> bool:
-        def extract_ref(content: str) -> tuple[str | None, str | None]:
+        """AC4: Verify Date and Stable Ref block update with structured field comparison."""
+
+        def extract_ref_block(content: str) -> dict[str, str | None]:
             if VERIFICATION_MARKER not in content:
-                return None, None
+                return {}
             block = content.split(VERIFICATION_MARKER, maxsplit=1)[1]
             date_match = re.search(r"- \*\*Date\*\* : `([^`]+)`", block)
             ref_match = re.search(r"- \*\*Référence stable(?: [^*]+)?\*\* : `([^`]+)`", block)
-            return (
-                date_match.group(1) if date_match else None,
-                ref_match.group(1) if ref_match else None,
-            )
+            return {
+                "date": date_match.group(1).strip() if date_match else None,
+                "ref": ref_match.group(1).strip() if ref_match else None,
+            }
 
-        old_date, old_ref = extract_ref(old_content)
-        new_date, new_ref = extract_ref(new_content)
-        if not new_date or not new_ref:
+        old_data = extract_ref_block(old_content)
+        new_data = extract_ref_block(new_content)
+
+        if not new_data.get("date") or not new_data.get("ref"):
             return False
-        return new_date != old_date or new_ref != old_ref
+
+        # Return True if either date or ref has changed
+        return new_data["date"] != old_data.get("date") or new_data["ref"] != old_data.get("ref")
 
     def parse_pr_template_state(self, pr_content: str) -> dict[str, object]:
         checked_reasons = [
@@ -211,6 +225,7 @@ class DocConformityValidator:
         }
 
     def check_pr_template_justification(self, pr_content: str) -> bool:
+        """Backward compatibility helper (Story 66.38)."""
         state = self.parse_pr_template_state(pr_content)
         if state["oui_checked"]:
             return True
@@ -222,14 +237,16 @@ class DocConformityValidator:
         *,
         structural_change: bool,
         doc_updated: bool,
+        changed_files: list[str] | None = None,
     ) -> list[str]:
+        """AC5, AC6: Strict PR parser with semantic checks for reasons."""
         if not structural_change:
             return []
 
         if not pr_content.strip():
             return [
                 "PR template error: the documentation governance section must be "
-                "explicitly filled in for structural changes."
+                "filled in for structural changes (PR body empty or missing)."
             ]
 
         state = self.parse_pr_template_state(pr_content)
@@ -237,40 +254,92 @@ class DocConformityValidator:
         checked_reasons = list(state["checked_reasons"])
         errors: list[str] = []
 
-        if doc_updated:
-            if oui_checked:
-                if checked_reasons:
-                    errors.append(
-                        "PR template error: do not check a justification reason "
-                        "when 'OUI' is selected."
-                    )
-                return errors
+        # AC5: Reject contradictory states
+        if oui_checked and checked_reasons:
+            errors.append(
+                "PR template error: contradictory state. 'OUI' is selected, but "
+                f"justification reasons are also checked: {checked_reasons}."
+            )
+            return errors
 
-            if checked_reasons != ["DOC_ONLY"]:
+        if doc_updated:
+            if not oui_checked and checked_reasons != ["DOC_ONLY"]:
                 errors.append(
-                    "PR template error: documentation update requires either "
-                    "'OUI' or the sole reason 'DOC_ONLY'."
+                    "PR template error: doc was updated, so either select 'OUI' "
+                    "or ONLY the 'DOC_ONLY' reason."
                 )
             return errors
 
+        # Case: structural change BUT doc NOT updated
         if oui_checked:
             errors.append(
-                "PR template error: 'OUI' cannot be selected when the "
-                "documentation file was not updated."
+                "PR template error: 'OUI' is selected but the documentation "
+                "file was NOT updated in this PR."
             )
             return errors
 
         if len(checked_reasons) != 1:
             errors.append(
-                "PR template error: exactly one authorized justification "
-                "reason must be selected when documentation is not updated."
+                "PR template error: exactly one authorized justification reason must be "
+                f"selected since doc is not updated. Found: {checked_reasons or 'none'}."
             )
             return errors
 
-        if checked_reasons[0] == "DOC_ONLY":
-            errors.append(
-                "PR template error: 'DOC_ONLY' is not valid when the "
-                "documentation file was not updated."
-            )
+        reason = checked_reasons[0]
+
+        # AC6: Semantic verification of reasons
+        if doc_updated:
+            # If doc is updated, only OUI or DOC_ONLY are allowed (handled above)
+            pass
+        else:
+            # If doc NOT updated, but structural change detected
+            if reason == "DOC_ONLY":
+                errors.append(
+                    "PR template error: 'DOC_ONLY' reason requires "
+                    "the documentation file to be updated."
+                )
+
+            if reason == "REF_ONLY":
+                errors.append(
+                    "PR template error: 'REF_ONLY' reason requires "
+                    "a Date/SHA update in the documentation file."
+                )
+
+        if changed_files:
+            norm_files = {f.replace("\\", "/").lstrip("./") for f in changed_files}
+            structural_touched = sorted(norm_files.intersection(STRUCTURAL_FILES))
+
+            if reason == "TEST_ONLY":
+                # Only tests, fixtures, or test tooling scripts.
+                # Must not touch gateway core logic or manifest.
+                invalid_files = [
+                    f
+                    for f in structural_touched
+                    if not any(x in f for x in ("tests/", "test_", "scripts/"))
+                ]
+                if invalid_files:
+                    errors.append(
+                        f"PR template error: 'TEST_ONLY' is invalid because core structural files "
+                        f"were touched: {invalid_files}."
+                    )
+
+            if reason == "FIX_TYPO":
+                # Only allowed on doc, template, or markdown files.
+                # Strictly forbidden on core .py files (gateway, manifest, registry).
+                python_structural = [
+                    f
+                    for f in structural_touched
+                    if f.endswith(".py") and f not in ("backend/scripts/check_doc_conformity.py",)
+                ]
+                if python_structural:
+                    errors.append(
+                        f"PR template error: 'FIX_TYPO' is invalid because Python structural "
+                        f"files were touched: {python_structural}."
+                    )
+
+            if reason == "NON_LLM":
+                # Structural files were touched, but justification says it's not an LLM change.
+                # This is allowed but must be clear that at least one structural file WAS touched.
+                pass
 
         return errors

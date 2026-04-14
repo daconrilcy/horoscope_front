@@ -624,3 +624,5 @@ development_status:
   66-36-gating-de-non-regression-end-to-end-sur-golden-set-de-prompts-et-outputs: done
   66-37-observabilite-d-exploitation-complete-avec-alertes-structurees-sur-les-dimensions-canoniques: done
   66-38-controle-automatique-conformite-doc-code: done
+  66-39-durcissement-fiabilite-multi-contexte-gate-conformite-documentaire: done
+

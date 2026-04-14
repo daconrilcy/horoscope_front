@@ -283,9 +283,7 @@ class GoldenRegressionService:
 
         resolved_snapshot_id = active_snapshot_id or await ReleaseService.get_active_release_id(db)
         if not resolved_snapshot_id:
-            raise ValueError(
-                "Golden regression rejected: no active snapshot ID could be resolved."
-            )
+            raise ValueError("Golden regression rejected: no active snapshot ID could be resolved.")
 
         stmt = select(LlmReleaseSnapshotModel).where(
             LlmReleaseSnapshotModel.id == resolved_snapshot_id
@@ -338,9 +336,7 @@ class GoldenRegressionService:
 
         execution_profile_source = getattr(result.meta, "execution_profile_source", None)
         if execution_profile_source in thresholds.forbidden_execution_profile_sources:
-            errors.append(
-                f"Forbidden legacy execution profile source: {execution_profile_source}"
-            )
+            errors.append(f"Forbidden legacy execution profile source: {execution_profile_source}")
 
         return errors
 

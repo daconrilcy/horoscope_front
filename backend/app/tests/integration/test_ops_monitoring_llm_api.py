@@ -200,9 +200,7 @@ def test_llm_ops_repair_hike_uses_previous_window_baseline_and_canonical_persona
 
     assert response.status_code == 200
     alerts = [
-        item
-        for item in response.json()["data"]["alerts"]
-        if item["code"] == "llm_repair_rate_hike"
+        item for item in response.json()["data"]["alerts"] if item["code"] == "llm_repair_rate_hike"
     ]
     assert len(alerts) == 1
     alert = alerts[0]
