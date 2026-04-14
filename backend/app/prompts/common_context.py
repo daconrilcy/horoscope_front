@@ -39,7 +39,7 @@ class PromptCommonContext(BaseModel):
         if self.use_case_key.startswith("natal_interpretation"):
             return self
 
-        if self.use_case_key == "daily_prediction":
+        if self.use_case_key in {"daily_prediction", "horoscope_daily"}:
             return self
 
         # Relax validation for build() to return partial contexts

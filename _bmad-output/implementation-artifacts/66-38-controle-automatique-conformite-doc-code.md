@@ -2,6 +2,12 @@
 
 Status: done
 
+## Maintenance Follow-Up
+
+- Après vérification runtime réelle du 2026-04-14, un résidu de nomenclature `daily_prediction` subsistait encore dans la construction du contexte commun du flux horoscope quotidien.
+- Ce résidu a été absorbé sans changer la doctrine du pipeline : le nominal daily passe maintenant aussi par `horoscope_daily` dans le builder de contexte, en cohérence avec la taxonomie Story 66 et avec les assemblies/runtime observés en production locale.
+- La compatibilité défensive avec l’alias legacy reste portée côté builder pour éviter une régression lors d’appels historiques non migrés.
+
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story

@@ -2,6 +2,13 @@
 
 Status: done
 
+## Post-Completion Maintenance Notes
+
+- Le dernier résidu de nomenclature `daily_prediction` dans le runtime nominal a été supprimé du build de contexte commun du flux daily.
+- Le routeur [predictions.py](/c:/dev/horoscope_front/backend/app/api/v1/routers/predictions.py) appelle désormais `CommonContextBuilder.build(..., use_case_key="horoscope_daily", ...)` au lieu de `daily_prediction`.
+- Le builder [common_context.py](/c:/dev/horoscope_front/backend/app/prompts/common_context.py) accepte explicitement `horoscope_daily` comme clé nominale daily, tout en conservant une compatibilité défensive avec `daily_prediction` tant que des appels historiques existent.
+- Une régression dédiée dans [test_common_context.py](/c:/dev/horoscope_front/backend/app/tests/unit/test_common_context.py) verrouille la clé canonique `horoscope_daily` et évite une réintroduction silencieuse du legacy dans la couche de contexte.
+
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story

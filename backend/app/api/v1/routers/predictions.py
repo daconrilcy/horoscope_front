@@ -589,7 +589,7 @@ async def get_daily_prediction(
 
         try:
             prompt_context = CommonContextBuilder.build(
-                user_id=current_user.id, use_case_key="daily_prediction", period="daily", db=db
+                user_id=current_user.id, use_case_key="horoscope_daily", period="daily", db=db
             )
         except Exception as e:
             logger.warning("failed to build prompt context for daily prediction: %s", str(e))

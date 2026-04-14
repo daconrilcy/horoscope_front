@@ -142,3 +142,51 @@ async def test_build_common_context_without_interpretation() -> None:
         assert ctx.payload.natal_interpretation is None
         assert ctx.payload.natal_data == {"planets": {"sun": {"sign": "aries"}}}
         assert "heure de naissance manquante" in ctx.payload.precision_level
+
+
+@pytest.mark.asyncio
+async def test_build_common_context_accepts_canonical_horoscope_daily_key() -> None:
+    """The daily common context should use the canonical Story 66 key."""
+    mock_db = MagicMock()
+    user_id = 1
+
+    mock_persona = MagicMock()
+    mock_persona.display_name = "Astrologue"
+    mock_persona.response_style = "clair"
+    mock_persona.tone = "bienveillant"
+    mock_persona.prudence_level = "standard"
+    mock_persona.to_prompt_line.return_value = "Astrologue - style clair"
+
+    mock_profile = MagicMock()
+    mock_profile.birth_time = "12:00"
+    mock_profile.birth_place = "Paris"
+
+    mock_interp = MagicMock()
+    mock_interp.interpretation_payload = {"summary": "Votre synthèse natale."}
+
+    mock_chart = MagicMock()
+    mock_chart.result.model_dump.return_value = {"planets": {"sun": {"sign": "aries"}}}
+
+    with (
+        patch(
+            "app.services.persona_config_service.PersonaConfigService.get_active",
+            return_value=mock_persona,
+        ),
+        patch(
+            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user",
+            return_value=mock_profile,
+        ),
+        patch(
+            "app.services.user_natal_chart_service.UserNatalChartService.get_latest_for_user",
+            return_value=mock_chart,
+        ),
+        patch("app.prompts.common_context.select"),
+    ):
+        mock_db.execute.return_value.scalar_one_or_none.return_value = mock_interp
+
+        ctx = CommonContextBuilder.build(user_id, "horoscope_daily", "daily", mock_db)
+
+        assert ctx.payload.use_case_key == "horoscope_daily"
+        assert ctx.payload.use_case_name == "horoscope-daily-canonical-v1"
+        assert ctx.payload.natal_interpretation == "Votre synthèse natale."
+        assert ctx.context_quality == "full"
