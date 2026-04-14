@@ -104,8 +104,7 @@ def test_auto_upgrade_repairs_email_logs_sqlite_primary_key_shape(
 
         with test_engine.connect() as connection:
             after_type = {
-                row[1]: row[2]
-                for row in connection.execute(text("PRAGMA table_info(email_logs)"))
+                row[1]: row[2] for row in connection.execute(text("PRAGMA table_info(email_logs)"))
             }["id"]
         assert before_type == "BIGINT"
         assert after_type == "INTEGER"

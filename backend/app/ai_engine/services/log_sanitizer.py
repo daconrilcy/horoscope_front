@@ -60,10 +60,7 @@ def _sanitize_value(key: str, value: Any) -> Any:
         }
 
     if isinstance(value, list):
-        return [
-            _sanitize_value(key, item) if isinstance(item, dict) else item
-            for item in value
-        ]
+        return [_sanitize_value(key, item) if isinstance(item, dict) else item for item in value]
 
     if isinstance(value, str):
         return _sanitize_text_preview(value)

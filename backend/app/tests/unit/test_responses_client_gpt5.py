@@ -14,6 +14,7 @@ def _build_raw_response(
     raw_response.headers = headers or {}
     return raw_response
 
+
 # ---------------------------------------------------------------------------
 # Tests _to_typed_content_blocks
 # ---------------------------------------------------------------------------

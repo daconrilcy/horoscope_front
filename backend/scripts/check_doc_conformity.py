@@ -185,8 +185,7 @@ def main() -> int:
     git_context = resolve_git_context(validator)
     structural_change = len(git_context.structural_files_detected) > 0
     normalized_changed_files = {
-        changed_file.replace("\\", "/").lstrip("./")
-        for changed_file in git_context.changed_files
+        changed_file.replace("\\", "/").lstrip("./") for changed_file in git_context.changed_files
     }
     doc_updated = doc_path in normalized_changed_files
 

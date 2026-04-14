@@ -105,10 +105,7 @@ def _repair_missing_tables(missing_tables: set[str]) -> None:
 
 def _table_columns(table_name: str) -> dict[str, dict[str, object]]:
     inspector = inspect(engine)
-    return {
-        str(column["name"]): column
-        for column in inspector.get_columns(table_name)
-    }
+    return {str(column["name"]): column for column in inspector.get_columns(table_name)}
 
 
 def _repair_email_logs_primary_key() -> bool:
