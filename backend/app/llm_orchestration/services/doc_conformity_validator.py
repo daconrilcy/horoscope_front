@@ -14,7 +14,9 @@ from app.llm_orchestration.feature_taxonomy import (
     LEGACY_NATAL_FEATURE,
     SUPPORTED_FAMILIES,
 )
-from app.llm_orchestration.golden_regression_registry import GOLDEN_THRESHOLDS_DEFAULT
+from app.llm_orchestration.golden_regression_registry import (
+    OBS_SNAPSHOT_CLASSIFICATION_DEFAULT,
+)
 from app.llm_orchestration.models import FallbackStatus, FallbackType
 from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
 from app.llm_orchestration.supported_providers import NOMINAL_SUPPORTED_PROVIDERS
@@ -144,7 +146,7 @@ class DocConformityValidator:
             return match.group(1) if match else ""
 
         strict_section = get_section("strict")
-        for field in sorted(GOLDEN_THRESHOLDS_DEFAULT.strict_obs_fields):
+        for field in sorted(OBS_SNAPSHOT_CLASSIFICATION_DEFAULT["strict"]):
             is_documented = f"`{field}`" in strict_section
             if not is_documented and field in {
                 "requested_provider",
@@ -158,14 +160,14 @@ class DocConformityValidator:
                 )
 
         thresholded_section = get_section("thresholded")
-        for field in sorted(GOLDEN_THRESHOLDS_DEFAULT.thresholded_obs_fields):
+        for field in sorted(OBS_SNAPSHOT_CLASSIFICATION_DEFAULT["thresholded"]):
             if f"`{field}`" not in thresholded_section:
                 errors.append(
                     f"ObsSnapshot error: field '{field}' should be classified as 'thresholded'."
                 )
 
         informational_section = get_section("informational")
-        for field in sorted(GOLDEN_THRESHOLDS_DEFAULT.informational_obs_fields):
+        for field in sorted(OBS_SNAPSHOT_CLASSIFICATION_DEFAULT["informational"]):
             if f"`{field}`" not in informational_section:
                 errors.append(
                     f"ObsSnapshot error: field '{field}' should be classified as 'informational'."

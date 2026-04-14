@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from app.llm_orchestration.golden_regression_registry import OBS_SNAPSHOT_CLASSIFICATION_DEFAULT
 from app.llm_orchestration.services.doc_conformity_validator import DocConformityValidator
 
 
@@ -32,6 +33,14 @@ def test_doc_conformity_validator_obs_snapshot_classification() -> None:
     validator = _validator()
     content = validator.doc_path.read_text(encoding="utf-8")
     assert not validator.validate_obs_snapshot_classification(content)
+
+
+def test_obs_snapshot_classification_default_is_explicit() -> None:
+    assert OBS_SNAPSHOT_CLASSIFICATION_DEFAULT["strict"]
+    assert OBS_SNAPSHOT_CLASSIFICATION_DEFAULT["thresholded"] == frozenset(
+        {"max_output_tokens_final"}
+    )
+    assert "active_snapshot_id" in OBS_SNAPSHOT_CLASSIFICATION_DEFAULT["informational"]
 
 
 def test_doc_conformity_is_update_required() -> None:
@@ -245,3 +254,41 @@ def test_script_requires_pr_section_when_doc_updated_and_pr_context_exists(
     monkeypatch.setattr(sys, "argv", ["check_doc_conformity.py", str(pr_body_file)])
 
     assert script.main() == 1
+
+
+def test_get_changed_files_prefers_merge_base_with_explicit_base_ref(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import sys
+
+    root = Path(__file__).resolve().parents[3]
+    monkeypatch.syspath_prepend(str(root / "backend"))
+    sys.modules.pop("scripts.check_doc_conformity", None)
+    import scripts.check_doc_conformity as script
+
+    monkeypatch.setenv("DOC_CONFORMITY_BASE_REF", "main")
+
+    def fake_run_git_text(args: list[str]) -> str | None:
+        if args == ["rev-parse", "--verify", "origin/main"]:
+            return "origin-main-sha"
+        if args == ["rev-parse", "--verify", "main"]:
+            return "main-sha"
+        if args == ["merge-base", "origin/main", "HEAD"]:
+            return "merge-base-sha"
+        return None
+
+    def fake_run_git_lines(args: list[str]) -> list[str]:
+        if args == ["diff", "--name-only", "merge-base-sha", "HEAD"]:
+            return ["backend/app/llm_orchestration/gateway.py"]
+        if args in (
+            ["diff", "--name-only", "HEAD"],
+            ["diff", "--cached", "--name-only"],
+            ["ls-files", "--others", "--exclude-standard"],
+        ):
+            return []
+        raise AssertionError(f"Unexpected git args: {args}")
+
+    monkeypatch.setattr(script, "_run_git_text", fake_run_git_text)
+    monkeypatch.setattr(script, "_run_git_lines", fake_run_git_lines)
+
+    assert script.get_changed_files() == ["backend/app/llm_orchestration/gateway.py"]

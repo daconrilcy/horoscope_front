@@ -330,7 +330,9 @@ GPT-5 Codex
 - 2026-04-13 : documentation runtime [docs/llm-prompt-generation-by-feature.md](/c:/dev/horoscope_front/docs/llm-prompt-generation-by-feature.md) réalignée et référence de vérification manuelle réactualisée.
 - 2026-04-14 : passe corrective post-review appliquée pour imposer la section documentaire en contexte PR, auto-protéger le gate via le manifeste, et vérifier explicitement les alias legacy `daily_prediction` / `natal_interpretation`.
 - 2026-04-14 : la doc runtime a été ré-alignée sur le périmètre structurel enrichi du manifeste, y compris les briques du gate documentaire lui-même.
-- 2026-04-14 : vérification ciblée exécutée dans le venv avec `ruff check` et `pytest -q tests/integration/test_story_66_38_doc_conformity.py` ; résultat `19 passed`.
+- 2026-04-14 : la classification doctrinale `obs_snapshot` a été explicitée via `OBS_SNAPSHOT_CLASSIFICATION_DEFAULT` pour découpler la gouvernance doc ↔ code de la seule sémantique de seuils portée par `GOLDEN_THRESHOLDS_DEFAULT`.
+- 2026-04-14 : le script documentaire utilise désormais un calcul de changeset plus déterministe basé sur merge-base et `DOC_CONFORMITY_BASE_REF`, avec fallbacks bornés pour les contextes locaux/CI atypiques.
+- 2026-04-14 : vérification ciblée exécutée dans le venv avec `ruff check` et `pytest -q tests/integration/test_story_66_38_doc_conformity.py` ; résultat `21 passed`.
 
 ### File List
 

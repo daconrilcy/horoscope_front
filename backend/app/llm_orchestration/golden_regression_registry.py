@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Set
+from typing import Dict, FrozenSet, Set
 
 from app.llm_orchestration.models import ExecutionPathKind, FallbackType
 
@@ -21,6 +21,23 @@ class GoldenRegressionThresholds:
         self.forbidden_execution_profile_sources = forbidden_execution_profile_sources
         self.forbidden_execution_paths = forbidden_execution_paths
         self.forbidden_fallbacks = forbidden_fallbacks
+
+
+def get_obs_snapshot_classification(
+    thresholds: GoldenRegressionThresholds,
+) -> Dict[str, FrozenSet[str]]:
+    """
+    Expose the doctrinal obs_snapshot classification independently from threshold values.
+
+    The threshold registry remains the single source of truth, but callers that only need
+    field classes should not have to infer semantics from tolerance-oriented attribute names.
+    """
+
+    return {
+        "strict": frozenset(thresholds.strict_obs_fields),
+        "thresholded": frozenset(thresholds.thresholded_obs_fields),
+        "informational": frozenset(thresholds.informational_obs_fields),
+    }
 
 
 # AC8, AC18: Classification of obs_snapshot fields
@@ -73,3 +90,7 @@ GOLDEN_REGISTRY: Dict[str, GoldenRegressionThresholds] = {
     "natal": GOLDEN_THRESHOLDS_DEFAULT,
     "horoscope_daily": GOLDEN_THRESHOLDS_DEFAULT,
 }
+
+OBS_SNAPSHOT_CLASSIFICATION_DEFAULT = get_obs_snapshot_classification(
+    GOLDEN_THRESHOLDS_DEFAULT
+)

@@ -34,5 +34,7 @@ jobs:
 
       - name: Run doc conformity check
         shell: bash
+        env:
+          DOC_CONFORMITY_BASE_REF: ${{ github.base_ref }}
         run: |
           python backend/scripts/check_doc_conformity.py "$RUNNER_TEMP/pr_body.md"

@@ -21,17 +21,79 @@ def _run_git_lines(args: list[str]) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
+def _run_git_text(args: list[str]) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=True,
+        )
+    except Exception:
+        return None
+    return result.stdout.strip() or None
+
+
+def _existing_base_refs() -> list[str]:
+    preferred_refs = [
+        os.environ.get("DOC_CONFORMITY_BASE_REF"),
+        os.environ.get("GITHUB_BASE_REF"),
+        "origin/main",
+        "main",
+    ]
+    candidates: list[str] = []
+    for ref in preferred_refs:
+        if not ref:
+            continue
+        normalized_candidates = [ref]
+        if "/" not in ref:
+            normalized_candidates.insert(0, f"origin/{ref}")
+        for candidate in normalized_candidates:
+            if candidate not in candidates and _run_git_text(["rev-parse", "--verify", candidate]):
+                candidates.append(candidate)
+    return candidates
+
+
+def _get_branch_diff_files() -> list[str]:
+    for base_ref in _existing_base_refs():
+        merge_base = _run_git_text(["merge-base", base_ref, "HEAD"])
+        if merge_base:
+            try:
+                return _run_git_lines(["diff", "--name-only", merge_base, "HEAD"])
+            except Exception:
+                continue
+
+    for fallback_args in (
+        ["diff", "--name-only", "HEAD~1", "HEAD"],
+        ["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"],
+    ):
+        try:
+            return _run_git_lines(fallback_args)
+        except Exception:
+            continue
+
+    return []
+
+
+def _read_file_from_best_base(path: str) -> str | None:
+    for base_ref in _existing_base_refs():
+        content = _run_git_text(["show", f"{base_ref}:{path}"])
+        if content is not None:
+            return content
+
+    for fallback_ref in ("HEAD~1",):
+        content = _run_git_text(["show", f"{fallback_ref}:{path}"])
+        if content is not None:
+            return content
+
+    return None
+
+
 def get_changed_files() -> list[str]:
     """Return committed branch diff plus staged/unstaged/untracked working tree changes."""
     changed: set[str] = set()
-
-    try:
-        changed.update(_run_git_lines(["diff", "--name-only", "origin/main...HEAD"]))
-    except Exception:
-        try:
-            changed.update(_run_git_lines(["diff", "--name-only", "HEAD~1"]))
-        except Exception:
-            pass
+    changed.update(_get_branch_diff_files())
 
     for args in (
         ["diff", "--name-only", "HEAD"],
@@ -89,24 +151,8 @@ def main() -> int:
         pr_body = read_pr_body()
         if doc_updated:
             try:
-                base_ref = "origin/main"
-                diff_result = subprocess.run(
-                    ["git", "show", f"{base_ref}:{DOC_PATH}"],
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                )
-                if diff_result.returncode != 0:
-                    base_ref = "HEAD~1"
-                    diff_result = subprocess.run(
-                        ["git", "show", f"{base_ref}:{DOC_PATH}"],
-                        capture_output=True,
-                        text=True,
-                        encoding="utf-8",
-                    )
-
-                if diff_result.returncode == 0:
-                    old_content = diff_result.stdout
+                old_content = _read_file_from_best_base(DOC_PATH)
+                if old_content is not None:
                     new_content = (root_path / DOC_PATH).read_text(encoding="utf-8")
                     if not validator.check_verification_reference_updated(old_content, new_content):
                         print(f"[FAIL] {DOC_PATH} was touched but Date/Ref block was not updated.")

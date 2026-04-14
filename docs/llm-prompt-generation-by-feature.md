@@ -770,6 +770,8 @@ La séparation doctrinale est désormais la suivante :
 - le registre golden porte la classification des champs `obs_snapshot` et les états legacy interdits ;
 - le rapport golden produit le verdict agrégé et les diffs safe-by-design.
 
+Pour éviter toute ambiguïté entre "seuils" et "classification", la mise en oeuvre 66.38 expose aussi explicitement la vue doctrinale `OBS_SNAPSHOT_CLASSIFICATION_DEFAULT`, dérivée du registre golden mais dédiée à la lecture gouvernance/doc ↔ code.
+
 À date, le golden set effectivement introduit reste minimal et sert de socle versionné pour le gate. Il n'est pas encore la couverture exhaustive finale de toutes les variantes métier de `chat`, `guidance`, `natal` et `horoscope_daily`, mais le contrat de campagne et le point de branchement bloquant sont désormais en place.
 
 ### Corrélation release obligatoire
@@ -808,6 +810,11 @@ Le registre golden applique désormais une classification explicite des champs d
 - `strict` : `pipeline_kind`, `execution_path_kind`, `fallback_kind`, triplet provider, `context_compensation_status`, `max_output_tokens_source` ;
 - `thresholded` : `max_output_tokens_final` avec tolérance versionnée ;
 - `informational` : `executed_provider_mode`, `attempt_count`, `provider_error_code`, `breaker_state`, `breaker_scope`, `active_snapshot_id`, `active_snapshot_version`, `manifest_entry_id`.
+
+Source de vérité runtime :
+
+- `GOLDEN_THRESHOLDS_DEFAULT` reste la source de vérité des tolérances et des états legacy interdits ;
+- `OBS_SNAPSHOT_CLASSIFICATION_DEFAULT` expose explicitement la classification `strict` / `thresholded` / `informational` relue par le gate documentaire.
 
 Règle de lecture :
 
@@ -1220,11 +1227,14 @@ Le pipeline de CI et le quality gate local (`scripts/quality-gate.ps1`) exécute
 
 - **Lint de conformité doc ↔ code** :
   - taxonomie canonique via `SUPPORTED_FAMILIES` ;
+  - alias legacy tolérés via `feature_taxonomy.py`, avec contrôle explicite des mappings `daily_prediction -> horoscope_daily` et `natal_interpretation -> natal` ;
   - provider nominal via `NOMINAL_SUPPORTED_PROVIDERS`, avec rejet des providers nominaux documentés en trop ;
   - fallbacks structurants `USE_CASE_FIRST` et `RESOLVE_MODEL`, avec contrôle du statut doctrinal et du périmètre de familles interdites ;
-  - classification `obs_snapshot` sur les trois classes `strict`, `thresholded`, `informational` à partir de `GOLDEN_THRESHOLDS_DEFAULT`.
+  - classification `obs_snapshot` sur les trois classes `strict`, `thresholded`, `informational` à partir de `OBS_SNAPSHOT_CLASSIFICATION_DEFAULT`, dérivée du registre golden versionné.
 - **Détection d'impact structurel** :
-  - le script calcule le changeset à partir du diff de branche quand disponible ;
+  - le script calcule d'abord le changeset à partir d'un merge-base avec la branche de base quand cette référence est disponible ;
+  - en CI, le workflow transmet explicitement `github.base_ref` au script via `DOC_CONFORMITY_BASE_REF` ;
+  - en local ou en contexte Git atypique, le script retombe de façon déterministe sur des fallbacks bornés (`origin/main`, `main`, puis `HEAD~1` ou `HEAD`) ;
   - il ajoute aussi les changements `staged`, `unstaged` et `untracked` pour que le gate local couvre le working tree, pas seulement les commits déjà créés ;
   - si un fichier structurant est touché, ce document doit être mis à jour dans le même changeset, sauf justification bornée explicitement autorisée.
 - **Validation du bloc de preuve documentaire** :
@@ -1232,6 +1242,7 @@ Le pipeline de CI et le quality gate local (`scripts/quality-gate.ps1`) exécute
   - un simple changement cosmétique dans la section de preuve ne satisfait pas le gate.
 - **Validation du template PR** :
   - le workflow PR lit le corps de la pull request et vérifie la cohérence entre fichiers touchés, mise à jour documentaire et justification déclarée ;
+  - en contexte PR, la section de gouvernance documentaire doit être explicitement renseignée ; un corps vide ou une section laissée sans réponse fait désormais échouer le contrôle ;
   - les motifs autorisés sont bornés à `REF_ONLY`, `FIX_TYPO`, `TEST_ONLY`, `DOC_ONLY`, `NON_LLM` ;
   - `DOC_ONLY` n'est recevable que si ce document a effectivement été mis à jour ;
   - en l'absence de mise à jour documentaire sur un change structurel, exactement un motif autorisé doit être sélectionné.
@@ -1271,6 +1282,11 @@ La revue de ce document est **obligatoire** pour toute modification portant sur 
 - `backend/scripts/check_doc_conformity.py`
 
 La liste versionnée dans le manifeste fait foi si elle diverge de ce résumé.
+
+Conséquence importante :
+
+- le gate documentaire est désormais lui-même dans son propre périmètre de gouvernance ;
+- une modification du manifeste, du validateur, du script ou du workflow PR/CI est donc traitée comme un changement documentaire structurel et ne peut plus dériver silencieusement hors de cette documentation.
 
 ### Vérification et Traçabilité
 
