@@ -3,7 +3,10 @@ import re
 from typing import Any, Dict, Optional, Set
 
 from app.infra.observability.metrics import increment_counter
-from app.llm_orchestration.feature_taxonomy import SUPPORTED_FAMILIES
+from app.llm_orchestration.legacy_residual_registry import (
+    build_governance_matrix_projection,
+    effective_progressive_blocklist,
+)
 from app.llm_orchestration.models import FallbackStatus, FallbackType
 
 logger = logging.getLogger(__name__)
@@ -11,67 +14,11 @@ logger = logging.getLogger(__name__)
 
 class FallbackGovernanceRegistry:
     """
-    Registre central de gouvernance des mécanismes de compatibilité (Story 66.21).
-    Définit le statut, le périmètre et la politique d'extinction de chaque fallback.
+    Registre central de gouvernance des mécanismes de compatibilité (Story 66.21, 66.40).
+    La matrice effective est une projection du fichier ``legacy_residual_registry.json`` (AC2).
     """
 
-    GOVERNANCE_MATRIX: Dict[FallbackType, Dict[str, Any]] = {
-        FallbackType.LEGACY_WRAPPER: {
-            "status": FallbackStatus.TRANSITORY,
-            "justification": "Wrapper de façade pour non-régression immédiate.",
-            "perimeter": "Appelants legacy existants (LLMGateway.execute).",
-            "extinction_criteria": "Migration du dernier appelant vers execute_request.",
-        },
-        FallbackType.DEPRECATED_USE_CASE: {
-            "status": FallbackStatus.TRANSITORY,
-            "justification": "Permet la convergence sans casser les clients mobiles/externes.",
-            "perimeter": "Use cases mappés dans DEPRECATED_USE_CASE_MAPPING.",
-            "extinction_criteria": "Compteurs d'usage à zéro en production.",
-        },
-        FallbackType.USE_CASE_FIRST: {
-            "status": FallbackStatus.TO_REMOVE,  # Par défaut, restreint
-            "justification": "Éteindre la concurrence avec le pipeline canonique.",
-            "forbidden_families": SUPPORTED_FAMILIES,
-            "extinction_criteria": "Migration 100% des features vers assembly.",
-        },
-        FallbackType.RESOLVE_MODEL: {
-            "status": FallbackStatus.TO_REMOVE,
-            "justification": "Filet de sécurité si ExecutionProfile est manquant.",
-            "perimeter": "Chemins sans ExecutionProfile explicite.",
-            "forbidden_families": SUPPORTED_FAMILIES,
-            "extinction_criteria": "Généralisation des ExecutionProfile sur tous les parcours.",
-        },
-        FallbackType.EXECUTION_CONFIG_ADMIN: {
-            "status": FallbackStatus.TO_REMOVE,
-            "justification": "Ancienne méthode de configuration directe (dette).",
-            "extinction_criteria": "Suppression après migration complète vers ExecutionProfile.",
-        },
-        FallbackType.PROVIDER_OPENAI: {
-            "status": FallbackStatus.TOLERATED,
-            "justification": "Limitation runtime assumée (OpenAI-only).",
-            "perimeter": "Runtime actuel.",
-            "forbidden_families": SUPPORTED_FAMILIES,  # Story 66.30 AC4
-            "extinction_criteria": "Activation multi-provider réelle.",
-        },
-        FallbackType.NARRATOR_LEGACY: {
-            "status": FallbackStatus.TO_REMOVE,
-            "justification": "Obsolète, remplacé par le gateway.",
-            "forbidden_families": {"horoscope_daily"},
-            "extinction_criteria": "Suppression du fichier llm_narrator.py.",
-        },
-        FallbackType.TEST_LOCAL: {
-            "status": FallbackStatus.TOLERATED,
-            "justification": "Productivité développement hors-production.",
-            "perimeter": "Environnements dev et test uniquement.",
-            "extinction_criteria": "Pérenne (hors production).",
-        },
-        FallbackType.NATAL_NO_DB: {
-            "status": FallbackStatus.TRANSITORY,
-            "justification": "Souplesse de test historique et modes dégradés.",
-            "perimeter": "Tests unitaires et modes dégradés Natal.",
-            "extinction_criteria": "DB obligatoire en production nominale.",
-        },
-    }
+    GOVERNANCE_MATRIX: Dict[FallbackType, Dict[str, Any]] = build_governance_matrix_projection()
 
     @staticmethod
     def _infer_family(feature: Optional[str], call_site: str) -> Optional[str]:
@@ -100,11 +47,14 @@ class FallbackGovernanceRegistry:
 
     @classmethod
     def track_fallback(
-        self,
+        cls,
         fallback_type: FallbackType,
         call_site: str,
         feature: Optional[str] = None,
         is_nominal: bool = True,
+        *,
+        subfeature: Optional[str] = None,
+        activation_reason: Optional[str] = None,
     ) -> None:
         """
         Enregistre l'usage d'un fallback, vérifie sa conformité et émet la télémétrie.
@@ -113,33 +63,84 @@ class FallbackGovernanceRegistry:
 
         is_prod = settings.app_env in {"production", "prod"}
 
-        gov = self.GOVERNANCE_MATRIX.get(fallback_type)
+        gov = cls.GOVERNANCE_MATRIX.get(fallback_type)
         if not gov:
             logger.warning(
                 "governance_unknown_fallback type=%s call_site=%s", fallback_type, call_site
             )
             return
 
+        stable_id = str(gov.get("stable_id", "unknown"))
+        path_kind = str(gov.get("path_kind", "unknown"))
+
         status = gov["status"]
         forbidden_families: Set[str] = gov.get("forbidden_families", set())
 
         # AC3 Bypass Fix: Inférence de la famille si absente
-        effective_feature = self._infer_family(feature, call_site)
+        effective_feature = cls._infer_family(feature, call_site)
 
         # 1. Gestion spécifique du statut conditionnel pour USE_CASE_FIRST (AC3)
         if fallback_type == FallbackType.USE_CASE_FIRST:
             if effective_feature not in forbidden_families:
                 status = FallbackStatus.TRANSITORY
 
-        # 2. Télémétrie (AC5, AC7, AC9) - Toujours émise même si blocage (Medium Issue Fix)
+        reason = activation_reason or "track_fallback"
+
+        blocked = effective_progressive_blocklist()
+        if stable_id in blocked:
+            from app.llm_orchestration.models import GatewayError
+            from app.llm_orchestration.services.observability_service import (
+                log_legacy_residual_blocked_attempt,
+            )
+
+            log_legacy_residual_blocked_attempt(
+                stable_id=stable_id,
+                path_kind=path_kind,
+                fallback_type=fallback_type.value,
+                feature=effective_feature or feature,
+                subfeature=subfeature,
+                call_site=call_site,
+                activation_reason=reason,
+                is_nominal=is_nominal,
+                status_value=status.value,
+            )
+            raise GatewayError(
+                f"Chemin legacy '{stable_id}' bloqué par la politique progressive "
+                f"(LLM_LEGACY_PROGRESSIVE_BLOCKLIST / registre).",
+                details={
+                    "stable_id": stable_id,
+                    "fallback_type": fallback_type.value,
+                    "call_site": call_site,
+                },
+            )
+
+        # 2. Télémétrie (AC5, AC7, AC9, Story 66.40 AC3)
         labels = {
             "fallback_type": fallback_type.value,
             "status": status.value,
             "call_site": call_site,
             "feature": effective_feature or feature or "unknown",
             "is_nominal": "true" if is_nominal else "false",
+            "stable_id": stable_id,
+            "path_kind": path_kind,
+            "activation_reason": reason[:120],
         }
         increment_counter("llm_gateway_fallback_usage_total", labels=labels)
+
+        from app.llm_orchestration.services.observability_service import (
+            log_legacy_residual_activation,
+        )
+
+        log_legacy_residual_activation(
+            stable_id=stable_id,
+            path_kind=path_kind,
+            fallback_type=fallback_type.value,
+            feature=effective_feature or feature,
+            subfeature=subfeature,
+            call_site=call_site,
+            activation_reason=reason,
+            is_nominal=is_nominal,
+        )
 
         # 3. Vérification du périmètre (Forbidden families)
         if effective_feature in forbidden_families and is_nominal:
@@ -203,16 +204,16 @@ class FallbackGovernanceRegistry:
         log_level = logging.WARNING if status == FallbackStatus.TO_REMOVE else logging.INFO
         logger.log(
             log_level,
-            "governance_fallback_usage type=%s status=%s feature=%s call_site=%s nominal=%s",
+            "governance_fallback_usage type=%s status=%s feature=%s call_site=%s nominal=%s "
+            "stable_id=%s",
             fallback_type.value,
             status.value,
             effective_feature,
             call_site,
             is_nominal,
+            stable_id,
         )
 
     @classmethod
-    def get_status(self, fallback_type: FallbackType) -> FallbackStatus:
-        return self.GOVERNANCE_MATRIX.get(fallback_type, {}).get(
-            "status", FallbackStatus.TRANSITORY
-        )
+    def get_status(cls, fallback_type: FallbackType) -> FallbackStatus:
+        return cls.GOVERNANCE_MATRIX.get(fallback_type, {}).get("status", FallbackStatus.TRANSITORY)

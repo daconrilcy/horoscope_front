@@ -239,6 +239,8 @@ def test_script_requires_pr_section_when_doc_updated_and_pr_context_exists(
 ) -> None:
     import sys
 
+    monkeypatch.delenv("DOC_CONFORMITY_PR_BODY", raising=False)
+
     root = Path(__file__).resolve().parents[3]
     monkeypatch.syspath_prepend(str(root / "backend"))
     sys.modules.pop("scripts.check_doc_conformity", None)

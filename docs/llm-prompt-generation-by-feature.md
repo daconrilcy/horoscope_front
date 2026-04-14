@@ -301,7 +301,29 @@ Si un provider non supporté ou un mapping provider échoue :
 
 ## Fallbacks réellement permis
 
-Les règles de gouvernance viennent de `FallbackGovernanceRegistry`.
+Les règles de gouvernance viennent du **registre résiduel versionné**
+(`backend/app/llm_orchestration/data/legacy_residual_registry.json`), projeté exclusivement par
+`FallbackGovernanceRegistry` sans matrice parallèle (Story 66.40).
+
+### Registre résiduel et stratégie d'extinction
+
+- **Deny-by-default (cible)** : toute nouvelle tolérance legacy doit être ajoutée explicitement au
+  registre avec `owner`, `justification`, statut de gouvernance et date de revue ou d'extinction ;
+  l'absence d'entrée ne constitue pas une autorisation implicite.
+- **Blocage progressif** : la variable d'environnement `LLM_LEGACY_PROGRESSIVE_BLOCKLIST` accepte
+  une liste de `stable_id` (séparés par des virgules) fusionnée avec le champ
+  `progressive_blocklist_stable_ids` du JSON ; lorsqu'un identifiant est listé, toute activation
+  correspondante échoue avec une erreur stable orientée revue.
+- **Identifiants `stable_id`** : uniques sur l'ensemble du registre (chemins fallback, aliases
+  gouvernés, use cases dépréciés) ; un doublon fait échouer le chargement.
+- **Observabilité** : chaque activation enregistrée via `FallbackGovernanceRegistry.track_fallback`
+  émet en complément le compteur `llm_legacy_residual_activation_total` (labels : `stable_id`,
+  `path_kind`, `fallback_type`, `feature`, `subfeature`, `call_site`, `activation_reason`,
+  `is_nominal`, `runtime_context`) et un événement agrégé `legacy_residual_activation` sur
+  `llm_governance_event_total`. Les tentatives **bloquées** par la liste progressive émettent
+  d'abord `llm_legacy_residual_blocked_attempt_total`, un point `llm_gateway_fallback_usage_total`
+  avec `outcome=progressive_block_intercepted`, puis l'événement `legacy_residual_blocked`, avant
+  la levée de l'erreur — pour conserver la visibilité ops pendant une extinction par phases.
 
 Sur le périmètre supporté :
 
@@ -432,6 +454,7 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 | `66.37` | lecture ops enrichie par les snapshots et discriminants de pipeline |
 | `66.38` | manifeste et contrôle doc/code |
 | `66.39` | durcissement du validateur de conformité documentaire |
+| `66.40` | registre central du legacy résiduel, télémétrie, blocage progressif, anti-réintroduction |
 
 ## Règles de maintenance
 
@@ -443,4 +466,5 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-14`
-- **Référence stable (Commit SHA)** : `f77e01065e736995a7e358d59a9331b907b1801d`
+- **Référence stable (Commit SHA)** : `80375e05db7276f289d4573a3180f628290d0aef`
+- **Version registre résiduel** : `2026.04.14`

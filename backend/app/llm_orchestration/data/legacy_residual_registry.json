@@ -1,0 +1,285 @@
+{
+  "schema_version": "2026.04.14",
+  "registry_title": "Registre résiduel legacy LLM (Story 66.40)",
+  "deny_by_default_statement": "Toute tolérance résiduelle hors taxonomie canonique doit être listée ici ; le runtime ne reconstruit pas une matrice parallèle.",
+  "progressive_blocklist_stable_ids": [],
+  "fallback_paths": [
+    {
+      "stable_id": "fb.legacy_wrapper",
+      "path_kind": "legacy_resolution_path",
+      "fallback_type": "legacy_wrapper",
+      "registry_status": "deprecated",
+      "fallback_status": "transitoire",
+      "owner": "platform-architecture",
+      "justification": "Façade dict LLMGateway.execute vers execute_request typé ; conservée pour appelants historiques.",
+      "perimeter": "Entrée legacy execute() uniquement ; parcours non nominal (is_nominal=false).",
+      "review_or_extinction_date": "2026-12-31",
+      "forbidden_families": []
+    },
+    {
+      "stable_id": "fb.deprecated_use_case",
+      "path_kind": "legacy_use_case",
+      "fallback_type": "deprecated_use_case",
+      "registry_status": "deprecated",
+      "fallback_status": "transitoire",
+      "owner": "platform-architecture",
+      "justification": "Cartographie use_case historiques vers triplet feature/subfeature/plan canonique.",
+      "perimeter": "Clés listées dans deprecated_use_cases[] du même registre ; la résolution nominale supportée reste assembly obligatoire.",
+      "review_or_extinction_date": "2026-09-30",
+      "forbidden_families": []
+    },
+    {
+      "stable_id": "fb.use_case_first",
+      "path_kind": "legacy_resolution_path",
+      "fallback_type": "use_case_first",
+      "registry_status": "removal_candidate",
+      "fallback_status": "à retirer",
+      "owner": "platform-architecture",
+      "justification": "Résolution par use_case sans assembly ; interdite sur familles supportées.",
+      "perimeter": "Features hors SUPPORTED_FAMILIES ou tests explicites (test_fallback_active).",
+      "review_or_extinction_date": "2026-06-30",
+      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily"]
+    },
+    {
+      "stable_id": "fb.resolve_model",
+      "path_kind": "fallback",
+      "fallback_type": "resolve_model",
+      "registry_status": "removal_candidate",
+      "fallback_status": "à retirer",
+      "owner": "platform-architecture",
+      "justification": "Résolution modèle via catalogue lorsque ExecutionProfile manque.",
+      "perimeter": "Chemins sans profil explicite ; interdit sur familles supportées en nominal.",
+      "review_or_extinction_date": "2026-06-30",
+      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily"]
+    },
+    {
+      "stable_id": "fb.execution_config_admin",
+      "path_kind": "fallback",
+      "fallback_type": "execution_config_admin",
+      "registry_status": "removal_candidate",
+      "fallback_status": "à retirer",
+      "owner": "platform-architecture",
+      "justification": "Ancienne résolution configuration admin directe.",
+      "perimeter": "Tous parcours nominaux jusqu'à migration ExecutionProfile.",
+      "review_or_extinction_date": "2026-06-30",
+      "forbidden_families": []
+    },
+    {
+      "stable_id": "fb.provider_openai",
+      "path_kind": "fallback",
+      "fallback_type": "provider_openai",
+      "registry_status": "deprecated",
+      "fallback_status": "toléré durablement",
+      "owner": "platform-architecture",
+      "justification": "Runtime nominalement OpenAI-only ; repli provider non supporté.",
+      "perimeter": "Provider non listé dans supported_providers sur chemins non strictement nominaux.",
+      "review_or_extinction_date": "2027-03-31",
+      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily"]
+    },
+    {
+      "stable_id": "fb.narrator_legacy",
+      "path_kind": "legacy_resolution_path",
+      "fallback_type": "narrator_legacy",
+      "registry_status": "removal_candidate",
+      "fallback_status": "à retirer",
+      "owner": "platform-architecture",
+      "justification": "Module llm_narrator hors gateway canonique.",
+      "perimeter": "horoscope_daily via LLMNarrator uniquement.",
+      "review_or_extinction_date": "2026-06-30",
+      "forbidden_families": ["horoscope_daily"]
+    },
+    {
+      "stable_id": "fb.test_local",
+      "path_kind": "fallback",
+      "fallback_type": "test_local",
+      "registry_status": "allowed",
+      "fallback_status": "toléré durablement",
+      "owner": "platform-architecture",
+      "justification": "Instrumentation tests (flags test_fallback_active).",
+      "perimeter": "Environnements non production uniquement.",
+      "review_or_extinction_date": "2099-12-31",
+      "forbidden_families": []
+    },
+    {
+      "stable_id": "fb.natal_no_db",
+      "path_kind": "fallback",
+      "fallback_type": "natal_no_db",
+      "registry_status": "deprecated",
+      "fallback_status": "transitoire",
+      "owner": "platform-architecture",
+      "justification": "Modes dégradés / tests sans base pour le domaine natal.",
+      "perimeter": "Tests et contextes explicitement non nominaux.",
+      "review_or_extinction_date": "2026-12-31",
+      "forbidden_families": []
+    },
+    {
+      "stable_id": "fb.deprecated_feature_alias",
+      "path_kind": "alias",
+      "fallback_type": "deprecated_feature_alias",
+      "registry_status": "deprecated",
+      "fallback_status": "transitoire",
+      "owner": "platform-architecture",
+      "justification": "Alias feature/subfeature historiques normalisés avant résolution.",
+      "perimeter": "Normalisation pré-gateway ; ne remplace pas l'assembly.",
+      "review_or_extinction_date": "2026-09-30",
+      "forbidden_families": []
+    }
+  ],
+  "governed_aliases": [
+    {
+      "stable_id": "alias.feature.daily_prediction",
+      "path_kind": "alias",
+      "alias_kind": "feature",
+      "from_value": "daily_prediction",
+      "to_value": "horoscope_daily",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Alignement Story 66.28 sur famille horoscope_daily.",
+      "perimeter": "Champ user_input.feature et équivalents catalogue.",
+      "review_or_extinction_date": "2026-12-31"
+    },
+    {
+      "stable_id": "alias.feature.natal_interpretation",
+      "path_kind": "alias",
+      "alias_kind": "feature",
+      "from_value": "natal_interpretation",
+      "to_value": "natal",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Drift historique natal_interpretation vers natal canonique.",
+      "perimeter": "Champ user_input.feature.",
+      "review_or_extinction_date": "2026-12-31"
+    },
+    {
+      "stable_id": "alias.subfeature.natal_interpretation",
+      "path_kind": "alias",
+      "alias_kind": "subfeature",
+      "from_value": "natal_interpretation",
+      "to_value": "interpretation",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Sous-fonctionnalité natal : mapping vers taxonomie NATAL_SUBFEATURES.",
+      "perimeter": "feature=natal uniquement.",
+      "review_or_extinction_date": "2026-12-31"
+    }
+  ],
+  "deprecated_use_cases": [
+    {
+      "stable_id": "uc.horoscope_daily_free",
+      "use_case_key": "horoscope_daily_free",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Use case commercial historique ; mappé vers horoscope_daily/narration.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.horoscope_daily_full",
+      "use_case_key": "horoscope_daily_full",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Variant premium historique horoscope_daily.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.chat",
+      "use_case_key": "chat",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Clé use_case historique vers chat/astrologer.",
+      "perimeter": "Clients sans feature explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.chat_astrologer",
+      "use_case_key": "chat_astrologer",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Alias chat astrologer premium/free.",
+      "perimeter": "Clients sans feature explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.natal_long_free",
+      "use_case_key": "natal_long_free",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Stub natal long free historique.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.natal_long_free_hyphen",
+      "use_case_key": "natal-long-free",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Variante clé avec tiret (compatibilité clients).",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.natal_interpretation",
+      "use_case_key": "natal_interpretation",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Premium natal historique.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.natal_interpretation_short",
+      "use_case_key": "natal_interpretation_short",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Variant courte natal historique.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.guidance_daily",
+      "use_case_key": "guidance_daily",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Guidance quotidienne historique.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.guidance_weekly",
+      "use_case_key": "guidance_weekly",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Guidance hebdomadaire historique.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.guidance_contextual",
+      "use_case_key": "guidance_contextual",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Guidance contextuelle premium historique.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.event_guidance",
+      "use_case_key": "event_guidance",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Guidance événementielle historique.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "uc.daily_prediction",
+      "use_case_key": "daily_prediction",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Prédiction quotidienne pré-absorption horoscope_daily.",
+      "perimeter": "Entrée use_case sans triplet canonique explicite.",
+      "review_or_extinction_date": "2026-09-30"
+    }
+  ]
+}

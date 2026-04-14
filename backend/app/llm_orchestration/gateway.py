@@ -1955,6 +1955,9 @@ class LLMGateway:
                     FallbackType.DEPRECATED_USE_CASE,
                     call_site=f"mapping:{use_case}",
                     feature=request.user_input.feature,
+                    is_nominal=False,
+                    subfeature=request.user_input.subfeature,
+                    activation_reason="deprecated_use_case_mapping",
                 )
                 logger.warning(
                     "DEPRECATION WARNING: Use case '%s' is deprecated. "

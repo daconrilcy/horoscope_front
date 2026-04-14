@@ -1,6 +1,6 @@
 # Story 66.40: Extinction totale du legacy hors périmètre supporté
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -108,37 +108,37 @@ Le registre du legacy résiduel doit rester proche des composants `llm_orchestra
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Formaliser le registre central du legacy résiduel (AC1, AC2, AC8)
-  - [ ] Définir une structure versionnée unique pour les chemins legacy résiduels.
-  - [ ] Y modéliser type, périmètre, statut, owner, justification et date de revue/expiration.
-  - [ ] Éliminer ou encapsuler toute duplication de gouvernance résiduelle déjà présente dans d’autres modules.
+- [x] Task 1: Formaliser le registre central du legacy résiduel (AC1, AC2, AC8)
+  - [x] Définir une structure versionnée unique pour les chemins legacy résiduels.
+  - [x] Y modéliser type, périmètre, statut, owner, justification et date de revue/expiration.
+  - [x] Éliminer ou encapsuler toute duplication de gouvernance résiduelle déjà présente dans d’autres modules.
 
-- [ ] Task 2: Aligner le runtime sur ce registre unique (AC2, AC4, AC5)
-  - [ ] Brancher la décision runtime de compatibilité legacy sur la source de vérité centrale.
-  - [ ] Ajouter un mécanisme explicite de blocage progressif par feature/famille/type.
-  - [ ] Garantir qu’aucun blocage progressif ne modifie le nominal déjà fermé des quatre familles supportées.
+- [x] Task 2: Aligner le runtime sur ce registre unique (AC2, AC4, AC5)
+  - [x] Brancher la décision runtime de compatibilité legacy sur la source de vérité centrale.
+  - [x] Ajouter un mécanisme explicite de blocage progressif par feature/famille/type.
+  - [x] Garantir qu’aucun blocage progressif ne modifie le nominal déjà fermé des quatre familles supportées.
 
-- [ ] Task 3: Instrumenter l’usage réel du legacy (AC3, AC11)
-  - [ ] Émettre une télémétrie normalisée lors de toute activation de chemin legacy.
-  - [ ] Corréler cette télémétrie avec les surfaces d’observabilité existantes quand les discriminants sont disponibles.
-  - [ ] Produire au moins une vue ou un rapport de maintenance exploitable.
+- [x] Task 3: Instrumenter l’usage réel du legacy (AC3, AC11)
+  - [x] Émettre une télémétrie normalisée lors de toute activation de chemin legacy.
+  - [x] Corréler cette télémétrie avec les surfaces d’observabilité existantes quand les discriminants sont disponibles.
+  - [x] Produire au moins une vue ou un rapport de maintenance exploitable.
 
-- [ ] Task 4: Verrouiller l’anti-réintroduction (AC5, AC6, AC7, AC8)
-  - [ ] Ajouter des tests qui cassent si un fallback nominal interdit réapparaît.
-  - [ ] Ajouter des tests qui cassent si un alias non gouverné est introduit.
-  - [ ] Ajouter des tests qui cassent si une exception legacy incomplète est enregistrée.
+- [x] Task 4: Verrouiller l’anti-réintroduction (AC5, AC6, AC7, AC8)
+  - [x] Ajouter des tests qui cassent si un fallback nominal interdit réapparaît.
+  - [x] Ajouter des tests qui cassent si un alias non gouverné est introduit.
+  - [x] Ajouter des tests qui cassent si une exception legacy incomplète est enregistrée.
 
-- [ ] Task 5: Réaligner la documentation et la gouvernance doc ↔ code (AC9, AC10)
-  - [ ] Mettre à jour la documentation canonique du pipeline LLM.
-  - [ ] Décrire explicitement la stratégie `deny-by-default` visée à terme.
-  - [ ] Étendre le contrôle doc ↔ code si le nouveau registre fait partie du périmètre structurel.
+- [x] Task 5: Réaligner la documentation et la gouvernance doc ↔ code (AC9, AC10)
+  - [x] Mettre à jour la documentation canonique du pipeline LLM.
+  - [x] Décrire explicitement la stratégie `deny-by-default` visée à terme.
+  - [x] Étendre le contrôle doc ↔ code si le nouveau registre fait partie du périmètre structurel.
 
-- [ ] Task 6: Validation locale obligatoire
-  - [ ] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
-  - [ ] Dans `backend/`, exécuter `ruff format .`.
-  - [ ] Dans `backend/`, exécuter `ruff check .`.
-  - [ ] Exécuter `pytest -q`.
-  - [ ] Exécuter au minimum les suites ciblant gouvernance des fallbacks, taxonomie, observabilité et conformité documentaire.
+- [x] Task 6: Validation locale obligatoire
+  - [x] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
+  - [x] Dans `backend/`, exécuter `ruff format .`.
+  - [x] Dans `backend/`, exécuter `ruff check .`.
+  - [x] Exécuter `pytest -q`.
+  - [x] Exécuter au minimum les suites ciblant gouvernance des fallbacks, taxonomie, observabilité et conformité documentaire.
 
 ## Dev Notes
 
@@ -217,6 +217,56 @@ GPT-5 Codex
 
 ### Debug Log References
 
+### Implementation Plan
+
+1. Registre JSON + module `legacy_residual_registry.py` (validation Pydantic, alignement catalogue / taxonomie).
+2. Projection unique dans `FallbackGovernanceRegistry` + blocage `LLM_LEGACY_PROGRESSIVE_BLOCKLIST`.
+3. Télémétrie `llm_legacy_residual_activation_total` + événement `legacy_residual_activation`.
+4. Tests d’intégration Story 66.40 + extension conformité doc (version registre).
+5. Documentation canonique + script `legacy_residual_report.py`.
+6. Correctifs revue P2 : télémétrie avant erreur sur blocage progressif ; unicité globale des `stable_id` ; tests associés.
+
+### Corrections revue (P2) — détail
+
+**Finding : observabilité absente sur blocage progressif (AC3 / AC4 / AC11).**  
+Avant correctif, `track_fallback()` levait `GatewayError` dès qu’un `stable_id` figurait sur la blocklist, sans émettre `llm_gateway_fallback_usage_total` ni `llm_legacy_residual_activation_total`, ce qui masquait le trafic utile pendant une extinction par phases.
+
+**Correctif :** calcul préalable de `status` / `effective_feature` / `reason`, puis si blocage — appel à `log_legacy_residual_blocked_attempt()` dans `observability_service.py` **avant** la levée : compteur `llm_legacy_residual_blocked_attempt_total`, point `llm_gateway_fallback_usage_total` avec label `outcome=progressive_block_intercepted`, événement `legacy_residual_blocked` sur `llm_governance_event_total`, log `legacy_residual_blocked_attempt`.
+
+**Finding : `stable_id` non unique entre sections du registre.**  
+La validation ne garantissait l’unicité qu’au sein de `deprecated_use_cases` et de `fallback_paths`, pas pour `governed_aliases`, ni entre sections.
+
+**Correctif :** `validate_registry_integrity()` (publique) vérifie l’unicité sur l’union `fallback_paths` + `governed_aliases` + `deprecated_use_cases` ; collision → `RuntimeError` explicite. Tests : `test_stable_id_unique_across_all_registry_sections`, `test_progressive_blocklist_emits_telemetry_before_gateway_error`.
+
 ### Completion Notes List
 
+- Registre versionné `legacy_residual_registry.json` : couverture exhaustive des `FallbackType`, des clés `DEPRECATED_USE_CASE_MAPPING`, des alias feature/subfeature requis par la taxonomie.
+- `GOVERNANCE_MATRIX` dérivée exclusivement du registre (AC2) ; blocage progressif par `stable_id` (registre + env).
+- Télémétrie legacy corrélée aux labels existants via `log_governance_event` et compteur dédié.
+- Gateway : `DEPRECATED_USE_CASE` tracé avec `is_nominal=false` après mapping vers périmètre supporté.
+- Doc : stratégie deny-by-default, blocage progressif, observabilité ; ligne **Version registre résiduel** pour la gate doc ↔ code ; doc produit : unicité globale des `stable_id` et flux de télémétrie en cas de blocage progressif.
+- `pytest` ciblé : 66.40, 66.21, 66.38, 66.39 (OK). Suite complète : 3 échecs préexistants dans `tests/evaluation/test_output_contract.py` (fixtures horoscope_daily), non liés à cette story.
+- Revue P2 intégrée : voir section **Corrections revue (P2)** ci-dessus.
+
+### Change Log
+
+- 2026-04-14 : Implémentation registre résiduel, runtime, télémétrie, tests, doc et script de rapport (Story 66.40).
+- 2026-04-14 : Correctifs revue — visibilité ops sur blocage progressif ; contrainte d’unicité `stable_id` sur tout le registre.
+- 2026-04-14 : Mise à jour artefact story (section détaillée correctifs P2, plan étendu).
+
 ### File List
+
+- backend/app/llm_orchestration/data/legacy_residual_registry.json
+- backend/app/llm_orchestration/legacy_residual_registry.py
+- backend/app/llm_orchestration/doc_conformity_manifest.py
+- backend/app/llm_orchestration/gateway.py
+- backend/app/llm_orchestration/services/doc_conformity_validator.py
+- backend/app/llm_orchestration/services/fallback_governance.py
+- backend/app/llm_orchestration/services/observability_service.py
+- backend/scripts/legacy_residual_report.py
+- backend/tests/integration/test_story_66_40_legacy_residual.py
+- backend/tests/integration/test_story_66_38_doc_conformity.py
+- backend/migrations/versions/8a572a8336bf_add_context_quality_to_llm_call_logs_.py
+- docs/llm-prompt-generation-by-feature.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- _bmad-output/implementation-artifacts/66-40-extinction-totale-legacy-hors-perimetre.md

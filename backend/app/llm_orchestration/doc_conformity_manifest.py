@@ -13,6 +13,8 @@ STRUCTURAL_FILES: Final[set[str]] = {
     "backend/app/llm_orchestration/feature_taxonomy.py",
     "backend/app/llm_orchestration/services/doc_conformity_validator.py",
     "backend/app/llm_orchestration/services/fallback_governance.py",
+    "backend/app/llm_orchestration/legacy_residual_registry.py",
+    "backend/app/llm_orchestration/data/legacy_residual_registry.json",
     "backend/app/llm_orchestration/services/provider_parameter_mapper.py",
     "backend/app/llm_orchestration/services/config_coherence_validator.py",
     "backend/app/llm_orchestration/golden_regression_registry.py",

@@ -17,6 +17,7 @@ from app.llm_orchestration.feature_taxonomy import (
 from app.llm_orchestration.golden_regression_registry import (
     OBS_SNAPSHOT_CLASSIFICATION_DEFAULT,
 )
+from app.llm_orchestration.legacy_residual_registry import validate_doc_registry_version
 from app.llm_orchestration.models import FallbackStatus, FallbackType
 from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
 from app.llm_orchestration.supported_providers import NOMINAL_SUPPORTED_PROVIDERS
@@ -41,6 +42,7 @@ class DocConformityValidator:
         errors.extend(self.validate_providers(content))
         errors.extend(self.validate_fallbacks(content))
         errors.extend(self.validate_obs_snapshot_classification(content))
+        errors.extend(validate_doc_registry_version(content))
         return errors
 
     def validate_taxonomy(self, content: str) -> list[str]:

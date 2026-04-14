@@ -104,7 +104,8 @@ def log_governance_event(
     """
     Emits unified governance metrics (AC6, Story 66.23 AC10, 66.30 AC8).
     event_type: publish_rejected | runtime_rejected | non_nominal_tolerated
-                | legacy_feature_alias_used
+                | legacy_feature_alias_used | legacy_residual_activation
+                | legacy_residual_blocked
     """
     labels = {
         "event_type": event_type,
@@ -134,6 +135,101 @@ def log_governance_event(
         subfeature,
         is_nominal,
         reason,
+    )
+
+
+def log_legacy_residual_activation(
+    *,
+    stable_id: str,
+    path_kind: str,
+    fallback_type: str,
+    feature: str | None,
+    subfeature: str | None,
+    call_site: str,
+    activation_reason: str,
+    is_nominal: bool,
+    runtime_context_hint: str | None = None,
+) -> None:
+    """
+    Télémétrie normalisée pour activation d'un chemin legacy résiduel (Story 66.40 AC3).
+    """
+    labels = {
+        "stable_id": stable_id,
+        "path_kind": path_kind,
+        "fallback_type": fallback_type,
+        "feature": feature or "unknown",
+        "subfeature": subfeature or "unknown",
+        "call_site": (call_site[:160] if call_site else "unknown"),
+        "activation_reason": (activation_reason[:120] if activation_reason else "unknown"),
+        "is_nominal": str(is_nominal).lower(),
+        "runtime_context": runtime_context_hint or "none",
+    }
+    increment_counter("llm_legacy_residual_activation_total", labels=labels)
+    log_governance_event(
+        event_type="legacy_residual_activation",
+        feature=feature,
+        subfeature=subfeature,
+        is_nominal=is_nominal,
+        reason=f"{stable_id}:{activation_reason}",
+    )
+
+
+def log_legacy_residual_blocked_attempt(
+    *,
+    stable_id: str,
+    path_kind: str,
+    fallback_type: str,
+    feature: str | None,
+    subfeature: str | None,
+    call_site: str,
+    activation_reason: str,
+    is_nominal: bool,
+    status_value: str,
+) -> None:
+    """
+    Télémétrie des tentatives d'activation interceptées par le blocage progressif (Story 66.40).
+    Émise avant GatewayError pour conserver la visibilité ops pendant une extinction par phases.
+    """
+    labels = {
+        "stable_id": stable_id,
+        "path_kind": path_kind,
+        "fallback_type": fallback_type,
+        "feature": feature or "unknown",
+        "subfeature": subfeature or "unknown",
+        "call_site": (call_site[:160] if call_site else "unknown"),
+        "activation_reason": (activation_reason[:120] if activation_reason else "unknown"),
+        "is_nominal": str(is_nominal).lower(),
+        "governance_status": status_value[:80],
+        "outcome": "progressive_block_intercepted",
+    }
+    increment_counter("llm_legacy_residual_blocked_attempt_total", labels=labels)
+    increment_counter(
+        "llm_gateway_fallback_usage_total",
+        labels={
+            "fallback_type": fallback_type,
+            "status": status_value,
+            "call_site": call_site,
+            "feature": feature or "unknown",
+            "is_nominal": "true" if is_nominal else "false",
+            "stable_id": stable_id,
+            "path_kind": path_kind,
+            "activation_reason": (activation_reason or "track_fallback")[:120],
+            "outcome": "progressive_block_intercepted",
+        },
+    )
+    log_governance_event(
+        event_type="legacy_residual_blocked",
+        feature=feature,
+        subfeature=subfeature,
+        is_nominal=is_nominal,
+        reason=f"{stable_id}:progressive_blocklist:{activation_reason}",
+    )
+    logger.info(
+        "legacy_residual_blocked_attempt stable_id=%s fallback_type=%s call_site=%s feature=%s",
+        stable_id,
+        fallback_type,
+        call_site,
+        feature,
     )
 
 
