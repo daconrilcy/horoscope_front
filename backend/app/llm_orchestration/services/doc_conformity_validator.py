@@ -9,7 +9,11 @@ from app.llm_orchestration.doc_conformity_manifest import (
     STRUCTURAL_FILES,
     VERIFICATION_MARKER,
 )
-from app.llm_orchestration.feature_taxonomy import SUPPORTED_FAMILIES
+from app.llm_orchestration.feature_taxonomy import (
+    LEGACY_DAILY_FEATURE,
+    LEGACY_NATAL_FEATURE,
+    SUPPORTED_FAMILIES,
+)
 from app.llm_orchestration.golden_regression_registry import GOLDEN_THRESHOLDS_DEFAULT
 from app.llm_orchestration.models import FallbackStatus, FallbackType
 from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
@@ -44,6 +48,18 @@ class DocConformityValidator:
             if not re.search(pattern, content):
                 errors.append(
                     f"Taxonomy error: family '{family}' not found as 'nominal_canonical' in doc."
+                )
+
+        alias_expectations = {
+            LEGACY_DAILY_FEATURE: "horoscope_daily",
+            LEGACY_NATAL_FEATURE: "natal",
+        }
+        for alias, canonical in alias_expectations.items():
+            alias_pattern = rf"`{alias}`.*?`{canonical}`|`{canonical}`.*?`{alias}`"
+            if not re.search(alias_pattern, content, flags=re.IGNORECASE | re.DOTALL):
+                errors.append(
+                    f"Taxonomy error: legacy alias '{alias}' should be documented "
+                    f"with its canonical mapping to '{canonical}'."
                 )
         return errors
 
@@ -159,7 +175,7 @@ class DocConformityValidator:
 
     def is_update_required(self, changed_files: list[str]) -> bool:
         normalized_changed_files = {
-            changed_file.replace("\\", "/").lstrip("./") for changed_file in changed_files
+            changed_file.replace("\\", "/").removeprefix("./") for changed_file in changed_files
         }
         return any(changed_file in STRUCTURAL_FILES for changed_file in normalized_changed_files)
 
@@ -207,6 +223,12 @@ class DocConformityValidator:
     ) -> list[str]:
         if not structural_change:
             return []
+
+        if not pr_content.strip():
+            return [
+                "PR template error: the documentation governance section must be "
+                "explicitly filled in for structural changes."
+            ]
 
         state = self.parse_pr_template_state(pr_content)
         oui_checked = bool(state["oui_checked"])

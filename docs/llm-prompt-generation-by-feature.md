@@ -1203,31 +1203,74 @@ Ce document constitue une **règle d'ingénierie explicite**. Sa maintenance est
 
 ### Contrôles automatiques (CI/Quality Gate)
 
+Depuis 66.38, le contrôle documentaire exécutable repose sur trois briques explicites :
+
+- le manifeste unique `backend/app/llm_orchestration/doc_conformity_manifest.py` ;
+- le script local/CI `backend/scripts/check_doc_conformity.py` ;
+- le workflow PR bloquant `.github/workflows/llm-doc-conformity.yml`.
+
+Le manifeste est la seule source de vérité pour :
+
+- les fichiers structurants du pipeline LLM ;
+- le chemin de ce document ;
+- le marqueur du bloc de preuve documentaire final ;
+- les motifs bornés de justification autorisés dans le template PR.
+
 Le pipeline de CI et le quality gate local (`scripts/quality-gate.ps1`) exécutent désormais les contrôles suivants :
-- **Lint de conformité** : Vérifie l'alignement entre ce document et le code réel pour :
-  - La taxonomie canonique (`SUPPORTED_FAMILIES`).
-  - Le provider nominal supporté (`NOMINAL_SUPPORTED_PROVIDERS`).
-  - Le statut des fallbacks critiques (`FallbackGovernanceRegistry`).
-  - La classification des champs `obs_snapshot` (`GoldenRegressionRegistry`).
-- **Détection d'impact** : Si un fichier structurel du pipeline LLM est modifié, la CI exige une mise à jour de la section de vérification ci-dessous (Date et Référence stable).
-- **Validation du template PR** : Vérifie qu'un motif de justification autorisé est fourni en cas d'absence de mise à jour documentaire.
+
+- **Lint de conformité doc ↔ code** :
+  - taxonomie canonique via `SUPPORTED_FAMILIES` ;
+  - provider nominal via `NOMINAL_SUPPORTED_PROVIDERS`, avec rejet des providers nominaux documentés en trop ;
+  - fallbacks structurants `USE_CASE_FIRST` et `RESOLVE_MODEL`, avec contrôle du statut doctrinal et du périmètre de familles interdites ;
+  - classification `obs_snapshot` sur les trois classes `strict`, `thresholded`, `informational` à partir de `GOLDEN_THRESHOLDS_DEFAULT`.
+- **Détection d'impact structurel** :
+  - le script calcule le changeset à partir du diff de branche quand disponible ;
+  - il ajoute aussi les changements `staged`, `unstaged` et `untracked` pour que le gate local couvre le working tree, pas seulement les commits déjà créés ;
+  - si un fichier structurant est touché, ce document doit être mis à jour dans le même changeset, sauf justification bornée explicitement autorisée.
+- **Validation du bloc de preuve documentaire** :
+  - si ce document est modifié sur un change structurel, le contrôle exige qu'au minimum la `Date` et/ou la `Référence stable` du bloc final changent effectivement ;
+  - un simple changement cosmétique dans la section de preuve ne satisfait pas le gate.
+- **Validation du template PR** :
+  - le workflow PR lit le corps de la pull request et vérifie la cohérence entre fichiers touchés, mise à jour documentaire et justification déclarée ;
+  - les motifs autorisés sont bornés à `REF_ONLY`, `FIX_TYPO`, `TEST_ONLY`, `DOC_ONLY`, `NON_LLM` ;
+  - `DOC_ONLY` n'est recevable que si ce document a effectivement été mis à jour ;
+  - en l'absence de mise à jour documentaire sur un change structurel, exactement un motif autorisé doit être sélectionné.
 
 ### Discipline de mise à jour et règle de PR
 
 Toute Pull Request modifiant la structure ou la gouvernance du pipeline LLM doit :
 
 1. Soit mettre à jour ce document dans le même change set pour refléter la nouvelle réalité technique.
-2. Soit justifier explicitement dans la description de la PR pourquoi ce document reste valide sans changement.
+2. Soit fournir dans le template PR la justification bornée explicitement prévue par le workflow.
+
+Le template PR n'est pas un simple rappel humain. Il est désormais couplé à un contrôle CI bloquant qui valide :
+
+- la présence d'une réponse documentaire explicite ;
+- la cohérence entre cette réponse et les fichiers réellement modifiés ;
+- l'usage exclusif des motifs autorisés quand aucune mise à jour doc n'est livrée.
 
 ### Zones à impact documentaire obligatoire
 
-La revue de ce document est **obligatoire** pour toute modification portant sur :
+La revue de ce document est **obligatoire** pour toute modification portant sur le périmètre structurel centralisé dans `backend/app/llm_orchestration/doc_conformity_manifest.py`.
 
-- **Gateway & Orchestration** : `_resolve_plan()`, `execute_request()`, `_call_provider()`, `_handle_repair_or_fallback()`, `_build_messages()`
-- **Composition & Rendu** : `PromptRenderer`, `PromptAssemblyConfig`, `context_quality`, `ContextQualityInjector`, budgets de longueur
-- **Paramétrage & Fallbacks** : `ProviderParameterMapper`, `FallbackGovernanceRegistry`, `NOMINAL_SUPPORTED_PROVIDERS`
-- **Taxonomie & Profils** : taxonomie canonique `feature/subfeature/plan`, `ExecutionProfile`
-- **Doctrine & Contrats** : toute logique modifiant la source de vérité décrite dans les sections précédentes
+À la date de cette vérification, ce périmètre couvre au minimum :
+
+- `docs/llm-prompt-generation-by-feature.md`
+- `.github/pull_request_template.md`
+- `.github/workflows/llm-doc-conformity.yml`
+- `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/doc_conformity_manifest.py`
+- `backend/app/llm_orchestration/feature_taxonomy.py`
+- `backend/app/llm_orchestration/services/doc_conformity_validator.py`
+- `backend/app/llm_orchestration/services/fallback_governance.py`
+- `backend/app/llm_orchestration/services/provider_parameter_mapper.py`
+- `backend/app/llm_orchestration/services/config_coherence_validator.py`
+- `backend/app/llm_orchestration/golden_regression_registry.py`
+- `backend/app/llm_orchestration/supported_providers.py`
+- `backend/app/llm_orchestration/models.py`
+- `backend/scripts/check_doc_conformity.py`
+
+La liste versionnée dans le manifeste fait foi si elle diverge de ce résumé.
 
 ### Vérification et Traçabilité
 
@@ -1236,6 +1279,6 @@ Toute mention de vérification ci-dessous atteste d'une **revue manuelle effecti
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-13`
-- **Référence stable (Commit SHA)** : `c6960a38`
+- **Référence stable (Commit SHA)** : `deb8cc6f`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.

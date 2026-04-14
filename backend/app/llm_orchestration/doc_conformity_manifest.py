@@ -7,14 +7,18 @@ from typing import Final
 STRUCTURAL_FILES: Final[set[str]] = {
     "docs/llm-prompt-generation-by-feature.md",
     ".github/pull_request_template.md",
+    ".github/workflows/llm-doc-conformity.yml",
     "backend/app/llm_orchestration/gateway.py",
+    "backend/app/llm_orchestration/doc_conformity_manifest.py",
     "backend/app/llm_orchestration/feature_taxonomy.py",
+    "backend/app/llm_orchestration/services/doc_conformity_validator.py",
     "backend/app/llm_orchestration/services/fallback_governance.py",
     "backend/app/llm_orchestration/services/provider_parameter_mapper.py",
     "backend/app/llm_orchestration/services/config_coherence_validator.py",
     "backend/app/llm_orchestration/golden_regression_registry.py",
     "backend/app/llm_orchestration/supported_providers.py",
     "backend/app/llm_orchestration/models.py",
+    "backend/scripts/check_doc_conformity.py",
 }
 
 DOC_PATH: Final[str] = "docs/llm-prompt-generation-by-feature.md"

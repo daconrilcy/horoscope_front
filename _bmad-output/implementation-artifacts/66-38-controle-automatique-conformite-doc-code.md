@@ -328,7 +328,9 @@ GPT-5 Codex
 - 2026-04-13 : script [backend/scripts/check_doc_conformity.py](/c:/dev/horoscope_front/backend/scripts/check_doc_conformity.py) étendu pour couvrir les changements commités, staged, unstaged et untracked, ainsi que le corps de PR en CI.
 - 2026-04-13 : workflow CI bloquant [.github/workflows/llm-doc-conformity.yml](/c:/dev/horoscope_front/.github/workflows/llm-doc-conformity.yml) ajouté pour exécuter le gate documentaire sur les pull requests.
 - 2026-04-13 : documentation runtime [docs/llm-prompt-generation-by-feature.md](/c:/dev/horoscope_front/docs/llm-prompt-generation-by-feature.md) réalignée et référence de vérification manuelle réactualisée.
-- 2026-04-13 : vérification ciblée exécutée dans le venv avec `ruff check` et `pytest -q tests/integration/test_story_66_38_doc_conformity.py` ; résultat `16 passed`.
+- 2026-04-14 : passe corrective post-review appliquée pour imposer la section documentaire en contexte PR, auto-protéger le gate via le manifeste, et vérifier explicitement les alias legacy `daily_prediction` / `natal_interpretation`.
+- 2026-04-14 : la doc runtime a été ré-alignée sur le périmètre structurel enrichi du manifeste, y compris les briques du gate documentaire lui-même.
+- 2026-04-14 : vérification ciblée exécutée dans le venv avec `ruff check` et `pytest -q tests/integration/test_story_66_38_doc_conformity.py` ; résultat `19 passed`.
 
 ### File List
 

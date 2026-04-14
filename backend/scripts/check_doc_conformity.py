@@ -15,6 +15,7 @@ def _run_git_lines(args: list[str]) -> list[str]:
         ["git", *args],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     )
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
@@ -53,6 +54,12 @@ def read_pr_body() -> str:
     return os.environ.get("DOC_CONFORMITY_PR_BODY", "")
 
 
+def has_pr_context() -> bool:
+    if len(sys.argv) > 1:
+        return Path(sys.argv[1]).exists()
+    return "DOC_CONFORMITY_PR_BODY" in os.environ
+
+
 def main() -> int:
     _ensure_backend_root_on_path()
     from app.llm_orchestration.doc_conformity_manifest import DOC_PATH
@@ -78,6 +85,8 @@ def main() -> int:
 
     if structural_change:
         print("Structural files changed. Checking documentation governance...")
+        pr_context = has_pr_context()
+        pr_body = read_pr_body()
         if doc_updated:
             try:
                 base_ref = "origin/main"
@@ -85,6 +94,7 @@ def main() -> int:
                     ["git", "show", f"{base_ref}:{DOC_PATH}"],
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
                 )
                 if diff_result.returncode != 0:
                     base_ref = "HEAD~1"
@@ -92,6 +102,7 @@ def main() -> int:
                         ["git", "show", f"{base_ref}:{DOC_PATH}"],
                         capture_output=True,
                         text=True,
+                        encoding="utf-8",
                     )
 
                 if diff_result.returncode == 0:
@@ -113,12 +124,10 @@ def main() -> int:
                 "If this is intended, the PR workflow must provide a valid bounded justification "
                 "for not updating the documentation."
             )
-            pr_body = read_pr_body()
             if not pr_body:
                 return 1
 
-        pr_body = read_pr_body()
-        if pr_body:
+        if pr_context:
             pr_errors = validator.validate_pr_template_state(
                 pr_body,
                 structural_change=True,

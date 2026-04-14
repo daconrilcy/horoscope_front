@@ -38,6 +38,8 @@ def test_doc_conformity_is_update_required() -> None:
     validator = DocConformityValidator(Path("/tmp"))
     assert validator.is_update_required(["backend/app/llm_orchestration/gateway.py"])
     assert validator.is_update_required(["docs/llm-prompt-generation-by-feature.md"])
+    assert validator.is_update_required(["backend/scripts/check_doc_conformity.py"])
+    assert validator.is_update_required([".github/workflows/llm-doc-conformity.yml"])
     assert not validator.is_update_required(["backend/app/main.py"])
     assert not validator.is_update_required(["frontend/src/App.tsx"])
 
@@ -95,6 +97,16 @@ def test_validate_pr_template_state_accepts_oui_when_doc_updated() -> None:
     )
 
 
+def test_validate_pr_template_state_rejects_empty_pr_content_for_structural_change() -> None:
+    validator = DocConformityValidator(Path("/tmp"))
+    errors = validator.validate_pr_template_state(
+        "",
+        structural_change=True,
+        doc_updated=True,
+    )
+    assert errors
+
+
 def test_validate_pr_template_state_rejects_reason_when_doc_updated() -> None:
     validator = DocConformityValidator(Path("/tmp"))
     errors = validator.validate_pr_template_state(
@@ -135,6 +147,19 @@ def test_taxonomy_mismatch_fails_validation() -> None:
     assert any("guidance" in error for error in errors)
     assert any("natal" in error for error in errors)
     assert any("horoscope_daily" in error for error in errors)
+
+
+def test_taxonomy_alias_mismatch_fails_validation() -> None:
+    validator = _validator()
+    fake_content = """
+| `chat` | point d'entrée | taxonomie | `nominal_canonical` |
+| `guidance` | point d'entrée | taxonomie | `nominal_canonical` |
+| `natal` | point d'entrée | taxonomie | `nominal_canonical` |
+| `horoscope_daily` | point d'entrée | taxonomie | `nominal_canonical` |
+"""
+    errors = validator.validate_taxonomy(fake_content)
+    assert any("daily_prediction" in error for error in errors)
+    assert any("natal_interpretation" in error for error in errors)
 
 
 def test_provider_mismatch_fails_validation() -> None:
@@ -189,7 +214,34 @@ def test_script_pr_body_validation(monkeypatch: pytest.MonkeyPatch) -> None:
     assert script.main() == 0
 
     monkeypatch.setenv("DOC_CONFORMITY_PR_BODY", "- [x] **OUI**")
+    monkeypatch.setattr(script, "has_pr_context", lambda: True)
     assert script.main() == 1
 
     monkeypatch.setenv("DOC_CONFORMITY_PR_BODY", "- [ ] `REF_ONLY`")
+    assert script.main() == 1
+
+
+def test_script_requires_pr_section_when_doc_updated_and_pr_context_exists(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import sys
+
+    root = Path(__file__).resolve().parents[3]
+    monkeypatch.syspath_prepend(str(root / "backend"))
+    sys.modules.pop("scripts.check_doc_conformity", None)
+    import scripts.check_doc_conformity as script
+
+    monkeypatch.setattr(
+        script,
+        "get_changed_files",
+        lambda: [
+            "backend/app/llm_orchestration/gateway.py",
+            "docs/llm-prompt-generation-by-feature.md",
+        ],
+    )
+
+    pr_body_file = tmp_path / "pr_body.md"
+    pr_body_file.write_text("", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["check_doc_conformity.py", str(pr_body_file)])
+
     assert script.main() == 1
