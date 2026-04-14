@@ -128,6 +128,21 @@ Le flux réel dans `LLMGateway.execute_request()` est :
 
 Point important : contrairement à des versions antérieures du document, la Stage 0.5 n'est pas "skippée" pour les familles supportées. Elle tourne toujours, mais elle reste best-effort et ne remplace pas les obligations canoniques d'assembly et d'`ExecutionProfile`.
 
+### Registre d'invariants sémantiques exécutable (Story 66.41)
+
+Un registre versionné (`backend/app/llm_orchestration/semantic_invariants_registry.py`, clé `SEMANTIC_INVARIANTS_VERSION`) formalise des invariants d'architecture **bornés** et les confronte au code réel via `SemanticConformityValidator` (`backend/app/llm_orchestration/services/semantic_conformity_validator.py`). La validation sémantique est branchée sur le **même** script CLI que le garde structurel (`backend/scripts/check_doc_conformity.py`), sans second point d'entrée parallèle.
+
+**Contenu typique du registre (à maintenir aligné avec le code) :**
+
+- **Ordre des transformations** du developer prompt : séquence attendue dans `assemble_developer_prompt` (budget de longueur puis `context_quality`) et dans `LLMGateway._resolve_plan` (`context_quality` → verbosité → rendu `PromptRenderer`).
+- **Priorité snapshot actif** : dans `AssemblyRegistry.get_active_config` / `get_active_config_sync` et `ExecutionProfileRegistry.get_active_profile`, aucune requête `select` sur le modèle ORM « live » (`PromptAssemblyConfigModel`, `LlmExecutionProfileModel`) avant le premier `if snapshot:` ni dans la branche `if snapshot:` ; le fallback tables ne doit apparaître que dans le `else` associé (contrôle AST).
+- **Gouvernance nominale** : égalité stricte entre le registre et les ensembles runtime (`SUPPORTED_FAMILIES`, `NOMINAL_SUPPORTED_PROVIDERS`), les aliases legacy → canonique documentés, et l'ensemble des noms du enum `FallbackType`.
+- **Propagation** : présence des champs critiques sur `ResolvedExecutionPlan` et `ExecutionObservabilitySnapshot` ; marqueurs snapshot dans la persistance d'observabilité (`log_call`).
+
+**Sortie CI (`check_doc_conformity.py --json`) :** chaque violation sémantique expose des champs stables (`semantic_code`, `invariant_id`, `component`, `message`, `detail`, …) en plus du libellé agrégé, pour consommation automatique sans reparse de texte libre.
+
+Toute évolution volontaire de ces invariants doit mettre à jour **ce document** et le registre **ensemble**.
+
 ## Détail de `_resolve_plan()`
 
 ```mermaid
@@ -466,5 +481,5 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-14`
-- **Référence stable (Commit SHA)** : `80375e05db7276f289d4573a3180f628290d0aef`
+- **Référence stable (Commit SHA)** : `fb863c823e91f4b965b685c3af6fa32fb6b63e78`
 - **Version registre résiduel** : `2026.04.14`

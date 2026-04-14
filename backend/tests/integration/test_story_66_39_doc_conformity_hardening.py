@@ -197,10 +197,18 @@ def test_script_json_output(monkeypatch, capsys) -> None:
         def is_update_required(self, files):
             return False
 
+    class FakeSemanticValidator:
+        def validate_all(self):
+            return []
+
     monkeypatch.setattr(
         script,
         "_load_validator_dependencies",
-        lambda: ("docs/llm-prompt-generation-by-feature.md", lambda _: FakeValidator()),
+        lambda: (
+            "docs/llm-prompt-generation-by-feature.md",
+            lambda _: FakeValidator(),
+            lambda _: FakeSemanticValidator(),
+        ),
     )
 
     exit_code = script.main()
@@ -215,3 +223,4 @@ def test_script_json_output(monkeypatch, capsys) -> None:
     assert "verification_block_updated" in data
     assert "pr_section_status" in data
     assert "errors" in data
+    assert "semantic_invariants_version" in data

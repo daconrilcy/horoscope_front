@@ -1,6 +1,6 @@
 # Story 66.40: Extinction totale du legacy hors périmètre supporté
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

@@ -12,6 +12,8 @@ STRUCTURAL_FILES: Final[set[str]] = {
     "backend/app/llm_orchestration/doc_conformity_manifest.py",
     "backend/app/llm_orchestration/feature_taxonomy.py",
     "backend/app/llm_orchestration/services/doc_conformity_validator.py",
+    "backend/app/llm_orchestration/semantic_invariants_registry.py",
+    "backend/app/llm_orchestration/services/semantic_conformity_validator.py",
     "backend/app/llm_orchestration/services/fallback_governance.py",
     "backend/app/llm_orchestration/legacy_residual_registry.py",
     "backend/app/llm_orchestration/data/legacy_residual_registry.json",

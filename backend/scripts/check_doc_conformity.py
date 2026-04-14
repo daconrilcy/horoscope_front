@@ -71,12 +71,27 @@ def _ensure_backend_root_on_path() -> None:
         sys.path.insert(0, str(backend_root))
 
 
+def __semantic_version_safe() -> str:
+    try:
+        _ensure_backend_root_on_path()
+        from app.llm_orchestration.services.semantic_conformity_validator import (
+            semantic_violations_version,
+        )
+
+        return semantic_violations_version()
+    except Exception:
+        return "unknown"
+
+
 def _load_validator_dependencies():
     _ensure_backend_root_on_path()
     from app.llm_orchestration.doc_conformity_manifest import DOC_PATH
     from app.llm_orchestration.services.doc_conformity_validator import DocConformityValidator
+    from app.llm_orchestration.services.semantic_conformity_validator import (
+        SemanticConformityValidator,
+    )
 
-    return DOC_PATH, DocConformityValidator
+    return DOC_PATH, DocConformityValidator, SemanticConformityValidator
 
 
 def resolve_git_context(validator) -> GitResolutionResult:
@@ -162,7 +177,7 @@ def has_pr_context() -> bool:
 
 def get_changed_files() -> list[str]:
     """Backward compatibility shim for tests."""
-    _, doc_conformity_validator = _load_validator_dependencies()
+    _, doc_conformity_validator, _ = _load_validator_dependencies()
 
     root_path = Path(__file__).resolve().parents[2]
     validator = doc_conformity_validator(root_path)
@@ -172,14 +187,20 @@ def get_changed_files() -> list[str]:
 def main() -> int:
     use_json = "--json" in sys.argv
     root_path = Path(__file__).resolve().parents[2]
-    doc_path, doc_conformity_validator = _load_validator_dependencies()
+    doc_path, doc_conformity_validator, semantic_conformity_validator = (
+        _load_validator_dependencies()
+    )
     validator = doc_conformity_validator(root_path)
+    semantic_validator = semantic_conformity_validator(root_path)
 
     if not use_json:
         print("==> Checking LLM Documentation conformity...")
 
     # Step 1: Doctrine lints (always run)
-    errors = validator.validate_all()
+    structural_errors: list[str] = validator.validate_all()
+
+    # Step 1b: Semantic invariants (Story 66.41) — même CLI, pas de second point d'entrée
+    semantic_violations = semantic_validator.validate_all()
 
     # Step 2: Git resolution
     git_context = resolve_git_context(validator)
@@ -204,13 +225,15 @@ def main() -> int:
                         old_content, new_content
                     )
                     if not verification_block_updated:
-                        errors.append(f"{doc_path} was touched but Date/Ref block was not updated.")
+                        structural_errors.append(
+                            f"{doc_path} was touched but Date/Ref block was not updated."
+                        )
                 else:
                     # In some Git contexts, we might not have the base version.
                     # We log it but don't fail unless it's a hard requirement in CI.
                     pass
             except Exception as exc:
-                errors.append(f"Error during verification reference check: {exc}")
+                structural_errors.append(f"Error during verification reference check: {exc}")
         else:
             # No doc update but structural change -> check PR justification
             pass
@@ -224,28 +247,51 @@ def main() -> int:
                 changed_files=git_context.changed_files,
             )
             if pr_errors:
-                errors.extend(pr_errors)
+                structural_errors.extend(pr_errors)
                 pr_section_status = "invalid"
             else:
                 pr_section_status = "valid"
         else:
-            errors.append(
+            structural_errors.append(
                 "PR template error: the documentation governance section must be "
                 "filled in for structural changes."
             )
 
+    errors = structural_errors + [sv.as_user_string() for sv in semantic_violations]
+
     # Step 4: Final Output
     if use_json:
+        error_records = []
+        for msg in structural_errors:
+            error_records.append(
+                {
+                    "code": "DOC_CONFORMITY_ERROR",
+                    "message": msg,
+                    "rule": "doc_conformity",
+                    "layer": "structural",
+                }
+            )
+        for sv in semantic_violations:
+            error_records.append(
+                {
+                    "code": "SEMANTIC_INVARIANT_VIOLATION",
+                    "rule": "semantic_conformity",
+                    "layer": "semantic",
+                    "semantic_code": sv.code,
+                    "invariant_id": sv.invariant_id,
+                    "component": sv.component,
+                    "message": sv.message,
+                    "detail": sv.detail,
+                }
+            )
         output = {
             "status": "fail" if errors else "ok",
             "git_context": asdict(git_context),
             "doc_changed": doc_updated,
             "verification_block_updated": verification_block_updated,
             "pr_section_status": pr_section_status,
-            "errors": [
-                {"code": "DOC_CONFORMITY_ERROR", "message": error, "rule": "doc_conformity"}
-                for error in errors
-            ],
+            "semantic_invariants_version": __semantic_version_safe(),
+            "errors": error_records,
         }
         print(json.dumps(output, indent=2))
     else:

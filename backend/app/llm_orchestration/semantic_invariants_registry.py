@@ -1,0 +1,100 @@
+"""
+Registre d'invariants sémantiques bornés — Story 66.41.
+
+Séparé du manifeste structurel (doc_conformity_manifest) : celui-ci décrit
+ce qui doit rester vrai dans l'architecture runtime du pipeline, pas le
+périmètre de fichiers PR.
+"""
+
+from __future__ import annotations
+
+from typing import Final
+
+# Version du contrat sémantique (incrémenter si les invariants évoluent volontairement).
+SEMANTIC_INVARIANTS_VERSION: Final[str] = "1.0.0"
+
+# Ordre doctrinal des transformations majeures du developer prompt (après résolution assembly
+# des blocs texte). Doit rester aligné avec docs/llm-prompt-generation-by-feature.md.
+# — Phase assemble_developer_prompt : budget de longueur puis compensation context_quality.
+# — Phase gateway (_resolve_plan) : context_quality runtime, verbosité, rendu placeholders.
+ASSEMBLE_DEVELOPER_PROMPT_TRANSFORM_ORDER: Final[tuple[str, ...]] = (
+    "length_budget_inject",
+    "context_quality_inject",
+)
+
+GATEWAY_PROMPT_TRANSFORM_ORDER: Final[tuple[str, ...]] = (
+    "context_quality_inject",
+    "verbosity_instruction",
+    "prompt_render",
+)
+
+# Règle runtime : le snapshot de release actif prime sur les tables publiées « live »
+# lorsqu'il est présent (AssemblyRegistry + ExecutionProfileRegistry).
+RUNTIME_SNAPSHOT_PRIORITY_RULE_ID: Final[str] = "runtime.snapshot_active_before_live_tables"
+
+# Familles et providers nominaux — source de vérité versionnée (AC1, AC4, AC9).
+# Toute évolution volontaire doit mettre à jour ce registre ET les modules runtime
+# (feature_taxonomy / supported_providers) en même temps ; le garde sémantique exige l'égalité stricte.
+GOVERNED_NOMINAL_FAMILIES: Final[frozenset[str]] = frozenset(
+    {"chat", "guidance", "natal", "horoscope_daily"}
+)
+GOVERNED_NOMINAL_PROVIDERS: Final[frozenset[str]] = frozenset({"openai"})
+
+# Aliases de features legacy → canonique (alignés sur normalize_feature).
+GOVERNED_LEGACY_FEATURE_ALIASES_TO_CANONICAL: Final[dict[str, str]] = {
+    "natal_interpretation": "natal",
+    "daily_prediction": "horoscope_daily",
+}
+
+# Noms d'enum FallbackType autorisés dans le contrat de gouvernance (nouveau membre = mise à jour registre).
+GOVERNED_FALLBACK_TYPE_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        "LEGACY_WRAPPER",
+        "DEPRECATED_USE_CASE",
+        "USE_CASE_FIRST",
+        "RESOLVE_MODEL",
+        "EXECUTION_CONFIG_ADMIN",
+        "PROVIDER_OPENAI",
+        "NARRATOR_LEGACY",
+        "TEST_LOCAL",
+        "NATAL_NO_DB",
+        "DEPRECATED_FEATURE_ALIAS",
+    }
+)
+
+# Discriminants devant rester présents sur les modèles de plan / observabilité (contrat review).
+CRITICAL_RESOLVED_EXECUTION_PLAN_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "assembly_id",
+        "feature",
+        "subfeature",
+        "plan",
+        "requested_provider",
+        "provider",
+        "context_quality",
+        "context_quality_instruction_injected",
+        "context_quality_handled_by_template",
+        "active_snapshot_id",
+        "active_snapshot_version",
+        "manifest_entry_id",
+    }
+)
+
+CRITICAL_EXECUTION_OBS_SNAPSHOT_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "requested_provider",
+        "resolved_provider",
+        "executed_provider",
+        "context_quality",
+        "max_output_tokens_source",
+        "active_snapshot_id",
+        "active_snapshot_version",
+        "manifest_entry_id",
+    }
+)
+
+# Marqueurs stables pour la persistance d'observabilité (llm_call_logs).
+OBSERVABILITY_LOG_SNAPSHOT_MARKERS: Final[tuple[str, ...]] = (
+    "active_snapshot_id",
+    "active_snapshot_version",
+)

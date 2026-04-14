@@ -1,6 +1,6 @@
 # Story 66.41: Validation sémantique doc ↔ code du pipeline de génération de prompt
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -112,42 +112,42 @@ Ce registre ne doit pas être un “jumeau complet” du code, mais un contrat e
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Formaliser le registre d’invariants sémantiques (AC1, AC10)
-  - [ ] Définir une source de vérité bornée des invariants critiques du pipeline.
-  - [ ] Séparer explicitement ce registre du manifeste purement structurel.
-  - [ ] Limiter ce registre aux invariants réellement documentés et gouvernés.
+- [x] Task 1: Formaliser le registre d’invariants sémantiques (AC1, AC10)
+  - [x] Définir une source de vérité bornée des invariants critiques du pipeline.
+  - [x] Séparer explicitement ce registre du manifeste purement structurel.
+  - [x] Limiter ce registre aux invariants réellement documentés et gouvernés.
 
-- [ ] Task 2: Vérifier l’ordre doctrinal du prompt (AC2)
-  - [ ] Encoder l’ordre doctrinal attendu des transformations critiques.
-  - [ ] Ajouter une validation qui détecte une dérive de cet ordre.
-  - [ ] Produire des erreurs explicites pour les inversions, suppressions ou insertions non gouvernées.
+- [x] Task 2: Vérifier l’ordre doctrinal du prompt (AC2)
+  - [x] Encoder l’ordre doctrinal attendu des transformations critiques.
+  - [x] Ajouter une validation qui détecte une dérive de cet ordre.
+  - [x] Produire des erreurs explicites pour les inversions, suppressions ou insertions non gouvernées.
 
-- [ ] Task 3: Vérifier la source de vérité runtime et la propagation critique (AC3, AC5)
-  - [ ] Contrôler la priorité runtime du snapshot actif.
-  - [ ] Vérifier la cohérence `AssemblyRegistry` / `ExecutionProfileRegistry` / runtime effectif.
-  - [ ] Vérifier la propagation des discriminants critiques documentés.
+- [x] Task 3: Vérifier la source de vérité runtime et la propagation critique (AC3, AC5)
+  - [x] Contrôler la priorité runtime du snapshot actif.
+  - [x] Vérifier la cohérence `AssemblyRegistry` / `ExecutionProfileRegistry` / runtime effectif.
+  - [x] Vérifier la propagation des discriminants critiques documentés.
 
-- [ ] Task 4: Vérifier providers, familles, fallbacks et aliases (AC4, AC10)
-  - [ ] Détecter les nouveaux providers nominaux non gouvernés.
-  - [ ] Détecter les nouvelles familles supportées non documentées.
-  - [ ] Détecter les nouveaux fallbacks et aliases hors gouvernance.
+- [x] Task 4: Vérifier providers, familles, fallbacks et aliases (AC4, AC10)
+  - [x] Détecter les nouveaux providers nominaux non gouvernés.
+  - [x] Détecter les nouvelles familles supportées non documentées.
+  - [x] Détecter les nouveaux fallbacks et aliases hors gouvernance.
 
-- [ ] Task 5: Construire les fixtures de sabotage volontaire (AC6, AC7, AC11)
-  - [ ] Créer des cas de sabotage ciblés par invariant.
-  - [ ] Vérifier que chaque sabotage produit une erreur stable et compréhensible.
-  - [ ] Séparer clairement ces cas des tests purement structurels.
+- [x] Task 5: Construire les fixtures de sabotage volontaire (AC6, AC7, AC11)
+  - [x] Créer des cas de sabotage ciblés par invariant.
+  - [x] Vérifier que chaque sabotage produit une erreur stable et compréhensible.
+  - [x] Séparer clairement ces cas des tests purement structurels.
 
-- [ ] Task 6: Intégrer le garde sémantique au flux de conformité existant (AC8, AC9, AC11)
-  - [ ] Brancher la validation sémantique au CLI et aux workflows existants.
-  - [ ] Vérifier l’absence de seconde commande concurrente.
-  - [ ] Mettre à jour la documentation canonique si un changement volontaire est introduit.
+- [x] Task 6: Intégrer le garde sémantique au flux de conformité existant (AC8, AC9, AC11)
+  - [x] Brancher la validation sémantique au CLI et aux workflows existants.
+  - [x] Vérifier l’absence de seconde commande concurrente.
+  - [x] Mettre à jour la documentation canonique si un changement volontaire est introduit.
 
-- [ ] Task 7: Validation locale obligatoire
-  - [ ] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
-  - [ ] Dans `backend/`, exécuter `ruff format .`.
-  - [ ] Dans `backend/`, exécuter `ruff check .`.
-  - [ ] Exécuter `pytest -q`.
-  - [ ] Exécuter au minimum les suites de conformité documentaire existantes et la nouvelle suite sémantique.
+- [x] Task 7: Validation locale obligatoire
+  - [x] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
+  - [x] Dans `backend/`, exécuter `ruff format .`.
+  - [x] Dans `backend/`, exécuter `ruff check .`.
+  - [x] Exécuter `pytest -q`.
+  - [x] Exécuter au minimum les suites de conformité documentaire existantes et la nouvelle suite sémantique.
 
 ## Dev Notes
 
@@ -234,4 +234,25 @@ GPT-5 Codex
 
 ### Completion Notes List
 
+- Registre versionné `SEMANTIC_INVARIANTS_VERSION` + tuples d’ordre (gateway / assemble) dans `semantic_invariants_registry.py`.
+- `SemanticConformityValidator` : ordre des transformations (`_resolve_plan`, `assemble_developer_prompt`) ; **AC3** : analyse AST — aucun `select` sur le modèle ORM « live » avant ou dans la branche `if snapshot:` ; présence d’un `select` sur ce modèle dans le `else` ; **AC4** : égalité stricte registre ↔ `SUPPORTED_FAMILIES`, `NOMINAL_SUPPORTED_PROVIDERS`, aliases legacy documentés, et noms `FallbackType` ; champs critiques sur `ResolvedExecutionPlan` / `ExecutionObservabilitySnapshot` ; marqueurs snapshot dans `log_call` (async).
+- Intégration au script unique `check_doc_conformity.py` ; sortie JSON avec champs structurés par violation sémantique (`semantic_code`, `invariant_id`, `component`, `detail`, …) pour la CI.
+- Tests d’intégration : sabotages ordre, snapshot (plusieurs formes), alignement gouvernance ; exécution verte sur l’arbre courant.
+- Doc canonique : section registre sémantique (comportement détaillé) + bloc Date/SHA de vérification.
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/implementation-artifacts/66-41-validation-semantique-doc-code.md`
+- `backend/app/llm_orchestration/doc_conformity_manifest.py`
+- `backend/app/llm_orchestration/semantic_invariants_registry.py`
+- `backend/app/llm_orchestration/services/semantic_conformity_validator.py`
+- `backend/scripts/check_doc_conformity.py`
+- `backend/tests/integration/test_story_66_41_semantic_conformity.py`
+- `backend/tests/integration/test_story_66_39_doc_conformity_hardening.py`
+- `docs/llm-prompt-generation-by-feature.md`
+
+### Change Log
+
+- 2026-04-14 : Implémentation du garde sémantique borné (registre + validateur + CLI + tests + doc + sprint status).
+- 2026-04-14 : Durcissement revue — AC4 alignement explicite registre/code, AC3 contrôle AST snapshot/branches, JSON CI structuré pour les violations sémantiques ; stories 66-40 / 66-41 passées en done.

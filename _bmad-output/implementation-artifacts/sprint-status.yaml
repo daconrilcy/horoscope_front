@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-14T21:15:00+02:00'
+last_updated: '2026-04-14T23:30:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -625,8 +625,8 @@ development_status:
   66-37-observabilite-d-exploitation-complete-avec-alertes-structurees-sur-les-dimensions-canoniques: done
   66-38-controle-automatique-conformite-doc-code: done
   66-39-durcissement-fiabilite-multi-contexte-gate-conformite-documentaire: done
-  66-40-extinction-totale-legacy-hors-perimetre: review
-  66-41-validation-semantique-doc-code: ready-for-dev
+  66-40-extinction-totale-legacy-hors-perimetre: done
+  66-41-validation-semantique-doc-code: done
   66-42-anti-entropie-taxonomie-placeholders: ready-for-dev
   66-43-chaos-testing-provider-runtime: ready-for-dev
   66-44-gate-production-continue-par-snapshot: ready-for-dev
