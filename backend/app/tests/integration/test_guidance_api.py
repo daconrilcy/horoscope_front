@@ -49,6 +49,9 @@ def _cleanup_tables() -> None:
     reset_test_generators()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    from scripts.seed_66_20_convergence import seed_66_20_convergence
+
+    seed_66_20_convergence()
     with SessionLocal() as db:
         for model in (
             ChatMessageModel,

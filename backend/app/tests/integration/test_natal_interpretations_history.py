@@ -139,7 +139,7 @@ class TestNatalInterpretationsHistory:
         item = UserNatalInterpretationModel(
             id=123,
             user_id=1,
-            chart_id="chart-1",
+            chart_id=1,
             level=InterpretationLevel.SHORT,
             use_case="natal_interpretation_short",
             created_at=datetime.now(timezone.utc),

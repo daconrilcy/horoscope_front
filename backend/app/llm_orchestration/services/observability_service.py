@@ -179,6 +179,7 @@ async def log_call(
         requested_provider = None
         resolved_provider = None
         executed_provider = None
+        context_quality = "unknown"
         context_compensation_status = None
         max_output_tokens_source = None
         max_output_tokens_final = None
@@ -254,6 +255,7 @@ async def log_call(
                 requested_provider = obs.requested_provider
                 resolved_provider = obs.resolved_provider
                 executed_provider = obs.executed_provider
+                context_quality = getattr(obs, "context_quality", context_quality)
                 context_compensation_status = (
                     obs.context_compensation_status.value
                     if hasattr(obs.context_compensation_status, "value")
@@ -274,6 +276,9 @@ async def log_call(
             provider_error_code = getattr(error, "_provider_error_code", None)
             breaker_state = getattr(error, "_breaker_state", None)
             breaker_scope = getattr(error, "_breaker_scope", None)
+
+        if result:
+            context_quality = getattr(result.meta, "context_quality", context_quality)
 
         # Increment specific metrics (AC8)
         if pipeline_kind and execution_path_kind:

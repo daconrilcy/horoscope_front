@@ -85,3 +85,8 @@ def get_circuit_breaker(
     if key not in _breakers:
         _breakers[key] = CircuitBreaker(failure_threshold, recovery_timeout_sec)
     return _breakers[key]
+
+
+def reset_circuit_breakers() -> None:
+    """Clear all in-memory breakers to keep tests isolated."""
+    _breakers.clear()

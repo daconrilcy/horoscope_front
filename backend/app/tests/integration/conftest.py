@@ -10,6 +10,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.rate_limit import reset_rate_limits
 from app.infra.db.base import Base
 from app.infra.db.session import engine
+from app.llm_orchestration.providers.circuit_breaker import reset_circuit_breakers
+from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+from app.llm_orchestration.services.execution_profile_registry import ExecutionProfileRegistry
 from app.main import app
 
 # Keep reference-data seed integration flows deterministic without manual shell exports.
@@ -46,6 +49,13 @@ def _reset_dependency_overrides() -> None:
         yield
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def _reset_llm_runtime_state() -> None:
+    reset_circuit_breakers()
+    AssemblyRegistry.invalidate_cache()
+    ExecutionProfileRegistry.invalidate_cache()
 
 
 @pytest.fixture

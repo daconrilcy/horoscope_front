@@ -317,6 +317,7 @@ GPT-5 Codex
 - 2026-04-14 : [backend/tests/integration/test_story_66_38_doc_conformity.py](/c:/dev/horoscope_front/backend/tests/integration/test_story_66_38_doc_conformity.py) et [backend/app/tests/integration/test_pipeline_scripts.py](/c:/dev/horoscope_front/backend/app/tests/integration/test_pipeline_scripts.py) réalignés sur le comportement effectif du gate documentaire.
 - 2026-04-14 : validation ciblée exécutée dans le venv avec `ruff check` sur les fichiers du gate, `pytest -q tests/integration/test_story_66_38_doc_conformity.py tests/integration/test_story_66_39_doc_conformity_hardening.py` et `pytest -q app/tests/integration/test_pipeline_scripts.py -k "quality_gate_success_executes_all_steps_in_order or quality_gate_skips_canonical_db_cli_when_db_not_marked_ready"` ; résultats verts.
 - 2026-04-14 : exécution réelle de `python backend/scripts/check_doc_conformity.py --json` confirmée ; la sortie JSON est conforme, et l’échec observé sur le worktree local provient bien de l’absence de body PR alors que des fichiers structurels sont modifiés.
+- 2026-04-14 : passe documentaire complémentaire appliquée après durcissement runtime/tests du backend ; la doc de référence LLM a été réalignée sur la compatibilité `ProviderRuntimeManager` / `ResponsesClient`, l’isolation des états globaux de test (`circuit breakers`, caches registry), la clarification pratique de `OPERATIONAL_FIELDS` et le fallback no-op du scheduler FastAPI quand `apscheduler` n’est pas importable.
 
 ### File List
 

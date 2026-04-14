@@ -333,6 +333,7 @@ GPT-5 Codex
 - 2026-04-14 : la classification doctrinale `obs_snapshot` a été explicitée via `OBS_SNAPSHOT_CLASSIFICATION_DEFAULT` pour découpler la gouvernance doc ↔ code de la seule sémantique de seuils portée par `GOLDEN_THRESHOLDS_DEFAULT`.
 - 2026-04-14 : le script documentaire utilise désormais un calcul de changeset plus déterministe basé sur merge-base et `DOC_CONFORMITY_BASE_REF`, avec fallbacks bornés pour les contextes locaux/CI atypiques.
 - 2026-04-14 : vérification ciblée exécutée dans le venv avec `ruff check` et `pytest -q tests/integration/test_story_66_38_doc_conformity.py` ; résultat `21 passed`.
+- 2026-04-14 : nouvelle passe de maintenance documentaire effectuée après corrections de fiabilité backend ; le gate 66.38 continue de couvrir la doc de référence désormais mise à jour pour refléter le durcissement runtime provider, la sanitation opérationnelle réellement autorisée, l’isolation de l’état global de test et le comportement dégradé contrôlé du scheduler au boot.
 
 ### File List
 

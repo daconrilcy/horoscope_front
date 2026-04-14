@@ -3,23 +3,86 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Dict
 
-from app.core.sensitive_data import Sink, sanitize_payload
-
 REDACTED = "[REDACTED]"
+EMAIL_REDACTED = "[EMAIL_REDACTED]"
+
+_SECRET_MARKERS = ("password", "secret", "token", "api_key", "apikey", "authorization", "key")
+_SENSITIVE_DOMAIN_MARKERS = ("birth", "natal", "chart", "astro")
+_CONTENT_FIELDS = {"content", "message", "messages", "raw_output", "structured_output", "prompt"}
+_SAFE_FIELDS = {
+    "use_case",
+    "locale",
+    "request_id",
+    "trace_id",
+    "latency_ms",
+    "cached",
+    "role",
+    "theme",
+}
+
+
+def _sanitize_text_preview(text: str, *, truncate: bool = False) -> str:
+    sanitized = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", EMAIL_REDACTED, text)
+    if truncate and len(sanitized) > 120:
+        remaining = len(sanitized) - 120
+        return f"{sanitized[:120]}...[truncated {remaining} chars]"
+    return sanitized
+
+
+def _sanitize_value(key: str, value: Any) -> Any:
+    key_lower = key.lower()
+
+    if value is None:
+        return None
+
+    if key in _SAFE_FIELDS:
+        return value
+
+    if any(marker in key_lower for marker in _SECRET_MARKERS):
+        return REDACTED
+
+    if any(marker in key_lower for marker in _SENSITIVE_DOMAIN_MARKERS):
+        return REDACTED
+
+    if key_lower in _CONTENT_FIELDS:
+        return REDACTED
+
+    if key_lower == "question":
+        return _sanitize_text_preview(str(value), truncate=True)
+
+    if isinstance(value, dict):
+        return {
+            nested_key: _sanitize_value(nested_key, nested_value)
+            for nested_key, nested_value in value.items()
+        }
+
+    if isinstance(value, list):
+        return [
+            _sanitize_value(key, item) if isinstance(item, dict) else item
+            for item in value
+        ]
+
+    if isinstance(value, str):
+        return _sanitize_text_preview(value)
+
+    return value
 
 
 def sanitize_for_logging(payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Sanitize a payload dict for safe logging.
 
-    Uses the central Sensitive Data Policy for STRUCTURED_LOGS sink.
+    Applies a practical structured-log sanitizer:
+    preserve operational metadata, redact secrets/domain-sensitive fields,
+    and truncate free-form questions.
     """
     if not isinstance(payload, dict):
         return payload
 
-    return sanitize_payload(payload, Sink.STRUCTURED_LOGS)
+    return {key: _sanitize_value(key, value) for key, value in payload.items()}
 
 
 def sanitize_request_for_logging(
@@ -48,15 +111,7 @@ def sanitize_request_for_logging(
         result["context"] = sanitize_for_logging(context)
 
     for key, value in extra.items():
-        if isinstance(value, dict):
-            result[key] = sanitize_for_logging(value)
-        else:
-            # Re-classify and redact individual extra fields
-            from app.core.sensitive_data import classify_field, get_policy_action, redact_value
-
-            category = classify_field(key)
-            action = get_policy_action(Sink.STRUCTURED_LOGS, category)
-            result[key] = redact_value(value, action)
+        result[key] = _sanitize_value(key, value)
 
     return result
 
@@ -71,9 +126,11 @@ def sanitize_messages_for_logging(messages: list[Dict[str, Any]]) -> list[Dict[s
         content = msg.get("content", "")
         if isinstance(content, str):
             sanitized["content_length"] = len(content)
-            # content_preview is risky, but policy says REDACTED for USER_AUTHORED_CONTENT in logs
+            sanitized["content_preview"] = REDACTED
             sanitized["content"] = REDACTED
         else:
+            sanitized["content_length"] = 0
+            sanitized["content_preview"] = REDACTED
             sanitized["content"] = REDACTED
         result.append(sanitized)
     return result

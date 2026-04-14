@@ -2,23 +2,31 @@ import logging
 import sys
 from threading import Lock
 
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from apscheduler.schedulers import SchedulerNotRunningError
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Persistent job store using the same database as the app
-jobstores = {"default": SQLAlchemyJobStore(url=settings.database_url)}
+try:
+    from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+    from apscheduler.schedulers import SchedulerNotRunningError
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+except ModuleNotFoundError:  # pragma: no cover - optional dependency in tests/dev
+    SQLAlchemyJobStore = None
+    SchedulerNotRunningError = RuntimeError
+    AsyncIOScheduler = None
 
-scheduler = AsyncIOScheduler(jobstores=jobstores)
+# Persistent job store using the same database as the app.
+scheduler = None
+if AsyncIOScheduler is not None and SQLAlchemyJobStore is not None:
+    jobstores = {"default": SQLAlchemyJobStore(url=settings.database_url)}
+    scheduler = AsyncIOScheduler(jobstores=jobstores)
 _scheduler_lock = Lock()
 
 
 def start_scheduler():
-    if "pytest" in sys.modules:
+    if "pytest" in sys.modules or scheduler is None:
+        if scheduler is None:
+            logger.info("APScheduler unavailable; scheduler startup skipped.")
         return
     with _scheduler_lock:
         if not scheduler.running:
@@ -27,7 +35,7 @@ def start_scheduler():
 
 
 def shutdown_scheduler():
-    if "pytest" in sys.modules:
+    if "pytest" in sys.modules or scheduler is None:
         return
     with _scheduler_lock:
         if scheduler.running:

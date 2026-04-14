@@ -21,6 +21,21 @@ from app.llm_orchestration.models import (
 logger = logging.getLogger(__name__)
 
 
+def _coerce_headers(raw_headers: Any) -> Dict[str, str]:
+    """Best-effort conversion for SDK/test header objects."""
+    if raw_headers is None:
+        return {}
+    if isinstance(raw_headers, dict):
+        return {str(key): str(value) for key, value in raw_headers.items()}
+    items = getattr(raw_headers, "items", None)
+    if callable(items):
+        try:
+            return {str(key): str(value) for key, value in items()}
+        except Exception:
+            return {}
+    return {}
+
+
 class ResponsesClient:
     """
     Wrapper for the OpenAI Responses API (POST /v1/responses).
@@ -154,13 +169,13 @@ class ResponsesClient:
         try:
             raw_api_response = await client.with_raw_response.responses.create(**params)
             response = raw_api_response.parse()
-            resp_headers = dict(raw_api_response.headers)
+            resp_headers = _coerce_headers(getattr(raw_api_response, "headers", None))
         except Exception as err:
             # Story 66.33 Finding High: Extract headers from exception if available
             resp_headers = {}
             if hasattr(err, "response") and hasattr(err.response, "headers"):
                 try:
-                    resp_headers = dict(err.response.headers)
+                    resp_headers = _coerce_headers(err.response.headers)
                 except Exception:
                     pass
             # Re-wrap error if it carries headers to propagate them

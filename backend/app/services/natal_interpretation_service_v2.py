@@ -876,7 +876,7 @@ class NatalInterpretationServiceV2:
                 persona_id=str(item.persona_id) if item.persona_id else None,
                 created_at=item.created_at.isoformat(),
                 deleted_at=datetime.now(timezone.utc).isoformat(),
-            ),
+            ).model_dump(exclude_none=True),
         )
 
         db.delete(item)

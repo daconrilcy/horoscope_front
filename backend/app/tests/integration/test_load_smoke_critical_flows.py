@@ -58,6 +58,9 @@ def _cleanup_tables() -> None:
     BillingService.reset_subscription_status_cache()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    from scripts.seed_66_20_convergence import seed_66_20_convergence
+
+    seed_66_20_convergence()
     with SessionLocal() as db:
         for model in (
             UserPrivacyRequestModel,

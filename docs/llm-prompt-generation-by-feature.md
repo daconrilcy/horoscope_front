@@ -527,6 +527,8 @@ Un circuit breaker est maintenu par couple `provider:family` (ex: `openai:chat`)
 - Extraction du header `Retry-After` pour caler le délai de retry applicatif.
 - Distinction nette entre rate limit passager et épuisement définitif du quota.
 - Les erreurs serveur provider (`5xx`) sont séparées des timeouts, des erreurs de connexion et de `retry_budget_exhausted`.
+- Le contrat interne reste compatible avec deux formes de retour du client provider : `GatewayResult` seul ou tuple `(GatewayResult, headers)`, ce qui évite qu'un changement de signature local fasse dériver tout le runtime.
+- Les mocks de tests du client Responses doivent donc cibler `with_raw_response.responses.create(...)` ou fournir explicitement une structure compatible avec ce contrat, pas seulement un `AsyncMock` générique sur `headers`.
 
 ### 5. Contrat aval et taxonomie propagée
 Le runtime provider n'est plus écrasé en un unique `llm_unavailable`.
@@ -557,6 +559,7 @@ Le snapshot d'observabilité et les logs `llm_call_logs` sont enrichis :
 - `breaker_state` / `breaker_scope` : état du circuit au moment de l'appel.
 - Ces champs sont aussi persistés sur le chemin d'erreur `log_call(error=...)`, y compris pour `circuit_open`.
 - Un résultat servi en mode dégradé ne doit jamais compter comme succès nominal provider.
+- Le calcul d'observabilité doit rester total même sur les chemins d'erreur ; en particulier `context_quality` ne doit jamais dépendre d'une variable initialisée seulement sur le chemin heureux.
 
 ### 7. Mode dégradé réellement autorisé
 La story 66.33 introduit le vocabulaire `nominal` / `dégradé`, mais le contrat produit actuel reste volontairement strict sur le périmètre nominal :
@@ -661,6 +664,12 @@ Champs observés :
 - `provider_error_code`
 - `breaker_state`
 - `breaker_scope`
+
+Contraintes de robustesse observées dans la base de code actuelle :
+
+- les tests doivent réinitialiser explicitement l'état global mutable du runtime (`circuit breakers`, caches `AssemblyRegistry`, caches `ExecutionProfileRegistry`) pour éviter qu'un test précédent contamine la résolution nominale du suivant ;
+- un rejet de configuration supportée (`missing_execution_profile`, assembly manquante, provider non nominal) ne doit jamais être confondu avec une panne provider transitoire ;
+- sur les chemins unitaires legacy qui valident encore l'input schema avant toute assembly nominale, le gateway peut exécuter une prévalidation rapide `UseCaseConfig` pour conserver un message d'erreur métier stable sans réintroduire de fallback d'exécution.
 
 ## Qualification de charge et capacité (Story 66.35)
 
@@ -1048,6 +1057,7 @@ Côté admin :
 - les erreurs API passent par `_error_response(... sanitize_payload(..., Sink.ADMIN_API))` ;
 - `AdminLogsPage` applique un masquage récursif de défense en profondeur sur les `details` d'audit avant affichage ;
 - cette défense UI ne remplace pas le contrat backend, elle ne fait qu'ajouter un garde-fou terminal.
+- En pratique, l'allowlist `OPERATIONAL_FIELDS` doit rester assez large pour laisser vivre les audits d'exploitation et d'administration attendus (`filters`, `export_type`, `template_code`, `persona_name`, `gesture_type`, `failure_rate`, etc.) ; sinon la politique de non-fuite détruit le contrat métier au lieu de le borner.
 
 ### 5. Logging runtime
 
@@ -1061,6 +1071,8 @@ La hiérarchie de confiance est :
 1. serializers et DTOs bornés par sink ;
 2. sanitation explicite avant persistance / restitution ;
 3. filtre global logging en dernier recours.
+
+Le `log_sanitizer` historique reste utilisé comme couche de présentation et de défense en profondeur, mais il ne doit pas remplacer la politique centrale par sink portée par `sensitive_data.py`.
 
 ### 6. Hashing, non-fuite et maintenance
 
@@ -1305,3 +1317,8 @@ Dernière vérification manuelle contre le pipeline réel du gateway :
 - **Référence stable (Commit SHA)** : `story-66-39-hardened`
 
 Si le code diverge, le pipeline réel du gateway fait foi jusqu'à mise à jour de cette documentation, mais l'absence de mise à jour constitue une **dette de gouvernance**.
+
+Note opérationnelle complémentaire observée au 2026-04-14 :
+
+- `backend/app/core/scheduler.py` tolère désormais l'absence effective d'`apscheduler` à l'import en mode no-op contrôlé, afin que le boot FastAPI et certains `TestClient(app)` recréés en test ne cassent pas pour une dépendance optionnelle manquante au runtime ;
+- cette tolérance ne change pas la doctrine d'exploitation LLM : les alertes et traitements périodiques structurants restent destinés à des scripts/cron externes, pas à un scheduler opportuniste embarqué dans FastAPI.

@@ -112,12 +112,17 @@ class ProviderRuntimeManager:
                         raise UpstreamServerError("Simulated server error")
 
                 # 1. Execute the call
-                result, headers = await self.client.execute(
+                provider_response = await self.client.execute(
                     messages=messages,
                     model=model,
                     timeout_seconds=timeout_seconds,
                     **kwargs,
                 )
+                if isinstance(provider_response, tuple) and len(provider_response) == 2:
+                    result, headers = provider_response
+                else:
+                    result = provider_response
+                    headers = {}
 
                 # 2. On success, update breaker and return
                 breaker.record_success()

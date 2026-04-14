@@ -4,6 +4,16 @@ import pytest
 
 from app.llm_orchestration.providers.responses_client import ResponsesClient
 
+
+def _build_raw_response(
+    mock_response: MagicMock,
+    headers: dict[str, str] | None = None,
+) -> MagicMock:
+    raw_response = MagicMock()
+    raw_response.parse.return_value = mock_response
+    raw_response.headers = headers or {}
+    return raw_response
+
 # ---------------------------------------------------------------------------
 # Tests _to_typed_content_blocks
 # ---------------------------------------------------------------------------
@@ -85,7 +95,7 @@ async def test_execute_gpt5_params():
     mock_response.usage.input_tokens = 10
     mock_response.usage.output_tokens = 20
     mock_response.usage.total_tokens = 30
-    mock_openai.responses.create.return_value = mock_response
+    mock_openai.with_raw_response.responses.create.return_value = _build_raw_response(mock_response)
 
     await client.execute(
         messages=messages,
@@ -98,7 +108,7 @@ async def test_execute_gpt5_params():
         use_case="natal_interpretation",
     )
 
-    _, kwargs = mock_openai.responses.create.call_args
+    _, kwargs = mock_openai.with_raw_response.responses.create.call_args
     assert kwargs["model"] == "gpt-5"
     assert "temperature" not in kwargs
     assert kwargs["reasoning"]["effort"] == "low"
@@ -130,7 +140,7 @@ async def test_execute_non_reasoning_params():
     mock_response.usage.input_tokens = 5
     mock_response.usage.output_tokens = 5
     mock_response.usage.total_tokens = 10
-    mock_openai.responses.create.return_value = mock_response
+    mock_openai.with_raw_response.responses.create.return_value = _build_raw_response(mock_response)
 
     await client.execute(
         messages=messages,
@@ -138,7 +148,7 @@ async def test_execute_non_reasoning_params():
         temperature=0.5,
     )
 
-    _, kwargs = mock_openai.responses.create.call_args
+    _, kwargs = mock_openai.with_raw_response.responses.create.call_args
     assert kwargs["model"] == "gpt-4o-mini"
     assert kwargs["temperature"] == 0.5
     assert "reasoning" not in kwargs
@@ -159,7 +169,7 @@ async def test_execute_o4_reasoning_no_temperature():
     mock_response.model = "o4-mini"
     mock_response.output_text = "{}"
     mock_response.usage = MagicMock(input_tokens=5, output_tokens=5, total_tokens=10)
-    mock_openai.responses.create.return_value = mock_response
+    mock_openai.with_raw_response.responses.create.return_value = _build_raw_response(mock_response)
 
     await client.execute(
         messages=[{"role": "user", "content": "Test"}],
@@ -168,7 +178,7 @@ async def test_execute_o4_reasoning_no_temperature():
         reasoning_effort="medium",
     )
 
-    _, kwargs = mock_openai.responses.create.call_args
+    _, kwargs = mock_openai.with_raw_response.responses.create.call_args
     assert "temperature" not in kwargs
     assert kwargs["reasoning"]["effort"] == "medium"
 
@@ -185,7 +195,7 @@ async def test_execute_gpt5_no_verbosity_when_none():
     mock_response.model = "gpt-5"
     mock_response.output_text = "{}"
     mock_response.usage = MagicMock(input_tokens=5, output_tokens=5, total_tokens=10)
-    mock_openai.responses.create.return_value = mock_response
+    mock_openai.with_raw_response.responses.create.return_value = _build_raw_response(mock_response)
 
     await client.execute(
         messages=[{"role": "user", "content": "Test"}],
@@ -194,7 +204,7 @@ async def test_execute_gpt5_no_verbosity_when_none():
         verbosity=None,
     )
 
-    _, kwargs = mock_openai.responses.create.call_args
+    _, kwargs = mock_openai.with_raw_response.responses.create.call_args
     assert "text" not in kwargs
 
 
@@ -210,14 +220,15 @@ async def test_structured_output_populated_when_response_format_set():
     mock_response.model = "gpt-5"
     mock_response.output_text = '{"result": "success"}'
     mock_response.usage = MagicMock(input_tokens=5, output_tokens=5, total_tokens=10)
-    mock_openai.responses.create.return_value = mock_response
+    mock_openai.with_raw_response.responses.create.return_value = _build_raw_response(mock_response)
 
-    result = await client.execute(
+    result, headers = await client.execute(
         messages=[{"role": "user", "content": "Test"}],
         model="gpt-5",
         response_format={"type": "json_object"},
     )
 
+    assert headers == {}
     assert result.structured_output == {"result": "success"}
 
 
@@ -233,12 +244,13 @@ async def test_structured_output_none_when_no_response_format():
     mock_response.model = "gpt-5"
     mock_response.output_text = '{"result": "success"}'
     mock_response.usage = MagicMock(input_tokens=5, output_tokens=5, total_tokens=10)
-    mock_openai.responses.create.return_value = mock_response
+    mock_openai.with_raw_response.responses.create.return_value = _build_raw_response(mock_response)
 
-    result = await client.execute(
+    result, headers = await client.execute(
         messages=[{"role": "user", "content": "Test"}],
         model="gpt-5",
         response_format=None,
     )
 
+    assert headers == {}
     assert result.structured_output is None

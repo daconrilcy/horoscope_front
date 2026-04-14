@@ -3,6 +3,7 @@ import uuid
 import pytest
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import (
     LlmPromptVersionModel,
@@ -38,12 +39,31 @@ async def test_plan_differentiation(db):
 
     # Create assemblies for free and premium
     for plan in ["free", "premium"]:
+        profile = LlmExecutionProfileModel(
+            id=uuid.uuid4(),
+            name=f"profile-{plan}",
+            provider="openai",
+            model="gpt-4o",
+            reasoning_profile="off",
+            verbosity_profile="balanced",
+            output_mode="structured_json",
+            tool_mode="none",
+            feature=feat,
+            subfeature="interpretation",
+            plan=plan,
+            status=PromptStatus.PUBLISHED,
+            created_by="eval",
+        )
+        db.add(profile)
+        db.flush()
         config = PromptAssemblyConfigModel(
             id=uuid.uuid4(),
             feature=feat,
+            subfeature="interpretation",
             plan=plan,
             locale="fr-FR",
             feature_template_ref=v.id,
+            execution_profile_ref=profile.id,
             plan_rules_ref="plan_free_concise" if plan == "free" else "plan_premium_full",
             plan_rules_enabled=True,
             execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
@@ -57,14 +77,18 @@ async def test_plan_differentiation(db):
 
     # 2. Resolve both
     req_free = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case=uc_key, feature=feat, plan="free"),
+        user_input=ExecutionUserInput(
+            use_case=uc_key, feature=feat, subfeature="interpretation", plan="free"
+        ),
         request_id="r1",
         trace_id="t1",
     )
     plan_free, _ = await gateway._resolve_plan(req_free, db)
 
     req_prem = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case=uc_key, feature=feat, plan="premium"),
+        user_input=ExecutionUserInput(
+            use_case=uc_key, feature=feat, subfeature="interpretation", plan="premium"
+        ),
         request_id="r2",
         trace_id="t2",
     )

@@ -1952,14 +1952,10 @@ class LLMGateway:
             extra = context_dict.pop("extra_context", {})
             context_dict.update(extra)
 
-            # Stage 0.5: Fast Validate Input (Story 66.4 AC8)
-            # Story 66.29: For supported features, skip use_case-based pre-validation.
-            # They MUST be validated after assembly resolution in Stage 1.5.
-            if not is_supported_feature(request.user_input.feature):
-                config = await self._resolve_config(db, use_case, context_dict)
-                self._validate_input(config, user_input_dict)
-            else:
-                config = None
+            # Stage 0.5: Fast pre-validation against the explicit use-case contract when available.
+            # This remains best-effort and does not replace mandatory assembly/profile resolution.
+            config = await self._resolve_config(db, use_case, context_dict)
+            self._validate_input(config, user_input_dict)
 
             # Stage 1: Resolve Plan (Now includes QualifiedContext)
             try:

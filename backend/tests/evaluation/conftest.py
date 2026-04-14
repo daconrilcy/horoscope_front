@@ -7,6 +7,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.infra.db.base import Base
+from app.llm_orchestration.providers.circuit_breaker import reset_circuit_breakers
+from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+from app.llm_orchestration.services.execution_profile_registry import ExecutionProfileRegistry
 
 
 def pytest_configure(config):
@@ -22,6 +25,9 @@ TestingSessionLocal = sessionmaker(bind=engine)
 def db():
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
+    reset_circuit_breakers()
+    AssemblyRegistry.invalidate_cache()
+    ExecutionProfileRegistry.invalidate_cache()
     # Ensure v2 is enabled for these tests
     with patch("app.llm_orchestration.gateway.settings") as mock_settings:
         mock_settings.app_env = "dev"

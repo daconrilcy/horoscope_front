@@ -5,7 +5,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.infra.db.base import Base
-from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
+from app.infra.db.models import (
+    LlmExecutionProfileModel,
+    LlmOutputSchemaModel,
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptAssemblyConfigModel,
+)
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
@@ -250,12 +256,41 @@ async def test_schema_blocking_paid_use_case(db_session):
         created_by="a",
     )
     db_session.add_all([uc, p])
+    profile = LlmExecutionProfileModel(
+        name="natal-paid-test",
+        provider="openai",
+        model="gpt-4o",
+        reasoning_profile="off",
+        verbosity_profile="balanced",
+        output_mode="structured_json",
+        tool_mode="none",
+        feature="natal",
+        subfeature="interpretation",
+        plan="premium",
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    db_session.add(profile)
+    db_session.flush()
+    db_session.add(
+        PromptAssemblyConfigModel(
+            feature="natal",
+            subfeature="interpretation",
+            plan="premium",
+            locale="fr-FR",
+            feature_template_ref=p.id,
+            execution_profile_ref=profile.id,
+            execution_config={"model": "gpt-4o", "max_output_tokens": 2048},
+            status=PromptStatus.PUBLISHED,
+            created_by="test",
+        )
+    )
     db_session.commit()
 
     gateway = LLMGateway(responses_client=MagicMock())
 
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_interpretation", locale="fr"),
+        user_input=ExecutionUserInput(use_case="natal_interpretation", locale="fr-FR"),
         request_id="r",
         trace_id="t",
         user_id=1,
@@ -310,6 +345,51 @@ async def test_schema_name_in_payload(db_session):
 
 @pytest.mark.asyncio
 async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
+    uc = LlmUseCaseConfigModel(
+        key="natal_long_free",
+        display_name="Free Natal",
+        description="D",
+    )
+    prompt = LlmPromptVersionModel(
+        use_case_key="natal_long_free",
+        status=PromptStatus.PUBLISHED,
+        model="gpt-4o-mini",
+        developer_prompt="Dev {{locale}}",
+        created_by="test",
+    )
+    db_session.add_all([uc, prompt])
+    db_session.flush()
+    profile = LlmExecutionProfileModel(
+        name="natal-free-test",
+        provider="openai",
+        model="gpt-4o-mini",
+        reasoning_profile="off",
+        verbosity_profile="balanced",
+        output_mode="structured_json",
+        tool_mode="none",
+        feature="natal",
+        subfeature="interpretation",
+        plan="free",
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    db_session.add(profile)
+    db_session.flush()
+    db_session.add(
+        PromptAssemblyConfigModel(
+            feature="natal",
+            subfeature="interpretation",
+            plan="free",
+            locale="fr-FR",
+            feature_template_ref=prompt.id,
+            execution_profile_ref=profile.id,
+            execution_config={"model": "gpt-4o-mini", "max_output_tokens": 2048},
+            status=PromptStatus.PUBLISHED,
+            created_by="test",
+        )
+    )
+    db_session.commit()
+
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
         return_value=create_mock_result(
