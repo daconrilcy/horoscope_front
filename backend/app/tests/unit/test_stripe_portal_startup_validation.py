@@ -148,9 +148,9 @@ def test_startup_validation_warn_mode_does_not_block_runtime(
     )
 
     with (
-        caplog.at_level("WARNING", logger="app.startup.stripe_portal_validation"),
+        caplog.at_level("INFO", logger="app.startup.stripe_portal_validation"),
         patch("app.startup.stripe_portal_validation.get_stripe_client", return_value=mock_client),
     ):
         run_stripe_portal_startup_validation(settings)
 
-    assert "stripe_portal_startup_validation_warn" in caplog.text
+    assert "stripe_portal_startup_validation_advisory" in caplog.text

@@ -431,7 +431,7 @@ def seed() -> None:
             if not lint_res.passed:
                 raise RuntimeError(f"Lint FAILED for {key}: {lint_res.errors}")
             if lint_res.warnings:
-                logger.warning("Lint warnings for %s: %s", key, lint_res.warnings)
+                logger.info("Lint advisories for %s: %s", key, lint_res.warnings)
             logger.info("Lint passed for %s", key)
 
             # 3. Vérifier idempotence : si le PUBLISHED existant est déjà identique, skip

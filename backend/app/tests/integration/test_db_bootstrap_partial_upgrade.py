@@ -78,3 +78,74 @@ def test_auto_upgrade_repairs_missing_llm_tables_even_when_revision_is_head(
         assert "llm_prompt_versions" in tables
     finally:
         test_engine.dispose()
+
+
+def test_auto_upgrade_repairs_email_logs_sqlite_primary_key_shape(
+    monkeypatch: object, tmp_path: Path
+) -> None:
+    db_path = tmp_path / "bootstrap-email-logs-repair.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    config = _alembic_config()
+    monkeypatch.setattr(bootstrap.settings, "database_url", database_url)
+    command.upgrade(config, "head")
+
+    test_engine = create_engine(database_url, future=True)
+    with test_engine.connect() as connection:
+        before_type = {
+            row[1]: row[2] for row in connection.execute(text("PRAGMA table_info(email_logs)"))
+        }["id"]
+
+    monkeypatch.setattr(bootstrap.settings, "app_env", "development")
+    monkeypatch.setattr(bootstrap, "engine", test_engine)
+    monkeypatch.setattr(bootstrap, "_is_pytest_runtime", lambda: False)
+
+    try:
+        bootstrap.ensure_local_sqlite_schema_ready()
+
+        with test_engine.connect() as connection:
+            after_type = {
+                row[1]: row[2]
+                for row in connection.execute(text("PRAGMA table_info(email_logs)"))
+            }["id"]
+        assert before_type == "BIGINT"
+        assert after_type == "INTEGER"
+    finally:
+        test_engine.dispose()
+
+
+def test_auto_upgrade_repairs_missing_llm_call_logs_operational_columns(
+    monkeypatch: object, tmp_path: Path
+) -> None:
+    db_path = tmp_path / "bootstrap-llm-provider-repair.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    config = _alembic_config()
+    monkeypatch.setattr(bootstrap.settings, "database_url", database_url)
+    command.upgrade(config, "8a572a8336bf")
+
+    test_engine = create_engine(database_url, future=True)
+    monkeypatch.setattr(bootstrap.settings, "app_env", "development")
+    monkeypatch.setattr(bootstrap, "engine", test_engine)
+    monkeypatch.setattr(bootstrap, "_is_pytest_runtime", lambda: False)
+
+    with test_engine.begin() as connection:
+        connection.execute(
+            text("UPDATE alembic_version SET version_num = :version"),
+            {"version": bootstrap._head_revision()},
+        )
+        before_columns = {
+            row[1] for row in connection.execute(text("PRAGMA table_info(llm_call_logs)"))
+        }
+
+    try:
+        bootstrap.ensure_local_sqlite_schema_ready()
+
+        with test_engine.connect() as connection:
+            after_columns = {
+                row[1] for row in connection.execute(text("PRAGMA table_info(llm_call_logs)"))
+            }
+        assert "executed_provider_mode" not in before_columns
+        assert "provider_error_code" not in before_columns
+        assert "executed_provider_mode" in after_columns
+        assert "provider_error_code" in after_columns
+    finally:
+        test_engine.dispose()

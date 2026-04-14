@@ -219,7 +219,7 @@ def _ensure_llm_registry_seeded() -> None:
     if not missing_registry and not degraded_registry:
         return
 
-    logger.warning(
+    logger.info(
         (
             "llm_registry_auto_heal use_cases=%s prompts=%s active_short=%s "
             "enabled_personas=%s persona_lock=%s placeholder_drift=%s degraded=%s"

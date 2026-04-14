@@ -808,8 +808,13 @@ class AIEngineAdapter:
 
             # 1. Prepare User Input
             subfeature = natal_input.use_case_key
-            if subfeature == "natal_interpretation_short":
-                subfeature = "natal_interpretation"
+            if subfeature in {
+                "natal_interpretation",
+                "natal_interpretation_short",
+                "natal_long_free",
+                "natal-long-free",
+            }:
+                subfeature = "interpretation"
 
             user_input = ExecutionUserInput(
                 use_case=natal_input.use_case_key,

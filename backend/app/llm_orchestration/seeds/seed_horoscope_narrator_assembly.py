@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
@@ -17,6 +17,38 @@ from app.infra.db.models.llm_prompt import (
 from app.llm_orchestration.narrator_contract import NARRATOR_OUTPUT_SCHEMA
 
 logger = logging.getLogger(__name__)
+
+
+def _keep_latest_published_and_archive_rest(
+    db: Session,
+    rows: list[object],
+    *,
+    label: str,
+) -> object | None:
+    if not rows:
+        return None
+
+    sorted_rows = sorted(
+        rows,
+        key=lambda row: (
+            getattr(row, "published_at", None) or getattr(row, "created_at", None),
+            getattr(row, "id", None),
+        ),
+        reverse=True,
+    )
+    winner = sorted_rows[0]
+    duplicates = sorted_rows[1:]
+    if duplicates:
+        for duplicate in duplicates:
+            setattr(duplicate, "status", PromptStatus.ARCHIVED)
+        logger.info(
+            "seed_narrator: archived %s duplicate published rows kept=%s archived=%s",
+            label,
+            getattr(winner, "id", None),
+            len(duplicates),
+        )
+        db.flush()
+    return winner
 
 
 def seed_horoscope_narrator_assembly(db: Session) -> None:
@@ -53,6 +85,20 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
     db.flush()
     logger.info("seed_narrator: archived legacy %s artifacts", legacy_key)
 
+    db.execute(
+        update(PromptAssemblyConfigModel)
+        .where(PromptAssemblyConfigModel.feature == "horoscope_daily")
+        .where(PromptAssemblyConfigModel.subfeature == "narration")
+        .where(
+            or_(
+                PromptAssemblyConfigModel.plan.is_(None),
+                PromptAssemblyConfigModel.plan.not_in(["free", "premium"]),
+            )
+        )
+        .values(status=PromptStatus.ARCHIVED)
+    )
+    db.flush()
+
     # 1. Output Schema
     stmt_schema = select(LlmOutputSchemaModel).where(
         LlmOutputSchemaModel.name == "NarratorResult_v1"
@@ -65,6 +111,11 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
         db.add(narrator_schema)
         db.flush()
         logger.info("seed_narrator: created NarratorResult_v1 schema")
+    else:
+        narrator_schema.json_schema = NARRATOR_OUTPUT_SCHEMA
+        narrator_schema.version = 1
+        db.flush()
+        logger.info("seed_narrator: updated NarratorResult_v1 schema")
 
     # 2. Use Cases
     use_cases = [
@@ -114,7 +165,11 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             LlmPromptVersionModel.use_case_key == uc_key,
             LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
         )
-        pv = db.execute(stmt_pv).scalar_one_or_none()
+        pv = _keep_latest_published_and_archive_rest(
+            db,
+            list(db.execute(stmt_pv).scalars().all()),
+            label=f"prompt:{uc_key}",
+        )
         if not pv:
             pv = LlmPromptVersionModel(
                 use_case_key=uc_key,
@@ -144,7 +199,11 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             LlmExecutionProfileModel.feature == prof_data["feature"],
             LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
         )
-        prof = db.execute(stmt_prof).scalar_one_or_none()
+        prof = _keep_latest_published_and_archive_rest(
+            db,
+            list(db.execute(stmt_prof).scalars().all()),
+            label=f"profile:{prof_data['feature']}",
+        )
         if not prof:
             prof = LlmExecutionProfileModel(
                 name=prof_data["name"],
@@ -194,7 +253,11 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             PromptAssemblyConfigModel.plan == ass_data["plan"],
             PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
         )
-        ass = db.execute(stmt_ass).scalar_one_or_none()
+        ass = _keep_latest_published_and_archive_rest(
+            db,
+            list(db.execute(stmt_ass).scalars().all()),
+            label=f"assembly:{ass_data['feature']}:{ass_data['subfeature']}:{ass_data['plan']}",
+        )
         if not ass:
             # Find template and profile
             pv = db.execute(
@@ -233,6 +296,37 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             db.add(ass)
             logger.info(
                 "seed_narrator: created assembly for %s / %s", ass_data["feature"], ass_data["plan"]
+            )
+        else:
+            pv = db.execute(
+                select(LlmPromptVersionModel).where(
+                    LlmPromptVersionModel.use_case_key == ass_data["feature"],
+                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+                )
+            ).scalar_one()
+
+            prof = db.execute(
+                select(LlmExecutionProfileModel).where(
+                    LlmExecutionProfileModel.feature == ass_data["feature"],
+                    LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
+                )
+            ).scalar_one()
+
+            ass.feature_template_ref = pv.id
+            ass.persona_ref = persona.id if persona else None
+            ass.execution_profile_ref = prof.id
+            ass.output_contract_ref = str(narrator_schema.id)
+            ass.execution_config = {
+                "model": "gpt-4o",
+                "temperature": 0.7,
+                "max_output_tokens": ass_data["max_tokens"],
+                "timeout_seconds": 60,
+            }
+            ass.status = PromptStatus.PUBLISHED
+            logger.info(
+                "seed_narrator: updated assembly for %s / %s",
+                ass_data["feature"],
+                ass_data["plan"],
             )
 
     db.commit()

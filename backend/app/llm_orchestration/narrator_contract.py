@@ -14,15 +14,22 @@ NARRATOR_OUTPUT_SCHEMA = {
         "astro_events_intro": {"type": "string"},
         "time_window_narratives": {
             "type": "object",
-            "additionalProperties": {"type": "string"},
+            "required": ["nuit", "matin", "apres_midi", "soiree"],
+            "additionalProperties": False,
+            "properties": {
+                "nuit": {"type": "string"},
+                "matin": {"type": "string"},
+                "apres_midi": {"type": "string"},
+                "soiree": {"type": "string"},
+            },
         },
         "turning_point_narratives": {
             "type": "array",
             "items": {"type": "string"},
         },
-        "main_turning_point_narrative": {"type": ["string", "null"]},
+        "main_turning_point_narrative": {"type": "string"},
         "daily_advice": {
-            "type": ["object", "null"],
+            "type": "object",
             "required": ["advice", "emphasis"],
             "additionalProperties": False,
             "properties": {

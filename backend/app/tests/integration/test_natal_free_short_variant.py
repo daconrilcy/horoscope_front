@@ -240,5 +240,7 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
 
             _, kwargs = mock_execute.call_args
             assert kwargs["request"].user_input.use_case == "natal_long_free"
+            assert kwargs["request"].user_input.feature == "natal"
+            assert kwargs["request"].user_input.subfeature == "interpretation"
 
     app.dependency_overrides.clear()

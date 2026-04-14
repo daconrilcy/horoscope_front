@@ -5,7 +5,7 @@ from typing import Any
 
 from app.domain.astrology.natal_calculation import sign_from_longitude
 from app.prediction.public_astro_vocabulary import get_planet_name_fr, get_sign_name_fr
-from app.prompts.common_context import PromptCommonContext
+from app.prompts.common_context import PromptCommonContext, QualifiedContext
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class AstrologerPromptBuilder:
 
     def build(
         self,
-        common_context: PromptCommonContext,
+        common_context: PromptCommonContext | QualifiedContext,
         time_windows: list[dict[str, Any]],
         astrologer_profile_key: str = "standard",
         lang: str = "fr",
@@ -91,8 +91,9 @@ class AstrologerPromptBuilder:
         domain_ranking: list[dict[str, Any]] | None = None,
         variant_code: str | None = None,
     ) -> str:
-        natal_section = self._build_natal_section(common_context)
-        date_str = common_context.today_date
+        payload = self._resolve_payload(common_context)
+        natal_section = self._build_natal_section(payload)
+        date_str = payload.today_date
         events_str = self._format_astro_daily_events(astro_daily_events)
         day_profile_str = self._format_day_profile(
             day_climate=day_climate,
@@ -152,7 +153,7 @@ DÉROULÉ DE LA JOURNÉE (CRÉNEAUX HORAIRES) :
 
 CONSIGNES DE RÉDACTION :
 - Style : {style_instr}
-- Ton : {common_context.astrologer_profile.get("tonality", "bienveillant")}
+        - Ton : {payload.astrologer_profile.get("tonality", "bienveillant")}
 - Langue : {"Français" if lang == "fr" else "English"}
 - Format attendu : JSON strict.
 - Ne fais jamais de banalités recyclables d'un jour à l'autre.
@@ -183,8 +184,15 @@ IMPORTANT :
 - Interdiction de produire des phrases creuses du type "faites-vous confiance", "restez centré",
   "écoutez votre intuition" sans ancrage astrologique explicite.
 - Le conseil du jour doit reprendre au moins un créneau, une vigilance ou un fait astrologique.
-"""
+        """
         return prompt.strip()
+
+    def _resolve_payload(
+        self, common_context: PromptCommonContext | QualifiedContext
+    ) -> PromptCommonContext:
+        if isinstance(common_context, QualifiedContext):
+            return common_context.payload
+        return common_context
 
     def _build_daily_synthesis_instruction(self, variant_code: str | None) -> str:
         if variant_code == "summary_only":

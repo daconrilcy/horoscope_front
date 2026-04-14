@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.daily_prediction import (
@@ -375,3 +376,39 @@ def test_idempotent_double_save(db_session: Session, seed_data):
         )
     ).all()
     assert len(runs) == 1  # AC7: un seul run en DB
+
+
+def test_reuses_existing_run_when_create_run_hits_unique_constraint(db_session: Session, seed_data):
+    service = PredictionPersistenceService()
+    user_id = 1
+    local_date = date(2026, 3, 7)
+
+    initial_output = EngineOutput(
+        run_metadata={},
+        effective_context=make_effective_context("hash_existing"),
+        category_scores={"love": {"note_20": 15}},
+        turning_points=[],
+        time_blocks=[],
+    )
+    initial_result = save_output(
+        service, initial_output, user_id, local_date, seed_data, db_session
+    )
+    assert initial_result.was_reused is False
+    db_session.commit()
+
+    colliding_output = EngineOutput(
+        run_metadata={},
+        effective_context=make_effective_context("hash_colliding"),
+        category_scores={"love": {"note_20": 18}},
+        turning_points=[],
+        time_blocks=[],
+    )
+
+    with patch(
+        "app.prediction.persistence_service.DailyPredictionRepository.create_run",
+        side_effect=IntegrityError("insert", {}, Exception("unique_violation")),
+    ):
+        reused = save_output(service, colliding_output, user_id, local_date, seed_data, db_session)
+
+    assert reused.was_reused is True
+    assert reused.run.run_id == initial_result.run.run_id

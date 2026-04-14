@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -1856,7 +1857,57 @@ class LLMGateway:
 
         return result
 
-    def _validate_input(self, config: UseCaseConfig, user_input: Dict[str, Any]) -> None:
+    def _build_validation_payload(
+        self,
+        config: UseCaseConfig,
+        user_input: Dict[str, Any],
+        context: Optional[ExecutionContext] = None,
+    ) -> Dict[str, Any]:
+        payload = {k: v for k, v in user_input.items() if v is not None}
+        if not config.input_schema or context is None:
+            return payload
+
+        declared_properties = set(config.input_schema.get("properties", {}))
+        if not declared_properties:
+            return payload
+
+        context_dict = context.model_dump()
+        extra_context = context_dict.pop("extra_context", {})
+        context_dict.update(extra_context)
+
+        for prop in declared_properties:
+            if prop in payload:
+                continue
+
+            if prop == "chart_json":
+                if context_dict.get("natal_data") is not None:
+                    payload[prop] = context_dict["natal_data"]
+                    continue
+
+                raw_chart_json = context_dict.get("chart_json")
+                if isinstance(raw_chart_json, dict):
+                    payload[prop] = raw_chart_json
+                    continue
+                if isinstance(raw_chart_json, str):
+                    try:
+                        parsed_chart_json = json.loads(raw_chart_json)
+                    except json.JSONDecodeError:
+                        continue
+                    if isinstance(parsed_chart_json, dict):
+                        payload[prop] = parsed_chart_json
+                    continue
+
+            if context_dict.get(prop) is not None:
+                payload[prop] = context_dict[prop]
+
+        return payload
+
+    def _validate_input(
+        self,
+        config: UseCaseConfig,
+        user_input: Dict[str, Any],
+        context: Optional[ExecutionContext] = None,
+    ) -> None:
         """Helper to validate user input against UseCaseConfig.input_schema."""
         logger.debug(
             "gateway_validate_input use_case=%s has_schema=%s",
@@ -1865,7 +1916,8 @@ class LLMGateway:
         )
         if config.input_schema:
             try:
-                res = validate_input(user_input, config.input_schema)
+                validation_payload = self._build_validation_payload(config, user_input, context)
+                res = validate_input(validation_payload, config.input_schema)
                 if not res.valid:
                     error_msg = "; ".join(res.errors)
                     logger.warning("gateway_input_validation_failed error=%s", error_msg)
@@ -1955,7 +2007,7 @@ class LLMGateway:
             # Stage 0.5: Fast pre-validation against the explicit use-case contract when available.
             # This remains best-effort and does not replace mandatory assembly/profile resolution.
             config = await self._resolve_config(db, use_case, context_dict)
-            self._validate_input(config, user_input_dict)
+            self._validate_input(config, user_input_dict, request.context)
 
             # Stage 1: Resolve Plan (Now includes QualifiedContext)
             try:
@@ -1982,7 +2034,7 @@ class LLMGateway:
             # Stage 1.5: Validate Input (Story 66.4 AC8)
             try:
                 # We use the config just resolved
-                self._validate_input(config, user_input_dict)
+                self._validate_input(config, user_input_dict, request.context)
             except InputValidationError:
                 raise
             except Exception as e:

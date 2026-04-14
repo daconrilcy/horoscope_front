@@ -199,6 +199,10 @@ def test_client(mock_db):
     with patch(
         "app.api.v1.routers.natal_interpretation.NatalChartLongEntitlementGate.check_and_consume",
         return_value=result,
+    ), patch(
+        "app.services.effective_entitlement_resolver_service."
+        "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
+        return_value=MagicMock(plan_code="free"),
     ):
         client = TestClient(app)
         yield client

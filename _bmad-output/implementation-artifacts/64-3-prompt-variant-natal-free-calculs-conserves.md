@@ -68,3 +68,6 @@ Cette story s'appuie sur le `NatalChartLongEntitlementGate`. Elle modifie le com
   - normalisation du payload persisté `free_short` pour qu'il reste relu comme une interprétation logique `complete` côté API ;
   - mapping fiable des titres de sections depuis `accordion_titles` pour conserver le contrat frontend attendu ;
   - ajout d'un `title` synthétique généré par le prompt free afin d'alimenter directement l'en-tête du cadre résumé côté frontend.
+  - routage canonique fiabilisé : les variantes legacy free (`natal_long_free`, `natal-long-free`, `natal_interpretation_short`) sont désormais résolues vers la sous-feature canonique `natal/interpretation/free`, ce qui supprime le drift entre alias historiques et taxonomie runtime ;
+  - validation gateway réalignée : quand le schéma d'entrée exige `chart_json`, le payload de validation est maintenant enrichi depuis `ExecutionContext.natal_data` ou `ExecutionContext.chart_json`, ce qui évite les faux rejets 422/500 du flux free ;
+  - robustesse locale améliorée : le bootstrap SQLite répare automatiquement le drift de `email_logs.id` et des colonnes opérationnelles de `llm_call_logs`, ce qui empêche des erreurs locales parasites pendant l'inscription puis la génération free.

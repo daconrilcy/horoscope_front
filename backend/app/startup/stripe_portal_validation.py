@@ -18,6 +18,28 @@ def _portal_billing_is_enabled(settings: Settings) -> bool:
     )
 
 
+def _is_non_prod_env(settings: Settings) -> bool:
+    return getattr(settings, "app_env", "development") in {
+        "development",
+        "dev",
+        "local",
+        "test",
+        "testing",
+    }
+
+
+def _emit_validation_message(settings: Settings, mode: str, error_msg: str) -> None:
+    if mode != "warn":
+        logger.error("stripe_portal_startup_validation_failed error=%s", error_msg)
+        raise RuntimeError(error_msg)
+
+    if _is_non_prod_env(settings):
+        logger.info("stripe_portal_startup_validation_advisory error=%s", error_msg)
+        return
+
+    logger.warning("stripe_portal_startup_validation_warn error=%s", error_msg)
+
+
 def run_stripe_portal_startup_validation(settings: Settings) -> None:
     """
     Vérifie que STRIPE_PORTAL_CONFIGURATION_ID est renseigné si le billing Stripe est actif.
@@ -47,11 +69,8 @@ def run_stripe_portal_startup_validation(settings: Settings) -> None:
             "billing endpoints are enabled to ensure explicit portal behavior (Story 61.64). "
             "Please create a dedicated portal configuration in Stripe Dashboard and set the ID."
         )
-        if validation_mode == "warn":
-            logger.warning("stripe_portal_startup_validation_warn error=%s", error_msg)
-            return
-        logger.error("stripe_portal_startup_validation_failed error=%s", error_msg)
-        raise RuntimeError(error_msg)
+        _emit_validation_message(settings, validation_mode, error_msg)
+        return
 
     client = get_stripe_client()
     if client is None:
@@ -59,11 +78,8 @@ def run_stripe_portal_startup_validation(settings: Settings) -> None:
             "Stripe Customer Portal validation requires a configured Stripe client when "
             "portal billing endpoints are enabled."
         )
-        if validation_mode == "warn":
-            logger.warning("stripe_portal_startup_validation_warn error=%s", error_msg)
-            return
-        logger.error("stripe_portal_startup_validation_failed error=%s", error_msg)
-        raise RuntimeError(error_msg)
+        _emit_validation_message(settings, validation_mode, error_msg)
+        return
 
     try:
         configuration = client.billing_portal.configurations.retrieve(
@@ -74,11 +90,11 @@ def run_stripe_portal_startup_validation(settings: Settings) -> None:
             "Unable to retrieve Stripe Customer Portal configuration "
             f"{settings.stripe_portal_configuration_id}: {error}"
         )
-        if validation_mode == "warn":
-            logger.warning("stripe_portal_startup_validation_warn error=%s", error_msg)
-            return
-        logger.error("stripe_portal_startup_validation_failed error=%s", error_msg)
-        raise RuntimeError(error_msg) from error
+        try:
+            _emit_validation_message(settings, validation_mode, error_msg)
+        except RuntimeError:
+            raise RuntimeError(error_msg) from error
+        return
 
     subscription_update = getattr(configuration, "features", None)
     subscription_update = getattr(subscription_update, "subscription_update", None)
@@ -88,11 +104,8 @@ def run_stripe_portal_startup_validation(settings: Settings) -> None:
             "Stripe Customer Portal configuration must enable subscription updates for "
             "self-service plan changes."
         )
-        if validation_mode == "warn":
-            logger.warning("stripe_portal_startup_validation_warn error=%s", error_msg)
-            return
-        logger.error("stripe_portal_startup_validation_failed error=%s", error_msg)
-        raise RuntimeError(error_msg)
+        _emit_validation_message(settings, validation_mode, error_msg)
+        return
 
     products = getattr(subscription_update, "products", None) or []
     allowed_price_ids: set[str] = set()
@@ -114,10 +127,7 @@ def run_stripe_portal_startup_validation(settings: Settings) -> None:
             "Stripe Customer Portal configuration is missing subscription_update prices "
             f"for configured plans: {', '.join(missing_price_ids)}"
         )
-        if validation_mode == "warn":
-            logger.warning("stripe_portal_startup_validation_warn error=%s", error_msg)
-            return
-        logger.error("stripe_portal_startup_validation_failed error=%s", error_msg)
-        raise RuntimeError(error_msg)
+        _emit_validation_message(settings, validation_mode, error_msg)
+        return
 
     logger.info("stripe_portal_startup_validation_ok")

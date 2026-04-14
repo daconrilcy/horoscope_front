@@ -77,7 +77,7 @@ def seed() -> None:
         if not lint_res.passed:
             raise RuntimeError(f"Lint FAILED for {use_case_key}: {lint_res.errors}")
         if lint_res.warnings:
-            logger.warning("Lint warnings for %s: %s", use_case_key, lint_res.warnings)
+            logger.info("Lint advisories for %s: %s", use_case_key, lint_res.warnings)
 
         current_published = db.execute(
             select(LlmPromptVersionModel).where(

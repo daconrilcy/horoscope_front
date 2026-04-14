@@ -6,6 +6,7 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from sqlalchemy import delete as sa_delete
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.daily_prediction import (
@@ -101,32 +102,48 @@ class PredictionPersistenceService:
             return SaveResult(run=existing, was_reused=True)
 
         # AC2 - Create new run
-        run_model = repo.create_run(
-            user_id=user_id,
-            local_date=local_date,
-            timezone=core.effective_context.timezone,
-            reference_version_id=reference_version_id,
-            ruleset_id=ruleset_id,
-            input_hash=input_hash,
-            engine_mode=engine_mode,
-            engine_version=engine_version,
-            snapshot_version=snapshot_version,
-            evidence_pack_version=evidence_pack_version,
-            v3_metrics_json=self._build_v3_metrics_json(v3_core, core),
-            house_system_effective=core.effective_context.house_system_effective,
-            is_provisional_calibration=core.run_metadata.get("is_provisional_calibration"),
-            calibration_label=core.run_metadata.get("calibration_label"),
-            overall_summary=(
-                editorial_text.intro
-                if editorial_text is not None
-                else core.run_metadata.get("overall_summary")
-            ),
-            overall_tone=(
-                editorial.data.overall_tone
-                if editorial is not None
-                else core.run_metadata.get("overall_tone")
-            ),
-        )
+        try:
+            run_model = repo.create_run(
+                user_id=user_id,
+                local_date=local_date,
+                timezone=core.effective_context.timezone,
+                reference_version_id=reference_version_id,
+                ruleset_id=ruleset_id,
+                input_hash=input_hash,
+                engine_mode=engine_mode,
+                engine_version=engine_version,
+                snapshot_version=snapshot_version,
+                evidence_pack_version=evidence_pack_version,
+                v3_metrics_json=self._build_v3_metrics_json(v3_core, core),
+                house_system_effective=core.effective_context.house_system_effective,
+                is_provisional_calibration=core.run_metadata.get("is_provisional_calibration"),
+                calibration_label=core.run_metadata.get("calibration_label"),
+                overall_summary=(
+                    editorial_text.intro
+                    if editorial_text is not None
+                    else core.run_metadata.get("overall_summary")
+                ),
+                overall_tone=(
+                    editorial.data.overall_tone
+                    if editorial is not None
+                    else core.run_metadata.get("overall_tone")
+                ),
+            )
+        except Exception as exc:
+            if not isinstance(exc, IntegrityError):
+                raise
+            db.rollback()
+            existing_run = repo.get_run(
+                user_id=user_id,
+                local_date=local_date,
+                reference_version_id=reference_version_id,
+                ruleset_id=ruleset_id,
+                engine_mode=engine_mode,
+            )
+            existing_snapshot = repo.get_snapshot(existing_run)
+            if existing_snapshot is not None:
+                return SaveResult(run=existing_snapshot, was_reused=True)
+            raise exc
 
         # Defensive: remove any orphaned child rows for this run_id before inserting.
         # Can occur with SQLite when FK enforcement was previously disabled and a run

@@ -103,6 +103,151 @@ def _repair_missing_tables(missing_tables: set[str]) -> None:
             raise
 
 
+def _table_columns(table_name: str) -> dict[str, dict[str, object]]:
+    inspector = inspect(engine)
+    return {
+        str(column["name"]): column
+        for column in inspector.get_columns(table_name)
+    }
+
+
+def _repair_email_logs_primary_key() -> bool:
+    inspector = inspect(engine)
+    if "email_logs" not in inspector.get_table_names():
+        return False
+
+    columns = _table_columns("email_logs")
+    id_column = columns.get("id")
+    if not id_column:
+        return False
+
+    column_type = str(id_column["type"]).upper()
+    if column_type == "INTEGER":
+        return False
+
+    logger.warning(
+        "local_sqlite_schema_repair_rebuild_email_logs old_id_type=%s",
+        column_type,
+    )
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE email_logs__rebuild (
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NULL REFERENCES users (id),
+                    email_type VARCHAR(50) NOT NULL,
+                    recipient_email VARCHAR(255) NOT NULL,
+                    sent_at DATETIME NOT NULL,
+                    status VARCHAR(20) NOT NULL,
+                    provider_message_id VARCHAR(255) NULL,
+                    error_message TEXT NULL
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO email_logs__rebuild (
+                    id,
+                    user_id,
+                    email_type,
+                    recipient_email,
+                    sent_at,
+                    status,
+                    provider_message_id,
+                    error_message
+                )
+                SELECT
+                    CAST(id AS INTEGER),
+                    user_id,
+                    email_type,
+                    recipient_email,
+                    sent_at,
+                    status,
+                    provider_message_id,
+                    error_message
+                FROM email_logs
+                """
+            )
+        )
+        connection.execute(text("DROP TABLE email_logs"))
+        connection.execute(text("ALTER TABLE email_logs__rebuild RENAME TO email_logs"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_email_logs_user_type "
+                "ON email_logs (user_id, email_type)"
+            )
+        )
+    return True
+
+
+def _repair_llm_call_logs_columns() -> bool:
+    inspector = inspect(engine)
+    if "llm_call_logs" not in inspector.get_table_names():
+        return False
+
+    columns = _table_columns("llm_call_logs")
+    required_columns = {
+        "provider": "ALTER TABLE llm_call_logs ADD COLUMN provider VARCHAR(32) DEFAULT 'openai'",
+        "pipeline_kind": "ALTER TABLE llm_call_logs ADD COLUMN pipeline_kind VARCHAR(32)",
+        "execution_path_kind": (
+            "ALTER TABLE llm_call_logs ADD COLUMN execution_path_kind VARCHAR(40)"
+        ),
+        "fallback_kind": "ALTER TABLE llm_call_logs ADD COLUMN fallback_kind VARCHAR(40)",
+        "requested_provider": "ALTER TABLE llm_call_logs ADD COLUMN requested_provider VARCHAR(32)",
+        "resolved_provider": "ALTER TABLE llm_call_logs ADD COLUMN resolved_provider VARCHAR(32)",
+        "executed_provider": "ALTER TABLE llm_call_logs ADD COLUMN executed_provider VARCHAR(32)",
+        "context_quality": "ALTER TABLE llm_call_logs ADD COLUMN context_quality VARCHAR(32)",
+        "context_compensation_status": (
+            "ALTER TABLE llm_call_logs ADD COLUMN context_compensation_status VARCHAR(32)"
+        ),
+        "max_output_tokens_source": (
+            "ALTER TABLE llm_call_logs ADD COLUMN max_output_tokens_source VARCHAR(32)"
+        ),
+        "max_output_tokens_final": (
+            "ALTER TABLE llm_call_logs ADD COLUMN max_output_tokens_final INTEGER"
+        ),
+        "executed_provider_mode": (
+            "ALTER TABLE llm_call_logs ADD COLUMN executed_provider_mode VARCHAR(32)"
+        ),
+        "attempt_count": "ALTER TABLE llm_call_logs ADD COLUMN attempt_count INTEGER",
+        "provider_error_code": (
+            "ALTER TABLE llm_call_logs ADD COLUMN provider_error_code VARCHAR(50)"
+        ),
+        "breaker_state": "ALTER TABLE llm_call_logs ADD COLUMN breaker_state VARCHAR(20)",
+        "breaker_scope": "ALTER TABLE llm_call_logs ADD COLUMN breaker_scope VARCHAR(100)",
+        "active_snapshot_id": "ALTER TABLE llm_call_logs ADD COLUMN active_snapshot_id NUMERIC",
+        "active_snapshot_version": (
+            "ALTER TABLE llm_call_logs ADD COLUMN active_snapshot_version VARCHAR(64)"
+        ),
+        "manifest_entry_id": (
+            "ALTER TABLE llm_call_logs ADD COLUMN manifest_entry_id VARCHAR(100)"
+        ),
+    }
+
+    missing_columns = [name for name in required_columns if name not in columns]
+    if not missing_columns:
+        return False
+
+    logger.warning(
+        "local_sqlite_schema_repair_llm_call_logs missing_columns=%s",
+        sorted(missing_columns),
+    )
+    with engine.begin() as connection:
+        for column_name in missing_columns:
+            connection.execute(text(required_columns[column_name]))
+    return True
+
+
+def _repair_local_sqlite_known_drift() -> bool:
+    repaired = False
+    repaired = _repair_email_logs_primary_key() or repaired
+    repaired = _repair_llm_call_logs_columns() or repaired
+    return repaired
+
+
 def ensure_local_sqlite_schema_ready() -> None:
     if not _should_auto_upgrade_local_sqlite():
         return
@@ -113,6 +258,7 @@ def ensure_local_sqlite_schema_ready() -> None:
     current_revision = _current_revision()
     head_revision = _head_revision()
     if not missing_tables and current_revision == head_revision:
+        _repair_local_sqlite_known_drift()
         return
 
     logger.warning(
@@ -134,10 +280,12 @@ def ensure_local_sqlite_schema_ready() -> None:
         )
         _repair_missing_tables(missing_tables)
         command.stamp(_alembic_config(), "head")
+        _repair_local_sqlite_known_drift()
         return
 
     if current_revision != head_revision:
         command.upgrade(_alembic_config(), "head")
+        _repair_local_sqlite_known_drift()
         return
 
     if missing_tables:
@@ -147,3 +295,4 @@ def ensure_local_sqlite_schema_ready() -> None:
             sorted(missing_tables),
         )
         _repair_missing_tables(missing_tables)
+        _repair_local_sqlite_known_drift()

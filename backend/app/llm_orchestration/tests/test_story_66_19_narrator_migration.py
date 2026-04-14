@@ -9,7 +9,7 @@ from app.llm_orchestration.models import (
     UsageInfo,
 )
 from app.prediction.llm_narrator import NarratorResult
-from app.prompts.common_context import PromptCommonContext
+from app.prompts.common_context import PromptCommonContext, QualifiedContext
 from app.services.ai_engine_adapter import AIEngineAdapter
 
 
@@ -26,6 +26,10 @@ def _make_dummy_context():
         use_case_name="Test Use Case",
         use_case_key="daily_prediction",
     )
+
+
+def _make_dummy_qualified_context() -> QualifiedContext:
+    return QualifiedContext(payload=_make_dummy_context(), source="db")
 
 
 @pytest.mark.asyncio
@@ -146,6 +150,47 @@ async def test_generate_horoscope_narration_routing_default(db):
         request = kwargs["request"]
         assert request.user_input.feature == "horoscope_daily"
         assert request.user_input.plan == "free"
+
+
+@pytest.mark.asyncio
+async def test_generate_horoscope_narration_accepts_qualified_context(db):
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_exec:
+        mock_exec.return_value = GatewayResult(
+            use_case="horoscope_daily",
+            request_id="req-qc",
+            trace_id="tr-qc",
+            raw_output="{}",
+            structured_output={
+                "daily_synthesis": "P1. P2. P3. P4. P5. P6. P7.",
+                "astro_events_intro": "intro",
+                "time_window_narratives": {
+                    "nuit": "",
+                    "matin": "matin",
+                    "apres_midi": "",
+                    "soiree": "",
+                },
+                "turning_point_narratives": [],
+                "main_turning_point_narrative": "",
+                "daily_advice": {"advice": "", "emphasis": ""},
+            },
+            usage=UsageInfo(),
+            meta=GatewayMeta(latency_ms=0, model="test"),
+        )
+
+        result = await AIEngineAdapter.generate_horoscope_narration(
+            variant_code="summary_only",
+            time_windows=[],
+            common_context=_make_dummy_qualified_context(),
+            user_id=1,
+            request_id="req-qc",
+            trace_id="tr-qc",
+            db=db,
+        )
+
+        assert result is not None
+        assert mock_exec.called
 
 
 @pytest.mark.asyncio
