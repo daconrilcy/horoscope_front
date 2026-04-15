@@ -1,0 +1,296 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Literal
+
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
+from app.llm_orchestration.feature_taxonomy import normalize_feature, normalize_subfeature
+from app.llm_orchestration.prompt_governance_registry import (
+    LEGACY_DAILY_FEATURE,
+    LEGACY_NATAL_FEATURE,
+)
+
+LEGACY_FEATURE_TO_CANONICAL: dict[str, str] = {
+    LEGACY_DAILY_FEATURE: "horoscope_daily",
+    LEGACY_NATAL_FEATURE: "natal",
+}
+
+Granularity = Literal["day", "month"]
+Scope = Literal["nominal", "all"]
+
+
+class CanonicalConsumptionFilters(BaseModel):
+    granularity: Granularity = "day"
+    scope: Scope = "nominal"
+    from_utc: datetime | None = None
+    to_utc: datetime | None = None
+    user_id: int | None = None
+    feature: str | None = None
+    subfeature: str | None = None
+    subscription_plan: str | None = None
+    locale: str | None = None
+    executed_provider: str | None = None
+    active_snapshot_version: str | None = None
+
+
+class CanonicalConsumptionAggregate(BaseModel):
+    period_start_utc: datetime
+    user_id: int | None
+    subscription_plan: str
+    feature: str
+    subfeature: str | None
+    locale: str
+    executed_provider: str
+    active_snapshot_version: str
+    taxonomy_scope: Literal["nominal", "legacy_residual"]
+    is_legacy_residual: bool
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    estimated_cost: float
+    call_count: int
+    latency_p50: float
+    latency_p95: float
+    error_rate: float
+
+
+@dataclass(frozen=True)
+class _NormalizedCall:
+    call_id: object
+    timestamp: datetime
+    user_id: int | None
+    subscription_plan: str
+    feature: str
+    subfeature: str | None
+    locale: str
+    executed_provider: str
+    active_snapshot_version: str
+    is_legacy_residual: bool
+    tokens_in: int
+    tokens_out: int
+    cost_usd_estimated: float
+    latency_ms: int
+    is_error: bool
+
+
+class LlmCanonicalConsumptionService:
+    @staticmethod
+    def get_aggregates(
+        db: Session,
+        *,
+        filters: CanonicalConsumptionFilters,
+    ) -> list[CanonicalConsumptionAggregate]:
+        normalized_rows = LlmCanonicalConsumptionService._normalized_calls(db=db, filters=filters)
+        grouped: dict[
+            tuple[datetime, int | None, str, str, str | None, str, str, str, bool],
+            list[_NormalizedCall],
+        ] = {}
+        for row in normalized_rows:
+            period_start = LlmCanonicalConsumptionService._period_start_utc(
+                timestamp=row.timestamp,
+                granularity=filters.granularity,
+            )
+            key = (
+                period_start,
+                row.user_id,
+                row.subscription_plan,
+                row.feature,
+                row.subfeature,
+                row.locale,
+                row.executed_provider,
+                row.active_snapshot_version,
+                row.is_legacy_residual,
+            )
+            grouped.setdefault(key, []).append(row)
+
+        output: list[CanonicalConsumptionAggregate] = []
+        for key, entries in sorted(grouped.items(), key=lambda item: item[0][0]):
+            latencies = sorted(float(entry.latency_ms) for entry in entries)
+            input_tokens = sum(entry.tokens_in for entry in entries)
+            output_tokens = sum(entry.tokens_out for entry in entries)
+            call_count = len(entries)
+            error_count = sum(1 for entry in entries if entry.is_error)
+            (
+                period_start,
+                user_id,
+                subscription_plan,
+                feature,
+                subfeature,
+                locale,
+                executed_provider,
+                active_snapshot_version,
+                is_legacy_residual,
+            ) = key
+            output.append(
+                CanonicalConsumptionAggregate(
+                    period_start_utc=period_start,
+                    user_id=user_id,
+                    subscription_plan=subscription_plan,
+                    feature=feature,
+                    subfeature=subfeature,
+                    locale=locale,
+                    executed_provider=executed_provider,
+                    active_snapshot_version=active_snapshot_version,
+                    taxonomy_scope="legacy_residual" if is_legacy_residual else "nominal",
+                    is_legacy_residual=is_legacy_residual,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    total_tokens=input_tokens + output_tokens,
+                    estimated_cost=float(sum(entry.cost_usd_estimated for entry in entries)),
+                    call_count=call_count,
+                    latency_p50=LlmCanonicalConsumptionService._percentile(latencies, 0.50),
+                    latency_p95=LlmCanonicalConsumptionService._percentile(latencies, 0.95),
+                    error_rate=(error_count / call_count) if call_count else 0.0,
+                )
+            )
+        return output
+
+    @staticmethod
+    def _normalized_calls(
+        *,
+        db: Session,
+        filters: CanonicalConsumptionFilters,
+    ) -> list[_NormalizedCall]:
+        stmt = (
+            select(
+                LlmCallLogModel.id.label("call_id"),
+                LlmCallLogModel.timestamp.label("timestamp"),
+                UserTokenUsageLogModel.user_id.label("user_id"),
+                LlmCallLogModel.plan.label("subscription_plan"),
+                LlmCallLogModel.feature.label("feature"),
+                LlmCallLogModel.subfeature.label("subfeature"),
+                LlmCallLogModel.manifest_entry_id.label("manifest_entry_id"),
+                LlmCallLogModel.executed_provider.label("executed_provider"),
+                LlmCallLogModel.active_snapshot_version.label("active_snapshot_version"),
+                LlmCallLogModel.tokens_in.label("tokens_in"),
+                LlmCallLogModel.tokens_out.label("tokens_out"),
+                LlmCallLogModel.cost_usd_estimated.label("estimated_cost"),
+                LlmCallLogModel.latency_ms.label("latency_ms"),
+                LlmCallLogModel.validation_status.label("validation_status"),
+            )
+            .select_from(LlmCallLogModel)
+            .outerjoin(
+                UserTokenUsageLogModel, UserTokenUsageLogModel.llm_call_log_id == LlmCallLogModel.id
+            )
+        )
+        if filters.from_utc:
+            stmt = stmt.where(LlmCallLogModel.timestamp >= filters.from_utc)
+        if filters.to_utc:
+            stmt = stmt.where(LlmCallLogModel.timestamp < filters.to_utc)
+
+        rows = db.execute(stmt).all()
+        normalized: list[_NormalizedCall] = []
+        for row in rows:
+            manifest_entry_id = str(row.manifest_entry_id or "")
+            locale = LlmCanonicalConsumptionService._extract_locale_from_manifest(manifest_entry_id)
+            feature, subfeature, is_legacy_residual = (
+                LlmCanonicalConsumptionService._normalize_taxonomy(
+                    feature=row.feature,
+                    subfeature=row.subfeature,
+                )
+            )
+            if filters.scope == "nominal" and is_legacy_residual:
+                continue
+            subscription_plan = str(row.subscription_plan or "unknown")
+            executed_provider = str(row.executed_provider or "unknown")
+            active_snapshot_version = str(row.active_snapshot_version or "unknown")
+            normalized_entry = _NormalizedCall(
+                call_id=row.call_id,
+                timestamp=LlmCanonicalConsumptionService._to_utc(row.timestamp),
+                user_id=row.user_id,
+                subscription_plan=subscription_plan,
+                feature=feature,
+                subfeature=subfeature,
+                locale=locale,
+                executed_provider=executed_provider,
+                active_snapshot_version=active_snapshot_version,
+                is_legacy_residual=is_legacy_residual,
+                tokens_in=int(row.tokens_in or 0),
+                tokens_out=int(row.tokens_out or 0),
+                cost_usd_estimated=float(row.estimated_cost or 0.0),
+                latency_ms=int(row.latency_ms or 0),
+                is_error=(row.validation_status == LlmValidationStatus.ERROR),
+            )
+            if not LlmCanonicalConsumptionService._matches_filters(normalized_entry, filters):
+                continue
+            normalized.append(normalized_entry)
+        return normalized
+
+    @staticmethod
+    def _matches_filters(item: _NormalizedCall, filters: CanonicalConsumptionFilters) -> bool:
+        if filters.user_id is not None and item.user_id != filters.user_id:
+            return False
+        if filters.feature is not None and item.feature != filters.feature:
+            return False
+        if filters.subfeature is not None and item.subfeature != filters.subfeature:
+            return False
+        if (
+            filters.subscription_plan is not None
+            and item.subscription_plan != filters.subscription_plan
+        ):
+            return False
+        if filters.locale is not None and item.locale != filters.locale:
+            return False
+        if (
+            filters.executed_provider is not None
+            and item.executed_provider != filters.executed_provider
+        ):
+            return False
+        if (
+            filters.active_snapshot_version is not None
+            and item.active_snapshot_version != filters.active_snapshot_version
+        ):
+            return False
+        return True
+
+    @staticmethod
+    def _normalize_taxonomy(
+        feature: str | None, subfeature: str | None
+    ) -> tuple[str, str | None, bool]:
+        if feature is None:
+            return ("unknown", subfeature, True)
+        raw_feature = str(feature).strip()
+        mapped_feature = LEGACY_FEATURE_TO_CANONICAL.get(raw_feature, raw_feature)
+        normalized_feature = normalize_feature(mapped_feature)
+        normalized_subfeature = normalize_subfeature(normalized_feature, subfeature)
+        is_legacy_residual = raw_feature not in {mapped_feature, normalized_feature}
+        if (
+            normalized_subfeature is None
+            and subfeature is not None
+            and str(subfeature).strip() != ""
+        ):
+            is_legacy_residual = True
+        return (normalized_feature, normalized_subfeature, is_legacy_residual)
+
+    @staticmethod
+    def _extract_locale_from_manifest(manifest_entry_id: str) -> str:
+        parts = manifest_entry_id.split(":")
+        if len(parts) == 4 and parts[3].strip():
+            return parts[3].strip()
+        return "unknown"
+
+    @staticmethod
+    def _to_utc(timestamp: datetime) -> datetime:
+        if timestamp.tzinfo is None or timestamp.utcoffset() is None:
+            return timestamp.replace(tzinfo=timezone.utc)
+        return timestamp.astimezone(timezone.utc)
+
+    @staticmethod
+    def _period_start_utc(*, timestamp: datetime, granularity: Granularity) -> datetime:
+        utc = LlmCanonicalConsumptionService._to_utc(timestamp)
+        if granularity == "month":
+            return utc.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        return utc.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    @staticmethod
+    def _percentile(values: list[float], percentile: float) -> float:
+        if not values:
+            return 0.0
+        index = int((len(values) - 1) * percentile)
+        return float(values[index])
