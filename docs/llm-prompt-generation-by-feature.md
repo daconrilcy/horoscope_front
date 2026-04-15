@@ -482,6 +482,7 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 | `66.38` | manifeste et contrôle doc/code |
 | `66.39` | durcissement du validateur de conformité documentaire |
 | `66.40` | registre central du legacy résiduel, télémétrie, blocage progressif, anti-réintroduction |
+| `66.43` | campagne de chaos déterministe sur `ProviderRuntimeManager` avec rapport d'invariants de résilience |
 
 ## Règles de maintenance
 
@@ -489,6 +490,66 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 - si le code diverge, le code fait foi ;
 - toute modification d'un fichier du manifeste documentaire doit déclencher une revue de ce document ;
 - les schémas Mermaid doivent refléter le flux réel et non un flux idéal.
+
+## Campagne chaos provider runtime (Story 66.43)
+
+Objectif : prouver la résilience opérationnelle de `ProviderRuntimeManager` par scénarios déterministes, sans dépendance réseau/provider réel.
+
+Suite de référence :
+
+- `backend/tests/integration/test_story_66_43_provider_runtime_chaos.py`
+
+Scénarios couverts :
+
+- `rate_limit` avec épuisement du retry budget ;
+- `timeout` avec épuisement du retry budget ;
+- `5xx` avec classification retryable puis épuisement ;
+- `breaker open` après échecs répétés ;
+- panne partielle suivie d'un rétablissement nominal ;
+- erreur de configuration non reclassée en incident provider.
+
+Invariants vérifiés dans le rapport :
+
+- cohérence `attempt_count` / budget de retries ;
+- taxonomie `provider_error_code` et état `breaker_state` ;
+- scope de résilience `breaker_scope` ;
+- fermeture stricte du nominal (`executed_provider_mode=nominal` ou `circuit_open`) sans réouverture fallback ;
+- corrélation snapshot quand pertinente (`active_snapshot_id`, `active_snapshot_version`, `manifest_entry_id`) sur le scénario de rétablissement nominal.
+
+Format de sortie attendu :
+
+- liste structurée d'objets `scenario`, `failure_type`, `invariant`, `passed`, `observed` ;
+- `observed` contient les discriminants d'observabilité exploitables par ops ;
+- un artefact JSON est produit à chaque run (`CHAOS_REPORT_PATH` si défini, sinon un chemin unique par exécution dans `backend/.pytest_cache/chaos/...`, avec fallback `tempfile.gettempdir()` si indisponible) pour exploitation locale/CI ;
+- le runtime de test réutilise ensuite le même chemin effectif pour relire et enrichir le rapport de campagne, y compris si l'écriture a basculé sur le fallback `tempfile`.
+
+Exemple d'exécution CI (Linux runner) :
+
+```bash
+mkdir -p artifacts/chaos
+export CHAOS_REPORT_PATH="artifacts/chaos/story-66-43-chaos-report.json"
+pytest -q backend/tests/integration/test_story_66_43_provider_runtime_chaos.py
+```
+
+Exemple d'exécution CI (Windows runner / PowerShell) :
+
+```powershell
+New-Item -ItemType Directory -Force -Path artifacts/chaos | Out-Null
+$env:CHAOS_REPORT_PATH = "artifacts/chaos/story-66-43-chaos-report.json"
+pytest -q backend/tests/integration/test_story_66_43_provider_runtime_chaos.py
+```
+
+Points d'exploitation recommandés :
+
+- publier `artifacts/chaos/story-66-43-chaos-report.json` en artifact de pipeline ;
+- optionnellement parser `all_passed` et `scenario_count` pour enrichir les quality gates ops ;
+- conserver l'artefact par build pour audit de résilience et comparaison inter-runs.
+- en exécution locale sans `CHAOS_REPORT_PATH`, le rapport reste isolé du dépôt et ne doit pas être utilisé comme artefact partagé entre plusieurs runs.
+
+Limites explicites :
+
+- cette campagne valide la résilience provider runtime, pas la charge globale ;
+- la couverture snapshot dans cette campagne reste bornée aux cas pertinents où ces métadonnées sont disponibles dans `obs_snapshot` (la couverture bout-en-bout complète demeure portée par les suites gateway/observabilité).
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 

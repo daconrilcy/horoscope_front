@@ -1,6 +1,6 @@
 # Story 66.43: Chaos testing du ProviderRuntimeManager et preuve de résilience opérationnelle
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -105,37 +105,37 @@ Le résultat attendu n’est pas un framework de chaos générique, mais une cam
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Définir la matrice de chaos et ses invariants (AC1, AC2, AC3, AC9)
-  - [ ] Lister les scénarios couverts et l’invariant attendu pour chacun.
-  - [ ] Distinguer explicitement erreurs provider, erreurs de configuration et transitions breaker.
-  - [ ] Formaliser la taxonomie de résultats attendus.
+- [x] Task 1: Définir la matrice de chaos et ses invariants (AC1, AC2, AC3, AC9)
+  - [x] Lister les scénarios couverts et l’invariant attendu pour chacun.
+  - [x] Distinguer explicitement erreurs provider, erreurs de configuration et transitions breaker.
+  - [x] Formaliser la taxonomie de résultats attendus.
 
-- [ ] Task 2: Mettre en place des doubles déterministes et rejouables (AC1, AC8)
-  - [ ] Ajouter des stubs ou hooks pilotables pour simuler les classes de panne visées.
-  - [ ] Garantir l’absence de dépendance à un provider réel.
-  - [ ] Vérifier la stabilité locale/CI de la campagne.
+- [x] Task 2: Mettre en place des doubles déterministes et rejouables (AC1, AC8)
+  - [x] Ajouter des stubs ou hooks pilotables pour simuler les classes de panne visées.
+  - [x] Garantir l’absence de dépendance à un provider réel.
+  - [x] Vérifier la stabilité locale/CI de la campagne.
 
-- [ ] Task 3: Vérifier classification, retries et breaker (AC2, AC3, AC4, AC9)
-  - [ ] Ajouter des assertions sur `attempt_count`, `provider_error_code`, `breaker_state`, `breaker_scope`.
-  - [ ] Vérifier l’idempotence logique des retries.
-  - [ ] Vérifier qu’une erreur de configuration reste correctement classifiée.
+- [x] Task 3: Vérifier classification, retries et breaker (AC2, AC3, AC4, AC9)
+  - [x] Ajouter des assertions sur `attempt_count`, `provider_error_code`, `breaker_state`, `breaker_scope`.
+  - [x] Vérifier l’idempotence logique des retries.
+  - [x] Vérifier qu’une erreur de configuration reste correctement classifiée.
 
-- [ ] Task 4: Verrouiller la fermeture du nominal sous panne (AC5, AC6)
-  - [ ] Ajouter des assertions empêchant tout fallback interdit.
-  - [ ] Vérifier la corrélation snapshot/observabilité quand applicable.
-  - [ ] Vérifier que les familles nominales restent dans la voie canonique même en mode dégradé.
+- [x] Task 4: Verrouiller la fermeture du nominal sous panne (AC5, AC6)
+  - [x] Ajouter des assertions empêchant tout fallback interdit.
+  - [x] Vérifier la corrélation snapshot/observabilité quand applicable.
+  - [x] Vérifier que les familles nominales restent dans la voie canonique même en mode dégradé.
 
-- [ ] Task 5: Produire un rapport de campagne exploitable (AC7, AC10, AC11)
-  - [ ] Définir un format de sortie structuré lisible par les ops.
-  - [ ] Documenter la lecture du rapport et le périmètre de preuve couvert.
-  - [ ] Réutiliser les surfaces de qualification existantes quand cela simplifie l’exploitation.
+- [x] Task 5: Produire un rapport de campagne exploitable (AC7, AC10, AC11)
+  - [x] Définir un format de sortie structuré lisible par les ops.
+  - [x] Documenter la lecture du rapport et le périmètre de preuve couvert.
+  - [x] Réutiliser les surfaces de qualification existantes quand cela simplifie l’exploitation.
 
-- [ ] Task 6: Validation locale obligatoire
-  - [ ] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
-  - [ ] Dans `backend/`, exécuter `ruff format .`.
-  - [ ] Dans `backend/`, exécuter `ruff check .`.
-  - [ ] Exécuter `pytest -q`.
-  - [ ] Exécuter au minimum les suites ciblant provider runtime, qualification et observabilité LLM.
+- [x] Task 6: Validation locale obligatoire
+  - [x] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
+  - [x] Dans `backend/`, exécuter `ruff format .`.
+  - [x] Dans `backend/`, exécuter `ruff check .`.
+  - [x] Exécuter `pytest -q`.
+  - [x] Exécuter au minimum les suites ciblant provider runtime, qualification et observabilité LLM.
 
 ## Dev Notes
 
@@ -216,6 +216,45 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- 2026-04-15: Ajout de la campagne de chaos déterministe `test_story_66_43_provider_runtime_chaos.py`.
+- 2026-04-15: Validation de la matrice minimale (rate_limit, timeout, 5xx, breaker_open, retry_budget_exhausted explicite).
+- 2026-04-15: Validation locale complète exécutée via venv PowerShell.
+
 ### Completion Notes List
 
+- Implémentation d'une campagne de chaos déterministe orientée invariants de résilience pour `ProviderRuntimeManager`.
+- Vérification explicite des discriminants `attempt_count`, `provider_error_code`, `breaker_state`, `breaker_scope`.
+- Preuve d'idempotence logique des retries (pas de surcomptage tentatives/échecs breaker).
+- Preuve de classification des erreurs de configuration sans reclassification en incident provider.
+- Vérification de la fermeture stricte du nominal en panne (`nominal`/`circuit_open`, sans fallback implicite).
+- Ajout d'un rapport structuré de campagne (`scenario`, `failure_type`, `invariant`, `passed`, `observed`).
+- Documentation d'exploitation alignée dans `docs/llm-prompt-generation-by-feature.md` section Story 66.43.
+- Correctif review P1: couverture explicite de la corrélation snapshot (`active_snapshot_id`, `active_snapshot_version`, `manifest_entry_id`) sur scénario pertinent.
+- Correctif review P2: émission d'un artefact JSON de campagne exploitable (`CHAOS_REPORT_PATH` ou fichier temporaire pytest).
+- Correctif review complémentaire P1: suppression de la dépendance `tmp_path` pour garantir l'exécution Windows/PowerShell avec fallback stable workspace (`backend/artifacts/chaos/...`).
+- Correctif review complémentaire P2: artefact JSON aligné campagne complète (matrice + recovery snapshot + config error + retry idempotence).
+- Correctif review complémentaire P2 bis: suppression de la dépendance à l'ordre d'exécution (plus de liste globale mutable, upsert idempotent par scénario et reset module).
+- Correctif review complémentaire P2 ter: suppression de l'effet de bord worktree (fallback rapport déplacé hors repo vers dossier temporaire utilisateur).
+- Correctif review P1 final: suppression du cleanup destructif au setup, rapport fallback désormais unique par run pour éviter les locks Windows.
+- Correctif review P1 bis: fallback d'écriture déplacé vers `backend/.pytest_cache/chaos` (writable et ignoré git), avec dernier recours `tempfile.gettempdir()`.
+- Correctif review P1 ter: cohérence lecture/écriture du rapport sur le même chemin effectif, y compris après bascule sur le fallback `tempfile`.
+
 ### File List
+
+- backend/tests/integration/test_story_66_43_provider_runtime_chaos.py
+- docs/llm-prompt-generation-by-feature.md
+- _bmad-output/implementation-artifacts/66-43-chaos-testing-provider-runtime.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+
+### Change Log
+
+- 2026-04-15: Ajout de la campagne de chaos déterministe provider runtime + rapport d'invariants.
+- 2026-04-15: Documentation d'exploitation mise à jour pour lecture de campagne et limites.
+- 2026-04-15: Validation locale complète (ruff format/check + pytest global + suites ciblées).
+- 2026-04-15: Traitement des findings review P1/P2 (corrélation snapshot + artefact JSON de rapport).
+- 2026-04-15: Durcissement Windows et alignement de l'artefact JSON sur l'ensemble de la campagne 66.43.
+- 2026-04-15: Stabilisation de l'artefact de campagne face aux reruns/selectifs (ordre indépendant).
+- 2026-04-15: Durcissement hygiène dépôt (rapport par défaut hors worktree).
+- 2026-04-15: Correction robustesse Windows (plus de `PermissionError` au setup sur fichier de rapport verrouillé).
+- 2026-04-15: Correction robustesse Windows sur écriture rapport (chemin fallback fiable + repli).
+- 2026-04-15: Correction finale agrégation rapport après fallback d'écriture (lecture/écriture alignées sur le chemin effectif).
