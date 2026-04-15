@@ -135,6 +135,9 @@ def test_export_generations_json(admin_token: str) -> None:
     )
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
+    assert "Deprecated field: use_case_compat" in response.headers["warning"]
+    assert response.headers["sunset"] == "Tue, 30 Sep 2026 23:59:59 GMT"
+    assert response.headers["x-deprecated-fields"] == "use_case_compat"
     assert isinstance(response.json(), list)
 
 
@@ -166,8 +169,48 @@ def test_export_generations_csv(admin_token: str) -> None:
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/csv; charset=utf-8"
-    assert "id,created_at,use_case,model,status" in response.text
-    assert "daily_overview" in response.text
+    assert "Deprecated field: use_case_compat" in response.headers["warning"]
+    assert response.headers["sunset"] == "Tue, 30 Sep 2026 23:59:59 GMT"
+    assert response.headers["x-deprecated-fields"] == "use_case_compat"
+    assert "id,created_at,feature,subfeature,subscription_plan" in response.text
+    assert "use_case_compat" in response.text
+
+
+def test_export_generations_csv_reclassifies_legacy_use_case_to_canonical_feature(
+    admin_token: str,
+) -> None:
+    with db_session_module.SessionLocal() as db:
+        db.add(
+            LlmCallLogModel(
+                use_case="natal_interpretation",
+                feature="natal_interpretation",
+                subfeature="legacy_unknown",
+                plan="free",
+                model="gpt-test",
+                validation_status=LlmValidationStatus.VALID,
+                latency_ms=350,
+                tokens_in=90,
+                tokens_out=110,
+                cost_usd_estimated=0.02,
+                request_id="req-export-legacy",
+                trace_id="trace-export-legacy",
+                input_hash="hash-export-legacy",
+                environment="test",
+                evidence_warnings_count=0,
+            )
+        )
+        db.commit()
+
+    response = client.post(
+        "/v1/admin/exports/generations",
+        json={"period": None, "format": "csv"},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 200
+    assert "natal,legacy_unknown,free" in response.text
+    assert "legacy_residual" in response.text
+    assert "natal_interpretation" in response.text
 
 
 def test_export_billing_csv(admin_token: str) -> None:

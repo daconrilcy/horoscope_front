@@ -1,6 +1,6 @@
 # Story 66.50: Cohérence billing/tokens avec la taxonomie canonique
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -58,31 +58,31 @@ La condition critique de réussite est l'existence d'un **registre central uniqu
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Auditer tous les points d'agrégation coût/tokens existants (AC: 1, 4, 5, 6)
-  - [ ] Identifier les endpoints, exports, services et dashboards encore centrés sur `use_case`.
-  - [ ] Lister les flux billing / observabilité / admin à réaligner.
+- [x] Task 1: Auditer tous les points d'agrégation coût/tokens existants (AC: 1, 4, 5, 6)
+  - [x] Identifier les endpoints, exports, services et dashboards encore centrés sur `use_case`.
+  - [x] Lister les flux billing / observabilité / admin à réaligner.
 
-- [ ] Task 2: Définir la politique de reclassement legacy -> canonique (AC: 2, 3, 4, 7, 8)
-  - [ ] Introduire ou réutiliser un registre central unique de mapping legacy -> canonique.
-  - [ ] Réutiliser la taxonomie/runtime et les registres d'alias existants.
-  - [ ] Définir les cas `reclassed_nominal`, `legacy_residual` ou équivalent stable.
-  - [ ] Documenter la priorité entre feature canonique et compat legacy.
+- [x] Task 2: Définir la politique de reclassement legacy -> canonique (AC: 2, 3, 4, 7, 8)
+  - [x] Introduire ou réutiliser un registre central unique de mapping legacy -> canonique.
+  - [x] Réutiliser la taxonomie/runtime et les registres d'alias existants.
+  - [x] Définir les cas `reclassed_nominal`, `legacy_residual` ou équivalent stable.
+  - [x] Documenter la priorité entre feature canonique et compat legacy.
 
-- [ ] Task 3: Réaligner les agrégats et exports admin (AC: 1, 4, 5, 6)
-  - [ ] Retirer `use_case` comme dimension nominale primaire.
-  - [ ] Introduire les colonnes canoniques obligatoires dans les exports.
-  - [ ] Garder `use_case` uniquement en diagnostic secondaire si nécessaire.
+- [x] Task 3: Réaligner les agrégats et exports admin (AC: 1, 4, 5, 6)
+  - [x] Retirer `use_case` comme dimension nominale primaire.
+  - [x] Introduire les colonnes canoniques obligatoires dans les exports.
+  - [x] Garder `use_case` uniquement en diagnostic secondaire si nécessaire.
 
-- [ ] Task 4: Réaligner les services/query layers backend (AC: 1 à 8)
-  - [ ] Vérifier que les services de consommation et de billing parlent le même vocabulaire canonique.
-  - [ ] Corriger les mappings restants entre `feature_code`, `feature`, `subfeature`, `plan`.
-  - [ ] Éviter toute logique de mapping locale divergente.
+- [x] Task 4: Réaligner les services/query layers backend (AC: 1 à 8)
+  - [x] Vérifier que les services de consommation et de billing parlent le même vocabulaire canonique.
+  - [x] Corriger les mappings restants entre `feature_code`, `feature`, `subfeature`, `plan`.
+  - [x] Éviter toute logique de mapping locale divergente.
 
-- [ ] Task 5: Ajouter la documentation et les tests (AC: 7, 8, 9)
-  - [ ] Documenter la doctrine de cohérence.
-  - [ ] Ajouter des tests sur le reclassement legacy.
-  - [ ] Ajouter des tests sur les exports et dashboards nominaux.
-  - [ ] Ajouter un test prouvant que billing, observabilité, dashboard et export consomment bien le même registre central de mapping.
+- [x] Task 5: Ajouter la documentation et les tests (AC: 7, 8, 9)
+  - [x] Documenter la doctrine de cohérence.
+  - [x] Ajouter des tests sur le reclassement legacy.
+  - [x] Ajouter des tests sur les exports et dashboards nominaux.
+  - [x] Ajouter un test prouvant que billing, observabilité, dashboard et export consomment bien le même registre central de mapping.
 
 ## Dev Notes
 
@@ -161,10 +161,39 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- Validation locale backend (venv activé):
+  - `.\.venv\Scripts\Activate.ps1`
+  - `cd backend`
+  - `ruff check --fix app/api/v1/routers/admin_exports.py` (si besoin)
+  - `ruff check app/api/v1/routers/admin_exports.py app/services/llm_canonical_consumption_service.py app/tests/integration/test_admin_exports_api.py`
+  - `pytest -q app/tests/integration/test_admin_exports_api.py app/tests/unit/test_llm_canonical_consumption_service.py app/tests/integration/test_admin_llm_canonical_consumption_api.py`
+- Validation locale frontend (`frontend/`) :
+  - `npm run lint`
+  - `npx vitest run src/tests/AdminSettingsPage.test.tsx`
+
 ### Completion Notes List
 
 - Story créée pour verrouiller la cohérence transverse entre billing tokens, observabilité et exports admin.
+- Export admin `generations` réaligné sur les colonnes canoniques nominales (`feature`, `subfeature`, `subscription_plan`) avec `use_case_compat` conservé en compatibilité secondaire.
+- Reclassement legacy appliqué à l'export admin via le même moteur canonique (`LlmCanonicalConsumptionService._normalize_taxonomy`) et marquage explicite `taxonomy_scope` (`nominal` vs `legacy_residual`).
+- Mapping legacy -> canonique du service de consommation branché sur le registre central de gouvernance (`prompt_governance_registry` via `legacy_nominal_feature_aliases_map`) pour supprimer une logique locale divergente.
+- Dépréciation HTTP explicite de `use_case_compat` sur `POST /v1/admin/exports/generations` (formats CSV et JSON) : en-têtes `Warning` (RFC 7234), `Sunset` (échéance indicative `2026-09-30`), `X-Deprecated-Fields: use_case_compat`.
+- Documentation produit : `docs/admin-implementation-overview.md` (section exports / générations LLM).
+- UI admin : page Paramètres & Exports (`AdminSettingsPage`) — bandeau informatif après export générations avec dépréciation, bouton « Fermer » (masquage jusqu’au prochain export générations concerné), styles dans `AdminSettingsPage.css`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/66-50-coherence-billing-tokens-taxonomie-canonique.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `backend/app/services/llm_canonical_consumption_service.py`
+- `backend/app/api/v1/routers/admin_exports.py`
+- `backend/app/tests/integration/test_admin_exports_api.py`
+- `docs/admin-implementation-overview.md`
+- `frontend/src/pages/admin/AdminSettingsPage.tsx`
+- `frontend/src/pages/admin/AdminSettingsPage.css`
+- `frontend/src/tests/AdminSettingsPage.test.tsx`
+
+### Change Log
+
+- 2026-04-15: Alignement export admin generations sur taxonomie canonique; reclassement legacy explicite; centralisation stricte du mapping legacy->canonique; ajout des tests d'intégration associés.
+- 2026-04-15 (suite): En-têtes HTTP de dépréciation sur export generations; doc admin overview; UI settings avec bandeau et fermeture; tests frontend et assertions headers backend.

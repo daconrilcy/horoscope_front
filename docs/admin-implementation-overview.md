@@ -107,6 +107,10 @@ Depuis `/admin`, les sections suivantes sont routées et implémentées :
 11. `/admin/settings` - `AdminSettingsPage`
     - Exports admin (users, generations, billing).
     - Flux sécurisé avec confirmation explicite côté UI.
+    - Export `generations`:
+      - colonnes nominales canoniques (`feature`, `subfeature`, `subscription_plan`) prioritaires ;
+      - `use_case_compat` maintenu en compatibilité secondaire uniquement ;
+      - signal de dépréciation HTTP (`Warning`, `Sunset`, `X-Deprecated-Fields`) exposé pour préparer la suppression de `use_case_compat`.
     - Endpoints : `/v1/admin/exports/users|generations|billing`.
 
 12. `/admin/reconciliation` - `ReconciliationAdmin`

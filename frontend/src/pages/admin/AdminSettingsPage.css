@@ -98,6 +98,33 @@
   color: var(--color-text-primary);
 }
 
+.alert-box--info {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 52%, transparent);
+  color: var(--color-text-primary);
+}
+
+.alert-box p {
+  margin: var(--space-2) 0 0;
+}
+
+.alert-box--dismissible .alert-box__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.alert-box__dismiss {
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.alert-box__dismiss:hover {
+  color: var(--color-text-primary);
+}
+
 .export-filters {
   display: flex;
   flex-direction: column;

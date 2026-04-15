@@ -80,4 +80,108 @@ describe("AdminSettingsPage", () => {
     expect(screen.queryByRole("button", { name: "Exporter (CSV/JSON)" })).not.toBeInTheDocument()
     expect(screen.getAllByText("Export indisponible pour ce profil.")).toHaveLength(3)
   })
+
+  it("shows generations deprecation notice after export success", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+    const createObjectUrlMock = vi.fn(() => "blob:generations-export")
+    const revokeObjectUrlMock = vi.fn()
+    Object.defineProperty(window.URL, "createObjectURL", {
+      value: createObjectUrlMock,
+      configurable: true,
+    })
+    Object.defineProperty(window.URL, "revokeObjectURL", {
+      value: revokeObjectUrlMock,
+      configurable: true,
+    })
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        return new Response('{"ok":true}', {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Warning":
+              '299 - "Deprecated field: use_case_compat is compatibility-only and will be removed after 2026-09-30. Use feature/subfeature/subscription_plan instead."',
+            "Sunset": "Tue, 30 Sep 2026 23:59:59 GMT",
+            "X-Deprecated-Fields": "use_case_compat",
+          },
+        })
+      }),
+    )
+
+    renderPage()
+    await userEvent.click(screen.getByRole("button", { name: "Exporter (CSV/JSON)" }))
+    await waitFor(() => {
+      expect(screen.getByText(/AVERTISSEMENT SÉCURITÉ/)).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByRole("checkbox"))
+    await userEvent.click(screen.getByRole("button", { name: "Confirmer l'export" }))
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "use_case_compat est en compatibilite uniquement",
+      )
+    })
+    expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:generations-export")
+  })
+
+  it("dismisses generations deprecation notice until next generations export", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+    const createObjectUrlMock = vi.fn(() => "blob:generations-export")
+    const revokeObjectUrlMock = vi.fn()
+    Object.defineProperty(window.URL, "createObjectURL", {
+      value: createObjectUrlMock,
+      configurable: true,
+    })
+    Object.defineProperty(window.URL, "revokeObjectURL", {
+      value: revokeObjectUrlMock,
+      configurable: true,
+    })
+
+    const deprecationHeaders = {
+      "Content-Type": "application/json",
+      Warning:
+        '299 - "Deprecated field: use_case_compat is compatibility-only and will be removed after 2026-09-30. Use feature/subfeature/subscription_plan instead."',
+      Sunset: "Tue, 30 Sep 2026 23:59:59 GMT",
+      "X-Deprecated-Fields": "use_case_compat",
+    }
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        return new Response('{"ok":true}', {
+          status: 200,
+          headers: deprecationHeaders,
+        })
+      }),
+    )
+
+    renderPage()
+    await userEvent.click(screen.getByRole("button", { name: "Exporter (CSV/JSON)" }))
+    await waitFor(() => {
+      expect(screen.getByText(/AVERTISSEMENT SÉCURITÉ/)).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole("checkbox"))
+    await userEvent.click(screen.getByRole("button", { name: "Confirmer l'export" }))
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("use_case_compat est en compatibilite uniquement")
+    })
+
+    await userEvent.click(screen.getByRole("button", { name: "Fermer cette information" }))
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: "Exporter (CSV/JSON)" }))
+    await waitFor(() => {
+      expect(screen.getByText(/AVERTISSEMENT SÉCURITÉ/)).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole("checkbox"))
+    await userEvent.click(screen.getByRole("button", { name: "Confirmer l'export" }))
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("use_case_compat est en compatibilite uniquement")
+    })
+  })
 })

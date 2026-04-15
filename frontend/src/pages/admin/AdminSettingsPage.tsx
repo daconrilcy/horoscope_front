@@ -8,9 +8,16 @@ import "./AdminSettingsPage.css"
 interface ExportModalProps {
   type: "users" | "generations" | "billing"
   onClose: () => void
+  onExportCompleted?: (result: ExportResult) => void
 }
 
-function ExportModal({ type, onClose }: ExportModalProps) {
+interface ExportResult {
+  deprecatedFields?: string
+  warning?: string
+  sunset?: string
+}
+
+function ExportModal({ type, onClose, onExportCompleted }: ExportModalProps) {
   const token = useAccessTokenSnapshot()
   const [period, setPeriod] = useState({ start: "", end: "" })
   const [format, setFormat] = useState("csv")
@@ -33,6 +40,12 @@ function ExportModal({ type, onClose }: ExportModalProps) {
         })
       })
       if (!response.ok) throw new Error("Export failed")
+
+      const exportResult: ExportResult = {
+        deprecatedFields: response.headers.get("X-Deprecated-Fields") ?? undefined,
+        warning: response.headers.get("Warning") ?? undefined,
+        sunset: response.headers.get("Sunset") ?? undefined,
+      }
       
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
@@ -43,8 +56,10 @@ function ExportModal({ type, onClose }: ExportModalProps) {
       a.click()
       a.remove()
       window.URL.revokeObjectURL(url)
+      return exportResult
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      onExportCompleted?.(result)
       onClose()
     }
   })
@@ -114,6 +129,28 @@ function ExportModal({ type, onClose }: ExportModalProps) {
 export function AdminSettingsPage() {
   const { canExport } = useAdminPermissions()
   const [activeExport, setActiveExport] = useState<ExportModalProps["type"] | null>(null)
+  const [generationsDeprecationNotice, setGenerationsDeprecationNotice] = useState<string | null>(null)
+  const [isGenerationsNoticeDismissed, setIsGenerationsNoticeDismissed] = useState(false)
+
+  const handleExportCompleted = (type: ExportModalProps["type"], result: ExportResult) => {
+    if (type !== "generations") {
+      return
+    }
+    if (!result.deprecatedFields?.includes("use_case_compat")) {
+      return
+    }
+    const sunsetLabel = result.sunset
+      ? new Date(result.sunset).toLocaleDateString("fr-FR")
+      : "date non communiquée"
+    setGenerationsDeprecationNotice(
+      `Deprecation active: use_case_compat est en compatibilite uniquement et sera retire apres le ${sunsetLabel}.`,
+    )
+    setIsGenerationsNoticeDismissed(false)
+  }
+
+  const dismissGenerationsNotice = () => {
+    setIsGenerationsNoticeDismissed(true)
+  }
 
   return (
     <div className="admin-settings-page">
@@ -124,6 +161,26 @@ export function AdminSettingsPage() {
       <section className="settings-section">
         <h3>Exports de données</h3>
         <p className="section-description">Téléchargez les données brutes pour reporting ou backup.</p>
+        {generationsDeprecationNotice && !isGenerationsNoticeDismissed && (
+          <div
+            className="alert-box alert-box--info alert-box--dismissible"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="alert-box__header">
+              <strong>Info export generations</strong>
+              <button
+                type="button"
+                className="alert-box__dismiss text-button"
+                onClick={dismissGenerationsNotice}
+                aria-label="Fermer cette information"
+              >
+                Fermer
+              </button>
+            </div>
+            <p>{generationsDeprecationNotice}</p>
+          </div>
+        )}
         
         <div className="export-list">
           <div className="export-card">
@@ -174,6 +231,7 @@ export function AdminSettingsPage() {
         <ExportModal 
           type={activeExport} 
           onClose={() => setActiveExport(null)} 
+          onExportCompleted={(result) => handleExportCompleted(activeExport, result)}
         />
       )}
     </div>

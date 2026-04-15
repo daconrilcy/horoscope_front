@@ -20,14 +20,12 @@ from app.llm_orchestration.feature_taxonomy import (
     normalize_subfeature,
 )
 from app.llm_orchestration.prompt_governance_registry import (
-    LEGACY_DAILY_FEATURE,
-    LEGACY_NATAL_FEATURE,
+    get_prompt_governance_registry,
 )
 
-LEGACY_FEATURE_TO_CANONICAL: dict[str, str] = {
-    LEGACY_DAILY_FEATURE: "horoscope_daily",
-    LEGACY_NATAL_FEATURE: "natal",
-}
+LEGACY_FEATURE_TO_CANONICAL: dict[str, str] = (
+    get_prompt_governance_registry().legacy_nominal_feature_aliases_map()
+)
 
 Granularity = Literal["day", "month"]
 Scope = Literal["nominal", "all"]

@@ -24,23 +24,40 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.services.audit_service import AuditEventCreatePayload, AuditService
+from app.services.llm_canonical_consumption_service import LlmCanonicalConsumptionService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/admin/exports", tags=["admin-exports"])
 
+GEN_EXPORT_COMPAT_DEPRECATION_WARNING = (
+    '299 - "Deprecated field: use_case_compat is compatibility-only and will be removed after '
+    '2026-09-30. Use feature/subfeature/subscription_plan instead."'
+)
+GEN_EXPORT_COMPAT_DEPRECATION_SUNSET = "Tue, 30 Sep 2026 23:59:59 GMT"
 
-def _generate_csv_response(rows: list[dict[str, Any]], fieldnames: list[str], filename: str):
+
+def _generate_csv_response(
+    rows: list[dict[str, Any]],
+    fieldnames: list[str],
+    filename: str,
+    *,
+    extra_headers: dict[str, str] | None = None,
+):
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(rows)
     output.seek(0)
 
+    headers = {"Content-Disposition": f"attachment; filename={filename}"}
+    if extra_headers:
+        headers.update(extra_headers)
+
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers=headers,
     )
 
 
@@ -141,7 +158,12 @@ def export_generations(
         select(
             LlmCallLogModel.id,
             LlmCallLogModel.timestamp.label("created_at"),
-            LlmCallLogModel.use_case,
+            LlmCallLogModel.use_case.label("use_case_compat"),
+            LlmCallLogModel.feature,
+            LlmCallLogModel.subfeature,
+            LlmCallLogModel.plan.label("subscription_plan"),
+            LlmCallLogModel.executed_provider,
+            LlmCallLogModel.active_snapshot_version,
             LlmCallLogModel.model,
             LlmCallLogModel.validation_status.label("status"),
             LlmCallLogModel.tokens_in.label("tokens_prompt"),
@@ -162,10 +184,21 @@ def export_generations(
     results = db.execute(stmt).all()
     rows = [dict(r._mapping) for r in results]
 
-    # Process ISO dates for JSON
+    # Canonical export doctrine:
+    # - nominal columns are feature/subfeature/plan
+    # - legacy use_case is compatibility-only
     for r in rows:
         if isinstance(r["created_at"], datetime):
             r["created_at"] = r["created_at"].isoformat()
+        feature, subfeature, is_legacy_residual = (
+            LlmCanonicalConsumptionService._normalize_taxonomy(
+                feature=r.get("feature"),
+                subfeature=r.get("subfeature"),
+            )
+        )
+        r["feature"] = feature
+        r["subfeature"] = subfeature
+        r["taxonomy_scope"] = "legacy_residual" if is_legacy_residual else "nominal"
 
     # 1. Audit
     _record_export_audit(
@@ -178,17 +211,31 @@ def export_generations(
     )
 
     # 2. Return File
+    deprecation_headers = {
+        "Warning": GEN_EXPORT_COMPAT_DEPRECATION_WARNING,
+        "Sunset": GEN_EXPORT_COMPAT_DEPRECATION_SUNSET,
+        "X-Deprecated-Fields": "use_case_compat",
+    }
     if payload.format == "json":
         return StreamingResponse(
             iter([json.dumps(rows, indent=2)]),
             media_type="application/json",
-            headers={"Content-Disposition": "attachment; filename=generations_export.json"},
+            headers={
+                "Content-Disposition": "attachment; filename=generations_export.json",
+                **deprecation_headers,
+            },
         )
 
     fieldnames = [
         "id",
         "created_at",
-        "use_case",
+        "feature",
+        "subfeature",
+        "subscription_plan",
+        "executed_provider",
+        "active_snapshot_version",
+        "taxonomy_scope",
+        "use_case_compat",
         "model",
         "status",
         "tokens_prompt",
@@ -196,7 +243,12 @@ def export_generations(
         "latency_ms",
         "request_id",
     ]
-    return _generate_csv_response(rows, fieldnames, "generations_export.csv")
+    return _generate_csv_response(
+        rows,
+        fieldnames,
+        "generations_export.csv",
+        extra_headers=deprecation_headers,
+    )
 
 
 @router.post("/billing")
