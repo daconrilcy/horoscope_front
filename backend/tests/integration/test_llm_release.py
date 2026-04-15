@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -89,6 +90,19 @@ def _sqlite_async_database_url() -> str | None:
     if not db_url.startswith("sqlite:///"):
         return None
     return db_url.replace("sqlite:///", "sqlite+aiosqlite:///")
+
+
+def test_activation_evidence_requires_timezone_aware_datetime():
+    from app.api.v1.routers.admin_llm_release import ActivationQualificationEvidence
+
+    with pytest.raises(ValidationError, match="timezone"):
+        ActivationQualificationEvidence(
+            active_snapshot_id=uuid.uuid4(),
+            active_snapshot_version="v-test",
+            manifest_entry_id="chat:None:None:fr-FR",
+            verdict="go",
+            generated_at="2026-04-15T10:00:00",
+        )
 
 
 @pytest.mark.asyncio
@@ -567,8 +581,52 @@ async def test_rollback_marks_faulty_snapshot_as_rolled_back():
 
         db.refresh(snapshot_a)
         db.refresh(snapshot_b)
-        assert snapshot_a.manifest["release_health"]["status"] == "activated"
+        snapshot_a_history = snapshot_a.manifest["release_health"]["history"]
+        assert snapshot_a_history[-1]["reason"].startswith(
+            "Rollback restored previous snapshot without synthetic"
+        )
+        smoke_pass_events = [
+            event
+            for event in snapshot_a_history
+            if event["reason"] == "Post-activation smoke passed."
+        ]
+        assert len(smoke_pass_events) == 1
         assert snapshot_b.manifest["release_health"]["status"] == "rolled_back"
+    finally:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.commit()
+        db.close()
+
+
+@pytest.mark.asyncio
+async def test_activation_with_naive_timestamp_is_rejected_without_500():
+    db = SessionLocal()
+    try:
+        service = ReleaseService(db)
+        snapshot = await service.build_snapshot(version="naive-ts", created_by="test_admin")
+        await service.validate_snapshot(snapshot.id)
+        manifest_entry_id = _default_manifest_entry_id(snapshot)
+
+        naive_qualification = type(
+            "NaiveQualificationEvidence",
+            (),
+            {
+                "verdict": "go",
+                "active_snapshot_id": snapshot.id,
+                "active_snapshot_version": snapshot.version,
+                "manifest_entry_id": manifest_entry_id,
+                "generated_at": datetime.now(),  # intentionally naive
+            },
+        )()
+
+        with pytest.raises(ValueError, match="stale"):
+            await service.activate_snapshot(
+                snapshot.id,
+                activated_by="test_admin",
+                qualification_report=naive_qualification,
+                golden_report=_golden_evidence(snapshot, manifest_entry_id=manifest_entry_id),
+                smoke_result=_smoke_evidence(snapshot, manifest_entry_id=manifest_entry_id),
+            )
     finally:
         db.execute(delete(LlmActiveReleaseModel))
         db.commit()

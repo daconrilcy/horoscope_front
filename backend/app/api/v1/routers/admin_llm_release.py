@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,12 @@ from app.llm_orchestration.services.release_service import ReleaseService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+def _validate_timezone_aware_timestamp(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("generated_at must include an explicit timezone offset.")
+    return value
 
 
 class ReleaseSnapshotCreate(BaseModel):
@@ -47,6 +53,11 @@ class ActivationQualificationEvidence(BaseModel):
     verdict: str
     generated_at: datetime
 
+    @field_validator("generated_at")
+    @classmethod
+    def ensure_generated_at_timezone(cls, value: datetime) -> datetime:
+        return _validate_timezone_aware_timestamp(value)
+
 
 class ActivationGoldenEvidence(BaseModel):
     active_snapshot_id: uuid.UUID
@@ -54,6 +65,11 @@ class ActivationGoldenEvidence(BaseModel):
     manifest_entry_id: Optional[str] = None
     verdict: str
     generated_at: datetime
+
+    @field_validator("generated_at")
+    @classmethod
+    def ensure_generated_at_timezone(cls, value: datetime) -> datetime:
+        return _validate_timezone_aware_timestamp(value)
 
 
 class ActivationSmokeEvidence(BaseModel):

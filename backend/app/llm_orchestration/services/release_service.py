@@ -80,6 +80,8 @@ class ReleaseService:
     def _is_recent(report_generated_at: Optional[datetime], max_age_minutes: int) -> bool:
         if report_generated_at is None:
             return False
+        if report_generated_at.tzinfo is None or report_generated_at.utcoffset() is None:
+            return False
         age_seconds = (ReleaseService._utcnow() - report_generated_at).total_seconds()
         return age_seconds <= (max_age_minutes * 60)
 
@@ -533,41 +535,75 @@ class ReleaseService:
             "rollback",
         )
 
-        # 3. Activate it
-        rolled_back = await self.activate_snapshot(
-            previous.id,
-            activated_by,
-            qualification_report=type(
-                "QualificationStub",
-                (),
-                {
-                    "verdict": "go",
-                    "active_snapshot_id": previous.id,
-                    "active_snapshot_version": previous.version,
-                    "manifest_entry_id": rollback_manifest_entry_id,
-                    "generated_at": self._utcnow(),
-                },
-            )(),
-            golden_report=type(
-                "GoldenStub",
-                (),
-                {
-                    "verdict": "pass",
-                    "active_snapshot_id": previous.id,
-                    "active_snapshot_version": previous.version,
-                    "manifest_entry_id": rollback_manifest_entry_id,
-                    "generated_at": self._utcnow(),
-                },
-            )(),
-            smoke_result={
-                "status": "pass",
-                "active_snapshot_id": str(previous.id),
-                "active_snapshot_version": previous.version,
-                "manifest_entry_id": rollback_manifest_entry_id,
-                "forbidden_fallback_detected": False,
-            },
-            rollback_policy="forced-rollback",
+        # 3. Switch active pointer without fabricating qualification/golden/smoke evidence.
+        stmt_select = select(LlmActiveReleaseModel)
+        res_select = await self._execute(stmt_select)
+        for old_active in res_select.scalars().all():
+            if isinstance(self.session, AsyncSession):
+                await self.session.delete(old_active)
+            else:
+                self.session.delete(old_active)
+        if isinstance(self.session, AsyncSession):
+            await self.session.flush()
+        else:
+            self.session.flush()
+
+        active = LlmActiveReleaseModel(
+            release_snapshot_id=previous.id,
+            activated_by=activated_by,
+            activated_at=self._utcnow(),
         )
+        self.session.add(active)
+
+        await self._execute(
+            update(LlmReleaseSnapshotModel)
+            .where(LlmReleaseSnapshotModel.status == ReleaseStatus.ACTIVE)
+            .values(status=ReleaseStatus.ARCHIVED)
+        )
+        previous.status = ReleaseStatus.ACTIVE
+        previous.activated_at = self._utcnow()
+        previous.activated_by = activated_by
+
+        restored_manifest_copy = dict(previous.manifest or {})
+        restored_health = restored_manifest_copy.setdefault("release_health", {})
+        restored_health.setdefault("taxonomy", {})
+        restored_health["taxonomy"]["allowed_statuses"] = [
+            "candidate",
+            "qualified",
+            "activated",
+            "monitoring",
+            "degraded",
+            "rollback_recommended",
+            "rolled_back",
+        ]
+        restored_health["snapshot_id"] = str(previous.id)
+        restored_health["snapshot_version"] = previous.version
+        restored_health["rollback_policy"] = "forced-rollback"
+        restored_health["monitoring_thresholds"] = restored_health.get("monitoring_thresholds") or {
+            "error_rate": 0.02,
+            "p95_latency_ms": 1500.0,
+            "fallback_rate": 0.01,
+        }
+        self._set_release_status(
+            restored_manifest_copy,
+            "monitoring",
+            reason=(
+                "Rollback restored previous snapshot without synthetic qualification/golden/smoke "
+                "evidence. Fresh post-rollback validation is required."
+            ),
+            signals={
+                "restored_via_rollback": True,
+                "restored_by": activated_by,
+                "manifest_entry_id": rollback_manifest_entry_id,
+                "fresh_evidence_required": True,
+            },
+        )
+        await self._execute(
+            update(LlmReleaseSnapshotModel)
+            .where(LlmReleaseSnapshotModel.id == previous.id)
+            .values(manifest=restored_manifest_copy)
+        )
+
         faulty_snapshot_after = (
             await self._execute(
                 select(LlmReleaseSnapshotModel).where(
@@ -583,8 +619,8 @@ class ReleaseService:
                 reason="Rollback executed: snapshot removed from active production slot.",
                 signals={
                     "rolled_back_by": activated_by,
-                    "restored_snapshot_id": str(rolled_back.id),
-                    "restored_snapshot_version": rolled_back.version,
+                    "restored_snapshot_id": str(previous.id),
+                    "restored_snapshot_version": previous.version,
                 },
             )
             await self._execute(
@@ -596,7 +632,8 @@ class ReleaseService:
             await self.session.commit()
         else:
             self.session.commit()
-        return rolled_back
+        self.invalidate_all_caches()
+        return previous
 
     async def evaluate_release_health(
         self,
