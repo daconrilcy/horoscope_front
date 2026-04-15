@@ -516,13 +516,24 @@ async def observability_http_middleware(
 def handle_request_validation_error(
     request: Request, error: RequestValidationError
 ) -> JSONResponse:
+    sanitized_errors = []
+    for entry in error.errors():
+        sanitized_entry = dict(entry)
+        ctx = sanitized_entry.get("ctx")
+        if ctx:
+            sanitized_entry["ctx"] = {
+                key: str(value) if isinstance(value, Exception) else value
+                for key, value in ctx.items()
+            }
+        sanitized_errors.append(sanitized_entry)
+
     return JSONResponse(
         status_code=422,
         content={
             "error": {
                 "code": "invalid_request_payload",
                 "message": "request payload validation failed",
-                "details": {"errors": error.errors()},
+                "details": {"errors": sanitized_errors},
                 "request_id": resolve_request_id(request),
             }
         },

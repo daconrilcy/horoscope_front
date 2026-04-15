@@ -1,11 +1,14 @@
 import uuid
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from app.api.v1.routers.admin_llm_release import ActivationQualificationEvidence
 from app.core.config import settings
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
@@ -14,7 +17,7 @@ from app.infra.db.models.llm_release import (
     LlmReleaseSnapshotModel,
     ReleaseStatus,
 )
-from app.infra.db.session import SessionLocal
+from app.infra.db.session import SessionLocal, get_db_session
 from app.llm_orchestration.gateway import (
     ExecutionContext,
     ExecutionFlags,
@@ -30,6 +33,7 @@ from app.llm_orchestration.services.execution_profile_registry import (
     ExecutionProfileRegistry,
 )
 from app.llm_orchestration.services.release_service import ReleaseService
+from app.main import app
 
 
 def _default_manifest_entry_id(snapshot) -> str:
@@ -93,8 +97,6 @@ def _sqlite_async_database_url() -> str | None:
 
 
 def test_activation_evidence_requires_timezone_aware_datetime():
-    from app.api.v1.routers.admin_llm_release import ActivationQualificationEvidence
-
     with pytest.raises(ValidationError, match="timezone"):
         ActivationQualificationEvidence(
             active_snapshot_id=uuid.uuid4(),
@@ -103,6 +105,45 @@ def test_activation_evidence_requires_timezone_aware_datetime():
             verdict="go",
             generated_at="2026-04-15T10:00:00",
         )
+
+
+def test_activate_endpoint_rejects_naive_generated_at_with_422():
+    client = TestClient(app)
+    app.dependency_overrides[get_db_session] = lambda: MagicMock()
+
+    try:
+        snapshot_id = uuid.uuid4()
+        payload = {
+            "qualification_report": {
+                "active_snapshot_id": str(snapshot_id),
+                "active_snapshot_version": "v-test",
+                "manifest_entry_id": "chat:None:None:fr-FR",
+                "verdict": "go",
+                "generated_at": "2026-04-15T10:00:00",
+            },
+            "golden_report": {
+                "active_snapshot_id": str(snapshot_id),
+                "active_snapshot_version": "v-test",
+                "manifest_entry_id": "chat:None:None:fr-FR",
+                "verdict": "pass",
+                "generated_at": "2026-04-15T10:00:00+02:00",
+            },
+            "smoke_result": {
+                "status": "pass",
+                "active_snapshot_id": str(snapshot_id),
+                "active_snapshot_version": "v-test",
+                "manifest_entry_id": "chat:None:None:fr-FR",
+                "forbidden_fallback_detected": False,
+            },
+        }
+
+        response = client.post(f"/v1/admin/llm/releases/{snapshot_id}/activate", json=payload)
+
+        assert response.status_code == 422
+        assert "generated_at" in response.text
+        assert "timezone offset" in response.text
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
