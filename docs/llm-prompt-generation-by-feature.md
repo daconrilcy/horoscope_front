@@ -38,6 +38,8 @@ Le document couvre le pipeline réellement exécuté dans :
 - `backend/app/prompts/common_context.py`
 - `backend/app/llm_orchestration/services/release_service.py`
 - `backend/app/llm_orchestration/services/config_coherence_validator.py`
+- `backend/app/llm_orchestration/data/prompt_governance_registry.json` (registre central versionné, Story 66.42)
+- `backend/app/llm_orchestration/prompt_governance_registry.py`
 - `backend/app/llm_orchestration/providers/provider_runtime_manager.py`
 - `backend/app/llm_orchestration/services/observability_service.py`
 
@@ -76,7 +78,16 @@ Compatibilités legacy encore gérées :
 
 - `daily_prediction` est mappé vers `horoscope_daily`
 - `natal_interpretation` comme feature legacy est mappé vers `natal`
-- plusieurs `use_case` historiques sont mappés via `DEPRECATED_USE_CASE_MAPPING`
+- plusieurs `use_case` historiques sont mappés via `DEPRECATED_USE_CASE_MAPPING` (contenu versionné dans le registre JSON, importé par `app.prompts.catalog`)
+
+## Registre central de gouvernance (Story 66.42)
+
+La taxonomie canonique (familles, aliases nominaux, sous-familles natales), les aliases de `use_case` dépréciés et les placeholders autorisés par famille sont définis dans un **seul artefact versionné** : `backend/app/llm_orchestration/data/prompt_governance_registry.json` (champ `schema_version`).
+
+- **Canonique vs legacy transitoire** : les clés `legacy_nominal_feature_aliases` et `legacy_subfeature_aliases_by_domain` décrivent explicitement la compatibilité de migration ; elles ne sont pas des extensions ad hoc de la taxonomie canonique.
+- **Placeholders** : `placeholders_by_family` est la seule allowlist exécutée par `ConfigCoherenceValidator`, `validate_placeholders()` et `PromptRenderer` (via `PLACEHOLDER_ALLOWLIST` dérivé du JSON).
+- **Exceptions** : toute entrée dans `governed_exceptions` doit porter owner, justification, périmètre, statut et `review_by` ; une entrée incomplète fait échouer le chargement du registre.
+- **Aliases use_case** : `deprecated_use_case_mapping` alimente `DEPRECATED_USE_CASE_MAPPING` ; toute nouvelle entrée doit y être ajoutée pour passer les garde-fous de cohérence et de non-régression.
 
 ## Classes impliquées dans la génération du prompt
 
@@ -443,6 +454,7 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 | `66.11` | `ExecutionProfile` découple texte et exécution |
 | `66.12` | `LengthBudget` agit sur le prompt et potentiellement sur `max_output_tokens` |
 | `66.13` | politique de placeholders par famille dans `PromptRenderer` et `assembly_resolver` |
+| `66.42` | registre JSON unique pour taxonomie, aliases et placeholders ; enforcement publish/runtime/CI |
 | `66.14` | `context_quality` géré par template ou injecteur |
 | `66.15` | convergence des points d'entrée métier dans `AIEngineAdapter` |
 | `66.16` | matrice d'évaluation devenue base des campagnes de qualification/golden |
@@ -481,5 +493,5 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-14`
-- **Référence stable (Commit SHA)** : `fb863c823e91f4b965b685c3af6fa32fb6b63e78`
+- **Référence stable (Commit SHA)** : `f034609b9f56d25abad633e1925b4f3c3fbaa02e`
 - **Version registre résiduel** : `2026.04.14`

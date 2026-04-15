@@ -5,6 +5,8 @@ from typing import Final
 # Story 66.38: single source of truth for documentation governance.
 
 STRUCTURAL_FILES: Final[set[str]] = {
+    "backend/app/llm_orchestration/data/prompt_governance_registry.json",
+    "backend/app/llm_orchestration/prompt_governance_registry.py",
     "docs/llm-prompt-generation-by-feature.md",
     ".github/pull_request_template.md",
     ".github/workflows/llm-doc-conformity.yml",

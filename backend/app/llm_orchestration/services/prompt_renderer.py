@@ -40,7 +40,10 @@ class PromptRenderer:
         )
 
         from app.llm_orchestration.placeholder_policy import PLACEHOLDER_POLICY
-        from app.llm_orchestration.services.assembly_resolver import PLACEHOLDER_ALLOWLIST
+        from app.llm_orchestration.prompt_governance_registry import (
+            PLACEHOLDER_ALLOWLIST,
+            get_prompt_governance_registry,
+        )
 
         # 1. Check legacy required_variables first
         required_variables = required_variables or []
@@ -59,22 +62,39 @@ class PromptRenderer:
         if effective_feature == "unknown" and variables.get("use_case"):
             effective_feature = variables["use_case"]
 
-        feat_key = (
-            effective_feature.split("_")[0] if "_" in effective_feature else effective_feature
-        )
+        reg = get_prompt_governance_registry()
+        feat_key = reg.resolve_placeholder_family(effective_feature)
         allowlist = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
         placeholder_defs = {d.name: d for d in allowlist}
 
         found_placeholders = PromptRenderer.extract_placeholders(template)
         effective_vars = variables.copy()
 
-        # Universal placeholders (Story 66.13 AC6)
-        universal = {"locale", "use_case", "persona_name", "last_user_msg"}
+        # Universal placeholders from central registry (Story 66.42)
+        universal = set(reg.universal_placeholders)
 
         for p_name in found_placeholders:
             p_def = placeholder_defs.get(p_name)
 
             if not p_def and p_name not in universal:
+                allowed_by_exception, exception_id = reg.is_placeholder_governed_for_feature(
+                    placeholder=p_name,
+                    feature=effective_feature,
+                    rule_id="GOV_PH_NOT_IN_REGISTRY",
+                )
+                if allowed_by_exception:
+                    logger.warning(
+                        (
+                            "prompt_governance_exception_applied_runtime "
+                            "id=%s placeholder=%s feature=%s"
+                        ),
+                        exception_id,
+                        p_name,
+                        effective_feature,
+                    )
+                    if p_name not in effective_vars:
+                        effective_vars[p_name] = ""
+                    continue
                 # Unknown placeholder (AC4) - NOT authorized for this feature
                 is_blocking = (
                     is_supported_feature(effective_feature) or p_name in required_variables

@@ -2,10 +2,13 @@
   "daily_synthesis": "Analyse simplifiée en raison de l'absence de certains paramètres de naissance. La journée s'annonce calme. Ne brusquez rien. Profitez de ce moment pour réfléchir à vos priorités. Les astres suggèrent une approche prudente.",
   "astro_events_intro": "Événements astraux généraux.",
   "time_window_narratives": {
-    "matin": "Période de calme relatif."
+    "nuit": "Nuit introspective, propice au repos mental.",
+    "matin": "Période de calme relatif.",
+    "apres_midi": "Après-midi stable, avancez à un rythme mesuré.",
+    "soiree": "Soirée apaisante pour faire le point."
   },
   "turning_point_narratives": [],
-  "main_turning_point_narrative": null,
+  "main_turning_point_narrative": "Le principal tournant consiste à ralentir pour clarifier vos priorités.",
   "daily_advice": {
     "advice": "Prenez soin de vous.",
     "emphasis": "Repos."

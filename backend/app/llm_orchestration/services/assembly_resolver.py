@@ -13,8 +13,11 @@ from app.llm_orchestration.admin_models import (
     PromptAssemblyTarget,
     ResolvedAssembly,
 )
-from app.llm_orchestration.placeholder_policy import PlaceholderDef
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
+from app.llm_orchestration.prompt_governance_registry import (
+    PLACEHOLDER_ALLOWLIST,
+    get_prompt_governance_registry,
+)
 from app.llm_orchestration.services.persona_composer import compose_persona_block
 from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 
@@ -26,30 +29,7 @@ class PlanRule(BaseModel):
     max_output_tokens_override: Optional[int] = None
 
 
-# AC6: Placeholder allowlist indexed by feature (Extended in Story 66.13 D1)
-PLACEHOLDER_ALLOWLIST: dict[str, list[PlaceholderDef]] = {
-    "guidance": [
-        PlaceholderDef(name="locale", classification="optional_with_fallback", fallback="fr-FR"),
-        PlaceholderDef(name="use_case", classification="optional"),
-        PlaceholderDef(name="situation", classification="required"),
-        PlaceholderDef(name="last_user_msg", classification="optional"),
-    ],
-    "natal": [
-        PlaceholderDef(name="locale", classification="optional_with_fallback", fallback="fr-FR"),
-        PlaceholderDef(name="use_case", classification="optional"),
-        PlaceholderDef(name="chart_json", classification="required"),
-        PlaceholderDef(name="natal_data", classification="required"),
-        PlaceholderDef(name="birth_date", classification="optional"),
-        PlaceholderDef(name="birth_time", classification="optional"),
-        PlaceholderDef(name="birth_timezone", classification="optional"),
-    ],
-    "chat": [
-        PlaceholderDef(name="locale", classification="optional_with_fallback", fallback="fr-FR"),
-        PlaceholderDef(name="use_case", classification="optional"),
-        PlaceholderDef(name="last_user_msg", classification="required"),
-        PlaceholderDef(name="persona_name", classification="optional"),
-    ],
-}
+# AC6: Placeholder allowlist — registre central versionné (Story 66.42), réexport ci-dessous.
 
 # AC11: Plan Rules Registry
 PLAN_RULES_REGISTRY: dict[str, PlanRule] = {
@@ -81,19 +61,13 @@ PLAN_RULES_REGISTRY: dict[str, PlanRule] = {
 
 def validate_placeholders(template: str, feature: str) -> list[str]:
     """
-    Extracts placeholders from template and validates them against the feature allowlist.
+    Extracts placeholders from template and validates them against the central registry.
     Returns a list of unknown/forbidden placeholders.
     """
-    found = PromptRenderer.extract_placeholders(template)
-    # Normalize feature key for lookup
-    feat_key = feature.split("_")[0] if "_" in feature else feature
-    allowed_defs = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
-    allowed_names = {d.name for d in allowed_defs}
-
-    # Allow some universal placeholders if not explicitly in list
-    universal = {"locale", "use_case", "persona_name", "last_user_msg"}
-
-    invalid = [p for p in found if p not in allowed_names and p not in universal]
+    reg = get_prompt_governance_registry()
+    invalid, _violations = reg.validate_placeholders_in_template(
+        template, feature, source="validate_placeholders"
+    )
     return invalid
 
 
@@ -132,7 +106,8 @@ def build_assembly_preview(
         mock_vars["chart_json"] = '{"planets": {}}'
         mock_vars["natal_data"] = '{"birth_date": "1990-01-01"}'
 
-    feat_key = config.feature.split("_")[0] if "_" in config.feature else config.feature
+    reg = get_prompt_governance_registry()
+    feat_key = reg.resolve_placeholder_family(config.feature)
     allowlist = PLACEHOLDER_ALLOWLIST.get(feat_key, [])
     placeholder_defs = {d.name: d for d in allowlist}
 

@@ -275,8 +275,7 @@ def validate_snapshot_runtime_branching(
                     invariant_id="INV-SNAPSHOT-LIVE-IN-SNAPSHOT-BRANCH",
                     component=component,
                     message=(
-                        "Requête table live dans la branche `if snapshot:` "
-                        "(ambiguïté / inversion)."
+                        "Requête table live dans la branche `if snapshot:` (ambiguïté / inversion)."
                     ),
                     detail=f"model={live_model_id!r}",
                 )
@@ -338,8 +337,7 @@ def validate_governed_taxonomy_and_providers() -> list[SemanticInvariantViolatio
                 invariant_id="INV-PROVIDERS-REGISTRY-MISMATCH",
                 component="supported_providers.NOMINAL_SUPPORTED_PROVIDERS",
                 message=(
-                    "NOMINAL_SUPPORTED_PROVIDERS ne correspond pas à "
-                    "GOVERNED_NOMINAL_PROVIDERS."
+                    "NOMINAL_SUPPORTED_PROVIDERS ne correspond pas à GOVERNED_NOMINAL_PROVIDERS."
                 ),
                 detail=(
                     f"registry={sorted(GOVERNED_NOMINAL_PROVIDERS)!r} "
@@ -375,8 +373,7 @@ def validate_governed_taxonomy_and_providers() -> list[SemanticInvariantViolatio
                 component="models.FallbackType",
                 message="FallbackType ne correspond pas à GOVERNED_FALLBACK_TYPE_NAMES.",
                 detail=(
-                    f"registry={sorted(GOVERNED_FALLBACK_TYPE_NAMES)!r} "
-                    f"code={sorted(enum_names)!r}"
+                    f"registry={sorted(GOVERNED_FALLBACK_TYPE_NAMES)!r} code={sorted(enum_names)!r}"
                 ),
             )
         )

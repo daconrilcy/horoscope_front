@@ -20,10 +20,11 @@ from app.llm_orchestration.feature_taxonomy import (
     is_nominal_feature_allowed,
     is_supported_feature,
 )
-from app.llm_orchestration.services.assembly_resolver import (
-    PLAN_RULES_REGISTRY,
-    validate_placeholders,
+from app.llm_orchestration.prompt_governance_registry import (
+    format_placeholder_violation_report,
+    get_prompt_governance_registry,
 )
+from app.llm_orchestration.services.assembly_resolver import PLAN_RULES_REGISTRY
 from app.llm_orchestration.services.execution_profile_registry import (
     ExecutionProfileRegistry,
 )
@@ -342,30 +343,48 @@ class ConfigCoherenceValidator:
         self, config: PromptAssemblyConfigModel, result: ValidationResult
     ):
         """
-        AC5: Static validation of placeholders.
+        AC5: Static validation of placeholders (registre central 66.42, AC7).
         """
+        reg = get_prompt_governance_registry()
+
         # Feature Template
         if config.feature_template:
-            invalid = validate_placeholders(
-                config.feature_template.developer_prompt, config.feature
+            _invalid, violations = reg.validate_placeholders_in_template(
+                config.feature_template.developer_prompt,
+                config.feature,
+                source="assembly.feature_template",
             )
-            if invalid:
+            if violations:
                 result.add_error(
                     "placeholder_policy_violation",
-                    f"Invalid placeholders in feature template: {', '.join(invalid)}",
-                    {"placeholders": invalid, "template": "feature"},
+                    f"Placeholders non gouvernés (feature template): {', '.join(_invalid)}. "
+                    f"Détail:\n{format_placeholder_violation_report(violations)}",
+                    {
+                        "placeholders": _invalid,
+                        "template": "feature",
+                        "governance_report": format_placeholder_violation_report(violations),
+                        "violations": [v.__dict__ for v in violations],
+                    },
                 )
 
         # Subfeature Template
         if config.subfeature_template_ref and config.subfeature_template:
-            invalid_sub = validate_placeholders(
-                config.subfeature_template.developer_prompt, config.feature
+            _inv_sub, viol_sub = reg.validate_placeholders_in_template(
+                config.subfeature_template.developer_prompt,
+                config.feature,
+                source="assembly.subfeature_template",
             )
-            if invalid_sub:
+            if viol_sub:
                 result.add_error(
                     "placeholder_policy_violation",
-                    f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}",
-                    {"placeholders": invalid_sub, "template": "subfeature"},
+                    f"Placeholders non gouvernés (subfeature template): {', '.join(_inv_sub)}. "
+                    f"Détail:\n{format_placeholder_violation_report(viol_sub)}",
+                    {
+                        "placeholders": _inv_sub,
+                        "template": "subfeature",
+                        "governance_report": format_placeholder_violation_report(viol_sub),
+                        "violations": [v.__dict__ for v in viol_sub],
+                    },
                 )
 
     async def _validate_persona(

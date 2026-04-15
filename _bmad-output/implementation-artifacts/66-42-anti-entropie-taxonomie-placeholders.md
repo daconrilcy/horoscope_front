@@ -1,6 +1,6 @@
 # Story 66.42: Anti-entropie de la taxonomie canonique et des placeholders
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -109,37 +109,37 @@ Le registre doit être exécutable, versionné et consulté par les validations 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Formaliser le registre central taxonomie/placeholders (AC1, AC5, AC9)
-  - [ ] Définir une source de vérité unique pour familles, aliases, placeholders et exceptions.
-  - [ ] Y modéliser les métadonnées minimales de gouvernance.
-  - [ ] Clarifier la séparation entre canonique et compatibilité transitoire.
+- [x] Task 1: Formaliser le registre central taxonomie/placeholders (AC1, AC5, AC9)
+  - [x] Définir une source de vérité unique pour familles, aliases, placeholders et exceptions.
+  - [x] Y modéliser les métadonnées minimales de gouvernance.
+  - [x] Clarifier la séparation entre canonique et compatibilité transitoire.
 
-- [ ] Task 2: Brancher le registre sur les validations publish/runtime (AC2, AC4, AC6)
-  - [ ] Rendre le publish des assemblies dépendant du registre central.
-  - [ ] Brancher le renderer et/ou les validateurs de cohérence sur cette même source de vérité.
-  - [ ] Éliminer les allowlists locales contradictoires.
+- [x] Task 2: Brancher le registre sur les validations publish/runtime (AC2, AC4, AC6)
+  - [x] Rendre le publish des assemblies dépendant du registre central.
+  - [x] Brancher le renderer et/ou les validateurs de cohérence sur cette même source de vérité.
+  - [x] Éliminer les allowlists locales contradictoires.
 
-- [ ] Task 3: Ajouter les garde-fous CI et anti-réintroduction (AC3, AC10, AC11)
-  - [ ] Faire échouer la CI sur alias non gouverné.
-  - [ ] Faire échouer les contrôles sur placeholder étendu sans gouvernance.
-  - [ ] Étendre le garde doc ↔ code si le registre central devient structurel.
+- [x] Task 3: Ajouter les garde-fous CI et anti-réintroduction (AC3, AC10, AC11)
+  - [x] Faire échouer la CI sur alias non gouverné.
+  - [x] Faire échouer les contrôles sur placeholder étendu sans gouvernance.
+  - [x] Étendre le garde doc ↔ code si le registre central devient structurel.
 
-- [ ] Task 4: Gérer explicitement les exceptions (AC5, AC7)
-  - [ ] Refuser toute exception incomplète.
-  - [ ] Produire un rapport lisible des exceptions et violations.
-  - [ ] Prévoir une lecture exploitable pour maintenance et review.
+- [x] Task 4: Gérer explicitement les exceptions (AC5, AC7)
+  - [x] Refuser toute exception incomplète.
+  - [x] Produire un rapport lisible des exceptions et violations.
+  - [x] Prévoir une lecture exploitable pour maintenance et review.
 
-- [ ] Task 5: Réaligner la documentation canonique (AC8, AC9)
-  - [ ] Mettre à jour `docs/llm-prompt-generation-by-feature.md`.
-  - [ ] Décrire le registre central et sa place dans le runtime.
-  - [ ] Clarifier la doctrine placeholders vs compatibilité legacy.
+- [x] Task 5: Réaligner la documentation canonique (AC8, AC9)
+  - [x] Mettre à jour `docs/llm-prompt-generation-by-feature.md`.
+  - [x] Décrire le registre central et sa place dans le runtime.
+  - [x] Clarifier la doctrine placeholders vs compatibilité legacy.
 
-- [ ] Task 6: Validation locale obligatoire
-  - [ ] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
-  - [ ] Dans `backend/`, exécuter `ruff format .`.
-  - [ ] Dans `backend/`, exécuter `ruff check .`.
-  - [ ] Exécuter `pytest -q`.
-  - [ ] Exécuter au minimum les suites ciblant taxonomie, placeholders, cohérence config et doc ↔ code.
+- [x] Task 6: Validation locale obligatoire
+  - [x] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
+  - [x] Dans `backend/`, exécuter `ruff format .`.
+  - [x] Dans `backend/`, exécuter `ruff check .`.
+  - [x] Exécuter `pytest -q`.
+  - [x] Exécuter au minimum les suites ciblant taxonomie, placeholders, cohérence config et doc ↔ code.
 
 ## Dev Notes
 
@@ -221,4 +221,35 @@ GPT-5 Codex
 
 ### Completion Notes List
 
+- Registre JSON unique (`prompt_governance_registry.json`) : familles canoniques, aliases legacy nominaux, sous-familles natales, `deprecated_use_case_mapping`, placeholders par famille, exceptions gouvernées (schéma Pydantic strict).
+- `feature_taxonomy`, `DEPRECATED_USE_CASE_MAPPING` (via catalog), `PLACEHOLDER_ALLOWLIST`, `semantic_invariants_registry` et validations placeholders dérivent du registre ; résolution `horoscope_daily` corrigée (plus de préfixe `horoscope` tronqué).
+- `ConfigCoherenceValidator` : erreurs placeholders enrichies (rule_id, rapport formaté AC7).
+- `PromptRenderer` aligné publish/runtime : les exceptions gouvernées actives sont désormais honorées au rendu runtime via `is_placeholder_governed_for_feature`.
+- Durcissement fail-closed des exceptions : parsing strict de `scope`, clés obligatoires (`placeholder`, `family`), validation de famille canonique et validation de `rule` contre une liste canonique supportée.
+- Tests dédiés `test_story_66_42_prompt_governance_registry.py` ; manifeste doc structurel étendu (AC11).
+- Fixtures `tests/evaluation` daily réalignées sur `NARRATOR_OUTPUT_SCHEMA` ; suite `test_output_contract.py` repassée verte.
+
 ### File List
+
+- `backend/app/llm_orchestration/data/prompt_governance_registry.json`
+- `backend/app/llm_orchestration/prompt_governance_registry.py`
+- `backend/app/llm_orchestration/feature_taxonomy.py`
+- `backend/app/llm_orchestration/services/assembly_resolver.py`
+- `backend/app/llm_orchestration/services/prompt_renderer.py`
+- `backend/app/llm_orchestration/services/config_coherence_validator.py`
+- `backend/app/llm_orchestration/semantic_invariants_registry.py`
+- `backend/app/llm_orchestration/services/semantic_conformity_validator.py`
+- `backend/app/llm_orchestration/doc_conformity_manifest.py`
+- `backend/app/prompts/catalog.py`
+- `backend/app/llm_orchestration/tests/test_story_66_42_prompt_governance_registry.py`
+- `backend/tests/evaluation/fixtures/llm_responses/horoscope_daily_premium_minimal.json`
+- `backend/tests/evaluation/fixtures/llm_responses/horoscope_daily_free_partial.json`
+- `backend/tests/evaluation/fixtures/llm_responses/horoscope_daily_free_minimal.json`
+- `backend/horoscope.db`
+- `docs/llm-prompt-generation-by-feature.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
+### Change Log
+
+- 2026-04-14 : Story 66.42 — registre central versionné, branchement runtime/validateurs, doc et garde-fous tests ; statut sprint → review.
+- 2026-04-15 : Correctifs post-review — placeholders chat restaurés, exceptions gouvernées alignées runtime, fail-closed strict sur `scope.rule`, fixtures output contract daily réalignées.

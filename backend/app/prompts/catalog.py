@@ -8,6 +8,12 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from app.llm_orchestration import prompt_governance_registry as _prompt_governance_registry
+
+DEPRECATED_USE_CASE_MAPPING: dict[str, dict[str, str]] = (
+    _prompt_governance_registry.DEPRECATED_USE_CASE_MAPPING
+)
+
 
 class PromptEntry(BaseModel):
     """Metadata for a prompt use case."""
@@ -21,40 +27,6 @@ class PromptEntry(BaseModel):
     output_schema: dict[str, Any] | None = None  # None = text output, no JSON schema
     deprecated: bool = False
     deprecation_note: str | None = None
-
-
-# Compatibility mapping for deprecated use cases (Story 66.9 AC5, 66.20)
-DEPRECATED_USE_CASE_MAPPING = {
-    "horoscope_daily_free": {
-        "feature": "horoscope_daily",
-        "subfeature": "narration",
-        "plan": "free",
-    },
-    "horoscope_daily_full": {
-        "feature": "horoscope_daily",
-        "subfeature": "narration",
-        "plan": "premium",
-    },
-    "chat": {"feature": "chat", "subfeature": "astrologer", "plan": "free"},
-    "chat_astrologer": {"feature": "chat", "subfeature": "astrologer", "plan": "premium"},
-    "natal_long_free": {"feature": "natal", "subfeature": "natal_interpretation", "plan": "free"},
-    "natal-long-free": {"feature": "natal", "subfeature": "natal_interpretation", "plan": "free"},
-    "natal_interpretation": {
-        "feature": "natal",
-        "subfeature": "natal_interpretation",
-        "plan": "premium",
-    },
-    "natal_interpretation_short": {
-        "feature": "natal",
-        "subfeature": "natal_interpretation",
-        "plan": "free",
-    },
-    "guidance_daily": {"feature": "guidance", "subfeature": "daily", "plan": "free"},
-    "guidance_weekly": {"feature": "guidance", "subfeature": "weekly", "plan": "free"},
-    "guidance_contextual": {"feature": "guidance", "subfeature": "contextual", "plan": "premium"},
-    "event_guidance": {"feature": "guidance", "subfeature": "event", "plan": "premium"},
-    "daily_prediction": {"feature": "horoscope_daily", "subfeature": "narration", "plan": "free"},
-}
 
 
 CHAT_RESPONSE_V1 = {

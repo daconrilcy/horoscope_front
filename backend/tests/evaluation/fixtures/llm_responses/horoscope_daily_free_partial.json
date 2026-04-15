@@ -2,10 +2,13 @@
   "daily_synthesis": "Journée équilibrée (version gratuite).",
   "astro_events_intro": "Influences lunaires.",
   "time_window_narratives": {
-    "matin": "Bonne vitalité."
+    "nuit": "Nuit calme, idéale pour récupérer.",
+    "matin": "Bonne vitalité.",
+    "apres_midi": "Après-midi coopératif, privilégiez les échanges simples.",
+    "soiree": "Soirée douce pour consolider vos décisions."
   },
   "turning_point_narratives": [],
-  "main_turning_point_narrative": null,
+  "main_turning_point_narrative": "Le tournant clé arrive quand vous choisissez la simplicité plutôt que la dispersion.",
   "daily_advice": {
     "advice": "Soyez à l'écoute.",
     "emphasis": "Partage."

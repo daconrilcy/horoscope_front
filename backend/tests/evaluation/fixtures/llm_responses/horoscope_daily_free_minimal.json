@@ -1,9 +1,14 @@
 {
   "daily_synthesis": "Analyse limitée (version gratuite). Journée calme.",
   "astro_events_intro": "Influences générales.",
-  "time_window_narratives": {},
+  "time_window_narratives": {
+    "nuit": "Nuit neutre, préservez votre énergie.",
+    "matin": "Matin posé pour démarrer sans pression.",
+    "apres_midi": "Après-midi régulier, concentrez-vous sur une seule priorité.",
+    "soiree": "Soirée favorable au recentrage."
+  },
   "turning_point_narratives": [],
-  "main_turning_point_narrative": null,
+  "main_turning_point_narrative": "Le point de bascule est une reprise de contrôle progressive et sereine.",
   "daily_advice": {
     "advice": "Restez patient.",
     "emphasis": "Stabilité."

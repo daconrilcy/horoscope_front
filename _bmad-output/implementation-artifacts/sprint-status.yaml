@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-14T23:30:00+02:00'
+last_updated: '2026-04-14T22:05:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -627,7 +627,7 @@ development_status:
   66-39-durcissement-fiabilite-multi-contexte-gate-conformite-documentaire: done
   66-40-extinction-totale-legacy-hors-perimetre: done
   66-41-validation-semantique-doc-code: done
-  66-42-anti-entropie-taxonomie-placeholders: ready-for-dev
+  66-42-anti-entropie-taxonomie-placeholders: review
   66-43-chaos-testing-provider-runtime: ready-for-dev
   66-44-gate-production-continue-par-snapshot: ready-for-dev
 
