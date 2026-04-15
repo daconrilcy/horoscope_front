@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from pydantic import BaseModel
@@ -100,9 +100,17 @@ class LlmCanonicalConsumptionService:
                 bind=db.bind, tables=[LlmCanonicalConsumptionAggregateModel.__table__]
             )
 
+        expanded_from, expanded_to = LlmCanonicalConsumptionService._expanded_refresh_bounds(
+            from_utc=from_utc,
+            to_utc=to_utc,
+        )
         normalized_rows = LlmCanonicalConsumptionService._normalized_calls(
             db=db,
-            filters=CanonicalConsumptionFilters(scope="all", from_utc=from_utc, to_utc=to_utc),
+            filters=CanonicalConsumptionFilters(
+                scope="all",
+                from_utc=expanded_from,
+                to_utc=expanded_to,
+            ),
         )
         grouped: dict[
             tuple[str, datetime, int | None, str, str, str | None, str, str, str, bool],
@@ -128,7 +136,11 @@ class LlmCanonicalConsumptionService:
                 )
                 grouped.setdefault(key, []).append(row)
 
-        db.query(LlmCanonicalConsumptionAggregateModel).delete()
+        LlmCanonicalConsumptionService._delete_refresh_scope(
+            db=db,
+            from_utc=from_utc,
+            to_utc=to_utc,
+        )
         for key, entries in grouped.items():
             latencies = sorted(float(entry.latency_ms) for entry in entries)
             input_tokens = sum(entry.tokens_in for entry in entries)
@@ -198,14 +210,15 @@ class LlmCanonicalConsumptionService:
         stmt = select(LlmCanonicalConsumptionAggregateModel).where(
             LlmCanonicalConsumptionAggregateModel.granularity == filters.granularity
         )
-        if filters.from_utc:
-            stmt = stmt.where(
-                LlmCanonicalConsumptionAggregateModel.period_start_utc >= filters.from_utc
-            )
-        if filters.to_utc:
-            stmt = stmt.where(
-                LlmCanonicalConsumptionAggregateModel.period_start_utc < filters.to_utc
-            )
+        bucket_from, bucket_to = LlmCanonicalConsumptionService._bucket_query_bounds(
+            granularity=filters.granularity,
+            from_utc=filters.from_utc,
+            to_utc=filters.to_utc,
+        )
+        if bucket_from:
+            stmt = stmt.where(LlmCanonicalConsumptionAggregateModel.period_start_utc >= bucket_from)
+        if bucket_to:
+            stmt = stmt.where(LlmCanonicalConsumptionAggregateModel.period_start_utc < bucket_to)
         if filters.scope == "nominal":
             stmt = stmt.where(LlmCanonicalConsumptionAggregateModel.is_legacy_residual.is_(False))
         if filters.user_id is not None:
@@ -273,6 +286,7 @@ class LlmCanonicalConsumptionService:
                 LlmCallLogModel.id.label("call_id"),
                 LlmCallLogModel.timestamp.label("timestamp"),
                 func.min(UserTokenUsageLogModel.user_id).label("user_id"),
+                func.count(func.distinct(UserTokenUsageLogModel.user_id)).label("user_id_count"),
                 LlmCallLogModel.plan.label("subscription_plan"),
                 LlmCallLogModel.feature.label("feature"),
                 LlmCallLogModel.subfeature.label("subfeature"),
@@ -326,10 +340,15 @@ class LlmCanonicalConsumptionService:
             subscription_plan = str(row.subscription_plan or "unknown")
             executed_provider = str(row.executed_provider or "unknown")
             active_snapshot_version = str(row.active_snapshot_version or "unknown")
+            resolved_user_id: int | None = row.user_id
+            if int(row.user_id_count or 0) > 1:
+                # Data-quality guardrail: avoid attributing one call to an arbitrary user.
+                # Keeping user_id=None excludes this call from user-scoped breakdowns.
+                resolved_user_id = None
             normalized_entry = _NormalizedCall(
                 call_id=row.call_id,
                 timestamp=LlmCanonicalConsumptionService._to_utc(row.timestamp),
-                user_id=row.user_id,
+                user_id=resolved_user_id,
                 subscription_plan=subscription_plan,
                 feature=feature,
                 subfeature=subfeature,
@@ -422,3 +441,106 @@ class LlmCanonicalConsumptionService:
             return 0.0
         index = int((len(values) - 1) * percentile)
         return float(values[index])
+
+    @staticmethod
+    def _delete_refresh_scope(
+        *,
+        db: Session,
+        from_utc: datetime | None,
+        to_utc: datetime | None,
+    ) -> None:
+        if from_utc is None and to_utc is None:
+            db.query(LlmCanonicalConsumptionAggregateModel).delete()
+            return
+
+        for granularity in ("day", "month"):
+            stmt = db.query(LlmCanonicalConsumptionAggregateModel).filter(
+                LlmCanonicalConsumptionAggregateModel.granularity == granularity
+            )
+            if from_utc is not None:
+                stmt = stmt.filter(
+                    LlmCanonicalConsumptionAggregateModel.period_start_utc
+                    >= LlmCanonicalConsumptionService._period_start_utc(
+                        timestamp=from_utc,
+                        granularity=granularity,  # type: ignore[arg-type]
+                    )
+                )
+            if to_utc is not None:
+                to_anchor = to_utc - timedelta(microseconds=1)
+                stmt = stmt.filter(
+                    LlmCanonicalConsumptionAggregateModel.period_start_utc
+                    <= LlmCanonicalConsumptionService._period_start_utc(
+                        timestamp=to_anchor,
+                        granularity=granularity,  # type: ignore[arg-type]
+                    )
+                )
+            stmt.delete()
+
+    @staticmethod
+    def _expanded_refresh_bounds(
+        *,
+        from_utc: datetime | None,
+        to_utc: datetime | None,
+    ) -> tuple[datetime | None, datetime | None]:
+        if from_utc is None and to_utc is None:
+            return (None, None)
+
+        expanded_from = from_utc
+        expanded_to = to_utc
+        if from_utc is not None:
+            day_start = LlmCanonicalConsumptionService._period_start_utc(
+                timestamp=from_utc,
+                granularity="day",
+            )
+            month_start = LlmCanonicalConsumptionService._period_start_utc(
+                timestamp=from_utc,
+                granularity="month",
+            )
+            expanded_from = min(day_start, month_start)
+        if to_utc is not None:
+            to_anchor = to_utc - timedelta(microseconds=1)
+            day_start = LlmCanonicalConsumptionService._period_start_utc(
+                timestamp=to_anchor,
+                granularity="day",
+            )
+            month_start = LlmCanonicalConsumptionService._period_start_utc(
+                timestamp=to_anchor,
+                granularity="month",
+            )
+            expanded_to = max(
+                day_start + timedelta(days=1),
+                LlmCanonicalConsumptionService._next_month_start(month_start),
+            )
+        return (expanded_from, expanded_to)
+
+    @staticmethod
+    def _bucket_query_bounds(
+        *,
+        granularity: Granularity,
+        from_utc: datetime | None,
+        to_utc: datetime | None,
+    ) -> tuple[datetime | None, datetime | None]:
+        start = None
+        end = None
+        if from_utc is not None:
+            start = LlmCanonicalConsumptionService._period_start_utc(
+                timestamp=from_utc,
+                granularity=granularity,
+            )
+        if to_utc is not None:
+            to_anchor = to_utc - timedelta(microseconds=1)
+            period_start = LlmCanonicalConsumptionService._period_start_utc(
+                timestamp=to_anchor,
+                granularity=granularity,
+            )
+            if granularity == "month":
+                end = LlmCanonicalConsumptionService._next_month_start(period_start)
+            else:
+                end = period_start + timedelta(days=1)
+        return (start, end)
+
+    @staticmethod
+    def _next_month_start(period_start: datetime) -> datetime:
+        if period_start.month == 12:
+            return period_start.replace(year=period_start.year + 1, month=1, day=1)
+        return period_start.replace(month=period_start.month + 1, day=1)

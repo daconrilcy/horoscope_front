@@ -262,3 +262,134 @@ def test_duplicate_usage_rows_do_not_duplicate_llm_calls(db_session) -> None:
     assert rows[0].input_tokens == 80
     assert rows[0].output_tokens == 20
     assert rows[0].total_tokens == 100
+    assert rows[0].user_id is None
+
+
+def test_partial_refresh_keeps_history_outside_requested_window(db_session) -> None:
+    _seed_user_id(db_session, "consumption-f@example.com")
+    april_call = _build_call_log(
+        feature="chat",
+        subfeature=None,
+        plan="premium",
+        timestamp=datetime(2026, 4, 15, 9, 0, tzinfo=timezone.utc),
+        request_id="req-april-history",
+        manifest_entry_id="chat:None:premium:fr-FR",
+        tokens_in=40,
+        tokens_out=10,
+    )
+    may_call = _build_call_log(
+        feature="chat",
+        subfeature=None,
+        plan="premium",
+        timestamp=datetime(2026, 5, 15, 9, 0, tzinfo=timezone.utc),
+        request_id="req-may-history",
+        manifest_entry_id="chat:None:premium:fr-FR",
+        tokens_in=60,
+        tokens_out=20,
+    )
+    db_session.add(april_call)
+    db_session.add(may_call)
+    db_session.commit()
+
+    full = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="month", scope="all"),
+        refresh=True,
+    )
+    assert len(full) == 2
+
+    may_only = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(
+            granularity="month",
+            scope="all",
+            from_utc=datetime(2026, 5, 1, 0, 0, tzinfo=timezone.utc),
+            to_utc=datetime(2026, 6, 1, 0, 0, tzinfo=timezone.utc),
+        ),
+        refresh=True,
+    )
+    assert len(may_only) == 1
+
+    after_partial = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="month", scope="all"),
+    )
+    assert len(after_partial) == 2
+
+
+def test_partial_refresh_mid_day_rebuilds_full_day_bucket(db_session) -> None:
+    _seed_user_id(db_session, "consumption-g@example.com")
+    first = _build_call_log(
+        feature="chat",
+        subfeature=None,
+        plan="premium",
+        timestamp=datetime(2026, 5, 15, 8, 0, tzinfo=timezone.utc),
+        request_id="req-day-first",
+        manifest_entry_id="chat:None:premium:fr-FR",
+        tokens_in=10,
+        tokens_out=5,
+    )
+    second = _build_call_log(
+        feature="chat",
+        subfeature=None,
+        plan="premium",
+        timestamp=datetime(2026, 5, 15, 20, 0, tzinfo=timezone.utc),
+        request_id="req-day-second",
+        manifest_entry_id="chat:None:premium:fr-FR",
+        tokens_in=30,
+        tokens_out=15,
+    )
+    db_session.add(first)
+    db_session.add(second)
+    db_session.commit()
+
+    LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="day", scope="all"),
+        refresh=True,
+    )
+    partial = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(
+            granularity="day",
+            scope="all",
+            from_utc=datetime(2026, 5, 15, 12, 0, tzinfo=timezone.utc),
+            to_utc=datetime(2026, 5, 15, 23, 0, tzinfo=timezone.utc),
+        ),
+        refresh=True,
+    )
+    assert len(partial) == 1
+    assert partial[0].total_tokens == 60
+    assert partial[0].call_count == 2
+
+
+def test_month_query_with_mid_month_from_keeps_containing_bucket(db_session) -> None:
+    _seed_user_id(db_session, "consumption-h@example.com")
+    db_session.add(
+        _build_call_log(
+            feature="natal",
+            subfeature="full",
+            plan="premium",
+            timestamp=datetime(2026, 5, 10, 10, 0, tzinfo=timezone.utc),
+            request_id="req-mid-month",
+            manifest_entry_id="natal:full:premium:fr-FR",
+        )
+    )
+    db_session.commit()
+
+    LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="month", scope="all"),
+        refresh=True,
+    )
+    may_only = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(
+            granularity="month",
+            scope="all",
+            from_utc=datetime(2026, 5, 15, 0, 0, tzinfo=timezone.utc),
+            to_utc=datetime(2026, 5, 20, 0, 0, tzinfo=timezone.utc),
+        ),
+    )
+    assert len(may_only) == 1
+    assert may_only[0].period_start_utc == datetime(2026, 5, 1, 0, 0, tzinfo=timezone.utc)
