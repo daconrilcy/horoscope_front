@@ -25,6 +25,15 @@ Run repository checks before shipping:
 .\scripts\predeploy-check.ps1
 ```
 
+## LLM Runtime Release
+
+Pour une promotion du runtime LLM prompt generation, ne pas se limiter à ce guide générique.
+Utiliser les documents dédiés :
+
+- [LLM Release Runbook](./llm-release-runbook.md)
+- [LLM Go / No-Go Formelle](./llm-go-no-go-formal.md)
+- [LLM Prod Release Step by Step](./llm-prod-release-step-by-step.md)
+
 ## Rollback Minimal
 ```powershell
 docker compose down

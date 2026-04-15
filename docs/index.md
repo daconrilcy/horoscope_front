@@ -35,6 +35,9 @@
 ## Existing Documentation
 - [Persona Governance](./persona-governance.md)
 - [Pricing Experiment Rollback](./pricing-experiment-rollback.md)
+- [LLM Release Runbook](./llm-release-runbook.md)
+- [LLM Go / No-Go Formelle](./llm-go-no-go-formal.md)
+- [LLM Prod Release Step by Step](./llm-prod-release-step-by-step.md)
 - [Astro Research - README](./recherches%20astro/README.md)
 - [Astro Deep Research Report](./recherches%20astro/deep-research-report.md)
 
@@ -43,6 +46,7 @@
 2. Lire [Architecture - Backend](./architecture-backend.md) et [Architecture - Frontend](./architecture-frontend.md).
 3. Utiliser [API Contracts - Backend](./api-contracts-backend.md) + [Data Models - Backend](./data-models-backend.md) pour toute extension fonctionnelle.
 4. Pour les workflows opérationnels, suivre [Deployment Guide](./deployment-guide.md).
+5. Pour une mise en prod du runtime LLM, suivre [LLM Prod Release Step by Step](./llm-prod-release-step-by-step.md).
 
 ## Usage AI / Brownfield
 Pour un nouveau cycle de planification brownfield (PRD/architecture), donne en entrée ce fichier:

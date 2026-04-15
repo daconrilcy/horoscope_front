@@ -100,6 +100,11 @@ def test_validate_placeholders_logic():
     assert validate_placeholders("Theme {{situation}}", "natal") == ["situation"]
 
 
+def test_execution_config_admin_accepts_reasoning_model_without_temperature():
+    config = ExecutionConfigAdmin(model="gpt-5", max_output_tokens=32000, reasoning_effort="low")
+    assert config.temperature is None
+
+
 @pytest.mark.asyncio
 async def test_assembly_waterfall_fallback(db):
     # Setup: 1 generic config, 1 specific config
@@ -187,6 +192,54 @@ async def test_gateway_uses_assembly(db):
     assert plan.model_source == "assembly"
     assert plan.rendered_developer_prompt == "FROM ASSEMBLY"
     assert plan.assembly_id == str(config.id)
+
+
+@pytest.mark.asyncio
+async def test_gateway_assembly_sets_default_persona_name_when_missing(db):
+    feature_v = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key="feat_persona",
+        developer_prompt="Persona {{persona_name}}",
+        status=PromptStatus.PUBLISHED,
+        model="gpt-4o",
+        created_by="t",
+    )
+    db.add(feature_v)
+
+    uc_config = LlmUseCaseConfigModel(
+        key="feat_persona",
+        display_name="Feature Persona",
+        description="test",
+        safety_profile="astrology",
+    )
+    db.add(uc_config)
+    db.commit()
+
+    config = PromptAssemblyConfigModel(
+        feature="feat_persona",
+        locale="fr-FR",
+        feature_template_ref=feature_v.id,
+        execution_config={"model": "gpt-4o"},
+        status=PromptStatus.PUBLISHED,
+        created_by="t",
+    )
+    db.add(config)
+    db.commit()
+
+    gateway = LLMGateway()
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="feat_persona",
+            feature="feat_persona",
+            locale="fr-FR",
+        ),
+        request_id="req-persona",
+        trace_id="trace-persona",
+    )
+
+    plan, _ = await gateway._resolve_plan(request, db)
+
+    assert "Persona Standard" in plan.rendered_developer_prompt
 
 
 @pytest.mark.asyncio

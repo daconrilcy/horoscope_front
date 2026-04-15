@@ -20,8 +20,12 @@ from app.llm_orchestration.golden_regression_registry import (
     GoldenRegressionThresholds,
 )
 from app.llm_orchestration.models import (
+    ExecutionContext,
+    ExecutionFlags,
+    ExecutionUserInput,
     GoldenRegressionReport,
     GoldenRegressionResult,
+    LLMExecutionRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,6 +33,17 @@ logger = logging.getLogger(__name__)
 
 class GoldenRegressionService:
     _PLACEHOLDER_PATTERN = re.compile(r"\{\{[^{}]+\}\}")
+    _CONTEXT_KEYS = {
+        "history",
+        "natal_data",
+        "chart_json",
+        "precision_level",
+        "astro_context",
+        "conversation_id",
+        "persona_id",
+        "evidence_catalog",
+        "validation_strict",
+    }
 
     @staticmethod
     def _resolve_path(path_str: str) -> Path:
@@ -207,6 +222,18 @@ class GoldenRegressionService:
             if candidate_family in GOLDEN_REGISTRY:
                 return candidate_family
         return "default"
+
+    @classmethod
+    def _split_fixture_payload(
+        cls,
+        fixture_input: Dict[str, Any],
+    ) -> tuple[Dict[str, Any], Dict[str, Any]]:
+        user_input = dict(fixture_input)
+        context: Dict[str, Any] = {}
+        for key in cls._CONTEXT_KEYS:
+            if key in user_input:
+                context[key] = user_input.pop(key)
+        return user_input, context
 
     @classmethod
     def _resolve_manifest_entry_id(
@@ -422,7 +449,7 @@ class GoldenRegressionService:
 
         for fixture in fixtures:
             fixture_id = fixture.get("fixture_id", fixture.get("id", "unknown"))
-            user_input = dict(fixture.get("input", {}))
+            user_input, context = cls._split_fixture_payload(dict(fixture.get("input", {})))
             baseline = fixture.get("baseline", {})
             family = cls._derive_family(use_case_key, fixture)
             thresholds = GOLDEN_REGISTRY.get(family, GOLDEN_REGISTRY["default"])
@@ -430,22 +457,62 @@ class GoldenRegressionService:
             # Ensure minimal input
             if "locale" not in user_input:
                 user_input["locale"] = "fr-FR"
-            if "use_case" not in user_input:
-                user_input["use_case"] = use_case_key
+            user_input["use_case"] = use_case_key
 
             try:
                 # Execution with override
                 context = {
+                    **context,
                     "_override_prompt_version_id": prompt_version_id,
                     "is_golden_replay": True,
+                    "_active_snapshot_id": str(resolved_snapshot_id),
+                    "_active_snapshot_version": resolved_snapshot_version,
+                    "_manifest_entry_id": resolved_manifest_entry_id,
                 }
+                execution_user_input = ExecutionUserInput(
+                    use_case=str(user_input.get("use_case") or use_case_key),
+                    locale=str(user_input.get("locale") or "fr-FR"),
+                    feature=user_input.get("feature"),
+                    subfeature=user_input.get("subfeature"),
+                    plan=user_input.get("plan"),
+                    message=user_input.get("message"),
+                    question=user_input.get("question"),
+                    situation=user_input.get("situation"),
+                    conversation_id=user_input.get("conversation_id"),
+                    persona_id_override=user_input.get("persona_id"),
+                )
+                execution_context = ExecutionContext(
+                    history=context.get("history", []),
+                    natal_data=context.get("natal_data"),
+                    chart_json=context.get("chart_json"),
+                    precision_level=context.get("precision_level"),
+                    astro_context=context.get("astro_context"),
+                    extra_context={
+                        key: value
+                        for key, value in context.items()
+                        if key
+                        not in {
+                            "history",
+                            "natal_data",
+                            "chart_json",
+                            "precision_level",
+                            "astro_context",
+                        }
+                    },
+                )
+                execution_flags = ExecutionFlags(
+                    evidence_catalog=context.get("evidence_catalog"),
+                    validation_strict=bool(context.get("validation_strict", False)),
+                )
 
-                result = await gateway.execute(
-                    use_case=use_case_key,
-                    user_input=user_input,
-                    context=context,
-                    request_id=f"golden-{fixture_id}",
-                    trace_id=f"golden-campaign-{use_case_key}",
+                result = await gateway.execute_request(
+                    LLMExecutionRequest(
+                        user_input=execution_user_input,
+                        context=execution_context,
+                        flags=execution_flags,
+                        request_id=f"golden-{fixture_id}",
+                        trace_id=f"golden-campaign-{use_case_key}",
+                    ),
                     db=db,
                 )
 

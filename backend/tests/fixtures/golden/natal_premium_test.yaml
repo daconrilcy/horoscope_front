@@ -1,0 +1,37 @@
+- fixture_id: "natal-premium-nominal-01"
+  family: "natal"
+  input:
+    use_case: "natal_interpretation"
+    feature: "natal"
+    subfeature: "interpretation"
+    plan: "premium"
+    chart_json: "{}"
+    natal_data: {}
+    evidence_catalog: []
+    locale: "fr-FR"
+    user_id: 123
+  baseline:
+    validation_status: "valid"
+    output_shape:
+      title: "str"
+      summary: "str"
+      sections:
+        - key: "str"
+          heading: "str"
+          content: "str"
+      highlights:
+        - "str"
+      advice:
+        - "str"
+      evidence: "list[]"
+    obs_snapshot:
+      pipeline_kind: "nominal_canonical"
+      execution_path_kind: "canonical_assembly"
+      fallback_kind: null
+      requested_provider: "openai"
+      resolved_provider: "openai"
+      executed_provider: "openai"
+      context_compensation_status: "unknown"
+      max_output_tokens_source: "verbosity_fallback"
+      max_output_tokens_final: 4000
+      manifest_entry_id: "natal:interpretation:premium:fr-FR"

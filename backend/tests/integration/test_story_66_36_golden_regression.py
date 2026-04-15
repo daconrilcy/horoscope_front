@@ -56,7 +56,10 @@ async def test_golden_regression_campaign_pass():
     db = MagicMock()
     snapshot_id = _mock_release_context(db)
 
-    with patch("app.llm_orchestration.gateway.LLMGateway.execute", return_value=mock_result):
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        return_value=mock_result,
+    ):
         with patch(
             "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
             return_value=snapshot_id,
@@ -103,7 +106,10 @@ async def test_golden_regression_campaign_fail_legacy():
     db = MagicMock()
     snapshot_id = _mock_release_context(db)
 
-    with patch("app.llm_orchestration.gateway.LLMGateway.execute", return_value=mock_result):
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        return_value=mock_result,
+    ):
         with patch(
             "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
             return_value=snapshot_id,
@@ -152,7 +158,10 @@ async def test_golden_regression_campaign_fail_structure():
     db = MagicMock()
     snapshot_id = _mock_release_context(db)
 
-    with patch("app.llm_orchestration.gateway.LLMGateway.execute", return_value=mock_result):
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        return_value=mock_result,
+    ):
         with patch(
             "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
             return_value=snapshot_id,
@@ -197,7 +206,10 @@ async def test_golden_regression_campaign_fail_obs_strict():
     db = MagicMock()
     snapshot_id = _mock_release_context(db)
 
-    with patch("app.llm_orchestration.gateway.LLMGateway.execute", return_value=mock_result):
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        return_value=mock_result,
+    ):
         with patch(
             "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
             return_value=snapshot_id,
@@ -242,7 +254,10 @@ async def test_golden_regression_canonicalization():
     db = MagicMock()
     snapshot_id = _mock_release_context(db)
 
-    with patch("app.llm_orchestration.gateway.LLMGateway.execute", return_value=mock_result):
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        return_value=mock_result,
+    ):
         with patch(
             "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
             return_value=snapshot_id,
@@ -280,7 +295,10 @@ async def test_golden_regression_campaign_invalid_without_active_release():
     mock_result.usage = UsageInfo(input_tokens=10, output_tokens=5)
 
     db = MagicMock()
-    with patch("app.llm_orchestration.gateway.LLMGateway.execute", return_value=mock_result):
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        return_value=mock_result,
+    ):
         with patch(
             "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
             return_value=None,
@@ -328,7 +346,10 @@ async def test_golden_regression_campaign_invalid_when_manifest_unresolved():
         },
     )
 
-    with patch("app.llm_orchestration.gateway.LLMGateway.execute", return_value=mock_result):
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        return_value=mock_result,
+    ):
         with patch(
             "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
             return_value=snapshot_id,
@@ -341,3 +362,63 @@ async def test_golden_regression_campaign_invalid_when_manifest_unresolved():
             )
 
     assert report.verdict == "invalid"
+
+
+@pytest.mark.asyncio
+async def test_golden_regression_projects_chart_json_into_context():
+    captured: dict[str, object] = {}
+
+    mock_result = MagicMock(spec=GatewayResult)
+    mock_result.structured_output = {
+        "interpretation": "Lune en Cancer",
+        "key_points": ["Sensibilité"],
+    }
+    mock_result.meta = MagicMock(spec=GatewayMeta)
+    mock_result.meta.validation_status = "valid"
+    mock_result.meta.execution_profile_source = "assembly"
+    mock_result.meta.obs_snapshot = ExecutionObservabilitySnapshot(
+        pipeline_kind="nominal_canonical",
+        execution_path_kind=ExecutionPathKind.CANONICAL_ASSEMBLY,
+        fallback_kind=None,
+        requested_provider="openai",
+        resolved_provider="openai",
+        executed_provider="openai",
+        context_quality="nominal",
+        context_compensation_status=ContextCompensationStatus.INJECTOR_APPLIED,
+        max_output_tokens_source=MaxTokensSource.EXECUTION_PROFILE,
+        max_output_tokens_final=1000,
+    )
+    mock_result.usage = UsageInfo(input_tokens=10, output_tokens=5)
+
+    async def _fake_execute(request, **kwargs):
+        captured["use_case"] = request.user_input.use_case
+        captured["feature"] = request.user_input.feature
+        captured["subfeature"] = request.user_input.subfeature
+        captured["plan"] = request.user_input.plan
+        captured["context"] = request.context
+        return mock_result
+
+    db = MagicMock()
+    snapshot_id = _mock_release_context(db)
+
+    with patch(
+        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        side_effect=_fake_execute,
+    ):
+        with patch(
+            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            return_value=snapshot_id,
+        ):
+            report = await GoldenRegressionService.run_campaign(
+                use_case_key="natal",
+                prompt_version_id="test-v1",
+                golden_set_path="tests/fixtures/golden/natal_test.yaml",
+                db=db,
+            )
+
+    assert report.verdict == "pass"
+    assert captured["use_case"] == "natal"
+    assert captured["feature"] == "natal"
+    assert captured["subfeature"] == "interpretation"
+    assert captured["plan"] == "free"
+    assert captured["context"].chart_json == "{}"

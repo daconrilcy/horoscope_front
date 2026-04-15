@@ -187,7 +187,7 @@ class ExecutionConfigAdmin(BaseModel):
     """Execution parameters for an assembly config."""
 
     model: str
-    temperature: Optional[float] = 0.7
+    temperature: Optional[float] = None
     max_output_tokens: int = 2048
     timeout_seconds: int = 30
     reasoning_effort: Optional[Literal["low", "medium", "high"]] = None

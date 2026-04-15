@@ -833,7 +833,11 @@ class LLMGateway:
         is_legacy_compatibility = False
         from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
 
-        if use_case in DEPRECATED_USE_CASE_MAPPING and not request.flags.is_repair_call:
+        if (
+            use_case in DEPRECATED_USE_CASE_MAPPING
+            and not request.flags.is_repair_call
+            and not request.user_input.feature
+        ):
             # We still keep the flag for observability
             is_legacy_compatibility = True
 
@@ -1355,9 +1359,14 @@ class LLMGateway:
             # Overlay context_dict (priority to context)
             render_vars.update(context_dict)
 
+            # Preserve a stable persona label for prompts that still require it.
+            render_vars.setdefault(
+                "persona_name",
+                persona_name or persona_id or context_dict.get("persona_name") or "Standard",
+            )
+
             # Re-apply persona info if resolved
             if persona_block:
-                render_vars.setdefault("persona_name", persona_name or persona_id)
                 if not render_vars.get("last_user_msg"):
                     render_vars["last_user_msg"] = request.user_input.message
 
@@ -1782,7 +1791,7 @@ class LLMGateway:
             path_kind = ExecutionPathKind.REPAIR
         elif recovery.fallback_reason:
             path_kind = ExecutionPathKind.LEGACY_USE_CASE_FALLBACK
-        elif plan.model_source == "assembly":
+        elif plan.assembly_id and plan.execution_profile_source in {"assembly_ref", "waterfall"}:
             path_kind = ExecutionPathKind.CANONICAL_ASSEMBLY
         elif plan.execution_profile_source == "fallback_resolve_model":
             path_kind = ExecutionPathKind.LEGACY_EXECUTION_PROFILE_FALLBACK
