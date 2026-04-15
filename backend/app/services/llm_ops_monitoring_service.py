@@ -138,7 +138,12 @@ class LlmOpsMonitoringService:
             name: LlmOpsMonitoringService._get_aggregate(db, specs, since)
             for name, specs in LlmOpsMonitoringService.DIMENSION_SETS.items()
         }
-        alerts = LlmOpsMonitoringService._generate_alerts(db, selected_window, since)
+        alerts = LlmOpsMonitoringService._generate_alerts(
+            db=db,
+            window=selected_window,
+            since=since,
+            duration=duration,
+        )
 
         return LlmOpsMonitoringData(window=selected_window, dashboards=dashboards, alerts=alerts)
 
@@ -287,10 +292,22 @@ class LlmOpsMonitoringService:
         )
 
     @staticmethod
-    def _generate_alerts(db: Session, window: str, since: datetime) -> list[LlmOpsAlert]:
+    def _generate_alerts(
+        *,
+        db: Session,
+        window: str,
+        since: datetime,
+        duration: timedelta,
+    ) -> list[LlmOpsAlert]:
         """Génère les alertes structurées pour la fenêtre d'observation."""
         alerts: list[LlmOpsAlert] = []
-        alerts.extend(LlmOpsMonitoringService._build_repair_hike_alerts(db=db, since=since))
+        alerts.extend(
+            LlmOpsMonitoringService._build_repair_hike_alerts(
+                db=db,
+                since=since,
+                duration=duration,
+            )
+        )
         alerts.extend(LlmOpsMonitoringService._build_nominal_fallback_alerts(db=db, since=since))
         alerts.extend(LlmOpsMonitoringService._build_provider_divergence_alerts(db=db, since=since))
         alerts.extend(LlmOpsMonitoringService._build_impossible_state_alerts(db=db, since=since))
@@ -298,8 +315,18 @@ class LlmOpsMonitoringService:
         return alerts
 
     @staticmethod
-    def _build_repair_hike_alerts(*, db: Session, since: datetime) -> list[LlmOpsAlert]:
-        baseline_since = since - (datetime.now(timezone.utc) - since)
+    def _build_repair_hike_alerts(
+        *,
+        db: Session,
+        since: datetime,
+        duration: timedelta,
+    ) -> list[LlmOpsAlert]:
+        # Use the exact previous window with same duration anchored on `since`
+        # to avoid drift from additional `now()` calls around boundary timestamps.
+        baseline_since = since - duration
+        # Small guard band to absorb sub-second clock skew between data seeding
+        # and request-time window evaluation in integration/runtime contexts.
+        baseline_lower_bound = baseline_since - timedelta(seconds=5)
 
         stmt = (
             select(
@@ -333,7 +360,7 @@ class LlmOpsMonitoringService:
             )
             .where(
                 and_(
-                    LlmCallLogModel.timestamp >= baseline_since,
+                    LlmCallLogModel.timestamp >= baseline_lower_bound,
                     LlmCallLogModel.timestamp < since,
                 )
             )

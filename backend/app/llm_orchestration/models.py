@@ -95,7 +95,7 @@ class ExecutionObservabilitySnapshot(BaseModel):
     active_snapshot_version: Optional[str] = None
     manifest_entry_id: Optional[str] = None
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, protected_namespaces=())
 
 
 # Shared reasoning-model detection — single source of truth for gateway and provider.
@@ -157,7 +157,7 @@ class ExecutionMessage(BaseModel):
     """Réservé aux blocs multi-modaux (GPT-5+). Si renseigné, prend la priorité sur content
     lors de la composition des messages dans ResponsesClient."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, protected_namespaces=())
 
 
 class ExecutionUserInput(BaseModel):
@@ -349,7 +349,7 @@ class ResolvedExecutionPlan(BaseModel):
     active_snapshot_version: Optional[str] = None
     manifest_entry_id: Optional[str] = None
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, protected_namespaces=())
 
     @model_validator(mode="after")
     def validate_supported_perimeter_execution_profile_source(self) -> "ResolvedExecutionPlan":
@@ -459,6 +459,8 @@ class GatewayMeta(BaseModel):
     provider_error_code: Optional[str] = None
     breaker_state: Optional[str] = None
     breaker_scope: Optional[str] = None
+
+    model_config = ConfigDict(protected_namespaces=())
 
 
 class GatewayResult(BaseModel):
