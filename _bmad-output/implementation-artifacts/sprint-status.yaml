@@ -627,7 +627,7 @@ development_status:
   66-39-durcissement-fiabilite-multi-contexte-gate-conformite-documentaire: done
   66-40-extinction-totale-legacy-hors-perimetre: done
   66-41-validation-semantique-doc-code: done
-  66-42-anti-entropie-taxonomie-placeholders: review
+  66-42-anti-entropie-taxonomie-placeholders: done
   66-43-chaos-testing-provider-runtime: ready-for-dev
   66-44-gate-production-continue-par-snapshot: ready-for-dev
 

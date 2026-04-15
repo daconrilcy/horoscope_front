@@ -1,6 +1,6 @@
 # Story 66.42: Anti-entropie de la taxonomie canonique et des placeholders
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
