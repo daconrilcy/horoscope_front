@@ -1,6 +1,6 @@
 # Story 66.43: Chaos testing du ProviderRuntimeManager et preuve de résilience opérationnelle
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

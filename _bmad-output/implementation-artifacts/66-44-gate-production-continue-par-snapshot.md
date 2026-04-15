@@ -1,6 +1,6 @@
 # Story 66.44: Gate de production continue par snapshot actif et release health
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
