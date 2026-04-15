@@ -438,7 +438,9 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
             == 777
         )
         assert (
-            payload["resolved_result"]["provider_messages"]["execution_parameters"]["timeout_seconds"]
+            payload["resolved_result"]["provider_messages"]["execution_parameters"][
+                "timeout_seconds"
+            ]
             == 42
         )
         assert isinstance(payload["resolved_result"]["placeholders"], list)
@@ -462,9 +464,7 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
             delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
         )
         db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
-        db.execute(
-            delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key)
-        )
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
         db.commit()
         db.close()
 
@@ -553,9 +553,7 @@ def test_admin_llm_catalog_resolved_detail_returns_explicit_error_on_unusable_sn
             delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
         )
         db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
-        db.execute(
-            delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key)
-        )
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
         db.commit()
         db.close()
 

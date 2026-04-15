@@ -258,6 +258,9 @@ Les différences introduites par la refonte doivent être mesurables, documenté
 - [Story 66.10 — Définir les bornes stylistiques de la persona astrologue](#story-6610--définir-les-bornes-stylistiques-de-la-persona-astrologue)
 - [Story 66.11 — Introduire les ExecutionProfiles administrables](#story-6611--introduire-les-executionprofiles-administrables)
 - [Story 66.12 — Pilotage des longueurs par section (budgets de longueur)](#story-6612--pilotage-des-longueurs-par-section-budgets-de-longueur)
+- [Story 66.48 — Modèle canonique de comptage de consommation LLM](#story-6648--modèle-canonique-de-comptage-de-consommation-llm)
+- [Story 66.49 — Dashboard consommation par utilisateur / abonnement / feature](#story-6649--dashboard-consommation-par-utilisateur--abonnement--feature)
+- [Story 66.50 — Cohérence billing/tokens avec la taxonomie canonique](#story-6650--cohérence-billingtokens-avec-la-taxonomie-canonique)
 - [Story 66.13 — Durcir la gestion des placeholders](#story-6613--durcir-la-gestion-des-placeholders)
 - [Story 66.14 — Utiliser context_quality comme paramètre de stratégie de rédaction](#story-6614--utiliser-context_quality-comme-paramètre-de-stratégie-de-rédaction)
 - [Story 66.15 — Faire converger guidance/natal/chat vers une gouvernance assembly complète](#story-6615--faire-converger-guidancenatalchat-vers-une-gouvernance-assembly-complète)
@@ -894,6 +897,117 @@ Actuellement, certaines variations liées à l'abonnement sont gérées par des 
 **Given** une nouvelle version de prompt publiée
 **When** le suffixe `_free` ou `_full` est détecté
 **Then** un avertissement de nommage est émis si aucune différence de schéma n'est justifiée
+
+---
+
+## Story 66.48 — Modèle canonique de comptage de consommation LLM
+
+**Statut :** draft
+
+En tant qu'**ops / finance / plateforme LLM**,
+Je veux **un modèle d'agrégation canonique stable pour les tokens et coûts**,
+Afin de **piloter la consommation LLM par utilisateur, abonnement, feature et historique sans dépendre des anciens axes `use_case`**.
+
+**Contexte technique :**
+Le dépôt dispose déjà de briques utiles mais encore séparées :
+
+- `LlmCallLogModel` stocke `tokens_in`, `tokens_out`, `cost_usd_estimated`, `latency_ms`, `feature`, `subfeature`, `plan`, `executed_provider`, `active_snapshot_version` et la taxonomie d'observabilité runtime.
+- `LlmOpsMonitoringService` sait agréger la télémétrie canoniquement, mais ne fournit pas encore une vérité de pilotage coûts/tokens par utilisateur et abonnement.
+- `LlmTokenUsageService` et `UserTokenUsageLogModel` journalisent le débit utilisateur facturable, mais pas sous une forme d'agrégation canonique unique pour l'admin.
+- Le dashboard historique 65.14 reste centré sur `use_case`, volume, coût, latence et erreurs.
+
+Cette story doit introduire un **modèle canonique de comptage** qui fasse converger ces sources vers une lecture nominale unique fondée sur la taxonomie runtime.
+
+**Acceptance Criteria :**
+
+**Given** qu'un appel LLM est enregistré
+**When** il alimente le modèle canonique de consommation
+**Then** les dimensions minimales stockées ou dérivables sont `user_id`, `subscription_plan`, `feature`, `subfeature`, `locale`, `executed_provider`, `active_snapshot_version`
+
+**Given** le modèle canonique de consommation
+**When** un agrégat est calculé
+**Then** les mesures minimales disponibles sont `input_tokens`, `output_tokens`, `total_tokens`, `estimated_cost`, `call_count`, `latency_p50`, `latency_p95`, `error_rate`
+
+**Given** le besoin de pilotage historique
+**When** les agrégats sont matérialisés
+**Then** une historisation journalière et mensuelle est disponible sans reconstruction manuelle depuis des logs bruts
+
+**Given** que des activations legacy peuvent encore exister
+**When** elles sont comptabilisées
+**Then** elles sont séparées explicitement de l'usage nominal canonique via un indicateur, bucket ou statut dédié
+
+**Given** qu'un appel entre encore via un alias ou `use_case` legacy
+**When** il est normalisé pour le pilotage
+**Then** il est reclassé sur la taxonomie canonique `feature/subfeature/plan`, ou marqué résiduel si le mapping nominal n'est pas autorisé
+
+---
+
+## Story 66.49 — Dashboard consommation par utilisateur / abonnement / feature
+
+**Statut :** draft
+
+En tant qu'**admin ops / produit / finance**,
+Je veux **une interface de consommation LLM orientée utilisateur, abonnement et feature**,
+Afin de **détecter les dérives de coût, comprendre la répartition d'usage et investiguer rapidement les appels récents corrélés aux logs LLM**.
+
+**Contexte technique :**
+Le bloc admin LLM a déjà livré :
+
+- l'observabilité d'exploitation par dimensions canoniques (`66.37`) ;
+- le catalogue canonique (`66.45`) ;
+- le détail de composition (`66.46`) ;
+- l'historisation par snapshot (`66.47`).
+
+Il manque encore la surface dédiée au **pilotage de consommation** fondée sur le modèle canonique de `66.48`.
+
+**Acceptance Criteria :**
+
+**Given** l'admin ouvre la surface consommation LLM
+**When** la page charge
+**Then** une vue `par utilisateur` expose l'historique, les tokens, le coût estimé, la latence et les erreurs par utilisateur avec possibilité d'export
+
+**Given** la vue `par abonnement`
+**When** l'admin consulte la répartition
+**Then** les agrégats sont ventilés au minimum par plan commercial (`free`, `basic`, `premium` ou équivalent canonique) avec breakdown clair
+
+**Given** la vue `par feature/subfeature`
+**When** l'admin filtre la consommation
+**Then** les agrégats reflètent la taxonomie canonique runtime et non les anciens `use_case`
+
+**Given** des filtres temporels sont nécessaires
+**When** l'admin sélectionne une période
+**Then** la surface supporte au minimum des filtres journaliers, mensuels et des bornes temporelles explicites
+
+**Given** qu'une dérive de coût ou de volume est détectée
+**When** l'admin ouvre un drill-down
+**Then** il peut accéder aux appels récents corrélés aux `llm_call_logs`, avec identifiants techniques suffisants pour l'investigation sans exposition de contenu sensible
+
+---
+
+## Story 66.50 — Cohérence billing/tokens avec la taxonomie canonique
+
+**Statut :** draft
+
+En tant qu'**architecte plateforme / billing / admin ops**,
+Je veux **empêcher le pilotage nominal des coûts et tokens sur les anciens axes `use_case`**,
+Afin de **garantir une lecture cohérente entre runtime, billing, observabilité et exports admin**.
+
+**Contexte technique :**
+Le pipeline 66 normalise déjà `feature`, `subfeature` et `plan`, convertit les alias legacy et rend la taxonomie runtime canonique prioritaire. Continuer à agréger nominalement par `use_case` casserait la lisibilité métier et réintroduirait une double vérité entre exécution, billing et supervision admin.
+
+**Acceptance Criteria :**
+
+**Given** un agrégat nominal de consommation LLM
+**When** il est exposé en dashboard, export ou API admin
+**Then** il n'est plus basé uniquement sur `use_case`
+
+**Given** que des aliases legacy existent encore à l'entrée
+**When** ils traversent le pipeline de consommation
+**Then** ils sont reclassés sur la feature canonique correspondante, ou explicitement marqués comme résiduels legacy si aucun mapping nominal n'est autorisé
+
+**Given** un export admin de consommation ou de coûts
+**When** il est généré
+**Then** il reflète uniquement la taxonomie canonique nominale (`feature`, `subfeature`, `plan` et dimensions runtime associées), sans colonne primaire `use_case`
 
 ---
 

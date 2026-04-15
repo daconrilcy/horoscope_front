@@ -466,9 +466,7 @@ def _extract_proof_summaries(snapshot: LlmReleaseSnapshotModel) -> list[ProofSum
         else None
     )
     smoke_status = (
-        str((smoke_signal or {}).get("signals", {}).get("status"))
-        if smoke_signal
-        else None
+        str((smoke_signal or {}).get("signals", {}).get("status")) if smoke_signal else None
     )
     smoke_manifest_entry_id = (
         str((smoke_signal or {}).get("signals", {}).get("manifest_entry_id"))
@@ -487,8 +485,7 @@ def _extract_proof_summaries(snapshot: LlmReleaseSnapshotModel) -> list[ProofSum
         golden_verdict is not None
         and golden_snapshot_id == str(snapshot.id)
         and (
-            golden_manifest_entry_id is None
-            or golden_manifest_entry_id in known_manifest_entry_ids
+            golden_manifest_entry_id is None or golden_manifest_entry_id in known_manifest_entry_ids
         )
     )
 
@@ -515,11 +512,7 @@ def _extract_proof_summaries(snapshot: LlmReleaseSnapshotModel) -> list[ProofSum
     )
     smoke = ProofSummary(
         proof_type="smoke",
-        status=(
-            "present"
-            if smoke_status
-            else "missing"
-        ),
+        status=("present" if smoke_status else "missing"),
         verdict=smoke_status,
         generated_at=str((smoke_signal or {}).get("timestamp")) if smoke_signal else None,
         manifest_entry_id=smoke_manifest_entry_id,
@@ -644,8 +637,8 @@ def _snapshot_diff_entries(
     from_snapshot: LlmReleaseSnapshotModel,
     to_snapshot: LlmReleaseSnapshotModel,
 ) -> list[SnapshotDiffEntry]:
-    from_targets = ((from_snapshot.manifest or {}).get("targets") or {})
-    to_targets = ((to_snapshot.manifest or {}).get("targets") or {})
+    from_targets = (from_snapshot.manifest or {}).get("targets") or {}
+    to_targets = (to_snapshot.manifest or {}).get("targets") or {}
     all_manifest_entry_ids = sorted(set(from_targets.keys()) | set(to_targets.keys()))
     entries: list[SnapshotDiffEntry] = []
 
@@ -1512,16 +1505,14 @@ def get_resolved_catalog_entry(
     )
     effective_profile_max_tokens = (
         int(snapshot_profile_data.get("max_output_tokens"))
-        if snapshot_profile_data
-        and snapshot_profile_data.get("max_output_tokens") is not None
+        if snapshot_profile_data and snapshot_profile_data.get("max_output_tokens") is not None
         else execution_profile_model.max_output_tokens
         if execution_profile_model
         else None
     )
     effective_profile_timeout = (
         int(snapshot_profile_data.get("timeout_seconds"))
-        if snapshot_profile_data
-        and snapshot_profile_data.get("timeout_seconds") is not None
+        if snapshot_profile_data and snapshot_profile_data.get("timeout_seconds") is not None
         else execution_profile_model.timeout_seconds
         if execution_profile_model
         else None

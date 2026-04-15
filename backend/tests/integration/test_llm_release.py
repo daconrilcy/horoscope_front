@@ -193,14 +193,12 @@ async def test_llm_release_lifecycle():
         assert monitoring_events
         latest_monitoring = monitoring_events[-1]
         assert latest_monitoring["signals"]["active_snapshot_id"] == str(snapshot.id)
-        assert (
-            latest_monitoring["signals"]["qualification_manifest_entry_id"]
-            == _default_manifest_entry_id(snapshot)
-        )
-        assert (
-            latest_monitoring["signals"]["golden_manifest_entry_id"]
-            == _default_manifest_entry_id(snapshot)
-        )
+        assert latest_monitoring["signals"][
+            "qualification_manifest_entry_id"
+        ] == _default_manifest_entry_id(snapshot)
+        assert latest_monitoring["signals"][
+            "golden_manifest_entry_id"
+        ] == _default_manifest_entry_id(snapshot)
 
         # Verify active pointer
         stmt = select(LlmActiveReleaseModel).where(
