@@ -28,6 +28,7 @@ Le document couvre le pipeline réellement exécuté dans :
 
 - `backend/app/services/ai_engine_adapter.py`
 - `backend/app/llm_orchestration/gateway.py`
+- `backend/app/llm_orchestration/legacy_residual_registry.py`
 - `backend/app/llm_orchestration/services/assembly_registry.py`
 - `backend/app/llm_orchestration/services/assembly_resolver.py`
 - `backend/app/llm_orchestration/services/execution_profile_registry.py`
@@ -40,8 +41,14 @@ Le document couvre le pipeline réellement exécuté dans :
 - `backend/app/llm_orchestration/services/config_coherence_validator.py`
 - `backend/app/llm_orchestration/data/prompt_governance_registry.json` (registre central versionné, Story 66.42)
 - `backend/app/llm_orchestration/prompt_governance_registry.py`
+- `backend/app/llm_orchestration/semantic_invariants_registry.py`
+- `backend/app/llm_orchestration/services/semantic_conformity_validator.py`
 - `backend/app/llm_orchestration/providers/provider_runtime_manager.py`
 - `backend/app/llm_orchestration/services/observability_service.py`
+- `backend/app/api/v1/routers/admin_llm_release.py`
+- `backend/scripts/check_doc_conformity.py`
+- `backend/scripts/legacy_residual_report.py`
+- `backend/tests/integration/test_story_66_43_provider_runtime_chaos.py`
 
 ## Vue d'ensemble
 
@@ -82,11 +89,12 @@ Compatibilités legacy encore gérées :
 
 ## Registre central de gouvernance (Story 66.42)
 
-La taxonomie canonique (familles, aliases nominaux, sous-familles natales), les aliases de `use_case` dépréciés et les placeholders autorisés par famille sont définis dans un **seul artefact versionné** : `backend/app/llm_orchestration/data/prompt_governance_registry.json` (champ `schema_version`).
+La taxonomie canonique (familles, aliases nominaux, sous-familles natales), les aliases de `use_case` dépréciés et les placeholders autorisés sont définis dans un **seul artefact versionné** : `backend/app/llm_orchestration/data/prompt_governance_registry.json` (champ `schema_version`, actuellement `1.0.0`).
 
 - **Canonique vs legacy transitoire** : les clés `legacy_nominal_feature_aliases` et `legacy_subfeature_aliases_by_domain` décrivent explicitement la compatibilité de migration ; elles ne sont pas des extensions ad hoc de la taxonomie canonique.
-- **Placeholders** : `placeholders_by_family` est la seule allowlist exécutée par `ConfigCoherenceValidator`, `validate_placeholders()` et `PromptRenderer` (via `PLACEHOLDER_ALLOWLIST` dérivé du JSON).
+- **Placeholders** : la gouvernance runtime combine `universal_placeholders` et `placeholders_by_family` ; `PromptRenderer` et `ConfigCoherenceValidator` passent tous deux par `PromptGovernanceRegistry` / `PLACEHOLDER_ALLOWLIST` dérivés du JSON.
 - **Exceptions** : toute entrée dans `governed_exceptions` doit porter owner, justification, périmètre, statut et `review_by` ; une entrée incomplète fait échouer le chargement du registre.
+- **État actuel** : dans l'arbre courant, `governed_exceptions` est vide ; le périmètre autorisé reste donc strictement celui du registre canonique, avec notamment `natal_chart_summary` rétabli comme placeholder `chat` optionnel.
 - **Aliases use_case** : `deprecated_use_case_mapping` alimente `DEPRECATED_USE_CASE_MAPPING` ; toute nouvelle entrée doit y être ajoutée pour passer les garde-fous de cohérence et de non-régression.
 
 ## Classes impliquées dans la génération du prompt
@@ -251,11 +259,11 @@ Si une `LengthBudget` existe :
 `PromptRenderer.render()` applique cet ordre :
 
 1. résolution des blocs `{{#context_quality:...}}`
-2. contrôle des placeholders autorisés selon la famille
+2. contrôle des placeholders autorisés selon la famille résolue plus les placeholders universels
 3. application des fallbacks pour les placeholders optionnels
 4. substitution finale `{{placeholder}}`
 
-Si une variable requise manque sur un périmètre bloquant, le renderer lève `PromptRenderError`.
+Si une variable requise manque sur un périmètre bloquant, le renderer lève `PromptRenderError`. Sur une famille supportée, un placeholder non gouverné est vidé et journalisé ; sur un placeholder legacy marqué requis, l'erreur reste bloquante.
 
 ## Ce qui entre dans les messages finaux
 
@@ -427,14 +435,15 @@ Le passage en production est désormais gouverné par un gate continu centré su
 
 - l'activation via `ReleaseService.activate_snapshot()` est bloquée sans qualification corrélée (`active_snapshot_id`, `active_snapshot_version`) et fraîche ;
 - l'activation est bloquée sans golden regression corrélée, valide et fraîche ;
-- un smoke post-activation corrélé est obligatoire et vérifie l'absence de fallback interdit ;
-- l'état synthétique de release health est historisé dans `manifest.release_health` (`monitoring`, `activated`, `degraded`, `rollback_recommended`, `rolled_back`) ;
+- un smoke post-activation corrélé est obligatoire ; son absence ou son échec ne revient pas en arrière automatiquement, mais fait basculer immédiatement `manifest.release_health.status` en `degraded` après activation ;
+- l'état synthétique de release health est historisé dans `manifest.release_health` ; la taxonomie embarquée expose `candidate`, `qualified`, `activated`, `monitoring`, `degraded`, `rollback_recommended`, `rolled_back`, tandis que les transitions actuellement écrites par le code passent surtout par `monitoring`, `activated`, `degraded`, `rollback_recommended` et `rolled_back` ;
 - la décision de rollback est gouvernée par des seuils versionnés (`error_rate`, `p95_latency_ms`, `fallback_rate`) évalués par `ReleaseService.evaluate_release_health()`.
 
 Lecture ops recommandée :
 
 - utiliser `POST /admin/llm/releases/{snapshot_id}/release-health` pour injecter les signaux observés ;
 - déclencher `auto_rollback=true` uniquement pour les environnements où la politique le permet ;
+- garder en tête les seuils par défaut si aucun override n'est fourni à l'activation : `error_rate=0.02`, `p95_latency_ms=1500`, `fallback_rate=0.01` ;
 - conserver les preuves qualification/golden/smoke pour chaque activation afin d'assurer la traçabilité bout-en-bout.
 
 ## Protection des données sensibles autour du prompt
@@ -570,6 +579,7 @@ Limites explicites :
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
-- **Date** : `2026-04-14`
-- **Référence stable (Commit SHA)** : `f034609b9f56d25abad633e1925b4f3c3fbaa02e`
+- **Date** : `2026-04-15`
+- **Référence stable (Commit SHA)** : `8483689ba563abdb82842dbff9e5832350dbef1b`
+- **Version registre de gouvernance prompt** : `1.0.0`
 - **Version registre résiduel** : `2026.04.14`
