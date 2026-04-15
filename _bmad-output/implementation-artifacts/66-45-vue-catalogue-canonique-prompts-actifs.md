@@ -164,6 +164,12 @@ Cette story ne demande pas encore le detail du prompt compose ni la timeline des
   - [x] Si du code Python est modifie, activer le venv avec `.\.venv\Scripts\Activate.ps1`, puis executer `cd backend`, `ruff format .`, `ruff check .`, `pytest -q`
   - [x] Executer aussi les tests frontend cibles lies a `AdminPromptsPage` si la page est modifiee
 
+### Review Findings
+
+- [x] [Review][Patch] Les lignes `live_table_fallback` affichent a tort le snapshot actif, ce qui fait croire qu'elles sont couvertes par la release nominale alors que le fallback n'est justement pas dans le manifest actif [backend/app/api/v1/routers/admin_llm.py:702]
+- [x] [Review][Patch] Les options de filtres du catalogue sont derivees uniquement de la page courante (`catalogEntries`), ce qui rend impossible le filtrage vers des valeurs absentes de la page active des que la pagination serveur entre en jeu [frontend/src/pages/admin/AdminPromptsPage.tsx:102]
+- [x] [Review][Patch] L'onglet `Historique legacy` declenche un `listPromptHistory()` pour chaque use case via `useQueries`, introduisant une regression N+1 et un risque de timeouts des l'ouverture de l'onglet [frontend/src/pages/admin/AdminPromptsPage.tsx:130]
+
 ## Dev Notes
 
 ### Diagnostic exact a preserver

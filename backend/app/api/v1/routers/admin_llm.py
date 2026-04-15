@@ -245,6 +245,28 @@ def _to_manifest_entry(feature: str, subfeature: str | None, plan: str | None, l
     return f"{feature}:{subfeature}:{plan}:{locale}"
 
 
+def _collect_catalog_facets(entries: list[AdminLlmCatalogEntry]) -> dict[str, list[str]]:
+    def values_for(field: str) -> list[str]:
+        values = {
+            str(getattr(entry, field))
+            for entry in entries
+            if getattr(entry, field, None) is not None and str(getattr(entry, field)).strip() != ""
+        }
+        return sorted(values)
+
+    return {
+        "feature": values_for("feature"),
+        "subfeature": values_for("subfeature"),
+        "plan": values_for("plan"),
+        "locale": values_for("locale"),
+        "provider": values_for("provider"),
+        "source_of_truth_status": values_for("source_of_truth_status"),
+        "assembly_status": values_for("assembly_status"),
+        "release_health_status": values_for("release_health_status"),
+        "catalog_visibility_status": values_for("catalog_visibility_status"),
+    }
+
+
 def _error_response(
     *,
     status_code: int,
@@ -699,12 +721,12 @@ def list_llm_catalog(
             execution_profile_id=str(profile.id) if profile else None,
             execution_profile_ref=str(profile.id) if profile else None,
             output_contract_ref=assembly.output_contract_ref,
-            active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
-            active_snapshot_version=active_snapshot.version if active_snapshot else None,
+            active_snapshot_id=None,
+            active_snapshot_version=None,
             provider=profile.provider if profile else None,
             model=profile.model if profile else None,
             source_of_truth_status="live_table_fallback",
-            release_health_status=active_release_health if active_snapshot else "n/a",
+            release_health_status="n/a",
             catalog_visibility_status="orphaned",
             runtime_signal_status="n/a",
         )
@@ -782,6 +804,8 @@ def list_llm_catalog(
             or lowered in (entry.locale or "").lower()
         ]
 
+    catalog_facets = _collect_catalog_facets(entries)
+
     allowed_sort_fields = {
         "feature",
         "subfeature",
@@ -823,6 +847,7 @@ def list_llm_catalog(
             "sort_by": resolved_sort_by,
             "sort_order": "desc" if reverse_sort else "asc",
             "freshness_window_minutes": freshness_window_minutes,
+            "facets": catalog_facets,
         },
     }
 

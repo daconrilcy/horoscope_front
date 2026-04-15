@@ -94,6 +94,17 @@ export type AdminLlmCatalogResponse = {
     sort_by: string
     sort_order: "asc" | "desc"
     freshness_window_minutes: number
+    facets?: {
+      feature?: string[]
+      subfeature?: string[]
+      plan?: string[]
+      locale?: string[]
+      provider?: string[]
+      source_of_truth_status?: string[]
+      assembly_status?: string[]
+      release_health_status?: string[]
+      catalog_visibility_status?: string[]
+    }
   }
 }
 

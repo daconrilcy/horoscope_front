@@ -1,14 +1,7 @@
-import { useEffect, useMemo, useState } from "react"
-import { useQueries, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 
-import {
-  listPromptHistory,
-  useAdminLlmCatalog,
-  useAdminLlmUseCases,
-  useRollbackPromptVersion,
-  type AdminLlmCatalogEntry,
-  type AdminPromptVersion,
-} from "@api"
+import { useAdminLlmCatalog, useAdminLlmUseCases, useAdminPromptHistory, useRollbackPromptVersion, type AdminPromptVersion } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
 import "./AdminPromptsPage.css"
 
@@ -47,15 +40,6 @@ function LegacyRollbackModal({
       </div>
     </div>
   )
-}
-
-function getUniqueValues(entries: AdminLlmCatalogEntry[], key: keyof AdminLlmCatalogEntry): string[] {
-  const values = new Set<string>()
-  entries.forEach((entry) => {
-    const value = entry[key]
-    if (typeof value === "string" && value.length > 0) values.add(value)
-  })
-  return [...values].sort((a, b) => a.localeCompare(b))
 }
 
 export function AdminPromptsPage() {
@@ -99,24 +83,16 @@ export function AdminPromptsPage() {
   const catalogEntries = catalogQuery.data?.data ?? []
   const catalogMeta = catalogQuery.data?.meta
 
-  const availableFeatures = useMemo(() => getUniqueValues(catalogEntries, "feature"), [catalogEntries])
-  const availableSubfeatures = useMemo(() => getUniqueValues(catalogEntries, "subfeature"), [catalogEntries])
-  const availablePlans = useMemo(() => getUniqueValues(catalogEntries, "plan"), [catalogEntries])
-  const availableLocales = useMemo(() => getUniqueValues(catalogEntries, "locale"), [catalogEntries])
-  const availableProviders = useMemo(() => getUniqueValues(catalogEntries, "provider"), [catalogEntries])
-  const availableSourceStatuses = useMemo(
-    () => getUniqueValues(catalogEntries, "source_of_truth_status"),
-    [catalogEntries],
-  )
-  const availableAssemblyStatuses = useMemo(() => getUniqueValues(catalogEntries, "assembly_status"), [catalogEntries])
-  const availableReleaseHealthStatuses = useMemo(
-    () => getUniqueValues(catalogEntries, "release_health_status"),
-    [catalogEntries],
-  )
-  const availableVisibilityStatuses = useMemo(
-    () => getUniqueValues(catalogEntries, "catalog_visibility_status"),
-    [catalogEntries],
-  )
+  const facets = catalogMeta?.facets
+  const availableFeatures = facets?.feature ?? []
+  const availableSubfeatures = facets?.subfeature ?? []
+  const availablePlans = facets?.plan ?? []
+  const availableLocales = facets?.locale ?? []
+  const availableProviders = facets?.provider ?? []
+  const availableSourceStatuses = facets?.source_of_truth_status ?? []
+  const availableAssemblyStatuses = facets?.assembly_status ?? []
+  const availableReleaseHealthStatuses = facets?.release_health_status ?? []
+  const availableVisibilityStatuses = facets?.catalog_visibility_status ?? []
 
   const useCasesQuery = useAdminLlmUseCases()
   const useCases = useCasesQuery.data ?? []
@@ -127,25 +103,16 @@ export function AdminPromptsPage() {
     }
   }, [legacyUseCaseKey, useCases])
 
-  const legacyHistoryQueries = useQueries({
-    queries: useCases.map((useCase) => ({
-      queryKey: ["admin-llm-prompt-history", useCase.key],
-      queryFn: () => listPromptHistory(useCase.key),
-      enabled: activeTab === "legacy",
-    })),
-  })
+  const legacyHistoryQuery = useAdminPromptHistory(
+    legacyUseCaseKey ?? "",
+    activeTab === "legacy" && Boolean(legacyUseCaseKey),
+  )
   const rollbackMutation = useRollbackPromptVersion()
-
-  const historyByUseCase = new Map<string, AdminPromptVersion[]>()
-  useCases.forEach((useCase, index) => {
-    historyByUseCase.set(useCase.key, legacyHistoryQueries[index]?.data ?? [])
-  })
-
-  const selectedLegacyHistory = legacyUseCaseKey ? historyByUseCase.get(legacyUseCaseKey) ?? [] : []
+  const selectedLegacyHistory = legacyHistoryQuery.data ?? []
 
   const isLegacyLoading =
-    useCasesQuery.isPending || (activeTab === "legacy" && legacyHistoryQueries.some((query) => query.isPending))
-  const hasLegacyError = useCasesQuery.isError || legacyHistoryQueries.some((query) => query.isError)
+    useCasesQuery.isPending || (activeTab === "legacy" && legacyHistoryQuery.isPending)
+  const hasLegacyError = useCasesQuery.isError || legacyHistoryQuery.isError
 
   const handleLegacyRollback = async () => {
     if (!legacyUseCaseKey || !legacyRollbackCandidate) return
