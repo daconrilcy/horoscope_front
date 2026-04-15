@@ -68,6 +68,9 @@ from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm_canonical_consumption import (
+    LlmCanonicalConsumptionAggregateModel,
+)
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmReplaySnapshotModel
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
@@ -166,6 +169,7 @@ __all__ = [
     "GeoPlaceResolvedModel",
     "GeocodingQueryCacheModel",
     "LlmCallLogModel",
+    "LlmCanonicalConsumptionAggregateModel",
     "LlmReplaySnapshotModel",
     "LlmActiveReleaseModel",
     "LlmReleaseSnapshotModel",

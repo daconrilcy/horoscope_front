@@ -31,6 +31,7 @@ def get_canonical_consumption(
     request: Request,
     granularity: Granularity = "day",
     scope: Scope = "nominal",
+    refresh: bool = False,
     from_utc: datetime | None = None,
     to_utc: datetime | None = None,
     user_id: int | None = None,
@@ -58,13 +59,18 @@ def get_canonical_consumption(
         executed_provider=executed_provider,
         active_snapshot_version=active_snapshot_version,
     )
-    aggregates = LlmCanonicalConsumptionService.get_aggregates(db=db, filters=filters)
+    aggregates = LlmCanonicalConsumptionService.get_aggregates(
+        db=db,
+        filters=filters,
+        refresh=refresh,
+    )
     return {
         "data": aggregates,
         "meta": {
             "request_id": request_id,
             "granularity": granularity,
             "scope": scope,
+            "refresh": refresh,
             "count": len(aggregates),
             "timezone": "UTC",
         },

@@ -79,12 +79,13 @@ def test_admin_consumption_endpoint_returns_canonical_aggregates() -> None:
 
     response = client.get(
         "/v1/admin/llm/consumption/canonical",
-        params={"granularity": "day", "scope": "all"},
+        params={"granularity": "day", "scope": "all", "refresh": "true"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200
     payload = response.json()
     assert payload["meta"]["timezone"] == "UTC"
+    assert payload["meta"]["refresh"] is True
     assert payload["meta"]["count"] >= 1
     first = payload["data"][0]
     assert first["feature"] == "natal"

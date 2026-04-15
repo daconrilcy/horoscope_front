@@ -100,7 +100,9 @@ def test_nominal_scope_excludes_legacy_residual_and_keeps_user_dimension(db_sess
     db_session.commit()
 
     result = LlmCanonicalConsumptionService.get_aggregates(
-        db_session, filters=CanonicalConsumptionFilters(granularity="day", scope="nominal")
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="day", scope="nominal"),
+        refresh=True,
     )
     assert len(result) == 1
     assert result[0].feature == "natal"
@@ -132,7 +134,9 @@ def test_monthly_aggregation_uses_utc_boundaries(db_session) -> None:
     db_session.commit()
 
     result = LlmCanonicalConsumptionService.get_aggregates(
-        db_session, filters=CanonicalConsumptionFilters(granularity="month", scope="all")
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="month", scope="all"),
+        refresh=True,
     )
     assert len(result) == 2
     assert result[0].period_start_utc == datetime(2026, 4, 1, 0, 0, tzinfo=timezone.utc)
@@ -160,7 +164,9 @@ def test_plan_cost_provider_snapshot_are_frozen_from_call_log(db_session) -> Non
     db_session.commit()
 
     result = LlmCanonicalConsumptionService.get_aggregates(
-        db_session, filters=CanonicalConsumptionFilters(granularity="day", scope="all")
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="day", scope="all"),
+        refresh=True,
     )
     assert len(result) == 1
     aggregate = result[0]
@@ -169,3 +175,90 @@ def test_plan_cost_provider_snapshot_are_frozen_from_call_log(db_session) -> Non
     assert aggregate.executed_provider == "anthropic"
     assert aggregate.active_snapshot_version == "release-locked"
     assert aggregate.locale == "en-US"
+
+
+def test_unknown_feature_is_marked_legacy_residual(db_session) -> None:
+    _seed_user_id(db_session, "consumption-d@example.com")
+    db_session.add(
+        _build_call_log(
+            feature="foo_bar",
+            subfeature=None,
+            plan="free",
+            timestamp=datetime(2026, 4, 15, 8, 30, tzinfo=timezone.utc),
+            request_id="req-unknown-feature",
+            manifest_entry_id="foo_bar:None:free:fr-FR",
+        )
+    )
+    db_session.commit()
+
+    nominal = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="day", scope="nominal"),
+        refresh=True,
+    )
+    all_rows = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="day", scope="all"),
+    )
+
+    assert nominal == []
+    assert len(all_rows) == 1
+    assert all_rows[0].is_legacy_residual is True
+    assert all_rows[0].taxonomy_scope == "legacy_residual"
+
+
+def test_duplicate_usage_rows_do_not_duplicate_llm_calls(db_session) -> None:
+    user_a = _seed_user_id(db_session, "consumption-e1@example.com")
+    user_b = _seed_user_id(db_session, "consumption-e2@example.com")
+    ts = datetime(2026, 4, 15, 11, 0, tzinfo=timezone.utc)
+    call = _build_call_log(
+        feature="natal",
+        subfeature="full",
+        plan="premium",
+        timestamp=ts,
+        request_id="req-duplicate-usage",
+        manifest_entry_id="natal:full:premium:fr-FR",
+        tokens_in=80,
+        tokens_out=20,
+        cost_usd_estimated=0.02,
+    )
+    db_session.add(call)
+    db_session.flush()
+    db_session.add_all(
+        [
+            UserTokenUsageLogModel(
+                user_id=user_a,
+                feature_code="natal",
+                provider_model="gpt-4.1-mini",
+                tokens_in=80,
+                tokens_out=20,
+                tokens_total=100,
+                request_id="req-duplicate-usage-a",
+                llm_call_log_id=call.id,
+                created_at=ts,
+            ),
+            UserTokenUsageLogModel(
+                user_id=user_b,
+                feature_code="natal",
+                provider_model="gpt-4.1-mini",
+                tokens_in=80,
+                tokens_out=20,
+                tokens_total=100,
+                request_id="req-duplicate-usage-b",
+                llm_call_log_id=call.id,
+                created_at=ts,
+            ),
+        ]
+    )
+    db_session.commit()
+
+    rows = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="day", scope="all"),
+        refresh=True,
+    )
+    assert len(rows) == 1
+    assert rows[0].call_count == 1
+    assert rows[0].input_tokens == 80
+    assert rows[0].output_tokens == 20
+    assert rows[0].total_tokens == 100
