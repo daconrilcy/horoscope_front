@@ -31,7 +31,15 @@ from app.llm_orchestration.services.execution_profile_registry import (
 from app.llm_orchestration.services.release_service import ReleaseService
 
 
-def _qualification_evidence(snapshot, verdict: str = "go"):
+def _default_manifest_entry_id(snapshot) -> str:
+    targets = (snapshot.manifest or {}).get("targets", {})
+    if not targets:
+        raise ValueError("Snapshot has no manifest targets.")
+    return str(next(iter(targets.keys())))
+
+
+def _qualification_evidence(snapshot, verdict: str = "go", manifest_entry_id: str | None = None):
+    resolved_manifest_entry_id = manifest_entry_id or _default_manifest_entry_id(snapshot)
     return type(
         "QualificationEvidence",
         (),
@@ -39,13 +47,14 @@ def _qualification_evidence(snapshot, verdict: str = "go"):
             "verdict": verdict,
             "active_snapshot_id": snapshot.id,
             "active_snapshot_version": snapshot.version,
-            "manifest_entry_id": "chat:None:None:fr-FR",
+            "manifest_entry_id": resolved_manifest_entry_id,
             "generated_at": datetime.now(timezone.utc),
         },
     )()
 
 
-def _golden_evidence(snapshot, verdict: str = "pass"):
+def _golden_evidence(snapshot, verdict: str = "pass", manifest_entry_id: str | None = None):
+    resolved_manifest_entry_id = manifest_entry_id or _default_manifest_entry_id(snapshot)
     return type(
         "GoldenEvidence",
         (),
@@ -53,18 +62,24 @@ def _golden_evidence(snapshot, verdict: str = "pass"):
             "verdict": verdict,
             "active_snapshot_id": snapshot.id,
             "active_snapshot_version": snapshot.version,
-            "manifest_entry_id": "chat:None:None:fr-FR",
+            "manifest_entry_id": resolved_manifest_entry_id,
             "generated_at": datetime.now(timezone.utc),
         },
     )()
 
 
-def _smoke_evidence(snapshot, status: str = "pass", fallback: bool = False):
+def _smoke_evidence(
+    snapshot,
+    status: str = "pass",
+    fallback: bool = False,
+    manifest_entry_id: str | None = None,
+):
+    resolved_manifest_entry_id = manifest_entry_id or _default_manifest_entry_id(snapshot)
     return {
         "status": status,
         "active_snapshot_id": str(snapshot.id),
         "active_snapshot_version": snapshot.version,
-        "manifest_entry_id": "chat:None:None:fr-FR",
+        "manifest_entry_id": resolved_manifest_entry_id,
         "forbidden_fallback_detected": fallback,
     }
 
@@ -129,13 +144,22 @@ async def test_llm_release_lifecycle():
         assert len(target_keys) > 0
         target_keys.sort()
 
-        # Pick a target that avoids schema-heavy test setup when possible.
-        # or just ensure we use the correct use_case for the target.
+        # Pick a target that avoids schema-heavy and known legacy prompt pitfalls when possible.
         target_key = None
         for tk in target_keys:
-            if "horoscope_daily" in tk or "chat" in tk:
+            if "horoscope_daily" in tk:
                 target_key = tk
                 break
+        if not target_key:
+            for tk in target_keys:
+                if "natal" in tk:
+                    target_key = tk
+                    break
+        if not target_key:
+            for tk in target_keys:
+                if "guidance" in tk:
+                    target_key = tk
+                    break
         if not target_key:
             target_key = target_keys[0]
 
@@ -195,17 +219,10 @@ async def test_llm_release_lifecycle():
             request_id=f"test-req-{uuid.uuid4().hex[:8]}",
             trace_id=f"test-trace-{uuid.uuid4().hex[:8]}",
         )
-        try:
-            plan, qualified_ctx = await gateway._resolve_plan(request, db)
-            assert str(plan.active_snapshot_id) == str(snapshot.id)
-            assert plan.active_snapshot_version == snapshot.version
-            assert plan.manifest_entry_id == target_key
-        except Exception:
-            # Le test principal de cette story porte sur le cycle release.
-            # Certains jeux de templates legacy peuvent invalider ce check annexe.
-            pytest.skip(
-                "Runtime plan resolution is not stable for this target on current fixtures."
-            )
+        plan, qualified_ctx = await gateway._resolve_plan(request, db)
+        assert str(plan.active_snapshot_id) == str(snapshot.id)
+        assert plan.active_snapshot_version == snapshot.version
+        assert plan.manifest_entry_id == target_key
 
         # 7. Rollback
         # Create a second snapshot to have something to rollback to
@@ -454,6 +471,27 @@ async def test_activation_is_blocked_without_correlated_evidence():
                 golden_report=_golden_evidence(snapshot),
                 smoke_result=_smoke_evidence(snapshot),
             )
+
+        mismatched_manifest_qualification = type(
+            "MismatchedManifestQualificationEvidence",
+            (),
+            {
+                "verdict": "go",
+                "active_snapshot_id": snapshot.id,
+                "active_snapshot_version": snapshot.version,
+                "manifest_entry_id": "does:not:exist:fr-FR",
+                "generated_at": datetime.now(timezone.utc),
+            },
+        )()
+
+        with pytest.raises(ValueError, match="manifest_entry_id"):
+            await service.activate_snapshot(
+                snapshot.id,
+                activated_by="test_admin",
+                qualification_report=mismatched_manifest_qualification,
+                golden_report=_golden_evidence(snapshot),
+                smoke_result=_smoke_evidence(snapshot),
+            )
     finally:
         db.execute(delete(LlmActiveReleaseModel))
         db.commit()
@@ -493,6 +531,44 @@ async def test_release_health_recommends_rollback_on_threshold_breach():
             auto_rollback=False,
         )
         assert decision["status"] == "rollback_recommended"
+    finally:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.commit()
+        db.close()
+
+
+@pytest.mark.asyncio
+async def test_rollback_marks_faulty_snapshot_as_rolled_back():
+    db = SessionLocal()
+    try:
+        service = ReleaseService(db)
+        snapshot_a = await service.build_snapshot(version="rollback-a", created_by="test_admin")
+        snapshot_b = await service.build_snapshot(version="rollback-b", created_by="test_admin")
+        await service.validate_snapshot(snapshot_a.id)
+        await service.validate_snapshot(snapshot_b.id)
+
+        await service.activate_snapshot(
+            snapshot_a.id,
+            activated_by="test_admin",
+            qualification_report=_qualification_evidence(snapshot_a),
+            golden_report=_golden_evidence(snapshot_a),
+            smoke_result=_smoke_evidence(snapshot_a),
+        )
+        await service.activate_snapshot(
+            snapshot_b.id,
+            activated_by="test_admin",
+            qualification_report=_qualification_evidence(snapshot_b),
+            golden_report=_golden_evidence(snapshot_b),
+            smoke_result=_smoke_evidence(snapshot_b),
+        )
+
+        restored_snapshot = await service.rollback(activated_by="ops_user")
+        assert restored_snapshot.id == snapshot_a.id
+
+        db.refresh(snapshot_a)
+        db.refresh(snapshot_b)
+        assert snapshot_a.manifest["release_health"]["status"] == "activated"
+        assert snapshot_b.manifest["release_health"]["status"] == "rolled_back"
     finally:
         db.execute(delete(LlmActiveReleaseModel))
         db.commit()

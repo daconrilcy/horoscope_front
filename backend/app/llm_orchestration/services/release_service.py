@@ -90,8 +90,12 @@ class ReleaseService:
         qualification_report: Optional[Any],
         golden_report: Optional[Any],
         max_evidence_age_minutes: int,
-    ) -> List[str]:
+    ) -> tuple[List[str], Optional[str]]:
         errors: List[str] = []
+        manifest_targets = (snapshot.manifest or {}).get("targets", {})
+        qualification_manifest_entry_id: Optional[str] = None
+        golden_manifest_entry_id: Optional[str] = None
+
         if qualification_report is None:
             errors.append("Activation blocked: missing performance qualification report.")
         else:
@@ -105,6 +109,13 @@ class ReleaseService:
                 getattr(qualification_report, "generated_at", None), max_evidence_age_minutes
             ):
                 errors.append("Activation blocked: qualification evidence is stale.")
+            qualification_manifest_entry_id = getattr(
+                qualification_report, "manifest_entry_id", None
+            )
+            if not qualification_manifest_entry_id:
+                errors.append("Activation blocked: qualification manifest_entry_id is missing.")
+            elif qualification_manifest_entry_id not in manifest_targets:
+                errors.append("Activation blocked: qualification manifest_entry_id mismatch.")
 
         if golden_report is None:
             errors.append("Activation blocked: missing golden regression report.")
@@ -119,13 +130,29 @@ class ReleaseService:
                 getattr(golden_report, "generated_at", None), max_evidence_age_minutes
             ):
                 errors.append("Activation blocked: golden evidence is stale.")
-        return errors
+            golden_manifest_entry_id = getattr(golden_report, "manifest_entry_id", None)
+            if not golden_manifest_entry_id:
+                errors.append("Activation blocked: golden manifest_entry_id is missing.")
+            elif golden_manifest_entry_id not in manifest_targets:
+                errors.append("Activation blocked: golden manifest_entry_id mismatch.")
+
+        expected_manifest_entry_id: Optional[str] = None
+        if qualification_manifest_entry_id and golden_manifest_entry_id:
+            if qualification_manifest_entry_id != golden_manifest_entry_id:
+                errors.append(
+                    "Activation blocked: evidence manifest_entry_id correlation mismatch."
+                )
+            else:
+                expected_manifest_entry_id = qualification_manifest_entry_id
+
+        return errors, expected_manifest_entry_id
 
     def _validate_post_activation_smoke(
         self,
         *,
         snapshot: LlmReleaseSnapshotModel,
         smoke_result: Optional[Dict[str, Any]],
+        expected_manifest_entry_id: Optional[str],
     ) -> List[str]:
         if smoke_result is None:
             return ["Post-activation smoke is required."]
@@ -136,8 +163,11 @@ class ReleaseService:
             errors.append("Smoke correlation mismatch on active_snapshot_id.")
         if smoke_result.get("active_snapshot_version") != snapshot.version:
             errors.append("Smoke correlation mismatch on active_snapshot_version.")
-        if not smoke_result.get("manifest_entry_id"):
+        smoke_manifest_entry_id = smoke_result.get("manifest_entry_id")
+        if not smoke_manifest_entry_id:
             errors.append("Smoke correlation mismatch on manifest_entry_id.")
+        elif expected_manifest_entry_id and smoke_manifest_entry_id != expected_manifest_entry_id:
+            errors.append("Smoke correlation mismatch on manifest_entry_id value.")
         if smoke_result.get("forbidden_fallback_detected", False):
             errors.append("Smoke detected forbidden fallback.")
         return errors
@@ -349,7 +379,7 @@ class ReleaseService:
             if not val_res.is_valid:
                 raise ValueError("Cannot activate invalid snapshot")
 
-        activation_gate_errors = self._validate_activation_evidence(
+        activation_gate_errors, expected_manifest_entry_id = self._validate_activation_evidence(
             snapshot,
             qualification_report=qualification_report,
             golden_report=golden_report,
@@ -431,6 +461,7 @@ class ReleaseService:
             smoke_errors = self._validate_post_activation_smoke(
                 snapshot=snapshot,
                 smoke_result=smoke_result,
+                expected_manifest_entry_id=expected_manifest_entry_id,
             )
             if smoke_errors:
                 self._set_release_status(
@@ -472,6 +503,18 @@ class ReleaseService:
 
         if not current_active:
             raise ValueError("No active release to rollback from")
+        faulty_snapshot = (
+            await self._execute(
+                select(LlmReleaseSnapshotModel)
+                .where(LlmReleaseSnapshotModel.status == ReleaseStatus.ACTIVE)
+                .order_by(desc(LlmReleaseSnapshotModel.activated_at))
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        if faulty_snapshot is not None:
+            faulty_snapshot_id = faulty_snapshot.id
+        else:
+            faulty_snapshot_id = current_active.release_snapshot_id
 
         # 2. Find the previous active (which should be ARCHIVED now)
         stmt = (
@@ -485,6 +528,10 @@ class ReleaseService:
 
         if not previous:
             raise ValueError("No previous snapshot found for rollback")
+        rollback_manifest_entry_id = next(
+            iter((previous.manifest or {}).get("targets", {}).keys()),
+            "rollback",
+        )
 
         # 3. Activate it
         rolled_back = await self.activate_snapshot(
@@ -497,6 +544,7 @@ class ReleaseService:
                     "verdict": "go",
                     "active_snapshot_id": previous.id,
                     "active_snapshot_version": previous.version,
+                    "manifest_entry_id": rollback_manifest_entry_id,
                     "generated_at": self._utcnow(),
                 },
             )(),
@@ -507,6 +555,7 @@ class ReleaseService:
                     "verdict": "pass",
                     "active_snapshot_id": previous.id,
                     "active_snapshot_version": previous.version,
+                    "manifest_entry_id": rollback_manifest_entry_id,
                     "generated_at": self._utcnow(),
                 },
             )(),
@@ -514,19 +563,35 @@ class ReleaseService:
                 "status": "pass",
                 "active_snapshot_id": str(previous.id),
                 "active_snapshot_version": previous.version,
-                "manifest_entry_id": "rollback",
+                "manifest_entry_id": rollback_manifest_entry_id,
                 "forbidden_fallback_detected": False,
             },
             rollback_policy="forced-rollback",
         )
-        manifest_copy = dict(rolled_back.manifest or {})
-        self._set_release_status(
-            manifest_copy,
-            "rolled_back",
-            reason="Rollback executed to previous active snapshot.",
-            signals={"rolled_back_by": activated_by},
-        )
-        rolled_back.manifest = manifest_copy
+        faulty_snapshot_after = (
+            await self._execute(
+                select(LlmReleaseSnapshotModel).where(
+                    LlmReleaseSnapshotModel.id == faulty_snapshot_id
+                )
+            )
+        ).scalar_one_or_none()
+        if faulty_snapshot_after is not None:
+            faulty_manifest_copy = dict(faulty_snapshot_after.manifest or {})
+            self._set_release_status(
+                faulty_manifest_copy,
+                "rolled_back",
+                reason="Rollback executed: snapshot removed from active production slot.",
+                signals={
+                    "rolled_back_by": activated_by,
+                    "restored_snapshot_id": str(rolled_back.id),
+                    "restored_snapshot_version": rolled_back.version,
+                },
+            )
+            await self._execute(
+                update(LlmReleaseSnapshotModel)
+                .where(LlmReleaseSnapshotModel.id == faulty_snapshot_id)
+                .values(manifest=faulty_manifest_copy)
+            )
         if isinstance(self.session, AsyncSession):
             await self.session.commit()
         else:
