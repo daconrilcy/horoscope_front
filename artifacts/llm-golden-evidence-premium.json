@@ -1,0 +1,23 @@
+{
+  "active_snapshot_id": "e2e7191a-b403-42b9-911a-43c6f442420e",
+  "active_snapshot_version": "release-candidate-ready",
+  "manifest_entry_id": "natal:interpretation:premium:fr-FR",
+  "environment": "local",
+  "verdict": "pass",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "constrained": 0,
+  "results": [
+    {
+      "fixture_id": "natal-premium-nominal-01",
+      "family": "natal",
+      "verdict": "pass",
+      "diffs_structure": {},
+      "diffs_obs": {},
+      "legacy_errors": [],
+      "details": null
+    }
+  ],
+  "generated_at": "2026-04-15T13:34:15.808478Z"
+}

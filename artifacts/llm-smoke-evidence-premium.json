@@ -1,0 +1,12 @@
+{
+  "status": "pass",
+  "active_snapshot_id": "e2e7191a-b403-42b9-911a-43c6f442420e",
+  "active_snapshot_version": "release-candidate-ready",
+  "manifest_entry_id": "natal:interpretation:premium:fr-FR",
+  "forbidden_fallback_detected": false,
+  "generated_at": "2026-04-15T13:11:14.896466+00:00",
+  "details": {
+    "environment": "staging",
+    "mechanism": "activate_snapshot_like_prod"
+  }
+}

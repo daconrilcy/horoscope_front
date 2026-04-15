@@ -170,9 +170,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--chaos",
-        default=str(
-            _BACKEND_ROOT.parent / "artifacts" / "chaos" / "story-66-43-chaos-report.json"
-        ),
+        default=str(_BACKEND_ROOT.parent / "artifacts" / "chaos" / "story-66-43-chaos-report.json"),
     )
     parser.add_argument("--qualification", default=None)
     parser.add_argument("--golden", default=None)

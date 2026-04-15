@@ -137,10 +137,7 @@ def _resolve_report_path() -> Path:
     run_id = f"pid-{os.getpid()}-{uuid.uuid4().hex[:8]}"
     backend_root = Path(__file__).resolve().parents[2]
     _RUN_UNIQUE_REPORT_PATH = (
-        backend_root
-        / ".pytest_cache"
-        / "chaos"
-        / f"story-66-43-chaos-report-{run_id}.json"
+        backend_root / ".pytest_cache" / "chaos" / f"story-66-43-chaos-report-{run_id}.json"
     )
     return _RUN_UNIQUE_REPORT_PATH
 

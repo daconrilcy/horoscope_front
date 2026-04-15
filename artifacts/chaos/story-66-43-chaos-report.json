@@ -1,0 +1,128 @@
+{
+  "story": "66.43",
+  "report_kind": "provider_runtime_chaos_invariants",
+  "scenario_count": 8,
+  "all_passed": true,
+  "scenarios": [
+    {
+      "scenario": "breaker_open_after_repeated_failures",
+      "failure_type": "breaker_open",
+      "invariant": "fermeture stricte du nominal quand breaker ouvert",
+      "passed": true,
+      "observed": {
+        "attempt_count": 0,
+        "provider_error_code": "UPSTREAM_CIRCUIT_OPEN",
+        "breaker_state": "open",
+        "breaker_scope": "openai:horoscope_daily",
+        "active_snapshot_id": null,
+        "active_snapshot_version": null,
+        "manifest_entry_id": null
+      }
+    },
+    {
+      "scenario": "configuration_error_not_reclassified",
+      "failure_type": "configuration_error",
+      "invariant": "erreur configuration non transform\u00e9e en incident provider",
+      "passed": true,
+      "observed": {
+        "attempt_count": 1,
+        "provider_error_code": null,
+        "breaker_state": "closed",
+        "breaker_scope": "openai:chat",
+        "active_snapshot_id": null,
+        "active_snapshot_version": null,
+        "manifest_entry_id": null
+      }
+    },
+    {
+      "scenario": "partial_failure_then_recovery_with_snapshot_correlation",
+      "failure_type": "recovery_with_snapshot",
+      "invariant": "corr\u00e9lation snapshot pr\u00e9serv\u00e9e en r\u00e9tablissement nominal",
+      "passed": true,
+      "observed": {
+        "attempt_count": 2,
+        "provider_error_code": null,
+        "breaker_state": "closed",
+        "breaker_scope": "openai:chat",
+        "active_snapshot_id": "f8ab2498-7f2c-48e9-90d2-4da65f4f1f88",
+        "active_snapshot_version": "snapshot-v66-43",
+        "manifest_entry_id": "chat:astrologer:premium"
+      }
+    },
+    {
+      "scenario": "rate_limit_budget_exhausted",
+      "failure_type": "rate_limit",
+      "invariant": "retry budget exhausted sans provider externe",
+      "passed": true,
+      "observed": {
+        "attempt_count": 3,
+        "provider_error_code": "RETRY_BUDGET_EXHAUSTED",
+        "breaker_state": "closed",
+        "breaker_scope": "openai:chat",
+        "active_snapshot_id": null,
+        "active_snapshot_version": null,
+        "manifest_entry_id": null
+      }
+    },
+    {
+      "scenario": "retry_budget_exhausted_explicit",
+      "failure_type": "retry_budget_exhausted",
+      "invariant": "le budget de retries borne strictement les tentatives",
+      "passed": true,
+      "observed": {
+        "attempt_count": 3,
+        "provider_error_code": "RETRY_BUDGET_EXHAUSTED",
+        "breaker_state": "closed",
+        "breaker_scope": "openai:guidance",
+        "active_snapshot_id": null,
+        "active_snapshot_version": null,
+        "manifest_entry_id": null
+      }
+    },
+    {
+      "scenario": "retry_idempotence_and_nominal_closure",
+      "failure_type": "retry_idempotence",
+      "invariant": "pas de surcomptage retries/breaker et fermeture nominale stricte",
+      "passed": true,
+      "observed": {
+        "attempt_count": 3,
+        "provider_error_code": "RETRY_BUDGET_EXHAUSTED",
+        "breaker_state": "closed",
+        "breaker_scope": "openai:chat",
+        "active_snapshot_id": null,
+        "active_snapshot_version": null,
+        "manifest_entry_id": null
+      }
+    },
+    {
+      "scenario": "server_error_budget_exhausted",
+      "failure_type": "5xx",
+      "invariant": "classification provider 5xx retryable puis budget exhausted",
+      "passed": true,
+      "observed": {
+        "attempt_count": 3,
+        "provider_error_code": "RETRY_BUDGET_EXHAUSTED",
+        "breaker_state": "closed",
+        "breaker_scope": "openai:natal",
+        "active_snapshot_id": null,
+        "active_snapshot_version": null,
+        "manifest_entry_id": null
+      }
+    },
+    {
+      "scenario": "timeout_budget_exhausted",
+      "failure_type": "timeout",
+      "invariant": "classification timeout + retries bornes",
+      "passed": true,
+      "observed": {
+        "attempt_count": 3,
+        "provider_error_code": "RETRY_BUDGET_EXHAUSTED",
+        "breaker_state": "closed",
+        "breaker_scope": "openai:guidance",
+        "active_snapshot_id": null,
+        "active_snapshot_version": null,
+        "manifest_entry_id": null
+      }
+    }
+  ]
+}

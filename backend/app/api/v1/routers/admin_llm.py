@@ -19,6 +19,8 @@ from app.api.dependencies.auth import (
 from app.core.request_id import resolve_request_id
 from app.core.sensitive_data import Sink, sanitize_payload
 from app.infra.db.models.billing import UserSubscriptionModel
+from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_observability import LlmCallLogModel
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
@@ -27,6 +29,7 @@ from app.infra.db.models.llm_prompt import (
     LlmUseCaseConfigModel,
     PromptStatus,
 )
+from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.llm_orchestration.admin_models import (
@@ -191,6 +194,55 @@ class LlmDashboardMetrics(BaseModel):
 class LlmDashboardResponse(BaseModel):
     data: List[LlmDashboardMetrics]
     meta: ResponseMeta
+
+
+class AdminLlmCatalogEntry(BaseModel):
+    manifest_entry_id: str
+    feature: str
+    subfeature: str | None = None
+    plan: str | None = None
+    locale: str | None = None
+    assembly_id: str | None = None
+    assembly_status: str
+    execution_profile_id: str | None = None
+    execution_profile_ref: str | None = None
+    output_contract_ref: str | None = None
+    active_snapshot_id: str | None = None
+    active_snapshot_version: str | None = None
+    provider: str | None = None
+    model: str | None = None
+    source_of_truth_status: str
+    release_health_status: str
+    catalog_visibility_status: str
+    runtime_signal_status: str
+    execution_path_kind: str | None = None
+    context_compensation_status: str | None = None
+    max_output_tokens_source: str | None = None
+
+
+class AdminLlmCatalogResponse(BaseModel):
+    data: List[AdminLlmCatalogEntry]
+    meta: dict[str, Any]
+
+
+def _to_none_if_literal_none(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value)
+    if text == "None":
+        return None
+    return text
+
+
+def _catalog_sort_value(entry: AdminLlmCatalogEntry, sort_by: str) -> tuple[int, str]:
+    raw = getattr(entry, sort_by, None)
+    if raw is None:
+        return (1, "")
+    return (0, str(raw).lower())
+
+
+def _to_manifest_entry(feature: str, subfeature: str | None, plan: str | None, locale: str) -> str:
+    return f"{feature}:{subfeature}:{plan}:{locale}"
 
 
 def _error_response(
@@ -534,6 +586,245 @@ def list_use_cases(
         )
 
     return {"data": result_data, "meta": {"request_id": request_id}}
+
+
+@router.get("/catalog", response_model=AdminLlmCatalogResponse)
+def list_llm_catalog(
+    request: Request,
+    feature: Optional[str] = None,
+    subfeature: Optional[str] = None,
+    plan: Optional[str] = None,
+    locale: Optional[str] = None,
+    provider: Optional[str] = None,
+    source_of_truth_status: Optional[str] = None,
+    assembly_status: Optional[str] = None,
+    release_health_status: Optional[str] = None,
+    catalog_visibility_status: Optional[str] = None,
+    search: Optional[str] = None,
+    sort_by: str = "feature",
+    sort_order: str = "asc",
+    page: int = 1,
+    page_size: int = 25,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    del current_user
+    request_id = resolve_request_id(request)
+    freshness_window_minutes = 120
+
+    latest_active = db.execute(
+        select(LlmActiveReleaseModel).order_by(desc(LlmActiveReleaseModel.activated_at)).limit(1)
+    ).scalar_one_or_none()
+    active_snapshot = None
+    if latest_active:
+        active_snapshot = db.get(LlmReleaseSnapshotModel, latest_active.release_snapshot_id)
+
+    release_health = (
+        ((active_snapshot.manifest or {}).get("release_health") or {}) if active_snapshot else {}
+    )
+    active_release_health = str(release_health.get("status") or "n/a")
+
+    entries_by_id: dict[str, AdminLlmCatalogEntry] = {}
+    manifest_targets = (
+        ((active_snapshot.manifest or {}).get("targets") or {}) if active_snapshot else {}
+    )
+
+    for manifest_entry_id, bundle in manifest_targets.items():
+        assembly_data = bundle.get("assembly") or {}
+        profile_data = bundle.get("profile") or {}
+
+        feature_value = _to_none_if_literal_none(assembly_data.get("feature"))
+        if not feature_value:
+            split_values = str(manifest_entry_id).split(":")
+            feature_value = split_values[0] if split_values else "unknown"
+        subfeature_value = _to_none_if_literal_none(assembly_data.get("subfeature"))
+        plan_value = _to_none_if_literal_none(assembly_data.get("plan"))
+        locale_value = _to_none_if_literal_none(assembly_data.get("locale")) or "fr-FR"
+
+        catalog_visibility = "visible"
+        if not assembly_data:
+            catalog_visibility = "orphaned"
+        elif not profile_data:
+            catalog_visibility = "stale"
+
+        entries_by_id[str(manifest_entry_id)] = AdminLlmCatalogEntry(
+            manifest_entry_id=str(manifest_entry_id),
+            feature=feature_value,
+            subfeature=subfeature_value,
+            plan=plan_value,
+            locale=locale_value,
+            assembly_id=str(assembly_data.get("id")) if assembly_data.get("id") else None,
+            assembly_status=str(assembly_data.get("status") or "unknown"),
+            execution_profile_id=str(profile_data.get("id")) if profile_data.get("id") else None,
+            execution_profile_ref=str(profile_data.get("id")) if profile_data.get("id") else None,
+            output_contract_ref=str(assembly_data.get("output_contract_ref"))
+            if assembly_data.get("output_contract_ref")
+            else None,
+            active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
+            active_snapshot_version=active_snapshot.version if active_snapshot else None,
+            provider=str(profile_data.get("provider")) if profile_data.get("provider") else None,
+            model=str(profile_data.get("model")) if profile_data.get("model") else None,
+            source_of_truth_status="active_snapshot",
+            release_health_status=active_release_health,
+            catalog_visibility_status=catalog_visibility,
+            runtime_signal_status="n/a",
+        )
+
+    live_assemblies = (
+        db.execute(
+            select(PromptAssemblyConfigModel).where(
+                PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for assembly in live_assemblies:
+        manifest_entry_id = _to_manifest_entry(
+            assembly.feature, assembly.subfeature, assembly.plan, assembly.locale
+        )
+        if manifest_entry_id in entries_by_id:
+            continue
+        profile = None
+        if assembly.execution_profile_ref:
+            profile = db.get(LlmExecutionProfileModel, assembly.execution_profile_ref)
+        entries_by_id[manifest_entry_id] = AdminLlmCatalogEntry(
+            manifest_entry_id=manifest_entry_id,
+            feature=assembly.feature,
+            subfeature=assembly.subfeature,
+            plan=assembly.plan,
+            locale=assembly.locale,
+            assembly_id=str(assembly.id),
+            assembly_status=str(assembly.status),
+            execution_profile_id=str(profile.id) if profile else None,
+            execution_profile_ref=str(profile.id) if profile else None,
+            output_contract_ref=assembly.output_contract_ref,
+            active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
+            active_snapshot_version=active_snapshot.version if active_snapshot else None,
+            provider=profile.provider if profile else None,
+            model=profile.model if profile else None,
+            source_of_truth_status="live_table_fallback",
+            release_health_status=active_release_health if active_snapshot else "n/a",
+            catalog_visibility_status="orphaned",
+            runtime_signal_status="n/a",
+        )
+
+    manifest_ids = list(entries_by_id.keys())
+    latest_logs: dict[str, LlmCallLogModel] = {}
+    if manifest_ids:
+        observability_rows = (
+            db.execute(
+                select(LlmCallLogModel)
+                .where(LlmCallLogModel.manifest_entry_id.in_(manifest_ids))
+                .order_by(desc(LlmCallLogModel.timestamp))
+                .limit(500)
+            )
+            .scalars()
+            .all()
+        )
+        for row in observability_rows:
+            if row.manifest_entry_id and row.manifest_entry_id not in latest_logs:
+                latest_logs[row.manifest_entry_id] = row
+
+    now_utc = datetime.now(timezone.utc)
+    for manifest_entry_id, entry in entries_by_id.items():
+        log_row = latest_logs.get(manifest_entry_id)
+        if log_row is None:
+            entry.runtime_signal_status = "n/a"
+            continue
+        observed_at = log_row.timestamp
+        if observed_at.tzinfo is None or observed_at.utcoffset() is None:
+            observed_at = observed_at.replace(tzinfo=timezone.utc)
+        age_minutes = (now_utc - observed_at).total_seconds() / 60
+        entry.runtime_signal_status = (
+            "fresh" if age_minutes <= freshness_window_minutes else "stale"
+        )
+        entry.execution_path_kind = log_row.execution_path_kind
+        entry.context_compensation_status = log_row.context_compensation_status
+        entry.max_output_tokens_source = log_row.max_output_tokens_source
+
+    entries = list(entries_by_id.values())
+    if feature:
+        entries = [entry for entry in entries if entry.feature == feature]
+    if subfeature:
+        entries = [entry for entry in entries if entry.subfeature == subfeature]
+    if plan:
+        entries = [entry for entry in entries if entry.plan == plan]
+    if locale:
+        entries = [entry for entry in entries if entry.locale == locale]
+    if provider:
+        entries = [entry for entry in entries if entry.provider == provider]
+    if source_of_truth_status:
+        entries = [
+            entry for entry in entries if entry.source_of_truth_status == source_of_truth_status
+        ]
+    if assembly_status:
+        entries = [entry for entry in entries if entry.assembly_status == assembly_status]
+    if release_health_status:
+        entries = [
+            entry for entry in entries if entry.release_health_status == release_health_status
+        ]
+    if catalog_visibility_status:
+        entries = [
+            entry
+            for entry in entries
+            if entry.catalog_visibility_status == catalog_visibility_status
+        ]
+    if search:
+        lowered = search.lower()
+        entries = [
+            entry
+            for entry in entries
+            if lowered in entry.manifest_entry_id.lower()
+            or lowered in entry.feature.lower()
+            or lowered in (entry.subfeature or "").lower()
+            or lowered in (entry.plan or "").lower()
+            or lowered in (entry.locale or "").lower()
+        ]
+
+    allowed_sort_fields = {
+        "feature",
+        "subfeature",
+        "plan",
+        "locale",
+        "manifest_entry_id",
+        "provider",
+        "source_of_truth_status",
+        "assembly_status",
+        "release_health_status",
+        "catalog_visibility_status",
+    }
+    resolved_sort_by = sort_by if sort_by in allowed_sort_fields else "feature"
+    reverse_sort = sort_order.lower() == "desc"
+    entries.sort(
+        key=lambda entry: (
+            _catalog_sort_value(entry, resolved_sort_by),
+            _catalog_sort_value(entry, "feature"),
+            _catalog_sort_value(entry, "subfeature"),
+            _catalog_sort_value(entry, "plan"),
+            _catalog_sort_value(entry, "locale"),
+            _catalog_sort_value(entry, "manifest_entry_id"),
+        ),
+        reverse=reverse_sort,
+    )
+
+    safe_page = max(page, 1)
+    safe_page_size = max(min(page_size, 100), 1)
+    start = (safe_page - 1) * safe_page_size
+    paged_entries = entries[start : start + safe_page_size]
+
+    return {
+        "data": paged_entries,
+        "meta": {
+            "request_id": request_id,
+            "total": len(entries),
+            "page": safe_page,
+            "page_size": safe_page_size,
+            "sort_by": resolved_sort_by,
+            "sort_order": "desc" if reverse_sort else "asc",
+            "freshness_window_minutes": freshness_window_minutes,
+        },
+    }
 
 
 @router.patch("/use-cases/{key}", response_model=LlmUseCaseListResponse)

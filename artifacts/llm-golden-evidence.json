@@ -1,0 +1,23 @@
+{
+  "active_snapshot_id": "e2e7191a-b403-42b9-911a-43c6f442420e",
+  "active_snapshot_version": "release-candidate-ready",
+  "manifest_entry_id": "natal:interpretation:free:fr-FR",
+  "environment": "local",
+  "verdict": "fail",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "constrained": 0,
+  "results": [
+    {
+      "fixture_id": "natal-nominal-01",
+      "family": "natal",
+      "verdict": "fail",
+      "diffs_structure": {},
+      "diffs_obs": {},
+      "legacy_errors": [],
+      "details": "Execution error during golden regression campaign."
+    }
+  ],
+  "generated_at": "2026-04-15T13:07:48.918145Z"
+}

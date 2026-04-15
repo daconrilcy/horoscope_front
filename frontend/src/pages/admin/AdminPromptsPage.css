@@ -235,6 +235,64 @@
   margin-bottom: var(--space-4);
 }
 
+.admin-prompts-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-prompts-catalog__filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2);
+}
+
+.admin-prompts-catalog__filters input,
+.admin-prompts-catalog__filters select {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  padding: var(--space-2) var(--space-3);
+}
+
+.admin-prompts-catalog__table-wrap {
+  overflow-x: auto;
+}
+
+.admin-prompts-catalog__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px;
+}
+
+.admin-prompts-catalog__table th,
+.admin-prompts-catalog__table td {
+  border-bottom: 1px solid var(--glass-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-prompts-catalog__table th {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.admin-prompts-catalog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.admin-prompts-catalog__pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 @media (max-width: 960px) {
   .admin-prompts-layout,
   .admin-prompts-diff,

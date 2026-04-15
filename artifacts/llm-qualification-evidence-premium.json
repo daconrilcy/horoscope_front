@@ -1,0 +1,29 @@
+{
+  "active_snapshot_id": "e2e7191a-b403-42b9-911a-43c6f442420e",
+  "active_snapshot_version": "release-candidate-ready",
+  "manifest_entry_id": "natal:interpretation:premium:fr-FR",
+  "environment": "local",
+  "family": "natal",
+  "profile": "smoke",
+  "total_requests": 3,
+  "success_count": 3,
+  "protection_count": 0,
+  "error_count": 0,
+  "error_rate": 0.0,
+  "latency_p50_ms": 12169.245999997656,
+  "latency_p95_ms": 12834.022600000026,
+  "latency_p99_ms": 12834.022600000026,
+  "throughput_rps": 0.0850774023571938,
+  "budget_remaining": 1.0,
+  "verdict": "go-with-constraints",
+  "constraints": [
+    "SLO Warning: p95 latency 12834.022600000026ms > 8000.0ms"
+  ],
+  "generated_at": "2026-04-15T13:32:07.416414Z",
+  "sample": {
+    "iterations": 3,
+    "use_case_key": "natal_interpretation",
+    "prompt_version_id": "227fdc59-33f4-4e1c-8350-3695d3721adf",
+    "avg_latency_ms": 11754.000333334261
+  }
+}

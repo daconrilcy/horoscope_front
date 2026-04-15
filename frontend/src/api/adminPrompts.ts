@@ -61,6 +61,42 @@ export type AdminPromptVersion = {
   published_at: string | null
 }
 
+export type AdminLlmCatalogEntry = {
+  manifest_entry_id: string
+  feature: string
+  subfeature: string | null
+  plan: string | null
+  locale: string | null
+  assembly_id: string | null
+  assembly_status: string
+  execution_profile_id: string | null
+  execution_profile_ref: string | null
+  output_contract_ref: string | null
+  active_snapshot_id: string | null
+  active_snapshot_version: string | null
+  provider: string | null
+  model: string | null
+  source_of_truth_status: string
+  release_health_status: string
+  catalog_visibility_status: string
+  runtime_signal_status: string
+  execution_path_kind: string | null
+  context_compensation_status: string | null
+  max_output_tokens_source: string | null
+}
+
+export type AdminLlmCatalogResponse = {
+  data: AdminLlmCatalogEntry[]
+  meta: {
+    total: number
+    page: number
+    page_size: number
+    sort_by: string
+    sort_order: "asc" | "desc"
+    freshness_window_minutes: number
+  }
+}
+
 export class AdminPromptsApiError extends Error {
   readonly code: string
   readonly status: number
@@ -136,6 +172,67 @@ export async function listPromptHistory(useCaseKey: string): Promise<AdminPrompt
       headers: getAccessTokenAuthHeader(),
     })
     return decodeResponse<AdminPromptVersion[]>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function listAdminLlmCatalog(
+  params: {
+    page?: number
+    pageSize?: number
+    search?: string
+    feature?: string
+    subfeature?: string
+    plan?: string
+    locale?: string
+    provider?: string
+    sourceOfTruthStatus?: string
+    assemblyStatus?: string
+    releaseHealthStatus?: string
+    catalogVisibilityStatus?: string
+    sortBy?: string
+    sortOrder?: "asc" | "desc"
+  } = {},
+): Promise<AdminLlmCatalogResponse> {
+  try {
+    const query = new URLSearchParams()
+    if (params.page) query.set("page", String(params.page))
+    if (params.pageSize) query.set("page_size", String(params.pageSize))
+    if (params.search) query.set("search", params.search)
+    if (params.feature) query.set("feature", params.feature)
+    if (params.subfeature) query.set("subfeature", params.subfeature)
+    if (params.plan) query.set("plan", params.plan)
+    if (params.locale) query.set("locale", params.locale)
+    if (params.provider) query.set("provider", params.provider)
+    if (params.sourceOfTruthStatus) query.set("source_of_truth_status", params.sourceOfTruthStatus)
+    if (params.assemblyStatus) query.set("assembly_status", params.assemblyStatus)
+    if (params.releaseHealthStatus) query.set("release_health_status", params.releaseHealthStatus)
+    if (params.catalogVisibilityStatus) query.set("catalog_visibility_status", params.catalogVisibilityStatus)
+    if (params.sortBy) query.set("sort_by", params.sortBy)
+    if (params.sortOrder) query.set("sort_order", params.sortOrder)
+
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/catalog?${query.toString()}`, {
+      headers: getAccessTokenAuthHeader(),
+    })
+
+    if (!response.ok) {
+      let payload: ErrorEnvelope | null = null
+      try {
+        payload = (await response.json()) as ErrorEnvelope
+      } catch {
+        payload = null
+      }
+      throw new AdminPromptsApiError(
+        payload?.error?.code ?? "unknown_error",
+        payload?.error?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        payload?.error?.details ?? {},
+      )
+    }
+
+    const payload = (await response.json()) as AdminLlmCatalogResponse
+    return payload
   } catch (error) {
     throw toTransportError(error)
   }
@@ -223,6 +320,17 @@ export function useAdminPersonaDetail(personaId: string | null, enabled = true) 
 export function useRollbackPromptVersion() {
   return useMutation({
     mutationFn: rollbackPromptVersion,
+  })
+}
+
+export function useAdminLlmCatalog(
+  params: Parameters<typeof listAdminLlmCatalog>[0],
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ["admin-llm-catalog", params],
+    queryFn: () => listAdminLlmCatalog(params),
+    enabled,
   })
 }
 

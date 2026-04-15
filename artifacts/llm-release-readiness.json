@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-04-15T13:08:11.234645+00:00",
+  "decision": "no-go",
+  "candidate_snapshot": {
+    "id": "e2e7191a-b403-42b9-911a-43c6f442420e",
+    "version": "release-candidate-ready",
+    "status": "validated",
+    "created_by": "release_readiness",
+    "created_at": "2026-04-15T12:48:40.522953",
+    "validated_at": "2026-04-15T12:48:40.529747",
+    "activated_at": null,
+    "target_count": 24,
+    "manifest_entry_ids": [
+      "natal:interpretation:premium:fr-FR",
+      "natal:short:free:fr-FR",
+      "chat:astrologer:premium:fr-FR",
+      "natal:interpretation:free:fr-FR",
+      "guidance:daily:free:fr-FR",
+      "guidance:daily:premium:fr-FR",
+      "guidance:weekly:free:fr-FR",
+      "guidance:weekly:premium:fr-FR",
+      "guidance:contextual:premium:fr-FR",
+      "guidance:event:premium:fr-FR",
+      "chat:astrologer:free:fr-FR",
+      "horoscope_daily:narration:free:fr-FR",
+      "horoscope_daily:narration:premium:fr-FR",
+      "guidance:contextual:free:fr-FR",
+      "guidance:event:free:fr-FR",
+      "natal:psy_profile:premium:fr-FR",
+      "natal:shadow_integration:premium:fr-FR",
+      "natal:leadership_workstyle:premium:fr-FR",
+      "natal:creativity_joy:premium:fr-FR",
+      "natal:relationship_style:premium:fr-FR",
+      "natal:community_networks:premium:fr-FR",
+      "natal:values_security:premium:fr-FR",
+      "natal:evolution_path:premium:fr-FR",
+      "natal:interpretation:premium:en-US"
+    ],
+    "default_manifest_entry_id": "natal:interpretation:premium:fr-FR"
+  },
+  "checks": {
+    "candidate_snapshot": "green",
+    "snapshot_validation": "green",
+    "qualification": "red",
+    "golden": "red",
+    "smoke": "red",
+    "chaos": "green",
+    "doc_conformity": "green",
+    "legacy_progressive_blocklist": "green"
+  },
+  "effective_progressive_blocklist": [
+    "fb.resolve_model",
+    "fb.use_case_first"
+  ],
+  "registry_schema_version": "2026.04.14",
+  "blockers": [
+    "Qualification evidence is missing, stale, or not correlated.",
+    "Golden regression evidence is missing, stale, or not correlated.",
+    "Post-activation smoke evidence is missing or not correlated."
+  ],
+  "source_artifacts": {
+    "candidate": true,
+    "qualification": false,
+    "golden": false,
+    "smoke": false,
+    "chaos": true,
+    "doc_conformity": true
+  }
+}
