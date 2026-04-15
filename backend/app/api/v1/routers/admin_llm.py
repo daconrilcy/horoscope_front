@@ -3,21 +3,21 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.api.dependencies.auth import (
     AuthenticatedUser,
     require_admin_user,
 )
 from app.core.request_id import resolve_request_id
-from app.core.sensitive_data import Sink, sanitize_payload
+from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
 from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
@@ -41,16 +41,26 @@ from app.llm_orchestration.admin_models import (
     LlmPromptVersionCreate,
     LlmUseCaseConfig,
 )
+from app.llm_orchestration.models import PromptRenderError
 from app.llm_orchestration.persona_boundary import (
     PersonaBoundaryViolation,
     validate_persona_block,
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
+from app.llm_orchestration.prompt_governance_registry import get_prompt_governance_registry
+from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+from app.llm_orchestration.services.assembly_resolver import (
+    assemble_developer_prompt,
+    resolve_assembly,
+)
+from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
 from app.llm_orchestration.services.eval_harness import run_eval
 from app.llm_orchestration.services.observability_service import purge_expired_logs
 from app.llm_orchestration.services.persona_composer import compose_persona_block
 from app.llm_orchestration.services.prompt_lint import PromptLint
 from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
+from app.llm_orchestration.services.prompt_renderer import PromptRenderer
+from app.llm_orchestration.services.provider_parameter_mapper import ProviderParameterMapper
 from app.llm_orchestration.services.replay_service import replay
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 
@@ -225,6 +235,63 @@ class AdminLlmCatalogResponse(BaseModel):
     meta: dict[str, Any]
 
 
+class ResolvedCompositionSources(BaseModel):
+    feature_template: dict[str, Any]
+    subfeature_template: dict[str, Any] | None = None
+    plan_rules: dict[str, Any] | None = None
+    persona_block: dict[str, Any] | None = None
+    hard_policy: dict[str, Any]
+    execution_profile: dict[str, Any]
+
+
+class ResolvedTransformationPipeline(BaseModel):
+    assembled_prompt: str
+    post_injectors_prompt: str
+    rendered_prompt: str
+
+
+class ResolvedPlaceholderView(BaseModel):
+    name: str
+    status: Literal["resolved", "optional_missing", "fallback_used", "blocking_missing", "unknown"]
+    classification: str | None = None
+    resolution_source: str | None = None
+    reason: str | None = None
+    safe_to_display: bool = False
+    value_preview: str | None = None
+
+
+class ResolvedResultView(BaseModel):
+    provider_messages: dict[str, Any]
+    placeholders: list[ResolvedPlaceholderView]
+    context_quality_handled_by_template: bool
+    context_quality_instruction_injected: bool
+    context_compensation_status: str
+    source_of_truth_status: str
+    active_snapshot_id: str | None = None
+    active_snapshot_version: str | None = None
+    manifest_entry_id: str
+
+
+class AdminResolvedAssemblyView(BaseModel):
+    manifest_entry_id: str
+    feature: str
+    subfeature: str | None = None
+    plan: str | None = None
+    locale: str | None = None
+    assembly_id: str | None = None
+    source_of_truth_status: str
+    active_snapshot_id: str | None = None
+    active_snapshot_version: str | None = None
+    composition_sources: ResolvedCompositionSources
+    transformation_pipeline: ResolvedTransformationPipeline
+    resolved_result: ResolvedResultView
+
+
+class AdminResolvedAssemblyResponse(BaseModel):
+    data: AdminResolvedAssemblyView
+    meta: ResponseMeta
+
+
 def _to_none_if_literal_none(value: Any) -> str | None:
     if value is None:
         return None
@@ -243,6 +310,14 @@ def _catalog_sort_value(entry: AdminLlmCatalogEntry, sort_by: str) -> tuple[int,
 
 def _to_manifest_entry(feature: str, subfeature: str | None, plan: str | None, locale: str) -> str:
     return f"{feature}:{subfeature}:{plan}:{locale}"
+
+
+def _parse_manifest_entry_id(manifest_entry_id: str) -> tuple[str, str | None, str | None, str]:
+    parts = manifest_entry_id.split(":")
+    if len(parts) != 4:
+        raise ValueError("manifest_entry_id must follow format feature:subfeature:plan:locale")
+    feature, subfeature, plan, locale = parts
+    return feature, _to_none_if_literal_none(subfeature), _to_none_if_literal_none(plan), locale
 
 
 def _collect_catalog_facets(entries: list[AdminLlmCatalogEntry]) -> dict[str, list[str]]:
@@ -746,14 +821,12 @@ def list_llm_catalog(
 
         latest_log_rows = (
             db.execute(
-                select(LlmCallLogModel)
-                .join(
+                select(LlmCallLogModel).join(
                     latest_timestamps_subquery,
                     and_(
                         LlmCallLogModel.manifest_entry_id
                         == latest_timestamps_subquery.c.manifest_entry_id,
-                        LlmCallLogModel.timestamp
-                        == latest_timestamps_subquery.c.latest_timestamp,
+                        LlmCallLogModel.timestamp == latest_timestamps_subquery.c.latest_timestamp,
                     ),
                 )
             )
@@ -867,6 +940,431 @@ def list_llm_catalog(
             "facets": catalog_facets,
         },
     }
+
+
+@router.get("/catalog/{manifest_entry_id}/resolved", response_model=AdminResolvedAssemblyResponse)
+def get_resolved_catalog_entry(
+    manifest_entry_id: str,
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    del current_user
+    request_id = resolve_request_id(request)
+
+    latest_active = db.execute(
+        select(LlmActiveReleaseModel).order_by(desc(LlmActiveReleaseModel.activated_at)).limit(1)
+    ).scalar_one_or_none()
+    active_snapshot = None
+    manifest_bundle: dict[str, Any] | None = None
+    if latest_active:
+        active_snapshot = db.get(LlmReleaseSnapshotModel, latest_active.release_snapshot_id)
+        if active_snapshot:
+            manifest_targets = (active_snapshot.manifest or {}).get("targets") or {}
+            manifest_bundle = manifest_targets.get(manifest_entry_id)
+
+    assembly_data = (manifest_bundle or {}).get("assembly") or {}
+    profile_data = (manifest_bundle or {}).get("profile") or {}
+
+    assembly_model: PromptAssemblyConfigModel | None = None
+    snapshot_profile_data: dict[str, Any] | None = None
+    snapshot_resolution_error: str | None = None
+    if manifest_bundle and isinstance(profile_data, dict) and profile_data:
+        snapshot_profile_data = profile_data
+    if manifest_bundle and not assembly_data:
+        snapshot_resolution_error = "snapshot bundle missing assembly payload"
+    if manifest_bundle and assembly_data and snapshot_resolution_error is None:
+        try:
+            registry = AssemblyRegistry(db)
+            assembly_model = registry._reconstruct_config(assembly_data)
+            # Some manifests may contain lightweight assembly payloads without transitive refs.
+            if assembly_model.feature_template is None:
+                raise ValueError("snapshot assembly bundle is incomplete")
+            setattr(assembly_model, "_snapshot_bundle", manifest_bundle)
+            if active_snapshot:
+                setattr(assembly_model, "_active_snapshot_id", active_snapshot.id)
+                setattr(assembly_model, "_active_snapshot_version", active_snapshot.version)
+            setattr(assembly_model, "_manifest_entry_id", manifest_entry_id)
+        except Exception as exc:
+            assembly_model = None
+            snapshot_resolution_error = str(exc)
+
+    if manifest_bundle and assembly_model is None and snapshot_resolution_error is not None:
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code="snapshot_bundle_unusable",
+            message="active snapshot bundle is present but cannot be reconstructed safely",
+            details={
+                "manifest_entry_id": manifest_entry_id,
+                "active_snapshot_id": str(active_snapshot.id) if active_snapshot else None,
+                "active_snapshot_version": active_snapshot.version if active_snapshot else None,
+                "snapshot_resolution_error": snapshot_resolution_error,
+            },
+        )
+
+    if assembly_model is None:
+        try:
+            feature, subfeature, plan, locale = _parse_manifest_entry_id(manifest_entry_id)
+        except ValueError as exc:
+            return _error_response(
+                status_code=422,
+                request_id=request_id,
+                code="invalid_manifest_entry_id",
+                message=str(exc),
+                details={"manifest_entry_id": manifest_entry_id},
+            )
+
+        assembly_model = db.execute(
+            select(PromptAssemblyConfigModel)
+            .where(PromptAssemblyConfigModel.feature == feature)
+            .where(PromptAssemblyConfigModel.subfeature == subfeature)
+            .where(PromptAssemblyConfigModel.plan == plan)
+            .where(PromptAssemblyConfigModel.locale == locale)
+            .where(PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED)
+            .options(
+                selectinload(PromptAssemblyConfigModel.feature_template),
+                selectinload(PromptAssemblyConfigModel.subfeature_template),
+                selectinload(PromptAssemblyConfigModel.persona),
+            )
+        ).scalar_one_or_none()
+
+    if assembly_model is None:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="manifest_entry_not_found",
+            message=f"manifest entry {manifest_entry_id} not found",
+            details={"manifest_entry_id": manifest_entry_id},
+        )
+    source_of_truth_status = "active_snapshot" if manifest_bundle else "live_table_fallback"
+
+    resolved = resolve_assembly(assembly_model, context_quality="full")
+    # Base canonical prompt from assembly resolver (includes length budget policy).
+    assembled_prompt = assemble_developer_prompt(resolved, assembly_model)
+
+    (
+        post_injectors_prompt,
+        context_quality_instruction_injected,
+        context_quality_handled_by_template,
+    ) = ContextQualityInjector.inject(
+        assembled_prompt, assembly_model.feature, resolved.context_quality
+    )
+
+    execution_profile_model = None
+    if not snapshot_profile_data and assembly_model.execution_profile_ref:
+        execution_profile_model = db.get(
+            LlmExecutionProfileModel, assembly_model.execution_profile_ref
+        )
+
+    effective_profile_provider = (
+        str(snapshot_profile_data.get("provider"))
+        if snapshot_profile_data and snapshot_profile_data.get("provider")
+        else execution_profile_model.provider
+        if execution_profile_model
+        else str(profile_data.get("provider") or "openai")
+    )
+    effective_profile_model = (
+        str(snapshot_profile_data.get("model"))
+        if snapshot_profile_data and snapshot_profile_data.get("model")
+        else execution_profile_model.model
+        if execution_profile_model
+        else str(profile_data.get("model") or resolved.execution_config.model)
+    )
+    effective_reasoning_profile = (
+        str(snapshot_profile_data.get("reasoning_profile"))
+        if snapshot_profile_data and snapshot_profile_data.get("reasoning_profile")
+        else execution_profile_model.reasoning_profile
+        if execution_profile_model
+        else None
+    )
+    effective_verbosity_profile = (
+        str(snapshot_profile_data.get("verbosity_profile"))
+        if snapshot_profile_data and snapshot_profile_data.get("verbosity_profile")
+        else execution_profile_model.verbosity_profile
+        if execution_profile_model
+        else None
+    )
+    effective_output_mode = (
+        str(snapshot_profile_data.get("output_mode"))
+        if snapshot_profile_data and snapshot_profile_data.get("output_mode")
+        else execution_profile_model.output_mode
+        if execution_profile_model
+        else "free_text"
+    )
+    effective_tool_mode = (
+        str(snapshot_profile_data.get("tool_mode"))
+        if snapshot_profile_data and snapshot_profile_data.get("tool_mode")
+        else execution_profile_model.tool_mode
+        if execution_profile_model
+        else "none"
+    )
+    effective_profile_max_tokens = (
+        int(snapshot_profile_data.get("max_output_tokens"))
+        if snapshot_profile_data
+        and snapshot_profile_data.get("max_output_tokens") is not None
+        else execution_profile_model.max_output_tokens
+        if execution_profile_model
+        else None
+    )
+    effective_profile_timeout = (
+        int(snapshot_profile_data.get("timeout_seconds"))
+        if snapshot_profile_data
+        and snapshot_profile_data.get("timeout_seconds") is not None
+        else execution_profile_model.timeout_seconds
+        if execution_profile_model
+        else None
+    )
+
+    verbosity_instruction = ""
+    translated_provider_params: dict[str, Any] = {}
+    if effective_verbosity_profile:
+        verbosity_instruction, recommended_tokens = (
+            ProviderParameterMapper.resolve_verbosity_instruction(effective_verbosity_profile)
+        )
+    else:
+        recommended_tokens = None
+    if effective_reasoning_profile and effective_verbosity_profile:
+        try:
+            translated_provider_params = ProviderParameterMapper.map(
+                provider=effective_profile_provider,
+                reasoning_profile=effective_reasoning_profile,
+                verbosity_profile=effective_verbosity_profile,
+                output_mode=effective_output_mode,
+                tool_mode=effective_tool_mode,
+            )
+        except Exception:
+            translated_provider_params = {}
+    if verbosity_instruction:
+        post_injectors_prompt = (
+            f"{post_injectors_prompt}\n\n[CONSIGNE DE VERBOSITÉ] {verbosity_instruction}"
+        )
+
+    # No fake runtime values: keep deterministic preview faithful to governance state.
+    render_variables: dict[str, Any] = {
+        "locale": assembly_model.locale,
+        "context_quality": resolved.context_quality,
+        "use_case": assembly_model.feature_template.use_case_key,
+    }
+
+    render_error: str | None = None
+    try:
+        rendered_prompt = PromptRenderer.render(
+            post_injectors_prompt,
+            render_variables,
+            feature=assembly_model.feature,
+        )
+    except PromptRenderError as exc:
+        # Keep detail endpoint inspectable on blocking placeholders.
+        rendered_prompt = post_injectors_prompt
+        render_error = str(exc)
+
+    reg = get_prompt_governance_registry()
+    placeholder_defs = {
+        item.name: item for item in reg.get_placeholder_defs(assembly_model.feature)
+    }
+    placeholders: list[ResolvedPlaceholderView] = []
+    for placeholder_name in PromptRenderer.extract_placeholders(post_injectors_prompt):
+        placeholder_def = placeholder_defs.get(placeholder_name)
+        classification = placeholder_def.classification if placeholder_def else None
+        safe_to_display = (
+            get_policy_action(Sink.ADMIN_API, classify_field(placeholder_name)).value == "allowed"
+        )
+        if placeholder_name in render_variables and render_variables[placeholder_name] is not None:
+            sanitized_value = sanitize_payload(
+                {"value": render_variables[placeholder_name]}, Sink.ADMIN_API
+            )
+            placeholders.append(
+                ResolvedPlaceholderView(
+                    name=placeholder_name,
+                    status="resolved",
+                    classification=classification,
+                    resolution_source="runtime_context",
+                    safe_to_display=safe_to_display,
+                    value_preview=(
+                        str(sanitized_value.get("value"))[:120]
+                        if safe_to_display and sanitized_value.get("value") is not None
+                        else None
+                    ),
+                )
+            )
+            continue
+
+        if placeholder_def and placeholder_def.classification == "optional_with_fallback":
+            placeholders.append(
+                ResolvedPlaceholderView(
+                    name=placeholder_name,
+                    status="fallback_used",
+                    classification=classification,
+                    resolution_source="fallback",
+                    reason="fallback_from_registry",
+                    safe_to_display=safe_to_display,
+                    value_preview=(placeholder_def.fallback or "")[:120]
+                    if safe_to_display
+                    else None,
+                )
+            )
+        elif placeholder_def and placeholder_def.classification == "optional":
+            placeholders.append(
+                ResolvedPlaceholderView(
+                    name=placeholder_name,
+                    status="optional_missing",
+                    classification=classification,
+                    resolution_source="missing_optional",
+                    reason="optional_placeholder_missing",
+                    safe_to_display=safe_to_display,
+                )
+            )
+        elif placeholder_def and placeholder_def.classification == "required":
+            placeholders.append(
+                ResolvedPlaceholderView(
+                    name=placeholder_name,
+                    status="blocking_missing",
+                    classification=classification,
+                    resolution_source="missing_required",
+                    reason="required_placeholder_missing",
+                    safe_to_display=safe_to_display,
+                )
+            )
+        else:
+            placeholders.append(
+                ResolvedPlaceholderView(
+                    name=placeholder_name,
+                    status="unknown",
+                    classification=classification,
+                    resolution_source="unknown",
+                    safe_to_display=safe_to_display,
+                )
+            )
+
+    # Keep execution parameters aligned with canonical gateway arbitration.
+    if resolved.length_budget and resolved.length_budget.global_max_tokens is not None:
+        final_max_output_tokens = resolved.length_budget.global_max_tokens
+        max_output_tokens_source = "length_budget_global"
+    elif effective_profile_max_tokens is not None:
+        final_max_output_tokens = effective_profile_max_tokens
+        max_output_tokens_source = "execution_profile"
+    elif recommended_tokens is not None:
+        final_max_output_tokens = recommended_tokens
+        max_output_tokens_source = "verbosity_fallback"
+    else:
+        final_max_output_tokens = resolved.execution_config.max_output_tokens
+        max_output_tokens_source = "assembly_execution_config"
+    final_timeout_seconds = (
+        effective_profile_timeout
+        if effective_profile_timeout is not None
+        else resolved.execution_config.timeout_seconds
+    )
+
+    execution_profile_view = {
+        "id": (
+            str(snapshot_profile_data.get("id"))
+            if snapshot_profile_data and snapshot_profile_data.get("id")
+            else str(execution_profile_model.id)
+            if execution_profile_model
+            else None
+        ),
+        "name": (
+            str(snapshot_profile_data.get("name"))
+            if snapshot_profile_data and snapshot_profile_data.get("name")
+            else execution_profile_model.name
+            if execution_profile_model
+            else None
+        ),
+        "provider": effective_profile_provider,
+        "model": effective_profile_model,
+        "reasoning": effective_reasoning_profile or resolved.execution_config.reasoning_effort,
+        "verbosity": effective_verbosity_profile or resolved.execution_config.verbosity,
+        "provider_params": sanitize_payload(
+            {
+                "temperature": (
+                    translated_provider_params.get("temperature")
+                    if "temperature" in translated_provider_params
+                    else resolved.execution_config.temperature
+                ),
+                "max_output_tokens_final": final_max_output_tokens,
+                "timeout_seconds": final_timeout_seconds,
+                "max_output_tokens_source": max_output_tokens_source,
+                **translated_provider_params,
+            },
+            Sink.ADMIN_API,
+        ),
+    }
+
+    data = AdminResolvedAssemblyView(
+        manifest_entry_id=manifest_entry_id,
+        feature=assembly_model.feature,
+        subfeature=assembly_model.subfeature,
+        plan=assembly_model.plan,
+        locale=assembly_model.locale,
+        assembly_id=str(assembly_model.id),
+        source_of_truth_status=source_of_truth_status,
+        active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
+        active_snapshot_version=active_snapshot.version if active_snapshot else None,
+        composition_sources=ResolvedCompositionSources(
+            feature_template={
+                "id": str(assembly_model.feature_template_ref),
+                "content": resolved.feature_template_prompt,
+            },
+            subfeature_template=(
+                {
+                    "id": str(assembly_model.subfeature_template_ref),
+                    "content": resolved.subfeature_template_prompt,
+                }
+                if resolved.subfeature_template_prompt
+                else None
+            ),
+            plan_rules=(
+                {"ref": assembly_model.plan_rules_ref, "content": resolved.plan_rules_content}
+                if resolved.plan_rules_content
+                else None
+            ),
+            persona_block=(
+                {
+                    "id": str(assembly_model.persona_ref),
+                    "name": assembly_model.persona.name if assembly_model.persona else None,
+                    "content": resolved.persona_block,
+                }
+                if resolved.persona_block
+                else None
+            ),
+            hard_policy={
+                "safety_profile": "astrology",
+                "content": resolved.policy_layer_content,
+            },
+            execution_profile=execution_profile_view,
+        ),
+        transformation_pipeline=ResolvedTransformationPipeline(
+            assembled_prompt=assembled_prompt,
+            post_injectors_prompt=post_injectors_prompt,
+            rendered_prompt=rendered_prompt,
+        ),
+        resolved_result=ResolvedResultView(
+            provider_messages={
+                "system_hard_policy": resolved.policy_layer_content,
+                "developer_content_rendered": rendered_prompt,
+                "persona_block": resolved.persona_block,
+                "execution_parameters": execution_profile_view["provider_params"],
+                "render_error": render_error,
+            },
+            placeholders=placeholders,
+            context_quality_handled_by_template=context_quality_handled_by_template,
+            context_quality_instruction_injected=context_quality_instruction_injected,
+            context_compensation_status=(
+                "handled_by_template"
+                if context_quality_handled_by_template
+                else "injector_applied"
+                if context_quality_instruction_injected
+                else "not_needed"
+            ),
+            source_of_truth_status=source_of_truth_status,
+            active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
+            active_snapshot_version=active_snapshot.version if active_snapshot else None,
+            manifest_entry_id=manifest_entry_id,
+        ),
+    )
+
+    return {"data": data, "meta": {"request_id": request_id}}
 
 
 @router.patch("/use-cases/{key}", response_model=LlmUseCaseListResponse)

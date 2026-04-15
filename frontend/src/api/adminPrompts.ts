@@ -108,6 +108,60 @@ export type AdminLlmCatalogResponse = {
   }
 }
 
+export type AdminResolvedPlaceholder = {
+  name: string
+  status: "resolved" | "optional_missing" | "fallback_used" | "blocking_missing" | "unknown"
+  classification: string | null
+  resolution_source: string | null
+  reason: string | null
+  safe_to_display: boolean
+  value_preview: string | null
+}
+
+export type AdminResolvedAssemblyView = {
+  manifest_entry_id: string
+  feature: string
+  subfeature: string | null
+  plan: string | null
+  locale: string | null
+  assembly_id: string | null
+  source_of_truth_status: string
+  active_snapshot_id: string | null
+  active_snapshot_version: string | null
+  composition_sources: {
+    feature_template: { id: string; content: string }
+    subfeature_template: { id: string; content: string } | null
+    plan_rules: { ref: string | null; content: string | null } | null
+    persona_block: { id: string | null; name: string | null; content: string | null } | null
+    hard_policy: { safety_profile: string; content: string }
+    execution_profile: {
+      id: string | null
+      name: string | null
+      provider: string
+      model: string
+      reasoning: string | null
+      verbosity: string | null
+      provider_params: Record<string, unknown>
+    }
+  }
+  transformation_pipeline: {
+    assembled_prompt: string
+    post_injectors_prompt: string
+    rendered_prompt: string
+  }
+  resolved_result: {
+    provider_messages: Record<string, unknown>
+    placeholders: AdminResolvedPlaceholder[]
+    context_quality_handled_by_template: boolean
+    context_quality_instruction_injected: boolean
+    context_compensation_status: string
+    source_of_truth_status: string
+    active_snapshot_id: string | null
+    active_snapshot_version: string | null
+    manifest_entry_id: string
+  }
+}
+
 export class AdminPromptsApiError extends Error {
   readonly code: string
   readonly status: number
@@ -260,6 +314,20 @@ export async function getAdminPersonaDetail(personaId: string): Promise<AdminLlm
   }
 }
 
+export async function getAdminResolvedAssembly(manifestEntryId: string): Promise<AdminResolvedAssemblyView> {
+  try {
+    const response = await apiFetch(
+      `${API_BASE_URL}/v1/admin/llm/catalog/${encodeURIComponent(manifestEntryId)}/resolved`,
+      {
+        headers: getAccessTokenAuthHeader(),
+      },
+    )
+    return decodeResponse<AdminResolvedAssemblyView>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
 export async function updateAdminPersona(
   personaId: string,
   payload: Partial<Pick<AdminLlmPersona, "enabled">>,
@@ -349,5 +417,13 @@ export function useUpdateAdminPersona() {
   return useMutation({
     mutationFn: ({ personaId, payload }: { personaId: string; payload: Partial<Pick<AdminLlmPersona, "enabled">> }) =>
       updateAdminPersona(personaId, payload),
+  })
+}
+
+export function useAdminResolvedAssembly(manifestEntryId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ["admin-llm-catalog-resolved", manifestEntryId],
+    queryFn: () => getAdminResolvedAssembly(manifestEntryId ?? ""),
+    enabled: enabled && Boolean(manifestEntryId),
   })
 }

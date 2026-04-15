@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
-import { useAdminLlmCatalog, useAdminLlmUseCases, useAdminPromptHistory, useRollbackPromptVersion, type AdminPromptVersion } from "@api"
+import {
+  useAdminLlmCatalog,
+  useAdminLlmUseCases,
+  useAdminPromptHistory,
+  useRollbackPromptVersion,
+  useAdminResolvedAssembly,
+  type AdminPromptVersion,
+} from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
 import "./AdminPromptsPage.css"
 
@@ -92,6 +99,7 @@ export function AdminPromptsPage() {
   const [legacyCompareVersionId, setLegacyCompareVersionId] = useState<string | null>(null)
   const [legacyRollbackCandidate, setLegacyRollbackCandidate] = useState<AdminPromptVersion | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [selectedManifestEntryId, setSelectedManifestEntryId] = useState<string | null>(null)
 
   const catalogQuery = useAdminLlmCatalog({
     page,
@@ -112,6 +120,10 @@ export function AdminPromptsPage() {
 
   const catalogEntries = catalogQuery.data?.data ?? []
   const catalogMeta = catalogQuery.data?.meta
+  const resolvedQuery = useAdminResolvedAssembly(
+    selectedManifestEntryId,
+    activeTab === "catalog" && Boolean(selectedManifestEntryId),
+  )
 
   const facets = catalogMeta?.facets
   const availableFeatures = facets?.feature ?? []
@@ -312,6 +324,13 @@ export function AdminPromptsPage() {
                         <td>
                           <div>{entry.runtime_signal_status}</div>
                           <div className="text-muted">{entry.execution_path_kind ?? "n/a"} · {entry.context_compensation_status ?? "n/a"} · {entry.max_output_tokens_source ?? "n/a"}</div>
+                          <button
+                            className="text-button admin-prompts-catalog__inspect"
+                            type="button"
+                            onClick={() => setSelectedManifestEntryId(entry.manifest_entry_id)}
+                          >
+                            Ouvrir le detail
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -332,6 +351,86 @@ export function AdminPromptsPage() {
                   </button>
                 </div>
               </div>
+
+              {selectedManifestEntryId ? (
+                <section className="panel admin-prompts-resolved" aria-label="Detail resolved prompt assembly">
+                  <div className="admin-prompts-resolved__header">
+                    <h3>Resolved Prompt Assembly</h3>
+                    <code>{selectedManifestEntryId}</code>
+                  </div>
+                  {resolvedQuery.isPending ? <div className="loading-placeholder">Chargement du detail...</div> : null}
+                  {resolvedQuery.isError ? <p className="chat-error">Impossible de charger le detail d'assembly.</p> : null}
+                  {resolvedQuery.data ? (
+                    <div className="admin-prompts-resolved__zones">
+                      <section>
+                        <h4>Sources de composition</h4>
+                        <p className="text-muted">
+                          Source: {resolvedQuery.data.source_of_truth_status} · snapshot: {resolvedQuery.data.active_snapshot_version ?? "n/a"}
+                        </p>
+                        <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.feature_template.content}</pre>
+                        {resolvedQuery.data.composition_sources.subfeature_template ? (
+                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.subfeature_template.content}</pre>
+                        ) : null}
+                        {resolvedQuery.data.composition_sources.plan_rules?.content ? (
+                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.plan_rules.content}</pre>
+                        ) : null}
+                        {resolvedQuery.data.composition_sources.persona_block?.content ? (
+                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.persona_block.content}</pre>
+                        ) : null}
+                        <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.hard_policy.content}</pre>
+                        <div className="admin-prompts-resolved__meta-grid">
+                          <span className="text-muted">Execution profile</span>
+                          <span>
+                            {resolvedQuery.data.composition_sources.execution_profile.provider} / {resolvedQuery.data.composition_sources.execution_profile.model}
+                          </span>
+                          <span className="text-muted">Reasoning</span>
+                          <span>{resolvedQuery.data.composition_sources.execution_profile.reasoning ?? "n/a"}</span>
+                          <span className="text-muted">Verbosity</span>
+                          <span>{resolvedQuery.data.composition_sources.execution_profile.verbosity ?? "n/a"}</span>
+                        </div>
+                      </section>
+                      <section>
+                        <h4>Pipeline de transformation</h4>
+                        <p className="text-muted">Assembled</p>
+                        <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.assembled_prompt}</pre>
+                        <p className="text-muted">Post injecteurs</p>
+                        <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.post_injectors_prompt}</pre>
+                        <p className="text-muted">Rendered</p>
+                        <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.rendered_prompt}</pre>
+                      </section>
+                      <section>
+                        <h4>Resultat resolu</h4>
+                        <p className="text-muted">
+                          context_quality: {resolvedQuery.data.resolved_result.context_compensation_status}
+                        </p>
+                        <p className="text-muted">System / hard policy</p>
+                        <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.system_hard_policy ?? "")}</pre>
+                        <p className="text-muted">Developer content rendu</p>
+                        <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.developer_content_rendered ?? "")}</pre>
+                        <p className="text-muted">Persona block</p>
+                        <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.persona_block ?? "")}</pre>
+                        <p className="text-muted">Execution parameters</p>
+                        <pre className="admin-prompts-code">{JSON.stringify(resolvedQuery.data.resolved_result.provider_messages.execution_parameters, null, 2)}</pre>
+                        <div className="admin-prompts-resolved__placeholders">
+                          {resolvedQuery.data.resolved_result.placeholders.map((item) => (
+                            <article key={item.name} className="admin-prompts-resolved__placeholder">
+                              <strong>{item.name}</strong>
+                              <span className="text-muted">{item.status}</span>
+                              <span className="text-muted">{item.classification ?? "n/a"}</span>
+                              <span className="text-muted">{item.resolution_source ?? "n/a"}</span>
+                              <span className="text-muted">{item.reason ?? "n/a"}</span>
+                              <span className="text-muted">{item.safe_to_display ? "safe_to_display" : "redacted"}</span>
+                              <span className="text-muted">
+                                {item.safe_to_display && item.value_preview ? item.value_preview : "redacted"}
+                              </span>
+                            </article>
+                          ))}
+                        </div>
+                      </section>
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
             </>
           ) : null}
         </section>

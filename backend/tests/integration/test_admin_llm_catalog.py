@@ -1,18 +1,26 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.api.dependencies.auth import require_admin_user
+from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 from app.infra.db.models.llm_release import (
     LlmActiveReleaseModel,
     LlmReleaseSnapshotModel,
     ReleaseStatus,
 )
 from app.infra.db.session import SessionLocal, get_db_session
+from app.infra.db.utils import serialize_orm
 from app.main import app
 
 
@@ -302,5 +310,251 @@ def test_admin_llm_catalog_resolves_signals_beyond_hot_500_rows():
             db.execute(delete(LlmCallLogModel).where(LlmCallLogModel.id.in_(hot_log_ids)))
         db.execute(delete(LlmCallLogModel).where(LlmCallLogModel.id == secondary_log_id))
         db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placeholders():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    manifest_entry_id = "chat:chat_default:premium:fr-FR"
+    use_case_key = f"chat_astrologer_{uuid.uuid4().hex[:8]}"
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Chat",
+                description="Chat astrologique",
+            )
+        )
+        db.flush()
+        template_model = LlmPromptVersionModel(
+            id=template_id,
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
+            model="gpt-5",
+            temperature=0.2,
+            max_output_tokens=900,
+            created_by="test-admin",
+        )
+        db.add(template_model)
+        assembly_model = PromptAssemblyConfigModel(
+            id=assembly_id,
+            feature="chat",
+            subfeature="chat_default",
+            plan="premium",
+            locale="fr-FR",
+            feature_template_ref=template_id,
+            execution_profile_ref=profile_id,
+            execution_config={
+                "model": "gpt-5",
+                "temperature": None,
+                "max_output_tokens": 900,
+                "timeout_seconds": 30,
+            },
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+        assembly_model.feature_template = template_model
+        db.add(assembly_model)
+        db.add(
+            LlmExecutionProfileModel(
+                id=profile_id,
+                name="live-profile",
+                provider="openai",
+                model="gpt-5",
+                reasoning_profile="off",
+                verbosity_profile="balanced",
+                output_mode="free_text",
+                tool_mode="none",
+                max_output_tokens=1234,
+                timeout_seconds=99,
+                feature="chat",
+                subfeature="chat_default",
+                plan="premium",
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-detail-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
+            **serialize_orm(assembly_model),
+            "_feature_template": serialize_orm(template_model),
+        }
+        snapshot.manifest["targets"][manifest_entry_id]["profile"] = {
+            "id": str(profile_id),
+            "name": "snapshot-profile",
+            "provider": "openai",
+            "model": "gpt-5",
+            "reasoning_profile": "medium",
+            "verbosity_profile": "concise",
+            "output_mode": "free_text",
+            "tool_mode": "none",
+            "max_output_tokens": 777,
+            "timeout_seconds": 42,
+        }
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
+        assert response.status_code == 200
+        payload = response.json()["data"]
+        assert payload["manifest_entry_id"] == manifest_entry_id
+        assert payload["source_of_truth_status"] == "active_snapshot"
+        assert payload["composition_sources"]["feature_template"]["content"]
+        assert payload["composition_sources"]["hard_policy"]["content"]
+        assert payload["transformation_pipeline"]["assembled_prompt"] is not None
+        assert payload["transformation_pipeline"]["post_injectors_prompt"] is not None
+        assert payload["transformation_pipeline"]["rendered_prompt"] is not None
+        assert payload["resolved_result"]["provider_messages"]["system_hard_policy"]
+        assert isinstance(payload["resolved_result"]["placeholders"], list)
+        assert (
+            payload["resolved_result"]["provider_messages"]["execution_parameters"][
+                "max_output_tokens_final"
+            ]
+            == 777
+        )
+        assert (
+            payload["resolved_result"]["provider_messages"]["execution_parameters"]["timeout_seconds"]
+            == 42
+        )
+        assert isinstance(payload["resolved_result"]["placeholders"], list)
+        assert "render_error" in payload["resolved_result"]["provider_messages"]
+
+        with patch(
+            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+        ) as mocked_runtime:
+            replay_response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
+            assert replay_response.status_code == 200
+            mocked_runtime.assert_not_called()
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(
+            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
+        )
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(
+            delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key)
+        )
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_resolved_detail_returns_explicit_error_on_unusable_snapshot_bundle():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    manifest_entry_id = "chat:chat_default:premium:fr-FR"
+    use_case_key = f"chat_astrologer_{uuid.uuid4().hex[:8]}"
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Chat",
+                description="Chat astrologique",
+            )
+        )
+        db.flush()
+        db.add(
+            LlmPromptVersionModel(
+                id=template_id,
+                use_case_key=use_case_key,
+                status=PromptStatus.PUBLISHED,
+                developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
+                model="gpt-5",
+                temperature=0.2,
+                max_output_tokens=900,
+                created_by="test-admin",
+            )
+        )
+        db.add(
+            PromptAssemblyConfigModel(
+                id=assembly_id,
+                feature="chat",
+                subfeature="chat_default",
+                plan="premium",
+                locale="fr-FR",
+                feature_template_ref=template_id,
+                execution_config={
+                    "model": "gpt-5",
+                    "temperature": None,
+                    "max_output_tokens": 900,
+                    "timeout_seconds": 30,
+                },
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-detail-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {"id": str(assembly_id)}
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
+        assert response.status_code == 422
+        payload = response.json()["error"]
+        assert payload["code"] == "snapshot_bundle_unusable"
+        assert payload["details"]["manifest_entry_id"] == manifest_entry_id
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(
+            delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key)
+        )
         db.commit()
         db.close()

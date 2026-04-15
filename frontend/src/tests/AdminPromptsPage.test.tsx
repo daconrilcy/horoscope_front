@@ -45,6 +45,68 @@ describe("AdminPromptsPage", () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
       if (url.includes("/v1/admin/llm/catalog")) {
+        if (url.includes("/resolved")) {
+          return makeJsonResponse({
+            data: {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              assembly_id: "assembly-1",
+              source_of_truth_status: "active_snapshot",
+              active_snapshot_id: "snapshot-1",
+              active_snapshot_version: "v1",
+              composition_sources: {
+                feature_template: { id: "tpl-1", content: "feature prompt" },
+                subfeature_template: { id: "tpl-2", content: "subfeature prompt" },
+                plan_rules: { ref: "premium_depth", content: "plan rules prompt" },
+                persona_block: { id: "persona-1", name: "Luna", content: "persona prompt" },
+                hard_policy: { safety_profile: "astrology", content: "hard policy prompt" },
+                execution_profile: {
+                  id: "profile-1",
+                  name: "default",
+                  provider: "openai",
+                  model: "gpt-5",
+                  reasoning: "medium",
+                  verbosity: "balanced",
+                  provider_params: { max_output_tokens: 1200 },
+                },
+              },
+              transformation_pipeline: {
+                assembled_prompt: "assembled",
+                post_injectors_prompt: "post",
+                rendered_prompt: "rendered",
+              },
+              resolved_result: {
+                provider_messages: {
+                  system_hard_policy: "hard policy prompt",
+                  developer_content_rendered: "rendered",
+                  persona_block: "persona prompt",
+                  execution_parameters: { max_output_tokens: 1200 },
+                },
+                placeholders: [
+                  {
+                    name: "locale",
+                    status: "resolved",
+                    classification: "required",
+                    resolution_source: "runtime_context",
+                    reason: "from_context",
+                    safe_to_display: true,
+                    value_preview: "fr-FR",
+                  },
+                ],
+                context_quality_handled_by_template: false,
+                context_quality_instruction_injected: false,
+                context_compensation_status: "not_needed",
+                source_of_truth_status: "active_snapshot",
+                active_snapshot_id: "snapshot-1",
+                active_snapshot_version: "v1",
+                manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              },
+            },
+          })
+        }
         return makeJsonResponse({
           data: [
             {
@@ -113,6 +175,15 @@ describe("AdminPromptsPage", () => {
     expect(screen.getAllByText(/fresh/).length).toBeGreaterThan(0)
     expect(screen.getByLabelText("Tri catalogue")).toBeInTheDocument()
     expect(screen.getByLabelText("Ordre tri catalogue")).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Resolved Prompt Assembly" })).toBeInTheDocument()
+    })
+    expect(screen.getByText("Pipeline de transformation")).toBeInTheDocument()
+    expect(screen.getByText("Resultat resolu")).toBeInTheDocument()
+    expect(screen.getAllByText("Execution profile").length).toBeGreaterThan(0)
+    expect(screen.getByText("safe_to_display")).toBeInTheDocument()
+    expect(screen.getByText("runtime_context")).toBeInTheDocument()
   })
 
   it("affiche l'onglet historique legacy avec rollback", async () => {

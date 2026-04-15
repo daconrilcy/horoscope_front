@@ -65,6 +65,8 @@ OPERATIONAL_FIELDS: Set[str] = {
     "context_compensation_status",
     "max_output_tokens_source",
     "max_output_tokens_final",
+    "max_output_tokens",
+    "timeout_seconds",
     "executed_provider_mode",
     "attempt_count",
     "provider_error_code",

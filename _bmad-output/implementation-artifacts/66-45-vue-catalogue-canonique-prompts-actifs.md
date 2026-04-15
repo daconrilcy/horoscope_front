@@ -1,6 +1,6 @@
 # Story 66.45: Vue catalogue canonique des prompts actifs
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
