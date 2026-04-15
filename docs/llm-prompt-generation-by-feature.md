@@ -47,8 +47,16 @@ Le document couvre le pipeline réellement exécuté dans :
 - `backend/app/llm_orchestration/services/observability_service.py`
 - `backend/app/api/v1/routers/admin_llm_release.py`
 - `backend/scripts/check_doc_conformity.py`
+- `backend/scripts/build_llm_release_candidate.py`
+- `backend/scripts/build_llm_release_readiness_report.py`
+- `backend/scripts/build_llm_qualification_evidence.py`
+- `backend/scripts/build_llm_golden_evidence.py`
+- `backend/scripts/build_llm_smoke_evidence.py`
 - `backend/scripts/legacy_residual_report.py`
+- `backend/tests/fixtures/golden/natal_premium_test.yaml`
 - `backend/tests/integration/test_story_66_43_provider_runtime_chaos.py`
+- `scripts/activate-llm-release.ps1`
+- `scripts/llm-release-readiness.ps1`
 
 ## Vue d'ensemble
 
@@ -429,6 +437,48 @@ Golden regression :
 - les familles canoniques utilisent `GOLDEN_REGISTRY`
 - les chemins legacy interdits y sont explicitement bannis
 
+## Outillage opératoire de release
+
+L'Epic 66 ne s'arrête plus aux garde-fous runtime. Le dépôt embarque désormais la chaîne opératoire minimale pour construire, qualifier, régresser, activer et relire une release LLM sans dépendre d'une connaissance implicite de l'application.
+
+Scripts source de vérité :
+
+- `backend/scripts/build_llm_release_candidate.py` construit le snapshot candidat versionné ;
+- `backend/scripts/build_llm_release_readiness_report.py` agrège l'état des preuves doc/code, chaos, legacy, qualification, golden et smoke ;
+- `backend/scripts/build_llm_qualification_evidence.py` génère une qualification corrélée à un snapshot et à un `manifest_entry_id` ;
+- `backend/scripts/build_llm_golden_evidence.py` génère une golden regression corrélée sur le même triplet ;
+- `backend/scripts/build_llm_smoke_evidence.py` produit la preuve de smoke post-activation ;
+- `scripts/llm-release-readiness.ps1` enchaîne la construction locale du dossier de preuve ;
+- `scripts/activate-llm-release.ps1` pousse l'activation seulement si les preuves passées en argument restent acceptables pour le gate backend.
+
+Artefacts d'environnement produits par cette chaîne :
+
+- `artifacts/llm-release-candidate.json`
+- `artifacts/llm-doc-conformity.json`
+- `artifacts/chaos/story-66-43-chaos-report.json`
+- `artifacts/llm-qualification-evidence-premium.json`
+- `artifacts/llm-golden-evidence-premium.json`
+- `artifacts/llm-smoke-evidence-premium.json`
+- `artifacts/llm-release-readiness-premium.json`
+- `artifacts/llm-activation-response.json`
+
+Ces artefacts ne sont pas des sources de configuration. Ils sont des preuves corrélées, propres à un environnement d'exécution donné.
+
+## Cible validée et ajustements runtime associés
+
+La cible utilisée pour stabiliser la chaîne de promotion est :
+
+- `natal:interpretation:premium:fr-FR`
+
+Pour rendre ce chemin promouvable, les ajustements suivants ont été opérés dans le runtime :
+
+- les campagnes qualification/golden rejouent désormais le pipeline canonique via `LLMGateway.execute_request()` au lieu d'un chemin legacy parallèle ;
+- la fixture premium dédiée `backend/tests/fixtures/golden/natal_premium_test.yaml` a été ajoutée pour valider le contrat enrichi `AstroResponse_v3` ;
+- `ExecutionConfigAdmin` n'impose plus une `temperature` invalide sur les reasoning models compatibles `gpt-5` ;
+- le gateway complète un `persona_name` par défaut lorsque certains prompts d'assembly l'exigent encore ;
+- le marquage `is_legacy_compatibility` ne s'applique plus aux exécutions déjà normalisées en canonique ;
+- `execution_path_kind` reste lisible comme `canonical_assembly` même lorsque le plan applique des overrides techniques nominalement autorisés.
+
 ## Gate de production continue par snapshot actif (Story 66.44)
 
 Le passage en production est désormais gouverné par un gate continu centré sur le snapshot candidat/actif :
@@ -445,6 +495,24 @@ Lecture ops recommandée :
 - déclencher `auto_rollback=true` uniquement pour les environnements où la politique le permet ;
 - garder en tête les seuils par défaut si aucun override n'est fourni à l'activation : `error_rate=0.02`, `p95_latency_ms=1500`, `fallback_rate=0.01` ;
 - conserver les preuves qualification/golden/smoke pour chaque activation afin d'assurer la traçabilité bout-en-bout.
+
+Séquence opératoire minimale désormais attendue avant promotion :
+
+1. construire le snapshot candidat ;
+2. produire la conformité doc/code ;
+3. produire ou relire le chaos report 66.43 ;
+4. produire la qualification corrélée ;
+5. produire la golden corrélée ;
+6. produire le smoke corrélé ;
+7. appeler `scripts/activate-llm-release.ps1` contre l'API cible ;
+8. relire `artifacts/llm-activation-response.json` puis `release_health`.
+
+Le dernier passage validé en préproduction a abouti à une activation du snapshot `e2e7191a-b403-42b9-911a-43c6f442420e` (`release-candidate-ready`) avec :
+
+- une qualification corrélée `go-with-constraints` à cause d'une latence `p95` supérieure au seuil SLO ;
+- une golden corrélée `pass` ;
+- un smoke corrélé présent ;
+- une réponse d'activation `status=active`.
 
 ## Protection des données sensibles autour du prompt
 
@@ -509,6 +577,12 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 | `66.40` | registre central du legacy résiduel, télémétrie, blocage progressif, anti-réintroduction |
 | `66.43` | campagne de chaos déterministe sur `ProviderRuntimeManager` avec rapport d'invariants de résilience |
 | `66.44` | gate continue activation/smoke/monitoring/rollback gouverné par snapshot actif |
+
+Complément opératoire Epic 66 :
+
+- la documentation de gouvernance runtime reste concentrée dans ce document ;
+- la documentation opérateur associée est portée par `docs/llm-release-runbook.md`, `docs/llm-go-no-go-formal.md` et `docs/llm-prod-release-step-by-step.md` ;
+- aucun autre document markdown dédié aux stories Epic 66 n'est aujourd'hui utilisé comme source de vérité d'exploitation dans ce dépôt.
 
 ## Règles de maintenance
 
@@ -580,6 +654,6 @@ Limites explicites :
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
 - **Date** : `2026-04-15`
-- **Référence stable (Commit SHA)** : `8483689ba563abdb82842dbff9e5832350dbef1b`
+- **Référence stable (Commit SHA)** : `6acae1e530a207aad95fe725589b9bc505c30826`
 - **Version registre de gouvernance prompt** : `1.0.0`
 - **Version registre résiduel** : `2026.04.14`
