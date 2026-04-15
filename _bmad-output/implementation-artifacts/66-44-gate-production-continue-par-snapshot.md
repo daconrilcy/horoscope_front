@@ -1,6 +1,6 @@
 # Story 66.44: Gate de production continue par snapshot actif et release health
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -102,42 +102,42 @@ Le système final doit rester mono-source sur le snapshot actif comme unité de 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Formaliser le modèle de release health et ses transitions (AC5, AC6, AC8)
-  - [ ] Définir les statuts synthétiques de release et leurs transitions.
-  - [ ] Relier ces statuts aux artefacts snapshot/activation déjà existants.
-  - [ ] Garantir l’historisation des décisions et des raisons associées.
+- [x] Task 1: Formaliser le modèle de release health et ses transitions (AC5, AC6, AC8)
+  - [x] Définir les statuts synthétiques de release et leurs transitions.
+  - [x] Relier ces statuts aux artefacts snapshot/activation déjà existants.
+  - [x] Garantir l’historisation des décisions et des raisons associées.
 
-- [ ] Task 2: Bloquer l’activation sans preuves préalables corrélées (AC1, AC2, AC3, AC10)
-  - [ ] Brancher qualification et golden au flux de promotion existant.
-  - [ ] Refuser l’activation si la corrélation snapshot est absente, ambiguë ou obsolète.
-  - [ ] Produire des erreurs lisibles et stables.
+- [x] Task 2: Bloquer l’activation sans preuves préalables corrélées (AC1, AC2, AC3, AC10)
+  - [x] Brancher qualification et golden au flux de promotion existant.
+  - [x] Refuser l’activation si la corrélation snapshot est absente, ambiguë ou obsolète.
+  - [x] Produire des erreurs lisibles et stables.
 
-- [ ] Task 3: Ajouter le smoke post-activation corrélé (AC4, AC8)
-  - [ ] Définir un smoke minimal sur les familles nominales supportées.
-  - [ ] Vérifier les discriminants d’observabilité remontés.
-  - [ ] Vérifier l’absence de fallback interdit pendant ce smoke.
+- [x] Task 3: Ajouter le smoke post-activation corrélé (AC4, AC8)
+  - [x] Définir un smoke minimal sur les familles nominales supportées.
+  - [x] Vérifier les discriminants d’observabilité remontés.
+  - [x] Vérifier l’absence de fallback interdit pendant ce smoke.
 
-- [ ] Task 4: Définir la surveillance post-release et la vue release health (AC5, AC6, AC9)
-  - [ ] Agréger les signaux clés par snapshot actif.
-  - [ ] Définir des seuils gouvernés et versionnés.
-  - [ ] Exposer ces signaux dans une vue ou un tableau de bord lisible.
+- [x] Task 4: Définir la surveillance post-release et la vue release health (AC5, AC6, AC9)
+  - [x] Agréger les signaux clés par snapshot actif.
+  - [x] Définir des seuils gouvernés et versionnés.
+  - [x] Exposer ces signaux dans une vue ou un tableau de bord lisible.
 
-- [ ] Task 5: Implémenter la décision de dégradation / rollback (AC7, AC8, AC10)
-  - [ ] Définir les conditions de recommandation ou déclenchement.
-  - [ ] Réutiliser `ReleaseService` pour éviter tout système concurrent.
-  - [ ] Garantir la traçabilité complète des transitions.
+- [x] Task 5: Implémenter la décision de dégradation / rollback (AC7, AC8, AC10)
+  - [x] Définir les conditions de recommandation ou déclenchement.
+  - [x] Réutiliser `ReleaseService` pour éviter tout système concurrent.
+  - [x] Garantir la traçabilité complète des transitions.
 
-- [ ] Task 6: Réaligner la documentation et l’exploitation (AC11)
-  - [ ] Mettre à jour `docs/llm-prompt-generation-by-feature.md`.
-  - [ ] Documenter le flux release health / smoke / rollback.
-  - [ ] Clarifier la lecture ops du snapshot actif.
+- [x] Task 6: Réaligner la documentation et l’exploitation (AC11)
+  - [x] Mettre à jour `docs/llm-prompt-generation-by-feature.md`.
+  - [x] Documenter le flux release health / smoke / rollback.
+  - [x] Clarifier la lecture ops du snapshot actif.
 
-- [ ] Task 7: Validation locale obligatoire
-  - [ ] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
-  - [ ] Dans `backend/`, exécuter `ruff format .`.
-  - [ ] Dans `backend/`, exécuter `ruff check .`.
-  - [ ] Exécuter `pytest -q`.
-  - [ ] Exécuter au minimum les suites ciblant release snapshots, qualification, golden regression et monitoring ops.
+- [x] Task 7: Validation locale obligatoire
+  - [x] Après activation du venv PowerShell, exécuter `.\.venv\Scripts\Activate.ps1`.
+  - [x] Dans `backend/`, exécuter `ruff format .`.
+  - [x] Dans `backend/`, exécuter `ruff check .`.
+  - [x] Exécuter `pytest -q`.
+  - [x] Exécuter au minimum les suites ciblant release snapshots, qualification, golden regression et monitoring ops.
 
 ## Dev Notes
 
@@ -218,6 +218,25 @@ GPT-5 Codex
 
 ### Debug Log References
 
+- `.\.venv\Scripts\Activate.ps1 && cd backend && ruff format . && ruff check . && pytest -q tests/integration/test_llm_release.py && pytest -q`
+
 ### Completion Notes List
 
+- Activation gate enrichi dans `ReleaseService.activate_snapshot` avec blocage strict sur qualification/golden corrélés, verdicts attendus et fraîcheur des preuves.
+- Smoke post-activation corrélé ajouté et branché au statut synthétique `release_health` avec historique des décisions.
+- Monitoring post-activation implémenté via `ReleaseService.evaluate_release_health` avec seuils gouvernés (`error_rate`, `p95_latency_ms`, `fallback_rate`) et recommandation rollback.
+- Endpoint ops/release ajouté (`POST /admin/llm/releases/{snapshot_id}/release-health`) pour piloter la décision de maintien/dégradation/rollback.
+- Tests d’intégration renforcés (`test_llm_release.py`) pour couvrir le gate d’activation et la décision de rollback recommandée.
+- Documentation runtime mise à jour sur le flux gate continue par snapshot actif.
+
 ### File List
+
+- `backend/app/llm_orchestration/services/release_service.py`
+- `backend/app/api/v1/routers/admin_llm_release.py`
+- `backend/tests/integration/test_llm_release.py`
+- `docs/llm-prompt-generation-by-feature.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
+### Change Log
+
+- 2026-04-15: Implémentation Story 66.44 (gate continue activation/smoke/monitoring/rollback) + tests + documentation.

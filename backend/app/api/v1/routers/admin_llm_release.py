@@ -40,6 +40,53 @@ class ValidationReport(BaseModel):
     errors: List[Dict[str, Any]]
 
 
+class ActivationQualificationEvidence(BaseModel):
+    active_snapshot_id: uuid.UUID
+    active_snapshot_version: str
+    manifest_entry_id: Optional[str] = None
+    verdict: str
+    generated_at: datetime
+
+
+class ActivationGoldenEvidence(BaseModel):
+    active_snapshot_id: uuid.UUID
+    active_snapshot_version: str
+    manifest_entry_id: Optional[str] = None
+    verdict: str
+    generated_at: datetime
+
+
+class ActivationSmokeEvidence(BaseModel):
+    status: str
+    active_snapshot_id: str
+    active_snapshot_version: str
+    manifest_entry_id: str
+    forbidden_fallback_detected: bool = False
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ActivateReleasePayload(BaseModel):
+    qualification_report: ActivationQualificationEvidence
+    golden_report: ActivationGoldenEvidence
+    smoke_result: ActivationSmokeEvidence
+    monitoring_thresholds: Dict[str, float] = Field(default_factory=dict)
+    rollback_policy: str = "recommend-only"
+    max_evidence_age_minutes: int = 60
+
+
+class ReleaseHealthSignalsPayload(BaseModel):
+    error_rate: float
+    p95_latency_ms: float
+    fallback_rate: float
+    auto_rollback: bool = False
+
+
+class ReleaseHealthRead(BaseModel):
+    status: str
+    breached: Dict[str, bool]
+    thresholds: Dict[str, float]
+
+
 @router.post("/", response_model=ReleaseSnapshotRead, status_code=status.HTTP_201_CREATED)
 async def create_release(
     payload: ReleaseSnapshotCreate,
@@ -96,13 +143,23 @@ async def validate_release(snapshot_id: uuid.UUID, db: Session = Depends(get_db_
 @router.post("/{snapshot_id}/activate", response_model=ReleaseSnapshotRead)
 async def activate_release(
     snapshot_id: uuid.UUID,
+    payload: ActivateReleasePayload,
     db: Session = Depends(get_db_session),
     current_user: str = "admin",
 ):
     """AC7: Atomically activate a release snapshot."""
     service = ReleaseService(db)
     try:
-        snapshot = await service.activate_snapshot(snapshot_id, activated_by=current_user)
+        snapshot = await service.activate_snapshot(
+            snapshot_id,
+            activated_by=current_user,
+            qualification_report=payload.qualification_report,
+            golden_report=payload.golden_report,
+            smoke_result=payload.smoke_result.model_dump(mode="json"),
+            monitoring_thresholds=payload.monitoring_thresholds,
+            rollback_policy=payload.rollback_policy,
+            max_evidence_age_minutes=payload.max_evidence_age_minutes,
+        )
         return snapshot
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -118,5 +175,30 @@ async def rollback_release(
     try:
         snapshot = await service.rollback(activated_by=current_user)
         return snapshot
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{snapshot_id}/release-health", response_model=ReleaseHealthRead)
+async def evaluate_release_health(
+    snapshot_id: uuid.UUID,
+    payload: ReleaseHealthSignalsPayload,
+    db: Session = Depends(get_db_session),
+    current_user: str = "admin",
+):
+    """Évalue la santé post-activation et recommande ou déclenche un rollback."""
+    service = ReleaseService(db)
+    try:
+        decision = await service.evaluate_release_health(
+            snapshot_id=snapshot_id,
+            signals={
+                "error_rate": payload.error_rate,
+                "p95_latency_ms": payload.p95_latency_ms,
+                "fallback_rate": payload.fallback_rate,
+            },
+            triggered_by=current_user,
+            auto_rollback=payload.auto_rollback,
+        )
+        return decision
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

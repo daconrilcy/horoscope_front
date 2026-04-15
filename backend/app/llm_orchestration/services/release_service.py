@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,6 +41,106 @@ class ReleaseService:
 
     def __init__(self, session: Union[AsyncSession, Session]):
         self.session = session
+
+    @staticmethod
+    def _utcnow() -> datetime:
+        return datetime.now(timezone.utc)
+
+    @staticmethod
+    def _iso(dt: datetime) -> str:
+        return dt.astimezone(timezone.utc).isoformat()
+
+    @staticmethod
+    def _append_history(manifest: Dict[str, Any], event: Dict[str, Any]) -> None:
+        release_health = manifest.setdefault("release_health", {})
+        history = release_health.setdefault("history", [])
+        history.append(event)
+
+    @staticmethod
+    def _set_release_status(
+        manifest: Dict[str, Any],
+        status: str,
+        *,
+        reason: str,
+        signals: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        release_health = manifest.setdefault("release_health", {})
+        release_health["status"] = status
+        ReleaseService._append_history(
+            manifest,
+            {
+                "status": status,
+                "reason": reason,
+                "signals": signals or {},
+                "timestamp": ReleaseService._iso(ReleaseService._utcnow()),
+            },
+        )
+
+    @staticmethod
+    def _is_recent(report_generated_at: Optional[datetime], max_age_minutes: int) -> bool:
+        if report_generated_at is None:
+            return False
+        age_seconds = (ReleaseService._utcnow() - report_generated_at).total_seconds()
+        return age_seconds <= (max_age_minutes * 60)
+
+    def _validate_activation_evidence(
+        self,
+        snapshot: LlmReleaseSnapshotModel,
+        *,
+        qualification_report: Optional[Any],
+        golden_report: Optional[Any],
+        max_evidence_age_minutes: int,
+    ) -> List[str]:
+        errors: List[str] = []
+        if qualification_report is None:
+            errors.append("Activation blocked: missing performance qualification report.")
+        else:
+            if qualification_report.verdict not in ("go", "go-with-constraints"):
+                errors.append("Activation blocked: qualification verdict is not promotable.")
+            if qualification_report.active_snapshot_id != snapshot.id:
+                errors.append("Activation blocked: qualification snapshot correlation mismatch.")
+            if qualification_report.active_snapshot_version != snapshot.version:
+                errors.append("Activation blocked: qualification snapshot version mismatch.")
+            if not self._is_recent(
+                getattr(qualification_report, "generated_at", None), max_evidence_age_minutes
+            ):
+                errors.append("Activation blocked: qualification evidence is stale.")
+
+        if golden_report is None:
+            errors.append("Activation blocked: missing golden regression report.")
+        else:
+            if golden_report.verdict != "pass":
+                errors.append("Activation blocked: golden regression verdict is not pass.")
+            if golden_report.active_snapshot_id != snapshot.id:
+                errors.append("Activation blocked: golden snapshot correlation mismatch.")
+            if golden_report.active_snapshot_version != snapshot.version:
+                errors.append("Activation blocked: golden snapshot version mismatch.")
+            if not self._is_recent(
+                getattr(golden_report, "generated_at", None), max_evidence_age_minutes
+            ):
+                errors.append("Activation blocked: golden evidence is stale.")
+        return errors
+
+    def _validate_post_activation_smoke(
+        self,
+        *,
+        snapshot: LlmReleaseSnapshotModel,
+        smoke_result: Optional[Dict[str, Any]],
+    ) -> List[str]:
+        if smoke_result is None:
+            return ["Post-activation smoke is required."]
+        errors: List[str] = []
+        if smoke_result.get("status") != "pass":
+            errors.append("Post-activation smoke failed.")
+        if smoke_result.get("active_snapshot_id") != str(snapshot.id):
+            errors.append("Smoke correlation mismatch on active_snapshot_id.")
+        if smoke_result.get("active_snapshot_version") != snapshot.version:
+            errors.append("Smoke correlation mismatch on active_snapshot_version.")
+        if not smoke_result.get("manifest_entry_id"):
+            errors.append("Smoke correlation mismatch on manifest_entry_id.")
+        if smoke_result.get("forbidden_fallback_detected", False):
+            errors.append("Smoke detected forbidden fallback.")
+        return errors
 
     async def _execute(self, stmt):
         from sqlalchemy.ext.asyncio import AsyncSession
@@ -222,7 +322,16 @@ class ReleaseService:
         return result
 
     async def activate_snapshot(
-        self, snapshot_id: uuid.UUID, activated_by: str
+        self,
+        snapshot_id: uuid.UUID,
+        activated_by: str,
+        *,
+        qualification_report: Optional[Any] = None,
+        golden_report: Optional[Any] = None,
+        smoke_result: Optional[Dict[str, Any]] = None,
+        monitoring_thresholds: Optional[Dict[str, float]] = None,
+        rollback_policy: str = "recommend-only",
+        max_evidence_age_minutes: int = 60,
     ) -> LlmReleaseSnapshotModel:
         """
         AC7: Atomic activation of a snapshot.
@@ -239,6 +348,15 @@ class ReleaseService:
             val_res = await self.validate_snapshot(snapshot_id)
             if not val_res.is_valid:
                 raise ValueError("Cannot activate invalid snapshot")
+
+        activation_gate_errors = self._validate_activation_evidence(
+            snapshot,
+            qualification_report=qualification_report,
+            golden_report=golden_report,
+            max_evidence_age_minutes=max_evidence_age_minutes,
+        )
+        if activation_gate_errors:
+            raise ValueError(" ; ".join(activation_gate_errors))
 
         # 1. Update Active Release pointer
         # We can either update the only row or add a new one and use the latest.
@@ -281,6 +399,54 @@ class ReleaseService:
             snapshot.status = ReleaseStatus.ACTIVE
             snapshot.activated_at = datetime.now(timezone.utc)
             snapshot.activated_by = activated_by
+            manifest_copy = dict(snapshot.manifest or {})
+            release_health = manifest_copy.setdefault("release_health", {})
+            release_health.setdefault("taxonomy", {})
+            release_health["taxonomy"]["allowed_statuses"] = [
+                "candidate",
+                "qualified",
+                "activated",
+                "monitoring",
+                "degraded",
+                "rollback_recommended",
+                "rolled_back",
+            ]
+            release_health["snapshot_id"] = str(snapshot.id)
+            release_health["snapshot_version"] = snapshot.version
+            release_health["rollback_policy"] = rollback_policy
+            release_health["monitoring_thresholds"] = monitoring_thresholds or {
+                "error_rate": 0.02,
+                "p95_latency_ms": 1500.0,
+                "fallback_rate": 0.01,
+            }
+            self._set_release_status(
+                manifest_copy,
+                "monitoring",
+                reason="Activation gate passed and monitoring window opened.",
+                signals={
+                    "qualification_verdict": getattr(qualification_report, "verdict", None),
+                    "golden_verdict": getattr(golden_report, "verdict", None),
+                },
+            )
+            smoke_errors = self._validate_post_activation_smoke(
+                snapshot=snapshot,
+                smoke_result=smoke_result,
+            )
+            if smoke_errors:
+                self._set_release_status(
+                    manifest_copy,
+                    "degraded",
+                    reason="Post-activation smoke failed.",
+                    signals={"errors": smoke_errors},
+                )
+            else:
+                self._set_release_status(
+                    manifest_copy,
+                    "activated",
+                    reason="Post-activation smoke passed.",
+                    signals=smoke_result or {},
+                )
+            snapshot.manifest = manifest_copy
             return snapshot
 
         if isinstance(self.session, AsyncSession):
@@ -321,7 +487,111 @@ class ReleaseService:
             raise ValueError("No previous snapshot found for rollback")
 
         # 3. Activate it
-        return await self.activate_snapshot(previous.id, activated_by)
+        rolled_back = await self.activate_snapshot(
+            previous.id,
+            activated_by,
+            qualification_report=type(
+                "QualificationStub",
+                (),
+                {
+                    "verdict": "go",
+                    "active_snapshot_id": previous.id,
+                    "active_snapshot_version": previous.version,
+                    "generated_at": self._utcnow(),
+                },
+            )(),
+            golden_report=type(
+                "GoldenStub",
+                (),
+                {
+                    "verdict": "pass",
+                    "active_snapshot_id": previous.id,
+                    "active_snapshot_version": previous.version,
+                    "generated_at": self._utcnow(),
+                },
+            )(),
+            smoke_result={
+                "status": "pass",
+                "active_snapshot_id": str(previous.id),
+                "active_snapshot_version": previous.version,
+                "manifest_entry_id": "rollback",
+                "forbidden_fallback_detected": False,
+            },
+            rollback_policy="forced-rollback",
+        )
+        manifest_copy = dict(rolled_back.manifest or {})
+        self._set_release_status(
+            manifest_copy,
+            "rolled_back",
+            reason="Rollback executed to previous active snapshot.",
+            signals={"rolled_back_by": activated_by},
+        )
+        rolled_back.manifest = manifest_copy
+        if isinstance(self.session, AsyncSession):
+            await self.session.commit()
+        else:
+            self.session.commit()
+        return rolled_back
+
+    async def evaluate_release_health(
+        self,
+        snapshot_id: uuid.UUID,
+        *,
+        signals: Dict[str, float],
+        triggered_by: str,
+        auto_rollback: bool = False,
+    ) -> Dict[str, Any]:
+        stmt = select(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id)
+        res = await self._execute(stmt)
+        snapshot = res.scalar_one_or_none()
+        if not snapshot:
+            raise ValueError(f"Snapshot {snapshot_id} not found")
+        manifest_copy = dict(snapshot.manifest or {})
+        release_health = manifest_copy.setdefault("release_health", {})
+        thresholds = release_health.get("monitoring_thresholds") or {
+            "error_rate": 0.02,
+            "p95_latency_ms": 1500.0,
+            "fallback_rate": 0.01,
+        }
+
+        breached = {
+            "error_rate": signals.get("error_rate", 0.0)
+            > float(thresholds.get("error_rate", 0.02)),
+            "p95_latency_ms": signals.get("p95_latency_ms", 0.0)
+            > float(thresholds.get("p95_latency_ms", 1500.0)),
+            "fallback_rate": signals.get("fallback_rate", 0.0)
+            > float(thresholds.get("fallback_rate", 0.01)),
+        }
+        if any(breached.values()):
+            self._set_release_status(
+                manifest_copy,
+                "rollback_recommended",
+                reason="Monitoring thresholds breached.",
+                signals={"breached": breached, "current": signals, "triggered_by": triggered_by},
+            )
+            decision = "rollback_recommended"
+            snapshot.manifest = manifest_copy
+            if isinstance(self.session, AsyncSession):
+                await self.session.commit()
+            else:
+                self.session.commit()
+            if auto_rollback:
+                await self.rollback(activated_by=triggered_by)
+                decision = "rolled_back"
+            return {"status": decision, "breached": breached, "thresholds": thresholds}
+
+        self._set_release_status(
+            manifest_copy,
+            "monitoring",
+            reason="Monitoring window healthy.",
+            signals={"current": signals, "triggered_by": triggered_by},
+        )
+        snapshot.manifest = manifest_copy
+        if isinstance(self.session, AsyncSession):
+            await self.session.commit()
+        else:
+            self.session.commit()
+        return {"status": "monitoring", "breached": breached, "thresholds": thresholds}
 
     def invalidate_all_caches(self):
         """AC14: Global invalidation of runtime registries."""

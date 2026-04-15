@@ -421,6 +421,22 @@ Golden regression :
 - les familles canoniques utilisent `GOLDEN_REGISTRY`
 - les chemins legacy interdits y sont explicitement bannis
 
+## Gate de production continue par snapshot actif (Story 66.44)
+
+Le passage en production est désormais gouverné par un gate continu centré sur le snapshot candidat/actif :
+
+- l'activation via `ReleaseService.activate_snapshot()` est bloquée sans qualification corrélée (`active_snapshot_id`, `active_snapshot_version`) et fraîche ;
+- l'activation est bloquée sans golden regression corrélée, valide et fraîche ;
+- un smoke post-activation corrélé est obligatoire et vérifie l'absence de fallback interdit ;
+- l'état synthétique de release health est historisé dans `manifest.release_health` (`monitoring`, `activated`, `degraded`, `rollback_recommended`, `rolled_back`) ;
+- la décision de rollback est gouvernée par des seuils versionnés (`error_rate`, `p95_latency_ms`, `fallback_rate`) évalués par `ReleaseService.evaluate_release_health()`.
+
+Lecture ops recommandée :
+
+- utiliser `POST /admin/llm/releases/{snapshot_id}/release-health` pour injecter les signaux observés ;
+- déclencher `auto_rollback=true` uniquement pour les environnements où la politique le permet ;
+- conserver les preuves qualification/golden/smoke pour chaque activation afin d'assurer la traçabilité bout-en-bout.
+
 ## Protection des données sensibles autour du prompt
 
 Le pipeline ne doit pas transformer l'observabilité en fuite de prompt ou de contenu utilisateur.
@@ -483,6 +499,7 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 | `66.39` | durcissement du validateur de conformité documentaire |
 | `66.40` | registre central du legacy résiduel, télémétrie, blocage progressif, anti-réintroduction |
 | `66.43` | campagne de chaos déterministe sur `ProviderRuntimeManager` avec rapport d'invariants de résilience |
+| `66.44` | gate continue activation/smoke/monitoring/rollback gouverné par snapshot actif |
 
 ## Règles de maintenance
 
