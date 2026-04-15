@@ -17,6 +17,18 @@ interface ExportResult {
   sunset?: string
 }
 
+/** Date calendaire du header HTTP Sunset en UTC (évite le décalage d’un jour avec toLocaleDateString). */
+function formatSunsetHttpDateUtc(sunsetHeader: string): string {
+  const parsed = new Date(sunsetHeader)
+  if (Number.isNaN(parsed.getTime())) {
+    return sunsetHeader
+  }
+  const dd = String(parsed.getUTCDate()).padStart(2, "0")
+  const mm = String(parsed.getUTCMonth() + 1).padStart(2, "0")
+  const yyyy = String(parsed.getUTCFullYear())
+  return `${dd}/${mm}/${yyyy} (UTC)`
+}
+
 function ExportModal({ type, onClose, onExportCompleted }: ExportModalProps) {
   const token = useAccessTokenSnapshot()
   const [period, setPeriod] = useState({ start: "", end: "" })
@@ -140,7 +152,7 @@ export function AdminSettingsPage() {
       return
     }
     const sunsetLabel = result.sunset
-      ? new Date(result.sunset).toLocaleDateString("fr-FR")
+      ? formatSunsetHttpDateUtc(result.sunset)
       : "date non communiquée"
     setGenerationsDeprecationNotice(
       `Deprecation active: use_case_compat est en compatibilite uniquement et sera retire apres le ${sunsetLabel}.`,

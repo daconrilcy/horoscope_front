@@ -176,6 +176,43 @@ def test_export_generations_csv(admin_token: str) -> None:
     assert "use_case_compat" in response.text
 
 
+def test_export_generations_csv_reclassifies_when_feature_null_but_use_case_compat_set(
+    admin_token: str,
+) -> None:
+    with db_session_module.SessionLocal() as db:
+        db.add(
+            LlmCallLogModel(
+                use_case="natal_interpretation",
+                feature=None,
+                subfeature="full",
+                plan="premium",
+                model="gpt-test",
+                validation_status=LlmValidationStatus.VALID,
+                latency_ms=350,
+                tokens_in=90,
+                tokens_out=110,
+                cost_usd_estimated=0.02,
+                request_id="req-export-null-feature",
+                trace_id="trace-export-null-feature",
+                input_hash="hash-export-null-feature",
+                environment="test",
+                evidence_warnings_count=0,
+            )
+        )
+        db.commit()
+
+    response = client.post(
+        "/v1/admin/exports/generations",
+        json={"period": None, "format": "csv"},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 200
+    assert "natal,full,premium" in response.text
+    assert "nominal" in response.text
+    assert "natal_interpretation" in response.text
+
+
 def test_export_generations_csv_reclassifies_legacy_use_case_to_canonical_feature(
     admin_token: str,
 ) -> None:

@@ -120,9 +120,9 @@ describe("AdminSettingsPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Confirmer l'export" }))
 
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent(
-        "use_case_compat est en compatibilite uniquement",
-      )
+      const status = screen.getByRole("status")
+      expect(status).toHaveTextContent("use_case_compat est en compatibilite uniquement")
+      expect(status).toHaveTextContent("30/09/2026 (UTC)")
     })
     expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:generations-export")
   })
@@ -167,7 +167,9 @@ describe("AdminSettingsPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Confirmer l'export" }))
 
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent("use_case_compat est en compatibilite uniquement")
+      const status = screen.getByRole("status")
+      expect(status).toHaveTextContent("use_case_compat est en compatibilite uniquement")
+      expect(status).toHaveTextContent("30/09/2026 (UTC)")
     })
 
     await userEvent.click(screen.getByRole("button", { name: "Fermer cette information" }))
@@ -181,7 +183,9 @@ describe("AdminSettingsPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Confirmer l'export" }))
 
     await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent("use_case_compat est en compatibilite uniquement")
+      const status = screen.getByRole("status")
+      expect(status).toHaveTextContent("use_case_compat est en compatibilite uniquement")
+      expect(status).toHaveTextContent("30/09/2026 (UTC)")
     })
   })
 })

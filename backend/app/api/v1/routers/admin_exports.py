@@ -194,6 +194,7 @@ def export_generations(
             LlmCanonicalConsumptionService._normalize_taxonomy(
                 feature=r.get("feature"),
                 subfeature=r.get("subfeature"),
+                use_case_compat=r.get("use_case_compat"),
             )
         )
         r["feature"] = feature

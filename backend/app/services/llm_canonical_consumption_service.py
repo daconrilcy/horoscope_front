@@ -16,10 +16,12 @@ from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidation
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.llm_orchestration.feature_taxonomy import (
     SUPPORTED_FAMILIES,
+    is_natal_subfeature_canonical,
     normalize_feature,
     normalize_subfeature,
 )
 from app.llm_orchestration.prompt_governance_registry import (
+    NATAL_CANONICAL_FEATURE,
     get_prompt_governance_registry,
 )
 
@@ -287,6 +289,7 @@ class LlmCanonicalConsumptionService:
                 func.count(func.distinct(UserTokenUsageLogModel.user_id)).label("user_id_count"),
                 LlmCallLogModel.plan.label("subscription_plan"),
                 LlmCallLogModel.feature.label("feature"),
+                LlmCallLogModel.use_case.label("use_case_compat"),
                 LlmCallLogModel.subfeature.label("subfeature"),
                 LlmCallLogModel.manifest_entry_id.label("manifest_entry_id"),
                 LlmCallLogModel.executed_provider.label("executed_provider"),
@@ -306,6 +309,7 @@ class LlmCanonicalConsumptionService:
                 LlmCallLogModel.timestamp,
                 LlmCallLogModel.plan,
                 LlmCallLogModel.feature,
+                LlmCallLogModel.use_case,
                 LlmCallLogModel.subfeature,
                 LlmCallLogModel.manifest_entry_id,
                 LlmCallLogModel.executed_provider,
@@ -331,6 +335,7 @@ class LlmCanonicalConsumptionService:
                 LlmCanonicalConsumptionService._normalize_taxonomy(
                     feature=row.feature,
                     subfeature=row.subfeature,
+                    use_case_compat=row.use_case_compat,
                 )
             )
             if filters.scope == "nominal" and is_legacy_residual:
@@ -394,17 +399,35 @@ class LlmCanonicalConsumptionService:
 
     @staticmethod
     def _normalize_taxonomy(
-        feature: str | None, subfeature: str | None
+        feature: str | None,
+        subfeature: str | None,
+        *,
+        use_case_compat: str | None = None,
     ) -> tuple[str, str | None, bool]:
-        if feature is None:
+        """
+        Map legacy / nullable feature columns to canonical nominal taxonomy.
+
+        When `feature` is missing, `use_case_compat` (historical `use_case`) is used so
+        older rows that only populated the legacy column still reclassify (Story 66-50).
+        """
+        raw_source = LlmCanonicalConsumptionService._first_non_empty_str(
+            feature,
+            use_case_compat,
+        )
+        if raw_source is None:
             return ("unknown", subfeature, True)
-        raw_feature = str(feature).strip()
-        mapped_feature = LEGACY_FEATURE_TO_CANONICAL.get(raw_feature, raw_feature)
+        mapped_feature = LEGACY_FEATURE_TO_CANONICAL.get(raw_source, raw_source)
         normalized_feature = normalize_feature(mapped_feature)
         normalized_subfeature = normalize_subfeature(normalized_feature, subfeature)
-        is_legacy_residual = raw_feature not in {mapped_feature, normalized_feature}
+        is_legacy_residual = False
         if normalized_feature not in SUPPORTED_FAMILIES:
             is_legacy_residual = True
+        raw_sf = str(subfeature).strip() if subfeature is not None else ""
+        if raw_sf and normalized_feature == NATAL_CANONICAL_FEATURE:
+            if normalized_subfeature is None or not is_natal_subfeature_canonical(
+                normalized_subfeature
+            ):
+                is_legacy_residual = True
         if (
             normalized_subfeature is None
             and subfeature is not None
@@ -412,6 +435,16 @@ class LlmCanonicalConsumptionService:
         ):
             is_legacy_residual = True
         return (normalized_feature, normalized_subfeature, is_legacy_residual)
+
+    @staticmethod
+    def _first_non_empty_str(*candidates: str | None) -> str | None:
+        for raw in candidates:
+            if raw is None:
+                continue
+            stripped = str(raw).strip()
+            if stripped:
+                return stripped
+        return None
 
     @staticmethod
     def _extract_locale_from_manifest(manifest_entry_id: str) -> str:

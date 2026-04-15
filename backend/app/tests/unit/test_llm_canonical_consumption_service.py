@@ -20,12 +20,13 @@ def _seed_user_id(db, email: str) -> int:
 
 def _build_call_log(
     *,
-    feature: str,
+    feature: str | None,
     subfeature: str | None,
     plan: str,
     timestamp: datetime,
     request_id: str,
     manifest_entry_id: str,
+    use_case: str | None = None,
     executed_provider: str = "openai",
     active_snapshot_version: str = "release-2026-04",
     validation_status: LlmValidationStatus = LlmValidationStatus.VALID,
@@ -34,9 +35,10 @@ def _build_call_log(
     cost_usd_estimated: float = 0.01,
     latency_ms: int = 400,
 ) -> LlmCallLogModel:
+    resolved_use_case = use_case if use_case is not None else (feature or "unspecified")
     return LlmCallLogModel(
         id=uuid.uuid4(),
-        use_case=feature,
+        use_case=resolved_use_case,
         feature=feature,
         subfeature=subfeature,
         plan=plan,
@@ -60,6 +62,59 @@ def _build_call_log(
         manifest_entry_id=manifest_entry_id,
         timestamp=timestamp,
     )
+
+
+def test_governed_feature_alias_is_nominal_when_subfeature_maps(db_session) -> None:
+    _seed_user_id(db_session, "consumption-alias-nominal@example.com")
+    ts = datetime(2026, 4, 15, 10, 12, tzinfo=timezone.utc)
+    db_session.add(
+        _build_call_log(
+            feature="natal_interpretation",
+            subfeature="full",
+            plan="premium",
+            timestamp=ts,
+            request_id="req-alias-nominal",
+            manifest_entry_id="natal_interpretation:full:premium:fr-FR",
+        )
+    )
+    db_session.commit()
+
+    nominal = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="day", scope="nominal"),
+        refresh=True,
+    )
+    assert len(nominal) == 1
+    assert nominal[0].feature == "natal"
+    assert nominal[0].subfeature == "full"
+    assert nominal[0].is_legacy_residual is False
+    assert nominal[0].taxonomy_scope == "nominal"
+
+
+def test_null_feature_reclassifies_from_use_case_compat(db_session) -> None:
+    _seed_user_id(db_session, "consumption-null-feature@example.com")
+    ts = datetime(2026, 4, 15, 10, 12, tzinfo=timezone.utc)
+    db_session.add(
+        _build_call_log(
+            feature=None,
+            use_case="natal_interpretation",
+            subfeature="full",
+            plan="premium",
+            timestamp=ts,
+            request_id="req-null-feature",
+            manifest_entry_id="natal:full:premium:fr-FR",
+        )
+    )
+    db_session.commit()
+
+    nominal = LlmCanonicalConsumptionService.get_aggregates(
+        db_session,
+        filters=CanonicalConsumptionFilters(granularity="day", scope="nominal"),
+        refresh=True,
+    )
+    assert len(nominal) == 1
+    assert nominal[0].feature == "natal"
+    assert nominal[0].is_legacy_residual is False
 
 
 def test_nominal_scope_excludes_legacy_residual_and_keeps_user_dimension(db_session) -> None:
