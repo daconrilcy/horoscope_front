@@ -252,4 +252,6 @@ GPT-5 Codex
 ### Change Log
 
 - 2026-04-14 : Story 66.42 — registre central versionné, branchement runtime/validateurs, doc et garde-fous tests ; statut sprint → review.
-- 2026-04-15 : Correctifs post-review — placeholders chat restaurés, exceptions gouvernées alignées runtime, fail-closed strict sur `scope.rule`, fixtures output contract daily réalignées.
+- 2026-04-15 : Correctif review P1 — restauration de `natal_chart_summary` (`chat`) et alignement runtime/publish des exceptions gouvernées (`is_placeholder_governed_for_feature` partagé).
+- 2026-04-15 : Correctif review P2 — durcissement fail-closed des exceptions : parsing strict `scope`, clés obligatoires (`placeholder`, `family`), famille canonique, `rule` validée contre une liste supportée.
+- 2026-04-15 : Qualité & non-régression — ajout des tests négatifs dédiés (Windows-safe), réalignement des fixtures `horoscope_daily` sur `NARRATOR_OUTPUT_SCHEMA`, et validation complète des suites ciblées.
