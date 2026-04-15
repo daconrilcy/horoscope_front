@@ -42,6 +42,33 @@ function LegacyRollbackModal({
   )
 }
 
+type DiffRow = {
+  leftText: string
+  rightText: string
+  leftType: "unchanged" | "removed"
+  rightType: "unchanged" | "added"
+}
+
+function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
+  const leftLines = basePrompt.split("\n")
+  const rightLines = nextPrompt.split("\n")
+  const rowCount = Math.max(leftLines.length, rightLines.length)
+  const rows: DiffRow[] = []
+
+  for (let index = 0; index < rowCount; index += 1) {
+    const leftText = leftLines[index] ?? ""
+    const rightText = rightLines[index] ?? ""
+    rows.push({
+      leftText,
+      rightText,
+      leftType: leftText === rightText ? "unchanged" : "removed",
+      rightType: leftText === rightText ? "unchanged" : "added",
+    })
+  }
+
+  return rows
+}
+
 export function AdminPromptsPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<PromptPageTab>("catalog")
@@ -58,8 +85,11 @@ export function AdminPromptsPage() {
   const [assemblyStatus, setAssemblyStatus] = useState("")
   const [releaseHealthStatus, setReleaseHealthStatus] = useState("")
   const [catalogVisibilityStatus, setCatalogVisibilityStatus] = useState("")
+  const [sortBy, setSortBy] = useState("feature")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
   const [legacyUseCaseKey, setLegacyUseCaseKey] = useState<string | null>(null)
+  const [legacyCompareVersionId, setLegacyCompareVersionId] = useState<string | null>(null)
   const [legacyRollbackCandidate, setLegacyRollbackCandidate] = useState<AdminPromptVersion | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -76,8 +106,8 @@ export function AdminPromptsPage() {
     assemblyStatus: assemblyStatus || undefined,
     releaseHealthStatus: releaseHealthStatus || undefined,
     catalogVisibilityStatus: catalogVisibilityStatus || undefined,
-    sortBy: "feature",
-    sortOrder: "asc",
+    sortBy,
+    sortOrder,
   }, activeTab === "catalog")
 
   const catalogEntries = catalogQuery.data?.data ?? []
@@ -109,10 +139,35 @@ export function AdminPromptsPage() {
   )
   const rollbackMutation = useRollbackPromptVersion()
   const selectedLegacyHistory = legacyHistoryQuery.data ?? []
+  const selectedLegacyUseCase = useCases.find((item) => item.key === legacyUseCaseKey) ?? null
+  const activeLegacyVersion =
+    selectedLegacyHistory.find((item) => item.id === selectedLegacyUseCase?.active_prompt_version_id) ??
+    selectedLegacyHistory[0] ??
+    null
+  const compareLegacyVersion =
+    selectedLegacyHistory.find((item) => item.id === legacyCompareVersionId) ??
+    selectedLegacyHistory.find((item) => item.id !== activeLegacyVersion?.id) ??
+    null
+  const legacyDiffRows =
+    activeLegacyVersion && compareLegacyVersion
+      ? buildDiffRows(compareLegacyVersion.developer_prompt, activeLegacyVersion.developer_prompt)
+      : []
 
   const isLegacyLoading =
     useCasesQuery.isPending || (activeTab === "legacy" && legacyHistoryQuery.isPending)
   const hasLegacyError = useCasesQuery.isError || legacyHistoryQuery.isError
+
+  useEffect(() => {
+    if (selectedLegacyHistory.length === 0) {
+      setLegacyCompareVersionId(null)
+      return
+    }
+    const defaultCompareId =
+      selectedLegacyHistory.find((version) => version.id !== activeLegacyVersion?.id)?.id ?? null
+    if (!selectedLegacyHistory.some((version) => version.id === legacyCompareVersionId)) {
+      setLegacyCompareVersionId(defaultCompareId)
+    }
+  }, [activeLegacyVersion?.id, legacyCompareVersionId, selectedLegacyHistory])
 
   const handleLegacyRollback = async () => {
     if (!legacyUseCaseKey || !legacyRollbackCandidate) return
@@ -189,6 +244,30 @@ export function AdminPromptsPage() {
             <select value={catalogVisibilityStatus} onChange={(event) => { setCatalogVisibilityStatus(event.target.value); setPage(1) }}>
               <option value="">Visibility</option>
               {availableVisibilityStatuses.map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+            <select
+              aria-label="Tri catalogue"
+              value={sortBy}
+              onChange={(event) => { setSortBy(event.target.value); setPage(1) }}
+            >
+              <option value="feature">Tri: Feature</option>
+              <option value="subfeature">Tri: Subfeature</option>
+              <option value="plan">Tri: Plan</option>
+              <option value="locale">Tri: Locale</option>
+              <option value="manifest_entry_id">Tri: Manifest entry</option>
+              <option value="provider">Tri: Provider</option>
+              <option value="source_of_truth_status">Tri: Source of truth</option>
+              <option value="assembly_status">Tri: Assembly status</option>
+              <option value="release_health_status">Tri: Release health</option>
+              <option value="catalog_visibility_status">Tri: Visibility</option>
+            </select>
+            <select
+              aria-label="Ordre tri catalogue"
+              value={sortOrder}
+              onChange={(event) => { setSortOrder(event.target.value as "asc" | "desc"); setPage(1) }}
+            >
+              <option value="asc">Ordre: Ascendant</option>
+              <option value="desc">Ordre: Descendant</option>
             </select>
           </div>
 
@@ -297,6 +376,53 @@ export function AdminPromptsPage() {
                   </article>
                 ))}
               </div>
+              {activeLegacyVersion && compareLegacyVersion ? (
+                <div className="panel">
+                  <div className="admin-prompts-history__header">
+                    <h3>Comparaison legacy</h3>
+                    <label className="admin-prompts-compare">
+                      <span>Comparer avec</span>
+                      <select
+                        aria-label="Comparer version legacy"
+                        value={compareLegacyVersion.id}
+                        onChange={(event) => setLegacyCompareVersionId(event.target.value)}
+                      >
+                        {selectedLegacyHistory
+                          .filter((version) => version.id !== activeLegacyVersion.id)
+                          .map((version) => (
+                            <option key={version.id} value={version.id}>
+                              {version.id} · {version.status}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="admin-prompts-diff" role="table" aria-label="Diff prompt legacy">
+                    <div className="admin-prompts-diff__column admin-prompts-diff__column--left">
+                      <h4>Version comparée</h4>
+                      {legacyDiffRows.map((row, index) => (
+                        <code
+                          key={`legacy-left-${index}`}
+                          className={`admin-prompts-diff__line admin-prompts-diff__line--${row.leftType}`}
+                        >
+                          {row.leftText || " "}
+                        </code>
+                      ))}
+                    </div>
+                    <div className="admin-prompts-diff__column">
+                      <h4>Version active</h4>
+                      {legacyDiffRows.map((row, index) => (
+                        <code
+                          key={`legacy-right-${index}`}
+                          className={`admin-prompts-diff__line admin-prompts-diff__line--${row.rightType}`}
+                        >
+                          {row.rightText || " "}
+                        </code>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </section>

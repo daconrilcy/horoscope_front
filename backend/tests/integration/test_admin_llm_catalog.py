@@ -184,3 +184,123 @@ def test_admin_llm_catalog_marks_stale_runtime_signal():
         db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
         db.commit()
         db.close()
+
+
+def test_admin_llm_catalog_resolves_signals_beyond_hot_500_rows():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    hot_manifest_entry = "chat:chat_default:hot:fr-FR"
+    secondary_manifest_entry = "chat:chat_default:secondary:fr-FR"
+    snapshot_id = uuid.uuid4()
+    hot_log_ids: list[uuid.UUID] = []
+    secondary_log_id = uuid.uuid4()
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        manifest = _build_manifest(hot_manifest_entry)
+        manifest["targets"][secondary_manifest_entry] = {
+            "assembly": {
+                "id": str(uuid.uuid4()),
+                "feature": "chat",
+                "subfeature": "chat_default",
+                "plan": "secondary",
+                "locale": "fr-FR",
+                "status": "published",
+                "output_contract_ref": "contract-chat",
+            },
+            "profile": {
+                "id": str(uuid.uuid4()),
+                "provider": "openai",
+                "model": "gpt-5",
+            },
+        }
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-catalog-hot-window",
+            manifest=manifest,
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+
+        for index in range(0, 550):
+            log_id = uuid.uuid4()
+            hot_log_ids.append(log_id)
+            db.add(
+                LlmCallLogModel(
+                    id=log_id,
+                    use_case="chat_astrologer",
+                    model="gpt-5",
+                    latency_ms=1000,
+                    tokens_in=200,
+                    tokens_out=300,
+                    cost_usd_estimated=0.01,
+                    validation_status=LlmValidationStatus.VALID,
+                    repair_attempted=False,
+                    fallback_triggered=False,
+                    request_id=f"req-hot-{index}",
+                    trace_id=f"trace-hot-{index}",
+                    input_hash=f"{index:064x}"[-64:],
+                    environment="test",
+                    manifest_entry_id=hot_manifest_entry,
+                    execution_path_kind="nominal",
+                    context_compensation_status="none",
+                    max_output_tokens_source="execution_profile",
+                    timestamp=datetime.now(timezone.utc) - timedelta(seconds=index),
+                    expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+                    provider="openai",
+                )
+            )
+
+        db.add(
+            LlmCallLogModel(
+                id=secondary_log_id,
+                use_case="chat_astrologer",
+                model="gpt-5",
+                latency_ms=900,
+                tokens_in=210,
+                tokens_out=320,
+                cost_usd_estimated=0.01,
+                validation_status=LlmValidationStatus.VALID,
+                repair_attempted=False,
+                fallback_triggered=False,
+                request_id="req-secondary",
+                trace_id="trace-secondary",
+                input_hash="c" * 64,
+                environment="test",
+                manifest_entry_id=secondary_manifest_entry,
+                execution_path_kind="nominal",
+                context_compensation_status="none",
+                max_output_tokens_source="execution_profile",
+                timestamp=datetime.now(timezone.utc),
+                expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+                provider="openai",
+            )
+        )
+        db.commit()
+
+        response = client.get("/v1/admin/llm/catalog?feature=chat")
+        assert response.status_code == 200
+        payload = response.json()
+        rows_by_manifest = {row["manifest_entry_id"]: row for row in payload["data"]}
+        assert rows_by_manifest[hot_manifest_entry]["runtime_signal_status"] == "fresh"
+        assert rows_by_manifest[secondary_manifest_entry]["runtime_signal_status"] == "fresh"
+    finally:
+        app.dependency_overrides.clear()
+        db.execute(delete(LlmActiveReleaseModel))
+        if hot_log_ids:
+            db.execute(delete(LlmCallLogModel).where(LlmCallLogModel.id.in_(hot_log_ids)))
+        db.execute(delete(LlmCallLogModel).where(LlmCallLogModel.id == secondary_log_id))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.commit()
+        db.close()

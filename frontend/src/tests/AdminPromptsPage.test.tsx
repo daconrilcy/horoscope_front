@@ -78,6 +78,17 @@ describe("AdminPromptsPage", () => {
             sort_by: "feature",
             sort_order: "asc",
             freshness_window_minutes: 120,
+            facets: {
+              feature: ["chat"],
+              subfeature: ["chat_default"],
+              plan: ["premium"],
+              locale: ["fr-FR"],
+              provider: ["openai"],
+              source_of_truth_status: ["active_snapshot"],
+              assembly_status: ["published"],
+              release_health_status: ["monitoring"],
+              catalog_visibility_status: ["visible"],
+            },
           },
         })
       }
@@ -100,6 +111,8 @@ describe("AdminPromptsPage", () => {
     expect(screen.getAllByText("active_snapshot").length).toBeGreaterThan(0)
     expect(screen.getAllByText(/monitoring/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/fresh/).length).toBeGreaterThan(0)
+    expect(screen.getByLabelText("Tri catalogue")).toBeInTheDocument()
+    expect(screen.getByLabelText("Ordre tri catalogue")).toBeInTheDocument()
   })
 
   it("affiche l'onglet historique legacy avec rollback", async () => {
@@ -108,7 +121,18 @@ describe("AdminPromptsPage", () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
       if (url.includes("/v1/admin/llm/catalog")) {
-        return makeJsonResponse({ data: [], meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120 } })
+        return makeJsonResponse({
+          data: [],
+          meta: {
+            total: 0,
+            page: 1,
+            page_size: 25,
+            sort_by: "feature",
+            sort_order: "asc",
+            freshness_window_minutes: 120,
+            facets: {},
+          },
+        })
       }
       if (url.endsWith("/v1/admin/llm/use-cases")) {
         return makeJsonResponse({
@@ -141,6 +165,19 @@ describe("AdminPromptsPage", () => {
               created_at: "2026-04-05T08:00:00Z",
               published_at: "2026-04-05T09:00:00Z",
             },
+            {
+              id: "prompt-1",
+              use_case_key: "chat",
+              status: "archived",
+              developer_prompt: "line one old\nline two",
+              model: "gpt-5",
+              temperature: 0.3,
+              max_output_tokens: 900,
+              fallback_use_case_key: null,
+              created_by: "98",
+              created_at: "2026-04-04T08:00:00Z",
+              published_at: "2026-04-04T09:00:00Z",
+            },
           ],
         })
       }
@@ -169,10 +206,11 @@ describe("AdminPromptsPage", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Historique legacy" }))
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Rollback" })).toBeInTheDocument()
+      expect(screen.getAllByRole("button", { name: "Rollback" }).length).toBeGreaterThan(0)
     })
+    expect(screen.getByRole("table", { name: "Diff prompt legacy" })).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole("button", { name: "Rollback" }))
+    await userEvent.click(screen.getAllByRole("button", { name: "Rollback" })[0])
     const dialog = await screen.findByRole("dialog", { name: "Confirmer le rollback legacy" })
     await userEvent.click(within(dialog).getByRole("button", { name: /^Rollback$/ }))
     await waitFor(() => {

@@ -734,17 +734,34 @@ def list_llm_catalog(
     manifest_ids = list(entries_by_id.keys())
     latest_logs: dict[str, LlmCallLogModel] = {}
     if manifest_ids:
-        observability_rows = (
+        latest_timestamps_subquery = (
+            select(
+                LlmCallLogModel.manifest_entry_id.label("manifest_entry_id"),
+                func.max(LlmCallLogModel.timestamp).label("latest_timestamp"),
+            )
+            .where(LlmCallLogModel.manifest_entry_id.in_(manifest_ids))
+            .group_by(LlmCallLogModel.manifest_entry_id)
+            .subquery()
+        )
+
+        latest_log_rows = (
             db.execute(
                 select(LlmCallLogModel)
-                .where(LlmCallLogModel.manifest_entry_id.in_(manifest_ids))
-                .order_by(desc(LlmCallLogModel.timestamp))
-                .limit(500)
+                .join(
+                    latest_timestamps_subquery,
+                    and_(
+                        LlmCallLogModel.manifest_entry_id
+                        == latest_timestamps_subquery.c.manifest_entry_id,
+                        LlmCallLogModel.timestamp
+                        == latest_timestamps_subquery.c.latest_timestamp,
+                    ),
+                )
             )
             .scalars()
             .all()
         )
-        for row in observability_rows:
+
+        for row in latest_log_rows:
             if row.manifest_entry_id and row.manifest_entry_id not in latest_logs:
                 latest_logs[row.manifest_entry_id] = row
 
