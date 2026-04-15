@@ -558,3 +558,184 @@ def test_admin_llm_catalog_resolved_detail_returns_explicit_error_on_unusable_sn
         )
         db.commit()
         db.close()
+
+
+def test_admin_llm_release_timeline_returns_snapshot_history_and_proofs():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    snapshot_id = uuid.uuid4()
+    manifest_entry_id = "chat:chat_default:premium:fr-FR"
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="timeline-test-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+            activated_at=datetime.now(timezone.utc),
+        )
+        snapshot.manifest["release_health"]["history"] = [
+            {
+                "status": "monitoring",
+                "reason": "Activation gate passed and monitoring window opened.",
+                "signals": {
+                    "qualification_verdict": "go",
+                    "golden_verdict": "pass",
+                    "active_snapshot_id": str(snapshot_id),
+                    "active_snapshot_version": "timeline-test-v1",
+                    "qualification_manifest_entry_id": manifest_entry_id,
+                    "golden_manifest_entry_id": manifest_entry_id,
+                },
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+            {
+                "status": "activated",
+                "reason": "Post-activation smoke passed.",
+                "signals": {
+                    "status": "pass",
+                    "manifest_entry_id": manifest_entry_id,
+                    "active_snapshot_id": str(snapshot_id),
+                },
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+        ]
+        db.add(snapshot)
+        db.commit()
+
+        response = client.get("/v1/admin/llm/release-snapshots/timeline")
+        assert response.status_code == 200
+        payload = response.json()["data"]
+        assert len(payload) >= 3
+        snapshot_rows = [row for row in payload if row["snapshot_id"] == str(snapshot_id)]
+        event_types = {row["event_type"] for row in snapshot_rows}
+        assert {"created", "monitoring", "activated"}.issubset(event_types)
+        activated_row = next(row for row in snapshot_rows if row["event_type"] == "activated")
+        proofs = {proof["proof_type"]: proof for proof in activated_row["proof_summaries"]}
+        assert proofs["qualification"]["verdict"] == "go"
+        assert proofs["qualification"]["correlated"] is True
+        assert proofs["golden"]["verdict"] == "pass"
+        assert proofs["golden"]["correlated"] is True
+        assert proofs["smoke"]["verdict"] == "pass"
+        assert proofs["smoke"]["correlated"] is True
+        assert proofs["readiness"]["verdict"] == "valid"
+    finally:
+        app.dependency_overrides.clear()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_release_timeline_keeps_unmapped_backend_events_explicit():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    snapshot_id = uuid.uuid4()
+    manifest_entry_id = "chat:chat_default:premium:fr-FR"
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="timeline-unmapped-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+            activated_at=datetime.now(timezone.utc),
+        )
+        snapshot.manifest["release_health"]["history"] = [
+            {
+                "status": "new_status_from_backend",
+                "reason": "Unknown status from runtime.",
+                "signals": {},
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        ]
+        db.add(snapshot)
+        db.commit()
+
+        response = client.get("/v1/admin/llm/release-snapshots/timeline")
+        assert response.status_code == 200
+        payload = response.json()["data"]
+        matching = [row for row in payload if row["snapshot_id"] == str(snapshot_id)]
+        assert any(row["event_type"] == "backend_unmapped" for row in matching)
+    finally:
+        app.dependency_overrides.clear()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_release_snapshot_diff_returns_manifest_entry_categories():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    from_snapshot_id = uuid.uuid4()
+    to_snapshot_id = uuid.uuid4()
+    kept_manifest_entry = "chat:chat_default:premium:fr-FR"
+    added_manifest_entry = "natal:None:premium:fr-FR"
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        from_manifest = _build_manifest(kept_manifest_entry)
+        to_manifest = _build_manifest(kept_manifest_entry)
+        to_manifest["targets"][kept_manifest_entry]["profile"]["model"] = "gpt-5-mini"
+        to_manifest["targets"][added_manifest_entry] = {
+            "assembly": {
+                "id": str(uuid.uuid4()),
+                "feature": "natal",
+                "subfeature": "None",
+                "plan": "premium",
+                "locale": "fr-FR",
+                "status": "published",
+                "output_contract_ref": "contract-natal",
+            },
+            "profile": {"id": str(uuid.uuid4()), "provider": "openai", "model": "gpt-5"},
+        }
+        db.add(
+            LlmReleaseSnapshotModel(
+                id=from_snapshot_id,
+                version="diff-from",
+                manifest=from_manifest,
+                status=ReleaseStatus.ARCHIVED,
+                created_by="test-admin",
+            )
+        )
+        db.add(
+            LlmReleaseSnapshotModel(
+                id=to_snapshot_id,
+                version="diff-to",
+                manifest=to_manifest,
+                status=ReleaseStatus.ACTIVE,
+                created_by="test-admin",
+            )
+        )
+        db.commit()
+
+        response = client.get(
+            f"/v1/admin/llm/release-snapshots/diff?from_snapshot_id={from_snapshot_id}&to_snapshot_id={to_snapshot_id}"
+        )
+        assert response.status_code == 200
+        entries = response.json()["data"]["entries"]
+        by_manifest = {entry["manifest_entry_id"]: entry for entry in entries}
+        assert by_manifest[kept_manifest_entry]["category"] == "changed"
+        assert by_manifest[kept_manifest_entry]["execution_profile_changed"] is True
+        assert by_manifest[added_manifest_entry]["category"] == "added"
+    finally:
+        app.dependency_overrides.clear()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(
+            delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == from_snapshot_id)
+        )
+        db.execute(
+            delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == to_snapshot_id)
+        )
+        db.commit()
+        db.close()

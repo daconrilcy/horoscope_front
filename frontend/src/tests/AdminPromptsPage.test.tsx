@@ -288,4 +288,103 @@ describe("AdminPromptsPage", () => {
       expect(screen.getByText(/Rollback effectue vers/)).toBeInTheDocument()
     })
   })
+
+  it("affiche l'historique release snapshot et le diff", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: {
+            total: 0,
+            page: 1,
+            page_size: 25,
+            sort_by: "feature",
+            sort_order: "asc",
+            freshness_window_minutes: 120,
+            facets: {},
+          },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      if (url.includes("/v1/admin/llm/release-snapshots/timeline")) {
+        return makeJsonResponse({
+          data: [
+            {
+              event_type: "monitoring",
+              snapshot_id: "11111111-1111-1111-1111-111111111111",
+              snapshot_version: "v2",
+              occurred_at: "2026-04-15T08:00:00Z",
+              current_status: "active",
+              release_health_status: "monitoring",
+              status_history: [{ status: "monitoring" }],
+              reason: "Monitoring healthy.",
+              from_snapshot_id: null,
+              to_snapshot_id: "11111111-1111-1111-1111-111111111111",
+              manifest_entry_count: 2,
+              proof_summaries: [
+                { proof_type: "qualification", status: "present", verdict: "go", generated_at: "2026-04-15T07:55:00Z", manifest_entry_id: "chat:chat_default:premium:fr-FR", correlated: true },
+                { proof_type: "golden", status: "present", verdict: "pass", generated_at: "2026-04-15T07:56:00Z", manifest_entry_id: "chat:chat_default:premium:fr-FR", correlated: true },
+                { proof_type: "smoke", status: "present", verdict: "pass", generated_at: "2026-04-15T07:57:00Z", manifest_entry_id: "chat:chat_default:premium:fr-FR", correlated: true },
+                { proof_type: "readiness", status: "present", verdict: "valid", generated_at: "2026-04-15T07:57:00Z", manifest_entry_id: "chat:chat_default:premium:fr-FR", correlated: true },
+              ],
+            },
+            {
+              event_type: "rolled_back",
+              snapshot_id: "22222222-2222-2222-2222-222222222222",
+              snapshot_version: "v1",
+              occurred_at: "2026-04-14T08:00:00Z",
+              current_status: "archived",
+              release_health_status: "rolled_back",
+              status_history: [{ status: "rolled_back" }],
+              reason: "Rollback executed.",
+              from_snapshot_id: "11111111-1111-1111-1111-111111111111",
+              to_snapshot_id: "22222222-2222-2222-2222-222222222222",
+              manifest_entry_count: 1,
+              proof_summaries: [],
+            },
+          ],
+        })
+      }
+      if (url.includes("/v1/admin/llm/release-snapshots/diff")) {
+        return makeJsonResponse({
+          data: {
+            from_snapshot_id: "22222222-2222-2222-2222-222222222222",
+            to_snapshot_id: "11111111-1111-1111-1111-111111111111",
+            entries: [
+              {
+                manifest_entry_id: "chat:chat_default:premium:fr-FR",
+                category: "changed",
+                assembly_changed: true,
+                execution_profile_changed: false,
+                output_contract_changed: false,
+                from_snapshot_id: "22222222-2222-2222-2222-222222222222",
+                to_snapshot_id: "11111111-1111-1111-1111-111111111111",
+              },
+            ],
+          },
+        })
+      }
+      if (url.includes("/v1/admin/llm/catalog/chat%3Achat_default%3Apremium%3Afr-FR/resolved")) {
+        return makeJsonResponse({ data: {} })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("tab", { name: "Historique release" }))
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Timeline snapshots" })).toBeInTheDocument()
+    })
+    expect(screen.getByText(/qualification: go/)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Diff snapshot" })).toBeInTheDocument()
+    })
+    expect(screen.getByText("chat:chat_default:premium:fr-FR")).toBeInTheDocument()
+  })
 })

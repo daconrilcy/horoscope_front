@@ -162,6 +162,46 @@ export type AdminResolvedAssemblyView = {
   }
 }
 
+export type ProofSummary = {
+  proof_type: "qualification" | "golden" | "smoke" | "readiness"
+  status: string
+  verdict: string | null
+  generated_at: string | null
+  manifest_entry_id: string | null
+  correlated: boolean
+}
+
+export type SnapshotTimelineItem = {
+  event_type: "created" | "validated" | "activated" | "monitoring" | "degraded" | "rollback_recommended" | "rolled_back" | "backend_unmapped"
+  snapshot_id: string
+  snapshot_version: string
+  occurred_at: string
+  current_status: string
+  release_health_status: string
+  status_history: Array<Record<string, unknown>>
+  reason: string | null
+  from_snapshot_id: string | null
+  to_snapshot_id: string | null
+  manifest_entry_count: number
+  proof_summaries: ProofSummary[]
+}
+
+export type SnapshotDiffEntry = {
+  manifest_entry_id: string
+  category: "added" | "removed" | "changed" | "unchanged"
+  assembly_changed: boolean
+  execution_profile_changed: boolean
+  output_contract_changed: boolean
+  from_snapshot_id: string
+  to_snapshot_id: string
+}
+
+export type SnapshotDiffResponse = {
+  from_snapshot_id: string
+  to_snapshot_id: string
+  entries: SnapshotDiffEntry[]
+}
+
 export class AdminPromptsApiError extends Error {
   readonly code: string
   readonly status: number
@@ -328,6 +368,34 @@ export async function getAdminResolvedAssembly(manifestEntryId: string): Promise
   }
 }
 
+export async function listReleaseSnapshotsTimeline(): Promise<SnapshotTimelineItem[]> {
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/release-snapshots/timeline`, {
+      headers: getAccessTokenAuthHeader(),
+    })
+    return decodeResponse<SnapshotTimelineItem[]>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function getReleaseSnapshotDiff(
+  fromSnapshotId: string,
+  toSnapshotId: string,
+): Promise<SnapshotDiffResponse> {
+  try {
+    const response = await apiFetch(
+      `${API_BASE_URL}/v1/admin/llm/release-snapshots/diff?from_snapshot_id=${encodeURIComponent(fromSnapshotId)}&to_snapshot_id=${encodeURIComponent(toSnapshotId)}`,
+      {
+        headers: getAccessTokenAuthHeader(),
+      },
+    )
+    return decodeResponse<SnapshotDiffResponse>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
 export async function updateAdminPersona(
   personaId: string,
   payload: Partial<Pick<AdminLlmPersona, "enabled">>,
@@ -425,5 +493,21 @@ export function useAdminResolvedAssembly(manifestEntryId: string | null, enabled
     queryKey: ["admin-llm-catalog-resolved", manifestEntryId],
     queryFn: () => getAdminResolvedAssembly(manifestEntryId ?? ""),
     enabled: enabled && Boolean(manifestEntryId),
+  })
+}
+
+export function useReleaseSnapshotsTimeline(enabled = true) {
+  return useQuery({
+    queryKey: ["admin-llm-release-snapshots-timeline"],
+    queryFn: listReleaseSnapshotsTimeline,
+    enabled,
+  })
+}
+
+export function useReleaseSnapshotDiff(fromSnapshotId: string | null, toSnapshotId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ["admin-llm-release-snapshots-diff", fromSnapshotId, toSnapshotId],
+    queryFn: () => getReleaseSnapshotDiff(fromSnapshotId ?? "", toSnapshotId ?? ""),
+    enabled: enabled && Boolean(fromSnapshotId) && Boolean(toSnapshotId),
   })
 }

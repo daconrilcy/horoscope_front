@@ -458,6 +458,14 @@ class ReleaseService:
                 signals={
                     "qualification_verdict": getattr(qualification_report, "verdict", None),
                     "golden_verdict": getattr(golden_report, "verdict", None),
+                    "active_snapshot_id": str(snapshot.id),
+                    "active_snapshot_version": snapshot.version,
+                    "qualification_manifest_entry_id": getattr(
+                        qualification_report, "manifest_entry_id", None
+                    )
+                    or expected_manifest_entry_id,
+                    "golden_manifest_entry_id": getattr(golden_report, "manifest_entry_id", None)
+                    or expected_manifest_entry_id,
                 },
             )
             smoke_errors = self._validate_post_activation_smoke(

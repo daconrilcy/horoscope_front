@@ -343,6 +343,58 @@
   padding: var(--space-2) var(--space-3);
 }
 
+.admin-prompts-release {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-prompts-release__header h3 {
+  margin: 0;
+}
+
+.admin-prompts-release__header p {
+  margin: var(--space-2) 0 0;
+}
+
+.admin-prompts-release__timeline {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-prompts-release__timeline-item {
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-prompts-release__timeline-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.admin-prompts-release__proofs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.admin-prompts-release__diff-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.admin-prompts-release__diff h3 {
+  margin: 0 0 var(--space-2);
+}
+
 @media (max-width: 960px) {
   .admin-prompts-layout,
   .admin-prompts-diff,

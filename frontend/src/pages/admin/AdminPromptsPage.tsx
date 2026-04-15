@@ -7,12 +7,15 @@ import {
   useAdminPromptHistory,
   useRollbackPromptVersion,
   useAdminResolvedAssembly,
+  useReleaseSnapshotsTimeline,
+  useReleaseSnapshotDiff,
   type AdminPromptVersion,
+  type SnapshotTimelineItem,
 } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
 import "./AdminPromptsPage.css"
 
-type PromptPageTab = "catalog" | "legacy" | "personas"
+type PromptPageTab = "catalog" | "legacy" | "release" | "personas"
 
 type LegacyRollbackModalProps = {
   isPending: boolean
@@ -100,6 +103,8 @@ export function AdminPromptsPage() {
   const [legacyRollbackCandidate, setLegacyRollbackCandidate] = useState<AdminPromptVersion | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [selectedManifestEntryId, setSelectedManifestEntryId] = useState<string | null>(null)
+  const [fromSnapshotId, setFromSnapshotId] = useState<string | null>(null)
+  const [toSnapshotId, setToSnapshotId] = useState<string | null>(null)
 
   const catalogQuery = useAdminLlmCatalog({
     page,
@@ -150,6 +155,16 @@ export function AdminPromptsPage() {
     activeTab === "legacy" && Boolean(legacyUseCaseKey),
   )
   const rollbackMutation = useRollbackPromptVersion()
+  const releaseTimelineQuery = useReleaseSnapshotsTimeline(activeTab === "release")
+  const releaseTimeline = releaseTimelineQuery.data ?? []
+  const releaseSnapshots = Array.from(
+    new Map(releaseTimeline.map((item) => [item.snapshot_id, item])).values(),
+  )
+  const releaseDiffQuery = useReleaseSnapshotDiff(
+    fromSnapshotId,
+    toSnapshotId,
+    activeTab === "release",
+  )
   const selectedLegacyHistory = legacyHistoryQuery.data ?? []
   const selectedLegacyUseCase = useCases.find((item) => item.key === legacyUseCaseKey) ?? null
   const activeLegacyVersion =
@@ -181,6 +196,25 @@ export function AdminPromptsPage() {
     }
   }, [activeLegacyVersion?.id, legacyCompareVersionId, selectedLegacyHistory])
 
+  useEffect(() => {
+    if (releaseSnapshots.length < 2) {
+      setFromSnapshotId(null)
+      setToSnapshotId(null)
+      return
+    }
+    if (!toSnapshotId || !releaseSnapshots.some((item) => item.snapshot_id === toSnapshotId)) {
+      setToSnapshotId(releaseSnapshots[0].snapshot_id)
+    }
+    if (!fromSnapshotId || !releaseSnapshots.some((item) => item.snapshot_id === fromSnapshotId)) {
+      setFromSnapshotId(releaseSnapshots[1].snapshot_id)
+    }
+  }, [fromSnapshotId, releaseSnapshots, toSnapshotId])
+
+  const selectedTimelineById = releaseTimeline.reduce<Record<string, SnapshotTimelineItem>>((acc, item) => {
+    acc[item.snapshot_id] = item
+    return acc
+  }, {})
+
   const handleLegacyRollback = async () => {
     if (!legacyUseCaseKey || !legacyRollbackCandidate) return
     await rollbackMutation.mutateAsync({
@@ -208,6 +242,9 @@ export function AdminPromptsPage() {
           </button>
           <button className={`tab-button ${activeTab === "legacy" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "legacy"} onClick={() => setActiveTab("legacy")}>
             Historique legacy
+          </button>
+          <button className={`tab-button ${activeTab === "release" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "release"} onClick={() => setActiveTab("release")}>
+            Historique release
           </button>
           <button className={`tab-button ${activeTab === "personas" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "personas"} onClick={() => setActiveTab("personas")}>
             Personas
@@ -523,6 +560,124 @@ export function AdminPromptsPage() {
                 </div>
               ) : null}
             </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {activeTab === "release" ? (
+        <section className="panel admin-prompts-release" aria-label="Historique release snapshots">
+          {releaseTimelineQuery.isPending ? <div className="loading-placeholder">Chargement de la timeline release...</div> : null}
+          {releaseTimelineQuery.isError ? <p className="chat-error">Impossible de charger la timeline release.</p> : null}
+          {!releaseTimelineQuery.isPending && !releaseTimelineQuery.isError && releaseTimeline.length === 0 ? (
+            <div className="state-line">Aucun snapshot disponible.</div>
+          ) : null}
+          {!releaseTimelineQuery.isPending && !releaseTimelineQuery.isError && releaseTimeline.length > 0 ? (
+            <>
+              <div className="admin-prompts-release__header">
+                <h3>Timeline snapshots</h3>
+                <p className="text-muted">Unité de lecture: release snapshot, avec statut courant, historique et preuves corrélées.</p>
+              </div>
+              <div className="admin-prompts-release__timeline">
+                {releaseTimeline.map((item) => (
+                  <article key={`${item.snapshot_id}-${item.occurred_at}`} className="admin-prompts-release__timeline-item">
+                    <div className="admin-prompts-release__timeline-top">
+                      <strong>{item.snapshot_version}</strong>
+                      <span className={`badge ${item.release_health_status === "degraded" || item.release_health_status === "rollback_recommended" ? "badge--warning" : "badge--info"}`}>
+                        {item.release_health_status}
+                      </span>
+                    </div>
+                    <p className="text-muted">
+                      {item.event_type} · {new Date(item.occurred_at).toLocaleString()} · entries: {item.manifest_entry_count}
+                    </p>
+                    <p className="text-muted">
+                      current_status: {item.current_status} · status_history: {item.status_history.length}
+                    </p>
+                    {item.from_snapshot_id ? (
+                      <p className="text-muted">rollback: {item.from_snapshot_id.slice(0, 8)}... → {item.to_snapshot_id?.slice(0, 8)}...</p>
+                    ) : null}
+                    {item.reason ? <p className="text-muted">{item.reason}</p> : null}
+                    <div className="admin-prompts-release__proofs">
+                      {item.proof_summaries.map((proof) => (
+                        <span key={`${item.snapshot_id}-${proof.proof_type}`} className={`badge ${proof.status === "missing" || proof.verdict === "uncorrelated" ? "badge--warning" : "badge--info"}`}>
+                          {proof.proof_type}: {proof.verdict ?? proof.status}
+                        </span>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="admin-prompts-release__diff-controls">
+                <label className="admin-prompts-compare">
+                  <span>Snapshot source</span>
+                  <select value={fromSnapshotId ?? ""} onChange={(event) => setFromSnapshotId(event.target.value)}>
+                    {releaseSnapshots.map((item) => (
+                      <option key={`from-${item.snapshot_id}`} value={item.snapshot_id}>
+                        {item.snapshot_version} ({item.snapshot_id.slice(0, 8)})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="admin-prompts-compare">
+                  <span>Snapshot cible</span>
+                  <select value={toSnapshotId ?? ""} onChange={(event) => setToSnapshotId(event.target.value)}>
+                    {releaseSnapshots.map((item) => (
+                      <option key={`to-${item.snapshot_id}`} value={item.snapshot_id}>
+                        {item.snapshot_version} ({item.snapshot_id.slice(0, 8)})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {releaseDiffQuery.isPending ? <div className="loading-placeholder">Chargement du diff snapshots...</div> : null}
+              {releaseDiffQuery.isError ? <p className="chat-error">Impossible de charger le diff snapshots.</p> : null}
+              {releaseDiffQuery.data ? (
+                <div className="admin-prompts-release__diff panel">
+                  <h3>Diff snapshot</h3>
+                  <p className="text-muted">
+                    from: {selectedTimelineById[releaseDiffQuery.data.from_snapshot_id]?.snapshot_version ?? releaseDiffQuery.data.from_snapshot_id} ·
+                    to: {selectedTimelineById[releaseDiffQuery.data.to_snapshot_id]?.snapshot_version ?? releaseDiffQuery.data.to_snapshot_id}
+                  </p>
+                  <div className="admin-prompts-catalog__table-wrap">
+                    <table className="admin-prompts-catalog__table">
+                      <thead>
+                        <tr>
+                          <th>manifest_entry_id</th>
+                          <th>catégorie</th>
+                          <th>assembly</th>
+                          <th>execution profile</th>
+                          <th>output contract</th>
+                          <th>navigation</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {releaseDiffQuery.data.entries.map((entry) => (
+                          <tr key={`diff-${entry.manifest_entry_id}`}>
+                            <td><code>{entry.manifest_entry_id}</code></td>
+                            <td>{entry.category}</td>
+                            <td>{entry.assembly_changed ? "changed" : "stable"}</td>
+                            <td>{entry.execution_profile_changed ? "changed" : "stable"}</td>
+                            <td>{entry.output_contract_changed ? "changed" : "stable"}</td>
+                            <td>
+                              <button
+                                className="text-button admin-prompts-catalog__inspect"
+                                type="button"
+                                onClick={() => {
+                                  setActiveTab("catalog")
+                                  setSelectedManifestEntryId(entry.manifest_entry_id)
+                                }}
+                              >
+                                Ouvrir 66.46
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
+            </>
           ) : null}
         </section>
       ) : null}
