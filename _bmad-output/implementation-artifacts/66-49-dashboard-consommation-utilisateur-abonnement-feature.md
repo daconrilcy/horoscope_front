@@ -1,6 +1,6 @@
 # Story 66.49: Dashboard consommation par utilisateur / abonnement / feature
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -64,40 +64,40 @@ Contrat UX/API à figer dans cette story :
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Définir l'API admin de consommation (AC: 1 à 10)
-  - [ ] Exposer un endpoint backend dédié du type `GET /v1/admin/llm/consumption` ou équivalent stable.
-  - [ ] Prévoir des modes/vues `user`, `subscription`, `feature`.
-  - [ ] Supporter filtres temporels, pagination, tri, recherche et export CSV.
+- [x] Task 1: Définir l'API admin de consommation (AC: 1 à 10)
+  - [x] Exposer un endpoint backend dédié du type `GET /v1/admin/llm/consumption` ou équivalent stable.
+  - [x] Prévoir des modes/vues `user`, `subscription`, `feature`.
+  - [x] Supporter filtres temporels, pagination, tri, recherche et export CSV.
 
-- [ ] Task 2: Brancher l'API sur le modèle canonique 66.48 (AC: 1, 3, 4, 8, 10)
-  - [ ] Réutiliser le service/query layer de consommation canonique.
-  - [ ] Définir les DTO API des trois vues.
-  - [ ] Rendre explicites les dimensions affichées et les mesures disponibles.
+- [x] Task 2: Brancher l'API sur le modèle canonique 66.48 (AC: 1, 3, 4, 8, 10)
+  - [x] Réutiliser le service/query layer de consommation canonique.
+  - [x] Définir les DTO API des trois vues.
+  - [x] Rendre explicites les dimensions affichées et les mesures disponibles.
 
-- [ ] Task 3: Ajouter le drill-down corrélé aux logs LLM (AC: 6, 7)
-  - [ ] Définir la relation entre agrégat et appels récents (`request_id`, `trace_id`, `timestamp`, `manifest_entry_id`, `validation_status`, etc.).
-  - [ ] Verrouiller le volume par défaut à 50 appels et l'ordre `timestamp desc`.
-  - [ ] Réutiliser les surfaces de `llm_call_logs` existantes ou exposer une projection dédiée.
-  - [ ] Garantir la non-fuite de contenu sensible.
+- [x] Task 3: Ajouter le drill-down corrélé aux logs LLM (AC: 6, 7)
+  - [x] Définir la relation entre agrégat et appels récents (`request_id`, `trace_id`, `timestamp`, `manifest_entry_id`, `validation_status`, etc.).
+  - [x] Verrouiller le volume par défaut à 50 appels et l'ordre `timestamp desc`.
+  - [x] Réutiliser les surfaces de `llm_call_logs` existantes ou exposer une projection dédiée.
+  - [x] Garantir la non-fuite de contenu sensible.
 
-- [ ] Task 4: Implémenter la surface frontend admin (AC: 1 à 13)
-  - [ ] Ajouter une page ou un onglet dédié dans l'espace admin LLM.
-  - [ ] Construire les trois vues `par utilisateur`, `par abonnement`, `par feature/subfeature`.
-  - [ ] Ajouter filtres temporels, tri, pagination, export CSV et drill-down.
-  - [ ] Afficher explicitement la granularité agrégée par période sélectionnée.
-  - [ ] Réutiliser les composants/tokens/CSS admin existants.
+- [x] Task 4: Implémenter la surface frontend admin (AC: 1 à 13)
+  - [x] Ajouter une page ou un onglet dédié dans l'espace admin LLM.
+  - [x] Construire les trois vues `par utilisateur`, `par abonnement`, `par feature/subfeature`.
+  - [x] Ajouter filtres temporels, tri, pagination, export CSV et drill-down.
+  - [x] Afficher explicitement la granularité agrégée par période sélectionnée.
+  - [x] Réutiliser les composants/tokens/CSS admin existants.
 
-- [ ] Task 5: Ajouter les tests backend/frontend (AC: 1 à 13)
-  - [ ] Tests backend sur pagination, filtres, tri, export, drill-down.
-  - [ ] Tests backend sur la borne à 50 lignes et l'ordre `timestamp desc` du drill-down.
-  - [ ] Tests frontend sur les trois vues et la disparition de `use_case` comme axe primaire.
-  - [ ] Tests frontend sur filtres temporels + pagination serveur.
-  - [ ] Tests frontend sur la granularité par période affichée.
-  - [ ] Tests de non-fuite et de cohérence des exports.
+- [x] Task 5: Ajouter les tests backend/frontend (AC: 1 à 13)
+  - [x] Tests backend sur pagination, filtres, tri, export, drill-down.
+  - [x] Tests backend sur la borne à 50 lignes et l'ordre `timestamp desc` du drill-down.
+  - [x] Tests frontend sur les trois vues et la disparition de `use_case` comme axe primaire.
+  - [x] Tests frontend sur filtres temporels + pagination serveur.
+  - [x] Tests frontend sur la granularité par période affichée.
+  - [x] Tests de non-fuite et de cohérence des exports.
 
-- [ ] Task 6: Validation locale et documentation
-  - [ ] Documenter la nouvelle surface de pilotage consommation.
-  - [ ] Exécuter les validations backend/frontend pertinentes.
+- [x] Task 6: Validation locale et documentation
+  - [x] Documenter la nouvelle surface de pilotage consommation.
+  - [x] Exécuter les validations backend/frontend pertinentes.
 
 ## Dev Notes
 
@@ -185,7 +185,22 @@ GPT-5 Codex
 ### Completion Notes List
 
 - Story créée pour la surface admin de pilotage consommation LLM, dépendante du modèle canonique 66.48.
+- Endpoint `GET /v1/admin/llm/consumption/canonical` enrichi avec vues `user/subscription/feature`, pagination/tri/recherche serveur, export CSV et granularité explicite.
+- Drill-down `GET /v1/admin/llm/consumption/canonical/drilldown` ajouté, borné à 50 appels récents triés par timestamp décroissant, avec champs safe-by-design.
+- Onglet `Consommation` intégré dans `AdminPromptsPage` avec vues canoniques, filtres temporels, pagination serveur, export CSV et affichage de la granularité.
+- Tests backend/frontend mis à jour sur pagination/export/drilldown/non-régression axe canonique.
+- Validation locale exécutée: `ruff check` + `pytest -q app/tests/integration/test_admin_llm_canonical_consumption_api.py` + `vitest run AdminPromptsPage.test.tsx`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/66-49-dashboard-consommation-utilisateur-abonnement-feature.md`
+- `backend/app/api/v1/routers/admin_llm_consumption.py`
+- `backend/app/tests/integration/test_admin_llm_canonical_consumption_api.py`
+- `frontend/src/api/adminPrompts.ts`
+- `frontend/src/pages/admin/AdminPromptsPage.tsx`
+- `frontend/src/tests/AdminPromptsPage.test.tsx`
+- `docs/admin-implementation-overview.md`
+
+### Change Log
+
+- 2026-04-15: Implémentation complète du dashboard de consommation canonique admin (API, drill-down, export CSV, UI onglet consommation, tests backend/frontend, documentation).

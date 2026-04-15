@@ -15,6 +15,34 @@ type ResponseEnvelope<T> = {
   data: T
 }
 
+function normalizeUtcDateTimeParam(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return trimmed
+  const hasExplicitTimezone = /([zZ]|[+\-]\d{2}:\d{2})$/.test(trimmed)
+  const asDate = new Date(trimmed)
+  if (Number.isNaN(asDate.getTime())) {
+    return trimmed
+  }
+  if (hasExplicitTimezone) {
+    return asDate.toISOString()
+  }
+  // datetime-local values do not contain timezone information.
+  // Interpret them as local time then convert to UTC ISO for backend contract.
+  return new Date(
+    asDate.getFullYear(),
+    asDate.getMonth(),
+    asDate.getDate(),
+    asDate.getHours(),
+    asDate.getMinutes(),
+    asDate.getSeconds(),
+    asDate.getMilliseconds(),
+  ).toISOString()
+}
+
+export function toUtcIsoFromDateTimeInput(value: string): string {
+  return normalizeUtcDateTimeParam(value)
+}
+
 export type AdminLlmPersona = {
   id: string
   name: string
@@ -200,6 +228,61 @@ export type SnapshotDiffResponse = {
   from_snapshot_id: string
   to_snapshot_id: string
   entries: SnapshotDiffEntry[]
+}
+
+export type AdminConsumptionView = "user" | "subscription" | "feature"
+export type AdminConsumptionGranularity = "day" | "month"
+
+export type AdminConsumptionRow = {
+  period_start_utc: string
+  granularity: AdminConsumptionGranularity
+  user_id: number | null
+  user_email: string | null
+  subscription_plan: string | null
+  feature: string | null
+  subfeature: string | null
+  request_count: number
+  input_tokens: number
+  output_tokens: number
+  total_tokens: number
+  estimated_cost: number
+  avg_latency_ms: number
+  error_rate: number
+}
+
+export type AdminConsumptionResponse = {
+  data: AdminConsumptionRow[]
+  meta: {
+    view: AdminConsumptionView
+    granularity: AdminConsumptionGranularity
+    count: number
+    page: number
+    page_size: number
+    sort_by: string
+    sort_order: "asc" | "desc"
+    timezone: string
+    default_granularity_behavior: string
+  }
+}
+
+export type AdminConsumptionDrilldownRow = {
+  request_id: string
+  timestamp: string
+  feature: string | null
+  subfeature: string | null
+  provider: string | null
+  active_snapshot_version: string | null
+  manifest_entry_id: string | null
+  validation_status: string
+}
+
+export type AdminConsumptionDrilldownResponse = {
+  data: AdminConsumptionDrilldownRow[]
+  meta: {
+    count: number
+    limit: number
+    order: string
+  }
 }
 
 export class AdminPromptsApiError extends Error {
@@ -396,6 +479,130 @@ export async function getReleaseSnapshotDiff(
   }
 }
 
+export async function getAdminConsumption(params: {
+  view: AdminConsumptionView
+  granularity: AdminConsumptionGranularity
+  fromUtc?: string
+  toUtc?: string
+  search?: string
+  page?: number
+  pageSize?: number
+  sortBy?: string
+  sortOrder?: "asc" | "desc"
+}): Promise<AdminConsumptionResponse> {
+  try {
+    const query = new URLSearchParams()
+    query.set("view", params.view)
+    query.set("granularity", params.granularity)
+    if (params.fromUtc) query.set("from_utc", normalizeUtcDateTimeParam(params.fromUtc))
+    if (params.toUtc) query.set("to_utc", normalizeUtcDateTimeParam(params.toUtc))
+    if (params.search) query.set("search", params.search)
+    if (params.page) query.set("page", String(params.page))
+    if (params.pageSize) query.set("page_size", String(params.pageSize))
+    if (params.sortBy) query.set("sort_by", params.sortBy)
+    if (params.sortOrder) query.set("sort_order", params.sortOrder)
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/consumption/canonical?${query.toString()}`, {
+      headers: getAccessTokenAuthHeader(),
+    })
+    if (!response.ok) {
+      let payload: ErrorEnvelope | null = null
+      try {
+        payload = (await response.json()) as ErrorEnvelope
+      } catch {
+        payload = null
+      }
+      throw new AdminPromptsApiError(
+        payload?.error?.code ?? "unknown_error",
+        payload?.error?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        payload?.error?.details ?? {},
+      )
+    }
+    return (await response.json()) as AdminConsumptionResponse
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function getAdminConsumptionDrilldown(params: {
+  view: AdminConsumptionView
+  granularity: AdminConsumptionGranularity
+  periodStartUtc: string
+  userId?: number | null
+  subscriptionPlan?: string | null
+  feature?: string | null
+  subfeature?: string | null
+}): Promise<AdminConsumptionDrilldownResponse> {
+  try {
+    const query = new URLSearchParams()
+    query.set("view", params.view)
+    query.set("granularity", params.granularity)
+    query.set("period_start_utc", params.periodStartUtc)
+    if (params.userId !== undefined && params.userId !== null) query.set("user_id", String(params.userId))
+    if (params.subscriptionPlan) query.set("subscription_plan", params.subscriptionPlan)
+    if (params.feature) query.set("feature", params.feature)
+    if (params.subfeature) query.set("subfeature", params.subfeature)
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/consumption/canonical/drilldown?${query.toString()}`, {
+      headers: getAccessTokenAuthHeader(),
+    })
+    if (!response.ok) {
+      let payload: ErrorEnvelope | null = null
+      try {
+        payload = (await response.json()) as ErrorEnvelope
+      } catch {
+        payload = null
+      }
+      throw new AdminPromptsApiError(
+        payload?.error?.code ?? "unknown_error",
+        payload?.error?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        payload?.error?.details ?? {},
+      )
+    }
+    return (await response.json()) as AdminConsumptionDrilldownResponse
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function downloadAdminConsumptionCsv(params: {
+  view: AdminConsumptionView
+  granularity: AdminConsumptionGranularity
+  fromUtc?: string
+  toUtc?: string
+  search?: string
+}): Promise<Blob> {
+  try {
+    const query = new URLSearchParams()
+    query.set("view", params.view)
+    query.set("granularity", params.granularity)
+    query.set("export", "csv")
+    if (params.fromUtc) query.set("from_utc", normalizeUtcDateTimeParam(params.fromUtc))
+    if (params.toUtc) query.set("to_utc", normalizeUtcDateTimeParam(params.toUtc))
+    if (params.search) query.set("search", params.search)
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/consumption/canonical?${query.toString()}`, {
+      headers: getAccessTokenAuthHeader(),
+    })
+    if (!response.ok) {
+      let payload: ErrorEnvelope | null = null
+      try {
+        payload = (await response.json()) as ErrorEnvelope
+      } catch {
+        payload = null
+      }
+      throw new AdminPromptsApiError(
+        payload?.error?.code ?? "unknown_error",
+        payload?.error?.message ?? `Request failed with status ${response.status}`,
+        response.status,
+        payload?.error?.details ?? {},
+      )
+    }
+    return await response.blob()
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
 export async function updateAdminPersona(
   personaId: string,
   payload: Partial<Pick<AdminLlmPersona, "enabled">>,
@@ -509,5 +716,40 @@ export function useReleaseSnapshotDiff(fromSnapshotId: string | null, toSnapshot
     queryKey: ["admin-llm-release-snapshots-diff", fromSnapshotId, toSnapshotId],
     queryFn: () => getReleaseSnapshotDiff(fromSnapshotId ?? "", toSnapshotId ?? ""),
     enabled: enabled && Boolean(fromSnapshotId) && Boolean(toSnapshotId),
+  })
+}
+
+export function useAdminConsumption(
+  params: Parameters<typeof getAdminConsumption>[0],
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ["admin-llm-consumption", params],
+    queryFn: () => getAdminConsumption(params),
+    enabled,
+  })
+}
+
+export function useAdminConsumptionDrilldown(
+  params: Parameters<typeof getAdminConsumptionDrilldown>[0] | null,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ["admin-llm-consumption-drilldown", params],
+    queryFn: () =>
+      getAdminConsumptionDrilldown(
+        params ?? {
+          view: "user",
+          granularity: "day",
+          periodStartUtc: new Date().toISOString(),
+        },
+      ),
+    enabled: enabled && Boolean(params),
+  })
+}
+
+export function useDownloadAdminConsumptionCsv() {
+  return useMutation({
+    mutationFn: downloadAdminConsumptionCsv,
   })
 }

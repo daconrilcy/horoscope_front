@@ -68,10 +68,16 @@ Depuis `/admin`, les sections suivantes sont routées et implémentées :
    - Endpoints : `/v1/admin/ai/metrics`, `/v1/admin/ai/metrics/{useCase}`.
 
 6. `/admin/prompts` - `AdminPromptsPage`
-   - Onglets Prompts / Personas.
+   - Onglets Prompts / Personas / Consommation.
    - Historique versions de prompts.
    - Diff côte à côte.
    - Rollback d'une version active.
+   - Dashboard de consommation canonique:
+     - vues `par utilisateur`, `par abonnement`, `par feature/subfeature`;
+     - granularité `jour`/`mois`, filtres temporels, recherche, pagination serveur;
+     - export CSV conforme aux filtres actifs;
+     - drill-down des 50 appels LLM les plus récents corrélés, triés `timestamp desc`;
+     - champs sûrs uniquement dans le drill-down (pas de prompt ni de contenu sensible).
    - S'appuie sur la couche API admin LLM (`/v1/admin/llm/...`).
 
 7. `/admin/content` - `AdminContentPage`
@@ -120,6 +126,7 @@ Le backend inclut les routeurs admin dans `backend/app/main.py` :
 - `admin_logs_router` (`/v1/admin/logs`)
 - `admin_exports_router` (`/v1/admin/exports`)
 - `admin_llm_router` (`/v1/admin/llm`)
+- `admin_llm_consumption_router` (`/v1/admin/llm/consumption`)
 - `admin_llm_assembly_router` (`/v1/admin/llm/assembly`)
 - `admin_llm_release_router` (monté sur `/v1/admin/llm/releases`)
 - `admin_users_router` (`/v1/admin/users`)

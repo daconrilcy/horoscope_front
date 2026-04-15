@@ -7,15 +7,20 @@ import {
   useAdminPromptHistory,
   useRollbackPromptVersion,
   useAdminResolvedAssembly,
+  useAdminConsumption,
+  useAdminConsumptionDrilldown,
+  useDownloadAdminConsumptionCsv,
   useReleaseSnapshotsTimeline,
   useReleaseSnapshotDiff,
+  toUtcIsoFromDateTimeInput,
+  type AdminConsumptionView,
   type AdminPromptVersion,
   type SnapshotTimelineItem,
 } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
 import "./AdminPromptsPage.css"
 
-type PromptPageTab = "catalog" | "legacy" | "release" | "personas"
+type PromptPageTab = "catalog" | "legacy" | "release" | "consumption" | "personas"
 
 type LegacyRollbackModalProps = {
   isPending: boolean
@@ -105,6 +110,15 @@ export function AdminPromptsPage() {
   const [selectedManifestEntryId, setSelectedManifestEntryId] = useState<string | null>(null)
   const [fromSnapshotId, setFromSnapshotId] = useState<string | null>(null)
   const [toSnapshotId, setToSnapshotId] = useState<string | null>(null)
+  const [consumptionView, setConsumptionView] = useState<AdminConsumptionView>("user")
+  const [consumptionGranularity, setConsumptionGranularity] = useState<"day" | "month">("day")
+  const [consumptionFrom, setConsumptionFrom] = useState("")
+  const [consumptionTo, setConsumptionTo] = useState("")
+  const [consumptionSearch, setConsumptionSearch] = useState("")
+  const [consumptionPage, setConsumptionPage] = useState(1)
+  const [selectedDrilldownKey, setSelectedDrilldownKey] = useState<string | null>(null)
+  const consumptionFromUtc = consumptionFrom ? toUtcIsoFromDateTimeInput(consumptionFrom) : undefined
+  const consumptionToUtc = consumptionTo ? toUtcIsoFromDateTimeInput(consumptionTo) : undefined
 
   const catalogQuery = useAdminLlmCatalog({
     page,
@@ -166,6 +180,39 @@ export function AdminPromptsPage() {
     activeTab === "release",
   )
   const selectedLegacyHistory = legacyHistoryQuery.data ?? []
+  const exportCsvMutation = useDownloadAdminConsumptionCsv()
+  const consumptionQuery = useAdminConsumption(
+    {
+      view: consumptionView,
+      granularity: consumptionGranularity,
+      fromUtc: consumptionFromUtc,
+      toUtc: consumptionToUtc,
+      search: consumptionSearch || undefined,
+      page: consumptionPage,
+      pageSize: 20,
+      sortBy: "period_start_utc",
+      sortOrder: "desc",
+    },
+    activeTab === "consumption",
+  )
+  const selectedConsumptionRow = consumptionQuery.data?.data.find((item) => {
+    const key = `${item.period_start_utc}::${item.user_id ?? "none"}::${item.subscription_plan ?? "none"}::${item.feature ?? "none"}::${item.subfeature ?? "none"}`
+    return key === selectedDrilldownKey
+  })
+  const consumptionDrilldownQuery = useAdminConsumptionDrilldown(
+    selectedConsumptionRow
+      ? {
+          view: consumptionView,
+          granularity: consumptionGranularity,
+          periodStartUtc: selectedConsumptionRow.period_start_utc,
+          userId: selectedConsumptionRow.user_id,
+          subscriptionPlan: selectedConsumptionRow.subscription_plan,
+          feature: selectedConsumptionRow.feature,
+          subfeature: selectedConsumptionRow.subfeature,
+        }
+      : null,
+    activeTab === "consumption" && Boolean(selectedConsumptionRow),
+  )
   const selectedLegacyUseCase = useCases.find((item) => item.key === legacyUseCaseKey) ?? null
   const activeLegacyVersion =
     selectedLegacyHistory.find((item) => item.id === selectedLegacyUseCase?.active_prompt_version_id) ??
@@ -245,6 +292,9 @@ export function AdminPromptsPage() {
           </button>
           <button className={`tab-button ${activeTab === "release" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "release"} onClick={() => setActiveTab("release")}>
             Historique release
+          </button>
+          <button className={`tab-button ${activeTab === "consumption" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "consumption"} onClick={() => setActiveTab("consumption")}>
+            Consommation
           </button>
           <button className={`tab-button ${activeTab === "personas" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "personas"} onClick={() => setActiveTab("personas")}>
             Personas
@@ -464,6 +514,142 @@ export function AdminPromptsPage() {
                           ))}
                         </div>
                       </section>
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
+            </>
+          ) : null}
+        </section>
+      ) : null}
+
+      {activeTab === "consumption" ? (
+        <section className="panel admin-prompts-catalog" aria-label="Dashboard consommation LLM">
+          <div className="admin-prompts-catalog__filters">
+            <select value={consumptionView} onChange={(event) => { setConsumptionView(event.target.value as AdminConsumptionView); setConsumptionPage(1); setSelectedDrilldownKey(null) }}>
+              <option value="user">Vue par utilisateur</option>
+              <option value="subscription">Vue par abonnement</option>
+              <option value="feature">Vue par feature/subfeature</option>
+            </select>
+            <select value={consumptionGranularity} onChange={(event) => { setConsumptionGranularity(event.target.value as "day" | "month"); setConsumptionPage(1) }}>
+              <option value="day">Granularité journalière</option>
+              <option value="month">Granularité mensuelle</option>
+            </select>
+            <input type="datetime-local" value={consumptionFrom} onChange={(event) => { setConsumptionFrom(event.target.value); setConsumptionPage(1) }} />
+            <input type="datetime-local" value={consumptionTo} onChange={(event) => { setConsumptionTo(event.target.value); setConsumptionPage(1) }} />
+            <input value={consumptionSearch} onChange={(event) => { setConsumptionSearch(event.target.value); setConsumptionPage(1) }} placeholder="Recherche utilisateur / abonnement / feature" />
+            <button
+              className="text-button"
+              type="button"
+              onClick={async () => {
+                const blob = await exportCsvMutation.mutateAsync({
+                  view: consumptionView,
+                  granularity: consumptionGranularity,
+                  fromUtc: consumptionFromUtc,
+                  toUtc: consumptionToUtc,
+                  search: consumptionSearch || undefined,
+                })
+                const url = URL.createObjectURL(blob)
+                const link = document.createElement("a")
+                link.href = url
+                link.download = `llm-consumption-${consumptionView}-${consumptionGranularity}.csv`
+                link.click()
+                URL.revokeObjectURL(url)
+              }}
+              disabled={exportCsvMutation.isPending}
+            >
+              {exportCsvMutation.isPending ? "Export en cours..." : "Export CSV"}
+            </button>
+          </div>
+          <p className="text-muted">Granularité par défaut: agrégé par période sélectionnée ({consumptionGranularity}).</p>
+          {consumptionQuery.isPending ? <div className="loading-placeholder">Chargement consommation...</div> : null}
+          {consumptionQuery.isError ? <p className="chat-error">Impossible de charger la consommation.</p> : null}
+          {consumptionQuery.data ? (
+            <>
+              <div className="admin-prompts-catalog__table-wrap">
+                <table className="admin-prompts-catalog__table">
+                  <thead>
+                    <tr>
+                      <th>Période</th>
+                      <th>Axe</th>
+                      <th>Requêtes</th>
+                      <th>Tokens in/out/total</th>
+                      <th>Coût estimé</th>
+                      <th>Latence moyenne</th>
+                      <th>Taux erreur</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {consumptionQuery.data.data.map((row) => {
+                      const rowKey = `${row.period_start_utc}::${row.user_id ?? "none"}::${row.subscription_plan ?? "none"}::${row.feature ?? "none"}::${row.subfeature ?? "none"}`
+                      return (
+                        <tr key={rowKey}>
+                          <td>{new Date(row.period_start_utc).toLocaleString()}</td>
+                          <td>
+                            {consumptionView === "user" ? (row.user_email ?? `user:${row.user_id ?? "n/a"}`) : null}
+                            {consumptionView === "subscription" ? (row.subscription_plan ?? "unknown") : null}
+                            {consumptionView === "feature" ? `${row.feature ?? "unknown"} / ${row.subfeature ?? "-"}` : null}
+                          </td>
+                          <td>{row.request_count}</td>
+                          <td>{row.input_tokens} / {row.output_tokens} / {row.total_tokens}</td>
+                          <td>{row.estimated_cost.toFixed(4)} $</td>
+                          <td>{row.avg_latency_ms.toFixed(1)} ms</td>
+                          <td>{(row.error_rate * 100).toFixed(2)}%</td>
+                          <td>
+                            <button className="text-button" type="button" onClick={() => setSelectedDrilldownKey(rowKey)}>
+                              Voir logs récents
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="admin-prompts-catalog__footer">
+                <span>{consumptionQuery.data.meta.count} lignes</span>
+                <div className="admin-prompts-catalog__pagination">
+                  <button className="text-button" type="button" onClick={() => setConsumptionPage((value) => Math.max(1, value - 1))} disabled={consumptionPage <= 1}>
+                    Précédent
+                  </button>
+                  <span>Page {consumptionQuery.data.meta.page}</span>
+                  <button className="text-button" type="button" onClick={() => setConsumptionPage((value) => value + 1)} disabled={consumptionQuery.data.meta.page * consumptionQuery.data.meta.page_size >= consumptionQuery.data.meta.count}>
+                    Suivant
+                  </button>
+                </div>
+              </div>
+              {selectedConsumptionRow ? (
+                <section className="panel" aria-label="Drill-down appels LLM récents">
+                  <h3>Drill-down appels récents (50 max)</h3>
+                  {consumptionDrilldownQuery.isPending ? <div className="loading-placeholder">Chargement drill-down...</div> : null}
+                  {consumptionDrilldownQuery.isError ? <p className="chat-error">Impossible de charger les logs corrélés.</p> : null}
+                  {consumptionDrilldownQuery.data ? (
+                    <div className="admin-prompts-catalog__table-wrap">
+                      <table className="admin-prompts-catalog__table">
+                        <thead>
+                          <tr>
+                            <th>timestamp</th>
+                            <th>request_id</th>
+                            <th>feature/subfeature</th>
+                            <th>provider</th>
+                            <th>snapshot/manifest</th>
+                            <th>validation_status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {consumptionDrilldownQuery.data.data.map((item) => (
+                            <tr key={`${item.request_id}-${item.timestamp}`}>
+                              <td>{new Date(item.timestamp).toLocaleString()}</td>
+                              <td><code>{item.request_id}</code></td>
+                              <td>{item.feature ?? "unknown"} / {item.subfeature ?? "-"}</td>
+                              <td>{item.provider ?? "unknown"}</td>
+                              <td>{item.active_snapshot_version ?? item.manifest_entry_id ?? "n/a"}</td>
+                              <td>{item.validation_status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   ) : null}
                 </section>

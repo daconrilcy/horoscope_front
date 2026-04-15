@@ -4,6 +4,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event"
 
 import { AdminPromptsPage } from "../pages/admin/AdminPromptsPage"
+import { toUtcIsoFromDateTimeInput } from "../api/adminPrompts"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 
 vi.mock("../pages/admin/PersonasAdmin", () => ({
@@ -386,5 +387,149 @@ describe("AdminPromptsPage", () => {
       expect(screen.getByRole("heading", { name: "Diff snapshot" })).toBeInTheDocument()
     })
     expect(screen.getByText("chat:chat_default:premium:fr-FR")).toBeInTheDocument()
+  })
+
+  it("affiche l'onglet consommation avec granularité, pagination serveur et axe canonique", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical/drilldown")) {
+        return makeJsonResponse({
+          data: [
+            {
+              request_id: "req-1",
+              timestamp: "2026-04-20T10:00:00Z",
+              feature: "chat",
+              subfeature: "chat_default",
+              provider: "openai",
+              active_snapshot_version: "release-1",
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              validation_status: "valid",
+            },
+          ],
+          meta: { count: 1, limit: 50, order: "timestamp_desc" },
+        })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical")) {
+        return makeJsonResponse({
+          data: [
+            {
+              period_start_utc: "2026-04-20T00:00:00Z",
+              granularity: "day",
+              user_id: null,
+              user_email: null,
+              subscription_plan: null,
+              feature: "chat",
+              subfeature: "chat_default",
+              request_count: 12,
+              input_tokens: 1200,
+              output_tokens: 600,
+              total_tokens: 1800,
+              estimated_cost: 1.23,
+              avg_latency_ms: 240,
+              error_rate: 0.05,
+            },
+          ],
+          meta: {
+            view: "feature",
+            granularity: "day",
+            count: 3,
+            page: 1,
+            page_size: 20,
+            sort_by: "period_start_utc",
+            sort_order: "desc",
+            timezone: "UTC",
+            default_granularity_behavior: "aggregated_by_selected_period",
+          },
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("tab", { name: "Consommation" }))
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "feature")
+    await waitFor(() => {
+      expect(screen.getByText(/Granularité par défaut: agrégé par période sélectionnée/)).toBeInTheDocument()
+    })
+    expect(screen.getByText("chat / chat_default")).toBeInTheDocument()
+    expect(screen.queryByText("use_case")).not.toBeInTheDocument()
+    expect(screen.getByText("Page 1")).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: "Voir logs récents" }))
+    await waitFor(() => {
+      expect(screen.getByText("Drill-down appels récents (50 max)")).toBeInTheDocument()
+    })
+    expect(screen.getByText("req-1")).toBeInTheDocument()
+  })
+
+  it("convertit explicitement les bornes datetime-local en ISO UTC", () => {
+    expect(toUtcIsoFromDateTimeInput("2026-04-22T10:30")).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:30:00\.000Z$/)
+    expect(toUtcIsoFromDateTimeInput("2026-04-22T10:30")).not.toBe("2026-04-22T10:30")
+    expect(toUtcIsoFromDateTimeInput("2026-04-22T10:30:00Z")).toBe("2026-04-22T10:30:00.000Z")
+  })
+
+  it("envoie les filtres temporels de consommation au format UTC dans la requete API", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical")) {
+        return makeJsonResponse({
+          data: [],
+          meta: {
+            view: "user",
+            granularity: "day",
+            count: 0,
+            page: 1,
+            page_size: 20,
+            sort_by: "period_start_utc",
+            sort_order: "desc",
+            timezone: "UTC",
+            default_granularity_behavior: "aggregated_by_selected_period",
+          },
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    })
+    vi.stubGlobal("fetch", fetchSpy)
+
+    renderPage()
+    await userEvent.click(screen.getByRole("tab", { name: "Consommation" }))
+
+    const dateInputs = Array.from(document.querySelectorAll("input[type='datetime-local']"))
+    const fromInput = dateInputs[0]
+    expect(fromInput).toBeDefined()
+    await userEvent.type(fromInput as HTMLInputElement, "2026-04-22T10:30")
+
+    const latestConsumptionCall = fetchSpy.mock.calls
+      .map(([input]) => String(input))
+      .filter((url) => url.includes("/v1/admin/llm/consumption/canonical"))
+      .at(-1)
+
+    expect(latestConsumptionCall).toBeTruthy()
+    const parsedUrl = new URL(latestConsumptionCall as string)
+    const fromUtc = parsedUrl.searchParams.get("from_utc")
+    expect(fromUtc).toBeTruthy()
+    expect(fromUtc).toMatch(/Z$/)
+    expect(fromUtc).not.toBe("2026-04-22T10:30")
   })
 })
