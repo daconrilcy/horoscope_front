@@ -47,7 +47,7 @@ def test_admin_llm_sample_payload_crud_list_and_recommended_default():
         item_1 = response_1.json()["data"]
         created_ids.append(uuid.UUID(item_1["id"]))
         assert item_1["feature"] == "natal"
-        assert item_1["payload_json"]["chart_json"] == "[REDACTED]"
+        assert item_1["payload_json"]["chart_json"] == {"sun": "aries", "moon": "leo"}
 
         response_2 = client.post(
             "/v1/admin/llm/sample-payloads",
@@ -401,5 +401,55 @@ def test_admin_llm_sample_payload_list_include_inactive():
         app.dependency_overrides.clear()
         if created_id is not None:
             db.execute(delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id == created_id))
+            db.commit()
+        db.close()
+
+
+def test_admin_llm_sample_payload_get_returns_unsanitized_payload_json_for_round_trip():
+    """P1: GET/POST/PATCH expose payload_json brut (pas de redaction ADMIN_API au round-trip)."""
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    created_ids: list[uuid.UUID] = []
+    try:
+        db.execute(delete(LlmSamplePayloadModel))
+        db.commit()
+
+        body = {
+            "name": "chat-round-trip",
+            "feature": "chat",
+            "locale": "fr-FR",
+            "payload_json": {
+                "sample": True,
+                "last_user_msg": "Question utilisateur à préserver",
+            },
+            "description": None,
+            "is_default": False,
+            "is_active": True,
+        }
+        create = client.post("/v1/admin/llm/sample-payloads", json=body)
+        assert create.status_code == 200
+        row = create.json()["data"]
+        created_ids.append(uuid.UUID(row["id"]))
+        assert row["payload_json"]["last_user_msg"] == "Question utilisateur à préserver"
+
+        get_resp = client.get(f"/v1/admin/llm/sample-payloads/{row['id']}")
+        assert get_resp.status_code == 200
+        assert get_resp.json()["data"]["payload_json"]["last_user_msg"] == "Question utilisateur à préserver"
+
+        patch = client.patch(
+            f"/v1/admin/llm/sample-payloads/{row['id']}",
+            json={"description": "mise à jour sans toucher au JSON"},
+        )
+        assert patch.status_code == 200
+        assert patch.json()["data"]["payload_json"]["last_user_msg"] == "Question utilisateur à préserver"
+    finally:
+        app.dependency_overrides.clear()
+        if created_ids:
+            db.execute(
+                delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id.in_(created_ids))
+            )
             db.commit()
         db.close()

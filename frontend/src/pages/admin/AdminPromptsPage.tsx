@@ -493,14 +493,26 @@ export function AdminPromptsPage() {
   }, [resolvedInspectionMode])
 
   useEffect(() => {
-    if (resolvedInspectionMode !== "runtime_preview") return
-    const recommendedId = samplePayloadsQuery.data?.recommended_default_id ?? null
-    if (!recommendedId) {
-      setSelectedSamplePayloadId(null)
+    if (resolvedInspectionMode !== "runtime_preview") {
       return
     }
-    setSelectedSamplePayloadId((current) => current ?? recommendedId)
-  }, [resolvedInspectionMode, samplePayloadsQuery.data?.recommended_default_id])
+    const data = samplePayloadsQuery.data
+    if (!data) {
+      return
+    }
+    const itemIds = new Set(data.items.map((row) => row.id))
+    const recommendedId = data.recommended_default_id ?? null
+
+    setSelectedSamplePayloadId((current) => {
+      if (current && itemIds.has(current)) {
+        return current
+      }
+      if (recommendedId && itemIds.has(recommendedId)) {
+        return recommendedId
+      }
+      return null
+    })
+  }, [resolvedInspectionMode, samplePayloadsQuery.data])
 
   const facets = catalogMeta?.facets
   const availableFeatures = facets?.feature ?? []

@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.routers.admin_llm_error_codes import AdminLlmErrorCode
 from app.core.request_id import resolve_request_id
-from app.core.sensitive_data import DataCategory, Sink, classify_field, sanitize_payload
+from app.core.sensitive_data import DataCategory, classify_field
 from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
@@ -206,9 +206,8 @@ def _record_audit_event(
 
 
 def _to_api_payload(model: LlmSamplePayloadModel) -> AdminLlmSamplePayload:
-    payload = AdminLlmSamplePayload.model_validate(model).model_dump(mode="python")
-    payload["payload_json"] = sanitize_payload(payload["payload_json"], Sink.ADMIN_API)
-    return AdminLlmSamplePayload.model_validate(payload)
+    """JSON tel qu’en base : pas de sanitize ADMIN_API (évite [REDACTED] au round-trip édition)."""
+    return AdminLlmSamplePayload.model_validate(model)
 
 
 def _sample_payload_name_conflict_response(

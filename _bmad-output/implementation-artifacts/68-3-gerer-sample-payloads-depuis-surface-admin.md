@@ -39,6 +39,10 @@ so that la preview runtime soit maintenable sans passage par la base ou des fixt
 
 - [x] [Review][Defer] Double chargement catalogue sur l’onglet « Échantillons runtime » (requête facettes déjà couverte par le catalogue prompts + requête dans `AdminSamplePayloadsAdmin`) [frontend/src/pages/admin/AdminSamplePayloadsAdmin.tsx] — deferred, optimisation réseau / perf ultérieure.
 
+- [x] [Review][Patch] Édition / duplication destructives depuis un payload redacted [backend/app/api/v1/routers/admin_llm_sample_payloads.py] — `_to_api_payload` renvoie le JSON tel qu’en base (plus de `sanitize_payload` ADMIN_API sur `payload_json`) ; test d’intégration `test_admin_llm_sample_payload_get_returns_unsanitized_payload_json_for_round_trip`.
+
+- [x] [Review][Patch] Réinitialiser la sélection runtime si le sample payload courant devient invalide [frontend/src/pages/admin/AdminPromptsPage.tsx] — Effet sur `samplePayloadsQuery.data` : si `selectedSamplePayloadId` absent des `items`, repli sur `recommended_default_id` si présent dans la liste, sinon `null` ; test Vitest « réaligne le sample payload runtime… ».
+
 ## Dev Notes
 
 ### Technical Requirements
@@ -118,6 +122,7 @@ Auto (Cursor agent)
 - `frontend/src/pages/admin/AdminSamplePayloadsAdmin.tsx`
 - `frontend/src/pages/admin/AdminSamplePayloadsAdmin.css`
 - `frontend/src/tests/AdminSamplePayloadsAdmin.test.tsx`
+- `frontend/src/tests/AdminPromptsPage.test.tsx`
 
 ### Change Log
 
@@ -126,3 +131,4 @@ Auto (Cursor agent)
 - 2026-04-17 : Revue code — décision « réinitialiser le payload si la feature (filtre) change » appliquée dans `AdminSamplePayloadsAdmin.tsx`.
 - 2026-04-17 : Code review (2ᵉ passe, périmètre `origin/main...HEAD` story 68-3) — pas de nouveau finding bloquant ; les 2 `[Review][Patch]` ouverts restent pertinents ; suggestion mineure hors scope : envisager le même reset si seule la **locale** filtre change pendant l’édition.
 - 2026-04-17 : Fermeture des 2 `[Review][Patch]` — erreurs isolées + garde-fous payload hors `natal` (exemples + aide + insertion) ; test Vitest associé.
+- 2026-04-17 : Correctifs revue P1/P2 — `payload_json` non sanitisé sur les réponses CRUD sample payloads admin ; réalignement `selectedSamplePayloadId` sur la liste runtime + tests.
