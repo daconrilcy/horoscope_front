@@ -17,6 +17,7 @@ import {
   type AdminPromptVersion,
   type AdminInspectionMode,
   type AdminResolvedPlaceholder,
+  type AdminResolvedAssemblyView,
   type SnapshotTimelineItem,
 } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
@@ -64,6 +65,28 @@ type DiffRow = {
   rightText: string
   leftType: "unchanged" | "removed"
   rightType: "unchanged" | "added"
+}
+
+type LogicGraphNodeTone = "neutral" | "layer" | "system" | "fallback" | "sample"
+
+type LogicGraphNode = {
+  id: string
+  title: string
+  detail: string
+  tone: LogicGraphNodeTone
+}
+
+type LogicGraphEdge = {
+  from: string
+  to: string
+  label: string
+}
+
+type LogicGraphProjection = {
+  nodes: LogicGraphNode[]
+  edges: LogicGraphEdge[]
+  dense: boolean
+  fallbackSummary: string[]
 }
 
 const INSPECTION_MODE_OPTIONS: { value: AdminInspectionMode; label: string }[] = [
@@ -146,6 +169,124 @@ function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
   }
 
   return rows
+}
+
+function buildLogicGraphProjection(resolvedView: AdminResolvedAssemblyView): LogicGraphProjection {
+  const placeholderStats = resolvedView.resolved_result.placeholders.reduce(
+    (acc, item) => {
+      const source = (item.resolution_source ?? "").toLowerCase()
+      // Use exclusive categories to avoid counting a placeholder multiple times.
+      if (source.includes("fallback")) {
+        acc.fallback += 1
+      } else if (source.includes("sample")) {
+        acc.sample += 1
+      } else if (source.includes("runtime")) {
+        acc.runtime += 1
+      }
+      return acc
+    },
+    { runtime: 0, fallback: 0, sample: 0 },
+  )
+  const hasSubfeatureTemplate = Boolean(resolvedView.composition_sources.subfeature_template)
+  const hasPlanRules = Boolean(resolvedView.composition_sources.plan_rules?.content)
+  const hasPersonaBlock = Boolean(resolvedView.composition_sources.persona_block?.content)
+  const dense = resolvedView.resolved_result.placeholders.length >= 16
+
+  const nodes: LogicGraphNode[] = [
+    { id: "manifest", title: "manifest_entry_id", detail: resolvedView.manifest_entry_id, tone: "neutral" },
+    {
+      id: "composition",
+      title: "composition_sources",
+      detail: `${resolvedView.feature}/${resolvedView.subfeature ?? "-"} · plan ${resolvedView.plan ?? "-"}`,
+      tone: "neutral",
+    },
+    { id: "feature", title: "feature template", detail: resolvedView.composition_sources.feature_template.id, tone: "layer" },
+    {
+      id: "subfeature",
+      title: "subfeature template",
+      detail: hasSubfeatureTemplate ? (resolvedView.composition_sources.subfeature_template?.id ?? "actif") : "absent",
+      tone: "layer",
+    },
+    {
+      id: "planRules",
+      title: "plan rules",
+      detail: hasPlanRules ? (resolvedView.composition_sources.plan_rules?.ref ?? "actif") : "absent",
+      tone: "layer",
+    },
+    {
+      id: "persona",
+      title: "persona block",
+      detail: hasPersonaBlock ? (resolvedView.composition_sources.persona_block?.name ?? "actif") : "absent",
+      tone: "layer",
+    },
+    {
+      id: "hardPolicy",
+      title: "hard policy",
+      detail: resolvedView.composition_sources.hard_policy.safety_profile,
+      tone: "system",
+    },
+    {
+      id: "executionProfile",
+      title: "execution profile",
+      detail: `${resolvedView.composition_sources.execution_profile.provider}/${resolvedView.composition_sources.execution_profile.model}`,
+      tone: "system",
+    },
+    { id: "pipeline", title: "transformation_pipeline", detail: "assembled -> injectors -> rendered", tone: "neutral" },
+    {
+      id: "providerMessages",
+      title: "provider_messages",
+      detail: `context_quality: ${resolvedView.resolved_result.context_compensation_status}`,
+      tone: "system",
+    },
+    {
+      id: "runtimeInputs",
+      title: "runtime inputs",
+      detail: `runtime:${placeholderStats.runtime} · fallback:${placeholderStats.fallback} · sample:${placeholderStats.sample}`,
+      tone: "neutral",
+    },
+    {
+      id: "fallbackRegistry",
+      title: "fallbacks registre",
+      detail: `${placeholderStats.fallback} placeholder(s)`,
+      tone: "fallback",
+    },
+    {
+      id: "samplePayloads",
+      title: "sample payloads",
+      detail: `${placeholderStats.sample} placeholder(s)`,
+      tone: "sample",
+    },
+  ]
+
+  const edges: LogicGraphEdge[] = [
+    { from: "manifest", to: "composition", label: "résout la cible canonique" },
+    { from: "composition", to: "feature", label: "couche" },
+    { from: "composition", to: "subfeature", label: hasSubfeatureTemplate ? "couche" : "optionnel" },
+    { from: "composition", to: "planRules", label: hasPlanRules ? "couche" : "optionnel" },
+    { from: "composition", to: "persona", label: hasPersonaBlock ? "couche" : "optionnel" },
+    { from: "composition", to: "hardPolicy", label: "politique système" },
+    { from: "composition", to: "executionProfile", label: "paramètres provider" },
+    { from: "composition", to: "pipeline", label: "assemblage prompt" },
+    { from: "hardPolicy", to: "providerMessages", label: "message system" },
+    { from: "persona", to: "providerMessages", label: hasPersonaBlock ? "message persona" : "optionnel" },
+    { from: "executionProfile", to: "providerMessages", label: "paramètres d'exécution" },
+    { from: "pipeline", to: "providerMessages", label: "messages finaux" },
+    { from: "runtimeInputs", to: "pipeline", label: "substitutions variables" },
+    { from: "fallbackRegistry", to: "runtimeInputs", label: "fallbacks appliqués" },
+    { from: "samplePayloads", to: "runtimeInputs", label: "données de test" },
+  ]
+
+  return {
+    nodes,
+    edges,
+    dense,
+    fallbackSummary: [
+      `manifest_entry_id: ${resolvedView.manifest_entry_id}`,
+      `composition_sources -> transformation_pipeline -> provider_messages`,
+      `runtime inputs: runtime=${placeholderStats.runtime}, fallback=${placeholderStats.fallback}, sample=${placeholderStats.sample}`,
+      `couches: feature template, subfeature template, plan rules, persona block, hard policy, execution profile`,
+    ],
+  }
 }
 
 export function AdminPromptsPage() {
@@ -296,6 +437,7 @@ export function AdminPromptsPage() {
     activeLegacyVersion && compareLegacyVersion
       ? buildDiffRows(compareLegacyVersion.developer_prompt, activeLegacyVersion.developer_prompt)
       : []
+  const logicGraph = resolvedQuery.data ? buildLogicGraphProjection(resolvedQuery.data) : null
 
   const isLegacyLoading =
     useCasesQuery.isPending || (activeTab === "legacy" && legacyHistoryQuery.isPending)
@@ -545,7 +687,49 @@ export function AdminPromptsPage() {
                   {resolvedQuery.isPending ? <div className="loading-placeholder">Chargement du detail...</div> : null}
                   {resolvedQuery.isError ? <p className="chat-error">Impossible de charger le detail d'assembly.</p> : null}
                   {resolvedQuery.data ? (
-                    <div className="admin-prompts-resolved__zones">
+                    <>
+                      <section className="admin-prompts-logic-graph" aria-label="Construction logique">
+                        <h4>Construction logique</h4>
+                        <p className="text-muted">
+                          Graphe inspectable de la chaîne canonique: sources de composition, pipeline de transformation et données runtime.
+                        </p>
+                        <div className="admin-prompts-logic-graph__legend" aria-label="Légende du graphe">
+                          <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--system">Données système</span>
+                          <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--fallback">Fallback registre</span>
+                          <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--sample">Sample payload</span>
+                        </div>
+                        {!logicGraph?.dense ? (
+                          <>
+                            <div className="admin-prompts-logic-graph__nodes">
+                              {logicGraph?.nodes.map((node) => (
+                                <article key={node.id} className={`admin-prompts-logic-graph__node admin-prompts-logic-graph__node--${node.tone}`}>
+                                  <strong>{node.title}</strong>
+                                  <span className="text-muted">{node.detail}</span>
+                                </article>
+                              ))}
+                            </div>
+                            <ul className="admin-prompts-logic-graph__edges" aria-label="Connexions du graphe">
+                              {logicGraph?.edges.map((edge) => (
+                                <li key={`${edge.from}-${edge.to}`}>
+                                  <code>{edge.from}</code> → <code>{edge.to}</code> · {edge.label}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        ) : (
+                          <div className="admin-prompts-logic-graph__fallback" aria-live="polite">
+                            <p className="text-muted">
+                              Graphe simplifié en vue texte car la densité dépasse le seuil de lisibilité.
+                            </p>
+                            <ul>
+                              {logicGraph?.fallbackSummary.map((line) => (
+                                <li key={line}>{line}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </section>
+                      <div className="admin-prompts-resolved__zones">
                       <section>
                         <h4>Sources de composition</h4>
                         <p className="text-muted">
@@ -630,7 +814,8 @@ export function AdminPromptsPage() {
                           ))}
                         </div>
                       </section>
-                    </div>
+                      </div>
+                    </>
                   ) : null}
                 </section>
               ) : null}
