@@ -15,6 +15,8 @@ import {
   toUtcIsoFromDateTimeInput,
   type AdminConsumptionView,
   type AdminPromptVersion,
+  type AdminInspectionMode,
+  type AdminResolvedPlaceholder,
   type SnapshotTimelineItem,
 } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
@@ -64,6 +66,68 @@ type DiffRow = {
   rightType: "unchanged" | "added"
 }
 
+const INSPECTION_MODE_OPTIONS: { value: AdminInspectionMode; label: string }[] = [
+  { value: "assembly_preview", label: "Prévisualisation assembly" },
+  { value: "runtime_preview", label: "Prévisualisation runtime" },
+  { value: "live_execution", label: "Exécution live (sémantique runtime)" },
+]
+
+function inspectionModeShortLabel(mode: AdminInspectionMode): string {
+  switch (mode) {
+    case "assembly_preview":
+      return "Assembly"
+    case "runtime_preview":
+      return "Runtime"
+    case "live_execution":
+      return "Live inspecté"
+    default:
+      return mode
+  }
+}
+
+function inspectionModeHelpText(mode: AdminInspectionMode): string {
+  switch (mode) {
+    case "assembly_preview":
+      return "Prévisualisation statique: les placeholders attendus uniquement au runtime restent signalés comme absents mais non bloquants."
+    case "runtime_preview":
+      return "Prévisualisation runtime: les placeholders requis manquants sont traités comme bloquants selon la sémantique nominale."
+    case "live_execution":
+      return "Inspection live: même sémantique placeholder que runtime_preview pour l’instant. Cette vue n’exécute pas encore le provider."
+    default:
+      return ""
+  }
+}
+
+function placeholderStatusLabel(status: AdminResolvedPlaceholder["status"]): string {
+  switch (status) {
+    case "resolved":
+      return "Résolu"
+    case "optional_missing":
+      return "Optionnel absent"
+    case "fallback_used":
+      return "Repli appliqué"
+    case "blocking_missing":
+      return "Bloquant (manquant)"
+    case "expected_missing_in_preview":
+      return "Absent en prévisualisation (attendu au runtime)"
+    case "unknown":
+      return "Inconnu"
+    default:
+      return status
+  }
+}
+
+function placeholderStatusClassName(status: AdminResolvedPlaceholder["status"]): string {
+  switch (status) {
+    case "blocking_missing":
+      return "admin-prompts-resolved__placeholder-status--blocking"
+    case "expected_missing_in_preview":
+      return "admin-prompts-resolved__placeholder-status--expected-preview"
+    default:
+      return "admin-prompts-resolved__placeholder-status--neutral"
+  }
+}
+
 function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
   const leftLines = basePrompt.split("\n")
   const rightLines = nextPrompt.split("\n")
@@ -108,6 +172,7 @@ export function AdminPromptsPage() {
   const [legacyRollbackCandidate, setLegacyRollbackCandidate] = useState<AdminPromptVersion | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [selectedManifestEntryId, setSelectedManifestEntryId] = useState<string | null>(null)
+  const [resolvedInspectionMode, setResolvedInspectionMode] = useState<AdminInspectionMode>("assembly_preview")
   const [fromSnapshotId, setFromSnapshotId] = useState<string | null>(null)
   const [toSnapshotId, setToSnapshotId] = useState<string | null>(null)
   const [consumptionView, setConsumptionView] = useState<AdminConsumptionView>("user")
@@ -141,8 +206,13 @@ export function AdminPromptsPage() {
   const catalogMeta = catalogQuery.data?.meta
   const resolvedQuery = useAdminResolvedAssembly(
     selectedManifestEntryId,
+    resolvedInspectionMode,
     activeTab === "catalog" && Boolean(selectedManifestEntryId),
   )
+
+  useEffect(() => {
+    setResolvedInspectionMode("assembly_preview")
+  }, [selectedManifestEntryId])
 
   const facets = catalogMeta?.facets
   const availableFeatures = facets?.feature ?? []
@@ -440,11 +510,38 @@ export function AdminPromptsPage() {
               </div>
 
               {selectedManifestEntryId ? (
-                <section className="panel admin-prompts-resolved" aria-label="Detail resolved prompt assembly">
+                <section className="panel admin-prompts-resolved" aria-label="Détail assembly résolue">
                   <div className="admin-prompts-resolved__header">
-                    <h3>Resolved Prompt Assembly</h3>
-                    <code>{selectedManifestEntryId}</code>
+                    <h3>Assembly prompt résolue</h3>
+                    <div className="admin-prompts-resolved__header-meta">
+                      <code>{selectedManifestEntryId}</code>
+                      <span
+                        className={`badge ${resolvedQuery.data?.inspection_mode === "assembly_preview" ? "badge--info" : "badge--warning"}`}
+                      >
+                        Mode: {resolvedQuery.data ? inspectionModeShortLabel(resolvedQuery.data.inspection_mode) : "—"}
+                      </span>
+                      <label className="admin-prompts-resolved__mode-field">
+                        <span className="text-muted">Mode d&apos;inspection</span>
+                        <select
+                          aria-label="Mode d'inspection du détail"
+                          className="admin-prompts-resolved__mode-select"
+                          value={resolvedInspectionMode}
+                          onChange={(event) => {
+                            setResolvedInspectionMode(event.target.value as AdminInspectionMode)
+                          }}
+                        >
+                          {INSPECTION_MODE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
                   </div>
+                  <p className="admin-prompts-resolved__render-note">
+                    {inspectionModeHelpText(resolvedQuery.data?.inspection_mode ?? resolvedInspectionMode)}
+                  </p>
                   {resolvedQuery.isPending ? <div className="loading-placeholder">Chargement du detail...</div> : null}
                   {resolvedQuery.isError ? <p className="chat-error">Impossible de charger le detail d'assembly.</p> : null}
                   {resolvedQuery.data ? (
@@ -478,31 +575,50 @@ export function AdminPromptsPage() {
                       </section>
                       <section>
                         <h4>Pipeline de transformation</h4>
-                        <p className="text-muted">Assembled</p>
+                        <p className="text-muted">Assemblage (prompt développeur)</p>
                         <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.assembled_prompt}</pre>
-                        <p className="text-muted">Post injecteurs</p>
+                        <p className="text-muted">Après injecteurs (qualité de contexte, verbosité…)</p>
                         <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.post_injectors_prompt}</pre>
-                        <p className="text-muted">Rendered</p>
+                        <p className="text-muted">Aperçu après substitution des variables (best-effort, peut être partiel)</p>
                         <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.rendered_prompt}</pre>
                       </section>
                       <section>
-                        <h4>Resultat resolu</h4>
+                        <h4>Résultat agrégé (aperçu admin)</h4>
                         <p className="text-muted">
                           context_quality: {resolvedQuery.data.resolved_result.context_compensation_status}
                         </p>
+                        {typeof resolvedQuery.data.resolved_result.provider_messages.render_error === "string" &&
+                        resolvedQuery.data.resolved_result.provider_messages.render_error ? (
+                          <p
+                            className={
+                              resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
+                              "static_preview_incomplete"
+                                ? "admin-prompts-resolved__render-note"
+                                : "chat-error"
+                            }
+                          >
+                            {resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
+                            "static_preview_incomplete"
+                              ? "Substitution incomplète en prévisualisation statique — ce n’est pas une erreur d’exécution LLM: "
+                              : "Erreur de rendu des variables: "}
+                            {resolvedQuery.data.resolved_result.provider_messages.render_error}
+                          </p>
+                        ) : null}
                         <p className="text-muted">System / hard policy</p>
                         <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.system_hard_policy ?? "")}</pre>
-                        <p className="text-muted">Developer content rendu</p>
+                        <p className="text-muted">Contenu développeur après rendu des variables</p>
                         <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.developer_content_rendered ?? "")}</pre>
                         <p className="text-muted">Persona block</p>
                         <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.persona_block ?? "")}</pre>
-                        <p className="text-muted">Execution parameters</p>
+                        <p className="text-muted">Paramètres d&apos;exécution</p>
                         <pre className="admin-prompts-code">{JSON.stringify(resolvedQuery.data.resolved_result.provider_messages.execution_parameters, null, 2)}</pre>
                         <div className="admin-prompts-resolved__placeholders">
                           {resolvedQuery.data.resolved_result.placeholders.map((item) => (
                             <article key={item.name} className="admin-prompts-resolved__placeholder">
                               <strong>{item.name}</strong>
-                              <span className="text-muted">{item.status}</span>
+                              <span className={`admin-prompts-resolved__placeholder-status ${placeholderStatusClassName(item.status)}`}>
+                                {placeholderStatusLabel(item.status)}
+                              </span>
                               <span className="text-muted">{item.classification ?? "n/a"}</span>
                               <span className="text-muted">{item.resolution_source ?? "n/a"}</span>
                               <span className="text-muted">{item.reason ?? "n/a"}</span>

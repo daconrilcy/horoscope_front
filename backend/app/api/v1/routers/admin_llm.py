@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, List, Literal, Optional
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select
@@ -252,7 +252,14 @@ class ResolvedTransformationPipeline(BaseModel):
 
 class ResolvedPlaceholderView(BaseModel):
     name: str
-    status: Literal["resolved", "optional_missing", "fallback_used", "blocking_missing", "unknown"]
+    status: Literal[
+        "resolved",
+        "optional_missing",
+        "fallback_used",
+        "blocking_missing",
+        "expected_missing_in_preview",
+        "unknown",
+    ]
     classification: str | None = None
     resolution_source: str | None = None
     reason: str | None = None
@@ -272,6 +279,9 @@ class ResolvedResultView(BaseModel):
     manifest_entry_id: str
 
 
+AdminInspectionMode = Literal["assembly_preview", "runtime_preview", "live_execution"]
+
+
 class AdminResolvedAssemblyView(BaseModel):
     manifest_entry_id: str
     feature: str
@@ -279,6 +289,7 @@ class AdminResolvedAssemblyView(BaseModel):
     plan: str | None = None
     locale: str | None = None
     assembly_id: str | None = None
+    inspection_mode: AdminInspectionMode
     source_of_truth_status: str
     active_snapshot_id: str | None = None
     active_snapshot_version: str | None = None
@@ -358,6 +369,38 @@ def _to_none_if_literal_none(value: Any) -> str | None:
     if text == "None":
         return None
     return text
+
+
+def _classify_admin_render_error_kind(
+    inspection_mode: AdminInspectionMode,
+    exc: PromptRenderError | None,
+) -> str | None:
+    """
+    Classe l'erreur de rendu admin à partir des métadonnées stables de PromptRenderError
+    (préféré aux sous-chaînes sur le message seul).
+    """
+    if exc is None:
+        return None
+    details = exc.details or {}
+    if details.get("missing_variables"):
+        return "execution_failure"
+    msg_l = str(exc).lower()
+    if details.get("placeholder") is not None:
+        if "unauthorized" in msg_l:
+            return "execution_failure"
+        if "not resolved" in msg_l:
+            if inspection_mode == "assembly_preview":
+                return "static_preview_incomplete"
+            return "execution_failure"
+    if inspection_mode == "assembly_preview" and (
+        "unauthorized" in msg_l
+        or "missing required legacy" in msg_l
+        or "legacy variables" in msg_l
+    ):
+        return "execution_failure"
+    if inspection_mode == "assembly_preview":
+        return "static_preview_incomplete"
+    return "execution_failure"
 
 
 def _catalog_sort_value(entry: AdminLlmCatalogEntry, sort_by: str) -> tuple[int, str]:
@@ -1350,6 +1393,14 @@ def list_llm_catalog(
 def get_resolved_catalog_entry(
     manifest_entry_id: str,
     request: Request,
+    inspection_mode: AdminInspectionMode = Query(
+        "assembly_preview",
+        description=(
+            "Mode d'inspection admin: prévisualisation assembly (variables statiques), "
+            "prévisualisation runtime (manques traités comme bloquants), "
+            "ou exécution live (même sémantique runtime que runtime_preview pour l'instant)."
+        ),
+    ),
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
@@ -1550,6 +1601,7 @@ def get_resolved_catalog_entry(
     }
 
     render_error: str | None = None
+    render_exc: PromptRenderError | None = None
     try:
         rendered_prompt = PromptRenderer.render(
             post_injectors_prompt,
@@ -1560,6 +1612,7 @@ def get_resolved_catalog_entry(
         # Keep detail endpoint inspectable on blocking placeholders.
         rendered_prompt = post_injectors_prompt
         render_error = str(exc)
+        render_exc = exc
 
     reg = get_prompt_governance_registry()
     placeholder_defs = {
@@ -1618,16 +1671,28 @@ def get_resolved_catalog_entry(
                 )
             )
         elif placeholder_def and placeholder_def.classification == "required":
-            placeholders.append(
-                ResolvedPlaceholderView(
-                    name=placeholder_name,
-                    status="blocking_missing",
-                    classification=classification,
-                    resolution_source="missing_required",
-                    reason="required_placeholder_missing",
-                    safe_to_display=safe_to_display,
+            if inspection_mode == "assembly_preview":
+                placeholders.append(
+                    ResolvedPlaceholderView(
+                        name=placeholder_name,
+                        status="expected_missing_in_preview",
+                        classification=classification,
+                        resolution_source="static_preview_gap",
+                        reason="expected_at_runtime_not_in_static_preview",
+                        safe_to_display=safe_to_display,
+                    )
                 )
-            )
+            else:
+                placeholders.append(
+                    ResolvedPlaceholderView(
+                        name=placeholder_name,
+                        status="blocking_missing",
+                        classification=classification,
+                        resolution_source="missing_required",
+                        reason="required_placeholder_missing",
+                        safe_to_display=safe_to_display,
+                    )
+                )
         else:
             placeholders.append(
                 ResolvedPlaceholderView(
@@ -1657,6 +1722,8 @@ def get_resolved_catalog_entry(
         if effective_profile_timeout is not None
         else resolved.execution_config.timeout_seconds
     )
+
+    render_error_kind = _classify_admin_render_error_kind(inspection_mode, render_exc)
 
     execution_profile_view = {
         "id": (
@@ -1700,6 +1767,7 @@ def get_resolved_catalog_entry(
         plan=assembly_model.plan,
         locale=assembly_model.locale,
         assembly_id=str(assembly_model.id),
+        inspection_mode=inspection_mode,
         source_of_truth_status=source_of_truth_status,
         active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
         active_snapshot_version=active_snapshot.version if active_snapshot else None,
@@ -1748,6 +1816,7 @@ def get_resolved_catalog_entry(
                 "persona_block": resolved.persona_block,
                 "execution_parameters": execution_profile_view["provider_params"],
                 "render_error": render_error,
+                "render_error_kind": render_error_kind,
             },
             placeholders=placeholders,
             context_quality_handled_by_template=context_quality_handled_by_template,

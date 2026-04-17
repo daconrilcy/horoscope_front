@@ -138,13 +138,21 @@ export type AdminLlmCatalogResponse = {
 
 export type AdminResolvedPlaceholder = {
   name: string
-  status: "resolved" | "optional_missing" | "fallback_used" | "blocking_missing" | "unknown"
+  status:
+    | "resolved"
+    | "optional_missing"
+    | "fallback_used"
+    | "blocking_missing"
+    | "expected_missing_in_preview"
+    | "unknown"
   classification: string | null
   resolution_source: string | null
   reason: string | null
   safe_to_display: boolean
   value_preview: string | null
 }
+
+export type AdminInspectionMode = "assembly_preview" | "runtime_preview" | "live_execution"
 
 export type AdminResolvedAssemblyView = {
   manifest_entry_id: string
@@ -153,6 +161,7 @@ export type AdminResolvedAssemblyView = {
   plan: string | null
   locale: string | null
   assembly_id: string | null
+  inspection_mode: AdminInspectionMode
   source_of_truth_status: string
   active_snapshot_id: string | null
   active_snapshot_version: string | null
@@ -178,7 +187,10 @@ export type AdminResolvedAssemblyView = {
     rendered_prompt: string
   }
   resolved_result: {
-    provider_messages: Record<string, unknown>
+    provider_messages: {
+      render_error?: string | null
+      render_error_kind?: "execution_failure" | "static_preview_incomplete" | null
+    } & Record<string, unknown>
     placeholders: AdminResolvedPlaceholder[]
     context_quality_handled_by_template: boolean
     context_quality_instruction_injected: boolean
@@ -437,10 +449,18 @@ export async function getAdminPersonaDetail(personaId: string): Promise<AdminLlm
   }
 }
 
-export async function getAdminResolvedAssembly(manifestEntryId: string): Promise<AdminResolvedAssemblyView> {
+export async function getAdminResolvedAssembly(
+  manifestEntryId: string,
+  options: { inspectionMode?: AdminInspectionMode } = {},
+): Promise<AdminResolvedAssemblyView> {
   try {
+    const query = new URLSearchParams()
+    if (options.inspectionMode) {
+      query.set("inspection_mode", options.inspectionMode)
+    }
+    const qs = query.toString()
     const response = await apiFetch(
-      `${API_BASE_URL}/v1/admin/llm/catalog/${encodeURIComponent(manifestEntryId)}/resolved`,
+      `${API_BASE_URL}/v1/admin/llm/catalog/${encodeURIComponent(manifestEntryId)}/resolved${qs ? `?${qs}` : ""}`,
       {
         headers: getAccessTokenAuthHeader(),
       },
@@ -695,10 +715,14 @@ export function useUpdateAdminPersona() {
   })
 }
 
-export function useAdminResolvedAssembly(manifestEntryId: string | null, enabled = true) {
+export function useAdminResolvedAssembly(
+  manifestEntryId: string | null,
+  inspectionMode: AdminInspectionMode,
+  enabled = true,
+) {
   return useQuery({
-    queryKey: ["admin-llm-catalog-resolved", manifestEntryId],
-    queryFn: () => getAdminResolvedAssembly(manifestEntryId ?? ""),
+    queryKey: ["admin-llm-catalog-resolved", manifestEntryId, inspectionMode],
+    queryFn: () => getAdminResolvedAssembly(manifestEntryId ?? "", { inspectionMode }),
     enabled: enabled && Boolean(manifestEntryId),
   })
 }

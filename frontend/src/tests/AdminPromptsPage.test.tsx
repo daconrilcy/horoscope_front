@@ -55,6 +55,7 @@ describe("AdminPromptsPage", () => {
               plan: "premium",
               locale: "fr-FR",
               assembly_id: "assembly-1",
+              inspection_mode: "assembly_preview",
               source_of_truth_status: "active_snapshot",
               active_snapshot_id: "snapshot-1",
               active_snapshot_version: "v1",
@@ -178,10 +179,13 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByLabelText("Ordre tri catalogue")).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Resolved Prompt Assembly" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Assembly prompt résolue" })).toBeInTheDocument()
     })
     expect(screen.getByText("Pipeline de transformation")).toBeInTheDocument()
-    expect(screen.getByText("Resultat resolu")).toBeInTheDocument()
+    expect(screen.getByText("Résultat agrégé (aperçu admin)")).toBeInTheDocument()
+    expect(screen.getByLabelText("Mode d'inspection du détail")).toBeInTheDocument()
+    expect(screen.getByText(/Mode: Assembly/)).toBeInTheDocument()
+    expect(screen.getByText(/Prévisualisation statique/)).toBeInTheDocument()
     expect(screen.getAllByText("Execution profile").length).toBeGreaterThan(0)
     expect(screen.getByText("safe_to_display")).toBeInTheDocument()
     expect(screen.getByText("runtime_context")).toBeInTheDocument()

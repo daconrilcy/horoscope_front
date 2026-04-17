@@ -261,13 +261,14 @@ def assemble_developer_prompt(resolved: ResolvedAssembly, config: PromptAssembly
     """
     blocks = []
 
-    if config.feature_enabled:
+    # None doit être traité comme activé (valeur SQL non chargée / instance détachée).
+    if config.feature_enabled is not False:
         blocks.append(resolved.feature_template_prompt)
 
-    if config.subfeature_enabled and resolved.subfeature_template_prompt:
+    if config.subfeature_enabled is not False and resolved.subfeature_template_prompt:
         blocks.append(resolved.subfeature_template_prompt)
 
-    if config.plan_rules_enabled and resolved.plan_rules_content:
+    if config.plan_rules_enabled is not False and resolved.plan_rules_content:
         blocks.append(resolved.plan_rules_content)
 
     prompt = "\n\n".join(blocks)

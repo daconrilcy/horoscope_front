@@ -423,6 +423,11 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
         assert response.status_code == 200
         payload = response.json()["data"]
         assert payload["manifest_entry_id"] == manifest_entry_id
+        assert payload["inspection_mode"] == "assembly_preview"
+        pip = payload["transformation_pipeline"]["post_injectors_prompt"]
+        assert "last_user_msg" in pip, pip[:500]
+        ph_by_name = {p["name"]: p for p in payload["resolved_result"]["placeholders"]}
+        assert ph_by_name["last_user_msg"]["status"] == "expected_missing_in_preview"
         assert payload["source_of_truth_status"] == "active_snapshot"
         assert payload["composition_sources"]["feature_template"]["content"]
         assert payload["composition_sources"]["hard_policy"]["content"]
@@ -445,6 +450,23 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
         )
         assert isinstance(payload["resolved_result"]["placeholders"], list)
         assert "render_error" in payload["resolved_result"]["provider_messages"]
+
+        runtime_response = client.get(
+            f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview"
+        )
+        assert runtime_response.status_code == 200
+        runtime_payload = runtime_response.json()["data"]
+        assert runtime_payload["inspection_mode"] == "runtime_preview"
+        rph = {p["name"]: p for p in runtime_payload["resolved_result"]["placeholders"]}
+        assert rph["last_user_msg"]["status"] == "blocking_missing"
+
+        live_response = client.get(
+            f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=live_execution"
+        )
+        assert live_response.status_code == 200
+        assert live_response.json()["data"]["inspection_mode"] == "live_execution"
+        lph = {p["name"]: p for p in live_response.json()["data"]["resolved_result"]["placeholders"]}
+        assert lph["last_user_msg"]["status"] == "blocking_missing"
 
         with patch(
             "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
