@@ -36,6 +36,7 @@ so that je comprenne immédiatement quelles briques et quelles données alimente
 - [x] [Review][Patch] Chaîne de messages sous-modélisée dans le graphe [frontend/src/pages/admin/AdminPromptsPage.tsx:253]
 - [x] [Review][Patch] Double comptage possible des catégories runtime/fallback/sample [frontend/src/pages/admin/AdminPromptsPage.tsx:174]
 - [x] [Review][Patch] Couverture de tests edge cases incomplète sur la projection [frontend/src/tests/AdminPromptsPage.test.tsx:206]
+- [x] [Review][Patch] `missing_optional` n'est plus compté comme fallback registre dans le graphe [frontend/src/pages/admin/AdminPromptsPage.tsx:92]
 - [x] [Review][Defer] Résilience limitée si payload `resolved` partiel [frontend/src/pages/admin/AdminPromptsPage.tsx:174] — deferred, pre-existing
 
 ## Dev Notes
@@ -99,8 +100,9 @@ GPT-5 Codex
 - Graphe de construction logique ajouté dans le détail `resolved` avec nœuds/connexions couvrant `manifest_entry_id`, `composition_sources`, `transformation_pipeline`, `provider_messages` et `runtime inputs`.
 - Couches métier rendues explicitement dans le graphe: `feature template`, `subfeature template`, `plan rules`, `persona block`, `hard policy`, `execution profile`.
 - Distinction visuelle ajoutée via légende et styles dédiés: données système, fallback registre, sample payloads.
+- Classification des placeholders alignée sur le contrat backend: `fallback` reste dédié aux replis de registre, `static_preview_gap`/`missing_required` restent comptés comme dépendances runtime, et `missing_optional` reste neutre.
 - Fallback texte activé automatiquement pour les graphes denses (seuil placeholders) afin de préserver la lisibilité mobile/desktop.
-- Tests mis à jour: assertions du graphe inspectable + scénario de fallback dense.
+- Tests mis à jour: assertions du graphe inspectable + scénario de fallback dense + couverture du contrat backend réel pour `static_preview_gap`, `missing_required`, `fallback` et `missing_optional`.
 
 ### File List
 
@@ -112,3 +114,4 @@ GPT-5 Codex
 ### Change Log
 
 - 2026-04-17: Implémentation de la story 67.2 (graphe logique inspectable, légende de lecture, fallback texte, tests associés).
+- 2026-04-17: Ajustement post-review de la classification des sources runtime/fallback pour exclure `missing_optional` des fallbacks registre et aligner la documentation d'artefact.

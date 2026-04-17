@@ -89,6 +89,22 @@ type LogicGraphProjection = {
   fallbackSummary: string[]
 }
 
+function classifyPlaceholderSource(item: AdminResolvedPlaceholder): LogicGraphNodeTone | "runtime" {
+  const source = (item.resolution_source ?? "").toLowerCase()
+  if (source.includes("sample")) return "sample"
+  if (source.includes("fallback")) return "fallback"
+  if (
+    source.includes("runtime") ||
+    source === "static_preview_gap" ||
+    source === "missing_required" ||
+    item.status === "expected_missing_in_preview" ||
+    item.status === "blocking_missing"
+  ) {
+    return "runtime"
+  }
+  return "neutral"
+}
+
 const INSPECTION_MODE_OPTIONS: { value: AdminInspectionMode; label: string }[] = [
   { value: "assembly_preview", label: "Prévisualisation assembly" },
   { value: "runtime_preview", label: "Prévisualisation runtime" },
@@ -174,13 +190,12 @@ function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
 function buildLogicGraphProjection(resolvedView: AdminResolvedAssemblyView): LogicGraphProjection {
   const placeholderStats = resolvedView.resolved_result.placeholders.reduce(
     (acc, item) => {
-      const source = (item.resolution_source ?? "").toLowerCase()
-      // Use exclusive categories to avoid counting a placeholder multiple times.
-      if (source.includes("fallback")) {
+      const category = classifyPlaceholderSource(item)
+      if (category === "fallback") {
         acc.fallback += 1
-      } else if (source.includes("sample")) {
+      } else if (category === "sample") {
         acc.sample += 1
-      } else if (source.includes("runtime")) {
+      } else if (category === "runtime") {
         acc.runtime += 1
       }
       return acc

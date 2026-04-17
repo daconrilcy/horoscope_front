@@ -254,9 +254,9 @@ describe("AdminPromptsPage", () => {
                 },
                 placeholders: Array.from({ length: 16 }).map((_, index) => ({
                   name: `placeholder_${index}`,
-                  status: "resolved",
+                  status: index % 2 === 0 ? "expected_missing_in_preview" : "fallback_used",
                   classification: "required",
-                  resolution_source: index % 2 === 0 ? "runtime_context" : "fallback_registry",
+                  resolution_source: index % 2 === 0 ? "static_preview_gap" : "fallback",
                   reason: "from_context",
                   safe_to_display: true,
                   value_preview: `value_${index}`,
@@ -336,7 +336,7 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByText(/runtime=8, fallback=8, sample=0/)).toBeInTheDocument()
   })
 
-  it("classe chaque placeholder dans une seule catégorie de source", async () => {
+  it("classe les sources selon le contrat backend (runtime/fallback/sample)", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
@@ -385,13 +385,40 @@ describe("AdminPromptsPage", () => {
                 },
                 placeholders: [
                   {
-                    name: "mixed_source",
-                    status: "resolved",
+                    name: "preview_gap",
+                    status: "expected_missing_in_preview",
                     classification: "required",
-                    resolution_source: "runtime_fallback",
+                    resolution_source: "static_preview_gap",
+                    reason: "needs_runtime_values",
+                    safe_to_display: false,
+                    value_preview: null,
+                  },
+                  {
+                    name: "missing_required_runtime",
+                    status: "blocking_missing",
+                    classification: "required",
+                    resolution_source: "missing_required",
+                    reason: "missing_runtime",
+                    safe_to_display: false,
+                    value_preview: null,
+                  },
+                  {
+                    name: "fallback_optional",
+                    status: "fallback_used",
+                    classification: "optional",
+                    resolution_source: "fallback",
                     reason: "from_context",
                     safe_to_display: true,
                     value_preview: "value",
+                  },
+                  {
+                    name: "missing_optional_only",
+                    status: "optional_missing",
+                    classification: "optional",
+                    resolution_source: "missing_optional",
+                    reason: "optional_placeholder_missing",
+                    safe_to_display: false,
+                    value_preview: null,
                   },
                 ],
                 context_quality_handled_by_template: false,
@@ -464,8 +491,9 @@ describe("AdminPromptsPage", () => {
     })
     await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
     await waitFor(() => {
-      expect(screen.getByText("runtime:0 · fallback:1 · sample:0")).toBeInTheDocument()
+      expect(screen.getByText("runtime:2 · fallback:1 · sample:0")).toBeInTheDocument()
     })
+    expect(screen.getByText("missing_optional")).toBeInTheDocument()
   })
 
   it("affiche l'onglet historique legacy avec rollback", async () => {
