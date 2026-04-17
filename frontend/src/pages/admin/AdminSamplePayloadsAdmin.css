@@ -100,6 +100,17 @@
   font-size: var(--font-size-xs);
 }
 
+.sample-payloads-admin__payload-constraints {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-5);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.sample-payloads-admin__modal-field-actions {
+  margin: 0 0 var(--space-2);
+}
+
 .sample-payloads-admin__checkbox-row {
   display: flex;
   flex-wrap: wrap;

@@ -1,6 +1,6 @@
 # Story 68.3: Permettre la gestion admin des sample payloads depuis la surface de contrôle
 
-Status: in-progress
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -33,9 +33,9 @@ so that la preview runtime soit maintenable sans passage par la base ou des fixt
 
 - [x] [Review][Decision] Duplication / changement de cible : choix produit **autoriser** le changement de feature dans les filtres et **réinitialiser les champs payload** (chart/JSON) quand la feature change pendant qu’une modale est ouverte — implémenté (`defaultPayloadFields`, ref `payloadBaselineFeatureRef`, texte d’aide modale). Le POST continue d’utiliser `mgmtFeature` / `mgmtLocale` ; le formulaire reste cohérent après changement de cible.
 
-- [ ] [Review][Patch] Renforcer les garde-fous hors domaine `natal` [frontend/src/pages/admin/AdminSamplePayloadsAdmin.tsx] — Les Dev Notes demandent d’éviter un éditeur JSON totalement libre ; pour les features non-natal, un seul textarea `payload_json` reste peu guidé (seulement parse + erreurs API).
+- [x] [Review][Patch] Renforcer les garde-fous hors domaine `natal` [frontend/src/pages/admin/AdminSamplePayloadsAdmin.tsx] — Exemples JSON par feature (`SUGGESTED_GENERIC_PAYLOAD_BY_FEATURE`), texte d’aide structuré, bouton « Insérer l’exemple suggéré », styles `AdminSamplePayloadsAdmin.css`.
 
-- [ ] [Review][Patch] Isoler les messages d’erreur par contexte (liste vs modale édition vs modale suppression) [frontend/src/pages/admin/AdminSamplePayloadsAdmin.tsx] — Un même `formError` peut laisser un message d’échec d’édition visible lorsqu’on ouvre la suppression, ou mélanger les contextes.
+- [x] [Review][Patch] Isoler les messages d’erreur par contexte (liste vs modale édition vs modale suppression) [frontend/src/pages/admin/AdminSamplePayloadsAdmin.tsx] — États `listActionError`, `editorError`, `deleteError` avec affichage conditionnel (liste masquée si modale ouverte / suppression).
 
 - [x] [Review][Defer] Double chargement catalogue sur l’onglet « Échantillons runtime » (requête facettes déjà couverte par le catalogue prompts + requête dans `AdminSamplePayloadsAdmin`) [frontend/src/pages/admin/AdminSamplePayloadsAdmin.tsx] — deferred, optimisation réseau / perf ultérieure.
 
@@ -124,3 +124,5 @@ Auto (Cursor agent)
 - 2026-04-17 : Implémentation gestion admin sample payloads (UI + tests + liste inactifs).
 - 2026-04-17 : E2E Playwright flux Données d’exemple → Échantillons runtime ; correctifs seed / auto-sélection locale sous Strict Mode ; docs artefacts epic 68.3.
 - 2026-04-17 : Revue code — décision « réinitialiser le payload si la feature (filtre) change » appliquée dans `AdminSamplePayloadsAdmin.tsx`.
+- 2026-04-17 : Code review (2ᵉ passe, périmètre `origin/main...HEAD` story 68-3) — pas de nouveau finding bloquant ; les 2 `[Review][Patch]` ouverts restent pertinents ; suggestion mineure hors scope : envisager le même reset si seule la **locale** filtre change pendant l’édition.
+- 2026-04-17 : Fermeture des 2 `[Review][Patch]` — erreurs isolées + garde-fous payload hors `natal` (exemples + aide + insertion) ; test Vitest associé.

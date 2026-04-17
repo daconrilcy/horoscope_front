@@ -24,6 +24,22 @@ const DEFAULT_GENERIC_PAYLOAD = `{
   "sample": true
 }`
 
+/** Exemples JSON minimaux par feature canonique (garde-fous revue code 68-3, hors natal). */
+const SUGGESTED_GENERIC_PAYLOAD_BY_FEATURE: Record<string, string> = {
+  chat: JSON.stringify(
+    { sample: true, use_case: "chat_test", last_user_msg: "Message de test minimal pour le chat." },
+    null,
+    2,
+  ),
+  guidance: JSON.stringify({ sample: true, topic: "orientation", locale: "fr-FR" }, null, 2),
+  horoscope_daily: JSON.stringify({ sample: true, day_key: "2026-04-17", plan: "free" }, null, 2),
+}
+
+function suggestedGenericPayloadText(feature: string): string {
+  const key = feature.trim().toLowerCase()
+  return SUGGESTED_GENERIC_PAYLOAD_BY_FEATURE[key] ?? DEFAULT_GENERIC_PAYLOAD
+}
+
 const SAMPLE_PAYLOAD_ERROR_MESSAGES_FR: Readonly<Record<string, string>> = {
   invalid_sample_payload: "Payload invalide (JSON, clés sensibles ou contraintes métier).",
   sample_payload_name_conflict: "Ce nom existe déjà pour cette feature et cette locale.",
@@ -112,7 +128,7 @@ function defaultPayloadFields(feature: string): Pick<EditorState, "natalPayloadM
     natalPayloadMode: natal ? "chart_guided" : "json_blob",
     chartJsonText: DEFAULT_NATAL_CHART,
     extrasJsonText: "",
-    genericPayloadText: natal ? DEFAULT_NATAL_CHART : DEFAULT_GENERIC_PAYLOAD,
+    genericPayloadText: natal ? DEFAULT_NATAL_CHART : suggestedGenericPayloadText(feature),
   }
 }
 
@@ -132,7 +148,7 @@ function editorFromDetail(detail: AdminLlmSamplePayload, mode: EditorMode): Edit
   const payload = detail.payload_json
   let chartJsonText = DEFAULT_NATAL_CHART
   let extrasJsonText = ""
-  let genericPayloadText = DEFAULT_GENERIC_PAYLOAD
+  let genericPayloadText = natal ? DEFAULT_NATAL_CHART : suggestedGenericPayloadText(detail.feature)
   let natalPayloadMode: EditorState["natalPayloadMode"] = "json_blob"
   if (natal && payload && typeof payload.chart_json === "object" && payload.chart_json !== null) {
     natalPayloadMode = "chart_guided"
@@ -219,7 +235,9 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
 
   const [editorOpen, setEditorOpen] = useState(false)
   const [editor, setEditor] = useState<EditorState | null>(null)
-  const [formError, setFormError] = useState<string | null>(null)
+  const [listActionError, setListActionError] = useState<string | null>(null)
+  const [editorError, setEditorError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [banner, setBanner] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
   /** Feature « de référence » du formulaire ouvert : si le filtre feature change, on vide les champs payload (revue code 68-3). */
@@ -235,7 +253,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
       return
     }
     payloadBaselineFeatureRef.current = mgmtFeature
-    setFormError(null)
+    setEditorError(null)
     setEditor((prev) => (prev ? { ...prev, ...defaultPayloadFields(mgmtFeature) } : prev))
   }, [editorOpen, mgmtFeature])
 
@@ -244,13 +262,15 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
       return
     }
     payloadBaselineFeatureRef.current = mgmtFeature
-    setFormError(null)
+    setListActionError(null)
+    setEditorError(null)
     setEditor(emptyEditor(mgmtFeature))
     setEditorOpen(true)
   }
 
   const openEdit = async (id: string) => {
-    setFormError(null)
+    setListActionError(null)
+    setEditorError(null)
     setBanner(null)
     try {
       const detail = await getAdminLlmSamplePayload(id)
@@ -258,12 +278,13 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
       setEditor(editorFromDetail(detail, "edit"))
       setEditorOpen(true)
     } catch (error) {
-      setFormError(formatSamplePayloadApiError(error))
+      setListActionError(formatSamplePayloadApiError(error))
     }
   }
 
   const openDuplicate = async (id: string) => {
-    setFormError(null)
+    setListActionError(null)
+    setEditorError(null)
     setBanner(null)
     try {
       const detail = await getAdminLlmSamplePayload(id)
@@ -275,7 +296,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
       setEditor(copy)
       setEditorOpen(true)
     } catch (error) {
-      setFormError(formatSamplePayloadApiError(error))
+      setListActionError(formatSamplePayloadApiError(error))
     }
   }
 
@@ -293,7 +314,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
     if (!editor || !mgmtFeature || !mgmtLocale) {
       return
     }
-    setFormError(null)
+    setEditorError(null)
     try {
       const payloadJson = buildPayloadJsonForSubmit()
       if (editor.mode === "create") {
@@ -324,12 +345,12 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
       setEditorOpen(false)
       setEditor(null)
     } catch (error) {
-      setFormError(formatSamplePayloadApiError(error))
+      setEditorError(formatSamplePayloadApiError(error))
     }
   }
 
   const handleToggleActive = async (row: AdminLlmSamplePayloadSummary) => {
-    setFormError(null)
+    setListActionError(null)
     setBanner(null)
     try {
       await updateMutation.mutateAsync({
@@ -338,7 +359,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
       })
       setBanner(row.is_active ? "Sample payload désactivé." : "Sample payload réactivé.")
     } catch (error) {
-      setFormError(formatSamplePayloadApiError(error))
+      setListActionError(formatSamplePayloadApiError(error))
     }
   }
 
@@ -346,13 +367,13 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
     if (!deleteTarget) {
       return
     }
-    setFormError(null)
+    setDeleteError(null)
     try {
       await deleteMutation.mutateAsync(deleteTarget.id)
       setBanner(`Sample payload « ${deleteTarget.name} » supprimé.`)
       setDeleteTarget(null)
     } catch (error) {
-      setFormError(formatSamplePayloadApiError(error))
+      setDeleteError(formatSamplePayloadApiError(error))
     }
   }
 
@@ -379,9 +400,9 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
           {banner}
         </p>
       ) : null}
-      {formError && !editorOpen ? (
+      {listActionError && !editorOpen && !deleteTarget ? (
         <p className="chat-error" role="alert">
-          {formError}
+          {listActionError}
         </p>
       ) : null}
 
@@ -492,7 +513,8 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
                           className="text-button"
                           type="button"
                           onClick={() => {
-                            setFormError(null)
+                            setDeleteError(null)
+                            setListActionError(null)
                             setDeleteTarget({ id: row.id, name: row.name })
                           }}
                         >
@@ -528,9 +550,9 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
               champs <strong>payload</strong> (JSON / chart) sont réinitialisés pour rester alignés sur la nouvelle
               cible ; le nom, la description et les cases à cocher ne sont pas effacés.
             </p>
-            {formError ? (
+            {editorError ? (
               <p className="chat-error" role="alert">
-                {formError}
+                {editorError}
               </p>
             ) : null}
 
@@ -611,6 +633,27 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
                     ? "payload_json natal (objet JSON complet, chart_json obligatoire)"
                     : "payload_json (objet JSON, non vide)"}
                 </label>
+                <ul className="sample-payloads-admin__payload-constraints" role="note">
+                  <li>Objet JSON uniquement (pas de tableau racine ni de chaîne seule).</li>
+                  <li>Au moins une clé ; évitez emails, mots de passe, jetons ou identifiants (rejet côté API).</li>
+                  <li>
+                    Préférez des clés alignées avec les placeholders du prompt pour la feature{" "}
+                    <strong>{mgmtFeature}</strong>.
+                  </li>
+                </ul>
+                <p className="sample-payloads-admin__modal-field-actions">
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() => {
+                      setEditor((prev) =>
+                        prev ? { ...prev, genericPayloadText: suggestedGenericPayloadText(mgmtFeature) } : prev,
+                      )
+                    }}
+                  >
+                    Insérer l&apos;exemple suggéré ({mgmtFeature})
+                  </button>
+                </p>
                 <textarea
                   id="sample-payload-generic"
                   value={editor.genericPayloadText}
@@ -628,7 +671,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
                 onClick={() => {
                   setEditorOpen(false)
                   setEditor(null)
-                  setFormError(null)
+                  setEditorError(null)
                 }}
               >
                 Annuler
@@ -648,9 +691,9 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
             <p className="admin-prompts-modal__copy">
               Confirmer la suppression de <strong>{deleteTarget.name}</strong> ? Cette action est irréversible.
             </p>
-            {formError ? (
+            {deleteError ? (
               <p className="chat-error" role="alert">
-                {formError}
+                {deleteError}
               </p>
             ) : null}
             <div className="modal-actions">
@@ -659,7 +702,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
                 type="button"
                 onClick={() => {
                   setDeleteTarget(null)
-                  setFormError(null)
+                  setDeleteError(null)
                 }}
               >
                 Annuler
