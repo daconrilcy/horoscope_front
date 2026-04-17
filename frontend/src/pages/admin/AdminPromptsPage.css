@@ -366,13 +366,21 @@
 .admin-prompts-resolved__zones {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.admin-prompts-resolved__zones section {
+.admin-prompts-resolved__zone {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-prompts-resolved__zone h4 {
+  margin: 0;
 }
 
 .admin-prompts-resolved__placeholders {
@@ -480,11 +488,28 @@
 
 .admin-prompts-resolved__placeholder {
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.4fr) repeat(5, minmax(0, auto));
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.4fr) repeat(4, minmax(0, auto)) minmax(120px, 1fr);
   gap: var(--space-2);
   border: 1px solid var(--glass-border);
   border-radius: 10px;
   padding: var(--space-2) var(--space-3);
+}
+
+.admin-prompts-resolved__state {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text-secondary);
+}
+
+.admin-prompts-resolved__state--warning {
+  border-color: color-mix(in srgb, var(--warning) 60%, var(--glass-border));
+}
+
+.admin-prompts-resolved__state--error {
+  border-color: color-mix(in srgb, var(--danger) 60%, var(--glass-border));
 }
 
 .admin-prompts-release {

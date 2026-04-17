@@ -181,14 +181,23 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Assembly prompt résolue" })).toBeInTheDocument()
     })
-    expect(screen.getByText("Pipeline de transformation")).toBeInTheDocument()
-    expect(screen.getByText("Résultat agrégé (aperçu admin)")).toBeInTheDocument()
+    expect(screen.getByText("Prompts")).toBeInTheDocument()
+    expect(screen.getByText("Données d'exemple")).toBeInTheDocument()
+    expect(screen.getByText("Retour LLM")).toBeInTheDocument()
     expect(screen.getByLabelText("Mode d'inspection du détail")).toBeInTheDocument()
     expect(screen.getByText(/Mode: Assembly/)).toBeInTheDocument()
     expect(screen.getByText(/Prévisualisation statique/)).toBeInTheDocument()
     expect(screen.getAllByText("Execution profile").length).toBeGreaterThan(0)
-    expect(screen.getByText("safe_to_display")).toBeInTheDocument()
-    expect(screen.getByText("runtime_context")).toBeInTheDocument()
+    expect(screen.getByText("Affichable")).toBeInTheDocument()
+    expect(screen.getByText("Contexte runtime")).toBeInTheDocument()
+    expect(screen.getByText("assembled prompt")).toBeInTheDocument()
+    expect(screen.getByText("post injectors prompt")).toBeInTheDocument()
+    expect(screen.getByText("rendered prompt")).toBeInTheDocument()
+    expect(screen.getByText("system hard policy")).toBeInTheDocument()
+    expect(screen.getByText("developer content")).toBeInTheDocument()
+    expect(screen.getAllByText("persona block").length).toBeGreaterThan(0)
+    expect(screen.getByText(/Sortie d'exécution live/)).toBeInTheDocument()
+    expect(screen.getByText(/Vide pour l'instant/)).toBeInTheDocument()
     expect(screen.getByText("Construction logique")).toBeInTheDocument()
     expect(screen.getByText("manifest_entry_id")).toBeInTheDocument()
     expect(screen.getByText("composition_sources")).toBeInTheDocument()
@@ -198,7 +207,7 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByText("feature template")).toBeInTheDocument()
     expect(screen.getByText("subfeature template")).toBeInTheDocument()
     expect(screen.getByText("plan rules")).toBeInTheDocument()
-    expect(screen.getByText("persona block")).toBeInTheDocument()
+    expect(screen.getAllByText("persona block").length).toBeGreaterThan(0)
     expect(screen.getByText("hard policy")).toBeInTheDocument()
     expect(screen.getByText("sample payloads")).toBeInTheDocument()
     expect(screen.getByText(/message system/)).toBeInTheDocument()
@@ -493,7 +502,258 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("runtime:2 · fallback:1 · sample:0")).toBeInTheDocument()
     })
-    expect(screen.getByText("missing_optional")).toBeInTheDocument()
+    expect(screen.getByText("Manquant optionnel")).toBeInTheDocument()
+  })
+
+  it("affiche des messages de premier rang pour preview partielle, erreur et données d'exemple vides", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        if (url.includes("/resolved")) {
+          return makeJsonResponse({
+            data: {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              assembly_id: "assembly-1",
+              inspection_mode: "runtime_preview",
+              source_of_truth_status: "active_snapshot",
+              active_snapshot_id: "snapshot-1",
+              active_snapshot_version: "v1",
+              composition_sources: {
+                feature_template: { id: "tpl-1", content: "feature prompt" },
+                subfeature_template: null,
+                plan_rules: null,
+                persona_block: null,
+                hard_policy: { safety_profile: "astrology", content: "hard policy prompt" },
+                execution_profile: {
+                  id: "profile-1",
+                  name: "default",
+                  provider: "openai",
+                  model: "gpt-5",
+                  reasoning: "medium",
+                  verbosity: "balanced",
+                  provider_params: { max_output_tokens: 1200 },
+                },
+              },
+              transformation_pipeline: {
+                assembled_prompt: "assembled",
+                post_injectors_prompt: "post",
+                rendered_prompt: "rendered",
+              },
+              resolved_result: {
+                provider_messages: {
+                  system_hard_policy: "hard policy prompt",
+                  developer_content_rendered: "rendered",
+                  persona_block: "",
+                  execution_parameters: { max_output_tokens: 1200 },
+                  render_error_kind: "static_preview_incomplete",
+                  render_error: "missing runtime placeholder",
+                },
+                placeholders: [],
+                context_quality_handled_by_template: false,
+                context_quality_instruction_injected: false,
+                context_compensation_status: "not_needed",
+                source_of_truth_status: "active_snapshot",
+                active_snapshot_id: "snapshot-1",
+                active_snapshot_version: "v1",
+                manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              },
+            },
+          })
+        }
+        return makeJsonResponse({
+          data: [
+            {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              assembly_id: "assembly-1",
+              assembly_status: "published",
+              execution_profile_id: "profile-1",
+              execution_profile_ref: "profile-1",
+              output_contract_ref: "contract-1",
+              active_snapshot_id: "snapshot-1",
+              active_snapshot_version: "v1",
+              provider: "openai",
+              model: "gpt-5",
+              source_of_truth_status: "active_snapshot",
+              release_health_status: "monitoring",
+              catalog_visibility_status: "visible",
+              runtime_signal_status: "fresh",
+              execution_path_kind: "nominal",
+              context_compensation_status: "none",
+              max_output_tokens_source: "execution_profile",
+            },
+          ],
+          meta: {
+            total: 1,
+            page: 1,
+            page_size: 25,
+            sort_by: "feature",
+            sort_order: "asc",
+            freshness_window_minutes: 120,
+            facets: {
+              feature: ["chat"],
+              subfeature: ["chat_default"],
+              plan: ["premium"],
+              locale: ["fr-FR"],
+              provider: ["openai"],
+              source_of_truth_status: ["active_snapshot"],
+              assembly_status: ["published"],
+              release_health_status: ["monitoring"],
+              catalog_visibility_status: ["visible"],
+            },
+          },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await waitFor(() => {
+      expect(screen.getByText(/Prévisualisation partielle :/)).toBeInTheDocument()
+    })
+    expect(screen.getByText(/Aucune donnée d'exemple disponible/)).toBeInTheDocument()
+    expect(screen.getByText(/Sortie d'exécution live/)).toBeInTheDocument()
+    expect(screen.getAllByRole("status").length).toBeGreaterThan(0)
+  })
+
+  it("annonce les états critiques avec des rôles ARIA adaptés", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        if (url.includes("/resolved")) {
+          return makeJsonResponse({
+            data: {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              assembly_id: "assembly-1",
+              inspection_mode: "runtime_preview",
+              source_of_truth_status: "active_snapshot",
+              active_snapshot_id: "snapshot-1",
+              active_snapshot_version: "v1",
+              composition_sources: {
+                feature_template: { id: "tpl-1", content: "feature prompt" },
+                subfeature_template: null,
+                plan_rules: null,
+                persona_block: null,
+                hard_policy: { safety_profile: "astrology", content: "hard policy prompt" },
+                execution_profile: {
+                  id: "profile-1",
+                  name: "default",
+                  provider: "openai",
+                  model: "gpt-5",
+                  reasoning: "medium",
+                  verbosity: "balanced",
+                  provider_params: { max_output_tokens: 1200 },
+                },
+              },
+              transformation_pipeline: {
+                assembled_prompt: "assembled",
+                post_injectors_prompt: "post",
+                rendered_prompt: "rendered",
+              },
+              resolved_result: {
+                provider_messages: {
+                  system_hard_policy: "hard policy prompt",
+                  developer_content_rendered: "rendered",
+                  persona_block: "",
+                  execution_parameters: { max_output_tokens: 1200 },
+                  render_error_kind: "execution_failure",
+                  render_error: "provider timeout",
+                },
+                placeholders: [],
+                context_quality_handled_by_template: false,
+                context_quality_instruction_injected: false,
+                context_compensation_status: "not_needed",
+                source_of_truth_status: "active_snapshot",
+                active_snapshot_id: "snapshot-1",
+                active_snapshot_version: "v1",
+                manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              },
+            },
+          })
+        }
+        return makeJsonResponse({
+          data: [
+            {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              assembly_id: "assembly-1",
+              assembly_status: "published",
+              execution_profile_id: "profile-1",
+              execution_profile_ref: "profile-1",
+              output_contract_ref: "contract-1",
+              active_snapshot_id: "snapshot-1",
+              active_snapshot_version: "v1",
+              provider: "openai",
+              model: "gpt-5",
+              source_of_truth_status: "active_snapshot",
+              release_health_status: "monitoring",
+              catalog_visibility_status: "visible",
+              runtime_signal_status: "fresh",
+              execution_path_kind: "nominal",
+              context_compensation_status: "none",
+              max_output_tokens_source: "execution_profile",
+            },
+          ],
+          meta: {
+            total: 1,
+            page: 1,
+            page_size: 25,
+            sort_by: "feature",
+            sort_order: "asc",
+            freshness_window_minutes: 120,
+            facets: {
+              feature: ["chat"],
+              subfeature: ["chat_default"],
+              plan: ["premium"],
+              locale: ["fr-FR"],
+              provider: ["openai"],
+              source_of_truth_status: ["active_snapshot"],
+              assembly_status: ["published"],
+              release_health_status: ["monitoring"],
+              catalog_visibility_status: ["visible"],
+            },
+          },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    const alertMessage = await screen.findByRole("alert")
+    expect(alertMessage).toHaveTextContent("Erreur de rendu détectée dans la prévisualisation")
+    expect(screen.getAllByRole("status").length).toBeGreaterThan(0)
   })
 
   it("affiche l'onglet historique legacy avec rollback", async () => {

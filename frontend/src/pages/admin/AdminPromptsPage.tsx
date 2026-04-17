@@ -167,6 +167,35 @@ function placeholderStatusClassName(status: AdminResolvedPlaceholder["status"]):
   }
 }
 
+function placeholderRedactionLevelLabel(item: AdminResolvedPlaceholder): string {
+  if (!item.safe_to_display) {
+    return "Masqué"
+  }
+  return "Affichable"
+}
+
+function placeholderSourceLabel(source: string | null): string {
+  if (!source) {
+    return "n/a"
+  }
+  if (source === "runtime_context") {
+    return "Contexte runtime"
+  }
+  if (source === "static_preview_gap") {
+    return "Preview partielle"
+  }
+  if (source === "fallback") {
+    return "Fallback"
+  }
+  if (source === "missing_required") {
+    return "Manquant requis"
+  }
+  if (source === "missing_optional") {
+    return "Manquant optionnel"
+  }
+  return source
+}
+
 function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
   const leftLines = basePrompt.split("\n")
   const rightLines = nextPrompt.split("\n")
@@ -745,90 +774,118 @@ export function AdminPromptsPage() {
                         )}
                       </section>
                       <div className="admin-prompts-resolved__zones">
-                      <section>
-                        <h4>Sources de composition</h4>
-                        <p className="text-muted">
-                          Source: {resolvedQuery.data.source_of_truth_status} · snapshot: {resolvedQuery.data.active_snapshot_version ?? "n/a"}
-                        </p>
-                        <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.feature_template.content}</pre>
-                        {resolvedQuery.data.composition_sources.subfeature_template ? (
-                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.subfeature_template.content}</pre>
-                        ) : null}
-                        {resolvedQuery.data.composition_sources.plan_rules?.content ? (
-                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.plan_rules.content}</pre>
-                        ) : null}
-                        {resolvedQuery.data.composition_sources.persona_block?.content ? (
-                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.persona_block.content}</pre>
-                        ) : null}
-                        <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.hard_policy.content}</pre>
-                        <div className="admin-prompts-resolved__meta-grid">
-                          <span className="text-muted">Execution profile</span>
-                          <span>
-                            {resolvedQuery.data.composition_sources.execution_profile.provider} / {resolvedQuery.data.composition_sources.execution_profile.model}
-                          </span>
-                          <span className="text-muted">Reasoning</span>
-                          <span>{resolvedQuery.data.composition_sources.execution_profile.reasoning ?? "n/a"}</span>
-                          <span className="text-muted">Verbosity</span>
-                          <span>{resolvedQuery.data.composition_sources.execution_profile.verbosity ?? "n/a"}</span>
-                        </div>
-                      </section>
-                      <section>
-                        <h4>Pipeline de transformation</h4>
-                        <p className="text-muted">Assemblage (prompt développeur)</p>
-                        <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.assembled_prompt}</pre>
-                        <p className="text-muted">Après injecteurs (qualité de contexte, verbosité…)</p>
-                        <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.post_injectors_prompt}</pre>
-                        <p className="text-muted">Aperçu après substitution des variables (best-effort, peut être partiel)</p>
-                        <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.rendered_prompt}</pre>
-                      </section>
-                      <section>
-                        <h4>Résultat agrégé (aperçu admin)</h4>
-                        <p className="text-muted">
-                          context_quality: {resolvedQuery.data.resolved_result.context_compensation_status}
-                        </p>
-                        {typeof resolvedQuery.data.resolved_result.provider_messages.render_error === "string" &&
-                        resolvedQuery.data.resolved_result.provider_messages.render_error ? (
-                          <p
-                            className={
-                              resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
-                              "static_preview_incomplete"
-                                ? "admin-prompts-resolved__render-note"
-                                : "chat-error"
-                            }
-                          >
-                            {resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
-                            "static_preview_incomplete"
-                              ? "Substitution incomplète en prévisualisation statique — ce n’est pas une erreur d’exécution LLM: "
-                              : "Erreur de rendu des variables: "}
-                            {resolvedQuery.data.resolved_result.provider_messages.render_error}
+                        <section className="admin-prompts-resolved__zone" aria-label="Prompts">
+                          <h4>Prompts</h4>
+                          <p className="text-muted">
+                            Source: {resolvedQuery.data.source_of_truth_status} · snapshot: {resolvedQuery.data.active_snapshot_version ?? "n/a"}
                           </p>
-                        ) : null}
-                        <p className="text-muted">System / hard policy</p>
-                        <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.system_hard_policy ?? "")}</pre>
-                        <p className="text-muted">Contenu développeur après rendu des variables</p>
-                        <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.developer_content_rendered ?? "")}</pre>
-                        <p className="text-muted">Persona block</p>
-                        <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.persona_block ?? "")}</pre>
-                        <p className="text-muted">Paramètres d&apos;exécution</p>
-                        <pre className="admin-prompts-code">{JSON.stringify(resolvedQuery.data.resolved_result.provider_messages.execution_parameters, null, 2)}</pre>
-                        <div className="admin-prompts-resolved__placeholders">
-                          {resolvedQuery.data.resolved_result.placeholders.map((item) => (
-                            <article key={item.name} className="admin-prompts-resolved__placeholder">
-                              <strong>{item.name}</strong>
-                              <span className={`admin-prompts-resolved__placeholder-status ${placeholderStatusClassName(item.status)}`}>
-                                {placeholderStatusLabel(item.status)}
-                              </span>
-                              <span className="text-muted">{item.classification ?? "n/a"}</span>
-                              <span className="text-muted">{item.resolution_source ?? "n/a"}</span>
-                              <span className="text-muted">{item.reason ?? "n/a"}</span>
-                              <span className="text-muted">{item.safe_to_display ? "safe_to_display" : "redacted"}</span>
-                              <span className="text-muted">
-                                {item.safe_to_display && item.value_preview ? item.value_preview : "redacted"}
-                              </span>
-                            </article>
-                          ))}
-                        </div>
-                      </section>
+                          <p className="text-muted">assembled prompt</p>
+                          <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.assembled_prompt}</pre>
+                          <p className="text-muted">post injectors prompt</p>
+                          <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.post_injectors_prompt}</pre>
+                          <p className="text-muted">rendered prompt</p>
+                          <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.rendered_prompt}</pre>
+                          <p className="text-muted">system hard policy</p>
+                          <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.system_hard_policy ?? "")}</pre>
+                          <p className="text-muted">developer content</p>
+                          <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.developer_content_rendered ?? "")}</pre>
+                          <p className="text-muted">persona block</p>
+                          <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.persona_block ?? "")}</pre>
+                        </section>
+                        <section className="admin-prompts-resolved__zone" aria-label="Données d'exemple">
+                          <h4>Données d&apos;exemple</h4>
+                          <p className="text-muted">
+                            Placeholders résolus/partiels pour lecture opérable (sans parser du JSON brut).
+                          </p>
+                          {resolvedQuery.data.resolved_result.placeholders.length === 0 ? (
+                            <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
+                              Aucune donnée d&apos;exemple disponible pour cette cible.
+                            </p>
+                          ) : (
+                            <div className="admin-prompts-resolved__placeholders">
+                              {resolvedQuery.data.resolved_result.placeholders.map((item) => (
+                                <article key={item.name} className="admin-prompts-resolved__placeholder">
+                                  <strong>{item.name}</strong>
+                                  <span className={`admin-prompts-resolved__placeholder-status ${placeholderStatusClassName(item.status)}`}>
+                                    {placeholderStatusLabel(item.status)}
+                                  </span>
+                                  <span className="text-muted">{placeholderSourceLabel(item.resolution_source)}</span>
+                                  <span className="text-muted">{item.classification ?? "n/a"}</span>
+                                  <span className="text-muted">{placeholderRedactionLevelLabel(item)}</span>
+                                  <span className="text-muted">{item.reason ?? "n/a"}</span>
+                                  <span className="text-muted">
+                                    {item.safe_to_display && item.value_preview ? item.value_preview : "redacted"}
+                                  </span>
+                                </article>
+                              ))}
+                            </div>
+                          )}
+                        </section>
+                        <section className="admin-prompts-resolved__zone" aria-label="Retour LLM">
+                          <h4>Retour LLM</h4>
+                          <p className="text-muted">
+                            context_quality: {resolvedQuery.data.resolved_result.context_compensation_status}
+                          </p>
+                          {typeof resolvedQuery.data.resolved_result.provider_messages.render_error === "string" &&
+                          resolvedQuery.data.resolved_result.provider_messages.render_error ? (
+                            <p
+                              role={
+                                resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
+                                "static_preview_incomplete"
+                                  ? "status"
+                                  : "alert"
+                              }
+                              aria-live={
+                                resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
+                                "static_preview_incomplete"
+                                  ? "polite"
+                                  : "assertive"
+                              }
+                              className={
+                                resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
+                                "static_preview_incomplete"
+                                  ? "admin-prompts-resolved__state admin-prompts-resolved__state--warning"
+                                  : "admin-prompts-resolved__state admin-prompts-resolved__state--error"
+                              }
+                            >
+                              {resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
+                              "static_preview_incomplete"
+                                ? "Prévisualisation partielle : certaines substitutions nécessitent des données runtime. "
+                                : "Erreur de rendu détectée dans la prévisualisation. "}
+                              {resolvedQuery.data.resolved_result.provider_messages.render_error}
+                            </p>
+                          ) : null}
+                          <p className="text-muted">Paramètres d&apos;exécution</p>
+                          <pre className="admin-prompts-code">{JSON.stringify(resolvedQuery.data.resolved_result.provider_messages.execution_parameters, null, 2)}</pre>
+                          <p className="text-muted">Sortie d&apos;exécution live</p>
+                          <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
+                            Vide pour l&apos;instant: cette zone accueillera le retour provider des stories 69.x.
+                          </p>
+                        </section>
+                        <section className="admin-prompts-resolved__zone" aria-label="Construction logique (sources)">
+                          <h4>Construction logique (sources)</h4>
+                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.feature_template.content}</pre>
+                          {resolvedQuery.data.composition_sources.subfeature_template ? (
+                            <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.subfeature_template.content}</pre>
+                          ) : null}
+                          {resolvedQuery.data.composition_sources.plan_rules?.content ? (
+                            <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.plan_rules.content}</pre>
+                          ) : null}
+                          {resolvedQuery.data.composition_sources.persona_block?.content ? (
+                            <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.persona_block.content}</pre>
+                          ) : null}
+                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.hard_policy.content}</pre>
+                          <div className="admin-prompts-resolved__meta-grid">
+                            <span className="text-muted">Execution profile</span>
+                            <span>
+                              {resolvedQuery.data.composition_sources.execution_profile.provider} / {resolvedQuery.data.composition_sources.execution_profile.model}
+                            </span>
+                            <span className="text-muted">Reasoning</span>
+                            <span>{resolvedQuery.data.composition_sources.execution_profile.reasoning ?? "n/a"}</span>
+                            <span className="text-muted">Verbosity</span>
+                            <span>{resolvedQuery.data.composition_sources.execution_profile.verbosity ?? "n/a"}</span>
+                          </div>
+                        </section>
                       </div>
                     </>
                   ) : null}
