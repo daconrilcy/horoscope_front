@@ -25,6 +25,7 @@ class AdminLlmErrorCode(StrEnum):
     INVALID_SAMPLE_PAYLOAD = "invalid_sample_payload"
     INVALID_QUERY = "invalid_query"
     SAMPLE_PAYLOAD_NOT_FOUND = "sample_payload_not_found"
+    SAMPLE_PAYLOAD_INACTIVE = "sample_payload_inactive"
     SAMPLE_PAYLOAD_TARGET_MISMATCH = "sample_payload_target_mismatch"
     SAMPLE_PAYLOAD_RUNTIME_PREVIEW_ONLY = "sample_payload_runtime_preview_only"
     SAMPLE_PAYLOAD_NAME_CONFLICT = "sample_payload_name_conflict"

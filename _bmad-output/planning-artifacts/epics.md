@@ -7,12 +7,18 @@ stepsCompleted:
 inputDocuments:
   - 'C:\dev\horoscope_front\_bmad-output\planning-artifacts\prd.md'
   - 'C:\dev\horoscope_front\_bmad-output\planning-artifacts\architecture.md'
-lastEdited: '2026-04-06'
+  - 'C:\dev\horoscope_front\_bmad-output\planning-artifacts\ux-design-specification.md'
+  - 'C:\dev\horoscope_front\docs\llm-prompt-generation-by-feature.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\66-45-vue-catalogue-canonique-prompts-actifs.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\66-46-vue-detail-resolved-prompt-assembly.md'
+lastEdited: '2026-04-16'
 editHistory:
   - date: '2026-02-21T14:39:07+01:00'
     changes: 'Epics rebaseline after PRD/Architecture finalization (FR38-42 + NFR SMART alignment)'
   - date: '2026-04-06'
     changes: 'Ajout Epic 66 — Refactorisation orchestration LLM vers contrats explicites'
+  - date: '2026-04-16'
+    changes: 'Ajout des epics/stories admin LLM preview runtime sample payloads et execution controlee'
 ---
 
 # horoscope_front - Epic Breakdown

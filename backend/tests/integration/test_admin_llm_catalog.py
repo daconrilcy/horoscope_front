@@ -700,7 +700,7 @@ def test_admin_llm_catalog_resolved_runtime_preview_with_sample_payload_no_provi
             placeholders = {p["name"]: p for p in payload["resolved_result"]["placeholders"]}
             assert placeholders["chart_json"]["status"] == "resolved"
             assert placeholders["chart_json"]["resolution_source"] == "sample_payload"
-            assert placeholders["last_user_msg"]["status"] in {"blocking_missing", "unknown"}
+            assert placeholders["last_user_msg"]["status"] == "blocking_missing"
             mocked_runtime.assert_not_called()
     finally:
         app.dependency_overrides.clear()
@@ -834,6 +834,542 @@ def test_admin_llm_catalog_rejects_sample_payload_outside_runtime_preview():
         assert response.status_code == 422
         payload = response.json()["error"]
         assert payload["code"] == "sample_payload_runtime_preview_only"
+
+        live_response = client.get(
+            f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=live_execution&sample_payload_id={sample_payload_id}"
+        )
+        assert live_response.status_code == 422
+        live_payload = live_response.json()["error"]
+        assert live_payload["code"] == "sample_payload_runtime_preview_only"
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.execute(
+            delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id == sample_payload_id)
+        )
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(
+            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
+        )
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_runtime_preview_rejects_inactive_sample_payload():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    sample_payload_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    manifest_entry_id = "natal:interpretation:premium:fr-FR"
+    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Natal",
+                description="Interpretation natale",
+            )
+        )
+        db.flush()
+        template_model = LlmPromptVersionModel(
+            id=template_id,
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+            model="gpt-5",
+            temperature=0.2,
+            max_output_tokens=900,
+            created_by="test-admin",
+        )
+        db.add(template_model)
+        assembly_model = PromptAssemblyConfigModel(
+            id=assembly_id,
+            feature="natal",
+            subfeature="interpretation",
+            plan="premium",
+            locale="fr-FR",
+            feature_template_ref=template_id,
+            execution_profile_ref=profile_id,
+            execution_config={
+                "model": "gpt-5",
+                "temperature": None,
+                "max_output_tokens": 900,
+                "timeout_seconds": 30,
+            },
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+        assembly_model.feature_template = template_model
+        db.add(assembly_model)
+        db.add(
+            LlmExecutionProfileModel(
+                id=profile_id,
+                name="live-profile",
+                provider="openai",
+                model="gpt-5",
+                reasoning_profile="off",
+                verbosity_profile="balanced",
+                output_mode="free_text",
+                tool_mode="none",
+                max_output_tokens=1234,
+                timeout_seconds=99,
+                feature="natal",
+                subfeature="interpretation",
+                plan="premium",
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        db.add(
+            LlmSamplePayloadModel(
+                id=sample_payload_id,
+                name="natal-runtime-inactive",
+                feature="natal",
+                locale="fr-FR",
+                payload_json={"chart_json": {"sun": "aries"}},
+                description="payload runtime",
+                is_default=False,
+                is_active=False,
+            )
+        )
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-runtime-preview-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
+            **serialize_orm(assembly_model),
+            "_feature_template": serialize_orm(template_model),
+        }
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+        ) as mocked_runtime:
+            response = client.get(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={sample_payload_id}"
+            )
+            assert response.status_code == 422
+            payload = response.json()["error"]
+            assert payload["code"] == "sample_payload_inactive"
+            mocked_runtime.assert_not_called()
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.execute(
+            delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id == sample_payload_id)
+        )
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(
+            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
+        )
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_runtime_preview_sample_payload_not_found():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    missing_sample_payload_id = uuid.uuid4()
+    manifest_entry_id = "natal:interpretation:premium:fr-FR"
+    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Natal",
+                description="Interpretation natale",
+            )
+        )
+        db.flush()
+        template_model = LlmPromptVersionModel(
+            id=template_id,
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+            model="gpt-5",
+            temperature=0.2,
+            max_output_tokens=900,
+            created_by="test-admin",
+        )
+        db.add(template_model)
+        assembly_model = PromptAssemblyConfigModel(
+            id=assembly_id,
+            feature="natal",
+            subfeature="interpretation",
+            plan="premium",
+            locale="fr-FR",
+            feature_template_ref=template_id,
+            execution_profile_ref=profile_id,
+            execution_config={
+                "model": "gpt-5",
+                "temperature": None,
+                "max_output_tokens": 900,
+                "timeout_seconds": 30,
+            },
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+        assembly_model.feature_template = template_model
+        db.add(assembly_model)
+        db.add(
+            LlmExecutionProfileModel(
+                id=profile_id,
+                name="live-profile",
+                provider="openai",
+                model="gpt-5",
+                reasoning_profile="off",
+                verbosity_profile="balanced",
+                output_mode="free_text",
+                tool_mode="none",
+                max_output_tokens=1234,
+                timeout_seconds=99,
+                feature="natal",
+                subfeature="interpretation",
+                plan="premium",
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-runtime-preview-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
+            **serialize_orm(assembly_model),
+            "_feature_template": serialize_orm(template_model),
+        }
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+        ) as mocked_runtime:
+            response = client.get(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={missing_sample_payload_id}"
+            )
+            assert response.status_code == 404
+            payload = response.json()["error"]
+            assert payload["code"] == "sample_payload_not_found"
+            mocked_runtime.assert_not_called()
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(
+            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
+        )
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_runtime_preview_sample_payload_target_mismatch():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    sample_payload_id = uuid.uuid4()
+    manifest_entry_id = "natal:interpretation:premium:fr-FR"
+    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Natal",
+                description="Interpretation natale",
+            )
+        )
+        db.flush()
+        template_model = LlmPromptVersionModel(
+            id=template_id,
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+            model="gpt-5",
+            temperature=0.2,
+            max_output_tokens=900,
+            created_by="test-admin",
+        )
+        db.add(template_model)
+        assembly_model = PromptAssemblyConfigModel(
+            id=assembly_id,
+            feature="natal",
+            subfeature="interpretation",
+            plan="premium",
+            locale="fr-FR",
+            feature_template_ref=template_id,
+            execution_profile_ref=profile_id,
+            execution_config={
+                "model": "gpt-5",
+                "temperature": None,
+                "max_output_tokens": 900,
+                "timeout_seconds": 30,
+            },
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+        assembly_model.feature_template = template_model
+        db.add(assembly_model)
+        db.add(
+            LlmExecutionProfileModel(
+                id=profile_id,
+                name="live-profile",
+                provider="openai",
+                model="gpt-5",
+                reasoning_profile="off",
+                verbosity_profile="balanced",
+                output_mode="free_text",
+                tool_mode="none",
+                max_output_tokens=1234,
+                timeout_seconds=99,
+                feature="natal",
+                subfeature="interpretation",
+                plan="premium",
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        db.add(
+            LlmSamplePayloadModel(
+                id=sample_payload_id,
+                name="chat-runtime",
+                feature="chat",
+                locale="fr-FR",
+                payload_json={"last_user_msg": "hello"},
+                description="payload chat",
+                is_default=False,
+                is_active=True,
+            )
+        )
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-runtime-preview-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
+            **serialize_orm(assembly_model),
+            "_feature_template": serialize_orm(template_model),
+        }
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+        ) as mocked_runtime:
+            response = client.get(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={sample_payload_id}"
+            )
+            assert response.status_code == 422
+            payload = response.json()["error"]
+            assert payload["code"] == "sample_payload_target_mismatch"
+            mocked_runtime.assert_not_called()
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.execute(
+            delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id == sample_payload_id)
+        )
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(
+            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
+        )
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_runtime_preview_rejects_non_object_payload_json():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    sample_payload_id = uuid.uuid4()
+    manifest_entry_id = "natal:interpretation:premium:fr-FR"
+    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Natal",
+                description="Interpretation natale",
+            )
+        )
+        db.flush()
+        template_model = LlmPromptVersionModel(
+            id=template_id,
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+            model="gpt-5",
+            temperature=0.2,
+            max_output_tokens=900,
+            created_by="test-admin",
+        )
+        db.add(template_model)
+        assembly_model = PromptAssemblyConfigModel(
+            id=assembly_id,
+            feature="natal",
+            subfeature="interpretation",
+            plan="premium",
+            locale="fr-FR",
+            feature_template_ref=template_id,
+            execution_profile_ref=profile_id,
+            execution_config={
+                "model": "gpt-5",
+                "temperature": None,
+                "max_output_tokens": 900,
+                "timeout_seconds": 30,
+            },
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+        assembly_model.feature_template = template_model
+        db.add(assembly_model)
+        db.add(
+            LlmExecutionProfileModel(
+                id=profile_id,
+                name="live-profile",
+                provider="openai",
+                model="gpt-5",
+                reasoning_profile="off",
+                verbosity_profile="balanced",
+                output_mode="free_text",
+                tool_mode="none",
+                max_output_tokens=1234,
+                timeout_seconds=99,
+                feature="natal",
+                subfeature="interpretation",
+                plan="premium",
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        db.add(
+            LlmSamplePayloadModel(
+                id=sample_payload_id,
+                name="natal-runtime-invalid-json",
+                feature="natal",
+                locale="fr-FR",
+                payload_json="invalid-structure",
+                description="payload runtime",
+                is_default=False,
+                is_active=True,
+            )
+        )
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-runtime-preview-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
+            **serialize_orm(assembly_model),
+            "_feature_template": serialize_orm(template_model),
+        }
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+        ) as mocked_runtime:
+            response = client.get(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={sample_payload_id}"
+            )
+            assert response.status_code == 422
+            payload = response.json()["error"]
+            assert payload["code"] == "invalid_sample_payload"
+            mocked_runtime.assert_not_called()
     finally:
         app.dependency_overrides.clear()
         db.rollback()

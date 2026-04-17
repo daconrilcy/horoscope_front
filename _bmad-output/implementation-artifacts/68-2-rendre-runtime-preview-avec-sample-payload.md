@@ -1,6 +1,6 @@
 # Story 68.2: Rendre la runtime preview avec un sample payload sélectionné
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -29,6 +29,24 @@ so that je voie exactement ce qui serait envoyé au provider sans exécuter enco
 - [x] Task 3: Tester l'absence d'appel provider (AC: 4)
   - [x] Vérifier côté backend qu'aucun runtime manager provider n'est invoqué.
   - [x] Vérifier côté frontend les états complet/incomplet.
+
+### Review Findings
+
+- [x] [Review][Patch] Runtime preview accepte un sample payload inactif (contournement de l'état métier) [backend/app/api/v1/routers/admin_llm.py:1628]
+- [x] [Review][Patch] Contrat API incohérent: la liste sample payload frontend attend `payload_json` absent côté backend [frontend/src/api/adminPrompts.ts:170]
+- [x] [Review][Patch] Le statut des placeholders manquants en runtime preview n'est pas strictement bloquant (tolérance `unknown`) [backend/tests/integration/test_admin_llm_catalog.py:703]
+- [x] [Review][Patch] Couverture backend incomplète: pas de test dédié `sample_payload_not_found` / `sample_payload_target_mismatch` [backend/tests/integration/test_admin_llm_catalog.py:836]
+- [x] [Review][Patch] Couverture frontend incomplète: absence d'assertion explicite d'un rendu bloquant pour placeholders manquants [frontend/src/tests/AdminPromptsPage.test.tsx:553]
+
+### Review Findings (Rerun)
+
+- [x] [Review][Patch] Fichier binaire `backend/horoscope.db` présent dans le diff de livraison [backend/horoscope.db]
+- [x] [Review][Patch] Couverture manquante: `live_execution + sample_payload_id` devrait être explicitement rejeté (`runtime_preview_only`) [backend/tests/integration/test_admin_llm_catalog.py]
+- [x] [Review][Patch] Garder un contrat explicite si `sample_payload.payload_json` est invalide/non-objet dans `runtime_preview` (retourner `invalid_sample_payload`) [backend/app/api/v1/routers/admin_llm.py:1664]
+
+### Review Findings (Rerun 2)
+
+- [x] [Review][Patch] Compléter la couverture backend des chemins d'erreur runtime preview avec assertion explicite `provider not called` (`sample_payload_not_found`, `sample_payload_target_mismatch`, `sample_payload_inactive`, `invalid_sample_payload`) [backend/tests/integration/test_admin_llm_catalog.py]
 
 ## Dev Notes
 
@@ -93,6 +111,7 @@ GPT-5 Codex
 - Les tests backend/frontend couvrent le chemin runtime preview avec sample payload et garantissent l'absence d'appel provider.
 - Correctifs post-review: isolation stricte `assembly_preview` vs `runtime_preview` côté frontend et garde-fou backend refusant `sample_payload_id` hors runtime preview.
 - Harmonisation des codes d'erreur runtime preview (`sample_payload_not_found`, `sample_payload_target_mismatch`, `sample_payload_runtime_preview_only`) via enum partagé `AdminLlmErrorCode`.
+- Clôture revue BMAD: rejet des sample payloads inactifs en runtime preview, alignement type frontend `summary`, placeholders manquants strictement bloquants en runtime preview, et extension de couverture tests backend/frontend.
 
 ### File List
 
@@ -109,3 +128,4 @@ GPT-5 Codex
 
 - 2026-04-17: Runtime preview enrichie par sample payload sélectionné (backend+frontend) avec tests de non-exécution provider.
 - 2026-04-17: Correctifs post-review 68.2 (anti-course mode preview, enforcement backend runtime-only, centralisation des codes d'erreur admin LLM).
+- 2026-04-17: Correctifs de revue BMAD appliqués (inactive sample guard, placeholder blocking strict runtime, alignement contrat list frontend/backend, tests d'erreurs runtime preview étendus).

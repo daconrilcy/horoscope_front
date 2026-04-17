@@ -167,8 +167,20 @@ export type AdminLlmSamplePayload = {
   updated_at: string
 }
 
+export type AdminLlmSamplePayloadSummary = {
+  id: string
+  name: string
+  feature: string
+  locale: string
+  description: string | null
+  is_default: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type AdminLlmSamplePayloadList = {
-  items: AdminLlmSamplePayload[]
+  items: AdminLlmSamplePayloadSummary[]
   recommended_default_id: string | null
 }
 

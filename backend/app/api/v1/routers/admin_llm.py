@@ -1634,6 +1634,14 @@ def get_resolved_catalog_entry(
                 message=f"sample payload {sample_payload_id} not found",
                 details={"sample_payload_id": str(sample_payload_id)},
             )
+        if not sample_payload.is_active:
+            return _error_response(
+                status_code=422,
+                request_id=request_id,
+                code=AdminLlmErrorCode.SAMPLE_PAYLOAD_INACTIVE.value,
+                message="sample payload is inactive and cannot be used for runtime preview",
+                details={"sample_payload_id": str(sample_payload_id)},
+            )
         if (
             sample_payload.feature != assembly_model.feature
             or sample_payload.locale != assembly_model.locale
@@ -1653,11 +1661,18 @@ def get_resolved_catalog_entry(
                     "target_locale": assembly_model.locale,
                 },
             )
-        if isinstance(sample_payload.payload_json, dict):
-            for key, value in sample_payload.payload_json.items():
-                if key not in render_variables:
-                    render_variables[key] = value
-                    render_variable_sources[key] = "sample_payload"
+        if not isinstance(sample_payload.payload_json, dict):
+            return _error_response(
+                status_code=422,
+                request_id=request_id,
+                code=AdminLlmErrorCode.INVALID_SAMPLE_PAYLOAD.value,
+                message="sample payload payload_json must be a JSON object",
+                details={"sample_payload_id": str(sample_payload_id)},
+            )
+        for key, value in sample_payload.payload_json.items():
+            if key not in render_variables:
+                render_variables[key] = value
+                render_variable_sources[key] = "sample_payload"
 
     render_error: str | None = None
     render_exc: PromptRenderError | None = None
@@ -1754,12 +1769,24 @@ def get_resolved_catalog_entry(
                     )
                 )
         else:
+            unknown_status = (
+                "blocking_missing" if inspection_mode == "runtime_preview" else "unknown"
+            )
+            unknown_source = (
+                "missing_required_untyped" if inspection_mode == "runtime_preview" else "unknown"
+            )
+            unknown_reason = (
+                "required_placeholder_missing_untyped"
+                if inspection_mode == "runtime_preview"
+                else None
+            )
             placeholders.append(
                 ResolvedPlaceholderView(
                     name=placeholder_name,
-                    status="unknown",
+                    status=unknown_status,
                     classification=classification,
-                    resolution_source="unknown",
+                    resolution_source=unknown_source,
+                    reason=unknown_reason,
                     safe_to_display=safe_to_display,
                 )
             )

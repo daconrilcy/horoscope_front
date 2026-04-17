@@ -14,6 +14,7 @@ import {
   useReleaseSnapshotsTimeline,
   useReleaseSnapshotDiff,
   toUtcIsoFromDateTimeInput,
+  AdminPromptsApiError,
   type AdminConsumptionView,
   type AdminPromptVersion,
   type AdminInspectionMode,
@@ -136,6 +137,46 @@ function inspectionModeHelpText(mode: AdminInspectionMode): string {
     default:
       return ""
   }
+}
+
+const RESOLVED_ASSEMBLY_ERROR_MESSAGES_FR: Readonly<Record<string, string>> = {
+  sample_payload_inactive:
+    "Ce sample payload est inactif. Choisissez un autre payload ou réactivez-le dans le catalogue.",
+  sample_payload_not_found: "Sample payload introuvable.",
+  sample_payload_target_mismatch:
+    "Ce sample payload ne correspond pas à cette entrée (feature ou locale différente).",
+  sample_payload_runtime_preview_only:
+    "Un sample payload ne peut être utilisé qu’en mode prévisualisation runtime.",
+  invalid_sample_payload: "Le sample payload est invalide (JSON attendu : un objet).",
+  manifest_entry_not_found: "Entrée de catalogue introuvable.",
+  invalid_manifest_entry_id: "Identifiant d’entrée manifeste invalide.",
+}
+
+function resolvedAssemblyErrorPresentation(error: unknown): { primary: string; secondary: string | null } {
+  if (!(error instanceof AdminPromptsApiError)) {
+    return { primary: "Impossible de charger le detail d'assembly.", secondary: null }
+  }
+  const mapped = RESOLVED_ASSEMBLY_ERROR_MESSAGES_FR[error.code]
+  const primary = mapped ?? error.message
+  const secondary =
+    mapped && mapped !== error.message
+      ? error.message
+      : !mapped
+        ? `Code : ${error.code} · HTTP ${error.status}`
+        : null
+  return { primary, secondary }
+}
+
+function AdminPromptsResolvedAssemblyError({ error }: { error: unknown }) {
+  const { primary, secondary } = resolvedAssemblyErrorPresentation(error)
+  return (
+    <div className="admin-prompts-resolved__error" role="alert">
+      <p className="admin-prompts-resolved__error-primary">{primary}</p>
+      {secondary ? (
+        <p className="admin-prompts-resolved__error-secondary text-muted">{secondary}</p>
+      ) : null}
+    </div>
+  )
 }
 
 function placeholderStatusLabel(status: AdminResolvedPlaceholder["status"]): string {
@@ -804,7 +845,7 @@ export function AdminPromptsPage() {
                     <p className="text-muted">Chargement des sample payloads...</p>
                   ) : null}
                   {resolvedQuery.isPending ? <div className="loading-placeholder">Chargement du detail...</div> : null}
-                  {resolvedQuery.isError ? <p className="chat-error">Impossible de charger le detail d'assembly.</p> : null}
+                  {resolvedQuery.isError ? <AdminPromptsResolvedAssemblyError error={resolvedQuery.error} /> : null}
                   {resolvedQuery.data ? (
                     <>
                       <section className="admin-prompts-logic-graph" aria-label="Construction logique">
