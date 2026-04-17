@@ -1,6 +1,6 @@
 # Story 67.3: Refondre la vue detail en zones pédagogiques et opérables
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,6 +28,11 @@ so that je puisse comprendre rapidement le prompt sans parser un JSON brut.
 - [x] Task 3: Ajouter les tests d'affichage et de structure (AC: 1, 2, 3, 4)
   - [x] Tester les sections obligatoires.
   - [x] Tester les états vides/erreurs/preview partielle.
+
+### Review Findings
+
+- [x] [Review][Patch] Le message d'erreur reste formulé comme une prévisualisation même en mode `live_execution` [frontend/src/pages/admin/AdminPromptsPage.tsx:854]
+- [x] [Review][Patch] Une valeur d'aperçu vide mais autorisée est affichée comme `redacted` au lieu de sa vraie valeur [frontend/src/pages/admin/AdminPromptsPage.tsx:817]
 
 ## Dev Notes
 

@@ -196,6 +196,26 @@ function placeholderSourceLabel(source: string | null): string {
   return source
 }
 
+function placeholderPreviewValue(item: AdminResolvedPlaceholder): string {
+  if (!item.safe_to_display) {
+    return "redacted"
+  }
+  return item.value_preview ?? ""
+}
+
+function renderErrorLeadText(
+  inspectionMode: AdminInspectionMode,
+  renderErrorKind: string | null | undefined,
+): string {
+  if (renderErrorKind === "static_preview_incomplete") {
+    return "Prévisualisation partielle : certaines substitutions nécessitent des données runtime. "
+  }
+  if (inspectionMode === "live_execution") {
+    return "Erreur détectée pendant l'inspection live. "
+  }
+  return "Erreur de rendu détectée dans la prévisualisation. "
+}
+
 function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
   const leftLines = basePrompt.split("\n")
   const rightLines = nextPrompt.split("\n")
@@ -813,9 +833,7 @@ export function AdminPromptsPage() {
                                   <span className="text-muted">{item.classification ?? "n/a"}</span>
                                   <span className="text-muted">{placeholderRedactionLevelLabel(item)}</span>
                                   <span className="text-muted">{item.reason ?? "n/a"}</span>
-                                  <span className="text-muted">
-                                    {item.safe_to_display && item.value_preview ? item.value_preview : "redacted"}
-                                  </span>
+                                  <span className="text-muted">{placeholderPreviewValue(item)}</span>
                                 </article>
                               ))}
                             </div>
@@ -848,10 +866,10 @@ export function AdminPromptsPage() {
                                   : "admin-prompts-resolved__state admin-prompts-resolved__state--error"
                               }
                             >
-                              {resolvedQuery.data.resolved_result.provider_messages.render_error_kind ===
-                              "static_preview_incomplete"
-                                ? "Prévisualisation partielle : certaines substitutions nécessitent des données runtime. "
-                                : "Erreur de rendu détectée dans la prévisualisation. "}
+                              {renderErrorLeadText(
+                                resolvedQuery.data.inspection_mode,
+                                resolvedQuery.data.resolved_result.provider_messages.render_error_kind,
+                              )}
                               {resolvedQuery.data.resolved_result.provider_messages.render_error}
                             </p>
                           ) : null}

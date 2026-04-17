@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-17T15:31:00+02:00'
+last_updated: '2026-04-17T16:36:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -639,7 +639,7 @@ development_status:
   epic-67: in-progress
   67-1-clarifier-modes-preview-et-statuts-placeholders: done
   67-2-exposer-construction-logique-graphe-inspectable: done
-  67-3-refondre-vue-detail-zones-pedagogiques-operables: review
+  67-3-refondre-vue-detail-zones-pedagogiques-operables: done
   epic-67-retrospective: backlog
   epic-68: in-progress
   68-1-definir-modele-admin-sample-payloads-par-feature: ready-for-dev
