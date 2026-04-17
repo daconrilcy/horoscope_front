@@ -265,6 +265,12 @@ So that la preview runtime soit maintenable sans passage par la base ou des fixt
 **Then** l’UI propose un sample par défaut ou recommandé
 **And** garde une navigation simple sans noyer l’admin dans des payloads non pertinents.
 
+**Implémentation livrée (réf. story `68-3-gerer-sample-payloads-depuis-surface-admin`, statut sprint `review`) :**
+
+- Onglet admin **« Échantillons runtime »** sur la page prompts LLM (`/admin/prompts`), composant `AdminSamplePayloadsAdmin` : CRUD UI sur le contrat HTTP existant, filtre feature/locale, option liste **incluant les inactifs**, duplication par relecture + création.
+- Lien **« Gérer les sample payloads (feature / locale) »** depuis la zone **Données d’exemple** du détail assembly ; présélection fiable du couple feature/locale (correctifs effets React / seed).
+- Tests : intégration backend `include_inactive`, Vitest panneau admin, **E2E Playwright** `frontend/e2e/admin-prompts-sample-payload-cta.spec.ts` (flux lien → onglet, mocks API).
+
 ## Epic 69: Déclencher une exécution contrôlée et inspecter le retour LLM
 
 Permettre à un admin de lancer explicitement une exécution LLM depuis la surface de contrôle, puis de consulter le prompt effectivement envoyé, les paramètres provider, la réponse brute, la réponse structurée et les métadonnées d’exécution.

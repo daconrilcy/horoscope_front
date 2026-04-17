@@ -360,3 +360,46 @@ def test_admin_llm_sample_payload_requires_natal_chart_json():
     finally:
         app.dependency_overrides.clear()
         db.close()
+
+
+def test_admin_llm_sample_payload_list_include_inactive():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+    created_id: uuid.UUID | None = None
+    try:
+        db.execute(delete(LlmSamplePayloadModel))
+        db.commit()
+
+        create = client.post(
+            "/v1/admin/llm/sample-payloads",
+            json=_build_payload(name="inactive-list-test", is_default=False),
+        )
+        assert create.status_code == 200
+        created_id = uuid.UUID(create.json()["data"]["id"])
+
+        patch = client.patch(
+            f"/v1/admin/llm/sample-payloads/{created_id}",
+            json={"is_active": False},
+        )
+        assert patch.status_code == 200
+
+        active_only = client.get("/v1/admin/llm/sample-payloads?feature=natal&locale=fr-FR")
+        assert active_only.status_code == 200
+        assert active_only.json()["data"]["items"] == []
+
+        with_inactive = client.get(
+            "/v1/admin/llm/sample-payloads?feature=natal&locale=fr-FR&include_inactive=true"
+        )
+        assert with_inactive.status_code == 200
+        items = with_inactive.json()["data"]["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == str(created_id)
+        assert items[0]["is_active"] is False
+    finally:
+        app.dependency_overrides.clear()
+        if created_id is not None:
+            db.execute(delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id == created_id))
+            db.commit()
+        db.close()

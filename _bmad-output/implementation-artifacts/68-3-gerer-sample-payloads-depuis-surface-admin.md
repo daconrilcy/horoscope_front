@@ -1,6 +1,6 @@
 # Story 68.3: Permettre la gestion admin des sample payloads depuis la surface de contrôle
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,15 +19,15 @@ so that la preview runtime soit maintenable sans passage par la base ou des fixt
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Exposer le CRUD admin des sample payloads (AC: 1, 2, 3)
-  - [ ] Créer les endpoints et schémas nécessaires.
-  - [ ] Encadrer permissions et validation.
-- [ ] Task 2: Intégrer les écrans/formulaires admin (AC: 1, 2, 3, 4)
-  - [ ] Ajouter la liste, le détail, la duplication et la suppression.
-  - [ ] Rendre la navigation compatible avec la zone `Données d'exemple`.
-- [ ] Task 3: Tester UX et auditabilité (AC: 3, 4)
-  - [ ] Vérifier les listes filtrées.
-  - [ ] Vérifier le comportement des samples par défaut ou recommandés.
+- [x] Task 1: Exposer le CRUD admin des sample payloads (AC: 1, 2, 3)
+  - [x] Créer les endpoints et schémas nécessaires.
+  - [x] Encadrer permissions et validation.
+- [x] Task 2: Intégrer les écrans/formulaires admin (AC: 1, 2, 3, 4)
+  - [x] Ajouter la liste, le détail, la duplication et la suppression.
+  - [x] Rendre la navigation compatible avec la zone `Données d'exemple`.
+- [x] Task 3: Tester UX et auditabilité (AC: 3, 4)
+  - [x] Vérifier les listes filtrées.
+  - [x] Vérifier le comportement des samples par défaut ou recommandés.
 
 ## Dev Notes
 
@@ -54,6 +54,7 @@ so that la preview runtime soit maintenable sans passage par la base ou des fixt
 - Validation refus des payloads invalides.
 - Filtrage feature/locale.
 - Non-régression sur la runtime preview.
+- E2E Playwright : flux « Données d’exemple → onglet Échantillons runtime » avec mocks réseau (`e2e/admin-prompts-sample-payload-cta.spec.ts`).
 
 ### Previous Story Intelligence
 
@@ -73,7 +74,13 @@ so that la preview runtime soit maintenable sans passage par la base ou des fixt
 
 ### Agent Model Used
 
-GPT-5 Codex
+Auto (Cursor agent)
+
+### Implementation Plan
+
+- Réutiliser le CRUD backend existant, compléter les tests manquants sur `include_inactive`.
+- Étendre `adminPrompts.ts` et brancher un panneau admin dédié sous l’onglet prompts LLM.
+- Formulaire guidé natal + repli JSON complet pour contournement des réponses masquées.
 
 ### Debug Log References
 
@@ -82,7 +89,27 @@ GPT-5 Codex
 ### Completion Notes List
 
 - Story file created from BMAD backlog.
+- CRUD HTTP déjà présent côté backend (`admin_llm_sample_payloads.py`) : validation, admin obligatoire, audit. Ajout d’un test d’intégration `include_inactive` pour l’auditabilité des payloads désactivés.
+- Front : onglet « Échantillons runtime » + composant `AdminSamplePayloadsAdmin` (liste filtrée feature/locale, case « Afficher les inactifs », création/édition avec formulaire guidé natal `chart_json` + extras JSON, mode JSON complet si `chart_json` non objet côté API, duplication via relecture + création, désactivation rapide, suppression confirmée). Lien depuis la zone « Données d’exemple » du détail catalogue vers l’onglet avec préremplissage feature/locale.
+- API client : `listAdminLlmSamplePayloads` supporte `include_inactive`, fonctions get/create/update/delete + mutations React Query et invalidation des previews résolues.
+- Seed catalogue → onglet samples : le seed parent n’est plus consommé immédiatement par l’enfant (évite perte du couple feature/locale sous React Strict Mode) ; réinitialisation du seed à la sortie de l’onglet « Échantillons runtime ». Garde-fou effets d’auto-sélection feature/locale quand un seed explicite est fourni (évite la course avec la première locale alphabétique, ex. `en-US`).
+- Test E2E Playwright : navigation depuis le bouton sous « Données d’exemple », onglet actif, région de gestion visible, selects `chat` / `fr-FR`.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/68-3-gerer-sample-payloads-depuis-surface-admin.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/planning-artifacts/epics-admin-llm-preview-execution.md`
+- `backend/tests/integration/test_admin_llm_sample_payloads.py`
+- `frontend/e2e/admin-prompts-sample-payload-cta.spec.ts`
+- `frontend/src/api/adminPrompts.ts`
+- `frontend/src/pages/admin/AdminPromptsPage.tsx`
+- `frontend/src/pages/admin/AdminPromptsPage.css`
+- `frontend/src/pages/admin/AdminSamplePayloadsAdmin.tsx`
+- `frontend/src/pages/admin/AdminSamplePayloadsAdmin.css`
+- `frontend/src/tests/AdminSamplePayloadsAdmin.test.tsx`
+
+### Change Log
+
+- 2026-04-17 : Implémentation gestion admin sample payloads (UI + tests + liste inactifs).
+- 2026-04-17 : E2E Playwright flux Données d’exemple → Échantillons runtime ; correctifs seed / auto-sélection locale sous Strict Mode ; docs artefacts epic 68.3.

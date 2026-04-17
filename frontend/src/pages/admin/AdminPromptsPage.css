@@ -406,6 +406,10 @@
   margin: 0;
 }
 
+.admin-prompts-resolved__sample-payload-cta {
+  margin: var(--space-2) 0 0;
+}
+
 .admin-prompts-resolved__placeholders {
   display: flex;
   flex-direction: column;

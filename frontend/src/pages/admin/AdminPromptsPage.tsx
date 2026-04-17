@@ -23,9 +23,10 @@ import {
   type SnapshotTimelineItem,
 } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
+import { AdminSamplePayloadsAdmin } from "./AdminSamplePayloadsAdmin"
 import "./AdminPromptsPage.css"
 
-type PromptPageTab = "catalog" | "legacy" | "release" | "consumption" | "personas"
+type PromptPageTab = "catalog" | "legacy" | "release" | "consumption" | "personas" | "samplePayloads"
 
 type LegacyRollbackModalProps = {
   isPending: boolean
@@ -430,6 +431,7 @@ export function AdminPromptsPage() {
   const [consumptionSearch, setConsumptionSearch] = useState("")
   const [consumptionPage, setConsumptionPage] = useState(1)
   const [selectedDrilldownKey, setSelectedDrilldownKey] = useState<string | null>(null)
+  const [samplePayloadsSeed, setSamplePayloadsSeed] = useState<{ feature: string; locale: string } | null>(null)
   const consumptionFromUtc = consumptionFrom ? toUtcIsoFromDateTimeInput(consumptionFrom) : undefined
   const consumptionToUtc = consumptionTo ? toUtcIsoFromDateTimeInput(consumptionTo) : undefined
   const effectiveSamplePayloadId =
@@ -465,15 +467,24 @@ export function AdminPromptsPage() {
   const samplePayloadsQuery = useAdminLlmSamplePayloads(
     selectedCatalogEntry?.feature ?? null,
     selectedCatalogEntry?.locale ?? null,
-    activeTab === "catalog" &&
-      Boolean(selectedManifestEntryId) &&
-      resolvedInspectionMode === "runtime_preview",
+    {
+      enabled:
+        activeTab === "catalog" &&
+        Boolean(selectedManifestEntryId) &&
+        resolvedInspectionMode === "runtime_preview",
+    },
   )
 
   useEffect(() => {
     setResolvedInspectionMode("assembly_preview")
     setSelectedSamplePayloadId(null)
   }, [selectedManifestEntryId])
+
+  useEffect(() => {
+    if (activeTab !== "samplePayloads") {
+      setSamplePayloadsSeed(null)
+    }
+  }, [activeTab])
 
   useEffect(() => {
     if (resolvedInspectionMode !== "runtime_preview") {
@@ -647,10 +658,26 @@ export function AdminPromptsPage() {
           <button className={`tab-button ${activeTab === "personas" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "personas"} onClick={() => setActiveTab("personas")}>
             Personas
           </button>
+          <button
+            className={`tab-button ${activeTab === "samplePayloads" ? "tab-button--active" : ""}`}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "samplePayloads"}
+            onClick={() => setActiveTab("samplePayloads")}
+          >
+            Échantillons runtime
+          </button>
         </div>
       </header>
 
       {activeTab === "personas" ? <PersonasAdmin /> : null}
+
+      {activeTab === "samplePayloads" ? (
+        <AdminSamplePayloadsAdmin
+          seedFeature={samplePayloadsSeed?.feature ?? null}
+          seedLocale={samplePayloadsSeed?.locale ?? null}
+        />
+      ) : null}
 
       {activeTab === "catalog" ? (
         <section className="panel admin-prompts-catalog" aria-label="Catalogue canonique">
@@ -913,6 +940,27 @@ export function AdminPromptsPage() {
                           <p className="text-muted">
                             Placeholders résolus/partiels pour lecture opérable (sans parser du JSON brut).
                           </p>
+                          {selectedCatalogEntry?.feature && selectedCatalogEntry.locale ? (
+                            <p className="admin-prompts-resolved__sample-payload-cta">
+                              <button
+                                type="button"
+                                className="text-button"
+                                onClick={() => {
+                                  const entryLocale = selectedCatalogEntry.locale
+                                  if (!entryLocale) {
+                                    return
+                                  }
+                                  setSamplePayloadsSeed({
+                                    feature: selectedCatalogEntry.feature,
+                                    locale: entryLocale,
+                                  })
+                                  setActiveTab("samplePayloads")
+                                }}
+                              >
+                                Gérer les sample payloads ({selectedCatalogEntry.feature} / {selectedCatalogEntry.locale})
+                              </button>
+                            </p>
+                          ) : null}
                           {resolvedQuery.data.resolved_result.placeholders.length === 0 ? (
                             <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
                               Aucune donnée d&apos;exemple disponible pour cette cible.

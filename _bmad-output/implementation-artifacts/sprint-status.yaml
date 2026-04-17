@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-17T18:52:00+02:00'
+last_updated: '2026-04-17T22:45:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -644,7 +644,7 @@ development_status:
   epic-68: in-progress
   68-1-definir-modele-admin-sample-payloads-par-feature: review
   68-2-rendre-runtime-preview-avec-sample-payload: done
-  68-3-gerer-sample-payloads-depuis-surface-admin: ready-for-dev
+  68-3-gerer-sample-payloads-depuis-surface-admin: review
   epic-68-retrospective: backlog
   epic-69: in-progress
   69-1-executer-manuellement-cible-canonique-depuis-sample-payload: ready-for-dev

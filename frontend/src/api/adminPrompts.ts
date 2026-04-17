@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
 import { getAccessTokenAuthHeader } from "../utils/authToken"
@@ -182,6 +182,25 @@ export type AdminLlmSamplePayloadSummary = {
 export type AdminLlmSamplePayloadList = {
   items: AdminLlmSamplePayloadSummary[]
   recommended_default_id: string | null
+}
+
+export type AdminLlmSamplePayloadCreateInput = {
+  name: string
+  feature: string
+  locale: string
+  payload_json: Record<string, unknown>
+  description?: string | null
+  is_default?: boolean
+  is_active?: boolean
+}
+
+export type AdminLlmSamplePayloadUpdateInput = {
+  name?: string
+  locale?: string
+  payload_json?: Record<string, unknown>
+  description?: string | null
+  is_default?: boolean
+  is_active?: boolean
 }
 
 export type AdminResolvedAssemblyView = {
@@ -507,15 +526,88 @@ export async function getAdminResolvedAssembly(
 export async function listAdminLlmSamplePayloads(
   feature: string,
   locale: string,
+  options: { includeInactive?: boolean } = {},
 ): Promise<AdminLlmSamplePayloadList> {
   try {
     const query = new URLSearchParams()
     query.set("feature", feature)
     query.set("locale", locale)
+    if (options.includeInactive) {
+      query.set("include_inactive", "true")
+    }
     const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/sample-payloads?${query.toString()}`, {
       headers: getAccessTokenAuthHeader(),
     })
     return decodeResponse<AdminLlmSamplePayloadList>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function getAdminLlmSamplePayload(samplePayloadId: string): Promise<AdminLlmSamplePayload> {
+  try {
+    const response = await apiFetch(
+      `${API_BASE_URL}/v1/admin/llm/sample-payloads/${encodeURIComponent(samplePayloadId)}`,
+      {
+        headers: getAccessTokenAuthHeader(),
+      },
+    )
+    return decodeResponse<AdminLlmSamplePayload>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function createAdminLlmSamplePayload(
+  payload: AdminLlmSamplePayloadCreateInput,
+): Promise<AdminLlmSamplePayload> {
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/sample-payloads`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAccessTokenAuthHeader(),
+      },
+      body: JSON.stringify(payload),
+    })
+    return decodeResponse<AdminLlmSamplePayload>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function updateAdminLlmSamplePayload(
+  samplePayloadId: string,
+  payload: AdminLlmSamplePayloadUpdateInput,
+): Promise<AdminLlmSamplePayload> {
+  try {
+    const response = await apiFetch(
+      `${API_BASE_URL}/v1/admin/llm/sample-payloads/${encodeURIComponent(samplePayloadId)}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAccessTokenAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+      },
+    )
+    return decodeResponse<AdminLlmSamplePayload>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function deleteAdminLlmSamplePayload(samplePayloadId: string): Promise<{ id: string }> {
+  try {
+    const response = await apiFetch(
+      `${API_BASE_URL}/v1/admin/llm/sample-payloads/${encodeURIComponent(samplePayloadId)}`,
+      {
+        method: "DELETE",
+        headers: getAccessTokenAuthHeader(),
+      },
+    )
+    return decodeResponse<{ id: string }>(response)
   } catch (error) {
     throw toTransportError(error)
   }
@@ -782,11 +874,61 @@ export function useAdminResolvedAssembly(
   })
 }
 
-export function useAdminLlmSamplePayloads(feature: string | null, locale: string | null, enabled = true) {
+export function useAdminLlmSamplePayloads(
+  feature: string | null,
+  locale: string | null,
+  options: { enabled?: boolean; includeInactive?: boolean } = {},
+) {
+  const { enabled = true, includeInactive = false } = options
   return useQuery({
-    queryKey: ["admin-llm-sample-payloads", feature, locale],
-    queryFn: () => listAdminLlmSamplePayloads(feature ?? "", locale ?? ""),
+    queryKey: ["admin-llm-sample-payloads", feature, locale, includeInactive],
+    queryFn: () => listAdminLlmSamplePayloads(feature ?? "", locale ?? "", { includeInactive }),
     enabled: enabled && Boolean(feature) && Boolean(locale),
+  })
+}
+
+export function useAdminLlmSamplePayloadDetail(samplePayloadId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ["admin-llm-sample-payload-detail", samplePayloadId],
+    queryFn: () => getAdminLlmSamplePayload(samplePayloadId ?? ""),
+    enabled: enabled && Boolean(samplePayloadId),
+  })
+}
+
+async function invalidateAdminLlmSamplePayloadQueries(queryClient: QueryClient) {
+  await queryClient.invalidateQueries({ queryKey: ["admin-llm-sample-payloads"] })
+  await queryClient.invalidateQueries({ queryKey: ["admin-llm-sample-payload-detail"] })
+  await queryClient.invalidateQueries({ queryKey: ["admin-llm-catalog-resolved"] })
+}
+
+export function useCreateAdminLlmSamplePayload() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: createAdminLlmSamplePayload,
+    onSuccess: async () => {
+      await invalidateAdminLlmSamplePayloadQueries(queryClient)
+    },
+  })
+}
+
+export function useUpdateAdminLlmSamplePayload() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ samplePayloadId, payload }: { samplePayloadId: string; payload: AdminLlmSamplePayloadUpdateInput }) =>
+      updateAdminLlmSamplePayload(samplePayloadId, payload),
+    onSuccess: async () => {
+      await invalidateAdminLlmSamplePayloadQueries(queryClient)
+    },
+  })
+}
+
+export function useDeleteAdminLlmSamplePayload() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteAdminLlmSamplePayload,
+    onSuccess: async () => {
+      await invalidateAdminLlmSamplePayloadQueries(queryClient)
+    },
   })
 }
 
