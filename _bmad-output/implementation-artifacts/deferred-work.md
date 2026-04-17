@@ -7,3 +7,7 @@
 ## Deferred from: code review of 67-2-exposer-construction-logique-graphe-inspectable.md (2026-04-17)
 
 - **Résilience limitée si payload `resolved` partiel** — La robustesse aux payloads incomplets n'est pas spécifique à ce diff (la vue détail déréférence déjà plusieurs sous-objets du payload), amélioration à traiter de façon transverse sur la surface d'inspection admin.
+
+## Deferred from: code review of 68-3-gerer-sample-payloads-depuis-surface-admin.md (2026-04-17)
+
+- **Double chargement catalogue sur l’onglet samples** — `AdminSamplePayloadsAdmin` refait un `useAdminLlmCatalog` pour les facettes alors que la page parent charge déjà le catalogue sur l’onglet catalogue ; regrouper ou mutualiser les facettes pour réduire les appels réseau.

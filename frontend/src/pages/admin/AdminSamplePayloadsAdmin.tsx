@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   useAdminLlmCatalog,
@@ -106,18 +106,24 @@ type EditorState = {
   genericPayloadText: string
 }
 
-function emptyEditor(feature: string): EditorState {
+function defaultPayloadFields(feature: string): Pick<EditorState, "natalPayloadMode" | "chartJsonText" | "extrasJsonText" | "genericPayloadText"> {
   const natal = isNatalFeature(feature)
+  return {
+    natalPayloadMode: natal ? "chart_guided" : "json_blob",
+    chartJsonText: DEFAULT_NATAL_CHART,
+    extrasJsonText: "",
+    genericPayloadText: natal ? DEFAULT_NATAL_CHART : DEFAULT_GENERIC_PAYLOAD,
+  }
+}
+
+function emptyEditor(feature: string): EditorState {
   return {
     mode: "create",
     name: "",
     description: "",
     isDefault: false,
     isActive: true,
-    natalPayloadMode: natal ? "chart_guided" : "json_blob",
-    chartJsonText: DEFAULT_NATAL_CHART,
-    extrasJsonText: "",
-    genericPayloadText: natal ? DEFAULT_NATAL_CHART : DEFAULT_GENERIC_PAYLOAD,
+    ...defaultPayloadFields(feature),
   }
 }
 
@@ -216,11 +222,28 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
   const [formError, setFormError] = useState<string | null>(null)
   const [banner, setBanner] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
+  /** Feature « de référence » du formulaire ouvert : si le filtre feature change, on vide les champs payload (revue code 68-3). */
+  const payloadBaselineFeatureRef = useRef<string>("")
+
+  useEffect(() => {
+    if (!editorOpen) {
+      payloadBaselineFeatureRef.current = mgmtFeature
+      return
+    }
+    const baseline = payloadBaselineFeatureRef.current
+    if (baseline === mgmtFeature) {
+      return
+    }
+    payloadBaselineFeatureRef.current = mgmtFeature
+    setFormError(null)
+    setEditor((prev) => (prev ? { ...prev, ...defaultPayloadFields(mgmtFeature) } : prev))
+  }, [editorOpen, mgmtFeature])
 
   const openCreate = () => {
     if (!mgmtFeature || !mgmtLocale) {
       return
     }
+    payloadBaselineFeatureRef.current = mgmtFeature
     setFormError(null)
     setEditor(emptyEditor(mgmtFeature))
     setEditorOpen(true)
@@ -231,6 +254,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
     setBanner(null)
     try {
       const detail = await getAdminLlmSamplePayload(id)
+      payloadBaselineFeatureRef.current = mgmtFeature
       setEditor(editorFromDetail(detail, "edit"))
       setEditorOpen(true)
     } catch (error) {
@@ -243,6 +267,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
     setBanner(null)
     try {
       const detail = await getAdminLlmSamplePayload(id)
+      payloadBaselineFeatureRef.current = mgmtFeature
       const copy = editorFromDetail(detail, "create")
       copy.name = `${detail.name} (copie)`
       copy.isDefault = false
@@ -496,7 +521,12 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
             </h3>
             <p className="sample-payloads-admin__modal-hint">
               Cible liste : <strong>{mgmtFeature}</strong> / <strong>{mgmtLocale}</strong>
-              {editor.mode === "edit" ? " · la feature ne peut pas être changée (contrainte API)." : null}
+              {editor.mode === "edit"
+                ? " · la feature de l’entrée en base ne change pas via l’API (PATCH). "
+                : null}
+              Si vous modifiez la <strong>feature</strong> dans les filtres pendant que cette fenêtre est ouverte, les
+              champs <strong>payload</strong> (JSON / chart) sont réinitialisés pour rester alignés sur la nouvelle
+              cible ; le nom, la description et les cases à cocher ne sont pas effacés.
             </p>
             {formError ? (
               <p className="chat-error" role="alert">
