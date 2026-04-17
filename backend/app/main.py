@@ -25,6 +25,9 @@ from app.api.v1.routers.admin_llm import router as admin_llm_router
 from app.api.v1.routers.admin_llm_assembly import router as admin_llm_assembly_router
 from app.api.v1.routers.admin_llm_consumption import router as admin_llm_consumption_router
 from app.api.v1.routers.admin_llm_release import router as admin_llm_release_router
+from app.api.v1.routers.admin_llm_sample_payloads import (
+    router as admin_llm_sample_payloads_router,
+)
 from app.api.v1.routers.admin_logs import router as admin_logs_router
 from app.api.v1.routers.admin_pdf_templates import router as admin_pdf_templates_router
 from app.api.v1.routers.admin_support import router as admin_support_router
@@ -699,6 +702,7 @@ app.include_router(admin_ai_router)
 app.include_router(admin_logs_router)
 app.include_router(admin_exports_router)
 app.include_router(admin_llm_router)
+app.include_router(admin_llm_sample_payloads_router)
 app.include_router(admin_llm_consumption_router)
 app.include_router(admin_llm_assembly_router)
 app.include_router(

@@ -16,6 +16,7 @@ from app.api.dependencies.auth import (
     AuthenticatedUser,
     require_admin_user,
 )
+from app.api.v1.routers.admin_llm_error_codes import AdminLlmErrorCode
 from app.core.request_id import resolve_request_id
 from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
 from app.infra.db.models.billing import UserSubscriptionModel
@@ -30,6 +31,7 @@ from app.infra.db.models.llm_prompt import (
     PromptStatus,
 )
 from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
+from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.llm_orchestration.admin_models import (
@@ -872,7 +874,7 @@ def get_persona_detail(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="persona_not_found",
+            code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
             message=f"persona {id} not found",
             details={},
         )
@@ -917,7 +919,7 @@ def update_persona(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="persona_not_found",
+            code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
             message=f"persona {id} not found",
             details={},
         )
@@ -974,7 +976,7 @@ def disable_persona(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="persona_not_found",
+            code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
             message=f"persona {id} not found",
             details={},
         )
@@ -1029,7 +1031,7 @@ def get_output_schema(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="schema_not_found",
+            code=AdminLlmErrorCode.SCHEMA_NOT_FOUND.value,
             message=f"schema {id} not found",
             details={},
         )
@@ -1114,7 +1116,7 @@ def get_release_snapshot_diff(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="snapshot_not_found",
+            code=AdminLlmErrorCode.SNAPSHOT_NOT_FOUND.value,
             message="from_snapshot_id or to_snapshot_id does not exist",
             details={
                 "from_snapshot_id": str(from_snapshot_id),
@@ -1401,6 +1403,13 @@ def get_resolved_catalog_entry(
             "ou exécution live (même sémantique runtime que runtime_preview pour l'instant)."
         ),
     ),
+    sample_payload_id: uuid.UUID | None = Query(
+        default=None,
+        description=(
+            "Identifiant optionnel d'un sample payload admin compatible avec la cible "
+            "feature/locale; utilisé pour enrichir les variables runtime de preview."
+        ),
+    ),
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
@@ -1448,7 +1457,7 @@ def get_resolved_catalog_entry(
         return _error_response(
             status_code=422,
             request_id=request_id,
-            code="snapshot_bundle_unusable",
+            code=AdminLlmErrorCode.SNAPSHOT_BUNDLE_UNUSABLE.value,
             message="active snapshot bundle is present but cannot be reconstructed safely",
             details={
                 "manifest_entry_id": manifest_entry_id,
@@ -1465,7 +1474,7 @@ def get_resolved_catalog_entry(
             return _error_response(
                 status_code=422,
                 request_id=request_id,
-                code="invalid_manifest_entry_id",
+                code=AdminLlmErrorCode.INVALID_MANIFEST_ENTRY_ID.value,
                 message=str(exc),
                 details={"manifest_entry_id": manifest_entry_id},
             )
@@ -1488,7 +1497,7 @@ def get_resolved_catalog_entry(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="manifest_entry_not_found",
+            code=AdminLlmErrorCode.MANIFEST_ENTRY_NOT_FOUND.value,
             message=f"manifest entry {manifest_entry_id} not found",
             details={"manifest_entry_id": manifest_entry_id},
         )
@@ -1599,6 +1608,56 @@ def get_resolved_catalog_entry(
         "context_quality": resolved.context_quality,
         "use_case": assembly_model.feature_template.use_case_key,
     }
+    render_variable_sources: dict[str, str] = {
+        "locale": "runtime_context",
+        "context_quality": "runtime_context",
+        "use_case": "runtime_context",
+    }
+    if sample_payload_id is not None:
+        if inspection_mode != "runtime_preview":
+            return _error_response(
+                status_code=422,
+                request_id=request_id,
+                code=AdminLlmErrorCode.SAMPLE_PAYLOAD_RUNTIME_PREVIEW_ONLY.value,
+                message="sample_payload_id is only supported in runtime_preview mode",
+                details={
+                    "sample_payload_id": str(sample_payload_id),
+                    "inspection_mode": inspection_mode,
+                },
+            )
+        sample_payload = db.get(LlmSamplePayloadModel, sample_payload_id)
+        if sample_payload is None:
+            return _error_response(
+                status_code=404,
+                request_id=request_id,
+                code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NOT_FOUND.value,
+                message=f"sample payload {sample_payload_id} not found",
+                details={"sample_payload_id": str(sample_payload_id)},
+            )
+        if (
+            sample_payload.feature != assembly_model.feature
+            or sample_payload.locale != assembly_model.locale
+        ):
+            return _error_response(
+                status_code=422,
+                request_id=request_id,
+                code=AdminLlmErrorCode.SAMPLE_PAYLOAD_TARGET_MISMATCH.value,
+                message=(
+                    "sample payload feature/locale mismatch with requested manifest entry"
+                ),
+                details={
+                    "sample_payload_id": str(sample_payload_id),
+                    "sample_feature": sample_payload.feature,
+                    "sample_locale": sample_payload.locale,
+                    "target_feature": assembly_model.feature,
+                    "target_locale": assembly_model.locale,
+                },
+            )
+        if isinstance(sample_payload.payload_json, dict):
+            for key, value in sample_payload.payload_json.items():
+                if key not in render_variables:
+                    render_variables[key] = value
+                    render_variable_sources[key] = "sample_payload"
 
     render_error: str | None = None
     render_exc: PromptRenderError | None = None
@@ -1629,12 +1688,13 @@ def get_resolved_catalog_entry(
             sanitized_value = sanitize_payload(
                 {"value": render_variables[placeholder_name]}, Sink.ADMIN_API
             )
+            resolution_source = render_variable_sources.get(placeholder_name, "runtime_context")
             placeholders.append(
                 ResolvedPlaceholderView(
                     name=placeholder_name,
                     status="resolved",
                     classification=classification,
-                    resolution_source="runtime_context",
+                    resolution_source=resolution_source,
                     safe_to_display=safe_to_display,
                     value_preview=(
                         str(sanitized_value.get("value"))[:120]
@@ -1853,7 +1913,7 @@ def update_use_case_config(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="use_case_not_found",
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
             message=f"use case {key} not found",
             details={},
         )
@@ -1865,7 +1925,7 @@ def update_use_case_config(
         return _error_response(
             status_code=403,
             request_id=request_id,
-            code="forbidden_feature",
+            code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
             message=f"use case {key} is legacy and frozen. No modifications allowed.",
             details={},
         )
@@ -1879,7 +1939,7 @@ def update_use_case_config(
                 return _error_response(
                     status_code=404,
                     request_id=request_id,
-                    code="persona_not_found",
+                    code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
                     message=f"persona {payload.persona_id} not found",
                     details={},
                 )
@@ -1899,7 +1959,7 @@ def update_use_case_config(
                     return _error_response(
                         status_code=404,
                         request_id=request_id,
-                        code="persona_not_found",
+                        code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
                         message=f"persona {pid} not found",
                         details={},
                     )
@@ -1907,7 +1967,7 @@ def update_use_case_config(
                 return _error_response(
                     status_code=422,
                     request_id=request_id,
-                    code="invalid_persona_id",
+                    code=AdminLlmErrorCode.INVALID_PERSONA_ID.value,
                     message=f"persona_id {pid} is not a valid UUID",
                     details={},
                 )
@@ -1927,7 +1987,7 @@ def update_use_case_config(
             return _error_response(
                 status_code=422,
                 request_id=request_id,
-                code="invalid_safety_profile",
+                code=AdminLlmErrorCode.INVALID_SAFETY_PROFILE.value,
                 message=str(e),
                 details={},
             )
@@ -1939,7 +1999,7 @@ def update_use_case_config(
                 return _error_response(
                     status_code=404,
                     request_id=request_id,
-                    code="schema_not_found",
+                    code=AdminLlmErrorCode.SCHEMA_NOT_FOUND.value,
                     message=f"schema {payload.output_schema_id} not found",
                     details={},
                 )
@@ -2031,7 +2091,7 @@ def associate_persona(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="use_case_not_found",
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
             message=f"use case {key} not found",
             details={},
         )
@@ -2042,7 +2102,7 @@ def associate_persona(
             return _error_response(
                 status_code=404,
                 request_id=request_id,
-                code="persona_not_found",
+                code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
                 message=f"persona {payload.persona_id} not found",
                 details={},
             )
@@ -2114,7 +2174,7 @@ def get_use_case_contract(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="use_case_not_found",
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
             message=f"use case {key} not found",
             details={},
         )
@@ -2183,7 +2243,7 @@ def create_prompt_draft(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="use_case_not_found",
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
             message=f"use case {key} not found",
             details={},
         )
@@ -2195,7 +2255,7 @@ def create_prompt_draft(
         return _error_response(
             status_code=403,
             request_id=request_id,
-            code="forbidden_feature",
+            code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
             message=f"use case {key} is legacy and frozen. No new drafts allowed.",
             details={},
         )
@@ -2207,7 +2267,7 @@ def create_prompt_draft(
         return _error_response(
             status_code=422,
             request_id=request_id,
-            code="lint_failed",
+            code=AdminLlmErrorCode.LINT_FAILED.value,
             message="prompt lint validation failed",
             details={"errors": lint_result.errors, "warnings": lint_result.warnings},
         )
@@ -2258,7 +2318,7 @@ async def publish_prompt(
         return _error_response(
             status_code=404,
             request_id=request_id,
-            code="use_case_not_found",
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
             message=f"use case {key} not found",
             details={},
         )
@@ -2277,7 +2337,7 @@ async def publish_prompt(
             return _error_response(
                 status_code=409,
                 request_id=request_id,
-                code="eval_failed",
+                code=AdminLlmErrorCode.EVAL_FAILED.value,
                 message=f"Evaluation failure rate ({eval_report.failure_rate:.2%}) exceeds threshold ({uc.eval_failure_threshold:.2%})",  # noqa: E501
                 details=eval_report.model_dump(),
             )
@@ -2299,7 +2359,7 @@ async def publish_prompt(
             return _error_response(
                 status_code=409,
                 request_id=request_id,
-                code="golden_regression_failed",
+                code=AdminLlmErrorCode.GOLDEN_REGRESSION_FAILED.value,
                 message=(
                     f"Golden regression campaign {golden_report.verdict} "
                     "(Blocking drift or invalid context detected)"
@@ -2349,14 +2409,14 @@ async def publish_prompt(
             return _error_response(
                 status_code=403,
                 request_id=request_id,
-                code="forbidden_feature",
+                code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
                 message=str(err),
                 details={},
             )
         return _error_response(
             status_code=422,
             request_id=request_id,
-            code="validation_error",
+            code=AdminLlmErrorCode.VALIDATION_ERROR.value,
             message=str(err),
             details={},
         )
@@ -2365,7 +2425,7 @@ async def publish_prompt(
         return _error_response(
             status_code=500,
             request_id=request_id,
-            code="publish_failed",
+            code=AdminLlmErrorCode.PUBLISH_FAILED.value,
             message=str(err),
             details={},
         )
@@ -2416,14 +2476,14 @@ def rollback_prompt(
             return _error_response(
                 status_code=403,
                 request_id=request_id,
-                code="forbidden_feature",
+                code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
                 message=str(err),
                 details={},
             )
         return _error_response(
             status_code=422,
             request_id=request_id,
-            code="rollback_failed",
+            code=AdminLlmErrorCode.ROLLBACK_FAILED.value,
             message=str(err),
             details={},
         )
@@ -2590,7 +2650,7 @@ async def replay_request(
         return _error_response(
             status_code=403 if "disabled" in str(e) else 400,
             request_id=request_id,
-            code="replay_failed",
+            code=AdminLlmErrorCode.REPLAY_FAILED.value,
             message=str(e),
             details={},
         )

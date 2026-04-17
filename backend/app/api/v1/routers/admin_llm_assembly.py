@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.api.v1.routers.admin_llm_error_codes import AdminLlmErrorCode
 from app.infra.db.session import get_db_session
 from app.llm_orchestration.admin_models import (
     DraftPublishResponse,
@@ -155,7 +156,7 @@ async def publish_assembly_config(
             return _error_response(
                 status_code=400,
                 request_id=request.state.request_id,
-                code="coherence_validation_failed",
+                code=AdminLlmErrorCode.COHERENCE_VALIDATION_FAILED.value,
                 message="assembly coherence validation failed",
                 details={"errors": [err.model_dump() for err in e.result.errors]},
             )

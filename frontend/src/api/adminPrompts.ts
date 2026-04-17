@@ -154,6 +154,24 @@ export type AdminResolvedPlaceholder = {
 
 export type AdminInspectionMode = "assembly_preview" | "runtime_preview" | "live_execution"
 
+export type AdminLlmSamplePayload = {
+  id: string
+  name: string
+  feature: string
+  locale: string
+  payload_json: Record<string, unknown>
+  description: string | null
+  is_default: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type AdminLlmSamplePayloadList = {
+  items: AdminLlmSamplePayload[]
+  recommended_default_id: string | null
+}
+
 export type AdminResolvedAssemblyView = {
   manifest_entry_id: string
   feature: string
@@ -451,12 +469,15 @@ export async function getAdminPersonaDetail(personaId: string): Promise<AdminLlm
 
 export async function getAdminResolvedAssembly(
   manifestEntryId: string,
-  options: { inspectionMode?: AdminInspectionMode } = {},
+  options: { inspectionMode?: AdminInspectionMode; samplePayloadId?: string } = {},
 ): Promise<AdminResolvedAssemblyView> {
   try {
     const query = new URLSearchParams()
     if (options.inspectionMode) {
       query.set("inspection_mode", options.inspectionMode)
+    }
+    if (options.samplePayloadId) {
+      query.set("sample_payload_id", options.samplePayloadId)
     }
     const qs = query.toString()
     const response = await apiFetch(
@@ -466,6 +487,23 @@ export async function getAdminResolvedAssembly(
       },
     )
     return decodeResponse<AdminResolvedAssemblyView>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export async function listAdminLlmSamplePayloads(
+  feature: string,
+  locale: string,
+): Promise<AdminLlmSamplePayloadList> {
+  try {
+    const query = new URLSearchParams()
+    query.set("feature", feature)
+    query.set("locale", locale)
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/sample-payloads?${query.toString()}`, {
+      headers: getAccessTokenAuthHeader(),
+    })
+    return decodeResponse<AdminLlmSamplePayloadList>(response)
   } catch (error) {
     throw toTransportError(error)
   }
@@ -718,12 +756,25 @@ export function useUpdateAdminPersona() {
 export function useAdminResolvedAssembly(
   manifestEntryId: string | null,
   inspectionMode: AdminInspectionMode,
+  samplePayloadId: string | null,
   enabled = true,
 ) {
   return useQuery({
-    queryKey: ["admin-llm-catalog-resolved", manifestEntryId, inspectionMode],
-    queryFn: () => getAdminResolvedAssembly(manifestEntryId ?? "", { inspectionMode }),
+    queryKey: ["admin-llm-catalog-resolved", manifestEntryId, inspectionMode, samplePayloadId],
+    queryFn: () =>
+      getAdminResolvedAssembly(manifestEntryId ?? "", {
+        inspectionMode,
+        samplePayloadId: samplePayloadId ?? undefined,
+      }),
     enabled: enabled && Boolean(manifestEntryId),
+  })
+}
+
+export function useAdminLlmSamplePayloads(feature: string | null, locale: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ["admin-llm-sample-payloads", feature, locale],
+    queryFn: () => listAdminLlmSamplePayloads(feature ?? "", locale ?? ""),
+    enabled: enabled && Boolean(feature) && Boolean(locale),
   })
 }
 

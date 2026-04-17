@@ -10,6 +10,7 @@ import {
   useAdminConsumption,
   useAdminConsumptionDrilldown,
   useDownloadAdminConsumptionCsv,
+  useAdminLlmSamplePayloads,
   useReleaseSnapshotsTimeline,
   useReleaseSnapshotDiff,
   toUtcIsoFromDateTimeInput,
@@ -378,6 +379,7 @@ export function AdminPromptsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [selectedManifestEntryId, setSelectedManifestEntryId] = useState<string | null>(null)
   const [resolvedInspectionMode, setResolvedInspectionMode] = useState<AdminInspectionMode>("assembly_preview")
+  const [selectedSamplePayloadId, setSelectedSamplePayloadId] = useState<string | null>(null)
   const [fromSnapshotId, setFromSnapshotId] = useState<string | null>(null)
   const [toSnapshotId, setToSnapshotId] = useState<string | null>(null)
   const [consumptionView, setConsumptionView] = useState<AdminConsumptionView>("user")
@@ -389,6 +391,8 @@ export function AdminPromptsPage() {
   const [selectedDrilldownKey, setSelectedDrilldownKey] = useState<string | null>(null)
   const consumptionFromUtc = consumptionFrom ? toUtcIsoFromDateTimeInput(consumptionFrom) : undefined
   const consumptionToUtc = consumptionTo ? toUtcIsoFromDateTimeInput(consumptionTo) : undefined
+  const effectiveSamplePayloadId =
+    resolvedInspectionMode === "runtime_preview" ? selectedSamplePayloadId : null
 
   const catalogQuery = useAdminLlmCatalog({
     page,
@@ -409,15 +413,42 @@ export function AdminPromptsPage() {
 
   const catalogEntries = catalogQuery.data?.data ?? []
   const catalogMeta = catalogQuery.data?.meta
+  const selectedCatalogEntry =
+    catalogEntries.find((entry) => entry.manifest_entry_id === selectedManifestEntryId) ?? null
   const resolvedQuery = useAdminResolvedAssembly(
     selectedManifestEntryId,
     resolvedInspectionMode,
+    effectiveSamplePayloadId,
     activeTab === "catalog" && Boolean(selectedManifestEntryId),
+  )
+  const samplePayloadsQuery = useAdminLlmSamplePayloads(
+    selectedCatalogEntry?.feature ?? null,
+    selectedCatalogEntry?.locale ?? null,
+    activeTab === "catalog" &&
+      Boolean(selectedManifestEntryId) &&
+      resolvedInspectionMode === "runtime_preview",
   )
 
   useEffect(() => {
     setResolvedInspectionMode("assembly_preview")
+    setSelectedSamplePayloadId(null)
   }, [selectedManifestEntryId])
+
+  useEffect(() => {
+    if (resolvedInspectionMode !== "runtime_preview") {
+      setSelectedSamplePayloadId(null)
+    }
+  }, [resolvedInspectionMode])
+
+  useEffect(() => {
+    if (resolvedInspectionMode !== "runtime_preview") return
+    const recommendedId = samplePayloadsQuery.data?.recommended_default_id ?? null
+    if (!recommendedId) {
+      setSelectedSamplePayloadId(null)
+      return
+    }
+    setSelectedSamplePayloadId((current) => current ?? recommendedId)
+  }, [resolvedInspectionMode, samplePayloadsQuery.data?.recommended_default_id])
 
   const facets = catalogMeta?.facets
   const availableFeatures = facets?.feature ?? []
@@ -743,11 +774,35 @@ export function AdminPromptsPage() {
                           ))}
                         </select>
                       </label>
+                      {resolvedInspectionMode === "runtime_preview" ? (
+                        <label className="admin-prompts-resolved__mode-field">
+                          <span className="text-muted">Sample payload</span>
+                          <select
+                            aria-label="Sélecteur sample payload runtime"
+                            className="admin-prompts-resolved__mode-select"
+                            value={selectedSamplePayloadId ?? ""}
+                            onChange={(event) => {
+                              setSelectedSamplePayloadId(event.target.value || null)
+                            }}
+                          >
+                            <option value="">Aucun sample payload</option>
+                            {(samplePayloadsQuery.data?.items ?? []).map((sample) => (
+                              <option key={sample.id} value={sample.id}>
+                                {sample.name}
+                                {sample.is_default ? " (défaut)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : null}
                     </div>
                   </div>
                   <p className="admin-prompts-resolved__render-note">
                     {inspectionModeHelpText(resolvedQuery.data?.inspection_mode ?? resolvedInspectionMode)}
                   </p>
+                  {resolvedInspectionMode === "runtime_preview" && samplePayloadsQuery.isPending ? (
+                    <p className="text-muted">Chargement des sample payloads...</p>
+                  ) : null}
                   {resolvedQuery.isPending ? <div className="loading-placeholder">Chargement du detail...</div> : null}
                   {resolvedQuery.isError ? <p className="chat-error">Impossible de charger le detail d'assembly.</p> : null}
                   {resolvedQuery.data ? (

@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-17T16:36:00+02:00'
+last_updated: '2026-04-17T17:15:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -642,8 +642,8 @@ development_status:
   67-3-refondre-vue-detail-zones-pedagogiques-operables: done
   epic-67-retrospective: backlog
   epic-68: in-progress
-  68-1-definir-modele-admin-sample-payloads-par-feature: ready-for-dev
-  68-2-rendre-runtime-preview-avec-sample-payload: ready-for-dev
+  68-1-definir-modele-admin-sample-payloads-par-feature: review
+  68-2-rendre-runtime-preview-avec-sample-payload: review
   68-3-gerer-sample-payloads-depuis-surface-admin: ready-for-dev
   epic-68-retrospective: backlog
   epic-69: in-progress
