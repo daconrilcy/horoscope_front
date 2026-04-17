@@ -226,6 +226,50 @@ def test_admin_llm_sample_payload_post_duplicate_name_returns_conflict():
         db.close()
 
 
+def test_admin_llm_sample_payload_patch_duplicate_name_returns_conflict():
+    db = SessionLocal()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    created_ids: list[uuid.UUID] = []
+    try:
+        db.execute(delete(LlmSamplePayloadModel))
+        db.commit()
+
+        first = client.post(
+            "/v1/admin/llm/sample-payloads",
+            json=_build_payload(name="first-name", is_default=False),
+        )
+        assert first.status_code == 200
+        first_id = first.json()["data"]["id"]
+        created_ids.append(uuid.UUID(first_id))
+
+        second = client.post(
+            "/v1/admin/llm/sample-payloads",
+            json=_build_payload(name="second-name", is_default=False),
+        )
+        assert second.status_code == 200
+        second_id = second.json()["data"]["id"]
+        created_ids.append(uuid.UUID(second_id))
+
+        patch_response = client.patch(
+            f"/v1/admin/llm/sample-payloads/{second_id}",
+            json={"name": "first-name"},
+        )
+        assert patch_response.status_code == 409
+        error = patch_response.json()["error"]
+        assert error["code"] == "sample_payload_name_conflict"
+    finally:
+        app.dependency_overrides.clear()
+        if created_ids:
+            db.execute(
+                delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id.in_(created_ids))
+            )
+            db.commit()
+        db.close()
+
+
 def test_admin_llm_sample_payload_patch_default_locale_conflict_returns_409():
     db = SessionLocal()
     client = TestClient(app)

@@ -211,30 +211,33 @@ def _to_api_payload(model: LlmSamplePayloadModel) -> AdminLlmSamplePayload:
     return AdminLlmSamplePayload.model_validate(payload)
 
 
-def _integrity_conflict_response(
-    *, request_id: str, exc: IntegrityError, feature: str, locale: str
+def _sample_payload_name_conflict_response(
+    *, request_id: str, feature: str, locale: str
 ) -> JSONResponse:
-    message = str(exc.orig).lower()
-    unique_name_key = (
-        "llm_sample_payloads.feature, llm_sample_payloads.locale, "
-        "llm_sample_payloads.name"
+    return _error_response(
+        request_id=request_id,
+        status_code=409,
+        code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NAME_CONFLICT.value,
+        message="a sample payload with this name already exists for this feature/locale",
+        details={"feature": feature, "locale": locale},
     )
-    if unique_name_key in message:
-        return _error_response(
-            request_id=request_id,
-            status_code=409,
-            code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NAME_CONFLICT.value,
-            message="a sample payload with this name already exists for this feature/locale",
-            details={"feature": feature, "locale": locale},
-        )
-    if "llm_sample_payloads.feature, llm_sample_payloads.locale" in message:
-        return _error_response(
-            request_id=request_id,
-            status_code=409,
-            code=AdminLlmErrorCode.SAMPLE_PAYLOAD_DEFAULT_CONFLICT.value,
-            message="another default sample payload already exists for this feature/locale",
-            details={"feature": feature, "locale": locale},
-        )
+
+
+def _sample_payload_default_conflict_response(
+    *, request_id: str, feature: str, locale: str
+) -> JSONResponse:
+    return _error_response(
+        request_id=request_id,
+        status_code=409,
+        code=AdminLlmErrorCode.SAMPLE_PAYLOAD_DEFAULT_CONFLICT.value,
+        message="another default sample payload already exists for this feature/locale",
+        details={"feature": feature, "locale": locale},
+    )
+
+
+def _sample_payload_generic_conflict_response(
+    *, request_id: str, feature: str, locale: str
+) -> JSONResponse:
     return _error_response(
         request_id=request_id,
         status_code=409,
@@ -242,6 +245,43 @@ def _integrity_conflict_response(
         message="sample payload update conflicts with existing data",
         details={"feature": feature, "locale": locale},
     )
+
+
+def _find_name_conflict(
+    db: Session,
+    *,
+    feature: str,
+    locale: str,
+    name: str,
+    exclude_id: uuid.UUID | None = None,
+) -> LlmSamplePayloadModel | None:
+    stmt = (
+        select(LlmSamplePayloadModel)
+        .where(LlmSamplePayloadModel.feature == feature)
+        .where(LlmSamplePayloadModel.locale == locale)
+        .where(LlmSamplePayloadModel.name == name)
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(LlmSamplePayloadModel.id != exclude_id)
+    return db.scalar(stmt.limit(1))
+
+
+def _find_default_conflict(
+    db: Session,
+    *,
+    feature: str,
+    locale: str,
+    exclude_id: uuid.UUID | None = None,
+) -> LlmSamplePayloadModel | None:
+    stmt = (
+        select(LlmSamplePayloadModel)
+        .where(LlmSamplePayloadModel.feature == feature)
+        .where(LlmSamplePayloadModel.locale == locale)
+        .where(LlmSamplePayloadModel.is_default == True)  # noqa: E712
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(LlmSamplePayloadModel.id != exclude_id)
+    return db.scalar(stmt.limit(1))
 
 
 @router.post("", response_model=AdminLlmSamplePayloadResponse)
@@ -267,13 +307,28 @@ def create_sample_payload(
             details={},
         )
 
+    if _find_name_conflict(
+        db,
+        feature=feature,
+        locale=locale,
+        name=normalized_name,
+    ):
+        return _sample_payload_name_conflict_response(
+            request_id=request_id,
+            feature=feature,
+            locale=locale,
+        )
+
     if payload.is_default:
-        existing_defaults = db.scalars(
-            select(LlmSamplePayloadModel)
-            .where(LlmSamplePayloadModel.feature == feature)
-            .where(LlmSamplePayloadModel.locale == locale)
-            .where(LlmSamplePayloadModel.is_default == True)  # noqa: E712
-        ).all()
+        if _find_default_conflict(db, feature=feature, locale=locale):
+            existing_defaults = db.scalars(
+                select(LlmSamplePayloadModel)
+                .where(LlmSamplePayloadModel.feature == feature)
+                .where(LlmSamplePayloadModel.locale == locale)
+                .where(LlmSamplePayloadModel.is_default == True)  # noqa: E712
+            ).all()
+        else:
+            existing_defaults = []
         for row in existing_defaults:
             row.is_default = False
         # Flush first to avoid transient uniqueness violations on SQLite
@@ -292,11 +347,10 @@ def create_sample_payload(
     db.add(model)
     try:
         db.commit()
-    except IntegrityError as exc:
+    except IntegrityError:
         db.rollback()
-        return _integrity_conflict_response(
+        return _sample_payload_generic_conflict_response(
             request_id=request_id,
-            exc=exc,
             feature=feature,
             locale=locale,
         )
@@ -425,6 +479,36 @@ def update_sample_payload(
             details={},
         )
 
+    if _find_name_conflict(
+        db,
+        feature=next_feature,
+        locale=next_locale,
+        name=next_name,
+        exclude_id=model.id,
+    ):
+        return _sample_payload_name_conflict_response(
+            request_id=request_id,
+            feature=next_feature,
+            locale=next_locale,
+        )
+
+    if (
+        payload.is_default is not False
+        and model.is_default
+        and next_locale != model.locale
+        and _find_default_conflict(
+            db,
+            feature=next_feature,
+            locale=next_locale,
+            exclude_id=model.id,
+        )
+    ):
+        return _sample_payload_default_conflict_response(
+            request_id=request_id,
+            feature=next_feature,
+            locale=next_locale,
+        )
+
     if payload.is_default is True:
         existing_defaults = db.scalars(
             select(LlmSamplePayloadModel)
@@ -451,11 +535,10 @@ def update_sample_payload(
 
     try:
         db.commit()
-    except IntegrityError as exc:
+    except IntegrityError:
         db.rollback()
-        return _integrity_conflict_response(
+        return _sample_payload_generic_conflict_response(
             request_id=request_id,
-            exc=exc,
             feature=next_feature,
             locale=next_locale,
         )

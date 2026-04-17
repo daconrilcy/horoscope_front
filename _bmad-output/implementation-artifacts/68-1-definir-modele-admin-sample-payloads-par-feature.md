@@ -89,7 +89,7 @@ GPT-5 Codex
 - Validation métier implémentée: feature canonique supportée, locale au format `xx-XX`, payload JSON non vide, `chart_json` obligatoire pour `natal`, rejet de clés sensibles (credentials/identifiants).
 - QA sécurité: tests d'intégration couvrant CRUD/lecture par défaut recommandé et rejets des payloads sensibles.
 - Durcissements post-review: `flush()` avant promotion de default via POST/PATCH, validation des noms trimés, support explicite de `description: null` en PATCH.
-- Conflits d'unicité traduits en erreurs métier `409` (`sample_payload_name_conflict`, `sample_payload_default_conflict`) au lieu d'erreurs `500`.
+- Conflits d'unicité prévalidés côté application (nom dupliqué, déplacement d'un default vers une locale déjà couverte) avec erreurs métier `409`; un `409 sample_payload_conflict` reste en garde-fou sur course concurrente au `commit()`.
 - Harmonisation des codes d'erreur via enum partagé `AdminLlmErrorCode` (scope `admin_llm*`).
 
 ### File List
@@ -109,4 +109,4 @@ GPT-5 Codex
 ### Change Log
 
 - 2026-04-17: Implémentation complète story 68.1 (modèle DB + migration + API admin CRUD/listing + validations sécurité + tests intégration).
-- 2026-04-17: Correctifs post-review 68.1 (robustesse transactionnelle default, validation `name` trimé, PATCH `description=null`, mapping `IntegrityError` en `409` métier, centralisation codes d'erreur admin LLM).
+- 2026-04-17: Correctifs post-review 68.1 (robustesse transactionnelle default, validation `name` trimé, PATCH `description=null`, prévalidation applicative des conflits d'unicité + garde-fou `409`, centralisation codes d'erreur admin LLM).
