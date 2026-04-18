@@ -34,7 +34,7 @@ from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSna
 from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
-from app.infra.llm.anonymizer import anonymize_text
+from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
 from app.llm_orchestration.admin_models import (
     LlmOutputSchema,
     LlmPersona,
@@ -815,6 +815,15 @@ def _admin_catalog_runtime_preview_blocking_reasons(view: AdminResolvedAssemblyV
     return reasons
 
 
+def _anonymize_for_admin_manual_execute(text: str, *, field: str) -> str:
+    """Ne pas faire échouer la réponse opérateur si l'anonymisation est indisponible."""
+    try:
+        return anonymize_text(text)
+    except LLMAnonymizationError as exc:
+        logger.warning("admin manual execute: anonymization skipped for %s: %s", field, exc)
+        return "[anonymization_unavailable]"
+
+
 def _build_admin_manual_execute_response_payload(
     *,
     built: AdminResolvedAssemblyView,
@@ -827,7 +836,9 @@ def _build_admin_manual_execute_response_payload(
 ) -> AdminCatalogManualExecuteResponseData:
     """Construit le payload opérateur (prompt, params runtime, sorties, redaction)."""
     rendered = built.transformation_pipeline.rendered_prompt
-    prompt_sent = anonymize_text(rendered if rendered else "")
+    prompt_sent = _anonymize_for_admin_manual_execute(
+        rendered if rendered else "", field="prompt_sent"
+    )
 
     structured = result.structured_output
     structured_sanitized: dict[str, Any] | None = None
@@ -852,10 +863,13 @@ def _build_admin_manual_execute_response_payload(
         Sink.ADMIN_API,
     )
 
-    raw_out = anonymize_text(result.raw_output or "")
+    raw_out = _anonymize_for_admin_manual_execute(result.raw_output or "", field="raw_output")
     val_errors: list[str] | None = None
     if meta.validation_errors:
-        val_errors = [anonymize_text(line) for line in meta.validation_errors]
+        val_errors = [
+            _anonymize_for_admin_manual_execute(line, field="meta_validation_error")
+            for line in meta.validation_errors
+        ]
 
     return AdminCatalogManualExecuteResponseData(
         manifest_entry_id=manifest_entry_id,
@@ -1941,27 +1955,30 @@ def _build_admin_resolved_catalog_view(
                     )
                 )
         else:
-            unknown_status = (
-                "blocking_missing" if inspection_mode == "runtime_preview" else "unknown"
-            )
-            unknown_source = (
-                "missing_required_untyped" if inspection_mode == "runtime_preview" else "unknown"
-            )
-            unknown_reason = (
-                "required_placeholder_missing_untyped"
-                if inspection_mode == "runtime_preview"
-                else None
-            )
-            placeholders.append(
-                ResolvedPlaceholderView(
-                    name=placeholder_name,
-                    status=unknown_status,
-                    classification=classification,
-                    resolution_source=unknown_source,
-                    reason=unknown_reason,
-                    safe_to_display=safe_to_display,
+            # Hors registre : `unknown` en assembly_preview ; runtime_preview et live_execution
+            # alignés (bloquant), comme documenté pour l’inspection live.
+            if inspection_mode == "assembly_preview":
+                placeholders.append(
+                    ResolvedPlaceholderView(
+                        name=placeholder_name,
+                        status="unknown",
+                        classification=classification,
+                        resolution_source="unknown",
+                        reason=None,
+                        safe_to_display=safe_to_display,
+                    )
                 )
-            )
+            else:
+                placeholders.append(
+                    ResolvedPlaceholderView(
+                        name=placeholder_name,
+                        status="blocking_missing",
+                        classification=classification,
+                        resolution_source="missing_required_untyped",
+                        reason="required_placeholder_missing_untyped",
+                        safe_to_display=safe_to_display,
+                    )
+                )
 
     # Keep execution parameters aligned with canonical gateway arbitration.
     if resolved.length_budget and resolved.length_budget.global_max_tokens is not None:

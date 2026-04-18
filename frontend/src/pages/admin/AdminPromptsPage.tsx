@@ -359,7 +359,13 @@ function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
 }
 
 function buildLogicGraphProjection(resolvedView: AdminResolvedAssemblyView): LogicGraphProjection {
-  const placeholderStats = resolvedView.resolved_result.placeholders.reduce(
+  const rr = resolvedView.resolved_result
+  const placeholders = Array.isArray(rr?.placeholders) ? rr.placeholders : []
+  const contextCompensationStatus =
+    typeof rr?.context_compensation_status === "string" ? rr.context_compensation_status : "n/a"
+  const cs = resolvedView.composition_sources
+
+  const placeholderStats = placeholders.reduce(
     (acc, item) => {
       const category = classifyPlaceholderSource(item)
       if (category === "fallback") {
@@ -373,10 +379,10 @@ function buildLogicGraphProjection(resolvedView: AdminResolvedAssemblyView): Log
     },
     { runtime: 0, fallback: 0, sample: 0 },
   )
-  const hasSubfeatureTemplate = Boolean(resolvedView.composition_sources.subfeature_template)
-  const hasPlanRules = Boolean(resolvedView.composition_sources.plan_rules?.content)
-  const hasPersonaBlock = Boolean(resolvedView.composition_sources.persona_block?.content)
-  const dense = resolvedView.resolved_result.placeholders.length >= 16
+  const hasSubfeatureTemplate = Boolean(cs?.subfeature_template)
+  const hasPlanRules = Boolean(cs?.plan_rules?.content)
+  const hasPersonaBlock = Boolean(cs?.persona_block?.content)
+  const dense = placeholders.length >= 16
 
   const nodes: LogicGraphNode[] = [
     { id: "manifest", title: "manifest_entry_id", detail: resolvedView.manifest_entry_id, tone: "neutral" },
@@ -386,42 +392,42 @@ function buildLogicGraphProjection(resolvedView: AdminResolvedAssemblyView): Log
       detail: `${resolvedView.feature}/${resolvedView.subfeature ?? "-"} · plan ${resolvedView.plan ?? "-"}`,
       tone: "neutral",
     },
-    { id: "feature", title: "feature template", detail: resolvedView.composition_sources.feature_template.id, tone: "layer" },
+    { id: "feature", title: "feature template", detail: cs?.feature_template?.id ?? "n/a", tone: "layer" },
     {
       id: "subfeature",
       title: "subfeature template",
-      detail: hasSubfeatureTemplate ? (resolvedView.composition_sources.subfeature_template?.id ?? "actif") : "absent",
+      detail: hasSubfeatureTemplate ? (cs?.subfeature_template?.id ?? "actif") : "absent",
       tone: "layer",
     },
     {
       id: "planRules",
       title: "plan rules",
-      detail: hasPlanRules ? (resolvedView.composition_sources.plan_rules?.ref ?? "actif") : "absent",
+      detail: hasPlanRules ? (cs?.plan_rules?.ref ?? "actif") : "absent",
       tone: "layer",
     },
     {
       id: "persona",
       title: "persona block",
-      detail: hasPersonaBlock ? (resolvedView.composition_sources.persona_block?.name ?? "actif") : "absent",
+      detail: hasPersonaBlock ? (cs?.persona_block?.name ?? "actif") : "absent",
       tone: "layer",
     },
     {
       id: "hardPolicy",
       title: "hard policy",
-      detail: resolvedView.composition_sources.hard_policy.safety_profile,
+      detail: cs?.hard_policy?.safety_profile ?? "n/a",
       tone: "system",
     },
     {
       id: "executionProfile",
       title: "execution profile",
-      detail: `${resolvedView.composition_sources.execution_profile.provider}/${resolvedView.composition_sources.execution_profile.model}`,
+      detail: `${cs?.execution_profile?.provider ?? "n/a"}/${cs?.execution_profile?.model ?? "n/a"}`,
       tone: "system",
     },
     { id: "pipeline", title: "transformation_pipeline", detail: "assembled -> injectors -> rendered", tone: "neutral" },
     {
       id: "providerMessages",
       title: "provider_messages",
-      detail: `context_quality: ${resolvedView.resolved_result.context_compensation_status}`,
+      detail: `context_quality: ${contextCompensationStatus}`,
       tone: "system",
     },
     {
@@ -517,22 +523,31 @@ export function AdminPromptsPage() {
   const effectiveSamplePayloadId =
     resolvedInspectionMode === "runtime_preview" ? selectedSamplePayloadId : null
 
-  const catalogQuery = useAdminLlmCatalog({
-    page,
-    pageSize,
-    search: search || undefined,
-    feature: feature || undefined,
-    subfeature: subfeature || undefined,
-    plan: plan || undefined,
-    locale: locale || undefined,
-    provider: provider || undefined,
-    sourceOfTruthStatus: sourceOfTruthStatus || undefined,
-    assemblyStatus: assemblyStatus || undefined,
-    releaseHealthStatus: releaseHealthStatus || undefined,
-    catalogVisibilityStatus: catalogVisibilityStatus || undefined,
-    sortBy,
-    sortOrder,
-  }, activeTab === "catalog")
+  const catalogQuery = useAdminLlmCatalog(
+    {
+      page,
+      pageSize,
+      search: search || undefined,
+      feature: feature || undefined,
+      subfeature: subfeature || undefined,
+      plan: plan || undefined,
+      locale: locale || undefined,
+      provider: provider || undefined,
+      sourceOfTruthStatus: sourceOfTruthStatus || undefined,
+      assemblyStatus: assemblyStatus || undefined,
+      releaseHealthStatus: releaseHealthStatus || undefined,
+      catalogVisibilityStatus: catalogVisibilityStatus || undefined,
+      sortBy,
+      sortOrder,
+    },
+    activeTab === "catalog",
+  )
+
+  /** Facettes globales (sans filtres catalogue) : l’API les calcule sur la liste complète avant pagination. */
+  const samplePayloadsFacetsCatalogQuery = useAdminLlmCatalog(
+    { page: 1, pageSize: 25, sortBy: "feature", sortOrder: "asc" },
+    activeTab === "samplePayloads",
+  )
 
   const catalogEntries = catalogQuery.data?.data ?? []
   const catalogMeta = catalogQuery.data?.meta
@@ -781,6 +796,11 @@ export function AdminPromptsPage() {
         <AdminSamplePayloadsAdmin
           seedFeature={samplePayloadsSeed?.feature ?? null}
           seedLocale={samplePayloadsSeed?.locale ?? null}
+          catalogFacetsFromParent={{
+            facets: samplePayloadsFacetsCatalogQuery.data?.meta?.facets,
+            isPending: samplePayloadsFacetsCatalogQuery.isPending,
+            isError: samplePayloadsFacetsCatalogQuery.isError,
+          }}
         />
       ) : null}
 
@@ -1207,78 +1227,91 @@ export function AdminPromptsPage() {
                                   ».
                                 </p>
                               ) : null}
-                              {manualExecuteMutation.isSuccess && manualExecuteMutation.data ? (
-                                <div className="admin-prompts-resolved__llm-return" aria-live="polite">
-                                  <dl className="admin-prompts-resolved__llm-meta">
-                                    <div>
-                                      <dt>Statut validation</dt>
-                                      <dd>{manualExecuteMutation.data.validation_status}</dd>
-                                    </div>
-                                    <div>
-                                      <dt>Durée</dt>
-                                      <dd>{manualExecuteMutation.data.latency_ms} ms</dd>
-                                    </div>
-                                    <div>
-                                      <dt>Chemin</dt>
-                                      <dd>{manualExecuteMutation.data.execution_path}</dd>
-                                    </div>
-                                    <div>
-                                      <dt>Provider / modèle</dt>
-                                      <dd>
-                                        {manualExecuteMutation.data.provider} · {manualExecuteMutation.data.model}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt>Tokens (in / out)</dt>
-                                      <dd>
-                                        {manualExecuteMutation.data.usage_input_tokens} /{" "}
-                                        {manualExecuteMutation.data.usage_output_tokens}
-                                      </dd>
-                                    </div>
-                                    <div>
-                                      <dt>Gateway request</dt>
-                                      <dd>
-                                        <code>{manualExecuteMutation.data.gateway_request_id}</code>
-                                      </dd>
-                                    </div>
-                                  </dl>
-                                  <p className="text-muted">Paramètres runtime résolus (exécution)</p>
-                                  <pre className="admin-prompts-code">
-                                    {JSON.stringify(manualExecuteMutation.data.resolved_runtime_parameters, null, 2)}
-                                  </pre>
-                                  <p className="text-muted">Prompt envoyé au fournisseur (anonymisé)</p>
-                                  <pre className="admin-prompts-code">{manualExecuteMutation.data.prompt_sent}</pre>
-                                  {manualExecuteMutation.data.structured_output_parseable &&
-                                  manualExecuteMutation.data.structured_output ? (
-                                    <>
-                                      <p className="text-muted">Sortie structurée (validée / redaction admin)</p>
-                                      <pre className="admin-prompts-code">
-                                        {JSON.stringify(manualExecuteMutation.data.structured_output, null, 2)}
-                                      </pre>
-                                    </>
-                                  ) : null}
-                                  <p className="text-muted">Réponse brute fournisseur (anonymisée)</p>
-                                  <pre className="admin-prompts-code">{manualExecuteMutation.data.raw_output}</pre>
-                                  {manualExecuteMutation.data.meta_validation_errors &&
-                                  manualExecuteMutation.data.meta_validation_errors.length > 0 ? (
-                                    <p
-                                      className="admin-prompts-resolved__state admin-prompts-resolved__state--warning"
-                                      role="status"
-                                    >
-                                      Détails validation :{" "}
-                                      {manualExecuteMutation.data.meta_validation_errors.join(" · ")}
-                                    </p>
-                                  ) : null}
-                                </div>
-                              ) : !manualExecuteMutation.isPending &&
-                                !manualExecuteMutation.isError &&
-                                !manualExecuteMutation.isSuccess ? (
-                                <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
-                                  {selectedSamplePayloadId && resolvedQuery.data &&
-                                  isAdminRuntimePreviewExecutable(resolvedQuery.data)
-                                    ? "Utilisez « Exécuter avec le LLM » pour afficher le retour complet (métadonnées, prompt effectif, sorties)."
-                                    : "Sélectionnez un sample payload valide puis exécutez pour afficher le retour opérateur."}
-                                </p>
+                              {!manualExecuteMutation.isPending && !manualExecuteMutation.isError ? (
+                                manualExecuteMutation.data ? (
+                                  <div className="admin-prompts-resolved__llm-return" aria-live="polite">
+                                    <dl className="admin-prompts-resolved__llm-meta">
+                                      <div>
+                                        <dt>Statut validation</dt>
+                                        <dd>{manualExecuteMutation.data.validation_status}</dd>
+                                      </div>
+                                      <div>
+                                        <dt>Durée</dt>
+                                        <dd>{manualExecuteMutation.data.latency_ms} ms</dd>
+                                      </div>
+                                      <div>
+                                        <dt>Chemin</dt>
+                                        <dd>{manualExecuteMutation.data.execution_path}</dd>
+                                      </div>
+                                      <div>
+                                        <dt>Provider / modèle</dt>
+                                        <dd>
+                                          {manualExecuteMutation.data.provider} · {manualExecuteMutation.data.model}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt>Tokens (in / out)</dt>
+                                        <dd>
+                                          {manualExecuteMutation.data.usage_input_tokens} /{" "}
+                                          {manualExecuteMutation.data.usage_output_tokens}
+                                        </dd>
+                                      </div>
+                                      <div>
+                                        <dt>Gateway request</dt>
+                                        <dd>
+                                          <code>{manualExecuteMutation.data.gateway_request_id}</code>
+                                        </dd>
+                                      </div>
+                                    </dl>
+                                    <p className="text-muted">Paramètres runtime résolus (exécution)</p>
+                                    <pre className="admin-prompts-code">
+                                      {JSON.stringify(
+                                        manualExecuteMutation.data.resolved_runtime_parameters,
+                                        null,
+                                        2,
+                                      )}
+                                    </pre>
+                                    <p className="text-muted">Prompt envoyé au fournisseur (anonymisé)</p>
+                                    <pre className="admin-prompts-code">{manualExecuteMutation.data.prompt_sent}</pre>
+                                    {manualExecuteMutation.data.structured_output_parseable &&
+                                    manualExecuteMutation.data.structured_output ? (
+                                      <>
+                                        <p className="text-muted">Sortie structurée (validée / redaction admin)</p>
+                                        <pre className="admin-prompts-code">
+                                          {JSON.stringify(manualExecuteMutation.data.structured_output, null, 2)}
+                                        </pre>
+                                      </>
+                                    ) : null}
+                                    <p className="text-muted">Réponse brute fournisseur (anonymisée)</p>
+                                    <pre className="admin-prompts-code">{manualExecuteMutation.data.raw_output}</pre>
+                                    {manualExecuteMutation.data.meta_validation_errors &&
+                                    manualExecuteMutation.data.meta_validation_errors.length > 0 ? (
+                                      <p
+                                        className="admin-prompts-resolved__state admin-prompts-resolved__state--warning"
+                                        role="status"
+                                      >
+                                        Détails validation :{" "}
+                                        {manualExecuteMutation.data.meta_validation_errors.join(" · ")}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                ) : manualExecuteMutation.isSuccess ? (
+                                  <p
+                                    className="admin-prompts-resolved__state admin-prompts-resolved__state--warning"
+                                    role="status"
+                                    aria-live="polite"
+                                  >
+                                    Exécution signalée comme réussie mais sans données de retour. Réessayez ou
+                                    vérifiez les journaux côté API.
+                                  </p>
+                                ) : (
+                                  <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
+                                    {selectedSamplePayloadId && resolvedQuery.data &&
+                                    isAdminRuntimePreviewExecutable(resolvedQuery.data)
+                                      ? "Utilisez « Exécuter avec le LLM » pour afficher le retour complet (métadonnées, prompt effectif, sorties)."
+                                      : "Sélectionnez un sample payload valide puis exécutez pour afficher le retour opérateur."}
+                                  </p>
+                                )
                               ) : null}
                             </>
                           ) : (

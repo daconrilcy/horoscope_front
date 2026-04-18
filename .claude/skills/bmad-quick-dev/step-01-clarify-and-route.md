@@ -1,5 +1,5 @@
 ---
-deferred_work_file: '{implementation_artifacts}/deferred-work.md'
+deferred_work_file: '{implementation_artifacts}/67-To-69-deferred-work.md'
 spec_file: '' # set at runtime for both routes before leaving this step
 ---
 

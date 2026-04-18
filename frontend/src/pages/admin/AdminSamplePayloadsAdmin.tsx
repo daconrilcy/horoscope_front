@@ -8,6 +8,7 @@ import {
   useUpdateAdminLlmSamplePayload,
   getAdminLlmSamplePayload,
   AdminPromptsApiError,
+  type AdminLlmCatalogResponse,
   type AdminLlmSamplePayload,
   type AdminLlmSamplePayloadSummary,
 } from "@api"
@@ -101,9 +102,17 @@ function formatDate(value: string): string {
   return new Date(value).toLocaleString("fr-FR")
 }
 
+export type AdminSamplePayloadsCatalogFacetsBundle = {
+  facets: AdminLlmCatalogResponse["meta"]["facets"] | undefined
+  isPending: boolean
+  isError: boolean
+}
+
 type AdminSamplePayloadsAdminProps = {
   seedFeature: string | null
   seedLocale: string | null
+  /** Évite un second GET catalogue quand la page parent charge déjà les facettes (onglet Échantillons). */
+  catalogFacetsFromParent?: AdminSamplePayloadsCatalogFacetsBundle
 }
 
 type EditorMode = "create" | "edit"
@@ -175,23 +184,35 @@ function editorFromDetail(detail: AdminLlmSamplePayload, mode: EditorMode): Edit
 
 type DeleteTarget = Pick<AdminLlmSamplePayloadSummary, "id" | "name">
 
-export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSamplePayloadsAdminProps) {
-  const catalogForFacets = useAdminLlmCatalog(
+export function AdminSamplePayloadsAdmin({
+  seedFeature,
+  seedLocale,
+  catalogFacetsFromParent,
+}: AdminSamplePayloadsAdminProps) {
+  const catalogForFacetsInternal = useAdminLlmCatalog(
     { page: 1, pageSize: 25, sortBy: "feature", sortOrder: "asc" },
-    true,
+    !catalogFacetsFromParent,
   )
 
+  const catalogFacetMeta = catalogFacetsFromParent
+    ? catalogFacetsFromParent.facets
+    : catalogForFacetsInternal.data?.meta?.facets
+
+  const catalogFacetLoadError = catalogFacetsFromParent
+    ? catalogFacetsFromParent.isError
+    : catalogForFacetsInternal.isError
+
   const featureOptions = useMemo(() => {
-    const fromCatalog = catalogForFacets.data?.meta?.facets?.feature ?? []
+    const fromCatalog = catalogFacetMeta?.feature ?? []
     const merged = new Set<string>([...fromCatalog, ...FALLBACK_FEATURES])
     return Array.from(merged).sort()
-  }, [catalogForFacets.data?.meta?.facets?.feature])
+  }, [catalogFacetMeta?.feature])
 
   const localeOptions = useMemo(() => {
-    const fromCatalog = catalogForFacets.data?.meta?.facets?.locale ?? []
+    const fromCatalog = catalogFacetMeta?.locale ?? []
     const merged = new Set<string>([...fromCatalog, "fr-FR", "en-US"])
     return Array.from(merged).sort()
-  }, [catalogForFacets.data?.meta?.facets?.locale])
+  }, [catalogFacetMeta?.locale])
 
   const [mgmtFeature, setMgmtFeature] = useState("")
   const [mgmtLocale, setMgmtLocale] = useState("")
@@ -391,7 +412,7 @@ export function AdminSamplePayloadsAdmin({ seedFeature, seedLocale }: AdminSampl
         </p>
       </header>
 
-      {catalogForFacets.isError ? (
+      {catalogFacetLoadError ? (
         <p className="chat-error">Impossible de charger les facettes du catalogue (filtres partiels).</p>
       ) : null}
 

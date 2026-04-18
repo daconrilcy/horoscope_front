@@ -126,4 +126,4 @@ GPT-5 Codex
 
 - [x] [Review][Patch] Classifier `render_error_kind` sans heuristique fragile sur sous-chaînes (`unauthorized`, `legacy`) — exploiter `PromptRenderError.details` ou un code d’erreur stable lorsque disponible [`backend/app/api/v1/routers/admin_llm.py`] — corrigé : `_classify_admin_render_error_kind` (détails `missing_variables` / `placeholder` + repli message ciblé)
 - [x] [Review][Patch] Aide UX pour distinguer « Exécution live » de la prévisualisation runtime (même logique aujourd’hui) — corrigé : libellé du mode et texte d’aide précisent que `live_execution` conserve pour l’instant une sémantique d’inspection runtime sans appel provider réel
-- [x] [Review][Defer] Statut `unknown` vs `expected_missing_in_preview` pour placeholders hors registre — reporté, voir `deferred-work.md`
+- [x] [Review][Done] Statut `unknown` vs `expected_missing_in_preview` pour placeholders hors registre — `unknown` conservé pour l’assembly (signal contrat), voir `67-To-69-deferred-work.md`

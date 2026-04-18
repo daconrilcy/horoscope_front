@@ -2,8 +2,11 @@
 
 import uuid
 from types import SimpleNamespace
+from unittest.mock import patch
 
+from app.api.v1.routers import admin_llm as admin_llm_router
 from app.api.v1.routers.admin_llm import _build_admin_manual_execute_response_payload
+from app.infra.llm.anonymizer import LLMAnonymizationError
 from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
@@ -75,3 +78,42 @@ def test_build_admin_manual_execute_response_non_dict_structured_not_parseable()
     )
     assert payload.structured_output is None
     assert payload.structured_output_parseable is False
+
+
+def test_build_admin_manual_execute_anonymization_failure_returns_placeholder() -> None:
+    built = SimpleNamespace(
+        use_case_key="uc_test",
+        transformation_pipeline=SimpleNamespace(rendered_prompt="secret prompt"),
+    )
+    result = GatewayResult(
+        use_case="uc_test",
+        request_id="gw-req",
+        trace_id="gw-tr",
+        raw_output="raw secret",
+        structured_output=None,
+        usage=UsageInfo(),
+        meta=GatewayMeta(
+            latency_ms=1,
+            model="gpt-test",
+            provider="openai",
+            validation_status="valid",
+            validation_errors=["line one"],
+        ),
+    )
+    with patch.object(
+        admin_llm_router,
+        "anonymize_text",
+        side_effect=LLMAnonymizationError("salt misconfigured"),
+    ):
+        payload = _build_admin_manual_execute_response_payload(
+            built=built,  # type: ignore[arg-type]
+            result=result,
+            manifest_entry_id="f:s:p:l",
+            sample_payload_id=uuid.uuid4(),
+            request_id="req-1",
+            trace_id="tr-1",
+            use_case_key="uc_test",
+        )
+    assert payload.prompt_sent == "[anonymization_unavailable]"
+    assert payload.raw_output == "[anonymization_unavailable]"
+    assert payload.meta_validation_errors == ["[anonymization_unavailable]"]
