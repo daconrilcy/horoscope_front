@@ -63,7 +63,7 @@ so that je puisse inspecter rapidement une cible sans perdre le contexte de la s
 - Ne pas changer le contrat backend `resolved` ni les hooks data (`useAdminLlmCatalog`, `useAdminResolvedAssembly`, `useAdminLlmSamplePayloads`, etc.).
 - La liste gauche doit rester basee sur le catalogue canonique existant et continuer a piloter `selectedManifestEntryId`.
 - Le detail droite doit etre decouple de la table mais continuer a exposer le detail resolved deja present.
-- Les actions sensibles d execution manuelle peuvent rester visuellement dans le detail catalogue pour l instant, tant qu elles ne regressent pas; leur rationalisation complete appartient surtout a `70.3`.
+- Les actions sensibles d execution manuelle restent dans le detail catalogue ; leur regroupement explicite dans une zone **Actions**, le decoupage en sections et les replis de contenus ont ete livres par la story **`70.3`** sans modifier le layout master-detail ni la route catalogue de `70.2`. [Source: C:/dev/horoscope_front/_bmad-output/implementation-artifacts/70-3-recomposer-le-detail-prompts-en-lecture-progressive-et-zone-d-actions.md]
 
 ### Architecture Compliance
 
@@ -109,7 +109,7 @@ so that je puisse inspecter rapidement une cible sans perdre le contexte de la s
 - `AdminPromptsPage.css` contient deja des bases inutilisees ou sous-utilisees pour un layout de type master-detail (`.admin-prompts-layout`, `.admin-prompts-sidebar`, `.admin-prompts-card`, `.admin-prompts-detail`). Les reutiliser en priorite plutot que recreer un nouveau systeme CSS. [Source: C:/dev/horoscope_front/frontend/src/pages/admin/AdminPromptsPage.css]
 - Aujourd hui, la table catalogue a `min-width: 1100px` et beaucoup trop de colonnes pour l usage principal. La simplification doit toucher le JSX et la structure CSS, pas seulement masquer visuellement des colonnes au hasard.
 - `selectedManifestEntryId` est deja utilise comme clef de selection. Le master-detail doit se construire autour de cette source de verite.
-- Le detail resolved contient beaucoup de contenu dense. Dans cette story, l objectif est surtout le repositionnement ergonomique du detail dans un panneau stable. La pedagogie progressive complete arrive surtout en `70.3`.
+- Le detail resolved contient beaucoup de contenu dense. Dans cette story, l objectif etait le repositionnement ergonomique du detail dans un panneau stable. La **lecture progressive** (sections, accordions, zone Actions) a ete livree ensuite en **`70.3`**, en conservant `admin-prompts-catalog-master-detail`, le panneau sticky et `selectedManifestEntryId`.
 - Respecter la regle projet: pas de styles inline; reutiliser les variables/tokens CSS existants. [Source: C:/dev/horoscope_front/AGENTS.md]
 
 ### UX Requirements
@@ -130,6 +130,7 @@ so that je puisse inspecter rapidement une cible sans perdre le contexte de la s
 - Architecture frontend: [Source: C:/dev/horoscope_front/_bmad-output/planning-artifacts/architecture.md#Frontend-Architecture]
 - UX responsive/accessibilite: [Source: C:/dev/horoscope_front/_bmad-output/planning-artifacts/ux-design-specification.md#Responsive-Design--Accessibility]
 - Non-regression 67-69: [Source: C:/dev/horoscope_front/_bmad-output/implementation-artifacts/67-To-69-deferred-work.md]
+- Story suivante 70.3 (detail catalogue : sections, Actions, replis — sans changer le master-detail 70.2) : [Source: C:/dev/horoscope_front/_bmad-output/implementation-artifacts/70-3-recomposer-le-detail-prompts-en-lecture-progressive-et-zone-d-actions.md]
 - Implementation actuelle catalogue/detail: [Source: C:/dev/horoscope_front/frontend/src/pages/admin/AdminPromptsPage.tsx]
 - Styles actuels admin prompts: [Source: C:/dev/horoscope_front/frontend/src/pages/admin/AdminPromptsPage.css]
 
@@ -156,6 +157,7 @@ gpt-5
 - **Revue code (2026-04-18)** : correctifs appliqués — activation clavier des lignes catalogue (`tabIndex`, Entrée/Espace, `aria-selected`, focus visible), reset qui referme les filtres avancés, test sur le conteneur master-detail ; story passée en `done`.
 - **Revue code — 2ᵉ passe (2026-04-18)** : aucun nouveau finding ; périmètre fonctionnel et AC validés sur l’état courant du code.
 - **Post-revue (2026-04-18)** : correction du cas où `runtime_preview` perdait les sample payloads si la ligne sélectionnée quittait la page courante ; fallback `feature/locale` depuis `resolvedQuery.data`, résumé hors page enrichi, test Vitest dédié ajouté ; alignement des future flags React Router (`v7_startTransition`) pour supprimer le warning résiduel en test.
+- **Après story 70.3 (2026-04-18)** : le catalogue conserve le layout **master-detail** et le panneau **sticky** livrés ici ; seul le *contenu* du panneau détail a été recomposé (ordre des sections, zone Actions, `<details>` pour les blocs denses). Aucun changement de périmètre sur les AC 70.2 (liste à gauche, filtres, colonnes, responsive).
 
 ### File List
 
@@ -171,3 +173,4 @@ gpt-5
 - 2026-04-18 : Revue code — correctifs patch (a11y clavier ligne, reset + filtres avancés, test conteneur master-detail) ; statut `done`.
 - 2026-04-18 : Revue code — 2ᵉ passe : clean ; documentation artefact / epics alignées ; prêt livraison git.
 - 2026-04-18 : Post-revue — fix de persistance des sample payloads runtime hors page courante + suppression du warning React Router `v7_startTransition` ; Vitest `AdminPromptsPage` et `AdminPromptsRouting` repassés au vert.
+- 2026-04-18 : Documentation artefact — précision du périmètre 70.2 vs **70.3** (master-detail / sticky inchangés ; refonte ergonomique du contenu du panneau détail portée par 70.3) ; référence croisée vers l’artefact 70.3.
