@@ -426,7 +426,7 @@ So that je puisse investiguer l historique legacy sans polluer l experience du c
 **Then** la confirmation explicite reste obligatoire
 **And** le libelle de l action et ses consequences sont formules en francais produit coherent.
 
-**Artefact d’implémentation :** [`70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md`](../implementation-artifacts/70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md) — statut **done** (2026-04-18) ; surface `admin-prompts-legacy` (en-tête, toolbar cas d’usage, liste versions, diff annoté avec métadonnées, modale restauration FR) ; i18n titres d’en-tête de page FR / EN / ES ; tests Vitest (`AdminPromptsPage`, `AdminPromptsRouting`) ; revue code (kicker hors `dl`, alignement ES).
+**Artefact d’implémentation :** [`70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md`](../implementation-artifacts/70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md) — statut **done** (2026-04-18) ; surface `admin-prompts-legacy` (en-tête, toolbar cas d’usage, liste versions, diff annoté avec métadonnées, modale restauration) ; i18n route legacy complète FR / EN / ES (`adminPromptsLegacy.ts`, `promptsLegacy` dans `translateAdmin`) ; pas de version « en production » affichée sans résolution API dans l’historique ; colonne droite « peer » si actif inconnu ; dates selon langue UI ; tests Vitest (`AdminPromptsPage`, `AdminPromptsRouting`) ; revues code (kicker hors `dl`, alignement ES, correctifs P2).
 
 ### Story 70.6: Refondre la route release pour l investigation snapshot
 

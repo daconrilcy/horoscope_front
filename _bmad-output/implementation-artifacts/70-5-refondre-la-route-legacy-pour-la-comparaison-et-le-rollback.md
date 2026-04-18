@@ -154,7 +154,8 @@ gpt-5
 - Story creee apres analyse de la route `legacy` actuelle, de la couverture Vitest existante et de la refonte deja livree sur les stories `70.1` a `70.4`.
 - La story verrouille une refonte UX/UI de la route `legacy` sans changement de contrat backend ni detour vers l edition canonique.
 - Implementation livree : surface `admin-prompts-legacy` avec en-tete dedie, toolbar « Cas d usage », liste de versions avec badge « En production », actions de restauration uniquement sur les versions non actives, diff avec bandeaux de metadonnees (`LegacyVersionMetaStrip`) avant les lignes, modale de restauration en francais produit avec impact sur la version active, message de succes « Restauration effectuée », i18n FR/EN du titre d en-tete de page legacy mis a jour.
-- Tests : `npm run test -- src/tests/AdminPromptsPage.test.tsx` OK (18 tests). Le lint `tsc` du frontend echoue encore sur `router.tsx` (futures React Router) — preexistant, hors story.
+- Correctifs P2 (2026-04-18, revue commit / coherence spec) : pas de version « active » inventee quand `active_prompt_version_id` est absent ou non present dans l historique ; colonne droite du diff en mode « peer » (contraste) dans ce cas ; surface legacy entierement i18n FR/EN/ES via `frontend/src/i18n/adminPromptsLegacy.ts` et `tAdmin.promptsLegacy` ; dates legacy formatees selon `useAstrologyLabels().lang` ; message de succes post-rollback corrige (variable capturee avant fermeture modale) ; test Vitest « sans id actif API » (pas de badge production, titre colonne peer).
+- Tests : `npm run test -- src/tests/AdminPromptsPage.test.tsx` OK (19 tests). Le lint `tsc` du frontend echoue encore sur `router.tsx` (futures React Router) — preexistant, hors story.
 - Revue code (2026-04-18) : correctifs auto — `LegacyVersionMetaStrip` enveloppe `dl` + kicker hors liste de descriptions ; `promptsPageHeader.legacy` ES aligne sur FR/EN. Vitest AdminPromptsPage + AdminPromptsRouting OK (22 tests).
 
 ### File List
@@ -162,6 +163,7 @@ gpt-5
 - frontend/src/pages/admin/AdminPromptsPage.tsx
 - frontend/src/pages/admin/AdminPromptsPage.css
 - frontend/src/i18n/admin.ts
+- frontend/src/i18n/adminPromptsLegacy.ts
 - frontend/src/tests/AdminPromptsPage.test.tsx
 - frontend/src/tests/AdminPromptsRouting.test.tsx
 - _bmad-output/implementation-artifacts/70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md
@@ -171,9 +173,10 @@ gpt-5
 
 - 2026-04-18 : Refonte UX route legacy (comparaison annotée, restauration explicite, tests Vitest étendus). Statut sprint → review.
 - 2026-04-18 : Correctifs revue de code — sémantique `dl`/`LegacyVersionMetaStrip`, i18n ES `promptsPageHeader.legacy`. Statut story → done.
+- 2026-04-18 : Correctifs P2 — verite sur la version active API, diff peer sans actif resolu, i18n route legacy complete (FR/EN/ES), locales dates, test sans `active_prompt_version_id`.
 
 ### Review Findings
 
 - [x] [Review][Patch] Balise `dl` : le bloc « kicker » (`admin-prompts-legacy__meta-strip-kicker`) est un `div` sans paire `dt`/`dd` à l’intérieur de `<dl>`, ce qui est invalide en HTML et peut dégrader le annonceur d’assistive tech — sortir le kicker au-dessus du `dl` ou regrouper uniquement des groupes `dt`/`dd` conformes. [frontend/src/pages/admin/AdminPromptsPage.tsx — `LegacyVersionMetaStrip`] — corrigé : wrapper `admin-prompts-legacy__meta-strip-wrap`, kicker hors du `dl`.
 - [x] [Review][Patch] i18n : `promptsPageHeader.legacy` (titre + intro) a été aligné en FR/EN mais pas en ES — incohérence pour `lang === "es"`. [frontend/src/i18n/admin.ts] — corrigé : titre + intro ES alignés sur FR/EN.
-- [x] [Review][Defer] `formatLegacyPromptTimestamp` utilise toujours `fr-FR` même si l’UI est en EN/ES — déjà un écart courant côté admin ; à traiter avec centralisation locale (ex. story 70.8) — deferred, pré-existant
+- [x] [Review][Patch] `formatLegacyPromptTimestamp` : harmonisation locale UI (`fr-FR` / `en-GB` / `es-ES`) via `useAstrologyLabels().lang` et module `adminPromptsLegacy.ts` — corrigé (2026-04-18).

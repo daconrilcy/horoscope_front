@@ -51,7 +51,7 @@ Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivan
 
 ## Deferred from: code review of 70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md (2026-04-18)
 
-- **Dates legacy formatées en `fr-FR` en dur** dans `formatLegacyPromptTimestamp` — harmoniser avec la langue UI (`localStorage` / i18n) lors d’un passage centralisé des formats date-heure admin (lien possible avec epic 70 story 70.8).
+- ~~**Dates legacy formatées en `fr-FR` en dur**~~ — **Traité** (2026-04-18) : `formatLegacyPromptTimestamp` dans `adminPromptsLegacy.ts` prend la locale UI (`useAstrologyLabels().lang`). Unifier d’autres formats date-heure admin reste un sujet transversal (ex. story 70.8).
 
 ## Deferred from: code review of 70-2-refaire-le-catalogue-canonique-en-mode-master-detail (2026-04-18)
 

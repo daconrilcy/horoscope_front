@@ -1862,6 +1862,92 @@ describe("AdminPromptsPage", () => {
     })
   })
 
+  it("legacy: sans id actif API, pas de badge « en production » et diff en colonne peer", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: {
+            total: 0,
+            page: 1,
+            page_size: 25,
+            sort_by: "feature",
+            sort_order: "asc",
+            freshness_window_minutes: 120,
+            facets: {},
+          },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({
+          data: [
+            {
+              key: "chat",
+              display_name: "Chat",
+              description: "Conversation astrologique",
+              persona_strategy: "required",
+              safety_profile: "astrology",
+              allowed_persona_ids: [],
+              active_prompt_version_id: null,
+            },
+          ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts")) {
+        return makeJsonResponse({
+          data: [
+            {
+              id: "prompt-2",
+              use_case_key: "chat",
+              status: "published",
+              developer_prompt: "right column",
+              model: "gpt-5",
+              temperature: 0.3,
+              max_output_tokens: 900,
+              fallback_use_case_key: null,
+              created_by: "99",
+              created_at: "2026-04-05T08:00:00Z",
+              published_at: "2026-04-05T09:00:00Z",
+            },
+            {
+              id: "prompt-1",
+              use_case_key: "chat",
+              status: "archived",
+              developer_prompt: "left column",
+              model: "gpt-5",
+              temperature: 0.3,
+              max_output_tokens: 900,
+              fallback_use_case_key: null,
+              created_by: "98",
+              created_at: "2026-04-04T08:00:00Z",
+              published_at: "2026-04-04T09:00:00Z",
+            },
+          ],
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+
+    await waitFor(() => {
+      expect(screen.getByRole("region", { name: "Investigation historique LLM hors catalogue" })).toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Aucune version « active » résolue par l'API pour ce cas d'usage/),
+      ).toBeInTheDocument()
+    })
+    expect(screen.queryByText("En production", { exact: true })).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "Colonne droite — autre version (actif non résolu)" }),
+    ).toBeInTheDocument()
+  })
+
   it("affiche l'historique release snapshot et le diff", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
