@@ -193,4 +193,4 @@ gpt-5
 - 2026-04-18 : Graphe logique admin rendu avec React Flow (`@xyflow/react`), projection extraite, tests et ResizeObserver jsdom.
 - 2026-04-18 : Revue code — clé remontage Error Boundary (`manifest_entry_id`), `console.error` réservé au DEV, commentaire MIT `hideAttribution` ; story passée `done`.
 - 2026-04-18 : Documentation artefacts alignée (`sprint-status`, notes de completion, defer 67–69). Dépôt : commit `0088af8d`.
-- 2026-04-18 : Correctifs graphe dense (`boundaryRemountKey`, détails nœuds opérateur AC3) ; tests Vitest ; sync artefacts sprint. Dépôt : `ed5c5404`.
+- 2026-04-18 : Correctifs graphe dense (`boundaryRemountKey`, détails nœuds opérateur AC3) ; tests Vitest ; sync artefacts sprint. Dépôt : `34b84f5d`.
