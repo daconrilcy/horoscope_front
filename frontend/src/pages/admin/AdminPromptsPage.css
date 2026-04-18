@@ -522,6 +522,85 @@
   margin-top: 0;
 }
 
+.admin-prompts-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-prompts-detail__exec-state {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-prompts-detail__actions {
+  padding: var(--space-3);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 22%, var(--glass-border));
+  background: color-mix(in srgb, var(--danger) 5%, rgba(255, 255, 255, 0.03));
+}
+
+.admin-prompts-detail__actions-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.admin-prompts-detail__actions-title {
+  margin: 0;
+  font-size: var(--font-size-md);
+}
+
+.admin-prompts-detail__actions-risk {
+  margin: 0;
+  font-size: var(--font-size-xs);
+}
+
+.admin-prompts-detail__actions-field {
+  width: 100%;
+  max-width: 420px;
+}
+
+.admin-prompts-detail__actions-idle {
+  margin: 0;
+}
+
+.admin-prompts-detail__disclosure {
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 0 var(--space-2);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.admin-prompts-detail__disclosure + .admin-prompts-detail__disclosure {
+  margin-top: var(--space-2);
+}
+
+.admin-prompts-detail__disclosure-summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-1);
+  list-style-position: outside;
+}
+
+.admin-prompts-detail__disclosure-summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.admin-prompts-detail__disclosure-body {
+  padding: 0 0 var(--space-2);
+}
+
+.admin-prompts-detail__disclosure--sources {
+  margin-top: var(--space-3);
+}
+
 .admin-prompts-resolved {
   display: flex;
   flex-direction: column;
@@ -685,9 +764,9 @@
 }
 
 .admin-prompts-resolved__zones {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .admin-prompts-resolved__zone {
@@ -763,6 +842,12 @@
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-prompts-logic-graph--in-zone {
+  border: none;
+  padding: var(--space-2) 0 0;
+  background: transparent;
 }
 
 .admin-prompts-logic-graph h4 {
@@ -929,7 +1014,6 @@
   .admin-prompts-diff,
   .admin-prompts-active__meta,
   .admin-prompts-history__item,
-  .admin-prompts-resolved__zones,
   .admin-prompts-resolved__placeholder {
     grid-template-columns: 1fr;
   }

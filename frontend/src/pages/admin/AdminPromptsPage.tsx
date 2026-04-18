@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 
@@ -138,6 +138,20 @@ function LegacyRollbackModal({
         </div>
       </div>
     </div>
+  )
+}
+
+type PromptDisclosureProps = {
+  summary: string
+  children: ReactNode
+}
+
+function PromptDisclosure({ summary, children }: PromptDisclosureProps) {
+  return (
+    <details className="admin-prompts-detail__disclosure">
+      <summary className="admin-prompts-detail__disclosure-summary">{summary}</summary>
+      <div className="admin-prompts-detail__disclosure-body">{children}</div>
+    </details>
   )
 }
 
@@ -1249,8 +1263,8 @@ export function AdminPromptsPage() {
             <aside className="admin-prompts-catalog__detail-panel" aria-label="Détail catalogue entrée">
               {selectedManifestEntryId ? (
                 <>
-                  <section className="admin-prompts-catalog-detail-summary" aria-label="Résumé de la cible">
-                    <h3 className="admin-prompts-catalog-detail-summary__title">Cible sélectionnée</h3>
+                  <section className="admin-prompts-catalog-detail-summary" aria-label="Résumé">
+                    <h3 className="admin-prompts-catalog-detail-summary__title">Résumé</h3>
                     {selectedCatalogEntry ? (
                       <>
                         <p className="admin-prompts-catalog-detail-summary__tuple">
@@ -1328,35 +1342,69 @@ export function AdminPromptsPage() {
                       ({inspectionModeShortLabel(resolvedInspectionMode)})
                     </span>
                   </div>
-                  <div className="admin-prompts-resolved__header">
-                    <h3>Assembly prompt résolue</h3>
-                    <div className="admin-prompts-resolved__header-meta">
-                      <code>{selectedManifestEntryId}</code>
-                      <span
-                        className={`badge ${resolvedQuery.data?.inspection_mode === "assembly_preview" ? "badge--info" : "badge--warning"}`}
-                      >
-                        Mode: {resolvedQuery.data ? inspectionModeShortLabel(resolvedQuery.data.inspection_mode) : "—"}
-                      </span>
-                      <label className="admin-prompts-resolved__mode-field">
-                        <span className="text-muted">Mode d&apos;inspection</span>
-                        <select
-                          aria-label="Mode d'inspection du détail"
-                          className="admin-prompts-resolved__mode-select"
-                          value={resolvedInspectionMode}
-                          onChange={(event) => {
-                            setResolvedInspectionMode(event.target.value as AdminInspectionMode)
-                          }}
+                  <section className="admin-prompts-detail-section" aria-label="Mode d'inspection">
+                    <div className="admin-prompts-resolved__header">
+                      <h3>Mode d&apos;inspection</h3>
+                      <div className="admin-prompts-resolved__header-meta">
+                        <code>{selectedManifestEntryId}</code>
+                        <span
+                          className={`badge ${resolvedQuery.data?.inspection_mode === "assembly_preview" ? "badge--info" : "badge--warning"}`}
                         >
-                          {INSPECTION_MODE_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      {resolvedInspectionMode === "runtime_preview" ? (
+                          Mode: {resolvedQuery.data ? inspectionModeShortLabel(resolvedQuery.data.inspection_mode) : "—"}
+                        </span>
                         <label className="admin-prompts-resolved__mode-field">
-                          <span className="text-muted">Sample payload</span>
+                          <span className="text-muted">Mode d&apos;inspection</span>
+                          <select
+                            aria-label="Mode d'inspection du détail"
+                            className="admin-prompts-resolved__mode-select"
+                            value={resolvedInspectionMode}
+                            onChange={(event) => {
+                              setResolvedInspectionMode(event.target.value as AdminInspectionMode)
+                            }}
+                          >
+                            {INSPECTION_MODE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                    <p className="admin-prompts-resolved__render-note">
+                      {inspectionModeHelpText(resolvedQuery.data?.inspection_mode ?? resolvedInspectionMode)}
+                    </p>
+                  </section>
+                  <section className="admin-prompts-detail-section" aria-label="État d'exécution">
+                    {resolvedInspectionMode === "runtime_preview" && samplePayloadsQuery.isPending ? (
+                      <p className="text-muted">Chargement des sample payloads...</p>
+                    ) : null}
+                    {resolvedQuery.isPending ? <div className="loading-placeholder">Chargement du detail...</div> : null}
+                    {resolvedQuery.isError ? <AdminPromptsResolvedAssemblyError error={resolvedQuery.error} /> : null}
+                    {resolvedQuery.data ? (
+                      <p className="admin-prompts-detail__exec-state text-muted" role="status">
+                        État résolu :{" "}
+                        <strong>{inspectionModeShortLabel(resolvedQuery.data.inspection_mode)}</strong>
+                        {" · "}
+                        source {resolvedQuery.data.source_of_truth_status}
+                        {resolvedQuery.data.active_snapshot_version
+                          ? ` · snapshot ${resolvedQuery.data.active_snapshot_version}`
+                          : ""}
+                      </p>
+                    ) : null}
+                  </section>
+                  <section className="admin-prompts-detail-section admin-prompts-detail__actions" aria-label="Actions">
+                    <div className="admin-prompts-detail__actions-header">
+                      <h3 className="admin-prompts-detail__actions-title">Actions</h3>
+                      <p className="admin-prompts-detail__actions-risk text-muted">
+                        Risque : exécution fournisseur réelle hors trafic nominal — tracée côté serveur, confirmation
+                        obligatoire avant envoi.
+                      </p>
+                    </div>
+                    {resolvedInspectionMode === "runtime_preview" ? (
+                      <div className="admin-prompts-resolved__manual-exec admin-prompts-resolved__manual-exec--confirmed-surface">
+                        <label className="admin-prompts-resolved__mode-field admin-prompts-detail__actions-field">
+                          <span className="text-muted">Sample payload (précondition exécution)</span>
                           <select
                             aria-label="Sélecteur sample payload runtime"
                             className="admin-prompts-resolved__mode-select"
@@ -1374,157 +1422,123 @@ export function AdminPromptsPage() {
                             ))}
                           </select>
                         </label>
-                      ) : null}
-                    </div>
-                  </div>
-                  <p className="admin-prompts-resolved__render-note">
-                    {inspectionModeHelpText(resolvedQuery.data?.inspection_mode ?? resolvedInspectionMode)}
-                  </p>
-                  {resolvedInspectionMode === "runtime_preview" ? (
-                    <div className="admin-prompts-resolved__manual-exec admin-prompts-resolved__manual-exec--confirmed-surface">
-                      <button
-                        type="button"
-                        className="action-button action-button--secondary"
-                        disabled={
-                          !selectedSamplePayloadId ||
-                          !resolvedQuery.data ||
-                          !isAdminRuntimePreviewExecutable(resolvedQuery.data) ||
-                          manualExecuteMutation.isPending ||
-                          resolvedQuery.isPending
-                        }
-                        onClick={() => setManualExecuteConfirmOpen(true)}
-                      >
-                        {manualExecuteMutation.isPending ? "Exécution LLM..." : "Exécuter avec le LLM"}
-                      </button>
-                      {!selectedSamplePayloadId ? (
-                        <p className="text-muted admin-prompts-resolved__manual-exec-hint">
-                          Sélectionnez un sample payload pour activer l&apos;exécution réelle.
-                        </p>
-                      ) : null}
-                      {selectedSamplePayloadId &&
-                      resolvedQuery.data &&
-                      !isAdminRuntimePreviewExecutable(resolvedQuery.data) ? (
-                        <p
-                          className="admin-prompts-resolved__state admin-prompts-resolved__state--warning"
-                          role="status"
-                        >
-                          Prévisualisation runtime incomplète : corrigez les placeholders bloquants ou complétez le sample
-                          avant d&apos;exécuter.
-                        </p>
-                      ) : null}
-                      {manualExecuteMutation.isError ? (
-                        <div
-                          className="admin-prompts-resolved__error admin-prompts-resolved__manual-exec-error"
-                          role="alert"
-                        >
-                          <p className="admin-prompts-resolved__error-primary">
-                            {manualExecuteMutation.error instanceof AdminPromptsApiError
-                              ? resolvedAssemblyErrorPresentation(manualExecuteMutation.error).primary
-                              : "Exécution impossible."}
+                        {catalogFeatureForSamplePayloads && catalogLocaleForSamplePayloads ? (
+                          <p className="admin-prompts-resolved__sample-payload-cta">
+                            <button
+                              type="button"
+                              className="text-button"
+                              onClick={() => {
+                                setSamplePayloadsSeed({
+                                  feature: catalogFeatureForSamplePayloads,
+                                  locale: catalogLocaleForSamplePayloads,
+                                })
+                                navigate(`${ADMIN_PROMPTS_BASE}/sample-payloads`)
+                              }}
+                            >
+                              Gérer les sample payloads ({catalogFeatureForSamplePayloads} /{" "}
+                              {catalogLocaleForSamplePayloads})
+                            </button>
                           </p>
-                          {manualExecuteMutation.error instanceof AdminPromptsApiError &&
-                          manualExecutionFailureLead(manualExecuteMutation.error) ? (
-                            <p className="admin-prompts-resolved__error-secondary text-muted">
-                              {manualExecutionFailureLead(manualExecuteMutation.error)}
+                        ) : null}
+                        <button
+                          type="button"
+                          className="action-button action-button--secondary"
+                          disabled={
+                            !selectedSamplePayloadId ||
+                            !resolvedQuery.data ||
+                            !isAdminRuntimePreviewExecutable(resolvedQuery.data) ||
+                            manualExecuteMutation.isPending ||
+                            resolvedQuery.isPending
+                          }
+                          onClick={() => setManualExecuteConfirmOpen(true)}
+                        >
+                          {manualExecuteMutation.isPending ? "Exécution LLM..." : "Exécuter avec le LLM"}
+                        </button>
+                        {!selectedSamplePayloadId ? (
+                          <p className="text-muted admin-prompts-resolved__manual-exec-hint">
+                            Sélectionnez un sample payload pour activer l&apos;exécution réelle.
+                          </p>
+                        ) : null}
+                        {selectedSamplePayloadId &&
+                        resolvedQuery.data &&
+                        !isAdminRuntimePreviewExecutable(resolvedQuery.data) ? (
+                          <p
+                            className="admin-prompts-resolved__state admin-prompts-resolved__state--warning"
+                            role="status"
+                          >
+                            Prévisualisation runtime incomplète : corrigez les placeholders bloquants ou complétez le
+                            sample avant d&apos;exécuter.
+                          </p>
+                        ) : null}
+                        {manualExecuteMutation.isError ? (
+                          <div
+                            className="admin-prompts-resolved__error admin-prompts-resolved__manual-exec-error"
+                            role="alert"
+                          >
+                            <p className="admin-prompts-resolved__error-primary">
+                              {manualExecuteMutation.error instanceof AdminPromptsApiError
+                                ? resolvedAssemblyErrorPresentation(manualExecuteMutation.error).primary
+                                : "Exécution impossible."}
                             </p>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  {resolvedInspectionMode === "runtime_preview" && samplePayloadsQuery.isPending ? (
-                    <p className="text-muted">Chargement des sample payloads...</p>
-                  ) : null}
-                  {resolvedQuery.isPending ? <div className="loading-placeholder">Chargement du detail...</div> : null}
-                  {resolvedQuery.isError ? <AdminPromptsResolvedAssemblyError error={resolvedQuery.error} /> : null}
+                            {manualExecuteMutation.error instanceof AdminPromptsApiError &&
+                            manualExecutionFailureLead(manualExecuteMutation.error) ? (
+                              <p className="admin-prompts-resolved__error-secondary text-muted">
+                                {manualExecutionFailureLead(manualExecuteMutation.error)}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="text-muted admin-prompts-detail__actions-idle">
+                        Sélectionnez « Prévisualisation runtime » pour activer les sample payloads et l&apos;exécution LLM
+                        depuis cette zone.
+                      </p>
+                    )}
+                  </section>
                   {resolvedQuery.data ? (
                     <>
-                      <section className="admin-prompts-logic-graph" aria-label="Construction logique">
-                        <h4>Construction logique</h4>
-                        <p className="text-muted">
-                          Graphe inspectable de la chaîne canonique: sources de composition, pipeline de transformation et données runtime.
-                        </p>
-                        <div className="admin-prompts-logic-graph__legend" aria-label="Légende du graphe">
-                          <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--system">Données système</span>
-                          <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--fallback">Fallback registre</span>
-                          <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--sample">Sample payload</span>
-                        </div>
-                        {!logicGraph?.dense ? (
-                          <>
-                            <div className="admin-prompts-logic-graph__nodes">
-                              {logicGraph?.nodes.map((node) => (
-                                <article key={node.id} className={`admin-prompts-logic-graph__node admin-prompts-logic-graph__node--${node.tone}`}>
-                                  <strong>{node.title}</strong>
-                                  <span className="text-muted">{node.detail}</span>
-                                </article>
-                              ))}
-                            </div>
-                            <ul className="admin-prompts-logic-graph__edges" aria-label="Connexions du graphe">
-                              {logicGraph?.edges.map((edge) => (
-                                <li key={`${edge.from}-${edge.to}`}>
-                                  <code>{edge.from}</code> → <code>{edge.to}</code> · {edge.label}
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        ) : (
-                          <div className="admin-prompts-logic-graph__fallback" aria-live="polite">
-                            <p className="text-muted">
-                              Graphe simplifié en vue texte car la densité dépasse le seuil de lisibilité.
-                            </p>
-                            <ul>
-                              {logicGraph?.fallbackSummary.map((line) => (
-                                <li key={line}>{line}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </section>
                       <div className="admin-prompts-resolved__zones">
                         <section className="admin-prompts-resolved__zone" aria-label="Prompts">
                           <h4>Prompts</h4>
                           <p className="text-muted">
-                            Source: {resolvedQuery.data.source_of_truth_status} · snapshot: {resolvedQuery.data.active_snapshot_version ?? "n/a"}
+                            Source: {resolvedQuery.data.source_of_truth_status} · snapshot:{" "}
+                            {resolvedQuery.data.active_snapshot_version ?? "n/a"}
                           </p>
-                          <p className="text-muted">assembled prompt</p>
-                          <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.assembled_prompt}</pre>
-                          <p className="text-muted">post injectors prompt</p>
-                          <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.post_injectors_prompt}</pre>
-                          <p className="text-muted">rendered prompt</p>
-                          <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.rendered_prompt}</pre>
-                          <p className="text-muted">system hard policy</p>
-                          <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.system_hard_policy ?? "")}</pre>
-                          <p className="text-muted">developer content</p>
-                          <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.developer_content_rendered ?? "")}</pre>
-                          <p className="text-muted">persona block</p>
-                          <pre className="admin-prompts-code">{String(resolvedQuery.data.resolved_result.provider_messages.persona_block ?? "")}</pre>
+                          <PromptDisclosure summary="assembled prompt">
+                            <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.assembled_prompt}</pre>
+                          </PromptDisclosure>
+                          <PromptDisclosure summary="post injectors prompt">
+                            <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.post_injectors_prompt}</pre>
+                          </PromptDisclosure>
+                          <PromptDisclosure summary="rendered prompt">
+                            <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.rendered_prompt}</pre>
+                          </PromptDisclosure>
+                          <PromptDisclosure summary="system hard policy">
+                            <pre className="admin-prompts-code">
+                              {String(resolvedQuery.data.resolved_result.provider_messages.system_hard_policy ?? "")}
+                            </pre>
+                          </PromptDisclosure>
+                          <PromptDisclosure summary="developer content">
+                            <pre className="admin-prompts-code">
+                              {String(resolvedQuery.data.resolved_result.provider_messages.developer_content_rendered ?? "")}
+                            </pre>
+                          </PromptDisclosure>
+                          <PromptDisclosure summary="persona block">
+                            <pre className="admin-prompts-code">
+                              {String(resolvedQuery.data.resolved_result.provider_messages.persona_block ?? "")}
+                            </pre>
+                          </PromptDisclosure>
                         </section>
-                        <section className="admin-prompts-resolved__zone" aria-label="Données d'exemple">
-                          <h4>Données d&apos;exemple</h4>
+                        <section className="admin-prompts-resolved__zone" aria-label="Placeholders">
+                          <h4>Placeholders</h4>
                           <p className="text-muted">
-                            Placeholders résolus/partiels pour lecture opérable (sans parser du JSON brut).
+                            Placeholders résolus/partiels pour lecture opérable (sans parser du JSON brut). Les actions
+                            sur les sample payloads sont regroupées dans la zone Actions.
                           </p>
-                          {catalogFeatureForSamplePayloads && catalogLocaleForSamplePayloads ? (
-                            <p className="admin-prompts-resolved__sample-payload-cta">
-                              <button
-                                type="button"
-                                className="text-button"
-                                onClick={() => {
-                                  setSamplePayloadsSeed({
-                                    feature: catalogFeatureForSamplePayloads,
-                                    locale: catalogLocaleForSamplePayloads,
-                                  })
-                                  navigate(`${ADMIN_PROMPTS_BASE}/sample-payloads`)
-                                }}
-                              >
-                                Gérer les sample payloads ({catalogFeatureForSamplePayloads} /{" "}
-                                {catalogLocaleForSamplePayloads})
-                              </button>
-                            </p>
-                          ) : null}
                           {resolvedQuery.data.resolved_result.placeholders.length === 0 ? (
                             <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
-                              Aucune donnée d&apos;exemple disponible pour cette cible.
+                              Aucun placeholder disponible pour cette cible.
                             </p>
                           ) : (
                             <div className="admin-prompts-resolved__placeholders">
@@ -1578,8 +1592,11 @@ export function AdminPromptsPage() {
                               {resolvedQuery.data.resolved_result.provider_messages.render_error}
                             </p>
                           ) : null}
-                          <p className="text-muted">Paramètres d&apos;exécution (prévisualisation assembly)</p>
-                          <pre className="admin-prompts-code">{JSON.stringify(resolvedQuery.data.resolved_result.provider_messages.execution_parameters, null, 2)}</pre>
+                          <PromptDisclosure summary="Paramètres d'exécution (prévisualisation assembly)">
+                            <pre className="admin-prompts-code">
+                              {JSON.stringify(resolvedQuery.data.resolved_result.provider_messages.execution_parameters, null, 2)}
+                            </pre>
+                          </PromptDisclosure>
                           <p className="text-muted">Sortie d&apos;exécution live</p>
                           {resolvedInspectionMode === "runtime_preview" ? (
                             <>
@@ -1593,8 +1610,7 @@ export function AdminPromptsPage() {
                                   className="admin-prompts-resolved__state admin-prompts-resolved__state--error"
                                   role="status"
                                 >
-                                  L&apos;exécution a échoué — le détail est affiché près du bouton « Exécuter avec le LLM
-                                  ».
+                                  L&apos;exécution a échoué — le détail est affiché dans la zone Actions.
                                 </p>
                               ) : null}
                               {!manualExecuteMutation.isPending && !manualExecuteMutation.isError ? (
@@ -1633,27 +1649,25 @@ export function AdminPromptsPage() {
                                         </dd>
                                       </div>
                                     </dl>
-                                    <p className="text-muted">Paramètres runtime résolus (exécution)</p>
-                                    <pre className="admin-prompts-code">
-                                      {JSON.stringify(
-                                        manualExecuteMutation.data.resolved_runtime_parameters,
-                                        null,
-                                        2,
-                                      )}
-                                    </pre>
-                                    <p className="text-muted">Prompt envoyé au fournisseur (anonymisé)</p>
-                                    <pre className="admin-prompts-code">{manualExecuteMutation.data.prompt_sent}</pre>
+                                    <PromptDisclosure summary="Paramètres runtime résolus (exécution)">
+                                      <pre className="admin-prompts-code">
+                                        {JSON.stringify(manualExecuteMutation.data.resolved_runtime_parameters, null, 2)}
+                                      </pre>
+                                    </PromptDisclosure>
+                                    <PromptDisclosure summary="Prompt envoyé au fournisseur (anonymisé)">
+                                      <pre className="admin-prompts-code">{manualExecuteMutation.data.prompt_sent}</pre>
+                                    </PromptDisclosure>
                                     {manualExecuteMutation.data.structured_output_parseable &&
                                     manualExecuteMutation.data.structured_output ? (
-                                      <>
-                                        <p className="text-muted">Sortie structurée (validée / redaction admin)</p>
+                                      <PromptDisclosure summary="Sortie structurée (validée / redaction admin)">
                                         <pre className="admin-prompts-code">
                                           {JSON.stringify(manualExecuteMutation.data.structured_output, null, 2)}
                                         </pre>
-                                      </>
+                                      </PromptDisclosure>
                                     ) : null}
-                                    <p className="text-muted">Réponse brute fournisseur (anonymisée)</p>
-                                    <pre className="admin-prompts-code">{manualExecuteMutation.data.raw_output}</pre>
+                                    <PromptDisclosure summary="Réponse brute fournisseur (anonymisée)">
+                                      <pre className="admin-prompts-code">{manualExecuteMutation.data.raw_output}</pre>
+                                    </PromptDisclosure>
                                     {manualExecuteMutation.data.meta_validation_errors &&
                                     manualExecuteMutation.data.meta_validation_errors.length > 0 ? (
                                       <p
@@ -1678,8 +1692,8 @@ export function AdminPromptsPage() {
                                   <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
                                     {selectedSamplePayloadId && resolvedQuery.data &&
                                     isAdminRuntimePreviewExecutable(resolvedQuery.data)
-                                      ? "Utilisez « Exécuter avec le LLM » pour afficher le retour complet (métadonnées, prompt effectif, sorties)."
-                                      : "Sélectionnez un sample payload valide puis exécutez pour afficher le retour opérateur."}
+                                      ? "Utilisez la zone Actions (« Exécuter avec le LLM ») pour afficher le retour complet (métadonnées, prompt effectif, sorties)."
+                                      : "Sélectionnez un sample payload valide dans la zone Actions puis exécutez pour afficher le retour opérateur."}
                                   </p>
                                 )
                               ) : null}
@@ -1691,29 +1705,78 @@ export function AdminPromptsPage() {
                             </p>
                           )}
                         </section>
-                        <section className="admin-prompts-resolved__zone" aria-label="Construction logique (sources)">
-                          <h4>Construction logique (sources)</h4>
-                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.feature_template.content}</pre>
-                          {resolvedQuery.data.composition_sources.subfeature_template ? (
-                            <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.subfeature_template.content}</pre>
-                          ) : null}
-                          {resolvedQuery.data.composition_sources.plan_rules?.content ? (
-                            <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.plan_rules.content}</pre>
-                          ) : null}
-                          {resolvedQuery.data.composition_sources.persona_block?.content ? (
-                            <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.persona_block.content}</pre>
-                          ) : null}
-                          <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.hard_policy.content}</pre>
-                          <div className="admin-prompts-resolved__meta-grid">
-                            <span className="text-muted">Execution profile</span>
-                            <span>
-                              {resolvedQuery.data.composition_sources.execution_profile.provider} / {resolvedQuery.data.composition_sources.execution_profile.model}
-                            </span>
-                            <span className="text-muted">Reasoning</span>
-                            <span>{resolvedQuery.data.composition_sources.execution_profile.reasoning ?? "n/a"}</span>
-                            <span className="text-muted">Verbosity</span>
-                            <span>{resolvedQuery.data.composition_sources.execution_profile.verbosity ?? "n/a"}</span>
+                        <section className="admin-prompts-resolved__zone" aria-label="Graphe logique">
+                          <h4>Graphe logique</h4>
+                          <p className="text-muted">
+                            Chaîne inspectable (aperçu texte — React Flow prévu en story 70.4). Sources de composition,
+                            pipeline et données runtime.
+                          </p>
+                          <div className="admin-prompts-logic-graph admin-prompts-logic-graph--in-zone">
+                            <div className="admin-prompts-logic-graph__legend" aria-label="Légende du graphe">
+                              <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--system">Données système</span>
+                              <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--fallback">Fallback registre</span>
+                              <span className="admin-prompts-logic-graph__legend-chip admin-prompts-logic-graph__legend-chip--sample">Sample payload</span>
+                            </div>
+                            {!logicGraph?.dense ? (
+                              <>
+                                <div className="admin-prompts-logic-graph__nodes">
+                                  {logicGraph?.nodes.map((node) => (
+                                    <article key={node.id} className={`admin-prompts-logic-graph__node admin-prompts-logic-graph__node--${node.tone}`}>
+                                      <strong>{node.title}</strong>
+                                      <span className="text-muted">{node.detail}</span>
+                                    </article>
+                                  ))}
+                                </div>
+                                <ul className="admin-prompts-logic-graph__edges" aria-label="Connexions du graphe">
+                                  {logicGraph?.edges.map((edge) => (
+                                    <li key={`${edge.from}-${edge.to}`}>
+                                      <code>{edge.from}</code> → <code>{edge.to}</code> · {edge.label}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            ) : (
+                              <div className="admin-prompts-logic-graph__fallback" aria-live="polite">
+                                <p className="text-muted">
+                                  Graphe simplifié en vue texte car la densité dépasse le seuil de lisibilité.
+                                </p>
+                                <ul>
+                                  {logicGraph?.fallbackSummary.map((line) => (
+                                    <li key={line}>{line}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
+                          <details className="admin-prompts-detail__disclosure admin-prompts-detail__disclosure--sources">
+                            <summary className="admin-prompts-detail__disclosure-summary">
+                              Sources de composition (texte intégral)
+                            </summary>
+                            <div className="admin-prompts-detail__disclosure-body">
+                              <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.feature_template.content}</pre>
+                              {resolvedQuery.data.composition_sources.subfeature_template ? (
+                                <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.subfeature_template.content}</pre>
+                              ) : null}
+                              {resolvedQuery.data.composition_sources.plan_rules?.content ? (
+                                <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.plan_rules.content}</pre>
+                              ) : null}
+                              {resolvedQuery.data.composition_sources.persona_block?.content ? (
+                                <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.persona_block.content}</pre>
+                              ) : null}
+                              <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.hard_policy.content}</pre>
+                              <div className="admin-prompts-resolved__meta-grid">
+                                <span className="text-muted">Execution profile</span>
+                                <span>
+                                  {resolvedQuery.data.composition_sources.execution_profile.provider} /{" "}
+                                  {resolvedQuery.data.composition_sources.execution_profile.model}
+                                </span>
+                                <span className="text-muted">Reasoning</span>
+                                <span>{resolvedQuery.data.composition_sources.execution_profile.reasoning ?? "n/a"}</span>
+                                <span className="text-muted">Verbosity</span>
+                                <span>{resolvedQuery.data.composition_sources.execution_profile.verbosity ?? "n/a"}</span>
+                              </div>
+                            </div>
+                          </details>
                         </section>
                       </div>
                     </>

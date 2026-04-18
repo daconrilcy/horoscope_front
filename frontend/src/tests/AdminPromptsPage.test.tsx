@@ -213,10 +213,12 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByLabelText("Ordre tri catalogue")).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Assembly prompt résolue" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Mode d'inspection" })).toBeInTheDocument()
     })
+    expect(screen.getByLabelText("Résumé")).toBeInTheDocument()
+    expect(screen.getByLabelText("Actions")).toBeInTheDocument()
     expect(screen.getByText("Prompts")).toBeInTheDocument()
-    expect(screen.getByText("Données d'exemple")).toBeInTheDocument()
+    expect(screen.getByText("Placeholders")).toBeInTheDocument()
     expect(screen.getByText("Retour LLM")).toBeInTheDocument()
     expect(screen.getByLabelText("Mode d'inspection du détail")).toBeInTheDocument()
     expect(screen.getByText(/Mode: Assembly/)).toBeInTheDocument()
@@ -234,7 +236,7 @@ describe("AdminPromptsPage", () => {
     expect(
       screen.getByText(/Passez en prévisualisation runtime pour exécuter le fournisseur/),
     ).toBeInTheDocument()
-    expect(screen.getByText("Construction logique")).toBeInTheDocument()
+    expect(screen.getByText("Graphe logique")).toBeInTheDocument()
     expect(screen.getByText("manifest_entry_id")).toBeInTheDocument()
     expect(screen.getByText("composition_sources")).toBeInTheDocument()
     expect(screen.getByText("transformation_pipeline")).toBeInTheDocument()
@@ -248,6 +250,124 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByText("sample payloads")).toBeInTheDocument()
     expect(screen.getByText(/message system/)).toBeInTheDocument()
     expect(screen.getByText(/message persona/)).toBeInTheDocument()
+  })
+
+  it("structure le détail catalogue : ordre des sections, zone Actions et prompts repliables", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        if (url.includes("/resolved")) {
+          return makeJsonResponse({
+            data: {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              use_case_key: "chat_uc",
+              context_quality: "full",
+              assembly_id: "assembly-1",
+              inspection_mode: "assembly_preview",
+              source_of_truth_status: "active_snapshot",
+              active_snapshot_id: "snapshot-1",
+              active_snapshot_version: "v1",
+              composition_sources: {
+                feature_template: { id: "tpl-1", content: "feature prompt" },
+                subfeature_template: { id: "tpl-2", content: "subfeature prompt" },
+                plan_rules: { ref: "premium_depth", content: "plan rules prompt" },
+                persona_block: { id: "persona-1", name: "Luna", content: "persona prompt" },
+                hard_policy: { safety_profile: "astrology", content: "hard policy prompt" },
+                execution_profile: {
+                  id: "profile-1",
+                  name: "default",
+                  provider: "openai",
+                  model: "gpt-5",
+                  reasoning: "medium",
+                  verbosity: "balanced",
+                  provider_params: { max_output_tokens: 1200 },
+                },
+              },
+              transformation_pipeline: {
+                assembled_prompt: "assembled",
+                post_injectors_prompt: "post",
+                rendered_prompt: "rendered",
+              },
+              resolved_result: {
+                provider_messages: {
+                  system_hard_policy: "hard policy prompt",
+                  developer_content_rendered: "rendered",
+                  persona_block: "persona prompt",
+                  execution_parameters: { max_output_tokens: 1200 },
+                },
+                placeholders: [
+                  {
+                    name: "locale",
+                    status: "resolved",
+                    classification: "required",
+                    resolution_source: "runtime_context",
+                    reason: "from_context",
+                    safe_to_display: true,
+                    value_preview: "fr-FR",
+                  },
+                ],
+                context_quality_handled_by_template: false,
+                context_quality_instruction_injected: false,
+                context_compensation_status: "not_needed",
+                source_of_truth_status: "active_snapshot",
+                active_snapshot_id: "snapshot-1",
+                active_snapshot_version: "v1",
+                manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              },
+            },
+          })
+        }
+        return makeJsonResponse({
+          data: [
+            {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              assembly_id: "assembly-1",
+              assembly_status: "published",
+              execution_profile_id: "profile-1",
+              execution_profile_ref: "profile-1",
+              output_contract_ref: "contract-1",
+              catalog_visibility_status: "visible",
+            },
+          ],
+          meta: { page: 1, page_size: 50, total: 1 },
+        })
+      }
+      return makeJsonResponse({}, 404)
+    }))
+    renderPage()
+    await userEvent.click(await screen.findByRole("button", { name: "Ouvrir le detail" }))
+    await waitFor(() => {
+      expect(screen.getByLabelText("Résumé")).toBeInTheDocument()
+    })
+    const detailPanel = screen.getByLabelText("Détail catalogue entrée")
+    const sections = within(detailPanel).getAllByRole("region")
+    const regionLabels = sections.map((el) => el.getAttribute("aria-label"))
+    const idx = (name: string) => regionLabels.indexOf(name)
+    expect(idx("Résumé")).toBeGreaterThanOrEqual(0)
+    expect(idx("Résumé")).toBeLessThan(idx("Mode d'inspection"))
+    expect(idx("Mode d'inspection")).toBeLessThan(idx("État d'exécution"))
+    expect(idx("État d'exécution")).toBeLessThan(idx("Actions"))
+    expect(idx("Actions")).toBeLessThan(idx("Prompts"))
+    expect(idx("Prompts")).toBeLessThan(idx("Placeholders"))
+    expect(idx("Placeholders")).toBeLessThan(idx("Retour LLM"))
+    expect(idx("Retour LLM")).toBeLessThan(idx("Graphe logique"))
+    expect(screen.getByText(/Risque : exécution fournisseur réelle/)).toBeInTheDocument()
+    const promptsRegion = screen.getByLabelText("Prompts")
+    const assembledSummary = within(promptsRegion).getByText("assembled prompt", { selector: "summary" })
+    expect(assembledSummary).toBeInTheDocument()
+    const assembledDetails = assembledSummary.closest("details")
+    expect(assembledDetails).not.toBeNull()
+    await userEvent.click(assembledSummary)
+    expect(assembledDetails).toHaveAttribute("open")
   })
 
   it("réinitialise les filtres catalogue via le bouton dédié", async () => {
@@ -1343,7 +1463,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/Prévisualisation partielle :/)).toBeInTheDocument()
     })
-    expect(screen.getByText(/Aucune donnée d'exemple disponible/)).toBeInTheDocument()
+    expect(screen.getByText(/Aucun placeholder disponible pour cette cible/)).toBeInTheDocument()
     expect(screen.getByText(/Sortie d'exécution live/)).toBeInTheDocument()
     expect(screen.getAllByRole("status").length).toBeGreaterThan(0)
   })
