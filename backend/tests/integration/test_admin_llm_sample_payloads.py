@@ -6,8 +6,9 @@ from sqlalchemy import delete
 
 from app.api.dependencies.auth import require_admin_user
 from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
-from app.infra.db.session import SessionLocal, get_db_session
+from app.infra.db.session import get_db_session
 from app.main import app
+from tests.integration.app_db import open_app_db_session
 
 
 async def mock_admin_user():
@@ -32,7 +33,7 @@ def _build_payload(**overrides):
 
 
 def test_admin_llm_sample_payload_crud_list_and_recommended_default():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -94,7 +95,7 @@ def test_admin_llm_sample_payload_crud_list_and_recommended_default():
 
 
 def test_admin_llm_sample_payload_post_default_switches_previous_default():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -138,7 +139,7 @@ def test_admin_llm_sample_payload_post_default_switches_previous_default():
 
 
 def test_admin_llm_sample_payload_rejects_whitespace_only_name():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -160,7 +161,7 @@ def test_admin_llm_sample_payload_rejects_whitespace_only_name():
 
 
 def test_admin_llm_sample_payload_patch_can_clear_description():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -192,7 +193,7 @@ def test_admin_llm_sample_payload_patch_can_clear_description():
 
 
 def test_admin_llm_sample_payload_post_duplicate_name_returns_conflict():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -227,7 +228,7 @@ def test_admin_llm_sample_payload_post_duplicate_name_returns_conflict():
 
 
 def test_admin_llm_sample_payload_patch_duplicate_name_returns_conflict():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -271,7 +272,7 @@ def test_admin_llm_sample_payload_patch_duplicate_name_returns_conflict():
 
 
 def test_admin_llm_sample_payload_patch_default_locale_conflict_returns_409():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -315,7 +316,7 @@ def test_admin_llm_sample_payload_patch_default_locale_conflict_returns_409():
 
 
 def test_admin_llm_sample_payload_rejects_sensitive_fields():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -339,7 +340,7 @@ def test_admin_llm_sample_payload_rejects_sensitive_fields():
 
 
 def test_admin_llm_sample_payload_requires_natal_chart_json():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -363,7 +364,7 @@ def test_admin_llm_sample_payload_requires_natal_chart_json():
 
 
 def test_admin_llm_sample_payload_list_include_inactive():
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -407,7 +408,7 @@ def test_admin_llm_sample_payload_list_include_inactive():
 
 def test_admin_llm_sample_payload_get_returns_unsanitized_payload_json_for_round_trip():
     """P1: GET/POST/PATCH expose payload_json brut (pas de redaction ADMIN_API au round-trip)."""
-    db = SessionLocal()
+    db = open_app_db_session()
     client = TestClient(app)
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
@@ -437,14 +438,20 @@ def test_admin_llm_sample_payload_get_returns_unsanitized_payload_json_for_round
 
         get_resp = client.get(f"/v1/admin/llm/sample-payloads/{row['id']}")
         assert get_resp.status_code == 200
-        assert get_resp.json()["data"]["payload_json"]["last_user_msg"] == "Question utilisateur à préserver"
+        assert (
+            get_resp.json()["data"]["payload_json"]["last_user_msg"]
+            == "Question utilisateur à préserver"
+        )
 
         patch = client.patch(
             f"/v1/admin/llm/sample-payloads/{row['id']}",
             json={"description": "mise à jour sans toucher au JSON"},
         )
         assert patch.status_code == 200
-        assert patch.json()["data"]["payload_json"]["last_user_msg"] == "Question utilisateur à préserver"
+        assert (
+            patch.json()["data"]["payload_json"]["last_user_msg"]
+            == "Question utilisateur à préserver"
+        )
     finally:
         app.dependency_overrides.clear()
         if created_ids:

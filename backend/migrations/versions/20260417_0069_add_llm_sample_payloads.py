@@ -61,8 +61,12 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_llm_sample_payload_feature_locale_default_unique", table_name="llm_sample_payloads")
-    op.drop_index("ix_llm_sample_payload_feature_locale_name_unique", table_name="llm_sample_payloads")
+    op.drop_index(
+        "ix_llm_sample_payload_feature_locale_default_unique", table_name="llm_sample_payloads"
+    )
+    op.drop_index(
+        "ix_llm_sample_payload_feature_locale_name_unique", table_name="llm_sample_payloads"
+    )
     op.drop_index("ix_llm_sample_payloads_locale", table_name="llm_sample_payloads")
     op.drop_index("ix_llm_sample_payloads_feature", table_name="llm_sample_payloads")
     op.drop_table("llm_sample_payloads")

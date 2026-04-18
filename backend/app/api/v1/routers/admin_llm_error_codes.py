@@ -31,3 +31,5 @@ class AdminLlmErrorCode(StrEnum):
     SAMPLE_PAYLOAD_NAME_CONFLICT = "sample_payload_name_conflict"
     SAMPLE_PAYLOAD_DEFAULT_CONFLICT = "sample_payload_default_conflict"
     SAMPLE_PAYLOAD_CONFLICT = "sample_payload_conflict"
+    RUNTIME_PREVIEW_INCOMPLETE_FOR_EXECUTION = "runtime_preview_incomplete_for_execution"
+    ADMIN_MANUAL_EXECUTION_FAILED = "admin_manual_execution_failed"

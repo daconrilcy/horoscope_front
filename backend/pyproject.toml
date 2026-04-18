@@ -55,7 +55,7 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["app/tests", "app/ai_engine/tests", "tests/evaluation"]
+testpaths = ["app/tests", "app/ai_engine/tests", "tests/evaluation", "tests/integration"]
 asyncio_mode = "auto"
 filterwarnings = [
   "ignore:Skipped unsupported reflection of expression-based index ix_llm_assembly_config_active_unique:sqlalchemy.exc.SAWarning",

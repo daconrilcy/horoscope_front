@@ -978,9 +978,9 @@ class LLMGateway:
                         context_dict["_active_snapshot_version"] = getattr(
                             assembly_db, "_active_snapshot_version", None
                         )
-                        context_dict["_manifest_entry_id"] = getattr(
-                            assembly_db, "_manifest_entry_id", None
-                        )
+                        assembly_mid = getattr(assembly_db, "_manifest_entry_id", None)
+                        if assembly_mid is not None:
+                            context_dict["_manifest_entry_id"] = assembly_mid
                 except GatewayConfigError:
                     raise
                 except Exception as e:

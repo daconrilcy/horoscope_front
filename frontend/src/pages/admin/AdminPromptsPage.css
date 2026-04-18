@@ -346,6 +346,33 @@
   color: var(--color-text-secondary);
 }
 
+.admin-prompts-resolved__manual-exec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-prompts-resolved__manual-exec-hint {
+  margin: 0;
+  font-size: var(--font-size-xs);
+}
+
+.admin-prompts-resolved__manual-exec-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-prompts-resolved__manual-exec-meta {
+  margin: 0;
+  font-size: var(--font-size-xs);
+}
+
 .admin-prompts-resolved__error {
   display: flex;
   flex-direction: column;

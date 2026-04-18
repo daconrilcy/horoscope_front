@@ -209,6 +209,8 @@ export type AdminResolvedAssemblyView = {
   subfeature: string | null
   plan: string | null
   locale: string | null
+  use_case_key: string
+  context_quality: string
   assembly_id: string | null
   inspection_mode: AdminInspectionMode
   source_of_truth_status: string
@@ -493,6 +495,55 @@ export async function getAdminPersonaDetail(personaId: string): Promise<AdminLlm
       headers: getAccessTokenAuthHeader(),
     })
     return decodeResponse<AdminLlmPersonaDetail>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
+export type AdminCatalogManualExecuteResult = {
+  manifest_entry_id: string
+  sample_payload_id: string
+  use_case_key: string
+  provider: string
+  model: string
+  request_id: string
+  trace_id: string
+  gateway_request_id: string
+  raw_output: string
+  validation_status: string
+  latency_ms: number
+  admin_manual_execution: true
+  usage_input_tokens: number
+  usage_output_tokens: number
+}
+
+export function isAdminRuntimePreviewExecutable(data: AdminResolvedAssemblyView): boolean {
+  const renderError = data.resolved_result.provider_messages.render_error
+  if (renderError) {
+    return false
+  }
+  return !data.resolved_result.placeholders.some(
+    (p) => p.status === "blocking_missing" || p.status === "unknown",
+  )
+}
+
+export async function executeAdminCatalogSamplePayload(
+  manifestEntryId: string,
+  samplePayloadId: string,
+): Promise<AdminCatalogManualExecuteResult> {
+  try {
+    const response = await apiFetch(
+      `${API_BASE_URL}/v1/admin/llm/catalog/${encodeURIComponent(manifestEntryId)}/execute-sample`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAccessTokenAuthHeader(),
+        },
+        body: JSON.stringify({ sample_payload_id: samplePayloadId }),
+      },
+    )
+    return decodeResponse<AdminCatalogManualExecuteResult>(response)
   } catch (error) {
     throw toTransportError(error)
   }

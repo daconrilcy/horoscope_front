@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.rate_limit import reset_rate_limits
 from app.infra.db.base import Base
+from app.infra.db.bootstrap import ensure_configured_sqlite_file_matches_alembic_head
 from app.infra.db.session import engine
 from app.llm_orchestration.providers.circuit_breaker import reset_circuit_breakers
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
@@ -22,9 +23,10 @@ os.environ.setdefault("ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", "1")
 
 @pytest.fixture(autouse=True, scope="session")
 def _ensure_db_schema() -> None:
-    # Guarantee all SQLAlchemy tables exist at session start.
-    # Individual tests may call drop_all+create_all for isolation, but tests that
-    # only DELETE rows (e.g. test_daily_prediction_qa) assume the schema is present.
+    # Alignement Alembic (tables / révisions) sur SQLite fichier — même logique que
+    # `backend/tests/conftest.py`, car sous pytest l'auto-migration runtime est désactivée.
+    ensure_configured_sqlite_file_matches_alembic_head()
+    # Tables déclarées en ORM non encore couvertes par une migration (rare) :
     Base.metadata.create_all(bind=engine)
 
 

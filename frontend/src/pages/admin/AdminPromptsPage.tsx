@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import {
   useAdminLlmCatalog,
@@ -15,6 +15,8 @@ import {
   useReleaseSnapshotDiff,
   toUtcIsoFromDateTimeInput,
   AdminPromptsApiError,
+  executeAdminCatalogSamplePayload,
+  isAdminRuntimePreviewExecutable,
   type AdminConsumptionView,
   type AdminPromptVersion,
   type AdminInspectionMode,
@@ -132,9 +134,9 @@ function inspectionModeHelpText(mode: AdminInspectionMode): string {
     case "assembly_preview":
       return "Prévisualisation statique: les placeholders attendus uniquement au runtime restent signalés comme absents mais non bloquants."
     case "runtime_preview":
-      return "Prévisualisation runtime: les placeholders requis manquants sont traités comme bloquants selon la sémantique nominale."
+      return "Prévisualisation runtime: les placeholders requis manquants sont bloquants. L’exécution réelle du provider se fait via « Exécuter avec le LLM » lorsque la prévisualisation est complète."
     case "live_execution":
-      return "Inspection live: même sémantique placeholder que runtime_preview pour l’instant. Cette vue n’exécute pas encore le provider."
+      return "Inspection live: même sémantique placeholder que runtime_preview. L’appel provider réel reste explicitement déclenché depuis le mode runtime (bouton dédié)."
     default:
       return ""
   }
@@ -151,6 +153,9 @@ const RESOLVED_ASSEMBLY_ERROR_MESSAGES_FR: Readonly<Record<string, string>> = {
   invalid_sample_payload: "Le sample payload est invalide (JSON attendu : un objet).",
   manifest_entry_not_found: "Entrée de catalogue introuvable.",
   invalid_manifest_entry_id: "Identifiant d’entrée manifeste invalide.",
+  runtime_preview_incomplete_for_execution:
+    "La prévisualisation runtime est incomplète : corrigez les placeholders bloquants avant d’exécuter le LLM.",
+  admin_manual_execution_failed: "L’exécution manuelle LLM a échoué. Consultez le message détaillé ou les journaux.",
 }
 
 function resolvedAssemblyErrorPresentation(error: unknown): { primary: string; secondary: string | null } {
@@ -464,6 +469,14 @@ export function AdminPromptsPage() {
     effectiveSamplePayloadId,
     activeTab === "catalog" && Boolean(selectedManifestEntryId),
   )
+  const manualExecuteMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedManifestEntryId || !selectedSamplePayloadId) {
+        throw new Error("missing selection")
+      }
+      return executeAdminCatalogSamplePayload(selectedManifestEntryId, selectedSamplePayloadId)
+    },
+  })
   const samplePayloadsQuery = useAdminLlmSamplePayloads(
     selectedCatalogEntry?.feature ?? null,
     selectedCatalogEntry?.locale ?? null,
@@ -491,6 +504,10 @@ export function AdminPromptsPage() {
       setSelectedSamplePayloadId(null)
     }
   }, [resolvedInspectionMode])
+
+  useEffect(() => {
+    manualExecuteMutation.reset()
+  }, [selectedManifestEntryId, selectedSamplePayloadId, resolvedInspectionMode])
 
   useEffect(() => {
     if (resolvedInspectionMode !== "runtime_preview") {
@@ -880,6 +897,59 @@ export function AdminPromptsPage() {
                   <p className="admin-prompts-resolved__render-note">
                     {inspectionModeHelpText(resolvedQuery.data?.inspection_mode ?? resolvedInspectionMode)}
                   </p>
+                  {resolvedInspectionMode === "runtime_preview" ? (
+                    <div className="admin-prompts-resolved__manual-exec">
+                      <button
+                        type="button"
+                        className="action-button action-button--secondary"
+                        disabled={
+                          !selectedSamplePayloadId ||
+                          !resolvedQuery.data ||
+                          !isAdminRuntimePreviewExecutable(resolvedQuery.data) ||
+                          manualExecuteMutation.isPending ||
+                          resolvedQuery.isPending
+                        }
+                        onClick={() => manualExecuteMutation.mutate()}
+                      >
+                        {manualExecuteMutation.isPending ? "Exécution LLM..." : "Exécuter avec le LLM"}
+                      </button>
+                      {!selectedSamplePayloadId ? (
+                        <p className="text-muted admin-prompts-resolved__manual-exec-hint">
+                          Sélectionnez un sample payload pour activer l&apos;exécution réelle.
+                        </p>
+                      ) : null}
+                      {selectedSamplePayloadId &&
+                      resolvedQuery.data &&
+                      !isAdminRuntimePreviewExecutable(resolvedQuery.data) ? (
+                        <p
+                          className="admin-prompts-resolved__state admin-prompts-resolved__state--warning"
+                          role="status"
+                        >
+                          Prévisualisation runtime incomplète : corrigez les placeholders bloquants ou complétez le sample
+                          avant d&apos;exécuter.
+                        </p>
+                      ) : null}
+                      {manualExecuteMutation.isError ? (
+                        <div className="admin-prompts-resolved__error" role="alert">
+                          <p className="admin-prompts-resolved__error-primary">
+                            {manualExecuteMutation.error instanceof AdminPromptsApiError
+                              ? resolvedAssemblyErrorPresentation(manualExecuteMutation.error).primary
+                              : "Exécution impossible."}
+                          </p>
+                        </div>
+                      ) : null}
+                      {manualExecuteMutation.isSuccess && manualExecuteMutation.data ? (
+                        <div className="admin-prompts-resolved__manual-exec-result" aria-live="polite">
+                          <p className="admin-prompts-resolved__manual-exec-meta text-muted">
+                            Terminé · {manualExecuteMutation.data.latency_ms} ms · validation{" "}
+                            {manualExecuteMutation.data.validation_status} · provider {manualExecuteMutation.data.provider}{" "}
+                            · {manualExecuteMutation.data.model}
+                          </p>
+                          <pre className="admin-prompts-code">{manualExecuteMutation.data.raw_output}</pre>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {resolvedInspectionMode === "runtime_preview" && samplePayloadsQuery.isPending ? (
                     <p className="text-muted">Chargement des sample payloads...</p>
                   ) : null}

@@ -43,7 +43,16 @@ from app.llm_orchestration.admin_models import (
     LlmPromptVersionCreate,
     LlmUseCaseConfig,
 )
-from app.llm_orchestration.models import PromptRenderError
+from app.llm_orchestration.gateway import LLMGateway
+from app.llm_orchestration.models import (
+    ExecutionContext,
+    ExecutionUserInput,
+    GatewayConfigError,
+    GatewayError,
+    InputValidationError,
+    LLMExecutionRequest,
+    PromptRenderError,
+)
 from app.llm_orchestration.persona_boundary import (
     PersonaBoundaryViolation,
     validate_persona_block,
@@ -290,6 +299,8 @@ class AdminResolvedAssemblyView(BaseModel):
     subfeature: str | None = None
     plan: str | None = None
     locale: str | None = None
+    use_case_key: str
+    context_quality: str
     assembly_id: str | None = None
     inspection_mode: AdminInspectionMode
     source_of_truth_status: str
@@ -302,6 +313,32 @@ class AdminResolvedAssemblyView(BaseModel):
 
 class AdminResolvedAssemblyResponse(BaseModel):
     data: AdminResolvedAssemblyView
+    meta: ResponseMeta
+
+
+class AdminCatalogManualExecutePayload(BaseModel):
+    sample_payload_id: uuid.UUID
+
+
+class AdminCatalogManualExecuteResponseData(BaseModel):
+    manifest_entry_id: str
+    sample_payload_id: str
+    use_case_key: str
+    provider: str
+    model: str
+    request_id: str
+    trace_id: str
+    gateway_request_id: str
+    raw_output: str
+    validation_status: str
+    latency_ms: int
+    admin_manual_execution: Literal[True] = True
+    usage_input_tokens: int = 0
+    usage_output_tokens: int = 0
+
+
+class AdminCatalogManualExecuteResponse(BaseModel):
+    data: AdminCatalogManualExecuteResponseData
     meta: ResponseMeta
 
 
@@ -395,9 +432,7 @@ def _classify_admin_render_error_kind(
                 return "static_preview_incomplete"
             return "execution_failure"
     if inspection_mode == "assembly_preview" and (
-        "unauthorized" in msg_l
-        or "missing required legacy" in msg_l
-        or "legacy variables" in msg_l
+        "unauthorized" in msg_l or "missing required legacy" in msg_l or "legacy variables" in msg_l
     ):
         return "execution_failure"
     if inspection_mode == "assembly_preview":
@@ -751,6 +786,18 @@ def _error_response(
             }
         },
     )
+
+
+def _admin_catalog_runtime_preview_blocking_reasons(view: AdminResolvedAssemblyView) -> list[str]:
+    reasons: list[str] = []
+    msgs = view.resolved_result.provider_messages
+    render_error = msgs.get("render_error") if isinstance(msgs, dict) else None
+    if render_error:
+        reasons.append(f"render_error:{render_error}")
+    for placeholder in view.resolved_result.placeholders:
+        if placeholder.status in ("blocking_missing", "unknown"):
+            reasons.append(f"placeholder:{placeholder.name}:{placeholder.status}")
+    return reasons
 
 
 def _record_audit_event(
@@ -1415,7 +1462,26 @@ def get_resolved_catalog_entry(
 ) -> Any:
     del current_user
     request_id = resolve_request_id(request)
+    built = _build_admin_resolved_catalog_view(
+        db=db,
+        manifest_entry_id=manifest_entry_id,
+        inspection_mode=inspection_mode,
+        sample_payload_id=sample_payload_id,
+        request_id=request_id,
+    )
+    if isinstance(built, JSONResponse):
+        return built
+    return {"data": built, "meta": {"request_id": request_id}}
 
+
+def _build_admin_resolved_catalog_view(
+    *,
+    db: Session,
+    manifest_entry_id: str,
+    inspection_mode: AdminInspectionMode,
+    sample_payload_id: uuid.UUID | None,
+    request_id: str,
+) -> AdminResolvedAssemblyView | JSONResponse:
     latest_active = db.execute(
         select(LlmActiveReleaseModel).order_by(desc(LlmActiveReleaseModel.activated_at)).limit(1)
     ).scalar_one_or_none()
@@ -1650,9 +1716,7 @@ def get_resolved_catalog_entry(
                 status_code=422,
                 request_id=request_id,
                 code=AdminLlmErrorCode.SAMPLE_PAYLOAD_TARGET_MISMATCH.value,
-                message=(
-                    "sample payload feature/locale mismatch with requested manifest entry"
-                ),
+                message=("sample payload feature/locale mismatch with requested manifest entry"),
                 details={
                     "sample_payload_id": str(sample_payload_id),
                     "sample_feature": sample_payload.feature,
@@ -1853,6 +1917,8 @@ def get_resolved_catalog_entry(
         subfeature=assembly_model.subfeature,
         plan=assembly_model.plan,
         locale=assembly_model.locale,
+        use_case_key=assembly_model.feature_template.use_case_key,
+        context_quality=resolved.context_quality,
         assembly_id=str(assembly_model.id),
         inspection_mode=inspection_mode,
         source_of_truth_status=source_of_truth_status,
@@ -1922,7 +1988,171 @@ def get_resolved_catalog_entry(
         ),
     )
 
-    return {"data": data, "meta": {"request_id": request_id}}
+    return data
+
+
+@router.post(
+    "/catalog/{manifest_entry_id}/execute-sample",
+    response_model=AdminCatalogManualExecuteResponse,
+)
+async def execute_admin_catalog_sample_payload(
+    manifest_entry_id: str,
+    request: Request,
+    payload: AdminCatalogManualExecutePayload,
+    current_user: AuthenticatedUser = Depends(require_admin_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    request_id = resolve_request_id(request)
+    trace_id = str(uuid.uuid4())
+    logger.info(
+        "admin_manual_llm_execute_start manifest_entry_id=%s sample_payload_id=%s "
+        "request_id=%s trace_id=%s operator_user_id=%s",
+        manifest_entry_id,
+        str(payload.sample_payload_id),
+        request_id,
+        trace_id,
+        current_user.id,
+    )
+    built = _build_admin_resolved_catalog_view(
+        db=db,
+        manifest_entry_id=manifest_entry_id,
+        inspection_mode="runtime_preview",
+        sample_payload_id=payload.sample_payload_id,
+        request_id=request_id,
+    )
+    if isinstance(built, JSONResponse):
+        return built
+    blocking = _admin_catalog_runtime_preview_blocking_reasons(built)
+    if blocking:
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code=AdminLlmErrorCode.RUNTIME_PREVIEW_INCOMPLETE_FOR_EXECUTION.value,
+            message="runtime preview is incomplete; cannot execute provider call",
+            details={
+                "manifest_entry_id": manifest_entry_id,
+                "sample_payload_id": str(payload.sample_payload_id),
+                "blocking_reasons": blocking,
+            },
+        )
+    sample_row = db.get(LlmSamplePayloadModel, payload.sample_payload_id)
+    if sample_row is None or not isinstance(sample_row.payload_json, dict):
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NOT_FOUND.value,
+            message="sample payload not found",
+            details={"sample_payload_id": str(payload.sample_payload_id)},
+        )
+    extra_ctx: dict[str, Any] = dict(sample_row.payload_json)
+    extra_ctx["_manifest_entry_id"] = manifest_entry_id
+    extra_ctx["_admin_manual_canonical_execution"] = True
+    extra_ctx["_admin_manual_sample_payload_id"] = str(payload.sample_payload_id)
+
+    user_in = ExecutionUserInput(
+        use_case=built.use_case_key,
+        locale=built.locale or "fr-FR",
+        feature=built.feature,
+        subfeature=built.subfeature,
+        plan=built.plan,
+        message=extra_ctx.get("message") if isinstance(extra_ctx.get("message"), str) else None,
+        question=extra_ctx.get("question") if isinstance(extra_ctx.get("question"), str) else None,
+        situation=extra_ctx.get("situation")
+        if isinstance(extra_ctx.get("situation"), str)
+        else None,
+    )
+    exec_ctx = ExecutionContext(extra_context=extra_ctx)
+    gateway_request = LLMExecutionRequest(
+        user_input=user_in,
+        context=exec_ctx,
+        user_id=current_user.id,
+        request_id=request_id,
+        trace_id=trace_id,
+    )
+    gateway = LLMGateway()
+    try:
+        result = await gateway.execute_request(gateway_request, db=db)
+    except InputValidationError as exc:
+        logger.warning(
+            "admin_manual_llm_execute_failed manifest_entry_id=%s error=%s",
+            manifest_entry_id,
+            exc.message,
+        )
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
+            message=exc.message,
+            details={
+                "manifest_entry_id": manifest_entry_id,
+                "sample_payload_id": str(payload.sample_payload_id),
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+    except GatewayConfigError as exc:
+        logger.warning(
+            "admin_manual_llm_execute_failed manifest_entry_id=%s error=%s",
+            manifest_entry_id,
+            exc.message,
+        )
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
+            message=exc.message,
+            details={
+                "manifest_entry_id": manifest_entry_id,
+                "sample_payload_id": str(payload.sample_payload_id),
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+    except GatewayError as exc:
+        logger.warning(
+            "admin_manual_llm_execute_failed manifest_entry_id=%s error=%s",
+            manifest_entry_id,
+            exc.message,
+        )
+        return _error_response(
+            status_code=502,
+            request_id=request_id,
+            code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
+            message=exc.message,
+            details={
+                "manifest_entry_id": manifest_entry_id,
+                "sample_payload_id": str(payload.sample_payload_id),
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+    except Exception as exc:
+        logger.exception(
+            "admin_manual_llm_execute_unexpected manifest_entry_id=%s", manifest_entry_id
+        )
+        return _error_response(
+            status_code=502,
+            request_id=request_id,
+            code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
+            message=str(exc),
+            details={"manifest_entry_id": manifest_entry_id},
+        )
+    return {
+        "data": AdminCatalogManualExecuteResponseData(
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=str(payload.sample_payload_id),
+            use_case_key=built.use_case_key,
+            provider=result.meta.provider or "openai",
+            model=result.meta.model,
+            request_id=request_id,
+            trace_id=trace_id,
+            gateway_request_id=result.request_id,
+            raw_output=result.raw_output,
+            validation_status=result.meta.validation_status,
+            latency_ms=result.meta.latency_ms,
+            admin_manual_execution=True,
+            usage_input_tokens=result.usage.input_tokens,
+            usage_output_tokens=result.usage.output_tokens,
+        ),
+        "meta": ResponseMeta(request_id=request_id),
+    }
 
 
 @router.patch("/use-cases/{key}", response_model=LlmUseCaseListResponse)

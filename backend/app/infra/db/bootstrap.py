@@ -7,7 +7,7 @@ from pathlib import Path
 from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-from sqlalchemy import inspect, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import OperationalError
 
 from app.core.config import settings
@@ -73,11 +73,13 @@ def _resolve_backend_root() -> Path:
     )
 
 
-def _alembic_config() -> Config:
+def _alembic_config(*, database_url: str | None = None) -> Config:
     backend_root = _resolve_backend_root()
     config = Config(str(backend_root / "alembic.ini"))
     config.set_main_option("script_location", str(backend_root / "migrations"))
-    config.set_main_option("sqlalchemy.url", settings.database_url)
+    config.set_main_option(
+        "sqlalchemy.url", database_url if database_url is not None else settings.database_url
+    )
     return config
 
 
@@ -293,3 +295,56 @@ def ensure_local_sqlite_schema_ready() -> None:
         )
         _repair_missing_tables(missing_tables)
         _repair_local_sqlite_known_drift()
+
+
+def ensure_configured_sqlite_file_matches_alembic_head() -> None:
+    """
+    À appeler depuis les conftest lorsque les tests utilisent `SessionLocal` /
+    le moteur SQLAlchemy applicatif (fichier SQLite).
+
+    Migrer **chaque** fichier SQLite pertinent : le moteur courant (`session.engine`)
+    et `settings.database_url` peuvent différer (`app/tests/conftest.py` remplace le
+    moteur par une base temporaire après l’import initial). Certains modules de test
+    conservent une référence à l’ancien `SessionLocal` (import à la collecte) pointant
+    encore vers `DATABASE_URL`, tandis que d’autres chemins utilisent le moteur patché.
+
+    Hors pytest, `ensure_local_sqlite_schema_ready()` aligne déjà le schéma ; pendant
+    pytest cette voie est désactivée (`_should_auto_upgrade_local_sqlite`), ce qui
+    provoque des « no such table » si une migration n'a pas été appliquée manuellement.
+    """
+    from app.infra.db import session as session_module
+
+    candidate_urls = [str(session_module.engine.url), settings.database_url]
+    seen: set[str] = set()
+    for url in candidate_urls:
+        if url in seen:
+            continue
+        seen.add(url)
+        if not url.startswith("sqlite"):
+            continue
+        if ":memory:" in url:
+            continue
+
+        command.upgrade(_alembic_config(database_url=url), "head")
+
+    # Sur la base SQLite « secondaire » (souvent le fichier temporaire injecté par
+    # `app/tests/conftest.py`), un filet ORM évite des tables manquantes si Alembic
+    # et le moteur patché divergent. On ne le fait pas sur `settings.database_url`
+    # pour ne pas perturber les tests qui s’appuient sur un schéma uniquement Alembic.
+    connect_args: dict[str, object] = {}
+    if _is_pytest_runtime():
+        connect_args = {"check_same_thread": False, "timeout": 30}
+
+    settings_url = settings.database_url
+    for url in seen:
+        if url == settings_url:
+            continue
+        sync_engine = create_engine(
+            url,
+            connect_args=connect_args,
+            future=True,
+        )
+        try:
+            Base.metadata.create_all(bind=sync_engine, checkfirst=True)
+        finally:
+            sync_engine.dispose()

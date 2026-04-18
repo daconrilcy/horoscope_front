@@ -5,16 +5,17 @@ from app.infra.db.base import Base
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
+from tests.integration.app_db import app_engine, open_app_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
+    engine = app_engine()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    with open_app_db_session() as db:
         db.execute(delete(SupportIncidentModel))
         db.execute(delete(SupportTicketCategoryModel))
         db.execute(delete(UserModel))
@@ -31,14 +32,14 @@ def _register_and_get_access_token(email: str = "user@example.com") -> str:
 
 
 def _set_user_role(email: str, role: str) -> None:
-    with SessionLocal() as db:
+    with open_app_db_session() as db:
         user = db.execute(select(UserModel).where(UserModel.email == email)).scalar_one()
         user.role = role
         db.commit()
 
 
 def _seed_categories():
-    with SessionLocal() as db:
+    with open_app_db_session() as db:
         cat1 = SupportTicketCategoryModel(
             code="bug", label_fr="Bug", label_en="Bug", label_es="Error", display_order=1
         )

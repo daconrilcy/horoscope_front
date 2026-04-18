@@ -73,6 +73,7 @@ Commandes standard (exemples PowerShell, toujours après activation venv):
   - ruff check .
 - Tests:
   - pytest -q
+  - Les tests sous `backend/tests/` exécutent `ensure_configured_sqlite_file_matches_alembic_head` (fixture session autouse dans `backend/tests/conftest.py`, **pas** `pytest_sessionstart`, qui s’exécute avant la collecte des tests). La fonction migre chaque fichier SQLite pertinent (`session.engine` et `settings.database_url`) puis applique un `create_all` ORM uniquement sur une base « secondaire » (typiquement le fichier temporaire de `app/tests/conftest.py`), pas sur `horoscope.db`. Pour les tests d’intégration qui partagent la session avec `app/tests/`, utiliser `tests/integration/app_db.py` plutôt qu’un import statique de `SessionLocal`.
 
 6) Qualité Front (recommandations fortes)
 - React en TypeScript recommandé.
