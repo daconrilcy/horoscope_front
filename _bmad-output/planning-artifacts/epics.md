@@ -11,7 +11,18 @@ inputDocuments:
   - 'C:\dev\horoscope_front\docs\llm-prompt-generation-by-feature.md'
   - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\66-45-vue-catalogue-canonique-prompts-actifs.md'
   - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\66-46-vue-detail-resolved-prompt-assembly.md'
-lastEdited: '2026-04-16'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\67-1-clarifier-modes-preview-et-statuts-placeholders.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\67-2-exposer-construction-logique-graphe-inspectable.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\67-3-refondre-vue-detail-zones-pedagogiques-operables.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\68-1-definir-modele-admin-sample-payloads-par-feature.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\68-2-rendre-runtime-preview-avec-sample-payload.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\68-3-gerer-sample-payloads-depuis-surface-admin.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\69-1-executer-manuellement-cible-canonique-depuis-sample-payload.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\69-2-afficher-retour-llm-brut-structure-metadonnees-execution.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\69-3-securiser-surface-execution-manuelle-et-qa.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\67-To-69-deferred-work.md'
+  - 'user-specification-inline-admin-prompts-ux-refactor-2026-04-18'
+lastEdited: '2026-04-18'
 editHistory:
   - date: '2026-02-21T14:39:07+01:00'
     changes: 'Epics rebaseline after PRD/Architecture finalization (FR38-42 + NFR SMART alignment)'
@@ -19,6 +30,8 @@ editHistory:
     changes: 'Ajout Epic 66 — Refactorisation orchestration LLM vers contrats explicites'
   - date: '2026-04-16'
     changes: 'Ajout des epics/stories admin LLM preview runtime sample payloads et execution controlee'
+  - date: '2026-04-18'
+    changes: 'Extraction des exigences ciblees pour la refonte UX/UI de /admin/prompts a partir des stories 67-69, du plan UX fourni par Cyril et des contraintes PRD/Architecture'
 ---
 
 # horoscope_front - Epic Breakdown
@@ -73,6 +86,14 @@ FR39: Les clients entreprise peuvent consommer du contenu astrologique via un ac
 FR40: Les clients entreprise peuvent gerer les limites de leur plan et consulter leurs metriques de consommation.  
 FR41: Les clients entreprise peuvent demander des ajustements de style de contenu alignes avec leurs besoins editoriaux.  
 FR42: L entreprise peut facturer les clients entreprise via un modele combinant abonnement fixe et composante variable a l usage.
+FR43: Les operations admin peuvent inspecter les prompts canoniques via une experience master-detail combinant liste filtrable et panneau detail sticky sur une meme surface.  
+FR44: Les operations admin peuvent distinguer explicitement les modes `assembly preview`, `runtime preview` et `live execution` avec une semantique stable des placeholders et du rendu.  
+FR45: Les operations admin peuvent lire la composition d une cible canonique dans des sections progressives comprenant au minimum resume, prompts, placeholders, retour LLM et graphe logique.  
+FR46: Les operations admin peuvent selectionner, creer, modifier, dupliquer, desactiver et supprimer des sample payloads par feature/locale pour alimenter des previews runtime non sensibles.  
+FR47: Les operations admin peuvent declencher une execution LLM reelle uniquement depuis une runtime preview valide et consulter le retour brut, structure et les metadonnees associees.  
+FR48: Les operations admin peuvent acceder a l historique legacy, a l historique release et a la consommation comme univers de travail separes du catalogue canonique.  
+FR49: Les operations admin peuvent executer les actions sensibles (rollback legacy, gestion sample payloads, execution manuelle) dans une zone d actions dediee avec niveau de risque et confirmation explicites.  
+FR50: Les operations admin disposent d une interface `/admin/prompts` entierement coherente en francais produit, avec libelles metier stabilises et actions contextuelles explicites.
 
 ### NonFunctional Requirements
 
@@ -98,6 +119,11 @@ NFR19: Le systeme doit maintenir une disponibilite mensuelle >= 99.5% sur les se
 NFR20: Le systeme doit detecter et tracer les reponses hors-scope avec un taux de classification automatique >= 90% sur jeu de validation interne, et produire un rapport hebdomadaire de suivi.  
 NFR21: Le mecanisme de rollback de configuration doit permettre un retour a la derniere configuration stable en <= 15 minutes apres declenchement.  
 NFR22: Chaque resultat astrologique doit inclure un identifiant de version du moteur logique et des regles utilisees, afin de garantir une tracabilite de 100% des calculs restitues.
+NFR23: La preview admin des prompts doit rester deterministe et locale, sans appel provider tant qu aucune execution manuelle explicite n a ete confirmee.  
+NFR24: L interface `/admin/prompts` doit rester operable sur desktop et mobile, avec adaptation responsive des grilles denses vers des composants replis et sans styles inline.  
+NFR25: 100% des controles critiques de `/admin/prompts` doivent avoir des labels visibles, des etats focus explicites, une navigation clavier complete et une semantique tabs/panels correcte, conformes a WCAG 2.1 AA.  
+NFR26: Toute execution manuelle admin doit etre explicitement identifiable en UI, en audit et en observabilite, et distincte du trafic produit nominal.  
+NFR27: Les surfaces de preview et d execution manuelle doivent maintenir la redaction/anonymisation des champs sensibles affiches ou renvoyes a l operateur.
 
 ### Additional Requirements
 
@@ -113,6 +139,25 @@ NFR22: Chaque resultat astrologique doit inclure un identifiant de version du mo
 - Exigences infra/deploiement initial: Docker Compose single host, separation d environnements via variables d environnement.
 - Contraintes de qualite produit: etats loading/error/empty explicites sur les parcours critiques et experience chat fluide.
 - Tracabilite metier obligatoire: versionnement des regles/donnees astrologiques et lien entre version et sortie calculee.
+- La taxonomie canonique `manifest_entry_id` et le quatuor `feature/subfeature/plan/locale` restent la verite nominale de `/admin/prompts`; ne pas reintroduire `use_case` comme axe principal d exploration.
+- La refonte UX/UI de `/admin/prompts` doit preserver les capacites deja livrees par les stories 67.1 a 69.3: semantique des modes preview, graphe logique, preview runtime via sample payload, CRUD sample payloads, execution manuelle, retour LLM, audit et observabilite.
+- La separation fonctionnelle entre `catalogue`, `legacy`, `release`, `consumption`, `personas` et `echantillons runtime` doit etre maintenue, mais le catalogue ne doit plus porter l ergonomie des autres univers.
+- Les previews et executions admin doivent reutiliser les endpoints et pipelines existants (`resolved`, sample payloads, `execute-sample`, gateway nominal) sans moteur parallele ad hoc cote frontend.
+- Les actions sensibles de l interface admin doivent etre regroupees dans des surfaces dediees, confirmees explicitement et alimentees par les garde-fous backend existants.
+- La mise en oeuvre frontend doit rester conforme aux regles du monorepo: React/TypeScript, CSS dedie sans style inline, reutilisation des variables et tokens admin existants.
+
+### UX Design Requirements
+
+UX-DR1: La page `/admin/prompts` doit etre restructuree autour d un vrai mode master-detail avec liste canonique filtrable a gauche et panneau detail sticky a droite sur desktop.  
+UX-DR2: Le catalogue canonique doit etre simplifie a 4 ou 5 colonnes de premier niveau maximum (`tuple`, `snapshot actif`, `provider/modele`, `sante`, `action`) et deporter les metadonnees secondaires dans le detail.  
+UX-DR3: Les filtres du catalogue doivent devenir une barre compacte avec labels visibles, chips actives, bouton `Reinitialiser` et section `Filtres avances` repliable.  
+UX-DR4: Le panneau detail doit etre recompose en sections progressives dans l ordre `Resume`, `Mode d inspection`, `Etat d execution`, `Prompts`, `Placeholders`, `Retour LLM`, `Graphe logique`.  
+UX-DR5: Les blocs textuels longs du detail doivent etre affiches via accordions, onglets secondaires ou mecanismes de repli equivalents afin d eviter l ecrasement visuel.  
+UX-DR6: Les actions sensibles (`Executer avec le LLM`, rollback legacy, gestion des sample payloads) doivent etre regroupees dans une zone `Actions` distincte des contenus de lecture, avec niveau de risque visible.  
+UX-DR7: Tous les libelles de la page doivent etre harmonises en francais produit coherent, avec suppression des intitulés techniques ambigus et des libelles errones du type `Ouvrir 66.46`.  
+UX-DR8: Les tabs et panneaux de `/admin/prompts` doivent etre semantiquement complets (`tablist`, `tab`, `tabpanel`, associations explicites) et utilisables integralement au clavier.  
+UX-DR9: Les grilles et tables denses doivent se replier proprement sur mobile en cartes, panneaux empiles ou sections collapsibles sans perte des informations critiques.  
+UX-DR10: Les etats `loading`, `error`, `empty`, `preview partielle`, `runtime incomplete` et `execution en cours` doivent etre de premier rang, comprehensibles sans lecture de JSON brut.
 
 ### FR Coverage Map
 

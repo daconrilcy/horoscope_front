@@ -9,6 +9,7 @@ from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
     ExecutionContext,
     ExecutionUserInput,
+    GatewayConfigError,
     LLMExecutionRequest,
     UseCaseConfig,
 )
@@ -102,6 +103,9 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
     mock_assembly_db.output_schema_id = None
     mock_assembly_db.input_schema = None
     mock_assembly_db.fallback_use_case = None
+    mock_assembly_db._active_snapshot_id = None
+    mock_assembly_db._active_snapshot_version = None
+    mock_assembly_db._manifest_entry_id = None
 
     mock_resolved = MagicMock()
     mock_resolved.feature_template_id = uuid.uuid4()
@@ -136,7 +140,7 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(GatewayConfigError) as exc:
             await gateway._resolve_plan(request, db=db_mock)
 
         assert "Provider 'anthropic' is not nominally supported by the platform" in str(exc.value)
@@ -212,6 +216,9 @@ async def test_gateway_nominal_path_accepts_openai():
     mock_assembly_db.output_schema_id = None
     mock_assembly_db.input_schema = None
     mock_assembly_db.fallback_use_case = None
+    mock_assembly_db._active_snapshot_id = None
+    mock_assembly_db._active_snapshot_version = None
+    mock_assembly_db._manifest_entry_id = None
 
     mock_resolved = MagicMock()
     mock_resolved.feature_template_id = uuid.uuid4()

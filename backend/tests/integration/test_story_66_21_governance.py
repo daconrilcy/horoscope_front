@@ -1,3 +1,4 @@
+import warnings
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -42,7 +43,9 @@ async def test_governance_blocks_narrator_legacy_for_horoscope_daily():
     """
     from app.prediction.llm_narrator import LLMNarrator
 
-    narrator = LLMNarrator()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        narrator = LLMNarrator()
 
     with pytest.raises(GatewayError) as exc:
         await narrator.narrate(

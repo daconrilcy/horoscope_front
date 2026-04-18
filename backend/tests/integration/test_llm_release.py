@@ -7,11 +7,13 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session
 
 from app.api.v1.routers.admin_llm_release import ActivationQualificationEvidence
 from app.core.config import settings
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm_prompt import PromptStatus
 from app.infra.db.models.llm_release import (
     LlmActiveReleaseModel,
     LlmReleaseSnapshotModel,
@@ -34,6 +36,26 @@ from app.llm_orchestration.services.execution_profile_registry import (
 )
 from app.llm_orchestration.services.release_service import ReleaseService
 from app.main import app
+
+
+def _ensure_published_assembly_for_release_snapshots(db: Session) -> None:
+    """build_snapshot() ne sérialise que les assemblies au statut publié."""
+    has_published = db.execute(
+        select(PromptAssemblyConfigModel.id)
+        .where(PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED)
+        .limit(1)
+    ).scalar_one_or_none()
+    if has_published:
+        return
+    any_id = db.execute(select(PromptAssemblyConfigModel.id).limit(1)).scalar_one_or_none()
+    if any_id is None:
+        pytest.skip("Aucune assembly en base : impossible de tester les snapshots de release.")
+    db.execute(
+        update(PromptAssemblyConfigModel)
+        .where(PromptAssemblyConfigModel.id == any_id)
+        .values(status=PromptStatus.PUBLISHED, published_at=datetime.now(timezone.utc))
+    )
+    db.commit()
 
 
 def _default_manifest_entry_id(snapshot) -> str:
@@ -160,6 +182,8 @@ async def test_llm_release_lifecycle():
 
         AssemblyRegistry.invalidate_cache()
         ExecutionProfileRegistry.invalidate_cache()
+
+        _ensure_published_assembly_for_release_snapshots(db)
 
         service = ReleaseService(db)
         version = f"test-release-{uuid.uuid4().hex[:8]}"
@@ -328,6 +352,8 @@ async def test_snapshot_validation_independence():
     """
     db = SessionLocal()
     try:
+        _ensure_published_assembly_for_release_snapshots(db)
+
         service = ReleaseService(db)
         version = f"test-indep-{uuid.uuid4().hex[:8]}"
 
@@ -357,6 +383,7 @@ async def test_snapshot_validation_independence():
             .filter(PromptAssemblyConfigModel.feature == f)
             .first()
         )
+        assert assembly is not None
         validator = ConfigCoherenceValidator(db)
         res_live = await validator.validate_assembly(assembly)
         assert res_live.is_valid is False  # Because profiles are archived.
@@ -377,6 +404,12 @@ async def test_async_activation_keeps_single_active_pointer():
 
     engine = create_async_engine(async_db_url, future=True)
     session_factory = async_sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)
+
+    sync_db = SessionLocal()
+    try:
+        _ensure_published_assembly_for_release_snapshots(sync_db)
+    finally:
+        sync_db.close()
 
     try:
         async with session_factory() as db:
@@ -432,6 +465,8 @@ async def test_startup_validation_uses_snapshot():
     """
     db = SessionLocal()
     try:
+        _ensure_published_assembly_for_release_snapshots(db)
+
         service = ReleaseService(db)
         snapshot = await service.build_snapshot(version="startup-test", created_by="test_admin")
         await service.activate_snapshot(
@@ -465,6 +500,8 @@ async def test_non_fr_locale_resolution():
     """Test Finding 4: Profile resolution should respect locale in snapshots."""
     db = SessionLocal()
     try:
+        _ensure_published_assembly_for_release_snapshots(db)
+
         # Ensure we have at least one assembly for en-US
         stmt = select(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.locale == "en-US")
         en_assembly = db.execute(stmt).scalars().first()
@@ -472,6 +509,8 @@ async def test_non_fr_locale_resolution():
         if not en_assembly:
             # Create a mock en-US assembly for testing
             fr_assembly = db.query(PromptAssemblyConfigModel).first()
+            if fr_assembly is None:
+                pytest.skip("Aucune assembly de référence pour dupliquer en en-US.")
             en_assembly = PromptAssemblyConfigModel(
                 feature=fr_assembly.feature,
                 subfeature=fr_assembly.subfeature,
@@ -516,6 +555,8 @@ async def test_non_fr_locale_resolution():
 async def test_activation_is_blocked_without_correlated_evidence():
     db = SessionLocal()
     try:
+        _ensure_published_assembly_for_release_snapshots(db)
+
         service = ReleaseService(db)
         snapshot = await service.build_snapshot(version="gate-block-test", created_by="test_admin")
         await service.validate_snapshot(snapshot.id)
@@ -571,6 +612,8 @@ async def test_activation_is_blocked_without_correlated_evidence():
 async def test_release_health_recommends_rollback_on_threshold_breach():
     db = SessionLocal()
     try:
+        _ensure_published_assembly_for_release_snapshots(db)
+
         service = ReleaseService(db)
         snapshot = await service.build_snapshot(version="health-test", created_by="test_admin")
         db.execute(
@@ -610,6 +653,8 @@ async def test_release_health_recommends_rollback_on_threshold_breach():
 async def test_rollback_marks_faulty_snapshot_as_rolled_back():
     db = SessionLocal()
     try:
+        _ensure_published_assembly_for_release_snapshots(db)
+
         service = ReleaseService(db)
         snapshot_a = await service.build_snapshot(version="rollback-a", created_by="test_admin")
         snapshot_b = await service.build_snapshot(version="rollback-b", created_by="test_admin")
@@ -657,6 +702,8 @@ async def test_rollback_marks_faulty_snapshot_as_rolled_back():
 async def test_activation_with_naive_timestamp_is_rejected_without_500():
     db = SessionLocal()
     try:
+        _ensure_published_assembly_for_release_snapshots(db)
+
         service = ReleaseService(db)
         snapshot = await service.build_snapshot(version="naive-ts", created_by="test_admin")
         await service.validate_snapshot(snapshot.id)

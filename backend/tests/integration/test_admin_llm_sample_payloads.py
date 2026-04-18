@@ -424,7 +424,9 @@ def test_admin_llm_sample_payload_get_returns_unsanitized_payload_json_for_round
             "locale": "fr-FR",
             "payload_json": {
                 "sample": True,
-                "last_user_msg": "Question utilisateur à préserver",
+                # Éviter des clés type last_user_msg : le segment "user" déclenche une
+                # catégorie correlable bloquée pour les sample payloads admin (classify_field).
+                "note": "Question utilisateur à préserver",
             },
             "description": None,
             "is_default": False,
@@ -434,24 +436,18 @@ def test_admin_llm_sample_payload_get_returns_unsanitized_payload_json_for_round
         assert create.status_code == 200
         row = create.json()["data"]
         created_ids.append(uuid.UUID(row["id"]))
-        assert row["payload_json"]["last_user_msg"] == "Question utilisateur à préserver"
+        assert row["payload_json"]["note"] == "Question utilisateur à préserver"
 
         get_resp = client.get(f"/v1/admin/llm/sample-payloads/{row['id']}")
         assert get_resp.status_code == 200
-        assert (
-            get_resp.json()["data"]["payload_json"]["last_user_msg"]
-            == "Question utilisateur à préserver"
-        )
+        assert get_resp.json()["data"]["payload_json"]["note"] == "Question utilisateur à préserver"
 
         patch = client.patch(
             f"/v1/admin/llm/sample-payloads/{row['id']}",
             json={"description": "mise à jour sans toucher au JSON"},
         )
         assert patch.status_code == 200
-        assert (
-            patch.json()["data"]["payload_json"]["last_user_msg"]
-            == "Question utilisateur à préserver"
-        )
+        assert patch.json()["data"]["payload_json"]["note"] == "Question utilisateur à préserver"
     finally:
         app.dependency_overrides.clear()
         if created_ids:

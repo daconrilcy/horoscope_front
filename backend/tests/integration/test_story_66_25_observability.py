@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import patch
 
 import pytest
@@ -67,9 +68,11 @@ async def test_observability_snapshot_canonical_assembly(gateway):
             from app.llm_orchestration.models import ResolvedExecutionPlan
 
             plan = ResolvedExecutionPlan(
+                assembly_id=str(uuid.uuid4()),
                 feature="chat",
                 model_id="gpt-4o",
                 model_source="assembly",
+                execution_profile_source="waterfall",
                 provider="openai",
                 requested_provider="openai",
                 rendered_developer_prompt="Chat prompt",

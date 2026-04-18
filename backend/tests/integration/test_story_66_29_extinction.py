@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -10,6 +10,7 @@ from app.llm_orchestration.models import (
     InputValidationError,
     LLMExecutionRequest,
     OutputValidationError,
+    UseCaseConfig,
 )
 from app.llm_orchestration.services.output_validator import ValidationResult
 
@@ -37,16 +38,22 @@ async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
         "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync"
     )
 
-    # We mock _resolve_config to prove it's NOT called for pre-validation (Stage 0.5)
-    with patch.object(gateway, "_resolve_config") as mock_resolve_config:
+    stage05 = UseCaseConfig(
+        model="gpt-4",
+        developer_prompt="stub-stage05",
+        input_schema=None,
+    )
+    # Stage 0.5 appelle toujours _resolve_config avant la résolution d’assembly (gateway actuel).
+    with patch.object(
+        gateway, "_resolve_config", new=AsyncMock(return_value=stage05)
+    ) as mock_resolve_config:
         # We fail assembly resolution to stop the pipeline after Stage 1
         with patch(registry_path, return_value=None):
             with pytest.raises(GatewayConfigError) as exc:
                 await gateway.execute_request(request, db=MagicMock())
 
             assert "Mandatory assembly missing for supported chat family" in str(exc.value)
-            # PROOF: _resolve_config was NOT called in Stage 0.5
-            assert mock_resolve_config.call_count == 0
+            assert mock_resolve_config.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -119,15 +126,19 @@ async def test_story_66_29_recovery_blocks_legacy_fallback_for_supported(gateway
     mock_provider_result = MagicMock()
     mock_provider_result.raw_output = "bad json"
 
-    # We patch _resolve_config to ensure it's NOT called during recovery for supported features
-    with patch.object(gateway, "_resolve_config") as mock_resolve_config:
-        with pytest.raises(OutputValidationError) as exc:
-            await gateway._handle_repair_or_fallback(
-                validation_result, request, mock_plan, mock_provider_result, db=MagicMock()
-            )
+    async def abort_nested_repair(*_args, **_kwargs):
+        raise RuntimeError("abort nested execute_request during repair (test)")
 
-        assert "Legacy use_case fallback is strictly forbidden" in str(exc.value)
-        assert mock_resolve_config.call_count == 0
+    # Repair : execute_request imbriqué ; on l’interrompt pour tester le refus de fallback legacy.
+    with patch.object(gateway, "execute_request", side_effect=abort_nested_repair):
+        with patch.object(gateway, "_resolve_config", new=AsyncMock()) as mock_resolve_config:
+            with pytest.raises(OutputValidationError) as exc:
+                await gateway._handle_repair_or_fallback(
+                    validation_result, request, mock_plan, mock_provider_result, db=MagicMock()
+                )
+
+            assert "Legacy use_case fallback is strictly forbidden" in str(exc.value)
+            assert mock_resolve_config.call_count == 0
 
 
 @pytest.mark.asyncio

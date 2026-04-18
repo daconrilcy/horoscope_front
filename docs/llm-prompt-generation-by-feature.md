@@ -22,6 +22,10 @@ Les objectifs de ce pipeline sont :
 
 Le document suit le code réel, pas une architecture cible théorique.
 
+## Maintenance de cette documentation
+
+La maintenance de cette documentation est **obligatoire** lors de tout changement du pipeline décrit ici (gateway, assemblies, profils, releases). Les mises à jour doivent rester **traçables** via le bloc « Dernière vérification manuelle » (référence stable, date). En cas d’absence de mise à jour du document alors que le code change, une **justification d’absence de changement** est requise ; l’équipe peut aussi **justifier explicitement** pourquoi le document reste inchangé.
+
 ## Portée
 
 Le document couvre le pipeline réellement exécuté dans :
@@ -79,6 +83,8 @@ flowchart TD
     O --> P["Repair ou fallback legacy hors périmètre supporté"]
     P --> Q["GatewayResult + obs_snapshot + llm_call_logs"]
 ```
+
+Référence des étapes nommées côté `LLMGateway` (alignement contrôles 66.26) : `_resolve_plan()`, `execute_request()`, `_build_messages()`, `_call_provider()`.
 
 ## Familles canoniques et points d'entrée
 

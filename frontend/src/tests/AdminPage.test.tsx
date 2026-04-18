@@ -191,10 +191,10 @@ describe("AdminPage - Story 65.4", () => {
     })
     unmount()
 
-    // Test /admin/personas -> should render Prompts page content
+    // Test /admin/personas -> Navigate vers /admin/prompts (legacy Story 65.4)
     renderApp(["/admin/personas"])
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Prompts & Personas" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Catalogue prompts LLM" })).toBeInTheDocument()
     })
   })
 })

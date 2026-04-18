@@ -1,5 +1,6 @@
 import uuid
-from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -10,6 +11,7 @@ from app.llm_orchestration.models import (
     ExecutionUserInput,
     GatewayConfigError,
     LLMExecutionRequest,
+    UseCaseConfig,
 )
 from app.llm_orchestration.services.observability_service import log_governance_event
 
@@ -164,59 +166,71 @@ async def test_story_66_30_legacy_alias_normalization_on_supported_perimeter(gat
     mock_assembly_db.input_schema = None
 
     mock_resolved_assembly = MagicMock()
-    mock_resolved_assembly.execution_config.model = "gpt-4o"
-    mock_resolved_assembly.execution_config.temperature = 0.7
-    mock_resolved_assembly.execution_config.max_output_tokens = 1000
-    mock_resolved_assembly.execution_config.timeout_seconds = 30
-    mock_resolved_assembly.execution_config.fallback_use_case = None
-    mock_resolved_assembly.execution_config.reasoning_effort = "medium"
-    mock_resolved_assembly.execution_config.verbosity = "normal"
+    mock_resolved_assembly.feature_template_id = uuid.uuid4()
+    mock_resolved_assembly.subfeature_template_id = None
+    mock_resolved_assembly.execution_config = SimpleNamespace(
+        model="gpt-4o",
+        temperature=0.7,
+        max_output_tokens=1000,
+        timeout_seconds=30,
+        fallback_use_case=None,
+        reasoning_effort="medium",
+        verbosity="normal",
+    )
     mock_resolved_assembly.output_contract_ref = None
     mock_resolved_assembly.persona_block = "test persona"
     mock_resolved_assembly.persona_ref = None
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
 
-    with patch(
-        "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
-        return_value=mock_assembly_db,
-    ):
+    stage05 = UseCaseConfig(
+        model="gpt-4o",
+        developer_prompt="stub-stage05",
+        input_schema=None,
+    )
+
+    with patch.object(gateway, "_resolve_config", new=AsyncMock(return_value=stage05)):
         with patch(
-            "app.llm_orchestration.gateway.resolve_assembly",
-            return_value=mock_resolved_assembly,
+            "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
+            return_value=mock_assembly_db,
         ):
             with patch(
-                "app.llm_orchestration.gateway.assemble_developer_prompt",
-                return_value="test prompt",
+                "app.llm_orchestration.gateway.resolve_assembly",
+                return_value=mock_resolved_assembly,
             ):
                 with patch(
-                    "app.llm_orchestration.services.execution_profile_registry."
-                    "ExecutionProfileRegistry.get_profile_by_id",
-                    return_value=None,
+                    "app.llm_orchestration.gateway.assemble_developer_prompt",
+                    return_value="test prompt",
                 ):
                     with patch(
                         "app.llm_orchestration.services.execution_profile_registry."
-                        "ExecutionProfileRegistry.get_active_profile",
+                        "ExecutionProfileRegistry.get_profile_by_id",
                         return_value=None,
                     ):
                         with patch(
-                            "app.llm_orchestration.gateway.resolve_model"
-                        ) as mock_resolve_model:
-                            # We call execute_request because the real use_case mapping
-                            # daily_prediction -> horoscope_daily happens there.
-                            with pytest.raises(
-                                GatewayConfigError, match="No ExecutionProfile found"
-                            ) as excinfo:
-                                await gateway.execute_request(request, db=MagicMock())
+                            "app.llm_orchestration.services.execution_profile_registry."
+                            "ExecutionProfileRegistry.get_active_profile",
+                            return_value=None,
+                        ):
+                            with patch(
+                                "app.llm_orchestration.gateway.resolve_model"
+                            ) as mock_resolve_model:
+                                # We call execute_request because the real use_case mapping
+                                # daily_prediction -> horoscope_daily happens there.
+                                with pytest.raises(
+                                    GatewayConfigError, match="No ExecutionProfile found"
+                                ) as excinfo:
+                                    await gateway.execute_request(request, db=MagicMock())
 
-                            assert request.user_input.feature == "horoscope_daily"
-                            assert request.user_input.subfeature == "narration"
-                            assert request.user_input.plan == "free"
-                            assert excinfo.value.error_code == "missing_execution_profile"
-                            assert (
-                                excinfo.value.details["error_code"] == "missing_execution_profile"
-                            )
-                            assert mock_resolve_model.called is False
+                                assert request.user_input.feature == "horoscope_daily"
+                                assert request.user_input.subfeature == "narration"
+                                assert request.user_input.plan == "free"
+                                assert excinfo.value.error_code == "missing_execution_profile"
+                                assert (
+                                    excinfo.value.details["error_code"]
+                                    == "missing_execution_profile"
+                                )
+                                assert mock_resolve_model.called is False
 
 
 @pytest.mark.asyncio

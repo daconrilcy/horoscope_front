@@ -1,27 +1,51 @@
+import uuid
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.user import UserModel
+from app.infra.db.session import get_db_session
 from app.main import app
 from app.services.email_service import EmailService
+from tests.integration.app_db import open_app_db_session
 
 client = TestClient(app)
 
 
 @pytest.fixture
-def test_user(db_session: Session):
+def db() -> Session:
+    """Même base que l’app FastAPI (pas le SQLite :memory: du conftest générique)."""
+    session = open_app_db_session()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+@pytest.fixture(autouse=True)
+def _override_get_db_session(db: Session):
+    app.dependency_overrides[get_db_session] = lambda: db
+    yield
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def test_user(db: Session):
     user = UserModel(
-        email="test@example.com", password_hash="hash", role="user", email_unsubscribed=False
+        email=f"unsub-test-{uuid.uuid4().hex}@example.com",
+        password_hash="hash",
+        role="user",
+        email_unsubscribed=False,
     )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
     return user
 
 
-def test_unsubscribe_success(db_session: Session, test_user: UserModel):
+def test_unsubscribe_success(db: Session, test_user: UserModel):
     # Generate valid token
     token = EmailService.generate_unsubscribe_token(test_user.id, email_type="marketing")
 
@@ -32,11 +56,11 @@ def test_unsubscribe_success(db_session: Session, test_user: UserModel):
     assert "Désabonnement réussi" in response.text
 
     # Check DB
-    db_session.refresh(test_user)
+    db.refresh(test_user)
     assert test_user.email_unsubscribed is True
 
 
-def test_unsubscribe_invalid_email_type(db_session: Session, test_user: UserModel):
+def test_unsubscribe_invalid_email_type(db: Session, test_user: UserModel):
     # Generate token with wrong email_type
     token = EmailService.generate_unsubscribe_token(test_user.id, email_type="transactional")
 
@@ -46,13 +70,14 @@ def test_unsubscribe_invalid_email_type(db_session: Session, test_user: UserMode
     assert "Lien de désabonnement non valide" in response.json()["detail"]
 
 
-def test_unsubscribe_expired_token(db_session: Session, test_user: UserModel):
-    import os
+def test_unsubscribe_expired_token(db: Session, test_user: UserModel):
     from datetime import datetime, timedelta, timezone
 
     import jwt
 
-    secret_key = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
+    from app.core.config import settings
+
+    secret_key = settings.jwt_secret_key
     payload = {
         "user_id": test_user.id,
         "email_type": "marketing",
@@ -66,7 +91,7 @@ def test_unsubscribe_expired_token(db_session: Session, test_user: UserModel):
     assert "Le lien de désabonnement a expiré" in response.json()["detail"]
 
 
-def test_unsubscribe_user_not_found(db_session: Session):
+def test_unsubscribe_user_not_found(db: Session):
     # Generate token for non-existent user
     token = EmailService.generate_unsubscribe_token(9999, email_type="marketing")
 
@@ -77,16 +102,14 @@ def test_unsubscribe_user_not_found(db_session: Session):
 
 
 @pytest.mark.asyncio
-async def test_email_service_skips_marketing_when_unsubscribed(
-    db_session: Session, test_user: UserModel
-):
+async def test_email_service_skips_marketing_when_unsubscribed(db: Session, test_user: UserModel):
     # Mark user as unsubscribed
     test_user.email_unsubscribed = True
-    db_session.commit()
+    db.commit()
 
     # Try to send marketing email
     result = await EmailService._send_email(
-        db=db_session,
+        db=db,
         user_id=test_user.id,
         email=test_user.email,
         email_type="marketing",
@@ -101,7 +124,7 @@ async def test_email_service_skips_marketing_when_unsubscribed(
     from app.infra.db.models.email_log import EmailLogModel
 
     logs = (
-        db_session.execute(
+        db.execute(
             select(EmailLogModel).where(
                 EmailLogModel.user_id == test_user.id, EmailLogModel.email_type == "marketing"
             )
@@ -115,11 +138,11 @@ async def test_email_service_skips_marketing_when_unsubscribed(
 
 @pytest.mark.asyncio
 async def test_email_service_sends_welcome_even_if_unsubscribed(
-    db_session: Session, test_user: UserModel, monkeypatch
+    db: Session, test_user: UserModel, monkeypatch
 ):
     # Mark user as unsubscribed
     test_user.email_unsubscribed = True
-    db_session.commit()
+    db.commit()
 
     # Mock provider to avoid actual sending
     async def mock_send(*args, **kwargs):
@@ -137,7 +160,7 @@ async def test_email_service_sends_welcome_even_if_unsubscribed(
 
     # Try to send welcome email (non-marketing)
     result = await EmailService.send_welcome_email(
-        db=db_session, user_id=test_user.id, email=test_user.email, firstname="Test"
+        db=db, user_id=test_user.id, email=test_user.email, firstname="Test"
     )
 
     assert result is True
@@ -146,7 +169,7 @@ async def test_email_service_sends_welcome_even_if_unsubscribed(
     from app.infra.db.models.email_log import EmailLogModel
 
     log = (
-        db_session.execute(
+        db.execute(
             select(EmailLogModel).where(
                 EmailLogModel.user_id == test_user.id,
                 EmailLogModel.email_type == "welcome",

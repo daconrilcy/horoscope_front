@@ -108,7 +108,9 @@ describe("HelpPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Comment pouvons-nous vous aider aujourd’hui ?")).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: "Ouvrir un ticket support" })).toBeInTheDocument()
+      // Hero + liste tickets (empty CTA ou doublon layout) : même libellé accessible
+      const openTicketCtas = screen.getAllByRole("button", { name: "Ouvrir un ticket support" })
+      expect(openTicketCtas.length).toBeGreaterThan(0)
 
       expect(screen.getByText("Explorer les sections du site")).toBeInTheDocument()
       expect(screen.getByText("Horoscope")).toBeInTheDocument()
