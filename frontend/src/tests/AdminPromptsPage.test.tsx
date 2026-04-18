@@ -48,7 +48,7 @@ function renderPage(initialEntry = "/admin/prompts/catalog") {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter
         initialEntries={[initialEntry]}
-        future={{ v7_relativeSplatPath: true }}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <AdminPromptsRoutesFixture />
       </MemoryRouter>
@@ -597,6 +597,175 @@ describe("AdminPromptsPage", () => {
         (u) => u.includes("/resolved?") && u.includes("sample_payload_id=sample-1"),
       )
       expect(resolvedWithDefault.length).toBeGreaterThan(0)
+    })
+  })
+
+  it("conserve les sample payloads runtime quand la ligne sélectionnée sort de la page catalogue", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+    const rowA = {
+      manifest_entry_id: "chat:chat_default:premium:fr-FR",
+      feature: "chat",
+      subfeature: "chat_default",
+      plan: "premium",
+      locale: "fr-FR",
+      assembly_id: "assembly-1",
+      assembly_status: "published",
+      execution_profile_id: "profile-1",
+      execution_profile_ref: "profile-1",
+      output_contract_ref: "contract-1",
+      active_snapshot_id: "snapshot-1",
+      active_snapshot_version: "v1",
+      provider: "openai",
+      model: "gpt-5",
+      source_of_truth_status: "active_snapshot",
+      release_health_status: "monitoring",
+      catalog_visibility_status: "visible",
+      runtime_signal_status: "fresh",
+      execution_path_kind: "nominal",
+      context_compensation_status: "none",
+      max_output_tokens_source: "execution_profile",
+    }
+    const rowB = {
+      ...rowA,
+      manifest_entry_id: "other:other_default:free:en-US",
+      feature: "other",
+      subfeature: "other_default",
+      plan: "free",
+      locale: "en-US",
+    }
+    const resolvedBody = (inspectionMode: string) => ({
+      manifest_entry_id: "chat:chat_default:premium:fr-FR",
+      feature: "chat",
+      subfeature: "chat_default",
+      plan: "premium",
+      locale: "fr-FR",
+      use_case_key: "chat_uc",
+      context_quality: "full",
+      assembly_id: "assembly-1",
+      inspection_mode: inspectionMode.includes("runtime_preview") ? "runtime_preview" : "assembly_preview",
+      source_of_truth_status: "active_snapshot",
+      active_snapshot_id: "snapshot-1",
+      active_snapshot_version: "v1",
+      composition_sources: {
+        feature_template: { id: "tpl-1", content: "feature prompt" },
+        subfeature_template: null,
+        plan_rules: null,
+        persona_block: null,
+        hard_policy: { safety_profile: "astrology", content: "hard policy prompt" },
+        execution_profile: {
+          id: "profile-1",
+          name: "default",
+          provider: "openai",
+          model: "gpt-5",
+          reasoning: "medium",
+          verbosity: "balanced",
+          provider_params: { max_output_tokens: 1200 },
+        },
+      },
+      transformation_pipeline: {
+        assembled_prompt: "assembled",
+        post_injectors_prompt: "post",
+        rendered_prompt: "rendered",
+      },
+      resolved_result: {
+        provider_messages: {
+          system_hard_policy: "hard policy prompt",
+          developer_content_rendered: "rendered",
+          persona_block: "",
+          execution_parameters: { max_output_tokens: 1200 },
+        },
+        placeholders: [],
+        context_quality_handled_by_template: false,
+        context_quality_instruction_injected: false,
+        context_compensation_status: "not_needed",
+        source_of_truth_status: "active_snapshot",
+        active_snapshot_id: "snapshot-1",
+        active_snapshot_version: "v1",
+        manifest_entry_id: "chat:chat_default:premium:fr-FR",
+      },
+    })
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/sample-payloads") && !url.match(/sample-payloads\/[^/?]+$/)) {
+        return makeJsonResponse({
+          data: {
+            items: [
+              {
+                id: "sample-1",
+                name: "sample natal",
+                feature: "chat",
+                locale: "fr-FR",
+                description: null,
+                is_default: true,
+                is_active: true,
+                created_at: "2026-04-10T10:00:00Z",
+                updated_at: "2026-04-10T10:00:00Z",
+              },
+            ],
+            recommended_default_id: "sample-1",
+          },
+        })
+      }
+      if (url.includes("/v1/admin/llm/catalog")) {
+        if (url.includes("/resolved")) {
+          return makeJsonResponse({
+            data: resolvedBody(url),
+          })
+        }
+        if (url.includes("page=2")) {
+          return makeJsonResponse({
+            data: [rowB],
+            meta: {
+              total: 50,
+              page: 2,
+              page_size: 25,
+              sort_by: "feature",
+              sort_order: "asc",
+              freshness_window_minutes: 120,
+              facets: {},
+            },
+          })
+        }
+        return makeJsonResponse({
+          data: [rowA],
+          meta: {
+            total: 50,
+            page: 1,
+            page_size: 25,
+            sort_by: "feature",
+            sort_order: "asc",
+            freshness_window_minutes: 120,
+            facets: {},
+          },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    })
+    vi.stubGlobal("fetch", fetchSpy)
+
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.selectOptions(screen.getByLabelText("Mode d'inspection du détail"), "runtime_preview")
+    await waitFor(() => {
+      expect(screen.getByLabelText("Sélecteur sample payload runtime")).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole("button", { name: "Suivant" }))
+    await waitFor(() => {
+      expect(screen.getByText("other/other_default/free/en-US")).toBeInTheDocument()
+    })
+    const select = screen.getByLabelText("Sélecteur sample payload runtime") as HTMLSelectElement
+    expect(select.querySelectorAll("option:not([value=''])").length).toBeGreaterThan(0)
+    await waitFor(() => {
+      const calls = fetchSpy.mock.calls.map(([u]) => String(u))
+      expect(calls.some((c) => c.includes("/sample-payloads?") && c.includes("feature=chat") && c.includes("locale=fr-FR"))).toBe(
+        true,
+      )
     })
   })
 

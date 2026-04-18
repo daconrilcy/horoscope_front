@@ -3,6 +3,7 @@ import { routes } from "./routes"
 
 const router = createBrowserRouter(routes, {
   future: {
+    v7_startTransition: true,
     v7_relativeSplatPath: true,
   },
 })
@@ -15,6 +16,7 @@ export function createTestMemoryRouter(initialEntries: string[] = ["/"]) {
   return createMemoryRouter(routes, {
     initialEntries,
     future: {
+      v7_startTransition: true,
       v7_relativeSplatPath: true,
     },
   })

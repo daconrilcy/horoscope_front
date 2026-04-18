@@ -590,6 +590,13 @@ export function AdminPromptsPage() {
     effectiveSamplePayloadId,
     activeTab === "catalog" && Boolean(selectedManifestEntryId),
   )
+
+  /** Hors page courante, `selectedCatalogEntry` est null mais le détail résolu porte toujours feature/locale (sample payloads + CTA). */
+  const catalogFeatureForSamplePayloads =
+    selectedCatalogEntry?.feature ?? resolvedQuery.data?.feature ?? null
+  const catalogLocaleForSamplePayloads =
+    selectedCatalogEntry?.locale ?? resolvedQuery.data?.locale ?? null
+
   const manualExecuteMutation = useMutation({
     mutationFn: async () => {
       if (!selectedManifestEntryId || !selectedSamplePayloadId) {
@@ -599,8 +606,8 @@ export function AdminPromptsPage() {
     },
   })
   const samplePayloadsQuery = useAdminLlmSamplePayloads(
-    selectedCatalogEntry?.feature ?? null,
-    selectedCatalogEntry?.locale ?? null,
+    catalogFeatureForSamplePayloads,
+    catalogLocaleForSamplePayloads,
     {
       enabled:
         activeTab === "catalog" &&
@@ -1278,6 +1285,28 @@ export function AdminPromptsPage() {
                           </div>
                         </dl>
                       </>
+                    ) : resolvedQuery.data ? (
+                      <>
+                        <p className="admin-prompts-catalog-detail-summary__tuple">
+                          {resolvedQuery.data.feature}/{resolvedQuery.data.subfeature ?? "-"}/
+                          {resolvedQuery.data.plan ?? "-"}/{resolvedQuery.data.locale ?? "-"}
+                        </p>
+                        <p className="text-muted">
+                          Entrée hors page courante du tableau — le résumé ci-dessus provient du détail résolu.
+                        </p>
+                        <dl className="admin-prompts-catalog-detail-summary__meta">
+                          <div>
+                            <dt>Manifest entry</dt>
+                            <dd>
+                              <code>{resolvedQuery.data.manifest_entry_id}</code>
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Assembly</dt>
+                            <dd>{resolvedQuery.data.assembly_id ?? "—"}</dd>
+                          </div>
+                        </dl>
+                      </>
                     ) : (
                       <p className="text-muted">
                         Entrée hors page courante — identifiant <code>{selectedManifestEntryId}</code>
@@ -1475,24 +1504,21 @@ export function AdminPromptsPage() {
                           <p className="text-muted">
                             Placeholders résolus/partiels pour lecture opérable (sans parser du JSON brut).
                           </p>
-                          {selectedCatalogEntry?.feature && selectedCatalogEntry.locale ? (
+                          {catalogFeatureForSamplePayloads && catalogLocaleForSamplePayloads ? (
                             <p className="admin-prompts-resolved__sample-payload-cta">
                               <button
                                 type="button"
                                 className="text-button"
                                 onClick={() => {
-                                  const entryLocale = selectedCatalogEntry.locale
-                                  if (!entryLocale) {
-                                    return
-                                  }
                                   setSamplePayloadsSeed({
-                                    feature: selectedCatalogEntry.feature,
-                                    locale: entryLocale,
+                                    feature: catalogFeatureForSamplePayloads,
+                                    locale: catalogLocaleForSamplePayloads,
                                   })
                                   navigate(`${ADMIN_PROMPTS_BASE}/sample-payloads`)
                                 }}
                               >
-                                Gérer les sample payloads ({selectedCatalogEntry.feature} / {selectedCatalogEntry.locale})
+                                Gérer les sample payloads ({catalogFeatureForSamplePayloads} /{" "}
+                                {catalogLocaleForSamplePayloads})
                               </button>
                             </p>
                           ) : null}

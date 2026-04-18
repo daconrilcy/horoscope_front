@@ -47,6 +47,7 @@ so that je puisse inspecter rapidement une cible sans perdre le contexte de la s
 - [x] [Review][Patch] Lignes du tableau sélectionnables à la souris mais sans équivalent clavier explicite — `AdminPromptsPage.tsx` [`<tr onClick>`] — corrigé : `tabIndex={0}`, `onKeyDown` Entrée/Espace, `aria-selected`, `:focus-visible` CSS ; `stopPropagation` sur le bouton d’action
 - [x] [Review][Patch] `resetCatalogFilters` ne remet pas `catalogAdvancedFiltersOpen` à `false` — après reset, la section « Filtres avancés » peut rester ouverte de façon incohérente — `AdminPromptsPage.tsx` — corrigé : `setCatalogAdvancedFiltersOpen(false)` dans `resetCatalogFilters`
 - [x] [Review][Patch] Couverture tests AC5 / Testing Requirements : pas d’assertion sur le conteneur master-detail (`admin-prompts-catalog-master-detail`) ni sur le repli mono-colonne — `AdminPromptsPage.test.tsx` — corrigé : assertion sur le conteneur dans le test catalogue principal
+- [x] [Review][Patch] Le mode `runtime_preview` perdait les sample payloads quand la sélection sortait de la page courante du tableau — `AdminPromptsPage.tsx` — corrigé : dérivation stable `feature/locale` via `resolvedQuery.data` quand `selectedCatalogEntry` n’est plus disponible, résumé détail hors page enrichi, CTA sample payload aligné
 - [x] [Review][Defer] Fichier `AdminPromptsPage.tsx` déjà volumineux avant ce diff ; dette structurelle hors périmètre strict 70.2 — `AdminPromptsPage.tsx` — deferred, pre-existing
 
 ## Dev Notes
@@ -154,9 +155,11 @@ gpt-5
 - **Implémentation (2026-04-18)** : layout `admin-prompts-catalog-master-detail` (liste + panneau sticky), tableau à 5 colonnes, filtres avec labels / liste d’état actif / section « Filtres avancés » repliable / « Réinitialiser les filtres », résumé de cible au-dessus du détail résolu, sélection par ligne + état visuel ; CSS dans `AdminPromptsPage.css` ; tests Vitest étendus (colonnes, panneau détail, reset).
 - **Revue code (2026-04-18)** : correctifs appliqués — activation clavier des lignes catalogue (`tabIndex`, Entrée/Espace, `aria-selected`, focus visible), reset qui referme les filtres avancés, test sur le conteneur master-detail ; story passée en `done`.
 - **Revue code — 2ᵉ passe (2026-04-18)** : aucun nouveau finding ; périmètre fonctionnel et AC validés sur l’état courant du code.
+- **Post-revue (2026-04-18)** : correction du cas où `runtime_preview` perdait les sample payloads si la ligne sélectionnée quittait la page courante ; fallback `feature/locale` depuis `resolvedQuery.data`, résumé hors page enrichi, test Vitest dédié ajouté ; alignement des future flags React Router (`v7_startTransition`) pour supprimer le warning résiduel en test.
 
 ### File List
 
+- `frontend/src/app/router.tsx`
 - `frontend/src/pages/admin/AdminPromptsPage.tsx`
 - `frontend/src/pages/admin/AdminPromptsPage.css`
 - `frontend/src/tests/AdminPromptsPage.test.tsx`
@@ -167,3 +170,4 @@ gpt-5
 - 2026-04-18 : Implémentation master-detail catalogue admin + mise à jour tests et sprint (`70-2` → review).
 - 2026-04-18 : Revue code — correctifs patch (a11y clavier ligne, reset + filtres avancés, test conteneur master-detail) ; statut `done`.
 - 2026-04-18 : Revue code — 2ᵉ passe : clean ; documentation artefact / epics alignées ; prêt livraison git.
+- 2026-04-18 : Post-revue — fix de persistance des sample payloads runtime hors page courante + suppression du warning React Router `v7_startTransition` ; Vitest `AdminPromptsPage` et `AdminPromptsRouting` repassés au vert.
