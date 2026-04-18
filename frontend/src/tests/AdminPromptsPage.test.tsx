@@ -1189,6 +1189,9 @@ describe("AdminPromptsPage", () => {
     })
     expect(screen.queryByTestId("admin-prompts-logic-graph-visual")).toBeNull()
     expect(screen.getByText(/runtime=8, fallback=8, sample=0/)).toBeInTheDocument()
+    expect(screen.getByText("Détail des nœuds (données opérateur)")).toBeInTheDocument()
+    expect(screen.getByLabelText("Nœuds du graphe logique (mode dense)")).toBeInTheDocument()
+    expect(screen.getByText(/openai\/gpt-5/)).toBeInTheDocument()
   })
 
   it("classe les sources selon le contrat backend (runtime/fallback/sample)", async () => {

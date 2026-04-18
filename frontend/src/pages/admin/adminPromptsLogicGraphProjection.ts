@@ -20,6 +20,8 @@ export type LogicGraphProjection = {
   edges: LogicGraphEdge[]
   dense: boolean
   fallbackSummary: string[]
+  /** Identifiant stable pour remonter l Error Boundary : même manifest mais mode, snapshot ou placeholders différents. */
+  boundaryRemountKey: string
 }
 
 function classifyPlaceholderSource(item: AdminResolvedPlaceholder): LogicGraphNodeTone | "runtime" {
@@ -155,10 +157,26 @@ export function buildLogicGraphProjection(resolvedView: AdminResolvedAssemblyVie
     { from: "samplePayloads", to: "runtimeInputs", label: "données de test" },
   ]
 
+  const placeholderFingerprint = placeholders
+    .map((p) => `${p.name}:${p.status}:${p.resolution_source ?? ""}`)
+    .sort()
+    .join("|")
+
+  const boundaryRemountKey = [
+    resolvedView.manifest_entry_id,
+    resolvedView.inspection_mode,
+    resolvedView.active_snapshot_version ?? "",
+    String(resolvedView.active_snapshot_id ?? ""),
+    String(rr?.context_compensation_status ?? ""),
+    dense ? "dense" : "sparse",
+    placeholderFingerprint,
+  ].join("::")
+
   return {
     nodes,
     edges,
     dense,
+    boundaryRemountKey,
     fallbackSummary: [
       `manifest_entry_id: ${resolvedView.manifest_entry_id}`,
       `composition_sources -> transformation_pipeline -> provider_messages -> résultat opérateur`,

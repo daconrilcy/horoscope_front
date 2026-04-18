@@ -16,12 +16,6 @@ import "@xyflow/react/dist/style.css"
 import type { LogicGraphNodeTone, LogicGraphProjection } from "./adminPromptsLogicGraphProjection"
 import { layoutLogicGraphNodesForFlow } from "./adminPromptsLogicGraphProjection"
 
-/** Identifiant stable par entrée catalogue pour remonter l’Error Boundary quand `manifest_entry_id` change. */
-function logicGraphRemountKey(projection: LogicGraphProjection): string {
-  const manifest = projection.nodes.find((n) => n.id === "manifest")
-  return manifest?.detail ?? "logic-graph"
-}
-
 type LogicFlowNodeData = Record<string, unknown> & {
   title: string
   detail: string
@@ -157,6 +151,29 @@ function LogicGraphTextEdgesOnly({ projection }: { projection: LogicGraphProject
   )
 }
 
+/** En mode dense, reprend les libellés métier des nœuds (profils, templates, politique) — AC3, sans dupliquer la logique de projection. */
+function LogicGraphDenseNodeDetails({ projection }: { projection: LogicGraphProjection }) {
+  return (
+    <details className="admin-prompts-logic-graph__dense-node-details" open>
+      <summary>Détail des nœuds (données opérateur)</summary>
+      <p className="text-muted admin-prompts-logic-graph__dense-node-details-lead">
+        Résumé global ci-dessus ; chaque couche conserve ses identifiants et paramètres utiles au diagnostic.
+      </p>
+      <div className="admin-prompts-logic-graph__nodes" aria-label="Nœuds du graphe logique (mode dense)">
+        {projection.nodes.map((node) => (
+          <article
+            key={node.id}
+            className={`admin-prompts-logic-graph__node admin-prompts-logic-graph__node--${node.tone}`}
+          >
+            <strong>{node.title}</strong>
+            <span className="text-muted">{node.detail}</span>
+          </article>
+        ))}
+      </div>
+    </details>
+  )
+}
+
 export type AdminPromptsLogicGraphProps = {
   projection: LogicGraphProjection | null
 }
@@ -194,6 +211,7 @@ export function AdminPromptsLogicGraph({ projection }: AdminPromptsLogicGraphPro
             ))}
           </ul>
         </div>
+        <LogicGraphDenseNodeDetails projection={projection} />
       </div>
     )
   }
@@ -222,7 +240,7 @@ export function AdminPromptsLogicGraph({ projection }: AdminPromptsLogicGraphPro
         </p>
         <LogicGraphTextEdgesOnly projection={projection} />
       </details>
-      <LogicGraphErrorBoundary key={logicGraphRemountKey(projection)} fallbackSummary={projection.fallbackSummary}>
+      <LogicGraphErrorBoundary key={projection.boundaryRemountKey} fallbackSummary={projection.fallbackSummary}>
         <ReactFlowProvider>
           <LogicGraphFlowInner projection={projection} />
         </ReactFlowProvider>

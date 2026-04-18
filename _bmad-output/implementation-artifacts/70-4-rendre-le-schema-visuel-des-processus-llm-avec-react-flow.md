@@ -175,6 +175,7 @@ gpt-5
 - Implementation livree : extraction `adminPromptsLogicGraphProjection.ts` (projection + layout statique), composant `AdminPromptsLogicGraph.tsx` avec `@xyflow/react` (lecture seule, zoom/pan, legende FR, details avec liste des connexions sans dupliquer les noeuds), noeud `résultat opérateur` et arete depuis `provider_messages`, fallback dense et boundary de secours si echec rendu, stub `ResizeObserver` dans les tests Vitest admin.
 - Revue code 2026-04-18 : correctifs (cle Error Boundary par `manifest_entry_id`, logs `componentDidCatch` en DEV, commentaire MIT `hideAttribution`) ; passe 2 sans nouveau finding bloquant.
 - Artefacts synchronises avec le depot (commit `0088af8d`) : `sprint-status.yaml` (70-4 `done`), story sous `_bmad-output/implementation-artifacts/`, defer dans `67-To-69-deferred-work.md`.
+- Suivi post-revue : mode dense — grille des nœuds opérateur (templates, profils, politique) sous le résumé texte (AC3) ; `boundaryRemountKey` sur la projection (manifest, mode inspection, snapshot, empreinte placeholders) pour remonter l Error Boundary hors simple changement de manifest.
 
 ### File List
 
@@ -192,3 +193,4 @@ gpt-5
 - 2026-04-18 : Graphe logique admin rendu avec React Flow (`@xyflow/react`), projection extraite, tests et ResizeObserver jsdom.
 - 2026-04-18 : Revue code — clé remontage Error Boundary (`manifest_entry_id`), `console.error` réservé au DEV, commentaire MIT `hideAttribution` ; story passée `done`.
 - 2026-04-18 : Documentation artefacts alignée (`sprint-status`, notes de completion, defer 67–69). Dépôt : commit `0088af8d`.
+- 2026-04-18 : Correctifs graphe dense (`boundaryRemountKey`, détails nœuds opérateur AC3) ; tests Vitest ; sync artefacts sprint. Dépôt : `ed5c5404`.

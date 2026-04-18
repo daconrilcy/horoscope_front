@@ -977,6 +977,30 @@
   padding-left: var(--space-4);
 }
 
+.admin-prompts-logic-graph__dense-node-details {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-prompts-logic-graph__dense-node-details summary {
+  cursor: pointer;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.admin-prompts-logic-graph__dense-node-details-lead {
+  margin: 0 var(--space-3) var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.admin-prompts-logic-graph__dense-node-details .admin-prompts-logic-graph__nodes {
+  padding: 0 var(--space-3) var(--space-3);
+}
+
 .admin-prompts-resolved__placeholder {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.4fr) repeat(4, minmax(0, auto)) minmax(120px, 1fr);
