@@ -173,6 +173,25 @@ function resolvedAssemblyErrorPresentation(error: unknown): { primary: string; s
   return { primary, secondary }
 }
 
+const MANUAL_EXEC_FAILURE_LEAD_FR: Readonly<Record<string, string>> = {
+  render_pipeline: "Rendu ou prévisualisation bloquante",
+  input_validation: "Validation des entrées (schéma ou contexte)",
+  gateway_config: "Configuration gateway ou profil d'exécution",
+  output_validation: "Validation de sortie (schéma)",
+  prompt_render: "Erreur de rendu du prompt (gateway)",
+  provider_error: "Erreur fournisseur LLM",
+  unknown_use_case: "Use case ou résolution catalogue inconnue",
+  unexpected: "Erreur interne inattendue",
+}
+
+function manualExecutionFailureLead(error: unknown): string | null {
+  if (!(error instanceof AdminPromptsApiError)) {
+    return null
+  }
+  const kind = error.details.failure_kind
+  return typeof kind === "string" && kind in MANUAL_EXEC_FAILURE_LEAD_FR ? MANUAL_EXEC_FAILURE_LEAD_FR[kind] : null
+}
+
 function AdminPromptsResolvedAssemblyError({ error }: { error: unknown }) {
   const { primary, secondary } = resolvedAssemblyErrorPresentation(error)
   return (
@@ -930,22 +949,21 @@ export function AdminPromptsPage() {
                         </p>
                       ) : null}
                       {manualExecuteMutation.isError ? (
-                        <div className="admin-prompts-resolved__error" role="alert">
+                        <div
+                          className="admin-prompts-resolved__error admin-prompts-resolved__manual-exec-error"
+                          role="alert"
+                        >
                           <p className="admin-prompts-resolved__error-primary">
                             {manualExecuteMutation.error instanceof AdminPromptsApiError
                               ? resolvedAssemblyErrorPresentation(manualExecuteMutation.error).primary
                               : "Exécution impossible."}
                           </p>
-                        </div>
-                      ) : null}
-                      {manualExecuteMutation.isSuccess && manualExecuteMutation.data ? (
-                        <div className="admin-prompts-resolved__manual-exec-result" aria-live="polite">
-                          <p className="admin-prompts-resolved__manual-exec-meta text-muted">
-                            Terminé · {manualExecuteMutation.data.latency_ms} ms · validation{" "}
-                            {manualExecuteMutation.data.validation_status} · provider {manualExecuteMutation.data.provider}{" "}
-                            · {manualExecuteMutation.data.model}
-                          </p>
-                          <pre className="admin-prompts-code">{manualExecuteMutation.data.raw_output}</pre>
+                          {manualExecuteMutation.error instanceof AdminPromptsApiError &&
+                          manualExecutionFailureLead(manualExecuteMutation.error) ? (
+                            <p className="admin-prompts-resolved__error-secondary text-muted">
+                              {manualExecutionFailureLead(manualExecuteMutation.error)}
+                            </p>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
@@ -1099,12 +1117,105 @@ export function AdminPromptsPage() {
                               {resolvedQuery.data.resolved_result.provider_messages.render_error}
                             </p>
                           ) : null}
-                          <p className="text-muted">Paramètres d&apos;exécution</p>
+                          <p className="text-muted">Paramètres d&apos;exécution (prévisualisation assembly)</p>
                           <pre className="admin-prompts-code">{JSON.stringify(resolvedQuery.data.resolved_result.provider_messages.execution_parameters, null, 2)}</pre>
                           <p className="text-muted">Sortie d&apos;exécution live</p>
-                          <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
-                            Vide pour l&apos;instant: cette zone accueillera le retour provider des stories 69.x.
-                          </p>
+                          {resolvedInspectionMode === "runtime_preview" ? (
+                            <>
+                              {manualExecuteMutation.isPending ? (
+                                <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
+                                  Exécution LLM en cours…
+                                </p>
+                              ) : null}
+                              {manualExecuteMutation.isError ? (
+                                <p
+                                  className="admin-prompts-resolved__state admin-prompts-resolved__state--error"
+                                  role="status"
+                                >
+                                  L&apos;exécution a échoué — le détail est affiché près du bouton « Exécuter avec le LLM
+                                  ».
+                                </p>
+                              ) : null}
+                              {manualExecuteMutation.isSuccess && manualExecuteMutation.data ? (
+                                <div className="admin-prompts-resolved__llm-return" aria-live="polite">
+                                  <dl className="admin-prompts-resolved__llm-meta">
+                                    <div>
+                                      <dt>Statut validation</dt>
+                                      <dd>{manualExecuteMutation.data.validation_status}</dd>
+                                    </div>
+                                    <div>
+                                      <dt>Durée</dt>
+                                      <dd>{manualExecuteMutation.data.latency_ms} ms</dd>
+                                    </div>
+                                    <div>
+                                      <dt>Chemin</dt>
+                                      <dd>{manualExecuteMutation.data.execution_path}</dd>
+                                    </div>
+                                    <div>
+                                      <dt>Provider / modèle</dt>
+                                      <dd>
+                                        {manualExecuteMutation.data.provider} · {manualExecuteMutation.data.model}
+                                      </dd>
+                                    </div>
+                                    <div>
+                                      <dt>Tokens (in / out)</dt>
+                                      <dd>
+                                        {manualExecuteMutation.data.usage_input_tokens} /{" "}
+                                        {manualExecuteMutation.data.usage_output_tokens}
+                                      </dd>
+                                    </div>
+                                    <div>
+                                      <dt>Gateway request</dt>
+                                      <dd>
+                                        <code>{manualExecuteMutation.data.gateway_request_id}</code>
+                                      </dd>
+                                    </div>
+                                  </dl>
+                                  <p className="text-muted">Paramètres runtime résolus (exécution)</p>
+                                  <pre className="admin-prompts-code">
+                                    {JSON.stringify(manualExecuteMutation.data.resolved_runtime_parameters, null, 2)}
+                                  </pre>
+                                  <p className="text-muted">Prompt envoyé au fournisseur (anonymisé)</p>
+                                  <pre className="admin-prompts-code">{manualExecuteMutation.data.prompt_sent}</pre>
+                                  {manualExecuteMutation.data.structured_output_parseable &&
+                                  manualExecuteMutation.data.structured_output ? (
+                                    <>
+                                      <p className="text-muted">Sortie structurée (validée / redaction admin)</p>
+                                      <pre className="admin-prompts-code">
+                                        {JSON.stringify(manualExecuteMutation.data.structured_output, null, 2)}
+                                      </pre>
+                                    </>
+                                  ) : null}
+                                  <p className="text-muted">Réponse brute fournisseur (anonymisée)</p>
+                                  <pre className="admin-prompts-code">{manualExecuteMutation.data.raw_output}</pre>
+                                  {manualExecuteMutation.data.meta_validation_errors &&
+                                  manualExecuteMutation.data.meta_validation_errors.length > 0 ? (
+                                    <p
+                                      className="admin-prompts-resolved__state admin-prompts-resolved__state--warning"
+                                      role="status"
+                                    >
+                                      Détails validation :{" "}
+                                      {manualExecuteMutation.data.meta_validation_errors.join(" · ")}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              ) : !manualExecuteMutation.isPending &&
+                                !manualExecuteMutation.isError &&
+                                !(manualExecuteMutation.isSuccess && manualExecuteMutation.data) ? (
+                                <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
+                                  {selectedSamplePayloadId && resolvedQuery.data &&
+                                  isAdminRuntimePreviewExecutable(resolvedQuery.data)
+                                    ? "Utilisez « Exécuter avec le LLM » pour afficher le retour complet (métadonnées, prompt effectif, sorties)."
+                                    : "Sélectionnez un sample payload valide puis exécutez pour afficher le retour opérateur."}
+                                </p>
+                              ) : null}
+                            </>
+                          ) : (
+                            <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
+                              Passez en prévisualisation runtime pour exécuter le fournisseur et afficher ici le retour
+                              complet.
+                            </p>
+                          )}
                         </section>
                         <section className="admin-prompts-resolved__zone" aria-label="Construction logique (sources)">
                           <h4>Construction logique (sources)</h4>

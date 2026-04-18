@@ -1,9 +1,11 @@
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
+from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import require_admin_user
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
@@ -22,9 +24,154 @@ from app.infra.db.models.llm_release import (
 from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.session import get_db_session
 from app.infra.db.utils import serialize_orm
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+from app.llm_orchestration.models import (
+    GatewayError,
+    GatewayMeta,
+    GatewayResult,
+    OutputValidationError,
+    PromptRenderError,
+    UnknownUseCaseError,
+    UsageInfo,
+)
 from app.main import app
 from tests.integration.app_db import open_app_db_session
+
+
+def _seed_admin_execute_sample_catalog(db: Session) -> dict[str, Any]:
+    """Active snapshot + assembly + sample payload pour POST execute-sample (réutilisable)."""
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    sample_payload_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    manifest_entry_id = "natal:interpretation:premium:fr-FR"
+    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+
+    db.execute(delete(LlmActiveReleaseModel))
+    db.execute(
+        delete(LlmSamplePayloadModel).where(
+            LlmSamplePayloadModel.feature == "natal",
+            LlmSamplePayloadModel.locale == "fr-FR",
+        )
+    )
+    db.add(
+        LlmUseCaseConfigModel(
+            key=use_case_key,
+            display_name="Natal",
+            description="Interpretation natale",
+        )
+    )
+    db.flush()
+    template_model = LlmPromptVersionModel(
+        id=template_id,
+        use_case_key=use_case_key,
+        status=PromptStatus.PUBLISHED,
+        developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+        model="gpt-5",
+        temperature=0.2,
+        max_output_tokens=900,
+        created_by="test-admin",
+    )
+    db.add(template_model)
+    assembly_model = PromptAssemblyConfigModel(
+        id=assembly_id,
+        feature="natal",
+        subfeature="interpretation",
+        plan="premium",
+        locale="fr-FR",
+        feature_template_ref=template_id,
+        execution_profile_ref=profile_id,
+        execution_config={
+            "model": "gpt-5",
+            "temperature": None,
+            "max_output_tokens": 900,
+            "timeout_seconds": 30,
+        },
+        status=PromptStatus.PUBLISHED,
+        created_by="test-admin",
+    )
+    assembly_model.feature_template = template_model
+    db.add(assembly_model)
+    db.add(
+        LlmExecutionProfileModel(
+            id=profile_id,
+            name="live-profile",
+            provider="openai",
+            model="gpt-5",
+            reasoning_profile="off",
+            verbosity_profile="balanced",
+            output_mode="free_text",
+            tool_mode="none",
+            max_output_tokens=1234,
+            timeout_seconds=99,
+            feature="natal",
+            subfeature="interpretation",
+            plan="premium",
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+    )
+    db.add(
+        LlmSamplePayloadModel(
+            id=sample_payload_id,
+            name="natal-runtime",
+            feature="natal",
+            locale="fr-FR",
+            payload_json={
+                "chart_json": {"sun": "aries"},
+                "last_user_msg": "hello from sample",
+            },
+            description="payload runtime",
+            is_default=True,
+            is_active=True,
+        )
+    )
+    snapshot = LlmReleaseSnapshotModel(
+        id=snapshot_id,
+        version="test-runtime-preview-v1",
+        manifest=_build_manifest(manifest_entry_id),
+        status=ReleaseStatus.ACTIVE,
+        created_by="test-admin",
+    )
+    snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
+        **serialize_orm(assembly_model),
+        "_feature_template": serialize_orm(template_model),
+    }
+    db.add(snapshot)
+    db.add(
+        LlmActiveReleaseModel(
+            release_snapshot_id=snapshot_id,
+            activated_by="test-admin",
+            activated_at=datetime.now(timezone.utc),
+        )
+    )
+    db.commit()
+    return {
+        "snapshot_id": snapshot_id,
+        "template_id": template_id,
+        "assembly_id": assembly_id,
+        "sample_payload_id": sample_payload_id,
+        "profile_id": profile_id,
+        "manifest_entry_id": manifest_entry_id,
+        "use_case_key": use_case_key,
+    }
+
+
+def _teardown_admin_execute_sample_catalog(db: Session, ctx: dict[str, Any]) -> None:
+    db.execute(delete(LlmActiveReleaseModel))
+    snap_id = ctx["snapshot_id"]
+    db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snap_id))
+    sp_id = ctx["sample_payload_id"]
+    db.execute(delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id == sp_id))
+    asm_id = ctx["assembly_id"]
+    db.execute(delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == asm_id))
+    prof_id = ctx["profile_id"]
+    db.execute(delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == prof_id))
+    tpl_id = ctx["template_id"]
+    db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == tpl_id))
+    uc_key = ctx["use_case_key"]
+    db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == uc_key))
+    db.commit()
 
 
 async def mock_admin_user():
@@ -1705,8 +1852,7 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
         assert mocked_audit.call_args.kwargs["status"] == "failed"
         assert mocked_audit.call_args.kwargs["manifest_entry_id"] == manifest_entry_id
         assert (
-            mocked_audit.call_args.kwargs["details"]["failure_kind"]
-            == "runtime_preview_incomplete"
+            mocked_audit.call_args.kwargs["details"]["failure_kind"] == "runtime_preview_incomplete"
         )
     finally:
         app.dependency_overrides.clear()
@@ -1734,120 +1880,18 @@ def test_admin_llm_catalog_execute_sample_success_mocked_gateway():
     app.dependency_overrides[require_admin_user] = mock_admin_user
     app.dependency_overrides[get_db_session] = lambda: db
 
-    snapshot_id = uuid.uuid4()
-    template_id = uuid.uuid4()
-    assembly_id = uuid.uuid4()
-    sample_payload_id = uuid.uuid4()
-    profile_id = uuid.uuid4()
-    manifest_entry_id = "natal:interpretation:premium:fr-FR"
-    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+    ctx = _seed_admin_execute_sample_catalog(db)
+    manifest_entry_id = str(ctx["manifest_entry_id"])
+    sample_payload_id = ctx["sample_payload_id"]
+    use_case_key = str(ctx["use_case_key"])
 
     try:
-        db.execute(delete(LlmActiveReleaseModel))
-        db.execute(
-            delete(LlmSamplePayloadModel).where(
-                LlmSamplePayloadModel.feature == "natal",
-                LlmSamplePayloadModel.locale == "fr-FR",
-            )
-        )
-        db.add(
-            LlmUseCaseConfigModel(
-                key=use_case_key,
-                display_name="Natal",
-                description="Interpretation natale",
-            )
-        )
-        db.flush()
-        template_model = LlmPromptVersionModel(
-            id=template_id,
-            use_case_key=use_case_key,
-            status=PromptStatus.PUBLISHED,
-            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
-            created_by="test-admin",
-        )
-        db.add(template_model)
-        assembly_model = PromptAssemblyConfigModel(
-            id=assembly_id,
-            feature="natal",
-            subfeature="interpretation",
-            plan="premium",
-            locale="fr-FR",
-            feature_template_ref=template_id,
-            execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
-            status=PromptStatus.PUBLISHED,
-            created_by="test-admin",
-        )
-        assembly_model.feature_template = template_model
-        db.add(assembly_model)
-        db.add(
-            LlmExecutionProfileModel(
-                id=profile_id,
-                name="live-profile",
-                provider="openai",
-                model="gpt-5",
-                reasoning_profile="off",
-                verbosity_profile="balanced",
-                output_mode="free_text",
-                tool_mode="none",
-                max_output_tokens=1234,
-                timeout_seconds=99,
-                feature="natal",
-                subfeature="interpretation",
-                plan="premium",
-                status=PromptStatus.PUBLISHED,
-                created_by="test-admin",
-            )
-        )
-        db.add(
-            LlmSamplePayloadModel(
-                id=sample_payload_id,
-                name="natal-runtime",
-                feature="natal",
-                locale="fr-FR",
-                payload_json={
-                    "chart_json": {"sun": "aries"},
-                    "last_user_msg": "hello from sample",
-                },
-                description="payload runtime",
-                is_default=True,
-                is_active=True,
-            )
-        )
-        snapshot = LlmReleaseSnapshotModel(
-            id=snapshot_id,
-            version="test-runtime-preview-v1",
-            manifest=_build_manifest(manifest_entry_id),
-            status=ReleaseStatus.ACTIVE,
-            created_by="test-admin",
-        )
-        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
-            **serialize_orm(assembly_model),
-            "_feature_template": serialize_orm(template_model),
-        }
-        db.add(snapshot)
-        db.add(
-            LlmActiveReleaseModel(
-                release_snapshot_id=snapshot_id,
-                activated_by="test-admin",
-                activated_at=datetime.now(timezone.utc),
-            )
-        )
-        db.commit()
-
         gw_result = GatewayResult(
             use_case=use_case_key,
             request_id="gw-req",
             trace_id="gw-tr",
             raw_output="mocked-llm-output",
+            structured_output={"provider": "openai", "chart_json": "secret-chart"},
             usage=UsageInfo(input_tokens=3, output_tokens=5, total_tokens=8),
             meta=GatewayMeta(
                 latency_ms=12,
@@ -1873,6 +1917,13 @@ def test_admin_llm_catalog_execute_sample_success_mocked_gateway():
         assert response.status_code == 200
         body = response.json()["data"]
         assert body["raw_output"] == "mocked-llm-output"
+        assert body["structured_output_parseable"] is True
+        assert body["structured_output"] is not None
+        assert body["structured_output"]["provider"] == "openai"
+        assert body["structured_output"]["chart_json"] == "[REDACTED]"
+        assert isinstance(body["prompt_sent"], str) and len(body["prompt_sent"]) > 0
+        assert isinstance(body["resolved_runtime_parameters"], dict)
+        assert body["execution_path"] == "nominal"
         assert body["admin_manual_execution"] is True
         assert body["manifest_entry_id"] == manifest_entry_id
         assert body["sample_payload_id"] == str(sample_payload_id)
@@ -1886,18 +1937,201 @@ def test_admin_llm_catalog_execute_sample_success_mocked_gateway():
     finally:
         app.dependency_overrides.clear()
         db.rollback()
-        db.execute(delete(LlmActiveReleaseModel))
-        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
-        db.execute(
-            delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id == sample_payload_id)
+        _teardown_admin_execute_sample_catalog(db, ctx)
+        db.close()
+
+
+def test_admin_llm_catalog_execute_sample_success_without_structured_output_mocked():
+    """Succès HTTP 200 sans sortie structurée (free text / schéma absent) — Dev Notes testing."""
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    ctx = _seed_admin_execute_sample_catalog(db)
+    manifest_entry_id = str(ctx["manifest_entry_id"])
+    sample_payload_id = ctx["sample_payload_id"]
+    use_case_key = str(ctx["use_case_key"])
+
+    try:
+        gw_result = GatewayResult(
+            use_case=use_case_key,
+            request_id="gw-req",
+            trace_id="gw-tr",
+            raw_output="plain text response only",
+            usage=UsageInfo(input_tokens=1, output_tokens=2, total_tokens=3),
+            meta=GatewayMeta(
+                latency_ms=7,
+                model="gpt-5",
+                provider="openai",
+                validation_status="valid",
+            ),
         )
-        db.execute(
-            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
-        )
-        db.execute(
-            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
-        )
-        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
-        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
-        db.commit()
+        with (
+            patch(
+                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                new_callable=AsyncMock,
+                return_value=gw_result,
+            ),
+            patch(
+                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+            ),
+        ):
+            response = client.post(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
+                json={"sample_payload_id": str(sample_payload_id)},
+            )
+        assert response.status_code == 200
+        body = response.json()["data"]
+        assert body["raw_output"] == "plain text response only"
+        assert body["structured_output"] is None
+        assert body["structured_output_parseable"] is False
+        assert body["validation_status"] == "valid"
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        _teardown_admin_execute_sample_catalog(db, ctx)
+        db.close()
+
+
+def test_admin_llm_catalog_execute_sample_unknown_use_case_error_mocked():
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+    ctx = _seed_admin_execute_sample_catalog(db)
+    manifest_entry_id = str(ctx["manifest_entry_id"])
+    sample_payload_id = ctx["sample_payload_id"]
+    try:
+        with (
+            patch(
+                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                new_callable=AsyncMock,
+                side_effect=UnknownUseCaseError("use case not registered"),
+            ),
+            patch(
+                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+            ) as mocked_audit,
+        ):
+            response = client.post(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
+                json={"sample_payload_id": str(sample_payload_id)},
+            )
+        assert response.status_code == 422
+        err = response.json()["error"]
+        assert err["details"]["failure_kind"] == "unknown_use_case"
+        assert mocked_audit.call_count == 1
+        assert mocked_audit.call_args.kwargs["status"] == "failed"
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        _teardown_admin_execute_sample_catalog(db, ctx)
+        db.close()
+
+
+def test_admin_llm_catalog_execute_sample_output_validation_error_mocked():
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+    ctx = _seed_admin_execute_sample_catalog(db)
+    manifest_entry_id = str(ctx["manifest_entry_id"])
+    sample_payload_id = ctx["sample_payload_id"]
+    try:
+        with (
+            patch(
+                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                new_callable=AsyncMock,
+                side_effect=OutputValidationError(
+                    "schema mismatch", details={"errors": ["missing title"]}
+                ),
+            ),
+            patch(
+                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+            ) as mocked_audit,
+        ):
+            response = client.post(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
+                json={"sample_payload_id": str(sample_payload_id)},
+            )
+        assert response.status_code == 422
+        err = response.json()["error"]
+        assert err["details"]["failure_kind"] == "output_validation"
+        assert mocked_audit.call_count == 1
+        assert mocked_audit.call_args.kwargs["status"] == "failed"
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        _teardown_admin_execute_sample_catalog(db, ctx)
+        db.close()
+
+
+def test_admin_llm_catalog_execute_sample_prompt_render_error_mocked():
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+    ctx = _seed_admin_execute_sample_catalog(db)
+    manifest_entry_id = str(ctx["manifest_entry_id"])
+    sample_payload_id = ctx["sample_payload_id"]
+    try:
+        with (
+            patch(
+                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                new_callable=AsyncMock,
+                side_effect=PromptRenderError("missing placeholder"),
+            ),
+            patch(
+                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+            ) as mocked_audit,
+        ):
+            response = client.post(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
+                json={"sample_payload_id": str(sample_payload_id)},
+            )
+        assert response.status_code == 422
+        err = response.json()["error"]
+        assert err["details"]["failure_kind"] == "prompt_render"
+        assert mocked_audit.call_count == 1
+        assert mocked_audit.call_args.kwargs["status"] == "failed"
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        _teardown_admin_execute_sample_catalog(db, ctx)
+        db.close()
+
+
+def test_admin_llm_catalog_execute_sample_provider_gateway_error_mocked():
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+    ctx = _seed_admin_execute_sample_catalog(db)
+    manifest_entry_id = str(ctx["manifest_entry_id"])
+    sample_payload_id = ctx["sample_payload_id"]
+    try:
+        with (
+            patch(
+                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                new_callable=AsyncMock,
+                side_effect=GatewayError("upstream unavailable", error_code="provider_upstream"),
+            ),
+            patch(
+                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+            ) as mocked_audit,
+        ):
+            response = client.post(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
+                json={"sample_payload_id": str(sample_payload_id)},
+            )
+        assert response.status_code == 502
+        err = response.json()["error"]
+        assert err["details"]["failure_kind"] == "provider_error"
+        assert err["details"]["gateway_error_class"] == "GatewayError"
+        assert mocked_audit.call_count == 1
+        assert mocked_audit.call_args.kwargs["status"] == "failed"
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        _teardown_admin_execute_sample_catalog(db, ctx)
         db.close()

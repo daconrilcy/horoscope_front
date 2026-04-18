@@ -99,6 +99,8 @@ OPERATIONAL_FIELDS: Set[str] = {
     "reason",
     "account_id",
     "failure_rate",
+    "failure_kind",
+    "gateway_error_class",
     "errors",
     "cached",
     "action",

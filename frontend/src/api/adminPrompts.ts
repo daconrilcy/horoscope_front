@@ -509,8 +509,14 @@ export type AdminCatalogManualExecuteResult = {
   request_id: string
   trace_id: string
   gateway_request_id: string
+  prompt_sent: string
+  resolved_runtime_parameters: Record<string, unknown>
   raw_output: string
+  structured_output: Record<string, unknown> | null
+  structured_output_parseable: boolean
   validation_status: string
+  execution_path: string
+  meta_validation_errors: string[] | null
   latency_ms: number
   admin_manual_execution: true
   usage_input_tokens: number

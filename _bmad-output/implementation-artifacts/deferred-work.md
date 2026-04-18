@@ -11,3 +11,9 @@
 ## Deferred from: code review of 68-3-gerer-sample-payloads-depuis-surface-admin.md (2026-04-17)
 
 - **Double chargement catalogue sur l’onglet samples** — `AdminSamplePayloadsAdmin` refait un `useAdminLlmCatalog` pour les facettes alors que la page parent charge déjà le catalogue sur l’onglet catalogue ; regrouper ou mutualiser les facettes pour réduire les appels réseau.
+
+## Deferred from: code review of 69-2-afficher-retour-llm-brut-structure-metadonnees-execution.md (2026-04-18)
+
+- **`failure_kind` `render_pipeline` vs prévisualisation incomplète** — Libellé pouvant évoquer une erreur de rendu template plutôt que des placeholders bloquants ; amélioration par renommage ou doc opérateur si retour terrain.
+
+- **`anonymize_text` sans garde-fou dans le helper de payload manuel** — Même pattern que sur d’autres chemins ; traiter transversalement si besoin de tolérance aux pannes de config salt.

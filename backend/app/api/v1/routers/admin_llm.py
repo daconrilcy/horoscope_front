@@ -34,6 +34,7 @@ from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSna
 from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
+from app.infra.llm.anonymizer import anonymize_text
 from app.llm_orchestration.admin_models import (
     LlmOutputSchema,
     LlmPersona,
@@ -49,9 +50,12 @@ from app.llm_orchestration.models import (
     ExecutionUserInput,
     GatewayConfigError,
     GatewayError,
+    GatewayResult,
     InputValidationError,
     LLMExecutionRequest,
+    OutputValidationError,
     PromptRenderError,
+    UnknownUseCaseError,
 )
 from app.llm_orchestration.persona_boundary import (
     PersonaBoundaryViolation,
@@ -329,8 +333,14 @@ class AdminCatalogManualExecuteResponseData(BaseModel):
     request_id: str
     trace_id: str
     gateway_request_id: str
+    prompt_sent: str
+    resolved_runtime_parameters: dict[str, Any]
     raw_output: str
+    structured_output: dict[str, Any] | None = None
+    structured_output_parseable: bool = False
     validation_status: str
+    execution_path: str = "nominal"
+    meta_validation_errors: list[str] | None = None
     latency_ms: int
     admin_manual_execution: Literal[True] = True
     usage_input_tokens: int = 0
@@ -798,6 +808,72 @@ def _admin_catalog_runtime_preview_blocking_reasons(view: AdminResolvedAssemblyV
         if placeholder.status in ("blocking_missing", "unknown"):
             reasons.append(f"placeholder:{placeholder.name}:{placeholder.status}")
     return reasons
+
+
+def _build_admin_manual_execute_response_payload(
+    *,
+    built: AdminResolvedAssemblyView,
+    result: GatewayResult,
+    manifest_entry_id: str,
+    sample_payload_id: uuid.UUID,
+    request_id: str,
+    trace_id: str,
+    use_case_key: str,
+) -> AdminCatalogManualExecuteResponseData:
+    """Construit le payload opérateur (prompt, params runtime, sorties, redaction)."""
+    rendered = built.transformation_pipeline.rendered_prompt
+    prompt_sent = anonymize_text(rendered if rendered else "")
+
+    structured = result.structured_output
+    structured_sanitized: dict[str, Any] | None = None
+    if isinstance(structured, dict):
+        structured_sanitized = sanitize_payload(structured, Sink.ADMIN_API)
+    parseable = structured_sanitized is not None
+
+    meta = result.meta
+    runtime_params = sanitize_payload(
+        {
+            "translated_provider_params": meta.translated_provider_params or {},
+            "reasoning_profile": meta.reasoning_profile,
+            "verbosity_profile": meta.verbosity_profile,
+            "output_mode": meta.output_mode,
+            "tool_mode": meta.tool_mode,
+            "max_output_tokens_source": meta.max_output_tokens_source,
+            "model_override_active": meta.model_override_active,
+            "prompt_version_id": meta.prompt_version_id,
+            "output_schema_id": meta.output_schema_id,
+            "schema_version": meta.schema_version,
+        },
+        Sink.ADMIN_API,
+    )
+
+    raw_out = anonymize_text(result.raw_output or "")
+    val_errors: list[str] | None = None
+    if meta.validation_errors:
+        val_errors = [anonymize_text(line) for line in meta.validation_errors]
+
+    return AdminCatalogManualExecuteResponseData(
+        manifest_entry_id=manifest_entry_id,
+        sample_payload_id=str(sample_payload_id),
+        use_case_key=use_case_key,
+        provider=meta.provider or "openai",
+        model=meta.model,
+        request_id=request_id,
+        trace_id=trace_id,
+        gateway_request_id=result.request_id,
+        prompt_sent=prompt_sent,
+        resolved_runtime_parameters=runtime_params,
+        raw_output=raw_out,
+        structured_output=structured_sanitized,
+        structured_output_parseable=parseable,
+        validation_status=meta.validation_status,
+        execution_path=meta.execution_path,
+        meta_validation_errors=val_errors,
+        latency_ms=meta.latency_ms,
+        admin_manual_execution=True,
+        usage_input_tokens=result.usage.input_tokens,
+        usage_output_tokens=result.usage.output_tokens,
+    )
 
 
 def _record_audit_event(
@@ -2066,6 +2142,7 @@ async def execute_admin_catalog_sample_payload(
             code=AdminLlmErrorCode.RUNTIME_PREVIEW_INCOMPLETE_FOR_EXECUTION.value,
             message="runtime preview is incomplete; cannot execute provider call",
             details={
+                "failure_kind": "render_pipeline",
                 "manifest_entry_id": manifest_entry_id,
                 "sample_payload_id": str(payload.sample_payload_id),
                 "blocking_reasons": blocking,
@@ -2140,6 +2217,7 @@ async def execute_admin_catalog_sample_payload(
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
             message=exc.message,
             details={
+                "failure_kind": "input_validation",
                 "manifest_entry_id": manifest_entry_id,
                 "sample_payload_id": str(payload.sample_payload_id),
                 "error_code": getattr(exc, "error_code", None),
@@ -2171,6 +2249,104 @@ async def execute_admin_catalog_sample_payload(
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
             message=exc.message,
             details={
+                "failure_kind": "gateway_config",
+                "manifest_entry_id": manifest_entry_id,
+                "sample_payload_id": str(payload.sample_payload_id),
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+    except OutputValidationError as exc:
+        logger.warning(
+            "admin_manual_llm_execute_output_invalid manifest_entry_id=%s error=%s",
+            manifest_entry_id,
+            exc.message,
+        )
+        _record_admin_manual_execution_audit(
+            db,
+            request_id=request_id,
+            actor=current_user,
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=payload.sample_payload_id,
+            status="failed",
+            details={
+                "failure_kind": "output_validation",
+                "error_message": exc.message,
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+        db.commit()
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
+            message=exc.message,
+            details={
+                "failure_kind": "output_validation",
+                "manifest_entry_id": manifest_entry_id,
+                "sample_payload_id": str(payload.sample_payload_id),
+                "error_code": getattr(exc, "error_code", None),
+                "validation_errors": (exc.details or {}).get("errors"),
+            },
+        )
+    except PromptRenderError as exc:
+        logger.warning(
+            "admin_manual_llm_execute_prompt_render manifest_entry_id=%s error=%s",
+            manifest_entry_id,
+            exc.message,
+        )
+        _record_admin_manual_execution_audit(
+            db,
+            request_id=request_id,
+            actor=current_user,
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=payload.sample_payload_id,
+            status="failed",
+            details={
+                "failure_kind": "prompt_render",
+                "error_message": exc.message,
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+        db.commit()
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
+            message=exc.message,
+            details={
+                "failure_kind": "prompt_render",
+                "manifest_entry_id": manifest_entry_id,
+                "sample_payload_id": str(payload.sample_payload_id),
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+    except UnknownUseCaseError as exc:
+        logger.warning(
+            "admin_manual_llm_execute_unknown_use_case manifest_entry_id=%s error=%s",
+            manifest_entry_id,
+            exc.message,
+        )
+        _record_admin_manual_execution_audit(
+            db,
+            request_id=request_id,
+            actor=current_user,
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=payload.sample_payload_id,
+            status="failed",
+            details={
+                "failure_kind": "unknown_use_case",
+                "error_message": exc.message,
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+        db.commit()
+        return _error_response(
+            status_code=422,
+            request_id=request_id,
+            code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
+            message=exc.message,
+            details={
+                "failure_kind": "unknown_use_case",
                 "manifest_entry_id": manifest_entry_id,
                 "sample_payload_id": str(payload.sample_payload_id),
                 "error_code": getattr(exc, "error_code", None),
@@ -2190,9 +2366,10 @@ async def execute_admin_catalog_sample_payload(
             sample_payload_id=payload.sample_payload_id,
             status="failed",
             details={
-                "failure_kind": "gateway_error",
+                "failure_kind": "provider_error",
                 "error_message": exc.message,
                 "error_code": getattr(exc, "error_code", None),
+                "gateway_error_class": type(exc).__name__,
             },
         )
         db.commit()
@@ -2202,9 +2379,11 @@ async def execute_admin_catalog_sample_payload(
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
             message=exc.message,
             details={
+                "failure_kind": "provider_error",
                 "manifest_entry_id": manifest_entry_id,
                 "sample_payload_id": str(payload.sample_payload_id),
                 "error_code": getattr(exc, "error_code", None),
+                "gateway_error_class": type(exc).__name__,
             },
         )
     except Exception as exc:
@@ -2226,7 +2405,11 @@ async def execute_admin_catalog_sample_payload(
             request_id=request_id,
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
             message=str(exc),
-            details={"manifest_entry_id": manifest_entry_id},
+            details={
+                "failure_kind": "unexpected",
+                "manifest_entry_id": manifest_entry_id,
+                "sample_payload_id": str(payload.sample_payload_id),
+            },
         )
     _record_admin_manual_execution_audit(
         db,
@@ -2245,21 +2428,14 @@ async def execute_admin_catalog_sample_payload(
     )
     db.commit()
     return {
-        "data": AdminCatalogManualExecuteResponseData(
+        "data": _build_admin_manual_execute_response_payload(
+            built=built,
+            result=result,
             manifest_entry_id=manifest_entry_id,
-            sample_payload_id=str(payload.sample_payload_id),
-            use_case_key=built.use_case_key,
-            provider=result.meta.provider or "openai",
-            model=result.meta.model,
+            sample_payload_id=payload.sample_payload_id,
             request_id=request_id,
             trace_id=trace_id,
-            gateway_request_id=result.request_id,
-            raw_output=result.raw_output,
-            validation_status=result.meta.validation_status,
-            latency_ms=result.meta.latency_ms,
-            admin_manual_execution=True,
-            usage_input_tokens=result.usage.input_tokens,
-            usage_output_tokens=result.usage.output_tokens,
+            use_case_key=built.use_case_key,
         ),
         "meta": ResponseMeta(request_id=request_id),
     }

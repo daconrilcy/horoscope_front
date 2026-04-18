@@ -200,7 +200,9 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByText("developer content")).toBeInTheDocument()
     expect(screen.getAllByText("persona block").length).toBeGreaterThan(0)
     expect(screen.getByText(/Sortie d'exécution live/)).toBeInTheDocument()
-    expect(screen.getByText(/Vide pour l'instant/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Passez en prévisualisation runtime pour exécuter le fournisseur/),
+    ).toBeInTheDocument()
     expect(screen.getByText("Construction logique")).toBeInTheDocument()
     expect(screen.getByText("manifest_entry_id")).toBeInTheDocument()
     expect(screen.getByText("composition_sources")).toBeInTheDocument()
