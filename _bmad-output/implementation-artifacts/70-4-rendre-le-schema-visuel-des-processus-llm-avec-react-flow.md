@@ -45,7 +45,7 @@ so that je comprenne rapidement la chaine de composition et les dependances runt
 
 - [x] [Review][Decision] Masquer l attribution React Flow via `proOptions.hideAttribution` — confirmer conformite licence / politique produit (attribution visible vs UI admin epuree). **Résolu 2026-04-18 :** choix A — garder le masquage (MIT) ; commentaire dans `AdminPromptsLogicGraph.tsx`.
 
-- [x] [Review][Patch] Reinitialiser l Error Boundary quand la projection change — `LogicGraphErrorBoundary` utilise `key="flow"` fixe ; apres une erreur de rendu React Flow, un changement d entree catalogue peut laisser l operateur bloque sur le fallback texte. **Corrigé :** `key={logicGraphRemountKey(projection)}` (detail noeud `manifest`).
+- [x] [Review][Patch] Reinitialiser l Error Boundary quand la projection change — `LogicGraphErrorBoundary` utilise `key="flow"` fixe ; apres une erreur de rendu React Flow, un changement d entree catalogue peut laisser l operateur bloque sur le fallback texte. **Corrigé :** `boundaryRemountKey` derive de la projection (manifest, mode d inspection, snapshot, empreinte placeholders) + test unitaire de recuperation sur meme manifest.
 
 - [x] [Review][Patch] `console.error` dans `componentDidCatch` — bruit ou fuite de stack en production ; preferer logger applicatif ou garde `import.meta.env.DEV`. **Corrigé :** log uniquement si `import.meta.env.DEV`.
 
@@ -176,6 +176,7 @@ gpt-5
 - Revue code 2026-04-18 : correctifs (cle Error Boundary par `manifest_entry_id`, logs `componentDidCatch` en DEV, commentaire MIT `hideAttribution`) ; passe 2 sans nouveau finding bloquant.
 - Artefacts synchronises avec le depot (commit `0088af8d`) : `sprint-status.yaml` (70-4 `done`), story sous `_bmad-output/implementation-artifacts/`, defer dans `67-To-69-deferred-work.md`.
 - Suivi post-revue : mode dense — grille des nœuds opérateur (templates, profils, politique) sous le résumé texte (AC3) ; `boundaryRemountKey` sur la projection (manifest, mode inspection, snapshot, empreinte placeholders) pour remonter l Error Boundary hors simple changement de manifest.
+- Couverture post-revue : test Vitest dedie `AdminPromptsLogicGraph.test.tsx` qui force une erreur React Flow puis valide la recuperation sur la meme entree quand `boundaryRemountKey` change.
 
 ### File List
 
@@ -194,3 +195,4 @@ gpt-5
 - 2026-04-18 : Revue code — clé remontage Error Boundary (`manifest_entry_id`), `console.error` réservé au DEV, commentaire MIT `hideAttribution` ; story passée `done`.
 - 2026-04-18 : Documentation artefacts alignée (`sprint-status`, notes de completion, defer 67–69). Dépôt : commit `0088af8d`.
 - 2026-04-18 : Correctifs graphe dense (`boundaryRemountKey`, détails nœuds opérateur AC3) ; tests Vitest ; sync artefacts sprint. Dépôt : correctifs `34b84f5d` ; référence SHA dans artefact `be4ae6ad`.
+- 2026-04-18 : Couverture de non-régression ajoutée sur le remount de l Error Boundary React Flow pour la même entrée catalogue quand le mode/projection change.
