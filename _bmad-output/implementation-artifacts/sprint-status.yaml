@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-18T21:49:00.0000000+02:00'
+last_updated: '2026-04-18T22:40:19.8782920+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -660,7 +660,7 @@ development_status:
   70-6-refondre-la-route-release-pour-l-investigation-snapshot: done
   70-7-refondre-la-route-consumption-pour-le-pilotage-operable: done
   70-8-harmoniser-les-libelles-l-accessibilite-et-le-responsive: done
-  70-9-editer-les-prompts-canoniques-via-des-formulaires-admin-guides: backlog
-  70-10-historiser-comparer-et-auditer-chaque-sauvegarde-de-prompt: backlog
+  70-9-editer-les-prompts-canoniques-via-des-formulaires-admin-guides: done
+  70-10-historiser-comparer-et-auditer-chaque-sauvegarde-de-prompt: ready-for-dev
   epic-70-retrospective: backlog
   67-to-69-deferred-work: done

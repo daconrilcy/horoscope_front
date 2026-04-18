@@ -2513,6 +2513,435 @@ describe("AdminPromptsPage", () => {
     expect(screen.queryByText("req-reset-1")).not.toBeInTheDocument()
   })
 
+  it("legacy: préremplit le formulaire de nouvelle version et crée un draft visible dans l'historique", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    let historyCallCount = 0
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({
+          data: [
+            {
+              key: "chat",
+              display_name: "Chat guidance",
+              description: "Prompt chat",
+              persona_strategy: "default",
+              safety_profile: "astro",
+              allowed_persona_ids: [],
+              active_prompt_version_id: "prompt-published",
+            },
+          ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && !init?.method) {
+        historyCallCount += 1
+        return makeJsonResponse({
+          data:
+            historyCallCount >= 2
+              ? [
+                  {
+                    id: "prompt-draft-3",
+                    use_case_key: "chat",
+                    status: "draft",
+                    developer_prompt: "Prompt draft enrichi",
+                    model: "gpt-5.1",
+                    temperature: 0.9,
+                    max_output_tokens: 1600,
+                    fallback_use_case_key: null,
+                    created_by: "admin@example.com",
+                    created_at: "2026-04-18T10:30:00Z",
+                    published_at: null,
+                  },
+                  {
+                    id: "prompt-published",
+                    use_case_key: "chat",
+                    status: "published",
+                    developer_prompt: "Prompt historique",
+                    model: "gpt-5",
+                    temperature: 0.7,
+                    max_output_tokens: 1200,
+                    fallback_use_case_key: null,
+                    created_by: "admin@example.com",
+                    created_at: "2026-04-17T09:00:00Z",
+                    published_at: "2026-04-17T09:05:00Z",
+                  },
+                ]
+              : [
+                  {
+                    id: "prompt-published",
+                    use_case_key: "chat",
+                    status: "published",
+                    developer_prompt: "Prompt historique",
+                    model: "gpt-5",
+                    temperature: 0.7,
+                    max_output_tokens: 1200,
+                    fallback_use_case_key: null,
+                    created_by: "admin@example.com",
+                    created_at: "2026-04-17T09:00:00Z",
+                    published_at: "2026-04-17T09:05:00Z",
+                  },
+                  {
+                    id: "prompt-older",
+                    use_case_key: "chat",
+                    status: "archived",
+                    developer_prompt: "Prompt archive",
+                    model: "gpt-4.1",
+                    temperature: 0.5,
+                    max_output_tokens: 900,
+                    fallback_use_case_key: "natal",
+                    created_by: "ops@example.com",
+                    created_at: "2026-04-15T09:00:00Z",
+                    published_at: null,
+                  },
+                ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && init?.method === "POST") {
+        expect(JSON.parse(String(init.body))).toEqual({
+          developer_prompt: "Prompt draft enrichi",
+          model: "gpt-5.1",
+          temperature: 0.9,
+          max_output_tokens: 1600,
+          fallback_use_case_key: null,
+        })
+        return makeJsonResponse({
+          data: {
+            id: "prompt-draft-3",
+            use_case_key: "chat",
+            status: "draft",
+            developer_prompt: "Prompt draft enrichi",
+            model: "gpt-5.1",
+            temperature: 0.9,
+            max_output_tokens: 1600,
+            fallback_use_case_key: null,
+            created_by: "admin@example.com",
+            created_at: "2026-04-18T10:30:00Z",
+            published_at: null,
+          },
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    })
+    vi.stubGlobal("fetch", fetchSpy)
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+
+    expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
+    expect(screen.getByLabelText("Prompt développeur")).toHaveValue("Prompt historique")
+    expect(screen.getByLabelText("Modèle")).toHaveValue("gpt-5")
+    expect(screen.getByLabelText("Température")).toHaveValue(0.7)
+    expect(screen.getByLabelText("Budget de sortie")).toHaveValue(1200)
+    expect(screen.getByText("Statut courant")).toBeInTheDocument()
+    expect(screen.getAllByText("Publié").length).toBeGreaterThan(0)
+
+    await userEvent.clear(screen.getByLabelText("Prompt développeur"))
+    await userEvent.type(screen.getByLabelText("Prompt développeur"), "Prompt draft enrichi")
+    await userEvent.clear(screen.getByLabelText("Modèle"))
+    await userEvent.type(screen.getByLabelText("Modèle"), "gpt-5.1")
+    await userEvent.clear(screen.getByLabelText("Température"))
+    await userEvent.type(screen.getByLabelText("Température"), "0.9")
+    await userEvent.clear(screen.getByLabelText("Budget de sortie"))
+    await userEvent.type(screen.getByLabelText("Budget de sortie"), "1600")
+
+    await userEvent.click(screen.getByRole("button", { name: "Créer une nouvelle version" }))
+
+    await waitFor(() => {
+      expect(fetchSpy.mock.calls.some(([url, init]) => String(url).endsWith("/v1/admin/llm/use-cases/chat/prompts") && init?.method === "POST")).toBe(true)
+    })
+    await waitFor(() => {
+      expect(screen.getByText(/Nouvelle version non publiée créée/)).toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(screen.getAllByText("prompt-draft-3").length).toBeGreaterThan(0)
+    })
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText("Version de référence pour la comparaison legacy"),
+      ).toHaveValue("prompt-draft-3")
+    })
+  })
+
+  it("legacy: bloque la sauvegarde si la validation locale échoue", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({
+          data: [
+            {
+              key: "chat",
+              display_name: "Chat guidance",
+              description: "Prompt chat",
+              persona_strategy: "default",
+              safety_profile: "astro",
+              allowed_persona_ids: [],
+              active_prompt_version_id: "prompt-published",
+            },
+            {
+              key: "natal",
+              display_name: "Natal",
+              description: "Prompt natal",
+              persona_strategy: "default",
+              safety_profile: "astro",
+              allowed_persona_ids: [],
+              active_prompt_version_id: null,
+            },
+          ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && !init?.method) {
+        return makeJsonResponse({
+          data: [
+            {
+              id: "prompt-published",
+              use_case_key: "chat",
+              status: "published",
+              developer_prompt: "Prompt historique",
+              model: "gpt-5",
+              temperature: 0.7,
+              max_output_tokens: 1200,
+              fallback_use_case_key: null,
+              created_by: "admin@example.com",
+              created_at: "2026-04-17T09:00:00Z",
+              published_at: "2026-04-17T09:05:00Z",
+            },
+          ],
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    })
+    vi.stubGlobal("fetch", fetchSpy)
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
+
+    await userEvent.clear(screen.getByLabelText("Prompt développeur"))
+    await userEvent.clear(screen.getByLabelText("Température"))
+    await userEvent.type(screen.getByLabelText("Température"), "3")
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Créer une nouvelle version" })).toBeEnabled()
+    })
+    await userEvent.click(screen.getByRole("button", { name: "Créer une nouvelle version" }))
+
+    expect(await screen.findAllByRole("alert")).toHaveLength(2)
+    expect(screen.getByText("Le prompt développeur est requis.")).toBeInTheDocument()
+    expect(screen.getByText("La température doit rester comprise entre 0 et 2.")).toBeInTheDocument()
+    expect(fetchSpy.mock.calls.some(([url, init]) => String(url).endsWith("/v1/admin/llm/use-cases/chat/prompts") && init?.method === "POST")).toBe(false)
+  })
+
+  it("legacy: rejette une température vide au lieu de la convertir silencieusement à 0", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({
+          data: [
+            {
+              key: "chat",
+              display_name: "Chat guidance",
+              description: "Prompt chat",
+              persona_strategy: "default",
+              safety_profile: "astro",
+              allowed_persona_ids: [],
+              active_prompt_version_id: "prompt-published",
+            },
+          ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && !init?.method) {
+        return makeJsonResponse({
+          data: [
+            {
+              id: "prompt-published",
+              use_case_key: "chat",
+              status: "published",
+              developer_prompt: "Prompt historique",
+              model: "gpt-5",
+              temperature: 0.7,
+              max_output_tokens: 1200,
+              fallback_use_case_key: null,
+              created_by: "admin@example.com",
+              created_at: "2026-04-17T09:00:00Z",
+              published_at: "2026-04-17T09:05:00Z",
+            },
+          ],
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    })
+    vi.stubGlobal("fetch", fetchSpy)
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
+
+    await userEvent.clear(screen.getByLabelText("Température"))
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Créer une nouvelle version" })).toBeEnabled()
+    })
+    await userEvent.click(screen.getByRole("button", { name: "Créer une nouvelle version" }))
+
+    expect(await screen.findByText("La température doit être un nombre valide.")).toBeInTheDocument()
+    expect(fetchSpy.mock.calls.some(([url, init]) => String(url).endsWith("/v1/admin/llm/use-cases/chat/prompts") && init?.method === "POST")).toBe(false)
+  })
+
+  it("legacy: affiche le statut inactive quand le backend renvoie cette valeur", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({
+          data: [
+            {
+              key: "chat",
+              display_name: "Chat guidance",
+              description: "Prompt chat",
+              persona_strategy: "default",
+              safety_profile: "astro",
+              allowed_persona_ids: [],
+              active_prompt_version_id: null,
+            },
+          ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && !init?.method) {
+        return makeJsonResponse({
+          data: [
+            {
+              id: "prompt-inactive",
+              use_case_key: "chat",
+              status: "inactive",
+              developer_prompt: "Prompt inactif",
+              model: "gpt-5",
+              temperature: 0.6,
+              max_output_tokens: 1000,
+              fallback_use_case_key: null,
+              created_by: "admin@example.com",
+              created_at: "2026-04-17T09:00:00Z",
+              published_at: null,
+            },
+          ],
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+
+    expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
+    expect(screen.getByText("Statut courant")).toBeInTheDocument()
+    expect(screen.getAllByText("Inactive").length).toBeGreaterThan(0)
+  })
+
+  it("legacy: relaie les erreurs backend de sauvegarde sans exposer de JSON brut", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({
+          data: [
+            {
+              key: "chat",
+              display_name: "Chat guidance",
+              description: "Prompt chat",
+              persona_strategy: "default",
+              safety_profile: "astro",
+              allowed_persona_ids: [],
+              active_prompt_version_id: "prompt-published",
+            },
+          ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && !init?.method) {
+        return makeJsonResponse({
+          data: [
+            {
+              id: "prompt-published",
+              use_case_key: "chat",
+              status: "published",
+              developer_prompt: "Prompt historique",
+              model: "gpt-5",
+              temperature: 0.7,
+              max_output_tokens: 1200,
+              fallback_use_case_key: null,
+              created_by: "admin@example.com",
+              created_at: "2026-04-17T09:00:00Z",
+              published_at: "2026-04-17T09:05:00Z",
+            },
+          ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && init?.method === "POST") {
+        return makeJsonResponse(
+          {
+            error: {
+              code: "validation_error",
+              message: "fallback use case inconnu",
+              details: {
+                fallback_use_case_key: "missing use case",
+              },
+            },
+          },
+          422,
+        )
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
+
+    await userEvent.clear(screen.getByLabelText("Modèle"))
+    await userEvent.type(screen.getByLabelText("Modèle"), "gpt-5.1")
+    await userEvent.click(screen.getByRole("button", { name: "Créer une nouvelle version" }))
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Le backend a refusé la sauvegarde: fallback use case inconnu (fallback_use_case_key: missing use case)",
+      )
+    })
+    expect(screen.queryByText(/^\{/)).not.toBeInTheDocument()
+  })
+
   it("diffère la révocation du blob lors de l'export CSV", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 

@@ -78,7 +78,7 @@ export type AdminLlmUseCase = {
 export type AdminPromptVersion = {
   id: string
   use_case_key: string
-  status: "draft" | "published" | "archived"
+  status: "draft" | "published" | "archived" | "inactive"
   developer_prompt: string
   model: string
   temperature: number
@@ -87,6 +87,16 @@ export type AdminPromptVersion = {
   created_by: string
   created_at: string
   published_at: string | null
+}
+
+export type AdminPromptDraftCreateInput = {
+  developer_prompt: string
+  model: string
+  temperature: number
+  max_output_tokens: number
+  fallback_use_case_key: string | null
+  reasoning_effort?: string | null
+  verbosity?: string | null
 }
 
 export type AdminLlmCatalogEntry = {
@@ -860,6 +870,25 @@ export async function rollbackPromptVersion(params: {
   }
 }
 
+export async function createPromptDraft(params: {
+  useCaseKey: string
+  payload: AdminPromptDraftCreateInput
+}): Promise<AdminPromptVersion> {
+  try {
+    const response = await apiFetch(`${API_BASE_URL}/v1/admin/llm/use-cases/${params.useCaseKey}/prompts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAccessTokenAuthHeader(),
+      },
+      body: JSON.stringify(params.payload),
+    })
+    return decodeResponse<AdminPromptVersion>(response)
+  } catch (error) {
+    throw toTransportError(error)
+  }
+}
+
 export function useAdminLlmUseCases(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["admin-llm-use-cases"],
@@ -894,6 +923,45 @@ export function useAdminPersonaDetail(personaId: string | null, enabled = true) 
 export function useRollbackPromptVersion() {
   return useMutation({
     mutationFn: rollbackPromptVersion,
+  })
+}
+
+async function invalidateAdminPromptQueries(
+  queryClient: QueryClient,
+  useCaseKey?: string,
+) {
+  await queryClient.invalidateQueries({ queryKey: ["admin-llm-use-cases"] })
+  await queryClient.invalidateQueries({ queryKey: ["admin-llm-catalog"] })
+  await queryClient.invalidateQueries({ queryKey: ["admin-llm-catalog-resolved"] })
+  if (useCaseKey) {
+    await queryClient.invalidateQueries({ queryKey: ["admin-llm-prompt-history", useCaseKey] })
+  } else {
+    await queryClient.invalidateQueries({ queryKey: ["admin-llm-prompt-history"] })
+  }
+}
+
+function upsertPromptHistoryCache(
+  queryClient: QueryClient,
+  useCaseKey: string,
+  version: AdminPromptVersion,
+) {
+  queryClient.setQueryData<AdminPromptVersion[]>(
+    ["admin-llm-prompt-history", useCaseKey],
+    (current = []) => {
+      const withoutCurrent = current.filter((item) => item.id !== version.id)
+      return [version, ...withoutCurrent]
+    },
+  )
+}
+
+export function useCreatePromptDraft() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: createPromptDraft,
+    onSuccess: async (data, variables) => {
+      upsertPromptHistoryCache(queryClient, variables.useCaseKey, data)
+      await invalidateAdminPromptQueries(queryClient, variables.useCaseKey)
+    },
   })
 }
 

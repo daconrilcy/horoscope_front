@@ -71,3 +71,8 @@ Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivan
 
 - **Personas / échantillons runtime** — harmonisation wording au-delà de `AdminPromptsPage` (composants dédiés) si l’AC « toutes les routes » doit être fermée au sens strict.
 - ~~**Timeline release — preuves**~~ — **Traité** (2026-04-18) : mapping métier ajouté pour `event_type`, `current_status`, `proof_type` et `verdict/status` dans `adminPromptsCatalog.ts` et `AdminPromptsPage.tsx`, avec couverture Vitest associée.
+
+## Deferred from: code review of 70-9-editer-les-prompts-canoniques-via-des-formulaires-admin-guides.md (2026-04-18)
+
+- **Rollback legacy n invalide pas l etat actif derive des use cases** — apres rollback, l UI peut conserver un `active_prompt_version_id` obsolete tant que la query `admin-llm-use-cases` n est pas invalidee, car l etat actif est derive de ce cache et pas uniquement de l historique.
+- **Le modal de rollback peut survivre a un changement de use case** — `legacyRollbackCandidate` reste ouvert si l operateur change de cas d usage, ce qui peut laisser confirmer un rollback avec un couple use case/version incoherent.

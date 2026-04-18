@@ -39,6 +39,7 @@ export type AdminPromptsLegacyStrings = {
   metaCreated: string
   metaId: string
   statusPublished: string
+  statusInactive: string
   statusArchived: string
   statusDraft: string
   modalTitle: string
@@ -94,6 +95,7 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     metaCreated: "Création",
     metaId: "Identifiant",
     statusPublished: "Publié",
+    statusInactive: "Inactive",
     statusArchived: "Archivé",
     statusDraft: "Brouillon",
     modalTitle: "Confirmer la restauration de version",
@@ -151,6 +153,7 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     metaCreated: "Created",
     metaId: "Id",
     statusPublished: "Published",
+    statusInactive: "Inactive",
     statusArchived: "Archived",
     statusDraft: "Draft",
     modalTitle: "Confirm version restore",
@@ -208,6 +211,7 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     metaCreated: "Creación",
     metaId: "Identificador",
     statusPublished: "Publicado",
+    statusInactive: "Inactiva",
     statusArchived: "Archivado",
     statusDraft: "Borrador",
     modalTitle: "Confirmar restauración de versión",
@@ -246,6 +250,8 @@ export function legacyPromptStatusLabel(
   switch (status) {
     case "published":
       return L.statusPublished
+    case "inactive":
+      return L.statusInactive
     case "archived":
       return L.statusArchived
     case "draft":

@@ -13,6 +13,7 @@ import {
 } from "../../i18n/adminPromptsLegacy"
 
 import {
+  useCreatePromptDraft,
   useAdminLlmCatalog,
   useAdminLlmUseCases,
   useAdminPromptHistory,
@@ -30,6 +31,7 @@ import {
   isAdminRuntimePreviewExecutable,
   type AdminConsumptionRow,
   type AdminConsumptionView,
+  type AdminPromptDraftCreateInput,
   type AdminPromptVersion,
   type AdminInspectionMode,
   type AdminResolvedPlaceholder,
@@ -37,6 +39,7 @@ import {
 } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
 import { AdminSamplePayloadsAdmin } from "./AdminSamplePayloadsAdmin"
+import { AdminPromptEditorPanel } from "./AdminPromptEditorPanel"
 import { buildLogicGraphProjection } from "./adminPromptsLogicGraphProjection"
 import { AdminPromptsLogicGraph } from "./AdminPromptsLogicGraph"
 import type { AdminPromptsCatalogStrings } from "../../i18n/adminPromptsCatalog"
@@ -368,6 +371,27 @@ function placeholderStatusClassName(status: AdminResolvedPlaceholder["status"]):
   }
 }
 
+function formatPromptSaveError(error: unknown): string {
+  if (error instanceof AdminPromptsApiError) {
+    const detailLines = Object.entries(error.details)
+      .filter(([, value]) => value !== null && value !== undefined && value !== "")
+      .map(([key, value]) => {
+        if (Array.isArray(value)) {
+          return `${key}: ${value.join(", ")}`
+        }
+        if (typeof value === "object") {
+          return `${key}: ${JSON.stringify(value)}`
+        }
+        return `${key}: ${String(value)}`
+      })
+    return detailLines.length > 0 ? `${error.message} (${detailLines.join(" · ")})` : error.message
+  }
+  if (error instanceof Error) {
+    return error.message
+  }
+  return "Erreur inconnue."
+}
+
 function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
   const leftLines = basePrompt.split("\n")
   const rightLines = nextPrompt.split("\n")
@@ -395,6 +419,7 @@ export function AdminPromptsPage() {
   const { lang } = useAstrologyLabels()
   const tAdmin = useTranslation("admin")
   const tLegacy = tAdmin.promptsLegacy
+  const tEditor = tAdmin.promptsEditor
   const tConsumption = tAdmin.promptsConsumption
   const tCat = tAdmin.promptsCatalog
   const sub = tAdmin.promptsSubNav
@@ -421,6 +446,8 @@ export function AdminPromptsPage() {
   const [legacyCompareVersionId, setLegacyCompareVersionId] = useState<string | null>(null)
   const [legacyRollbackCandidate, setLegacyRollbackCandidate] = useState<AdminPromptVersion | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [legacyEditorSuccessMessage, setLegacyEditorSuccessMessage] = useState<string | null>(null)
+  const [legacyEditorErrorMessage, setLegacyEditorErrorMessage] = useState<string | null>(null)
   const [selectedManifestEntryId, setSelectedManifestEntryId] = useState<string | null>(null)
   const [resolvedInspectionMode, setResolvedInspectionMode] = useState<AdminInspectionMode>("assembly_preview")
   const [selectedSamplePayloadId, setSelectedSamplePayloadId] = useState<string | null>(null)
@@ -635,6 +662,7 @@ export function AdminPromptsPage() {
     activeTab === "legacy" && Boolean(legacyUseCaseKey),
   )
   const rollbackMutation = useRollbackPromptVersion()
+  const createPromptDraftMutation = useCreatePromptDraft()
   const releaseTimelineQuery = useReleaseSnapshotsTimeline(activeTab === "release")
   const releaseTimeline = releaseTimelineQuery.data ?? []
   const releaseSnapshots = Array.from(
@@ -720,6 +748,13 @@ export function AdminPromptsPage() {
   }, [activeLegacyVersion?.id, legacyCompareVersionId, selectedLegacyHistory])
 
   useEffect(() => {
+    setSuccessMessage(null)
+    setLegacyEditorSuccessMessage(null)
+    setLegacyEditorErrorMessage(null)
+    createPromptDraftMutation.reset()
+  }, [legacyUseCaseKey])
+
+  useEffect(() => {
     if (releaseSnapshots.length < 2) {
       setFromSnapshotId(null)
       setToSnapshotId(null)
@@ -749,6 +784,25 @@ export function AdminPromptsPage() {
     setSuccessMessage(interpolateLegacyTemplate(tLegacy.successRestore, { short: restoredShort }))
     await queryClient.invalidateQueries({ queryKey: ["admin-llm-prompt-history", legacyUseCaseKey] })
     await queryClient.invalidateQueries({ queryKey: ["admin-llm-catalog"] })
+  }
+
+  const handleLegacyCreateDraft = async (payload: AdminPromptDraftCreateInput) => {
+    if (!legacyUseCaseKey) return
+    setSuccessMessage(null)
+    setLegacyEditorSuccessMessage(null)
+    setLegacyEditorErrorMessage(null)
+
+    try {
+      const createdVersion = await createPromptDraftMutation.mutateAsync({
+        useCaseKey: legacyUseCaseKey,
+        payload,
+      })
+      setLegacyEditorSuccessMessage(tEditor.success(createdVersion.id.slice(0, 8)))
+      setLegacyCompareVersionId(createdVersion.id)
+    } catch (error) {
+      setLegacyEditorErrorMessage(formatPromptSaveError(error))
+      throw error
+    }
   }
 
   return (
@@ -2053,6 +2107,21 @@ export function AdminPromptsPage() {
                   </select>
                 </label>
               </div>
+
+              {legacyUseCaseKey ? (
+                <AdminPromptEditorPanel
+                  useCaseKey={legacyUseCaseKey}
+                  useCaseDisplayName={selectedLegacyUseCase?.display_name ?? legacyUseCaseKey}
+                  versions={selectedLegacyHistory}
+                  activeVersion={activeLegacyVersion}
+                  useCases={useCases}
+                  strings={tEditor}
+                  saveError={legacyEditorErrorMessage}
+                  saveSuccess={legacyEditorSuccessMessage}
+                  isPending={createPromptDraftMutation.isPending}
+                  onSubmit={handleLegacyCreateDraft}
+                />
+              ) : null}
 
               {selectedLegacyHistory.length === 0 ? (
                 <p className="admin-prompts-legacy__empty text-muted" role="status">
