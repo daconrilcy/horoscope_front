@@ -2142,7 +2142,7 @@ async def execute_admin_catalog_sample_payload(
             code=AdminLlmErrorCode.RUNTIME_PREVIEW_INCOMPLETE_FOR_EXECUTION.value,
             message="runtime preview is incomplete; cannot execute provider call",
             details={
-                "failure_kind": "render_pipeline",
+                "failure_kind": "runtime_preview_incomplete",
                 "manifest_entry_id": manifest_entry_id,
                 "sample_payload_id": str(payload.sample_payload_id),
                 "blocking_reasons": blocking,
@@ -2397,7 +2397,7 @@ async def execute_admin_catalog_sample_payload(
             manifest_entry_id=manifest_entry_id,
             sample_payload_id=payload.sample_payload_id,
             status="failed",
-            details={"failure_kind": "unexpected_exception", "error_message": str(exc)},
+            details={"failure_kind": "unexpected", "error_message": str(exc)},
         )
         db.commit()
         return _error_response(

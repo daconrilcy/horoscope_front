@@ -1848,6 +1848,7 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
         assert response.status_code == 422
         err = response.json()["error"]
         assert err["code"] == "runtime_preview_incomplete_for_execution"
+        assert err["details"]["failure_kind"] == "runtime_preview_incomplete"
         assert mocked_audit.call_count == 1
         assert mocked_audit.call_args.kwargs["status"] == "failed"
         assert mocked_audit.call_args.kwargs["manifest_entry_id"] == manifest_entry_id

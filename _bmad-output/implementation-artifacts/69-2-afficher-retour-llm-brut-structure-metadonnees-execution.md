@@ -87,7 +87,7 @@ GPT-5 Codex
 
 - Payload `AdminCatalogManualExecuteResponseData` enrichi (prompt anonymisé, paramètres runtime sanitizés, sortie structurée sanitizée, chemins d'erreur avec `failure_kind`).
 - Zone « Retour LLM » : grille métadonnées, JSON params runtime, prompt, bloc structuré séparé du brut, états chargement / succès / erreur.
-- Erreurs API : distinction via `failure_kind` (input_validation, gateway_config, output_validation, provider_error, render_pipeline, unexpected).
+- Erreurs API : distinction via `failure_kind` (valeurs alignées audit / réponse HTTP : `runtime_preview_incomplete`, `input_validation`, `gateway_config`, `output_validation`, `prompt_render`, `unknown_use_case`, `provider_error`, `unexpected`).
 - Tests : intégration catalogue mise à jour, unit test helper redaction structurée.
 
 ### File List
@@ -109,6 +109,7 @@ GPT-5 Codex
 - 2026-04-18 : Correctifs post code-review — parseable cohérent, `PromptRenderError`, tests erreurs, `failure_kind` opérationnel dans les détails API.
 - 2026-04-18 : Code review passe 2 — aucun nouveau patch requis ; story et sprint passés en **done**.
 - 2026-04-18 : Test d’intégration succès sans `structured_output` ; `UnknownUseCaseError` → `failure_kind` `unknown_use_case` ; résidu `GatewayError` enrichi de `gateway_error_class` (sanitization admin) + libellé front.
+- 2026-04-18 : Alignement taxonomie `failure_kind` audit ↔ API — `unexpected` (plus `unexpected_exception` en audit seul) ; prévisualisation runtime incomplète : `runtime_preview_incomplete` partout (plus `render_pipeline` côté API) ; test d’intégration sur le détail HTTP ; libellé UI `MANUAL_EXEC_FAILURE_LEAD_FR` mis à jour.
 
 ### Review Findings
 
@@ -122,7 +123,7 @@ GPT-5 Codex
 
 - [x] [Review][Patch] `failure_kind` ne doit pas être redigé dans les détails d’erreur admin — ajout à `OPERATIONAL_FIELDS`. `backend/app/core/sensitive_data.py`.
 
-- [x] [Review][Defer] Libellé `failure_kind` `render_pipeline` pour `runtime_preview_incomplete` — nom proche d’une erreur de rendu template ; acceptable si documenté pour l’opérateur. — deferred, naming / doc only.
+- [x] [Review][Patch] Taxonomie `failure_kind` cohérente audit / API / UI — `runtime_preview_incomplete` (ex-`render_pipeline` côté réponse), `unexpected` (ex-`unexpected_exception` en audit seul). `backend/app/api/v1/routers/admin_llm.py`, `frontend/src/pages/admin/AdminPromptsPage.tsx`, `backend/tests/integration/test_admin_llm_catalog.py`.
 
 - [x] [Review][Defer] `anonymize_text` sans try/except dans le helper — aligné avec le reste du projet ; risque résiduel si configuration d’anonymisation défaillante. — deferred, pattern existant.
 

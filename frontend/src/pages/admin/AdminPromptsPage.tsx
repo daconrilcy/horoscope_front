@@ -174,7 +174,7 @@ function resolvedAssemblyErrorPresentation(error: unknown): { primary: string; s
 }
 
 const MANUAL_EXEC_FAILURE_LEAD_FR: Readonly<Record<string, string>> = {
-  render_pipeline: "Rendu ou prévisualisation bloquante",
+  runtime_preview_incomplete: "Prévisualisation runtime incomplète (placeholders bloquants)",
   input_validation: "Validation des entrées (schéma ou contexte)",
   gateway_config: "Configuration gateway ou profil d'exécution",
   output_validation: "Validation de sortie (schéma)",
