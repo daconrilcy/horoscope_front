@@ -66,3 +66,8 @@ Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivan
 ## Deferred from: code review of 70-7-refondre-la-route-consumption-pour-le-pilotage-operable.md (2026-04-18)
 
 - **Compatibilité `MediaQueryList` très anciens navigateurs** — `addEventListener` sur `matchMedia` ; les environnements Safari obsolètes utilisaient `addListener` / `removeListener`. Périmètre admin interne, risque faible ; polyfill ou repli seulement si besoin terrain avéré.
+
+## Deferred from: code review (2026-04-18) — `70-8-harmoniser-les-libelles-l-accessibilite-et-le-responsive.md`
+
+- **Personas / échantillons runtime** — harmonisation wording au-delà de `AdminPromptsPage` (composants dédiés) si l’AC « toutes les routes » doit être fermée au sens strict.
+- ~~**Timeline release — preuves**~~ — **Traité** (2026-04-18) : mapping métier ajouté pour `event_type`, `current_status`, `proof_type` et `verdict/status` dans `adminPromptsCatalog.ts` et `AdminPromptsPage.tsx`, avec couverture Vitest associée.

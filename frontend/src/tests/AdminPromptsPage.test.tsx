@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
@@ -228,12 +229,13 @@ describe("AdminPromptsPage", () => {
       screen.getByText(/Sélectionnez une ligne du catalogue pour afficher le détail résolu/),
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Réinitialiser les filtres" })).toBeInTheDocument()
-    expect(screen.getAllByText("active_snapshot").length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/monitoring/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/fresh/).length).toBeGreaterThan(0)
+    expect(screen.getByText("Snapshot actif (catalogue)")).toBeInTheDocument()
+    expect(screen.getByText(/Surveillance · signal À jour · Visible/)).toBeInTheDocument()
+    expect(screen.getByRole("navigation", { name: "Sections administration des prompts" })).toBeInTheDocument()
+    expect(document.querySelector(".admin-prompts-catalog__health-cell")).not.toBeNull()
     expect(screen.getByLabelText("Tri catalogue")).toBeInTheDocument()
     expect(screen.getByLabelText("Ordre tri catalogue")).toBeInTheDocument()
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Mode d'inspection" })).toBeInTheDocument()
     })
@@ -243,17 +245,17 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByText("Placeholders")).toBeInTheDocument()
     expect(screen.getByText("Retour LLM")).toBeInTheDocument()
     expect(screen.getByLabelText("Mode d'inspection du détail")).toBeInTheDocument()
-    expect(screen.getByText(/Mode: Assembly/)).toBeInTheDocument()
+    expect(screen.getByText(/Mode : Préassemblage/)).toBeInTheDocument()
     expect(screen.getByText(/Prévisualisation statique/)).toBeInTheDocument()
-    expect(screen.getAllByText("Execution profile").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Profil d'exécution").length).toBeGreaterThan(0)
     expect(screen.getByText("Affichable")).toBeInTheDocument()
     expect(screen.getByText("Contexte runtime")).toBeInTheDocument()
-    expect(screen.getByText("assembled prompt")).toBeInTheDocument()
-    expect(screen.getByText("post injectors prompt")).toBeInTheDocument()
-    expect(screen.getByText("rendered prompt")).toBeInTheDocument()
-    expect(screen.getByText("system hard policy")).toBeInTheDocument()
-    expect(screen.getByText("developer content")).toBeInTheDocument()
-    expect(screen.getAllByText("persona block").length).toBeGreaterThan(0)
+    expect(screen.getByText("Prompt assemblé")).toBeInTheDocument()
+    expect(screen.getByText("Après injecteurs")).toBeInTheDocument()
+    expect(screen.getByText("Prompt rendu")).toBeInTheDocument()
+    expect(screen.getByText("Politique système stricte")).toBeInTheDocument()
+    expect(screen.getByText("Contenu développeur rendu")).toBeInTheDocument()
+    expect(screen.getAllByText("Bloc persona").length).toBeGreaterThan(0)
     expect(screen.getByText(/Sortie d'exécution live/)).toBeInTheDocument()
     expect(
       screen.getByText(/Passez en prévisualisation runtime pour exécuter le fournisseur/),
@@ -269,11 +271,141 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByText("feature template")).toBeInTheDocument()
     expect(screen.getByText("subfeature template")).toBeInTheDocument()
     expect(screen.getByText("plan rules")).toBeInTheDocument()
-    expect(screen.getAllByText("persona block").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Bloc persona").length).toBeGreaterThan(0)
     expect(screen.getByText("hard policy")).toBeInTheDocument()
     expect(screen.getByText("sample payloads")).toBeInTheDocument()
     expect(screen.getByText(/message system/)).toBeInTheDocument()
     expect(screen.getByText(/message persona/)).toBeInTheDocument()
+  })
+
+  it("ouvre une ligne du catalogue au clavier et garde un contrat responsive explicite", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        if (url.includes("/resolved")) {
+          return makeJsonResponse({
+            data: {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              use_case_key: "chat_uc",
+              context_quality: "full",
+              assembly_id: "assembly-1",
+              inspection_mode: "assembly_preview",
+              source_of_truth_status: "active_snapshot",
+              active_snapshot_id: "snapshot-1",
+              active_snapshot_version: "v1",
+              composition_sources: {
+                feature_template: { id: "tpl-1", content: "feature prompt" },
+                subfeature_template: { id: "tpl-2", content: "subfeature prompt" },
+                plan_rules: { ref: "premium_depth", content: "plan rules prompt" },
+                persona_block: { id: "persona-1", name: "Luna", content: "persona prompt" },
+                hard_policy: { safety_profile: "astrology", content: "hard policy prompt" },
+                execution_profile: {
+                  id: "profile-1",
+                  name: "default",
+                  provider: "openai",
+                  model: "gpt-5",
+                  reasoning: "medium",
+                  verbosity: "balanced",
+                  provider_params: { max_output_tokens: 1200 },
+                },
+              },
+              transformation_pipeline: {
+                assembled_prompt: "assembled prompt",
+                post_injectors_prompt: "post injectors prompt",
+                rendered_prompt: "rendered prompt",
+              },
+              resolved_result: {
+                provider_messages: {
+                  system_hard_policy: "system hard policy",
+                  developer_content_rendered: "developer content",
+                  persona_block: "persona block",
+                  execution_parameters: { max_output_tokens: 1200 },
+                },
+                placeholders: [],
+                context_quality_handled_by_template: false,
+                context_quality_instruction_injected: false,
+                context_compensation_status: "not_needed",
+                source_of_truth_status: "active_snapshot",
+                active_snapshot_id: "snapshot-1",
+                active_snapshot_version: "v1",
+                manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              },
+            },
+          })
+        }
+        return makeJsonResponse({
+          data: [
+            {
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              feature: "chat",
+              subfeature: "chat_default",
+              plan: "premium",
+              locale: "fr-FR",
+              assembly_id: "assembly-1",
+              assembly_status: "published",
+              execution_profile_id: "profile-1",
+              execution_profile_ref: "profile-1",
+              output_contract_ref: "contract-1",
+              active_snapshot_id: "snapshot-1",
+              active_snapshot_version: "v1",
+              provider: "openai",
+              model: "gpt-5",
+              source_of_truth_status: "active_snapshot",
+              release_health_status: "monitoring",
+              catalog_visibility_status: "visible",
+              runtime_signal_status: "fresh",
+              execution_path_kind: "nominal",
+              context_compensation_status: "none",
+              max_output_tokens_source: "execution_profile",
+            },
+          ],
+          meta: {
+            total: 1,
+            page: 1,
+            page_size: 25,
+            sort_by: "feature",
+            sort_order: "asc",
+            freshness_window_minutes: 120,
+            facets: {},
+          },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
+    })
+
+    const catalogTable = screen.getByRole("table")
+    const dataRow = within(catalogTable).getAllByRole("row")[1]
+    dataRow.focus()
+    expect(dataRow).toHaveFocus()
+
+    await userEvent.keyboard("{Enter}")
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Mode d'inspection" })).toBeInTheDocument()
+    })
+
+    const css = readFileSync("src/pages/admin/AdminPromptsPage.css", "utf8")
+    expect(css).toContain("@media (max-width: 1024px)")
+    expect(css).toContain(".admin-prompts-catalog-master-detail")
+    expect(css).toContain("grid-template-columns: 1fr;")
+    expect(css).toContain(".admin-prompts-catalog__detail-panel")
+    expect(css).toContain("position: static;")
+    expect(css).toContain(".admin-prompts-catalog__health-cell")
+    expect(css).toContain("word-break: break-word;")
   })
 
   it("structure le détail catalogue : ordre des sections, zone Actions et prompts repliables", async () => {
@@ -368,7 +500,7 @@ describe("AdminPromptsPage", () => {
       return makeJsonResponse({}, 404)
     }))
     renderPage()
-    await userEvent.click(await screen.findByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(await screen.findByRole("button", { name: "Ouvrir le détail" }))
     await waitFor(() => {
       expect(screen.getByLabelText("Résumé")).toBeInTheDocument()
     })
@@ -386,7 +518,7 @@ describe("AdminPromptsPage", () => {
     expect(idx("Retour LLM")).toBeLessThan(idx("Graphe logique"))
     expect(screen.getByText(/Risque : exécution fournisseur réelle/)).toBeInTheDocument()
     const promptsRegion = screen.getByLabelText("Prompts")
-    const assembledSummary = within(promptsRegion).getByText("assembled prompt", { selector: "summary" })
+    const assembledSummary = within(promptsRegion).getByText("Prompt assemblé", { selector: "summary" })
     expect(assembledSummary).toBeInTheDocument()
     const assembledDetails = assembledSummary.closest("details")
     expect(assembledDetails).not.toBeNull()
@@ -568,7 +700,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await userEvent.selectOptions(screen.getByLabelText("Mode d'inspection du détail"), "runtime_preview")
     await waitFor(() => {
       expect(screen.getByLabelText("Sélecteur sample payload runtime")).toBeInTheDocument()
@@ -714,7 +846,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await userEvent.selectOptions(screen.getByLabelText("Mode d'inspection du détail"), "runtime_preview")
     await waitFor(() => {
       expect(screen.getByLabelText("Sélecteur sample payload runtime")).toBeInTheDocument()
@@ -894,7 +1026,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await userEvent.selectOptions(screen.getByLabelText("Mode d'inspection du détail"), "runtime_preview")
     await waitFor(() => {
       expect(screen.getByLabelText("Sélecteur sample payload runtime")).toBeInTheDocument()
@@ -1049,7 +1181,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await userEvent.selectOptions(screen.getByLabelText("Mode d'inspection du détail"), "runtime_preview")
     await waitFor(() => {
       expect(screen.getByLabelText("Sélecteur sample payload runtime")).toBeInTheDocument()
@@ -1194,7 +1326,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await waitFor(() => {
       expect(screen.getByText(/Graphe simplifié en vue texte/)).toBeInTheDocument()
     })
@@ -1360,7 +1492,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await waitFor(() => {
       expect(screen.getByText("runtime:2 · fallback:1 · sample:0")).toBeInTheDocument()
     })
@@ -1487,7 +1619,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await waitFor(() => {
       expect(screen.getByText(/Prévisualisation partielle :/)).toBeInTheDocument()
     })
@@ -1616,7 +1748,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     const alertMessage = await screen.findByRole("alert")
     expect(alertMessage).toHaveTextContent("Erreur détectée pendant l'inspection live")
     expect(screen.getAllByRole("status").length).toBeGreaterThan(0)
@@ -1752,7 +1884,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
     await waitFor(() => {
       expect(screen.getByText("empty_but_visible")).toBeInTheDocument()
     })
@@ -2049,12 +2181,15 @@ describe("AdminPromptsPage", () => {
     await userEvent.click(screen.getByRole("link", { name: "Historique release" }))
 
     expect(
-      screen.getByRole("region", { name: "Investigation release snapshots" }),
+      screen.getByRole("region", { name: "Investigation des snapshots release" }),
     ).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Timeline et comparaison de snapshots" })).toBeInTheDocument()
     })
-    expect(screen.getByText(/qualification: go/)).toBeInTheDocument()
+    expect(screen.getByText(/Qualification: Go/)).toBeInTheDocument()
+    expect(screen.getByText(/Événement : Surveillance/)).toBeInTheDocument()
+    expect(screen.getByText(/État courant : Actif/)).toBeInTheDocument()
+    expect(screen.getByText(/Jeu golden: Succès/)).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Chronologie des événements" })).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Synthèse de comparaison" })).toBeInTheDocument()
@@ -2666,8 +2801,8 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
-    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le detail" }))
-    expect(screen.getByLabelText("Mode d'inspection actif pour ce détail")).toHaveTextContent("Assembly")
+    await userEvent.click(screen.getByRole("button", { name: "Ouvrir le détail" }))
+    expect(screen.getByLabelText("Mode d'inspection actif pour ce détail")).toHaveTextContent(/Préassemblage/)
 
     await userEvent.selectOptions(screen.getByLabelText("Mode d'inspection du détail"), "runtime_preview")
     await waitFor(() => {

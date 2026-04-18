@@ -39,6 +39,7 @@ import { PersonasAdmin } from "./PersonasAdmin"
 import { AdminSamplePayloadsAdmin } from "./AdminSamplePayloadsAdmin"
 import { buildLogicGraphProjection } from "./adminPromptsLogicGraphProjection"
 import { AdminPromptsLogicGraph } from "./AdminPromptsLogicGraph"
+import type { AdminPromptsCatalogStrings } from "../../i18n/adminPromptsCatalog"
 import "./AdminPromptsPage.css"
 
 function useMatchMediaMaxWidth(maxPx: number, enabled: boolean): boolean {
@@ -90,16 +91,6 @@ function consumptionRowKey(row: AdminConsumptionRow): string {
   return `${row.period_start_utc}::${row.user_id ?? "none"}::${row.subscription_plan ?? "none"}::${row.feature ?? "none"}::${row.subfeature ?? "none"}`
 }
 
-function formatConsumptionAxisLabel(view: AdminConsumptionView, row: AdminConsumptionRow): string {
-  if (view === "user") {
-    return row.user_email ?? `user:${row.user_id ?? "n/a"}`
-  }
-  if (view === "subscription") {
-    return row.subscription_plan ?? "unknown"
-  }
-  return `${row.feature ?? "unknown"} / ${row.subfeature ?? "-"}`
-}
-
 function formatReleaseSnapshotIdShort(id: string): string {
   return id.length > 10 ? `${id.slice(0, 8)}…` : id
 }
@@ -120,26 +111,12 @@ function releaseDiffAxisBadgeClass(changed: boolean): string {
   return changed ? "badge badge--warning" : "badge badge--info"
 }
 
-function releaseDiffCategoryLabel(category: string): string {
-  const map: Record<string, string> = {
-    changed: "Écart sur cette fiche",
-    added: "Ajout",
-    removed: "Retrait",
-    stable: "Sans écart",
-  }
-  const known = map[category]
-  if (known !== undefined) {
-    return known
-  }
-  const trimmed = category.trim()
-  return trimmed.length > 0 ? `Catégorie (API) : ${trimmed}` : "Catégorie non renseignée"
-}
-
 type ManualLlmExecuteConfirmModalProps = {
   isPending: boolean
   manifestEntryId: string
   samplePayloadId: string
   inspectionModeLabel: string
+  catalog: AdminPromptsCatalogStrings
   onCancel: () => void
   onConfirm: () => void
 }
@@ -149,6 +126,7 @@ function ManualLlmExecuteConfirmModal({
   manifestEntryId,
   samplePayloadId,
   inspectionModeLabel,
+  catalog: c,
   onCancel,
   onConfirm,
 }: ManualLlmExecuteConfirmModalProps) {
@@ -160,17 +138,22 @@ function ManualLlmExecuteConfirmModal({
         role="dialog"
         aria-modal="true"
       >
-        <h3 id="manual-llm-exec-title">Confirmer l&apos;exécution LLM réelle</h3>
+        <h3 id="manual-llm-exec-title">{c.manualLlmModalTitle}</h3>
         <p className="admin-prompts-modal__copy">
-          Vous allez lancer un appel fournisseur réel (hors trafic utilisateur nominal), avec le sample{" "}
-          <code>{samplePayloadId}</code> sur l&apos;entrée <code>{manifestEntryId}</code>.
+          {c.manualLlmModalIntroBeforeSample}
+          <code>{samplePayloadId}</code>
+          {c.manualLlmModalBetweenSampleAndManifest}
+          <code>{manifestEntryId}</code>
+          {c.manualLlmModalAfterManifest}
         </p>
         <p className="admin-prompts-modal__copy admin-prompts-modal__copy--emphasis">
-          Mode actif : <strong>{inspectionModeLabel}</strong>. Cette action est tracée côté serveur.
+          {c.manualLlmModalModePrefix}
+          <strong>{inspectionModeLabel}</strong>
+          {c.manualLlmModalModeTraced}
         </p>
         <div className="modal-actions">
           <button className="text-button" type="button" onClick={onCancel}>
-            Annuler
+            {c.manualLlmModalCancel}
           </button>
           <button
             className="action-button action-button--primary"
@@ -178,7 +161,7 @@ function ManualLlmExecuteConfirmModal({
             disabled={isPending}
             onClick={onConfirm}
           >
-            {isPending ? "Exécution en cours..." : "Confirmer l'exécution"}
+            {isPending ? c.manualLlmModalExecuting : c.manualLlmModalConfirm}
           </button>
         </div>
       </div>
@@ -327,94 +310,43 @@ type DiffRow = {
   rightType: "unchanged" | "added"
 }
 
-const INSPECTION_MODE_OPTIONS: { value: AdminInspectionMode; label: string }[] = [
-  { value: "assembly_preview", label: "Prévisualisation assembly" },
-  { value: "runtime_preview", label: "Prévisualisation runtime" },
-  { value: "live_execution", label: "Exécution live (sémantique runtime)" },
-]
-
-function inspectionModeShortLabel(mode: AdminInspectionMode): string {
-  switch (mode) {
-    case "assembly_preview":
-      return "Assembly"
-    case "runtime_preview":
-      return "Runtime"
-    case "live_execution":
-      return "Live inspecté"
-    default:
-      return mode
-  }
-}
-
-function inspectionModeFullLabel(mode: AdminInspectionMode): string {
-  return INSPECTION_MODE_OPTIONS.find((opt) => opt.value === mode)?.label ?? mode
-}
-
-function inspectionModeHelpText(mode: AdminInspectionMode): string {
-  switch (mode) {
-    case "assembly_preview":
-      return "Prévisualisation statique: les placeholders attendus uniquement au runtime restent signalés comme absents mais non bloquants."
-    case "runtime_preview":
-      return "Prévisualisation runtime: les placeholders requis manquants sont bloquants. L’exécution réelle du provider se fait via « Exécuter avec le LLM » lorsque la prévisualisation est complète."
-    case "live_execution":
-      return "Inspection live: même sémantique placeholder que runtime_preview. L’appel provider réel reste explicitement déclenché depuis le mode runtime (bouton dédié)."
-    default:
-      return ""
-  }
-}
-
-const RESOLVED_ASSEMBLY_ERROR_MESSAGES_FR: Readonly<Record<string, string>> = {
-  sample_payload_inactive:
-    "Ce sample payload est inactif. Choisissez un autre payload ou réactivez-le dans le catalogue.",
-  sample_payload_not_found: "Sample payload introuvable.",
-  sample_payload_target_mismatch:
-    "Ce sample payload ne correspond pas à cette entrée (feature ou locale différente).",
-  sample_payload_runtime_preview_only:
-    "Un sample payload ne peut être utilisé qu’en mode prévisualisation runtime.",
-  invalid_sample_payload: "Le sample payload est invalide (JSON attendu : un objet).",
-  manifest_entry_not_found: "Entrée de catalogue introuvable.",
-  invalid_manifest_entry_id: "Identifiant d’entrée manifeste invalide.",
-  runtime_preview_incomplete_for_execution:
-    "La prévisualisation runtime est incomplète : corrigez les placeholders bloquants avant d’exécuter le LLM.",
-  admin_manual_execution_failed: "L’exécution manuelle LLM a échoué. Consultez le message détaillé ou les journaux.",
-}
-
-function resolvedAssemblyErrorPresentation(error: unknown): { primary: string; secondary: string | null } {
+function resolvedAssemblyErrorPresentation(
+  error: unknown,
+  tCat: AdminPromptsCatalogStrings,
+): { primary: string; secondary: string | null } {
   if (!(error instanceof AdminPromptsApiError)) {
-    return { primary: "Impossible de charger le detail d'assembly.", secondary: null }
+    return { primary: tCat.resolvedErrorLoadDetailGeneric, secondary: null }
   }
-  const mapped = RESOLVED_ASSEMBLY_ERROR_MESSAGES_FR[error.code]
+  const mapped = tCat.resolvedAssemblyErrorMessage(error.code)
   const primary = mapped ?? error.message
   const secondary =
     mapped && mapped !== error.message
       ? error.message
       : !mapped
-        ? `Code : ${error.code} · HTTP ${error.status}`
+        ? tCat.resolvedErrorSecondaryCodeHttp(error.code, error.status)
         : null
   return { primary, secondary }
 }
 
-const MANUAL_EXEC_FAILURE_LEAD_FR: Readonly<Record<string, string>> = {
-  runtime_preview_incomplete: "Prévisualisation runtime incomplète (placeholders bloquants)",
-  input_validation: "Validation des entrées (schéma ou contexte)",
-  gateway_config: "Configuration gateway ou profil d'exécution",
-  output_validation: "Validation de sortie (schéma)",
-  prompt_render: "Erreur de rendu du prompt (gateway)",
-  provider_error: "Erreur fournisseur LLM",
-  unknown_use_case: "Use case ou résolution catalogue inconnue",
-  unexpected: "Erreur interne inattendue",
-}
-
-function manualExecutionFailureLead(error: unknown): string | null {
+function manualExecutionFailureLead(error: unknown, tCat: AdminPromptsCatalogStrings): string | null {
   if (!(error instanceof AdminPromptsApiError)) {
     return null
   }
   const kind = error.details.failure_kind
-  return typeof kind === "string" && kind in MANUAL_EXEC_FAILURE_LEAD_FR ? MANUAL_EXEC_FAILURE_LEAD_FR[kind] : null
+  if (typeof kind !== "string") {
+    return null
+  }
+  return tCat.manualExecutionFailureLeadMessage(kind) ?? null
 }
 
-function AdminPromptsResolvedAssemblyError({ error }: { error: unknown }) {
-  const { primary, secondary } = resolvedAssemblyErrorPresentation(error)
+function AdminPromptsResolvedAssemblyError({
+  error,
+  catalog,
+}: {
+  error: unknown
+  catalog: AdminPromptsCatalogStrings
+}) {
+  const { primary, secondary } = resolvedAssemblyErrorPresentation(error, catalog)
   return (
     <div className="admin-prompts-resolved__error" role="alert">
       <p className="admin-prompts-resolved__error-primary">{primary}</p>
@@ -423,25 +355,6 @@ function AdminPromptsResolvedAssemblyError({ error }: { error: unknown }) {
       ) : null}
     </div>
   )
-}
-
-function placeholderStatusLabel(status: AdminResolvedPlaceholder["status"]): string {
-  switch (status) {
-    case "resolved":
-      return "Résolu"
-    case "optional_missing":
-      return "Optionnel absent"
-    case "fallback_used":
-      return "Repli appliqué"
-    case "blocking_missing":
-      return "Bloquant (manquant)"
-    case "expected_missing_in_preview":
-      return "Absent en prévisualisation (attendu au runtime)"
-    case "unknown":
-      return "Inconnu"
-    default:
-      return status
-  }
 }
 
 function placeholderStatusClassName(status: AdminResolvedPlaceholder["status"]): string {
@@ -453,55 +366,6 @@ function placeholderStatusClassName(status: AdminResolvedPlaceholder["status"]):
     default:
       return "admin-prompts-resolved__placeholder-status--neutral"
   }
-}
-
-function placeholderRedactionLevelLabel(item: AdminResolvedPlaceholder): string {
-  if (!item.safe_to_display) {
-    return "Masqué"
-  }
-  return "Affichable"
-}
-
-function placeholderSourceLabel(source: string | null): string {
-  if (!source) {
-    return "n/a"
-  }
-  if (source === "runtime_context") {
-    return "Contexte runtime"
-  }
-  if (source === "static_preview_gap") {
-    return "Preview partielle"
-  }
-  if (source === "fallback") {
-    return "Fallback"
-  }
-  if (source === "missing_required") {
-    return "Manquant requis"
-  }
-  if (source === "missing_optional") {
-    return "Manquant optionnel"
-  }
-  return source
-}
-
-function placeholderPreviewValue(item: AdminResolvedPlaceholder): string {
-  if (!item.safe_to_display) {
-    return "redacted"
-  }
-  return item.value_preview ?? ""
-}
-
-function renderErrorLeadText(
-  inspectionMode: AdminInspectionMode,
-  renderErrorKind: string | null | undefined,
-): string {
-  if (renderErrorKind === "static_preview_incomplete") {
-    return "Prévisualisation partielle : certaines substitutions nécessitent des données runtime. "
-  }
-  if (inspectionMode === "live_execution") {
-    return "Erreur détectée pendant l'inspection live. "
-  }
-  return "Erreur de rendu détectée dans la prévisualisation. "
 }
 
 function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
@@ -532,6 +396,7 @@ export function AdminPromptsPage() {
   const tAdmin = useTranslation("admin")
   const tLegacy = tAdmin.promptsLegacy
   const tConsumption = tAdmin.promptsConsumption
+  const tCat = tAdmin.promptsCatalog
   const sub = tAdmin.promptsSubNav
   const activeTab = useMemo(() => resolvePromptsTabFromPath(location.pathname), [location.pathname])
   const consumptionNarrowLayout = useMatchMediaMaxWidth(960, activeTab === "consumption")
@@ -893,7 +758,7 @@ export function AdminPromptsPage() {
           <h2>{pageHeader.title}</h2>
           <p className="admin-prompts-page__intro">{pageHeader.intro}</p>
         </div>
-        <nav className="admin-tabs admin-prompts-subnav" aria-label="Sections prompts">
+        <nav className="admin-tabs admin-prompts-subnav" aria-label={tCat.subNavAriaLabel}>
           <NavLink
             to={`${ADMIN_PROMPTS_BASE}/catalog`}
             className={({ isActive }) => `tab-button ${isActive ? "tab-button--active" : ""}`}
@@ -954,13 +819,13 @@ export function AdminPromptsPage() {
       ) : null}
 
       {activeTab === "catalog" ? (
-        <section className="panel admin-prompts-catalog" aria-label="Catalogue canonique">
+        <section className="panel admin-prompts-catalog" aria-label={tCat.catalogRegionAria}>
           <div className="admin-prompts-catalog-master-detail">
             <div className="admin-prompts-catalog__master">
               <div className="admin-prompts-catalog__filters">
                 <div className="admin-prompts-catalog__filters-primary">
                   <div className="admin-prompts-catalog__filter-field">
-                    <label htmlFor="catalog-search">Recherche</label>
+                    <label htmlFor="catalog-search">{tCat.filterSearchLabel}</label>
                     <input
                       id="catalog-search"
                       value={search}
@@ -968,11 +833,11 @@ export function AdminPromptsPage() {
                         setSearch(event.target.value)
                         setPage(1)
                       }}
-                      placeholder="Tuple canonique ou manifest_entry_id"
+                      placeholder={tCat.filterSearchPlaceholder}
                     />
                   </div>
                   <div className="admin-prompts-catalog__filter-field">
-                    <label htmlFor="catalog-feature">Feature</label>
+                    <label htmlFor="catalog-feature">{tCat.filterFeatureLabel}</label>
                     <select
                       id="catalog-feature"
                       value={feature}
@@ -981,7 +846,7 @@ export function AdminPromptsPage() {
                         setPage(1)
                       }}
                     >
-                      <option value="">Toutes</option>
+                      <option value="">{tCat.filterAllFeminine}</option>
                       {availableFeatures.map((value) => (
                         <option key={value} value={value}>
                           {value}
@@ -990,7 +855,7 @@ export function AdminPromptsPage() {
                     </select>
                   </div>
                   <div className="admin-prompts-catalog__filter-field">
-                    <label htmlFor="catalog-locale">Locale</label>
+                    <label htmlFor="catalog-locale">{tCat.filterLocaleLabel}</label>
                     <select
                       id="catalog-locale"
                       value={locale}
@@ -999,7 +864,7 @@ export function AdminPromptsPage() {
                         setPage(1)
                       }}
                     >
-                      <option value="">Toutes</option>
+                      <option value="">{tCat.filterAllFeminine}</option>
                       {availableLocales.map((value) => (
                         <option key={value} value={value}>
                           {value}
@@ -1008,7 +873,7 @@ export function AdminPromptsPage() {
                     </select>
                   </div>
                   <div className="admin-prompts-catalog__filter-field">
-                    <label htmlFor="catalog-provider">Provider</label>
+                    <label htmlFor="catalog-provider">{tCat.filterProviderLabel}</label>
                     <select
                       id="catalog-provider"
                       value={provider}
@@ -1017,7 +882,7 @@ export function AdminPromptsPage() {
                         setPage(1)
                       }}
                     >
-                      <option value="">Tous</option>
+                      <option value="">{tCat.filterAllMasculine}</option>
                       {availableProviders.map((value) => (
                         <option key={value} value={value}>
                           {value}
@@ -1026,65 +891,79 @@ export function AdminPromptsPage() {
                     </select>
                   </div>
                   <div className="admin-prompts-catalog__filter-field">
-                    <label htmlFor="catalog-sort">Tri</label>
+                    <label htmlFor="catalog-sort">{tCat.filterSortLabel}</label>
                     <select
                       id="catalog-sort"
-                      aria-label="Tri catalogue"
+                      aria-label={tCat.sortAriaCatalog}
                       value={sortBy}
                       onChange={(event) => {
                         setSortBy(event.target.value)
                         setPage(1)
                       }}
                     >
-                      <option value="feature">Feature</option>
-                      <option value="subfeature">Subfeature</option>
-                      <option value="plan">Plan</option>
-                      <option value="locale">Locale</option>
-                      <option value="manifest_entry_id">Manifest entry</option>
-                      <option value="provider">Provider</option>
-                      <option value="source_of_truth_status">Source of truth</option>
-                      <option value="assembly_status">Assembly status</option>
-                      <option value="release_health_status">Release health</option>
-                      <option value="catalog_visibility_status">Visibility</option>
+                      <option value="feature">{tCat.sortOptionFeature}</option>
+                      <option value="subfeature">{tCat.sortOptionSubfeature}</option>
+                      <option value="plan">{tCat.sortOptionPlan}</option>
+                      <option value="locale">{tCat.sortOptionLocale}</option>
+                      <option value="manifest_entry_id">{tCat.sortOptionManifestEntry}</option>
+                      <option value="provider">{tCat.sortOptionProvider}</option>
+                      <option value="source_of_truth_status">{tCat.sortOptionSourceOfTruth}</option>
+                      <option value="assembly_status">{tCat.sortOptionAssemblyStatus}</option>
+                      <option value="release_health_status">{tCat.sortOptionReleaseHealth}</option>
+                      <option value="catalog_visibility_status">{tCat.sortOptionCatalogVisibility}</option>
                     </select>
                   </div>
                   <div className="admin-prompts-catalog__filter-field">
-                    <label htmlFor="catalog-sort-order">Ordre</label>
+                    <label htmlFor="catalog-sort-order">{tCat.filterSortOrderLabel}</label>
                     <select
                       id="catalog-sort-order"
-                      aria-label="Ordre tri catalogue"
+                      aria-label={tCat.sortOrderAriaCatalog}
                       value={sortOrder}
                       onChange={(event) => {
                         setSortOrder(event.target.value as "asc" | "desc")
                         setPage(1)
                       }}
                     >
-                      <option value="asc">Ascendant</option>
-                      <option value="desc">Descendant</option>
+                      <option value="asc">{tCat.sortOrderAsc}</option>
+                      <option value="desc">{tCat.sortOrderDesc}</option>
                     </select>
                   </div>
                   <div className="admin-prompts-catalog__filter-actions">
                     <button className="text-button" type="button" onClick={resetCatalogFilters}>
-                      Réinitialiser les filtres
+                      {tCat.resetCatalogFilters}
                     </button>
                   </div>
                 </div>
-                <div className="admin-prompts-catalog__active-filters" aria-label="Filtres actifs">
+                <div className="admin-prompts-catalog__active-filters" aria-label={tCat.activeFiltersAria}>
                   {catalogHasActiveFilters ? (
                     <ul className="admin-prompts-catalog__active-filters-list">
-                      {search.trim() ? <li>Recherche : {search}</li> : null}
-                      {feature ? <li>Feature : {feature}</li> : null}
-                      {subfeature ? <li>Subfeature : {subfeature}</li> : null}
-                      {plan ? <li>Plan : {plan}</li> : null}
-                      {locale ? <li>Locale : {locale}</li> : null}
-                      {provider ? <li>Provider : {provider}</li> : null}
-                      {sourceOfTruthStatus ? <li>Source de vérité : {sourceOfTruthStatus}</li> : null}
-                      {assemblyStatus ? <li>Assembly : {assemblyStatus}</li> : null}
-                      {releaseHealthStatus ? <li>Release health : {releaseHealthStatus}</li> : null}
-                      {catalogVisibilityStatus ? <li>Visibilité : {catalogVisibilityStatus}</li> : null}
+                      {search.trim() ? <li>{tCat.activeFilterSearch(search.trim())}</li> : null}
+                      {feature ? <li>{tCat.activeFilterFeature(feature)}</li> : null}
+                      {subfeature ? <li>{tCat.activeFilterSubfeature(subfeature)}</li> : null}
+                      {plan ? <li>{tCat.activeFilterPlan(plan)}</li> : null}
+                      {locale ? <li>{tCat.activeFilterLocale(locale)}</li> : null}
+                      {provider ? <li>{tCat.activeFilterProvider(provider)}</li> : null}
+                      {sourceOfTruthStatus ? (
+                        <li>
+                          {tCat.activeFilterSourceOfTruth(tCat.labelSourceOfTruthStatus(sourceOfTruthStatus))}
+                        </li>
+                      ) : null}
+                      {assemblyStatus ? (
+                        <li>{tCat.activeFilterAssembly(tCat.labelAssemblyStatus(assemblyStatus))}</li>
+                      ) : null}
+                      {releaseHealthStatus ? (
+                        <li>
+                          {tCat.activeFilterReleaseHealth(tCat.labelReleaseHealthStatus(releaseHealthStatus))}
+                        </li>
+                      ) : null}
+                      {catalogVisibilityStatus ? (
+                        <li>
+                          {tCat.activeFilterVisibility(tCat.labelCatalogVisibilityStatus(catalogVisibilityStatus))}
+                        </li>
+                      ) : null}
                     </ul>
                   ) : (
-                    <span className="text-muted">Aucun filtre actif</span>
+                    <span className="text-muted">{tCat.noActiveFilters}</span>
                   )}
                 </div>
                 <div className="admin-prompts-catalog__filters-advanced">
@@ -1094,12 +973,12 @@ export function AdminPromptsPage() {
                     aria-expanded={catalogAdvancedFiltersOpen}
                     onClick={() => setCatalogAdvancedFiltersOpen((open) => !open)}
                   >
-                    Filtres avancés
+                    {tCat.advancedFiltersToggle}
                   </button>
                   {catalogAdvancedFiltersOpen ? (
                     <div className="admin-prompts-catalog__filters-advanced-panel">
                       <div className="admin-prompts-catalog__filter-field">
-                        <label htmlFor="catalog-subfeature">Subfeature</label>
+                        <label htmlFor="catalog-subfeature">{tCat.filterSubfeatureLabel}</label>
                         <select
                           id="catalog-subfeature"
                           value={subfeature}
@@ -1108,7 +987,7 @@ export function AdminPromptsPage() {
                             setPage(1)
                           }}
                         >
-                          <option value="">Toutes</option>
+                          <option value="">{tCat.filterAllFeminine}</option>
                           {availableSubfeatures.map((value) => (
                             <option key={value} value={value}>
                               {value}
@@ -1117,7 +996,7 @@ export function AdminPromptsPage() {
                         </select>
                       </div>
                       <div className="admin-prompts-catalog__filter-field">
-                        <label htmlFor="catalog-plan">Plan</label>
+                        <label htmlFor="catalog-plan">{tCat.filterPlanLabel}</label>
                         <select
                           id="catalog-plan"
                           value={plan}
@@ -1126,7 +1005,7 @@ export function AdminPromptsPage() {
                             setPage(1)
                           }}
                         >
-                          <option value="">Tous</option>
+                          <option value="">{tCat.filterAllMasculine}</option>
                           {availablePlans.map((value) => (
                             <option key={value} value={value}>
                               {value}
@@ -1135,7 +1014,7 @@ export function AdminPromptsPage() {
                         </select>
                       </div>
                       <div className="admin-prompts-catalog__filter-field">
-                        <label htmlFor="catalog-sot">Source de vérité</label>
+                        <label htmlFor="catalog-sot">{tCat.filterSourceOfTruth}</label>
                         <select
                           id="catalog-sot"
                           value={sourceOfTruthStatus}
@@ -1144,16 +1023,16 @@ export function AdminPromptsPage() {
                             setPage(1)
                           }}
                         >
-                          <option value="">Toutes</option>
+                          <option value="">{tCat.filterAllFeminine}</option>
                           {availableSourceStatuses.map((value) => (
                             <option key={value} value={value}>
-                              {value}
+                              {tCat.labelSourceOfTruthStatus(value)}
                             </option>
                           ))}
                         </select>
                       </div>
                       <div className="admin-prompts-catalog__filter-field">
-                        <label htmlFor="catalog-assembly">Assembly status</label>
+                        <label htmlFor="catalog-assembly">{tCat.filterAssemblyStatus}</label>
                         <select
                           id="catalog-assembly"
                           value={assemblyStatus}
@@ -1162,16 +1041,16 @@ export function AdminPromptsPage() {
                             setPage(1)
                           }}
                         >
-                          <option value="">Tous</option>
+                          <option value="">{tCat.filterAllMasculine}</option>
                           {availableAssemblyStatuses.map((value) => (
                             <option key={value} value={value}>
-                              {value}
+                              {tCat.labelAssemblyStatus(value)}
                             </option>
                           ))}
                         </select>
                       </div>
                       <div className="admin-prompts-catalog__filter-field">
-                        <label htmlFor="catalog-rel-health">Release health</label>
+                        <label htmlFor="catalog-rel-health">{tCat.filterReleaseHealth}</label>
                         <select
                           id="catalog-rel-health"
                           value={releaseHealthStatus}
@@ -1180,16 +1059,16 @@ export function AdminPromptsPage() {
                             setPage(1)
                           }}
                         >
-                          <option value="">Tous</option>
+                          <option value="">{tCat.filterAllMasculine}</option>
                           {availableReleaseHealthStatuses.map((value) => (
                             <option key={value} value={value}>
-                              {value}
+                              {tCat.labelReleaseHealthStatus(value)}
                             </option>
                           ))}
                         </select>
                       </div>
                       <div className="admin-prompts-catalog__filter-field">
-                        <label htmlFor="catalog-vis">Visibilité catalogue</label>
+                        <label htmlFor="catalog-vis">{tCat.filterCatalogVisibility}</label>
                         <select
                           id="catalog-vis"
                           value={catalogVisibilityStatus}
@@ -1198,10 +1077,10 @@ export function AdminPromptsPage() {
                             setPage(1)
                           }}
                         >
-                          <option value="">Toutes</option>
+                          <option value="">{tCat.filterAllFeminine}</option>
                           {availableVisibilityStatuses.map((value) => (
                             <option key={value} value={value}>
-                              {value}
+                              {tCat.labelCatalogVisibilityStatus(value)}
                             </option>
                           ))}
                         </select>
@@ -1211,8 +1090,8 @@ export function AdminPromptsPage() {
                 </div>
               </div>
 
-          {catalogQuery.isPending ? <div className="loading-placeholder">Chargement du catalogue canonique...</div> : null}
-          {catalogQuery.isError ? <p className="chat-error">Impossible de charger le catalogue canonique.</p> : null}
+          {catalogQuery.isPending ? <div className="loading-placeholder">{tCat.catalogLoading}</div> : null}
+          {catalogQuery.isError ? <p className="chat-error">{tCat.catalogError}</p> : null}
 
           {!catalogQuery.isPending && !catalogQuery.isError ? (
             <>
@@ -1220,11 +1099,11 @@ export function AdminPromptsPage() {
                 <table className="admin-prompts-catalog__table">
                   <thead>
                     <tr>
-                      <th>Tuple canonique</th>
-                      <th>Snapshot actif</th>
-                      <th>Provider / modèle</th>
-                      <th>Santé</th>
-                      <th className="admin-prompts-catalog__col-action">Action</th>
+                      <th>{tCat.tableColTuple}</th>
+                      <th>{tCat.tableColSnapshot}</th>
+                      <th>{tCat.tableColProviderModel}</th>
+                      <th>{tCat.tableColHealth}</th>
+                      <th className="admin-prompts-catalog__col-action">{tCat.tableColAction}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1233,7 +1112,10 @@ export function AdminPromptsPage() {
                         key={entry.manifest_entry_id}
                         className={`admin-prompts-catalog__row${entry.manifest_entry_id === selectedManifestEntryId ? " admin-prompts-catalog__row--selected" : ""}`}
                         tabIndex={0}
-                        aria-selected={entry.manifest_entry_id === selectedManifestEntryId}
+                        aria-label={tCat.catalogRowAria(
+                          `${entry.feature}/${entry.subfeature ?? "-"}/${entry.plan ?? "-"}/${entry.locale ?? "-"}`,
+                          entry.manifest_entry_id === selectedManifestEntryId,
+                        )}
                         onClick={() => setSelectedManifestEntryId(entry.manifest_entry_id)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
@@ -1246,19 +1128,23 @@ export function AdminPromptsPage() {
                         <td>
                           {entry.active_snapshot_id
                             ? `${entry.active_snapshot_version} (${entry.active_snapshot_id.slice(0, 8)}…)`
-                            : "n/a"}
+                            : tCat.notAvailable}
                         </td>
                         <td>
                           {entry.provider ?? "—"} / {entry.model ?? "—"}
                         </td>
-                        <td>
+                        <td className="admin-prompts-catalog__health-cell">
                           <span
                             className={`badge ${entry.source_of_truth_status === "active_snapshot" ? "badge--info" : "badge--warning"}`}
                           >
-                            {entry.source_of_truth_status}
+                            {tCat.labelSourceOfTruthStatus(entry.source_of_truth_status)}
                           </span>
                           <div className="text-muted">
-                            {entry.release_health_status} · signal {entry.runtime_signal_status} · {entry.catalog_visibility_status}
+                            {tCat.healthLine(
+                              tCat.labelReleaseHealthStatus(entry.release_health_status),
+                              tCat.labelRuntimeSignalStatus(entry.runtime_signal_status),
+                              tCat.labelCatalogVisibilityStatus(entry.catalog_visibility_status),
+                            )}
                           </div>
                         </td>
                         <td>
@@ -1270,7 +1156,7 @@ export function AdminPromptsPage() {
                               setSelectedManifestEntryId(entry.manifest_entry_id)
                             }}
                           >
-                            Ouvrir le detail
+                            {tCat.openDetail}
                           </button>
                         </td>
                       </tr>
@@ -1280,15 +1166,18 @@ export function AdminPromptsPage() {
               </div>
               <div className="admin-prompts-catalog__footer">
                 <span>
-                  {catalogMeta?.total ?? 0} lignes · fenêtre runtime: {catalogMeta?.freshness_window_minutes ?? "-"} min
+                  {tCat.catalogFooterLines(
+                    catalogMeta?.total ?? 0,
+                    String(catalogMeta?.freshness_window_minutes ?? "-"),
+                  )}
                 </span>
                 <div className="admin-prompts-catalog__pagination">
                   <button className="text-button" type="button" onClick={() => setPage((current) => Math.max(current - 1, 1))} disabled={page <= 1}>
-                    Précédent
+                    {tCat.catalogPrev}
                   </button>
-                  <span>Page {catalogMeta?.page ?? page}</span>
+                  <span>{tCat.catalogPage(catalogMeta?.page ?? page)}</span>
                   <button className="text-button" type="button" onClick={() => setPage((current) => current + 1)} disabled={Boolean(catalogMeta && catalogMeta.page * pageSize >= catalogMeta.total)}>
-                    Suivant
+                    {tCat.catalogNext}
                   </button>
                 </div>
               </div>
@@ -1296,11 +1185,11 @@ export function AdminPromptsPage() {
           ) : null}
             </div>
 
-            <aside className="admin-prompts-catalog__detail-panel" aria-label="Détail catalogue entrée">
+            <aside className="admin-prompts-catalog__detail-panel" aria-label={tCat.detailPanelAria}>
               {selectedManifestEntryId ? (
                 <>
-                  <section className="admin-prompts-catalog-detail-summary" aria-label="Résumé">
-                    <h3 className="admin-prompts-catalog-detail-summary__title">Résumé</h3>
+                  <section className="admin-prompts-catalog-detail-summary" aria-label={tCat.detailSummaryTitle}>
+                    <h3 className="admin-prompts-catalog-detail-summary__title">{tCat.detailSummaryTitle}</h3>
                     {selectedCatalogEntry ? (
                       <>
                         <p className="admin-prompts-catalog-detail-summary__tuple">
@@ -1309,29 +1198,31 @@ export function AdminPromptsPage() {
                         </p>
                         <dl className="admin-prompts-catalog-detail-summary__meta">
                           <div>
-                            <dt>Manifest entry</dt>
+                            <dt>{tCat.detailManifestEntryDt}</dt>
                             <dd>
                               <code>{selectedCatalogEntry.manifest_entry_id}</code>
                             </dd>
                           </div>
                           <div>
-                            <dt>Assembly</dt>
+                            <dt>{tCat.detailAssemblyDt}</dt>
                             <dd>
                               {selectedCatalogEntry.assembly_id ?? "—"}{" "}
-                              <span className="text-muted">({selectedCatalogEntry.assembly_status})</span>
+                              <span className="text-muted">
+                                ({tCat.labelAssemblyStatus(selectedCatalogEntry.assembly_status)})
+                              </span>
                             </dd>
                           </div>
                           <div>
-                            <dt>Execution profile</dt>
+                            <dt>{tCat.detailExecutionProfileDt}</dt>
                             <dd>{selectedCatalogEntry.execution_profile_ref ?? "—"}</dd>
                           </div>
                           <div>
-                            <dt>Output contract</dt>
+                            <dt>{tCat.detailOutputContractDt}</dt>
                             <dd>{selectedCatalogEntry.output_contract_ref ?? "—"}</dd>
                           </div>
                           <div>
-                            <dt>Visibilité catalogue</dt>
-                            <dd>{selectedCatalogEntry.catalog_visibility_status}</dd>
+                            <dt>{tCat.detailCatalogVisibilityDt}</dt>
+                            <dd>{tCat.labelCatalogVisibilityStatus(selectedCatalogEntry.catalog_visibility_status)}</dd>
                           </div>
                         </dl>
                       </>
@@ -1341,64 +1232,64 @@ export function AdminPromptsPage() {
                           {resolvedQuery.data.feature}/{resolvedQuery.data.subfeature ?? "-"}/
                           {resolvedQuery.data.plan ?? "-"}/{resolvedQuery.data.locale ?? "-"}
                         </p>
-                        <p className="text-muted">
-                          Entrée hors page courante du tableau — le résumé ci-dessus provient du détail résolu.
-                        </p>
+                        <p className="text-muted">{tCat.detailOffPageFromResolved}</p>
                         <dl className="admin-prompts-catalog-detail-summary__meta">
                           <div>
-                            <dt>Manifest entry</dt>
+                            <dt>{tCat.detailManifestEntryDt}</dt>
                             <dd>
                               <code>{resolvedQuery.data.manifest_entry_id}</code>
                             </dd>
                           </div>
                           <div>
-                            <dt>Assembly</dt>
+                            <dt>{tCat.detailAssemblyDt}</dt>
                             <dd>{resolvedQuery.data.assembly_id ?? "—"}</dd>
                           </div>
                         </dl>
                       </>
                     ) : (
                       <p className="text-muted">
-                        Entrée hors page courante — identifiant <code>{selectedManifestEntryId}</code>
+                        {tCat.detailOffPageIdOnly} <code>{selectedManifestEntryId}</code>
                       </p>
                     )}
                   </section>
-                <section className="panel admin-prompts-resolved" aria-label="Détail assembly résolue">
+                <section className="panel admin-prompts-resolved" aria-label={tCat.resolvedPanelAria}>
                   <div
                     className={`admin-prompts-resolved__surface-banner admin-prompts-resolved__surface-banner--${resolvedInspectionMode}`}
                     role="status"
                     aria-live="polite"
-                    aria-label="Mode d'inspection actif pour ce détail"
+                    aria-label={tCat.inspectionBannerAria}
                   >
-                    <span className="admin-prompts-resolved__surface-banner-kicker">Mode d&apos;inspection</span>
+                    <span className="admin-prompts-resolved__surface-banner-kicker">{tCat.inspectionBannerKicker}</span>
                     <span className="admin-prompts-resolved__surface-banner-title">
-                      {inspectionModeFullLabel(resolvedInspectionMode)}
+                      {tCat.inspectionModeFullLabel(resolvedInspectionMode)}
                     </span>
                     <span className="admin-prompts-resolved__surface-banner-short">
-                      ({inspectionModeShortLabel(resolvedInspectionMode)})
+                      ({tCat.inspectionModeShortLabel(resolvedInspectionMode)})
                     </span>
                   </div>
-                  <section className="admin-prompts-detail-section" aria-label="Mode d'inspection">
+                  <section className="admin-prompts-detail-section" aria-label={tCat.inspectionSectionAria}>
                     <div className="admin-prompts-resolved__header">
-                      <h3>Mode d&apos;inspection</h3>
+                      <h3>{tCat.inspectionHeading}</h3>
                       <div className="admin-prompts-resolved__header-meta">
                         <code>{selectedManifestEntryId}</code>
                         <span
                           className={`badge ${resolvedQuery.data?.inspection_mode === "assembly_preview" ? "badge--info" : "badge--warning"}`}
                         >
-                          Mode: {resolvedQuery.data ? inspectionModeShortLabel(resolvedQuery.data.inspection_mode) : "—"}
+                          {resolvedQuery.data
+                            ? tCat.modeBadge(tCat.inspectionModeShortLabel(resolvedQuery.data.inspection_mode))
+                            : "—"}
                         </span>
                         <label className="admin-prompts-resolved__mode-field">
-                          <span className="text-muted">Mode d&apos;inspection</span>
+                          <span className="text-muted">{tCat.inspectionModeFieldCaption}</span>
                           <select
-                            aria-label="Mode d'inspection du détail"
+                            aria-label={tCat.inspectionModeSelectAria}
                             className="admin-prompts-resolved__mode-select"
                             value={resolvedInspectionMode}
                             onChange={(event) => {
                               setResolvedInspectionMode(event.target.value as AdminInspectionMode)
                             }}
                           >
-                            {INSPECTION_MODE_OPTIONS.map((opt) => (
+                            {tCat.inspectionModeOptions.map((opt) => (
                               <option key={opt.value} value={opt.value}>
                                 {opt.label}
                               </option>
@@ -1408,48 +1299,45 @@ export function AdminPromptsPage() {
                       </div>
                     </div>
                     <p className="admin-prompts-resolved__render-note">
-                      {inspectionModeHelpText(resolvedQuery.data?.inspection_mode ?? resolvedInspectionMode)}
+                      {tCat.inspectionModeHelpText(resolvedQuery.data?.inspection_mode ?? resolvedInspectionMode)}
                     </p>
                   </section>
-                  <section className="admin-prompts-detail-section" aria-label="État d'exécution">
+                  <section className="admin-prompts-detail-section" aria-label={tCat.executionStateSectionAria}>
                     {resolvedInspectionMode === "runtime_preview" && samplePayloadsQuery.isPending ? (
-                      <p className="text-muted">Chargement des sample payloads...</p>
+                      <p className="text-muted">{tCat.resolvedLoadingSamples}</p>
                     ) : null}
-                    {resolvedQuery.isPending ? <div className="loading-placeholder">Chargement du detail...</div> : null}
-                    {resolvedQuery.isError ? <AdminPromptsResolvedAssemblyError error={resolvedQuery.error} /> : null}
+                    {resolvedQuery.isPending ? <div className="loading-placeholder">{tCat.resolvedLoading}</div> : null}
+                    {resolvedQuery.isError ? (
+                      <AdminPromptsResolvedAssemblyError error={resolvedQuery.error} catalog={tCat} />
+                    ) : null}
                     {resolvedQuery.data ? (
                       <p className="admin-prompts-detail__exec-state text-muted" role="status">
-                        État résolu :{" "}
-                        <strong>{inspectionModeShortLabel(resolvedQuery.data.inspection_mode)}</strong>
-                        {" · "}
-                        source {resolvedQuery.data.source_of_truth_status}
-                        {resolvedQuery.data.active_snapshot_version
-                          ? ` · snapshot ${resolvedQuery.data.active_snapshot_version}`
-                          : ""}
+                        {tCat.resolvedStateLead(
+                          tCat.inspectionModeShortLabel(resolvedQuery.data.inspection_mode),
+                          tCat.labelSourceOfTruthStatus(resolvedQuery.data.source_of_truth_status),
+                          resolvedQuery.data.active_snapshot_version ?? "",
+                        )}
                       </p>
                     ) : null}
                   </section>
-                  <section className="admin-prompts-detail-section admin-prompts-detail__actions" aria-label="Actions">
+                  <section className="admin-prompts-detail-section admin-prompts-detail__actions" aria-label={tCat.actionsSectionAria}>
                     <div className="admin-prompts-detail__actions-header">
-                      <h3 className="admin-prompts-detail__actions-title">Actions</h3>
-                      <p className="admin-prompts-detail__actions-risk text-muted">
-                        Risque : exécution fournisseur réelle hors trafic nominal — tracée côté serveur, confirmation
-                        obligatoire avant envoi.
-                      </p>
+                      <h3 className="admin-prompts-detail__actions-title">{tCat.actionsTitle}</h3>
+                      <p className="admin-prompts-detail__actions-risk text-muted">{tCat.actionsRiskNote}</p>
                     </div>
                     {resolvedInspectionMode === "runtime_preview" ? (
                       <div className="admin-prompts-resolved__manual-exec admin-prompts-resolved__manual-exec--confirmed-surface">
                         <label className="admin-prompts-resolved__mode-field admin-prompts-detail__actions-field">
-                          <span className="text-muted">Sample payload (précondition exécution)</span>
+                          <span className="text-muted">{tCat.samplePayloadFieldCaption}</span>
                           <select
-                            aria-label="Sélecteur sample payload runtime"
+                            aria-label={tCat.samplePayloadSelectAria}
                             className="admin-prompts-resolved__mode-select"
                             value={selectedSamplePayloadId ?? ""}
                             onChange={(event) => {
                               setSelectedSamplePayloadId(event.target.value || null)
                             }}
                           >
-                            <option value="">Aucun sample payload</option>
+                            <option value="">{tCat.noSamplePayloadOption}</option>
                             {(samplePayloadsQuery.data?.items ?? []).map((sample) => (
                               <option key={sample.id} value={sample.id}>
                                 {sample.name}
@@ -1488,7 +1376,7 @@ export function AdminPromptsPage() {
                           }
                           onClick={() => setManualExecuteConfirmOpen(true)}
                         >
-                          {manualExecuteMutation.isPending ? "Exécution LLM..." : "Exécuter avec le LLM"}
+                          {manualExecuteMutation.isPending ? tCat.executeWithLlmPending : tCat.executeWithLlm}
                         </button>
                         {!selectedSamplePayloadId ? (
                           <p className="text-muted admin-prompts-resolved__manual-exec-hint">
@@ -1502,8 +1390,7 @@ export function AdminPromptsPage() {
                             className="admin-prompts-resolved__state admin-prompts-resolved__state--warning"
                             role="status"
                           >
-                            Prévisualisation runtime incomplète : corrigez les placeholders bloquants ou complétez le
-                            sample avant d&apos;exécuter.
+                            {tCat.manualExecIncomplete}
                           </p>
                         ) : null}
                         {manualExecuteMutation.isError ? (
@@ -1513,68 +1400,64 @@ export function AdminPromptsPage() {
                           >
                             <p className="admin-prompts-resolved__error-primary">
                               {manualExecuteMutation.error instanceof AdminPromptsApiError
-                                ? resolvedAssemblyErrorPresentation(manualExecuteMutation.error).primary
-                                : "Exécution impossible."}
+                                ? resolvedAssemblyErrorPresentation(manualExecuteMutation.error, tCat).primary
+                                : tCat.manualExecErrorGeneric}
                             </p>
                             {manualExecuteMutation.error instanceof AdminPromptsApiError &&
-                            manualExecutionFailureLead(manualExecuteMutation.error) ? (
+                            manualExecutionFailureLead(manualExecuteMutation.error, tCat) ? (
                               <p className="admin-prompts-resolved__error-secondary text-muted">
-                                {manualExecutionFailureLead(manualExecuteMutation.error)}
+                                {manualExecutionFailureLead(manualExecuteMutation.error, tCat)}
                               </p>
                             ) : null}
                           </div>
                         ) : null}
                       </div>
                     ) : (
-                      <p className="text-muted admin-prompts-detail__actions-idle">
-                        Sélectionnez « Prévisualisation runtime » pour activer les sample payloads et l&apos;exécution LLM
-                        depuis cette zone.
-                      </p>
+                      <p className="text-muted admin-prompts-detail__actions-idle">{tCat.runtimePreviewIdle}</p>
                     )}
                   </section>
                   {resolvedQuery.data ? (
                     <>
                       <div className="admin-prompts-resolved__zones">
-                        <section className="admin-prompts-resolved__zone" aria-label="Prompts">
-                          <h4>Prompts</h4>
+                        <section className="admin-prompts-resolved__zone" aria-label={tCat.promptsZoneAria}>
+                          <h4>{tCat.promptsZoneTitle}</h4>
                           <p className="text-muted">
-                            Source: {resolvedQuery.data.source_of_truth_status} · snapshot:{" "}
-                            {resolvedQuery.data.active_snapshot_version ?? "n/a"}
+                            {tCat.promptsSourceLine(
+                              tCat.labelSourceOfTruthStatus(resolvedQuery.data.source_of_truth_status),
+                              resolvedQuery.data.active_snapshot_version ?? tCat.notAvailable,
+                            )}
                           </p>
-                          <PromptDisclosure summary="assembled prompt">
+                          <PromptDisclosure summary={tCat.disclosureAssembled}>
                             <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.assembled_prompt}</pre>
                           </PromptDisclosure>
-                          <PromptDisclosure summary="post injectors prompt">
+                          <PromptDisclosure summary={tCat.disclosurePostInjectors}>
                             <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.post_injectors_prompt}</pre>
                           </PromptDisclosure>
-                          <PromptDisclosure summary="rendered prompt">
+                          <PromptDisclosure summary={tCat.disclosureRendered}>
                             <pre className="admin-prompts-code">{resolvedQuery.data.transformation_pipeline.rendered_prompt}</pre>
                           </PromptDisclosure>
-                          <PromptDisclosure summary="system hard policy">
+                          <PromptDisclosure summary={tCat.disclosureSystemPolicy}>
                             <pre className="admin-prompts-code">
                               {String(resolvedQuery.data.resolved_result.provider_messages.system_hard_policy ?? "")}
                             </pre>
                           </PromptDisclosure>
-                          <PromptDisclosure summary="developer content">
+                          <PromptDisclosure summary={tCat.disclosureDeveloper}>
                             <pre className="admin-prompts-code">
                               {String(resolvedQuery.data.resolved_result.provider_messages.developer_content_rendered ?? "")}
                             </pre>
                           </PromptDisclosure>
-                          <PromptDisclosure summary="persona block">
+                          <PromptDisclosure summary={tCat.disclosurePersona}>
                             <pre className="admin-prompts-code">
                               {String(resolvedQuery.data.resolved_result.provider_messages.persona_block ?? "")}
                             </pre>
                           </PromptDisclosure>
                         </section>
-                        <section className="admin-prompts-resolved__zone" aria-label="Placeholders">
-                          <h4>Placeholders</h4>
-                          <p className="text-muted">
-                            Placeholders résolus/partiels pour lecture opérable (sans parser du JSON brut). Les actions
-                            sur les sample payloads sont regroupées dans la zone Actions.
-                          </p>
+                        <section className="admin-prompts-resolved__zone" aria-label={tCat.placeholdersZoneAria}>
+                          <h4>{tCat.placeholdersZoneTitle}</h4>
+                          <p className="text-muted">{tCat.placeholdersIntro}</p>
                           {resolvedQuery.data.resolved_result.placeholders.length === 0 ? (
                             <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
-                              Aucun placeholder disponible pour cette cible.
+                              {tCat.placeholdersEmpty}
                             </p>
                           ) : (
                             <div className="admin-prompts-resolved__placeholders">
@@ -1582,22 +1465,24 @@ export function AdminPromptsPage() {
                                 <article key={item.name} className="admin-prompts-resolved__placeholder">
                                   <strong>{item.name}</strong>
                                   <span className={`admin-prompts-resolved__placeholder-status ${placeholderStatusClassName(item.status)}`}>
-                                    {placeholderStatusLabel(item.status)}
+                                    {tCat.placeholderStatusLabel(item.status)}
                                   </span>
-                                  <span className="text-muted">{placeholderSourceLabel(item.resolution_source)}</span>
-                                  <span className="text-muted">{item.classification ?? "n/a"}</span>
-                                  <span className="text-muted">{placeholderRedactionLevelLabel(item)}</span>
-                                  <span className="text-muted">{item.reason ?? "n/a"}</span>
-                                  <span className="text-muted">{placeholderPreviewValue(item)}</span>
+                                  <span className="text-muted">{tCat.placeholderSourceLabel(item.resolution_source)}</span>
+                                  <span className="text-muted">{item.classification ?? tCat.placeholderUnknownClassification}</span>
+                                  <span className="text-muted">{tCat.placeholderRedactionLevelLabel(item)}</span>
+                                  <span className="text-muted">{item.reason ?? tCat.placeholderUnknownReason}</span>
+                                  <span className="text-muted">{tCat.placeholderPreviewValue(item)}</span>
                                 </article>
                               ))}
                             </div>
                           )}
                         </section>
-                        <section className="admin-prompts-resolved__zone" aria-label="Retour LLM">
-                          <h4>Retour LLM</h4>
+                        <section className="admin-prompts-resolved__zone" aria-label={tCat.llmReturnZoneAria}>
+                          <h4>{tCat.llmReturnZoneTitle}</h4>
                           <p className="text-muted">
-                            context_quality: {resolvedQuery.data.resolved_result.context_compensation_status}
+                            {tCat.contextQualityLine(
+                              tCat.labelContextCompensation(resolvedQuery.data.resolved_result.context_compensation_status),
+                            )}
                           </p>
                           {typeof resolvedQuery.data.resolved_result.provider_messages.render_error === "string" &&
                           resolvedQuery.data.resolved_result.provider_messages.render_error ? (
@@ -1621,24 +1506,24 @@ export function AdminPromptsPage() {
                                   : "admin-prompts-resolved__state admin-prompts-resolved__state--error"
                               }
                             >
-                              {renderErrorLeadText(
+                              {tCat.renderErrorLeadLine(
                                 resolvedQuery.data.inspection_mode,
                                 resolvedQuery.data.resolved_result.provider_messages.render_error_kind,
                               )}
                               {resolvedQuery.data.resolved_result.provider_messages.render_error}
                             </p>
                           ) : null}
-                          <PromptDisclosure summary="Paramètres d'exécution (prévisualisation assembly)">
+                          <PromptDisclosure summary={tCat.disclosureExecParamsPreview}>
                             <pre className="admin-prompts-code">
                               {JSON.stringify(resolvedQuery.data.resolved_result.provider_messages.execution_parameters, null, 2)}
                             </pre>
                           </PromptDisclosure>
-                          <p className="text-muted">Sortie d&apos;exécution live</p>
+                          <p className="text-muted">{tCat.llmOutputLead}</p>
                           {resolvedInspectionMode === "runtime_preview" ? (
                             <>
                               {manualExecuteMutation.isPending ? (
                                 <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
-                                  Exécution LLM en cours…
+                                  {tCat.executeWithLlmPending}
                                 </p>
                               ) : null}
                               {manualExecuteMutation.isError ? (
@@ -1646,7 +1531,7 @@ export function AdminPromptsPage() {
                                   className="admin-prompts-resolved__state admin-prompts-resolved__state--error"
                                   role="status"
                                 >
-                                  L&apos;exécution a échoué — le détail est affiché dans la zone Actions.
+                                  {tCat.manualExecFailed}
                                 </p>
                               ) : null}
                               {!manualExecuteMutation.isPending && !manualExecuteMutation.isError ? (
@@ -1654,54 +1539,54 @@ export function AdminPromptsPage() {
                                   <div className="admin-prompts-resolved__llm-return" aria-live="polite">
                                     <dl className="admin-prompts-resolved__llm-meta">
                                       <div>
-                                        <dt>Statut validation</dt>
+                                        <dt>{tCat.validationStatusDt}</dt>
                                         <dd>{manualExecuteMutation.data.validation_status}</dd>
                                       </div>
                                       <div>
-                                        <dt>Durée</dt>
+                                        <dt>{tCat.durationDt}</dt>
                                         <dd>{manualExecuteMutation.data.latency_ms} ms</dd>
                                       </div>
                                       <div>
-                                        <dt>Chemin</dt>
+                                        <dt>{tCat.pathDt}</dt>
                                         <dd>{manualExecuteMutation.data.execution_path}</dd>
                                       </div>
                                       <div>
-                                        <dt>Provider / modèle</dt>
+                                        <dt>{tCat.providerModelDt}</dt>
                                         <dd>
                                           {manualExecuteMutation.data.provider} · {manualExecuteMutation.data.model}
                                         </dd>
                                       </div>
                                       <div>
-                                        <dt>Tokens (in / out)</dt>
+                                        <dt>{tCat.tokensDt}</dt>
                                         <dd>
                                           {manualExecuteMutation.data.usage_input_tokens} /{" "}
                                           {manualExecuteMutation.data.usage_output_tokens}
                                         </dd>
                                       </div>
                                       <div>
-                                        <dt>Gateway request</dt>
+                                        <dt>{tCat.gatewayRequestDt}</dt>
                                         <dd>
                                           <code>{manualExecuteMutation.data.gateway_request_id}</code>
                                         </dd>
                                       </div>
                                     </dl>
-                                    <PromptDisclosure summary="Paramètres runtime résolus (exécution)">
+                                    <PromptDisclosure summary={tCat.disclosureRuntimeResolved}>
                                       <pre className="admin-prompts-code">
                                         {JSON.stringify(manualExecuteMutation.data.resolved_runtime_parameters, null, 2)}
                                       </pre>
                                     </PromptDisclosure>
-                                    <PromptDisclosure summary="Prompt envoyé au fournisseur (anonymisé)">
+                                    <PromptDisclosure summary={tCat.disclosurePromptSent}>
                                       <pre className="admin-prompts-code">{manualExecuteMutation.data.prompt_sent}</pre>
                                     </PromptDisclosure>
                                     {manualExecuteMutation.data.structured_output_parseable &&
                                     manualExecuteMutation.data.structured_output ? (
-                                      <PromptDisclosure summary="Sortie structurée (validée / redaction admin)">
+                                      <PromptDisclosure summary={tCat.disclosureStructuredOut}>
                                         <pre className="admin-prompts-code">
                                           {JSON.stringify(manualExecuteMutation.data.structured_output, null, 2)}
                                         </pre>
                                       </PromptDisclosure>
                                     ) : null}
-                                    <PromptDisclosure summary="Réponse brute fournisseur (anonymisée)">
+                                    <PromptDisclosure summary={tCat.disclosureRawOut}>
                                       <pre className="admin-prompts-code">{manualExecuteMutation.data.raw_output}</pre>
                                     </PromptDisclosure>
                                     {manualExecuteMutation.data.meta_validation_errors &&
@@ -1721,36 +1606,31 @@ export function AdminPromptsPage() {
                                     role="status"
                                     aria-live="polite"
                                   >
-                                    Exécution signalée comme réussie mais sans données de retour. Réessayez ou
-                                    vérifiez les journaux côté API.
+                                    {tCat.manualExecSuccessNoData}
                                   </p>
                                 ) : (
                                   <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
                                     {selectedSamplePayloadId && resolvedQuery.data &&
                                     isAdminRuntimePreviewExecutable(resolvedQuery.data)
-                                      ? "Utilisez la zone Actions (« Exécuter avec le LLM ») pour afficher le retour complet (métadonnées, prompt effectif, sorties)."
-                                      : "Sélectionnez un sample payload valide dans la zone Actions puis exécutez pour afficher le retour opérateur."}
+                                      ? tCat.manualExecHintReady
+                                      : tCat.manualExecHintNeedSample}
                                   </p>
                                 )
                               ) : null}
                             </>
                           ) : (
                             <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
-                              Passez en prévisualisation runtime pour exécuter le fournisseur et afficher ici le retour
-                              complet.
+                              {tCat.manualExecPassToRuntime}
                             </p>
                           )}
                         </section>
-                        <section className="admin-prompts-resolved__zone" aria-label="Graphe logique">
-                          <h4>Graphe logique</h4>
-                          <p className="text-muted">
-                            Chaîne inspectable : schéma interactif (zoom / déplacement) avec secours texte. Sources de
-                            composition, pipeline, messages fournisseur et données runtime.
-                          </p>
+                        <section className="admin-prompts-resolved__zone" aria-label={tCat.graphZoneAria}>
+                          <h4>{tCat.graphZoneTitle}</h4>
+                          <p className="text-muted">{tCat.graphIntro}</p>
                           <AdminPromptsLogicGraph projection={logicGraph} />
                           <details className="admin-prompts-detail__disclosure admin-prompts-detail__disclosure--sources">
                             <summary className="admin-prompts-detail__disclosure-summary">
-                              Sources de composition (texte intégral)
+                              {tCat.compositionSourcesSummary}
                             </summary>
                             <div className="admin-prompts-detail__disclosure-body">
                               <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.feature_template.content}</pre>
@@ -1765,15 +1645,19 @@ export function AdminPromptsPage() {
                               ) : null}
                               <pre className="admin-prompts-code">{resolvedQuery.data.composition_sources.hard_policy.content}</pre>
                               <div className="admin-prompts-resolved__meta-grid">
-                                <span className="text-muted">Execution profile</span>
+                                <span className="text-muted">{tCat.execProfileGridLabel}</span>
                                 <span>
                                   {resolvedQuery.data.composition_sources.execution_profile.provider} /{" "}
                                   {resolvedQuery.data.composition_sources.execution_profile.model}
                                 </span>
-                                <span className="text-muted">Reasoning</span>
-                                <span>{resolvedQuery.data.composition_sources.execution_profile.reasoning ?? "n/a"}</span>
-                                <span className="text-muted">Verbosity</span>
-                                <span>{resolvedQuery.data.composition_sources.execution_profile.verbosity ?? "n/a"}</span>
+                                <span className="text-muted">{tCat.reasoningGridLabel}</span>
+                                <span>
+                                  {resolvedQuery.data.composition_sources.execution_profile.reasoning ?? tCat.notAvailable}
+                                </span>
+                                <span className="text-muted">{tCat.verbosityGridLabel}</span>
+                                <span>
+                                  {resolvedQuery.data.composition_sources.execution_profile.verbosity ?? tCat.notAvailable}
+                                </span>
                               </div>
                             </div>
                           </details>
@@ -1785,9 +1669,7 @@ export function AdminPromptsPage() {
                 </>
               ) : (
                 <div className="admin-prompts-catalog__detail-empty">
-                  <p className="text-muted">
-                    Sélectionnez une ligne du catalogue pour afficher le détail résolu.
-                  </p>
+                  <p className="text-muted">{tCat.detailEmptySelectRow}</p>
                 </div>
               )}
             </aside>
@@ -1957,7 +1839,7 @@ export function AdminPromptsPage() {
                     <div className="admin-prompts-consumption__cards-mobile" role="list">
                       {consumptionQuery.data.data.map((row) => {
                         const rowKey = consumptionRowKey(row)
-                        const axisLabel = formatConsumptionAxisLabel(consumptionView, row)
+                        const axisLabel = tCat.formatConsumptionAxisLabel(consumptionView, row)
                         const periodLabel = new Date(row.period_start_utc).toLocaleString()
                         return (
                           <article key={rowKey} className="admin-prompts-consumption__row-card" role="listitem">
@@ -2019,7 +1901,7 @@ export function AdminPromptsPage() {
                           <tbody>
                             {consumptionQuery.data.data.map((row) => {
                               const rowKey = consumptionRowKey(row)
-                              const axisLabel = formatConsumptionAxisLabel(consumptionView, row)
+                              const axisLabel = tCat.formatConsumptionAxisLabel(consumptionView, row)
                               return (
                                 <tr key={rowKey}>
                                   <td>{new Date(row.period_start_utc).toLocaleString()}</td>
@@ -2085,7 +1967,7 @@ export function AdminPromptsPage() {
                       <p className="admin-prompts-consumption__investigation-context" role="status">
                         {tConsumption.selectedRowSummary(
                           new Date(selectedConsumptionRow.period_start_utc).toLocaleString(),
-                          formatConsumptionAxisLabel(consumptionView, selectedConsumptionRow),
+                          tCat.formatConsumptionAxisLabel(consumptionView, selectedConsumptionRow),
                         )}
                       </p>
                     </div>
@@ -2118,10 +2000,10 @@ export function AdminPromptsPage() {
                                   <code>{item.request_id}</code>
                                 </td>
                                 <td>
-                                  {item.feature ?? "unknown"} / {item.subfeature ?? "-"}
+                                  {tCat.consumptionUnknownFeatureCell(item.feature ?? null, item.subfeature ?? null)}
                                 </td>
-                                <td>{item.provider ?? "unknown"}</td>
-                                <td>{item.active_snapshot_version ?? item.manifest_entry_id ?? "n/a"}</td>
+                                <td>{item.provider ?? tCat.consumptionUnknownProvider}</td>
+                                <td>{item.active_snapshot_version ?? item.manifest_entry_id ?? tCat.notAvailable}</td>
                                 <td>{item.validation_status}</td>
                               </tr>
                             ))}
@@ -2332,31 +2214,26 @@ export function AdminPromptsPage() {
       ) : null}
 
       {activeTab === "release" ? (
-        <section className="panel admin-prompts-release" aria-label="Investigation release snapshots">
-          {releaseTimelineQuery.isPending ? <div className="loading-placeholder">Chargement de la timeline release...</div> : null}
-          {releaseTimelineQuery.isError ? <p className="chat-error">Impossible de charger la timeline release.</p> : null}
+        <section className="panel admin-prompts-release" aria-label={tCat.releaseRegionAria}>
+          {releaseTimelineQuery.isPending ? <div className="loading-placeholder">{tCat.releaseLoadingTimeline}</div> : null}
+          {releaseTimelineQuery.isError ? <p className="chat-error">{tCat.releaseErrorTimeline}</p> : null}
           {!releaseTimelineQuery.isPending && !releaseTimelineQuery.isError && releaseTimeline.length === 0 ? (
-            <div className="state-line">Aucun snapshot disponible.</div>
+            <div className="state-line">{tCat.releaseEmptySnapshots}</div>
           ) : null}
           {!releaseTimelineQuery.isPending && !releaseTimelineQuery.isError && releaseTimeline.length > 0 ? (
             <div className="admin-prompts-release__surface">
               <header className="admin-prompts-release__surface-header">
-                <p className="admin-prompts-release__kicker">Investigation release</p>
-                <h3 className="admin-prompts-release__surface-title">Timeline et comparaison de snapshots</h3>
-                <p className="admin-prompts-release__surface-intro text-muted">
-                  Lire l&apos;état courant et l&apos;historique, qualifier le snapshot via les preuves, puis comparer deux versions avant
-                  d&apos;ouvrir une entrée canonique dans le catalogue.
-                </p>
+                <p className="admin-prompts-release__kicker">{tCat.releaseKicker}</p>
+                <h3 className="admin-prompts-release__surface-title">{tCat.releaseSurfaceTitle}</h3>
+                <p className="admin-prompts-release__surface-intro text-muted">{tCat.releaseSurfaceIntro}</p>
               </header>
 
               <section className="admin-prompts-release__section" aria-labelledby="release-timeline-heading">
                 <div className="admin-prompts-release__section-head">
                   <h4 id="release-timeline-heading" className="admin-prompts-release__section-heading">
-                    Chronologie des événements
+                    {tCat.releaseTimelineHeading}
                   </h4>
-                  <p className="admin-prompts-release__section-hint text-muted">
-                    Chaque carte regroupe statut release, motif, rollback éventuel et preuves corrélées au snapshot.
-                  </p>
+                  <p className="admin-prompts-release__section-hint text-muted">{tCat.releaseTimelineHint}</p>
                 </div>
                 <div className="admin-prompts-release__timeline">
                   {releaseTimeline.map((item) => (
@@ -2366,37 +2243,43 @@ export function AdminPromptsPage() {
                         <span
                           className={`badge ${item.release_health_status === "degraded" || item.release_health_status === "rollback_recommended" ? "badge--warning" : "badge--info"}`}
                         >
-                          {item.release_health_status}
+                          {tCat.labelReleaseHealthStatus(item.release_health_status)}
                         </span>
                       </div>
                       <p className="text-muted">
-                        Événement : {item.event_type} · {new Date(item.occurred_at).toLocaleString()} ·{" "}
-                        {item.manifest_entry_count} entrée(s) manifeste
+                        {tCat.releaseEventLine(
+                          tCat.labelReleaseEventType(item.event_type),
+                          new Date(item.occurred_at).toLocaleString(),
+                          tCat.manifestEntriesCount(item.manifest_entry_count),
+                        )}
                       </p>
                       <p className="text-muted">
-                        État courant : {item.current_status} · transitions enregistrées : {item.status_history.length}
+                        {tCat.releaseCurrentLine(tCat.labelReleaseCurrentStatus(item.current_status), item.status_history.length)}
                       </p>
                       {item.from_snapshot_id ? (
                         <p className="text-muted">
-                          Rollback : {formatReleaseSnapshotIdShort(item.from_snapshot_id)} →{" "}
-                          {item.to_snapshot_id ? formatReleaseSnapshotIdShort(item.to_snapshot_id) : "—"}
+                          {tCat.releaseRollbackLine(
+                            formatReleaseSnapshotIdShort(item.from_snapshot_id),
+                            item.to_snapshot_id ? formatReleaseSnapshotIdShort(item.to_snapshot_id) : "—",
+                          )}
                         </p>
                       ) : null}
                       {item.reason ? (
                         <p className="text-muted">
-                          <span className="admin-prompts-release__reason-label">Motif : </span>
+                          <span className="admin-prompts-release__reason-label">{tCat.releaseReasonPrefix}</span>
                           {item.reason}
                         </p>
                       ) : null}
                       <div className="admin-prompts-release__proofs-block">
-                        <p className="admin-prompts-release__proofs-lead text-muted">Preuves qualité (corrélation snapshot)</p>
+                        <p className="admin-prompts-release__proofs-lead text-muted">{tCat.releaseProofsLead}</p>
                         <div className="admin-prompts-release__proofs">
                           {item.proof_summaries.map((proof) => (
                             <span
                               key={`${item.snapshot_id}-${proof.proof_type}`}
                               className={`badge ${proof.status === "missing" || proof.verdict === "uncorrelated" ? "badge--warning" : "badge--info"}`}
                             >
-                              {proof.proof_type}: {proof.verdict ?? proof.status}
+                              {tCat.labelReleaseProofType(proof.proof_type)}:{" "}
+                              {tCat.labelReleaseProofOutcome(proof.verdict, proof.status)}
                             </span>
                           ))}
                         </div>
@@ -2409,16 +2292,13 @@ export function AdminPromptsPage() {
               <section className="admin-prompts-release__section" aria-labelledby="release-compare-heading">
                 <div className="admin-prompts-release__section-head">
                   <h4 id="release-compare-heading" className="admin-prompts-release__section-heading">
-                    Comparer deux snapshots
+                    {tCat.releaseCompareHeading}
                   </h4>
-                  <p className="admin-prompts-release__section-hint text-muted">
-                    Choisissez la référence (source) et la version comparée (cible). Le tableau ci-dessous synthétise les écarts par axe
-                    technique.
-                  </p>
+                  <p className="admin-prompts-release__section-hint text-muted">{tCat.releaseCompareHint}</p>
                 </div>
                 <div className="admin-prompts-release__diff-controls">
                   <label className="admin-prompts-compare">
-                    <span>Snapshot source (référence)</span>
+                    <span>{tCat.releaseSnapshotSourceLabel}</span>
                     <select value={fromSnapshotId ?? ""} onChange={(event) => setFromSnapshotId(event.target.value)}>
                       {releaseSnapshots.map((item) => (
                         <option key={`from-${item.snapshot_id}`} value={item.snapshot_id}>
@@ -2428,7 +2308,7 @@ export function AdminPromptsPage() {
                     </select>
                   </label>
                   <label className="admin-prompts-compare">
-                    <span>Snapshot cible (comparée)</span>
+                    <span>{tCat.releaseSnapshotTargetLabel}</span>
                     <select value={toSnapshotId ?? ""} onChange={(event) => setToSnapshotId(event.target.value)}>
                       {releaseSnapshots.map((item) => (
                         <option key={`to-${item.snapshot_id}`} value={item.snapshot_id}>
@@ -2440,14 +2320,14 @@ export function AdminPromptsPage() {
                 </div>
               </section>
 
-              {releaseDiffQuery.isPending ? <div className="loading-placeholder">Chargement du diff snapshots...</div> : null}
-              {releaseDiffQuery.isError ? <p className="chat-error">Impossible de charger le diff snapshots.</p> : null}
+              {releaseDiffQuery.isPending ? <div className="loading-placeholder">{tCat.releaseDiffLoading}</div> : null}
+              {releaseDiffQuery.isError ? <p className="chat-error">{tCat.releaseDiffError}</p> : null}
               {releaseDiffQuery.data ? (
                 <div className="admin-prompts-release__diff panel">
-                  <h3 className="admin-prompts-release__diff-title">Synthèse de comparaison</h3>
-                  <div className="admin-prompts-release__compare-banner" aria-label="Versions comparées pour ce diff">
+                  <h3 className="admin-prompts-release__diff-title">{tCat.releaseDiffTitle}</h3>
+                  <div className="admin-prompts-release__compare-banner" aria-label={tCat.releaseCompareBannerAria}>
                     <div className="admin-prompts-release__compare-card">
-                      <span className="admin-prompts-release__compare-role">Référence (source)</span>
+                      <span className="admin-prompts-release__compare-role">{tCat.releaseCompareRoleSource}</span>
                       <strong>
                         {selectedTimelineById[releaseDiffQuery.data.from_snapshot_id]?.snapshot_version ??
                           releaseDiffQuery.data.from_snapshot_id}
@@ -2460,7 +2340,7 @@ export function AdminPromptsPage() {
                       →
                     </span>
                     <div className="admin-prompts-release__compare-card">
-                      <span className="admin-prompts-release__compare-role">Comparée (cible)</span>
+                      <span className="admin-prompts-release__compare-role">{tCat.releaseCompareRoleTarget}</span>
                       <strong>
                         {selectedTimelineById[releaseDiffQuery.data.to_snapshot_id]?.snapshot_version ??
                           releaseDiffQuery.data.to_snapshot_id}
@@ -2470,20 +2350,18 @@ export function AdminPromptsPage() {
                       </code>
                     </div>
                   </div>
-                  <h4 className="admin-prompts-release__diff-table-heading">Écarts par entrée canonique</h4>
-                  <p className="admin-prompts-release__diff-table-lead text-muted">
-                    Assembly, profil d&apos;exécution et contrat de sortie : état synthétique avant d&apos;ouvrir le détail catalogue.
-                  </p>
+                  <h4 className="admin-prompts-release__diff-table-heading">{tCat.releaseDiffTableHeading}</h4>
+                  <p className="admin-prompts-release__diff-table-lead text-muted">{tCat.releaseDiffTableLead}</p>
                   <div className="admin-prompts-catalog__table-wrap">
                     <table className="admin-prompts-catalog__table">
                       <thead>
                         <tr>
-                          <th>Entrée manifeste</th>
-                          <th>Portée du changement</th>
-                          <th>Assembly</th>
-                          <th>Profil d&apos;exécution</th>
-                          <th>Contrat de sortie</th>
-                          <th>Catalogue</th>
+                          <th>{tCat.releaseDiffColManifest}</th>
+                          <th>{tCat.releaseDiffColScope}</th>
+                          <th>{tCat.releaseDiffColAssembly}</th>
+                          <th>{tCat.releaseDiffColExec}</th>
+                          <th>{tCat.releaseDiffColContract}</th>
+                          <th>{tCat.releaseDiffColCatalog}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2492,33 +2370,33 @@ export function AdminPromptsPage() {
                             <td>
                               <code>{entry.manifest_entry_id}</code>
                             </td>
-                            <td>{releaseDiffCategoryLabel(entry.category)}</td>
+                            <td>{tCat.releaseDiffCategoryLabel(entry.category)}</td>
                             <td>
                               <span className={releaseDiffAxisBadgeClass(entry.assembly_changed)}>
-                                {entry.assembly_changed ? "Modifié" : "Inchangé"}
+                                {entry.assembly_changed ? tCat.releaseDiffChanged : tCat.releaseDiffUnchanged}
                               </span>
                             </td>
                             <td>
                               <span className={releaseDiffAxisBadgeClass(entry.execution_profile_changed)}>
-                                {entry.execution_profile_changed ? "Modifié" : "Inchangé"}
+                                {entry.execution_profile_changed ? tCat.releaseDiffChanged : tCat.releaseDiffUnchanged}
                               </span>
                             </td>
                             <td>
                               <span className={releaseDiffAxisBadgeClass(entry.output_contract_changed)}>
-                                {entry.output_contract_changed ? "Modifié" : "Inchangé"}
+                                {entry.output_contract_changed ? tCat.releaseDiffChanged : tCat.releaseDiffUnchanged}
                               </span>
                             </td>
                             <td>
                               <button
                                 className="text-button admin-prompts-catalog__inspect admin-prompts-release__catalog-link"
                                 type="button"
-                                aria-label={`Ouvrir l'entrée canonique ${entry.manifest_entry_id} dans le catalogue`}
+                                aria-label={tCat.releaseOpenCatalogAria(entry.manifest_entry_id)}
                                 onClick={() => {
                                   navigate(`${ADMIN_PROMPTS_BASE}/catalog`)
                                   setSelectedManifestEntryId(entry.manifest_entry_id)
                                 }}
                               >
-                                <span className="admin-prompts-release__catalog-link-title">Ouvrir dans le catalogue</span>
+                                <span className="admin-prompts-release__catalog-link-title">{tCat.releaseOpenCatalogTitle}</span>
                                 <span className="admin-prompts-release__catalog-link-hint text-muted">
                                   <code>{formatManifestEntryCatalogHint(entry.manifest_entry_id)}</code>
                                 </span>
@@ -2557,7 +2435,8 @@ export function AdminPromptsPage() {
           isPending={manualExecuteMutation.isPending}
           manifestEntryId={selectedManifestEntryId}
           samplePayloadId={selectedSamplePayloadId}
-          inspectionModeLabel={inspectionModeFullLabel(resolvedInspectionMode)}
+          inspectionModeLabel={tCat.inspectionModeFullLabel(resolvedInspectionMode)}
+          catalog={tCat}
           onCancel={() => setManualExecuteConfirmOpen(false)}
           onConfirm={() => {
             manualExecuteMutation.mutate(undefined, {

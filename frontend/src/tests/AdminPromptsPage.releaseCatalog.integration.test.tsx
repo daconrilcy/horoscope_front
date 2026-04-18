@@ -173,7 +173,7 @@ describe("AdminPromptsPage — navigation release → catalogue (intégration ro
     const { router } = renderPromptsApp(["/admin/prompts/release"])
 
     await waitFor(() => {
-      expect(screen.getByRole("region", { name: "Investigation release snapshots" })).toBeInTheDocument()
+      expect(screen.getByRole("region", { name: "Investigation des snapshots release" })).toBeInTheDocument()
     })
 
     const catalogBtn = await screen.findByRole("button", {
