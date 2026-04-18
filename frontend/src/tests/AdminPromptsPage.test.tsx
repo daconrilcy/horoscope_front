@@ -2292,6 +2292,163 @@ describe("AdminPromptsPage", () => {
     expect(screen.queryByRole("columnheader", { name: "Période" })).not.toBeInTheDocument()
   })
 
+  it("réinitialise le drill-down quand la granularité redéfinit le périmètre d'agrégats", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical/drilldown")) {
+        return makeJsonResponse({
+          data: [
+            {
+              request_id: "req-reset-1",
+              timestamp: "2026-04-20T10:00:00Z",
+              feature: "chat",
+              subfeature: "chat_default",
+              provider: "openai",
+              active_snapshot_version: "release-1",
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              validation_status: "valid",
+            },
+          ],
+          meta: { count: 1, limit: 50, order: "timestamp_desc" },
+        })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical")) {
+        const granularity = new URL(url).searchParams.get("granularity") ?? "day"
+        return makeJsonResponse({
+          data: [
+            {
+              period_start_utc: "2026-04-20T00:00:00Z",
+              granularity,
+              user_id: null,
+              user_email: null,
+              subscription_plan: null,
+              feature: "chat",
+              subfeature: "chat_default",
+              request_count: granularity === "day" ? 3 : 12,
+              input_tokens: 100,
+              output_tokens: 50,
+              total_tokens: 150,
+              estimated_cost: 0.12,
+              avg_latency_ms: 200,
+              error_rate: 0,
+            },
+          ],
+          meta: {
+            view: "feature",
+            granularity,
+            count: 1,
+            page: 1,
+            page_size: 20,
+            sort_by: "period_start_utc",
+            sort_order: "desc",
+            timezone: "UTC",
+            default_granularity_behavior: "aggregated_by_selected_period",
+          },
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Consommation" }))
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: /Vue d'agrégation/i }), "feature")
+    await userEvent.click(await screen.findByRole("button", { name: "Voir logs récents" }))
+
+    await waitFor(() => {
+      expect(screen.getByText("Drill-down appels récents (50 max)")).toBeInTheDocument()
+    })
+    expect(screen.getByText("req-reset-1")).toBeInTheDocument()
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: /Pas de temps des agrégats/i }), "month")
+
+    await waitFor(() => {
+      expect(screen.queryByText("Drill-down appels récents (50 max)")).not.toBeInTheDocument()
+    })
+    expect(screen.queryByText("req-reset-1")).not.toBeInTheDocument()
+  })
+
+  it("diffère la révocation du blob lors de l'export CSV", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    const createObjectURL = vi.fn(() => "blob:test-consumption")
+    const revokeObjectURL = vi.fn()
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {})
+    const setTimeoutSpy = vi.spyOn(window, "setTimeout")
+
+    vi.stubGlobal("URL", {
+      ...URL,
+      createObjectURL,
+      revokeObjectURL,
+    })
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical/export")) {
+        return new Response("period,requests\n2026-04-20,3\n", {
+          status: 200,
+          headers: { "Content-Type": "text/csv" },
+        })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical")) {
+        return makeJsonResponse({
+          data: [],
+          meta: {
+            view: "user",
+            granularity: "day",
+            count: 0,
+            page: 1,
+            page_size: 20,
+            sort_by: "period_start_utc",
+            sort_order: "desc",
+            timezone: "UTC",
+            default_granularity_behavior: "aggregated_by_selected_period",
+          },
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Consommation" }))
+    await userEvent.click(screen.getByRole("button", { name: "Exporter CSV" }))
+
+    await waitFor(() => {
+      expect(createObjectURL).toHaveBeenCalledTimes(1)
+    })
+    expect(anchorClick).toHaveBeenCalledTimes(1)
+    expect(revokeObjectURL).not.toHaveBeenCalled()
+    const revokeTimeoutCall = setTimeoutSpy.mock.calls.find(([, delay]) => delay === 30_000)
+    expect(revokeTimeoutCall).toBeDefined()
+
+    const revokeLater = revokeTimeoutCall?.[0]
+    expect(typeof revokeLater).toBe("function")
+    ;(revokeLater as () => void)()
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:test-consumption")
+
+    setTimeoutSpy.mockRestore()
+    anchorClick.mockRestore()
+  })
+
   it("convertit explicitement les bornes datetime-local en ISO UTC", () => {
     expect(toUtcIsoFromDateTimeInput("2026-04-22T10:30")).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:30:00\.000Z$/)
     expect(toUtcIsoFromDateTimeInput("2026-04-22T10:30")).not.toBe("2026-04-22T10:30")

@@ -171,6 +171,7 @@ gpt-5
 - Implementation livree : surface `admin-prompts-consumption` (en-tete, toolbar par groupes, section agrégats, panneau investigation distinct), i18n `adminPromptsConsumption` (FR/EN/ES), bascule table/cartes via `matchMedia` (pas de double DOM), helpers `consumptionRowKey` / `formatConsumptionAxisLabel`, tests Vitest etendus (region, heading agrégats, viewport etroit).
 - Post-revue code : hook `useMatchMediaMaxWidth` reloge apres les imports ; export CSV avec `try/catch` et message d erreur ; etat vide agrégats (`emptyAggregates`) + test Vitest dédié.
 - Durcissement final : reinitialisation du drill-down (`selectedDrilldownKey`) sur tout changement de périmètre d’agrégats (vue, granularité, période, recherche, pagination) ; `URL.revokeObjectURL` différé après export CSV pour fiabilité navigateur.
+- Fermeture du risque résiduel : tests Vitest explicites sur la disparition du drill-down après changement de granularité et sur la révocation différée du blob d export CSV (pas seulement une couverture indirecte).
 
 ### File List
 
@@ -188,6 +189,7 @@ gpt-5
 - 2026-04-18 : code review BMAD (étapes 2–3) — constats consignés dans « Review Findings ».
 - 2026-04-18 : correctifs post-revue (imports, export CSV, état vide + test Vitest) — story et sprint passés en **done**.
 - 2026-04-18 : cloture — reset drill-down sur périmètre agrégats + revoke blob CSV différé ; artefacts et dépôt alignés (**done**).
+- 2026-04-18 : couverture complémentaire — tests ciblés sur reset drill-down après changement de granularité et cleanup différé de l export CSV ; risque résiduel fermé.
 
 ### Review Findings (AI)
 
