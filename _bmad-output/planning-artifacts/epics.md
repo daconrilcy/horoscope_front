@@ -32,6 +32,18 @@ editHistory:
     changes: 'Ajout des epics/stories admin LLM preview runtime sample payloads et execution controlee'
   - date: '2026-04-18'
     changes: 'Extraction des exigences ciblees pour la refonte UX/UI de /admin/prompts a partir des stories 67-69, du plan UX fourni par Cyril et des contraintes PRD/Architecture'
+  - date: '2026-04-18'
+    changes: 'Clarifications step-01: legacy/release/consumption en routes dediees; schema visuel LLM explicite ajoute aux exigences'
+  - date: '2026-04-18'
+    changes: 'Step-02 approuve: ajout Epic 70 et couverture FR43-FR51'
+  - date: '2026-04-18'
+    changes: 'Step-03: generation initiale des stories de l Epic 70'
+  - date: '2026-04-18'
+    changes: 'Epic 70 enrichi avec edition des prompts via formulaires et historisation des sauvegardes'
+  - date: '2026-04-18'
+    changes: 'Clarification step-02: le schema visuel LLM doit utiliser une bibliotheque React reconnue'
+  - date: '2026-04-18'
+    changes: 'Validation finale Epic 70: workflow de sauvegarde precise (nouvelle version draft/inactive puis publication), statut explicite des prompts et inactivation automatique de l ancienne version publiee'
 ---
 
 # horoscope_front - Epic Breakdown
@@ -91,9 +103,11 @@ FR44: Les operations admin peuvent distinguer explicitement les modes `assembly 
 FR45: Les operations admin peuvent lire la composition d une cible canonique dans des sections progressives comprenant au minimum resume, prompts, placeholders, retour LLM et graphe logique.  
 FR46: Les operations admin peuvent selectionner, creer, modifier, dupliquer, desactiver et supprimer des sample payloads par feature/locale pour alimenter des previews runtime non sensibles.  
 FR47: Les operations admin peuvent declencher une execution LLM reelle uniquement depuis une runtime preview valide et consulter le retour brut, structure et les metadonnees associees.  
-FR48: Les operations admin peuvent acceder a l historique legacy, a l historique release et a la consommation comme univers de travail separes du catalogue canonique.  
+FR48: Les operations admin peuvent acceder a l historique legacy, a l historique release et a la consommation comme routes dediees et univers de travail separes du catalogue canonique.  
 FR49: Les operations admin peuvent executer les actions sensibles (rollback legacy, gestion sample payloads, execution manuelle) dans une zone d actions dediee avec niveau de risque et confirmation explicites.  
-FR50: Les operations admin disposent d une interface `/admin/prompts` entierement coherente en francais produit, avec libelles metier stabilises et actions contextuelles explicites.
+FR50: Les operations admin disposent d une interface `/admin/prompts` entierement coherente en francais produit, avec libelles metier stabilises et actions contextuelles explicites.  
+FR51: Les operations admin peuvent consulter la chaine logique des processus LLM sous forme de schema visuel pedagogique reliant sources de composition, pipeline de transformation, donnees runtime et resultat operateur.
+FR52: Les operations admin peuvent modifier les prompts canoniques via des formulaires admin guides et toute sauvegarde cree une nouvelle version historisee, comparable et auditée.
 
 ### NonFunctional Requirements
 
@@ -142,9 +156,13 @@ NFR27: Les surfaces de preview et d execution manuelle doivent maintenir la reda
 - La taxonomie canonique `manifest_entry_id` et le quatuor `feature/subfeature/plan/locale` restent la verite nominale de `/admin/prompts`; ne pas reintroduire `use_case` comme axe principal d exploration.
 - La refonte UX/UI de `/admin/prompts` doit preserver les capacites deja livrees par les stories 67.1 a 69.3: semantique des modes preview, graphe logique, preview runtime via sample payload, CRUD sample payloads, execution manuelle, retour LLM, audit et observabilite.
 - La separation fonctionnelle entre `catalogue`, `legacy`, `release`, `consumption`, `personas` et `echantillons runtime` doit etre maintenue, mais le catalogue ne doit plus porter l ergonomie des autres univers.
+- `legacy`, `release` et `consumption` doivent evoluer vers des routes dediees plutot qu etre conserves comme simples sous-onglets du catalogue.
 - Les previews et executions admin doivent reutiliser les endpoints et pipelines existants (`resolved`, sample payloads, `execute-sample`, gateway nominal) sans moteur parallele ad hoc cote frontend.
 - Les actions sensibles de l interface admin doivent etre regroupees dans des surfaces dediees, confirmees explicitement et alimentees par les garde-fous backend existants.
 - La mise en oeuvre frontend doit rester conforme aux regles du monorepo: React/TypeScript, CSS dedie sans style inline, reutilisation des variables et tokens admin existants.
+- L edition des prompts doit creer une nouvelle version historisee a chaque sauvegarde, sans ecrasement silencieux de la version precedente, et rester compatible avec les mecanismes existants de diff, rollback, audit et publication.
+- Le workflow d edition des prompts suit obligatoirement la sequence `creation d une nouvelle version draft/inactive -> publication explicite -> passage automatique de l ancienne version publiee au statut inactive`.
+- Le schema visuel LLM doit etre rendu via une bibliotheque React connue et maintenable (par exemple React Flow), plutot qu un rendu artisanal ad hoc.
 
 ### UX Design Requirements
 
@@ -157,7 +175,12 @@ UX-DR6: Les actions sensibles (`Executer avec le LLM`, rollback legacy, gestion 
 UX-DR7: Tous les libelles de la page doivent etre harmonises en francais produit coherent, avec suppression des intitulés techniques ambigus et des libelles errones du type `Ouvrir 66.46`.  
 UX-DR8: Les tabs et panneaux de `/admin/prompts` doivent etre semantiquement complets (`tablist`, `tab`, `tabpanel`, associations explicites) et utilisables integralement au clavier.  
 UX-DR9: Les grilles et tables denses doivent se replier proprement sur mobile en cartes, panneaux empiles ou sections collapsibles sans perte des informations critiques.  
-UX-DR10: Les etats `loading`, `error`, `empty`, `preview partielle`, `runtime incomplete` et `execution en cours` doivent etre de premier rang, comprehensibles sans lecture de JSON brut.
+UX-DR10: Les etats `loading`, `error`, `empty`, `preview partielle`, `runtime incomplete` et `execution en cours` doivent etre de premier rang, comprehensibles sans lecture de JSON brut.  
+UX-DR11: La logique LLM doit etre rendue sous forme de schema visuel lisible et pedagogique, avec noeuds et relations explicites plutot qu une simple liste textuelle.  
+UX-DR12: `legacy`, `release` et `consumption` doivent etre accessibles par navigation dediee (routes ou sous-pages) avec un modele d interaction adapte a leur usage propre, et non plus comme extensions du catalogue.  
+UX-DR13: L edition des prompts doit se faire via des formulaires guides et comprehensibles, avec champs structures, validation explicite, resume des changements et confirmation de creation d une nouvelle version historisee.  
+UX-DR14: Le statut de chaque prompt doit etre visible explicitement dans l interface (`draft`, `inactive`, `published` ou equivalent stabilise) et le workflow de publication doit etre comprehensible sans connaissance technique.
+UX-DR13: Le schema visuel LLM doit utiliser une bibliotheque React reconnue pour garantir lisibilite, interactivite, maintenabilite et comportement responsive/accessible.
 
 ### FR Coverage Map
 
@@ -203,6 +226,16 @@ FR39: Epic 7 - consommation API B2B authentifiee
 FR40: Epic 7 - gestion des limites et metrics de consommation  
 FR41: Epic 7 - demandes de personnalisation editoriale  
 FR42: Epic 7 - facturation hybride fixe + volume
+FR43: Epic 70 - catalogue admin prompts en master-detail operable  
+FR44: Epic 70 - clarification explicite des modes preview et execution  
+FR45: Epic 70 - detail progressif de la cible canonique  
+FR46: Epic 70 - gestion operable des sample payloads  
+FR47: Epic 70 - execution manuelle depuis runtime preview valide  
+FR48: Epic 70 - univers legacy, release et consommation en routes dediees  
+FR49: Epic 70 - zone d actions sensibles dediee et confirmee  
+FR50: Epic 70 - harmonisation complete des libelles FR de la surface admin prompts  
+FR51: Epic 70 - schema visuel des processus LLM  
+FR52: Epic 70 - edition formulaire des prompts et historisation des sauvegardes
 
 ## Epic List
 
@@ -234,6 +267,10 @@ Permettre aux equipes support/ops de traiter les incidents et maintenir la quali
 Permettre aux clients entreprise de consommer le moteur via API, gerer leurs acces/offres et etre factures en fixe + volume.
 **FRs covered:** FR38, FR39, FR40, FR41, FR42
 
+### Epic 70: Refonte UX/UI operable de l espace Admin Prompts LLM
+Permettre aux equipes ops/admin d explorer, comprendre, previsualiser et executer les prompts canoniques via une interface plus ergonomique, plus lisible et plus sure, organisee autour d un master-detail, de routes dediees pour les univers secondaires, et d un schema visuel explicite des processus LLM rendu avec une bibliotheque React dediee.
+**FRs covered:** FR43, FR44, FR45, FR46, FR47, FR48, FR49, FR50, FR51, FR52
+
 ### Epic 12: Profil natal — saisie des donnees de naissance et generation du theme
 Permettre a l utilisateur de renseigner ses donnees de naissance depuis le frontend et de declencher la generation de son theme natal, avec feedback adequat pendant le calcul.
 **FRs covered:** FR10, FR11, FR14
@@ -263,6 +300,258 @@ So that la qualité premium augmente, les coûts tokens baissent et les erreurs 
 [Source: _bmad-output/implementation-artifacts/30-8-mise-a-niveau-globale-interpretation-theme-natal-gpt5-responses-structured-outputs.md]
 
 ### Story 30.9: Historique multi-interprétations, suppression traçable et export PDF templatisable
+
+## Epic 70: Refonte UX/UI operable de l espace Admin Prompts LLM
+
+Permettre aux equipes ops/admin d explorer, comprendre, previsualiser et executer les prompts canoniques via une interface plus ergonomique, plus lisible et plus sure, organisee autour d un master-detail, de routes dediees pour les univers secondaires, et d un schema visuel explicite des processus LLM rendu avec une bibliotheque React dediee.
+
+### Story 70.1: Reorganiser la navigation admin prompts en routes dediees
+
+As a admin ops,
+I want acceder a des routes dediees pour le catalogue, le legacy, le release et la consommation,
+So that chaque univers de travail ait une navigation claire et un modele d interaction adapte.
+
+**Acceptance Criteria:**
+
+**Given** l utilisateur admin accede a l espace prompts
+**When** il navigue entre les univers `catalogue`, `legacy`, `release`, `consumption`, `personas` et `echantillons runtime`
+**Then** chaque univers est accessible via une route dediee stable
+**And** la navigation active indique clairement la section courante sans melanger les contenus dans un seul ecran.
+
+**Given** l univers `catalogue`
+**When** il est affiche
+**Then** il ne porte plus les contenus `legacy`, `release` et `consumption`
+**And** ces contenus ne sont plus relies a la logique interne du tableau catalogue.
+
+**Given** un lien profond existant vers `/admin/prompts`
+**When** la refonte est livree
+**Then** la route catalogue reste accessible
+**And** les nouvelles routes dediees sont atteignables sans casser l acces admin existant.
+
+### Story 70.2: Refaire le catalogue canonique en mode master-detail
+
+As a admin ops,
+I want un catalogue canonique simplifie avec liste filtrable et panneau detail sticky,
+So that je puisse inspecter rapidement une cible sans perdre le contexte de la selection.
+
+**Acceptance Criteria:**
+
+**Given** l admin ouvre la route catalogue prompts
+**When** la page charge sur desktop
+**Then** la surface affiche une liste canonique filtrable a gauche et un panneau detail sticky a droite
+**And** la selection courante reste visible pendant la lecture du detail.
+
+**Given** le tableau catalogue
+**When** il est affiche
+**Then** il n expose que les colonnes de premier niveau `tuple`, `snapshot actif`, `provider/modele`, `sante` et `action`
+**And** les metadonnees secondaires sont reservees au panneau detail.
+
+**Given** les filtres catalogue
+**When** l admin les utilise
+**Then** ils sont presentes dans une barre compacte avec labels visibles
+**And** les filtres actifs sont resumes visuellement
+**And** un bouton `Reinitialiser` et une zone `Filtres avances` repliable sont disponibles.
+
+**Artefact d’implémentation :** [`70-2-refaire-le-catalogue-canonique-en-mode-master-detail.md`](../implementation-artifacts/70-2-refaire-le-catalogue-canonique-en-mode-master-detail.md) — statut **done** (2026-04-18) ; implémentation master-detail + filtres + tests Vitest ; revues code (correctifs a11y / reset / assertion layout) puis 2ᵉ passe sans finding résiduel.
+
+### Story 70.3: Recomposer le detail prompts en lecture progressive et zone d actions
+
+As a admin ops,
+I want un detail structure en sections progressives et une zone d actions dediee,
+So that je distingue immediatement ce que je lis de ce que je peux executer.
+
+**Acceptance Criteria:**
+
+**Given** une cible canonique est selectionnee
+**When** le panneau detail est rendu
+**Then** les sections apparaissent dans l ordre `Resume`, `Mode d inspection`, `Etat d execution`, `Prompts`, `Placeholders`, `Retour LLM`, `Graphe logique`
+**And** cette hierarchie est stable quel que soit le mode de preview.
+
+**Given** les blocs de texte longs du detail
+**When** ils depassent un volume de lecture confortable
+**Then** ils sont presentes dans des accordions, onglets secondaires ou sections repliables equivalentes
+**And** la page reste lisible sans scroll excessif dans un seul bloc.
+
+**Given** des actions sensibles sont disponibles
+**When** le detail est affiche
+**Then** elles sont regroupees dans une zone `Actions` distincte du contenu de lecture
+**And** le niveau de risque et les preconditions d execution sont explicitement visibles.
+
+### Story 70.4: Rendre le schema visuel des processus LLM avec React Flow
+
+As a admin ops,
+I want un schema visuel interactif des processus LLM,
+So that je comprenne rapidement la chaine de composition et les dependances runtime sans parser du texte brut.
+
+**Acceptance Criteria:**
+
+**Given** une cible canonique est ouverte dans le detail
+**When** la section `Graphe logique` est affichee
+**Then** elle rend un schema visuel avec une bibliotheque React reconnue
+**And** la bibliotheque retenue est `React Flow` ou equivalent de meme niveau de robustesse.
+
+**Given** le schema visuel
+**When** il est rendu
+**Then** il relie au minimum `manifest_entry_id`, `composition_sources`, `transformation_pipeline`, `provider_messages`, `runtime inputs` et le resultat operateur
+**And** il distingue visuellement templates, policy, execution profile, sample payloads et fallbacks.
+
+**Given** la densite du graphe devient trop forte ou le rendu est contraint
+**When** le composant ne peut plus rester lisible
+**Then** un fallback texte ou une vue simplifiee reste disponible
+**And** aucune information critique n est perdue pour l operateur.
+
+### Story 70.5: Refondre la route legacy pour la comparaison et le rollback
+
+As a admin ops,
+I want une route legacy dediee avec comparaison et rollback plus lisibles,
+So that je puisse investiguer l historique legacy sans polluer l experience du catalogue canonique.
+
+**Acceptance Criteria:**
+
+**Given** l admin ouvre la route legacy
+**When** la page charge
+**Then** l univers legacy est presente comme un ecran autonome avec son propre contexte de lecture
+**And** le choix du use case et des versions a comparer est immediatement comprehensible.
+
+**Given** l admin compare deux versions legacy
+**When** il ouvre le diff
+**Then** le diff est lisible, clairement annote et dissocie de l inspection canonique
+**And** les actions de rollback sont presentes dans une zone dediee.
+
+**Given** une action de rollback legacy est disponible
+**When** l admin la declenche
+**Then** la confirmation explicite reste obligatoire
+**And** le libelle de l action et ses consequences sont formules en francais produit coherent.
+
+### Story 70.6: Refondre la route release pour l investigation snapshot
+
+As a admin ops,
+I want une route release dediee pour la timeline et les diffs de snapshots,
+So that je puisse comprendre l historique de release sans naviguer dans le catalogue principal.
+
+**Acceptance Criteria:**
+
+**Given** l admin ouvre la route release
+**When** la page charge
+**Then** la timeline snapshots est affichee dans une interface autonome orientee investigation
+**And** les preuves, statuts et changements sont hierarchises visuellement.
+
+**Given** l admin compare deux snapshots
+**When** il ouvre le diff
+**Then** les changements assembly, execution profile et output contract sont lisibles sans ambiguite
+**And** les actions de navigation vers le catalogue utilisent un libelle contextuel coherent en francais.
+
+**Given** un bouton de navigation vers une cible canonique est affiche
+**When** l admin l active
+**Then** il ouvre le detail catalogue approprie
+**And** aucun libelle parasite ou numerique ambigu de type `Ouvrir 66.46` n apparait.
+
+### Story 70.7: Refondre la route consommation pour le pilotage operable
+
+As a admin ops,
+I want une route consommation dediee plus claire pour les vues, filtres et drill-down,
+So that je puisse analyser les usages LLM sans surcharge cognitive.
+
+**Acceptance Criteria:**
+
+**Given** l admin ouvre la route consommation
+**When** la page charge
+**Then** les vues `utilisateur`, `abonnement` et `feature/subfeature` sont presentes dans un ecran autonome
+**And** les filtres temporels, la granularite et l export sont clairement regroupes.
+
+**Given** la table de consommation
+**When** elle est rendue sur mobile ou sur largeur contrainte
+**Then** elle se replie en composants lisibles sans perdre l acces au drill-down
+**And** les actions `Voir logs recents` restent disponibles.
+
+**Given** un drill-down de consommation est ouvert
+**When** l admin consulte les appels recents
+**Then** les logs correles sont affiches dans une presentation claire et distincte de la table d agregats
+**And** l operateur conserve son contexte de filtre courant.
+
+### Story 70.8: Harmoniser les libelles, l accessibilite et le responsive de la surface admin prompts
+
+As a admin ops,
+I want une interface admin prompts coherente, accessible et responsive,
+So that je puisse l utiliser efficacement sur tous les ecrans et avec les technologies d assistance.
+
+**Acceptance Criteria:**
+
+**Given** les controles critiques de l espace admin prompts
+**When** ils sont rendus
+**Then** ils ont tous des labels visibles et des etats focus explicites
+**And** la navigation clavier couvre les tabs, panneaux, formulaires et actions sensibles.
+
+**Given** l ensemble des routes de l epic 70
+**When** elles sont relues
+**Then** les libelles sont harmonises en francais produit coherent
+**And** les termes techniques bruts ou ambigus sont remplaces par des formulations metier stables.
+
+**Given** la surface est ouverte sur mobile ou largeur reduite
+**When** les composants master-detail, tableaux et panneaux deviennent contraints
+**Then** ils se replient proprement en sections empilees ou collapsibles
+**And** l interface reste conforme aux exigences WCAG 2.1 AA et sans style inline.
+
+### Story 70.9: Editer les prompts canoniques via des formulaires admin guides
+
+As a admin ops,
+I want modifier les prompts canoniques depuis des formulaires structures,
+So that je puisse faire evoluer les contenus sans passer par des editions brutes ou ambiguës.
+
+**Acceptance Criteria:**
+
+**Given** une cible canonique editable est ouverte
+**When** l admin choisit `Modifier le prompt`
+**Then** un formulaire guide s ouvre avec les champs pertinents structures
+**And** les blocs editables sont distingues clairement des metadonnees non editables.
+
+**Given** le formulaire d edition
+**When** l admin modifie un ou plusieurs champs
+**Then** les validations de forme et de coherence sont explicites
+**And** les erreurs sont affichees en francais produit avant toute sauvegarde.
+
+**Given** l admin prepare une sauvegarde
+**When** il relit son edition
+**Then** un resume des changements et de la portee de la modification est visible
+**And** l action de sauvegarde est distincte des autres actions sensibles de la page.
+
+**Given** l admin sauvegarde une modification de prompt
+**When** la sauvegarde reussit
+**Then** une nouvelle version est creee avec un statut explicite `draft` ou `inactive` non publie
+**And** la version actuellement publiee reste active tant qu aucune publication explicite n a ete confirmee.
+
+### Story 70.10: Historiser, comparer et auditer chaque sauvegarde de prompt
+
+As a admin ops,
+I want que chaque sauvegarde de prompt cree une nouvelle version historisee, comparable et auditée,
+So that je puisse revenir sur une modification et comprendre quand, pourquoi et par qui elle a ete effectuee.
+
+**Acceptance Criteria:**
+
+**Given** un prompt est sauvegarde depuis le formulaire admin
+**When** la sauvegarde reussit
+**Then** une nouvelle version historisee est creee
+**And** la version precedente n est jamais ecrasee silencieusement.
+
+**Given** une nouvelle version vient d etre creee
+**When** l admin consulte l historique du prompt
+**Then** il voit au minimum la date, l auteur, le statut et un acces au diff avec la version precedente
+**And** cette version est exploitable par les mecanismes existants de comparaison et rollback.
+
+**Given** une sauvegarde de prompt est effectuee
+**When** l operation est journalisee
+**Then** un audit event persistant est cree avec les metadonnees utiles
+**And** la surface admin confirme visuellement qu une nouvelle version historisee a ete enregistree.
+
+**Given** l admin publie explicitement une nouvelle version de prompt
+**When** la publication est confirmee
+**Then** la nouvelle version passe au statut `published`
+**And** l ancienne version qui etait `published` passe automatiquement au statut `inactive`.
+
+**Given** l historique des versions d un prompt
+**When** il est affiche
+**Then** le statut de chaque version est visible explicitement
+**And** il n existe jamais plus d une version `published` simultanement pour un meme prompt canonique.
 
 As a utilisateur,
 I want pouvoir basculer entre mes interprétations SHORT/COMPLETE, sélectionner une version précise, supprimer une interprétation et télécharger un PDF personnalisable,

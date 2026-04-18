@@ -188,16 +188,24 @@ describe("AdminPromptsPage", () => {
       return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
     }))
 
-    renderPage()
+    const { container } = renderPage()
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Catalogue prompts LLM" })).toBeInTheDocument()
     })
 
+    expect(container.querySelector(".admin-prompts-catalog-master-detail")).not.toBeNull()
     expect(screen.getByRole("link", { name: "Catalogue canonique" })).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
+    const catalogTable = screen.getByRole("table")
+    expect(within(catalogTable).getAllByRole("columnheader")).toHaveLength(5)
+    expect(screen.getByLabelText("Détail catalogue entrée")).toBeInTheDocument()
+    expect(
+      screen.getByText(/Sélectionnez une ligne du catalogue pour afficher le détail résolu/),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Réinitialiser les filtres" })).toBeInTheDocument()
     expect(screen.getAllByText("active_snapshot").length).toBeGreaterThan(0)
     expect(screen.getAllByText(/monitoring/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/fresh/).length).toBeGreaterThan(0)
@@ -240,6 +248,40 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByText("sample payloads")).toBeInTheDocument()
     expect(screen.getByText(/message system/)).toBeInTheDocument()
     expect(screen.getByText(/message persona/)).toBeInTheDocument()
+  })
+
+  it("réinitialise les filtres catalogue via le bouton dédié", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        if (url.includes("/resolved")) {
+          return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+        }
+        return makeJsonResponse({
+          data: [],
+          meta: {
+            total: 0,
+            page: 1,
+            page_size: 25,
+            sort_by: "feature",
+            sort_order: "asc",
+            freshness_window_minutes: 120,
+            facets: {},
+          },
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Catalogue prompts LLM" })).toBeInTheDocument()
+    })
+    const searchInput = screen.getByLabelText("Recherche")
+    await userEvent.type(searchInput, "filtre-test")
+    expect(searchInput).toHaveValue("filtre-test")
+    await userEvent.click(screen.getByRole("button", { name: "Réinitialiser les filtres" }))
+    expect(searchInput).toHaveValue("")
   })
 
   it("passe le sample payload sélectionné dans la runtime preview", async () => {

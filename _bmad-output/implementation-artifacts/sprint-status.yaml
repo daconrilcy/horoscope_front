@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-18T14:05:00+02:00'
+last_updated: '2026-04-18T15:45:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -410,18 +410,18 @@ development_status:
   59-5-socle-commun-prompts: done
   epic-59-retrospective: optional
   epic-60: in-progress
-  60-1-taxonomie-domaines-publics: review
-  60-2-scores-publics-sur-10: review
-  60-3-day-climate: review
-  60-4-time-windows: review
-  60-5-turning-point: review
-  60-6-best-window: review
-  60-7-astro-foundation: review
-  60-8-refonte-front: review
-  60-9-wording-microcopies: review
-  60-10-migration-api: review
-  60-11-tests-fixtures-qa: review
-  60-12-cleanup-legacy: review
+  60-1-taxonomie-domaines-publics: done
+  60-2-scores-publics-sur-10: done
+  60-3-day-climate: done
+  60-4-time-windows: done
+  60-5-turning-point: done
+  60-6-best-window: done
+  60-7-astro-foundation: done
+  60-8-refonte-front: done
+  60-9-wording-microcopies: done
+  60-10-migration-api: done
+  60-11-tests-fixtures-qa: done
+  60-12-cleanup-legacy: done
   60-13-astro-daily-events-module: done
   60-14-periodes-du-jour-timeline: done
   60-15-enrichissement-calculs-astrologiques: done
@@ -612,7 +612,7 @@ development_status:
   66-24-extension-matrice-evaluation-chemins-non-converges: done
   66-25-renforcement-observabilite-operationnelle-pipeline-canonique-compatibilites: done
   66-26-durcissement-discipline-maintenance-documentaire-pipeline-llm: done
-  66-27-propagation-complete-context-quality-handled-by-template-observabilite: ready-for-dev
+  66-27-propagation-complete-context-quality-handled-by-template-observabilite: done
   66-28-fermeture-canonique-daily-prediction-ou-suppression-statut-transitoire: done
   66-29-extinction-definitive-fallback-use-case-first-tous-chemins-supportes: done
   66-30-suppression-fallback-resolve-model-source-finale-verite-execution: done
@@ -633,18 +633,18 @@ development_status:
   66-45-vue-catalogue-canonique-prompts-actifs: done
   66-46-vue-detail-resolved-prompt-assembly: done
   66-47-historisation-orientee-release-snapshot: done
-  66-48-modele-canonique-comptage-consommation-llm: review
-  66-49-dashboard-consommation-utilisateur-abonnement-feature: review
-  66-50-coherence-billing-tokens-taxonomie-canonique: review
+  66-48-modele-canonique-comptage-consommation-llm: done
+  66-49-dashboard-consommation-utilisateur-abonnement-feature: done
+  66-50-coherence-billing-tokens-taxonomie-canonique: done
   epic-67: in-progress
   67-1-clarifier-modes-preview-et-statuts-placeholders: done
   67-2-exposer-construction-logique-graphe-inspectable: done
   67-3-refondre-vue-detail-zones-pedagogiques-operables: done
   epic-67-retrospective: backlog
   epic-68: in-progress
-  68-1-definir-modele-admin-sample-payloads-par-feature: review
+  68-1-definir-modele-admin-sample-payloads-par-feature: done
   68-2-rendre-runtime-preview-avec-sample-payload: done
-  68-3-gerer-sample-payloads-depuis-surface-admin: review
+  68-3-gerer-sample-payloads-depuis-surface-admin: done
   epic-68-retrospective: backlog
   epic-69: in-progress
   69-1-executer-manuellement-cible-canonique-depuis-sample-payload: done
@@ -653,7 +653,7 @@ development_status:
   epic-69-retrospective: backlog
   epic-70: in-progress
   70-1-reorganiser-la-navigation-admin-prompts-en-routes-dediees: done
-  70-2-refaire-le-catalogue-canonique-en-mode-master-detail: backlog
+  70-2-refaire-le-catalogue-canonique-en-mode-master-detail: done
   70-3-recomposer-le-detail-prompts-en-lecture-progressive-et-zone-d-actions: backlog
   70-4-rendre-le-schema-visuel-des-processus-llm-avec-react-flow: backlog
   70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback: backlog

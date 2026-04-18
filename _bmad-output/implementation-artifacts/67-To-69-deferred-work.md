@@ -41,3 +41,9 @@ Suite à l’implémentation, les tests d’intégration backend et Vitest front
 **Vérification** : `pytest` (backend, venv activé) et `npm run test` (frontend) au vert.
 
 Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivant la convention d’équipe.
+
+---
+
+## Deferred from: code review of 70-2-refaire-le-catalogue-canonique-en-mode-master-detail (2026-04-18)
+
+- **Fichier `AdminPromptsPage.tsx` déjà volumineux** — dette structurelle (extraction composants catalogue) hors périmètre strict de la story 70.2 ; à traiter si refactor dédié.

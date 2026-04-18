@@ -548,6 +548,7 @@ export function AdminPromptsPage() {
   const [selectedDrilldownKey, setSelectedDrilldownKey] = useState<string | null>(null)
   const [samplePayloadsSeed, setSamplePayloadsSeed] = useState<{ feature: string; locale: string } | null>(null)
   const [manualExecuteConfirmOpen, setManualExecuteConfirmOpen] = useState(false)
+  const [catalogAdvancedFiltersOpen, setCatalogAdvancedFiltersOpen] = useState(false)
   const consumptionFromUtc = consumptionFrom ? toUtcIsoFromDateTimeInput(consumptionFrom) : undefined
   const consumptionToUtc = consumptionTo ? toUtcIsoFromDateTimeInput(consumptionTo) : undefined
   const effectiveSamplePayloadId =
@@ -662,6 +663,51 @@ export function AdminPromptsPage() {
   const availableAssemblyStatuses = facets?.assembly_status ?? []
   const availableReleaseHealthStatuses = facets?.release_health_status ?? []
   const availableVisibilityStatuses = facets?.catalog_visibility_status ?? []
+
+  const resetCatalogFilters = () => {
+    setSearch("")
+    setFeature("")
+    setSubfeature("")
+    setPlan("")
+    setLocale("")
+    setProvider("")
+    setSourceOfTruthStatus("")
+    setAssemblyStatus("")
+    setReleaseHealthStatus("")
+    setCatalogVisibilityStatus("")
+    setSortBy("feature")
+    setSortOrder("asc")
+    setPage(1)
+    setCatalogAdvancedFiltersOpen(false)
+  }
+
+  const catalogHasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        search.trim() ||
+          feature ||
+          subfeature ||
+          plan ||
+          locale ||
+          provider ||
+          sourceOfTruthStatus ||
+          assemblyStatus ||
+          releaseHealthStatus ||
+          catalogVisibilityStatus,
+      ),
+    [
+      search,
+      feature,
+      subfeature,
+      plan,
+      locale,
+      provider,
+      sourceOfTruthStatus,
+      assemblyStatus,
+      releaseHealthStatus,
+      catalogVisibilityStatus,
+    ],
+  )
 
   const useCasesQuery = useAdminLlmUseCases({ enabled: activeTab === "legacy" })
   const useCases = useCasesQuery.data ?? []
@@ -852,69 +898,261 @@ export function AdminPromptsPage() {
 
       {activeTab === "catalog" ? (
         <section className="panel admin-prompts-catalog" aria-label="Catalogue canonique">
-          <div className="admin-prompts-catalog__filters">
-            <input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1) }} placeholder="Recherche tuple canonique / manifest_entry_id" />
-            <select value={feature} onChange={(event) => { setFeature(event.target.value); setPage(1) }}>
-              <option value="">Feature</option>
-              {availableFeatures.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select value={subfeature} onChange={(event) => { setSubfeature(event.target.value); setPage(1) }}>
-              <option value="">Subfeature</option>
-              {availableSubfeatures.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select value={plan} onChange={(event) => { setPlan(event.target.value); setPage(1) }}>
-              <option value="">Plan</option>
-              {availablePlans.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select value={locale} onChange={(event) => { setLocale(event.target.value); setPage(1) }}>
-              <option value="">Locale</option>
-              {availableLocales.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select value={provider} onChange={(event) => { setProvider(event.target.value); setPage(1) }}>
-              <option value="">Provider</option>
-              {availableProviders.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select value={sourceOfTruthStatus} onChange={(event) => { setSourceOfTruthStatus(event.target.value); setPage(1) }}>
-              <option value="">Source of truth</option>
-              {availableSourceStatuses.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select value={assemblyStatus} onChange={(event) => { setAssemblyStatus(event.target.value); setPage(1) }}>
-              <option value="">Assembly status</option>
-              {availableAssemblyStatuses.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select value={releaseHealthStatus} onChange={(event) => { setReleaseHealthStatus(event.target.value); setPage(1) }}>
-              <option value="">Release health</option>
-              {availableReleaseHealthStatuses.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select value={catalogVisibilityStatus} onChange={(event) => { setCatalogVisibilityStatus(event.target.value); setPage(1) }}>
-              <option value="">Visibility</option>
-              {availableVisibilityStatuses.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <select
-              aria-label="Tri catalogue"
-              value={sortBy}
-              onChange={(event) => { setSortBy(event.target.value); setPage(1) }}
-            >
-              <option value="feature">Tri: Feature</option>
-              <option value="subfeature">Tri: Subfeature</option>
-              <option value="plan">Tri: Plan</option>
-              <option value="locale">Tri: Locale</option>
-              <option value="manifest_entry_id">Tri: Manifest entry</option>
-              <option value="provider">Tri: Provider</option>
-              <option value="source_of_truth_status">Tri: Source of truth</option>
-              <option value="assembly_status">Tri: Assembly status</option>
-              <option value="release_health_status">Tri: Release health</option>
-              <option value="catalog_visibility_status">Tri: Visibility</option>
-            </select>
-            <select
-              aria-label="Ordre tri catalogue"
-              value={sortOrder}
-              onChange={(event) => { setSortOrder(event.target.value as "asc" | "desc"); setPage(1) }}
-            >
-              <option value="asc">Ordre: Ascendant</option>
-              <option value="desc">Ordre: Descendant</option>
-            </select>
-          </div>
+          <div className="admin-prompts-catalog-master-detail">
+            <div className="admin-prompts-catalog__master">
+              <div className="admin-prompts-catalog__filters">
+                <div className="admin-prompts-catalog__filters-primary">
+                  <div className="admin-prompts-catalog__filter-field">
+                    <label htmlFor="catalog-search">Recherche</label>
+                    <input
+                      id="catalog-search"
+                      value={search}
+                      onChange={(event) => {
+                        setSearch(event.target.value)
+                        setPage(1)
+                      }}
+                      placeholder="Tuple canonique ou manifest_entry_id"
+                    />
+                  </div>
+                  <div className="admin-prompts-catalog__filter-field">
+                    <label htmlFor="catalog-feature">Feature</label>
+                    <select
+                      id="catalog-feature"
+                      value={feature}
+                      onChange={(event) => {
+                        setFeature(event.target.value)
+                        setPage(1)
+                      }}
+                    >
+                      <option value="">Toutes</option>
+                      {availableFeatures.map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="admin-prompts-catalog__filter-field">
+                    <label htmlFor="catalog-locale">Locale</label>
+                    <select
+                      id="catalog-locale"
+                      value={locale}
+                      onChange={(event) => {
+                        setLocale(event.target.value)
+                        setPage(1)
+                      }}
+                    >
+                      <option value="">Toutes</option>
+                      {availableLocales.map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="admin-prompts-catalog__filter-field">
+                    <label htmlFor="catalog-provider">Provider</label>
+                    <select
+                      id="catalog-provider"
+                      value={provider}
+                      onChange={(event) => {
+                        setProvider(event.target.value)
+                        setPage(1)
+                      }}
+                    >
+                      <option value="">Tous</option>
+                      {availableProviders.map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="admin-prompts-catalog__filter-field">
+                    <label htmlFor="catalog-sort">Tri</label>
+                    <select
+                      id="catalog-sort"
+                      aria-label="Tri catalogue"
+                      value={sortBy}
+                      onChange={(event) => {
+                        setSortBy(event.target.value)
+                        setPage(1)
+                      }}
+                    >
+                      <option value="feature">Feature</option>
+                      <option value="subfeature">Subfeature</option>
+                      <option value="plan">Plan</option>
+                      <option value="locale">Locale</option>
+                      <option value="manifest_entry_id">Manifest entry</option>
+                      <option value="provider">Provider</option>
+                      <option value="source_of_truth_status">Source of truth</option>
+                      <option value="assembly_status">Assembly status</option>
+                      <option value="release_health_status">Release health</option>
+                      <option value="catalog_visibility_status">Visibility</option>
+                    </select>
+                  </div>
+                  <div className="admin-prompts-catalog__filter-field">
+                    <label htmlFor="catalog-sort-order">Ordre</label>
+                    <select
+                      id="catalog-sort-order"
+                      aria-label="Ordre tri catalogue"
+                      value={sortOrder}
+                      onChange={(event) => {
+                        setSortOrder(event.target.value as "asc" | "desc")
+                        setPage(1)
+                      }}
+                    >
+                      <option value="asc">Ascendant</option>
+                      <option value="desc">Descendant</option>
+                    </select>
+                  </div>
+                  <div className="admin-prompts-catalog__filter-actions">
+                    <button className="text-button" type="button" onClick={resetCatalogFilters}>
+                      Réinitialiser les filtres
+                    </button>
+                  </div>
+                </div>
+                <div className="admin-prompts-catalog__active-filters" aria-label="Filtres actifs">
+                  {catalogHasActiveFilters ? (
+                    <ul className="admin-prompts-catalog__active-filters-list">
+                      {search.trim() ? <li>Recherche : {search}</li> : null}
+                      {feature ? <li>Feature : {feature}</li> : null}
+                      {subfeature ? <li>Subfeature : {subfeature}</li> : null}
+                      {plan ? <li>Plan : {plan}</li> : null}
+                      {locale ? <li>Locale : {locale}</li> : null}
+                      {provider ? <li>Provider : {provider}</li> : null}
+                      {sourceOfTruthStatus ? <li>Source de vérité : {sourceOfTruthStatus}</li> : null}
+                      {assemblyStatus ? <li>Assembly : {assemblyStatus}</li> : null}
+                      {releaseHealthStatus ? <li>Release health : {releaseHealthStatus}</li> : null}
+                      {catalogVisibilityStatus ? <li>Visibilité : {catalogVisibilityStatus}</li> : null}
+                    </ul>
+                  ) : (
+                    <span className="text-muted">Aucun filtre actif</span>
+                  )}
+                </div>
+                <div className="admin-prompts-catalog__filters-advanced">
+                  <button
+                    type="button"
+                    className="admin-prompts-catalog__filters-advanced-toggle"
+                    aria-expanded={catalogAdvancedFiltersOpen}
+                    onClick={() => setCatalogAdvancedFiltersOpen((open) => !open)}
+                  >
+                    Filtres avancés
+                  </button>
+                  {catalogAdvancedFiltersOpen ? (
+                    <div className="admin-prompts-catalog__filters-advanced-panel">
+                      <div className="admin-prompts-catalog__filter-field">
+                        <label htmlFor="catalog-subfeature">Subfeature</label>
+                        <select
+                          id="catalog-subfeature"
+                          value={subfeature}
+                          onChange={(event) => {
+                            setSubfeature(event.target.value)
+                            setPage(1)
+                          }}
+                        >
+                          <option value="">Toutes</option>
+                          {availableSubfeatures.map((value) => (
+                            <option key={value} value={value}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="admin-prompts-catalog__filter-field">
+                        <label htmlFor="catalog-plan">Plan</label>
+                        <select
+                          id="catalog-plan"
+                          value={plan}
+                          onChange={(event) => {
+                            setPlan(event.target.value)
+                            setPage(1)
+                          }}
+                        >
+                          <option value="">Tous</option>
+                          {availablePlans.map((value) => (
+                            <option key={value} value={value}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="admin-prompts-catalog__filter-field">
+                        <label htmlFor="catalog-sot">Source de vérité</label>
+                        <select
+                          id="catalog-sot"
+                          value={sourceOfTruthStatus}
+                          onChange={(event) => {
+                            setSourceOfTruthStatus(event.target.value)
+                            setPage(1)
+                          }}
+                        >
+                          <option value="">Toutes</option>
+                          {availableSourceStatuses.map((value) => (
+                            <option key={value} value={value}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="admin-prompts-catalog__filter-field">
+                        <label htmlFor="catalog-assembly">Assembly status</label>
+                        <select
+                          id="catalog-assembly"
+                          value={assemblyStatus}
+                          onChange={(event) => {
+                            setAssemblyStatus(event.target.value)
+                            setPage(1)
+                          }}
+                        >
+                          <option value="">Tous</option>
+                          {availableAssemblyStatuses.map((value) => (
+                            <option key={value} value={value}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="admin-prompts-catalog__filter-field">
+                        <label htmlFor="catalog-rel-health">Release health</label>
+                        <select
+                          id="catalog-rel-health"
+                          value={releaseHealthStatus}
+                          onChange={(event) => {
+                            setReleaseHealthStatus(event.target.value)
+                            setPage(1)
+                          }}
+                        >
+                          <option value="">Tous</option>
+                          {availableReleaseHealthStatuses.map((value) => (
+                            <option key={value} value={value}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="admin-prompts-catalog__filter-field">
+                        <label htmlFor="catalog-vis">Visibilité catalogue</label>
+                        <select
+                          id="catalog-vis"
+                          value={catalogVisibilityStatus}
+                          onChange={(event) => {
+                            setCatalogVisibilityStatus(event.target.value)
+                            setPage(1)
+                          }}
+                        >
+                          <option value="">Toutes</option>
+                          {availableVisibilityStatuses.map((value) => (
+                            <option key={value} value={value}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
 
           {catalogQuery.isPending ? <div className="loading-placeholder">Chargement du catalogue canonique...</div> : null}
           {catalogQuery.isError ? <p className="chat-error">Impossible de charger le catalogue canonique.</p> : null}
@@ -926,41 +1164,54 @@ export function AdminPromptsPage() {
                   <thead>
                     <tr>
                       <th>Tuple canonique</th>
-                      <th>Assembly</th>
-                      <th>Execution profile</th>
-                      <th>Output contract</th>
-                      <th>Source de verite</th>
                       <th>Snapshot actif</th>
-                      <th>Manifest entry</th>
-                      <th>Provider / model</th>
-                      <th>Signals runtime</th>
+                      <th>Provider / modèle</th>
+                      <th>Santé</th>
+                      <th className="admin-prompts-catalog__col-action">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {catalogEntries.map((entry) => (
-                      <tr key={entry.manifest_entry_id}>
+                      <tr
+                        key={entry.manifest_entry_id}
+                        className={`admin-prompts-catalog__row${entry.manifest_entry_id === selectedManifestEntryId ? " admin-prompts-catalog__row--selected" : ""}`}
+                        tabIndex={0}
+                        aria-selected={entry.manifest_entry_id === selectedManifestEntryId}
+                        onClick={() => setSelectedManifestEntryId(entry.manifest_entry_id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault()
+                            setSelectedManifestEntryId(entry.manifest_entry_id)
+                          }
+                        }}
+                      >
                         <td>{entry.feature}/{entry.subfeature ?? "-"}/{entry.plan ?? "-"}/{entry.locale ?? "-"}</td>
-                        <td>{entry.assembly_id ?? "-"} <span className="text-muted">({entry.assembly_status})</span></td>
-                        <td>{entry.execution_profile_ref ?? "-"}</td>
-                        <td>{entry.output_contract_ref ?? "-"}</td>
                         <td>
-                          <span className={`badge ${entry.source_of_truth_status === "active_snapshot" ? "badge--info" : "badge--warning"}`}>
+                          {entry.active_snapshot_id
+                            ? `${entry.active_snapshot_version} (${entry.active_snapshot_id.slice(0, 8)}…)`
+                            : "n/a"}
+                        </td>
+                        <td>
+                          {entry.provider ?? "—"} / {entry.model ?? "—"}
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${entry.source_of_truth_status === "active_snapshot" ? "badge--info" : "badge--warning"}`}
+                          >
                             {entry.source_of_truth_status}
                           </span>
                           <div className="text-muted">
-                            health: {entry.release_health_status} · visibility: {entry.catalog_visibility_status}
+                            {entry.release_health_status} · signal {entry.runtime_signal_status} · {entry.catalog_visibility_status}
                           </div>
                         </td>
-                        <td>{entry.active_snapshot_id ? `${entry.active_snapshot_version} (${entry.active_snapshot_id.slice(0, 8)}...)` : "n/a"}</td>
-                        <td><code>{entry.manifest_entry_id}</code></td>
-                        <td>{entry.provider ?? "-"} / {entry.model ?? "-"}</td>
                         <td>
-                          <div>{entry.runtime_signal_status}</div>
-                          <div className="text-muted">{entry.execution_path_kind ?? "n/a"} · {entry.context_compensation_status ?? "n/a"} · {entry.max_output_tokens_source ?? "n/a"}</div>
                           <button
                             className="text-button admin-prompts-catalog__inspect"
                             type="button"
-                            onClick={() => setSelectedManifestEntryId(entry.manifest_entry_id)}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setSelectedManifestEntryId(entry.manifest_entry_id)
+                            }}
                           >
                             Ouvrir le detail
                           </button>
@@ -984,8 +1235,55 @@ export function AdminPromptsPage() {
                   </button>
                 </div>
               </div>
+            </>
+          ) : null}
+            </div>
 
+            <aside className="admin-prompts-catalog__detail-panel" aria-label="Détail catalogue entrée">
               {selectedManifestEntryId ? (
+                <>
+                  <section className="admin-prompts-catalog-detail-summary" aria-label="Résumé de la cible">
+                    <h3 className="admin-prompts-catalog-detail-summary__title">Cible sélectionnée</h3>
+                    {selectedCatalogEntry ? (
+                      <>
+                        <p className="admin-prompts-catalog-detail-summary__tuple">
+                          {selectedCatalogEntry.feature}/{selectedCatalogEntry.subfeature ?? "-"}/
+                          {selectedCatalogEntry.plan ?? "-"}/{selectedCatalogEntry.locale ?? "-"}
+                        </p>
+                        <dl className="admin-prompts-catalog-detail-summary__meta">
+                          <div>
+                            <dt>Manifest entry</dt>
+                            <dd>
+                              <code>{selectedCatalogEntry.manifest_entry_id}</code>
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Assembly</dt>
+                            <dd>
+                              {selectedCatalogEntry.assembly_id ?? "—"}{" "}
+                              <span className="text-muted">({selectedCatalogEntry.assembly_status})</span>
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Execution profile</dt>
+                            <dd>{selectedCatalogEntry.execution_profile_ref ?? "—"}</dd>
+                          </div>
+                          <div>
+                            <dt>Output contract</dt>
+                            <dd>{selectedCatalogEntry.output_contract_ref ?? "—"}</dd>
+                          </div>
+                          <div>
+                            <dt>Visibilité catalogue</dt>
+                            <dd>{selectedCatalogEntry.catalog_visibility_status}</dd>
+                          </div>
+                        </dl>
+                      </>
+                    ) : (
+                      <p className="text-muted">
+                        Entrée hors page courante — identifiant <code>{selectedManifestEntryId}</code>
+                      </p>
+                    )}
+                  </section>
                 <section className="panel admin-prompts-resolved" aria-label="Détail assembly résolue">
                   <div
                     className={`admin-prompts-resolved__surface-banner admin-prompts-resolved__surface-banner--${resolvedInspectionMode}`}
@@ -1395,9 +1693,16 @@ export function AdminPromptsPage() {
                     </>
                   ) : null}
                 </section>
-              ) : null}
-            </>
-          ) : null}
+                </>
+              ) : (
+                <div className="admin-prompts-catalog__detail-empty">
+                  <p className="text-muted">
+                    Sélectionnez une ligne du catalogue pour afficher le détail résolu.
+                  </p>
+                </div>
+              )}
+            </aside>
+          </div>
         </section>
       ) : null}
 
