@@ -64,6 +64,37 @@ export function resolvePromptsTabFromPath(pathname: string): PromptPageTab {
   return map[segment] ?? "catalog"
 }
 
+function formatReleaseSnapshotIdShort(id: string): string {
+  return id.length > 10 ? `${id.slice(0, 8)}…` : id
+}
+
+function formatManifestEntryCatalogHint(manifestEntryId: string): string {
+  const parts = manifestEntryId.split(":")
+  if (parts.length >= 2) {
+    return `${parts[0]} · ${parts[1]}`
+  }
+  return manifestEntryId
+}
+
+function releaseDiffAxisBadgeClass(changed: boolean): string {
+  return changed ? "badge badge--warning" : "badge badge--info"
+}
+
+function releaseDiffCategoryLabel(category: string): string {
+  const map: Record<string, string> = {
+    changed: "Écart sur cette fiche",
+    added: "Ajout",
+    removed: "Retrait",
+    stable: "Sans écart",
+  }
+  const known = map[category]
+  if (known !== undefined) {
+    return known
+  }
+  const trimmed = category.trim()
+  return trimmed.length > 0 ? `Catégorie (API) : ${trimmed}` : "Catégorie non renseignée"
+}
+
 type ManualLlmExecuteConfirmModalProps = {
   isPending: boolean
   manifestEntryId: string
@@ -2038,109 +2069,196 @@ export function AdminPromptsPage() {
       ) : null}
 
       {activeTab === "release" ? (
-        <section className="panel admin-prompts-release" aria-label="Historique release snapshots">
+        <section className="panel admin-prompts-release" aria-label="Investigation release snapshots">
           {releaseTimelineQuery.isPending ? <div className="loading-placeholder">Chargement de la timeline release...</div> : null}
           {releaseTimelineQuery.isError ? <p className="chat-error">Impossible de charger la timeline release.</p> : null}
           {!releaseTimelineQuery.isPending && !releaseTimelineQuery.isError && releaseTimeline.length === 0 ? (
             <div className="state-line">Aucun snapshot disponible.</div>
           ) : null}
           {!releaseTimelineQuery.isPending && !releaseTimelineQuery.isError && releaseTimeline.length > 0 ? (
-            <>
-              <div className="admin-prompts-release__header">
-                <h3>Timeline snapshots</h3>
-                <p className="text-muted">Unité de lecture: release snapshot, avec statut courant, historique et preuves corrélées.</p>
-              </div>
-              <div className="admin-prompts-release__timeline">
-                {releaseTimeline.map((item) => (
-                  <article key={`${item.snapshot_id}-${item.occurred_at}`} className="admin-prompts-release__timeline-item">
-                    <div className="admin-prompts-release__timeline-top">
-                      <strong>{item.snapshot_version}</strong>
-                      <span className={`badge ${item.release_health_status === "degraded" || item.release_health_status === "rollback_recommended" ? "badge--warning" : "badge--info"}`}>
-                        {item.release_health_status}
-                      </span>
-                    </div>
-                    <p className="text-muted">
-                      {item.event_type} · {new Date(item.occurred_at).toLocaleString()} · entries: {item.manifest_entry_count}
-                    </p>
-                    <p className="text-muted">
-                      current_status: {item.current_status} · status_history: {item.status_history.length}
-                    </p>
-                    {item.from_snapshot_id ? (
-                      <p className="text-muted">rollback: {item.from_snapshot_id.slice(0, 8)}... → {item.to_snapshot_id?.slice(0, 8)}...</p>
-                    ) : null}
-                    {item.reason ? <p className="text-muted">{item.reason}</p> : null}
-                    <div className="admin-prompts-release__proofs">
-                      {item.proof_summaries.map((proof) => (
-                        <span key={`${item.snapshot_id}-${proof.proof_type}`} className={`badge ${proof.status === "missing" || proof.verdict === "uncorrelated" ? "badge--warning" : "badge--info"}`}>
-                          {proof.proof_type}: {proof.verdict ?? proof.status}
+            <div className="admin-prompts-release__surface">
+              <header className="admin-prompts-release__surface-header">
+                <p className="admin-prompts-release__kicker">Investigation release</p>
+                <h3 className="admin-prompts-release__surface-title">Timeline et comparaison de snapshots</h3>
+                <p className="admin-prompts-release__surface-intro text-muted">
+                  Lire l&apos;état courant et l&apos;historique, qualifier le snapshot via les preuves, puis comparer deux versions avant
+                  d&apos;ouvrir une entrée canonique dans le catalogue.
+                </p>
+              </header>
+
+              <section className="admin-prompts-release__section" aria-labelledby="release-timeline-heading">
+                <div className="admin-prompts-release__section-head">
+                  <h4 id="release-timeline-heading" className="admin-prompts-release__section-heading">
+                    Chronologie des événements
+                  </h4>
+                  <p className="admin-prompts-release__section-hint text-muted">
+                    Chaque carte regroupe statut release, motif, rollback éventuel et preuves corrélées au snapshot.
+                  </p>
+                </div>
+                <div className="admin-prompts-release__timeline">
+                  {releaseTimeline.map((item) => (
+                    <article key={`${item.snapshot_id}-${item.occurred_at}`} className="admin-prompts-release__timeline-item">
+                      <div className="admin-prompts-release__timeline-top">
+                        <strong>{item.snapshot_version}</strong>
+                        <span
+                          className={`badge ${item.release_health_status === "degraded" || item.release_health_status === "rollback_recommended" ? "badge--warning" : "badge--info"}`}
+                        >
+                          {item.release_health_status}
                         </span>
+                      </div>
+                      <p className="text-muted">
+                        Événement : {item.event_type} · {new Date(item.occurred_at).toLocaleString()} ·{" "}
+                        {item.manifest_entry_count} entrée(s) manifeste
+                      </p>
+                      <p className="text-muted">
+                        État courant : {item.current_status} · transitions enregistrées : {item.status_history.length}
+                      </p>
+                      {item.from_snapshot_id ? (
+                        <p className="text-muted">
+                          Rollback : {formatReleaseSnapshotIdShort(item.from_snapshot_id)} →{" "}
+                          {item.to_snapshot_id ? formatReleaseSnapshotIdShort(item.to_snapshot_id) : "—"}
+                        </p>
+                      ) : null}
+                      {item.reason ? (
+                        <p className="text-muted">
+                          <span className="admin-prompts-release__reason-label">Motif : </span>
+                          {item.reason}
+                        </p>
+                      ) : null}
+                      <div className="admin-prompts-release__proofs-block">
+                        <p className="admin-prompts-release__proofs-lead text-muted">Preuves qualité (corrélation snapshot)</p>
+                        <div className="admin-prompts-release__proofs">
+                          {item.proof_summaries.map((proof) => (
+                            <span
+                              key={`${item.snapshot_id}-${proof.proof_type}`}
+                              className={`badge ${proof.status === "missing" || proof.verdict === "uncorrelated" ? "badge--warning" : "badge--info"}`}
+                            >
+                              {proof.proof_type}: {proof.verdict ?? proof.status}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="admin-prompts-release__section" aria-labelledby="release-compare-heading">
+                <div className="admin-prompts-release__section-head">
+                  <h4 id="release-compare-heading" className="admin-prompts-release__section-heading">
+                    Comparer deux snapshots
+                  </h4>
+                  <p className="admin-prompts-release__section-hint text-muted">
+                    Choisissez la référence (source) et la version comparée (cible). Le tableau ci-dessous synthétise les écarts par axe
+                    technique.
+                  </p>
+                </div>
+                <div className="admin-prompts-release__diff-controls">
+                  <label className="admin-prompts-compare">
+                    <span>Snapshot source (référence)</span>
+                    <select value={fromSnapshotId ?? ""} onChange={(event) => setFromSnapshotId(event.target.value)}>
+                      {releaseSnapshots.map((item) => (
+                        <option key={`from-${item.snapshot_id}`} value={item.snapshot_id}>
+                          {item.snapshot_version} ({item.snapshot_id.slice(0, 8)})
+                        </option>
                       ))}
-                    </div>
-                  </article>
-                ))}
-              </div>
-              <div className="admin-prompts-release__diff-controls">
-                <label className="admin-prompts-compare">
-                  <span>Snapshot source</span>
-                  <select value={fromSnapshotId ?? ""} onChange={(event) => setFromSnapshotId(event.target.value)}>
-                    {releaseSnapshots.map((item) => (
-                      <option key={`from-${item.snapshot_id}`} value={item.snapshot_id}>
-                        {item.snapshot_version} ({item.snapshot_id.slice(0, 8)})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="admin-prompts-compare">
-                  <span>Snapshot cible</span>
-                  <select value={toSnapshotId ?? ""} onChange={(event) => setToSnapshotId(event.target.value)}>
-                    {releaseSnapshots.map((item) => (
-                      <option key={`to-${item.snapshot_id}`} value={item.snapshot_id}>
-                        {item.snapshot_version} ({item.snapshot_id.slice(0, 8)})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+                    </select>
+                  </label>
+                  <label className="admin-prompts-compare">
+                    <span>Snapshot cible (comparée)</span>
+                    <select value={toSnapshotId ?? ""} onChange={(event) => setToSnapshotId(event.target.value)}>
+                      {releaseSnapshots.map((item) => (
+                        <option key={`to-${item.snapshot_id}`} value={item.snapshot_id}>
+                          {item.snapshot_version} ({item.snapshot_id.slice(0, 8)})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </section>
 
               {releaseDiffQuery.isPending ? <div className="loading-placeholder">Chargement du diff snapshots...</div> : null}
               {releaseDiffQuery.isError ? <p className="chat-error">Impossible de charger le diff snapshots.</p> : null}
               {releaseDiffQuery.data ? (
                 <div className="admin-prompts-release__diff panel">
-                  <h3>Diff snapshot</h3>
-                  <p className="text-muted">
-                    from: {selectedTimelineById[releaseDiffQuery.data.from_snapshot_id]?.snapshot_version ?? releaseDiffQuery.data.from_snapshot_id} ·
-                    to: {selectedTimelineById[releaseDiffQuery.data.to_snapshot_id]?.snapshot_version ?? releaseDiffQuery.data.to_snapshot_id}
+                  <h3 className="admin-prompts-release__diff-title">Synthèse de comparaison</h3>
+                  <div className="admin-prompts-release__compare-banner" aria-label="Versions comparées pour ce diff">
+                    <div className="admin-prompts-release__compare-card">
+                      <span className="admin-prompts-release__compare-role">Référence (source)</span>
+                      <strong>
+                        {selectedTimelineById[releaseDiffQuery.data.from_snapshot_id]?.snapshot_version ??
+                          releaseDiffQuery.data.from_snapshot_id}
+                      </strong>
+                      <code className="admin-prompts-release__compare-id">
+                        {formatReleaseSnapshotIdShort(releaseDiffQuery.data.from_snapshot_id)}
+                      </code>
+                    </div>
+                    <span className="admin-prompts-release__compare-arrow" aria-hidden>
+                      →
+                    </span>
+                    <div className="admin-prompts-release__compare-card">
+                      <span className="admin-prompts-release__compare-role">Comparée (cible)</span>
+                      <strong>
+                        {selectedTimelineById[releaseDiffQuery.data.to_snapshot_id]?.snapshot_version ??
+                          releaseDiffQuery.data.to_snapshot_id}
+                      </strong>
+                      <code className="admin-prompts-release__compare-id">
+                        {formatReleaseSnapshotIdShort(releaseDiffQuery.data.to_snapshot_id)}
+                      </code>
+                    </div>
+                  </div>
+                  <h4 className="admin-prompts-release__diff-table-heading">Écarts par entrée canonique</h4>
+                  <p className="admin-prompts-release__diff-table-lead text-muted">
+                    Assembly, profil d&apos;exécution et contrat de sortie : état synthétique avant d&apos;ouvrir le détail catalogue.
                   </p>
                   <div className="admin-prompts-catalog__table-wrap">
                     <table className="admin-prompts-catalog__table">
                       <thead>
                         <tr>
-                          <th>manifest_entry_id</th>
-                          <th>catégorie</th>
-                          <th>assembly</th>
-                          <th>execution profile</th>
-                          <th>output contract</th>
-                          <th>navigation</th>
+                          <th>Entrée manifeste</th>
+                          <th>Portée du changement</th>
+                          <th>Assembly</th>
+                          <th>Profil d&apos;exécution</th>
+                          <th>Contrat de sortie</th>
+                          <th>Catalogue</th>
                         </tr>
                       </thead>
                       <tbody>
                         {releaseDiffQuery.data.entries.map((entry) => (
                           <tr key={`diff-${entry.manifest_entry_id}`}>
-                            <td><code>{entry.manifest_entry_id}</code></td>
-                            <td>{entry.category}</td>
-                            <td>{entry.assembly_changed ? "changed" : "stable"}</td>
-                            <td>{entry.execution_profile_changed ? "changed" : "stable"}</td>
-                            <td>{entry.output_contract_changed ? "changed" : "stable"}</td>
+                            <td>
+                              <code>{entry.manifest_entry_id}</code>
+                            </td>
+                            <td>{releaseDiffCategoryLabel(entry.category)}</td>
+                            <td>
+                              <span className={releaseDiffAxisBadgeClass(entry.assembly_changed)}>
+                                {entry.assembly_changed ? "Modifié" : "Inchangé"}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={releaseDiffAxisBadgeClass(entry.execution_profile_changed)}>
+                                {entry.execution_profile_changed ? "Modifié" : "Inchangé"}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={releaseDiffAxisBadgeClass(entry.output_contract_changed)}>
+                                {entry.output_contract_changed ? "Modifié" : "Inchangé"}
+                              </span>
+                            </td>
                             <td>
                               <button
-                                className="text-button admin-prompts-catalog__inspect"
+                                className="text-button admin-prompts-catalog__inspect admin-prompts-release__catalog-link"
                                 type="button"
+                                aria-label={`Ouvrir l'entrée canonique ${entry.manifest_entry_id} dans le catalogue`}
                                 onClick={() => {
                                   navigate(`${ADMIN_PROMPTS_BASE}/catalog`)
                                   setSelectedManifestEntryId(entry.manifest_entry_id)
                                 }}
                               >
-                                Ouvrir 66.46
+                                <span className="admin-prompts-release__catalog-link-title">Ouvrir dans le catalogue</span>
+                                <span className="admin-prompts-release__catalog-link-hint text-muted">
+                                  <code>{formatManifestEntryCatalogHint(entry.manifest_entry_id)}</code>
+                                </span>
                               </button>
                             </td>
                           </tr>
@@ -2150,7 +2268,7 @@ export function AdminPromptsPage() {
                   </div>
                 </div>
               ) : null}
-            </>
+            </div>
           ) : null}
         </section>
       ) : null}

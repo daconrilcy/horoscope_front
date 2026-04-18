@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-18T23:59:00.0000000+02:00'
+last_updated: '2026-04-18T23:59:59.0000000+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -657,7 +657,7 @@ development_status:
   70-3-recomposer-le-detail-prompts-en-lecture-progressive-et-zone-d-actions: done
   70-4-rendre-le-schema-visuel-des-processus-llm-avec-react-flow: done
   70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback: done
-  70-6-refondre-la-route-release-pour-l-investigation-snapshot: backlog
+  70-6-refondre-la-route-release-pour-l-investigation-snapshot: done
   70-7-refondre-la-route-consumption-pour-le-pilotage-operable: backlog
   70-8-harmoniser-les-libelles-l-accessibilite-et-le-responsive: backlog
   70-9-editer-les-prompts-canoniques-via-des-formulaires-admin-guides: backlog

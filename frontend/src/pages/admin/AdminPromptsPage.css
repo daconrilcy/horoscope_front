@@ -1033,12 +1033,62 @@
   gap: var(--space-4);
 }
 
-.admin-prompts-release__header h3 {
-  margin: 0;
+.admin-prompts-release__surface {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
-.admin-prompts-release__header p {
-  margin: var(--space-2) 0 0;
+.admin-prompts-release__surface-header {
+  padding: var(--space-4);
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--color-primary) 6%, rgba(255, 255, 255, 0.02));
+}
+
+.admin-prompts-release__kicker {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.admin-prompts-release__surface-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+.admin-prompts-release__surface-intro {
+  margin: 0;
+  max-width: 72ch;
+  line-height: 1.5;
+}
+
+.admin-prompts-release__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.admin-prompts-release__section-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.admin-prompts-release__section-heading {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.admin-prompts-release__section-hint {
+  margin: 0;
+  max-width: 72ch;
+  line-height: 1.45;
 }
 
 .admin-prompts-release__timeline {
@@ -1063,6 +1113,22 @@
   gap: var(--space-2);
 }
 
+.admin-prompts-release__reason-label {
+  font-weight: 600;
+}
+
+.admin-prompts-release__proofs-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.admin-prompts-release__proofs-lead {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
 .admin-prompts-release__proofs {
   display: flex;
   flex-wrap: wrap;
@@ -1075,8 +1141,75 @@
   gap: var(--space-3);
 }
 
-.admin-prompts-release__diff h3 {
+.admin-prompts-release__diff-title {
   margin: 0 0 var(--space-2);
+}
+
+.admin-prompts-release__compare-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-prompts-release__compare-card {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.admin-prompts-release__compare-role {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.admin-prompts-release__compare-id {
+  font-size: var(--font-size-xs);
+  word-break: break-all;
+}
+
+.admin-prompts-release__compare-arrow {
+  align-self: center;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+}
+
+.admin-prompts-release__diff-table-heading {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.admin-prompts-release__diff-table-lead {
+  margin: 0 0 var(--space-3);
+  max-width: 72ch;
+  line-height: 1.45;
+}
+
+.admin-prompts-release__catalog-link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  text-align: left;
+}
+
+.admin-prompts-release__catalog-link-title {
+  font-weight: 600;
+}
+
+.admin-prompts-release__catalog-link-hint code {
+  font-size: var(--font-size-xs);
 }
 
 /* Route legacy : investigation hors catalogue */

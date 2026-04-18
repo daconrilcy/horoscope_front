@@ -2037,14 +2037,28 @@ describe("AdminPromptsPage", () => {
     renderPage()
     await userEvent.click(screen.getByRole("link", { name: "Historique release" }))
 
+    expect(
+      screen.getByRole("region", { name: "Investigation release snapshots" }),
+    ).toBeInTheDocument()
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Timeline snapshots" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Timeline et comparaison de snapshots" })).toBeInTheDocument()
     })
     expect(screen.getByText(/qualification: go/)).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Chronologie des événements" })).toBeInTheDocument()
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Diff snapshot" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Synthèse de comparaison" })).toBeInTheDocument()
     })
+    expect(screen.getByText("Référence (source)")).toBeInTheDocument()
+    expect(screen.getByText("Comparée (cible)")).toBeInTheDocument()
     expect(screen.getByText("chat:chat_default:premium:fr-FR")).toBeInTheDocument()
+    expect(screen.getByText("Écart sur cette fiche")).toBeInTheDocument()
+    expect(screen.queryByText(/Ouvrir 66\.46/)).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", {
+        name: "Ouvrir l'entrée canonique chat:chat_default:premium:fr-FR dans le catalogue",
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/chat · chat_default/)).toBeInTheDocument()
   })
 
   it("affiche l'onglet consommation avec granularité, pagination serveur et axe canonique", async () => {

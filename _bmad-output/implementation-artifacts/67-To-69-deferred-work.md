@@ -56,3 +56,9 @@ Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivan
 ## Deferred from: code review of 70-2-refaire-le-catalogue-canonique-en-mode-master-detail (2026-04-18)
 
 - **Fichier `AdminPromptsPage.tsx` déjà volumineux** — dette structurelle (extraction composants catalogue) hors périmètre strict de la story 70.2 ; à traiter si refactor dédié.
+
+## Deferred from: code review of 70-6-refondre-la-route-release-pour-l-investigation-snapshot.md (2026-04-18)
+
+- **Extraction composants route release** — optionnel selon story 70.6 ; la surface release reste dans `AdminPromptsPage.tsx` ; à planifier si le fichier devient ingérable.
+
+- **Test Vitest release : navigation catalogue après clic** — le scénario valide le bouton et l’étiquette accessible ; un test d’interaction mockant `navigate` / état sélection pourrait renforcer la non-régression « navigation contextuelle ».
