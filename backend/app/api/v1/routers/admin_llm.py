@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, List, Literal, Optional
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select
@@ -80,6 +80,10 @@ from app.llm_orchestration.services.replay_service import replay
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
+
+# Epic 69.3: marqueurs observabilité (logs, audit, en-tête HTTP).
+ADMIN_MANUAL_LLM_EXECUTE_SURFACE = "admin_catalog_manual_execute_sample"
+ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER = "X-Admin-Manual-Llm-Execute"
 
 router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])
 
@@ -782,6 +786,7 @@ def _error_response(
     code: str,
     message: str,
     details: dict[str, Any],
+    response_headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     # AC13: Sanitize error details
     sanitized_details = sanitize_payload(details, Sink.ADMIN_API)
@@ -795,6 +800,7 @@ def _error_response(
                 "request_id": request_id,
             }
         },
+        headers=response_headers or {},
     )
 
 
@@ -923,6 +929,7 @@ def _record_admin_manual_execution_audit(
         target_id=manifest_entry_id,
         status=status,
         details={
+            "execution_surface": ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
             "manifest_entry_id": manifest_entry_id,
             "sample_payload_id": str(sample_payload_id),
             **details,
@@ -2100,15 +2107,21 @@ def _build_admin_resolved_catalog_view(
 async def execute_admin_catalog_sample_payload(
     manifest_entry_id: str,
     request: Request,
+    response: Response,
     payload: AdminCatalogManualExecutePayload,
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
     trace_id = str(uuid.uuid4())
+    _manual_exec_headers = {ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER: "1"}
     logger.info(
-        "admin_manual_llm_execute_start manifest_entry_id=%s sample_payload_id=%s "
-        "request_id=%s trace_id=%s operator_user_id=%s",
+        (
+            "admin_manual_llm_execute_surface=%s event=admin_manual_llm_execute_start "
+            "manifest_entry_id=%s sample_payload_id=%s request_id=%s trace_id=%s "
+            "operator_user_id=%s"
+        ),
+        ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
         manifest_entry_id,
         str(payload.sample_payload_id),
         request_id,
@@ -2123,6 +2136,7 @@ async def execute_admin_catalog_sample_payload(
         request_id=request_id,
     )
     if isinstance(built, JSONResponse):
+        built.headers[ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER] = "1"
         return built
     blocking = _admin_catalog_runtime_preview_blocking_reasons(built)
     if blocking:
@@ -2147,6 +2161,7 @@ async def execute_admin_catalog_sample_payload(
                 "sample_payload_id": str(payload.sample_payload_id),
                 "blocking_reasons": blocking,
             },
+            response_headers=_manual_exec_headers,
         )
     sample_row = db.get(LlmSamplePayloadModel, payload.sample_payload_id)
     if sample_row is None or not isinstance(sample_row.payload_json, dict):
@@ -2156,6 +2171,7 @@ async def execute_admin_catalog_sample_payload(
             code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NOT_FOUND.value,
             message="sample payload not found",
             details={"sample_payload_id": str(payload.sample_payload_id)},
+            response_headers=_manual_exec_headers,
         )
     extra_ctx: dict[str, Any] = dict(sample_row.payload_json)
     extra_ctx["_manifest_entry_id"] = manifest_entry_id
@@ -2222,6 +2238,7 @@ async def execute_admin_catalog_sample_payload(
                 "sample_payload_id": str(payload.sample_payload_id),
                 "error_code": getattr(exc, "error_code", None),
             },
+            response_headers=_manual_exec_headers,
         )
     except GatewayConfigError as exc:
         logger.warning(
@@ -2254,6 +2271,7 @@ async def execute_admin_catalog_sample_payload(
                 "sample_payload_id": str(payload.sample_payload_id),
                 "error_code": getattr(exc, "error_code", None),
             },
+            response_headers=_manual_exec_headers,
         )
     except OutputValidationError as exc:
         logger.warning(
@@ -2287,6 +2305,7 @@ async def execute_admin_catalog_sample_payload(
                 "error_code": getattr(exc, "error_code", None),
                 "validation_errors": (exc.details or {}).get("errors"),
             },
+            response_headers=_manual_exec_headers,
         )
     except PromptRenderError as exc:
         logger.warning(
@@ -2319,6 +2338,7 @@ async def execute_admin_catalog_sample_payload(
                 "sample_payload_id": str(payload.sample_payload_id),
                 "error_code": getattr(exc, "error_code", None),
             },
+            response_headers=_manual_exec_headers,
         )
     except UnknownUseCaseError as exc:
         logger.warning(
@@ -2351,6 +2371,7 @@ async def execute_admin_catalog_sample_payload(
                 "sample_payload_id": str(payload.sample_payload_id),
                 "error_code": getattr(exc, "error_code", None),
             },
+            response_headers=_manual_exec_headers,
         )
     except GatewayError as exc:
         logger.warning(
@@ -2385,6 +2406,7 @@ async def execute_admin_catalog_sample_payload(
                 "error_code": getattr(exc, "error_code", None),
                 "gateway_error_class": type(exc).__name__,
             },
+            response_headers=_manual_exec_headers,
         )
     except Exception as exc:
         logger.exception(
@@ -2410,6 +2432,7 @@ async def execute_admin_catalog_sample_payload(
                 "manifest_entry_id": manifest_entry_id,
                 "sample_payload_id": str(payload.sample_payload_id),
             },
+            response_headers=_manual_exec_headers,
         )
     _record_admin_manual_execution_audit(
         db,
@@ -2427,6 +2450,21 @@ async def execute_admin_catalog_sample_payload(
         },
     )
     db.commit()
+    logger.info(
+        (
+            "admin_manual_llm_execute_surface=%s event=admin_manual_llm_execute_success "
+            "manifest_entry_id=%s sample_payload_id=%s request_id=%s trace_id=%s "
+            "operator_user_id=%s gateway_request_id=%s"
+        ),
+        ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
+        manifest_entry_id,
+        str(payload.sample_payload_id),
+        request_id,
+        trace_id,
+        current_user.id,
+        result.request_id,
+    )
+    response.headers[ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER] = "1"
     return {
         "data": _build_admin_manual_execute_response_payload(
             built=built,

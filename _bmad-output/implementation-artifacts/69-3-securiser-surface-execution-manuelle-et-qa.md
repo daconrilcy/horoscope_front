@@ -1,6 +1,6 @@
 # Story 69.3: Sécuriser la surface d'exécution manuelle et verrouiller sa QA
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,15 +19,15 @@ so that la surface reste utile sans devenir une source d'erreur opératoire ou d
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Encadrer l'action UI d'exécution (AC: 1)
-  - [ ] Ajouter une confirmation explicite.
-  - [ ] Afficher le mode courant en permanence.
-- [ ] Task 2: Verrouiller permissions et sécurité backend (AC: 2)
-  - [ ] Vérifier les guards admin.
-  - [ ] Refuser tout appel non autorisé même hors UI.
-- [ ] Task 3: Couvrir QA et observabilité (AC: 3, 4)
-  - [ ] Ajouter les tests backend/frontend requis.
-  - [ ] Ajouter ou réutiliser des marqueurs d'observabilité identifiant l'origine admin.
+- [x] Task 1: Encadrer l'action UI d'exécution (AC: 1)
+  - [x] Ajouter une confirmation explicite.
+  - [x] Afficher le mode courant en permanence.
+- [x] Task 2: Verrouiller permissions et sécurité backend (AC: 2)
+  - [x] Vérifier les guards admin.
+  - [x] Refuser tout appel non autorisé même hors UI.
+- [x] Task 3: Couvrir QA et observabilité (AC: 3, 4)
+  - [x] Ajouter les tests backend/frontend requis.
+  - [x] Ajouter ou réutiliser des marqueurs d'observabilité identifiant l'origine admin.
 
 ## Dev Notes
 
@@ -83,7 +83,26 @@ GPT-5 Codex
 ### Completion Notes List
 
 - Story file created from BMAD backlog.
+- **Implémentation (2026-04-18)** : modal de confirmation avant POST `execute-sample`, bandeau de mode d'inspection permanent, renfort observabilité backend (logs structurés `admin_manual_llm_execute_surface`, champ `execution_surface` dans l'audit, en-tête `X-Admin-Manual-Llm-Execute` sur toutes les réponses de cette route), tests 401/403 + en-tête sur succès/échec, test Vitest sur le flux de confirmation.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/69-3-securiser-surface-execution-manuelle-et-qa.md`
+- `backend/app/api/v1/routers/admin_llm.py`
+- `backend/tests/integration/test_admin_llm_catalog.py`
+- `frontend/src/pages/admin/AdminPromptsPage.tsx`
+- `frontend/src/pages/admin/AdminPromptsPage.css`
+- `frontend/src/tests/AdminPromptsPage.test.tsx`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- (revue) `backend/tests/integration/test_admin_llm_catalog.py` — constante d’en-tête partagée
+
+### Change Log
+
+- 2026-04-18 : Garde-fous UX (confirmation + bandeau de mode), observabilité admin (logs, audit, en-tête HTTP), tests d’auth et de flux front.
+- 2026-04-18 : Revue code — tests d’intégration alignés sur `ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER` (plus de littéral dupliqué).
+
+### Review Findings
+
+- [x] [Review][Patch] Assertions d’en-tête HTTP dupliquent le littéral `X-Admin-Manual-Llm-Execute` au lieu d’importer `ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER` depuis `app.api.v1.routers.admin_llm` — risque de dérive si le nom change. [`backend/tests/integration/test_admin_llm_catalog.py` ~1854, ~1925] — corrigé : import et assertions sur la constante.
+
+- [x] [Review][Defer] Cas limite TanStack : si `manualExecuteMutation.isSuccess` est vrai sans `data`, le bloc « aide » sous « Retour LLM » ne s’affiche plus (condition réduite à `!isSuccess`). Acceptable si le contrat mutation garantit `data` en succès ; sinon à surveiller. [`frontend/src/pages/admin/AdminPromptsPage.tsx` ~1272]

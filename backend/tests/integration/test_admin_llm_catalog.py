@@ -7,7 +7,13 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import require_admin_user
+from app.api.dependencies.auth import (
+    AuthenticatedUser,
+    UserAuthenticationError,
+    require_admin_user,
+    require_authenticated_user,
+)
+from app.api.v1.routers.admin_llm import ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
@@ -1846,6 +1852,7 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
                 json={"sample_payload_id": str(sample_payload_id)},
             )
         assert response.status_code == 422
+        assert response.headers.get(ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER) == "1"
         err = response.json()["error"]
         assert err["code"] == "runtime_preview_incomplete_for_execution"
         assert err["details"]["failure_kind"] == "runtime_preview_incomplete"
@@ -1916,6 +1923,7 @@ def test_admin_llm_catalog_execute_sample_success_mocked_gateway():
                 json={"sample_payload_id": str(sample_payload_id)},
             )
         assert response.status_code == 200
+        assert response.headers.get(ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER) == "1"
         body = response.json()["data"]
         assert body["raw_output"] == "mocked-llm-output"
         assert body["structured_output_parseable"] is True
@@ -2136,3 +2144,47 @@ def test_admin_llm_catalog_execute_sample_provider_gateway_error_mocked():
         db.rollback()
         _teardown_admin_execute_sample_catalog(db, ctx)
         db.close()
+
+
+def test_admin_llm_catalog_execute_sample_forbidden_without_admin_role():
+    """Surface execute-sample : refus hors rôle admin (garde backend, story 69.3)."""
+    client = TestClient(app)
+    app.dependency_overrides[require_authenticated_user] = lambda: AuthenticatedUser(
+        id=999,
+        role="user",
+        email="user@test.com",
+        created_at=datetime.now(timezone.utc),
+    )
+    try:
+        response = client.post(
+            "/v1/admin/llm/catalog/chat:chat_default:premium:fr-FR/execute-sample",
+            json={"sample_payload_id": str(uuid.uuid4())},
+        )
+        assert response.status_code == 403
+        assert response.json()["error"]["code"] == "insufficient_role"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_admin_llm_catalog_execute_sample_unauthorized_without_token():
+    """Refus 401 si l'identité n'est pas établie."""
+
+    def _raise_missing() -> AuthenticatedUser:
+        raise UserAuthenticationError(
+            code="missing_access_token",
+            message="missing bearer access token",
+            status_code=401,
+            details={},
+        )
+
+    client = TestClient(app)
+    app.dependency_overrides[require_authenticated_user] = _raise_missing
+    try:
+        response = client.post(
+            "/v1/admin/llm/catalog/chat:chat_default:premium:fr-FR/execute-sample",
+            json={"sample_payload_id": str(uuid.uuid4())},
+        )
+        assert response.status_code == 401
+        assert response.json()["error"]["code"] == "missing_access_token"
+    finally:
+        app.dependency_overrides.clear()

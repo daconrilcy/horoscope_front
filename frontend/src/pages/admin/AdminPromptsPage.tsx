@@ -30,6 +30,57 @@ import "./AdminPromptsPage.css"
 
 type PromptPageTab = "catalog" | "legacy" | "release" | "consumption" | "personas" | "samplePayloads"
 
+type ManualLlmExecuteConfirmModalProps = {
+  isPending: boolean
+  manifestEntryId: string
+  samplePayloadId: string
+  inspectionModeLabel: string
+  onCancel: () => void
+  onConfirm: () => void
+}
+
+function ManualLlmExecuteConfirmModal({
+  isPending,
+  manifestEntryId,
+  samplePayloadId,
+  inspectionModeLabel,
+  onCancel,
+  onConfirm,
+}: ManualLlmExecuteConfirmModalProps) {
+  return (
+    <div className="modal-overlay" role="presentation">
+      <div
+        className="modal-content admin-prompts-modal admin-prompts-modal--manual-llm"
+        aria-labelledby="manual-llm-exec-title"
+        role="dialog"
+        aria-modal="true"
+      >
+        <h3 id="manual-llm-exec-title">Confirmer l&apos;exécution LLM réelle</h3>
+        <p className="admin-prompts-modal__copy">
+          Vous allez lancer un appel fournisseur réel (hors trafic utilisateur nominal), avec le sample{" "}
+          <code>{samplePayloadId}</code> sur l&apos;entrée <code>{manifestEntryId}</code>.
+        </p>
+        <p className="admin-prompts-modal__copy admin-prompts-modal__copy--emphasis">
+          Mode actif : <strong>{inspectionModeLabel}</strong>. Cette action est tracée côté serveur.
+        </p>
+        <div className="modal-actions">
+          <button className="text-button" type="button" onClick={onCancel}>
+            Annuler
+          </button>
+          <button
+            className="action-button action-button--primary"
+            type="button"
+            disabled={isPending}
+            onClick={onConfirm}
+          >
+            {isPending ? "Exécution en cours..." : "Confirmer l'exécution"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 type LegacyRollbackModalProps = {
   isPending: boolean
   useCaseKey: string
@@ -127,6 +178,10 @@ function inspectionModeShortLabel(mode: AdminInspectionMode): string {
     default:
       return mode
   }
+}
+
+function inspectionModeFullLabel(mode: AdminInspectionMode): string {
+  return INSPECTION_MODE_OPTIONS.find((opt) => opt.value === mode)?.label ?? mode
 }
 
 function inspectionModeHelpText(mode: AdminInspectionMode): string {
@@ -456,6 +511,7 @@ export function AdminPromptsPage() {
   const [consumptionPage, setConsumptionPage] = useState(1)
   const [selectedDrilldownKey, setSelectedDrilldownKey] = useState<string | null>(null)
   const [samplePayloadsSeed, setSamplePayloadsSeed] = useState<{ feature: string; locale: string } | null>(null)
+  const [manualExecuteConfirmOpen, setManualExecuteConfirmOpen] = useState(false)
   const consumptionFromUtc = consumptionFrom ? toUtcIsoFromDateTimeInput(consumptionFrom) : undefined
   const consumptionToUtc = consumptionTo ? toUtcIsoFromDateTimeInput(consumptionTo) : undefined
   const effectiveSamplePayloadId =
@@ -526,6 +582,7 @@ export function AdminPromptsPage() {
 
   useEffect(() => {
     manualExecuteMutation.reset()
+    setManualExecuteConfirmOpen(false)
   }, [selectedManifestEntryId, selectedSamplePayloadId, resolvedInspectionMode])
 
   useEffect(() => {
@@ -864,6 +921,20 @@ export function AdminPromptsPage() {
 
               {selectedManifestEntryId ? (
                 <section className="panel admin-prompts-resolved" aria-label="Détail assembly résolue">
+                  <div
+                    className={`admin-prompts-resolved__surface-banner admin-prompts-resolved__surface-banner--${resolvedInspectionMode}`}
+                    role="status"
+                    aria-live="polite"
+                    aria-label="Mode d'inspection actif pour ce détail"
+                  >
+                    <span className="admin-prompts-resolved__surface-banner-kicker">Mode d&apos;inspection</span>
+                    <span className="admin-prompts-resolved__surface-banner-title">
+                      {inspectionModeFullLabel(resolvedInspectionMode)}
+                    </span>
+                    <span className="admin-prompts-resolved__surface-banner-short">
+                      ({inspectionModeShortLabel(resolvedInspectionMode)})
+                    </span>
+                  </div>
                   <div className="admin-prompts-resolved__header">
                     <h3>Assembly prompt résolue</h3>
                     <div className="admin-prompts-resolved__header-meta">
@@ -917,7 +988,7 @@ export function AdminPromptsPage() {
                     {inspectionModeHelpText(resolvedQuery.data?.inspection_mode ?? resolvedInspectionMode)}
                   </p>
                   {resolvedInspectionMode === "runtime_preview" ? (
-                    <div className="admin-prompts-resolved__manual-exec">
+                    <div className="admin-prompts-resolved__manual-exec admin-prompts-resolved__manual-exec--confirmed-surface">
                       <button
                         type="button"
                         className="action-button action-button--secondary"
@@ -928,7 +999,7 @@ export function AdminPromptsPage() {
                           manualExecuteMutation.isPending ||
                           resolvedQuery.isPending
                         }
-                        onClick={() => manualExecuteMutation.mutate()}
+                        onClick={() => setManualExecuteConfirmOpen(true)}
                       >
                         {manualExecuteMutation.isPending ? "Exécution LLM..." : "Exécuter avec le LLM"}
                       </button>
@@ -1201,7 +1272,7 @@ export function AdminPromptsPage() {
                                 </div>
                               ) : !manualExecuteMutation.isPending &&
                                 !manualExecuteMutation.isError &&
-                                !(manualExecuteMutation.isSuccess && manualExecuteMutation.data) ? (
+                                !manualExecuteMutation.isSuccess ? (
                                 <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
                                   {selectedSamplePayloadId && resolvedQuery.data &&
                                   isAdminRuntimePreviewExecutable(resolvedQuery.data)
@@ -1603,6 +1674,24 @@ export function AdminPromptsPage() {
           version={legacyRollbackCandidate}
           onCancel={() => setLegacyRollbackCandidate(null)}
           onConfirm={() => void handleLegacyRollback()}
+        />
+      ) : null}
+
+      {manualExecuteConfirmOpen &&
+      selectedManifestEntryId &&
+      selectedSamplePayloadId &&
+      activeTab === "catalog" ? (
+        <ManualLlmExecuteConfirmModal
+          isPending={manualExecuteMutation.isPending}
+          manifestEntryId={selectedManifestEntryId}
+          samplePayloadId={selectedSamplePayloadId}
+          inspectionModeLabel={inspectionModeFullLabel(resolvedInspectionMode)}
+          onCancel={() => setManualExecuteConfirmOpen(false)}
+          onConfirm={() => {
+            manualExecuteMutation.mutate(undefined, {
+              onSettled: () => setManualExecuteConfirmOpen(false),
+            })
+          }}
         />
       ) : null}
     </div>

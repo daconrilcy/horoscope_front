@@ -15,3 +15,7 @@
 ## Deferred from: code review of 69-2-afficher-retour-llm-brut-structure-metadonnees-execution.md (2026-04-18)
 
 - **`anonymize_text` sans garde-fou dans le helper de payload manuel** — Même pattern que sur d’autres chemins ; traiter transversalement si besoin de tolérance aux pannes de config salt.
+
+## Deferred from: code review of 69-3-securiser-surface-execution-manuelle-et-qa.md (2026-04-18)
+
+- **Mutation `useMutation` : `isSuccess` sans `data`** — La zone d’aide « Retour LLM » dépend de `!manualExecuteMutation.isSuccess`. Si un cas extrême produisait un succès sans payload, l’utilisateur ne verrait ni résultat ni invite ; à traiter seulement si observé en prod (contrat TanStack Query habituellement garantit `data` au succès).

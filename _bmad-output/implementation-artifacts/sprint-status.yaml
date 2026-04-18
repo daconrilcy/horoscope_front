@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-18T22:30:00+02:00'
+last_updated: '2026-04-18T12:15:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -649,5 +649,5 @@ development_status:
   epic-69: in-progress
   69-1-executer-manuellement-cible-canonique-depuis-sample-payload: done
   69-2-afficher-retour-llm-brut-structure-metadonnees-execution: done
-  69-3-securiser-surface-execution-manuelle-et-qa: ready-for-dev
+  69-3-securiser-surface-execution-manuelle-et-qa: done
   epic-69-retrospective: backlog
