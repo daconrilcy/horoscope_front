@@ -107,10 +107,80 @@ function ManualLlmExecuteConfirmModal({
   )
 }
 
+function legacyPromptStatusLabel(status: AdminPromptVersion["status"]): string {
+  switch (status) {
+    case "published":
+      return "Publié"
+    case "archived":
+      return "Archivé"
+    case "draft":
+      return "Brouillon"
+    default:
+      return status
+  }
+}
+
+function formatLegacyPromptTimestamp(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })
+  } catch {
+    return iso
+  }
+}
+
+type LegacyVersionMetaStripProps = {
+  version: AdminPromptVersion
+  headingId: string
+  variant: "reference" | "active"
+}
+
+function LegacyVersionMetaStrip({ version, headingId, variant }: LegacyVersionMetaStripProps) {
+  const variantLabel = variant === "reference" ? "Référence (gauche)" : "Version en production (droite)"
+  return (
+    <div className="admin-prompts-legacy__meta-strip-wrap" aria-labelledby={headingId}>
+      <div className="admin-prompts-legacy__meta-strip-kicker">
+        <span className="admin-prompts-legacy__pill">{variantLabel}</span>
+      </div>
+      <dl className="admin-prompts-legacy__meta-strip">
+      <div>
+        <dt>Statut</dt>
+        <dd>
+          <span
+            className={`badge ${version.status === "published" ? "badge--info" : "badge--warning"}`}
+          >
+            {legacyPromptStatusLabel(version.status)}
+          </span>
+        </dd>
+      </div>
+      <div>
+        <dt>Modèle</dt>
+        <dd>{version.model}</dd>
+      </div>
+      <div>
+        <dt>Auteur</dt>
+        <dd>{version.created_by}</dd>
+      </div>
+      <div>
+        <dt>Création</dt>
+        <dd>{formatLegacyPromptTimestamp(version.created_at)}</dd>
+      </div>
+      <div>
+        <dt>Identifiant</dt>
+        <dd>
+          <code>{version.id}</code>
+        </dd>
+      </div>
+      </dl>
+    </div>
+  )
+}
+
 type LegacyRollbackModalProps = {
   isPending: boolean
   useCaseKey: string
-  version: AdminPromptVersion
+  useCaseDisplayName: string
+  activeVersion: AdminPromptVersion | null
+  targetVersion: AdminPromptVersion
   onCancel: () => void
   onConfirm: () => void
 }
@@ -118,23 +188,48 @@ type LegacyRollbackModalProps = {
 function LegacyRollbackModal({
   isPending,
   useCaseKey,
-  version,
+  useCaseDisplayName,
+  activeVersion,
+  targetVersion,
   onCancel,
   onConfirm,
 }: LegacyRollbackModalProps) {
+  const activeShort = activeVersion ? `${activeVersion.id.slice(0, 8)}…` : "—"
+  const targetShort = `${targetVersion.id.slice(0, 8)}…`
   return (
     <div className="modal-overlay" role="presentation">
-      <div className="modal-content admin-prompts-modal" aria-labelledby="legacy-rollback-title" role="dialog" aria-modal="true">
-        <h3 id="legacy-rollback-title">Confirmer le rollback legacy</h3>
+      <div
+        className="modal-content admin-prompts-modal admin-prompts-modal--legacy-rollback"
+        aria-labelledby="legacy-rollback-title"
+        role="dialog"
+        aria-modal="true"
+      >
+        <h3 id="legacy-rollback-title">Confirmer la restauration de version</h3>
         <p className="admin-prompts-modal__copy">
-          Le use case <strong>{useCaseKey}</strong> sera republié sur la version <code>{version.id}</code>.
+          Vous allez publier la version <code>{targetShort}</code> ({legacyPromptStatusLabel(targetVersion.status)}) comme
+          prompt actif pour le cas d&apos;usage <strong>{useCaseDisplayName}</strong>{" "}
+          <span className="text-muted">({useCaseKey})</span>.
+        </p>
+        {activeVersion ? (
+          <p className="admin-prompts-modal__copy">
+            La version actuellement en production <code>{activeShort}</code> (
+            {legacyPromptStatusLabel(activeVersion.status)}) sera remplacée pour les prochains appels qui résolvent ce
+            cas d&apos;usage.
+          </p>
+        ) : (
+          <p className="admin-prompts-modal__copy text-muted">
+            Aucune version active résolue dans la liste : la cible ci-dessus sera publiée pour ce cas d&apos;usage.
+          </p>
+        )}
+        <p className="admin-prompts-modal__copy admin-prompts-modal__copy--emphasis">
+          Cette action est traçable côté serveur et affecte le prompt/persona legacy, pas le catalogue canonique.
         </p>
         <div className="modal-actions">
           <button className="text-button" type="button" onClick={onCancel}>
             Annuler
           </button>
           <button className="action-button action-button--primary" type="button" disabled={isPending} onClick={onConfirm}>
-            {isPending ? "Rollback en cours..." : "Rollback"}
+            {isPending ? "Restauration en cours…" : "Confirmer la restauration"}
           </button>
         </div>
       </div>
@@ -685,7 +780,7 @@ export function AdminPromptsPage() {
       targetVersionId: legacyRollbackCandidate.id,
     })
     setLegacyRollbackCandidate(null)
-    setSuccessMessage(`Rollback effectue vers ${legacyRollbackCandidate.id.slice(0, 8)}.`)
+    setSuccessMessage(`Restauration effectuée vers ${legacyRollbackCandidate.id.slice(0, 8)}…`)
     await queryClient.invalidateQueries({ queryKey: ["admin-llm-prompt-history", legacyUseCaseKey] })
     await queryClient.invalidateQueries({ queryKey: ["admin-llm-catalog"] })
   }
@@ -1736,91 +1831,189 @@ export function AdminPromptsPage() {
       ) : null}
 
       {activeTab === "legacy" ? (
-        <section className="panel" aria-label="Historique legacy prompt/persona">
-          {successMessage ? <p className="state-line state-success">{successMessage}</p> : null}
-          {isLegacyLoading ? <div className="loading-placeholder">Chargement de l'historique legacy...</div> : null}
-          {hasLegacyError ? <p className="chat-error">Impossible de charger l'historique legacy.</p> : null}
+        <section className="panel admin-prompts-legacy" aria-label="Investigation historique LLM hors catalogue">
+          {successMessage ? (
+            <p className="state-line state-success" role="status" aria-live="polite">
+              {successMessage}
+            </p>
+          ) : null}
+          {isLegacyLoading ? <div className="loading-placeholder">Chargement de l&apos;historique legacy…</div> : null}
+          {hasLegacyError ? <p className="chat-error">Impossible de charger l&apos;historique legacy.</p> : null}
 
           {!isLegacyLoading && !hasLegacyError ? (
-            <div className="admin-prompts-history-legacy">
-              <label className="admin-prompts-compare">
-                <span>Use case legacy</span>
-                <select value={legacyUseCaseKey ?? ""} onChange={(event) => setLegacyUseCaseKey(event.target.value)}>
-                  {useCases.map((useCase) => (
-                    <option key={useCase.key} value={useCase.key}>
-                      {useCase.display_name} ({useCase.key})
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="admin-prompts-history">
-                {selectedLegacyHistory.map((version) => (
-                  <article key={version.id} className="admin-prompts-history__item">
-                    <div>
-                      <div className="admin-prompts-history__topline">
-                        <strong>{version.status}</strong>
-                        <span className="text-muted">{version.model}</span>
-                      </div>
-                      <p className="admin-prompts-history__copy">
-                        Auteur {version.created_by} · {version.created_at}
-                      </p>
-                      <code>{version.id}</code>
-                    </div>
-                    <div className="admin-prompts-history__actions">
-                      <button className="action-button action-button--secondary" type="button" onClick={() => setLegacyRollbackCandidate(version)}>
-                        Rollback
-                      </button>
-                    </div>
-                  </article>
-                ))}
+            <div className="admin-prompts-legacy__surface">
+              <header className="admin-prompts-legacy__surface-header">
+                <p className="admin-prompts-legacy__kicker">Hors catalogue canonique</p>
+                <h3 className="admin-prompts-legacy__surface-title">Investigation des versions historiques</h3>
+                <p className="admin-prompts-legacy__surface-intro text-muted">
+                  Ce périmètre est dédié à la lecture et à la comparaison des prompts enregistrés avant le modèle catalogue.
+                  Choisissez un cas d&apos;usage, repérez la version active, puis comparez le texte développeur à une autre
+                  version. Les restaurations sont regroupées et nécessitent une confirmation explicite.
+                </p>
+              </header>
+
+              <div className="admin-prompts-legacy__toolbar">
+                <label className="admin-prompts-compare admin-prompts-legacy__field">
+                  <span>Cas d&apos;usage à consulter</span>
+                  <select
+                    aria-label="Cas d'usage historique"
+                    value={legacyUseCaseKey ?? ""}
+                    onChange={(event) => setLegacyUseCaseKey(event.target.value)}
+                  >
+                    {useCases.map((useCase) => (
+                      <option key={useCase.key} value={useCase.key}>
+                        {useCase.display_name} · {useCase.key}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
-              {activeLegacyVersion && compareLegacyVersion ? (
-                <div className="panel">
-                  <div className="admin-prompts-history__header">
-                    <h3>Comparaison legacy</h3>
-                    <label className="admin-prompts-compare">
-                      <span>Comparer avec</span>
-                      <select
-                        aria-label="Comparer version legacy"
-                        value={compareLegacyVersion.id}
-                        onChange={(event) => setLegacyCompareVersionId(event.target.value)}
+
+              {selectedLegacyHistory.length === 0 ? (
+                <p className="admin-prompts-legacy__empty text-muted" role="status">
+                  Aucune version enregistrée pour ce cas d&apos;usage.
+                </p>
+              ) : (
+                <>
+                  <section className="admin-prompts-legacy__versions" aria-labelledby="legacy-versions-heading">
+                    <div className="admin-prompts-legacy__section-head">
+                      <h4 id="legacy-versions-heading" className="admin-prompts-legacy__section-heading">
+                        Versions enregistrées
+                      </h4>
+                      <p className="admin-prompts-legacy__section-hint text-muted">
+                        La version marquée « en production » est celle comparée à droite dans le diff ci-dessous.
+                      </p>
+                    </div>
+                    <div className="admin-prompts-history admin-prompts-legacy__version-list">
+                      {selectedLegacyHistory.map((version) => {
+                        const isActive = Boolean(
+                          selectedLegacyUseCase?.active_prompt_version_id &&
+                            version.id === selectedLegacyUseCase.active_prompt_version_id,
+                        )
+                        return (
+                          <article key={version.id} className="admin-prompts-history__item admin-prompts-legacy__version-row">
+                            <div>
+                              <div className="admin-prompts-history__topline">
+                                <span
+                                  className={`badge ${version.status === "published" ? "badge--info" : "badge--warning"}`}
+                                >
+                                  {legacyPromptStatusLabel(version.status)}
+                                </span>
+                                {isActive ? (
+                                  <span className="admin-prompts-legacy__pill admin-prompts-legacy__pill--active">
+                                    En production
+                                  </span>
+                                ) : null}
+                                <span className="text-muted">{version.model}</span>
+                              </div>
+                              <p className="admin-prompts-history__copy">
+                                Auteur {version.created_by} · {formatLegacyPromptTimestamp(version.created_at)}
+                              </p>
+                              <code>{version.id}</code>
+                            </div>
+                            <div className="admin-prompts-history__actions admin-prompts-legacy__version-actions">
+                              {isActive ? (
+                                <span className="admin-prompts-legacy__action-placeholder text-muted">
+                                  Déjà actif — comparez à gauche
+                                </span>
+                              ) : (
+                                <button
+                                  className="action-button action-button--secondary"
+                                  type="button"
+                                  onClick={() => setLegacyRollbackCandidate(version)}
+                                >
+                                  Restaurer cette version
+                                </button>
+                              )}
+                            </div>
+                          </article>
+                        )
+                      })}
+                    </div>
+                  </section>
+
+                  {activeLegacyVersion && compareLegacyVersion ? (
+                    <section
+                      className="admin-prompts-legacy__diff panel"
+                      aria-labelledby="legacy-diff-heading"
+                    >
+                      <div className="admin-prompts-legacy__diff-head">
+                        <div>
+                          <h4 id="legacy-diff-heading" className="admin-prompts-legacy__section-heading">
+                            Comparaison du prompt développeur
+                          </h4>
+                          <p className="admin-prompts-legacy__diff-lead text-muted">
+                            Diff ligne à ligne : à gauche la version de référence choisie, à droite la version actuellement
+                            en production pour ce cas d&apos;usage. Les métadonnées restent visibles sans ouvrir le texte
+                            intégral.
+                          </p>
+                        </div>
+                        <label className="admin-prompts-compare admin-prompts-legacy__field admin-prompts-legacy__field--inline">
+                          <span>Version de référence (colonne gauche)</span>
+                          <select
+                            aria-label="Version de référence pour la comparaison legacy"
+                            value={compareLegacyVersion.id}
+                            onChange={(event) => setLegacyCompareVersionId(event.target.value)}
+                          >
+                            {selectedLegacyHistory
+                              .filter((version) => version.id !== activeLegacyVersion.id)
+                              .map((version) => (
+                                <option key={version.id} value={version.id}>
+                                  {version.id.slice(0, 8)}… · {legacyPromptStatusLabel(version.status)}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                      </div>
+
+                      <div
+                        className="admin-prompts-diff admin-prompts-legacy__diff-grid"
+                        role="group"
+                        aria-label="Diff prompt développeur legacy"
                       >
-                        {selectedLegacyHistory
-                          .filter((version) => version.id !== activeLegacyVersion.id)
-                          .map((version) => (
-                            <option key={version.id} value={version.id}>
-                              {version.id} · {version.status}
-                            </option>
+                        <div className="admin-prompts-diff__column admin-prompts-diff__column--left">
+                          <h4 className="admin-prompts-legacy__diff-column-title" id="legacy-diff-left-title">
+                            Colonne gauche — version de référence
+                          </h4>
+                          <LegacyVersionMetaStrip
+                            version={compareLegacyVersion}
+                            headingId="legacy-diff-left-title"
+                            variant="reference"
+                          />
+                          <p className="admin-prompts-legacy__diff-caption text-muted">Contenu comparé (ligne à ligne)</p>
+                          {legacyDiffRows.map((row, index) => (
+                            <code
+                              key={`legacy-left-${index}`}
+                              className={`admin-prompts-diff__line admin-prompts-diff__line--${row.leftType}`}
+                            >
+                              {row.leftText || " "}
+                            </code>
                           ))}
-                      </select>
-                    </label>
-                  </div>
-                  <div className="admin-prompts-diff" role="table" aria-label="Diff prompt legacy">
-                    <div className="admin-prompts-diff__column admin-prompts-diff__column--left">
-                      <h4>Version comparée</h4>
-                      {legacyDiffRows.map((row, index) => (
-                        <code
-                          key={`legacy-left-${index}`}
-                          className={`admin-prompts-diff__line admin-prompts-diff__line--${row.leftType}`}
-                        >
-                          {row.leftText || " "}
-                        </code>
-                      ))}
-                    </div>
-                    <div className="admin-prompts-diff__column">
-                      <h4>Version active</h4>
-                      {legacyDiffRows.map((row, index) => (
-                        <code
-                          key={`legacy-right-${index}`}
-                          className={`admin-prompts-diff__line admin-prompts-diff__line--${row.rightType}`}
-                        >
-                          {row.rightText || " "}
-                        </code>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+                        </div>
+                        <div className="admin-prompts-diff__column">
+                          <h4 className="admin-prompts-legacy__diff-column-title" id="legacy-diff-right-title">
+                            Colonne droite — version en production
+                          </h4>
+                          <LegacyVersionMetaStrip
+                            version={activeLegacyVersion}
+                            headingId="legacy-diff-right-title"
+                            variant="active"
+                          />
+                          <p className="admin-prompts-legacy__diff-caption text-muted">Contenu comparé (ligne à ligne)</p>
+                          {legacyDiffRows.map((row, index) => (
+                            <code
+                              key={`legacy-right-${index}`}
+                              className={`admin-prompts-diff__line admin-prompts-diff__line--${row.rightType}`}
+                            >
+                              {row.rightText || " "}
+                            </code>
+                          ))}
+                        </div>
+                      </div>
+                    </section>
+                  ) : null}
+                </>
+              )}
             </div>
           ) : null}
         </section>
@@ -1948,7 +2141,9 @@ export function AdminPromptsPage() {
         <LegacyRollbackModal
           isPending={rollbackMutation.isPending}
           useCaseKey={legacyUseCaseKey}
-          version={legacyRollbackCandidate}
+          useCaseDisplayName={selectedLegacyUseCase?.display_name ?? legacyUseCaseKey}
+          activeVersion={activeLegacyVersion}
+          targetVersion={legacyRollbackCandidate}
           onCancel={() => setLegacyRollbackCandidate(null)}
           onConfirm={() => void handleLegacyRollback()}
         />

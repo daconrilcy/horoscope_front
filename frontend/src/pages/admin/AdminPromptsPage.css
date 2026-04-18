@@ -1079,6 +1079,196 @@
   margin: 0 0 var(--space-2);
 }
 
+/* Route legacy : investigation hors catalogue */
+.admin-prompts-legacy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-prompts-legacy__surface {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.admin-prompts-legacy__surface-header {
+  padding: var(--space-4);
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--color-primary) 6%, rgba(255, 255, 255, 0.02));
+}
+
+.admin-prompts-legacy__kicker {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.admin-prompts-legacy__surface-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+.admin-prompts-legacy__surface-intro {
+  margin: 0;
+  max-width: 72ch;
+  line-height: 1.5;
+}
+
+.admin-prompts-legacy__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.admin-prompts-legacy__field--inline {
+  min-width: min(100%, 320px);
+}
+
+.admin-prompts-legacy__field span {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.admin-prompts-legacy__empty {
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: 12px;
+  border: 1px dashed var(--glass-border);
+}
+
+.admin-prompts-legacy__section-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.admin-prompts-legacy__section-heading {
+  margin: 0;
+  font-size: var(--font-size-md);
+}
+
+.admin-prompts-legacy__section-hint {
+  margin: 0;
+  max-width: 72ch;
+}
+
+.admin-prompts-legacy__version-list {
+  margin-top: 0;
+}
+
+.admin-prompts-legacy__version-row {
+  border-color: color-mix(in srgb, var(--glass-border) 90%, var(--color-primary));
+}
+
+.admin-prompts-legacy__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-prompts-legacy__pill--active {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--glass-border));
+  color: color-mix(in srgb, var(--success) 88%, var(--color-text-primary));
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+}
+
+.admin-prompts-legacy__version-actions {
+  justify-content: flex-end;
+}
+
+.admin-prompts-legacy__action-placeholder {
+  font-size: var(--font-size-xs);
+  text-align: right;
+}
+
+.admin-prompts-legacy__diff {
+  margin-top: var(--space-2);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.admin-prompts-legacy__diff-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.admin-prompts-legacy__diff-lead {
+  margin: var(--space-2) 0 0;
+  max-width: 72ch;
+}
+
+.admin-prompts-legacy__diff-column-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.admin-prompts-legacy__diff-caption {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.admin-prompts-legacy__diff-grid {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.admin-prompts-legacy__meta-strip-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.admin-prompts-legacy__meta-strip {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.admin-prompts-legacy__meta-strip-kicker {
+  margin: 0;
+}
+
+.admin-prompts-legacy__meta-strip dt {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.admin-prompts-legacy__meta-strip dd {
+  margin: 0;
+  word-break: break-word;
+}
+
+.admin-prompts-modal--legacy-rollback {
+  max-width: 560px;
+}
+
 @media (max-width: 960px) {
   .admin-prompts-layout,
   .admin-prompts-diff,
@@ -1092,6 +1282,11 @@
   .admin-prompts-history__header,
   .admin-prompts-diff__header,
   .admin-prompts-history__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-prompts-legacy__diff-head {
     flex-direction: column;
     align-items: stretch;
   }

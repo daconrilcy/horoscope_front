@@ -21,6 +21,7 @@ inputDocuments:
   - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\69-2-afficher-retour-llm-brut-structure-metadonnees-execution.md'
   - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\69-3-securiser-surface-execution-manuelle-et-qa.md'
   - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\67-To-69-deferred-work.md'
+  - 'C:\dev\horoscope_front\_bmad-output\implementation-artifacts\70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md'
   - 'user-specification-inline-admin-prompts-ux-refactor-2026-04-18'
 lastEdited: '2026-04-18'
 editHistory:
@@ -44,6 +45,8 @@ editHistory:
     changes: 'Clarification step-02: le schema visuel LLM doit utiliser une bibliotheque React reconnue'
   - date: '2026-04-18'
     changes: 'Validation finale Epic 70: workflow de sauvegarde precise (nouvelle version draft/inactive puis publication), statut explicite des prompts et inactivation automatique de l ancienne version publiee'
+  - date: '2026-04-18'
+    changes: 'Story 70.5 livree : lien artefact implementation et trace dans epics (route legacy refondue)'
 ---
 
 # horoscope_front - Epic Breakdown
@@ -422,6 +425,8 @@ So that je puisse investiguer l historique legacy sans polluer l experience du c
 **When** l admin la declenche
 **Then** la confirmation explicite reste obligatoire
 **And** le libelle de l action et ses consequences sont formules en francais produit coherent.
+
+**Artefact d’implémentation :** [`70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md`](../implementation-artifacts/70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md) — statut **done** (2026-04-18) ; surface `admin-prompts-legacy` (en-tête, toolbar cas d’usage, liste versions, diff annoté avec métadonnées, modale restauration FR) ; i18n titres d’en-tête de page FR / EN / ES ; tests Vitest (`AdminPromptsPage`, `AdminPromptsRouting`) ; revue code (kicker hors `dl`, alignement ES).
 
 ### Story 70.6: Refondre la route release pour l investigation snapshot
 

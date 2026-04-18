@@ -49,6 +49,10 @@ Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivan
 - **Couverture tests accessibilité clavier** (zoom/pan React Flow, critère « compatible clavier » de la story) — aucun test automatisé ajouté ; à couvrir par smoke manuel admin ou story QA dédiée.
 - **Churn `package-lock.json`** (d3, zustand, `devOptional` sur `@types/react`) — surveiller build CI et `npm audit` après merge de `@xyflow/react`.
 
+## Deferred from: code review of 70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback.md (2026-04-18)
+
+- **Dates legacy formatées en `fr-FR` en dur** dans `formatLegacyPromptTimestamp` — harmoniser avec la langue UI (`localStorage` / i18n) lors d’un passage centralisé des formats date-heure admin (lien possible avec epic 70 story 70.8).
+
 ## Deferred from: code review of 70-2-refaire-le-catalogue-canonique-en-mode-master-detail (2026-04-18)
 
 - **Fichier `AdminPromptsPage.tsx` déjà volumineux** — dette structurelle (extraction composants catalogue) hors périmètre strict de la story 70.2 ; à traiter si refactor dédié.

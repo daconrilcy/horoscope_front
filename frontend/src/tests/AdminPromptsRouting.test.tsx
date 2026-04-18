@@ -189,7 +189,7 @@ describe("Admin prompts — routage dédié (story 70.1)", () => {
     renderApp(["/admin/prompts/legacy"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Historique legacy" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Historique LLM hors catalogue" })).toBeInTheDocument()
     })
   })
 })

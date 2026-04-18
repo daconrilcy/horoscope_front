@@ -250,8 +250,9 @@ export const adminTranslations = {
           "Vue canonique feature/subfeature/plan/locale gouvernée par snapshot actif, avec historique legacy séparé.",
       },
       legacy: {
-        title: "Historique legacy",
-        intro: "Use cases hérités, versions prompt et rollback côté prompt/persona.",
+        title: "Historique LLM hors catalogue",
+        intro:
+          "Investigation seule : versions historiques par cas d’usage, comparaison au prompt actif et restauration confirmée — sans éditer le catalogue canonique.",
       },
       release: {
         title: "Historique release",
@@ -277,8 +278,9 @@ export const adminTranslations = {
           "Canonical feature/subfeature/plan/locale view governed by the active snapshot, with separate legacy history.",
       },
       legacy: {
-        title: "Legacy history",
-        intro: "Legacy use cases, prompt versions, and prompt/persona rollback.",
+        title: "Off-catalog LLM history",
+        intro:
+          "Investigation only: historical versions per use case, diff against the active prompt, and confirmed restore — without editing the canonical catalog.",
       },
       release: {
         title: "Release history",
@@ -304,8 +306,9 @@ export const adminTranslations = {
           "Vista canónica feature/subfeature/plan/locale gobernada por el snapshot activo, con historial legacy aparte.",
       },
       legacy: {
-        title: "Historial legacy",
-        intro: "Casos de uso heredados, versiones de prompt y rollback de prompt/persona.",
+        title: "Historial LLM fuera del catálogo",
+        intro:
+          "Solo investigación: versiones históricas por caso de uso, comparación con el prompt activo y restauración confirmada — sin editar el catálogo canónico.",
       },
       release: {
         title: "Historial de release",

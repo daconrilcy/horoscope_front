@@ -1841,15 +1841,24 @@ describe("AdminPromptsPage", () => {
     await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
 
     await waitFor(() => {
-      expect(screen.getAllByRole("button", { name: "Rollback" }).length).toBeGreaterThan(0)
+      expect(screen.getByRole("heading", { name: "Historique LLM hors catalogue" })).toBeInTheDocument()
     })
-    expect(screen.getByRole("table", { name: "Diff prompt legacy" })).toBeInTheDocument()
-
-    await userEvent.click(screen.getAllByRole("button", { name: "Rollback" })[0])
-    const dialog = await screen.findByRole("dialog", { name: "Confirmer le rollback legacy" })
-    await userEvent.click(within(dialog).getByRole("button", { name: /^Rollback$/ }))
     await waitFor(() => {
-      expect(screen.getByText(/Rollback effectue vers/)).toBeInTheDocument()
+      expect(screen.getByText("Hors catalogue canonique")).toBeInTheDocument()
+    })
+    expect(screen.getByRole("region", { name: "Investigation historique LLM hors catalogue" })).toBeInTheDocument()
+    expect(screen.getByLabelText("Cas d'usage historique")).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Restaurer cette version" })).toBeInTheDocument()
+    })
+    expect(screen.getByRole("group", { name: "Diff prompt développeur legacy" })).toBeInTheDocument()
+    expect(screen.getAllByText("Statut").length).toBeGreaterThan(0)
+
+    await userEvent.click(screen.getByRole("button", { name: "Restaurer cette version" }))
+    const dialog = await screen.findByRole("dialog", { name: "Confirmer la restauration de version" })
+    await userEvent.click(within(dialog).getByRole("button", { name: "Confirmer la restauration" }))
+    await waitFor(() => {
+      expect(screen.getByText(/Restauration effectuée vers/)).toBeInTheDocument()
     })
   })
 
