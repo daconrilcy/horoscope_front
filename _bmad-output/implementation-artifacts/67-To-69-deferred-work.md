@@ -35,7 +35,7 @@ Suite à l’implémentation, les tests d’intégration backend et Vitest front
 
 | Fichier | Ajustement principal |
 |--------|------------------------|
-| `AdminPage.test.tsx` | Après redirect `/admin/personas` → `/admin/prompts`, titre attendu : « Catalogue prompts LLM ». |
+| `AdminPage.test.tsx` | Après redirect `/admin/personas` → `/admin/prompts/personas`, vérifie le chemin et le panneau personas (`personas-admin-title`), pas le catalogue (story 70.1). |
 | `HelpPage.test.tsx` | Plusieurs boutons « Ouvrir un ticket support » : `getAllByRole` + `length > 0`. |
 
 **Vérification** : `pytest` (backend, venv activé) et `npm run test` (frontend) au vert.

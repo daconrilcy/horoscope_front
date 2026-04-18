@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-18T12:45:00+02:00'
+last_updated: '2026-04-18T14:05:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -410,18 +410,18 @@ development_status:
   59-5-socle-commun-prompts: done
   epic-59-retrospective: optional
   epic-60: in-progress
-  60-1-taxonomie-domaines-publics: ready-for-dev
-  60-2-scores-publics-sur-10: ready-for-dev
-  60-3-day-climate: ready-for-dev
-  60-4-time-windows: ready-for-dev
-  60-5-turning-point: ready-for-dev
-  60-6-best-window: ready-for-dev
-  60-7-astro-foundation: ready-for-dev
-  60-8-refonte-front: ready-for-dev
-  60-9-wording-microcopies: ready-for-dev
-  60-10-migration-api: ready-for-dev
-  60-11-tests-fixtures-qa: ready-for-dev
-  60-12-cleanup-legacy: ready-for-dev
+  60-1-taxonomie-domaines-publics: review
+  60-2-scores-publics-sur-10: review
+  60-3-day-climate: review
+  60-4-time-windows: review
+  60-5-turning-point: review
+  60-6-best-window: review
+  60-7-astro-foundation: review
+  60-8-refonte-front: review
+  60-9-wording-microcopies: review
+  60-10-migration-api: review
+  60-11-tests-fixtures-qa: review
+  60-12-cleanup-legacy: review
   60-13-astro-daily-events-module: done
   60-14-periodes-du-jour-timeline: done
   60-15-enrichissement-calculs-astrologiques: done
@@ -617,7 +617,7 @@ development_status:
   66-29-extinction-definitive-fallback-use-case-first-tous-chemins-supportes: done
   66-30-suppression-fallback-resolve-model-source-finale-verite-execution: done
   66-31-validation-fail-fast-coherence-configuration-publish-boot-runtime: done
-  66-32-versionnement-atomique-et-rollback-sur-des-artefacts-de-prompting: ready-for-dev
+  66-32-versionnement-atomique-et-rollback-sur-des-artefacts-de-prompting: done
   66-33-durcissement-operationnel-appel-provider-openai: done
   66-34-politique-stricte-redaction-classification-donnees-sensibles-logs-snapshots-replays: done
   66-35-qualification-charge-stabilite-degradation-controlee-gateway: done
@@ -651,4 +651,16 @@ development_status:
   69-2-afficher-retour-llm-brut-structure-metadonnees-execution: done
   69-3-securiser-surface-execution-manuelle-et-qa: done
   epic-69-retrospective: backlog
+  epic-70: in-progress
+  70-1-reorganiser-la-navigation-admin-prompts-en-routes-dediees: done
+  70-2-refaire-le-catalogue-canonique-en-mode-master-detail: backlog
+  70-3-recomposer-le-detail-prompts-en-lecture-progressive-et-zone-d-actions: backlog
+  70-4-rendre-le-schema-visuel-des-processus-llm-avec-react-flow: backlog
+  70-5-refondre-la-route-legacy-pour-la-comparaison-et-le-rollback: backlog
+  70-6-refondre-la-route-release-pour-l-investigation-snapshot: backlog
+  70-7-refondre-la-route-consumption-pour-le-pilotage-operable: backlog
+  70-8-harmoniser-les-libelles-l-accessibilite-et-le-responsive: backlog
+  70-9-editer-les-prompts-canoniques-via-des-formulaires-admin-guides: backlog
+  70-10-historiser-comparer-et-auditer-chaque-sauvegarde-de-prompt: backlog
+  epic-70-retrospective: backlog
   67-to-69-deferred-work: done

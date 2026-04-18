@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest"
 import { navItems, type NavItem } from "../ui/nav"
 
 describe("ui/nav configuration", () => {
-  it("exports navItems array with 14 entries", () => {
+  it("exports navItems array with 13 entries", () => {
     expect(navItems).toBeDefined()
     expect(Array.isArray(navItems)).toBe(true)
-    expect(navItems).toHaveLength(14)
+    expect(navItems).toHaveLength(13)
   })
 
   it("each navItem has required properties", () => {

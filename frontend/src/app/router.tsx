@@ -11,12 +11,16 @@ export function AppRouter() {
   return <RouterProvider router={router} future={{ v7_startTransition: true }} />
 }
 
-export function TestAppRouter({ initialEntries = ["/"] }: { initialEntries?: string[] }) {
-  const testRouter = createMemoryRouter(routes, {
+export function createTestMemoryRouter(initialEntries: string[] = ["/"]) {
+  return createMemoryRouter(routes, {
     initialEntries,
     future: {
       v7_relativeSplatPath: true,
     },
   })
+}
+
+export function TestAppRouter({ initialEntries = ["/"] }: { initialEntries?: string[] }) {
+  const testRouter = createTestMemoryRouter(initialEntries)
   return <RouterProvider router={testRouter} future={{ v7_startTransition: true }} />
 }

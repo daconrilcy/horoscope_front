@@ -2,7 +2,8 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest"
 
-import { TestAppRouter } from "../app/router"
+import { RouterProvider } from "react-router-dom"
+import { createTestMemoryRouter } from "../app/router"
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
 import { adminTranslations } from "../i18n/admin"
@@ -86,12 +87,28 @@ const NOT_FOUND = {
   json: async () => ({ error: { code: "not_found", message: "not found" } }),
 }
 
+function fetchInputToUrlString(input: RequestInfo | URL): string {
+  if (typeof input === "string") {
+    return input
+  }
+  if (input instanceof Request) {
+    return input.url
+  }
+  if (input instanceof URL) {
+    return input.href
+  }
+  return String(input)
+}
+
 function makeFetchMock(authMeResponse: object) {
   return vi.fn(async (input: RequestInfo | URL) => {
-    const url = String(input)
+    const url = fetchInputToUrlString(input)
     if (url.endsWith("/v1/auth/me")) return authMeResponse
     if (url.includes("/v1/billing/subscription")) return { ok: true, status: 200, json: async () => ({ data: null }) }
     if (url.includes("/v1/entitlements/me")) return { ok: true, status: 200, json: async () => ({ data: { features: [] } }) }
+    if (/\/v1\/admin\/llm\/personas\/?(?:\?|$)/.test(url)) {
+      return { ok: true, status: 200, json: async () => ({ data: [] }) }
+    }
     return NOT_FOUND
   })
 }
@@ -100,13 +117,15 @@ function renderApp(initialEntries: string[] = ["/"]) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   })
-  return render(
+  const router = createTestMemoryRouter(initialEntries)
+  const result = render(
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <TestAppRouter initialEntries={initialEntries} />
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
       </QueryClientProvider>
     </ThemeProvider>
   )
+  return { ...result, router }
 }
 
 function setupToken(sub = "1", role = "admin") {
@@ -191,10 +210,13 @@ describe("AdminPage - Story 65.4", () => {
     })
     unmount()
 
-    // Test /admin/personas -> Navigate vers /admin/prompts (legacy Story 65.4)
-    renderApp(["/admin/personas"])
+    // Test /admin/personas -> route dédiée personas (story 70.1)
+    const { router: personasRouter } = renderApp(["/admin/personas"])
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Catalogue prompts LLM" })).toBeInTheDocument()
+      expect(personasRouter.state.location.pathname).toBe("/admin/prompts/personas")
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId("personas-admin-title")).toHaveTextContent("Personas astrologues")
     })
   })
 })

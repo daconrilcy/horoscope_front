@@ -12,7 +12,6 @@ export interface NavigationTranslation {
     privacy: string
     support: string
     monitoring: string
-    persona: string
     reconciliation: string
     ent_api: string
     ent_astro: string
@@ -35,7 +34,6 @@ const translations: Record<AstrologyLang, NavigationTranslation> = {
       privacy: "Confidentialité",
       support: "Support",
       monitoring: "Monitoring",
-      persona: "Persona",
       reconciliation: "Réconciliation",
       ent_api: "API",
       ent_astro: "Astrologie",
@@ -56,7 +54,6 @@ const translations: Record<AstrologyLang, NavigationTranslation> = {
       privacy: "Privacy",
       support: "Support",
       monitoring: "Monitoring",
-      persona: "Persona",
       reconciliation: "Reconciliation",
       ent_api: "API",
       ent_astro: "Astrology",
@@ -77,7 +74,6 @@ const translations: Record<AstrologyLang, NavigationTranslation> = {
       privacy: "Privacidad",
       support: "Soporte",
       monitoring: "Monitoreo",
-      persona: "Persona",
       reconciliation: "Reconciliación",
       ent_api: "API",
       ent_astro: "Astrología",

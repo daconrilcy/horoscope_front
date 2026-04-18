@@ -3,6 +3,22 @@ import type { AstrologyLang } from "./astrology"
 
 export interface AdminTranslation {
   page: { title: string; backToHub: string }
+  promptsSubNav: {
+    catalog: string
+    legacy: string
+    release: string
+    consumption: string
+    personas: string
+    sample_payloads: string
+  }
+  promptsPageHeader: {
+    catalog: { title: string; intro: string }
+    legacy: { title: string; intro: string }
+    release: { title: string; intro: string }
+    consumption: { title: string; intro: string }
+    personas: { title: string; intro: string }
+    samplePayloads: { title: string; intro: string }
+  }
   sections: {
     dashboard: string
     users: string
@@ -188,6 +204,137 @@ export const adminTranslations = {
     en: { title: "Administration", backToHub: "← Back to hub" },
     es: { title: "Administración", backToHub: "← Volver al hub" },
   } as Record<AstrologyLang, { title: string; backToHub: string }>,
+
+  promptsSubNav: {
+    fr: {
+      catalog: "Catalogue canonique",
+      legacy: "Historique legacy",
+      release: "Historique release",
+      consumption: "Consommation",
+      personas: "Personas",
+      sample_payloads: "Échantillons runtime",
+    },
+    en: {
+      catalog: "Canonical catalog",
+      legacy: "Legacy history",
+      release: "Release history",
+      consumption: "Consumption",
+      personas: "Personas",
+      sample_payloads: "Runtime samples",
+    },
+    es: {
+      catalog: "Catálogo canónico",
+      legacy: "Historial legacy",
+      release: "Historial de release",
+      consumption: "Consumo",
+      personas: "Personas",
+      sample_payloads: "Muestras runtime",
+    },
+  } as Record<
+    AstrologyLang,
+    {
+      catalog: string
+      legacy: string
+      release: string
+      consumption: string
+      personas: string
+      sample_payloads: string
+    }
+  >,
+
+  promptsPageHeader: {
+    fr: {
+      catalog: {
+        title: "Catalogue prompts LLM",
+        intro:
+          "Vue canonique feature/subfeature/plan/locale gouvernée par snapshot actif, avec historique legacy séparé.",
+      },
+      legacy: {
+        title: "Historique legacy",
+        intro: "Use cases hérités, versions prompt et rollback côté prompt/persona.",
+      },
+      release: {
+        title: "Historique release",
+        intro: "Timeline des snapshots déployés et comparaisons entre versions.",
+      },
+      consumption: {
+        title: "Consommation LLM",
+        intro: "Métriques agrégées et drill-down par période, utilisateur ou feature.",
+      },
+      personas: {
+        title: "Personas LLM",
+        intro: "Personas astrologues en production : état, style et limites, sans redéploiement.",
+      },
+      samplePayloads: {
+        title: "Échantillons runtime",
+        intro: "Payloads d'exemple et exécution contrôlée pour valider le catalogue hors trafic nominal.",
+      },
+    },
+    en: {
+      catalog: {
+        title: "LLM prompt catalog",
+        intro:
+          "Canonical feature/subfeature/plan/locale view governed by the active snapshot, with separate legacy history.",
+      },
+      legacy: {
+        title: "Legacy history",
+        intro: "Legacy use cases, prompt versions, and prompt/persona rollback.",
+      },
+      release: {
+        title: "Release history",
+        intro: "Deployed snapshot timeline and version comparisons.",
+      },
+      consumption: {
+        title: "LLM consumption",
+        intro: "Aggregated metrics and drill-down by period, user, or feature.",
+      },
+      personas: {
+        title: "LLM personas",
+        intro: "Astrologer personas in production: status, style, and boundaries without redeploy.",
+      },
+      samplePayloads: {
+        title: "Runtime samples",
+        intro: "Sample payloads and controlled execution to validate the catalog off nominal traffic.",
+      },
+    },
+    es: {
+      catalog: {
+        title: "Catálogo de prompts LLM",
+        intro:
+          "Vista canónica feature/subfeature/plan/locale gobernada por el snapshot activo, con historial legacy aparte.",
+      },
+      legacy: {
+        title: "Historial legacy",
+        intro: "Casos de uso heredados, versiones de prompt y rollback de prompt/persona.",
+      },
+      release: {
+        title: "Historial de release",
+        intro: "Línea de tiempo de snapshots desplegados y comparaciones entre versiones.",
+      },
+      consumption: {
+        title: "Consumo LLM",
+        intro: "Métricas agregadas y drill-down por periodo, usuario o feature.",
+      },
+      personas: {
+        title: "Personas LLM",
+        intro: "Personas de astrólogos en producción: estado, estilo y límites sin redeploy.",
+      },
+      samplePayloads: {
+        title: "Muestras runtime",
+        intro: "Payloads de ejemplo y ejecución controlada para validar el catálogo fuera del tráfico nominal.",
+      },
+    },
+  } as Record<
+    AstrologyLang,
+    {
+      catalog: { title: string; intro: string }
+      legacy: { title: string; intro: string }
+      release: { title: string; intro: string }
+      consumption: { title: string; intro: string }
+      personas: { title: string; intro: string }
+      samplePayloads: { title: string; intro: string }
+    }
+  >,
 
   sections: {
     fr: {
@@ -751,6 +898,8 @@ export const adminTranslations = {
 export function translateAdmin(lang: AstrologyLang = "fr"): AdminTranslation {
   return {
     page: adminTranslations.page[lang],
+    promptsSubNav: adminTranslations.promptsSubNav[lang],
+    promptsPageHeader: adminTranslations.promptsPageHeader[lang],
     sections: adminTranslations.sections[lang],
     monitoring: adminTranslations.monitoring[lang],
     personas: adminTranslations.personas[lang],

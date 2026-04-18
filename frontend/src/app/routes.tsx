@@ -50,6 +50,11 @@ import {
   ReconciliationAdmin
 } from "../pages/admin"
 
+/** Enfant de route pour les sections prompts : le rendu réel est entièrement dans `AdminPromptsPage`. */
+function AdminPromptsRouteSlot() {
+  return null
+}
+
 export const routes: RouteObject[] = [
   {
     path: "/",
@@ -237,6 +242,16 @@ export const routes: RouteObject[] = [
           {
             path: "prompts",
             element: <AdminPromptsPage />,
+            children: [
+              { index: true, element: <Navigate to="catalog" replace /> },
+              { path: "catalog", element: <AdminPromptsRouteSlot /> },
+              { path: "legacy", element: <AdminPromptsRouteSlot /> },
+              { path: "release", element: <AdminPromptsRouteSlot /> },
+              { path: "consumption", element: <AdminPromptsRouteSlot /> },
+              { path: "personas", element: <AdminPromptsRouteSlot /> },
+              { path: "sample-payloads", element: <AdminPromptsRouteSlot /> },
+              { path: "*", element: <Navigate to="catalog" replace /> },
+            ],
           },
           {
             path: "content",
@@ -269,7 +284,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "personas",
-            element: <Navigate to="/admin/prompts" replace />,
+            element: <Navigate to="/admin/prompts/personas" replace />,
           },
           {
             path: "reconciliation",

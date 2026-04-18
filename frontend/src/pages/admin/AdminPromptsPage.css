@@ -9,6 +9,37 @@
   color: var(--color-text-secondary);
 }
 
+/* Sous-navigation prompts (liens route-aware, mêmes jetons que les onglets admin) */
+.admin-prompts-page .admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.admin-prompts-page .tab-button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all var(--duration-fast);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.admin-prompts-page .tab-button:hover {
+  color: var(--color-text-primary);
+}
+
+.admin-prompts-page .tab-button--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
 .admin-prompts-layout {
   display: grid;
   grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);

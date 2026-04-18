@@ -3,16 +3,15 @@
  * Source: docs/interfaces/horoscope-ui-spec.md §8, §9
  */
 
-import { 
-  CalendarDays, 
-  MessageCircle, 
-  Star, 
-  Layers, 
-  User, 
+import {
+  CalendarDays,
+  MessageCircle,
+  Star,
+  Layers,
   Users,
-  Shield, 
-  FileText
-} from './icons.tsx'
+  Shield,
+  FileText,
+} from "./icons.tsx"
 import type { LucideIcon } from 'lucide-react'
 
 export interface NavItem {
@@ -37,7 +36,6 @@ export const navItems: NavItem[] = [
   
   // Admin / Ops
   { key: 'monitoring', label: 'Monitoring', icon: FileText, path: '/admin/monitoring', roles: ['ops', 'admin'], showOnMobile: false },
-  { key: 'persona', label: 'Persona', icon: User, path: '/admin/personas', roles: ['ops', 'admin'], showOnMobile: false },
   { key: 'reconciliation', label: 'Réconciliation', icon: FileText, path: '/admin/reconciliation', roles: ['ops'], showOnMobile: false },
   
   // Enterprise

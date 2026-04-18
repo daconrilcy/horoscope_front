@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
+
+import { useTranslation } from "../../i18n"
 
 import {
   useAdminLlmCatalog,
@@ -29,6 +32,28 @@ import { AdminSamplePayloadsAdmin } from "./AdminSamplePayloadsAdmin"
 import "./AdminPromptsPage.css"
 
 type PromptPageTab = "catalog" | "legacy" | "release" | "consumption" | "personas" | "samplePayloads"
+
+const ADMIN_PROMPTS_BASE = "/admin/prompts"
+
+export function resolvePromptsTabFromPath(pathname: string): PromptPageTab {
+  const normalized = (pathname.replace(/\/$/, "") || "/").toLowerCase()
+  if (!normalized.startsWith(ADMIN_PROMPTS_BASE)) {
+    return "catalog"
+  }
+  const rest = normalized.slice(ADMIN_PROMPTS_BASE.length).replace(/^\//, "")
+  const segment = rest.split("/")[0] ?? ""
+  if (segment === "" || segment === "catalog") {
+    return "catalog"
+  }
+  const map: Record<string, PromptPageTab> = {
+    legacy: "legacy",
+    release: "release",
+    consumption: "consumption",
+    personas: "personas",
+    "sample-payloads": "samplePayloads",
+  }
+  return map[segment] ?? "catalog"
+}
 
 type ManualLlmExecuteConfirmModalProps = {
   isPending: boolean
@@ -483,7 +508,12 @@ function buildLogicGraphProjection(resolvedView: AdminResolvedAssemblyView): Log
 
 export function AdminPromptsPage() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<PromptPageTab>("catalog")
+  const location = useLocation()
+  const navigate = useNavigate()
+  const tAdmin = useTranslation("admin")
+  const sub = tAdmin.promptsSubNav
+  const activeTab = useMemo(() => resolvePromptsTabFromPath(location.pathname), [location.pathname])
+  const pageHeader = tAdmin.promptsPageHeader[activeTab]
 
   const [page, setPage] = useState(1)
   const [pageSize] = useState(25)
@@ -633,7 +663,7 @@ export function AdminPromptsPage() {
   const availableReleaseHealthStatuses = facets?.release_health_status ?? []
   const availableVisibilityStatuses = facets?.catalog_visibility_status ?? []
 
-  const useCasesQuery = useAdminLlmUseCases()
+  const useCasesQuery = useAdminLlmUseCases({ enabled: activeTab === "legacy" })
   const useCases = useCasesQuery.data ?? []
 
   useEffect(() => {
@@ -757,37 +787,53 @@ export function AdminPromptsPage() {
     <div className="admin-prompts-page">
       <header className="admin-page-header">
         <div>
-          <h2>Catalogue prompts LLM</h2>
-          <p className="admin-prompts-page__intro">
-            Vue canonique feature/subfeature/plan/locale gouvernée par snapshot actif, avec historique legacy séparé.
-          </p>
+          <h2>{pageHeader.title}</h2>
+          <p className="admin-prompts-page__intro">{pageHeader.intro}</p>
         </div>
-        <div className="admin-tabs" role="tablist" aria-label="Sections prompts">
-          <button className={`tab-button ${activeTab === "catalog" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "catalog"} onClick={() => setActiveTab("catalog")}>
-            Catalogue canonique
-          </button>
-          <button className={`tab-button ${activeTab === "legacy" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "legacy"} onClick={() => setActiveTab("legacy")}>
-            Historique legacy
-          </button>
-          <button className={`tab-button ${activeTab === "release" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "release"} onClick={() => setActiveTab("release")}>
-            Historique release
-          </button>
-          <button className={`tab-button ${activeTab === "consumption" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "consumption"} onClick={() => setActiveTab("consumption")}>
-            Consommation
-          </button>
-          <button className={`tab-button ${activeTab === "personas" ? "tab-button--active" : ""}`} type="button" role="tab" aria-selected={activeTab === "personas"} onClick={() => setActiveTab("personas")}>
-            Personas
-          </button>
-          <button
-            className={`tab-button ${activeTab === "samplePayloads" ? "tab-button--active" : ""}`}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "samplePayloads"}
-            onClick={() => setActiveTab("samplePayloads")}
+        <nav className="admin-tabs admin-prompts-subnav" aria-label="Sections prompts">
+          <NavLink
+            to={`${ADMIN_PROMPTS_BASE}/catalog`}
+            className={({ isActive }) => `tab-button ${isActive ? "tab-button--active" : ""}`}
+            end
           >
-            Échantillons runtime
-          </button>
-        </div>
+            {sub.catalog}
+          </NavLink>
+          <NavLink
+            to={`${ADMIN_PROMPTS_BASE}/legacy`}
+            className={({ isActive }) => `tab-button ${isActive ? "tab-button--active" : ""}`}
+            end
+          >
+            {sub.legacy}
+          </NavLink>
+          <NavLink
+            to={`${ADMIN_PROMPTS_BASE}/release`}
+            className={({ isActive }) => `tab-button ${isActive ? "tab-button--active" : ""}`}
+            end
+          >
+            {sub.release}
+          </NavLink>
+          <NavLink
+            to={`${ADMIN_PROMPTS_BASE}/consumption`}
+            className={({ isActive }) => `tab-button ${isActive ? "tab-button--active" : ""}`}
+            end
+          >
+            {sub.consumption}
+          </NavLink>
+          <NavLink
+            to={`${ADMIN_PROMPTS_BASE}/personas`}
+            className={({ isActive }) => `tab-button ${isActive ? "tab-button--active" : ""}`}
+            end
+          >
+            {sub.personas}
+          </NavLink>
+          <NavLink
+            to={`${ADMIN_PROMPTS_BASE}/sample-payloads`}
+            className={({ isActive }) => `tab-button ${isActive ? "tab-button--active" : ""}`}
+            end
+          >
+            {sub.sample_payloads}
+          </NavLink>
+        </nav>
       </header>
 
       {activeTab === "personas" ? <PersonasAdmin /> : null}
@@ -1145,7 +1191,7 @@ export function AdminPromptsPage() {
                                     feature: selectedCatalogEntry.feature,
                                     locale: entryLocale,
                                   })
-                                  setActiveTab("samplePayloads")
+                                  navigate(`${ADMIN_PROMPTS_BASE}/sample-payloads`)
                                 }}
                               >
                                 Gérer les sample payloads ({selectedCatalogEntry.feature} / {selectedCatalogEntry.locale})
@@ -1681,7 +1727,7 @@ export function AdminPromptsPage() {
                                 className="text-button admin-prompts-catalog__inspect"
                                 type="button"
                                 onClick={() => {
-                                  setActiveTab("catalog")
+                                  navigate(`${ADMIN_PROMPTS_BASE}/catalog`)
                                   setSelectedManifestEntryId(entry.manifest_entry_id)
                                 }}
                               >
@@ -1727,6 +1773,8 @@ export function AdminPromptsPage() {
           }}
         />
       ) : null}
+
+      <Outlet />
     </div>
   )
 }

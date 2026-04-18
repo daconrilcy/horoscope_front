@@ -860,10 +860,11 @@ export async function rollbackPromptVersion(params: {
   }
 }
 
-export function useAdminLlmUseCases() {
+export function useAdminLlmUseCases(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["admin-llm-use-cases"],
     queryFn: listAdminLlmUseCases,
+    enabled: options?.enabled ?? true,
   })
 }
 

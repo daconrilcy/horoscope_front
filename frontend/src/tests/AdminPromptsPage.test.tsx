@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { MemoryRouter, Navigate, Route, Routes } from "react-router-dom"
 
 import { AdminPromptsPage } from "../pages/admin/AdminPromptsPage"
 import { toUtcIsoFromDateTimeInput } from "../api/adminPrompts"
@@ -18,7 +19,24 @@ function makeJsonResponse(payload: unknown, status = 200) {
   })
 }
 
-function renderPage() {
+function AdminPromptsRoutesFixture() {
+  return (
+    <Routes>
+      <Route path="/admin/prompts" element={<AdminPromptsPage />}>
+        <Route index element={<Navigate to="catalog" replace />} />
+        <Route path="catalog" element={null} />
+        <Route path="legacy" element={null} />
+        <Route path="release" element={null} />
+        <Route path="consumption" element={null} />
+        <Route path="personas" element={null} />
+        <Route path="sample-payloads" element={null} />
+        <Route path="*" element={<Navigate to="catalog" replace />} />
+      </Route>
+    </Routes>
+  )
+}
+
+function renderPage(initialEntry = "/admin/prompts/catalog") {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -28,7 +46,12 @@ function renderPage() {
   })
   const view = render(
     <QueryClientProvider client={queryClient}>
-      <AdminPromptsPage />
+      <MemoryRouter
+        initialEntries={[initialEntry]}
+        future={{ v7_relativeSplatPath: true }}
+      >
+        <AdminPromptsRoutesFixture />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
   return { ...view, queryClient }
@@ -171,7 +194,7 @@ describe("AdminPromptsPage", () => {
       expect(screen.getByRole("heading", { name: "Catalogue prompts LLM" })).toBeInTheDocument()
     })
 
-    expect(screen.getByRole("tab", { name: "Catalogue canonique" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Catalogue canonique" })).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByText("chat/chat_default/premium/fr-FR")).toBeInTheDocument()
     })
@@ -1467,7 +1490,7 @@ describe("AdminPromptsPage", () => {
     }))
 
     renderPage()
-    await userEvent.click(screen.getByRole("tab", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
 
     await waitFor(() => {
       expect(screen.getAllByRole("button", { name: "Rollback" }).length).toBeGreaterThan(0)
@@ -1569,7 +1592,7 @@ describe("AdminPromptsPage", () => {
     }))
 
     renderPage()
-    await userEvent.click(screen.getByRole("tab", { name: "Historique release" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique release" }))
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Timeline snapshots" })).toBeInTheDocument()
@@ -1649,7 +1672,7 @@ describe("AdminPromptsPage", () => {
     }))
 
     renderPage()
-    await userEvent.click(screen.getByRole("tab", { name: "Consommation" }))
+    await userEvent.click(screen.getByRole("link", { name: "Consommation" }))
     await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "feature")
     await waitFor(() => {
       expect(screen.getByText(/Granularité par défaut: agrégé par période sélectionnée/)).toBeInTheDocument()
@@ -1705,7 +1728,7 @@ describe("AdminPromptsPage", () => {
     vi.stubGlobal("fetch", fetchSpy)
 
     renderPage()
-    await userEvent.click(screen.getByRole("tab", { name: "Consommation" }))
+    await userEvent.click(screen.getByRole("link", { name: "Consommation" }))
 
     const dateInputs = Array.from(document.querySelectorAll("input[type='datetime-local']"))
     const fromInput = dateInputs[0]
