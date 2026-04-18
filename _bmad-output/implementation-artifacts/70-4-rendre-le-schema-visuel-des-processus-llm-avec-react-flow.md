@@ -174,7 +174,7 @@ gpt-5
 - La story verrouille le choix de la bibliotheque `@xyflow/react`, la reutilisation de `buildLogicGraphProjection` et le maintien d un fallback texte robuste.
 - Implementation livree : extraction `adminPromptsLogicGraphProjection.ts` (projection + layout statique), composant `AdminPromptsLogicGraph.tsx` avec `@xyflow/react` (lecture seule, zoom/pan, legende FR, details avec liste des connexions sans dupliquer les noeuds), noeud `résultat opérateur` et arete depuis `provider_messages`, fallback dense et boundary de secours si echec rendu, stub `ResizeObserver` dans les tests Vitest admin.
 - Revue code 2026-04-18 : correctifs (cle Error Boundary par `manifest_entry_id`, logs `componentDidCatch` en DEV, commentaire MIT `hideAttribution`) ; passe 2 sans nouveau finding bloquant.
-- Artefacts synchronises avec le depot : `sprint-status.yaml` (70-4 `done`), story presente sous `_bmad-output/implementation-artifacts/`, report defer dans `67-To-69-deferred-work.md` si pertinent.
+- Artefacts synchronises avec le depot (commit `0088af8d`) : `sprint-status.yaml` (70-4 `done`), story sous `_bmad-output/implementation-artifacts/`, defer dans `67-To-69-deferred-work.md`.
 
 ### File List
 
@@ -191,4 +191,4 @@ gpt-5
 
 - 2026-04-18 : Graphe logique admin rendu avec React Flow (`@xyflow/react`), projection extraite, tests et ResizeObserver jsdom.
 - 2026-04-18 : Revue code — clé remontage Error Boundary (`manifest_entry_id`), `console.error` réservé au DEV, commentaire MIT `hideAttribution` ; story passée `done`.
-- 2026-04-18 : Documentation artefacts alignée (`sprint-status`, notes de completion, defer 67–69) ; pret pour commit/push frontend.
+- 2026-04-18 : Documentation artefacts alignée (`sprint-status`, notes de completion, defer 67–69). Dépôt : commit `0088af8d`.
