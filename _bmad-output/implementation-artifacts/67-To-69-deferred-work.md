@@ -61,4 +61,4 @@ Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivan
 
 - **Extraction composants route release** — optionnel selon story 70.6 ; la surface release reste dans `AdminPromptsPage.tsx` ; à planifier si le fichier devient ingérable.
 
-- **Test Vitest release : navigation catalogue après clic** — le scénario valide le bouton et l’étiquette accessible ; un test d’interaction mockant `navigate` / état sélection pourrait renforcer la non-régression « navigation contextuelle ».
+- ~~**Test Vitest release : navigation catalogue après clic**~~ — **Traité** (2026-04-18) : `useNavigate` mocké dans `AdminPromptsPage.test.tsx` + test d’intégration `AdminPromptsPage.releaseCatalog.integration.test.tsx` (`createTestMemoryRouter`, assertion `pathname`, lien catalogue actif, identifiant dans le résumé détail).

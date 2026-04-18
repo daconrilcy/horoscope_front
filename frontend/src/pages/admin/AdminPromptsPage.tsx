@@ -68,12 +68,16 @@ function formatReleaseSnapshotIdShort(id: string): string {
   return id.length > 10 ? `${id.slice(0, 8)}…` : id
 }
 
+/** Segments complets du manifest (feature, sous-fonction, plan, locale, …) pour distinguer les variantes canoniques. */
 function formatManifestEntryCatalogHint(manifestEntryId: string): string {
-  const parts = manifestEntryId.split(":")
-  if (parts.length >= 2) {
-    return `${parts[0]} · ${parts[1]}`
+  const parts = manifestEntryId
+    .split(":")
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+  if (parts.length === 0) {
+    return manifestEntryId.trim() || "—"
   }
-  return manifestEntryId
+  return parts.join(" · ")
 }
 
 function releaseDiffAxisBadgeClass(changed: boolean): string {

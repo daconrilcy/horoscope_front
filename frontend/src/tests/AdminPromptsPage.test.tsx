@@ -4,6 +4,16 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter, Navigate, Route, Routes } from "react-router-dom"
 
+const mockNavigate = vi.fn()
+
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom")
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  }
+})
+
 import { AdminPromptsPage } from "../pages/admin/AdminPromptsPage"
 import { toUtcIsoFromDateTimeInput } from "../api/adminPrompts"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
@@ -59,6 +69,7 @@ function renderPage(initialEntry = "/admin/prompts/catalog") {
 
 describe("AdminPromptsPage", () => {
   beforeEach(() => {
+    mockNavigate.mockClear()
     vi.stubGlobal(
       "ResizeObserver",
       class {
@@ -2053,12 +2064,15 @@ describe("AdminPromptsPage", () => {
     expect(screen.getByText("chat:chat_default:premium:fr-FR")).toBeInTheDocument()
     expect(screen.getByText("Écart sur cette fiche")).toBeInTheDocument()
     expect(screen.queryByText(/Ouvrir 66\.46/)).not.toBeInTheDocument()
-    expect(
-      screen.getByRole("button", {
-        name: "Ouvrir l'entrée canonique chat:chat_default:premium:fr-FR dans le catalogue",
-      }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/chat · chat_default/)).toBeInTheDocument()
+    const catalogOpenButton = screen.getByRole("button", {
+      name: "Ouvrir l'entrée canonique chat:chat_default:premium:fr-FR dans le catalogue",
+    })
+    expect(catalogOpenButton).toBeInTheDocument()
+    expect(screen.getByText("chat · chat_default · premium · fr-FR")).toBeInTheDocument()
+    await userEvent.click(catalogOpenButton)
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/admin/prompts/catalog")
+    })
   })
 
   it("affiche l'onglet consommation avec granularité, pagination serveur et axe canonique", async () => {

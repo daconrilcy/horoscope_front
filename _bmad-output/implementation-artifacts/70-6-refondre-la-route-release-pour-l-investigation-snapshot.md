@@ -165,19 +165,21 @@ gpt-5
 ### Completion Notes (implémentation)
 
 - Surface release restructurée : en-tête type investigation (kicker, titre, intro), sections « Chronologie des événements » et « Comparer deux snapshots », cartes timeline avec libellés FR (événement, état courant, rollback, motif, preuves qualité).
-- Diff : bandeau source/cible avec versions et identifiants courts, tableau avec badges Modifié/Inchangé par axe, portée du changement mappée en français (`releaseDiffCategoryLabel`), bouton catalogue avec libellé explicite + indice `feature · subfeature` et `aria-label` canonique (suppression du placeholder `Ouvrir 66.46`).
+- Diff : bandeau source/cible avec versions et identifiants courts, tableau avec badges Modifié/Inchangé par axe, portée du changement mappée en français (`releaseDiffCategoryLabel`), bouton catalogue avec libellé explicite + indice **tous segments** du manifest (`feature · subfeature · plan · locale`, etc.) et `aria-label` canonique (suppression du placeholder `Ouvrir 66.46`).
 - Hooks `useReleaseSnapshotsTimeline` et `useReleaseSnapshotDiff` inchangés ; navigation `navigate` + `setSelectedManifestEntryId` conservée.
-- Tests Vitest : scénario release enrichi (région ARIA, titres, synthèse comparaison, absence `Ouvrir 66.46`, bouton accessible, hint catalogue, libellé portée).
+- Tests Vitest : scénario release enrichi dans `AdminPromptsPage.test.tsx` (région ARIA, titres, synthèse, absence `Ouvrir 66.46`, hint complet, mock `useNavigate` pour l’URL catalogue). **Intégration route** dédiée dans `AdminPromptsPage.releaseCatalog.integration.test.tsx` : `createTestMemoryRouter` + `RouterProvider`, clic bouton catalogue, assertion `pathname` `/admin/prompts/catalog`, onglet catalogue actif, résumé détail avec l’identifiant manifeste sélectionné (catalogue vide + resolved 404).
 
 ### Change Log
 
 - 2026-04-18 : Implémentation story 70.6 — refonte UI/CSS route release, helpers de libellés, extension tests `AdminPromptsPage.test.tsx`.
+- 2026-04-18 (suivi) : hint manifeste sur tous les segments ; test d’intégration release→catalogue (`AdminPromptsPage.releaseCatalog.integration.test.tsx`) ; correctifs revue P2.
 
 ### File List
 
 - frontend/src/pages/admin/AdminPromptsPage.tsx
 - frontend/src/pages/admin/AdminPromptsPage.css
 - frontend/src/tests/AdminPromptsPage.test.tsx
+- frontend/src/tests/AdminPromptsPage.releaseCatalog.integration.test.tsx
 - _bmad-output/implementation-artifacts/70-6-refondre-la-route-release-pour-l-investigation-snapshot.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 
@@ -189,4 +191,4 @@ gpt-5
 
 - [x] [Review][Defer] Refonte release encore entièrement dans `AdminPromptsPage.tsx` — les Dev Notes suggèrent une extraction locale (`AdminPromptsReleaseRoute` ou sous-composants) si la surface grossit ; non bloquant pour les AC actuels. [frontend/src/pages/admin/AdminPromptsPage.tsx] — deferred, pre-existing / story optionnelle
 
-- [x] [Review][Defer] Tests release : présence du bouton catalogue et `aria-label` vérifiés, mais pas d’assertion sur `navigate` + sélection d’entrée après clic (couverture comportementale partielle vs intention « navigation contextuelle »). [frontend/src/tests/AdminPromptsPage.test.tsx] — deferred, pre-existing / renforcement futur
+- [x] [Review][Defer] Tests release : présence du bouton catalogue et `aria-label` vérifiés, mais pas d’assertion sur `navigate` + sélection d’entrée après clic (couverture comportementale partielle vs intention « navigation contextuelle »). [frontend/src/tests/AdminPromptsPage.test.tsx] — **clos** : mock `navigate` dans le test unitaire + fichier `AdminPromptsPage.releaseCatalog.integration.test.tsx` (router réel, URL catalogue, entrée manifeste dans le résumé détail).

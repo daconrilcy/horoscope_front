@@ -1210,6 +1210,8 @@
 
 .admin-prompts-release__catalog-link-hint code {
   font-size: var(--font-size-xs);
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* Route legacy : investigation hors catalogue */
