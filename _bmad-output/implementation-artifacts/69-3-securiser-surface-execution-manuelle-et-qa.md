@@ -84,11 +84,13 @@ GPT-5 Codex
 
 - Story file created from BMAD backlog.
 - **Implémentation (2026-04-18)** : modal de confirmation avant POST `execute-sample`, bandeau de mode d'inspection permanent, renfort observabilité backend (logs structurés `admin_manual_llm_execute_surface`, champ `execution_surface` dans l'audit, en-tête `X-Admin-Manual-Llm-Execute` sur toutes les réponses de cette route), tests 401/403 + en-tête sur succès/échec, test Vitest sur le flux de confirmation.
+- **Correctif revue (2026-04-18)** : le marquage HTTP `X-Admin-Manual-Llm-Execute` repose désormais sur le template de route FastAPI partagé (`ADMIN_MANUAL_EXECUTE_ROUTE_PATH`) plutôt que sur un matcher d'URL préfixe/suffixe dans le middleware ; le risque de dérive lors d'un renommage de route est supprimé.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/69-3-securiser-surface-execution-manuelle-et-qa.md`
 - `backend/app/api/v1/routers/admin_llm.py`
+- `backend/app/main.py`
 - `backend/tests/integration/test_admin_llm_catalog.py`
 - `frontend/src/pages/admin/AdminPromptsPage.tsx`
 - `frontend/src/pages/admin/AdminPromptsPage.css`
@@ -100,9 +102,12 @@ GPT-5 Codex
 
 - 2026-04-18 : Garde-fous UX (confirmation + bandeau de mode), observabilité admin (logs, audit, en-tête HTTP), tests d’auth et de flux front.
 - 2026-04-18 : Revue code — tests d’intégration alignés sur `ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER` (plus de littéral dupliqué).
+- 2026-04-18 : Revue code — marquage middleware réaligné sur le template de route partagé `ADMIN_MANUAL_EXECUTE_ROUTE_PATH` pour éviter toute dérive future lors d’un renommage.
 
 ### Review Findings
 
 - [x] [Review][Patch] Assertions d’en-tête HTTP dupliquent le littéral `X-Admin-Manual-Llm-Execute` au lieu d’importer `ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER` depuis `app.api.v1.routers.admin_llm` — risque de dérive si le nom change. [`backend/tests/integration/test_admin_llm_catalog.py` ~1854, ~1925] — corrigé : import et assertions sur la constante.
+
+- [x] [Review][Patch] Le marquage middleware de `POST /v1/admin/llm/catalog/{manifest_entry_id}/execute-sample` reposait sur un matcher de chemin préfixe/suffixe fragile ; corrigé en partageant le template de route `ADMIN_MANUAL_EXECUTE_ROUTE_PATH` entre router et middleware. [`backend/app/main.py`, `backend/app/api/v1/routers/admin_llm.py`]
 
 - [x] [Review][Defer] Cas limite TanStack : si `manualExecuteMutation.isSuccess` est vrai sans `data`, le bloc « aide » sous « Retour LLM » ne s’affiche plus (condition réduite à `!isSuccess`). Acceptable si le contrat mutation garantit `data` en succès ; sinon à surveiller. [`frontend/src/pages/admin/AdminPromptsPage.tsx` ~1272]

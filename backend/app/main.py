@@ -21,7 +21,13 @@ from app.api.v1.routers.admin_content import router as admin_content_router
 from app.api.v1.routers.admin_dashboard import router as admin_dashboard_router
 from app.api.v1.routers.admin_entitlements import router as admin_entitlements_router
 from app.api.v1.routers.admin_exports import router as admin_exports_router
-from app.api.v1.routers.admin_llm import router as admin_llm_router
+from app.api.v1.routers.admin_llm import (
+    ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
+    ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
+)
+from app.api.v1.routers.admin_llm import (
+    router as admin_llm_router,
+)
 from app.api.v1.routers.admin_llm_assembly import router as admin_llm_assembly_router
 from app.api.v1.routers.admin_llm_consumption import router as admin_llm_consumption_router
 from app.api.v1.routers.admin_llm_release import router as admin_llm_release_router
@@ -458,6 +464,15 @@ def _resolve_route_template(request: Request) -> str:
     return "__unmatched__"
 
 
+def _is_post_admin_llm_catalog_execute_sample(request: Request) -> bool:
+    """POST execute-sample identifié par le template FastAPI partagé avec le router."""
+    return (
+        request.method == "POST"
+        and _resolve_route_template(request)
+        == f"{admin_llm_router.prefix}{ADMIN_MANUAL_EXECUTE_ROUTE_PATH}"
+    )
+
+
 def _record_http_metrics(
     method: str, route: str, status_code: int, duration_seconds: float
 ) -> None:
@@ -499,6 +514,8 @@ async def observability_http_middleware(
     route = _resolve_route_template(request)
     _record_http_metrics(method, route, response.status_code, duration)
     response.headers["X-Request-Id"] = request_id
+    if _is_post_admin_llm_catalog_execute_sample(request):
+        response.headers[ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER] = "1"
 
     if response.status_code >= 500:
         logger.error(

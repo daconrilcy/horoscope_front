@@ -2162,6 +2162,7 @@ def test_admin_llm_catalog_execute_sample_forbidden_without_admin_role():
         )
         assert response.status_code == 403
         assert response.json()["error"]["code"] == "insufficient_role"
+        assert response.headers.get(ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER) == "1"
     finally:
         app.dependency_overrides.clear()
 
@@ -2186,5 +2187,22 @@ def test_admin_llm_catalog_execute_sample_unauthorized_without_token():
         )
         assert response.status_code == 401
         assert response.json()["error"]["code"] == "missing_access_token"
+        assert response.headers.get(ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER) == "1"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_admin_llm_catalog_execute_sample_invalid_body_request_validation_includes_manual_header():
+    """422 invalid_request_payload : en-tête manuel présent avant handler (AC4)."""
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    try:
+        response = client.post(
+            "/v1/admin/llm/catalog/chat:chat_default:premium:fr-FR/execute-sample",
+            json={},
+        )
+        assert response.status_code == 422
+        assert response.json()["error"]["code"] == "invalid_request_payload"
+        assert response.headers.get(ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER) == "1"
     finally:
         app.dependency_overrides.clear()
