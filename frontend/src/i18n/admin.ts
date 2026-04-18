@@ -2,6 +2,8 @@
 import type { AstrologyLang } from "./astrology"
 import type { AdminPromptsLegacyStrings } from "./adminPromptsLegacy"
 import { adminPromptsLegacyByLang } from "./adminPromptsLegacy"
+import type { AdminPromptsConsumptionStrings } from "./adminPromptsConsumption"
+import { adminPromptsConsumptionByLang } from "./adminPromptsConsumption"
 
 export interface AdminTranslation {
   page: { title: string; backToHub: string }
@@ -177,6 +179,7 @@ export interface AdminTranslation {
     }
   }
   promptsLegacy: AdminPromptsLegacyStrings
+  promptsConsumption: AdminPromptsConsumptionStrings
 }
 
 export interface PricingTranslations {
@@ -913,5 +916,6 @@ export function translateAdmin(lang: AstrologyLang = "fr"): AdminTranslation {
     b2b: adminTranslations.b2b[lang],
     pricing: adminTranslations.pricing[lang],
     promptsLegacy: adminPromptsLegacyByLang[lang],
+    promptsConsumption: adminPromptsConsumptionByLang[lang],
   }
 }

@@ -2144,7 +2144,9 @@ describe("AdminPromptsPage", () => {
 
     renderPage()
     await userEvent.click(screen.getByRole("link", { name: "Consommation" }))
-    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "feature")
+    expect(screen.getByRole("region", { name: /Pilotage de la consommation LLM/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Agrégats par période" })).toBeInTheDocument()
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: /Vue d'agrégation/i }), "feature")
     await waitFor(() => {
       expect(screen.getByText(/Granularité par défaut: agrégé par période sélectionnée/)).toBeInTheDocument()
     })
@@ -2156,6 +2158,138 @@ describe("AdminPromptsPage", () => {
       expect(screen.getByText("Drill-down appels récents (50 max)")).toBeInTheDocument()
     })
     expect(screen.getByText("req-1")).toBeInTheDocument()
+  })
+
+  it("affiche les cartes de consommation en viewport étroit avec accès aux logs récents", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        matches: query.includes("max-width: 960px"),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    )
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical/drilldown")) {
+        return makeJsonResponse({
+          data: [
+            {
+              request_id: "req-narrow-1",
+              timestamp: "2026-04-20T10:00:00Z",
+              feature: "chat",
+              subfeature: "chat_default",
+              provider: "openai",
+              active_snapshot_version: "release-1",
+              manifest_entry_id: "chat:chat_default:premium:fr-FR",
+              validation_status: "valid",
+            },
+          ],
+          meta: { count: 1, limit: 50, order: "timestamp_desc" },
+        })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical")) {
+        return makeJsonResponse({
+          data: [
+            {
+              period_start_utc: "2026-04-20T00:00:00Z",
+              granularity: "day",
+              user_id: null,
+              user_email: null,
+              subscription_plan: null,
+              feature: "chat",
+              subfeature: "chat_default",
+              request_count: 3,
+              input_tokens: 100,
+              output_tokens: 50,
+              total_tokens: 150,
+              estimated_cost: 0.12,
+              avg_latency_ms: 200,
+              error_rate: 0,
+            },
+          ],
+          meta: {
+            view: "feature",
+            granularity: "day",
+            count: 1,
+            page: 1,
+            page_size: 20,
+            sort_by: "period_start_utc",
+            sort_order: "desc",
+            timezone: "UTC",
+            default_granularity_behavior: "aggregated_by_selected_period",
+          },
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Consommation" }))
+    await waitFor(() => {
+      expect(screen.getByRole("list")).toBeInTheDocument()
+    })
+    expect(screen.queryByRole("columnheader", { name: "Période" })).not.toBeInTheDocument()
+    const logsButtons = screen.getAllByRole("button", { name: "Voir logs récents" })
+    expect(logsButtons.length).toBe(1)
+    await userEvent.click(logsButtons[0])
+    await waitFor(() => {
+      expect(screen.getByText("req-narrow-1")).toBeInTheDocument()
+    })
+  })
+
+  it("affiche un état vide explicite lorsque la consommation canonique ne retourne aucune ligne", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({ data: [] })
+      }
+      if (url.includes("/v1/admin/llm/consumption/canonical")) {
+        return makeJsonResponse({
+          data: [],
+          meta: {
+            view: "user",
+            granularity: "day",
+            count: 0,
+            page: 1,
+            page_size: 20,
+            sort_by: "period_start_utc",
+            sort_order: "desc",
+            timezone: "UTC",
+            default_granularity_behavior: "aggregated_by_selected_period",
+          },
+        })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    }))
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Consommation" }))
+    await waitFor(() => {
+      expect(screen.getByText(/Aucune ligne d'agrégat/)).toBeInTheDocument()
+    })
+    expect(screen.queryByRole("columnheader", { name: "Période" })).not.toBeInTheDocument()
   })
 
   it("convertit explicitement les bornes datetime-local en ISO UTC", () => {

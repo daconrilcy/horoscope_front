@@ -62,3 +62,7 @@ Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivan
 - **Extraction composants route release** — optionnel selon story 70.6 ; la surface release reste dans `AdminPromptsPage.tsx` ; à planifier si le fichier devient ingérable.
 
 - ~~**Test Vitest release : navigation catalogue après clic**~~ — **Traité** (2026-04-18) : `useNavigate` mocké dans `AdminPromptsPage.test.tsx` + test d’intégration `AdminPromptsPage.releaseCatalog.integration.test.tsx` (`createTestMemoryRouter`, assertion `pathname`, lien catalogue actif, identifiant dans le résumé détail).
+
+## Deferred from: code review of 70-7-refondre-la-route-consumption-pour-le-pilotage-operable.md (2026-04-18)
+
+- **Compatibilité `MediaQueryList` très anciens navigateurs** — `addEventListener` sur `matchMedia` ; les environnements Safari obsolètes utilisaient `addListener` / `removeListener`. Périmètre admin interne, risque faible ; polyfill ou repli seulement si besoin terrain avéré.

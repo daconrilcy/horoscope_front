@@ -28,6 +28,7 @@ import {
   AdminPromptsApiError,
   executeAdminCatalogSamplePayload,
   isAdminRuntimePreviewExecutable,
+  type AdminConsumptionRow,
   type AdminConsumptionView,
   type AdminPromptVersion,
   type AdminInspectionMode,
@@ -39,6 +40,27 @@ import { AdminSamplePayloadsAdmin } from "./AdminSamplePayloadsAdmin"
 import { buildLogicGraphProjection } from "./adminPromptsLogicGraphProjection"
 import { AdminPromptsLogicGraph } from "./AdminPromptsLogicGraph"
 import "./AdminPromptsPage.css"
+
+function useMatchMediaMaxWidth(maxPx: number, enabled: boolean): boolean {
+  const [matches, setMatches] = useState(() => {
+    if (!enabled || typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return false
+    }
+    return window.matchMedia(`(max-width: ${maxPx}px)`).matches
+  })
+  useEffect(() => {
+    if (!enabled || typeof window.matchMedia !== "function") {
+      setMatches(false)
+      return
+    }
+    const mq = window.matchMedia(`(max-width: ${maxPx}px)`)
+    const apply = () => setMatches(mq.matches)
+    apply()
+    mq.addEventListener("change", apply)
+    return () => mq.removeEventListener("change", apply)
+  }, [enabled, maxPx])
+  return matches
+}
 
 type PromptPageTab = "catalog" | "legacy" | "release" | "consumption" | "personas" | "samplePayloads"
 
@@ -62,6 +84,20 @@ export function resolvePromptsTabFromPath(pathname: string): PromptPageTab {
     "sample-payloads": "samplePayloads",
   }
   return map[segment] ?? "catalog"
+}
+
+function consumptionRowKey(row: AdminConsumptionRow): string {
+  return `${row.period_start_utc}::${row.user_id ?? "none"}::${row.subscription_plan ?? "none"}::${row.feature ?? "none"}::${row.subfeature ?? "none"}`
+}
+
+function formatConsumptionAxisLabel(view: AdminConsumptionView, row: AdminConsumptionRow): string {
+  if (view === "user") {
+    return row.user_email ?? `user:${row.user_id ?? "n/a"}`
+  }
+  if (view === "subscription") {
+    return row.subscription_plan ?? "unknown"
+  }
+  return `${row.feature ?? "unknown"} / ${row.subfeature ?? "-"}`
 }
 
 function formatReleaseSnapshotIdShort(id: string): string {
@@ -495,8 +531,10 @@ export function AdminPromptsPage() {
   const { lang } = useAstrologyLabels()
   const tAdmin = useTranslation("admin")
   const tLegacy = tAdmin.promptsLegacy
+  const tConsumption = tAdmin.promptsConsumption
   const sub = tAdmin.promptsSubNav
   const activeTab = useMemo(() => resolvePromptsTabFromPath(location.pathname), [location.pathname])
+  const consumptionNarrowLayout = useMatchMediaMaxWidth(960, activeTab === "consumption")
   const pageHeader = tAdmin.promptsPageHeader[activeTab]
 
   const [page, setPage] = useState(1)
@@ -529,12 +567,30 @@ export function AdminPromptsPage() {
   const [consumptionTo, setConsumptionTo] = useState("")
   const [consumptionSearch, setConsumptionSearch] = useState("")
   const [consumptionPage, setConsumptionPage] = useState(1)
+  const [consumptionExportError, setConsumptionExportError] = useState<string | null>(null)
   const [selectedDrilldownKey, setSelectedDrilldownKey] = useState<string | null>(null)
   const [samplePayloadsSeed, setSamplePayloadsSeed] = useState<{ feature: string; locale: string } | null>(null)
   const [manualExecuteConfirmOpen, setManualExecuteConfirmOpen] = useState(false)
   const [catalogAdvancedFiltersOpen, setCatalogAdvancedFiltersOpen] = useState(false)
   const consumptionFromUtc = consumptionFrom ? toUtcIsoFromDateTimeInput(consumptionFrom) : undefined
   const consumptionToUtc = consumptionTo ? toUtcIsoFromDateTimeInput(consumptionTo) : undefined
+
+  useEffect(() => {
+    setConsumptionExportError(null)
+  }, [consumptionView, consumptionGranularity, consumptionFrom, consumptionTo, consumptionSearch])
+
+  // Drill-down : la clé de ligne est stable sur l’axe, pas sur le jeu d’agrégats — vider dès que périmètre ou page change.
+  useEffect(() => {
+    setSelectedDrilldownKey(null)
+  }, [
+    consumptionView,
+    consumptionGranularity,
+    consumptionFrom,
+    consumptionTo,
+    consumptionSearch,
+    consumptionPage,
+  ])
+
   const effectiveSamplePayloadId =
     resolvedInspectionMode === "runtime_preview" ? selectedSamplePayloadId : null
 
@@ -740,10 +796,7 @@ export function AdminPromptsPage() {
     },
     activeTab === "consumption",
   )
-  const selectedConsumptionRow = consumptionQuery.data?.data.find((item) => {
-    const key = `${item.period_start_utc}::${item.user_id ?? "none"}::${item.subscription_plan ?? "none"}::${item.feature ?? "none"}::${item.subfeature ?? "none"}`
-    return key === selectedDrilldownKey
-  })
+  const selectedConsumptionRow = consumptionQuery.data?.data.find((item) => consumptionRowKey(item) === selectedDrilldownKey)
   const consumptionDrilldownQuery = useAdminConsumptionDrilldown(
     selectedConsumptionRow
       ? {
@@ -1743,138 +1796,344 @@ export function AdminPromptsPage() {
       ) : null}
 
       {activeTab === "consumption" ? (
-        <section className="panel admin-prompts-catalog" aria-label="Dashboard consommation LLM">
-          <div className="admin-prompts-catalog__filters">
-            <select value={consumptionView} onChange={(event) => { setConsumptionView(event.target.value as AdminConsumptionView); setConsumptionPage(1); setSelectedDrilldownKey(null) }}>
-              <option value="user">Vue par utilisateur</option>
-              <option value="subscription">Vue par abonnement</option>
-              <option value="feature">Vue par feature/subfeature</option>
-            </select>
-            <select value={consumptionGranularity} onChange={(event) => { setConsumptionGranularity(event.target.value as "day" | "month"); setConsumptionPage(1) }}>
-              <option value="day">Granularité journalière</option>
-              <option value="month">Granularité mensuelle</option>
-            </select>
-            <input type="datetime-local" value={consumptionFrom} onChange={(event) => { setConsumptionFrom(event.target.value); setConsumptionPage(1) }} />
-            <input type="datetime-local" value={consumptionTo} onChange={(event) => { setConsumptionTo(event.target.value); setConsumptionPage(1) }} />
-            <input value={consumptionSearch} onChange={(event) => { setConsumptionSearch(event.target.value); setConsumptionPage(1) }} placeholder="Recherche utilisateur / abonnement / feature" />
-            <button
-              className="text-button"
-              type="button"
-              onClick={async () => {
-                const blob = await exportCsvMutation.mutateAsync({
-                  view: consumptionView,
-                  granularity: consumptionGranularity,
-                  fromUtc: consumptionFromUtc,
-                  toUtc: consumptionToUtc,
-                  search: consumptionSearch || undefined,
-                })
-                const url = URL.createObjectURL(blob)
-                const link = document.createElement("a")
-                link.href = url
-                link.download = `llm-consumption-${consumptionView}-${consumptionGranularity}.csv`
-                link.click()
-                URL.revokeObjectURL(url)
-              }}
-              disabled={exportCsvMutation.isPending}
-            >
-              {exportCsvMutation.isPending ? "Export en cours..." : "Export CSV"}
-            </button>
-          </div>
-          <p className="text-muted">Granularité par défaut: agrégé par période sélectionnée ({consumptionGranularity}).</p>
-          {consumptionQuery.isPending ? <div className="loading-placeholder">Chargement consommation...</div> : null}
-          {consumptionQuery.isError ? <p className="chat-error">Impossible de charger la consommation.</p> : null}
-          {consumptionQuery.data ? (
-            <>
-              <div className="admin-prompts-catalog__table-wrap">
-                <table className="admin-prompts-catalog__table">
-                  <thead>
-                    <tr>
-                      <th>Période</th>
-                      <th>Axe</th>
-                      <th>Requêtes</th>
-                      <th>Tokens in/out/total</th>
-                      <th>Coût estimé</th>
-                      <th>Latence moyenne</th>
-                      <th>Taux erreur</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {consumptionQuery.data.data.map((row) => {
-                      const rowKey = `${row.period_start_utc}::${row.user_id ?? "none"}::${row.subscription_plan ?? "none"}::${row.feature ?? "none"}::${row.subfeature ?? "none"}`
-                      return (
-                        <tr key={rowKey}>
-                          <td>{new Date(row.period_start_utc).toLocaleString()}</td>
-                          <td>
-                            {consumptionView === "user" ? (row.user_email ?? `user:${row.user_id ?? "n/a"}`) : null}
-                            {consumptionView === "subscription" ? (row.subscription_plan ?? "unknown") : null}
-                            {consumptionView === "feature" ? `${row.feature ?? "unknown"} / ${row.subfeature ?? "-"}` : null}
-                          </td>
-                          <td>{row.request_count}</td>
-                          <td>{row.input_tokens} / {row.output_tokens} / {row.total_tokens}</td>
-                          <td>{row.estimated_cost.toFixed(4)} $</td>
-                          <td>{row.avg_latency_ms.toFixed(1)} ms</td>
-                          <td>{(row.error_rate * 100).toFixed(2)}%</td>
-                          <td>
-                            <button className="text-button" type="button" onClick={() => setSelectedDrilldownKey(rowKey)}>
-                              Voir logs récents
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+        <section className="panel admin-prompts-consumption" aria-label={tConsumption.regionAriaLabel}>
+          <div className="admin-prompts-consumption__surface">
+            <header className="admin-prompts-consumption__surface-header">
+              <p className="admin-prompts-consumption__kicker">{tConsumption.kicker}</p>
+              <h3 className="admin-prompts-consumption__surface-title">{tConsumption.surfaceTitle}</h3>
+              <p className="admin-prompts-consumption__surface-intro text-muted">{tConsumption.surfaceIntro}</p>
+            </header>
+
+            <div className="admin-prompts-consumption__toolbar" role="toolbar" aria-label={tConsumption.toolbarAria}>
+              <div className="admin-prompts-consumption__toolbar-group">
+                <p className="admin-prompts-consumption__toolbar-group-title">{tConsumption.groupAxis}</p>
+                <div className="admin-prompts-consumption__toolbar-fields">
+                  <label className="admin-prompts-consumption__field">
+                    <span>{tConsumption.viewLabel}</span>
+                    <select
+                      aria-label={tConsumption.viewAria}
+                      value={consumptionView}
+                      onChange={(event) => {
+                        setConsumptionView(event.target.value as AdminConsumptionView)
+                        setConsumptionPage(1)
+                      }}
+                    >
+                      <option value="user">{tConsumption.viewOptionUser}</option>
+                      <option value="subscription">{tConsumption.viewOptionSubscription}</option>
+                      <option value="feature">{tConsumption.viewOptionFeature}</option>
+                    </select>
+                  </label>
+                  <label className="admin-prompts-consumption__field">
+                    <span>{tConsumption.granularityLabel}</span>
+                    <select
+                      aria-label={tConsumption.granularityAria}
+                      value={consumptionGranularity}
+                      onChange={(event) => {
+                        setConsumptionGranularity(event.target.value as "day" | "month")
+                        setConsumptionPage(1)
+                      }}
+                    >
+                      <option value="day">{tConsumption.granularityOptionDay}</option>
+                      <option value="month">{tConsumption.granularityOptionMonth}</option>
+                    </select>
+                  </label>
+                </div>
               </div>
-              <div className="admin-prompts-catalog__footer">
-                <span>{consumptionQuery.data.meta.count} lignes</span>
-                <div className="admin-prompts-catalog__pagination">
-                  <button className="text-button" type="button" onClick={() => setConsumptionPage((value) => Math.max(1, value - 1))} disabled={consumptionPage <= 1}>
-                    Précédent
-                  </button>
-                  <span>Page {consumptionQuery.data.meta.page}</span>
-                  <button className="text-button" type="button" onClick={() => setConsumptionPage((value) => value + 1)} disabled={consumptionQuery.data.meta.page * consumptionQuery.data.meta.page_size >= consumptionQuery.data.meta.count}>
-                    Suivant
+              <div className="admin-prompts-consumption__toolbar-group">
+                <p className="admin-prompts-consumption__toolbar-group-title">{tConsumption.groupPeriod}</p>
+                <div className="admin-prompts-consumption__toolbar-fields admin-prompts-consumption__toolbar-fields--period">
+                  <label className="admin-prompts-consumption__field">
+                    <span>{tConsumption.periodFromLabel}</span>
+                    <input
+                      type="datetime-local"
+                      value={consumptionFrom}
+                      onChange={(event) => {
+                        setConsumptionFrom(event.target.value)
+                        setConsumptionPage(1)
+                      }}
+                    />
+                  </label>
+                  <label className="admin-prompts-consumption__field">
+                    <span>{tConsumption.periodToLabel}</span>
+                    <input
+                      type="datetime-local"
+                      value={consumptionTo}
+                      onChange={(event) => {
+                        setConsumptionTo(event.target.value)
+                        setConsumptionPage(1)
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="admin-prompts-consumption__toolbar-group admin-prompts-consumption__toolbar-group--refine">
+                <p className="admin-prompts-consumption__toolbar-group-title">{tConsumption.groupRefine}</p>
+                <div className="admin-prompts-consumption__toolbar-fields admin-prompts-consumption__toolbar-fields--refine">
+                  <label className="admin-prompts-consumption__field admin-prompts-consumption__field--grow">
+                    <span>{tConsumption.searchLabel}</span>
+                    <input
+                      value={consumptionSearch}
+                      onChange={(event) => {
+                        setConsumptionSearch(event.target.value)
+                        setConsumptionPage(1)
+                      }}
+                      placeholder={tConsumption.searchPlaceholder}
+                    />
+                  </label>
+                  <button
+                    className="action-button action-button--secondary"
+                    type="button"
+                    onClick={async () => {
+                      setConsumptionExportError(null)
+                      try {
+                        const blob = await exportCsvMutation.mutateAsync({
+                          view: consumptionView,
+                          granularity: consumptionGranularity,
+                          fromUtc: consumptionFromUtc,
+                          toUtc: consumptionToUtc,
+                          search: consumptionSearch || undefined,
+                        })
+                        const url = URL.createObjectURL(blob)
+                        const link = document.createElement("a")
+                        link.href = url
+                        link.download = `llm-consumption-${consumptionView}-${consumptionGranularity}.csv`
+                        link.click()
+                        window.setTimeout(() => {
+                          URL.revokeObjectURL(url)
+                        }, 30_000)
+                      } catch (error: unknown) {
+                        setConsumptionExportError(
+                          error instanceof AdminPromptsApiError
+                            ? error.message
+                            : error instanceof Error
+                              ? error.message
+                              : tConsumption.errorExportCsv,
+                        )
+                      }
+                    }}
+                    disabled={exportCsvMutation.isPending}
+                  >
+                    {exportCsvMutation.isPending ? tConsumption.exportCsvPending : tConsumption.exportCsv}
                   </button>
                 </div>
               </div>
-              {selectedConsumptionRow ? (
-                <section className="panel" aria-label="Drill-down appels LLM récents">
-                  <h3>Drill-down appels récents (50 max)</h3>
-                  {consumptionDrilldownQuery.isPending ? <div className="loading-placeholder">Chargement drill-down...</div> : null}
-                  {consumptionDrilldownQuery.isError ? <p className="chat-error">Impossible de charger les logs corrélés.</p> : null}
-                  {consumptionDrilldownQuery.data ? (
-                    <div className="admin-prompts-catalog__table-wrap">
-                      <table className="admin-prompts-catalog__table">
-                        <thead>
-                          <tr>
-                            <th>timestamp</th>
-                            <th>request_id</th>
-                            <th>feature/subfeature</th>
-                            <th>provider</th>
-                            <th>snapshot/manifest</th>
-                            <th>validation_status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {consumptionDrilldownQuery.data.data.map((item) => (
-                            <tr key={`${item.request_id}-${item.timestamp}`}>
-                              <td>{new Date(item.timestamp).toLocaleString()}</td>
-                              <td><code>{item.request_id}</code></td>
-                              <td>{item.feature ?? "unknown"} / {item.subfeature ?? "-"}</td>
-                              <td>{item.provider ?? "unknown"}</td>
-                              <td>{item.active_snapshot_version ?? item.manifest_entry_id ?? "n/a"}</td>
-                              <td>{item.validation_status}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+            </div>
+
+            {consumptionExportError ? (
+              <p className="chat-error" role="alert">
+                {consumptionExportError}
+              </p>
+            ) : null}
+
+            <p className="admin-prompts-consumption__granularity-hint text-muted">
+              {tConsumption.granularityHint(consumptionGranularity)}
+            </p>
+
+            {consumptionQuery.isPending ? (
+              <div className="loading-placeholder" role="status" aria-live="polite">
+                {tConsumption.loadingAggregates}
+              </div>
+            ) : null}
+            {consumptionQuery.isError ? <p className="chat-error">{tConsumption.errorAggregates}</p> : null}
+
+            {consumptionQuery.data ? (
+              <div className="admin-prompts-consumption__body">
+                <section
+                  className="admin-prompts-consumption__aggregates"
+                  aria-labelledby="consumption-aggregates-heading"
+                >
+                  <div className="admin-prompts-consumption__section-head">
+                    <h4 id="consumption-aggregates-heading" className="admin-prompts-consumption__section-heading">
+                      {tConsumption.aggregatesHeading}
+                    </h4>
+                    <p className="admin-prompts-consumption__section-hint text-muted">{tConsumption.aggregatesHint}</p>
+                  </div>
+
+                  {consumptionQuery.data.data.length === 0 ? (
+                    <p className="admin-prompts-consumption__empty text-muted" role="status">
+                      {tConsumption.emptyAggregates}
+                    </p>
+                  ) : consumptionNarrowLayout ? (
+                    <div className="admin-prompts-consumption__cards-mobile" role="list">
+                      {consumptionQuery.data.data.map((row) => {
+                        const rowKey = consumptionRowKey(row)
+                        const axisLabel = formatConsumptionAxisLabel(consumptionView, row)
+                        const periodLabel = new Date(row.period_start_utc).toLocaleString()
+                        return (
+                          <article key={rowKey} className="admin-prompts-consumption__row-card" role="listitem">
+                            <div className="admin-prompts-consumption__row-card-head">
+                              <span className="admin-prompts-consumption__row-card-label">{tConsumption.tablePeriod}</span>
+                              <span className="admin-prompts-consumption__row-card-value">{periodLabel}</span>
+                            </div>
+                            <div className="admin-prompts-consumption__row-card-head">
+                              <span className="admin-prompts-consumption__row-card-label">{tConsumption.tableAxis}</span>
+                              <span className="admin-prompts-consumption__row-card-value">{axisLabel}</span>
+                            </div>
+                            <dl className="admin-prompts-consumption__row-card-stats">
+                              <div>
+                                <dt>{tConsumption.tableRequests}</dt>
+                                <dd>{row.request_count}</dd>
+                              </div>
+                              <div>
+                                <dt>{tConsumption.tableTokens}</dt>
+                                <dd>
+                                  {row.input_tokens} / {row.output_tokens} / {row.total_tokens}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>{tConsumption.tableCost}</dt>
+                                <dd>{row.estimated_cost.toFixed(4)} $</dd>
+                              </div>
+                              <div>
+                                <dt>{tConsumption.tableLatency}</dt>
+                                <dd>{row.avg_latency_ms.toFixed(1)} ms</dd>
+                              </div>
+                              <div>
+                                <dt>{tConsumption.tableErrorRate}</dt>
+                                <dd>{(row.error_rate * 100).toFixed(2)}%</dd>
+                              </div>
+                            </dl>
+                            <button className="text-button" type="button" onClick={() => setSelectedDrilldownKey(rowKey)}>
+                              {tConsumption.viewLogsButton}
+                            </button>
+                          </article>
+                        )
+                      })}
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="admin-prompts-consumption__table-desktop">
+                      <div className="admin-prompts-consumption__table-wrap">
+                        <table className="admin-prompts-consumption__table">
+                          <thead>
+                            <tr>
+                              <th>{tConsumption.tablePeriod}</th>
+                              <th>{tConsumption.tableAxis}</th>
+                              <th>{tConsumption.tableRequests}</th>
+                              <th>{tConsumption.tableTokens}</th>
+                              <th>{tConsumption.tableCost}</th>
+                              <th>{tConsumption.tableLatency}</th>
+                              <th>{tConsumption.tableErrorRate}</th>
+                              <th>{tConsumption.tableActions}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {consumptionQuery.data.data.map((row) => {
+                              const rowKey = consumptionRowKey(row)
+                              const axisLabel = formatConsumptionAxisLabel(consumptionView, row)
+                              return (
+                                <tr key={rowKey}>
+                                  <td>{new Date(row.period_start_utc).toLocaleString()}</td>
+                                  <td>{axisLabel}</td>
+                                  <td>{row.request_count}</td>
+                                  <td>
+                                    {row.input_tokens} / {row.output_tokens} / {row.total_tokens}
+                                  </td>
+                                  <td>{row.estimated_cost.toFixed(4)} $</td>
+                                  <td>{row.avg_latency_ms.toFixed(1)} ms</td>
+                                  <td>{(row.error_rate * 100).toFixed(2)}%</td>
+                                  <td>
+                                    <button className="text-button" type="button" onClick={() => setSelectedDrilldownKey(rowKey)}>
+                                      {tConsumption.viewLogsButton}
+                                    </button>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <footer className="admin-prompts-consumption__footer">
+                    <span>{tConsumption.rowLines(consumptionQuery.data.meta.count)}</span>
+                    <div className="admin-prompts-consumption__pagination">
+                      <button
+                        className="text-button"
+                        type="button"
+                        onClick={() => setConsumptionPage((value) => Math.max(1, value - 1))}
+                        disabled={consumptionPage <= 1}
+                      >
+                        {tConsumption.prevPage}
+                      </button>
+                      <span>{tConsumption.pageLabel(consumptionQuery.data.meta.page)}</span>
+                      <button
+                        className="text-button"
+                        type="button"
+                        onClick={() => setConsumptionPage((value) => value + 1)}
+                        disabled={
+                          consumptionQuery.data.meta.page * consumptionQuery.data.meta.page_size >=
+                          consumptionQuery.data.meta.count
+                        }
+                      >
+                        {tConsumption.nextPage}
+                      </button>
+                    </div>
+                  </footer>
                 </section>
-              ) : null}
-            </>
-          ) : null}
+
+                {selectedConsumptionRow ? (
+                  <aside
+                    className="admin-prompts-consumption__investigation"
+                    aria-labelledby="consumption-drill-heading"
+                  >
+                    <div className="admin-prompts-consumption__investigation-head">
+                      <h4 id="consumption-drill-heading" className="admin-prompts-consumption__investigation-title">
+                        {tConsumption.drilldownHeading}
+                      </h4>
+                      <p className="admin-prompts-consumption__investigation-lead text-muted">{tConsumption.drilldownLead}</p>
+                      <p className="admin-prompts-consumption__investigation-context" role="status">
+                        {tConsumption.selectedRowSummary(
+                          new Date(selectedConsumptionRow.period_start_utc).toLocaleString(),
+                          formatConsumptionAxisLabel(consumptionView, selectedConsumptionRow),
+                        )}
+                      </p>
+                    </div>
+                    {consumptionDrilldownQuery.isPending ? (
+                      <div className="loading-placeholder" role="status" aria-live="polite">
+                        {tConsumption.loadingDrilldown}
+                      </div>
+                    ) : null}
+                    {consumptionDrilldownQuery.isError ? (
+                      <p className="chat-error">{tConsumption.errorDrilldown}</p>
+                    ) : null}
+                    {consumptionDrilldownQuery.data ? (
+                      <div className="admin-prompts-consumption__drill-table-wrap">
+                        <table className="admin-prompts-consumption__drill-table">
+                          <thead>
+                            <tr>
+                              <th>{tConsumption.drillTableTimestamp}</th>
+                              <th>{tConsumption.drillTableRequestId}</th>
+                              <th>{tConsumption.drillTableFeature}</th>
+                              <th>{tConsumption.drillTableProvider}</th>
+                              <th>{tConsumption.drillTableSnapshot}</th>
+                              <th>{tConsumption.drillTableValidation}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {consumptionDrilldownQuery.data.data.map((item) => (
+                              <tr key={`${item.request_id}-${item.timestamp}`}>
+                                <td>{new Date(item.timestamp).toLocaleString()}</td>
+                                <td>
+                                  <code>{item.request_id}</code>
+                                </td>
+                                <td>
+                                  {item.feature ?? "unknown"} / {item.subfeature ?? "-"}
+                                </td>
+                                <td>{item.provider ?? "unknown"}</td>
+                                <td>{item.active_snapshot_version ?? item.manifest_entry_id ?? "n/a"}</td>
+                                <td>{item.validation_status}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : null}
+                  </aside>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </section>
       ) : null}
 
