@@ -44,6 +44,11 @@ Pour de nouveaux reports de revue, réutiliser ce fichier ou en créer un suivan
 
 ---
 
+## Deferred from: code review of 70-4-rendre-le-schema-visuel-des-processus-llm-avec-react-flow.md (2026-04-18)
+
+- **Couverture tests accessibilité clavier** (zoom/pan React Flow, critère « compatible clavier » de la story) — aucun test automatisé ajouté ; à couvrir par smoke manuel admin ou story QA dédiée.
+- **Churn `package-lock.json`** (d3, zustand, `devOptional` sur `@types/react`) — surveiller build CI et `npm audit` après merge de `@xyflow/react`.
+
 ## Deferred from: code review of 70-2-refaire-le-catalogue-canonique-en-mode-master-detail (2026-04-18)
 
 - **Fichier `AdminPromptsPage.tsx` déjà volumineux** — dette structurelle (extraction composants catalogue) hors périmètre strict de la story 70.2 ; à traiter si refactor dédié.

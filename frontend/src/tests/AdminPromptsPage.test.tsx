@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -58,6 +58,17 @@ function renderPage(initialEntry = "/admin/prompts/catalog") {
 }
 
 describe("AdminPromptsPage", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      },
+    )
+  })
+
   afterEach(() => {
     cleanup()
     clearAccessToken()
@@ -237,7 +248,9 @@ describe("AdminPromptsPage", () => {
       screen.getByText(/Passez en prévisualisation runtime pour exécuter le fournisseur/),
     ).toBeInTheDocument()
     expect(screen.getByText("Graphe logique")).toBeInTheDocument()
+    expect(screen.getByTestId("admin-prompts-logic-graph-visual")).toBeInTheDocument()
     expect(screen.getByText("manifest_entry_id")).toBeInTheDocument()
+    expect(screen.getByText("résultat opérateur")).toBeInTheDocument()
     expect(screen.getByText("composition_sources")).toBeInTheDocument()
     expect(screen.getByText("transformation_pipeline")).toBeInTheDocument()
     expect(screen.getByText("provider_messages")).toBeInTheDocument()
@@ -1174,6 +1187,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/Graphe simplifié en vue texte/)).toBeInTheDocument()
     })
+    expect(screen.queryByTestId("admin-prompts-logic-graph-visual")).toBeNull()
     expect(screen.getByText(/runtime=8, fallback=8, sample=0/)).toBeInTheDocument()
   })
 

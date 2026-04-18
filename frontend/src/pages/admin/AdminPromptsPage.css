@@ -879,6 +879,52 @@
   background: color-mix(in srgb, var(--success) 16%, transparent);
 }
 
+.admin-prompts-logic-graph__legend-chip--layer {
+  background: color-mix(in srgb, var(--color-accent, var(--color-primary)) 14%, transparent);
+}
+
+.admin-prompts-logic-graph__text-fallback-details {
+  margin: 0;
+  padding: 0;
+  border: 1px dashed var(--glass-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-prompts-logic-graph__text-fallback-details summary {
+  cursor: pointer;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.admin-prompts-logic-graph__text-fallback-details .admin-prompts-logic-graph__edges {
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+.admin-prompts-logic-graph__text-fallback-lead {
+  margin: 0 var(--space-3) var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.admin-prompts-logic-graph__rf-canvas {
+  width: 100%;
+  min-height: 22rem;
+  height: min(32rem, 70vh);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.admin-prompts-logic-graph__rf-canvas .react-flow__attribution {
+  font-size: 10px;
+  opacity: 0.65;
+}
+
+.admin-prompts-logic-graph__fallback--error {
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--glass-border));
+}
+
 .admin-prompts-logic-graph__nodes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
