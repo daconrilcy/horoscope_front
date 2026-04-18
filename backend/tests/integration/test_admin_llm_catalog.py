@@ -332,6 +332,12 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
 
     try:
         db.execute(delete(LlmActiveReleaseModel))
+        db.execute(
+            delete(LlmSamplePayloadModel).where(
+                LlmSamplePayloadModel.feature == "natal",
+                LlmSamplePayloadModel.locale == "fr-FR",
+            )
+        )
         db.add(
             LlmUseCaseConfigModel(
                 key=use_case_key,
@@ -1589,6 +1595,12 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
 
     try:
         db.execute(delete(LlmActiveReleaseModel))
+        db.execute(
+            delete(LlmSamplePayloadModel).where(
+                LlmSamplePayloadModel.feature == "natal",
+                LlmSamplePayloadModel.locale == "fr-FR",
+            )
+        )
         db.add(
             LlmUseCaseConfigModel(
                 key=use_case_key,
@@ -1679,13 +1691,23 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
         )
         db.commit()
 
-        response = client.post(
-            f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
-            json={"sample_payload_id": str(sample_payload_id)},
-        )
+        with patch(
+            "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit"
+        ) as mocked_audit:
+            response = client.post(
+                f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
+                json={"sample_payload_id": str(sample_payload_id)},
+            )
         assert response.status_code == 422
         err = response.json()["error"]
         assert err["code"] == "runtime_preview_incomplete_for_execution"
+        assert mocked_audit.call_count == 1
+        assert mocked_audit.call_args.kwargs["status"] == "failed"
+        assert mocked_audit.call_args.kwargs["manifest_entry_id"] == manifest_entry_id
+        assert (
+            mocked_audit.call_args.kwargs["details"]["failure_kind"]
+            == "runtime_preview_incomplete"
+        )
     finally:
         app.dependency_overrides.clear()
         db.rollback()
@@ -1722,6 +1744,12 @@ def test_admin_llm_catalog_execute_sample_success_mocked_gateway():
 
     try:
         db.execute(delete(LlmActiveReleaseModel))
+        db.execute(
+            delete(LlmSamplePayloadModel).where(
+                LlmSamplePayloadModel.feature == "natal",
+                LlmSamplePayloadModel.locale == "fr-FR",
+            )
+        )
         db.add(
             LlmUseCaseConfigModel(
                 key=use_case_key,
@@ -1828,10 +1856,15 @@ def test_admin_llm_catalog_execute_sample_success_mocked_gateway():
                 validation_status="valid",
             ),
         )
-        with patch(
-            "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
-            new_callable=AsyncMock,
-            return_value=gw_result,
+        with (
+            patch(
+                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                new_callable=AsyncMock,
+                return_value=gw_result,
+            ) as mocked_execute,
+            patch(
+                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit"
+            ) as mocked_audit,
         ):
             response = client.post(
                 f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
@@ -1844,6 +1877,12 @@ def test_admin_llm_catalog_execute_sample_success_mocked_gateway():
         assert body["manifest_entry_id"] == manifest_entry_id
         assert body["sample_payload_id"] == str(sample_payload_id)
         assert body["use_case_key"] == use_case_key
+        gateway_request = mocked_execute.await_args.args[0]
+        assert gateway_request.user_input.message == "hello from sample"
+        assert mocked_audit.call_count == 1
+        assert mocked_audit.call_args.kwargs["status"] == "success"
+        assert mocked_audit.call_args.kwargs["manifest_entry_id"] == manifest_entry_id
+        assert mocked_audit.call_args.kwargs["details"]["gateway_request_id"] == "gw-req"
     finally:
         app.dependency_overrides.clear()
         db.rollback()

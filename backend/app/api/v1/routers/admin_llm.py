@@ -828,6 +828,32 @@ def _record_audit_event(
     )
 
 
+def _record_admin_manual_execution_audit(
+    db: Session,
+    *,
+    request_id: str,
+    actor: AuthenticatedUser,
+    manifest_entry_id: str,
+    sample_payload_id: uuid.UUID,
+    status: Literal["success", "failed"],
+    details: dict[str, Any],
+) -> None:
+    _record_audit_event(
+        db,
+        request_id=request_id,
+        actor=actor,
+        action="llm_catalog_execute_sample",
+        target_type="llm_manifest_entry",
+        target_id=manifest_entry_id,
+        status=status,
+        details={
+            "manifest_entry_id": manifest_entry_id,
+            "sample_payload_id": str(sample_payload_id),
+            **details,
+        },
+    )
+
+
 @router.get("/personas", response_model=LlmPersonaListResponse)
 def list_personas(
     request: Request,
@@ -2024,6 +2050,16 @@ async def execute_admin_catalog_sample_payload(
         return built
     blocking = _admin_catalog_runtime_preview_blocking_reasons(built)
     if blocking:
+        _record_admin_manual_execution_audit(
+            db,
+            request_id=request_id,
+            actor=current_user,
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=payload.sample_payload_id,
+            status="failed",
+            details={"blocking_reasons": blocking, "failure_kind": "runtime_preview_incomplete"},
+        )
+        db.commit()
         return _error_response(
             status_code=422,
             request_id=request_id,
@@ -2055,7 +2091,13 @@ async def execute_admin_catalog_sample_payload(
         feature=built.feature,
         subfeature=built.subfeature,
         plan=built.plan,
-        message=extra_ctx.get("message") if isinstance(extra_ctx.get("message"), str) else None,
+        message=(
+            extra_ctx.get("message")
+            if isinstance(extra_ctx.get("message"), str)
+            else extra_ctx.get("last_user_msg")
+            if isinstance(extra_ctx.get("last_user_msg"), str)
+            else None
+        ),
         question=extra_ctx.get("question") if isinstance(extra_ctx.get("question"), str) else None,
         situation=extra_ctx.get("situation")
         if isinstance(extra_ctx.get("situation"), str)
@@ -2078,6 +2120,20 @@ async def execute_admin_catalog_sample_payload(
             manifest_entry_id,
             exc.message,
         )
+        _record_admin_manual_execution_audit(
+            db,
+            request_id=request_id,
+            actor=current_user,
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=payload.sample_payload_id,
+            status="failed",
+            details={
+                "failure_kind": "input_validation",
+                "error_message": exc.message,
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+        db.commit()
         return _error_response(
             status_code=422,
             request_id=request_id,
@@ -2095,6 +2151,20 @@ async def execute_admin_catalog_sample_payload(
             manifest_entry_id,
             exc.message,
         )
+        _record_admin_manual_execution_audit(
+            db,
+            request_id=request_id,
+            actor=current_user,
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=payload.sample_payload_id,
+            status="failed",
+            details={
+                "failure_kind": "gateway_config",
+                "error_message": exc.message,
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+        db.commit()
         return _error_response(
             status_code=422,
             request_id=request_id,
@@ -2112,6 +2182,20 @@ async def execute_admin_catalog_sample_payload(
             manifest_entry_id,
             exc.message,
         )
+        _record_admin_manual_execution_audit(
+            db,
+            request_id=request_id,
+            actor=current_user,
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=payload.sample_payload_id,
+            status="failed",
+            details={
+                "failure_kind": "gateway_error",
+                "error_message": exc.message,
+                "error_code": getattr(exc, "error_code", None),
+            },
+        )
+        db.commit()
         return _error_response(
             status_code=502,
             request_id=request_id,
@@ -2127,6 +2211,16 @@ async def execute_admin_catalog_sample_payload(
         logger.exception(
             "admin_manual_llm_execute_unexpected manifest_entry_id=%s", manifest_entry_id
         )
+        _record_admin_manual_execution_audit(
+            db,
+            request_id=request_id,
+            actor=current_user,
+            manifest_entry_id=manifest_entry_id,
+            sample_payload_id=payload.sample_payload_id,
+            status="failed",
+            details={"failure_kind": "unexpected_exception", "error_message": str(exc)},
+        )
+        db.commit()
         return _error_response(
             status_code=502,
             request_id=request_id,
@@ -2134,6 +2228,22 @@ async def execute_admin_catalog_sample_payload(
             message=str(exc),
             details={"manifest_entry_id": manifest_entry_id},
         )
+    _record_admin_manual_execution_audit(
+        db,
+        request_id=request_id,
+        actor=current_user,
+        manifest_entry_id=manifest_entry_id,
+        sample_payload_id=payload.sample_payload_id,
+        status="success",
+        details={
+            "gateway_request_id": result.request_id,
+            "provider": result.meta.provider or "openai",
+            "model": result.meta.model,
+            "validation_status": result.meta.validation_status,
+            "latency_ms": result.meta.latency_ms,
+        },
+    )
+    db.commit()
     return {
         "data": AdminCatalogManualExecuteResponseData(
             manifest_entry_id=manifest_entry_id,

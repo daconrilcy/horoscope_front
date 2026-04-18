@@ -29,6 +29,11 @@ so that je puisse vérifier le comportement réel du provider sur une cible cano
   - [x] Préserver request/correlation ids et métadonnées d'observabilité.
   - [x] Vérifier permissions admin strictes.
 
+### Review Findings
+
+- [x] [Review][Patch] Les exécutions manuelles de samples "chat opening" perdent `last_user_msg` dans le bloc utilisateur transmis au provider [backend/app/api/v1/routers/admin_llm.py:2052]
+- [x] [Review][Patch] L'endpoint `execute-sample` ne crée aucun audit event persistant pour une action admin pourtant sensible [backend/app/api/v1/routers/admin_llm.py:2005]
+
 ## Dev Notes
 
 ### Technical Requirements
@@ -90,6 +95,7 @@ GPT-5 Codex
 - UI : bouton « Exécuter avec le LLM » en mode prévisualisation runtime, désactivé si sample absent ou preview incomplète ; affichage succès / erreur.
 - Tests d’intégration : exécution mockée gateway + rejet preview incomplète (`test_admin_llm_catalog.py`). Front : tests existants mis à jour pour les nouveaux champs.
 - Mitigation risque schéma pytest : `ensure_configured_sqlite_file_matches_alembic_head` dans `bootstrap.py` (Alembic sur `session.engine` et `settings.database_url` ; `create_all` ORM uniquement sur la base secondaire type fichier temporaire `app/tests/conftest.py`). Hook `pytest_sessionstart` évité (exécuté avant la collecte). `backend/tests/conftest.py` fixture session autouse ; `tests/integration/app_db.py` pour ouvrir la session sur le `SessionLocal` effectif ; `app/tests/integration/conftest.py` inchangé côté appel ; `AGENTS.md` et `pyproject.toml` (`testpaths` inclut `tests/integration`).
+- Revue post-implémentation : l’endpoint d’exécution manuelle préserve désormais `last_user_msg` comme fallback d’entrée utilisateur pour rester cohérent avec la runtime preview, et journalise un audit event persistant `llm_catalog_execute_sample` en succès comme en échec.
 
 ### File List
 
@@ -114,3 +120,4 @@ GPT-5 Codex
 
 - 2026-04-17 : Exécution manuelle LLM depuis sample payload (POST execute-sample, UI, tests, codes d’erreur, correctif corrélation manifest gateway).
 - 2026-04-17 : Alignement SQLite pytest (fixture post-collecte, double URL Alembic, `app_db`, doc AGENTS).
+- 2026-04-18 : Correctifs post-review 69.1 (`last_user_msg` préservé à l’exécution manuelle, audit trail persistant, tests d’intégration ajustés).
