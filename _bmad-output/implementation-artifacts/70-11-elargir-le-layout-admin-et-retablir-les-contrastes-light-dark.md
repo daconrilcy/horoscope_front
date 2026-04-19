@@ -118,6 +118,11 @@ so that les pages admin restent lisibles sur grand ecran, sans colonnes inutilem
 
 - Sur desktop large, l operateur doit voir davantage d information utile sans devoir ouvrir autant de replis ou scroller horizontalement.
 - Le shell admin doit respirer, mais rester cadre: pleine largeur utile avec gouttieres, pas pleine largeur brute bord a bord.
+
+## Follow-up Notes
+
+- 2026-04-19: la surface `/admin/prompts/catalog` a ete reorientee vers un flux minimal `feature / formule / locale`, suivi d un graphe React Flow de la chaine active et d une modale d edition par noeud reprenant le formulaire legacy sans l historique.
+- 2026-04-19: correction du crash runtime `manualExecuteConfirmOpen is not defined` dans `AdminPromptsPage.tsx`; l ancien detail runtime est conserve hors rendu pendant la transition catalogue.
 - Le passage `light` -> `dark` ne doit plus creer d ambiguite sur ce qui est lecture principale, lecture secondaire, etat critique ou action.
 - Les surfaces admin doivent conserver un niveau de contraste compatible avec une lecture de travail prolongee, en particulier dans les tableaux, diffs et meta informations.
 
@@ -172,6 +177,8 @@ gpt-5
 - La passe de code review a ferme les reliquats restants sur le bandeau `resolved`, les disclosures associes, les panneaux `legacy` d edition et leurs resumes, afin d eliminer les derniers fonds figes qui cassaient encore le theme clair.
 - Verification navigateur sur `http://localhost:5173/admin/` avec le compte admin fourni: le verrou principal de largeur etait en realite dans `AppLayout`, via `app-bg-container`, et non uniquement dans `.admin-container`.
 - Une classe de shell admin large a ete ajoutee au layout applicatif pour desserrer `/admin/*` sans impacter les autres pages, puis les surfaces admin light ont ete eclaircies pour supprimer le grand panneau sombre encore visible en mode day.
+- Le catalogue `/admin/prompts/catalog` a ete remanie vers un flux plus operatoire: selection minimale `feature / formule / locale`, affichage du schema React Flow des prompts actifs, puis modale de lecture/edition au clic sur un noeud.
+- L interaction React Flow a ete corrigee pour supprimer le crash de handles, permettre le drag unitaire des noeuds, conserver le pan du canvas, et ouvrir la modale depuis `onNodeClick` sans bloquer les gestes souris.
 
 ### File List
 
@@ -181,8 +188,13 @@ gpt-5
 - frontend/src/layouts/AppLayout.tsx
 - frontend/src/pages/admin/AdminPromptsPage.css
 - frontend/src/styles/backgrounds.css
+- frontend/src/pages/admin/AdminPromptsLogicGraph.tsx
+- frontend/src/pages/admin/adminPromptsLogicGraphProjection.ts
+- frontend/src/pages/admin/adminPromptCatalogFlowProjection.ts
+- frontend/src/pages/admin/AdminPromptCatalogNodeModal.tsx
 - frontend/src/tests/AdminPage.test.tsx
 - frontend/src/tests/AdminPromptsPage.test.tsx
+- frontend/src/tests/AdminPromptsCatalogFlow.test.tsx
 - frontend/src/tests/theme-tokens.test.ts
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 
@@ -192,3 +204,4 @@ gpt-5
 - 2026-04-19 : implementation de la story 70.11 avec elargissement du shell admin, remapping des surfaces/encres admin prompts et ajout des garde-fous Vitest associes.
 - 2026-04-19 : cloture des findings de review sur `resolved` et `legacy`, avec revalidation frontend et passage de la story en `done`.
 - 2026-04-19 : seconde passe sur constat navigateur reel pour lever la borne `app-bg-container` sur `/admin/*` et eclaircir le rendu day du shell admin.
+- 2026-04-19 : evolution du catalogue prompts vers un schema React Flow interactif avec modale par noeud, puis correction des regressions d interaction (boucle React, handles React Flow, drag noeud/canvas).

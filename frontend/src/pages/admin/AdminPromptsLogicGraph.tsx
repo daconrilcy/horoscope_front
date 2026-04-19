@@ -1,10 +1,14 @@
-import { Component, type ErrorInfo, type ReactNode, useMemo } from "react"
+import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo } from "react"
 import {
   Background,
   Controls,
+  Handle,
   MarkerType,
+  Position,
   ReactFlow,
   ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
   type Edge,
   type Node,
   type NodeProps,
@@ -20,16 +24,20 @@ type LogicFlowNodeData = Record<string, unknown> & {
   title: string
   detail: string
   tone: LogicGraphNodeTone
+  interactive: boolean
 }
 
 type LogicRfNode = Node<LogicFlowNodeData, "logic">
 
 function LogicGraphFlowNode(props: NodeProps<LogicRfNode>) {
   const { data } = props
+  const className = `admin-prompts-logic-graph__node admin-prompts-logic-graph__node--${data.tone}${data.interactive ? " admin-prompts-logic-graph__node--interactive" : ""}`
   return (
-    <div className={`admin-prompts-logic-graph__node admin-prompts-logic-graph__node--${data.tone}`}>
+    <div className={className}>
+      <Handle type="target" position={Position.Left} />
       <strong>{data.title}</strong>
       <span className="text-muted">{data.detail}</span>
+      <Handle type="source" position={Position.Right} />
     </div>
   )
 }
@@ -38,14 +46,21 @@ const nodeTypes: NodeTypes = {
   logic: LogicGraphFlowNode,
 }
 
-function projectionToFlow(projection: LogicGraphProjection): { nodes: Node[]; edges: Edge[] } {
+function projectionToFlow(
+  projection: LogicGraphProjection,
+  onNodeSelect?: ((nodeId: string) => void) | undefined,
+): { nodes: Node[]; edges: Edge[] } {
   const pos = layoutLogicGraphNodesForFlow(projection.nodes)
   const nodes: Node[] = projection.nodes.map((n) => ({
     id: n.id,
     type: "logic",
     position: pos[n.id] ?? { x: 0, y: 0 },
-    data: { title: n.title, detail: n.detail, tone: n.tone },
-    draggable: false,
+    data: {
+      title: n.title,
+      detail: n.detail,
+      tone: n.tone,
+      interactive: Boolean(n.interactive && onNodeSelect),
+    },
     selectable: false,
   }))
   const edges: Edge[] = projection.edges.map((e, index) => ({
@@ -58,8 +73,28 @@ function projectionToFlow(projection: LogicGraphProjection): { nodes: Node[]; ed
   return { nodes, edges }
 }
 
-function LogicGraphFlowInner({ projection }: { projection: LogicGraphProjection }) {
-  const { nodes, edges } = useMemo(() => projectionToFlow(projection), [projection])
+function LogicGraphFlowInner({
+  projection,
+  onNodeSelect,
+}: {
+  projection: LogicGraphProjection
+  onNodeSelect?: ((nodeId: string) => void) | undefined
+}) {
+  const initialFlow = useMemo(
+    () => projectionToFlow(projection, onNodeSelect),
+    [onNodeSelect, projection],
+  )
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialFlow.nodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialFlow.edges)
+
+  useEffect(() => {
+    setNodes(initialFlow.nodes)
+  }, [initialFlow.nodes, setNodes])
+
+  useEffect(() => {
+    setEdges(initialFlow.edges)
+  }, [initialFlow.edges, setEdges])
+
   return (
     <div
       className="admin-prompts-logic-graph__rf-canvas"
@@ -70,10 +105,14 @@ function LogicGraphFlowInner({ projection }: { projection: LogicGraphProjection 
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
         nodesConnectable={false}
-        nodesDraggable={false}
+        nodesDraggable
         elementsSelectable={false}
+        selectionOnDrag={false}
+        panOnDrag
         panOnScroll
         zoomOnScroll
         zoomOnPinch
@@ -81,6 +120,7 @@ function LogicGraphFlowInner({ projection }: { projection: LogicGraphProjection 
         maxZoom={1.25}
         fitView
         fitViewOptions={{ padding: 0.2 }}
+        onNodeClick={onNodeSelect ? (_event, node) => onNodeSelect(node.id) : undefined}
         // MIT @xyflow/react : masquage pastille d’attribution en UI admin (décision produit revue 70-4).
         proOptions={{ hideAttribution: true }}
       >
@@ -176,9 +216,10 @@ function LogicGraphDenseNodeDetails({ projection }: { projection: LogicGraphProj
 
 export type AdminPromptsLogicGraphProps = {
   projection: LogicGraphProjection | null
+  onNodeSelect?: ((nodeId: string) => void) | undefined
 }
 
-export function AdminPromptsLogicGraph({ projection }: AdminPromptsLogicGraphProps) {
+export function AdminPromptsLogicGraph({ projection, onNodeSelect }: AdminPromptsLogicGraphProps) {
   if (!projection) {
     return null
   }
@@ -242,7 +283,7 @@ export function AdminPromptsLogicGraph({ projection }: AdminPromptsLogicGraphPro
       </details>
       <LogicGraphErrorBoundary key={projection.boundaryRemountKey} fallbackSummary={projection.fallbackSummary}>
         <ReactFlowProvider>
-          <LogicGraphFlowInner projection={projection} />
+          <LogicGraphFlowInner projection={projection} onNodeSelect={onNodeSelect} />
         </ReactFlowProvider>
       </LogicGraphErrorBoundary>
     </div>

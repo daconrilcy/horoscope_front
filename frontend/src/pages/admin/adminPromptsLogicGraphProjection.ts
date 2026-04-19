@@ -7,6 +7,8 @@ export type LogicGraphNode = {
   title: string
   detail: string
   tone: LogicGraphNodeTone
+  position?: { x: number; y: number }
+  interactive?: boolean
 }
 
 export type LogicGraphEdge = {
@@ -205,7 +207,9 @@ export function layoutLogicGraphNodesForFlow(nodes: LogicGraphNode[]): Record<st
     operatorResult: { x: 1420, y: 320 },
   }
   for (const n of nodes) {
-    if (!positions[n.id]) {
+    if (n.position) {
+      positions[n.id] = n.position
+    } else if (!positions[n.id]) {
       positions[n.id] = { x: 0, y: 0 }
     }
   }

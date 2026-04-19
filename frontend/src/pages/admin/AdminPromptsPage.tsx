@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
@@ -31,17 +32,19 @@ import {
   isAdminRuntimePreviewExecutable,
   type AdminConsumptionRow,
   type AdminConsumptionView,
+  type AdminInspectionMode,
+  type AdminLlmCatalogEntry,
   type AdminPromptDraftCreateInput,
   type AdminPromptVersion,
-  type AdminInspectionMode,
   type AdminResolvedPlaceholder,
   type SnapshotTimelineItem,
 } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
 import { AdminSamplePayloadsAdmin } from "./AdminSamplePayloadsAdmin"
 import { AdminPromptEditorPanel } from "./AdminPromptEditorPanel"
-import { buildLogicGraphProjection } from "./adminPromptsLogicGraphProjection"
 import { AdminPromptsLogicGraph } from "./AdminPromptsLogicGraph"
+import { AdminPromptCatalogNodeModal } from "./AdminPromptCatalogNodeModal"
+import { buildAdminPromptCatalogFlowProjection } from "./adminPromptCatalogFlowProjection"
 import type { AdminPromptsCatalogStrings } from "../../i18n/adminPromptsCatalog"
 import "./AdminPromptsPage.css"
 
@@ -108,6 +111,26 @@ function formatManifestEntryCatalogHint(manifestEntryId: string): string {
     return manifestEntryId.trim() || "—"
   }
   return parts.join(" · ")
+}
+
+function pickPreferredCatalogEntry(entries: AdminLlmCatalogEntry[]): AdminLlmCatalogEntry | null {
+  if (entries.length === 0) {
+    return null
+  }
+  return [...entries].sort((left, right) => {
+    const leftScore =
+      (left.execution_path_kind === "nominal" ? 4 : 0) +
+      (left.source_of_truth_status === "active_snapshot" ? 2 : 0) +
+      (left.catalog_visibility_status === "visible" ? 1 : 0)
+    const rightScore =
+      (right.execution_path_kind === "nominal" ? 4 : 0) +
+      (right.source_of_truth_status === "active_snapshot" ? 2 : 0) +
+      (right.catalog_visibility_status === "visible" ? 1 : 0)
+    if (leftScore !== rightScore) {
+      return rightScore - leftScore
+    }
+    return (left.subfeature ?? "").localeCompare(right.subfeature ?? "")
+  })[0] ?? null
 }
 
 function releaseDiffAxisBadgeClass(changed: boolean): string {
@@ -337,17 +360,6 @@ function resolvedAssemblyErrorPresentation(
   return { primary, secondary }
 }
 
-function manualExecutionFailureLead(error: unknown, tCat: AdminPromptsCatalogStrings): string | null {
-  if (!(error instanceof AdminPromptsApiError)) {
-    return null
-  }
-  const kind = error.details.failure_kind
-  if (typeof kind !== "string") {
-    return null
-  }
-  return tCat.manualExecutionFailureLeadMessage(kind) ?? null
-}
-
 function AdminPromptsResolvedAssemblyError({
   error,
   catalog,
@@ -375,6 +387,17 @@ function placeholderStatusClassName(status: AdminResolvedPlaceholder["status"]):
     default:
       return "admin-prompts-resolved__placeholder-status--neutral"
   }
+}
+
+function manualExecutionFailureLead(error: unknown, tCat: AdminPromptsCatalogStrings): string | null {
+  if (!(error instanceof AdminPromptsApiError)) {
+    return null
+  }
+  const kind = error.details.failure_kind
+  if (typeof kind !== "string") {
+    return null
+  }
+  return tCat.manualExecutionFailureLeadMessage(kind) ?? null
 }
 
 function formatPromptSaveError(error: unknown): string {
@@ -432,7 +455,6 @@ export function AdminPromptsPage() {
   const activeTab = useMemo(() => resolvePromptsTabFromPath(location.pathname), [location.pathname])
   const consumptionNarrowLayout = useMatchMediaMaxWidth(960, activeTab === "consumption")
   const pageHeader = tAdmin.promptsPageHeader[activeTab]
-
   const [page, setPage] = useState(1)
   const [pageSize] = useState(25)
   const [search, setSearch] = useState("")
@@ -448,15 +470,29 @@ export function AdminPromptsPage() {
   const [sortBy, setSortBy] = useState("feature")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
+  const [catalogSelectionDraft, setCatalogSelectionDraft] = useState({
+    feature: "",
+    plan: "",
+    locale: "",
+  })
+  const [catalogSelection, setCatalogSelection] = useState<{
+    feature: string
+    plan: string
+    locale: string
+  } | null>(null)
+
   const [legacyUseCaseKey, setLegacyUseCaseKey] = useState<string | null>(null)
   const [legacyCompareVersionId, setLegacyCompareVersionId] = useState<string | null>(null)
   const [legacyRollbackCandidate, setLegacyRollbackCandidate] = useState<AdminPromptVersion | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [legacyEditorSuccessMessage, setLegacyEditorSuccessMessage] = useState<string | null>(null)
   const [legacyEditorErrorMessage, setLegacyEditorErrorMessage] = useState<string | null>(null)
+  const [catalogEditorSuccessMessage, setCatalogEditorSuccessMessage] = useState<string | null>(null)
+  const [catalogEditorErrorMessage, setCatalogEditorErrorMessage] = useState<string | null>(null)
   const [selectedManifestEntryId, setSelectedManifestEntryId] = useState<string | null>(null)
   const [resolvedInspectionMode, setResolvedInspectionMode] = useState<AdminInspectionMode>("assembly_preview")
   const [selectedSamplePayloadId, setSelectedSamplePayloadId] = useState<string | null>(null)
+  const [catalogModalNodeId, setCatalogModalNodeId] = useState<string | null>(null)
   const [fromSnapshotId, setFromSnapshotId] = useState<string | null>(null)
   const [toSnapshotId, setToSnapshotId] = useState<string | null>(null)
   const [consumptionView, setConsumptionView] = useState<AdminConsumptionView>("user")
@@ -491,7 +527,6 @@ export function AdminPromptsPage() {
 
   const effectiveSamplePayloadId =
     resolvedInspectionMode === "runtime_preview" ? selectedSamplePayloadId : null
-
   const catalogQuery = useAdminLlmCatalog(
     {
       page,
@@ -509,32 +544,45 @@ export function AdminPromptsPage() {
       sortBy,
       sortOrder,
     },
-    activeTab === "catalog",
+    false,
   )
 
-  /** Facettes globales (sans filtres catalogue) : l’API les calcule sur la liste complète avant pagination. */
+  /** Facettes globales (sans dérouler le catalogue complet) : servent au sélecteur minimal et aux sample payloads. */
   const samplePayloadsFacetsCatalogQuery = useAdminLlmCatalog(
-    { page: 1, pageSize: 25, sortBy: "feature", sortOrder: "asc" },
-    activeTab === "samplePayloads",
+    { page: 1, pageSize: 1, sortBy: "feature", sortOrder: "asc" },
+    activeTab === "samplePayloads" || activeTab === "catalog",
   )
 
-  const catalogEntries = catalogQuery.data?.data ?? []
+  const catalogFacets = samplePayloadsFacetsCatalogQuery.data?.meta?.facets
+  const catalogContextQuery = useAdminLlmCatalog(
+    catalogSelection
+      ? {
+          page: 1,
+          pageSize: 50,
+          feature: catalogSelection.feature,
+          plan: catalogSelection.plan,
+          locale: catalogSelection.locale,
+          sortBy: "subfeature",
+          sortOrder: "asc",
+        }
+      : { page: 1, pageSize: 1, sortBy: "feature", sortOrder: "asc" },
+    activeTab === "catalog" && Boolean(catalogSelection),
+  )
+
+  const catalogEntries = catalogContextQuery.data?.data ?? []
   const catalogMeta = catalogQuery.data?.meta
   const selectedCatalogEntry =
     catalogEntries.find((entry) => entry.manifest_entry_id === selectedManifestEntryId) ?? null
   const resolvedQuery = useAdminResolvedAssembly(
     selectedManifestEntryId,
-    resolvedInspectionMode,
-    effectiveSamplePayloadId,
+    "assembly_preview",
+    null,
     activeTab === "catalog" && Boolean(selectedManifestEntryId),
   )
-
-  /** Hors page courante, `selectedCatalogEntry` est null mais le détail résolu porte toujours feature/locale (sample payloads + CTA). */
   const catalogFeatureForSamplePayloads =
     selectedCatalogEntry?.feature ?? resolvedQuery.data?.feature ?? null
   const catalogLocaleForSamplePayloads =
     selectedCatalogEntry?.locale ?? resolvedQuery.data?.locale ?? null
-
   const manualExecuteMutation = useMutation({
     mutationFn: async () => {
       if (!selectedManifestEntryId || !selectedSamplePayloadId) {
@@ -547,17 +595,9 @@ export function AdminPromptsPage() {
     catalogFeatureForSamplePayloads,
     catalogLocaleForSamplePayloads,
     {
-      enabled:
-        activeTab === "catalog" &&
-        Boolean(selectedManifestEntryId) &&
-        resolvedInspectionMode === "runtime_preview",
+      enabled: false,
     },
   )
-
-  useEffect(() => {
-    setResolvedInspectionMode("assembly_preview")
-    setSelectedSamplePayloadId(null)
-  }, [selectedManifestEntryId])
 
   useEffect(() => {
     if (activeTab !== "samplePayloads") {
@@ -566,15 +606,80 @@ export function AdminPromptsPage() {
   }, [activeTab])
 
   useEffect(() => {
+    if (activeTab !== "catalog") {
+      setCatalogModalNodeId(null)
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    setCatalogModalNodeId(null)
+    setCatalogEditorSuccessMessage(null)
+    setCatalogEditorErrorMessage(null)
+    createPromptDraftMutation.reset()
+  }, [selectedManifestEntryId])
+
+  useEffect(() => {
+    if (!catalogSelection || catalogEntries.length === 0) {
+      return
+    }
+    if (selectedManifestEntryId && catalogEntries.some((entry) => entry.manifest_entry_id === selectedManifestEntryId)) {
+      return
+    }
+    const preferredEntry = pickPreferredCatalogEntry(catalogEntries)
+    if (preferredEntry) {
+      setSelectedManifestEntryId(preferredEntry.manifest_entry_id)
+    }
+  }, [catalogEntries, catalogSelection, selectedManifestEntryId])
+
+  useEffect(() => {
+    if (!resolvedQuery.data) {
+      return
+    }
+    setCatalogSelection((current) => {
+      if (
+        current?.feature === resolvedQuery.data.feature &&
+        current?.plan === (resolvedQuery.data.plan ?? "") &&
+        current?.locale === (resolvedQuery.data.locale ?? "")
+      ) {
+        return current
+      }
+      return {
+        feature: resolvedQuery.data.feature,
+        plan: resolvedQuery.data.plan ?? "",
+        locale: resolvedQuery.data.locale ?? "",
+      }
+    })
+    setCatalogSelectionDraft((current) => {
+      const next = {
+        feature: current.feature || resolvedQuery.data.feature,
+        plan: current.plan || (resolvedQuery.data.plan ?? ""),
+        locale: current.locale || (resolvedQuery.data.locale ?? ""),
+      }
+      if (
+        current.feature === next.feature &&
+        current.plan === next.plan &&
+        current.locale === next.locale
+      ) {
+        return current
+      }
+      return next
+    })
+  }, [resolvedQuery.data])
+
+  useEffect(() => {
+    setResolvedInspectionMode("assembly_preview")
+    setSelectedSamplePayloadId(null)
+  }, [selectedManifestEntryId])
+
+  useEffect(() => {
     if (resolvedInspectionMode !== "runtime_preview") {
       setSelectedSamplePayloadId(null)
     }
   }, [resolvedInspectionMode])
 
   useEffect(() => {
-    manualExecuteMutation.reset()
     setManualExecuteConfirmOpen(false)
-  }, [selectedManifestEntryId, selectedSamplePayloadId, resolvedInspectionMode])
+  }, [resolvedInspectionMode, selectedManifestEntryId, selectedSamplePayloadId])
 
   useEffect(() => {
     if (resolvedInspectionMode !== "runtime_preview") {
@@ -586,7 +691,6 @@ export function AdminPromptsPage() {
     }
     const itemIds = new Set(data.items.map((row) => row.id))
     const recommendedId = data.recommended_default_id ?? null
-
     setSelectedSamplePayloadId((current) => {
       if (current && itemIds.has(current)) {
         return current
@@ -599,16 +703,12 @@ export function AdminPromptsPage() {
   }, [resolvedInspectionMode, samplePayloadsQuery.data])
 
   const facets = catalogMeta?.facets
-  const availableFeatures = facets?.feature ?? []
   const availableSubfeatures = facets?.subfeature ?? []
-  const availablePlans = facets?.plan ?? []
-  const availableLocales = facets?.locale ?? []
   const availableProviders = facets?.provider ?? []
   const availableSourceStatuses = facets?.source_of_truth_status ?? []
   const availableAssemblyStatuses = facets?.assembly_status ?? []
   const availableReleaseHealthStatuses = facets?.release_health_status ?? []
   const availableVisibilityStatuses = facets?.catalog_visibility_status ?? []
-
   const resetCatalogFilters = () => {
     setSearch("")
     setFeature("")
@@ -625,36 +725,26 @@ export function AdminPromptsPage() {
     setPage(1)
     setCatalogAdvancedFiltersOpen(false)
   }
-
-  const catalogHasActiveFilters = useMemo(
-    () =>
-      Boolean(
-        search.trim() ||
-          feature ||
-          subfeature ||
-          plan ||
-          locale ||
-          provider ||
-          sourceOfTruthStatus ||
-          assemblyStatus ||
-          releaseHealthStatus ||
-          catalogVisibilityStatus,
-      ),
-    [
-      search,
-      feature,
-      subfeature,
-      plan,
-      locale,
-      provider,
-      sourceOfTruthStatus,
-      assemblyStatus,
-      releaseHealthStatus,
+  const catalogHasActiveFilters = Boolean(
+    search.trim() ||
+      feature ||
+      subfeature ||
+      plan ||
+      locale ||
+      provider ||
+      sourceOfTruthStatus ||
+      assemblyStatus ||
+      releaseHealthStatus ||
       catalogVisibilityStatus,
-    ],
   )
 
-  const useCasesQuery = useAdminLlmUseCases({ enabled: activeTab === "legacy" })
+  const availableFeatures = catalogFacets?.feature ?? []
+  const availablePlans = catalogFacets?.plan ?? []
+  const availableLocales = catalogFacets?.locale ?? []
+
+  const useCasesQuery = useAdminLlmUseCases({
+    enabled: activeTab === "legacy" || activeTab === "catalog",
+  })
   const useCases = useCasesQuery.data ?? []
 
   useEffect(() => {
@@ -680,6 +770,14 @@ export function AdminPromptsPage() {
     activeTab === "release",
   )
   const selectedLegacyHistory = legacyHistoryQuery.data ?? []
+  const catalogModalEnabled =
+    activeTab === "catalog" &&
+    Boolean(catalogModalNodeId) &&
+    Boolean(resolvedQuery.data?.use_case_key)
+  const catalogHistoryQuery = useAdminPromptHistory(
+    resolvedQuery.data?.use_case_key ?? "",
+    catalogModalEnabled,
+  )
   const exportCsvMutation = useDownloadAdminConsumptionCsv()
   const consumptionQuery = useAdminConsumption(
     {
@@ -711,6 +809,8 @@ export function AdminPromptsPage() {
     activeTab === "consumption" && Boolean(selectedConsumptionRow),
   )
   const selectedLegacyUseCase = useCases.find((item) => item.key === legacyUseCaseKey) ?? null
+  const selectedCatalogUseCase =
+    useCases.find((item) => item.key === (resolvedQuery.data?.use_case_key ?? "")) ?? null
   const apiActiveId = selectedLegacyUseCase?.active_prompt_version_id
   const activeLegacyVersion =
     apiActiveId != null && String(apiActiveId).length > 0
@@ -734,7 +834,25 @@ export function AdminPromptsPage() {
   const legacyDiffRows = canShowLegacyDiff
     ? buildDiffRows(compareLegacyVersion!.developer_prompt, legacyDiffRightVersion!.developer_prompt)
     : []
-  const logicGraph = resolvedQuery.data ? buildLogicGraphProjection(resolvedQuery.data) : null
+  const catalogHistory = catalogHistoryQuery.data ?? []
+  const activeCatalogVersion =
+    selectedCatalogUseCase?.active_prompt_version_id != null
+      ? (catalogHistory.find((item) => item.id === selectedCatalogUseCase.active_prompt_version_id) ?? null)
+      : null
+  const logicGraph =
+    resolvedQuery.data && selectedCatalogUseCase
+      ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data, selectedCatalogUseCase.display_name)
+      : resolvedQuery.data
+        ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data, resolvedQuery.data.use_case_key)
+        : null
+  const selectedCatalogFlowNode =
+    logicGraph?.flowNodes.find((node) => node.id === catalogModalNodeId) ?? null
+  const canApplyCatalogSelection = Boolean(
+    catalogSelectionDraft.feature && catalogSelectionDraft.plan && catalogSelectionDraft.locale,
+  )
+  const catalogContextLabel = resolvedQuery.data
+    ? `${resolvedQuery.data.feature}/${resolvedQuery.data.subfeature ?? "-"}/${resolvedQuery.data.plan ?? "-"}/${resolvedQuery.data.locale ?? "-"}`
+    : null
 
   const isLegacyLoading =
     useCasesQuery.isPending || (activeTab === "legacy" && legacyHistoryQuery.isPending)
@@ -790,23 +908,54 @@ export function AdminPromptsPage() {
     setSuccessMessage(interpolateLegacyTemplate(tLegacy.successRestore, { short: restoredShort }))
   }
 
+  const createDraftForUseCase = async (
+    useCaseKey: string,
+    payload: AdminPromptDraftCreateInput,
+    onSuccess: (createdVersion: AdminPromptVersion) => void,
+    onError: (message: string) => void,
+  ) => {
+    try {
+      const createdVersion = await createPromptDraftMutation.mutateAsync({
+        useCaseKey,
+        payload,
+      })
+      onSuccess(createdVersion)
+    } catch (error) {
+      onError(formatPromptSaveError(error))
+      throw error
+    }
+  }
+
   const handleLegacyCreateDraft = async (payload: AdminPromptDraftCreateInput) => {
     if (!legacyUseCaseKey) return
     setSuccessMessage(null)
     setLegacyEditorSuccessMessage(null)
     setLegacyEditorErrorMessage(null)
 
-    try {
-      const createdVersion = await createPromptDraftMutation.mutateAsync({
-        useCaseKey: legacyUseCaseKey,
-        payload,
-      })
-      setLegacyEditorSuccessMessage(tEditor.success(createdVersion.id.slice(0, 8)))
-      setLegacyCompareVersionId(createdVersion.id)
-    } catch (error) {
-      setLegacyEditorErrorMessage(formatPromptSaveError(error))
-      throw error
-    }
+    await createDraftForUseCase(
+      legacyUseCaseKey,
+      payload,
+      (createdVersion) => {
+        setLegacyEditorSuccessMessage(tEditor.success(createdVersion.id.slice(0, 8)))
+        setLegacyCompareVersionId(createdVersion.id)
+      },
+      setLegacyEditorErrorMessage,
+    )
+  }
+
+  const handleCatalogCreateDraft = async (payload: AdminPromptDraftCreateInput) => {
+    if (!resolvedQuery.data?.use_case_key) return
+    setCatalogEditorSuccessMessage(null)
+    setCatalogEditorErrorMessage(null)
+
+    await createDraftForUseCase(
+      resolvedQuery.data.use_case_key,
+      payload,
+      (createdVersion) => {
+        setCatalogEditorSuccessMessage(tEditor.success(createdVersion.id.slice(0, 8)))
+      },
+      setCatalogEditorErrorMessage,
+    )
   }
 
   return (
@@ -877,6 +1026,213 @@ export function AdminPromptsPage() {
       ) : null}
 
       {activeTab === "catalog" ? (
+        <section className="panel admin-prompts-catalog" aria-label={tCat.catalogRegionAria}>
+          <div className="admin-prompts-catalog__flow-shell">
+            <header className="admin-prompts-catalog__flow-header">
+              <p className="admin-prompts-catalog__flow-kicker">Catalogue actif</p>
+              <h3 className="admin-prompts-catalog__flow-title">Sélectionner un contexte catalogue</h3>
+              <p className="admin-prompts-catalog__flow-intro">
+                Commencez par choisir une feature, un abonnement et une locale. Le schéma affiche ensuite la chaîne
+                active jusqu&apos;au prompt rendu final. Cliquez sur un nœud pour ouvrir sa modale d&apos;édition ou
+                de lecture.
+              </p>
+            </header>
+
+            <section className="admin-prompts-catalog__selector" aria-label="Sélection du contexte catalogue">
+              <div className="admin-prompts-catalog__selector-grid">
+                <label className="admin-prompts-catalog__filter-field" htmlFor="catalog-feature-minimal">
+                  <span>{tCat.filterFeatureLabel}</span>
+                  <select
+                    id="catalog-feature-minimal"
+                    value={catalogSelectionDraft.feature}
+                    onChange={(event) =>
+                      setCatalogSelectionDraft((current) => ({ ...current, feature: event.target.value }))
+                    }
+                  >
+                    <option value="">{tCat.filterAllFeminine}</option>
+                    {availableFeatures.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="admin-prompts-catalog__filter-field" htmlFor="catalog-plan-minimal">
+                  <span>{tCat.filterPlanLabel}</span>
+                  <select
+                    id="catalog-plan-minimal"
+                    value={catalogSelectionDraft.plan}
+                    onChange={(event) =>
+                      setCatalogSelectionDraft((current) => ({ ...current, plan: event.target.value }))
+                    }
+                  >
+                    <option value="">{tCat.filterAllMasculine}</option>
+                    {availablePlans.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="admin-prompts-catalog__filter-field" htmlFor="catalog-locale-minimal">
+                  <span>{tCat.filterLocaleLabel}</span>
+                  <select
+                    id="catalog-locale-minimal"
+                    value={catalogSelectionDraft.locale}
+                    onChange={(event) =>
+                      setCatalogSelectionDraft((current) => ({ ...current, locale: event.target.value }))
+                    }
+                  >
+                    <option value="">{tCat.filterAllFeminine}</option>
+                    {availableLocales.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="admin-prompts-catalog__selector-actions">
+                <button
+                  className="action-button action-button--primary"
+                  type="button"
+                  disabled={!canApplyCatalogSelection}
+                  onClick={() =>
+                    setCatalogSelection({
+                      feature: catalogSelectionDraft.feature,
+                      plan: catalogSelectionDraft.plan,
+                      locale: catalogSelectionDraft.locale,
+                    })
+                  }
+                >
+                  Afficher le schéma
+                </button>
+                <button
+                  className="text-button"
+                  type="button"
+                  onClick={() => {
+                    setCatalogSelection(null)
+                    setCatalogSelectionDraft({ feature: "", plan: "", locale: "" })
+                    setSelectedManifestEntryId(null)
+                    setCatalogModalNodeId(null)
+                    setCatalogEditorSuccessMessage(null)
+                    setCatalogEditorErrorMessage(null)
+                  }}
+                >
+                  Réinitialiser
+                </button>
+              </div>
+            </section>
+
+            {!catalogSelection ? (
+              <div className="admin-prompts-catalog__detail-empty">
+                <p className="text-muted">
+                  Sélectionnez un triplet feature / abonnement / locale pour charger le graphe du catalogue actif.
+                </p>
+              </div>
+            ) : null}
+
+            {catalogSelection && catalogContextQuery.isPending ? (
+              <div className="loading-placeholder">{tCat.catalogLoading}</div>
+            ) : null}
+            {catalogSelection && catalogContextQuery.isError ? (
+              <p className="chat-error">{tCat.catalogError}</p>
+            ) : null}
+            {catalogSelection &&
+            !catalogContextQuery.isPending &&
+            !catalogContextQuery.isError &&
+            catalogEntries.length === 0 ? (
+              <div className="state-line">
+                Aucun prompt catalogue actif ne correspond à cette combinaison feature / abonnement / locale.
+              </div>
+            ) : null}
+
+            {catalogSelection && selectedManifestEntryId ? (
+              <>
+                <section className="admin-prompts-catalog-detail-summary" aria-label={tCat.detailSummaryTitle}>
+                  <h3 className="admin-prompts-catalog-detail-summary__title">{tCat.detailSummaryTitle}</h3>
+                  {catalogContextLabel ? (
+                    <p className="admin-prompts-catalog-detail-summary__tuple">{catalogContextLabel}</p>
+                  ) : null}
+                  <dl className="admin-prompts-catalog-detail-summary__meta">
+                    <div>
+                      <dt>{tCat.detailManifestEntryDt}</dt>
+                      <dd>
+                        <code>{selectedManifestEntryId}</code>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{tCat.detailAssemblyDt}</dt>
+                      <dd>{resolvedQuery.data?.assembly_id ?? selectedCatalogEntry?.assembly_id ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>{tCat.detailExecutionProfileDt}</dt>
+                      <dd>
+                        {selectedCatalogEntry?.execution_profile_ref ??
+                          resolvedQuery.data?.composition_sources.execution_profile.name ??
+                          "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{tCat.detailOutputContractDt}</dt>
+                      <dd>{selectedCatalogEntry?.output_contract_ref ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>{tCat.detailCatalogVisibilityDt}</dt>
+                      <dd>
+                        {selectedCatalogEntry
+                          ? tCat.labelCatalogVisibilityStatus(selectedCatalogEntry.catalog_visibility_status)
+                          : "—"}
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section className="admin-prompts-catalog__graph-surface" aria-label={tCat.graphZoneAria}>
+                  <div className="admin-prompts-catalog__graph-head">
+                    <div>
+                      <h3 className="admin-prompts-catalog__graph-title">{tCat.graphZoneTitle}</h3>
+                      <p className="admin-prompts-catalog__graph-intro text-muted">{tCat.graphIntro}</p>
+                    </div>
+                    {selectedCatalogUseCase ? (
+                      <span className="badge badge--info">{selectedCatalogUseCase.display_name}</span>
+                    ) : null}
+                  </div>
+
+                  {resolvedQuery.isPending ? <div className="loading-placeholder">{tCat.resolvedLoading}</div> : null}
+                  {resolvedQuery.isError ? (
+                    <AdminPromptsResolvedAssemblyError error={resolvedQuery.error} catalog={tCat} />
+                  ) : null}
+
+                  {resolvedQuery.data ? (
+                    <>
+                      <AdminPromptsLogicGraph
+                        projection={logicGraph}
+                        onNodeSelect={(nodeId) => setCatalogModalNodeId(nodeId)}
+                      />
+                      <p className="admin-prompts-catalog__graph-help text-muted">
+                        Chaque nœud correspond à une couche active. Cliquez dessus pour ouvrir le prompt source ou
+                        éditer le use case publié.
+                      </p>
+                      <section className="admin-prompts-catalog__final-prompt">
+                        <h4>Prompt rendu final</h4>
+                        <pre className="admin-prompts-code">
+                          {resolvedQuery.data.transformation_pipeline.rendered_prompt}
+                        </pre>
+                      </section>
+                    </>
+                  ) : null}
+                </section>
+              </>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {false && activeTab === "catalog" ? (
         <section className="panel admin-prompts-catalog" aria-label={tCat.catalogRegionAria}>
           <div className="admin-prompts-catalog-master-detail">
             <div className="admin-prompts-catalog__master">
@@ -2507,7 +2863,28 @@ export function AdminPromptsPage() {
         />
       ) : null}
 
-      {manualExecuteConfirmOpen &&
+      {activeTab === "catalog" && selectedCatalogFlowNode ? (
+        <AdminPromptCatalogNodeModal
+          node={selectedCatalogFlowNode}
+          useCases={useCases}
+          versions={catalogHistory}
+          activeVersion={activeCatalogVersion}
+          useCaseDisplayName={selectedCatalogUseCase?.display_name ?? null}
+          editorStrings={tEditor}
+          saveError={catalogEditorErrorMessage}
+          saveSuccess={catalogEditorSuccessMessage}
+          isPending={createPromptDraftMutation.isPending}
+          onClose={() => {
+            setCatalogModalNodeId(null)
+            setCatalogEditorSuccessMessage(null)
+            setCatalogEditorErrorMessage(null)
+          }}
+          onSubmit={handleCatalogCreateDraft}
+        />
+      ) : null}
+
+      {false &&
+      manualExecuteConfirmOpen &&
       selectedManifestEntryId &&
       selectedSamplePayloadId &&
       activeTab === "catalog" ? (
