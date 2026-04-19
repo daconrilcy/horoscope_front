@@ -7,6 +7,7 @@ export type LogicGraphNode = {
   title: string
   detail: string
   tone: LogicGraphNodeTone
+  badge?: string
   position?: { x: number; y: number }
   interactive?: boolean
 }

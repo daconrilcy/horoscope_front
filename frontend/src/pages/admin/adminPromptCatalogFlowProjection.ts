@@ -19,6 +19,7 @@ export type AdminPromptCatalogFlowNode = {
   title: string
   detail: string
   tone: LogicGraphNodeTone
+  badge?: string
   position: { x: number; y: number }
   promptContent: string | null
   summary: string
@@ -28,6 +29,11 @@ export type AdminPromptCatalogFlowNode = {
 
 export type AdminPromptCatalogFlowProjection = LogicGraphProjection & {
   flowNodes: AdminPromptCatalogFlowNode[]
+}
+
+type UseCaseNodePresentation = {
+  canonicalDisplayName: string
+  runtimeDisplayName: string | null
 }
 
 function toSingleLinePreview(value: string, limit = 88): string {
@@ -49,6 +55,7 @@ function makeNode(
   summary: string,
   meta: Array<{ label: string; value: string }>,
   editableUseCaseKey: string | null = null,
+  badge?: string,
 ): AdminPromptCatalogFlowNode {
   return {
     id,
@@ -56,6 +63,7 @@ function makeNode(
     title,
     detail,
     tone,
+    badge,
     position,
     promptContent,
     summary,
@@ -66,7 +74,7 @@ function makeNode(
 
 export function buildAdminPromptCatalogFlowProjection(
   resolvedView: AdminResolvedAssemblyView,
-  useCaseDisplayName: string,
+  useCasePresentation: UseCaseNodePresentation,
 ): AdminPromptCatalogFlowProjection {
   const flowNodes: AdminPromptCatalogFlowNode[] = []
   const flowEdges: AdminPromptCatalogFlowProjection["edges"] = []
@@ -147,17 +155,34 @@ export function buildAdminPromptCatalogFlowProjection(
     makeNode(
       "useCasePrompt",
       "use_case_prompt",
-      "Prompt use case",
-      useCaseDisplayName,
+      useCasePresentation.runtimeDisplayName &&
+      useCasePresentation.runtimeDisplayName !== useCasePresentation.canonicalDisplayName
+        ? "Prompt use case canonique / runtime"
+        : "Prompt use case",
+      useCasePresentation.runtimeDisplayName &&
+      useCasePresentation.runtimeDisplayName !== useCasePresentation.canonicalDisplayName
+        ? `${useCasePresentation.canonicalDisplayName} -> ${useCasePresentation.runtimeDisplayName}`
+        : useCasePresentation.canonicalDisplayName,
       "neutral",
       { x: 0, y: 390 },
       null,
-      "Prompt éditable actuellement publié pour ce contexte runtime.",
+      useCasePresentation.runtimeDisplayName &&
+      useCasePresentation.runtimeDisplayName !== useCasePresentation.canonicalDisplayName
+        ? "Le prompt canonique éditable diffère du use case réellement appelé par le runtime pour cette cible."
+        : "Prompt éditable actuellement publié pour ce contexte runtime.",
       [
-        { label: "Use case", value: resolvedView.use_case_key },
+        { label: "Use case canonique", value: resolvedView.use_case_key },
+        ...(resolvedView.runtime_use_case_key &&
+        resolvedView.runtime_use_case_key !== resolvedView.use_case_key
+          ? [{ label: "Use case runtime", value: resolvedView.runtime_use_case_key }]
+          : []),
         { label: "Manifest", value: resolvedView.manifest_entry_id },
       ],
       resolvedView.use_case_key,
+      resolvedView.runtime_use_case_key &&
+        resolvedView.runtime_use_case_key !== resolvedView.use_case_key
+        ? "Runtime different"
+        : undefined,
     ),
     "prompt actif",
   )
@@ -259,6 +284,7 @@ export function buildAdminPromptCatalogFlowProjection(
       title: node.title,
       detail: node.detail,
       tone: node.tone,
+      badge: node.badge,
       position: node.position,
       interactive: true,
     })),

@@ -220,6 +220,7 @@ export type AdminResolvedAssemblyView = {
   plan: string | null
   locale: string | null
   use_case_key: string
+  runtime_use_case_key: string | null
   context_quality: string
   assembly_id: string | null
   inspection_mode: AdminInspectionMode

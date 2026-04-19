@@ -58,38 +58,40 @@ export function AdminPromptCatalogNodeModal({
           </button>
         </div>
 
-        <dl className="admin-prompts-modal__meta admin-prompts-modal__meta--catalog-node">
-          {node.meta.map((item) => (
-            <div key={`${node.id}-${item.label}`}>
-              <dt>{item.label}</dt>
-              <dd>{item.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="admin-prompts-modal__body admin-prompts-modal__body--catalog-node">
+          <dl className="admin-prompts-modal__meta admin-prompts-modal__meta--catalog-node">
+            {node.meta.map((item) => (
+              <div key={`${node.id}-${item.label}`}>
+                <dt>{item.label}</dt>
+                <dd>{item.value}</dd>
+              </div>
+            ))}
+          </dl>
 
-        {isEditable && node.editableUseCaseKey ? (
-          <AdminPromptEditorPanel
-            useCaseKey={node.editableUseCaseKey}
-            useCaseDisplayName={useCaseDisplayName ?? node.editableUseCaseKey}
-            versions={versions}
-            activeVersion={activeVersion}
-            useCases={useCases}
-            strings={editorStrings}
-            saveError={saveError}
-            saveSuccess={saveSuccess}
-            isPending={isPending}
-            onSubmit={onSubmit}
-          />
-        ) : (
-          <section className="admin-prompts-catalog-node-modal__read-only">
-            <h4>Prompt actif</h4>
-            <pre className="admin-prompts-code">
-              {node.promptContent && node.promptContent.trim().length > 0
-                ? node.promptContent
-                : "Aucun texte exploitable n'est exposé par cette couche."}
-            </pre>
-          </section>
-        )}
+          {isEditable && node.editableUseCaseKey ? (
+            <AdminPromptEditorPanel
+              useCaseKey={node.editableUseCaseKey}
+              useCaseDisplayName={useCaseDisplayName ?? node.editableUseCaseKey}
+              versions={versions}
+              activeVersion={activeVersion}
+              useCases={useCases}
+              strings={editorStrings}
+              saveError={saveError}
+              saveSuccess={saveSuccess}
+              isPending={isPending}
+              onSubmit={onSubmit}
+            />
+          ) : (
+            <section className="admin-prompts-catalog-node-modal__read-only">
+              <h4>Prompt actif</h4>
+              <pre className="admin-prompts-code">
+                {node.promptContent && node.promptContent.trim().length > 0
+                  ? node.promptContent
+                  : "Aucun texte exploitable n'est exposé par cette couche."}
+              </pre>
+            </section>
+          )}
+        </div>
       </div>
     </div>
   )

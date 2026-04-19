@@ -309,6 +309,7 @@ class AdminResolvedAssemblyView(BaseModel):
     plan: str | None = None
     locale: str | None = None
     use_case_key: str
+    runtime_use_case_key: str | None = None
     context_quality: str
     assembly_id: str | None = None
     inspection_mode: AdminInspectionMode
@@ -813,6 +814,24 @@ def _admin_catalog_runtime_preview_blocking_reasons(view: AdminResolvedAssemblyV
         if placeholder.status in ("blocking_missing", "unknown"):
             reasons.append(f"placeholder:{placeholder.name}:{placeholder.status}")
     return reasons
+
+
+def _derive_admin_runtime_use_case_key(assembly_model: PromptAssemblyConfigModel) -> str | None:
+    """Expose le use case réellement exécuté quand le runtime diverge du template canonique."""
+    canonical_use_case_key = (
+        assembly_model.feature_template.use_case_key if assembly_model.feature_template else None
+    )
+    if not canonical_use_case_key:
+        return None
+
+    if (
+        assembly_model.feature == "natal"
+        and assembly_model.subfeature == "interpretation"
+        and assembly_model.plan == "free"
+    ):
+        return "natal_long_free"
+
+    return canonical_use_case_key
 
 
 def _anonymize_for_admin_manual_execute(text: str, *, field: str) -> str:
@@ -2036,13 +2055,15 @@ def _build_admin_resolved_catalog_view(
         ),
     }
 
+    effective_use_case_key = _derive_admin_runtime_use_case_key(assembly_model)
     data = AdminResolvedAssemblyView(
         manifest_entry_id=manifest_entry_id,
         feature=assembly_model.feature,
         subfeature=assembly_model.subfeature,
         plan=assembly_model.plan,
         locale=assembly_model.locale,
-        use_case_key=assembly_model.feature_template.use_case_key,
+        use_case_key=effective_use_case_key or assembly_model.feature_template.use_case_key,
+        runtime_use_case_key=effective_use_case_key,
         context_quality=resolved.context_quality,
         assembly_id=str(assembly_model.id),
         inspection_mode=inspection_mode,

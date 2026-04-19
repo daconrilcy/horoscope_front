@@ -123,6 +123,7 @@ so that les pages admin restent lisibles sur grand ecran, sans colonnes inutilem
 
 - 2026-04-19: la surface `/admin/prompts/catalog` a ete reorientee vers un flux minimal `feature / formule / locale`, suivi d un graphe React Flow de la chaine active et d une modale d edition par noeud reprenant le formulaire legacy sans l historique.
 - 2026-04-19: correction du crash runtime `manualExecuteConfirmOpen is not defined` dans `AdminPromptsPage.tsx`; l ancien detail runtime est conserve hors rendu pendant la transition catalogue.
+- 2026-04-19: le cas `natal / interpretation / free` est desormais aligne sur le use case effectivement execute (`natal_long_free`) dans la vue admin resolved; le graphe ne signale plus un faux ecart `canonique / runtime` pour cette cible.
 - Le passage `light` -> `dark` ne doit plus creer d ambiguite sur ce qui est lecture principale, lecture secondaire, etat critique ou action.
 - Les surfaces admin doivent conserver un niveau de contraste compatible avec une lecture de travail prolongee, en particulier dans les tableaux, diffs et meta informations.
 
@@ -165,6 +166,8 @@ gpt-5
 - Validation implementation:
   - `npm run test -- --run src/tests/AdminPage.test.tsx src/tests/AdminPromptsPage.test.tsx src/tests/theme-tokens.test.ts`
   - `npm run lint`
+  - `.\.venv\Scripts\Activate.ps1; pytest -q backend\tests\integration\test_admin_llm_catalog.py -k "effective_runtime_use_case_for_natal_free or resolved_detail_exposes_sources_pipeline_and_placeholders"`
+  - `npm run test -- --run src/tests/AdminPromptsCatalogFlow.test.tsx`
 
 ### Completion Notes List
 
@@ -179,6 +182,7 @@ gpt-5
 - Une classe de shell admin large a ete ajoutee au layout applicatif pour desserrer `/admin/*` sans impacter les autres pages, puis les surfaces admin light ont ete eclaircies pour supprimer le grand panneau sombre encore visible en mode day.
 - Le catalogue `/admin/prompts/catalog` a ete remanie vers un flux plus operatoire: selection minimale `feature / formule / locale`, affichage du schema React Flow des prompts actifs, puis modale de lecture/edition au clic sur un noeud.
 - L interaction React Flow a ete corrigee pour supprimer le crash de handles, permettre le drag unitaire des noeuds, conserver le pan du canvas, et ouvrir la modale depuis `onNodeClick` sans bloquer les gestes souris.
+- Le cas `natal free` n est plus presente comme une divergence artificielle dans le catalogue: la vue resolved admin s aligne maintenant sur `natal_long_free`, qui est deja le use case reellement execute et celui attendu par les scripts de convergence existants.
 
 ### File List
 
@@ -196,6 +200,8 @@ gpt-5
 - frontend/src/tests/AdminPromptsPage.test.tsx
 - frontend/src/tests/AdminPromptsCatalogFlow.test.tsx
 - frontend/src/tests/theme-tokens.test.ts
+- backend/app/api/v1/routers/admin_llm.py
+- backend/tests/integration/test_admin_llm_catalog.py
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 
 ## Change Log
@@ -205,3 +211,4 @@ gpt-5
 - 2026-04-19 : cloture des findings de review sur `resolved` et `legacy`, avec revalidation frontend et passage de la story en `done`.
 - 2026-04-19 : seconde passe sur constat navigateur reel pour lever la borne `app-bg-container` sur `/admin/*` et eclaircir le rendu day du shell admin.
 - 2026-04-19 : evolution du catalogue prompts vers un schema React Flow interactif avec modale par noeud, puis correction des regressions d interaction (boucle React, handles React Flow, drag noeud/canvas).
+- 2026-04-19 : alignement final de la vue admin resolved sur le use case runtime reel `natal_long_free` pour `natal / interpretation / free`, avec suppression du faux signal d ecart dans le graphe catalogue.

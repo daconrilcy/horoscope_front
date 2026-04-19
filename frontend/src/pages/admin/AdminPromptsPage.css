@@ -285,6 +285,10 @@
   margin-bottom: var(--space-3);
 }
 
+.admin-prompts-modal__body {
+  min-height: 0;
+}
+
 .admin-prompts-modal__eyebrow {
   margin: 0 0 var(--space-2);
   font-size: var(--font-size-xs);
@@ -297,6 +301,28 @@
 .admin-prompts-modal--catalog-node {
   max-width: min(1120px, calc(100vw - 3rem));
   width: min(1120px, calc(100vw - 3rem));
+  max-height: min(90vh, 980px);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(1rem, 1.5vw, 1.5rem);
+}
+
+.admin-prompts-modal--catalog-node .admin-prompts-modal__header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding-bottom: var(--space-3);
+  margin-bottom: 0;
+  background: inherit;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.admin-prompts-modal__body--catalog-node {
+  overflow-y: auto;
+  padding-top: var(--space-3);
+  padding-right: var(--space-1);
 }
 
 .admin-prompts-modal__meta--catalog-node {
@@ -1089,6 +1115,23 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
+.admin-prompts-logic-graph__node-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-admin-warning-border);
+  background: var(--color-admin-warning-surface);
+  color: var(--color-admin-ink-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .admin-prompts-logic-graph__node--interactive {
   width: 100%;
   color: inherit;
@@ -1740,6 +1783,7 @@
   gap: var(--space-4);
   border-color: var(--color-admin-info-border);
   background: var(--color-admin-surface-soft);
+  min-height: 0;
 }
 
 .admin-prompts-editor__header {
@@ -1816,7 +1860,8 @@
 }
 
 .admin-prompts-editor__field textarea {
-  min-height: 15rem;
+  min-height: clamp(12rem, 28vh, 18rem);
+  max-height: 42vh;
   resize: vertical;
 }
 
@@ -1852,6 +1897,10 @@
 .admin-prompts-editor__actions {
   display: flex;
   justify-content: flex-end;
+  position: sticky;
+  bottom: 0;
+  padding-top: var(--space-3);
+  background: linear-gradient(to bottom, transparent, var(--color-admin-surface-soft) 24%);
 }
 
 .admin-prompts-legacy__field--inline {
@@ -2016,6 +2065,17 @@
   }
 
   .admin-prompts-legacy__diff-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-prompts-modal--catalog-node {
+    width: min(calc(100vw - 1rem), 100%);
+    max-height: calc(100vh - 1rem);
+    padding: 0.875rem;
+  }
+
+  .admin-prompts-modal--catalog-node .admin-prompts-modal__header {
     flex-direction: column;
     align-items: stretch;
   }

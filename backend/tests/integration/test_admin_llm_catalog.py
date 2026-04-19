@@ -655,6 +655,117 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
         db.close()
 
 
+def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_natal_free():
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    manifest_entry_id = "natal:interpretation:free:fr-FR"
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    use_case_key = f"natal_interpretation_short_{uuid.uuid4().hex[:8]}"
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Interprétation Natale (Courte)",
+                description="Prompt natal canonique free",
+            )
+        )
+        db.flush()
+        template_model = LlmPromptVersionModel(
+            id=template_id,
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+            model="gpt-5",
+            temperature=0.2,
+            max_output_tokens=900,
+            created_by="test-admin",
+        )
+        db.add(template_model)
+        assembly_model = PromptAssemblyConfigModel(
+            id=assembly_id,
+            feature="natal",
+            subfeature="interpretation",
+            plan="free",
+            locale="fr-FR",
+            feature_template_ref=template_id,
+            execution_profile_ref=profile_id,
+            execution_config={
+                "model": "gpt-5",
+                "temperature": None,
+                "max_output_tokens": 900,
+                "timeout_seconds": 30,
+            },
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+        assembly_model.feature_template = template_model
+        db.add(assembly_model)
+        db.add(
+            LlmExecutionProfileModel(
+                id=profile_id,
+                name="natal-free-profile",
+                provider="openai",
+                model="gpt-5",
+                reasoning_profile="off",
+                verbosity_profile="balanced",
+                output_mode="free_text",
+                tool_mode="none",
+                max_output_tokens=1000,
+                timeout_seconds=60,
+                feature="natal",
+                subfeature="interpretation",
+                plan="free",
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-natal-free-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
+            **serialize_orm(assembly_model),
+            "_feature_template": serialize_orm(template_model),
+        }
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
+        assert response.status_code == 200
+        payload = response.json()["data"]
+        assert payload["use_case_key"] == "natal_long_free"
+        assert payload["runtime_use_case_key"] == "natal_long_free"
+    finally:
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.execute(delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id))
+        db.execute(delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id))
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
+        db.commit()
+        db.close()
+
+
 def test_admin_llm_catalog_resolved_detail_returns_explicit_error_on_unusable_snapshot_bundle():
     db = open_app_db_session()
     client = TestClient(app)

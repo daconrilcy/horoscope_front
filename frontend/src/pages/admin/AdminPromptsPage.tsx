@@ -811,6 +811,8 @@ export function AdminPromptsPage() {
   const selectedLegacyUseCase = useCases.find((item) => item.key === legacyUseCaseKey) ?? null
   const selectedCatalogUseCase =
     useCases.find((item) => item.key === (resolvedQuery.data?.use_case_key ?? "")) ?? null
+  const selectedRuntimeCatalogUseCase =
+    useCases.find((item) => item.key === (resolvedQuery.data?.runtime_use_case_key ?? "")) ?? null
   const apiActiveId = selectedLegacyUseCase?.active_prompt_version_id
   const activeLegacyVersion =
     apiActiveId != null && String(apiActiveId).length > 0
@@ -841,9 +843,23 @@ export function AdminPromptsPage() {
       : null
   const logicGraph =
     resolvedQuery.data && selectedCatalogUseCase
-      ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data, selectedCatalogUseCase.display_name)
+      ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data, {
+          canonicalDisplayName: selectedCatalogUseCase.display_name,
+          runtimeDisplayName:
+            resolvedQuery.data.runtime_use_case_key &&
+            resolvedQuery.data.runtime_use_case_key !== resolvedQuery.data.use_case_key
+              ? selectedRuntimeCatalogUseCase?.display_name ?? resolvedQuery.data.runtime_use_case_key
+              : null,
+        })
       : resolvedQuery.data
-        ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data, resolvedQuery.data.use_case_key)
+        ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data, {
+            canonicalDisplayName: resolvedQuery.data.use_case_key,
+            runtimeDisplayName:
+              resolvedQuery.data.runtime_use_case_key &&
+              resolvedQuery.data.runtime_use_case_key !== resolvedQuery.data.use_case_key
+                ? resolvedQuery.data.runtime_use_case_key
+                : null,
+          })
         : null
   const selectedCatalogFlowNode =
     logicGraph?.flowNodes.find((node) => node.id === catalogModalNodeId) ?? null

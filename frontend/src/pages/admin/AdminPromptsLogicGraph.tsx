@@ -24,6 +24,7 @@ type LogicFlowNodeData = Record<string, unknown> & {
   title: string
   detail: string
   tone: LogicGraphNodeTone
+  badge?: string
   interactive: boolean
 }
 
@@ -35,8 +36,8 @@ function LogicGraphFlowNode(props: NodeProps<LogicRfNode>) {
   return (
     <div className={className}>
       <Handle type="target" position={Position.Left} />
+      {data.badge ? <span className="admin-prompts-logic-graph__node-badge">{data.badge}</span> : null}
       <strong>{data.title}</strong>
-      <span className="text-muted">{data.detail}</span>
       <Handle type="source" position={Position.Right} />
     </div>
   )
@@ -59,6 +60,7 @@ function projectionToFlow(
       title: n.title,
       detail: n.detail,
       tone: n.tone,
+      badge: n.badge,
       interactive: Boolean(n.interactive && onNodeSelect),
     },
     selectable: false,
@@ -205,8 +207,8 @@ function LogicGraphDenseNodeDetails({ projection }: { projection: LogicGraphProj
             key={node.id}
             className={`admin-prompts-logic-graph__node admin-prompts-logic-graph__node--${node.tone}`}
           >
+            {node.badge ? <span className="admin-prompts-logic-graph__node-badge">{node.badge}</span> : null}
             <strong>{node.title}</strong>
-            <span className="text-muted">{node.detail}</span>
           </article>
         ))}
       </div>
