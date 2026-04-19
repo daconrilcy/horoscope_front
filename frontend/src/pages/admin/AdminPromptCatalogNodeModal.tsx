@@ -83,7 +83,7 @@ export function AdminPromptCatalogNodeModal({
             />
           ) : (
             <section className="admin-prompts-catalog-node-modal__read-only">
-              <h4>Prompt actif</h4>
+              <h4>{node.contentLabel}</h4>
               <pre className="admin-prompts-code">
                 {node.promptContent && node.promptContent.trim().length > 0
                   ? node.promptContent

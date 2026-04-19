@@ -13,10 +13,12 @@ from app.api.dependencies.auth import (
     require_admin_user,
     require_authenticated_user,
 )
+from app.api.v1.routers import admin_llm
 from app.api.v1.routers.admin_llm import ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
@@ -591,6 +593,23 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
         ph_by_name = {p["name"]: p for p in payload["resolved_result"]["placeholders"]}
         assert ph_by_name["last_user_msg"]["status"] == "expected_missing_in_preview"
         assert payload["source_of_truth_status"] == "active_snapshot"
+        assert payload["activation"]["provider_target"] == "openai / gpt-5"
+        assert payload["activation"]["policy_family"] == "astrology"
+        selected_components = {item["key"]: item for item in payload["selected_components"]}
+        assert selected_components["domain_instructions"]["component_type"] == "domain_instructions"
+        assert selected_components["output_contract"]["impact_status"] == "reference_only"
+        assert selected_components["hard_policy"]["merge_mode"] == "system_message"
+        runtime_artifacts = {item["key"]: item for item in payload["runtime_artifacts"]}
+        assert (
+            runtime_artifacts["developer_prompt_assembled"]["artifact_type"]
+            == "developer_prompt_assembled"
+        )
+        assert (
+            runtime_artifacts["developer_prompt_after_injectors"]["injection_point"]
+            == "developer"
+        )
+        assert runtime_artifacts["system_prompt"]["injection_point"] == "system"
+        assert "messages" in runtime_artifacts["final_provider_payload"]["content"]
         assert payload["composition_sources"]["feature_template"]["content"]
         assert payload["composition_sources"]["hard_policy"]["content"]
         assert payload["transformation_pipeline"]["assembled_prompt"] is not None
@@ -667,7 +686,6 @@ def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_n
     assembly_id = uuid.uuid4()
     profile_id = uuid.uuid4()
     use_case_key = f"natal_interpretation_short_{uuid.uuid4().hex[:8]}"
-
     try:
         db.execute(delete(LlmActiveReleaseModel))
         db.add(
@@ -753,14 +771,176 @@ def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_n
         payload = response.json()["data"]
         assert payload["use_case_key"] == "natal_long_free"
         assert payload["runtime_use_case_key"] == "natal_long_free"
+        selected_components = {item["key"]: item for item in payload["selected_components"]}
+        assert "plan_overlay" not in selected_components
+        assert selected_components["use_case_overlay"]["component_type"] == "use_case_overlay"
+        assert selected_components["use_case_overlay"]["editable_use_case_key"] == "natal_long_free"
+        assert selected_components["use_case_overlay"]["content"]
     finally:
+        client.close()
         app.dependency_overrides.clear()
         db.rollback()
         db.execute(delete(LlmActiveReleaseModel))
         db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
-        db.execute(delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id))
-        db.execute(delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id))
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(
+            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
+        )
         db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_resolved_detail_exposes_persona_overlay_and_runtime_delta():
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    manifest_entry_id = "chat:chat_default:premium:fr-FR"
+    snapshot_id = uuid.uuid4()
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    persona_id = uuid.uuid4()
+    use_case_key = f"chat_premium_{uuid.uuid4().hex[:8]}"
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Chat Premium",
+                description="Prompt premium avec persona",
+            )
+        )
+        db.flush()
+        persona = LlmPersonaModel(
+            id=persona_id,
+            code=f"premium-{uuid.uuid4().hex[:6]}",
+            name="Luna Premium",
+            description="Persona premium",
+            style_markers=["empathique"],
+            boundaries=["pas de diagnostic"],
+            allowed_topics=["astrologie"],
+            disallowed_topics=["santé"],
+            formatting={"sections": True, "bullets": False, "emojis": False},
+        )
+        db.add(persona)
+        template_model = LlmPromptVersionModel(
+            id=template_id,
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
+            model="gpt-5",
+            temperature=0.2,
+            max_output_tokens=900,
+            created_by="test-admin",
+        )
+        db.add(template_model)
+        assembly_model = PromptAssemblyConfigModel(
+            id=assembly_id,
+            feature="chat",
+            subfeature="chat_default",
+            plan="premium",
+            locale="fr-FR",
+            feature_template_ref=template_id,
+            persona_ref=persona_id,
+            execution_profile_ref=profile_id,
+            execution_config={
+                "model": "gpt-5",
+                "temperature": None,
+                "max_output_tokens": 900,
+                "timeout_seconds": 30,
+            },
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+        assembly_model.feature_template = template_model
+        assembly_model.persona = persona
+        db.add(assembly_model)
+        db.add(
+            LlmExecutionProfileModel(
+                id=profile_id,
+                name="chat-premium-profile",
+                provider="openai",
+                model="gpt-5",
+                reasoning_profile="medium",
+                verbosity_profile="balanced",
+                output_mode="free_text",
+                tool_mode="none",
+                max_output_tokens=1200,
+                timeout_seconds=60,
+                feature="chat",
+                subfeature="chat_default",
+                plan="premium",
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version="test-chat-premium-v1",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"] = {
+            **serialize_orm(assembly_model),
+            "_feature_template": serialize_orm(template_model),
+            "_persona": serialize_orm(persona),
+        }
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        real_resolve_assembly = admin_llm.resolve_assembly
+
+        def resolve_without_embedded_persona(*args: Any, **kwargs: Any):
+            resolved = real_resolve_assembly(*args, **kwargs)
+            return resolved.model_copy(update={"persona_block": None})
+
+        with patch(
+            "app.api.v1.routers.admin_llm.resolve_assembly",
+            side_effect=resolve_without_embedded_persona,
+        ):
+            response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
+        assert response.status_code == 200
+        payload = response.json()["data"]
+        assert payload["activation"]["persona_policy"] == "enabled"
+        selected_components = {item["key"]: item for item in payload["selected_components"]}
+        assert selected_components["persona_overlay"]["component_type"] == "persona_overlay"
+        assert selected_components["persona_overlay"]["merge_mode"] == "separate_developer_message"
+        assert selected_components["persona_overlay"]["source_label"] == "Luna Premium"
+        runtime_artifacts = {item["key"]: item for item in payload["runtime_artifacts"]}
+        assert "developer_prompt_after_persona" in runtime_artifacts
+        assert (
+            "second message developer"
+            in (runtime_artifacts["developer_prompt_after_persona"]["delta_note"] or "").lower()
+        )
+    finally:
+        client.close()
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(
+            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
+        )
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(delete(LlmPersonaModel).where(LlmPersonaModel.id == persona_id))
         db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
         db.commit()
         db.close()
@@ -842,6 +1022,7 @@ def test_admin_llm_catalog_resolved_detail_returns_explicit_error_on_unusable_sn
         assert payload["code"] == "snapshot_bundle_unusable"
         assert payload["details"]["manifest_entry_id"] == manifest_entry_id
     finally:
+        client.close()
         app.dependency_overrides.clear()
         db.rollback()
         db.execute(delete(LlmActiveReleaseModel))

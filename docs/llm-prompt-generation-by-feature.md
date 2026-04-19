@@ -161,6 +161,28 @@ Le flux réel dans `LLMGateway.execute_request()` est :
 
 Point important : contrairement à des versions antérieures du document, la Stage 0.5 n'est pas "skippée" pour les familles supportées. Elle tourne toujours, mais elle reste best-effort et ne remplace pas les obligations canoniques d'assembly et d'`ExecutionProfile`.
 
+## Lecture admin de référence
+
+La surface admin `/admin/prompts/catalog` doit désormais exposer la chaîne de prompting en **trois niveaux distincts**, sans reconstruire une pipeline pédagogique parallèle :
+
+1. `Activation`
+   - sélection canonique (`feature`, `subfeature`, `plan`, `locale`, `manifest_entry_id`)
+   - snapshot actif
+   - profil d'exécution et cible provider
+   - famille de policy, schéma de sortie, injecteurs et stratégie persona
+2. `Composants sélectionnés`
+   - briques source versionnées ou référencées (`domain instructions`, `use case overlay`, `plan overlay` uniquement s'il existe comme couche distincte, `persona overlay`, `output contract`, `hard policy`, etc.)
+   - un bloc purement nominal ne doit pas être affiché comme prompt autonome
+3. `Artefacts runtime`
+   - états réellement observables au moment de l'appel provider
+   - `developer prompt assembled`
+   - `developer prompt after persona` uniquement si la persona ajoute réellement un message
+   - `developer prompt after injectors`
+   - `system prompt(s)`
+   - `final provider payload`
+
+Règle de lecture : l'admin ne doit plus afficher plusieurs "prompts finaux" textuels successifs si aucun delta n'est observable. Quand la persona ou la hard policy restent envoyées comme messages séparés, leur point d'injection doit être visible explicitement à ce niveau.
+
 ### Registre d'invariants sémantiques exécutable (Story 66.41)
 
 Un registre versionné (`backend/app/llm_orchestration/semantic_invariants_registry.py`, clé `SEMANTIC_INVARIANTS_VERSION`) formalise des invariants d'architecture **bornés** et les confronte au code réel via `SemanticConformityValidator` (`backend/app/llm_orchestration/services/semantic_conformity_validator.py`). La validation sémantique est branchée sur le **même** script CLI que le garde structurel (`backend/scripts/check_doc_conformity.py`), sans second point d'entrée parallèle.

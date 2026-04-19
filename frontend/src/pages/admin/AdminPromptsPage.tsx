@@ -811,8 +811,6 @@ export function AdminPromptsPage() {
   const selectedLegacyUseCase = useCases.find((item) => item.key === legacyUseCaseKey) ?? null
   const selectedCatalogUseCase =
     useCases.find((item) => item.key === (resolvedQuery.data?.use_case_key ?? "")) ?? null
-  const selectedRuntimeCatalogUseCase =
-    useCases.find((item) => item.key === (resolvedQuery.data?.runtime_use_case_key ?? "")) ?? null
   const apiActiveId = selectedLegacyUseCase?.active_prompt_version_id
   const activeLegacyVersion =
     apiActiveId != null && String(apiActiveId).length > 0
@@ -841,26 +839,7 @@ export function AdminPromptsPage() {
     selectedCatalogUseCase?.active_prompt_version_id != null
       ? (catalogHistory.find((item) => item.id === selectedCatalogUseCase.active_prompt_version_id) ?? null)
       : null
-  const logicGraph =
-    resolvedQuery.data && selectedCatalogUseCase
-      ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data, {
-          canonicalDisplayName: selectedCatalogUseCase.display_name,
-          runtimeDisplayName:
-            resolvedQuery.data.runtime_use_case_key &&
-            resolvedQuery.data.runtime_use_case_key !== resolvedQuery.data.use_case_key
-              ? selectedRuntimeCatalogUseCase?.display_name ?? resolvedQuery.data.runtime_use_case_key
-              : null,
-        })
-      : resolvedQuery.data
-        ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data, {
-            canonicalDisplayName: resolvedQuery.data.use_case_key,
-            runtimeDisplayName:
-              resolvedQuery.data.runtime_use_case_key &&
-              resolvedQuery.data.runtime_use_case_key !== resolvedQuery.data.use_case_key
-                ? resolvedQuery.data.runtime_use_case_key
-                : null,
-          })
-        : null
+  const logicGraph = resolvedQuery.data ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data) : null
   const selectedCatalogFlowNode =
     logicGraph?.flowNodes.find((node) => node.id === catalogModalNodeId) ?? null
   const canApplyCatalogSelection = Boolean(
@@ -1048,9 +1027,9 @@ export function AdminPromptsPage() {
               <p className="admin-prompts-catalog__flow-kicker">Catalogue actif</p>
               <h3 className="admin-prompts-catalog__flow-title">Sélectionner un contexte catalogue</h3>
               <p className="admin-prompts-catalog__flow-intro">
-                Commencez par choisir une feature, un abonnement et une locale. Le schéma affiche ensuite la chaîne
-                active jusqu&apos;au prompt rendu final. Cliquez sur un nœud pour ouvrir sa modale d&apos;édition ou
-                de lecture.
+                Commencez par choisir une feature, un abonnement et une locale. Le schéma affiche ensuite
+                l&apos;activation canonique, les composants retenus et les artefacts runtime réellement préparés.
+                Cliquez sur un nœud pour ouvrir sa modale d&apos;édition ou de lecture.
               </p>
             </header>
 
@@ -1205,6 +1184,65 @@ export function AdminPromptsPage() {
                       </dd>
                     </div>
                   </dl>
+                  {resolvedQuery.data ? (
+                    <div className="admin-prompts-catalog-layers">
+                      <section className="admin-prompts-catalog-layer-card" aria-label="Activation">
+                        <h4>Activation</h4>
+                        <dl className="admin-prompts-catalog-layer-card__meta">
+                          <div>
+                            <dt>Manifest</dt>
+                            <dd>
+                              <code>{resolvedQuery.data.activation.manifest_entry_id}</code>
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Provider</dt>
+                            <dd>{resolvedQuery.data.activation.provider_target}</dd>
+                          </div>
+                          <div>
+                            <dt>Policy family</dt>
+                            <dd>{resolvedQuery.data.activation.policy_family}</dd>
+                          </div>
+                          <div>
+                            <dt>Output schema</dt>
+                            <dd>{resolvedQuery.data.activation.output_schema ?? "—"}</dd>
+                          </div>
+                          <div>
+                            <dt>Injecteurs</dt>
+                            <dd>{resolvedQuery.data.activation.injector_set.join(", ") || "—"}</dd>
+                          </div>
+                          <div>
+                            <dt>Persona policy</dt>
+                            <dd>{resolvedQuery.data.activation.persona_policy ?? "—"}</dd>
+                          </div>
+                        </dl>
+                      </section>
+
+                      <section className="admin-prompts-catalog-layer-card" aria-label="Composants sélectionnés">
+                        <h4>Composants sélectionnés</h4>
+                        <ul className="admin-prompts-catalog-layer-card__list">
+                          {resolvedQuery.data.selected_components.map((component) => (
+                            <li key={component.key}>
+                              <strong>{component.title}</strong>
+                              <span>{component.summary}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+
+                      <section className="admin-prompts-catalog-layer-card" aria-label="Artefacts runtime">
+                        <h4>Artefacts runtime</h4>
+                        <ul className="admin-prompts-catalog-layer-card__list">
+                          {resolvedQuery.data.runtime_artifacts.map((artifact) => (
+                            <li key={artifact.key}>
+                              <strong>{artifact.title}</strong>
+                              <span>{artifact.delta_note ?? artifact.summary}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    </div>
+                  ) : null}
                 </section>
 
                 <section className="admin-prompts-catalog__graph-surface" aria-label={tCat.graphZoneAria}>
@@ -1213,8 +1251,8 @@ export function AdminPromptsPage() {
                       <h3 className="admin-prompts-catalog__graph-title">{tCat.graphZoneTitle}</h3>
                       <p className="admin-prompts-catalog__graph-intro text-muted">{tCat.graphIntro}</p>
                     </div>
-                    {selectedCatalogUseCase ? (
-                      <span className="badge badge--info">{selectedCatalogUseCase.display_name}</span>
+                    {resolvedQuery.data ? (
+                      <span className="badge badge--info">{resolvedQuery.data.activation.provider_target}</span>
                     ) : null}
                   </div>
 
@@ -1230,13 +1268,15 @@ export function AdminPromptsPage() {
                         onNodeSelect={(nodeId) => setCatalogModalNodeId(nodeId)}
                       />
                       <p className="admin-prompts-catalog__graph-help text-muted">
-                        Chaque nœud correspond à une couche active. Cliquez dessus pour ouvrir le prompt source ou
-                        éditer le use case publié.
+                        Le graphe sépare l&apos;activation canonique, les composants réellement sélectionnés et les
+                        artefacts runtime envoyés au provider. Cliquez sur un nœud pour inspecter son contenu.
                       </p>
                       <section className="admin-prompts-catalog__final-prompt">
-                        <h4>Prompt rendu final</h4>
+                        <h4>Final provider payload</h4>
                         <pre className="admin-prompts-code">
-                          {resolvedQuery.data.transformation_pipeline.rendered_prompt}
+                          {resolvedQuery.data.runtime_artifacts.find(
+                            (artifact) => artifact.key === "final_provider_payload",
+                          )?.content ?? "Payload final indisponible."}
                         </pre>
                       </section>
                     </>

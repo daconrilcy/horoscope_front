@@ -1,17 +1,12 @@
-import type { AdminResolvedAssemblyView } from "@api"
+import type {
+  AdminResolvedAssemblyView,
+  AdminRuntimeArtifactView,
+  AdminSelectedComponentView,
+} from "@api"
 
 import type { LogicGraphProjection, LogicGraphNodeTone } from "./adminPromptsLogicGraphProjection"
 
-type PromptFlowNodeKind =
-  | "feature_template"
-  | "subfeature_template"
-  | "plan_rules"
-  | "use_case_prompt"
-  | "persona_block"
-  | "hard_policy"
-  | "assembled_prompt"
-  | "post_injectors_prompt"
-  | "rendered_prompt"
+type PromptFlowNodeKind = "activation" | "selected_component" | "runtime_artifact"
 
 export type AdminPromptCatalogFlowNode = {
   id: string
@@ -23,6 +18,7 @@ export type AdminPromptCatalogFlowNode = {
   position: { x: number; y: number }
   promptContent: string | null
   summary: string
+  contentLabel: string
   meta: Array<{ label: string; value: string }>
   editableUseCaseKey: string | null
 }
@@ -31,17 +27,24 @@ export type AdminPromptCatalogFlowProjection = LogicGraphProjection & {
   flowNodes: AdminPromptCatalogFlowNode[]
 }
 
-type UseCaseNodePresentation = {
-  canonicalDisplayName: string
-  runtimeDisplayName: string | null
-}
-
-function toSingleLinePreview(value: string, limit = 88): string {
+function toSingleLinePreview(value: string, limit = 72): string {
   const normalized = value.replace(/\s+/g, " ").trim()
+  if (!normalized) {
+    return "Texte disponible"
+  }
   if (normalized.length <= limit) {
-    return normalized || "Texte disponible"
+    return normalized
   }
   return `${normalized.slice(0, Math.max(limit - 1, 1)).trimEnd()}…`
+}
+
+function toMetaEntries(meta: Record<string, unknown>): Array<{ label: string; value: string }> {
+  return Object.entries(meta)
+    .filter(([, value]) => value !== null && value !== undefined && value !== "")
+    .map(([label, value]) => ({
+      label: label.replace(/_/g, " "),
+      value: typeof value === "string" ? value : JSON.stringify(value),
+    }))
 }
 
 function makeNode(
@@ -53,6 +56,7 @@ function makeNode(
   position: { x: number; y: number },
   promptContent: string | null,
   summary: string,
+  contentLabel: string,
   meta: Array<{ label: string; value: string }>,
   editableUseCaseKey: string | null = null,
   badge?: string,
@@ -67,216 +71,155 @@ function makeNode(
     position,
     promptContent,
     summary,
+    contentLabel,
     meta,
     editableUseCaseKey,
   }
 }
 
+function getComponentTone(component: AdminSelectedComponentView): LogicGraphNodeTone {
+  if (component.component_type === "hard_policy") {
+    return "system"
+  }
+  if (component.component_type === "persona_overlay") {
+    return "neutral"
+  }
+  if (component.impact_status === "reference_only") {
+    return "layer"
+  }
+  return "layer"
+}
+
+function getArtifactTone(artifact: AdminRuntimeArtifactView): LogicGraphNodeTone {
+  if (artifact.artifact_type === "system_prompt" || artifact.artifact_type === "final_provider_payload") {
+    return "system"
+  }
+  return "neutral"
+}
+
 export function buildAdminPromptCatalogFlowProjection(
   resolvedView: AdminResolvedAssemblyView,
-  useCasePresentation: UseCaseNodePresentation,
 ): AdminPromptCatalogFlowProjection {
   const flowNodes: AdminPromptCatalogFlowNode[] = []
   const flowEdges: AdminPromptCatalogFlowProjection["edges"] = []
-  const sourceTargets: string[] = []
-  const pushSourceNode = (
-    node: AdminPromptCatalogFlowNode | null,
-    edgeLabel: string,
-  ) => {
-    if (!node) {
+
+  flowNodes.push(
+    makeNode(
+      "activation",
+      "activation",
+      "Activation",
+      `${resolvedView.activation.feature} / ${resolvedView.activation.plan ?? "—"} / ${resolvedView.activation.locale ?? "—"}`,
+      "layer",
+      { x: 0, y: 210 },
+      null,
+      "Sélection canonique active pour ce contexte runtime.",
+      "Détails d'activation",
+      [
+        { label: "Manifest", value: resolvedView.activation.manifest_entry_id },
+        { label: "Feature", value: resolvedView.activation.feature },
+        { label: "Subfeature", value: resolvedView.activation.subfeature ?? "—" },
+        { label: "Plan", value: resolvedView.activation.plan ?? "—" },
+        { label: "Locale", value: resolvedView.activation.locale ?? "—" },
+        { label: "Execution profile", value: resolvedView.activation.execution_profile ?? "—" },
+        { label: "Provider", value: resolvedView.activation.provider_target },
+        { label: "Policy family", value: resolvedView.activation.policy_family },
+        { label: "Output schema", value: resolvedView.activation.output_schema ?? "—" },
+        { label: "Persona policy", value: resolvedView.activation.persona_policy ?? "—" },
+      ],
+    ),
+  )
+
+  resolvedView.selected_components.forEach((component, index) => {
+    const nodeId = `component-${component.key}`
+    const meta = [
+      ...(component.ref ? [{ label: "Reference", value: component.ref }] : []),
+      ...(component.source_label ? [{ label: "Source", value: component.source_label }] : []),
+      ...(component.version_label ? [{ label: "Version", value: component.version_label }] : []),
+      ...(component.merge_mode ? [{ label: "Merge mode", value: component.merge_mode }] : []),
+      ...toMetaEntries(component.meta),
+    ]
+    flowNodes.push(
+      makeNode(
+        nodeId,
+        "selected_component",
+        component.title,
+        component.content ? toSingleLinePreview(component.content) : component.impact_status,
+        getComponentTone(component),
+        { x: 360, y: 40 + index * 130 },
+        component.content,
+        component.summary,
+        "Composant sélectionné",
+        meta,
+        component.editable_use_case_key,
+        component.impact_status === "reference_only"
+          ? "Reference"
+          : component.impact_status === "absent"
+            ? "Absent"
+            : undefined,
+      ),
+    )
+    flowEdges.push({ from: "activation", to: nodeId, label: "sélectionne" })
+  })
+
+  resolvedView.runtime_artifacts.forEach((artifact, index) => {
+    const nodeId = `artifact-${artifact.key}`
+    const meta = [
+      ...(artifact.injection_point ? [{ label: "Injection", value: artifact.injection_point }] : []),
+      ...toMetaEntries(artifact.meta),
+    ]
+    flowNodes.push(
+      makeNode(
+        nodeId,
+        "runtime_artifact",
+        artifact.title,
+        artifact.content ? toSingleLinePreview(artifact.content) : artifact.change_status,
+        getArtifactTone(artifact),
+        { x: 760 + index * 320, y: 210 },
+        artifact.content,
+        artifact.summary,
+        "Artefact runtime",
+        meta,
+        null,
+        artifact.change_status === "unchanged" ? "No delta" : undefined,
+      ),
+    )
+  })
+
+  const assembledNode = "artifact-developer_prompt_assembled"
+  const afterPersonaNode = "artifact-developer_prompt_after_persona"
+  const afterInjectorsNode = "artifact-developer_prompt_after_injectors"
+  const systemNode = "artifact-system_prompt"
+  const payloadNode = "artifact-final_provider_payload"
+
+  resolvedView.selected_components.forEach((component) => {
+    const nodeId = `component-${component.key}`
+    if (component.component_type === "persona_overlay") {
+      if (flowNodes.some((node) => node.id === afterPersonaNode)) {
+        flowEdges.push({ from: nodeId, to: afterPersonaNode, label: "ajoute persona" })
+      }
       return
     }
-    flowNodes.push(node)
-    sourceTargets.push(node.id)
-    flowEdges.push({ from: node.id, to: "assembledPrompt", label: edgeLabel })
+    if (component.component_type === "hard_policy") {
+      if (flowNodes.some((node) => node.id === systemNode)) {
+        flowEdges.push({ from: nodeId, to: systemNode, label: "injecté en system" })
+      }
+      return
+    }
+    if (flowNodes.some((node) => node.id === assembledNode)) {
+      flowEdges.push({ from: nodeId, to: assembledNode, label: "alimente" })
+    }
+  })
+
+  if (flowNodes.some((node) => node.id === assembledNode) && flowNodes.some((node) => node.id === afterPersonaNode)) {
+    flowEdges.push({ from: assembledNode, to: afterPersonaNode, label: "after persona" })
   }
-
-  const { composition_sources: sources, transformation_pipeline: pipeline } = resolvedView
-
-  pushSourceNode(
-    makeNode(
-      "featureTemplate",
-      "feature_template",
-      "Feature template",
-      sources.feature_template.id,
-      "layer",
-      { x: 0, y: 0 },
-      sources.feature_template.content,
-      "Couche de base activée pour la feature.",
-      [
-        { label: "Feature", value: resolvedView.feature },
-        { label: "Template", value: sources.feature_template.id },
-      ],
-    ),
-    "base",
-  )
-
-  pushSourceNode(
-    sources.subfeature_template
-      ? makeNode(
-          "subfeatureTemplate",
-          "subfeature_template",
-          "Subfeature template",
-          sources.subfeature_template.id,
-          "layer",
-          { x: 0, y: 130 },
-          sources.subfeature_template.content,
-          "Couche active spécifique à la sous-fonction.",
-          [
-            { label: "Subfeature", value: resolvedView.subfeature ?? "—" },
-            { label: "Template", value: sources.subfeature_template.id },
-          ],
-        )
-      : null,
-    "scope",
-  )
-
-  pushSourceNode(
-    sources.plan_rules?.content
-      ? makeNode(
-          "planRules",
-          "plan_rules",
-          "Plan rules",
-          sources.plan_rules.ref ?? (resolvedView.plan ?? "actif"),
-          "layer",
-          { x: 0, y: 260 },
-          sources.plan_rules.content,
-          "Règles de formule injectées dans la chaîne active.",
-          [
-            { label: "Plan", value: resolvedView.plan ?? "—" },
-            { label: "Référence", value: sources.plan_rules.ref ?? "inline" },
-          ],
-        )
-      : null,
-    "plan",
-  )
-
-  pushSourceNode(
-    makeNode(
-      "useCasePrompt",
-      "use_case_prompt",
-      useCasePresentation.runtimeDisplayName &&
-      useCasePresentation.runtimeDisplayName !== useCasePresentation.canonicalDisplayName
-        ? "Prompt use case canonique / runtime"
-        : "Prompt use case",
-      useCasePresentation.runtimeDisplayName &&
-      useCasePresentation.runtimeDisplayName !== useCasePresentation.canonicalDisplayName
-        ? `${useCasePresentation.canonicalDisplayName} -> ${useCasePresentation.runtimeDisplayName}`
-        : useCasePresentation.canonicalDisplayName,
-      "neutral",
-      { x: 0, y: 390 },
-      null,
-      useCasePresentation.runtimeDisplayName &&
-      useCasePresentation.runtimeDisplayName !== useCasePresentation.canonicalDisplayName
-        ? "Le prompt canonique éditable diffère du use case réellement appelé par le runtime pour cette cible."
-        : "Prompt éditable actuellement publié pour ce contexte runtime.",
-      [
-        { label: "Use case canonique", value: resolvedView.use_case_key },
-        ...(resolvedView.runtime_use_case_key &&
-        resolvedView.runtime_use_case_key !== resolvedView.use_case_key
-          ? [{ label: "Use case runtime", value: resolvedView.runtime_use_case_key }]
-          : []),
-        { label: "Manifest", value: resolvedView.manifest_entry_id },
-      ],
-      resolvedView.use_case_key,
-      resolvedView.runtime_use_case_key &&
-        resolvedView.runtime_use_case_key !== resolvedView.use_case_key
-        ? "Runtime different"
-        : undefined,
-    ),
-    "prompt actif",
-  )
-
-  pushSourceNode(
-    sources.persona_block?.content
-      ? makeNode(
-          "personaBlock",
-          "persona_block",
-          "Persona block",
-          sources.persona_block.name ?? "persona",
-          "layer",
-          { x: 360, y: 130 },
-          sources.persona_block.content,
-          "Bloc persona actif dans la chaîne courante.",
-          [
-            { label: "Persona", value: sources.persona_block.name ?? "—" },
-            { label: "ID", value: sources.persona_block.id ?? "—" },
-          ],
-        )
-      : null,
-    "persona",
-  )
-
-  flowNodes.push(
-    makeNode(
-      "hardPolicy",
-      "hard_policy",
-      "Hard policy",
-      sources.hard_policy.safety_profile,
-      "system",
-      { x: 360, y: 260 },
-      sources.hard_policy.content,
-      "Politique stricte injectée avant le rendu final.",
-      [{ label: "Safety profile", value: sources.hard_policy.safety_profile }],
-    ),
-  )
-  flowEdges.push({ from: "hardPolicy", to: "renderedPrompt", label: "contrainte système" })
-
-  flowNodes.push(
-    makeNode(
-      "assembledPrompt",
-      "assembled_prompt",
-      "Prompt assemblé",
-      toSingleLinePreview(pipeline.assembled_prompt),
-      "neutral",
-      { x: 760, y: 170 },
-      pipeline.assembled_prompt,
-      "Chaîne assemblée après composition des couches actives.",
-      [
-        { label: "Context quality", value: resolvedView.context_quality },
-        { label: "Inspection", value: resolvedView.inspection_mode },
-      ],
-    ),
-  )
-  flowNodes.push(
-    makeNode(
-      "postInjectorsPrompt",
-      "post_injectors_prompt",
-      "Après injecteurs",
-      toSingleLinePreview(pipeline.post_injectors_prompt),
-      "neutral",
-      { x: 1110, y: 170 },
-      pipeline.post_injectors_prompt,
-      "Prompt après enrichissements et injecteurs runtime.",
-      [
-        {
-          label: "Compensation",
-          value: resolvedView.resolved_result.context_compensation_status,
-        },
-      ],
-    ),
-  )
-  flowNodes.push(
-    makeNode(
-      "renderedPrompt",
-      "rendered_prompt",
-      "Prompt rendu final",
-      toSingleLinePreview(pipeline.rendered_prompt),
-      "system",
-      { x: 1460, y: 170 },
-      pipeline.rendered_prompt,
-      "Dernier prompt rendu avant envoi au fournisseur.",
-      [
-        {
-          label: "Provider",
-          value: `${sources.execution_profile.provider} / ${sources.execution_profile.model}`,
-        },
-      ],
-    ),
-  )
-
-  flowEdges.push({ from: "assembledPrompt", to: "postInjectorsPrompt", label: "injecteurs" })
-  flowEdges.push({ from: "postInjectorsPrompt", to: "renderedPrompt", label: "rendu final" })
+  flowEdges.push({
+    from: flowNodes.some((node) => node.id === afterPersonaNode) ? afterPersonaNode : assembledNode,
+    to: afterInjectorsNode,
+    label: "after injectors",
+  })
+  flowEdges.push({ from: afterInjectorsNode, to: payloadNode, label: "developer payload" })
+  flowEdges.push({ from: systemNode, to: payloadNode, label: "system payload" })
 
   return {
     nodes: flowNodes.map((node) => ({
@@ -296,12 +239,12 @@ export function buildAdminPromptCatalogFlowProjection(
       resolvedView.active_snapshot_id ?? "",
       resolvedView.active_snapshot_version ?? "",
       resolvedView.use_case_key,
+      resolvedView.runtime_artifacts.length,
     ].join("::"),
     fallbackSummary: [
-      `Contexte: ${resolvedView.feature}/${resolvedView.subfeature ?? "-"}/${resolvedView.plan ?? "-"}/${resolvedView.locale ?? "-"}`,
-      ...sourceTargets.map((nodeId) => `${nodeId} -> assembledPrompt`),
-      "assembledPrompt -> postInjectorsPrompt -> renderedPrompt",
-      "hardPolicy -> renderedPrompt",
+      `Activation: ${resolvedView.activation.feature}/${resolvedView.activation.plan ?? "-"}/${resolvedView.activation.locale ?? "-"}`,
+      ...resolvedView.selected_components.map((component) => `component:${component.key}`),
+      ...resolvedView.runtime_artifacts.map((artifact) => `artifact:${artifact.key}`),
     ],
   }
 }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -302,6 +303,70 @@ class ResolvedResultView(BaseModel):
 AdminInspectionMode = Literal["assembly_preview", "runtime_preview", "live_execution"]
 
 
+class AdminResolvedActivationView(BaseModel):
+    manifest_entry_id: str
+    feature: str
+    subfeature: str | None = None
+    plan: str | None = None
+    locale: str | None = None
+    active_snapshot_id: str | None = None
+    active_snapshot_version: str | None = None
+    execution_profile: str | None = None
+    provider_target: str
+    policy_family: str
+    output_schema: str | None = None
+    injector_set: list[str] = Field(default_factory=list)
+    persona_policy: str | None = None
+
+
+AdminSelectedComponentType = Literal[
+    "domain_instructions",
+    "use_case_overlay",
+    "plan_overlay",
+    "persona_overlay",
+    "output_contract",
+    "style_lexicon_rules",
+    "error_handling_rules",
+    "hard_policy",
+]
+
+
+class AdminSelectedComponentView(BaseModel):
+    key: str
+    component_type: AdminSelectedComponentType
+    title: str
+    content: str | None = None
+    summary: str
+    ref: str | None = None
+    source_label: str | None = None
+    version_label: str | None = None
+    merge_mode: str | None = None
+    impact_status: Literal["active", "inactive", "absent", "reference_only"] = "active"
+    editable_use_case_key: str | None = None
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
+AdminRuntimeArtifactType = Literal[
+    "developer_prompt_assembled",
+    "developer_prompt_after_persona",
+    "developer_prompt_after_injectors",
+    "system_prompt",
+    "final_provider_payload",
+]
+
+
+class AdminRuntimeArtifactView(BaseModel):
+    key: str
+    artifact_type: AdminRuntimeArtifactType
+    title: str
+    content: str | None = None
+    summary: str
+    change_status: Literal["changed", "unchanged", "absent"] = "changed"
+    delta_note: str | None = None
+    injection_point: str | None = None
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
 class AdminResolvedAssemblyView(BaseModel):
     manifest_entry_id: str
     feature: str
@@ -316,6 +381,9 @@ class AdminResolvedAssemblyView(BaseModel):
     source_of_truth_status: str
     active_snapshot_id: str | None = None
     active_snapshot_version: str | None = None
+    activation: AdminResolvedActivationView
+    selected_components: list[AdminSelectedComponentView]
+    runtime_artifacts: list[AdminRuntimeArtifactView]
     composition_sources: ResolvedCompositionSources
     transformation_pipeline: ResolvedTransformationPipeline
     resolved_result: ResolvedResultView
@@ -832,6 +900,44 @@ def _derive_admin_runtime_use_case_key(assembly_model: PromptAssemblyConfigModel
         return "natal_long_free"
 
     return canonical_use_case_key
+
+
+def _get_active_prompt_version_for_use_case(
+    db: Session, use_case_key: str | None
+) -> LlmPromptVersionModel | None:
+    if not use_case_key:
+        return None
+    return (
+        db.execute(
+            select(LlmPromptVersionModel)
+            .where(
+                LlmPromptVersionModel.use_case_key == use_case_key,
+                LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+            )
+            .order_by(
+                desc(LlmPromptVersionModel.published_at),
+                desc(LlmPromptVersionModel.created_at),
+            )
+            .limit(1)
+        )
+        .scalar_one_or_none()
+    )
+
+
+def _json_pretty_admin(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, indent=2, default=str)
+
+
+def _build_admin_developer_message_bundle(
+    *,
+    main_prompt: str,
+    persona_block: str | None,
+    include_persona: bool,
+) -> str:
+    messages: list[str] = [f"[DEVELOPER MESSAGE 1 / main]\n{main_prompt}"]
+    if include_persona and persona_block:
+        messages.append(f"[DEVELOPER MESSAGE 2 / persona overlay]\n{persona_block}")
+    return "\n\n".join(messages)
 
 
 def _anonymize_for_admin_manual_execute(text: str, *, field: str) -> str:
@@ -2056,6 +2162,264 @@ def _build_admin_resolved_catalog_view(
     }
 
     effective_use_case_key = _derive_admin_runtime_use_case_key(assembly_model)
+    active_prompt_version = _get_active_prompt_version_for_use_case(
+        db, effective_use_case_key or assembly_model.feature_template.use_case_key
+    )
+    persona_block_content = resolved.persona_block
+    if not persona_block_content and assembly_model.persona is not None:
+        persona_block_content = compose_persona_block(assembly_model.persona)
+    has_effective_persona_overlay = bool(persona_block_content)
+
+    provider_messages = [
+        {
+            "role": "system",
+            "source": "hard_policy",
+            "content": resolved.policy_layer_content,
+        },
+        {
+            "role": "developer",
+            "source": "assembled_after_injectors",
+            "content": rendered_prompt,
+        },
+    ]
+    if persona_block_content:
+        provider_messages.append(
+            {
+                "role": "developer",
+                "source": "persona_overlay",
+                "content": persona_block_content,
+            }
+        )
+    final_provider_payload = {
+        "messages": provider_messages,
+        "provider": effective_profile_provider,
+        "model": effective_profile_model,
+        "provider_params": execution_profile_view["provider_params"],
+        "render_error": render_error,
+        "inspection_mode": inspection_mode,
+    }
+    selected_components: list[AdminSelectedComponentView] = [
+        AdminSelectedComponentView(
+            key="domain_instructions",
+            component_type="domain_instructions",
+            title="Instructions métier",
+            content=resolved.feature_template_prompt,
+            summary="Bloc source principal résolu depuis le feature template.",
+            ref=str(assembly_model.feature_template_ref),
+            source_label="feature_template",
+            impact_status="active",
+            meta={
+                "feature": assembly_model.feature,
+                "template_ref": str(assembly_model.feature_template_ref),
+            },
+        )
+    ]
+    if active_prompt_version:
+        selected_components.append(
+            AdminSelectedComponentView(
+                key="use_case_overlay",
+                component_type="use_case_overlay",
+                title="Use case overlay",
+                content=active_prompt_version.developer_prompt,
+                summary="Surcharge éditoriale spécifique au use case runtime actif.",
+                ref=str(active_prompt_version.id),
+                source_label=active_prompt_version.use_case_key,
+                version_label=(
+                    active_prompt_version.published_at.isoformat()
+                    if active_prompt_version.published_at
+                    else active_prompt_version.created_at.isoformat()
+                ),
+                impact_status="active",
+                editable_use_case_key=active_prompt_version.use_case_key,
+                meta={
+                    "use_case_key": active_prompt_version.use_case_key,
+                    "status": str(active_prompt_version.status),
+                    "model": active_prompt_version.model,
+                },
+            )
+        )
+    if assembly_model.plan and (
+        resolved.plan_rules_content
+        or assembly_model.plan_rules_ref
+        or not active_prompt_version
+    ):
+        selected_components.append(
+            AdminSelectedComponentView(
+                key="plan_overlay",
+                component_type="plan_overlay",
+                title="Plan overlay",
+                content=resolved.plan_rules_content,
+                summary=(
+                    "Aucun prompt publié distinct n'est trouvé pour cette formule; "
+                    "la couche affichée "
+                    "reflète uniquement les règles d'assembly actuellement observables."
+                ),
+                ref=assembly_model.plan_rules_ref,
+                source_label="assembly_plan_rules",
+                impact_status="active" if resolved.plan_rules_content else "absent",
+                meta={"plan": assembly_model.plan},
+            )
+        )
+    elif resolved.plan_rules_content:
+        selected_components.append(
+            AdminSelectedComponentView(
+                key="plan_overlay",
+                component_type="plan_overlay",
+                title="Plan overlay",
+                content=resolved.plan_rules_content,
+                summary="Règles de formule injectées dans l'assembly actif.",
+                ref=assembly_model.plan_rules_ref,
+                source_label="assembly_plan_rules",
+                impact_status="active",
+                meta={"plan": assembly_model.plan},
+            )
+        )
+    selected_components.append(
+        AdminSelectedComponentView(
+            key="output_contract",
+            component_type="output_contract",
+            title="Output contract",
+            content=None,
+            summary=(
+                "Contrat de sortie résolu pour ce contexte. Référence visible, "
+                "texte non dupliqué dans l'admin."
+            ),
+            ref=str(assembly_model.output_contract_ref)
+                if assembly_model.output_contract_ref is not None
+                else None,
+            source_label="output_schema",
+            impact_status="reference_only",
+            meta={
+                "output_contract_ref": str(assembly_model.output_contract_ref)
+                if assembly_model.output_contract_ref is not None
+                else None
+            },
+        )
+    )
+    if persona_block_content:
+        selected_components.append(
+            AdminSelectedComponentView(
+                key="persona_overlay",
+                component_type="persona_overlay",
+                title="Persona overlay",
+                content=persona_block_content,
+                summary="Persona résolue, injectée comme message developer séparé.",
+                ref=str(assembly_model.persona_ref) if assembly_model.persona_ref else None,
+                source_label=assembly_model.persona.name if assembly_model.persona else None,
+                version_label=(
+                    str(assembly_model.persona.updated_at)
+                    if assembly_model.persona
+                    else None
+                ),
+                merge_mode="separate_developer_message",
+                impact_status="active",
+                meta={
+                    "persona_id": (
+                        str(assembly_model.persona_ref)
+                        if assembly_model.persona_ref
+                        else None
+                    ),
+                    "persona_name": assembly_model.persona.name if assembly_model.persona else None,
+                },
+            )
+        )
+    selected_components.append(
+        AdminSelectedComponentView(
+            key="hard_policy",
+            component_type="hard_policy",
+            title="Hard policy",
+            content=resolved.policy_layer_content,
+            summary="Politique stricte envoyée au provider en message system.",
+            ref="astrology",
+            source_label="system_prompt",
+            merge_mode="system_message",
+            impact_status="active",
+            meta={"safety_profile": "astrology"},
+        )
+    )
+    runtime_artifacts: list[AdminRuntimeArtifactView] = [
+        AdminRuntimeArtifactView(
+            key="developer_prompt_assembled",
+            artifact_type="developer_prompt_assembled",
+            title="Developer prompt assembled",
+            content=assembled_prompt,
+            summary="Premier artefact textuel après assemblage des couches source.",
+            change_status="changed",
+            delta_note="Compose les instructions métier et la surcharge éditoriale active.",
+            injection_point="developer",
+        )
+    ]
+    if persona_block_content:
+        runtime_artifacts.append(
+            AdminRuntimeArtifactView(
+                key="developer_prompt_after_persona",
+                artifact_type="developer_prompt_after_persona",
+                title="Developer prompt after persona",
+                content=_build_admin_developer_message_bundle(
+                    main_prompt=assembled_prompt,
+                    persona_block=persona_block_content,
+                    include_persona=True,
+                ),
+                summary="Vue opératoire des messages developer après ajout de la persona.",
+                change_status="changed",
+                delta_note=(
+                    "La persona n'est pas fusionnée dans le texte principal; "
+                    "elle part comme second message developer."
+                ),
+                injection_point="developer",
+            )
+        )
+    runtime_artifacts.append(
+        AdminRuntimeArtifactView(
+            key="developer_prompt_after_injectors",
+            artifact_type="developer_prompt_after_injectors",
+            title="Developer prompt after injectors",
+            content=_build_admin_developer_message_bundle(
+                main_prompt=post_injectors_prompt,
+                persona_block=persona_block_content,
+                include_persona=bool(persona_block_content),
+            ),
+            summary=(
+                "État developer après compensation context_quality, "
+                "budget et injecteurs runtime."
+            ),
+            change_status=(
+                "unchanged"
+                if post_injectors_prompt.strip() == assembled_prompt.strip()
+                else "changed"
+            ),
+            delta_note=(
+                "Aucun delta textuel observable après injecteurs."
+                if post_injectors_prompt.strip() == assembled_prompt.strip()
+                else "Les injecteurs runtime modifient le message developer principal."
+            ),
+            injection_point="developer",
+        )
+    )
+    runtime_artifacts.append(
+        AdminRuntimeArtifactView(
+            key="system_prompt",
+            artifact_type="system_prompt",
+            title="System prompt(s)",
+            content=resolved.policy_layer_content,
+            summary="Message system réellement préparé pour le provider.",
+            change_status="changed",
+            delta_note="La hard policy est envoyée séparément du developer prompt.",
+            injection_point="system",
+        )
+    )
+    runtime_artifacts.append(
+        AdminRuntimeArtifactView(
+            key="final_provider_payload",
+            artifact_type="final_provider_payload",
+            title="Final provider payload",
+            content=_json_pretty_admin(final_provider_payload),
+            summary="Payload inspectable réellement prêt pour l'appel provider.",
+            change_status="changed",
+            delta_note="Agrège system message, messages developer et paramètres provider traduits.",
+            injection_point="provider",
+        )
+    )
     data = AdminResolvedAssemblyView(
         manifest_entry_id=manifest_entry_id,
         feature=assembly_model.feature,
@@ -2070,6 +2434,31 @@ def _build_admin_resolved_catalog_view(
         source_of_truth_status=source_of_truth_status,
         active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
         active_snapshot_version=active_snapshot.version if active_snapshot else None,
+        activation=AdminResolvedActivationView(
+            manifest_entry_id=manifest_entry_id,
+            feature=assembly_model.feature,
+            subfeature=assembly_model.subfeature,
+            plan=assembly_model.plan,
+            locale=assembly_model.locale,
+            active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
+            active_snapshot_version=active_snapshot.version if active_snapshot else None,
+            execution_profile=execution_profile_view["name"] or execution_profile_view["id"],
+            provider_target=f"{effective_profile_provider} / {effective_profile_model}",
+            policy_family="astrology",
+            output_schema=(
+                str(assembly_model.output_contract_ref)
+                if assembly_model.output_contract_ref is not None
+                else None
+            ),
+            injector_set=[
+                "context_quality_injector",
+                "length_budget_injector" if resolved.length_budget else "length_budget_inactive",
+                "verbosity_instruction" if verbosity_instruction else "verbosity_inactive",
+            ],
+            persona_policy="enabled" if has_effective_persona_overlay else "none",
+        ),
+        selected_components=selected_components,
+        runtime_artifacts=runtime_artifacts,
         composition_sources=ResolvedCompositionSources(
             feature_template={
                 "id": str(assembly_model.feature_template_ref),
@@ -2112,8 +2501,9 @@ def _build_admin_resolved_catalog_view(
             provider_messages={
                 "system_hard_policy": resolved.policy_layer_content,
                 "developer_content_rendered": rendered_prompt,
-                "persona_block": resolved.persona_block,
+                "persona_block": persona_block_content,
                 "execution_parameters": execution_profile_view["provider_params"],
+                "provider_payload_messages": provider_messages,
                 "render_error": render_error,
                 "render_error_kind": render_error_kind,
             },

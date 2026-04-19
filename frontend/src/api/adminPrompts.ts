@@ -164,6 +164,66 @@ export type AdminResolvedPlaceholder = {
 
 export type AdminInspectionMode = "assembly_preview" | "runtime_preview" | "live_execution"
 
+export type AdminResolvedActivationView = {
+  manifest_entry_id: string
+  feature: string
+  subfeature: string | null
+  plan: string | null
+  locale: string | null
+  active_snapshot_id: string | null
+  active_snapshot_version: string | null
+  execution_profile: string | null
+  provider_target: string
+  policy_family: string
+  output_schema: string | null
+  injector_set: string[]
+  persona_policy: string | null
+}
+
+export type AdminSelectedComponentType =
+  | "domain_instructions"
+  | "use_case_overlay"
+  | "plan_overlay"
+  | "persona_overlay"
+  | "output_contract"
+  | "style_lexicon_rules"
+  | "error_handling_rules"
+  | "hard_policy"
+
+export type AdminSelectedComponentView = {
+  key: string
+  component_type: AdminSelectedComponentType
+  title: string
+  content: string | null
+  summary: string
+  ref: string | null
+  source_label: string | null
+  version_label: string | null
+  merge_mode: string | null
+  impact_status: "active" | "inactive" | "absent" | "reference_only"
+  editable_use_case_key: string | null
+  meta: Record<string, unknown>
+}
+
+export type AdminRuntimeArtifactType =
+  | "developer_prompt_assembled"
+  | "developer_prompt_after_persona"
+  | "developer_prompt_after_injectors"
+  | "system_prompt"
+  | "final_provider_payload"
+
+export type AdminRuntimeArtifactView = {
+  key: string
+  artifact_type: AdminRuntimeArtifactType
+  title: string
+  content: string | null
+  summary: string
+  change_status: "changed" | "unchanged" | "absent"
+  delta_note: string | null
+  injection_point: string | null
+  meta: Record<string, unknown>
+}
+
 export type AdminLlmSamplePayload = {
   id: string
   name: string
@@ -227,6 +287,9 @@ export type AdminResolvedAssemblyView = {
   source_of_truth_status: string
   active_snapshot_id: string | null
   active_snapshot_version: string | null
+  activation: AdminResolvedActivationView
+  selected_components: AdminSelectedComponentView[]
+  runtime_artifacts: AdminRuntimeArtifactView[]
   composition_sources: {
     feature_template: { id: string; content: string }
     subfeature_template: { id: string; content: string } | null
