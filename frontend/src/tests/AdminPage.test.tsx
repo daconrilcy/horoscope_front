@@ -169,6 +169,8 @@ describe("AdminPage - Story 65.4", () => {
       // Check for Hub grid presence
       expect(screen.getByRole("region", { name: /Hub d'administration/i })).toBeInTheDocument()
     }, { timeout: 2000 })
+
+    expect(document.querySelector(".app-bg-container--admin")).toBeInTheDocument()
   })
 
   it("displays 10 sections in the sidebar for admin", async () => {
@@ -223,6 +225,7 @@ describe("AdminPage - Story 65.4", () => {
 
   it("expose un shell admin elargi via des tokens dedies", () => {
     const css = readFileSync("src/layouts/AdminLayout.css", "utf8")
+    const backgroundsCss = readFileSync("src/styles/backgrounds.css", "utf8")
 
     expect(css).toContain(".admin-main")
     expect(css).toContain("padding: var(--layout-admin-gutter);")
@@ -230,5 +233,7 @@ describe("AdminPage - Story 65.4", () => {
     expect(css).toContain("max-width: var(--layout-admin-max-width);")
     expect(css).toContain("min-width: 0;")
     expect(css).not.toContain("max-width: 1200px;")
+    expect(backgroundsCss).toContain(".app-bg-container--admin")
+    expect(backgroundsCss).toContain("max-width: min(1880px, calc(100vw - 2 * var(--space-6)));")
   })
 })

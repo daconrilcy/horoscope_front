@@ -285,7 +285,7 @@ describe("Story 70-11 — tokens admin largeur et contraste", () => {
 
     expect(lightInk).toBe("var(--color-text-primary)")
     expect(darkInk).toBe("rgba(245,245,255,0.92)")
-    expect(normalizeCssValue(lightSurface)).toBe("rgba(255,255,255,0.64)")
+    expect(normalizeCssValue(lightSurface)).toBe("rgba(255,255,255,0.82)")
     expect(normalizeCssValue(darkSurface)).toBe("rgba(16,22,42,0.72)")
   })
 

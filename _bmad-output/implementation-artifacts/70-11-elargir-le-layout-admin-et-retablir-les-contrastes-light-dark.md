@@ -170,13 +170,17 @@ gpt-5
 - Les surfaces critiques de `/admin/prompts/*` ont ete remappees sur des tokens admin light/dark explicites pour les encres, surfaces info et surfaces danger, en supprimant les fonds fixes les plus fragiles.
 - Les tests frontend verrouillent maintenant le debridage du shell admin, la grille desktop du master-detail prompts et la presence de tokens admin distincts entre `light` et `dark`.
 - La passe de code review a ferme les reliquats restants sur le bandeau `resolved`, les disclosures associes, les panneaux `legacy` d edition et leurs resumes, afin d eliminer les derniers fonds figes qui cassaient encore le theme clair.
+- Verification navigateur sur `http://localhost:5173/admin/` avec le compte admin fourni: le verrou principal de largeur etait en realite dans `AppLayout`, via `app-bg-container`, et non uniquement dans `.admin-container`.
+- Une classe de shell admin large a ete ajoutee au layout applicatif pour desserrer `/admin/*` sans impacter les autres pages, puis les surfaces admin light ont ete eclaircies pour supprimer le grand panneau sombre encore visible en mode day.
 
 ### File List
 
 - _bmad-output/implementation-artifacts/70-11-elargir-le-layout-admin-et-retablir-les-contrastes-light-dark.md
 - frontend/src/styles/design-tokens.css
 - frontend/src/layouts/AdminLayout.css
+- frontend/src/layouts/AppLayout.tsx
 - frontend/src/pages/admin/AdminPromptsPage.css
+- frontend/src/styles/backgrounds.css
 - frontend/src/tests/AdminPage.test.tsx
 - frontend/src/tests/AdminPromptsPage.test.tsx
 - frontend/src/tests/theme-tokens.test.ts
@@ -187,3 +191,4 @@ gpt-5
 - 2026-04-19 : creation de la story 70.11 pour elargir le shell admin et retablir les contrastes d encre light/dark sur les surfaces admin.
 - 2026-04-19 : implementation de la story 70.11 avec elargissement du shell admin, remapping des surfaces/encres admin prompts et ajout des garde-fous Vitest associes.
 - 2026-04-19 : cloture des findings de review sur `resolved` et `legacy`, avec revalidation frontend et passage de la story en `done`.
+- 2026-04-19 : seconde passe sur constat navigateur reel pour lever la borne `app-bg-container` sur `/admin/*` et eclaircir le rendu day du shell admin.

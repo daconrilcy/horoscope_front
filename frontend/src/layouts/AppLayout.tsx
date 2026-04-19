@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom"
+import { Outlet, useLocation } from "react-router-dom"
 
 import { Header } from "../components/layout/Header"
 import { Sidebar } from "../components/layout/Sidebar"
@@ -9,14 +9,17 @@ import { SidebarProvider, useSidebarContext } from "../state/SidebarContext"
 
 function AppLayoutContent() {
   const { sidebarState } = useSidebarContext()
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith("/admin")
   const mainClassName = sidebarState === "icon-only"
-    ? "app-shell-main app-shell-main--with-sidebar-offset"
-    : "app-shell-main"
+    ? `app-shell-main app-shell-main--with-sidebar-offset${isAdminRoute ? " app-shell-main--admin" : ""}`
+    : `app-shell-main${isAdminRoute ? " app-shell-main--admin" : ""}`
+  const containerClassName = `app-bg-container${isAdminRoute ? " app-bg-container--admin" : ""}`
 
   return (
     <div className="app-shell app-bg">
       <StarfieldBackground />
-      <div className="app-bg-container">
+      <div className={containerClassName}>
         <Header />
         <div className="app-shell-body">
           <Sidebar />

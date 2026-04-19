@@ -1,7 +1,8 @@
 .admin-layout {
   display: flex;
   min-height: calc(100vh - 64px - 64px); /* Subtract header and bottom nav heights if they exist */
-  background-color: var(--bg-base);
+  width: 100%;
+  background-color: transparent;
 }
 
 .admin-sidebar {
@@ -69,6 +70,7 @@
   padding: var(--layout-admin-gutter);
   overflow-y: auto;
   min-width: 0;
+  width: 100%;
 }
 
 .admin-content-header {

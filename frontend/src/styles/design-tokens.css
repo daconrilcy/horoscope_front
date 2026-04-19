@@ -129,9 +129,9 @@
   /* === ADMIN UI === */
   --color-admin-ink-strong: var(--color-text-primary);
   --color-admin-ink-soft: var(--color-text-secondary);
-  --color-admin-surface: rgba(255,255,255,0.64);
-  --color-admin-surface-soft: rgba(255,255,255,0.5);
-  --color-admin-surface-muted: rgba(255,255,255,0.4);
+  --color-admin-surface: rgba(255,255,255,0.82);
+  --color-admin-surface-soft: rgba(255,255,255,0.74);
+  --color-admin-surface-muted: rgba(255,255,255,0.64);
   --color-admin-interactive-hover: rgba(134,108,208,0.1);
   --color-admin-interactive-active: rgba(134,108,208,0.16);
   --color-admin-info-surface: rgba(134,108,208,0.08);
