@@ -285,7 +285,7 @@
 
 .admin-prompts-catalog-master-detail {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 42%);
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 44%);
   gap: var(--space-5);
   align-items: start;
 }
@@ -342,8 +342,8 @@
 .admin-prompts-catalog__active-filters {
   padding: var(--space-2) var(--space-3);
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-info-surface);
 }
 
 .admin-prompts-catalog__active-filters-list {
@@ -367,7 +367,7 @@
   background: transparent;
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
   padding: var(--space-2) var(--space-3);
   cursor: pointer;
   font-weight: 600;
@@ -385,16 +385,16 @@
   gap: var(--space-3);
   padding: var(--space-3);
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-catalog__filters input,
 .admin-prompts-catalog__filters select {
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--color-admin-surface-soft);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
   padding: var(--space-2) var(--space-3);
 }
 
@@ -413,7 +413,8 @@
   padding: var(--space-4);
   border-radius: 16px;
   border: 1px solid var(--glass-border);
-  background: var(--glass);
+  background: var(--color-admin-surface);
+  color: var(--color-admin-ink-strong);
 }
 
 .admin-prompts-catalog-detail-summary__title {
@@ -437,7 +438,7 @@
 
 .admin-prompts-catalog-detail-summary__meta dt {
   margin: 0;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
   font-size: var(--font-size-xs);
 }
 
@@ -478,7 +479,7 @@
 }
 
 .admin-prompts-catalog__row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-admin-interactive-hover);
 }
 
 .admin-prompts-catalog__row--selected {
@@ -504,7 +505,8 @@
 
 .admin-prompts-catalog__table th {
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
+  background: var(--color-admin-surface-soft);
   white-space: nowrap;
 }
 
@@ -540,14 +542,15 @@
   padding: var(--space-2) var(--space-3);
   border-radius: 8px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-admin-surface-soft);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-detail__actions {
   padding: var(--space-3);
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--danger) 22%, var(--glass-border));
-  background: color-mix(in srgb, var(--danger) 5%, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--color-admin-danger-border);
+  background: var(--color-admin-danger-surface);
 }
 
 .admin-prompts-detail__actions-header {
@@ -580,7 +583,7 @@
   border: 1px solid var(--glass-border);
   border-radius: 10px;
   padding: 0 var(--space-2);
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--color-admin-surface-muted);
 }
 
 .admin-prompts-detail__disclosure + .admin-prompts-detail__disclosure {
@@ -621,24 +624,24 @@
   gap: var(--space-2) var(--space-3);
   padding: var(--space-3) var(--space-4);
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-info-surface);
 }
 
 .admin-prompts-resolved__surface-banner-kicker {
   font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-resolved__surface-banner-title {
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
 }
 
 .admin-prompts-resolved__surface-banner-short {
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
   font-size: var(--font-size-sm);
 }
 
@@ -647,12 +650,15 @@
 }
 
 .admin-prompts-resolved__surface-banner--runtime_preview {
-  border-left: 4px solid color-mix(in srgb, var(--danger) 55%, var(--color-primary));
-  background: color-mix(in srgb, var(--danger) 8%, rgba(255, 255, 255, 0.04));
+  border-color: var(--color-admin-danger-border);
+  border-left: 4px solid var(--color-admin-danger-ink);
+  background: var(--color-admin-danger-surface);
 }
 
 .admin-prompts-resolved__surface-banner--live_execution {
+  border-color: var(--color-admin-warning-border);
   border-left: 4px solid var(--warning);
+  background: var(--color-admin-warning-surface);
 }
 
 .admin-prompts-resolved__header {
@@ -682,10 +688,10 @@
 
 .admin-prompts-resolved__mode-select {
   min-width: 220px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--color-admin-surface-soft);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
   padding: var(--space-2) var(--space-3);
 }
 
@@ -694,8 +700,8 @@
   padding: var(--space-2) var(--space-3);
   border-radius: 8px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--color-text-secondary);
+  background: var(--color-admin-surface-soft);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-resolved__manual-exec {
@@ -706,12 +712,12 @@
   padding: var(--space-3);
   border-radius: 8px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-resolved__manual-exec--confirmed-surface {
-  border-color: color-mix(in srgb, var(--danger) 32%, var(--glass-border));
-  background: color-mix(in srgb, var(--danger) 7%, rgba(255, 255, 255, 0.04));
+  border-color: var(--color-admin-danger-border);
+  background: var(--color-admin-danger-surface);
 }
 
 .admin-prompts-resolved__manual-exec-hint {
@@ -737,13 +743,13 @@
   margin: 0 0 var(--space-2);
   padding: var(--space-2) var(--space-3);
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--glass-border));
-  background: color-mix(in srgb, var(--danger) 12%, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-admin-danger-border);
+  background: var(--color-admin-danger-surface);
 }
 
 .admin-prompts-resolved__error-primary {
   margin: 0;
-  color: color-mix(in srgb, var(--danger) 88%, var(--color-text-primary));
+  color: var(--color-admin-danger-ink);
   font-weight: 600;
 }
 
@@ -767,7 +773,7 @@
 }
 
 .admin-prompts-resolved__placeholder-status--neutral {
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-resolved__zones {
@@ -783,7 +789,7 @@
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: var(--space-3);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-resolved__zone h4 {
@@ -826,13 +832,13 @@
   padding: var(--space-2);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-resolved__llm-meta dt {
   margin: 0;
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-resolved__llm-meta dd {
@@ -848,7 +854,7 @@
   padding: var(--space-3);
   border: 1px solid var(--glass-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-logic-graph--in-zone {
@@ -1015,6 +1021,7 @@
   border: 1px solid var(--glass-border);
   border-radius: 10px;
   padding: var(--space-2) var(--space-3);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-resolved__state {
@@ -1022,8 +1029,8 @@
   padding: var(--space-2) var(--space-3);
   border-radius: 8px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--color-text-secondary);
+  background: var(--color-admin-surface-soft);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-resolved__state--warning {
@@ -1049,8 +1056,8 @@
 .admin-prompts-release__surface-header {
   padding: var(--space-4);
   border-radius: 16px;
-  border: 1px solid var(--glass-border);
-  background: color-mix(in srgb, var(--color-primary) 6%, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-info-surface);
 }
 
 .admin-prompts-release__kicker {
@@ -1059,7 +1066,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-release__surface-title {
@@ -1089,7 +1096,7 @@
   margin: 0;
   font-size: var(--font-size-sm);
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
 }
 
 .admin-prompts-release__section-hint {
@@ -1106,7 +1113,7 @@
 .admin-prompts-release__timeline-item {
   border: 1px solid var(--glass-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-admin-surface-soft);
   padding: var(--space-3);
   display: flex;
   flex-direction: column;
@@ -1160,8 +1167,8 @@
   margin: 0 0 var(--space-4);
   padding: var(--space-3);
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-release__compare-card {
@@ -1177,18 +1184,19 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-release__compare-id {
   font-size: var(--font-size-xs);
+  color: var(--color-admin-ink-strong);
   word-break: break-all;
 }
 
 .admin-prompts-release__compare-arrow {
   align-self: center;
   font-size: var(--font-size-lg);
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-release__diff-table-heading {
@@ -1237,8 +1245,8 @@
 .admin-prompts-consumption__surface-header {
   padding: var(--space-4);
   border-radius: 16px;
-  border: 1px solid var(--glass-border);
-  background: color-mix(in srgb, var(--color-primary) 6%, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-info-surface);
 }
 
 .admin-prompts-consumption__kicker {
@@ -1247,7 +1255,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-consumption__surface-title {
@@ -1267,8 +1275,8 @@
   gap: var(--space-4);
   padding: var(--space-4);
   border-radius: 16px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-consumption__toolbar-group {
@@ -1283,7 +1291,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-consumption__toolbar-fields {
@@ -1306,7 +1314,7 @@
   flex-direction: column;
   gap: var(--space-1);
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-consumption__field--grow {
@@ -1321,7 +1329,7 @@
 
 .admin-prompts-consumption__field span {
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
 }
 
 .admin-prompts-consumption__granularity-hint {
@@ -1390,7 +1398,7 @@
 
 .admin-prompts-consumption__table th {
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-admin-surface-soft);
   white-space: nowrap;
 }
 
@@ -1407,7 +1415,7 @@
   padding: var(--space-3);
   border-radius: 12px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-consumption__row-card-head {
@@ -1421,12 +1429,12 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-consumption__row-card-value {
   font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
   word-break: break-word;
 }
 
@@ -1456,7 +1464,7 @@
   gap: var(--space-3);
   padding-top: var(--space-2);
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-consumption__pagination {
@@ -1472,8 +1480,8 @@
   gap: var(--space-3);
   padding: var(--space-4);
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--glass-border));
-  background: color-mix(in srgb, var(--color-primary) 8%, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-info-surface);
 }
 
 .admin-prompts-consumption__investigation-head {
@@ -1497,14 +1505,14 @@
   margin: 0;
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
 }
 
 .admin-prompts-consumption__drill-table-wrap {
   overflow-x: auto;
   border-radius: 12px;
   border: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--color-admin-surface-muted);
 }
 
 .admin-prompts-consumption__drill-table {
@@ -1523,7 +1531,7 @@
 
 .admin-prompts-consumption__drill-table th {
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-admin-surface-soft);
 }
 
 /* Route legacy : investigation hors catalogue */
@@ -1542,8 +1550,8 @@
 .admin-prompts-legacy__surface-header {
   padding: var(--space-4);
   border-radius: 16px;
-  border: 1px solid var(--glass-border);
-  background: color-mix(in srgb, var(--color-primary) 6%, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-admin-info-border);
+  background: var(--color-admin-info-surface);
 }
 
 .admin-prompts-legacy__kicker {
@@ -1552,7 +1560,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-legacy__surface-title {
@@ -1577,8 +1585,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--glass-border));
-  background: color-mix(in srgb, var(--color-primary) 4%, rgba(255, 255, 255, 0.03));
+  border-color: var(--color-admin-info-border);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-editor__header {
@@ -1612,7 +1620,7 @@
 .admin-prompts-editor__meta dt {
   margin: 0;
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-editor__meta dd {
@@ -1640,17 +1648,17 @@
 
 .admin-prompts-editor__field span {
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
 }
 
 .admin-prompts-editor__field input,
 .admin-prompts-editor__field select,
 .admin-prompts-editor__field textarea {
   width: 100%;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--color-admin-surface-muted);
   border: 1px solid var(--glass-border);
   border-radius: 10px;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
   padding: var(--space-3);
 }
 
@@ -1672,7 +1680,7 @@
   padding: var(--space-3);
   border-radius: 12px;
   border: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--color-admin-surface-muted);
 }
 
 .admin-prompts-editor__summary-title {
@@ -1742,13 +1750,13 @@
   border: 1px solid var(--glass-border);
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--color-text-secondary);
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-admin-ink-soft);
+  background: var(--color-admin-surface-soft);
 }
 
 .admin-prompts-legacy__pill--active {
   border-color: color-mix(in srgb, var(--success) 45%, var(--glass-border));
-  color: color-mix(in srgb, var(--success) 88%, var(--color-text-primary));
+  color: var(--success);
   background: color-mix(in srgb, var(--success) 10%, transparent);
 }
 
@@ -1765,7 +1773,7 @@
   margin-top: var(--space-2);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--color-admin-surface-muted);
 }
 
 .admin-prompts-legacy__diff-head {
@@ -1810,7 +1818,7 @@
   padding: var(--space-3);
   border-radius: 12px;
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-admin-surface-soft);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--space-2) var(--space-4);
@@ -1824,7 +1832,7 @@
 .admin-prompts-legacy__meta-strip dt {
   margin: 0;
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-legacy__meta-strip dd {

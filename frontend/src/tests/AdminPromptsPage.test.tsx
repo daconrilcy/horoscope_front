@@ -400,6 +400,7 @@ describe("AdminPromptsPage", () => {
     })
 
     const css = readFileSync("src/pages/admin/AdminPromptsPage.css", "utf8")
+    expect(css).toContain("grid-template-columns: minmax(0, 1.2fr) minmax(360px, 44%);")
     expect(css).toContain("@media (max-width: 1024px)")
     expect(css).toContain(".admin-prompts-catalog-master-detail")
     expect(css).toContain("grid-template-columns: 1fr;")
@@ -407,6 +408,22 @@ describe("AdminPromptsPage", () => {
     expect(css).toContain("position: static;")
     expect(css).toContain(".admin-prompts-catalog__health-cell")
     expect(css).toContain("word-break: break-word;")
+    expect(css).toContain("background: var(--color-admin-surface-soft);")
+    expect(css).toContain("background: var(--color-admin-info-surface);")
+    expect(css).toContain("background: var(--color-admin-danger-surface);")
+    expect(css).toContain(".admin-prompts-resolved__surface-banner")
+    expect(css).toContain(".admin-prompts-editor__field input")
+    expect(css).toContain("background: var(--color-admin-surface-muted);")
+    const resolvedBannerBlock = css.match(/\.admin-prompts-resolved__surface-banner\s*\{[^}]+\}/)?.[0] ?? ""
+    const editorFieldBlock = css.match(/\.admin-prompts-editor__field input,[\s\S]*?\.admin-prompts-editor__field textarea\s*\{[^}]+\}/)?.[0] ?? ""
+    const editorSummaryBlock = css.match(/\.admin-prompts-editor__summary\s*\{[^}]+\}/)?.[0] ?? ""
+
+    expect(resolvedBannerBlock).toContain("background: var(--color-admin-info-surface);")
+    expect(resolvedBannerBlock).not.toContain("background: rgba(255, 255, 255, 0.06);")
+    expect(editorFieldBlock).toContain("background: var(--color-admin-surface-muted);")
+    expect(editorFieldBlock).not.toContain("background: rgba(0, 0, 0, 0.15);")
+    expect(editorSummaryBlock).toContain("background: var(--color-admin-surface-muted);")
+    expect(editorSummaryBlock).not.toContain("background: rgba(0, 0, 0, 0.1);")
   })
 
   it("structure le détail catalogue : ordre des sections, zone Actions et prompts repliables", async () => {

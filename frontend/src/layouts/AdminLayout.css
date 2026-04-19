@@ -7,7 +7,7 @@
 .admin-sidebar {
   width: 260px;
   flex-shrink: 0;
-  background: var(--glass);
+  background: var(--color-admin-surface);
   backdrop-filter: blur(var(--glass-blur));
   border-right: 1px solid var(--glass-border);
   display: flex;
@@ -24,7 +24,7 @@
 .admin-sidebar-logo {
   font-size: var(--font-size-xl);
   font-weight: 700;
-  color: var(--color-text-headline);
+  color: var(--color-admin-ink-strong);
   text-decoration: none;
 }
 
@@ -41,7 +41,7 @@
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   border-radius: 8px;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
   text-decoration: none;
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -49,12 +49,12 @@
 }
 
 .admin-sidebar-link:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--color-admin-interactive-hover);
   color: var(--color-primary);
 }
 
 .admin-sidebar-link--active {
-  background-color: var(--glass-border);
+  background-color: var(--color-admin-interactive-active);
   color: var(--color-primary-strong);
 }
 
@@ -66,8 +66,9 @@
 
 .admin-main {
   flex-grow: 1;
-  padding: var(--space-6);
+  padding: var(--layout-admin-gutter);
   overflow-y: auto;
+  min-width: 0;
 }
 
 .admin-content-header {
@@ -86,8 +87,9 @@
 
 .admin-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--layout-admin-max-width);
   margin: 0 auto;
+  min-width: 0;
 }
 
 .admin-hub {
@@ -106,7 +108,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-8) var(--space-6);
-  background: var(--glass);
+  background: var(--color-admin-surface);
   backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: 16px;
@@ -129,7 +131,7 @@
 .admin-card-label {
   font-size: var(--font-size-base);
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
   text-align: center;
 }
 
@@ -145,7 +147,7 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: var(--space-4);
-  background: var(--glass);
+  background: var(--color-admin-surface);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -158,16 +160,16 @@
 }
 
 .pricing-table th {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-admin-surface-soft);
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .pricing-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-admin-interactive-hover);
 }
 
 .status-active {
@@ -176,13 +178,13 @@
 }
 
 .status-inactive {
-  color: var(--color-text-muted);
+  color: var(--color-admin-ink-soft);
 }
 
 .admin-notice {
   margin-top: var(--space-8);
   padding: var(--space-4);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-admin-surface-soft);
   border-radius: 8px;
   border-left: 4px solid var(--color-primary);
 }
@@ -190,7 +192,7 @@
 .admin-notice h3 {
   margin: 0 0 var(--space-2);
   font-size: 1rem;
-  color: var(--color-text-primary);
+  color: var(--color-admin-ink-strong);
 }
 
 .admin-notice ul {
@@ -199,20 +201,20 @@
 }
 
 .admin-notice li {
-  color: var(--color-text-secondary);
+  color: var(--color-admin-ink-soft);
   margin-bottom: 0.25rem;
 }
 
 .info-note {
   font-size: 0.875rem;
-  color: var(--color-text-muted);
+  color: var(--color-admin-ink-soft);
   margin-top: 0.5rem;
   font-style: italic;
 }
 
 .error-detail {
   font-size: 0.875rem;
-  color: var(--error);
+  color: var(--color-admin-danger-ink);
   margin: 0.5rem 0;
 }
 

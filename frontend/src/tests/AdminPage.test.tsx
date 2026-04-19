@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest"
@@ -218,5 +219,16 @@ describe("AdminPage - Story 65.4", () => {
     await waitFor(() => {
       expect(screen.getByTestId("personas-admin-title")).toHaveTextContent("Personas astrologues")
     })
+  })
+
+  it("expose un shell admin elargi via des tokens dedies", () => {
+    const css = readFileSync("src/layouts/AdminLayout.css", "utf8")
+
+    expect(css).toContain(".admin-main")
+    expect(css).toContain("padding: var(--layout-admin-gutter);")
+    expect(css).toContain(".admin-container")
+    expect(css).toContain("max-width: var(--layout-admin-max-width);")
+    expect(css).toContain("min-width: 0;")
+    expect(css).not.toContain("max-width: 1200px;")
   })
 })

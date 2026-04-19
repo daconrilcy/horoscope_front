@@ -268,3 +268,32 @@ describe("AC#2 — Valeurs exactes des tokens critiques (story 17-10)", () => {
   })
 })
 
+describe("Story 70-11 — tokens admin largeur et contraste", () => {
+  it("declare une largeur shell admin dediee dans :root", () => {
+    const adminWidth = getTokenValue(themeContent, ":root", "--layout-admin-max-width")
+    const adminGutter = getTokenValue(themeContent, ":root", "--layout-admin-gutter")
+
+    expect(adminWidth).toBe("1680px")
+    expect(normalizeCssValue(adminGutter)).toBe("clamp(var(--space-4),2vw,var(--space-8))")
+  })
+
+  it("declare des encres admin critiques distinctes en light et dark", () => {
+    const lightInk = getTokenValue(themeContent, ":root", "--color-admin-ink-strong")
+    const darkInk = getTokenValue(themeContent, ".dark", "--color-admin-ink-strong")
+    const lightSurface = getTokenValue(themeContent, ":root", "--color-admin-surface")
+    const darkSurface = getTokenValue(themeContent, ".dark", "--color-admin-surface")
+
+    expect(lightInk).toBe("var(--color-text-primary)")
+    expect(darkInk).toBe("rgba(245,245,255,0.92)")
+    expect(normalizeCssValue(lightSurface)).toBe("rgba(255,255,255,0.64)")
+    expect(normalizeCssValue(darkSurface)).toBe("rgba(16,22,42,0.72)")
+  })
+
+  it("declare des surfaces semantiques admin pour info et danger dans les deux themes", () => {
+    expect(normalizeCssValue(getTokenValue(themeContent, ":root", "--color-admin-info-surface"))).toBe("rgba(134,108,208,0.08)")
+    expect(normalizeCssValue(getTokenValue(themeContent, ".dark", "--color-admin-info-surface"))).toBe("rgba(161,144,237,0.12)")
+    expect(normalizeCssValue(getTokenValue(themeContent, ":root", "--color-admin-danger-ink"))).toBe("#8f2742")
+    expect(normalizeCssValue(getTokenValue(themeContent, ".dark", "--color-admin-danger-ink"))).toBe("rgba(255,214,225,0.96)")
+  })
+})
+
