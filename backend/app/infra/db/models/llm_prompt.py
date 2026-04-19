@@ -27,7 +27,20 @@ def utc_now() -> datetime:
 class PromptStatus(str, Enum):
     DRAFT = "draft"
     PUBLISHED = "published"
+    INACTIVE = "inactive"
     ARCHIVED = "archived"
+
+    @classmethod
+    def normalize(cls, value: "PromptStatus | str") -> "PromptStatus":
+        if value == cls.ARCHIVED or value == cls.ARCHIVED.value:
+            return cls.INACTIVE
+        if isinstance(value, cls):
+            return value
+        return cls(str(value))
+
+    @classmethod
+    def inactive_values(cls) -> tuple[str, str]:
+        return (cls.INACTIVE.value, cls.ARCHIVED.value)
 
 
 class LlmUseCaseConfigModel(Base):

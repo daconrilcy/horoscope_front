@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
 
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.execution_profiles_types import (
@@ -128,6 +128,10 @@ class LlmPromptVersion(BaseModel):
     published_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("status")
+    def serialize_status(self, status: PromptStatus) -> str:
+        return PromptStatus.normalize(status).value
 
 
 class LlmPromptVersionCreate(BaseModel):

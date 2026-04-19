@@ -97,7 +97,7 @@ def test_publish_archives_previous(db):
     db.refresh(v1)
 
     # Assert
-    assert v1.status == PromptStatus.ARCHIVED
+    assert v1.status == PromptStatus.INACTIVE
     assert v2.status == PromptStatus.PUBLISHED
     active = PromptRegistryV2.get_active_prompt(db, "test_uc")
     assert active.id == v2.id
@@ -112,7 +112,7 @@ def test_rollback(db):
     v1 = LlmPromptVersionModel(
         id=uuid.uuid4(),
         use_case_key="test_uc",
-        status=PromptStatus.ARCHIVED,
+        status=PromptStatus.INACTIVE,
         developer_prompt="P1",
         model="m",
         created_by="u",
@@ -137,7 +137,7 @@ def test_rollback(db):
     # Assert
     assert rolled_back.id == v1.id
     assert rolled_back.status == PromptStatus.PUBLISHED
-    assert v2.status == PromptStatus.ARCHIVED
+    assert v2.status == PromptStatus.INACTIVE
 
 
 def test_cache_ttl(db):
@@ -213,7 +213,7 @@ def test_rollback_prompt_forbidden_for_legacy_daily_prediction(db):
     archived = LlmPromptVersionModel(
         id=uuid.uuid4(),
         use_case_key="daily_prediction",
-        status=PromptStatus.ARCHIVED,
+        status=PromptStatus.INACTIVE,
         developer_prompt="Legacy daily prompt",
         model="gpt-4o-mini",
         created_by="test-user",
@@ -224,3 +224,37 @@ def test_rollback_prompt_forbidden_for_legacy_daily_prediction(db):
 
     with pytest.raises(ValueError, match="forbidden for nominal use"):
         PromptRegistryV2.rollback_prompt(db, "daily_prediction")
+
+
+def test_rollback_supports_legacy_archived_versions(db):
+    uc = LlmUseCaseConfigModel(key="test_uc", display_name="Test", description="Test")
+    db.add(uc)
+    db.commit()
+
+    legacy_archived = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key="test_uc",
+        status=PromptStatus.ARCHIVED,
+        developer_prompt="Legacy archived",
+        model="m",
+        created_by="u",
+        published_at=datetime.now(),
+    )
+    published = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key="test_uc",
+        status=PromptStatus.PUBLISHED,
+        developer_prompt="Current published",
+        model="m",
+        created_by="u",
+        published_at=datetime.now(),
+    )
+    db.add_all([legacy_archived, published])
+    db.commit()
+
+    rolled_back = PromptRegistryV2.rollback_prompt(db, "test_uc")
+    db.refresh(published)
+
+    assert rolled_back.id == legacy_archived.id
+    assert rolled_back.status == PromptStatus.PUBLISHED
+    assert published.status == PromptStatus.INACTIVE

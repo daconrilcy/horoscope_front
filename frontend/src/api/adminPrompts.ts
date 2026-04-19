@@ -921,8 +921,12 @@ export function useAdminPersonaDetail(personaId: string | null, enabled = true) 
 }
 
 export function useRollbackPromptVersion() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: rollbackPromptVersion,
+    onSuccess: async (_data, variables) => {
+      await invalidateAdminPromptQueries(queryClient, variables.useCaseKey)
+    },
   })
 }
 

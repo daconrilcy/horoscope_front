@@ -17,6 +17,7 @@ vi.mock("react-router-dom", async () => {
 
 import { AdminPromptsPage } from "../pages/admin/AdminPromptsPage"
 import { toUtcIsoFromDateTimeInput } from "../api/adminPrompts"
+import { formatLegacyPromptTimestamp } from "../i18n/adminPromptsLegacy"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 
 vi.mock("../pages/admin/PersonasAdmin", () => ({
@@ -1896,6 +1897,47 @@ describe("AdminPromptsPage", () => {
   it("affiche l'onglet historique legacy avec rollback", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
+    const useCasesPayload = [
+      {
+        key: "chat",
+        display_name: "Chat",
+        description: "Conversation astrologique",
+        persona_strategy: "required",
+        safety_profile: "astrology",
+        allowed_persona_ids: [],
+        active_prompt_version_id: "prompt-2",
+      },
+    ]
+
+    const historyPayload = [
+      {
+        id: "prompt-2",
+        use_case_key: "chat",
+        status: "published",
+        developer_prompt: "x",
+        model: "gpt-5",
+        temperature: 0.3,
+        max_output_tokens: 900,
+        fallback_use_case_key: null,
+        created_by: "99",
+        created_at: "2026-04-05T08:00:00Z",
+        published_at: "2026-04-05T09:00:00Z",
+      },
+      {
+        id: "prompt-1",
+        use_case_key: "chat",
+        status: "archived",
+        developer_prompt: "line one old\nline two",
+        model: "gpt-5",
+        temperature: 0.3,
+        max_output_tokens: 900,
+        fallback_use_case_key: null,
+        created_by: "98",
+        created_at: "2026-04-04T08:00:00Z",
+        published_at: "2026-04-04T09:00:00Z",
+      },
+    ]
+
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
       if (url.includes("/v1/admin/llm/catalog")) {
@@ -1914,66 +1956,42 @@ describe("AdminPromptsPage", () => {
       }
       if (url.endsWith("/v1/admin/llm/use-cases")) {
         return makeJsonResponse({
-          data: [
-            {
-              key: "chat",
-              display_name: "Chat",
-              description: "Conversation astrologique",
-              persona_strategy: "required",
-              safety_profile: "astrology",
-              allowed_persona_ids: [],
-              active_prompt_version_id: "prompt-2",
-            },
-          ],
+          data: useCasesPayload,
         })
       }
       if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts")) {
         return makeJsonResponse({
-          data: [
-            {
-              id: "prompt-2",
-              use_case_key: "chat",
-              status: "published",
-              developer_prompt: "x",
-              model: "gpt-5",
-              temperature: 0.3,
-              max_output_tokens: 900,
-              fallback_use_case_key: null,
-              created_by: "99",
-              created_at: "2026-04-05T08:00:00Z",
-              published_at: "2026-04-05T09:00:00Z",
-            },
-            {
-              id: "prompt-1",
-              use_case_key: "chat",
-              status: "archived",
-              developer_prompt: "line one old\nline two",
-              model: "gpt-5",
-              temperature: 0.3,
-              max_output_tokens: 900,
-              fallback_use_case_key: null,
-              created_by: "98",
-              created_at: "2026-04-04T08:00:00Z",
-              published_at: "2026-04-04T09:00:00Z",
-            },
-          ],
+          data: historyPayload,
         })
       }
       if (url.endsWith("/v1/admin/llm/use-cases/chat/rollback")) {
         expect(init?.method).toBe("POST")
+        useCasesPayload[0] = {
+          ...useCasesPayload[0],
+          active_prompt_version_id: "prompt-1",
+        }
+        historyPayload[0] = {
+          ...historyPayload[0],
+          status: "inactive",
+        }
+        historyPayload[1] = {
+          ...historyPayload[1],
+          status: "published",
+          published_at: "2026-04-06T10:30:00Z",
+        }
         return makeJsonResponse({
           data: {
-            id: "prompt-2",
+            id: "prompt-1",
             use_case_key: "chat",
             status: "published",
-            developer_prompt: "x",
+            developer_prompt: "line one old\nline two",
             model: "gpt-5",
             temperature: 0.3,
             max_output_tokens: 900,
             fallback_use_case_key: null,
-            created_by: "99",
-            created_at: "2026-04-05T08:00:00Z",
-            published_at: "2026-04-05T09:00:00Z",
+            created_by: "98",
+            created_at: "2026-04-04T08:00:00Z",
+            published_at: "2026-04-06T10:30:00Z",
           },
         })
       }
@@ -2003,6 +2021,13 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/Restauration effectuée vers/)).toBeInTheDocument()
     })
+    await waitFor(() => {
+      expect(screen.getByText("En production")).toBeInTheDocument()
+    })
+    expect(screen.getAllByText("Publié").length).toBeGreaterThan(0)
+    expect(
+      screen.getByText(`Publication ${formatLegacyPromptTimestamp("2026-04-06T10:30:00Z", "fr")}`),
+    ).toBeInTheDocument()
   })
 
   it("legacy: sans id actif API, pas de badge « en production » et diff en colonne peer", async () => {
@@ -2862,6 +2887,94 @@ describe("AdminPromptsPage", () => {
     expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
     expect(screen.getByText("Statut courant")).toBeInTheDocument()
     expect(screen.getAllByText("Inactive").length).toBeGreaterThan(0)
+  })
+
+  it("legacy: expose la date de publication et la nouvelle version historisée après sauvegarde", async () => {
+    setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
+
+    let historyPayload = [
+      {
+        id: "prompt-published",
+        use_case_key: "chat",
+        status: "published",
+        developer_prompt: "Prompt historique",
+        model: "gpt-5",
+        temperature: 0.7,
+        max_output_tokens: 1200,
+        fallback_use_case_key: null,
+        created_by: "admin@example.com",
+        created_at: "2026-04-17T09:00:00Z",
+        published_at: "2026-04-17T09:05:00Z",
+      },
+    ]
+
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/v1/admin/llm/catalog")) {
+        return makeJsonResponse({
+          data: [],
+          meta: { total: 0, page: 1, page_size: 25, sort_by: "feature", sort_order: "asc", freshness_window_minutes: 120, facets: {} },
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases")) {
+        return makeJsonResponse({
+          data: [
+            {
+              key: "chat",
+              display_name: "Chat guidance",
+              description: "Prompt chat",
+              persona_strategy: "default",
+              safety_profile: "astro",
+              allowed_persona_ids: [],
+              active_prompt_version_id: "prompt-published",
+            },
+          ],
+        })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && !init?.method) {
+        return makeJsonResponse({ data: historyPayload })
+      }
+      if (url.endsWith("/v1/admin/llm/use-cases/chat/prompts") && init?.method === "POST") {
+        historyPayload = [
+          {
+            id: "prompt-draft-new",
+            use_case_key: "chat",
+            status: "draft",
+            developer_prompt: "Prompt historique v2",
+            model: "gpt-5.1",
+            temperature: 0.7,
+            max_output_tokens: 1200,
+            fallback_use_case_key: null,
+            created_by: "admin@example.com",
+            created_at: "2026-04-18T12:00:00Z",
+            published_at: null,
+          },
+          ...historyPayload,
+        ]
+        return makeJsonResponse({ data: historyPayload[0] })
+      }
+      return makeJsonResponse({ error: { code: "not_found", message: "not found" } }, 404)
+    })
+    vi.stubGlobal("fetch", fetchSpy)
+
+    renderPage()
+    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
+
+    expect(screen.getByText(/Publication/)).toBeInTheDocument()
+
+    await userEvent.clear(screen.getByLabelText("Modèle"))
+    await userEvent.type(screen.getByLabelText("Modèle"), "gpt-5.1")
+    await userEvent.clear(screen.getByLabelText("Prompt développeur"))
+    await userEvent.type(screen.getByLabelText("Prompt développeur"), "Prompt historique v2")
+    await userEvent.click(screen.getByRole("button", { name: "Créer une nouvelle version" }))
+
+    expect(
+      await screen.findByText(/Nouvelle version non publiée créée \(prompt-d…\)/),
+    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getAllByText("Brouillon").length).toBeGreaterThan(0)
+    })
   })
 
   it("legacy: relaie les erreurs backend de sauvegarde sans exposer de JSON brut", async () => {

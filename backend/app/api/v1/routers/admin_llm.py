@@ -2841,6 +2841,13 @@ def create_prompt_draft(
             details={},
         )
 
+    previous_version = db.execute(
+        select(LlmPromptVersionModel)
+        .where(LlmPromptVersionModel.use_case_key == key)
+        .order_by(LlmPromptVersionModel.created_at.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+
     lint_result = PromptLint.lint_prompt(
         payload.developer_prompt, use_case_required_placeholders=uc.required_prompt_placeholders
     )
@@ -2875,7 +2882,13 @@ def create_prompt_draft(
         target_type="llm_prompt",
         target_id=str(version.id),
         status="success",
-        details={"use_case_key": key, "model": version.model},
+        details={
+            "use_case_key": key,
+            "model": version.model,
+            "from_version": str(previous_version.id) if previous_version else None,
+            "to_version": str(version.id),
+            "result_status": PromptStatus.normalize(version.status).value,
+        },
     )
     db.commit()
 
@@ -2893,6 +2906,7 @@ async def publish_prompt(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+    previous_published = PromptRegistryV2.get_active_prompt(db, key)
 
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
@@ -2966,6 +2980,9 @@ async def publish_prompt(
             status="success",
             details={
                 "use_case_key": key,
+                "from_version": str(previous_published.id) if previous_published else None,
+                "to_version": str(version.id),
+                "result_status": PromptStatus.normalize(version.status).value,
                 "eval_run": eval_report is not None,
                 "golden_campaign": golden_report is not None,
                 "golden_verdict": golden_report.verdict if golden_report else None,
@@ -3042,6 +3059,7 @@ def rollback_prompt(
                 "use_case_key": key,
                 "from_version": str(previous_version.id) if previous_version else None,
                 "to_version": str(version.id),
+                "result_status": PromptStatus.normalize(version.status).value,
             },
         )
         db.commit()

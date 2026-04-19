@@ -38,10 +38,12 @@ export type AdminPromptsLegacyStrings = {
   metaAuthor: string
   metaCreated: string
   metaId: string
+  metaPublished: string
   statusPublished: string
   statusInactive: string
   statusArchived: string
   statusDraft: string
+  publishedLine: (dateFormatted: string) => string
   modalTitle: string
   modalPublishTarget: string
   modalReplaceActive: string
@@ -94,10 +96,12 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     metaAuthor: "Auteur",
     metaCreated: "Création",
     metaId: "Identifiant",
+    metaPublished: "Publication",
     statusPublished: "Publié",
     statusInactive: "Inactive",
     statusArchived: "Archivé",
     statusDraft: "Brouillon",
+    publishedLine: (dateFormatted) => `Publication ${dateFormatted}`,
     modalTitle: "Confirmer la restauration de version",
     modalPublishTarget:
       "Vous allez publier la version {{code}} ({{status}}) comme prompt actif pour le cas d'usage {{name}} ({{key}}).",
@@ -152,10 +156,12 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     metaAuthor: "Author",
     metaCreated: "Created",
     metaId: "Id",
+    metaPublished: "Published",
     statusPublished: "Published",
     statusInactive: "Inactive",
     statusArchived: "Archived",
     statusDraft: "Draft",
+    publishedLine: (dateFormatted) => `Published ${dateFormatted}`,
     modalTitle: "Confirm version restore",
     modalPublishTarget:
       "You will publish version {{code}} ({{status}}) as the active prompt for use case {{name}} ({{key}}).",
@@ -210,10 +216,12 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     metaAuthor: "Autor",
     metaCreated: "Creación",
     metaId: "Identificador",
+    metaPublished: "Publicación",
     statusPublished: "Publicado",
     statusInactive: "Inactiva",
     statusArchived: "Archivado",
     statusDraft: "Borrador",
+    publishedLine: (dateFormatted) => `Publicación ${dateFormatted}`,
     modalTitle: "Confirmar restauración de versión",
     modalPublishTarget:
       "Publicará la versión {{code}} ({{status}}) como prompt activo para el caso de uso {{name}} ({{key}}).",

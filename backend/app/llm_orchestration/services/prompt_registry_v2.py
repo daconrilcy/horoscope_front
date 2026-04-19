@@ -85,7 +85,7 @@ class PromptRegistryV2:
     def publish_prompt(db: Session, version_id: uuid.UUID) -> LlmPromptVersionModel:
         """
         Publish a prompt version.
-        Automatically archives the previously published version for the same use case.
+        Automatically inactivates the previously published version for the same use case.
         """
         # 1. Get the version to publish
         version = db.get(LlmPromptVersionModel, version_id)
@@ -103,14 +103,14 @@ class PromptRegistryV2:
 
         assert_nominal_feature_allowed(use_case_key)
 
-        # 2. Archive currently published version
+        # 2. Inactivate currently published version while preserving its history.
         db.execute(
             update(LlmPromptVersionModel)
             .where(
                 LlmPromptVersionModel.use_case_key == use_case_key,
                 LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
             )
-            .values(status=PromptStatus.ARCHIVED)
+            .values(status=PromptStatus.INACTIVE)
         )
 
         # 3. Publish the new version
@@ -164,7 +164,7 @@ class PromptRegistryV2:
         target_version_id: uuid.UUID | None = None,
     ) -> LlmPromptVersionModel:
         """
-        Rollback to a specific historical version or the most recent archived version.
+        Rollback to a specific historical version or the most recent inactive legacy version.
         """
         # Story 66.28: Block resurrection of forbidden nominal features (AC5)
         from app.llm_orchestration.feature_taxonomy import assert_nominal_feature_allowed
@@ -186,7 +186,7 @@ class PromptRegistryV2:
                 select(LlmPromptVersionModel)
                 .where(
                     LlmPromptVersionModel.use_case_key == use_case_key,
-                    LlmPromptVersionModel.status == PromptStatus.ARCHIVED,
+                    LlmPromptVersionModel.status.in_(PromptStatus.inactive_values()),
                 )
                 .order_by(LlmPromptVersionModel.published_at.desc())
                 .limit(1)
@@ -194,13 +194,13 @@ class PromptRegistryV2:
             result = db.execute(stmt)
             target_version = result.scalar_one_or_none()
             if not target_version:
-                raise ValueError(f"No archived version found for use case {use_case_key}")
+                raise ValueError(f"No inactive version found for use case {use_case_key}")
 
         if current_published:
             db.execute(
                 update(LlmPromptVersionModel)
                 .where(LlmPromptVersionModel.id == current_published.id)
-                .values(status=PromptStatus.ARCHIVED)
+                .values(status=PromptStatus.INACTIVE)
             )
 
         target_version.status = PromptStatus.PUBLISHED

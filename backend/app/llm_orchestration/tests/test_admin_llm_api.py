@@ -101,6 +101,15 @@ def test_admin_llm_crud_flow():
     version_id = draft_resp.json()["data"]["id"]
     assert draft_resp.json()["data"]["status"] == "draft"
 
+    with SessionLocal() as db:
+        create_event = db.execute(
+            select(AuditEventModel).where(AuditEventModel.action == "llm_prompt_create_draft")
+        ).scalar_one()
+
+    assert create_event.details["use_case_key"] == "test_chat"
+    assert create_event.details["to_version"] == version_id
+    assert create_event.details["from_version"] is None
+
     # 4. List history
     hist_resp = client.get("/v1/admin/llm/use-cases/test_chat/prompts", headers=headers)
     assert hist_resp.status_code == 200
@@ -114,6 +123,15 @@ def test_admin_llm_crud_flow():
     )
     assert pub_resp.status_code == 200
     assert pub_resp.json()["data"]["status"] == "published"
+
+    with SessionLocal() as db:
+        publish_event = db.execute(
+            select(AuditEventModel).where(AuditEventModel.action == "llm_prompt_publish")
+        ).scalar_one()
+
+    assert publish_event.details["use_case_key"] == "test_chat"
+    assert publish_event.details["from_version"] is None
+    assert publish_event.details["to_version"] == version_id
 
     # 6. Verify active prompt in use cases list
     uc_list_resp = client.get("/v1/admin/llm/use-cases", headers=headers)
@@ -131,6 +149,16 @@ def test_admin_llm_crud_flow():
     )
     v2_id = draft2_resp.json()["data"]["id"]
     client.patch(f"/v1/admin/llm/use-cases/test_chat/prompts/{v2_id}/publish", headers=headers)
+
+    hist_after_second_publish = client.get(
+        "/v1/admin/llm/use-cases/test_chat/prompts",
+        headers=headers,
+    )
+    assert hist_after_second_publish.status_code == 200
+    history_rows = hist_after_second_publish.json()["data"]
+    history_by_id = {row["id"]: row for row in history_rows}
+    assert history_by_id[version_id]["status"] == "inactive"
+    assert history_by_id[v2_id]["status"] == "published"
 
     # 8. Rollback
     rb_resp = client.post("/v1/admin/llm/use-cases/test_chat/rollback", headers=headers)
@@ -205,10 +233,8 @@ def test_admin_llm_targeted_rollback():
     assert active is not None
     assert previous is not None
     assert active.status == "published"
-    assert previous.status == "archived"
-    print("DEBUG details:", event.details)
+    assert previous.status == "inactive"
     assert event.details.get("from_version") == v3_id
-
     assert event.details["to_version"] == v1_id
 
 

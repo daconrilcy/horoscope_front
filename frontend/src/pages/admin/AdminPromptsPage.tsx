@@ -221,6 +221,12 @@ function LegacyVersionMetaStrip({ version, headingId, variant, legacy, lang }: L
             <code>{version.id}</code>
           </dd>
         </div>
+        {version.published_at ? (
+          <div>
+            <dt>{legacy.metaPublished}</dt>
+            <dd>{formatLegacyPromptTimestamp(version.published_at, lang)}</dd>
+          </div>
+        ) : null}
       </dl>
     </div>
   )
@@ -782,8 +788,6 @@ export function AdminPromptsPage() {
     })
     setLegacyRollbackCandidate(null)
     setSuccessMessage(interpolateLegacyTemplate(tLegacy.successRestore, { short: restoredShort }))
-    await queryClient.invalidateQueries({ queryKey: ["admin-llm-prompt-history", legacyUseCaseKey] })
-    await queryClient.invalidateQueries({ queryKey: ["admin-llm-catalog"] })
   }
 
   const handleLegacyCreateDraft = async (payload: AdminPromptDraftCreateInput) => {
@@ -2164,6 +2168,13 @@ export function AdminPromptsPage() {
                                   formatLegacyPromptTimestamp(version.created_at, lang),
                                 )}
                               </p>
+                              {version.published_at ? (
+                                <p className="admin-prompts-history__copy text-muted">
+                                  {tLegacy.publishedLine(
+                                    formatLegacyPromptTimestamp(version.published_at, lang),
+                                  )}
+                                </p>
+                              ) : null}
                               <code>{version.id}</code>
                             </div>
                             <div className="admin-prompts-history__actions admin-prompts-legacy__version-actions">
