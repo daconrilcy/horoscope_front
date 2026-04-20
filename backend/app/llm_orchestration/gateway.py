@@ -15,6 +15,7 @@ from app.domain.llm.configuration.assemblies import (
     assemble_developer_prompt,
     resolve_assembly,
 )
+from app.domain.llm.configuration.execution_profiles import ExecutionProfileRegistry
 from app.domain.llm.configuration.prompt_versions import get_active_prompt_version
 from app.domain.llm.legacy.bridge import (
     DEPRECATED_USE_CASE_MAPPING,
@@ -26,6 +27,7 @@ from app.domain.llm.legacy.bridge import (
 from app.domain.llm.prompting.context import CommonContextBuilder, QualifiedContext
 from app.domain.llm.prompting.personas import compose_persona_block
 from app.domain.llm.prompting.renderer import PromptRenderer
+from app.domain.llm.runtime.composition import ContextQualityInjector, ProviderParameterMapper
 from app.domain.llm.runtime.fallback import FallbackGovernanceRegistry
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.domain.llm.runtime.validation import ValidationResult, validate_output
@@ -863,10 +865,6 @@ class LLMGateway:
         profile_source = None
         if db:
             try:
-                from app.llm_orchestration.services.execution_profile_registry import (
-                    ExecutionProfileRegistry,
-                )
-
                 # 1. Try from assembly if present
                 if source_base == "assembly" and assembly_db:
                     if assembly_db.execution_profile_ref:
@@ -908,10 +906,6 @@ class LLMGateway:
         ) and not request.flags.test_fallback_active
 
         if profile_db:
-            from app.llm_orchestration.services.provider_parameter_mapper import (
-                ProviderParameterMapper,
-            )
-
             # Profile overrides config/assembly model
             model_id = profile_db.model
             provider = profile_db.provider
@@ -1180,10 +1174,6 @@ class LLMGateway:
 
             # 1. & 2. context_quality blocks and compensation (handled in order in gateway/renderer)
             if request.user_input.feature:
-                from app.llm_orchestration.services.context_quality_injector import (
-                    ContextQualityInjector,
-                )
-
                 (
                     current_prompt,
                     context_quality_injected,

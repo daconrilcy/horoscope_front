@@ -48,3 +48,52 @@ def test_nominal_modules_do_not_import_legacy_directly() -> None:
         "Legacy direct imports detected in nominal perimeter. "
         "Use app.domain.llm.legacy.bridge instead.\n- " + "\n- ".join(violations)
     )
+
+
+def test_runtime_and_bootstrap_modules_do_not_depend_on_legacy_transition_paths() -> None:
+    """
+    Story 70.14 follow-up:
+    canonical runtime/bootstrap entrypoints must not route back through legacy script/service
+    paths for the moved LLM surface.
+    """
+    root = Path(__file__).resolve().parents[2]
+    file_expectations = {
+        root / "app" / "llm_orchestration" / "gateway.py": {
+            "app.llm_orchestration.services.execution_profile_registry",
+            "app.llm_orchestration.services.provider_parameter_mapper",
+            "app.llm_orchestration.services.context_quality_injector",
+        },
+        root / "app" / "ops" / "llm" / "bootstrap" / "seed_29_prompts.py": {
+            "scripts.seed_29_prompts",
+        },
+        root / "app" / "ops" / "llm" / "bootstrap" / "seed_30_8_v3_prompts.py": {
+            "scripts.seed_30_8_v3_prompts",
+        },
+        root / "app" / "ops" / "llm" / "bootstrap" / "seed_30_14_chat_prompt.py": {
+            "scripts.seed_30_14_chat_prompt",
+        },
+    }
+
+    violations: list[str] = []
+    for file_path, forbidden_modules in file_expectations.items():
+        modules = _imported_modules(file_path)
+        for module_name in sorted(modules):
+            if module_name in forbidden_modules:
+                violations.append(f"{file_path.relative_to(root)} imports {module_name}")
+
+    assert not violations, (
+        "Canonical runtime/bootstrap modules still depend on legacy transition paths.\n- "
+        + "\n- ".join(violations)
+    )
+
+
+def test_admin_observability_router_exposes_only_observability_endpoints() -> None:
+    from app.api.v1.routers.admin.llm.observability import router
+
+    paths = sorted(route.path for route in router.routes)
+    assert paths == [
+        "/v1/admin/llm/call-logs",
+        "/v1/admin/llm/call-logs/purge",
+        "/v1/admin/llm/dashboard",
+        "/v1/admin/llm/replay",
+    ]

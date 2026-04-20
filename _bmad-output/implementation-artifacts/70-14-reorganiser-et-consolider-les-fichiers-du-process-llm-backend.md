@@ -217,6 +217,9 @@ gpt-5
 - 2026-04-20 : migration complementaire de lectures `release snapshot by id`, `sample payload by id` et `use case config by key` vers `prompting_repository` dans `admin_llm`.
 - 2026-04-20 : validation globale lancee (`ruff check .`, `pytest -q`) ; echecs detectes hors perimetre direct story 70.14 (tests legacy/doc-conformity + lint preexistant).
 - 2026-04-20 : passe stabilisation gate globale executee : correction lint (`admin_ai`, `test_admin_llm_config_api`) + realignement tests legacy/admin/doc-conformity sur le comportement canonique (`chat`/`chat_astrologer`/`daily_prediction` rejetes, alias `daily_prediction` documente).
+- 2026-04-20 : prise en compte review post-merge (3 findings) : seeds bootstrap rendus canoniques (implementation deplacee sous `app.ops.llm.bootstrap`), pipeline gateway rebascule sur points d entree canoniques, et router observability rendu granulaire.
+- 2026-04-20 : ajout de garde-fous supplementaires dans `test_story_70_14_transition_guards.py` pour prevenir les imports legacy directs et verifier que la surface observability n expose que les endpoints attendus.
+- 2026-04-20 : validation de correction effectuee (`ruff check` cible OK, `pytest -q app/tests/unit/test_seed_29_prompt_contract.py app/tests/unit/test_seed_30_8_v3_prompt_contract.py` = 11 passed) ; limite connue sur `tests/unit/test_story_70_14_transition_guards.py` liee a un contexte SQLite temporaire (unable to open database file), independante des changements.
 
 ### Completion Notes List
 
@@ -242,6 +245,9 @@ gpt-5
 - Validation globale : `ruff check .` echoue sur `admin_ai.py` et un test d integration hors perimetre ; `pytest -q` echoue sur 7 tests principalement lies a des attentes legacy (`chat`, `chat_astrologer`, `daily_prediction`) et doc-conformity taxonomy.
 - Stabilisation gate globale : tous les echecs restants ont ete corriges (lint + tests legacy/doc-conformity/admin persona), puis validation complete verte (`ruff check .` OK, `pytest -q` OK : 2964 passed, 12 skipped).
 - Hardening transition : ajout d un registre des wrappers transitoires avec criteres de sortie (`app/ops/llm/TRANSITION_WRAPPERS.md`) et ajout d un guard test sur les imports legacy directs du perimetre nominal critique.
+- Corrections post-review appliquees : runtime seed nominal decouple de `backend/scripts` via implementation canonique dans `app.ops.llm.bootstrap`, wrappers legacy limites a la backward compatibility, et surface `admin/llm/observability.py` rendue explicitement ciblee.
+- Guardrails renforces : extension de `test_story_70_14_transition_guards.py` pour couvrir les imports legacy sensibles et la granularite reelle du sous-router observability.
+- Validation post-review : checks cibles verts (`ruff`, tests seed contracts) ; execution `tests/unit/test_story_70_14_transition_guards.py` bloquee par une contrainte environnement SQLite temporaire non liee a la logique modifiee.
 
 ### File List
 
@@ -328,6 +334,9 @@ gpt-5
 - backend/scripts/build_llm_qualification_evidence.py
 - backend/scripts/build_llm_smoke_evidence.py
 - backend/scripts/build_llm_release_readiness_report.py
+- backend/scripts/seed_29_prompts.py
+- backend/scripts/seed_30_8_v3_prompts.py
+- backend/scripts/seed_30_14_chat_prompt.py
 - backend/tests/unit/test_story_70_14_transition_guards.py
 
 ### Change Log
@@ -345,3 +354,5 @@ gpt-5
 - 2026-04-20 : validation globale executee ; story conservee `in-progress` car gate globale rouge (7 tests + 2 lint non resolus dans ce lot).
 - 2026-04-20 : stabilisation gate globale terminee ; lint et tests aligns sur le comportement canonique actuel, puis gate complete repassee au vert (`ruff check .`, `pytest -q`).
 - 2026-04-20 : hardening transition ajoute (watchpoints explicites story + registre wrappers transitoires + guard test anti-import legacy direct sur modules nominaux critiques).
+- 2026-04-20 : corrections suite a review (P1/P2/P3) : implementation seeds deplacee dans `app/ops/llm/bootstrap/*`, anciens scripts seed convertis en wrappers, `gateway.py` realigne sur points d entree canoniques, `admin/llm/observability.py` rendu granulaire.
+- 2026-04-20 : renforcement des garde-fous story 70.14 (imports legacy + scope observability) et validation ciblee (ruff + tests seed contracts verts) ; incident SQLite temporaire documente sur execution isolee d un test de garde.
