@@ -187,33 +187,15 @@ class TestAdminLlmNatalPrompts:
         )
         mock_db.get.return_value = uc_mock
 
-        with patch(
-            "app.llm_orchestration.services.prompt_registry_v2.PromptRegistryV2.publish_prompt"
-        ) as mock_publish:
-            mock_publish.side_effect = ValueError(
-                "Feature identifier 'daily_prediction' is forbidden for nominal use."
-            )
-
-            response = test_client.patch(
-                f"/v1/admin/llm/use-cases/{key}/prompts/{version_id}/publish"
-            )
-
-        assert response.status_code == 403
-        assert response.json()["error"]["code"] == "forbidden_feature"
+        response = test_client.patch(f"/v1/admin/llm/use-cases/{key}/prompts/{version_id}/publish")
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "use_case_not_found"
 
     def test_rollback_prompt_forbidden_for_legacy_daily_prediction(self, test_client, mock_db):
         key = "daily_prediction"
         uc_mock = LlmUseCaseConfigModel(key=key, display_name="Legacy Daily", description="...")
         mock_db.get.return_value = uc_mock
 
-        with patch(
-            "app.llm_orchestration.services.prompt_registry_v2.PromptRegistryV2.rollback_prompt"
-        ) as mock_rollback:
-            mock_rollback.side_effect = ValueError(
-                "Feature identifier 'daily_prediction' is forbidden for nominal use."
-            )
-
-            response = test_client.post(f"/v1/admin/llm/use-cases/{key}/rollback")
-
-        assert response.status_code == 403
-        assert response.json()["error"]["code"] == "forbidden_feature"
+        response = test_client.post(f"/v1/admin/llm/use-cases/{key}/rollback")
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "use_case_not_found"

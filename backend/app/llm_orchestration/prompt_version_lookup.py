@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel
+from app.infrastructure.db.repositories.llm.prompting_repository import (
+    get_active_prompt_version as repo_get_active_prompt_version,
+)
 
 
 def get_active_prompt_version(
@@ -23,16 +25,4 @@ def get_active_prompt_version(
         except (ValueError, TypeError):
             return None
 
-    stmt = (
-        select(LlmPromptVersionModel)
-        .where(
-            LlmPromptVersionModel.use_case_key == use_case_key,
-            LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
-        )
-        .order_by(
-            desc(LlmPromptVersionModel.published_at),
-            desc(LlmPromptVersionModel.created_at),
-        )
-        .limit(1)
-    )
-    return db.execute(stmt).scalar_one_or_none()
+    return repo_get_active_prompt_version(db, use_case_key)

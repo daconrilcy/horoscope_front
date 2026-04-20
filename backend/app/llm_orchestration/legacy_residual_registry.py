@@ -24,8 +24,19 @@ from app.llm_orchestration.feature_taxonomy import (
 from app.llm_orchestration.models import FallbackStatus, FallbackType
 from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
 
-_REGISTRY_PATH: Final[Path] = (
+_CANONICAL_REGISTRY_PATH: Final[Path] = (
+    Path(__file__).resolve().parents[1]
+    / "domain"
+    / "llm"
+    / "governance"
+    / "data"
+    / "legacy_residual_registry.json"
+)
+_LEGACY_REGISTRY_PATH: Final[Path] = (
     Path(__file__).resolve().parent / "data" / "legacy_residual_registry.json"
+)
+_REGISTRY_PATH: Final[Path] = (
+    _CANONICAL_REGISTRY_PATH if _CANONICAL_REGISTRY_PATH.is_file() else _LEGACY_REGISTRY_PATH
 )
 
 _SCHEMA_LINE_PATTERN = re.compile(

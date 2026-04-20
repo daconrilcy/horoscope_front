@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
 
+from app.domain.llm.legacy.bridge import DEPRECATED_USE_CASE_MAPPING
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.execution_profiles_types import (
     OutputMode,
@@ -18,7 +19,6 @@ from app.llm_orchestration.feature_taxonomy import (
     normalize_feature,
     normalize_subfeature,
 )
-from app.llm_orchestration.legacy_prompt_runtime import DEPRECATED_USE_CASE_MAPPING
 from app.llm_orchestration.models import is_reasoning_model
 
 

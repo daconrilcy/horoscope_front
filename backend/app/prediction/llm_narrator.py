@@ -10,7 +10,7 @@ from typing import Any
 
 import openai
 
-from app.llm_orchestration.legacy_prompt_runtime import (
+from app.domain.llm.legacy.bridge import (
     get_legacy_max_tokens,
     resolve_legacy_model,
 )
@@ -69,8 +69,8 @@ class LLMNarrator:
         domain_ranking: list[dict[str, Any]] | None = None,
         variant_code: str | None = None,
     ) -> NarratorResult | None:
+        from app.domain.llm.runtime.fallback import FallbackGovernanceRegistry
         from app.llm_orchestration.models import FallbackType
-        from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
         from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
 
         # 0. Governance check (Story 66.21 AC8)

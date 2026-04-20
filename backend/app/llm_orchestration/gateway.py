@@ -10,21 +10,34 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.llm.configuration.assemblies import (
+    AssemblyRegistry,
+    assemble_developer_prompt,
+    resolve_assembly,
+)
+from app.domain.llm.configuration.prompt_versions import get_active_prompt_version
+from app.domain.llm.legacy.bridge import (
+    DEPRECATED_USE_CASE_MAPPING,
+    build_legacy_compat_use_case_config,
+    get_legacy_output_schema,
+    get_legacy_prompt_runtime_entry,
+    resolve_legacy_model,
+)
+from app.domain.llm.prompting.context import CommonContextBuilder, QualifiedContext
+from app.domain.llm.prompting.personas import compose_persona_block
+from app.domain.llm.prompting.renderer import PromptRenderer
+from app.domain.llm.runtime.fallback import FallbackGovernanceRegistry
+from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
+from app.domain.llm.runtime.validation import ValidationResult, validate_output
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
+from app.infrastructure.providers.llm.openai_responses_client import ResponsesClient
 from app.llm_orchestration.admin_models import ResolvedAssembly
 from app.llm_orchestration.feature_taxonomy import (
     assert_nominal_feature_allowed,
     is_supported_feature,
     normalize_feature,
     normalize_subfeature,
-)
-from app.llm_orchestration.legacy_prompt_runtime import (
-    DEPRECATED_USE_CASE_MAPPING,
-    build_legacy_compat_use_case_config,
-    get_legacy_output_schema,
-    get_legacy_prompt_runtime_entry,
-    resolve_legacy_model,
 )
 from app.llm_orchestration.models import (
     ContextCompensationStatus,
@@ -50,22 +63,9 @@ from app.llm_orchestration.models import (
     is_reasoning_model,
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
-from app.llm_orchestration.prompt_version_lookup import get_active_prompt_version
-from app.llm_orchestration.providers.provider_runtime_manager import ProviderRuntimeManager
-from app.llm_orchestration.providers.responses_client import ResponsesClient
-from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
-from app.llm_orchestration.services.assembly_resolver import (
-    assemble_developer_prompt,
-    resolve_assembly,
-)
-from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
 from app.llm_orchestration.services.input_validator import validate_input
 from app.llm_orchestration.services.observability_service import log_call, log_governance_event
-from app.llm_orchestration.services.output_validator import ValidationResult, validate_output
-from app.llm_orchestration.services.persona_composer import compose_persona_block
-from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 from app.llm_orchestration.services.repair_prompter import build_repair_prompt
-from app.prompts.common_context import CommonContextBuilder, QualifiedContext
 
 logger = logging.getLogger(__name__)
 

@@ -53,7 +53,7 @@ async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
             with pytest.raises(GatewayConfigError) as exc:
                 await gateway.execute_request(request, db=MagicMock())
 
-            assert "Mandatory assembly missing for supported chat family" in str(exc.value)
+            assert "Legacy use_case key 'chat_astrologer' is removed" in str(exc.value)
             assert mock_resolve_config.call_count == 0
 
 

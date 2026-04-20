@@ -63,7 +63,11 @@ def test_admin_use_case_update_config():
     headers = {"Authorization": f"Bearer {admin_token}"}
 
     with SessionLocal() as db:
-        uc = LlmUseCaseConfigModel(key="guidance_daily", display_name="Guidance", description="Test")
+        uc = LlmUseCaseConfigModel(
+            key="guidance_daily",
+            display_name="Guidance",
+            description="Test",
+        )
         s = LlmOutputSchemaModel(name="chat_schema", json_schema={"type": "object"})
         db.add_all([uc, s])
         db.commit()
@@ -71,7 +75,7 @@ def test_admin_use_case_update_config():
 
     # Update config
     resp = client.patch(
-            "/v1/admin/llm/use-cases/guidance_daily",
+        "/v1/admin/llm/use-cases/guidance_daily",
         headers=headers,
         json={
             "persona_strategy": "required",
@@ -105,12 +109,12 @@ def test_admin_use_case_list_exposes_legacy_alias_audit():
     with SessionLocal() as db:
         db.add_all(
             [
-                    LlmUseCaseConfigModel(
-                        key="chat",
-                        display_name="Chat",
-                        description="Legacy alias exposed in admin",
-                        fallback_use_case_key="horoscope_daily_free",
-                    ),
+                LlmUseCaseConfigModel(
+                    key="chat",
+                    display_name="Chat",
+                    description="Legacy alias exposed in admin",
+                    fallback_use_case_key="horoscope_daily_free",
+                ),
                 LlmUseCaseConfigModel(
                     key="natal_psy_profile",
                     display_name="Natal Psy Profile",

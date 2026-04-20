@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_families": ["chat", "guidance", "natal", "horoscope_daily"],
+  "universal_placeholders": ["locale", "use_case", "persona_name", "last_user_msg"],
+  "legacy_nominal_feature_aliases": {
+    "natal_interpretation": "natal",
+    "daily_prediction": "horoscope_daily"
+  },
+  "legacy_subfeature_aliases_by_domain": {
+    "natal": {
+      "natal_interpretation": "interpretation"
+    }
+  },
+  "natal_subfeatures_canonical": [
+    "interpretation",
+    "short",
+    "full",
+    "psy_profile",
+    "shadow_integration",
+    "leadership_workstyle",
+    "creativity_joy",
+    "relationship_style",
+    "community_networks",
+    "values_security",
+    "evolution_path"
+  ],
+  "deprecated_use_case_mapping": {},
+  "placeholders_by_family": {
+    "guidance": [
+      {
+        "name": "locale",
+        "classification": "optional_with_fallback",
+        "fallback": "fr-FR"
+      },
+      { "name": "use_case", "classification": "optional" },
+      { "name": "situation", "classification": "required" },
+      { "name": "event_description", "classification": "optional" },
+      { "name": "last_user_msg", "classification": "optional" }
+    ],
+    "natal": [
+      {
+        "name": "locale",
+        "classification": "optional_with_fallback",
+        "fallback": "fr-FR"
+      },
+      { "name": "use_case", "classification": "optional" },
+      { "name": "chart_json", "classification": "required" },
+      { "name": "natal_data", "classification": "required" },
+      { "name": "birth_date", "classification": "optional" },
+      { "name": "birth_time", "classification": "optional" },
+      { "name": "birth_timezone", "classification": "optional" }
+    ],
+    "chat": [
+      {
+        "name": "locale",
+        "classification": "optional_with_fallback",
+        "fallback": "fr-FR"
+      },
+      { "name": "use_case", "classification": "optional" },
+      { "name": "last_user_msg", "classification": "required" },
+      { "name": "persona_name", "classification": "optional" },
+      { "name": "natal_chart_summary", "classification": "optional" }
+    ],
+    "horoscope_daily": [
+      {
+        "name": "locale",
+        "classification": "optional_with_fallback",
+        "fallback": "fr-FR"
+      },
+      { "name": "use_case", "classification": "optional" },
+      { "name": "question", "classification": "optional" },
+      { "name": "last_user_msg", "classification": "optional" }
+    ]
+  },
+  "governed_exceptions": []
+}

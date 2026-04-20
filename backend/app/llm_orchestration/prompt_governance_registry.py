@@ -21,8 +21,19 @@ from app.llm_orchestration.placeholder_policy import PlaceholderDef
 
 logger = logging.getLogger(__name__)
 
-_DATA_FILE: Final[Path] = (
+_CANONICAL_DATA_FILE: Final[Path] = (
+    Path(__file__).resolve().parents[1]
+    / "domain"
+    / "llm"
+    / "governance"
+    / "data"
+    / "prompt_governance_registry.json"
+)
+_LEGACY_DATA_FILE: Final[Path] = (
     Path(__file__).resolve().parent / "data" / "prompt_governance_registry.json"
+)
+_DATA_FILE: Final[Path] = (
+    _CANONICAL_DATA_FILE if _CANONICAL_DATA_FILE.is_file() else _LEGACY_DATA_FILE
 )
 
 NATAL_CANONICAL_FEATURE: Final[str] = "natal"

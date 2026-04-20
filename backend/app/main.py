@@ -15,25 +15,25 @@ from app.ai_engine.routes import router as ai_engine_router
 from app.api.dependencies.auth import UserAuthenticationError
 from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.health import router as health_router
+from app.api.v1.routers.admin.llm.assemblies import router as admin_llm_assembly_router
+from app.api.v1.routers.admin.llm.consumption import router as admin_llm_consumption_router
+from app.api.v1.routers.admin.llm.prompts import (
+    ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
+    ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
+)
+from app.api.v1.routers.admin.llm.prompts import (
+    router as admin_llm_router,
+)
+from app.api.v1.routers.admin.llm.releases import router as admin_llm_release_router
+from app.api.v1.routers.admin.llm.sample_payloads import (
+    router as admin_llm_sample_payloads_router,
+)
 from app.api.v1.routers.admin_ai import router as admin_ai_router
 from app.api.v1.routers.admin_audit import router as admin_audit_router
 from app.api.v1.routers.admin_content import router as admin_content_router
 from app.api.v1.routers.admin_dashboard import router as admin_dashboard_router
 from app.api.v1.routers.admin_entitlements import router as admin_entitlements_router
 from app.api.v1.routers.admin_exports import router as admin_exports_router
-from app.api.v1.routers.admin_llm import (
-    ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
-    ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
-)
-from app.api.v1.routers.admin_llm import (
-    router as admin_llm_router,
-)
-from app.api.v1.routers.admin_llm_assembly import router as admin_llm_assembly_router
-from app.api.v1.routers.admin_llm_consumption import router as admin_llm_consumption_router
-from app.api.v1.routers.admin_llm_release import router as admin_llm_release_router
-from app.api.v1.routers.admin_llm_sample_payloads import (
-    router as admin_llm_sample_payloads_router,
-)
 from app.api.v1.routers.admin_logs import router as admin_logs_router
 from app.api.v1.routers.admin_pdf_templates import router as admin_pdf_templates_router
 from app.api.v1.routers.admin_support import router as admin_support_router
@@ -110,9 +110,9 @@ def _ensure_llm_registry_seeded() -> None:
     from app.infra.db.session import SessionLocal
     from app.llm_orchestration.prompt_version_lookup import get_active_prompt_version
     from app.llm_orchestration.seeds.use_cases_seed import seed_use_cases
-    from scripts.seed_29_prompts import seed_prompts
-    from scripts.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
-    from scripts.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
+    from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
+    from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
+    from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
     def collect_registry_state() -> tuple[bool, bool, int, int, bool, int, bool, bool]:

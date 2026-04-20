@@ -20,6 +20,15 @@ from app.api.dependencies.auth import (
 from app.api.v1.routers.admin_llm_error_codes import AdminLlmErrorCode
 from app.core.request_id import resolve_request_id
 from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
+from app.domain.llm.configuration.assemblies import (
+    AssemblyRegistry,
+    assemble_developer_prompt,
+    resolve_assembly,
+)
+from app.domain.llm.governance.governance import get_prompt_governance_registry
+from app.domain.llm.prompting.personas import compose_persona_block
+from app.domain.llm.prompting.renderer import PromptRenderer
+from app.domain.llm.runtime.composition import ContextQualityInjector, ProviderParameterMapper
 from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
@@ -31,11 +40,25 @@ from app.infra.db.models.llm_prompt import (
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
-from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
+from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
+from app.infrastructure.db.repositories.llm.prompting_repository import (
+    get_active_prompt_version as repo_get_active_prompt_version,
+)
+from app.infrastructure.db.repositories.llm.prompting_repository import (
+    get_latest_active_release_snapshot,
+    get_latest_prompt_version,
+    get_release_snapshot,
+    get_sample_payload,
+    get_use_case_config,
+    list_prompt_versions,
+    list_use_case_configs,
+)
+from app.infrastructure.db.repositories.llm.prompting_repository import (
+    list_release_snapshots_timeline as repo_list_release_snapshots_timeline,
+)
 from app.llm_orchestration.admin_models import (
     AdminUseCaseAudit,
     LlmOutputSchema,
@@ -65,20 +88,10 @@ from app.llm_orchestration.persona_boundary import (
     validate_persona_block,
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
-from app.llm_orchestration.prompt_governance_registry import get_prompt_governance_registry
-from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
-from app.llm_orchestration.services.assembly_resolver import (
-    assemble_developer_prompt,
-    resolve_assembly,
-)
-from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
 from app.llm_orchestration.services.eval_harness import run_eval
 from app.llm_orchestration.services.observability_service import purge_expired_logs
-from app.llm_orchestration.services.persona_composer import compose_persona_block
 from app.llm_orchestration.services.prompt_lint import PromptLint
 from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
-from app.llm_orchestration.services.prompt_renderer import PromptRenderer
-from app.llm_orchestration.services.provider_parameter_mapper import ProviderParameterMapper
 from app.llm_orchestration.services.replay_service import replay
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 
@@ -944,18 +957,7 @@ def _get_active_prompt_version_for_use_case(
 ) -> LlmPromptVersionModel | None:
     if not use_case_key:
         return None
-    return db.execute(
-        select(LlmPromptVersionModel)
-        .where(
-            LlmPromptVersionModel.use_case_key == use_case_key,
-            LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
-        )
-        .order_by(
-            desc(LlmPromptVersionModel.published_at),
-            desc(LlmPromptVersionModel.created_at),
-        )
-        .limit(1)
-    ).scalar_one_or_none()
+    return repo_get_active_prompt_version(db, use_case_key)
 
 
 def _json_pretty_admin(value: Any) -> str:
@@ -1375,8 +1377,7 @@ def list_use_cases(
 ) -> Any:
     request_id = resolve_request_id(request)
 
-    stmt = select(LlmUseCaseConfigModel)
-    use_cases = db.execute(stmt).scalars().all()
+    use_cases = list_use_case_configs(db)
 
     result_data = []
     for uc in use_cases:
@@ -1411,15 +1412,7 @@ def list_release_snapshots_timeline(
 ) -> Any:
     del current_user
     request_id = resolve_request_id(request)
-    snapshots = (
-        db.execute(
-            select(LlmReleaseSnapshotModel).order_by(
-                desc(LlmReleaseSnapshotModel.activated_at), desc(LlmReleaseSnapshotModel.created_at)
-            )
-        )
-        .scalars()
-        .all()
-    )
+    snapshots = repo_list_release_snapshots_timeline(db)
 
     timeline: list[SnapshotTimelineItem] = []
     for snapshot in snapshots:
@@ -1440,8 +1433,8 @@ def get_release_snapshot_diff(
 ) -> Any:
     del current_user
     request_id = resolve_request_id(request)
-    from_snapshot = db.get(LlmReleaseSnapshotModel, from_snapshot_id)
-    to_snapshot = db.get(LlmReleaseSnapshotModel, to_snapshot_id)
+    from_snapshot = get_release_snapshot(db, from_snapshot_id)
+    to_snapshot = get_release_snapshot(db, to_snapshot_id)
     if from_snapshot is None or to_snapshot is None:
         return _error_response(
             status_code=404,
@@ -1488,12 +1481,7 @@ def list_llm_catalog(
     request_id = resolve_request_id(request)
     freshness_window_minutes = 120
 
-    latest_active = db.execute(
-        select(LlmActiveReleaseModel).order_by(desc(LlmActiveReleaseModel.activated_at)).limit(1)
-    ).scalar_one_or_none()
-    active_snapshot = None
-    if latest_active:
-        active_snapshot = db.get(LlmReleaseSnapshotModel, latest_active.release_snapshot_id)
+    active_snapshot = get_latest_active_release_snapshot(db)
 
     release_health = (
         ((active_snapshot.manifest or {}).get("release_health") or {}) if active_snapshot else {}
@@ -1765,16 +1753,11 @@ def _build_admin_resolved_catalog_view(
     sample_payload_id: uuid.UUID | None,
     request_id: str,
 ) -> AdminResolvedAssemblyView | JSONResponse:
-    latest_active = db.execute(
-        select(LlmActiveReleaseModel).order_by(desc(LlmActiveReleaseModel.activated_at)).limit(1)
-    ).scalar_one_or_none()
-    active_snapshot = None
+    active_snapshot = get_latest_active_release_snapshot(db)
     manifest_bundle: dict[str, Any] | None = None
-    if latest_active:
-        active_snapshot = db.get(LlmReleaseSnapshotModel, latest_active.release_snapshot_id)
-        if active_snapshot:
-            manifest_targets = (active_snapshot.manifest or {}).get("targets") or {}
-            manifest_bundle = manifest_targets.get(manifest_entry_id)
+    if active_snapshot:
+        manifest_targets = (active_snapshot.manifest or {}).get("targets") or {}
+        manifest_bundle = manifest_targets.get(manifest_entry_id)
 
     assembly_data = (manifest_bundle or {}).get("assembly") or {}
     profile_data = (manifest_bundle or {}).get("profile") or {}
@@ -1974,7 +1957,7 @@ def _build_admin_resolved_catalog_view(
                     "inspection_mode": inspection_mode,
                 },
             )
-        sample_payload = db.get(LlmSamplePayloadModel, sample_payload_id)
+        sample_payload = get_sample_payload(db, sample_payload_id)
         if sample_payload is None:
             return _error_response(
                 status_code=404,
@@ -2649,7 +2632,7 @@ async def execute_admin_catalog_sample_payload(
                 "blocking_reasons": blocking,
             },
         )
-    sample_row = db.get(LlmSamplePayloadModel, payload.sample_payload_id)
+    sample_row = get_sample_payload(db, payload.sample_payload_id)
     if sample_row is None or not isinstance(sample_row.payload_json, dict):
         return _error_response(
             status_code=404,
@@ -2975,7 +2958,7 @@ def update_use_case_config(
             details={},
         )
 
-    uc = db.get(LlmUseCaseConfigModel, key)
+    uc = get_use_case_config(db, key)
     if not uc:
         return _error_response(
             status_code=404,
@@ -3162,7 +3145,7 @@ def associate_persona(
             details={},
         )
 
-    uc = db.get(LlmUseCaseConfigModel, key)
+    uc = get_use_case_config(db, key)
     if not uc:
         return _error_response(
             status_code=404,
@@ -3254,7 +3237,7 @@ def get_use_case_contract(
             details={},
         )
 
-    uc = db.get(LlmUseCaseConfigModel, key)
+    uc = get_use_case_config(db, key)
     if not uc:
         return _error_response(
             status_code=404,
@@ -3303,12 +3286,7 @@ def list_prompt_history(
     if _is_removed_legacy_use_case_key(key):
         return {"data": [], "meta": {"request_id": request_id}}
 
-    stmt = (
-        select(LlmPromptVersionModel)
-        .where(LlmPromptVersionModel.use_case_key == key)
-        .order_by(LlmPromptVersionModel.created_at.desc())
-    )
-    versions = db.execute(stmt).scalars().all()
+    versions = list_prompt_versions(db, key)
 
     return {
         "data": [LlmPromptVersion.model_validate(v) for v in versions],
@@ -3335,7 +3313,7 @@ def create_prompt_draft(
             details={},
         )
 
-    uc = db.get(LlmUseCaseConfigModel, key)
+    uc = get_use_case_config(db, key)
     if not uc:
         return _error_response(
             status_code=404,
@@ -3357,12 +3335,7 @@ def create_prompt_draft(
             details={},
         )
 
-    previous_version = db.execute(
-        select(LlmPromptVersionModel)
-        .where(LlmPromptVersionModel.use_case_key == key)
-        .order_by(LlmPromptVersionModel.created_at.desc())
-        .limit(1)
-    ).scalar_one_or_none()
+    previous_version = get_latest_prompt_version(db, key)
 
     lint_result = PromptLint.lint_prompt(
         payload.developer_prompt, use_case_required_placeholders=uc.required_prompt_placeholders
@@ -3432,7 +3405,7 @@ async def publish_prompt(
         )
     previous_published = PromptRegistryV2.get_active_prompt(db, key)
 
-    uc = db.get(LlmUseCaseConfigModel, key)
+    uc = get_use_case_config(db, key)
     if not uc:
         return _error_response(
             status_code=404,

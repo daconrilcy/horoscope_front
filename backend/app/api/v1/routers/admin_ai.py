@@ -179,10 +179,6 @@ def get_ai_metrics(
     """
     start_date = _resolve_start_date(period)
 
-    # Base aggregation query
-    # Using case() for error count calculation to be database-neutral
-    error_case = case((LlmCallLogModel.validation_status == LlmValidationStatus.ERROR, 1), else_=0)
-
     stmt = select(LlmCallLogModel).where(LlmCallLogModel.timestamp >= start_date)
 
     results = db.execute(stmt).scalars().all()

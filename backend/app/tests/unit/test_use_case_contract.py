@@ -267,4 +267,4 @@ async def test_input_validation_failure(db_session, monkeypatch):
             db=db_session,
         )
 
-    assert "Mandatory assembly missing for supported chat family" in str(exc.value)
+    assert "Legacy use_case key 'chat' is removed" in str(exc.value)

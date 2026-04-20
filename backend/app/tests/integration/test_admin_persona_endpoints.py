@@ -75,13 +75,17 @@ def test_admin_persona_crud_lifecycle() -> None:
     # Create use case first
     with SessionLocal() as db:
         uc = LlmUseCaseConfigModel(
-            key="chat", display_name="Chat", description="Chat with astrologer"
+            key="guidance_daily",
+            display_name="Guidance",
+            description="Daily guidance",
         )
         db.add(uc)
         db.commit()
 
     assoc_resp = client.patch(
-        "/v1/admin/llm/use-cases/chat/persona", headers=headers, json={"persona_id": persona_id}
+        "/v1/admin/llm/use-cases/guidance_daily/persona",
+        headers=headers,
+        json={"persona_id": persona_id},
     )
     assert assoc_resp.status_code == 200
     assert assoc_resp.json()["data"][0]["allowed_persona_ids"] == [persona_id]

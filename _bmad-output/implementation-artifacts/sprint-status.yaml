@@ -664,6 +664,7 @@ development_status:
   70-10-historiser-comparer-et-auditer-chaque-sauvegarde-de-prompt: review
   70-11-elargir-le-layout-admin-et-retablir-les-contrastes-light-dark: done
   70-12-refondre-la-lecture-admin-des-prompts-en-couches-observables: done
-  70-13-cleaner-le-backend-generation-de-prompt-et-fermer-les-compatibilites-legacy: in-progress
+  70-13-cleaner-le-backend-generation-de-prompt-et-fermer-les-compatibilites-legacy: done
+  70-14-reorganiser-et-consolider-les-fichiers-du-process-llm-backend-de-facon-dry: review
   epic-70-retrospective: backlog
   67-to-69-deferred-work: done

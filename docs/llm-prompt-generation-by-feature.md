@@ -98,6 +98,7 @@ Référence des étapes nommées côté `LLMGateway` (alignement contrôles 66.2
 Compatibilités legacy encore gérées :
 
 - `natal_interpretation` comme feature legacy est mappé vers `natal`
+- `daily_prediction` comme feature legacy est mappé vers `horoscope_daily`
 - les anciennes clés `use_case` runtime supprimées sont désormais retirées du nominal et rejetées explicitement.
 
 ## Registre central de gouvernance (Story 66.42)

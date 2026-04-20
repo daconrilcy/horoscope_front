@@ -10,10 +10,10 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.domain.llm.legacy.bridge import get_legacy_use_case_name
 from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
-from app.llm_orchestration.legacy_prompt_runtime import get_legacy_use_case_name
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import UserBirthProfileService
 from app.services.user_natal_chart_service import UserNatalChartService
