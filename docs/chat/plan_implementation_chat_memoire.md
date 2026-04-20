@@ -258,7 +258,7 @@ Ajouter / garantir :
 - `memory_summary`
 - `memory_facts`
 
-(Le prompt `chat_astrologer` doit apprendre à utiliser ces champs.)
+(Le prompt canonique chat doit apprendre à utiliser ces champs.)
 
 ### 7.3 Gestion `context_too_large`
 Le mapping existe déjà vers `AIEngineAdapterError(code="context_too_large")`.  
@@ -266,9 +266,9 @@ Le chat service doit interpréter ce code et déclencher hard trigger.
 
 ---
 
-## 8) Prompts/use cases — `chat_astrologer` doit “lire la mémoire”
+## 8) Prompts/use cases — le flux chat canonique doit “lire la mémoire”
 
-Dans le prompt du use case `chat_astrologer` (stocké en DB) :
+Dans le prompt du flux chat canonique (stocké en DB) :
 - Injecter explicitement :
   - persona_line
   - memory_summary
@@ -312,7 +312,7 @@ Cas :
 ### 10.2 Integration tests (DB + gateway mock)
 - Mock gateway execute(use_case=chat_memory_compress) renvoie JSON
 - Vérifie update conversation.memory_* en DB
-- Vérifie que chat_astrologer reçoit bien memory_summary/memory_facts
+- Vérifie que le flux chat canonique reçoit bien memory_summary/memory_facts
 
 ### 10.3 Fixtures
 Tes fixtures actuelles peuvent être étendues avec un scénario “long chat” :
@@ -327,7 +327,7 @@ Tes fixtures actuelles peuvent être étendues avec un scénario “long chat”
 2) Déploiement en “shadow mode” (optionnel) :
 - calcule la mémoire et la stocke
 - mais n’injecte pas encore dans prompt
-3) Activer injection mémoire dans prompt `chat_astrologer`
+3) Activer l’injection mémoire dans le prompt chat canonique
 4) Monitor :
 - context_too_large_total doit chuter
 - latence acceptable
@@ -362,7 +362,7 @@ Backfill (optionnel) :
 - [ ] Prompt sécurisé (no PII, pas d’hallucination)
 
 Étape 5 — Prompt chat
-- [ ] Mettre à jour `chat_astrologer` pour utiliser memory_summary/memory_facts
+- [ ] Mettre à jour le prompt chat canonique pour utiliser memory_summary/memory_facts
 
 Étape 6 — Tests + observabilité
 - [ ] Unit tests pipeline memory

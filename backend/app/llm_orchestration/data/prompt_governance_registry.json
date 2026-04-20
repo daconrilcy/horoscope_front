@@ -24,69 +24,7 @@
     "values_security",
     "evolution_path"
   ],
-  "deprecated_use_case_mapping": {
-    "horoscope_daily_free": {
-      "feature": "horoscope_daily",
-      "subfeature": "narration",
-      "plan": "free"
-    },
-    "horoscope_daily_full": {
-      "feature": "horoscope_daily",
-      "subfeature": "narration",
-      "plan": "premium"
-    },
-    "chat": { "feature": "chat", "subfeature": "astrologer", "plan": "free" },
-    "chat_astrologer": {
-      "feature": "chat",
-      "subfeature": "astrologer",
-      "plan": "premium"
-    },
-    "natal_long_free": {
-      "feature": "natal",
-      "subfeature": "natal_interpretation",
-      "plan": "free"
-    },
-    "natal-long-free": {
-      "feature": "natal",
-      "subfeature": "natal_interpretation",
-      "plan": "free"
-    },
-    "natal_interpretation": {
-      "feature": "natal",
-      "subfeature": "natal_interpretation",
-      "plan": "premium"
-    },
-    "natal_interpretation_short": {
-      "feature": "natal",
-      "subfeature": "natal_interpretation",
-      "plan": "free"
-    },
-    "guidance_daily": {
-      "feature": "guidance",
-      "subfeature": "daily",
-      "plan": "free"
-    },
-    "guidance_weekly": {
-      "feature": "guidance",
-      "subfeature": "weekly",
-      "plan": "free"
-    },
-    "guidance_contextual": {
-      "feature": "guidance",
-      "subfeature": "contextual",
-      "plan": "premium"
-    },
-    "event_guidance": {
-      "feature": "guidance",
-      "subfeature": "event",
-      "plan": "premium"
-    },
-    "daily_prediction": {
-      "feature": "horoscope_daily",
-      "subfeature": "narration",
-      "plan": "free"
-    }
-  },
+  "deprecated_use_case_mapping": {},
   "placeholders_by_family": {
     "guidance": [
       {

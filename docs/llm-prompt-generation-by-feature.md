@@ -97,9 +97,8 @@ Référence des étapes nommées côté `LLMGateway` (alignement contrôles 66.2
 
 Compatibilités legacy encore gérées :
 
-- `daily_prediction` est mappé vers `horoscope_daily`
 - `natal_interpretation` comme feature legacy est mappé vers `natal`
-- plusieurs `use_case` historiques sont mappés via `DEPRECATED_USE_CASE_MAPPING` (contenu versionné dans le registre JSON, importé par `app.prompts.catalog`)
+- les anciennes clés `use_case` runtime supprimées sont désormais retirées du nominal et rejetées explicitement.
 
 ## Registre central de gouvernance (Story 66.42)
 
@@ -109,7 +108,7 @@ La taxonomie canonique (familles, aliases nominaux, sous-familles natales), les 
 - **Placeholders** : la gouvernance runtime combine `universal_placeholders` et `placeholders_by_family` ; `PromptRenderer` et `ConfigCoherenceValidator` passent tous deux par `PromptGovernanceRegistry` / `PLACEHOLDER_ALLOWLIST` dérivés du JSON.
 - **Exceptions** : toute entrée dans `governed_exceptions` doit porter owner, justification, périmètre, statut et `review_by` ; une entrée incomplète fait échouer le chargement du registre.
 - **État actuel** : dans l'arbre courant, `governed_exceptions` est vide ; le périmètre autorisé reste donc strictement celui du registre canonique, avec notamment `natal_chart_summary` rétabli comme placeholder `chat` optionnel.
-- **Aliases use_case** : `deprecated_use_case_mapping` alimente `DEPRECATED_USE_CASE_MAPPING` ; toute nouvelle entrée doit y être ajoutée pour passer les garde-fous de cohérence et de non-régression.
+- **Aliases use_case** : `deprecated_use_case_mapping` est désormais vide pour le runtime nominal ; les anciennes clés supprimées restent traitées en rejet explicite.
 
 ## Classes impliquées dans la génération du prompt
 
@@ -147,7 +146,7 @@ La taxonomie canonique (familles, aliases nominaux, sous-familles natales), les 
 
 Le flux réel dans `LLMGateway.execute_request()` est :
 
-1. normaliser tôt les aliases `use_case -> feature/subfeature/plan` via `DEPRECATED_USE_CASE_MAPPING` si `feature` est absente ;
+1. rejeter tôt les anciennes clés `use_case` supprimées et normaliser `feature/subfeature/plan` sur la taxonomie canonique ;
 2. normaliser `feature`, `subfeature` et `plan` ;
 3. fusionner `context` et `extra_context` ;
 4. exécuter une prévalidation Stage 0.5 via `_resolve_legacy_compat_config()` puis `_validate_input()` uniquement pour les chemins legacy hors périmètre supporté ;
@@ -336,7 +335,6 @@ flowchart LR
 Règles centrales :
 
 - `SUPPORTED_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}`
-- `daily_prediction` est un alias normalisé vers `horoscope_daily`
 - `natal_interpretation` en tant que feature est un alias normalisé vers `natal`
 - `normalize_subfeature("natal", "natal_interpretation")` retourne `interpretation`
 - `_normalize_plan_for_assembly()` convertit `premium`, `pro`, `ultra`, `full` en `premium`
@@ -345,7 +343,7 @@ Règles centrales :
 Conséquence :
 
 - la profondeur business est portée par `plan`
-- les anciennes clés `use_case` restent surtout des clés de compatibilité, de fallback legacy et de sélection de fixtures/schémas
+- les anciennes clés `use_case` supprimées ne font plus partie du chemin nominal ; l'entrée doit être canonique.
 
 ## Execution profiles et provider
 
@@ -575,7 +573,7 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 
 | Story | Couverture dans le pipeline actuel |
 |---|---|
-| `66.9` | unification `use_case -> feature/subfeature/plan` via `DEPRECATED_USE_CASE_MAPPING` |
+| `66.9` | unification `use_case -> feature/subfeature/plan` via taxonomie gouvernée |
 | `66.10` | la persona reste une couche de style séparée du developer prompt |
 | `66.11` | `ExecutionProfile` découple texte et exécution |
 | `66.12` | `LengthBudget` agit sur le prompt et potentiellement sur `max_output_tokens` |
@@ -595,7 +593,7 @@ Le document couvre l'epic 66 sous l'angle du pipeline de génération de prompt 
 | `66.25` | `ExecutionObservabilitySnapshot` devient la vue canonique d'observabilité |
 | `66.26` | gouvernance documentaire autour du pipeline |
 | `66.27` | propagation de `context_quality_handled_by_template` et du statut de compensation |
-| `66.28` | absorption de `daily_prediction` dans `horoscope_daily` |
+| `66.28` | convergence du daily sur `horoscope_daily` canonique |
 | `66.29` | extinction du fallback `use_case-first` sur le périmètre supporté |
 | `66.30` | extinction du fallback `resolve_model` sur le périmètre supporté |
 | `66.31` | validation fail-fast de cohérence au publish et au boot |

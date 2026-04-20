@@ -88,7 +88,7 @@ class LLMNarrator:
 
             model = resolve_legacy_model(use_case)
             max_completion_tokens = (
-                get_legacy_max_tokens(use_case, default_use_case="daily_prediction")
+                get_legacy_max_tokens(use_case, default_use_case="horoscope_daily")
                 or self.DEFAULT_MAX_COMPLETION_TOKENS
             )
             min_daily_synthesis_sentences = self._get_min_daily_synthesis_sentences(variant_code)
@@ -251,11 +251,8 @@ class LLMNarrator:
         )
 
     def _resolve_use_case(self, variant_code: str | None) -> str:
-        if variant_code == "summary_only":
-            return "horoscope_daily_free"
-        if variant_code == "full":
-            return "horoscope_daily_full"
-        return "daily_prediction"
+        del variant_code
+        return "horoscope_daily"
 
     def _get_min_daily_synthesis_sentences(self, variant_code: str | None) -> int:
         if variant_code == "summary_only":

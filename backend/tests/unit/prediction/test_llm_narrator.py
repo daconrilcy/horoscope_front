@@ -67,7 +67,7 @@ async def test_narrate_success():
         }
         assert mock_client.chat.completions.create.await_args.kwargs[
             "max_completion_tokens"
-        ] == get_legacy_max_tokens("daily_prediction")
+        ] == get_legacy_max_tokens("horoscope_daily")
 
 
 @pytest.mark.asyncio
@@ -283,5 +283,5 @@ async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
         assert "7 à 8 phrases" in second_prompt
         assert (
             mock_client.chat.completions.create.await_args_list[0].kwargs["max_completion_tokens"]
-            == 1300
+            == 3000
         )

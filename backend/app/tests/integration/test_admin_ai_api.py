@@ -62,7 +62,10 @@ def test_get_ai_metrics_success(admin_token):
         db.add_all(
             [
                 LlmCallLogModel(
-                    use_case="chat_astrologer",
+                    use_case="chat_runtime",
+                    feature="chat",
+                    subfeature="astrologer",
+                    plan="premium",
                     model="gpt-4o",
                     latency_ms=500,
                     tokens_in=100,
@@ -75,7 +78,10 @@ def test_get_ai_metrics_success(admin_token):
                     environment="test",
                 ),
                 LlmCallLogModel(
-                    use_case="chat_astrologer",
+                    use_case="chat_runtime",
+                    feature="chat",
+                    subfeature="astrologer",
+                    plan="premium",
                     model="gpt-4o",
                     latency_ms=1000,
                     tokens_in=100,
@@ -88,7 +94,10 @@ def test_get_ai_metrics_success(admin_token):
                     environment="test",
                 ),
                 LlmCallLogModel(
-                    use_case="natal_psy_profile",
+                    use_case="natal_psy_profile_runtime",
+                    feature="natal",
+                    subfeature="psy_profile",
+                    plan="premium",
                     model="gpt-4o",
                     latency_ms=1500,
                     tokens_in=50,
@@ -134,7 +143,10 @@ def test_get_use_case_detail_success(admin_token):
         db.add_all(
             [
                 LlmCallLogModel(
-                    use_case="natal_interpretation",
+                    use_case="natal_interpretation_runtime",
+                    feature="natal",
+                    subfeature="interpretation",
+                    plan="premium",
                     model="gpt-4o",
                     latency_ms=2000,
                     tokens_in=500,
@@ -147,7 +159,10 @@ def test_get_use_case_detail_success(admin_token):
                     environment="test",
                 ),
                 LlmCallLogModel(
-                    use_case="natal_interpretation",
+                    use_case="natal_interpretation_runtime",
+                    feature="natal",
+                    subfeature="interpretation",
+                    plan="premium",
                     model="gpt-4o",
                     latency_ms=1200,
                     tokens_in=400,

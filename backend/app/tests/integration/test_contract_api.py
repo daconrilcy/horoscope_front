@@ -70,7 +70,7 @@ def test_get_use_case_contract():
     }
 
 
-def test_get_use_case_contract_exposes_legacy_alias_metadata():
+def test_get_use_case_contract_hides_removed_legacy_use_case():
     _cleanup_tables()
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
@@ -86,20 +86,4 @@ def test_get_use_case_contract_exposes_legacy_alias_metadata():
         db.commit()
 
     resp = client.get("/v1/admin/llm/use-cases/chat/contract", headers=headers)
-    assert resp.status_code == 200
-
-    data = resp.json()["data"]
-    assert data["use_case_audit"] == {
-        "maintenance_surface": "legacy_maintenance",
-        "status": "legacy_alias",
-        "canonical_feature": "chat",
-        "canonical_subfeature": "astrologer",
-        "canonical_plan": "free",
-    }
-    assert data["fallback_use_case_audit"] == {
-        "maintenance_surface": "legacy_maintenance",
-        "status": "legacy_alias",
-        "canonical_feature": "horoscope_daily",
-        "canonical_subfeature": "narration",
-        "canonical_plan": "free",
-    }
+    assert resp.status_code == 404

@@ -86,26 +86,6 @@ LEGACY_PROMPT_RUNTIME_DATA: dict[str, dict[str, Any]] = {
         "temperature": 0.7,
         "output_schema": NATAL_FREE_SHORT_SCHEMA,
     },
-    "horoscope_daily_free": {
-        "name": "horoscope-daily-free-v1",
-        "description": "Horoscope du jour restreint au résumé (plan free)",
-        "engine_env_key": "OPENAI_ENGINE_HOROSCOPE_DAILY_FREE",
-        "max_tokens": 1300,
-        "temperature": 0.7,
-        "output_schema": HOROSCOPE_FREE_OUTPUT_SCHEMA,
-        "deprecated": True,
-        "deprecation_note": "Migré vers feature='horoscope_daily', plan='free' via assembly.",
-    },
-    "horoscope_daily_full": {
-        "name": "horoscope-daily-full-v1",
-        "description": "Horoscope du jour complet (plan basic/premium)",
-        "engine_env_key": "OPENAI_ENGINE_HOROSCOPE_DAILY_FULL",
-        "max_tokens": 3000,
-        "temperature": 0.7,
-        "output_schema": None,
-        "deprecated": True,
-        "deprecation_note": "Migré vers feature='horoscope_daily', plan='premium' via assembly.",
-    },
     "guidance_daily": {
         "name": "guidance-daily-v1",
         "description": "Daily astrological guidance",
@@ -149,14 +129,6 @@ LEGACY_PROMPT_RUNTIME_DATA: dict[str, dict[str, Any]] = {
     "chat_astrologer": {
         "name": "chat-astrologer-v1",
         "description": "Interactive conversation with the virtual astrologer",
-        "engine_env_key": "OPENAI_ENGINE_CHAT",
-        "max_tokens": 2000,
-        "temperature": 0.7,
-        "output_schema": CHAT_RESPONSE_V1,
-    },
-    "chat": {
-        "name": "chat-v1-legacy",
-        "description": "Legacy chat use case",
         "engine_env_key": "OPENAI_ENGINE_CHAT",
         "max_tokens": 2000,
         "temperature": 0.7,
@@ -250,16 +222,6 @@ LEGACY_PROMPT_RUNTIME_DATA: dict[str, dict[str, Any]] = {
         "temperature": 0.0,
         "output_schema": None,
     },
-    "daily_prediction": {
-        "name": "daily-prediction-legacy",
-        "description": "Legacy daily prediction use case",
-        "engine_env_key": "OPENAI_ENGINE_HOROSCOPE_DAILY_FREE",
-        "max_tokens": 1300,
-        "temperature": 0.7,
-        "output_schema": HOROSCOPE_FREE_OUTPUT_SCHEMA,
-        "deprecated": True,
-        "deprecation_note": "Migré vers feature='horoscope_daily', plan='free' via assembly.",
-    },
 }
 
 LEGACY_COMPAT_PROMPT_CONFIGS: dict[str, dict[str, Any]] = {
@@ -310,12 +272,6 @@ LEGACY_COMPAT_PROMPT_CONFIGS: dict[str, dict[str, Any]] = {
         "interaction_mode": "structured",
         "user_question_policy": "optional",
     },
-    "chat": {
-        "developer_prompt": "Réponds à la conversation suivante: {{last_user_msg}}.",
-        "required_prompt_placeholders": ["last_user_msg"],
-        "interaction_mode": "chat",
-        "user_question_policy": "required",
-    },
     "chat_astrologer": {
         "developer_prompt": "Réponds à la conversation suivante: {{last_user_msg}}.",
         "required_prompt_placeholders": ["last_user_msg"],
@@ -330,14 +286,6 @@ LEGACY_COMPAT_PROMPT_CONFIGS: dict[str, dict[str, Any]] = {
     },
     "horoscope_daily": {
         "developer_prompt": "Génère un horoscope quotidien (compat legacy). Question: {{question}}",
-        "required_prompt_placeholders": ["question"],
-        "interaction_mode": "structured",
-        "user_question_policy": "none",
-    },
-    "daily_prediction": {
-        "developer_prompt": (
-            "Génère des prédictions quotidiennes (compat legacy). Question: {{question}}"
-        ),
         "required_prompt_placeholders": ["question"],
         "interaction_mode": "structured",
         "user_question_policy": "none",
@@ -374,18 +322,6 @@ LEGACY_COMPAT_PROMPT_CONFIGS: dict[str, dict[str, Any]] = {
     },
     "test_guidance": {
         "developer_prompt": "Test guidance prompt. locale={{locale}} situation={{situation}}",
-        "required_prompt_placeholders": [],
-        "interaction_mode": "structured",
-        "user_question_policy": "none",
-    },
-    "horoscope_daily_free": {
-        "developer_prompt": "Deprecated free compat prompt.",
-        "required_prompt_placeholders": [],
-        "interaction_mode": "structured",
-        "user_question_policy": "none",
-    },
-    "horoscope_daily_full": {
-        "developer_prompt": "Deprecated full compat prompt.",
         "required_prompt_placeholders": [],
         "interaction_mode": "structured",
         "user_question_policy": "none",

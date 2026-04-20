@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import case, func, select
+from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
@@ -25,61 +25,95 @@ _AI_METRIC_CATEGORY_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {
         "key": "natal_theme_short_free",
         "display_name": "Theme natal short free",
-        "raw_use_cases": ("natal_long_free",),
+        "targets": ({"feature": "natal", "subfeature": "interpretation", "plan": "free"},),
     },
     {
         "key": "natal_theme_short_paid",
         "display_name": "Theme natal short basic/premium",
-        "raw_use_cases": ("natal_interpretation_short",),
+        "targets": (
+            {"feature": "natal", "subfeature": "short", "plan": "basic"},
+            {"feature": "natal", "subfeature": "short", "plan": "premium"},
+        ),
     },
     {
         "key": "natal_theme_complete_paid",
         "display_name": "Theme natal complete basic/premium",
-        "raw_use_cases": ("natal_interpretation",),
+        "targets": (
+            {"feature": "natal", "subfeature": "interpretation", "plan": "basic"},
+            {"feature": "natal", "subfeature": "interpretation", "plan": "premium"},
+        ),
     },
     {
         "key": "thematic_consultations",
         "display_name": "Consultations thematiques",
-        "raw_use_cases": (
-            "event_guidance",
-            "natal_psy_profile",
-            "natal_shadow_integration",
-            "natal_leadership_workstyle",
-            "natal_creativity_joy",
-            "natal_relationship_style",
-            "natal_community_networks",
-            "natal_values_security",
-            "natal_evolution_path",
+        "targets": (
+            {"feature": "guidance", "subfeature": "event"},
+            {"feature": "natal", "subfeature": "psy_profile"},
+            {"feature": "natal", "subfeature": "shadow_integration"},
+            {"feature": "natal", "subfeature": "leadership_workstyle"},
+            {"feature": "natal", "subfeature": "creativity_joy"},
+            {"feature": "natal", "subfeature": "relationship_style"},
+            {"feature": "natal", "subfeature": "community_networks"},
+            {"feature": "natal", "subfeature": "values_security"},
+            {"feature": "natal", "subfeature": "evolution_path"},
         ),
     },
     {
         "key": "astrologer_chat",
         "display_name": "Chat astrologue",
-        "raw_use_cases": ("chat_astrologer", "chat"),
+        "targets": ({"feature": "chat", "subfeature": "astrologer"},),
     },
     {
         "key": "daily_horoscope",
         "display_name": "Horoscope du jour",
-        "raw_use_cases": (
-            "guidance_daily",
-            "horoscope_daily_free",
-            "horoscope_daily_full",
-            "daily_prediction",
-        ),
+        "targets": ({"feature": "horoscope_daily", "subfeature": "narration"},),
     },
     {
         "key": "weekly_horoscope",
         "display_name": "Horoscope hebdomadaire",
-        "raw_use_cases": ("guidance_weekly",),
+        "targets": ({"feature": "guidance", "subfeature": "weekly"},),
     },
 )
 
 _AI_METRIC_CATEGORY_BY_KEY = {item["key"]: item for item in _AI_METRIC_CATEGORY_DEFINITIONS}
-_AI_METRIC_CATEGORY_BY_RAW_USE_CASE = {
-    raw_use_case: item
-    for item in _AI_METRIC_CATEGORY_DEFINITIONS
-    for raw_use_case in item["raw_use_cases"]
-}
+_REMOVED_LEGACY_USE_CASES = frozenset(
+    {"daily_prediction", "horoscope_daily_free", "horoscope_daily_full", "chat", "chat_astrologer"}
+)
+
+
+def _matches_target(log: LlmCallLogModel, target: dict[str, str | None]) -> bool:
+    if log.feature != target.get("feature"):
+        return False
+    target_subfeature = target.get("subfeature")
+    if target_subfeature is not None and log.subfeature != target_subfeature:
+        return False
+    target_plan = target.get("plan")
+    if target_plan is not None and log.plan != target_plan:
+        return False
+    return True
+
+
+def _resolve_metric_category(log: LlmCallLogModel) -> dict[str, Any]:
+    # Legacy keys are no longer nominal axes: isolate them in a dedicated bucket.
+    if not log.feature and log.use_case in _REMOVED_LEGACY_USE_CASES:
+        return {
+            "key": "legacy_removed",
+            "display_name": "Legacy removed (blocked)",
+            "targets": tuple(),
+            "classification": "legacy_removed",
+        }
+
+    for category in _AI_METRIC_CATEGORY_DEFINITIONS:
+        for target in category.get("targets", ()):
+            if _matches_target(log, target):
+                return category
+
+    return {
+        "key": log.feature or "unknown_feature",
+        "display_name": log.feature or "unknown_feature",
+        "targets": tuple(),
+        "classification": "derived_feature",
+    }
 
 
 def _derive_failed_call_error_code(log: LlmCallLogModel) -> str:
@@ -114,11 +148,21 @@ def _empty_metric_row(category: dict[str, Any]) -> dict[str, Any]:
 def _resolve_metric_category_or_raw(use_case: str) -> tuple[dict[str, Any], tuple[str, ...]]:
     category = _AI_METRIC_CATEGORY_BY_KEY.get(use_case)
     if category is not None:
-        return category, tuple(category["raw_use_cases"])
+        return category, tuple()
+    if use_case == "legacy_removed":
+        return (
+            {
+                "key": "legacy_removed",
+                "display_name": "Legacy removed (blocked)",
+                "targets": tuple(),
+                "classification": "legacy_removed",
+            },
+            tuple(_REMOVED_LEGACY_USE_CASES),
+        )
     fallback_category = {
         "key": use_case,
         "display_name": use_case,
-        "raw_use_cases": (use_case,),
+        "targets": tuple(),
     }
     return fallback_category, (use_case,)
 
@@ -139,46 +183,29 @@ def get_ai_metrics(
     # Using case() for error count calculation to be database-neutral
     error_case = case((LlmCallLogModel.validation_status == LlmValidationStatus.ERROR, 1), else_=0)
 
-    stmt = (
-        select(
-            LlmCallLogModel.use_case,
-            func.count(LlmCallLogModel.id).label("call_count"),
-            func.sum(LlmCallLogModel.tokens_in + LlmCallLogModel.tokens_out).label("total_tokens"),
-            func.sum(LlmCallLogModel.cost_usd_estimated).label("total_cost"),
-            func.avg(LlmCallLogModel.latency_ms).label("avg_latency"),
-            func.sum(error_case).label("error_count"),
-        )
-        .where(LlmCallLogModel.timestamp >= start_date)
-        .group_by(LlmCallLogModel.use_case)
-    )
+    stmt = select(LlmCallLogModel).where(LlmCallLogModel.timestamp >= start_date)
 
-    results = db.execute(stmt).all()
+    results = db.execute(stmt).scalars().all()
 
     metrics_by_category = {
         category["key"]: _empty_metric_row(category) for category in _AI_METRIC_CATEGORY_DEFINITIONS
     }
     for r in results:
-        category = _AI_METRIC_CATEGORY_BY_RAW_USE_CASE.get(r.use_case)
-        if category is None:
-            category = {
-                "key": r.use_case,
-                "display_name": r.use_case,
-                "raw_use_cases": (r.use_case,),
-            }
-            metrics_by_category.setdefault(category["key"], _empty_metric_row(category))
+        category = _resolve_metric_category(r)
+        metrics_by_category.setdefault(category["key"], _empty_metric_row(category))
 
         metric_row = metrics_by_category[category["key"]]
-        row_call_count = int(r.call_count or 0)
+        row_call_count = 1
         previous_call_count = int(metric_row["call_count"])
         metric_row["call_count"] = previous_call_count + row_call_count
-        metric_row["total_tokens"] += int(r.total_tokens or 0)
-        metric_row["estimated_cost_usd"] += float(r.total_cost or 0)
+        metric_row["total_tokens"] += int((r.tokens_in or 0) + (r.tokens_out or 0))
+        metric_row["estimated_cost_usd"] += float(r.cost_usd_estimated or 0)
         accumulated_latency = metric_row["avg_latency_ms"] * previous_call_count
-        accumulated_latency += int(r.avg_latency or 0) * row_call_count
+        accumulated_latency += int(r.latency_ms or 0) * row_call_count
         if metric_row["call_count"] > 0:
             metric_row["avg_latency_ms"] = int(accumulated_latency / metric_row["call_count"])
         total_error_count = metric_row["error_rate"] * previous_call_count
-        total_error_count += float(r.error_count or 0)
+        total_error_count += float(1 if r.validation_status == LlmValidationStatus.ERROR else 0)
         metric_row["error_rate"] = float(
             total_error_count / metric_row["call_count"] if metric_row["call_count"] > 0 else 0
         )
@@ -211,7 +238,21 @@ def get_use_case_detail(
         func.sum(LlmCallLogModel.cost_usd_estimated).label("total_cost"),
         func.avg(LlmCallLogModel.latency_ms).label("avg_latency"),
         func.sum(error_case).label("error_count"),
-    ).where(LlmCallLogModel.use_case.in_(raw_use_cases), LlmCallLogModel.timestamp >= start_date)
+    ).where(LlmCallLogModel.timestamp >= start_date)
+    if raw_use_cases:
+        summary_stmt = summary_stmt.where(LlmCallLogModel.use_case.in_(raw_use_cases))
+    elif category.get("targets"):
+        target_filters = []
+        for target in category["targets"]:
+            cond = [LlmCallLogModel.feature == target["feature"]]
+            if target.get("subfeature") is not None:
+                cond.append(LlmCallLogModel.subfeature == target["subfeature"])
+            if target.get("plan") is not None:
+                cond.append(LlmCallLogModel.plan == target["plan"])
+            target_filters.append(and_(*cond))
+        summary_stmt = summary_stmt.where(or_(*target_filters))
+    else:
+        summary_stmt = summary_stmt.where(LlmCallLogModel.use_case == use_case)
     s = db.execute(summary_stmt).first()
     if not s or s.call_count == 0:
         raise HTTPException(status_code=404, detail="No data for this use case")
@@ -231,10 +272,24 @@ def get_use_case_detail(
     date_func = func.date(LlmCallLogModel.timestamp)
     trend_stmt = (
         select(date_func, func.count(LlmCallLogModel.id), func.sum(error_case))
-        .where(LlmCallLogModel.use_case.in_(raw_use_cases), LlmCallLogModel.timestamp >= start_date)
+        .where(LlmCallLogModel.timestamp >= start_date)
         .group_by(date_func)
         .order_by(date_func)
     )
+    if raw_use_cases:
+        trend_stmt = trend_stmt.where(LlmCallLogModel.use_case.in_(raw_use_cases))
+    elif category.get("targets"):
+        target_filters = []
+        for target in category["targets"]:
+            cond = [LlmCallLogModel.feature == target["feature"]]
+            if target.get("subfeature") is not None:
+                cond.append(LlmCallLogModel.subfeature == target["subfeature"])
+            if target.get("plan") is not None:
+                cond.append(LlmCallLogModel.plan == target["plan"])
+            target_filters.append(and_(*cond))
+        trend_stmt = trend_stmt.where(or_(*target_filters))
+    else:
+        trend_stmt = trend_stmt.where(LlmCallLogModel.use_case == use_case)
     trend_rows = db.execute(trend_stmt).all()
     trend_data = [
         {"date": str(r[0]), "call_count": r[1], "error_count": int(r[2] or 0)} for r in trend_rows
@@ -244,12 +299,25 @@ def get_use_case_detail(
     failed_stmt = (
         select(LlmCallLogModel)
         .where(
-            LlmCallLogModel.use_case.in_(raw_use_cases),
             LlmCallLogModel.validation_status == LlmValidationStatus.ERROR,
         )
         .order_by(LlmCallLogModel.timestamp.desc())
         .limit(10)
     )
+    if raw_use_cases:
+        failed_stmt = failed_stmt.where(LlmCallLogModel.use_case.in_(raw_use_cases))
+    elif category.get("targets"):
+        target_filters = []
+        for target in category["targets"]:
+            cond = [LlmCallLogModel.feature == target["feature"]]
+            if target.get("subfeature") is not None:
+                cond.append(LlmCallLogModel.subfeature == target["subfeature"])
+            if target.get("plan") is not None:
+                cond.append(LlmCallLogModel.plan == target["plan"])
+            target_filters.append(and_(*cond))
+        failed_stmt = failed_stmt.where(or_(*target_filters))
+    else:
+        failed_stmt = failed_stmt.where(LlmCallLogModel.use_case == use_case)
     failed_rows = db.scalars(failed_stmt).all()
     recent_failed_calls = [
         {

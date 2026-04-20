@@ -91,6 +91,16 @@ ADMIN_MANUAL_EXECUTE_ROUTE_PATH = "/catalog/{manifest_entry_id}/execute-sample"
 
 router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])
 
+LEGACY_USE_CASE_KEYS_REMOVED: frozenset[str] = frozenset(
+    {
+        "daily_prediction",
+        "horoscope_daily_free",
+        "horoscope_daily_full",
+        "chat",
+        "chat_astrologer",
+    }
+)
+
 
 class ResponseMeta(BaseModel):
     request_id: str
@@ -923,6 +933,12 @@ def _build_admin_runtime_use_case_audit(
     )
 
 
+def _is_removed_legacy_use_case_key(use_case_key: str | None) -> bool:
+    if not use_case_key:
+        return False
+    return use_case_key in LEGACY_USE_CASE_KEYS_REMOVED
+
+
 def _get_active_prompt_version_for_use_case(
     db: Session, use_case_key: str | None
 ) -> LlmPromptVersionModel | None:
@@ -1364,6 +1380,8 @@ def list_use_cases(
 
     result_data = []
     for uc in use_cases:
+        if _is_removed_legacy_use_case_key(uc.key):
+            continue
         active_prompt = PromptRegistryV2.get_active_prompt(db, uc.key)
         result_data.append(
             LlmUseCaseConfig(
@@ -2948,6 +2966,15 @@ def update_use_case_config(
 ) -> Any:
     request_id = resolve_request_id(request)
 
+    if _is_removed_legacy_use_case_key(key):
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
+            message=f"use case {key} not found",
+            details={},
+        )
+
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
         return _error_response(
@@ -3126,6 +3153,15 @@ def associate_persona(
     """
     request_id = resolve_request_id(request)
 
+    if _is_removed_legacy_use_case_key(key):
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
+            message=f"use case {key} not found",
+            details={},
+        )
+
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
         return _error_response(
@@ -3209,6 +3245,15 @@ def get_use_case_contract(
 ) -> Any:
     request_id = resolve_request_id(request)
 
+    if _is_removed_legacy_use_case_key(key):
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
+            message=f"use case {key} not found",
+            details={},
+        )
+
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
         return _error_response(
@@ -3255,6 +3300,9 @@ def list_prompt_history(
 ) -> Any:
     request_id = resolve_request_id(request)
 
+    if _is_removed_legacy_use_case_key(key):
+        return {"data": [], "meta": {"request_id": request_id}}
+
     stmt = (
         select(LlmPromptVersionModel)
         .where(LlmPromptVersionModel.use_case_key == key)
@@ -3277,6 +3325,15 @@ def create_prompt_draft(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+
+    if _is_removed_legacy_use_case_key(key):
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
+            message=f"use case {key} not found",
+            details={},
+        )
 
     uc = db.get(LlmUseCaseConfigModel, key)
     if not uc:
@@ -3365,6 +3422,14 @@ async def publish_prompt(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+    if _is_removed_legacy_use_case_key(key):
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
+            message=f"use case {key} not found",
+            details={},
+        )
     previous_published = PromptRegistryV2.get_active_prompt(db, key)
 
     uc = db.get(LlmUseCaseConfigModel, key)
@@ -3497,6 +3562,15 @@ def rollback_prompt(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+
+    if _is_removed_legacy_use_case_key(key):
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
+            message=f"use case {key} not found",
+            details={},
+        )
     previous_version = PromptRegistryV2.get_active_prompt(db, key)
 
     try:

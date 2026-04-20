@@ -284,6 +284,7 @@ async def log_call(
         executed_provider_mode = "nominal"
         attempt_count = 1
         provider_error_code = None
+        runtime_error_code = None
         breaker_state = None
         breaker_scope = None
 
@@ -370,6 +371,7 @@ async def log_call(
             executed_provider_mode = getattr(error, "_executed_provider_mode", "nominal")
             attempt_count = getattr(error, "_attempt_count", 1)
             provider_error_code = getattr(error, "_provider_error_code", None)
+            runtime_error_code = getattr(error, "error_code", None)
             breaker_state = getattr(error, "_breaker_state", None)
             breaker_scope = getattr(error, "_breaker_scope", None)
 
@@ -427,6 +429,7 @@ async def log_call(
                 executed_provider_mode=executed_provider_mode,
                 attempt_count=attempt_count,
                 provider_error_code=provider_error_code,
+                runtime_error_code=runtime_error_code,
                 breaker_state=breaker_state,
                 breaker_scope=breaker_scope,
                 # Story 66.32

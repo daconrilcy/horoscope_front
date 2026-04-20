@@ -74,6 +74,15 @@ PAID_USE_CASES = {"natal_interpretation", "event_guidance", "natal_interpretatio
 
 _VALID_INTERACTION_MODES = {"structured", "chat"}
 _VALID_QUESTION_POLICIES = {"none", "optional", "required"}
+_REMOVED_LEGACY_USE_CASE_KEYS = frozenset(
+    {
+        "daily_prediction",
+        "horoscope_daily_free",
+        "horoscope_daily_full",
+        "chat",
+        "chat_astrologer",
+    }
+)
 
 # Locale-aware fallback messages for structured-data-only calls
 _FALLBACK_USER_MSG = {
@@ -1794,6 +1803,14 @@ class LLMGateway:
         is_repair_call = request.flags.is_repair_call
 
         try:
+            if use_case in _REMOVED_LEGACY_USE_CASE_KEYS and not request.user_input.feature:
+                raise GatewayConfigError(
+                    f"Legacy use_case key '{use_case}' is removed. "
+                    "Use canonical feature/subfeature/plan inputs.",
+                    error_code="removed_legacy_use_case_key",
+                    details={"use_case": use_case},
+                )
+
             # Story 66.23: Early taxonomy normalization and validation (AC1, AC2, AC10)
             # Story 66.29: Move legacy mapping here to ensure it bypasses Stage 0.5 (Issue 1)
             if use_case in DEPRECATED_USE_CASE_MAPPING and not request.user_input.feature:

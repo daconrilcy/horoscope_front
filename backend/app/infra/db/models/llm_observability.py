@@ -107,6 +107,7 @@ class LlmCallLogModel(Base):
     executed_provider_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
     attempt_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     provider_error_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    runtime_error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
     breaker_state: Mapped[str | None] = mapped_column(String(20), nullable=True)
     breaker_scope: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
