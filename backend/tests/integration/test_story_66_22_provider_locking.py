@@ -136,7 +136,7 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
         ),
         patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved),
         patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="Prompt"),
-        patch.object(gateway, "_resolve_config", return_value=mock_config),
+        patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
@@ -249,7 +249,7 @@ async def test_gateway_nominal_path_accepts_openai():
         ),
         patch("app.llm_orchestration.gateway.resolve_assembly", return_value=mock_resolved),
         patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="Prompt"),
-        patch.object(gateway, "_resolve_config", return_value=mock_config),
+        patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
@@ -323,7 +323,7 @@ async def test_gateway_non_nominal_accepts_fallback_and_logs():
         ),
         patch("app.llm_orchestration.gateway.resolve_assembly", return_value=MagicMock()),
         patch("app.llm_orchestration.gateway.assemble_developer_prompt", return_value="Prompt"),
-        patch.object(gateway, "_resolve_config", return_value=mock_config),
+        patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
         patch("app.llm_orchestration.services.fallback_governance.increment_counter") as mock_inc,

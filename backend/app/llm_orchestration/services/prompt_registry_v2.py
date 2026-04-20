@@ -26,6 +26,14 @@ def utc_now() -> datetime:
 
 
 class PromptRegistryV2:
+    """
+    Admin/history registry for published prompt versions.
+
+    Scope is intentionally limited to admin mutation flows, rollback/history, and
+    related startup maintenance. Runtime execution paths must use direct read-only
+    lookups instead of depending on this registry abstraction.
+    """
+
     @staticmethod
     def get_active_prompt(db: Session, use_case_key: str) -> Optional[LlmPromptVersionModel]:
         """

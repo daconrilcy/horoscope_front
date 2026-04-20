@@ -247,7 +247,7 @@ async def test_input_validation_failure(db_session, monkeypatch):
     # We must skip common context to avoid birth profile errors in this unit test
     request.flags.skip_common_context = True
 
-    # Use monkeypatch to ensure _resolve_config is NOT falling back to stub
+    # Use monkeypatch to ensure the legacy compatibility resolver is NOT used here.
     # if we want to test DB resolution.
     # Actually, the real LLMGateway should find it in db_session if provided.
 
@@ -259,11 +259,12 @@ async def test_input_validation_failure(db_session, monkeypatch):
         )
     assert "Input validation failed" in str(exc.value)
 
-    # Now the full test should also pass if resolution is correct
+    # Full request path: supported families now fail on missing canonical assembly
+    # before any legacy Stage 0.5 use-case validation can rescue the request.
     with pytest.raises(GatewayError) as exc:
         await gateway.execute_request(
             request=request,
             db=db_session,
         )
 
-    assert "Input validation failed" in str(exc.value)
+    assert "Mandatory assembly missing for supported chat family" in str(exc.value)

@@ -37,6 +37,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
 from app.llm_orchestration.admin_models import (
+    AdminUseCaseAudit,
     LlmOutputSchema,
     LlmPersona,
     LlmPersonaCreate,
@@ -44,6 +45,7 @@ from app.llm_orchestration.admin_models import (
     LlmPromptVersion,
     LlmPromptVersionCreate,
     LlmUseCaseConfig,
+    build_admin_use_case_audit,
 )
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import (
@@ -374,7 +376,10 @@ class AdminResolvedAssemblyView(BaseModel):
     plan: str | None = None
     locale: str | None = None
     use_case_key: str
+    canonical_use_case_key: str | None = None
     runtime_use_case_key: str | None = None
+    use_case_audit: AdminUseCaseAudit | None = None
+    runtime_use_case_audit: AdminUseCaseAudit | None = None
     context_quality: str
     assembly_id: str | None = None
     inspection_mode: AdminInspectionMode
@@ -902,26 +907,39 @@ def _derive_admin_runtime_use_case_key(assembly_model: PromptAssemblyConfigModel
     return canonical_use_case_key
 
 
+def _build_admin_runtime_use_case_audit(
+    use_case_key: str | None,
+    *,
+    canonical_feature: str,
+    canonical_subfeature: str | None,
+    canonical_plan: str | None,
+) -> AdminUseCaseAudit | None:
+    return build_admin_use_case_audit(
+        use_case_key,
+        maintenance_surface="canonical_runtime",
+        canonical_feature=canonical_feature,
+        canonical_subfeature=canonical_subfeature,
+        canonical_plan=canonical_plan,
+    )
+
+
 def _get_active_prompt_version_for_use_case(
     db: Session, use_case_key: str | None
 ) -> LlmPromptVersionModel | None:
     if not use_case_key:
         return None
-    return (
-        db.execute(
-            select(LlmPromptVersionModel)
-            .where(
-                LlmPromptVersionModel.use_case_key == use_case_key,
-                LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
-            )
-            .order_by(
-                desc(LlmPromptVersionModel.published_at),
-                desc(LlmPromptVersionModel.created_at),
-            )
-            .limit(1)
+    return db.execute(
+        select(LlmPromptVersionModel)
+        .where(
+            LlmPromptVersionModel.use_case_key == use_case_key,
+            LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
         )
-        .scalar_one_or_none()
-    )
+        .order_by(
+            desc(LlmPromptVersionModel.published_at),
+            desc(LlmPromptVersionModel.created_at),
+        )
+        .limit(1)
+    ).scalar_one_or_none()
 
 
 def _json_pretty_admin(value: Any) -> str:
@@ -2214,35 +2232,53 @@ def _build_admin_resolved_catalog_view(
             },
         )
     ]
-    if active_prompt_version:
+    if effective_use_case_key:
         selected_components.append(
             AdminSelectedComponentView(
                 key="use_case_overlay",
                 component_type="use_case_overlay",
                 title="Use case overlay",
-                content=active_prompt_version.developer_prompt,
-                summary="Surcharge éditoriale spécifique au use case runtime actif.",
-                ref=str(active_prompt_version.id),
-                source_label=active_prompt_version.use_case_key,
+                content=(
+                    active_prompt_version.developer_prompt
+                    if active_prompt_version
+                    else resolved.feature_template_prompt
+                ),
+                summary=(
+                    "Surcharge éditoriale spécifique au use case runtime actif."
+                    if active_prompt_version
+                    else (
+                        "Aucun prompt publié distinct n'est trouvé pour ce use case runtime; "
+                        "la couche affichée reprend le bloc éditorial actuellement observable."
+                    )
+                ),
+                ref=str(active_prompt_version.id) if active_prompt_version else None,
+                source_label=(
+                    active_prompt_version.use_case_key
+                    if active_prompt_version
+                    else effective_use_case_key
+                ),
                 version_label=(
                     active_prompt_version.published_at.isoformat()
-                    if active_prompt_version.published_at
-                    else active_prompt_version.created_at.isoformat()
+                    if active_prompt_version and active_prompt_version.published_at
+                    else (
+                        active_prompt_version.created_at.isoformat()
+                        if active_prompt_version
+                        else None
+                    )
                 ),
                 impact_status="active",
-                editable_use_case_key=active_prompt_version.use_case_key,
+                editable_use_case_key=effective_use_case_key,
                 meta={
-                    "use_case_key": active_prompt_version.use_case_key,
-                    "status": str(active_prompt_version.status),
-                    "model": active_prompt_version.model,
+                    "use_case_key": effective_use_case_key,
+                    "status": (
+                        str(active_prompt_version.status) if active_prompt_version else "fallback"
+                    ),
+                    "model": active_prompt_version.model if active_prompt_version else None,
+                    "fallback_to_feature_template": not bool(active_prompt_version),
                 },
             )
         )
-    if assembly_model.plan and (
-        resolved.plan_rules_content
-        or assembly_model.plan_rules_ref
-        or not active_prompt_version
-    ):
+    if assembly_model.plan and (resolved.plan_rules_content or assembly_model.plan_rules_ref):
         selected_components.append(
             AdminSelectedComponentView(
                 key="plan_overlay",
@@ -2285,8 +2321,8 @@ def _build_admin_resolved_catalog_view(
                 "texte non dupliqué dans l'admin."
             ),
             ref=str(assembly_model.output_contract_ref)
-                if assembly_model.output_contract_ref is not None
-                else None,
+            if assembly_model.output_contract_ref is not None
+            else None,
             source_label="output_schema",
             impact_status="reference_only",
             meta={
@@ -2307,17 +2343,13 @@ def _build_admin_resolved_catalog_view(
                 ref=str(assembly_model.persona_ref) if assembly_model.persona_ref else None,
                 source_label=assembly_model.persona.name if assembly_model.persona else None,
                 version_label=(
-                    str(assembly_model.persona.updated_at)
-                    if assembly_model.persona
-                    else None
+                    str(assembly_model.persona.updated_at) if assembly_model.persona else None
                 ),
                 merge_mode="separate_developer_message",
                 impact_status="active",
                 meta={
                     "persona_id": (
-                        str(assembly_model.persona_ref)
-                        if assembly_model.persona_ref
-                        else None
+                        str(assembly_model.persona_ref) if assembly_model.persona_ref else None
                     ),
                     "persona_name": assembly_model.persona.name if assembly_model.persona else None,
                 },
@@ -2380,8 +2412,7 @@ def _build_admin_resolved_catalog_view(
                 include_persona=bool(persona_block_content),
             ),
             summary=(
-                "État developer après compensation context_quality, "
-                "budget et injecteurs runtime."
+                "État developer après compensation context_quality, budget et injecteurs runtime."
             ),
             change_status=(
                 "unchanged"
@@ -2420,14 +2451,31 @@ def _build_admin_resolved_catalog_view(
             injection_point="provider",
         )
     )
+    canonical_use_case_key = (
+        assembly_model.feature_template.use_case_key if assembly_model.feature_template else None
+    )
+    selected_use_case_key = effective_use_case_key or canonical_use_case_key
     data = AdminResolvedAssemblyView(
         manifest_entry_id=manifest_entry_id,
         feature=assembly_model.feature,
         subfeature=assembly_model.subfeature,
         plan=assembly_model.plan,
         locale=assembly_model.locale,
-        use_case_key=effective_use_case_key or assembly_model.feature_template.use_case_key,
+        use_case_key=selected_use_case_key,
+        canonical_use_case_key=canonical_use_case_key,
         runtime_use_case_key=effective_use_case_key,
+        use_case_audit=_build_admin_runtime_use_case_audit(
+            selected_use_case_key,
+            canonical_feature=assembly_model.feature,
+            canonical_subfeature=assembly_model.subfeature,
+            canonical_plan=assembly_model.plan,
+        ),
+        runtime_use_case_audit=_build_admin_runtime_use_case_audit(
+            effective_use_case_key,
+            canonical_feature=assembly_model.feature,
+            canonical_subfeature=assembly_model.subfeature,
+            canonical_plan=assembly_model.plan,
+        ),
         context_quality=resolved.context_quality,
         assembly_id=str(assembly_model.id),
         inspection_mode=inspection_mode,

@@ -150,7 +150,7 @@ Le flux réel dans `LLMGateway.execute_request()` est :
 1. normaliser tôt les aliases `use_case -> feature/subfeature/plan` via `DEPRECATED_USE_CASE_MAPPING` si `feature` est absente ;
 2. normaliser `feature`, `subfeature` et `plan` ;
 3. fusionner `context` et `extra_context` ;
-4. exécuter une prévalidation Stage 0.5 via `_resolve_config()` puis `_validate_input()` ;
+4. exécuter une prévalidation Stage 0.5 via `_resolve_legacy_compat_config()` puis `_validate_input()` uniquement pour les chemins legacy hors périmètre supporté ;
 5. appeler `_resolve_plan()` ;
 6. refaire une validation Stage 1.5 à partir de la config réellement résolue depuis le plan ;
 7. composer les messages finaux ;
@@ -159,7 +159,7 @@ Le flux réel dans `LLMGateway.execute_request()` est :
 10. tenter une réparation, puis éventuellement un `fallback_use_case` legacy ;
 11. construire le `GatewayResult` final et le snapshot d'observabilité.
 
-Point important : contrairement à des versions antérieures du document, la Stage 0.5 n'est pas "skippée" pour les familles supportées. Elle tourne toujours, mais elle reste best-effort et ne remplace pas les obligations canoniques d'assembly et d'`ExecutionProfile`.
+Point important : la Stage 0.5 n'est plus la source de vérité pour les familles supportées. Sur `chat`, `guidance`, `natal` et `horoscope_daily`, la validation d'entrée utile doit partir du plan canonique résolu depuis l'assembly et l'`ExecutionProfile`, pas d'un `use_case` legacy ou d'un catalogue Python.
 
 ## Lecture admin de référence
 
@@ -219,7 +219,7 @@ flowchart TD
 
     H -->|Non| M{"Famille supportée ?"}
     I -->|Oui| N["GatewayConfigError"]
-    I -->|Non| O["_resolve_config() + fallback use_case-first"]
+I -->|Non| O["_resolve_legacy_compat_config() + fallback use_case-first"]
     M -->|Oui| N
     M -->|Non| O
 
@@ -236,8 +236,10 @@ Dans `_resolve_plan()` :
 - `CommonContextBuilder.build()` n'est exécuté que si `db` est disponible, `user_id` est renseigné et `skip_common_context` est faux ;
 - la résolution assembly passe d'abord par l'ID explicite si `assembly_config_id` est fourni ;
 - sinon, la résolution se fait par waterfall sur `feature/subfeature/plan/locale` ;
-- si une famille supportée n'a pas d'assembly active, le runtime lève une `GatewayConfigError` et émet `supported_perimeter_rejection` ;
-- si aucune assembly n'est trouvée pour une famille non supportée, le code peut encore tomber sur `_resolve_config()` et donc sur le chemin legacy `USE_CASE_FIRST`.
+- si une famille supportée n'a pas d'assembly active, le runtime lève une `GatewayConfigError` avec `error_code="missing_assembly"` et émet `supported_perimeter_rejection` ;
+- si aucune assembly n'est trouvée pour une famille non supportée, le code peut encore tomber sur `_resolve_legacy_compat_config()` et donc sur le chemin legacy `USE_CASE_FIRST`, explicitement borné hors nominal ;
+- les métadonnées legacy encore nécessaires au runtime non nominal vivent désormais dans `app.llm_orchestration.legacy_prompt_runtime`, pas dans `app.prompts.catalog`.
+- `PromptRegistryV2` n'est plus une dépendance runtime du gateway ; il reste une surface admin/history/publish explicitement bornée.
 
 ## Comment le developer prompt est réellement construit
 
@@ -404,7 +406,8 @@ En pratique :
 
 - une famille supportée sans assembly active est rejetée ;
 - une famille supportée sans `ExecutionProfile` valide est rejetée ;
-- une famille supportée ne doit pas publier un `ResolvedExecutionPlan` réussi avec `fallback_resolve_model` ni `fallback_provider_unsupported`.
+- une famille supportée ne doit pas publier un `ResolvedExecutionPlan` réussi avec `fallback_resolve_model` ni `fallback_provider_unsupported` ;
+- quand un chemin legacy hors nominal doit encore résoudre un modèle ou un schéma, il passe par `legacy_prompt_runtime` comme couche de compatibilité explicitement bornée.
 
 Le `fallback_use_case` configuré dans `UseCaseConfig` existe encore, mais il intervient après échec de validation ou de récupération, et il reste destiné aux chemins legacy ou hors périmètre supporté.
 
@@ -443,6 +446,8 @@ dans `ResolvedExecutionPlan`, puis dans `ExecutionObservabilitySnapshot`, puis d
 - que la `LengthBudget` reste dans ses bornes.
 
 Au boot, `run_llm_coherence_startup_validation()` privilégie le snapshot actif s'il existe.
+
+Le démarrage applicatif ne s'appuie plus sur une validation bloquante `catalog vs db` ni sur un reseed implicite du registre LLM legacy pour masquer une incohérence canonique. En local, un reseed legacy n'est encore possible que derrière le flag explicite `DEV_ALLOW_LEGACY_SEED`; sans ce flag, le boot doit réussir avec les seules données canoniques présentes ou échouer clairement via les validations canoniques.
 
 ## Observabilité, qualification et golden gate
 
@@ -681,7 +686,7 @@ Limites explicites :
 
 Dernière vérification manuelle contre le pipeline réel du gateway :
 
-- **Date** : `2026-04-15`
+- **Date** : `2026-04-20`
 - **Référence stable (Commit SHA)** : `6acae1e530a207aad95fe725589b9bc505c30826`
 - **Version registre de gouvernance prompt** : `1.0.0`
 - **Version registre résiduel** : `2026.04.14`

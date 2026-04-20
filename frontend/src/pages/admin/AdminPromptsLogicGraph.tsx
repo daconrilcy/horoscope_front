@@ -38,6 +38,9 @@ function LogicGraphFlowNode(props: NodeProps<LogicRfNode>) {
       <Handle type="target" position={Position.Left} />
       {data.badge ? <span className="admin-prompts-logic-graph__node-badge">{data.badge}</span> : null}
       <strong>{data.title}</strong>
+      {!data.interactive && data.detail ? (
+        <span className="admin-prompts-logic-graph__node-detail">{data.detail}</span>
+      ) : null}
       <Handle type="source" position={Position.Right} />
     </div>
   )
@@ -136,18 +139,29 @@ function LogicGraphFlowInner({
 type LogicGraphErrorBoundaryProps = {
   children: ReactNode
   fallbackSummary: string[]
+  resetKey: string
 }
 
-type LogicGraphErrorBoundaryState = { hasError: boolean }
+type LogicGraphErrorBoundaryState = { hasError: boolean; resetKey: string }
 
 class LogicGraphErrorBoundary extends Component<LogicGraphErrorBoundaryProps, LogicGraphErrorBoundaryState> {
   constructor(props: LogicGraphErrorBoundaryProps) {
     super(props)
-    this.state = { hasError: false }
+    this.state = { hasError: false, resetKey: props.resetKey }
+  }
+
+  static getDerivedStateFromProps(
+    props: LogicGraphErrorBoundaryProps,
+    state: LogicGraphErrorBoundaryState,
+  ): Partial<LogicGraphErrorBoundaryState> | null {
+    if (props.resetKey !== state.resetKey) {
+      return { hasError: false, resetKey: props.resetKey }
+    }
+    return null
   }
 
   static getDerivedStateFromError(): LogicGraphErrorBoundaryState {
-    return { hasError: true }
+    return { hasError: true, resetKey: "" }
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
@@ -209,6 +223,7 @@ function LogicGraphDenseNodeDetails({ projection }: { projection: LogicGraphProj
           >
             {node.badge ? <span className="admin-prompts-logic-graph__node-badge">{node.badge}</span> : null}
             <strong>{node.title}</strong>
+            {node.detail ? <span className="admin-prompts-logic-graph__node-detail">{node.detail}</span> : null}
           </article>
         ))}
       </div>
@@ -283,7 +298,11 @@ export function AdminPromptsLogicGraph({ projection, onNodeSelect }: AdminPrompt
         </p>
         <LogicGraphTextEdgesOnly projection={projection} />
       </details>
-      <LogicGraphErrorBoundary key={projection.boundaryRemountKey} fallbackSummary={projection.fallbackSummary}>
+      <LogicGraphErrorBoundary
+        key={projection.boundaryRemountKey}
+        fallbackSummary={projection.fallbackSummary}
+        resetKey={projection.boundaryRemountKey}
+      >
         <ReactFlowProvider>
           <LogicGraphFlowInner projection={projection} onNodeSelect={onNodeSelect} />
         </ReactFlowProvider>

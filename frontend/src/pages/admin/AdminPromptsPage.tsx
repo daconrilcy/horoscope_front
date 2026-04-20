@@ -45,6 +45,7 @@ import { AdminPromptEditorPanel } from "./AdminPromptEditorPanel"
 import { AdminPromptsLogicGraph } from "./AdminPromptsLogicGraph"
 import { AdminPromptCatalogNodeModal } from "./AdminPromptCatalogNodeModal"
 import { buildAdminPromptCatalogFlowProjection } from "./adminPromptCatalogFlowProjection"
+import { buildLogicGraphProjection } from "./adminPromptsLogicGraphProjection"
 import type { AdminPromptsCatalogStrings } from "../../i18n/adminPromptsCatalog"
 import "./AdminPromptsPage.css"
 
@@ -544,7 +545,7 @@ export function AdminPromptsPage() {
       sortBy,
       sortOrder,
     },
-    false,
+    activeTab === "catalog",
   )
 
   /** Facettes globales (sans dérouler le catalogue complet) : servent au sélecteur minimal et aux sample payloads. */
@@ -570,13 +571,16 @@ export function AdminPromptsPage() {
   )
 
   const catalogEntries = catalogContextQuery.data?.data ?? []
+  const catalogTableEntries = catalogQuery.data?.data ?? []
   const catalogMeta = catalogQuery.data?.meta
   const selectedCatalogEntry =
-    catalogEntries.find((entry) => entry.manifest_entry_id === selectedManifestEntryId) ?? null
+    catalogTableEntries.find((entry) => entry.manifest_entry_id === selectedManifestEntryId) ??
+    catalogEntries.find((entry) => entry.manifest_entry_id === selectedManifestEntryId) ??
+    null
   const resolvedQuery = useAdminResolvedAssembly(
     selectedManifestEntryId,
-    "assembly_preview",
-    null,
+    resolvedInspectionMode,
+    effectiveSamplePayloadId,
     activeTab === "catalog" && Boolean(selectedManifestEntryId),
   )
   const catalogFeatureForSamplePayloads =
@@ -595,7 +599,11 @@ export function AdminPromptsPage() {
     catalogFeatureForSamplePayloads,
     catalogLocaleForSamplePayloads,
     {
-      enabled: false,
+      enabled:
+        activeTab === "catalog" &&
+        resolvedInspectionMode === "runtime_preview" &&
+        Boolean(catalogFeatureForSamplePayloads) &&
+        Boolean(catalogLocaleForSamplePayloads),
     },
   )
 
@@ -839,7 +847,15 @@ export function AdminPromptsPage() {
     selectedCatalogUseCase?.active_prompt_version_id != null
       ? (catalogHistory.find((item) => item.id === selectedCatalogUseCase.active_prompt_version_id) ?? null)
       : null
-  const logicGraph = resolvedQuery.data ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data) : null
+  const logicGraph =
+    resolvedQuery.data &&
+    resolvedQuery.data.activation &&
+    Array.isArray(resolvedQuery.data.selected_components) &&
+    Array.isArray(resolvedQuery.data.runtime_artifacts)
+      ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data)
+      : null
+  const resolvedLogicGraph = resolvedQuery.data ? buildLogicGraphProjection(resolvedQuery.data) : null
+  const hasStructuredCatalogView = Boolean(logicGraph && resolvedQuery.data?.activation)
   const selectedCatalogFlowNode =
     logicGraph?.flowNodes.find((node) => node.id === catalogModalNodeId) ?? null
   const canApplyCatalogSelection = Boolean(
@@ -1145,10 +1161,15 @@ export function AdminPromptsPage() {
               </div>
             ) : null}
 
-            {catalogSelection && selectedManifestEntryId ? (
+            {catalogSelection && selectedManifestEntryId && hasStructuredCatalogView ? (
               <>
-                <section className="admin-prompts-catalog-detail-summary" aria-label={tCat.detailSummaryTitle}>
-                  <h3 className="admin-prompts-catalog-detail-summary__title">{tCat.detailSummaryTitle}</h3>
+                <section
+                  className="admin-prompts-catalog-detail-summary"
+                  aria-label="Résumé du contexte catalogue"
+                >
+                  <h3 className="admin-prompts-catalog-detail-summary__title">
+                    Résumé du contexte catalogue
+                  </h3>
                   {catalogContextLabel ? (
                     <p className="admin-prompts-catalog-detail-summary__tuple">{catalogContextLabel}</p>
                   ) : null}
@@ -1184,7 +1205,7 @@ export function AdminPromptsPage() {
                       </dd>
                     </div>
                   </dl>
-                  {resolvedQuery.data ? (
+                  {hasStructuredCatalogView ? (
                     <div className="admin-prompts-catalog-layers">
                       <section className="admin-prompts-catalog-layer-card" aria-label="Activation">
                         <h4>Activation</h4>
@@ -1251,7 +1272,7 @@ export function AdminPromptsPage() {
                       <h3 className="admin-prompts-catalog__graph-title">{tCat.graphZoneTitle}</h3>
                       <p className="admin-prompts-catalog__graph-intro text-muted">{tCat.graphIntro}</p>
                     </div>
-                    {resolvedQuery.data ? (
+                    {hasStructuredCatalogView ? (
                       <span className="badge badge--info">{resolvedQuery.data.activation.provider_target}</span>
                     ) : null}
                   </div>
@@ -1261,7 +1282,7 @@ export function AdminPromptsPage() {
                     <AdminPromptsResolvedAssemblyError error={resolvedQuery.error} catalog={tCat} />
                   ) : null}
 
-                  {resolvedQuery.data ? (
+                  {hasStructuredCatalogView ? (
                     <>
                       <AdminPromptsLogicGraph
                         projection={logicGraph}
@@ -1288,7 +1309,7 @@ export function AdminPromptsPage() {
         </section>
       ) : null}
 
-      {false && activeTab === "catalog" ? (
+      {activeTab === "catalog" ? (
         <section className="panel admin-prompts-catalog" aria-label={tCat.catalogRegionAria}>
           <div className="admin-prompts-catalog-master-detail">
             <div className="admin-prompts-catalog__master">
@@ -1577,7 +1598,7 @@ export function AdminPromptsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {catalogEntries.map((entry) => (
+                    {catalogTableEntries.map((entry) => (
                       <tr
                         key={entry.manifest_entry_id}
                         className={`admin-prompts-catalog__row${entry.manifest_entry_id === selectedManifestEntryId ? " admin-prompts-catalog__row--selected" : ""}`}
@@ -2097,7 +2118,13 @@ export function AdminPromptsPage() {
                         <section className="admin-prompts-resolved__zone" aria-label={tCat.graphZoneAria}>
                           <h4>{tCat.graphZoneTitle}</h4>
                           <p className="text-muted">{tCat.graphIntro}</p>
-                          <AdminPromptsLogicGraph projection={logicGraph} />
+                          {resolvedLogicGraph ? (
+                            <AdminPromptsLogicGraph projection={resolvedLogicGraph} />
+                          ) : (
+                            <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
+                              {tCat.graphUnavailable ?? tCat.notAvailable}
+                            </p>
+                          )}
                           <details className="admin-prompts-detail__disclosure admin-prompts-detail__disclosure--sources">
                             <summary className="admin-prompts-detail__disclosure-summary">
                               {tCat.compositionSourcesSummary}
@@ -2939,8 +2966,7 @@ export function AdminPromptsPage() {
         />
       ) : null}
 
-      {false &&
-      manualExecuteConfirmOpen &&
+      {manualExecuteConfirmOpen &&
       selectedManifestEntryId &&
       selectedSamplePayloadId &&
       activeTab === "catalog" ? (

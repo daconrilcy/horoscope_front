@@ -19,7 +19,7 @@ async def test_raises_prompt_render_error_if_var_missing(db):
         model="m", developer_prompt="Hello {{name}}", required_prompt_placeholders=["name"]
     )
 
-    with patch.object(gateway, "_resolve_config", return_value=dummy_config):
+    with patch.object(gateway, "_resolve_legacy_compat_config", return_value=dummy_config):
         # Renderer raises on FIRST missing variable
         with pytest.raises(PromptRenderError) as exc:
             await gateway.execute(

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.core.config import settings
+from app.llm_orchestration.legacy_prompt_runtime import get_legacy_max_tokens
 from app.prediction.llm_narrator import LLMNarrator
 from app.prompts.common_context import PromptCommonContext
 
@@ -19,6 +20,15 @@ def _make_common_context() -> PromptCommonContext:
         use_case_key="daily_prediction",
         natal_interpretation="Vous avancez mieux quand un cap clair se dégage.",
     )
+
+
+@pytest.fixture(autouse=True)
+def _mock_legacy_governance():
+    with patch(
+        "app.llm_orchestration.services.fallback_governance."
+        "FallbackGovernanceRegistry.track_fallback"
+    ):
+        yield
 
 
 @pytest.mark.asyncio
@@ -55,10 +65,9 @@ async def test_narrate_success():
         assert mock_client.chat.completions.create.await_args.kwargs["response_format"] == {
             "type": "json_object"
         }
-        assert (
-            mock_client.chat.completions.create.await_args.kwargs["max_completion_tokens"]
-            == LLMNarrator.DEFAULT_MAX_COMPLETION_TOKENS
-        )
+        assert mock_client.chat.completions.create.await_args.kwargs[
+            "max_completion_tokens"
+        ] == get_legacy_max_tokens("daily_prediction")
 
 
 @pytest.mark.asyncio

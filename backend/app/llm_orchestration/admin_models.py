@@ -18,6 +18,7 @@ from app.llm_orchestration.feature_taxonomy import (
     normalize_feature,
     normalize_subfeature,
 )
+from app.llm_orchestration.legacy_prompt_runtime import DEPRECATED_USE_CASE_MAPPING
 from app.llm_orchestration.models import is_reasoning_model
 
 
@@ -105,6 +106,54 @@ class LlmPersonaUpdate(BaseModel):
     enabled: Optional[bool] = None
 
 
+class AdminUseCaseAudit(BaseModel):
+    """Explicitly marks whether an admin key is canonical runtime or legacy-only."""
+
+    maintenance_surface: Literal["canonical_runtime", "legacy_maintenance"]
+    status: Literal["canonical_runtime", "legacy_alias", "legacy_registry_only"]
+    canonical_feature: Optional[str] = None
+    canonical_subfeature: Optional[str] = None
+    canonical_plan: Optional[str] = None
+
+
+def build_admin_use_case_audit(
+    use_case_key: str | None,
+    *,
+    maintenance_surface: Literal["canonical_runtime", "legacy_maintenance"] = (
+        "legacy_maintenance"
+    ),
+    canonical_feature: str | None = None,
+    canonical_subfeature: str | None = None,
+    canonical_plan: str | None = None,
+) -> AdminUseCaseAudit | None:
+    if not use_case_key:
+        return None
+
+    deprecated_mapping = DEPRECATED_USE_CASE_MAPPING.get(use_case_key)
+    if deprecated_mapping is not None:
+        return AdminUseCaseAudit(
+            maintenance_surface="legacy_maintenance",
+            status="legacy_alias",
+            canonical_feature=deprecated_mapping.get("feature"),
+            canonical_subfeature=deprecated_mapping.get("subfeature"),
+            canonical_plan=deprecated_mapping.get("plan"),
+        )
+
+    if canonical_feature is not None:
+        return AdminUseCaseAudit(
+            maintenance_surface="canonical_runtime",
+            status="canonical_runtime",
+            canonical_feature=canonical_feature,
+            canonical_subfeature=canonical_subfeature,
+            canonical_plan=canonical_plan,
+        )
+
+    return AdminUseCaseAudit(
+        maintenance_surface=maintenance_surface,
+        status="legacy_registry_only",
+    )
+
+
 class LlmPromptVersion(BaseModel):
     """
     Serializable admin view of a prompt version.
@@ -121,6 +170,8 @@ class LlmPromptVersion(BaseModel):
     temperature: float
     max_output_tokens: int
     fallback_use_case_key: Optional[str] = None
+    use_case_audit: AdminUseCaseAudit | None = None
+    fallback_use_case_audit: AdminUseCaseAudit | None = None
     reasoning_effort: Optional[str] = None
     verbosity: Optional[str] = None
     created_by: str
@@ -132,6 +183,12 @@ class LlmPromptVersion(BaseModel):
     @field_serializer("status")
     def serialize_status(self, status: PromptStatus) -> str:
         return PromptStatus.normalize(status).value
+
+    @model_validator(mode="after")
+    def populate_admin_audit(self) -> "LlmPromptVersion":
+        self.use_case_audit = build_admin_use_case_audit(self.use_case_key)
+        self.fallback_use_case_audit = build_admin_use_case_audit(self.fallback_use_case_key)
+        return self
 
 
 class LlmPromptVersionCreate(BaseModel):
@@ -166,8 +223,16 @@ class LlmUseCaseConfig(BaseModel):
     eval_failure_threshold: Optional[float] = None
     golden_set_path: Optional[str] = None
     active_prompt_version_id: Optional[uuid.UUID] = None
+    use_case_audit: AdminUseCaseAudit | None = None
+    fallback_use_case_audit: AdminUseCaseAudit | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="after")
+    def populate_admin_audit(self) -> "LlmUseCaseConfig":
+        self.use_case_audit = build_admin_use_case_audit(self.key)
+        self.fallback_use_case_audit = build_admin_use_case_audit(self.fallback_use_case_key)
+        return self
 
 
 class PromptAssemblyTarget(BaseModel):

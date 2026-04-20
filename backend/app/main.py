@@ -94,8 +94,11 @@ logger = logging.getLogger(__name__)
 
 
 def _ensure_llm_registry_seeded() -> None:
-    """Auto-reseed LLM registry in local/dev when critical entries are missing."""
+    """Legacy-only local reseed guarded by an explicit opt-in flag."""
     if settings.app_env in {"production", "prod"}:
+        return
+    if not settings.dev_allow_legacy_seed:
+        logger.info("llm_registry_legacy_seed_disabled")
         return
 
     from app.infra.db.models import (
@@ -105,8 +108,8 @@ def _ensure_llm_registry_seeded() -> None:
     )
     from app.infra.db.models.llm_prompt import PromptStatus
     from app.infra.db.session import SessionLocal
+    from app.llm_orchestration.prompt_version_lookup import get_active_prompt_version
     from app.llm_orchestration.seeds.use_cases_seed import seed_use_cases
-    from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
     from scripts.seed_29_prompts import seed_prompts
     from scripts.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
     from scripts.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
@@ -125,9 +128,7 @@ def _ensure_llm_registry_seeded() -> None:
                 .filter(LlmUseCaseConfigModel.key == "natal_interpretation_short")
                 .one_or_none()
             )
-            active_short_prompt = PromptRegistryV2.get_active_prompt(
-                db, "natal_interpretation_short"
-            )
+            active_short_prompt = get_active_prompt_version(db, "natal_interpretation_short")
             prompt_count = db.query(LlmPromptVersionModel).count()
             enabled_personas = (
                 db.query(LlmPersonaModel).filter(LlmPersonaModel.enabled == True).count()  # noqa: E712
@@ -408,12 +409,9 @@ async def _app_lifespan(_: FastAPI):
     # Story 61.64: Safeguard for Stripe Customer Portal
     run_stripe_portal_startup_validation(settings)
 
-    # Story 59.2: Validate prompt catalog vs DB
     from app.infra.db.session import SessionLocal
-    from app.prompts.validators import validate_catalog_vs_db
 
     with SessionLocal() as db:
-        validate_catalog_vs_db(db)
         run_canonical_db_startup_validation(settings.canonical_db_validation_mode, db)
         # Story 66.31: Validate LLM configuration coherence at startup
         await run_llm_coherence_startup_validation(settings.llm_coherence_validation_mode, db)

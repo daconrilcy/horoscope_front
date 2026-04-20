@@ -95,6 +95,57 @@ def test_admin_use_case_update_config():
     assert resp.json()["error"]["code"] == "invalid_safety_profile"
 
 
+def test_admin_use_case_list_exposes_legacy_alias_audit():
+    _cleanup_tables()
+    admin_token = _register_admin_and_token()
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    with SessionLocal() as db:
+        db.add_all(
+            [
+                LlmUseCaseConfigModel(
+                    key="chat",
+                    display_name="Chat",
+                    description="Legacy alias exposed in admin",
+                    fallback_use_case_key="horoscope_daily_free",
+                ),
+                LlmUseCaseConfigModel(
+                    key="natal_psy_profile",
+                    display_name="Natal Psy Profile",
+                    description="Legacy registry only surface",
+                ),
+            ]
+        )
+        db.commit()
+
+    resp = client.get("/v1/admin/llm/use-cases", headers=headers)
+    assert resp.status_code == 200
+
+    data = {item["key"]: item for item in resp.json()["data"]}
+
+    assert data["chat"]["use_case_audit"] == {
+        "maintenance_surface": "legacy_maintenance",
+        "status": "legacy_alias",
+        "canonical_feature": "chat",
+        "canonical_subfeature": "astrologer",
+        "canonical_plan": "free",
+    }
+    assert data["chat"]["fallback_use_case_audit"] == {
+        "maintenance_surface": "legacy_maintenance",
+        "status": "legacy_alias",
+        "canonical_feature": "horoscope_daily",
+        "canonical_subfeature": "narration",
+        "canonical_plan": "free",
+    }
+    assert data["natal_psy_profile"]["use_case_audit"] == {
+        "maintenance_surface": "legacy_maintenance",
+        "status": "legacy_registry_only",
+        "canonical_feature": None,
+        "canonical_subfeature": None,
+        "canonical_plan": None,
+    }
+
+
 def test_admin_assembly_publish_returns_structured_coherence_error():
     _cleanup_tables()
     admin_token = _register_admin_and_token()

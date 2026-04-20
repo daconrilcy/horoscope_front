@@ -43,9 +43,10 @@ async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
         developer_prompt="stub-stage05",
         input_schema=None,
     )
-    # Stage 0.5 appelle toujours _resolve_config avant la résolution d’assembly (gateway actuel).
+    # Story 70.13: once normalized to a supported family, Stage 0.5 must no longer
+    # resolve a legacy use-case config before canonical assembly/profile resolution.
     with patch.object(
-        gateway, "_resolve_config", new=AsyncMock(return_value=stage05)
+        gateway, "_resolve_legacy_compat_config", new=AsyncMock(return_value=stage05)
     ) as mock_resolve_config:
         # We fail assembly resolution to stop the pipeline after Stage 1
         with patch(registry_path, return_value=None):
@@ -53,7 +54,7 @@ async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
                 await gateway.execute_request(request, db=MagicMock())
 
             assert "Mandatory assembly missing for supported chat family" in str(exc.value)
-            assert mock_resolve_config.call_count == 1
+            assert mock_resolve_config.call_count == 0
 
 
 @pytest.mark.asyncio
@@ -131,7 +132,9 @@ async def test_story_66_29_recovery_blocks_legacy_fallback_for_supported(gateway
 
     # Repair : execute_request imbriqué ; on l’interrompt pour tester le refus de fallback legacy.
     with patch.object(gateway, "execute_request", side_effect=abort_nested_repair):
-        with patch.object(gateway, "_resolve_config", new=AsyncMock()) as mock_resolve_config:
+        with patch.object(
+            gateway, "_resolve_legacy_compat_config", new=AsyncMock()
+        ) as mock_resolve_config:
             with pytest.raises(OutputValidationError) as exc:
                 await gateway._handle_repair_or_fallback(
                     validation_result, request, mock_plan, mock_provider_result, db=MagicMock()
@@ -159,8 +162,10 @@ async def test_story_66_29_other_features_still_allow_prevalidation_and_fallback
     mock_config.input_schema = None
     mock_config.fallback_use_case = "some_fallback"
 
-    # Stage 0.5 should call _resolve_config
-    with patch.object(gateway, "_resolve_config", return_value=mock_config) as mock_resolve:
+    # Stage 0.5 should call the bounded legacy compatibility resolver.
+    with patch.object(
+        gateway, "_resolve_legacy_compat_config", return_value=mock_config
+    ) as mock_resolve:
         # We simulate a failure in _resolve_plan to stop execution after Stage 0.5
         with patch.object(gateway, "_resolve_plan", side_effect=ValueError("stop here")):
             with pytest.raises(ValueError, match="stop here"):

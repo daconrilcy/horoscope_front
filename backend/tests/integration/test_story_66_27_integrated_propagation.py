@@ -52,7 +52,7 @@ async def test_integrated_template_handled_propagation(db):
     )
 
     # We need a developer prompt that handles partial quality
-    # We'll mock _resolve_config to return this prompt
+    # We'll mock the legacy compatibility resolver to return this prompt
     from app.llm_orchestration.models import UseCaseConfig
 
     mock_config = UseCaseConfig(
@@ -74,7 +74,7 @@ async def test_integrated_template_handled_propagation(db):
     )
 
     with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
-        with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
+        with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
                 return_value=None,
@@ -148,7 +148,7 @@ async def test_integrated_injector_applied_propagation(db):
     )
 
     with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
-        with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
+        with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
                 return_value=None,
@@ -223,7 +223,7 @@ async def test_integrated_not_needed_propagation(db):
     )
 
     with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
-        with patch.object(LLMGateway, "_resolve_config", return_value=mock_config):
+        with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
                 return_value=None,

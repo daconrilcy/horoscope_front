@@ -141,6 +141,45 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
                             assert (
                                 excinfo.value.details["error_code"] == "missing_execution_profile"
                             )
+                            assert excinfo.value.details["feature"] == "chat"
+
+
+@pytest.mark.asyncio
+async def test_story_70_13_supported_perimeter_bypasses_stage_0_5_legacy_config(gateway):
+    """
+    Story 70.13: supported canonical paths must not use the legacy compat resolver during
+        Stage 0.5 pre-validation before assembly/profile resolution.
+    """
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            feature="chat",
+            subfeature="astrologer",
+            plan="free",
+            use_case="chat_astrologer",
+            message="Bonjour",
+        ),
+        context=ExecutionContext(),
+        request_id="test-70-13-stage05-bypass",
+        trace_id="trace-70-13-stage05-bypass",
+    )
+
+    with patch.object(
+        gateway, "_resolve_legacy_compat_config", new=AsyncMock()
+    ) as mock_resolve_config:
+        with patch.object(
+            gateway,
+            "_resolve_plan",
+            new=AsyncMock(
+                side_effect=GatewayConfigError(
+                    "missing assembly",
+                    error_code="missing_assembly",
+                )
+            ),
+        ):
+            with pytest.raises(GatewayConfigError, match="missing assembly"):
+                await gateway.execute_request(request, db=MagicMock())
+
+    assert mock_resolve_config.await_count == 0
 
 
 @pytest.mark.asyncio
@@ -189,7 +228,9 @@ async def test_story_66_30_legacy_alias_normalization_on_supported_perimeter(gat
         input_schema=None,
     )
 
-    with patch.object(gateway, "_resolve_config", new=AsyncMock(return_value=stage05)):
+    with patch.object(
+        gateway, "_resolve_legacy_compat_config", new=AsyncMock(return_value=stage05)
+    ):
         with patch(
             "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
             return_value=mock_assembly_db,
@@ -213,7 +254,7 @@ async def test_story_66_30_legacy_alias_normalization_on_supported_perimeter(gat
                             return_value=None,
                         ):
                             with patch(
-                                "app.llm_orchestration.gateway.resolve_model"
+                                "app.llm_orchestration.gateway.resolve_legacy_model"
                             ) as mock_resolve_model:
                                 # We call execute_request because the real use_case mapping
                                 # daily_prediction -> horoscope_daily happens there.
@@ -431,7 +472,8 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
         mock_config.required_prompt_placeholders = []
 
         with patch(
-            "app.llm_orchestration.gateway.LLMGateway._resolve_config", return_value=mock_config
+            "app.llm_orchestration.gateway.LLMGateway._resolve_legacy_compat_config",
+            return_value=mock_config,
         ):
             with patch(
                 "app.llm_orchestration.services.execution_profile_registry."
@@ -439,7 +481,8 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
                 return_value=None,
             ):
                 with patch(
-                    "app.llm_orchestration.gateway.resolve_model", return_value="gpt-4o-fallback"
+                    "app.llm_orchestration.gateway.resolve_legacy_model",
+                    return_value="gpt-4o-fallback",
                 ) as mock_resolve:
                     result, _ = await gateway._resolve_plan(request, db=MagicMock())
 

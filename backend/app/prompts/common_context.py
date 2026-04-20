@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
-from app.prompts.catalog import PROMPT_CATALOG
+from app.llm_orchestration.legacy_prompt_runtime import get_legacy_use_case_name
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import UserBirthProfileService
 from app.services.user_natal_chart_service import UserNatalChartService
@@ -225,8 +225,7 @@ class CommonContextBuilder:
             period_label = f"semaine du {cls._format_date_fr(today)}"
 
         # 5. Catalog Name
-        catalog_entry = PROMPT_CATALOG.get(use_case_key)
-        use_case_name = catalog_entry.name if catalog_entry else use_case_key
+        use_case_name = get_legacy_use_case_name(use_case_key)
 
         payload = PromptCommonContext(
             natal_interpretation=natal_interpretation,

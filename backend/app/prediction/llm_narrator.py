@@ -10,7 +10,10 @@ from typing import Any
 
 import openai
 
-from app.prompts.catalog import PROMPT_CATALOG, resolve_model
+from app.llm_orchestration.legacy_prompt_runtime import (
+    get_legacy_max_tokens,
+    resolve_legacy_model,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +44,7 @@ class LLMNarrator:
 
     TIMEOUT_SECONDS = 60.0
     # Story 66.28: daily_prediction is absorbed into horoscope_daily
-    DEFAULT_MAX_COMPLETION_TOKENS = PROMPT_CATALOG["horoscope_daily"].max_tokens
+    DEFAULT_MAX_COMPLETION_TOKENS = get_legacy_max_tokens("horoscope_daily") or 3000
     MIN_DAILY_SYNTHESIS_SENTENCES = 10
     MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 7
     MAX_NARRATION_ATTEMPTS = 2
@@ -73,7 +76,9 @@ class LLMNarrator:
         # 0. Governance check (Story 66.21 AC8)
         # LLMNarrator est exclusivement utilisé pour la famille horoscope_daily
         FallbackGovernanceRegistry.track_fallback(
-            FallbackType.NARRATOR_LEGACY, call_site="LLMNarrator.narrate", feature="horoscope_daily"
+            FallbackType.NARRATOR_LEGACY,
+            call_site="LLMNarrator.narrate",
+            feature="horoscope_daily",
         )
 
         try:
@@ -81,10 +86,11 @@ class LLMNarrator:
             # variant_code expected: "summary_only" | "full"
             use_case = self._resolve_use_case(variant_code)
 
-            model = resolve_model(use_case)
-            max_completion_tokens = PROMPT_CATALOG.get(
-                use_case, PROMPT_CATALOG["daily_prediction"]
-            ).max_tokens
+            model = resolve_legacy_model(use_case)
+            max_completion_tokens = (
+                get_legacy_max_tokens(use_case, default_use_case="daily_prediction")
+                or self.DEFAULT_MAX_COMPLETION_TOKENS
+            )
             min_daily_synthesis_sentences = self._get_min_daily_synthesis_sentences(variant_code)
 
             base_prompt = AstrologerPromptBuilder().build(

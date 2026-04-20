@@ -219,8 +219,8 @@ class ExecutionOverrides(BaseModel):
       use cases expérimentaux non encore en config DB.
     - USAGE INTERDIT : services métier normaux (chat, guidance,
       natal en production stable).
-    - EFFET : les valeurs non-None remplacent celles résolues par
-      _resolve_config() dans ResolvedExecutionPlan.
+    - EFFET : les valeurs non-None remplacent celles résolues par la
+      compatibilité legacy bornée ou par l'assembly dans ResolvedExecutionPlan.
     - JOURNALISATION : toute surcharge effective est tracée dans
       ResolvedExecutionPlan.to_log_dict() sous une clé 'overrides_applied'.
     - RÈGLE : un nouveau use case ne doit JAMAIS dépendre d'ExecutionOverrides

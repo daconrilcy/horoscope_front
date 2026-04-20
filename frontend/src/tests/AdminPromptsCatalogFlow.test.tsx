@@ -356,6 +356,15 @@ describe("Admin prompts catalog flow", () => {
     vi.unstubAllGlobals()
   })
 
+  async function selectCatalogFlowContext(plan: "free" | "premium") {
+    const selector = await screen.findByRole("region", { name: "Sélection du contexte catalogue" })
+    await within(selector).findByRole("option", { name: "natal" })
+    await userEvent.selectOptions(within(selector).getByLabelText("Fonctionnalité"), "natal")
+    await userEvent.selectOptions(within(selector).getByLabelText("Formule"), plan)
+    await userEvent.selectOptions(within(selector).getByLabelText("Locale"), "fr-FR")
+    await userEvent.click(within(selector).getByRole("button", { name: "Afficher le schéma" }))
+  }
+
   it("affiche la lecture en activation composants et artefacts runtime", async () => {
     installCatalogFetchStub(makeResolvedPayload())
     renderPage()
@@ -364,11 +373,7 @@ describe("Admin prompts catalog flow", () => {
       expect(screen.getByRole("heading", { name: "Catalogue prompts LLM" })).toBeInTheDocument()
     })
 
-    await screen.findByRole("option", { name: "natal" })
-    await userEvent.selectOptions(screen.getByLabelText("Fonctionnalité"), "natal")
-    await userEvent.selectOptions(screen.getByLabelText("Formule"), "free")
-    await userEvent.selectOptions(screen.getByLabelText("Locale"), "fr-FR")
-    await userEvent.click(screen.getByRole("button", { name: "Afficher le schéma" }))
+    await selectCatalogFlowContext("free")
 
     expect(await screen.findByText("Activation")).toBeInTheDocument()
     expect(screen.getByText("Composants sélectionnés")).toBeInTheDocument()
@@ -382,13 +387,14 @@ describe("Admin prompts catalog flow", () => {
     installCatalogFetchStub(makeResolvedPayload())
     renderPage()
 
-    await screen.findByRole("option", { name: "natal" })
-    await userEvent.selectOptions(screen.getByLabelText("Fonctionnalité"), "natal")
-    await userEvent.selectOptions(screen.getByLabelText("Formule"), "free")
-    await userEvent.selectOptions(screen.getByLabelText("Locale"), "fr-FR")
-    await userEvent.click(screen.getByRole("button", { name: "Afficher le schéma" }))
+    await selectCatalogFlowContext("free")
 
-    const graph = await screen.findByTestId("admin-prompts-logic-graph-visual")
+    const graphs = await screen.findAllByTestId("admin-prompts-logic-graph-visual")
+    const graph = await waitFor(() => {
+      const matchingGraph = graphs.find((candidate) => within(candidate).queryByText("Use case overlay"))
+      expect(matchingGraph).toBeTruthy()
+      return matchingGraph as HTMLElement
+    })
     const useCaseOverlayNode = await within(graph).findByText("Use case overlay")
     expect(useCaseOverlayNode).toBeTruthy()
     fireEvent.click(useCaseOverlayNode)
@@ -476,11 +482,7 @@ describe("Admin prompts catalog flow", () => {
 
     renderPage()
 
-    await screen.findByRole("option", { name: "natal" })
-    await userEvent.selectOptions(screen.getByLabelText("Fonctionnalité"), "natal")
-    await userEvent.selectOptions(screen.getByLabelText("Formule"), "premium")
-    await userEvent.selectOptions(screen.getByLabelText("Locale"), "fr-FR")
-    await userEvent.click(screen.getByRole("button", { name: "Afficher le schéma" }))
+    await selectCatalogFlowContext("premium")
 
     expect(await screen.findByText("Persona overlay")).toBeInTheDocument()
     expect(screen.getAllByText("Developer prompt after persona").length).toBeGreaterThan(0)

@@ -73,6 +73,16 @@ export type AdminLlmUseCase = {
   safety_profile: string
   allowed_persona_ids: string[]
   active_prompt_version_id: string | null
+  use_case_audit?: AdminUseCaseAudit | null
+  fallback_use_case_audit?: AdminUseCaseAudit | null
+}
+
+export type AdminUseCaseAudit = {
+  maintenance_surface: "canonical_runtime" | "legacy_maintenance"
+  status: "canonical_runtime" | "legacy_alias" | "legacy_registry_only"
+  canonical_feature: string | null
+  canonical_subfeature: string | null
+  canonical_plan: string | null
 }
 
 export type AdminPromptVersion = {
@@ -84,6 +94,8 @@ export type AdminPromptVersion = {
   temperature: number
   max_output_tokens: number
   fallback_use_case_key: string | null
+  use_case_audit?: AdminUseCaseAudit | null
+  fallback_use_case_audit?: AdminUseCaseAudit | null
   created_by: string
   created_at: string
   published_at: string | null
@@ -280,7 +292,10 @@ export type AdminResolvedAssemblyView = {
   plan: string | null
   locale: string | null
   use_case_key: string
+  canonical_use_case_key?: string | null
   runtime_use_case_key: string | null
+  use_case_audit?: AdminUseCaseAudit | null
+  runtime_use_case_audit?: AdminUseCaseAudit | null
   context_quality: string
   assembly_id: string | null
   inspection_mode: AdminInspectionMode

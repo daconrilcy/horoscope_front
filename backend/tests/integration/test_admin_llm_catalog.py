@@ -605,8 +605,7 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
             == "developer_prompt_assembled"
         )
         assert (
-            runtime_artifacts["developer_prompt_after_injectors"]["injection_point"]
-            == "developer"
+            runtime_artifacts["developer_prompt_after_injectors"]["injection_point"] == "developer"
         )
         assert runtime_artifacts["system_prompt"]["injection_point"] == "system"
         assert "messages" in runtime_artifacts["final_provider_payload"]["content"]

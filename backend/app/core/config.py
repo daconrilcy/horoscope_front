@@ -293,6 +293,7 @@ class Settings:
             "ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", default=False
         )
         self.seed_admin = self._parse_bool_env("SEED_ADMIN", default=False)
+        self.dev_allow_legacy_seed = self._parse_bool_env("DEV_ALLOW_LEGACY_SEED", default=False)
         # pricing experiment settings
         self.pricing_experiment_enabled = self._parse_bool_env(
             "PRICING_EXPERIMENT_ENABLED",

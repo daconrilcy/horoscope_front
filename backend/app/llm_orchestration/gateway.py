@@ -19,6 +19,13 @@ from app.llm_orchestration.feature_taxonomy import (
     normalize_feature,
     normalize_subfeature,
 )
+from app.llm_orchestration.legacy_prompt_runtime import (
+    DEPRECATED_USE_CASE_MAPPING,
+    build_legacy_compat_use_case_config,
+    get_legacy_output_schema,
+    get_legacy_prompt_runtime_entry,
+    resolve_legacy_model,
+)
 from app.llm_orchestration.models import (
     ContextCompensationStatus,
     ExecutionContext,
@@ -43,6 +50,7 @@ from app.llm_orchestration.models import (
     is_reasoning_model,
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
+from app.llm_orchestration.prompt_version_lookup import get_active_prompt_version
 from app.llm_orchestration.providers.provider_runtime_manager import ProviderRuntimeManager
 from app.llm_orchestration.providers.responses_client import ResponsesClient
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
@@ -55,10 +63,8 @@ from app.llm_orchestration.services.input_validator import validate_input
 from app.llm_orchestration.services.observability_service import log_call, log_governance_event
 from app.llm_orchestration.services.output_validator import ValidationResult, validate_output
 from app.llm_orchestration.services.persona_composer import compose_persona_block
-from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
 from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 from app.llm_orchestration.services.repair_prompter import build_repair_prompt
-from app.prompts.catalog import PROMPT_CATALOG, resolve_model
 from app.prompts.common_context import CommonContextBuilder, QualifiedContext
 
 logger = logging.getLogger(__name__)
@@ -77,202 +83,6 @@ _FALLBACK_USER_MSG = {
 
 # ComposedMessages type alias (Story 66.4 AC3)
 ComposedMessages = List[Dict[str, Any]]
-
-
-# Stub system cores
-SYSTEM_CORES = {
-    "default_v1": "Tu es un assistant astrologique expert, éthique et précis. "
-    "Tu respectes les consignes de sécurité et ne prédis pas la mort ou les maladies graves.",
-}
-
-# Stub use cases
-USE_CASE_STUBS = {
-    "natal_long_free": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=1000,
-        system_core_key="default_v1",
-        developer_prompt=(
-            "Langue de reponse : francais ({{locale}}). Contexte : use_case={{use_case}}.\n\n"
-            "Interpretez le theme natal fourni de facon claire, chaleureuse et non fataliste, "
-            "strictement a partir des donnees techniques suivantes :\n"
-            "{{chart_json}}\n\n"
-            "Retourne uniquement un JSON valide with exactly :\n"
-            '- "title" : une phrase courte et fluide qui synthétise le profil natal '
-            "dans un style éditorial, rédigée au vouvoiement, sans deux-points ni guillemets.\n"
-            '- "summary" : un portrait natal en 5 a 7 phrases fluides, redige au vouvoiement, '
-            "avec un peu plus de matiere qu'un simple resume.\n"
-            '- "accordion_titles" : une liste de 2 a 4 titres courts, concrets et distincts '
-            "pour les sections premium verrouillees.\n\n"
-            "Contraintes :\n"
-            "- N'invente aucun placement, aspect ou maison absent des donnees.\n"
-            "- Utilisez toujours 'vous' et 'votre', jamais 'il', 'elle' ou 'cette personne'.\n"
-            "- Le champ 'title' doit ressembler a une accroche premium concise, "
-            "pas a un label generique.\n"
-            "- Donnez un portrait nuance, utile et incarné, sans jargon inutile.\n"
-            "- Pas de promesse absolue, pas de fatalisme.\n"
-            "- Aucun markdown, aucun texte hors JSON."
-        ),
-        required_prompt_placeholders=["chart_json", "locale", "use_case"],
-        interaction_mode="structured",
-        user_question_policy="none",
-    ),
-    "natal-long-free": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=1000,
-        system_core_key="default_v1",
-        developer_prompt="Génère un horoscope natal long (stub).",
-        required_prompt_placeholders=[],
-        interaction_mode="structured",
-        user_question_policy="none",
-    ),
-    "natal_interpretation": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=4000,
-        system_core_key="default_v1",
-        developer_prompt="Analyse le thème natal pour un utilisateur né le {{birth_date}}. "
-        "Données: {{chart_json}}.",
-        required_prompt_placeholders=["birth_date", "chart_json"],
-    ),
-    "natal_interpretation_short": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=4000,
-        system_core_key="default_v1",
-        developer_prompt="Analyse rapide du thème natal.",
-        required_prompt_placeholders=[],
-        interaction_mode="structured",
-        user_question_policy="optional",
-    ),
-    "chat": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2000,
-        system_core_key="default_v1",
-        developer_prompt="Réponds à la conversation suivante: {{last_user_msg}}.",
-        required_prompt_placeholders=["last_user_msg"],
-        interaction_mode="chat",
-        user_question_policy="required",
-    ),
-    "chat_astrologer": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2000,
-        system_core_key="default_v1",
-        developer_prompt="Réponds à la conversation suivante: {{last_user_msg}}.",
-        required_prompt_placeholders=["last_user_msg"],
-        interaction_mode="chat",
-        user_question_policy="required",
-    ),
-    "guidance_daily": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2000,
-        system_core_key="default_v1",
-        developer_prompt="Génère une guidance quotidienne basée sur le contexte: {{situation}}.",
-        required_prompt_placeholders=["situation"],
-        interaction_mode="structured",
-        user_question_policy="none",
-    ),
-    "horoscope_daily": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=3000,
-        system_core_key="default_v1",
-        developer_prompt="Génère un horoscope quotidien (stub). Question: {{question}}",
-        required_prompt_placeholders=["question"],
-        interaction_mode="structured",
-        user_question_policy="none",
-    ),
-    "daily_prediction": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=1600,
-        system_core_key="default_v1",
-        developer_prompt="Génère des prédictions quotidiennes (stub). Question: {{question}}",
-        required_prompt_placeholders=["question"],
-        interaction_mode="structured",
-        user_question_policy="none",
-    ),
-    "guidance_weekly": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2000,
-        system_core_key="default_v1",
-        developer_prompt="Génère une guidance hebdomadaire.",
-        required_prompt_placeholders=[],
-        interaction_mode="chat",
-        user_question_policy="none",
-    ),
-    "guidance_contextual": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2000,
-        system_core_key="default_v1",
-        developer_prompt="Génère une guidance contextuelle pour: {{situation}}.",
-        required_prompt_placeholders=["situation"],
-        interaction_mode="chat",
-        user_question_policy="required",
-    ),
-    "event_guidance": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=4000,
-        system_core_key="default_v1",
-        developer_prompt="Guidance pour un événement: {{event_description}}.",
-        required_prompt_placeholders=["event_description"],
-        interaction_mode="chat",
-        user_question_policy="required",
-    ),
-    "astrologer_selection_help": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2048,
-        system_core_key="default_v1",
-        developer_prompt="Aide l'utilisateur à choisir un astrologue.",
-        required_prompt_placeholders=[],
-        interaction_mode="chat",
-        user_question_policy="optional",
-    ),
-    "test_natal": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2048,
-        system_core_key="default_v1",
-        developer_prompt="Test natal prompt. locale={{locale}}",
-        required_prompt_placeholders=[],
-        interaction_mode="structured",
-    ),
-    "test_guidance": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2048,
-        system_core_key="default_v1",
-        developer_prompt="Test guidance prompt. locale={{locale}} situation={{situation}}",
-        required_prompt_placeholders=[],
-        interaction_mode="structured",
-    ),
-    "horoscope_daily_free": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2048,
-        system_core_key="default_v1",
-        developer_prompt="Deprecated free stub.",
-        required_prompt_placeholders=[],
-        interaction_mode="structured",
-    ),
-    "horoscope_daily_full": UseCaseConfig(
-        model=settings.openai_model_default,
-        temperature=0.7,
-        max_output_tokens=2048,
-        system_core_key="default_v1",
-        developer_prompt="Deprecated full stub.",
-        required_prompt_placeholders=[],
-        interaction_mode="structured",
-    ),
-}
 
 
 class LLMGateway:
@@ -378,20 +188,18 @@ class LLMGateway:
         messages.append({"role": "user", "content": user_payload})
         return messages
 
-    async def _resolve_config(
+    async def _resolve_legacy_compat_config(
         self, db: Optional[Session], use_case: str, context: Dict[str, Any]
     ) -> UseCaseConfig:
-        """Resolves use case configuration from DB or stubs."""
+        """Resolve config for bounded legacy-only compatibility paths."""
         config = None
         if db:
             try:
-                override_id = context.get("_override_prompt_version_id")
-                if override_id:
-                    from app.infra.db.models import LlmPromptVersionModel
-
-                    db_prompt = db.get(LlmPromptVersionModel, uuid.UUID(override_id))
-                else:
-                    db_prompt = PromptRegistryV2.get_active_prompt(db, use_case)
+                db_prompt = get_active_prompt_version(
+                    db,
+                    use_case,
+                    override_prompt_version_id=context.get("_override_prompt_version_id"),
+                )
 
                 use_case_stmt = select(LlmUseCaseConfigModel).where(
                     LlmUseCaseConfigModel.key == use_case
@@ -482,9 +290,10 @@ class LLMGateway:
                 )
 
         if not config:
-            config = USE_CASE_STUBS.get(use_case)
+            config = build_legacy_compat_use_case_config(use_case)
             if db and config:
-                # Still try to merge DB use case config even if prompt is stubbed
+                # Still merge DB use-case config even when the prompt contract comes
+                # from the bounded legacy compatibility layer.
                 use_case_stmt = select(LlmUseCaseConfigModel).where(
                     LlmUseCaseConfigModel.key == use_case
                 )
@@ -506,12 +315,12 @@ class LLMGateway:
                             context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
                 except Exception as e:
                     logger.error("gateway_db_use_case_merge_failed error=%s", str(e))
-            logger.warning("gateway_fallback_to_stub use_case=%s", use_case)
+            logger.warning("gateway_legacy_compat_config_used use_case=%s", use_case)
 
         if not config:
             raise UnknownUseCaseError(f"Use case '{use_case}' not found in registry.")
 
-        resolved_model = resolve_model(use_case, fallback_model=config.model)
+        resolved_model = resolve_legacy_model(use_case, fallback_model=config.model)
         if resolved_model != config.model:
             config = config.model_copy(update={"model": resolved_model})
             logger.info(
@@ -652,10 +461,11 @@ class LLMGateway:
                 logger.error("gateway_invalid_schema_id schema_id=%s", config.output_schema_id)
 
         if not schema_dict and use_case not in PAID_USE_CASES:
-            catalog_entry = PROMPT_CATALOG.get(use_case)
-            if catalog_entry and catalog_entry.output_schema:
-                schema_dict = catalog_entry.output_schema
-                schema_name = re.sub(r"[^a-z0-9_-]", "_", catalog_entry.name.lower())
+            legacy_schema = get_legacy_output_schema(use_case)
+            legacy_entry = get_legacy_prompt_runtime_entry(use_case)
+            if legacy_schema and legacy_entry:
+                schema_dict = legacy_schema
+                schema_name = re.sub(r"[^a-z0-9_-]", "_", str(legacy_entry["name"]).lower())
 
         is_stub = config.prompt_version_id == "hardcoded-v1"
         is_prod = getattr(settings, "app_env", "development") in {"production", "prod"}
@@ -831,8 +641,6 @@ class LLMGateway:
         # Story 66.29: Legacy mapping was moved to execute_request (Issue 1)
         # We assume taxonomy is already normalized here.
         is_legacy_compatibility = False
-        from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
-
         if (
             use_case in DEPRECATED_USE_CASE_MAPPING
             and not request.flags.is_repair_call
@@ -915,7 +723,16 @@ class LLMGateway:
                             subfeature=request.user_input.subfeature,
                             is_nominal=True,
                         )
-                        raise GatewayConfigError(msg)
+                        raise GatewayConfigError(
+                            msg,
+                            error_code="missing_assembly",
+                            details={
+                                "feature": request.user_input.feature,
+                                "subfeature": request.user_input.subfeature,
+                                "plan": request.user_input.plan,
+                                "use_case": use_case,
+                            },
+                        )
                     if assembly_db:
                         # Assembly found! Override everything (AC10)
                         resolved_assembly = resolve_assembly(assembly_db)
@@ -996,24 +813,33 @@ class LLMGateway:
                 ):
                     raise GatewayConfigError(
                         f"Resolution failed for supported feature '{request.user_input.feature}'. "
-                        "Fallback to USE_CASE_FIRST is strictly forbidden."
+                        "Fallback to USE_CASE_FIRST is strictly forbidden.",
+                        error_code="missing_assembly",
+                        details={
+                            "feature": request.user_input.feature,
+                            "subfeature": request.user_input.subfeature,
+                            "plan": request.user_input.plan,
+                            "use_case": use_case,
+                        },
                     )
 
                 if db:
                     try:
-                        config = await self._resolve_config(db, use_case, context_dict)
+                        config = await self._resolve_legacy_compat_config(
+                            db, use_case, context_dict
+                        )
                         if config.prompt_version_id == "hardcoded-v1":
                             source_base = "stub"
                     except Exception:
                         source_base = "stub"
 
                 if not config:
-                    config = await self._resolve_config(db, use_case, context_dict)
+                    config = await self._resolve_legacy_compat_config(db, use_case, context_dict)
                     source_base = "stub"
 
                 FallbackGovernanceRegistry.track_fallback(
                     FallbackType.USE_CASE_FIRST,
-                    call_site=f"resolve_config:{use_case}",
+                    call_site=f"legacy_compat_config:{use_case}",
                     feature=request.user_input.feature,
                     is_nominal=bool(request.user_input.feature)
                     and not is_legacy_compatibility
@@ -1129,6 +955,13 @@ class LLMGateway:
                     raise GatewayConfigError(
                         f"Provider '{provider}' is not nominally supported by the platform.",
                         error_code="unsupported_execution_provider",
+                        details={
+                            "feature": request.user_input.feature,
+                            "subfeature": request.user_input.subfeature,
+                            "plan": request.user_input.plan,
+                            "use_case": use_case,
+                            "provider": provider,
+                        },
                     )
                 else:
                     # AC5: Fallback on non-nominal/test paths
@@ -1150,7 +983,7 @@ class LLMGateway:
                         provider,
                         model_id,
                     )
-                    model_id = resolve_model(use_case, fallback_model=config.model)
+                    model_id = resolve_legacy_model(use_case, fallback_model=config.model)
                     profile_source = "fallback_provider_unsupported"
                     provider = "openai"
                     translated_params = {}
@@ -1183,6 +1016,13 @@ class LLMGateway:
                     raise GatewayConfigError(
                         f"Provider mapping failed for '{provider}' on supported path: {e}",
                         error_code="provider_mapping_failed",
+                        details={
+                            "feature": request.user_input.feature,
+                            "subfeature": request.user_input.subfeature,
+                            "plan": request.user_input.plan,
+                            "use_case": use_case,
+                            "provider": provider,
+                        },
                     )
 
                 # High #1 & #2: Fallback if provider/params mapping fails (Legacy)
@@ -1197,7 +1037,7 @@ class LLMGateway:
                     provider,
                     e,
                 )
-                model_id = resolve_model(use_case, fallback_model=config.model)
+                model_id = resolve_legacy_model(use_case, fallback_model=config.model)
                 profile_source = "fallback_resolve_model"
                 provider = "openai"  # High #2 Fix: Reset to supported provider
                 translated_params = {}
@@ -1234,10 +1074,16 @@ class LLMGateway:
                     f"No ExecutionProfile found for supported feature "
                     f"'{request.user_input.feature}'.",
                     error_code="missing_execution_profile",
+                    details={
+                        "feature": request.user_input.feature,
+                        "subfeature": request.user_input.subfeature,
+                        "plan": request.user_input.plan,
+                        "use_case": use_case,
+                    },
                 )
 
             # Legacy/Fallback resolution
-            model_id = resolve_model(use_case, fallback_model=config.model)
+            model_id = resolve_legacy_model(use_case, fallback_model=config.model)
             profile_source = "fallback_resolve_model"
 
             FallbackGovernanceRegistry.track_fallback(
@@ -1285,8 +1131,8 @@ class LLMGateway:
         # Final Stage 1 resolution
 
         model_source = source_base
-        entry = PROMPT_CATALOG.get(use_case)
-        if entry and os.environ.get(entry.engine_env_key):
+        entry = get_legacy_prompt_runtime_entry(use_case)
+        if entry and os.environ.get(str(entry["engine_env_key"])):
             model_source = "os_granular"
         else:
             safe_uc_key = re.sub(r"[^a-zA-Z0-9_]", "_", use_case).upper()
@@ -1628,7 +1474,7 @@ class LLMGateway:
             context_dict = request.context.model_dump()
             extra = context_dict.pop("extra_context", {})
             context_dict.update(extra)
-            config = await self._resolve_config(db, use_case, context_dict)
+            config = await self._resolve_legacy_compat_config(db, use_case, context_dict)
 
             if config.fallback_use_case:
                 logger.warning(
@@ -1950,8 +1796,6 @@ class LLMGateway:
         try:
             # Story 66.23: Early taxonomy normalization and validation (AC1, AC2, AC10)
             # Story 66.29: Move legacy mapping here to ensure it bypasses Stage 0.5 (Issue 1)
-            from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
-
             if use_case in DEPRECATED_USE_CASE_MAPPING and not request.user_input.feature:
                 mapping = DEPRECATED_USE_CASE_MAPPING[use_case]
                 request.user_input.feature = normalize_feature(mapping["feature"])
@@ -2016,10 +1860,12 @@ class LLMGateway:
             extra = context_dict.pop("extra_context", {})
             context_dict.update(extra)
 
-            # Stage 0.5: Fast pre-validation against the explicit use-case contract when available.
-            # This remains best-effort and does not replace mandatory assembly/profile resolution.
-            config = await self._resolve_config(db, use_case, context_dict)
-            self._validate_input(config, user_input_dict, request.context)
+            # Stage 0.5: Fast pre-validation remains best-effort for legacy-only paths.
+            # Supported canonical families must be validated from the resolved plan instead of a
+            # legacy use-case config resolved before assembly/profile lookup.
+            if not is_supported_feature(request.user_input.feature):
+                config = await self._resolve_legacy_compat_config(db, use_case, context_dict)
+                self._validate_input(config, user_input_dict, request.context)
 
             # Stage 1: Resolve Plan (Now includes QualifiedContext)
             try:

@@ -64,8 +64,8 @@ async def test_prompt_version_id_propagation():
         user_id=1,
     )
 
-    # Mocking _resolve_config to return our config
-    gateway._resolve_config = AsyncMock(return_value=config)
+    # Mock the bounded legacy compatibility resolver.
+    gateway._resolve_legacy_compat_config = AsyncMock(return_value=config)
 
     result = await gateway.execute_request(request)
 
@@ -173,7 +173,7 @@ async def test_observability_success_ignores_missing_fk_references():
         mock_client.execute = AsyncMock(return_value=(provider_res, {}))
 
         gateway = LLMGateway(responses_client=mock_client)
-        gateway._resolve_config = AsyncMock(
+        gateway._resolve_legacy_compat_config = AsyncMock(
             return_value=UseCaseConfig(
                 model="m",
                 developer_prompt="hello",

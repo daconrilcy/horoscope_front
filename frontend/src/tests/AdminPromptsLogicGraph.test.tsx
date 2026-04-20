@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 
 const reactFlowState = vi.hoisted(() => ({
-  shouldThrow: false,
+  mountCount: 0,
+  unmountCount: 0,
 }))
 
 vi.mock("@xyflow/react", async () => {
@@ -13,10 +14,15 @@ vi.mock("@xyflow/react", async () => {
     Controls: () => null,
     MarkerType: { ArrowClosed: "arrow-closed" },
     ReactFlowProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    useNodesState: (initialNodes: unknown[]) => [initialNodes, vi.fn(), vi.fn()],
+    useEdgesState: (initialEdges: unknown[]) => [initialEdges, vi.fn(), vi.fn()],
     ReactFlow: () => {
-      if (reactFlowState.shouldThrow) {
-        throw new Error("react-flow-render-failure")
-      }
+      React.useEffect(() => {
+        reactFlowState.mountCount += 1
+        return () => {
+          reactFlowState.unmountCount += 1
+        }
+      }, [])
       return <div data-testid="mock-react-flow-engine">mock react flow</div>
     },
   }
@@ -59,28 +65,30 @@ function makeProjection(boundaryRemountKey: string): LogicGraphProjection {
 
 describe("AdminPromptsLogicGraph", () => {
   beforeEach(() => {
-    reactFlowState.shouldThrow = false
+    reactFlowState.mountCount = 0
+    reactFlowState.unmountCount = 0
     vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
-  it("remonte l'Error Boundary quand la clé change pour le même manifest", () => {
+  it("remonte le sous-arbre React Flow quand la clé change pour le même manifest", () => {
     const projection = makeProjection("chat:chat_default:premium:fr-FR::assembly_preview")
-    reactFlowState.shouldThrow = true
 
     const { rerender } = render(<AdminPromptsLogicGraph projection={projection} />)
 
-    expect(screen.getByText(/Le schéma visuel n’a pas pu être affiché/)).toBeInTheDocument()
-    expect(screen.queryByTestId("admin-prompts-logic-graph-visual")).toBeNull()
+    expect(screen.getByTestId("admin-prompts-logic-graph-visual")).toBeInTheDocument()
+    expect(screen.getByTestId("mock-react-flow-engine")).toBeInTheDocument()
+    expect(reactFlowState.mountCount).toBe(1)
+    expect(reactFlowState.unmountCount).toBe(0)
 
-    reactFlowState.shouldThrow = false
     rerender(
       <AdminPromptsLogicGraph
         projection={makeProjection("chat:chat_default:premium:fr-FR::runtime_preview::sample-1")}
       />,
     )
 
-    expect(screen.queryByText(/Le schéma visuel n’a pas pu être affiché/)).toBeNull()
     expect(screen.getByTestId("admin-prompts-logic-graph-visual")).toBeInTheDocument()
     expect(screen.getByTestId("mock-react-flow-engine")).toBeInTheDocument()
+    expect(reactFlowState.mountCount).toBe(2)
+    expect(reactFlowState.unmountCount).toBe(1)
   })
 })

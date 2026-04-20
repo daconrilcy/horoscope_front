@@ -24,6 +24,7 @@ from app.infra.db.models.user_natal_interpretation import (
 )
 from app.infra.observability.metrics import observe_duration
 from app.llm_orchestration.models import GatewayResult, NatalExecutionInput
+from app.llm_orchestration.prompt_version_lookup import get_active_prompt_version
 from app.llm_orchestration.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
@@ -32,7 +33,6 @@ from app.llm_orchestration.schemas import (
     AstroResponseV2,
     AstroResponseV3,
 )
-from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
 from app.services.ai_engine_adapter import AIEngineAdapter
 from app.services.chart_json_builder import (
     build_chart_json,
@@ -301,7 +301,7 @@ class NatalInterpretationServiceV2:
                 )
             if existing:
                 # Avoid serving stale cached payloads produced with an archived prompt version.
-                active_prompt = PromptRegistryV2.get_active_prompt(db, existing.use_case)
+                active_prompt = get_active_prompt_version(db, existing.use_case)
                 active_prompt_id = str(active_prompt.id) if active_prompt else None
                 existing_prompt_id = (
                     str(existing.prompt_version_id) if existing.prompt_version_id else None

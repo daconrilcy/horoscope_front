@@ -106,6 +106,53 @@ def test_execution_config_admin_accepts_reasoning_model_without_temperature():
 
 
 @pytest.mark.asyncio
+async def test_resolve_assembly_clears_legacy_temperature_for_reasoning_model(db):
+    feature_v = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key="reasoning_feature",
+        developer_prompt="FEATURE PROMPT {{locale}}",
+        status=PromptStatus.PUBLISHED,
+        model="gpt-5",
+        created_by="test",
+    )
+    db.add(feature_v)
+
+    uc_config = LlmUseCaseConfigModel(
+        key="reasoning_feature",
+        display_name="Reasoning Feature",
+        description="test",
+        safety_profile="astrology",
+    )
+    db.add(uc_config)
+    db.commit()
+
+    config = PromptAssemblyConfigModel(
+        feature="reasoning_feature",
+        locale="fr-FR",
+        feature_template_ref=feature_v.id,
+        execution_config={
+            "model": "gpt-5",
+            "temperature": 0.7,
+            "max_output_tokens": 32000,
+            "reasoning_effort": "low",
+        },
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    db.add(config)
+    db.commit()
+
+    resolved_db = db.get(PromptAssemblyConfigModel, config.id)
+    assert resolved_db is not None
+
+    resolved = resolve_assembly(resolved_db)
+
+    assert resolved.execution_config.model == "gpt-5"
+    assert resolved.execution_config.temperature is None
+    assert resolved.execution_config.reasoning_effort == "low"
+
+
+@pytest.mark.asyncio
 async def test_assembly_waterfall_fallback(db):
     # Setup: 1 generic config, 1 specific config
     fv = LlmPromptVersionModel(

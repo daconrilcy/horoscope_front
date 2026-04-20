@@ -13,6 +13,7 @@ from app.llm_orchestration.admin_models import (
     PromptAssemblyTarget,
     ResolvedAssembly,
 )
+from app.llm_orchestration.models import is_reasoning_model
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
 from app.llm_orchestration.prompt_governance_registry import (
     PLACEHOLDER_ALLOWLIST,
@@ -196,7 +197,7 @@ def resolve_assembly(
 
     # 3. Resolve Plan Rules (AC11)
     plan_rules_content = None
-    exec_dict = config.execution_config
+    exec_dict = dict(config.execution_config or {})
 
     if config.plan_rules_enabled and config.plan_rules_ref:
         rule = PLAN_RULES_REGISTRY.get(config.plan_rules_ref)
@@ -220,6 +221,11 @@ def resolve_assembly(
                 exec_dict["max_output_tokens"] = min(current_max, rule.max_output_tokens_override)
 
     # 4. Execution Config (AC5)
+    # Backward compatibility: legacy persisted configs may still contain
+    # a temperature for reasoning models, which is now forbidden.
+    if is_reasoning_model(str(exec_dict.get("model", ""))):
+        exec_dict["temperature"] = None
+
     execution_config = ExecutionConfigAdmin(**exec_dict)
 
     # 5. Policy Layer (Architectural Note 1)

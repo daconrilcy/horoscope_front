@@ -61,3 +61,45 @@ def test_get_use_case_contract():
     assert data["output_schema"]["title"] == "Astro"
     assert data["persona_strategy"] == "required"
     assert "chart_json" in data["required_prompt_placeholders"]
+    assert data["use_case_audit"] == {
+        "maintenance_surface": "legacy_maintenance",
+        "status": "legacy_registry_only",
+        "canonical_feature": None,
+        "canonical_subfeature": None,
+        "canonical_plan": None,
+    }
+
+
+def test_get_use_case_contract_exposes_legacy_alias_metadata():
+    _cleanup_tables()
+    admin_token = _register_admin_and_token()
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    with SessionLocal() as db:
+        uc = LlmUseCaseConfigModel(
+            key="chat",
+            display_name="Chat",
+            description="Legacy chat alias",
+            fallback_use_case_key="horoscope_daily_free",
+        )
+        db.add(uc)
+        db.commit()
+
+    resp = client.get("/v1/admin/llm/use-cases/chat/contract", headers=headers)
+    assert resp.status_code == 200
+
+    data = resp.json()["data"]
+    assert data["use_case_audit"] == {
+        "maintenance_surface": "legacy_maintenance",
+        "status": "legacy_alias",
+        "canonical_feature": "chat",
+        "canonical_subfeature": "astrologer",
+        "canonical_plan": "free",
+    }
+    assert data["fallback_use_case_audit"] == {
+        "maintenance_surface": "legacy_maintenance",
+        "status": "legacy_alias",
+        "canonical_feature": "horoscope_daily",
+        "canonical_subfeature": "narration",
+        "canonical_plan": "free",
+    }
