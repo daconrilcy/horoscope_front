@@ -78,6 +78,7 @@ A l issue de cette story :
 14. **AC14 - Compatibilite transitoire documentee** : chaque shim ou wrapper inverse restant est liste dans un document de transition maintenu a jour avec son critere de suppression.
 15. **AC15 - Validation complete obligatoire** : la story est consideree finie seulement si les validations locales backend passent (`ruff format`, `ruff check`, `pytest -q`) et si les tests critiques de non-regression runtime/admin sont verts.
 16. **AC16 - Adoption nominale des chemins canoniques** : pour les composants critiques migres vers `app.domain.llm.*`, le code nominal `backend/app` importe directement les chemins canoniques ; les chemins historiques `app.llm_orchestration.*` correspondants ne sont utilises que comme shims de compatibilite transitoire.
+17. **AC17 - Suppression du moteur de rendu historique comme source primaire** : le rendu effectif des prompts n est plus porte par `backend/app/llm_orchestration/services/prompt_renderer.py` ; `backend/app/domain/llm/prompting/renderer.py` ou `backend/app/domain/llm/prompting/prompt_renderer.py` devient l implementation reelle ; tous les imports nominaux `backend/app` pointent vers le renderer canonique ; `backend/app/llm_orchestration/services/prompt_renderer.py` est supprime ou reduit a un shim minimal historique -> canonique ; aucun composant nominal ne depend directement du renderer historique ; le comportement `{{placeholders}}`, les regles `required/optional/fallback` et les controles de gouvernance restent identiques.
 
 ## Tasks / Subtasks
 
@@ -131,6 +132,12 @@ A l issue de cette story :
   - [x] Basculer `prompt_governance_registry` nominal vers `app.domain.llm.governance.prompt_governance_registry`.
   - [x] Basculer `legacy_residual_registry` nominal vers `app.domain.llm.governance.legacy_residual_registry`.
   - [x] Inverser les chemins historiques concernes en shims de compatibilite.
+
+- [x] Task 8: Sortir le renderer historique du nominal (AC17)
+  - [x] Definir `app.domain.llm.prompting.prompt_renderer` comme implementation reelle du rendu.
+  - [x] Basculer les imports nominaux runtime/configuration vers `app.domain.llm.prompting.prompt_renderer`.
+  - [x] Reduire `app.llm_orchestration.services.prompt_renderer` a un shim minimal vers le canonique.
+  - [x] Verifier l absence de changement comportemental sur le rendu placeholders et la gouvernance.
 
 ## Dev Notes
 
@@ -258,3 +265,4 @@ gpt-5
 - 2026-04-21 : correctifs review P1/P2 — suppression des dependances trackees vers modules non suivis et restauration systematique de `backend/horoscope.db` hors scope.
 - 2026-04-21 : ajout AC16 et bascule ciblee des imports nominaux vers `app.domain.llm.*` pour `provider_runtime_manager`, `prompt_version_lookup`, `prompt_governance_registry` et `legacy_residual_registry` ; inversion des chemins historiques en shims.
 - 2026-04-21 : correctif tests integration 66.27 apres bascule canonique — realignement de la cible de patch `CommonContextBuilder.build` vers `app.prompts.common_context` pour conserver `obs.context_quality` (3/3 verts) sans rollback des imports canoniques.
+- 2026-04-21 : ajout AC17 et implementation — renderer canonique `app.domain.llm.prompting.prompt_renderer` promu source primaire, imports nominaux reroutes, `app.llm_orchestration.services.prompt_renderer` reduit a un shim minimal.
