@@ -12,7 +12,6 @@ Ce registre suit les wrappers de compatibilite introduces pendant la convergence
 
 | Wrapper transitoire | Cible canonique | Raison | Critere de sortie |
 | --- | --- | --- | --- |
-| `backend/app/services/ai_engine_adapter.py` | `app.application.llm.ai_engine_adapter` | Consommateurs restants: tests legacy + quelques routes historiques | Zero import production vers `app.services.ai_engine_adapter` ; tests migres |
 | `backend/app/llm_orchestration/gateway.py` | `app.domain.llm.runtime.gateway` | Consommateurs restants: tests/patcheurs namespace historique | Imports runtime/admin pointent `domain.llm.runtime.gateway` ; shim reduit a reexports minimaux |
 | `backend/app/llm_orchestration/services/*.py` (shims runtime/prompting/configuration listes ci-dessous) | `app.domain.llm.runtime.*` ou `app.domain.llm.configuration.*` ou `app.domain.llm.prompting.*` | Consommateurs restants: tests et modules historiques maintenus temporairement | Aucun import actif hors tests/historique vers ces modules shim |
 | `backend/app/llm_orchestration/prompt_version_lookup.py` | `app.domain.llm.configuration.prompt_version_lookup` | Compatibilite | Suppression apres migration des derniers imports |
@@ -29,7 +28,7 @@ Ce registre suit les wrappers de compatibilite introduces pendant la convergence
 
 ### Shims `llm_orchestration/services` et provider (post 70-15)
 
-Fichiers reduits a un reexport vers le domaine canonique : `context_quality_injector`, `length_budget_injector`, `provider_parameter_mapper`, `output_validator`, `fallback_governance`, `prompt_renderer`, `persona_composer`, `assembly_resolver`, `assembly_registry`, `assembly_admin_service`, `execution_profile_registry`.
+Fichiers reduits a un reexport vers le domaine canonique : `context_quality_injector`, `length_budget_injector`, `provider_parameter_mapper`, `output_validator`, `fallback_governance`, `prompt_renderer`, `assembly_resolver`, `assembly_registry`, `assembly_admin_service`, `execution_profile_registry`.
 
 ## Garde-fou
 

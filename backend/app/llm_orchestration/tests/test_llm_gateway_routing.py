@@ -2,8 +2,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from app.application.llm.ai_engine_adapter import AIEngineAdapter, reset_test_generators
 from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
-from app.services.ai_engine_adapter import AIEngineAdapter, reset_test_generators
 
 
 @pytest.mark.asyncio

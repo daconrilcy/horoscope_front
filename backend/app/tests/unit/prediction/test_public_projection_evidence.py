@@ -236,7 +236,7 @@ async def test_assemble_reuses_persisted_llm_narrative_without_regeneration():
     prompt_context = MagicMock()
 
     with patch(
-        "app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration",
+        "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration",
         new_callable=AsyncMock,
     ) as mock_gen:
         result = await PublicPredictionAssembler().assemble(
@@ -301,7 +301,7 @@ async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short()
 
     with (
         patch(
-            "app.services.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration",
+            "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration",
             new_callable=AsyncMock,
             return_value=regenerated,
         ) as mock_gen,

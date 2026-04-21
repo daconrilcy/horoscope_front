@@ -3,9 +3,9 @@ import uuid
 
 import pytest
 
+from app.domain.llm.prompting.personas import compose_persona_block
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.llm_orchestration.persona_boundary import validate_persona_block
-from app.llm_orchestration.services.persona_composer import compose_persona_block
 
 
 def test_validate_persona_block_violations():

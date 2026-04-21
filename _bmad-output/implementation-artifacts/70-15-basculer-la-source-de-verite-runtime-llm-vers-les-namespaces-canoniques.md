@@ -92,6 +92,7 @@ A l issue de cette story :
 28. **AC28 - Validation complete obligatoire apres nettoyage** : la convergence est acceptee uniquement si `ruff format`, `ruff check`, `pytest -q` passent, avec tests guidance/chat/natal/daily et tests admin LLM/release/readiness/doc conformity verts, sans reintroduire d import historique pour reparer les tests.
 29. **AC29 - Preuve d adoption canonique par scan d imports** : un scan d imports `backend/app` est produit pour les modules nettoyes ; il montre les chemins nominaux canoniques (`app.application.llm.*`, `app.domain.llm.*`, `app.infrastructure.*`) ; tout chemin historique restant est liste et justifie.
 30. **AC30 - Liste de suppression immediate en fin de story** : la story produit une liste `safe to delete next` avec raison de suppression, absence d import nominal, absence d usage CI bloquant et statut final propose ; au minimum les doublons/alias morts identifies pendant la story sont traites ou explicitement files en suppression.
+31. **AC31 - Execution de la passe suppression immediate** : les candidats `safe to delete next` sans usage nominal sont effectivement supprimes dans la story ; les imports de tests/historique sont migres vers les chemins canoniques ; `ruff format`, `ruff check` et `pytest -q` restent verts apres suppression.
 
 ## Tasks / Subtasks
 
@@ -175,6 +176,13 @@ A l issue de cette story :
   - [x] Mettre a jour `TRANSITION_WRAPPERS.md` avec la liste residuelle, consommateurs et criteres de retrait.
   - [x] Mettre a jour l audit post-story 70-15 avec scan d imports canoniques/historiques justifies.
   - [x] Produire une liste `safe to delete next` des doublons/alias/shims candidats.
+
+- [x] Task 14: Executer la passe suppression immediate (AC31)
+  - [x] Supprimer `backend/app/domain/llm/prompting/renderer.py` apres migration complete des imports.
+  - [x] Supprimer `backend/app/services/ai_engine_adapter.py` apres migration des imports de tests/historique.
+  - [x] Supprimer `backend/app/llm_orchestration/services/persona_composer.py` apres migration des imports de tests/historique.
+  - [x] Realigner la documentation et le registre wrappers sur l etat post-suppression.
+  - [x] Revalider `ruff format`, `ruff check`, `pytest -q`.
 
 ## Dev Notes
 
@@ -303,3 +311,4 @@ gpt-5
 - 2026-04-21 : ajout AC16 et bascule ciblee des imports nominaux vers `app.domain.llm.*` pour `provider_runtime_manager`, `prompt_version_lookup`, `prompt_governance_registry` et `legacy_residual_registry` ; inversion des chemins historiques en shims.
 - 2026-04-21 : correctif tests integration 66.27 apres bascule canonique — realignement de la cible de patch `CommonContextBuilder.build` vers `app.prompts.common_context` pour conserver `obs.context_quality` (3/3 verts) sans rollback des imports canoniques.
 - 2026-04-21 : ajout AC17 et implementation — renderer canonique `app.domain.llm.prompting.prompt_renderer` promu source primaire, imports nominaux reroutes, `app.llm_orchestration.services.prompt_renderer` reduit a un shim minimal.
+- 2026-04-21 : ajout AC31 et execution de la passe suppression immediate — suppression de `domain/llm/prompting/renderer.py`, `services/ai_engine_adapter.py`, `llm_orchestration/services/persona_composer.py`, migration des imports restants vers les chemins canoniques et revalidation complete.

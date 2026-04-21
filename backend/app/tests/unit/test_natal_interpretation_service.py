@@ -292,7 +292,7 @@ class TestNatalInterpretationService:
         mock_result.usage.total_tokens = 500
 
         with patch(
-            "app.services.ai_engine_adapter.AIEngineAdapter.generate_guidance",
+            "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_guidance",
             new_callable=AsyncMock,
             return_value=mock_result,
         ):
@@ -333,7 +333,7 @@ class TestNatalInterpretationService:
         mock_result.usage.total_tokens = 300
 
         with patch(
-            "app.services.ai_engine_adapter.AIEngineAdapter.generate_guidance",
+            "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_guidance",
             new_callable=AsyncMock,
             return_value=mock_result,
         ):
@@ -352,7 +352,7 @@ class TestNatalInterpretationService:
         birth_profile = _make_birth_profile()
 
         with patch(
-            "app.services.ai_engine_adapter.AIEngineAdapter.generate_guidance",
+            "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_guidance",
             new_callable=AsyncMock,
             side_effect=TimeoutError("AI Engine timeout"),
         ):

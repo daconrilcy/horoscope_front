@@ -2,7 +2,7 @@
 LLM infrastructure module.
 
 DEPRECATED: LLMClient has been removed. Use the AI Engine module instead:
-- app.services.ai_engine_adapter.AIEngineAdapter
+- app.application.llm.ai_engine_adapter.AIEngineAdapter
 - app.ai_engine.services.chat_service
 - app.ai_engine.services.generate_service
 

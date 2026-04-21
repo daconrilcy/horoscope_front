@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.application.llm.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
 from app.llm_orchestration.models import (
     GatewayMeta,
     GatewayResult,
@@ -9,7 +10,6 @@ from app.llm_orchestration.models import (
     OutputValidationError,
     UsageInfo,
 )
-from app.services.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
 
 
 @pytest.mark.asyncio

@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from app.application.llm.ai_engine_adapter import AIEngineAdapter
 from app.llm_orchestration.models import (
     GatewayMeta,
     GatewayResult,
@@ -10,7 +11,6 @@ from app.llm_orchestration.models import (
 )
 from app.prediction.llm_narrator import NarratorResult
 from app.prompts.common_context import PromptCommonContext, QualifiedContext
-from app.services.ai_engine_adapter import AIEngineAdapter
 
 
 def _make_dummy_context():

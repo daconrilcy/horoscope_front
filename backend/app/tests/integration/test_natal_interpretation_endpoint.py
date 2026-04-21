@@ -303,7 +303,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.services.ai_engine_adapter.AIEngineAdapter.generate_natal_interpretation",
+                "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_natal_interpretation",
                 side_effect=InputValidationError("Persona missing"),
             ),
         ):

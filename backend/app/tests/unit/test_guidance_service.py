@@ -134,7 +134,10 @@ class AlwaysOffScopeGenerator:
 
 
 def set_test_generators(generator: object) -> None:
-    from app.services.ai_engine_adapter import set_test_chat_generator, set_test_guidance_generator
+    from app.application.llm.ai_engine_adapter import (
+        set_test_chat_generator,
+        set_test_guidance_generator,
+    )
 
     if hasattr(generator, "generate_chat"):
         set_test_chat_generator(generator.generate_chat)  # type: ignore

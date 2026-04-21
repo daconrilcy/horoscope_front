@@ -4,6 +4,10 @@ from types import SimpleNamespace
 import pytest
 from sqlalchemy import delete
 
+from app.application.llm.ai_engine_adapter import (
+    reset_test_generators,
+    set_test_chat_generator,
+)
 from app.core.config import settings
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
@@ -23,10 +27,6 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.infra.llm.anonymizer import LLMAnonymizationError
-from app.services.ai_engine_adapter import (
-    reset_test_generators,
-    set_test_chat_generator,
-)
 from app.services.auth_service import AuthService
 from app.services.chat_guidance_service import ChatGuidanceService, ChatGuidanceServiceError
 from app.services.persona_config_service import PersonaConfigService, PersonaConfigUpdatePayload

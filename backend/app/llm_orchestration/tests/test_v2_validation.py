@@ -3,11 +3,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from app.application.llm.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
 from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import GatewayMeta, GatewayResult, PromptRenderError, UsageInfo
-from app.services.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
 
 
 @pytest.mark.asyncio
@@ -121,7 +121,9 @@ async def test_error_mapping_reaches_client_v2(db):
 
     try:
         # Disable test fallback for this specific call
-        with patch("app.services.ai_engine_adapter._is_non_production_env", return_value=False):
+        with patch(
+            "app.application.llm.ai_engine_adapter._is_non_production_env", return_value=False
+        ):
             await AIEngineAdapter.generate_chat_reply(
                 messages=[{"role": "user", "content": "hi"}],
                 context={"locale": "fr"},  # Missing natal_chart_summary
