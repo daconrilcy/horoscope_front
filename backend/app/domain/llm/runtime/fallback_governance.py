@@ -2,11 +2,11 @@ import logging
 import re
 from typing import Any, Dict, Optional, Set
 
-from app.infra.observability.metrics import increment_counter
-from app.llm_orchestration.legacy_residual_registry import (
+from app.domain.llm.governance.legacy_residual_registry import (
     build_governance_matrix_projection,
     effective_progressive_blocklist,
 )
+from app.infra.observability.metrics import increment_counter
 from app.llm_orchestration.models import FallbackStatus, FallbackType
 
 logger = logging.getLogger(__name__)

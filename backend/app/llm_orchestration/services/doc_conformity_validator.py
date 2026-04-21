@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from app.llm_orchestration.legacy_residual_registry import validate_doc_registry_version
+from app.domain.llm.governance.legacy_residual_registry import validate_doc_registry_version
 from app.llm_orchestration.doc_conformity_manifest import (
     AUTHORIZED_PR_REASONS,
     DOC_PATH,

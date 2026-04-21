@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session, selectinload
 
-from app.llm_orchestration.prompt_governance_registry import (
+from app.domain.llm.governance.prompt_governance_registry import (
     format_placeholder_violation_report,
     get_prompt_governance_registry,
 )

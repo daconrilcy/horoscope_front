@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.llm_orchestration.prompt_governance_registry import (
+from app.domain.llm.governance.prompt_governance_registry import (
     NATAL_CANONICAL_FEATURE,
     get_prompt_governance_registry,
 )

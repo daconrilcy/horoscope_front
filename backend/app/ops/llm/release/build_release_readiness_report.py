@@ -15,7 +15,7 @@ _BACKEND_ROOT = Path(__file__).resolve().parents[4]
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
-from app.llm_orchestration.legacy_residual_registry import (
+from app.domain.llm.governance.legacy_residual_registry import (
     effective_progressive_blocklist,
     load_legacy_residual_registry,
 )

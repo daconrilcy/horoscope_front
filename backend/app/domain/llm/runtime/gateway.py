@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.domain.llm.legacy.bridge import (
     DEPRECATED_USE_CASE_MAPPING,
     build_legacy_compat_use_case_config,
@@ -17,6 +18,7 @@ from app.domain.llm.legacy.bridge import (
     get_legacy_prompt_runtime_entry,
     resolve_legacy_model,
 )
+from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
 from app.infrastructure.providers.llm.openai_responses_client import ResponsesClient
@@ -51,8 +53,6 @@ from app.llm_orchestration.models import (
     is_reasoning_model,
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
-from app.llm_orchestration.prompt_version_lookup import get_active_prompt_version
-from app.llm_orchestration.providers.provider_runtime_manager import ProviderRuntimeManager
 from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
 from app.llm_orchestration.services.assembly_resolver import (
     assemble_developer_prompt,

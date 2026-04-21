@@ -39,11 +39,11 @@ class PromptRenderer:
             flags=re.DOTALL,
         )
 
-        from app.llm_orchestration.placeholder_policy import PLACEHOLDER_POLICY
-        from app.llm_orchestration.prompt_governance_registry import (
+        from app.domain.llm.governance.prompt_governance_registry import (
             PLACEHOLDER_ALLOWLIST,
             get_prompt_governance_registry,
         )
+        from app.llm_orchestration.placeholder_policy import PLACEHOLDER_POLICY
 
         # 1. Check legacy required_variables first
         required_variables = required_variables or []

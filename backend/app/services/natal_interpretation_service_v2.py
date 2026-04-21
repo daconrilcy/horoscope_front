@@ -17,6 +17,7 @@ from app.api.v1.schemas.natal_interpretation import (
 )
 from app.core.config import settings
 from app.domain.astrology.natal_calculation import NatalResult
+from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
@@ -24,7 +25,6 @@ from app.infra.db.models.user_natal_interpretation import (
 )
 from app.infra.observability.metrics import observe_duration
 from app.llm_orchestration.models import GatewayResult, NatalExecutionInput
-from app.llm_orchestration.prompt_version_lookup import get_active_prompt_version
 from app.llm_orchestration.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,

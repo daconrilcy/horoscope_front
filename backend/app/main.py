@@ -101,6 +101,7 @@ def _ensure_llm_registry_seeded() -> None:
         logger.info("llm_registry_legacy_seed_disabled")
         return
 
+    from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
     from app.infra.db.models import (
         LlmPersonaModel,
         LlmPromptVersionModel,
@@ -108,7 +109,6 @@ def _ensure_llm_registry_seeded() -> None:
     )
     from app.infra.db.models.llm_prompt import PromptStatus
     from app.infra.db.session import SessionLocal
-    from app.llm_orchestration.prompt_version_lookup import get_active_prompt_version
     from app.llm_orchestration.seeds.use_cases_seed import seed_use_cases
     from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
     from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts

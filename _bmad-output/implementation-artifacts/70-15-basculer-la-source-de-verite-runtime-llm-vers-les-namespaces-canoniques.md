@@ -77,6 +77,7 @@ A l issue de cette story :
 13. **AC13 - Legacy bridge maintenu comme sas unique** : `backend/app/domain/llm/legacy/bridge.py` reste l unique point d acces nominal -> legacy tant que des dependances legacy subsistent.
 14. **AC14 - Compatibilite transitoire documentee** : chaque shim ou wrapper inverse restant est liste dans un document de transition maintenu a jour avec son critere de suppression.
 15. **AC15 - Validation complete obligatoire** : la story est consideree finie seulement si les validations locales backend passent (`ruff format`, `ruff check`, `pytest -q`) et si les tests critiques de non-regression runtime/admin sont verts.
+16. **AC16 - Adoption nominale des chemins canoniques** : pour les composants critiques migres vers `app.domain.llm.*`, le code nominal `backend/app` importe directement les chemins canoniques ; les chemins historiques `app.llm_orchestration.*` correspondants ne sont utilises que comme shims de compatibilite transitoire.
 
 ## Tasks / Subtasks
 
@@ -123,6 +124,13 @@ A l issue de cette story :
   - [x] Executer `cd backend ; pytest -q`
   - [x] Executer ou cibler des tests critiques sur guidance, chat, natal, daily prediction, admin prompts/replay/release si necessaire.
   - [x] Verifier que les imports historiques restants pointent tous vers des shims documentes.
+
+- [x] Task 7: Bascule ciblee des imports nominaux critiques vers `app.domain.llm.*` (AC16)
+  - [x] Basculer `ProviderRuntimeManager` nominal vers `app.domain.llm.runtime.provider_runtime_manager`.
+  - [x] Basculer `prompt_version_lookup` nominal vers `app.domain.llm.configuration.prompt_version_lookup`.
+  - [x] Basculer `prompt_governance_registry` nominal vers `app.domain.llm.governance.prompt_governance_registry`.
+  - [x] Basculer `legacy_residual_registry` nominal vers `app.domain.llm.governance.legacy_residual_registry`.
+  - [x] Inverser les chemins historiques concernes en shims de compatibilite.
 
 ## Dev Notes
 
@@ -192,6 +200,8 @@ gpt-5
 - Registre `TRANSITION_WRAPPERS.md` et manifest doc conformite mis a jour ; `ruff format`, `ruff check`, `pytest -q` verts (2964 passed).
 - Stabilisation reproductibilite (review P1) : les imports runtime trackes ont ete reroutes vers des modules suivis (`app.llm_orchestration/*` et `app.prompts/common_context`) pour eviter toute dependance aux fichiers canoniques non suivis.
 - Hygiene diff (review P2) : `backend/horoscope.db` reste hors scope et est restauree depuis `HEAD` avant validation finale.
+- Bascule ciblee AC16 : les imports nominaux backend/app des 4 composants critiques consomment maintenant directement `app.domain.llm.*` ; les chemins historiques correspondants sont reduits a des shims.
+- Correctif cible post-bascule : les 3 tests `test_story_66_27_integrated_propagation.py` patchent desormais `app.prompts.common_context.CommonContextBuilder.build` (reference runtime effective) pour restaurer la propagation attendue de `obs.context_quality` sans revenir sur les imports canoniques.
 
 ### File List
 
@@ -246,3 +256,5 @@ gpt-5
 - 2026-04-20 : creation de la story backend `70.15` pour basculer la source de verite runtime LLM des chemins historiques vers les namespaces canoniques introduits par 70-14.
 - 2026-04-20 : implementation — bascule effective des implementations vers `application/llm` et `domain/llm/*`, shims historiques, ajustements tests et conformite doc/semantique.
 - 2026-04-21 : correctifs review P1/P2 — suppression des dependances trackees vers modules non suivis et restauration systematique de `backend/horoscope.db` hors scope.
+- 2026-04-21 : ajout AC16 et bascule ciblee des imports nominaux vers `app.domain.llm.*` pour `provider_runtime_manager`, `prompt_version_lookup`, `prompt_governance_registry` et `legacy_residual_registry` ; inversion des chemins historiques en shims.
+- 2026-04-21 : correctif tests integration 66.27 apres bascule canonique — realignement de la cible de patch `CommonContextBuilder.build` vers `app.prompts.common_context` pour conserver `obs.context_quality` (3/3 verts) sans rollback des imports canoniques.
