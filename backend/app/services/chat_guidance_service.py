@@ -21,17 +21,17 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
-from app.infra.db.repositories.chat_repository import ChatRepository
-from app.infra.db.repositories.user_repository import UserRepository
-from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
-from app.infra.observability.metrics import increment_counter, observe_duration
-from app.services.ai_engine_adapter import (
+from app.application.llm.ai_engine_adapter import (
     AIEngineAdapter,
     AIEngineAdapterError,
     assess_off_scope,
     map_adapter_error_to_codes,
 )
+from app.core.config import settings
+from app.infra.db.repositories.chat_repository import ChatRepository
+from app.infra.db.repositories.user_repository import UserRepository
+from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
+from app.infra.observability.metrics import increment_counter, observe_duration
 from app.services.chat_entitlement_gate import ChatEntitlementResult, ChatQuotaExceededError
 from app.services.current_context import build_current_prompt_context
 from app.services.entitlement_types import QuotaDefinition

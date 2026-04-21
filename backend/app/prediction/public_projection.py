@@ -216,7 +216,7 @@ class PublicPredictionAssembler:
                         daily_advice = {"advice": advice, "emphasis": emphasis}
 
         if not has_llm_narrative and settings.llm_narrator_enabled and prompt_context:
-            from app.services.ai_engine_adapter import AIEngineAdapter
+            from app.application.llm.ai_engine_adapter import AIEngineAdapter
 
             # AC9: Utilisation de AIEngineAdapter (pipeline canonique)
             narrator_res = await AIEngineAdapter.generate_horoscope_narration(

@@ -20,10 +20,10 @@ from app.ai_engine.schemas import (
 )
 from app.ai_engine.services.rate_limiter import RateLimiter
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.application.llm.ai_engine_adapter import AIEngineAdapter
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
-from app.services.ai_engine_adapter import AIEngineAdapter
 
 logger = logging.getLogger(__name__)
 

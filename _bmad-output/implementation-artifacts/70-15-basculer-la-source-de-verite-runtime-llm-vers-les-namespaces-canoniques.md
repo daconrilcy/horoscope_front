@@ -79,6 +79,19 @@ A l issue de cette story :
 15. **AC15 - Validation complete obligatoire** : la story est consideree finie seulement si les validations locales backend passent (`ruff format`, `ruff check`, `pytest -q`) et si les tests critiques de non-regression runtime/admin sont verts.
 16. **AC16 - Adoption nominale des chemins canoniques** : pour les composants critiques migres vers `app.domain.llm.*`, le code nominal `backend/app` importe directement les chemins canoniques ; les chemins historiques `app.llm_orchestration.*` correspondants ne sont utilises que comme shims de compatibilite transitoire.
 17. **AC17 - Suppression du moteur de rendu historique comme source primaire** : le rendu effectif des prompts n est plus porte par `backend/app/llm_orchestration/services/prompt_renderer.py` ; `backend/app/domain/llm/prompting/renderer.py` ou `backend/app/domain/llm/prompting/prompt_renderer.py` devient l implementation reelle ; tous les imports nominaux `backend/app` pointent vers le renderer canonique ; `backend/app/llm_orchestration/services/prompt_renderer.py` est supprime ou reduit a un shim minimal historique -> canonique ; aucun composant nominal ne depend directement du renderer historique ; le comportement `{{placeholders}}`, les regles `required/optional/fallback` et les controles de gouvernance restent identiques.
+18. **AC18 - Suppression du composeur persona historique comme source primaire** : la composition persona n est plus portee par `backend/app/llm_orchestration/services/persona_composer.py` ; l implementation reelle vit sous `backend/app/domain/llm/prompting/personas.py` ; le gateway canonique et les resolveurs canoniques consomment uniquement le composeur canonique ; le fichier historique est un shim minimal ou est supprime ; aucun import nominal `backend/app` n utilise directement `app.llm_orchestration.services.persona_composer`.
+19. **AC19 - Unification stricte des points d acces prompting** : un seul point d acces canonique est retenu par capacite prompting ; pour le rendu prompt, la reference officielle est `backend/app/domain/llm/prompting/prompt_renderer.py` ; `backend/app/domain/llm/prompting/renderer.py` est limite a un alias transitoire explicite ; toute ambiguite de nommage est levee dans le code et la documentation.
+20. **AC20 - Fin de dependance nominale a `legacy_prompt_runtime` hors cas explicitement conserves** : les dependances nominales vers `backend/app/llm_orchestration/legacy_prompt_runtime.py` sont recensees ; toute dependance nominale passe par `backend/app/domain/llm/legacy/bridge.py` ; le runtime canonique n importe jamais `legacy_prompt_runtime.py` directement ; les reliquats legacy conserves sont documentes avec justification explicite.
+21. **AC21 - Reduction des wrappers historiques a une liste tres bornee** : chaque wrapper actif legacy restant est liste dans `backend/app/ops/llm/TRANSITION_WRAPPERS.md` avec consommateur restant, raison d existence et critere exact de suppression ; tout wrapper sans consommateur nominal reel est supprime ; aucun nouveau wrapper ne peut etre ajoute sans justification explicite ; la liste finale est courte et intentionnelle.
+22. **AC22 - Aucun import nominal direct depuis `llm_orchestration/services/*` pour les briques migrees** : les composants converges ne sont plus appeles via leurs anciens chemins ; les anciens chemins restants sont de purs shims historiques vers le canonique ; les modules canoniques sont les seuls consommes par le runtime nominal.
+23. **AC23 - Nettoyage des doublons et alias internes inutiles** : les alias internes non references dans `backend/app` sont supprimes ; les modules copie de nom sans valeur fonctionnelle sont retires ; les reexports sont conserves uniquement avec un usage demontre ; l arborescence `backend/app/domain/llm/prompting/` reste minimale et lisible.
+24. **AC24 - Le gateway canonique n utilise que des dependances canoniques pour les briques migrees** : `backend/app/domain/llm/runtime/gateway.py` n importe plus de module historique pour les capacites migrees (renderer, persona, resolvers) ; les dependances runtime/prompting/configuration/gouvernance passent par `app.domain.llm.*` ou `app.infrastructure.*` ; tout ecart restant est borne comme dette residuelle documentee.
+25. **AC25 - Les services metier consomment l adaptateur applicatif canonique** : les services guidance/chat/natal/prediction consomment `app.application.llm.ai_engine_adapter` ; `backend/app/services/ai_engine_adapter.py` est uniquement un shim de compatibilite ; aucun service metier nominal n importe un chemin ancien pour atteindre le pipeline.
+26. **AC26 - Extinction des compatibilites inutiles avant prod** : les compatibilites strictement internes (tests/historique) sont retirees lorsqu elles n apportent plus de valeur ; les entrypoints legacy non necessaires sont nettoyes ; les composants deprecated activables par flag sont soit supprimes soit explicitement qualifies hors perimetre prod.
+27. **AC27 - Documentation de reference realignee sur l etat final vise** : la documentation backend LLM decrit les modules effectivement porteurs ; `TRANSITION_WRAPPERS.md` est aligne apres chaque suppression reelle ; les reliquats historiques sont marques candidats a retrait proche ; le rapport d etat distingue clairement source canonique, reliquats toleres et candidats de suppression immediate.
+28. **AC28 - Validation complete obligatoire apres nettoyage** : la convergence est acceptee uniquement si `ruff format`, `ruff check`, `pytest -q` passent, avec tests guidance/chat/natal/daily et tests admin LLM/release/readiness/doc conformity verts, sans reintroduire d import historique pour reparer les tests.
+29. **AC29 - Preuve d adoption canonique par scan d imports** : un scan d imports `backend/app` est produit pour les modules nettoyes ; il montre les chemins nominaux canoniques (`app.application.llm.*`, `app.domain.llm.*`, `app.infrastructure.*`) ; tout chemin historique restant est liste et justifie.
+30. **AC30 - Liste de suppression immediate en fin de story** : la story produit une liste `safe to delete next` avec raison de suppression, absence d import nominal, absence d usage CI bloquant et statut final propose ; au minimum les doublons/alias morts identifies pendant la story sont traites ou explicitement files en suppression.
 
 ## Tasks / Subtasks
 
@@ -138,6 +151,30 @@ A l issue de cette story :
   - [x] Basculer les imports nominaux runtime/configuration vers `app.domain.llm.prompting.prompt_renderer`.
   - [x] Reduire `app.llm_orchestration.services.prompt_renderer` a un shim minimal vers le canonique.
   - [x] Verifier l absence de changement comportemental sur le rendu placeholders et la gouvernance.
+
+- [x] Task 9: Bascule persona canonique et purge des imports historiques (AC18, AC22, AC24)
+  - [x] Deplacer l implementation active de `persona_composer` vers `app.domain.llm.prompting.personas`.
+  - [x] Reduire `app.llm_orchestration.services.persona_composer` a un shim minimal.
+  - [x] Basculer les imports runtime/configuration nominaux vers `app.domain.llm.prompting.personas`.
+
+- [x] Task 10: Verrouiller le point d acces renderer canonique (AC19, AC23)
+  - [x] Promouvoir `app.domain.llm.prompting.prompt_renderer` comme reference officielle.
+  - [x] Basculer les imports nominaux restants (`admin`) vers `prompt_renderer`.
+  - [x] Conserver `renderer.py` uniquement comme alias de compatibilite temporaire documente.
+
+- [x] Task 11: Isoler strictement le legacy runtime derriere bridge (AC20)
+  - [x] Etendre `app.domain.llm.legacy.bridge` pour exposer les constantes legacy utilisees.
+  - [x] Basculer `app.prompts.catalog` vers `app.domain.llm.legacy.bridge`.
+  - [x] Verifier l absence d import direct nominal de `legacy_prompt_runtime` hors bridge.
+
+- [x] Task 12: Aligner les consommateurs metier vers l adaptateur canonique (AC25, AC26)
+  - [x] Basculer guidance/chat/natal/prediction (+ routes nominales associees) vers `app.application.llm.ai_engine_adapter`.
+  - [x] Conserver `app.services.ai_engine_adapter` uniquement en shim compatibilite pour tests/legacy.
+
+- [x] Task 13: Produire preuves, documentation et liste suppressions suivantes (AC21, AC27, AC29, AC30)
+  - [x] Mettre a jour `TRANSITION_WRAPPERS.md` avec la liste residuelle, consommateurs et criteres de retrait.
+  - [x] Mettre a jour l audit post-story 70-15 avec scan d imports canoniques/historiques justifies.
+  - [x] Produire une liste `safe to delete next` des doublons/alias/shims candidats.
 
 ## Dev Notes
 

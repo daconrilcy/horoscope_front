@@ -15,6 +15,7 @@ from app.api.v1.schemas.natal_interpretation import (
     NatalInterpretationData,
     NatalInterpretationResponse,
 )
+from app.application.llm.ai_engine_adapter import AIEngineAdapter
 from app.core.config import settings
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
@@ -33,7 +34,6 @@ from app.llm_orchestration.schemas import (
     AstroResponseV2,
     AstroResponseV3,
 )
-from app.services.ai_engine_adapter import AIEngineAdapter
 from app.services.chart_json_builder import (
     build_chart_json,
     build_enriched_evidence_catalog,

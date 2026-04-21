@@ -8,13 +8,13 @@ Ce registre suit les wrappers de compatibilite introduces pendant la convergence
 - Toute nouvelle evolution doit cibler le chemin canonique, pas le wrapper.
 - Chaque wrapper doit avoir un **critere de sortie** clair.
 
-## Wrappers actifs
+## Wrappers actifs (liste residuelle bornee)
 
 | Wrapper transitoire | Cible canonique | Raison | Critere de sortie |
 | --- | --- | --- | --- |
-| `backend/app/services/ai_engine_adapter.py` | `app.application.llm.ai_engine_adapter` | Compatibilite imports historiques services | Zero import production vers `app.services.ai_engine_adapter` ; tests migres |
-| `backend/app/llm_orchestration/gateway.py` | `app.domain.llm.runtime.gateway` | Compatibilite imports et patches tests sur namespace historique | Imports runtime/admin pointent `domain.llm.runtime.gateway` ; shim reduit a reexports minimaux |
-| `backend/app/llm_orchestration/services/*.py` (shims runtime/prompting/configuration listes ci-dessous) | `app.domain.llm.runtime.*` ou `app.domain.llm.configuration.*` ou `app.domain.llm.prompting.*` | Compatibilite chemins historiques | Aucun import actif hors tests vers ces modules shim |
+| `backend/app/services/ai_engine_adapter.py` | `app.application.llm.ai_engine_adapter` | Consommateurs restants: tests legacy + quelques routes historiques | Zero import production vers `app.services.ai_engine_adapter` ; tests migres |
+| `backend/app/llm_orchestration/gateway.py` | `app.domain.llm.runtime.gateway` | Consommateurs restants: tests/patcheurs namespace historique | Imports runtime/admin pointent `domain.llm.runtime.gateway` ; shim reduit a reexports minimaux |
+| `backend/app/llm_orchestration/services/*.py` (shims runtime/prompting/configuration listes ci-dessous) | `app.domain.llm.runtime.*` ou `app.domain.llm.configuration.*` ou `app.domain.llm.prompting.*` | Consommateurs restants: tests et modules historiques maintenus temporairement | Aucun import actif hors tests/historique vers ces modules shim |
 | `backend/app/llm_orchestration/prompt_version_lookup.py` | `app.domain.llm.configuration.prompt_version_lookup` | Compatibilite | Suppression apres migration des derniers imports |
 | `backend/app/llm_orchestration/providers/provider_runtime_manager.py` | `app.domain.llm.runtime.provider_runtime_manager` | Compatibilite | Idem |
 | `backend/app/llm_orchestration/prompt_governance_registry.py` | `app.domain.llm.governance.prompt_governance_registry` | Compatibilite imports gouvernance historiques | Suppression apres migration complete des imports runtime/admin/coherence |
@@ -30,6 +30,10 @@ Ce registre suit les wrappers de compatibilite introduces pendant la convergence
 ### Shims `llm_orchestration/services` et provider (post 70-15)
 
 Fichiers reduits a un reexport vers le domaine canonique : `context_quality_injector`, `length_budget_injector`, `provider_parameter_mapper`, `output_validator`, `fallback_governance`, `prompt_renderer`, `persona_composer`, `assembly_resolver`, `assembly_registry`, `assembly_admin_service`, `execution_profile_registry`.
+
+## Garde-fou
+
+- Aucun nouveau wrapper ne doit etre ajoute sans justification explicite (consommateur + date/condition de retrait) et mise a jour immediate de ce registre.
 
 ## Checklist de sortie (a appliquer avant suppression)
 

@@ -9,6 +9,8 @@ from app.domain.llm.governance.prompt_governance_registry import (
     PLACEHOLDER_ALLOWLIST,
     get_prompt_governance_registry,
 )
+from app.domain.llm.prompting.personas import compose_persona_block
+from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.llm_orchestration.admin_models import (
     ExecutionConfigAdmin,
@@ -19,8 +21,6 @@ from app.llm_orchestration.admin_models import (
 )
 from app.llm_orchestration.models import is_reasoning_model
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
-from app.llm_orchestration.services.persona_composer import compose_persona_block
-from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 
 logger = logging.getLogger(__name__)
 

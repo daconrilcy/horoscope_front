@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from app.llm_orchestration import legacy_prompt_runtime
+from app.domain.llm.legacy import bridge as legacy_bridge
 
 
 class PromptEntry(BaseModel):
@@ -25,14 +25,14 @@ class PromptEntry(BaseModel):
 
 PROMPT_CATALOG: dict[str, PromptEntry] = {
     key: PromptEntry(use_case_key=key, **entry)
-    for key, entry in legacy_prompt_runtime.LEGACY_PROMPT_RUNTIME_DATA.items()
+    for key, entry in legacy_bridge.LEGACY_PROMPT_RUNTIME_DATA.items()
 }
-DEPRECATED_USE_CASE_MAPPING = legacy_prompt_runtime.DEPRECATED_USE_CASE_MAPPING
-CHAT_RESPONSE_V1 = legacy_prompt_runtime.CHAT_RESPONSE_V1
-ASTRO_RESPONSE_V1 = legacy_prompt_runtime.ASTRO_RESPONSE_V1
-ASTRO_RESPONSE_V3 = legacy_prompt_runtime.ASTRO_RESPONSE_V3
-HOROSCOPE_FREE_OUTPUT_SCHEMA = legacy_prompt_runtime.HOROSCOPE_FREE_OUTPUT_SCHEMA
-NATAL_FREE_SHORT_SCHEMA = legacy_prompt_runtime.NATAL_FREE_SHORT_SCHEMA
+DEPRECATED_USE_CASE_MAPPING = legacy_bridge.DEPRECATED_USE_CASE_MAPPING
+CHAT_RESPONSE_V1 = legacy_bridge.CHAT_RESPONSE_V1
+ASTRO_RESPONSE_V1 = legacy_bridge.ASTRO_RESPONSE_V1
+ASTRO_RESPONSE_V3 = legacy_bridge.ASTRO_RESPONSE_V3
+HOROSCOPE_FREE_OUTPUT_SCHEMA = legacy_bridge.HOROSCOPE_FREE_OUTPUT_SCHEMA
+NATAL_FREE_SHORT_SCHEMA = legacy_bridge.NATAL_FREE_SHORT_SCHEMA
 
 
 def validate_catalog() -> None:
@@ -53,4 +53,4 @@ validate_catalog()
 
 def resolve_model(use_case_key: str, fallback_model: str | None = None) -> str:
     """Compatibility wrapper kept for legacy tests and admin tooling."""
-    return legacy_prompt_runtime.resolve_legacy_model(use_case_key, fallback_model=fallback_model)
+    return legacy_bridge.resolve_legacy_model(use_case_key, fallback_model=fallback_model)

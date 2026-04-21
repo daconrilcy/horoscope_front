@@ -18,6 +18,8 @@ from app.domain.llm.legacy.bridge import (
     get_legacy_prompt_runtime_entry,
     resolve_legacy_model,
 )
+from app.domain.llm.prompting.personas import compose_persona_block
+from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
@@ -64,8 +66,6 @@ from app.llm_orchestration.services.fallback_governance import FallbackGovernanc
 from app.llm_orchestration.services.input_validator import validate_input
 from app.llm_orchestration.services.observability_service import log_call, log_governance_event
 from app.llm_orchestration.services.output_validator import ValidationResult, validate_output
-from app.llm_orchestration.services.persona_composer import compose_persona_block
-from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.llm_orchestration.services.provider_parameter_mapper import ProviderParameterMapper
 from app.llm_orchestration.services.repair_prompter import build_repair_prompt
 from app.prompts.common_context import CommonContextBuilder, QualifiedContext

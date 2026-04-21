@@ -22,6 +22,7 @@ from app.api.v1.schemas.natal_interpretation import (
     NatalInterpretationResponse,
     NatalPdfTemplateListResponse,
 )
+from app.application.llm.ai_engine_adapter import AIEngineAdapterError
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
@@ -32,7 +33,6 @@ from app.llm_orchestration.models import (
     OutputValidationError,
     UnknownUseCaseError,
 )
-from app.services.ai_engine_adapter import AIEngineAdapterError
 from app.services.disclaimer_registry import get_disclaimers
 from app.services.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,

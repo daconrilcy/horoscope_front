@@ -27,7 +27,7 @@ from app.domain.llm.configuration.assemblies import (
 )
 from app.domain.llm.governance.governance import get_prompt_governance_registry
 from app.domain.llm.prompting.personas import compose_persona_block
-from app.domain.llm.prompting.renderer import PromptRenderer
+from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.domain.llm.runtime.composition import ContextQualityInjector, ProviderParameterMapper
 from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
