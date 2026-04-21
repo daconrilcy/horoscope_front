@@ -106,17 +106,17 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
 
-    with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=True):
+    with patch("app.domain.llm.runtime.gateway.is_supported_feature", return_value=True):
         with patch(
-            "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
+            "app.domain.llm.runtime.gateway.AssemblyRegistry.get_active_config_sync",
             return_value=mock_assembly_db,
         ):
             with patch(
-                "app.llm_orchestration.gateway.resolve_assembly",
+                "app.domain.llm.runtime.gateway.resolve_assembly",
                 return_value=mock_resolved_assembly,
             ):
                 with patch(
-                    "app.llm_orchestration.gateway.assemble_developer_prompt",
+                    "app.domain.llm.runtime.gateway.assemble_developer_prompt",
                     return_value="test prompt",
                 ):
                     # CRITICAL: Ensure profile resolution returns None
@@ -250,17 +250,17 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
 
-    with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=True):
+    with patch("app.domain.llm.runtime.gateway.is_supported_feature", return_value=True):
         with patch(
-            "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
+            "app.domain.llm.runtime.gateway.AssemblyRegistry.get_active_config_sync",
             return_value=mock_assembly_db,
         ):
             with patch(
-                "app.llm_orchestration.gateway.resolve_assembly",
+                "app.domain.llm.runtime.gateway.resolve_assembly",
                 return_value=mock_resolved_assembly,
             ):
                 with patch(
-                    "app.llm_orchestration.gateway.assemble_developer_prompt",
+                    "app.domain.llm.runtime.gateway.assemble_developer_prompt",
                     return_value="test prompt",
                 ):
                     with patch(
@@ -327,17 +327,17 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
 
-    with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=True):
+    with patch("app.domain.llm.runtime.gateway.is_supported_feature", return_value=True):
         with patch(
-            "app.llm_orchestration.gateway.AssemblyRegistry.get_active_config_sync",
+            "app.domain.llm.runtime.gateway.AssemblyRegistry.get_active_config_sync",
             return_value=mock_assembly_db,
         ):
             with patch(
-                "app.llm_orchestration.gateway.resolve_assembly",
+                "app.domain.llm.runtime.gateway.resolve_assembly",
                 return_value=mock_resolved_assembly,
             ):
                 with patch(
-                    "app.llm_orchestration.gateway.assemble_developer_prompt",
+                    "app.domain.llm.runtime.gateway.assemble_developer_prompt",
                     return_value="test prompt",
                 ):
                     with patch(
@@ -350,7 +350,7 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
                             return_value=True,
                         ):
                             with patch(
-                                "app.llm_orchestration.services.provider_parameter_mapper.ProviderParameterMapper.map",
+                                "app.domain.llm.runtime.provider_parameter_mapper.ProviderParameterMapper.map",
                                 side_effect=NotImplementedError("Not implemented"),
                             ):
                                 with pytest.raises(
@@ -382,7 +382,7 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
     )
 
     # Mock is_supported_feature to return False
-    with patch("app.llm_orchestration.gateway.is_supported_feature", return_value=False):
+    with patch("app.domain.llm.runtime.gateway.is_supported_feature", return_value=False):
         # Mock resolve_config and resolve_model
         mock_config = MagicMock()
         mock_config.model = "gpt-3.5-turbo"
@@ -401,7 +401,7 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
         mock_config.required_prompt_placeholders = []
 
         with patch(
-            "app.llm_orchestration.gateway.LLMGateway._resolve_legacy_compat_config",
+            "app.domain.llm.runtime.gateway.LLMGateway._resolve_legacy_compat_config",
             return_value=mock_config,
         ):
             with patch(
@@ -410,7 +410,7 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
                 return_value=None,
             ):
                 with patch(
-                    "app.llm_orchestration.gateway.resolve_legacy_model",
+                    "app.domain.llm.runtime.gateway.resolve_legacy_model",
                     return_value="gpt-4o-fallback",
                 ) as mock_resolve:
                     result, _ = await gateway._resolve_plan(request, db=MagicMock())

@@ -437,14 +437,15 @@ class SemanticConformityValidator:
         self.root_path = root_path
         self._orch = root_path / "backend" / "app" / "llm_orchestration"
         self._services = self._orch / "services"
+        self._domain_llm = root_path / "backend" / "app" / "domain" / "llm"
 
     def validate_all(self) -> list[SemanticInvariantViolation]:
         violations: list[SemanticInvariantViolation] = []
 
-        gw_path = self._orch / "gateway.py"
-        ar_path = self._services / "assembly_resolver.py"
-        asm_reg_path = self._services / "assembly_registry.py"
-        ex_reg_path = self._services / "execution_profile_registry.py"
+        gw_path = self._domain_llm / "runtime" / "gateway.py"
+        ar_path = self._domain_llm / "configuration" / "assembly_resolver.py"
+        asm_reg_path = self._domain_llm / "configuration" / "assembly_registry.py"
+        ex_reg_path = self._domain_llm / "configuration" / "execution_profile_registry.py"
         obs_path = self._services / "observability_service.py"
 
         gw_src = gw_path.read_text(encoding="utf-8")

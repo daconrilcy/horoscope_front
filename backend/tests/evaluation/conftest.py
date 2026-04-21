@@ -29,7 +29,7 @@ def db():
     AssemblyRegistry.invalidate_cache()
     ExecutionProfileRegistry.invalidate_cache()
     # Ensure v2 is enabled for these tests
-    with patch("app.llm_orchestration.gateway.settings") as mock_settings:
+    with patch("app.domain.llm.runtime.gateway.settings") as mock_settings:
         mock_settings.app_env = "dev"
         mock_settings.llm_replay_encryption_key = "test-key-test-key-test-key-test-key="
         yield session

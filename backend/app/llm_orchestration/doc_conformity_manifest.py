@@ -10,6 +10,7 @@ STRUCTURAL_FILES: Final[set[str]] = {
     "docs/llm-prompt-generation-by-feature.md",
     ".github/pull_request_template.md",
     ".github/workflows/llm-doc-conformity.yml",
+    "backend/app/domain/llm/runtime/gateway.py",
     "backend/app/llm_orchestration/gateway.py",
     "backend/app/llm_orchestration/doc_conformity_manifest.py",
     "backend/app/llm_orchestration/feature_taxonomy.py",

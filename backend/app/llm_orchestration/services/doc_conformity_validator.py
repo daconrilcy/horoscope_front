@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from app.llm_orchestration.legacy_residual_registry import validate_doc_registry_version
 from app.llm_orchestration.doc_conformity_manifest import (
     AUTHORIZED_PR_REASONS,
     DOC_PATH,
@@ -17,7 +18,6 @@ from app.llm_orchestration.feature_taxonomy import (
 from app.llm_orchestration.golden_regression_registry import (
     OBS_SNAPSHOT_CLASSIFICATION_DEFAULT,
 )
-from app.llm_orchestration.legacy_residual_registry import validate_doc_registry_version
 from app.llm_orchestration.models import FallbackStatus, FallbackType
 from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
 from app.llm_orchestration.supported_providers import NOMINAL_SUPPORTED_PROVIDERS

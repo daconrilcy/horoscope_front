@@ -73,7 +73,9 @@ async def test_integrated_template_handled_propagation(db):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
+    with patch(
+        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+    ):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
@@ -84,7 +86,7 @@ async def test_integrated_template_handled_propagation(db):
                     return_value=None,
                 ):
                     with patch(
-                        "app.llm_orchestration.providers.responses_client.ResponsesClient.execute",
+                        "app.infrastructure.providers.llm.openai_responses_client.ResponsesClient.execute",
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response
@@ -147,7 +149,9 @@ async def test_integrated_injector_applied_propagation(db):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
+    with patch(
+        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+    ):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
@@ -158,7 +162,7 @@ async def test_integrated_injector_applied_propagation(db):
                     return_value=None,
                 ):
                     with patch(
-                        "app.llm_orchestration.providers.responses_client.ResponsesClient.execute",
+                        "app.infrastructure.providers.llm.openai_responses_client.ResponsesClient.execute",
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response
@@ -222,7 +226,9 @@ async def test_integrated_not_needed_propagation(db):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
+    with patch(
+        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+    ):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
@@ -233,7 +239,7 @@ async def test_integrated_not_needed_propagation(db):
                     return_value=None,
                 ):
                     with patch(
-                        "app.llm_orchestration.providers.responses_client.ResponsesClient.execute",
+                        "app.infrastructure.providers.llm.openai_responses_client.ResponsesClient.execute",
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response

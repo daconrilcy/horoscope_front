@@ -234,7 +234,7 @@ class TestNatalInterpretationServiceV2UserInput:
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
-                "app.services.ai_engine_adapter.LLMGateway",
+                "app.application.llm.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),
@@ -291,7 +291,7 @@ class TestNatalInterpretationServiceV2UserInput:
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
-                "app.services.ai_engine_adapter.LLMGateway",
+                "app.application.llm.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),
@@ -344,7 +344,7 @@ class TestNatalInterpretationServiceV2UserInput:
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
-                "app.services.ai_engine_adapter.LLMGateway",
+                "app.application.llm.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),
@@ -397,7 +397,7 @@ class TestNatalInterpretationServiceV2SchemaVersion:
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
-                "app.services.ai_engine_adapter.LLMGateway",
+                "app.application.llm.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),
@@ -457,7 +457,7 @@ class TestNatalInterpretationServiceV2Modules:
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
-                "app.services.ai_engine_adapter.LLMGateway",
+                "app.application.llm.ai_engine_adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),

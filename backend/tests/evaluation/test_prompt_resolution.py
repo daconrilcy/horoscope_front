@@ -169,9 +169,9 @@ async def test_prompt_resolution_matrix(
         )
 
         with MagicMock():
-            import app.llm_orchestration.gateway as gateway_module
+            import app.domain.llm.runtime.gateway as gateway_module
 
-            # We patch it directly in the module
+            # On patche le builder dans le module où le gateway le résout (story 70-15).
             original_build = gateway_module.CommonContextBuilder.build
             gateway_module.CommonContextBuilder.build = MagicMock(return_value=mock_qualified)
 

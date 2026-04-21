@@ -137,7 +137,7 @@ async def test_pipeline_repair_flow(db):
     with patch.object(gateway, "_call_provider", new_callable=AsyncMock) as mock_call:
         mock_call.side_effect = [mock_res_bad, mock_res_good]
 
-        with patch("app.llm_orchestration.gateway.validate_output") as mock_val:
+        with patch("app.domain.llm.runtime.gateway.validate_output") as mock_val:
             mock_val.side_effect = [
                 ValidationResult(valid=False, parsed={}, errors=["err"]),
                 ValidationResult(valid=True, parsed={"ok": True}, errors=[]),

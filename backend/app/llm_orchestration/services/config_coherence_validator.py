@@ -9,6 +9,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session, selectinload
 
+from app.llm_orchestration.prompt_governance_registry import (
+    format_placeholder_violation_report,
+    get_prompt_governance_registry,
+)
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
@@ -19,10 +23,6 @@ from app.llm_orchestration.feature_taxonomy import (
     is_natal_subfeature_canonical,
     is_nominal_feature_allowed,
     is_supported_feature,
-)
-from app.llm_orchestration.prompt_governance_registry import (
-    format_placeholder_violation_report,
-    get_prompt_governance_registry,
 )
 from app.llm_orchestration.services.assembly_resolver import PLAN_RULES_REGISTRY
 from app.llm_orchestration.services.execution_profile_registry import (

@@ -4,7 +4,7 @@ DEPRECATED: Ce module est déprécié et sera supprimé dans une version future.
 Utilisez le nouveau module AI Engine à la place:
 - Pour le chat: app.ai_engine.services.chat_service
 - Pour les guidances: app.ai_engine.services.generate_service avec les use_cases guidance_*
-- Pour l'intégration dans les services existants: app.services.ai_engine_adapter
+- Pour l'intégration dans les services existants: app.application.llm.ai_engine_adapter
 
 Le AI Engine offre:
 - De vrais appels OpenAI au lieu de simples échos
@@ -30,7 +30,7 @@ class LLMClient:
         """Initialize LLMClient with deprecation warning."""
         warnings.warn(
             "LLMClient is deprecated. Use AIEngineAdapter or ai_engine services instead. "
-            "See app.services.ai_engine_adapter for migration guide.",
+            "See app.application.llm.ai_engine_adapter for migration guide.",
             DeprecationWarning,
             stacklevel=2,
         )
