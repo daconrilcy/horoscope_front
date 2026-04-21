@@ -379,7 +379,7 @@ async def test_map_gateway_result_to_narrator_result_empty():
 async def test_non_regression_66_9_to_66_18_suites():
     """AC11: Proves that the new narrator migration doesn't break the base orchestration logic."""
     # We just need to make sure we can still resolve and render basic things
-    from app.llm_orchestration.services.prompt_renderer import PromptRenderer
+    from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 
     template = "Hello {{persona_name}}!"
     vars = {"persona_name": "Luna"}

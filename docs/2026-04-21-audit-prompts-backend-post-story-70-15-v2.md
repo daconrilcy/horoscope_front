@@ -37,11 +37,11 @@ Perimetre: backend, flux runtime prompting/persona/configuration/gateway, consom
 - `app.application.llm.ai_engine_adapter` consomme par services metier:
   - guidance/chat/natal/prediction (+ routes nominales associees)
 
-## Reliquats de compatibilite toleres (justifies)
+## Reliquats de compatibilite toleres (justifies, liste fermee)
 
 - `backend/app/llm_orchestration/gateway.py`
   - raison: compatibilite namespace historique (tests/patches)
-- `backend/app/llm_orchestration/services/*.py`
+- `backend/app/llm_orchestration/services/*.py` (hors `prompt_renderer.py`, supprime)
   - raison: shims de transition cibles vers `app.domain.llm.*` (tests/historique)
 - `backend/app/llm_orchestration/legacy_prompt_runtime.py`
   - raison: source data legacy encore exploitee via `app.domain.llm.legacy.bridge`
@@ -58,14 +58,12 @@ Perimetre: backend, flux runtime prompting/persona/configuration/gateway, consom
    - statut: **supprime**
 
 4. `backend/app/llm_orchestration/services/prompt_renderer.py`
-   - raison: shim historique vers canonique
-   - import nominal production: aucun
-   - usage CI bloquant: oui (tests legacy)
-   - statut propose: suppression apres migration tests namespace historique
+   - statut: **supprime**
 
 ## Validation de la passe AC31
 
 - AC31 confirme: les trois suppressions candidates ont bien ete executees.
+- AC32/AC33/AC36/AC37 confirmes: aucun import `backend/app` vers `app.llm_orchestration.services.prompt_renderer`; tests et patches historiques migres vers `app.domain.llm.prompting.prompt_renderer`.
 - L import canonical `app.domain.llm.prompting.prompt_renderer` est bien la reference runtime/config/admin.
 - Aucun import nominal vers `app.services.ai_engine_adapter`.
 - Aucun import nominal vers `app.llm_orchestration.services.persona_composer`.
@@ -73,12 +71,11 @@ Perimetre: backend, flux runtime prompting/persona/configuration/gateway, consom
 
 ## Points de vigilance restants
 
-- `app.llm_orchestration.services.prompt_renderer` reste consomme par des tests legacy et des shims historiques.
 - Le registre `backend/app/ops/llm/TRANSITION_WRAPPERS.md` doit rester synchronise a chaque suppression de shim.
-- Prochaine cible prioritaire: migration des imports historiques encore actifs vers `app.domain.llm.*` avant suppression du shim `prompt_renderer`.
+- Prochaine cible prioritaire: reduction des derniers wrappers historiques hors renderer (gateway/services namespace).
 
 ## Conclusion
 
 - La source de verite runtime est maintenant alignee sur `app.application.llm.*` + `app.domain.llm.*`.
 - Les dependances historiques sont bornees a des shims explicites et au bridge legacy nominal.
-- Le reliquat principal est des shims historiques strictement bornes (notamment `llm_orchestration/services/prompt_renderer.py` et wrappers namespace legacy).
+- Le renderer historique est supprime ; les reliquats principaux restants sont des wrappers namespace legacy strictement bornes.

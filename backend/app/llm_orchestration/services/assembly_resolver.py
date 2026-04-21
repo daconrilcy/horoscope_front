@@ -6,6 +6,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from app.domain.llm.prompting.personas import compose_persona_block
+from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.llm_orchestration.admin_models import (
     ExecutionConfigAdmin,
@@ -20,7 +21,6 @@ from app.llm_orchestration.prompt_governance_registry import (
     PLACEHOLDER_ALLOWLIST,
     get_prompt_governance_registry,
 )
-from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 
 logger = logging.getLogger(__name__)
 

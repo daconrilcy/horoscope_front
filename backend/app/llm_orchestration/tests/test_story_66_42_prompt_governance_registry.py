@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 import app.llm_orchestration.prompt_governance_registry as gov_registry_module
+from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.llm_orchestration.prompt_governance_registry import (
     PromptGovernanceRegistry,
     PromptGovernanceRegistryData,
@@ -22,7 +23,6 @@ from app.llm_orchestration.services.assembly_resolver import (
     PLACEHOLDER_ALLOWLIST,
     validate_placeholders,
 )
-from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
 
 

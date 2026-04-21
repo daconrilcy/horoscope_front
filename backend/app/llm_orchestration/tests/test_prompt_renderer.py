@@ -1,7 +1,7 @@
 import pytest
 
+from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.llm_orchestration.models import PromptRenderError
-from app.llm_orchestration.services.prompt_renderer import PromptRenderer
 
 
 def test_render_success():

@@ -26,9 +26,14 @@ Ce registre suit les wrappers de compatibilite introduces pendant la convergence
 | `backend/app/api/v1/routers/admin/llm/*.py` (wrappers namespace) | Routers `admin_llm*` historiques | Stabiliser le namespace canonique API sans big-bang | Les routers historiques `admin_llm*.py` sont absorbes/remplaces, puis wrappers supprimes |
 | `backend/app/infrastructure/db/models/llm_*.py` (re-exports) | `app.infra.db.models.*` historiques | Convergence progressive vers chemins DB canoniques | Plus aucun import actif vers `app.infra.db.models.llm_*` |
 
+## Suppressions effectives
+
+- `backend/app/llm_orchestration/services/prompt_renderer.py` a ete **supprime**.
+- Le renderer canonique unique est `app.domain.llm.prompting.prompt_renderer`.
+
 ### Shims `llm_orchestration/services` et provider (post 70-15)
 
-Fichiers reduits a un reexport vers le domaine canonique : `context_quality_injector`, `length_budget_injector`, `provider_parameter_mapper`, `output_validator`, `fallback_governance`, `prompt_renderer`, `assembly_resolver`, `assembly_registry`, `assembly_admin_service`, `execution_profile_registry`.
+Fichiers reduits a un reexport vers le domaine canonique : `context_quality_injector`, `length_budget_injector`, `provider_parameter_mapper`, `output_validator`, `fallback_governance`, `assembly_resolver`, `assembly_registry`, `assembly_admin_service`, `execution_profile_registry`.
 
 ## Garde-fou
 

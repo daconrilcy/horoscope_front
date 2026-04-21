@@ -93,6 +93,15 @@ A l issue de cette story :
 29. **AC29 - Preuve d adoption canonique par scan d imports** : un scan d imports `backend/app` est produit pour les modules nettoyes ; il montre les chemins nominaux canoniques (`app.application.llm.*`, `app.domain.llm.*`, `app.infrastructure.*`) ; tout chemin historique restant est liste et justifie.
 30. **AC30 - Liste de suppression immediate en fin de story** : la story produit une liste `safe to delete next` avec raison de suppression, absence d import nominal, absence d usage CI bloquant et statut final propose ; au minimum les doublons/alias morts identifies pendant la story sont traites ou explicitement files en suppression.
 31. **AC31 - Execution de la passe suppression immediate** : les candidats `safe to delete next` sans usage nominal sont effectivement supprimes dans la story ; les imports de tests/historique sont migres vers les chemins canoniques ; `ruff format`, `ruff check` et `pytest -q` restent verts apres suppression.
+32. **AC32 - Suppression du shim historique `llm_orchestration/services/prompt_renderer.py`** : le fichier `backend/app/llm_orchestration/services/prompt_renderer.py` n existe plus ; imports et patches historiques sont migres vers `app.domain.llm.prompting.prompt_renderer` ; aucun shim equivalent n est reintroduit ; comportement de rendu/gouvernance preserve.
+33. **AC33 - Migration complete des tests et patches historiques vers le renderer canonique** : tests/fixtures/monkeypatches/mocks qui visaient l ancien renderer pointent desormais `app.domain.llm.prompting.prompt_renderer` ; aucun test n est maintenu vert via une dependance artificielle au shim historique.
+34. **AC34 - Reduction de `TRANSITION_WRAPPERS.md` apres suppression effective** : `llm_orchestration/services/prompt_renderer.py` est retire des wrappers actifs ; le registre mentionne explicitement sa suppression ; la liste de wrappers restants diminue.
+35. **AC35 - Liste des wrappers historiques residuels figee et bornee** : la liste residuelle admise est explicite, courte et coherente entre code et registre ; tout wrapper hors liste est supprime ou requalifie.
+36. **AC36 - Aucun import nominal ou de validation interne vers le renderer historique** : aucun import dans `backend/app` ne pointe vers `app.llm_orchestration.services.prompt_renderer` ; runtime/admin/outils internes consomment le renderer canonique uniquement.
+37. **AC37 - Preuve de suppression sure du shim renderer** : preuves de scan imports, migration tests et doc d etat confirment la suppression sans fallback implicite.
+38. **AC38 - Validation complete post-suppression du renderer historique** : `ruff format`, `ruff check`, `pytest -q` et les suites critiques guidance/chat/natal/daily + admin/release/readiness/doc conformity restent verts sans reintroduire le chemin historique.
+39. **AC39 - Mise a jour de l audit backend post-suppression** : l audit backend n identifie plus `llm_orchestration/services/prompt_renderer.py` comme reliquat actif ; `app.domain.llm.prompting.prompt_renderer` est la source unique ; reliquats restants reevalues.
+40. **AC40 - Cloture explicite de la phase renderer migration** : completion notes/changelog story actent la fin de migration renderer et suppriment le point d attention "prochaine cible: prompt_renderer shim".
 
 ## Tasks / Subtasks
 
@@ -184,6 +193,13 @@ A l issue de cette story :
   - [x] Realigner la documentation et le registre wrappers sur l etat post-suppression.
   - [x] Revalider `ruff format`, `ruff check`, `pytest -q`.
 
+- [x] Task 15: Cloturer la migration renderer historique (AC32, AC33, AC34, AC35, AC36, AC37, AC38, AC39, AC40)
+  - [x] Migrer les imports et patches tests `app.llm_orchestration.services.prompt_renderer` vers `app.domain.llm.prompting.prompt_renderer`.
+  - [x] Supprimer `backend/app/llm_orchestration/services/prompt_renderer.py`.
+  - [x] Mettre a jour `backend/app/ops/llm/TRANSITION_WRAPPERS.md` pour retirer le shim renderer.
+  - [x] Mettre a jour l audit `docs/2026-04-21-audit-prompts-backend-post-story-70-15-v2.md` en etat post-suppression.
+  - [x] Produire la preuve de scan d imports backend/app et revalider la suite quality gates.
+
 ## Dev Notes
 
 ### Positionnement par rapport a 70-14
@@ -254,6 +270,8 @@ gpt-5
 - Hygiene diff (review P2) : `backend/horoscope.db` reste hors scope et est restauree depuis `HEAD` avant validation finale.
 - Bascule ciblee AC16 : les imports nominaux backend/app des 4 composants critiques consomment maintenant directement `app.domain.llm.*` ; les chemins historiques correspondants sont reduits a des shims.
 - Correctif cible post-bascule : les 3 tests `test_story_66_27_integrated_propagation.py` patchent desormais `app.prompts.common_context.CommonContextBuilder.build` (reference runtime effective) pour restaurer la propagation attendue de `obs.context_quality` sans revenir sur les imports canoniques.
+- AC32-AC37 : migration complete des imports/tests historiques `app.llm_orchestration.services.prompt_renderer` vers `app.domain.llm.prompting.prompt_renderer`, puis suppression effective du shim `backend/app/llm_orchestration/services/prompt_renderer.py`.
+- AC34-AC35-AC39-AC40 : registre wrappers et audit post-story realignes; la phase de migration renderer est explicitement close.
 
 ### File List
 
@@ -312,3 +330,4 @@ gpt-5
 - 2026-04-21 : correctif tests integration 66.27 apres bascule canonique — realignement de la cible de patch `CommonContextBuilder.build` vers `app.prompts.common_context` pour conserver `obs.context_quality` (3/3 verts) sans rollback des imports canoniques.
 - 2026-04-21 : ajout AC17 et implementation — renderer canonique `app.domain.llm.prompting.prompt_renderer` promu source primaire, imports nominaux reroutes, `app.llm_orchestration.services.prompt_renderer` reduit a un shim minimal.
 - 2026-04-21 : ajout AC31 et execution de la passe suppression immediate — suppression de `domain/llm/prompting/renderer.py`, `services/ai_engine_adapter.py`, `llm_orchestration/services/persona_composer.py`, migration des imports restants vers les chemins canoniques et revalidation complete.
+- 2026-04-21 : ajout AC32-AC40 et cloture renderer migration — suppression de `llm_orchestration/services/prompt_renderer.py`, migration complete des imports/tests vers `app.domain.llm.prompting.prompt_renderer`, realignement registre wrappers + audit post-story.
