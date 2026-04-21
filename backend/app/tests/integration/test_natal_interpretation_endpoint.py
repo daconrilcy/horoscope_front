@@ -18,8 +18,13 @@ from app.domain.astrology.natal_calculation import (
     PlanetPosition,
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
+from app.domain.llm.runtime.contracts import (
+    GatewayConfigError,
+    GatewayMeta,
+    GatewayResult,
+    UsageInfo,
+)
 from app.infra.db.session import get_db_session
-from app.llm_orchestration.models import GatewayConfigError, GatewayMeta, GatewayResult, UsageInfo
 from app.main import app
 from app.services.user_birth_profile_service import UserBirthProfileData
 from app.services.user_natal_chart_service import (
@@ -229,7 +234,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute_request",
+                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 return_value=_make_gateway_result(use_case),
             ),
@@ -268,7 +273,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute_request",
+                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 return_value=_make_gateway_result(use_case, persona_id=persona_id),
             ),
@@ -291,7 +296,7 @@ class TestNatalInterpretationEndpointV2:
 
     def test_complete_persona_missing(self, test_client, mock_db) -> None:
         # mock_db.execute.return_value.scalar_one_or_none.return_value = None (from fixture)
-        from app.llm_orchestration.models import InputValidationError
+        from app.domain.llm.runtime.contracts import InputValidationError
 
         with (
             patch(
@@ -341,7 +346,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute_request",
+                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
                 side_effect=GatewayConfigError("Invalid gateway config"),
             ),
         ):
@@ -352,7 +357,7 @@ class TestNatalInterpretationEndpointV2:
         assert response.json()["error"]["code"] == "gateway_config_error"
 
     def test_unknown_use_case(self, test_client, mock_db) -> None:
-        from app.llm_orchestration.models import UnknownUseCaseError
+        from app.domain.llm.runtime.contracts import UnknownUseCaseError
 
         mock_db.execute.return_value.scalar_one_or_none.return_value = None
         with (
@@ -365,7 +370,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute_request",
+                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
                 side_effect=UnknownUseCaseError("Unknown use case"),
             ),
         ):
@@ -389,7 +394,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.llm_orchestration.gateway.LLMGateway.execute_request",
+                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
                 side_effect=UpstreamTimeoutError("LLM Timeout"),
             ),
         ):

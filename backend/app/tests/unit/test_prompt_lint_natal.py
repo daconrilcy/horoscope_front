@@ -1,4 +1,4 @@
-from app.llm_orchestration.services.prompt_lint import PromptLint
+from app.ops.llm.prompt_lint import PromptLint
 
 
 def test_lint_short_valid():

@@ -17,20 +17,18 @@ _BACKEND_ROOT = Path(__file__).resolve().parents[4]
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
-from app.infra.db.models.llm_prompt import LlmUseCaseConfigModel
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
-from app.infra.db.session import SessionLocal
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionFlags,
     ExecutionUserInput,
     LLMExecutionRequest,
 )
-from app.llm_orchestration.services.golden_regression_service import GoldenRegressionService
-from app.llm_orchestration.services.performance_qualification_service import (
-    PerformanceQualificationService,
-)
+from app.domain.llm.runtime.gateway import LLMGateway
+from app.infra.db.models.llm_prompt import LlmUseCaseConfigModel
+from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.session import SessionLocal
+from app.ops.llm.performance_qualification import PerformanceQualificationService
+from app.ops.llm.services import GoldenRegressionService
 
 DEFAULT_GOLDEN_PATHS = {
     "natal": "tests/fixtures/golden/natal_test.yaml",

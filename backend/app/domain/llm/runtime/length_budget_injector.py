@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.llm_orchestration.admin_models import LengthBudget
+from app.domain.llm.configuration.admin_models import LengthBudget
 
 
 class LengthBudgetInjector:

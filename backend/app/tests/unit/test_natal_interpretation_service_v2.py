@@ -18,7 +18,7 @@ from app.domain.astrology.natal_calculation import (
     PlanetPosition,
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import UserBirthProfileData
 

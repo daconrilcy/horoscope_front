@@ -130,7 +130,7 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
         mock_settings_proj.llm_narrator_enabled = True
 
         # Mock CommonContextBuilder.build
-        with patch("app.prompts.common_context.CommonContextBuilder.build") as mock_ctx_build:
+        with patch("app.domain.llm.prompting.context.CommonContextBuilder.build") as mock_ctx_build:
             mock_ctx = MagicMock()
             mock_ctx.context_quality = "nominal"
             mock_ctx.missing_fields = []
@@ -219,7 +219,7 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
         mock_settings_router.active_reference_version = "2.0.0"
         mock_settings_proj.llm_narrator_enabled = True
 
-        with patch("app.prompts.common_context.CommonContextBuilder.build") as mock_ctx_build:
+        with patch("app.domain.llm.prompting.context.CommonContextBuilder.build") as mock_ctx_build:
             mock_ctx = MagicMock()
             mock_ctx.context_quality = "nominal"
             mock_ctx.missing_fields = []
@@ -316,7 +316,7 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
     with (
         patch("app.api.v1.routers.predictions.settings") as mock_settings_router,
         patch("app.prediction.public_projection.settings") as mock_settings_proj,
-        patch("app.prompts.common_context.CommonContextBuilder.build") as mock_ctx_build,
+        patch("app.domain.llm.prompting.context.CommonContextBuilder.build") as mock_ctx_build,
         patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls,
         patch(
             "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration"

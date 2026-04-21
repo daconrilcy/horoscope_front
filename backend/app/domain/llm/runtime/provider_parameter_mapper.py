@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from app.llm_orchestration.execution_profiles_types import (
+from app.domain.llm.runtime.execution_profiles_types import (
     OutputMode,
     ReasoningProfile,
     ToolMode,

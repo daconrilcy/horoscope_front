@@ -585,7 +585,7 @@ async def get_daily_prediction(
     # Build prompt context if LLM narration is enabled
     prompt_context = None
     if settings.llm_narrator_enabled:
-        from app.prompts.common_context import CommonContextBuilder
+        from app.domain.llm.prompting.context import CommonContextBuilder
 
         try:
             prompt_context = CommonContextBuilder.build(

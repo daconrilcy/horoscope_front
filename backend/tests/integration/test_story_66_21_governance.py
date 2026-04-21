@@ -3,8 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionUserInput,
     FallbackType,
@@ -12,7 +11,8 @@ from app.llm_orchestration.models import (
     LLMExecutionRequest,
     UseCaseConfig,
 )
-from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
+from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
+from app.domain.llm.runtime.gateway import LLMGateway
 
 
 @pytest.fixture
@@ -64,9 +64,7 @@ async def test_governance_telemetry_emission():
     """
     Vérifie que l'usage d'un fallback autorisé émet bien la télémétrie.
     """
-    with patch(
-        "app.llm_orchestration.services.fallback_governance.increment_counter"
-    ) as mock_increment:
+    with patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_increment:
         # On utilise un feature autorisé pour ne pas lever d'exception
         FallbackGovernanceRegistry.track_fallback(
             FallbackType.LEGACY_WRAPPER,
@@ -110,7 +108,7 @@ async def test_governance_allows_transitory_fallback_on_permitted_perimeter(gate
     )
 
     with patch(
-        "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
+        "app.domain.llm.configuration.assembly_registry.AssemblyRegistry.get_active_config_sync",
         return_value=None,
     ):
         with patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config):
@@ -177,7 +175,7 @@ async def test_governance_critical_log_on_db_error_in_prod():
     """
     with patch("app.core.config.settings.app_env", "production"):
         # Import logger from the module to patch it correctly
-        from app.llm_orchestration.services.fallback_governance import logger as gov_logger
+        from app.domain.llm.runtime.fallback_governance import logger as gov_logger
 
         with patch.object(gov_logger, "critical") as mock_log:
             FallbackGovernanceRegistry.track_fallback(
@@ -214,9 +212,7 @@ async def test_governance_telemetry_emitted_even_on_block():
     """
     Medium: La télémétrie doit être émise même si l'appel est bloqué par une exception.
     """
-    with patch(
-        "app.llm_orchestration.services.fallback_governance.increment_counter"
-    ) as mock_increment:
+    with patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_increment:
         # On force un blocage via TO_REMOVE + is_nominal
         with pytest.raises(GatewayError):
             FallbackGovernanceRegistry.track_fallback(

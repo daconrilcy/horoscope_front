@@ -11,9 +11,9 @@ Run with:
 
 from sqlalchemy import select
 
+from app.domain.llm.runtime.contracts import EVIDENCE_ID_REGEX
 from app.infra.db.models import LlmOutputSchemaModel
 from app.infra.db.session import SessionLocal
-from app.llm_orchestration.models import EVIDENCE_ID_REGEX
 
 FIXED_SCHEMAS = {
     "AstroResponse_v1": {

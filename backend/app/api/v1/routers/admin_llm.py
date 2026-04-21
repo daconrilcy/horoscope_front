@@ -20,15 +20,45 @@ from app.api.dependencies.auth import (
 from app.api.v1.routers.admin_llm_error_codes import AdminLlmErrorCode
 from app.core.request_id import resolve_request_id
 from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
+from app.domain.llm.configuration.admin_models import (
+    AdminUseCaseAudit,
+    LlmOutputSchema,
+    LlmPersona,
+    LlmPersonaCreate,
+    LlmPersonaUpdate,
+    LlmPromptVersion,
+    LlmPromptVersionCreate,
+    LlmUseCaseConfig,
+    build_admin_use_case_audit,
+)
 from app.domain.llm.configuration.assemblies import (
     AssemblyRegistry,
     assemble_developer_prompt,
     resolve_assembly,
 )
 from app.domain.llm.governance.governance import get_prompt_governance_registry
+from app.domain.llm.prompting.persona_boundary import (
+    PersonaBoundaryViolation,
+    validate_persona_block,
+)
 from app.domain.llm.prompting.personas import compose_persona_block
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.domain.llm.runtime.composition import ContextQualityInjector, ProviderParameterMapper
+from app.domain.llm.runtime.contracts import (
+    ExecutionContext,
+    ExecutionUserInput,
+    GatewayConfigError,
+    GatewayError,
+    GatewayResult,
+    InputValidationError,
+    LLMExecutionRequest,
+    OutputValidationError,
+    PromptRenderError,
+    UnknownUseCaseError,
+)
+from app.domain.llm.runtime.gateway import LLMGateway
+from app.domain.llm.runtime.observability import purge_expired_logs
+from app.domain.llm.runtime.policy import get_hard_policy
 from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
@@ -59,40 +89,7 @@ from app.infrastructure.db.repositories.llm.prompting_repository import (
 from app.infrastructure.db.repositories.llm.prompting_repository import (
     list_release_snapshots_timeline as repo_list_release_snapshots_timeline,
 )
-from app.llm_orchestration.admin_models import (
-    AdminUseCaseAudit,
-    LlmOutputSchema,
-    LlmPersona,
-    LlmPersonaCreate,
-    LlmPersonaUpdate,
-    LlmPromptVersion,
-    LlmPromptVersionCreate,
-    LlmUseCaseConfig,
-    build_admin_use_case_audit,
-)
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
-    ExecutionContext,
-    ExecutionUserInput,
-    GatewayConfigError,
-    GatewayError,
-    GatewayResult,
-    InputValidationError,
-    LLMExecutionRequest,
-    OutputValidationError,
-    PromptRenderError,
-    UnknownUseCaseError,
-)
-from app.llm_orchestration.persona_boundary import (
-    PersonaBoundaryViolation,
-    validate_persona_block,
-)
-from app.llm_orchestration.policies.hard_policy import get_hard_policy
-from app.llm_orchestration.services.eval_harness import run_eval
-from app.llm_orchestration.services.observability_service import purge_expired_logs
-from app.llm_orchestration.services.prompt_lint import PromptLint
-from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2
-from app.llm_orchestration.services.replay_service import replay
+from app.ops.llm.services import PromptLint, PromptRegistryV2, replay, run_eval
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
@@ -2969,7 +2966,7 @@ def update_use_case_config(
         )
 
     # Story 66.28: Block modification of forbidden nominal features (AC5)
-    from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
+    from app.domain.llm.governance.feature_taxonomy import is_nominal_feature_allowed
 
     if not is_nominal_feature_allowed(key):
         return _error_response(
@@ -3324,7 +3321,7 @@ def create_prompt_draft(
         )
 
     # Story 66.28: Block resurrection of forbidden nominal features (AC5)
-    from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
+    from app.domain.llm.governance.feature_taxonomy import is_nominal_feature_allowed
 
     if not is_nominal_feature_allowed(key):
         return _error_response(
@@ -3436,9 +3433,7 @@ async def publish_prompt(
 
     golden_report = None
     if uc.golden_set_path:
-        from app.llm_orchestration.services.golden_regression_service import (
-            GoldenRegressionService,
-        )
+        from app.ops.llm.services import GoldenRegressionService
 
         golden_report = await GoldenRegressionService.run_campaign(
             use_case_key=key,
@@ -3498,7 +3493,7 @@ async def publish_prompt(
         }
 
     except ValueError as err:
-        from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
+        from app.domain.llm.governance.feature_taxonomy import is_nominal_feature_allowed
 
         if not is_nominal_feature_allowed(key):
             return _error_response(
@@ -3575,7 +3570,7 @@ def rollback_prompt(
             "meta": {"request_id": request_id},
         }
     except ValueError as err:
-        from app.llm_orchestration.feature_taxonomy import is_nominal_feature_allowed
+        from app.domain.llm.governance.feature_taxonomy import is_nominal_feature_allowed
 
         if not is_nominal_feature_allowed(key):
             return _error_response(

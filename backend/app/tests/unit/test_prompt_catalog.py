@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.prompts.catalog import PROMPT_CATALOG, PromptEntry
-from app.prompts.exceptions import ConfigurationError
-from app.prompts.validators import validate_catalog_vs_db
+from app.domain.llm.prompting.catalog import PROMPT_CATALOG, PromptEntry
+from app.domain.llm.prompting.exceptions import ConfigurationError
+from app.domain.llm.prompting.validators import validate_catalog_vs_db
 
 
 def test_catalog_contains_expected_use_cases() -> None:
@@ -62,7 +62,7 @@ def test_validate_catalog_vs_db_failure() -> None:
 def test_resolve_model_default(monkeypatch) -> None:
     """Test that resolve_model returns default when no env is set."""
     from app.core.config import settings
-    from app.prompts.catalog import resolve_model
+    from app.domain.llm.prompting.catalog import resolve_model
 
     monkeypatch.delenv("OPENAI_ENGINE_GUIDANCE_DAILY", raising=False)
     # Default from settings
@@ -72,7 +72,7 @@ def test_resolve_model_default(monkeypatch) -> None:
 
 def test_resolve_model_from_env(monkeypatch) -> None:
     """Test that resolve_model returns value from env."""
-    from app.prompts.catalog import resolve_model
+    from app.domain.llm.prompting.catalog import resolve_model
 
     monkeypatch.setenv("OPENAI_ENGINE_GUIDANCE_DAILY", "gpt-4-test")
     assert resolve_model("guidance_daily") == "gpt-4-test"
@@ -81,6 +81,6 @@ def test_resolve_model_from_env(monkeypatch) -> None:
 def test_resolve_model_unknown_use_case(monkeypatch) -> None:
     """Test that resolve_model returns default for unknown use case."""
     from app.core.config import settings
-    from app.prompts.catalog import resolve_model
+    from app.domain.llm.prompting.catalog import resolve_model
 
     assert resolve_model("unknown_key") == settings.openai_model_default

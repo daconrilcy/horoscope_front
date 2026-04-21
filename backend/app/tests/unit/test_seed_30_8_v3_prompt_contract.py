@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.llm_orchestration.services.prompt_lint import PromptLint
+from app.ops.llm.prompt_lint import PromptLint
 from scripts.seed_30_8_v3_prompts import (
     ALL_PROMPT_CONFIGS,
     GPT5_V3_CONFIG,

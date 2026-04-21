@@ -80,7 +80,7 @@ def seed_66_15_convergence():
             db_uc = db.execute(stmt_uc).scalar_one_or_none()
 
             if not db_uc:
-                from app.prompts.catalog import PROMPT_CATALOG
+                from app.domain.llm.prompting.catalog import PROMPT_CATALOG
 
                 entry = PROMPT_CATALOG.get(key)
                 if not entry:
@@ -110,7 +110,7 @@ def seed_66_15_convergence():
                 return v
 
             # Create stub version
-            from app.prompts.catalog import PROMPT_CATALOG
+            from app.domain.llm.prompting.catalog import PROMPT_CATALOG
 
             entry = PROMPT_CATALOG.get(key)
             if not entry:

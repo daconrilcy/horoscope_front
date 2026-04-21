@@ -20,7 +20,7 @@ if str(_BACKEND_ROOT) not in sys.path:
 
 from app.infra.db.models.llm_release import LlmReleaseSnapshotModel  # noqa: E402
 from app.infra.db.session import SessionLocal  # noqa: E402
-from app.llm_orchestration.services.release_service import ReleaseService  # noqa: E402
+from app.ops.llm.services import ReleaseService  # noqa: E402
 
 
 def _utcnow() -> datetime:

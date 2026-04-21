@@ -9,16 +9,16 @@ from sqlalchemy import and_, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.domain.llm.governance.feature_taxonomy import (
+    assert_nominal_feature_allowed,
+    normalize_feature,
+    normalize_subfeature,
+)
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.utils import reconstruct_orm, serialize_orm
-from app.llm_orchestration.feature_taxonomy import (
-    assert_nominal_feature_allowed,
-    normalize_feature,
-    normalize_subfeature,
-)
 
 logger = logging.getLogger(__name__)
 

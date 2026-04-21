@@ -8,9 +8,9 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.domain.llm.prompting.catalog import PROMPT_CATALOG
+from app.domain.llm.prompting.exceptions import ConfigurationError
 from app.infra.db.models import LlmUseCaseConfigModel
-from app.prompts.catalog import PROMPT_CATALOG
-from app.prompts.exceptions import ConfigurationError
 
 logger = logging.getLogger(__name__)
 

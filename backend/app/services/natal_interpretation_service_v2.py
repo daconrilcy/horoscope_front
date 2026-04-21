@@ -19,14 +19,7 @@ from app.application.llm.ai_engine_adapter import AIEngineAdapter
 from app.core.config import settings
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.user_natal_interpretation import (
-    InterpretationLevel,
-    UserNatalInterpretationModel,
-)
-from app.infra.observability.metrics import observe_duration
-from app.llm_orchestration.models import GatewayResult, NatalExecutionInput
-from app.llm_orchestration.schemas import (
+from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
     AstroFreeSection,
@@ -34,6 +27,13 @@ from app.llm_orchestration.schemas import (
     AstroResponseV2,
     AstroResponseV3,
 )
+from app.domain.llm.runtime.contracts import GatewayResult, NatalExecutionInput
+from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.user_natal_interpretation import (
+    InterpretationLevel,
+    UserNatalInterpretationModel,
+)
+from app.infra.observability.metrics import observe_duration
 from app.services.chart_json_builder import (
     build_chart_json,
     build_enriched_evidence_catalog,

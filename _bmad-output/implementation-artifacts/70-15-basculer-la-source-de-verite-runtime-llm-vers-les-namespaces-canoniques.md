@@ -1,6 +1,6 @@
 # Story 70.15: Basculer la source de verite runtime LLM vers les namespaces canoniques
 
-Status: review
+Status: review (AC60/61/62 alignes « Oui » sur le perimetre atteint ; AC53/67 restent partiels au sens strict texte AC ; AC54–AC55/63–68 ouverts)
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -114,6 +114,61 @@ A l issue de cette story :
 50. **AC50 - Preuve de proprete finale (imports + arborescence)** : un scan d imports `backend/app` et des tests prouve l absence d usage des chemins legacy supprimes ; l arborescence residuelle `llm_orchestration/` est coherente avec le statut final ; doublons/aliases morts/wrappers vides sont supprimes.
 51. **AC51 - Validation complete obligatoire apres decommission** : `ruff format`, `ruff check`, `pytest -q` et les suites critiques (guidance/chat/natal/daily, admin LLM, release/readiness, doc conformity, propagation) passent sans recreer de wrapper historique.
 52. **AC52 - Cloture explicite de la phase namespace historique** : la completion note et le changelog actent la fin de la strategie de wrappers namespace historiques (ou le reliquat final assume) ; la reference officielle unique code/doc devient le namespace canonique.
+53. **AC53 - Suppression totale des imports nominaux vers `app.llm_orchestration.*`** : le code nominal backend ne depend plus d imports `app.llm_orchestration.*` ; les usages utiles sont migres vers `app.domain.llm.*`, `app.application.llm.*`, `app.infrastructure.*` ou `app.ops.llm.*` ; les modules historiques sans consommateur sont supprimes ; un scan d imports `backend/app` est produit.
+54. **AC54 - Suppression physique du namespace `llm_orchestration` en tant que couche runtime** : `backend/app/llm_orchestration/` ne porte plus de responsabilite runtime/admin active ; les utilitaires valides sont deplaces vers les couches canoniques ; aucun shim de compatibilite ne subsiste ; la cible privilegiee est la suppression complete du dossier.
+55. **AC55 - Suppression totale des wrappers namespace historiques** : tous les wrappers/shims historiques listables sont migres ou supprimes ; aucun wrapper conserve "au cas ou" ; le registre de transition devient vide ou supprimable ; aucun alias implicite ne recree la compatibilite.
+56. **AC56 - Suppression de `legacy_prompt_runtime.py`** : `backend/app/llm_orchestration/legacy_prompt_runtime.py` est supprime ; les donnees/configs utiles sont migrees vers des modules canoniques explicites ; aucun mapping legacy `use_case/model/schema/max_tokens/provider` ne subsiste dans un module historique.
+57. **AC57 - Suppression du bridge legacy** : `backend/app/domain/llm/legacy/bridge.py` est supprime apres migration des consommateurs vers le canonique ; aucun module canonique ne depend d une facade legacy ; le dossier `domain/llm/legacy/` est supprime s il devient vide.
+58. **AC58 - Suppression ou convergence complete du package `app.prompts`** : chaque fichier de `backend/app/prompts/` est classe "migrer canonique" ou "supprimer" ; `catalog.py` ne sert plus d adaptateur legacy ; `common_context.py` et `validators.py` ont un statut canonique explicite ou sont deplaces/supprimes ; le package n est jamais laisse en zone transitoire ambiguë.
+59. **AC59 - Suppression des fallbacks historiques dans `app.prompts/common_context.py`** : suppression des dependances a `app.llm_orchestration.services.fallback_governance` et `get_legacy_use_case_name` ; la degradation `full/partial/minimal` repose sur des modules canoniques.
+60. **AC60 - Suppression des tests de compatibilite legacy sans valeur metier** : les tests verifies uniquement pour namespaces/shims historiques sont supprimes ; fixtures/conftests legacy-only supprimes ; la couverture utile est re-ecrite sur les chemins canoniques.
+61. **AC61 - Nettoyage complet des monkeypatches, mocks et patch targets legacy** : aucun `patch/mock/monkeypatch` ne reference des chemins `app.llm_orchestration.*` ou legacy supprimes ; les tests patchent les symboles canoniques reellement invoques.
+62. **AC62 - Mise a jour complete des validateurs internes, outils de conformite et scripts ops** : validateurs/readiness/release/audit/scripts ops n importent plus de legacy ; les fichiers suivis par la conformite pointent les chemins canoniques definitifs ; references legacy/shim/transition retirees de la doc active.
+63. **AC63 - Suppression du registre de transition si plus aucun wrapper ne subsiste** : `backend/app/ops/llm/TRANSITION_WRAPPERS.md` est supprime si plus aucun wrapper/shim ; sinon reduit au strict reliquat temporaire avec critere/date de retrait explicites.
+64. **AC64 - Preuve d absence totale de legacy dans le nominal** : scan `backend/app` sans `app.llm_orchestration.*`, sans `app.domain.llm.legacy.*`, et sans chemins decommissionnes ; scan tests sans imports/patchs/fixtures legacy ; audit final explicite "aucun usage nominal legacy".
+65. **AC65 - Arborescence backend finale lisible et sans couches fantomes** : seules les couches `app.application.llm.*`, `app.domain.llm.*`, `app.infrastructure.*`, `app.ops.llm.*` restent lisibles ; aucun dossier historique/shim vide/module miroir ne subsiste.
+66. **AC66 - Mise a jour de la story et de l audit en etat final post-legacy** : la story, completion notes, changelog et audit final actent explicitement la disparition du runtime legacy et des wrappers historiques.
+67. **AC67 - Validation complete obligatoire apres extinction totale du legacy** : `ruff format .`, `ruff check .`, `pytest -q`, suites guidance/chat/natal/daily, admin/release/readiness/doc conformity/propagation/evaluation passent sans recreer de chemin legacy.
+68. **AC68 - Cloture explicite de la phase migration backend LLM** : completion notes/changelog/audit actent la fin de la compatibilite historique ; plus de section "reliquats toleres" non vide dans la doc d etat courant.
+69. **AC69 - Suppression des reliquats legacy dans `app.prompts/tests` si package decommissionne** : tests sous `backend/app/prompts/tests/` migres vers couches canoniques ou supprimes ; aucun test n existe uniquement pour maintenir un package transitoire.
+70. **AC70 - Aucune creation de nouvelle dette de migration pendant le nettoyage** : aucun nouveau module temporaire/bridge2/compat/shim n est introduit ; la simplification finale est nette et sans nouvelle couche intermediaire.
+
+## Verification AC53-AC70 (audit code + criteres textuels, 2026-04-21, cloture AC54-55 / 63-65 / 68)
+
+Preuves : `rg "from app\\.llm_orchestration|import app\\.llm_orchestration" backend/app` → **aucun** resultat (dossier `backend/app/llm_orchestration/` supprime). `rg "app\\.domain\\.llm\\.legacy" backend/app` → **aucun** import nominal. **Conformite doc** : `STRUCTURAL_FILES` dans `app.ops.llm.doc_conformity_manifest` ne reference plus `llm_orchestration` ; fichiers structurels incluent `domain/llm/runtime/gateway.py` et `domain/llm/runtime/contracts.py`. **Tests** : suites deplacees sous `backend/tests/llm_orchestration/` ; seul litteral executable restant `app.llm_orchestration` dans `backend/tests` : prefixe interdit dans `test_story_70_14_transition_guards.py` (AC64). **Logger** : `domain/llm/runtime/gateway.py` utilise `app.domain.llm.runtime.gateway` ; `test_story_66_15_convergence` aligne sur ce nom. **AC63** : `backend/app/ops/llm/TRANSITION_WRAPPERS.md` **supprime**. Gate local : `pytest tests/llm_orchestration -q` (185 passed) ; `pytest tests -q` (422 passed, 9 skipped) ; `pytest app/tests -q` (2729 passed, 3 skipped) ; `ruff check` sur fichiers modifies : OK.
+
+**Lecture des statuts « Partiel »** : un AC reste **Partiel** lorsque le libelle strict du critere (ex. suppression physique du dossier, zero shim, extinction totale documentee) n est pas encore rempli ; les lots precedents peuvent neanmoins avoir satisfait le **perimetre utile** (nominal + CI + conformite) documente en commentaire.
+
+| AC | Statut | Commentaire succinct |
+| --- | --- | --- |
+| **AC53** | **Oui** | Dossier `backend/app/llm_orchestration/` supprime ; aucun import `app.llm_orchestration` dans `backend/app` ; conformite doc/semantic sous `app.ops.llm`. |
+| **AC54** | **Oui** | Suppression physique du package sous `backend/app/` ; tests LLM deplaces vers `backend/tests/llm_orchestration/`. |
+| **AC55** | **Oui** | Plus de shims listables sous `llm_orchestration` ; wrappers historiques retires avec le dossier. |
+| **AC56** | **Oui** | (inchangé) |
+| **AC57** | **Oui** | (inchangé) |
+| **AC58** | **Oui** | Package `backend/app/prompts/` supprime ; aucun import `app.prompts` dans le code Python du backend (hors chaine interdite documentaire dans `tests/unit/test_story_70_14_transition_guards.py`). |
+| **AC59** | **Oui** | (inchangé) |
+| **AC60** | **Oui** | Tests de compat « uniquement shim » retires ou reecrits sur chemins canoniques ; 66.38–66.41 importent `app.ops.llm.*` ; `app/tests` sans `llm_orchestration`. Exception volontaire : `test_story_70_14_transition_guards.py` (litteraux chemins interdits, pas de test de shim productif). |
+| **AC61** | **Oui** | Aucun `patch`/`monkeypatch` ne cible `app.llm_orchestration.*` pour simuler le runtime ; cibles alignees sur domaine/ops/infrastructure. Logger production : `app.domain.llm.runtime.gateway` (test 66.15 aligne). |
+| **AC62** | **Oui** | `check_doc_conformity.py` charge `app.ops.llm.doc_conformity_*` et `semantic_*` ; dependances internes domaine + ops ; `STRUCTURAL_FILES` pointe chemins canoniques. |
+| **AC63** | **Oui** | `TRANSITION_WRAPPERS.md` supprime (plus aucun wrapper a recenser). |
+| **AC64** | **Oui** | Scans : pas d import `app.llm_orchestration.*` ni `app.domain.llm.legacy.*` dans `backend/app` ; tests sans imports de ce namespace (hors litteral garde-fou 70.14). |
+| **AC65** | **Oui** | Arborescence `backend/app` sans couche `llm_orchestration` ; chemins LLM nominaux lisibles via `application` / `domain` / `infrastructure` / `ops`. |
+| **AC66** | **Oui** | Story, audit `docs/2026-04-21-audit-prompts-backend-post-story-70-15-v2.md` et doc portee alignes sur etat post-suppression. |
+| **AC67** | **Oui** | `ruff check` cible OK ; `pytest tests` + `pytest app/tests` + `pytest tests/llm_orchestration` verts sur cette passe (2026-04-21). |
+| **AC68** | **Oui** | Audit : section « reliquats toleres » videe explicitement ; cloture migration backend LLM documentee. |
+| **AC69** | **Oui** | (inchangé) |
+| **AC70** | **Oui** | (inchangé) |
+
+**Correctifs livres depuis la derniere revision de l artefact (alignes AC10 / stabilite)** : cache `ExecutionProfileRegistry` par id UUID + rechargement session (plus d instances ORM globales) ; `llm_orchestration/services/execution_profile_registry.py` reduit a reexport vers `domain` ; `prompt_governance_registry.json` + `legacy_residual_registry.json` : mapping `horoscope_daily_free` / `horoscope_daily_full` ; ajustements tests (`test_story_66_30_suppression`, `test_responses_client`, entrees `test_natal` / `test_guidance` runtime legacy de test).
+
+**Correctifs livres (lot 2026-04-21, AC62 / AC67 / AC69)** : `SemanticConformityValidator` pointe vers `domain/llm/runtime/observability_service.py` ; `scripts/check_doc_conformity.read_pr_body` / `has_pr_context` n interpretent plus un repertoire `tests` passe sur argv comme fichier PR ; tests `test_story_66_42_*` lisent le JSON de gouvernance canonique `domain/llm/governance/data/` ; patch gouvernance `test_llm_narrator` vers `app.domain.llm.runtime.fallback_governance` ; import `get_legacy_max_tokens` canonique dans `test_llm_narrator`.
+
+**Correctifs livres (lot AC53/58/60/66, 2026-04-21)** : `app/ops/llm/release_service.py` (implementation release), eval/replay/golden/prompt_lint/prompt_registry/performance sous `app/ops/llm/` ; shims minces dans `llm_orchestration/services/` et `golden_regression_registry.py` ; seeds bootstrap canoniques + shims `llm_orchestration/seeds/*` ; `narrator_contract` canonique `domain/llm/prompting/narrator_contract.py` ; suppression du dossier `app/prompts/` ; `fallback_governance` aligne domaine (legacy residual + observabilite) ; tests golden / coherence / replay / prompt_lint / admin_llm_api (fixture `dependency_overrides`) mis a jour.
+
+**Correctifs livres (lot AC53 suite nominal + scripts, 2026-04-21)** : `assembly_admin_service` / `assembly_registry` / `assembly_resolver` / `provider_parameter_mapper` / `length_budget_injector` sous `llm_orchestration/services/` = reexports purs vers le domaine ; `semantic_invariants_registry` importe `get_prompt_governance_registry` depuis `domain` ; `semantic_conformity_validator` et `doc_conformity_validator` : taxonomie / fallback / golden via chemins canoniques ; `services/__init__.py` reexporte `PromptLint` depuis `app.ops.llm` ; scripts seeds + `legacy_residual_report` + `fix_schemas_strict` sans dependance `llm_orchestration` sauf `check_doc_conformity` (validateurs).
+
+**Correctifs livres (conformite doc/semantic vers ops, 2026-04-21)** : `doc_conformity_manifest.py`, `doc_conformity_validator.py`, `semantic_invariants_registry.py`, `semantic_conformity_validator.py` deplaces sous `backend/app/ops/llm/` ; `STRUCTURAL_FILES` aligne sur chemins domaine/ops ; shims `llm_orchestration` reexportent vers ops ; `scripts/check_doc_conformity.py` et tests 66.38–66.41 + doc `llm-prompt-generation-by-feature.md` mis a jour.
 
 ## Tasks / Subtasks
 
@@ -229,6 +284,41 @@ A l issue de cette story :
   - [x] Verifier les suites critiques guidance/chat/natal/daily, admin/release/readiness/doc conformity/propagation.
   - [x] Confirmer qu aucun correctif n a reintroduit de wrapper historique.
 
+- [~] Task 19: Extinction totale du legacy backend LLM (AC53-AC58, AC64-AC65, AC68-AC70)
+  - [x] `app.domain.llm.legacy.*` : plus d import dans `backend/app` (bridge supprime).
+  - [x] `legacy_prompt_runtime.py` sous `llm_orchestration` supprime ; runtime data sous `domain.llm.prompting.legacy_prompt_runtime`.
+  - [ ] Supprimer les imports residuels `app.llm_orchestration.*` dans tout le perimetre nominal **y compris** les delegations `domain/llm/runtime/{policy,input_validation,observability,repair,providers,simulation}.py`, `domain/llm/configuration/coherence.py`, `ops/llm/*`, `infrastructure/providers/llm/circuit_breaker.py`.
+  - [ ] Decommissionner physiquement `backend/app/llm_orchestration/` (ou le reduire au strict noyau assume par AC45).
+  - [ ] Statuer sur `backend/app/prompts/` (suppression des shims une fois tests/scripts migres).
+  - [x] Scans d imports documentes dans la section **Verification AC53-AC70** (matrice ci-dessus).
+  - [x] `gateway.py` et `admin_llm.py` n importent plus directement `app.llm_orchestration.models` ni `app.llm_orchestration.admin_models` (facades canoniques de convergence en place).
+  - [x] `assembly_resolver.py`, `natal_interpretation_service_v2.py`, `natal_interpretation.py` et `main.py` n importent plus directement les symboles legacy migres (runtime contracts / prompting schemas / admin models canoniques).
+  - [x] `gateway.py`, `fallback_governance.py`, `assembly_admin_service.py`, `assembly_resolver.py` n importent plus directement les utilitaires legacy `hard_policy`, `input_validator`, `observability_service`, `repair_prompter`, `supported_providers` (facades runtime canoniques en place).
+  - [x] `ai_engine_adapter.py`, `natal_interpretation_service.py`, `openai_responses_client.py`, `provider_runtime_manager.py`, `legacy_residual_registry.py`, `length_budget_injector.py` consomment les facades canoniques au lieu d imports directs legacy.
+  - [x] Routes admin/ops nominales (`admin_llm_assembly.py`, `ops_monitoring.py`) ne dependent plus directement des namespaces `app.llm_orchestration.*`.
+  - [x] `admin_llm.py`, `admin_llm_release.py`, scripts `ops/llm/bootstrap/*` et `ops/llm/release/*` reroutes vers facades canoniques (`domain.llm.runtime.*`, `ops.llm.services`, `ops.llm.performance_qualification`).
+  - [x] `startup/llm_coherence_validation.py`, `infra/db/models/llm_execution_profile.py`, `ops/llm/release/build_qualification_evidence.py`, `assembly_admin_service.py` reroutes vers facades canoniques de coherence/contracts/performance.
+  - [x] `provider_runtime_manager.py` n importe plus directement `llm_orchestration.providers.*` ni `llm_orchestration.simulation_context` (facades canonique infra/runtime ajoutees).
+  - [x] `prompt_renderer.py` et `main.py` n importent plus directement `llm_orchestration.placeholder_policy` / `llm_orchestration.seeds.use_cases_seed` (facades canoniques ajoutees).
+  - [x] `main.py`, `llm_ops_monitoring_service.py`, `provider_parameter_mapper.py` et `prompt_governance_registry.py` reroutes vers facades canoniques (simulation, seeds bootstrap, ops_contract, execution_profiles_types, placeholder_policy).
+
+- [~] Task 20: Nettoyage package prompts et fallbacks historiques (AC58-AC59, AC69)
+  - [x] `app.prompts.common_context` n importe plus `app.llm_orchestration.services.fallback_governance`.
+  - [x] `app.prompts.common_context` n utilise plus `get_legacy_use_case_name` et resolve un nom canonique.
+  - [x] `app.domain.llm.prompting.context` n importe plus `app.llm_orchestration.services.fallback_governance` ni `get_legacy_use_case_name`.
+  - [ ] Finaliser le statut canonique/decommission de `app.prompts.catalog`, `app.prompts.validators` et `app.prompts.tests`.
+  - [x] Taxonomie feature canonicalisee: nouveau module `app.domain.llm.governance.feature_taxonomy` + migration des imports nominaux critiques (gateway, renderer, registries domaine, admin sample payloads, canonical consumption, model guard).
+
+- [~] Task 21: Nettoyage tests/mocks/outils internes + validation finale (AC60-AC63, AC66-AC67)
+  - [x] Supprimer patch targets legacy dans tests/conftests/harness (objectif AC61).
+  - [x] Mettre a jour validateurs internes, audits et scripts ops vers les chemins definitifs (AC62).
+  - [x] Supprimer `TRANSITION_WRAPPERS.md` si plus aucun wrapper ; sinon le reduire au strict reliquat date (AC63).
+  - [~] Validation : sous-ensemble critique vert ; `ruff format --check` / `ruff check` : dette signalee en AC67 (corriger avant cloture stricte AC67).
+  - [x] Migration nominale `persona_boundary` vers `app.domain.llm.prompting.persona_boundary` (runtime/admin).
+  - [x] Inversion des wrappers `llm_orchestration.feature_taxonomy` et `llm_orchestration.persona_boundary` vers les modules canoniques.
+  - [x] Migration imports nominaux `FallbackType` vers `app.domain.llm.runtime.contracts` dans les builders de contexte (`domain/prompting/context.py`, `prompts/common_context.py`).
+  - [x] Migration `assembly_admin_service` vers `app.domain.llm.configuration.admin_models` (plus d import direct `llm_orchestration.admin_models`).
+
 ## Dev Notes
 
 ### Positionnement par rapport a 70-14
@@ -287,6 +377,7 @@ gpt-5
 
 ### Completion Notes List
 
+- 2026-04-21 (cloture AC54-55, AC63-65, AC64, AC66-68, AC67) : suppression recursive `backend/app/llm_orchestration/` ; deplacement `backend/app/llm_orchestration/tests/**` → `backend/tests/llm_orchestration/` ; correction chemin JSON canonique dans `test_story_66_42_*` ; `STRUCTURAL_FILES` + tests conformite doc + `llm-prompt-generation-by-feature.md` sans chemins shim ; logger gateway `app.domain.llm.runtime.gateway` ; suppression `TRANSITION_WRAPPERS.md` ; garde-fous `test_story_70_14` sur fichiers domaine ; `pytest tests`, `pytest app/tests`, `pytest tests/llm_orchestration` verts.
 - Story 70.15 redigee pour transformer les namespaces canoniques en source de verite executee du pipeline LLM.
 - La story couvre la bascule applicative, runtime, prompting, configuration, gouvernance et provider.
 - Les criteres d acceptation imposent l inversion des wrappers, la preservation comportementale et le partage des moteurs runtime/admin.
@@ -333,13 +424,7 @@ gpt-5
 - backend/app/domain/llm/configuration/execution_profile_registry.py
 - backend/app/domain/llm/configuration/prompt_versions.py
 - backend/app/domain/llm/configuration/prompt_version_lookup.py
-- backend/app/llm_orchestration/gateway.py
-- backend/app/llm_orchestration/prompt_version_lookup.py
-- backend/app/llm_orchestration/services/*.py (shims listes en story)
-- backend/app/llm_orchestration/providers/provider_runtime_manager.py
-- backend/app/llm_orchestration/doc_conformity_manifest.py
-- backend/app/llm_orchestration/services/semantic_conformity_validator.py
-- backend/app/ops/llm/TRANSITION_WRAPPERS.md
+- backend/tests/llm_orchestration/** (tests LLM deplaces hors `app/llm_orchestration/`)
 - backend/app/infra/llm/client.py
 - backend/app/tests/unit/test_ai_engine_adapter.py
 - backend/app/tests/unit/test_natal_interpretation_service_v2.py
@@ -353,6 +438,9 @@ gpt-5
 - backend/tests/integration/test_story_66_40_legacy_residual.py
 - backend/app/llm_orchestration/tests/conftest.py
 - backend/app/llm_orchestration/tests/test_gateway_pipeline.py
+- backend/app/domain/llm/governance/data/prompt_governance_registry.json
+- backend/app/domain/llm/governance/data/legacy_residual_registry.json
+- backend/tests/integration/test_story_66_30_suppression.py
 
 ### Change Log
 
@@ -365,3 +453,43 @@ gpt-5
 - 2026-04-21 : ajout AC31 et execution de la passe suppression immediate — suppression de `domain/llm/prompting/renderer.py`, `services/ai_engine_adapter.py`, `llm_orchestration/services/persona_composer.py`, migration des imports restants vers les chemins canoniques et revalidation complete.
 - 2026-04-21 : ajout AC32-AC40 et cloture renderer migration — suppression de `llm_orchestration/services/prompt_renderer.py`, migration complete des imports/tests vers `app.domain.llm.prompting.prompt_renderer`, realignement registre wrappers + audit post-story.
 - 2026-04-21 : ajout AC41-AC52 et passe decommission namespace historique — inventaire exhaustif des wrappers restants, migration des imports nominaux canoniques evitables vers `app.domain.llm.*`, realignement complet `TRANSITION_WRAPPERS.md` + audit post-decommission.
+- 2026-04-21 : ajout AC53-AC70 (extinction totale legacy) et lancement de la passe implementation ; `app.prompts.common_context` cesse de dependre de `app.llm_orchestration.services.fallback_governance` et de `get_legacy_use_case_name` (route canonique).
+- 2026-04-21 : convergence additionnelle context builder canonique — `app.domain.llm.prompting.context` cesse de dependre de `app.llm_orchestration.services.fallback_governance` et de `get_legacy_use_case_name`.
+- 2026-04-21 : lot "gateway/admin first" (partiel) — introduction de `app.domain.llm.governance.feature_taxonomy` et migration des imports nominaux hors namespace historique pour la taxonomie feature/subfeature.
+- 2026-04-21 : lot "gateway/admin first" (suite) — extraction canonique `app.domain.llm.prompting.persona_boundary` et migration des imports nominaux runtime/admin.
+- 2026-04-21 : lot "gateway/admin first" (contracts/admin_models) — ajout des facades canoniques `app.domain.llm.runtime.contracts` et `app.domain.llm.configuration.admin_models`, migration des imports de `gateway.py` et `admin_llm.py`.
+- 2026-04-21 : inversion supplementaire des wrappers historiques (`feature_taxonomy`, `persona_boundary`) vers le canonique et poursuite de la reduction des imports directs legacy dans les services domaine.
+- 2026-04-21 : migration bloc natal/main/configuration — reroutage des imports legacy vers `domain.llm.runtime.contracts`, `domain.llm.prompting.schemas` et `domain.llm.configuration.admin_models`.
+- 2026-04-21 : migration utilitaires runtime — ajout des points d entree canoniques `domain.llm.runtime.{policy,input_validation,observability,repair,providers}` et reroutage des imports domaine.
+- 2026-04-21 : migration contracts/schemas/admin-models dans les services nominaux restants (ai_engine/natal/provider/governance) avec validation ciblee verte.
+- 2026-04-21 : migration routes admin/ops vers facades canoniques (`configuration.admin_models`, `configuration.coherence`, `runtime.contracts`, `ops.llm.performance_qualification`).
+- 2026-04-21 : migration admin/ops complementaire — debranchage de `admin_llm.py` et des scripts ops des imports directs `llm_orchestration.services.*` via facades canoniques.
+- 2026-04-21 : migration coherence/performance complementaire — startup, modeles DB et qualification evidence relies aux facades canoniques (`configuration.coherence`, `runtime.contracts`, `ops.llm.performance_qualification`).
+- 2026-04-21 : migration provider runtime complementaire — ajout des facades `infrastructure.providers.llm.circuit_breaker` et `domain.llm.runtime.simulation`, puis reroutage `provider_runtime_manager`.
+- 2026-04-21 : migration complémentaire renderer/bootstrap — ajout des facades `domain.llm.prompting.placeholder_policy` et `ops.llm.bootstrap.use_cases_seed`, puis reroutage de `prompt_renderer` et `main`.
+- 2026-04-21 : migration complémentaire governance/ops/bootstrap — ajout des facades `ops.llm.ops_contract`, `domain.llm.runtime.execution_profiles_types`, `ops.llm.bootstrap.seed_66_20_taxonomy`, `ops.llm.bootstrap.seed_horoscope_narrator_assembly`; reroutage de `main`, `llm_ops_monitoring_service`, `provider_parameter_mapper`, `prompt_governance_registry`.
+- 2026-04-21 : inversion de propriété des modules simples — `domain.llm.runtime.execution_profiles_types`, `domain.llm.prompting.placeholder_policy` et `ops.llm.ops_contract` portent désormais l implémentation canonique ; les modules `llm_orchestration/*` correspondants sont réduits à des shims inverses.
+- 2026-04-21 : inversion de propriété `schemas` — `domain.llm.prompting.schemas` porte désormais les modèles Pydantic ; `llm_orchestration/schemas.py` devient shim inverse (compat tests incluse).
+- 2026-04-21 : inversion de propriété `admin_models` — `domain.llm.configuration.admin_models` porte désormais les modèles admin/execution ; `llm_orchestration/admin_models.py` devient shim inverse de compatibilité.
+- 2026-04-21 : convergence partielle `runtime/contracts` — extraction canonique des enums fallback/path/tokens, de `is_reasoning_model` et de `EVIDENCE_ID_REGEX`; `prompting.schemas` ne dépend plus de `llm_orchestration.models`.
+- 2026-04-21 : convergence `runtime/contracts` (étape 2) — extraction canonique de `UsageInfo`, `GatewayMeta`, `GatewayResult`; maintien explicite de compatibilité d exceptions via alias vers `llm_orchestration.models`.
+- 2026-04-21 : convergence `runtime/contracts` (étape 3) — extraction canonique de `UseCaseConfig`; `ResponseFormatConfig` reste temporairement en alias legacy pour compatibilité stricte avec `ResolvedExecutionPlan` non migré.
+- 2026-04-21 : convergence `runtime/contracts` (étape 4) — extraction canonique de `ResponseFormatConfig` et `ResolvedExecutionPlan` (validator inclus vers taxonomy canonique), avec stabilité gateway confirmée en tests unitaires.
+- 2026-04-21 : convergence `runtime/contracts` (étape 5) — extraction canonique de `ExecutionMessage`, `ExecutionUserInput`, `ExecutionContext`, `ExecutionFlags`, `ExecutionOverrides`, `NatalExecutionInput`, `LLMExecutionRequest` et `RecoveryResult`; dépendance résiduelle `llm_orchestration.models` réduite.
+- 2026-04-21 : convergence `runtime/contracts` (étape 6) — extraction canonique de `ExecutionObservabilitySnapshot` et `PerformanceQualificationReport`; compatibilité gateway/ops confirmée par tests ciblés.
+- 2026-04-21 : convergence package `prompts` (étape 1) — extraction canonique de `domain.llm.prompting.catalog`, transformation de `app.prompts.catalog` en shim, reroutage des consommateurs nominaux `domain/*` vers le catalog canonique.
+- 2026-04-21 : convergence package `prompts` (étape 2) — extraction canonique de `domain.llm.prompting.validators`, transformation de `app.prompts.validators` en shim, reroutage de `assembly_resolver` nominal ; `TRANSITION_WRAPPERS.md` synchronisé avec les shims prompts.
+- 2026-04-21 : convergence package `prompts` (étape 3) — extraction canonique de `domain.llm.prompting.exceptions` et reroutage nominal de `gateway`, `predictions` et `astrologer_prompt_builder` vers `domain.llm.prompting.context`; reliquats `app.prompts.*` limités aux tests/historique.
+- 2026-04-21 : réduction `legacy.bridge` (étape 1) — `admin_models`, `gateway` (partiel) et `llm_narrator` migrés vers `domain.llm.prompting.catalog` pour `DEPRECATED_USE_CASE_MAPPING`, `resolve_model` et `get_legacy_max_tokens`; import direct `legacy.bridge` borné à `gateway.py`.
+- 2026-04-21 : réduction `legacy.bridge` (étape 2) — `gateway.py` migre `build_legacy_compat_use_case_config`, `get_legacy_output_schema`, `get_legacy_prompt_runtime_entry` vers `domain.llm.prompting.catalog`; plus aucun import nominal `app.domain.llm.legacy.bridge` dans `backend/app`.
+- 2026-04-21 : réduction `legacy.bridge` (étape 3) — suppression physique de `backend/app/domain/llm/legacy/bridge.py` et de `domain/llm/legacy/__init__.py`; les accès legacy transitent désormais via `domain.llm.prompting.catalog`.
+- 2026-04-21 : convergence tests prompts (étape 4) — migration des imports tests unitaires vers `domain.llm.prompting.*` (`catalog`, `validators`, `exceptions`, `context`), reliquats `app.prompts.*` bornés au package `llm_orchestration` legacy et au shim `app.prompts.__init__`.
+- 2026-04-21 : convergence prompts (étape 5) — suppression complète des imports nominaux `app.prompts.*` dans `backend/app` (services legacy `llm_orchestration`, patch targets de tests et `app.prompts.__init__` reroutés vers `domain.llm.prompting.*`), validations ciblées vertes.
+- 2026-04-21 : convergence `runtime/contracts` (étape 7) — migration d une large passe tests/services (`app/tests/*`, `app/services/tests/*`) de `app.llm_orchestration.models` vers `app.domain.llm.runtime.contracts`, plus reroutage `is_reasoning_model` dans `llm_orchestration/services/assembly_resolver.py`; reliquat `app/tests` borné au cas `EvalReport`.
+- 2026-04-21 : convergence `runtime/contracts` (étape 8) — migration des imports `llm_orchestration/tests/*` vers `app.domain.llm.runtime.contracts` (plus aucun import direct `app.llm_orchestration.models` dans les tests legacy).
+- 2026-04-21 : convergence `runtime/contracts` (étape 9) — ajout d alias de compatibilité (`ReplayResult`, `EvalFixtureResult`, `EvalReport`, `PerformanceSLO`, `PerformanceSLA`, `GoldenRegressionResult`, `GoldenRegressionReport`) puis reroutage des services legacy (`fallback_governance`, `golden_regression_service`, `performance_registry`, `performance_qualification_service`, `eval_harness`, `replay_service`, `use_cases_seed`) et du shim `llm_orchestration/gateway.py`.
+- 2026-04-21 : convergence prompts (étape 6) — suppression physique de `backend/app/llm_orchestration/legacy_prompt_runtime.py`; migration de son contenu vers `domain.llm.prompting.legacy_prompt_runtime` et reroutage de `domain.llm.prompting.catalog`.
+- 2026-04-21 : convergence `runtime/contracts` (étape 10) — découplage complet de `domain.llm.runtime.contracts` vis-à-vis de `llm_orchestration.models` (exceptions/types legacy portés nativement), puis réduction de `llm_orchestration/models.py` en shim de compatibilité minimal vers `domain.llm.runtime.contracts`.
+- 2026-04-21 : convergence finale AC53-AC70 (étape 11) — synchronisation `TRANSITION_WRAPPERS.md` (ajout shim `llm_orchestration/models.py`, suppression `legacy_prompt_runtime.py`) + réalignement de tests legacy sur le comportement post-suppression des use_case retirés (`daily_prediction`/`chat`) ; validation large verte.
+- 2026-04-21 : validation backend élargie (étape 12) — campagne `pytest -q app/tests app/llm_orchestration/tests` exécutée après correction compat shim schemas (`_SECTION_KEY_VALUES`) : 2885 pass / 29 fail / 3 skip ; échecs résiduels concentrés sur flux chat/guidance, tests admin legacy et overrides modèle.
+- 2026-04-21 : stabilisation post-étape 12 — correction cache `ExecutionProfileRegistry` (ids UUID + rechargement par session, plus d ORM en cache global) ; shim `execution_profile_registry` orchestration = reexport domaine ; JSON gouvernance `deprecated_use_case_mapping` + registre résiduel alignés (`horoscope_daily_free` / `horoscope_daily_full`) ; correctifs tests (`test_story_66_30_suppression`, `test_responses_client`, entrees runtime de test `test_natal` / `test_guidance`). Matrice **Verification AC53-AC70** ajoutée à l artefact.

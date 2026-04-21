@@ -4,15 +4,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pydantic import ValidationError
 
-from app.llm_orchestration.admin_models import LlmExecutionProfileCreate
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.configuration.admin_models import LlmExecutionProfileCreate
+from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionUserInput,
     GatewayConfigError,
     LLMExecutionRequest,
     UseCaseConfig,
 )
+from app.domain.llm.runtime.gateway import LLMGateway
 
 
 def test_admin_validation_rejects_unsupported_provider():

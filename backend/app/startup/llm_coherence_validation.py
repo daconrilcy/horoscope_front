@@ -4,7 +4,7 @@ from typing import Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from app.llm_orchestration.services.config_coherence_validator import ConfigCoherenceValidator
+from app.domain.llm.configuration.coherence import ConfigCoherenceValidator
 
 logger = logging.getLogger(__name__)
 

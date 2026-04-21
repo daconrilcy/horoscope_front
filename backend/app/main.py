@@ -81,9 +81,9 @@ from app.domain.astrology.houses_provider import HousesCalcError, UnsupportedHou
 from app.domain.astrology.natal_preparation import (
     warmup_timezone_finder,
 )
+from app.domain.llm.runtime.contracts import InputValidationError
 from app.infra.db.bootstrap import ensure_local_sqlite_schema_ready
 from app.infra.observability.metrics import increment_counter, observe_duration
-from app.llm_orchestration.models import InputValidationError
 from app.services.pricing_experiment_service import PricingExperimentService
 from app.startup.canonical_db_validation import run_canonical_db_startup_validation
 from app.startup.feature_scope_validation import run_feature_scope_startup_validation
@@ -109,10 +109,10 @@ def _ensure_llm_registry_seeded() -> None:
     )
     from app.infra.db.models.llm_prompt import PromptStatus
     from app.infra.db.session import SessionLocal
-    from app.llm_orchestration.seeds.use_cases_seed import seed_use_cases
     from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
     from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
     from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
+    from app.ops.llm.bootstrap.use_cases_seed import seed_use_cases
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
     def collect_registry_state() -> tuple[bool, bool, int, int, bool, int, bool, bool]:
@@ -253,8 +253,8 @@ def _ensure_llm_registry_seeded() -> None:
         seed_natal_v3_prompts()
         seed_chat_prompt_v2()
 
-        from app.llm_orchestration.seeds.seed_66_20_taxonomy import seed_66_20_taxonomy
-        from app.llm_orchestration.seeds.seed_horoscope_narrator_assembly import (
+        from app.ops.llm.bootstrap.seed_66_20_taxonomy import seed_66_20_taxonomy
+        from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
             seed_horoscope_narrator_assembly,
         )
 
@@ -428,7 +428,7 @@ async def llm_simulation_middleware(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
     """Story 66.35: capture simulation header for qualification runs."""
-    from app.llm_orchestration.simulation_context import simulation_error as simulation_error_ctx
+    from app.domain.llm.runtime.simulation import simulation_error as simulation_error_ctx
 
     header_val = request.headers.get("X-LLM-Simulate-Error") or request.headers.get(
         "x-llm-simulate-error"

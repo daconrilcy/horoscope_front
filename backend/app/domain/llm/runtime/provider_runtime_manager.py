@@ -24,9 +24,10 @@ from app.ai_engine.exceptions import (
     UpstreamServerError,
     UpstreamTimeoutError,
 )
-from app.llm_orchestration.models import GatewayResult
-from app.llm_orchestration.providers.circuit_breaker import get_circuit_breaker
-from app.llm_orchestration.providers.responses_client import ResponsesClient
+from app.domain.llm.runtime.contracts import GatewayResult
+from app.domain.llm.runtime.simulation import simulation_error
+from app.infrastructure.providers.llm.circuit_breaker import get_circuit_breaker
+from app.infrastructure.providers.llm.openai_responses_client import ResponsesClient
 
 logger = logging.getLogger(__name__)
 
@@ -95,11 +96,7 @@ class ProviderRuntimeManager:
         for attempt in range(max_retries + 1):
             attempt_count = attempt + 1
             try:
-                from app.llm_orchestration.simulation_context import (
-                    simulation_error as simulation_error_ctx,
-                )
-
-                sim_err = simulation_error_ctx.get()
+                sim_err = simulation_error.get()
                 if sim_err:
                     if sim_err == "rate_limit":
                         raise UpstreamRateLimitError(retry_after_ms=60000)

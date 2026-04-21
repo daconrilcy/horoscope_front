@@ -1,4 +1,4 @@
-from app.llm_orchestration.seeds.use_cases_seed import CHAT_RESPONSE_V1
+from app.ops.llm.bootstrap.use_cases_seed import CHAT_RESPONSE_V1
 
 
 def test_chat_response_v1_suggested_replies_has_no_min_items() -> None:

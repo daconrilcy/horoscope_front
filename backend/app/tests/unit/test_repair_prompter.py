@@ -1,4 +1,4 @@
-from app.llm_orchestration.services.repair_prompter import build_repair_prompt
+from app.domain.llm.runtime.repair_prompter import build_repair_prompt
 
 _SCHEMA_V3 = {
     "type": "object",

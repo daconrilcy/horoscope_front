@@ -11,6 +11,20 @@ from sqlalchemy.orm import Session
 
 from app.api.v1.routers.admin_llm_release import ActivationQualificationEvidence
 from app.core.config import settings
+from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
+from app.domain.llm.configuration.config_coherence_validator import (
+    ConfigCoherenceValidator,
+)
+from app.domain.llm.configuration.execution_profile_registry import (
+    ExecutionProfileRegistry,
+)
+from app.domain.llm.runtime.contracts import (
+    ExecutionContext,
+    ExecutionFlags,
+    ExecutionUserInput,
+    LLMExecutionRequest,
+)
+from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_prompt import PromptStatus
@@ -20,22 +34,8 @@ from app.infra.db.models.llm_release import (
     ReleaseStatus,
 )
 from app.infra.db.session import SessionLocal, get_db_session
-from app.llm_orchestration.gateway import (
-    ExecutionContext,
-    ExecutionFlags,
-    ExecutionUserInput,
-    LLMExecutionRequest,
-    LLMGateway,
-)
-from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
-from app.llm_orchestration.services.config_coherence_validator import (
-    ConfigCoherenceValidator,
-)
-from app.llm_orchestration.services.execution_profile_registry import (
-    ExecutionProfileRegistry,
-)
-from app.llm_orchestration.services.release_service import ReleaseService
 from app.main import app
+from app.ops.llm.release_service import ReleaseService
 
 
 def _ensure_published_assembly_for_release_snapshots(db: Session) -> None:

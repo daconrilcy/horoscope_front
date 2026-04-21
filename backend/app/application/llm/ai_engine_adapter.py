@@ -60,8 +60,7 @@ from app.ai_engine.exceptions import (
     ValidationError as AIEngineValidationError,
 )
 from app.core.config import settings
-from app.domain.llm.runtime.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionFlags,
     ExecutionMessage,
@@ -70,6 +69,7 @@ from app.llm_orchestration.models import (
     LLMExecutionRequest,
     NatalExecutionInput,
 )
+from app.domain.llm.runtime.gateway import LLMGateway
 from app.prediction.llm_narrator import NarratorAdvice, NarratorResult
 
 logger = logging.getLogger(__name__)
@@ -221,7 +221,7 @@ def build_opening_chat_user_data_block(
 def _can_use_test_fallback(err: Exception) -> bool:
     if not _is_non_production_env():
         return False
-    from app.llm_orchestration.models import GatewayError
+    from app.domain.llm.runtime.contracts import GatewayError
 
     if isinstance(err, ProviderNotConfiguredError):
         return True
@@ -306,7 +306,7 @@ def _handle_gateway_error(
     use_case: str,
 ) -> NoReturn:
     """Handle LLM Gateway errors and map them to adapter exceptions."""
-    from app.llm_orchestration.models import (
+    from app.domain.llm.runtime.contracts import (
         GatewayConfigError,
         GatewayError,
         InputValidationError,
@@ -571,7 +571,7 @@ class AIEngineAdapter:
             result_raw = await _test_chat_generator(
                 messages, context, user_id, request_id, trace_id, locale
             )
-            from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+            from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 
             if isinstance(result_raw, GatewayResult):
                 return result_raw
@@ -679,7 +679,7 @@ class AIEngineAdapter:
             return result
         except Exception as err:
             if _can_use_test_fallback(err):
-                from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+                from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 
                 fallback_text = _build_test_chat_fallback(messages)
                 return GatewayResult(
@@ -697,7 +697,7 @@ class AIEngineAdapter:
                 )
 
             # Combined handler for all LLM-related errors (Finding High)
-            from app.llm_orchestration.models import GatewayError
+            from app.domain.llm.runtime.contracts import GatewayError
 
             if isinstance(err, (AIEngineError, GatewayError)):
                 _handle_gateway_error(err, request_id, "chat")
@@ -728,7 +728,7 @@ class AIEngineAdapter:
             text = await _test_guidance_generator(
                 use_case, context, user_id, request_id, trace_id, locale
             )
-            from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+            from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 
             return GatewayResult(
                 use_case=use_case,
@@ -766,7 +766,7 @@ class AIEngineAdapter:
             return result
         except Exception as err:
             if _can_use_test_fallback(err):
-                from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
+                from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 
                 return GatewayResult(
                     use_case=use_case,
@@ -778,7 +778,7 @@ class AIEngineAdapter:
                 )
 
             # Combined handler for all LLM-related errors (Finding High)
-            from app.llm_orchestration.models import GatewayError
+            from app.domain.llm.runtime.contracts import GatewayError
 
             if isinstance(err, (AIEngineError, GatewayError)):
                 _handle_gateway_error(err, request_id, use_case)
@@ -856,7 +856,7 @@ class AIEngineAdapter:
 
         except Exception as err:
             # Combined handler for all LLM-related errors (Finding High)
-            from app.llm_orchestration.models import GatewayError
+            from app.domain.llm.runtime.contracts import GatewayError
 
             if isinstance(err, (AIEngineError, GatewayError)):
                 _handle_gateway_error(err, natal_input.request_id, natal_input.use_case_key)
@@ -995,7 +995,7 @@ class AIEngineAdapter:
 
         except Exception as err:
             # Combined handler for all LLM-related errors (Finding High)
-            from app.llm_orchestration.models import GatewayError
+            from app.domain.llm.runtime.contracts import GatewayError
 
             if isinstance(err, (AIEngineError, GatewayError)):
                 _handle_gateway_error(err, request_id, "horoscope_daily")

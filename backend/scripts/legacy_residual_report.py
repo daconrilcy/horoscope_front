@@ -11,7 +11,7 @@ if str(_BACKEND_ROOT) not in sys.path:
 
 
 def main() -> int:
-    from app.llm_orchestration.legacy_residual_registry import render_maintenance_report
+    from app.domain.llm.governance.legacy_residual_registry import render_maintenance_report
 
     print(render_maintenance_report(), end="")
     return 0

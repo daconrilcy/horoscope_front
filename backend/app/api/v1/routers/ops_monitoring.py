@@ -14,8 +14,9 @@ from app.api.dependencies.auth import (
 )
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
+from app.domain.llm.runtime.contracts import PerformanceQualificationReport
 from app.infra.db.session import get_db_session
-from app.llm_orchestration.models import PerformanceQualificationReport
+from app.ops.llm.performance_qualification import PerformanceQualificationService
 from app.services.ops_monitoring_service import (
     OpsMonitoringKpisData,
     OpsMonitoringOperationalSummaryData,
@@ -288,10 +289,6 @@ async def evaluate_performance_qualification(
     )
     if limit_error is not None:
         return limit_error
-
-    from app.llm_orchestration.services.performance_qualification_service import (
-        PerformanceQualificationService,
-    )
 
     try:
         report = await PerformanceQualificationService.evaluate_run_async(

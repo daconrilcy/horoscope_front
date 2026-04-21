@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
+from app.domain.llm.prompting.narrator_contract import NARRATOR_OUTPUT_SCHEMA
 from app.infra.db.models.llm_prompt import PromptStatus
-from app.llm_orchestration.narrator_contract import NARRATOR_OUTPUT_SCHEMA
-from app.llm_orchestration.seeds.seed_horoscope_narrator_assembly import (
+from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
     _keep_latest_published_and_archive_rest,
 )
 

@@ -66,7 +66,7 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
 
         # 3. Boundary validation (Story 66.10 AC2, AC3, AC4)
         try:
-            from app.llm_orchestration.persona_boundary import validate_persona_block
+            from app.domain.llm.prompting.persona_boundary import validate_persona_block
 
             violations = validate_persona_block(block, str(persona.id))
             for v in violations:
@@ -161,7 +161,7 @@ def compose_persona_block(persona: LlmPersonaModel) -> str:
 
     # 3. Boundary validation (Story 66.10 AC2, AC3, AC4)
     try:
-        from app.llm_orchestration.persona_boundary import validate_persona_block
+        from app.domain.llm.prompting.persona_boundary import validate_persona_block
 
         violations = validate_persona_block(block, str(persona.id))
         for v in violations:

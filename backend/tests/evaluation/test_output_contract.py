@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from app.llm_orchestration.seeds.use_cases_seed import ASTRO_RESPONSE_V3_JSON_SCHEMA
-from app.llm_orchestration.services.output_validator import validate_schema
+from app.domain.llm.runtime.output_validator import validate_schema
+from app.ops.llm.bootstrap.use_cases_seed import ASTRO_RESPONSE_V3_JSON_SCHEMA
 
 
 @pytest.mark.evaluation
@@ -25,7 +25,7 @@ def test_output_contract_validation(feature, plan, quality):
     Validates pre-recorded LLM responses against the real JSON Schema used at runtime.
     (Story 66.24: extended to daily paths, free plans and degraded modes)
     """
-    from app.llm_orchestration.narrator_contract import NARRATOR_OUTPUT_SCHEMA
+    from app.domain.llm.prompting.narrator_contract import NARRATOR_OUTPUT_SCHEMA
 
     # Schema selection logic based on feature and plan
     if feature == "natal":
@@ -33,8 +33,8 @@ def test_output_contract_validation(feature, plan, quality):
             schema = ASTRO_RESPONSE_V3_JSON_SCHEMA
         else:
             # For free natal, we use AstroFreeResponseV1 schema (Story 64.3)
-            # We fetch it from app.llm_orchestration.schemas as it might not be in seeds
-            from app.llm_orchestration.schemas import AstroFreeResponseV1
+            # We fetch it from app.domain.llm.prompting.schemas as it might not be in seeds
+            from app.domain.llm.prompting.schemas import AstroFreeResponseV1
 
             schema = AstroFreeResponseV1.model_json_schema()
     else:

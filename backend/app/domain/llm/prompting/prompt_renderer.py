@@ -2,8 +2,8 @@ import logging
 import re
 from typing import Any, Dict, List
 
-from app.llm_orchestration.feature_taxonomy import is_supported_feature
-from app.llm_orchestration.models import PromptRenderError
+from app.domain.llm.governance.feature_taxonomy import is_supported_feature
+from app.domain.llm.runtime.contracts import PromptRenderError
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class PromptRenderer:
             PLACEHOLDER_ALLOWLIST,
             get_prompt_governance_registry,
         )
-        from app.llm_orchestration.placeholder_policy import PLACEHOLDER_POLICY
+        from app.domain.llm.prompting.placeholder_policy import PLACEHOLDER_POLICY
 
         # 1. Check legacy required_variables first
         required_variables = required_variables or []

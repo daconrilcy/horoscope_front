@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.domain.astrology.natal_calculation import NatalResult
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.infra.db.base import Base
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.product_entitlements import (
@@ -19,8 +20,6 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import get_db_session
-from app.llm_orchestration.gateway import GatewayResult
-from app.llm_orchestration.models import GatewayMeta, UsageInfo
 from app.main import app
 from app.services.billing_service import BillingService
 from app.services.user_birth_profile_service import UserBirthProfileData
@@ -210,7 +209,7 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
             usage=mock_usage,
         )
 
-        with patch("app.llm_orchestration.gateway.LLMGateway.execute_request") as mock_execute:
+        with patch("app.domain.llm.runtime.gateway.LLMGateway.execute_request") as mock_execute:
             mock_execute.return_value = mock_res
 
             response = client.post(

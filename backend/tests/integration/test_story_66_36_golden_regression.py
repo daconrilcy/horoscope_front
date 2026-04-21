@@ -1,9 +1,9 @@
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ContextCompensationStatus,
     ExecutionObservabilitySnapshot,
     ExecutionPathKind,
@@ -12,7 +12,7 @@ from app.llm_orchestration.models import (
     MaxTokensSource,
     UsageInfo,
 )
-from app.llm_orchestration.services.golden_regression_service import GoldenRegressionService
+from app.ops.llm.golden_regression_service import GoldenRegressionService
 
 
 def _mock_release_context(db: MagicMock, manifest: dict | None = None) -> uuid.UUID:
@@ -57,11 +57,13 @@ async def test_golden_regression_campaign_pass():
     snapshot_id = _mock_release_context(db)
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+        new_callable=AsyncMock,
         return_value=mock_result,
     ):
         with patch(
-            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            "app.domain.llm.configuration.active_release.get_active_release_id",
+            new_callable=AsyncMock,
             return_value=snapshot_id,
         ):
             report = await GoldenRegressionService.run_campaign(
@@ -107,11 +109,13 @@ async def test_golden_regression_campaign_fail_legacy():
     snapshot_id = _mock_release_context(db)
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+        new_callable=AsyncMock,
         return_value=mock_result,
     ):
         with patch(
-            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            "app.domain.llm.configuration.active_release.get_active_release_id",
+            new_callable=AsyncMock,
             return_value=snapshot_id,
         ):
             report = await GoldenRegressionService.run_campaign(
@@ -159,11 +163,13 @@ async def test_golden_regression_campaign_fail_structure():
     snapshot_id = _mock_release_context(db)
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+        new_callable=AsyncMock,
         return_value=mock_result,
     ):
         with patch(
-            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            "app.domain.llm.configuration.active_release.get_active_release_id",
+            new_callable=AsyncMock,
             return_value=snapshot_id,
         ):
             report = await GoldenRegressionService.run_campaign(
@@ -207,11 +213,13 @@ async def test_golden_regression_campaign_fail_obs_strict():
     snapshot_id = _mock_release_context(db)
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+        new_callable=AsyncMock,
         return_value=mock_result,
     ):
         with patch(
-            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            "app.domain.llm.configuration.active_release.get_active_release_id",
+            new_callable=AsyncMock,
             return_value=snapshot_id,
         ):
             report = await GoldenRegressionService.run_campaign(
@@ -255,11 +263,13 @@ async def test_golden_regression_canonicalization():
     snapshot_id = _mock_release_context(db)
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+        new_callable=AsyncMock,
         return_value=mock_result,
     ):
         with patch(
-            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            "app.domain.llm.configuration.active_release.get_active_release_id",
+            new_callable=AsyncMock,
             return_value=snapshot_id,
         ):
             report = await GoldenRegressionService.run_campaign(
@@ -296,11 +306,13 @@ async def test_golden_regression_campaign_invalid_without_active_release():
 
     db = MagicMock()
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+        new_callable=AsyncMock,
         return_value=mock_result,
     ):
         with patch(
-            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            "app.domain.llm.configuration.active_release.get_active_release_id",
+            new_callable=AsyncMock,
             return_value=None,
         ):
             report = await GoldenRegressionService.run_campaign(
@@ -347,11 +359,13 @@ async def test_golden_regression_campaign_invalid_when_manifest_unresolved():
     )
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+        new_callable=AsyncMock,
         return_value=mock_result,
     ):
         with patch(
-            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            "app.domain.llm.configuration.active_release.get_active_release_id",
+            new_callable=AsyncMock,
             return_value=snapshot_id,
         ):
             report = await GoldenRegressionService.run_campaign(
@@ -402,11 +416,12 @@ async def test_golden_regression_projects_chart_json_into_context():
     snapshot_id = _mock_release_context(db)
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request",
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
         side_effect=_fake_execute,
     ):
         with patch(
-            "app.llm_orchestration.services.release_service.ReleaseService.get_active_release_id",
+            "app.domain.llm.configuration.active_release.get_active_release_id",
+            new_callable=AsyncMock,
             return_value=snapshot_id,
         ):
             report = await GoldenRegressionService.run_campaign(

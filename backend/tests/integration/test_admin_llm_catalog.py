@@ -15,6 +15,15 @@ from app.api.dependencies.auth import (
 )
 from app.api.v1.routers import admin_llm
 from app.api.v1.routers.admin_llm import ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER
+from app.domain.llm.runtime.contracts import (
+    GatewayError,
+    GatewayMeta,
+    GatewayResult,
+    OutputValidationError,
+    PromptRenderError,
+    UnknownUseCaseError,
+    UsageInfo,
+)
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
@@ -32,15 +41,6 @@ from app.infra.db.models.llm_release import (
 from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.session import get_db_session
 from app.infra.db.utils import serialize_orm
-from app.llm_orchestration.models import (
-    GatewayError,
-    GatewayMeta,
-    GatewayResult,
-    OutputValidationError,
-    PromptRenderError,
-    UnknownUseCaseError,
-    UsageInfo,
-)
 from app.main import app
 from tests.integration.app_db import open_app_db_session
 
@@ -651,7 +651,7 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
         assert lph["last_user_msg"]["status"] == "blocking_missing"
 
         with patch(
-            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+            "app.domain.llm.runtime.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
         ) as mocked_runtime:
             replay_response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
             assert replay_response.status_code == 200
@@ -1142,7 +1142,7 @@ def test_admin_llm_catalog_resolved_runtime_preview_with_sample_payload_no_provi
         db.commit()
 
         with patch(
-            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+            "app.domain.llm.runtime.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
         ) as mocked_runtime:
             response = client.get(
                 f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={sample_payload_id}"
@@ -1420,7 +1420,7 @@ def test_admin_llm_catalog_runtime_preview_rejects_inactive_sample_payload():
         db.commit()
 
         with patch(
-            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+            "app.domain.llm.runtime.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
         ) as mocked_runtime:
             response = client.get(
                 f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={sample_payload_id}"
@@ -1544,7 +1544,7 @@ def test_admin_llm_catalog_runtime_preview_sample_payload_not_found():
         db.commit()
 
         with patch(
-            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+            "app.domain.llm.runtime.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
         ) as mocked_runtime:
             response = client.get(
                 f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={missing_sample_payload_id}"
@@ -1677,7 +1677,7 @@ def test_admin_llm_catalog_runtime_preview_sample_payload_target_mismatch():
         db.commit()
 
         with patch(
-            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+            "app.domain.llm.runtime.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
         ) as mocked_runtime:
             response = client.get(
                 f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={sample_payload_id}"
@@ -1813,7 +1813,7 @@ def test_admin_llm_catalog_runtime_preview_rejects_non_object_payload_json():
         db.commit()
 
         with patch(
-            "app.llm_orchestration.providers.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
+            "app.domain.llm.runtime.provider_runtime_manager.ProviderRuntimeManager.execute_with_resilience"
         ) as mocked_runtime:
             response = client.get(
                 f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved?inspection_mode=runtime_preview&sample_payload_id={sample_payload_id}"

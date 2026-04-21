@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from app.llm_orchestration.doc_conformity_manifest import (
+from app.ops.llm.doc_conformity_manifest import (
     STRUCTURAL_FILES,
     VERIFICATION_MARKER,
 )
@@ -14,7 +14,7 @@ def test_source_of_truth_uniqueness() -> None:
 
     # Files to ignore (the manifest itself and this test)
     ignored_files = {
-        "backend/app/llm_orchestration/doc_conformity_manifest.py",
+        "backend/app/ops/llm/doc_conformity_manifest.py",
         "backend/tests/integration/test_story_66_39_doc_conformity_hardening.py",
     }
 
@@ -33,10 +33,7 @@ def test_source_of_truth_uniqueness() -> None:
         content = file_path.read_text(encoding="utf-8")
         for name, pattern in patterns.items():
             # We allow imports of these names
-            if (
-                re.search(pattern, content)
-                and "from app.llm_orchestration.doc_conformity_manifest import" not in content
-            ):
+            if re.search(pattern, content):
                 # Special cases for tests that might use these names locally for different purposes
                 if "test_" in rel_path and name in ["DOC_PATH", "AUTHORIZED_PR_REASONS"]:
                     continue
@@ -58,7 +55,7 @@ def test_structural_files_existence() -> None:
 
 def test_doc_conformity_check_verification_reference_updated_robustness() -> None:
     """AC4: Verify Date and Stable Ref block update robustness."""
-    from app.llm_orchestration.services.doc_conformity_validator import DocConformityValidator
+    from app.ops.llm.doc_conformity_validator import DocConformityValidator
 
     validator = DocConformityValidator(Path("/tmp"))
 
@@ -85,7 +82,7 @@ Dernière vérification manuelle contre le pipeline réel du gateway :
 
 def test_validate_pr_template_state_semantic_checks() -> None:
     """AC5, AC6: PR template state with semantic checks."""
-    from app.llm_orchestration.services.doc_conformity_validator import DocConformityValidator
+    from app.ops.llm.doc_conformity_validator import DocConformityValidator
 
     validator = DocConformityValidator(Path("/tmp"))
 
@@ -101,7 +98,7 @@ def test_validate_pr_template_state_semantic_checks() -> None:
         "- [x] `TEST_ONLY`",
         structural_change=True,
         doc_updated=False,
-        changed_files=["backend/app/llm_orchestration/gateway.py"],
+        changed_files=["backend/app/domain/llm/runtime/gateway.py"],
     )
     assert any("TEST_ONLY" in e and "invalid" in e for e in errors)
 
@@ -142,7 +139,7 @@ def test_validate_pr_template_state_semantic_checks() -> None:
         "- [x] `REF_ONLY`",
         structural_change=True,
         doc_updated=False,
-        changed_files=["backend/app/llm_orchestration/gateway.py"],
+        changed_files=["backend/app/domain/llm/runtime/gateway.py"],
     )
     assert any("REF_ONLY" in e for e in errors)
 
@@ -150,7 +147,7 @@ def test_validate_pr_template_state_semantic_checks() -> None:
 def test_git_context_resolution_mocked(monkeypatch) -> None:
     """AC2, AC3: Test git context resolution under various conditions."""
     import scripts.check_doc_conformity as script
-    from app.llm_orchestration.services.doc_conformity_validator import DocConformityValidator
+    from app.ops.llm.doc_conformity_validator import DocConformityValidator
 
     validator = DocConformityValidator(Path("/tmp"))
 
@@ -163,7 +160,7 @@ def test_git_context_resolution_mocked(monkeypatch) -> None:
 
     def mock_run_git_lines(args):
         if "diff" in args and "base-sha" in args:
-            return ["backend/app/llm_orchestration/gateway.py"]
+            return ["backend/app/domain/llm/runtime/gateway.py"]
         return []
 
     monkeypatch.setattr(script, "_run_git_text", mock_run_git_text)
@@ -173,8 +170,8 @@ def test_git_context_resolution_mocked(monkeypatch) -> None:
     result = script.resolve_git_context(validator)
     assert result.mode == "merge_base"
     assert result.base_commit == "base-sha"
-    assert "backend/app/llm_orchestration/gateway.py" in result.changed_files
-    assert "backend/app/llm_orchestration/gateway.py" in result.structural_files_detected
+    assert "backend/app/domain/llm/runtime/gateway.py" in result.changed_files
+    assert "backend/app/domain/llm/runtime/gateway.py" in result.structural_files_detected
 
 
 def test_script_json_output(monkeypatch, capsys) -> None:

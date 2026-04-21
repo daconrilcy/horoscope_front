@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 
+from app.domain.llm.runtime.output_validator import validate_output
 from app.infra.observability.metrics import get_metrics_snapshot
-from app.llm_orchestration.services.output_validator import validate_output
 
 _SIMPLE_SCHEMA = {
     "type": "object",

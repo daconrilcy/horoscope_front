@@ -13,6 +13,7 @@ from app.api.v1.schemas.natal_interpretation import (
     NatalInterpretationData,
     NatalInterpretationResponse,
 )
+from app.domain.llm.prompting.schemas import AstroResponseV3
 from app.infra.db.base import Base
 from app.infra.db.models.product_entitlements import (
     AccessMode,
@@ -28,7 +29,6 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine, get_db_session
-from app.llm_orchestration.schemas import AstroResponseV3
 from app.main import app
 from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
 from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService

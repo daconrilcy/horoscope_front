@@ -1,5 +1,5 @@
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import ExecutionContext, UseCaseConfig
+from app.domain.llm.runtime.contracts import ExecutionContext, UseCaseConfig
+from app.domain.llm.runtime.gateway import LLMGateway
 
 
 def test_build_validation_payload_uses_natal_data_for_chart_json_object() -> None:

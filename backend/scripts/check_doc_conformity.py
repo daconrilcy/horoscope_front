@@ -74,9 +74,7 @@ def _ensure_backend_root_on_path() -> None:
 def __semantic_version_safe() -> str:
     try:
         _ensure_backend_root_on_path()
-        from app.llm_orchestration.services.semantic_conformity_validator import (
-            semantic_violations_version,
-        )
+        from app.ops.llm.semantic_conformity_validator import semantic_violations_version
 
         return semantic_violations_version()
     except Exception:
@@ -85,11 +83,9 @@ def __semantic_version_safe() -> str:
 
 def _load_validator_dependencies():
     _ensure_backend_root_on_path()
-    from app.llm_orchestration.doc_conformity_manifest import DOC_PATH
-    from app.llm_orchestration.services.doc_conformity_validator import DocConformityValidator
-    from app.llm_orchestration.services.semantic_conformity_validator import (
-        SemanticConformityValidator,
-    )
+    from app.ops.llm.doc_conformity_manifest import DOC_PATH
+    from app.ops.llm.doc_conformity_validator import DocConformityValidator
+    from app.ops.llm.semantic_conformity_validator import SemanticConformityValidator
 
     return DOC_PATH, DocConformityValidator, SemanticConformityValidator
 
@@ -163,7 +159,7 @@ def read_pr_body() -> str:
     for arg in sys.argv[1:]:
         if not arg.startswith("--"):
             pr_body_file = Path(arg)
-            if pr_body_file.exists() and pr_body_file.suffix != ".py":
+            if pr_body_file.is_file() and pr_body_file.suffix != ".py":
                 return pr_body_file.read_text(encoding="utf-8")
     return ""
 
@@ -171,7 +167,9 @@ def read_pr_body() -> str:
 def has_pr_context() -> bool:
     for arg in sys.argv[1:]:
         if not arg.startswith("--"):
-            return Path(arg).exists()
+            p = Path(arg)
+            if p.is_file():
+                return True
     return "DOC_CONFORMITY_PR_BODY" in os.environ
 
 

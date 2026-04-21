@@ -369,7 +369,7 @@ class NatalInterpretationService:
                     plan=user_plan,
                 )
             else:
-                from app.llm_orchestration.models import NatalExecutionInput
+                from app.domain.llm.runtime.contracts import NatalExecutionInput
 
                 natal_input = NatalExecutionInput(
                     use_case_key="natal_interpretation",

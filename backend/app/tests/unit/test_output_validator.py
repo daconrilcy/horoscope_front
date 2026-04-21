@@ -1,9 +1,9 @@
-from app.llm_orchestration.services.output_validator import validate_output
+from app.domain.llm.runtime.output_validator import validate_output
 
 
 def test_normalize_fields_nested_lists():
     """Test normalization with nested lists in catalog_map (defensive logic)."""
-    from app.llm_orchestration.services.output_validator import normalize_fields
+    from app.domain.llm.runtime.output_validator import normalize_fields
 
     data = {"evidence": ["Alias A", "Alias B"]}
     # Nested list: ["Alias A", ["Subalias A1", "Subalias A2"]]

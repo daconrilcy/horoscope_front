@@ -3,7 +3,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, NatalExecutionInput, UsageInfo
+from app.domain.llm.runtime.contracts import (
+    GatewayMeta,
+    GatewayResult,
+    NatalExecutionInput,
+    UsageInfo,
+)
 from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 
 

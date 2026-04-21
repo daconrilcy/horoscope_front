@@ -8,6 +8,12 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.domain.llm.governance.feature_taxonomy import (
+    SUPPORTED_FAMILIES,
+    is_natal_subfeature_canonical,
+    normalize_feature,
+    normalize_subfeature,
+)
 from app.domain.llm.governance.prompt_governance_registry import (
     NATAL_CANONICAL_FEATURE,
     get_prompt_governance_registry,
@@ -18,12 +24,6 @@ from app.infra.db.models.llm_canonical_consumption import (
 )
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
-from app.llm_orchestration.feature_taxonomy import (
-    SUPPORTED_FAMILIES,
-    is_natal_subfeature_canonical,
-    normalize_feature,
-    normalize_subfeature,
-)
 
 LEGACY_FEATURE_TO_CANONICAL: dict[str, str] = (
     get_prompt_governance_registry().legacy_nominal_feature_aliases_map()

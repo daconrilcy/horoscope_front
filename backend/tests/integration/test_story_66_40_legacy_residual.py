@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from app.llm_orchestration.feature_taxonomy import SUPPORTED_FAMILIES
-from app.llm_orchestration.legacy_residual_registry import (
+from app.domain.llm.governance.feature_taxonomy import SUPPORTED_FAMILIES
+from app.domain.llm.governance.legacy_residual_registry import (
     assert_deprecated_use_case_registered,
     effective_progressive_blocklist,
     get_registry_schema_version,
@@ -15,9 +15,9 @@ from app.llm_orchestration.legacy_residual_registry import (
     validate_doc_registry_version,
     validate_registry_integrity,
 )
-from app.llm_orchestration.models import FallbackType, GatewayError
-from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
-from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
+from app.domain.llm.prompting.catalog import DEPRECATED_USE_CASE_MAPPING
+from app.domain.llm.runtime.contracts import FallbackType, GatewayError
+from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
 
 
 def _repo_root() -> Path:
@@ -61,8 +61,8 @@ def test_progressive_blocklist_emits_telemetry_before_gateway_error(monkeypatch)
     """Visibilité ops : métriques avant GatewayError (blocage progressif)."""
     monkeypatch.setenv("LLM_LEGACY_PROGRESSIVE_BLOCKLIST", "fb.legacy_wrapper")
     with (
-        patch("app.llm_orchestration.services.fallback_governance.increment_counter") as mock_gov,
-        patch("app.llm_orchestration.services.observability_service.increment_counter") as mock_obs,
+        patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_gov,
+        patch("app.domain.llm.runtime.observability_service.increment_counter") as mock_obs,
     ):
         with pytest.raises(GatewayError):
             FallbackGovernanceRegistry.track_fallback(
@@ -109,8 +109,8 @@ def test_doc_registry_version_matches_code():
 
 def test_legacy_residual_telemetry_emitted():
     with (
-        patch("app.llm_orchestration.services.fallback_governance.increment_counter") as mock_gov,
-        patch("app.llm_orchestration.services.observability_service.increment_counter") as mock_obs,
+        patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_gov,
+        patch("app.domain.llm.runtime.observability_service.increment_counter") as mock_obs,
     ):
         FallbackGovernanceRegistry.track_fallback(
             FallbackType.LEGACY_WRAPPER,
@@ -128,7 +128,7 @@ def test_legacy_residual_telemetry_emitted():
 def test_incomplete_deprecated_use_case_rejected_by_model():
     from pydantic import ValidationError
 
-    from app.llm_orchestration.legacy_residual_registry import DeprecatedUseCaseRecord
+    from app.domain.llm.governance.legacy_residual_registry import DeprecatedUseCaseRecord
 
     with pytest.raises(ValidationError, match="Champ obligatoire vide"):
         DeprecatedUseCaseRecord(

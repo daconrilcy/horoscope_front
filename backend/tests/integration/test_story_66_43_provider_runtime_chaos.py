@@ -14,7 +14,7 @@ from openai import APITimeoutError, InternalServerError, RateLimitError
 
 from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.exceptions import RetryBudgetExhaustedError, UpstreamCircuitOpenError
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ContextCompensationStatus,
     ExecutionObservabilitySnapshot,
     ExecutionPathKind,
@@ -23,11 +23,11 @@ from app.llm_orchestration.models import (
     MaxTokensSource,
     UsageInfo,
 )
-from app.llm_orchestration.providers.circuit_breaker import (
+from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
+from app.infrastructure.providers.llm.circuit_breaker import (
     get_circuit_breaker,
     reset_circuit_breakers,
 )
-from app.llm_orchestration.providers.provider_runtime_manager import ProviderRuntimeManager
 
 
 @dataclass(frozen=True)

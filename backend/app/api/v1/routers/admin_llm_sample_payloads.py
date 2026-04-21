@@ -17,10 +17,10 @@ from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.routers.admin_llm_error_codes import AdminLlmErrorCode
 from app.core.request_id import resolve_request_id
 from app.core.sensitive_data import DataCategory, classify_field
+from app.domain.llm.governance.feature_taxonomy import is_supported_feature, normalize_feature
 from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
-from app.llm_orchestration.feature_taxonomy import is_supported_feature, normalize_feature
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 
 router = APIRouter(prefix="/v1/admin/llm/sample-payloads", tags=["admin-llm"])

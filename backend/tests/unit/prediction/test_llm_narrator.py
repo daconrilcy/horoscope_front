@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.core.config import settings
-from app.llm_orchestration.legacy_prompt_runtime import get_legacy_max_tokens
+from app.domain.llm.prompting.catalog import get_legacy_max_tokens
+from app.domain.llm.prompting.context import PromptCommonContext
 from app.prediction.llm_narrator import LLMNarrator
-from app.prompts.common_context import PromptCommonContext
 
 
 def _make_common_context() -> PromptCommonContext:
@@ -25,8 +25,7 @@ def _make_common_context() -> PromptCommonContext:
 @pytest.fixture(autouse=True)
 def _mock_legacy_governance():
     with patch(
-        "app.llm_orchestration.services.fallback_governance."
-        "FallbackGovernanceRegistry.track_fallback"
+        "app.domain.llm.runtime.fallback_governance.FallbackGovernanceRegistry.track_fallback"
     ):
         yield
 

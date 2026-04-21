@@ -11,7 +11,7 @@ from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.exceptions import (
     ProviderNotConfiguredError,
 )
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     GatewayMeta,
     GatewayResult,
     UsageInfo,

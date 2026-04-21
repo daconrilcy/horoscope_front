@@ -24,7 +24,18 @@
     "values_security",
     "evolution_path"
   ],
-  "deprecated_use_case_mapping": {},
+  "deprecated_use_case_mapping": {
+    "horoscope_daily_free": {
+      "feature": "horoscope_daily",
+      "subfeature": "narration",
+      "plan": "free"
+    },
+    "horoscope_daily_full": {
+      "feature": "horoscope_daily",
+      "subfeature": "narration",
+      "plan": "premium"
+    }
+  },
   "placeholders_by_family": {
     "guidance": [
       {

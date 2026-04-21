@@ -9,6 +9,7 @@ from app.application.llm.ai_engine_adapter import (
     set_test_chat_generator,
 )
 from app.core.config import settings
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.infra.db.base import Base
 from app.infra.db.models.billing import (
     BillingPlanModel,
@@ -45,7 +46,6 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService

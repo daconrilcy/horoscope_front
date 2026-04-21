@@ -5,12 +5,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import require_admin_user
+from app.domain.llm.runtime.contracts import GoldenRegressionReport
 from app.infra.db.models.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.llm_orchestration.models import GoldenRegressionReport
 from app.main import app
 
 
@@ -75,7 +75,7 @@ async def test_publish_prompt_blocks_on_golden_regression():
         )
 
         with patch(
-            "app.llm_orchestration.services.golden_regression_service.GoldenRegressionService.run_campaign",
+            "app.ops.llm.golden_regression_service.GoldenRegressionService.run_campaign",
             return_value=mock_report,
         ):
             response = client.patch(
@@ -142,7 +142,7 @@ async def test_publish_prompt_blocks_on_golden_invalid():
         )
 
         with patch(
-            "app.llm_orchestration.services.golden_regression_service.GoldenRegressionService.run_campaign",
+            "app.ops.llm.golden_regression_service.GoldenRegressionService.run_campaign",
             return_value=mock_report,
         ):
             response = client.patch(
@@ -210,11 +210,11 @@ async def test_publish_prompt_warns_on_golden_constrained():
         )
 
         with patch(
-            "app.llm_orchestration.services.golden_regression_service.GoldenRegressionService.run_campaign",
+            "app.ops.llm.golden_regression_service.GoldenRegressionService.run_campaign",
             return_value=mock_report,
         ):
             with patch(
-                "app.llm_orchestration.services.prompt_registry_v2.PromptRegistryV2.publish_prompt",
+                "app.ops.llm.prompt_registry_v2.PromptRegistryV2.publish_prompt",
                 return_value=version,
             ):
                 response = client.patch(
@@ -283,11 +283,11 @@ async def test_publish_prompt_passes_on_golden_success():
 
         # Need to mock PromptRegistryV2.publish_prompt too
         with patch(
-            "app.llm_orchestration.services.golden_regression_service.GoldenRegressionService.run_campaign",
+            "app.ops.llm.golden_regression_service.GoldenRegressionService.run_campaign",
             return_value=mock_report,
         ):
             with patch(
-                "app.llm_orchestration.services.prompt_registry_v2.PromptRegistryV2.publish_prompt",
+                "app.ops.llm.prompt_registry_v2.PromptRegistryV2.publish_prompt",
                 return_value=version,
             ):
                 response = client.patch(

@@ -1,4 +1,4 @@
-from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
+from app.domain.llm.runtime.context_quality_injector import ContextQualityInjector
 
 
 def test_injector_handled_by_template_partial():

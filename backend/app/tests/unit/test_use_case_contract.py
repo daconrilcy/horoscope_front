@@ -5,11 +5,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.infra.db.base import Base
-from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
-from app.infra.db.models.llm_prompt import PromptStatus
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ExecutionUserInput,
     GatewayError,
     GatewayMeta,
@@ -19,6 +15,10 @@ from app.llm_orchestration.models import (
     UsageInfo,
     UseCaseConfig,
 )
+from app.domain.llm.runtime.gateway import LLMGateway
+from app.infra.db.base import Base
+from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
+from app.infra.db.models.llm_prompt import PromptStatus
 
 
 @pytest.fixture
@@ -186,7 +186,7 @@ async def test_persona_override_authorized(db_session, monkeypatch):
 
 def test_lint_usecase_placeholders():
     """AC 4: Lint verify use-case specific placeholders."""
-    from app.llm_orchestration.services.prompt_lint import PromptLint
+    from app.ops.llm.prompt_lint import PromptLint
 
     required = ["{{chart_json}}"]
 

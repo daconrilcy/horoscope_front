@@ -23,11 +23,11 @@ def test_nominal_modules_do_not_import_legacy_directly() -> None:
     """
     root = Path(__file__).resolve().parents[2]
     critical_nominal_files = [
-        root / "app" / "llm_orchestration" / "gateway.py",
+        root / "app" / "domain" / "llm" / "runtime" / "gateway.py",
         root / "app" / "api" / "v1" / "routers" / "admin_llm.py",
         root / "app" / "prediction" / "llm_narrator.py",
-        root / "app" / "prompts" / "common_context.py",
-        root / "app" / "llm_orchestration" / "admin_models.py",
+        root / "app" / "domain" / "llm" / "prompting" / "context.py",
+        root / "app" / "domain" / "llm" / "configuration" / "admin_models.py",
     ]
     forbidden_prefixes = (
         "app.llm_orchestration.legacy_prompt_runtime",
@@ -58,11 +58,6 @@ def test_runtime_and_bootstrap_modules_do_not_depend_on_legacy_transition_paths(
     """
     root = Path(__file__).resolve().parents[2]
     file_expectations = {
-        root / "app" / "llm_orchestration" / "gateway.py": {
-            "app.llm_orchestration.services.execution_profile_registry",
-            "app.llm_orchestration.services.provider_parameter_mapper",
-            "app.llm_orchestration.services.context_quality_injector",
-        },
         root / "app" / "ops" / "llm" / "bootstrap" / "seed_29_prompts.py": {
             "scripts.seed_29_prompts",
         },

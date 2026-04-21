@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 
-from app.llm_orchestration.services.output_validator import validate_output
+from app.domain.llm.runtime.output_validator import validate_output
 
 _BASE_SCHEMA = {
     "type": "object",

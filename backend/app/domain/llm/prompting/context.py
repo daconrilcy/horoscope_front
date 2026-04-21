@@ -10,7 +10,10 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.domain.llm.legacy.bridge import get_legacy_use_case_name
+from app.domain.llm.governance.prompt_governance_registry import get_prompt_governance_registry
+from app.domain.llm.prompting.catalog import PROMPT_CATALOG
+from app.domain.llm.runtime.contracts import FallbackType
+from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
 from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
@@ -19,6 +22,17 @@ from app.services.user_birth_profile_service import UserBirthProfileService
 from app.services.user_natal_chart_service import UserNatalChartService
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_use_case_display_name(use_case_key: str) -> str:
+    """Resolve use-case display name with canonical fallback behavior."""
+    entry = PROMPT_CATALOG.get(use_case_key)
+    if entry:
+        return entry.name
+    registry = get_prompt_governance_registry()
+    mapping = registry.legacy_nominal_feature_aliases_map()
+    canonical = mapping.get(use_case_key, use_case_key)
+    return canonical.replace("_", " ").strip().title()
 
 
 class PromptCommonContext(BaseModel):
@@ -61,7 +75,9 @@ class QualifiedContext(BaseModel):
         """Auto-computes missing fields and quality if not already provided."""
         if not self.missing_fields:
             missing = []
-            if not self.payload.natal_interpretation:
+            if not self.payload.natal_interpretation and not self.payload.use_case_key.startswith(
+                "natal_interpretation"
+            ):
                 missing.append("natal_interpretation")
             if not self.payload.natal_data:
                 missing.append("natal_data")
@@ -200,11 +216,6 @@ class CommonContextBuilder:
 
             is_database_error = isinstance(e, SQLAlchemyError)
 
-            from app.llm_orchestration.models import FallbackType
-            from app.llm_orchestration.services.fallback_governance import (
-                FallbackGovernanceRegistry,
-            )
-
             FallbackGovernanceRegistry.track_fallback(
                 FallbackType.NATAL_NO_DB,
                 call_site="common_context_builder",
@@ -225,7 +236,7 @@ class CommonContextBuilder:
             period_label = f"semaine du {cls._format_date_fr(today)}"
 
         # 5. Catalog Name
-        use_case_name = get_legacy_use_case_name(use_case_key)
+        use_case_name = _resolve_use_case_display_name(use_case_key)
 
         payload = PromptCommonContext(
             natal_interpretation=natal_interpretation,

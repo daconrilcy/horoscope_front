@@ -130,7 +130,7 @@ class TestAdminLlmNatalPrompts:
         mock_db.get.return_value = uc_mock
 
         with patch(
-            "app.llm_orchestration.services.prompt_registry_v2.PromptRegistryV2.publish_prompt"
+            "app.ops.llm.prompt_registry_v2.PromptRegistryV2.publish_prompt"
         ) as mock_publish:
             mock_publish.return_value = version_mock
             version_mock.status = PromptStatus.PUBLISHED  # simulate effect
@@ -143,7 +143,7 @@ class TestAdminLlmNatalPrompts:
         assert response.json()["data"]["status"] == "published"
 
     def test_publish_prompt_blocked_by_eval(self, test_client, mock_db):
-        from app.llm_orchestration.models import EvalReport
+        from app.domain.llm.runtime.contracts import EvalReport
 
         key = "natal_interpretation_short"
         version_id = str(uuid.uuid4())

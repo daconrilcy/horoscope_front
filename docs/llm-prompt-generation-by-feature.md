@@ -30,25 +30,25 @@ La maintenance de cette documentation est **obligatoire** lors de tout changemen
 
 Le document couvre le pipeline réellement exécuté dans :
 
-- `backend/app/services/ai_engine_adapter.py`
-- `backend/app/llm_orchestration/gateway.py`
-- `backend/app/llm_orchestration/legacy_residual_registry.py`
-- `backend/app/llm_orchestration/services/assembly_registry.py`
-- `backend/app/llm_orchestration/services/assembly_resolver.py`
-- `backend/app/llm_orchestration/services/execution_profile_registry.py`
-- `backend/app/llm_orchestration/services/provider_parameter_mapper.py`
-- `backend/app/llm_orchestration/services/prompt_renderer.py`
-- `backend/app/llm_orchestration/services/context_quality_injector.py`
-- `backend/app/llm_orchestration/services/length_budget_injector.py`
-- `backend/app/prompts/common_context.py`
-- `backend/app/llm_orchestration/services/release_service.py`
-- `backend/app/llm_orchestration/services/config_coherence_validator.py`
-- `backend/app/llm_orchestration/data/prompt_governance_registry.json` (registre central versionné, Story 66.42)
-- `backend/app/llm_orchestration/prompt_governance_registry.py`
-- `backend/app/llm_orchestration/semantic_invariants_registry.py`
-- `backend/app/llm_orchestration/services/semantic_conformity_validator.py`
-- `backend/app/llm_orchestration/providers/provider_runtime_manager.py`
-- `backend/app/llm_orchestration/services/observability_service.py`
+- `backend/app/application/llm/ai_engine_adapter.py`
+- `backend/app/domain/llm/runtime/gateway.py`
+- `backend/app/domain/llm/governance/legacy_residual_registry.py`
+- `backend/app/domain/llm/configuration/assembly_registry.py`
+- `backend/app/domain/llm/configuration/assembly_resolver.py`
+- `backend/app/domain/llm/configuration/execution_profile_registry.py`
+- `backend/app/domain/llm/runtime/provider_parameter_mapper.py`
+- `backend/app/domain/llm/prompting/prompt_renderer.py`
+- `backend/app/domain/llm/runtime/context_quality_injector.py`
+- `backend/app/domain/llm/runtime/length_budget_injector.py`
+- `backend/app/domain/llm/prompting/context.py`
+- `backend/app/ops/llm/release_service.py`
+- `backend/app/domain/llm/configuration/config_coherence_validator.py`
+- `backend/app/domain/llm/governance/data/prompt_governance_registry.json` (registre central versionné, Story 66.42)
+- `backend/app/domain/llm/governance/prompt_governance_registry.py`
+- `backend/app/ops/llm/semantic_invariants_registry.py`
+- `backend/app/ops/llm/semantic_conformity_validator.py`
+- `backend/app/domain/llm/runtime/provider_runtime_manager.py`
+- `backend/app/domain/llm/runtime/observability_service.py`
 - `backend/app/api/v1/routers/admin_llm_release.py`
 - `backend/scripts/check_doc_conformity.py`
 - `backend/scripts/build_llm_release_candidate.py`
@@ -103,7 +103,7 @@ Compatibilités legacy encore gérées :
 
 ## Registre central de gouvernance (Story 66.42)
 
-La taxonomie canonique (familles, aliases nominaux, sous-familles natales), les aliases de `use_case` dépréciés et les placeholders autorisés sont définis dans un **seul artefact versionné** : `backend/app/llm_orchestration/data/prompt_governance_registry.json` (champ `schema_version`, actuellement `1.0.0`).
+La taxonomie canonique (familles, aliases nominaux, sous-familles natales), les aliases de `use_case` dépréciés et les placeholders autorisés sont définis dans un **seul artefact versionné** : `backend/app/domain/llm/governance/data/prompt_governance_registry.json` (champ `schema_version`, actuellement `1.0.0`).
 
 - **Canonique vs legacy transitoire** : les clés `legacy_nominal_feature_aliases` et `legacy_subfeature_aliases_by_domain` décrivent explicitement la compatibilité de migration ; elles ne sont pas des extensions ad hoc de la taxonomie canonique.
 - **Placeholders** : la gouvernance runtime combine `universal_placeholders` et `placeholders_by_family` ; `PromptRenderer` et `ConfigCoherenceValidator` passent tous deux par `PromptGovernanceRegistry` / `PLACEHOLDER_ALLOWLIST` dérivés du JSON.
@@ -185,7 +185,7 @@ Règle de lecture : l'admin ne doit plus afficher plusieurs "prompts finaux" tex
 
 ### Registre d'invariants sémantiques exécutable (Story 66.41)
 
-Un registre versionné (`backend/app/llm_orchestration/semantic_invariants_registry.py`, clé `SEMANTIC_INVARIANTS_VERSION`) formalise des invariants d'architecture **bornés** et les confronte au code réel via `SemanticConformityValidator` (`backend/app/llm_orchestration/services/semantic_conformity_validator.py`). La validation sémantique est branchée sur le **même** script CLI que le garde structurel (`backend/scripts/check_doc_conformity.py`), sans second point d'entrée parallèle.
+Un registre versionné (`backend/app/ops/llm/semantic_invariants_registry.py`, clé `SEMANTIC_INVARIANTS_VERSION`) formalise des invariants d'architecture **bornés** et les confronte au code réel via `SemanticConformityValidator` (`backend/app/ops/llm/semantic_conformity_validator.py`). La validation sémantique est branchée sur le **même** script CLI que le garde structurel (`backend/scripts/check_doc_conformity.py`), sans second point d'entrée parallèle.
 
 **Contenu typique du registre (à maintenir aligné avec le code) :**
 
@@ -238,7 +238,7 @@ Dans `_resolve_plan()` :
 - sinon, la résolution se fait par waterfall sur `feature/subfeature/plan/locale` ;
 - si une famille supportée n'a pas d'assembly active, le runtime lève une `GatewayConfigError` avec `error_code="missing_assembly"` et émet `supported_perimeter_rejection` ;
 - si aucune assembly n'est trouvée pour une famille non supportée, le code peut encore tomber sur `_resolve_legacy_compat_config()` et donc sur le chemin legacy `USE_CASE_FIRST`, explicitement borné hors nominal ;
-- les métadonnées legacy encore nécessaires au runtime non nominal vivent désormais dans `app.llm_orchestration.legacy_prompt_runtime`, pas dans `app.prompts.catalog`.
+- les métadonnées legacy encore nécessaires au runtime non nominal vivent désormais dans `app.domain.llm.prompting.legacy_prompt_runtime`, pas dans `app.prompts.catalog`.
 - `PromptRegistryV2` n'est plus une dépendance runtime du gateway ; il reste une surface admin/history/publish explicitement bornée.
 
 ## Comment le developer prompt est réellement construit
@@ -373,7 +373,7 @@ Si un provider non supporté ou un mapping provider échoue :
 ## Fallbacks réellement permis
 
 Les règles de gouvernance viennent du **registre résiduel versionné**
-(`backend/app/llm_orchestration/data/legacy_residual_registry.json`), projeté exclusivement par
+(`backend/app/domain/llm/governance/data/legacy_residual_registry.json`), projeté exclusivement par
 `FallbackGovernanceRegistry` sans matrice parallèle (Story 66.40).
 
 ### Registre résiduel et stratégie d'extinction

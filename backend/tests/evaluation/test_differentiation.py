@@ -2,6 +2,9 @@ import uuid
 
 import pytest
 
+from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
+from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
+from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
@@ -10,9 +13,6 @@ from app.infra.db.models.llm_prompt import (
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
-from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 
 
 @pytest.mark.evaluation

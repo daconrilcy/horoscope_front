@@ -16,8 +16,7 @@ from sqlalchemy import select
 from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.infra.db.session import SessionLocal
-from app.llm_orchestration.services.prompt_lint import PromptLint
-from app.llm_orchestration.services.prompt_registry_v2 import PromptRegistryV2, utc_now
+from app.ops.llm.services import PromptLint, PromptRegistryV2, utc_now
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)

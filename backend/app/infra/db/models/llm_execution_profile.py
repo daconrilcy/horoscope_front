@@ -69,9 +69,7 @@ class LlmExecutionProfileModel(Base):
         (Story 66.31: Integration with central validator)
         """
         if value == PromptStatus.PUBLISHED:
-            from app.llm_orchestration.services.config_coherence_validator import (
-                validate_execution_profile,
-            )
+            from app.domain.llm.configuration.coherence import validate_execution_profile
 
             result = validate_execution_profile(self)
             if not result.is_valid:

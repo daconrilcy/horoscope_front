@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.session import get_db_session
-from app.llm_orchestration.services.release_service import ReleaseService
+from app.ops.llm.services import ReleaseService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

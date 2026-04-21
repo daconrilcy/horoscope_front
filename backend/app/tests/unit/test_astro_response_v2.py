@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.llm_orchestration.schemas import AstroResponseV1, AstroResponseV2
+from app.domain.llm.prompting.schemas import AstroResponseV1, AstroResponseV2
 
 VALID_V1_PAYLOAD = {
     "title": "Thème Natal Court",

@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from app.llm_orchestration.golden_regression_registry import OBS_SNAPSHOT_CLASSIFICATION_DEFAULT
-from app.llm_orchestration.services.doc_conformity_validator import DocConformityValidator
+from app.ops.llm.doc_conformity_validator import DocConformityValidator
+from app.ops.llm.golden_regression_registry import OBS_SNAPSHOT_CLASSIFICATION_DEFAULT
 
 
 def _validator() -> DocConformityValidator:
@@ -45,7 +45,7 @@ def test_obs_snapshot_classification_default_is_explicit() -> None:
 
 def test_doc_conformity_is_update_required() -> None:
     validator = DocConformityValidator(Path("/tmp"))
-    assert validator.is_update_required(["backend/app/llm_orchestration/gateway.py"])
+    assert validator.is_update_required(["backend/app/domain/llm/runtime/gateway.py"])
     assert validator.is_update_required(["docs/llm-prompt-generation-by-feature.md"])
     assert validator.is_update_required(["backend/scripts/check_doc_conformity.py"])
     assert validator.is_update_required([".github/workflows/llm-doc-conformity.yml"])
@@ -216,8 +216,8 @@ def test_script_pr_body_validation(monkeypatch: pytest.MonkeyPatch) -> None:
         "resolve_git_context",
         lambda v: script.GitResolutionResult(
             mode="test",
-            changed_files=["backend/app/llm_orchestration/gateway.py"],
-            structural_files_detected=["backend/app/llm_orchestration/gateway.py"],
+            changed_files=["backend/app/domain/llm/runtime/gateway.py"],
+            structural_files_detected=["backend/app/domain/llm/runtime/gateway.py"],
         ),
     )
     monkeypatch.delenv("DOC_CONFORMITY_PR_BODY", raising=False)
@@ -252,10 +252,10 @@ def test_script_requires_pr_section_when_doc_updated_and_pr_context_exists(
         lambda v: script.GitResolutionResult(
             mode="test",
             changed_files=[
-                "backend/app/llm_orchestration/gateway.py",
+                "backend/app/domain/llm/runtime/gateway.py",
                 "docs/llm-prompt-generation-by-feature.md",
             ],
-            structural_files_detected=["backend/app/llm_orchestration/gateway.py"],
+            structural_files_detected=["backend/app/domain/llm/runtime/gateway.py"],
         ),
     )
 
@@ -289,7 +289,7 @@ def test_get_changed_files_prefers_merge_base_with_explicit_base_ref(
 
     def fake_run_git_lines(args: list[str]) -> list[str]:
         if args == ["diff", "--name-only", "merge-base-sha", "HEAD"]:
-            return ["backend/app/llm_orchestration/gateway.py"]
+            return ["backend/app/domain/llm/runtime/gateway.py"]
         if args in (
             ["diff", "--name-only", "HEAD"],
             ["diff", "--cached", "--name-only"],
@@ -305,4 +305,4 @@ def test_get_changed_files_prefers_merge_base_with_explicit_base_ref(
     result = script.resolve_git_context(validator)
     assert result.mode == "merge_base"
     assert result.base_commit == "merge-base-sha"
-    assert result.changed_files == ["backend/app/llm_orchestration/gateway.py"]
+    assert result.changed_files == ["backend/app/domain/llm/runtime/gateway.py"]

@@ -8,12 +8,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.rate_limit import reset_rate_limits
+from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
+from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.infra.db.base import Base
 from app.infra.db.bootstrap import ensure_configured_sqlite_file_matches_alembic_head
 from app.infra.db.session import engine
-from app.llm_orchestration.providers.circuit_breaker import reset_circuit_breakers
-from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
-from app.llm_orchestration.services.execution_profile_registry import ExecutionProfileRegistry
+from app.infrastructure.providers.llm.circuit_breaker import reset_circuit_breakers
 from app.main import app
 
 # Keep reference-data seed integration flows deterministic without manual shell exports.

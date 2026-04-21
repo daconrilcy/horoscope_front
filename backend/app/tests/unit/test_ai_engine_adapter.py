@@ -2,7 +2,12 @@ import pytest
 
 from app.ai_engine.exceptions import RetryBudgetExhaustedError, UpstreamCircuitOpenError
 from app.application.llm.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, NatalExecutionInput, UsageInfo
+from app.domain.llm.runtime.contracts import (
+    GatewayMeta,
+    GatewayResult,
+    NatalExecutionInput,
+    UsageInfo,
+)
 
 
 @pytest.mark.asyncio

@@ -6,8 +6,12 @@ from app.domain.llm.governance.legacy_residual_registry import (
     build_governance_matrix_projection,
     effective_progressive_blocklist,
 )
+from app.domain.llm.runtime.contracts import FallbackStatus, FallbackType, GatewayError
+from app.domain.llm.runtime.observability import (
+    log_legacy_residual_activation,
+    log_legacy_residual_blocked_attempt,
+)
 from app.infra.observability.metrics import increment_counter
-from app.llm_orchestration.models import FallbackStatus, FallbackType
 
 logger = logging.getLogger(__name__)
 
@@ -88,11 +92,6 @@ class FallbackGovernanceRegistry:
 
         blocked = effective_progressive_blocklist()
         if stable_id in blocked:
-            from app.llm_orchestration.models import GatewayError
-            from app.llm_orchestration.services.observability_service import (
-                log_legacy_residual_blocked_attempt,
-            )
-
             log_legacy_residual_blocked_attempt(
                 stable_id=stable_id,
                 path_kind=path_kind,
@@ -127,10 +126,6 @@ class FallbackGovernanceRegistry:
         }
         increment_counter("llm_gateway_fallback_usage_total", labels=labels)
 
-        from app.llm_orchestration.services.observability_service import (
-            log_legacy_residual_activation,
-        )
-
         log_legacy_residual_activation(
             stable_id=stable_id,
             path_kind=path_kind,
@@ -152,8 +147,6 @@ class FallbackGovernanceRegistry:
                 status.value,
             )
             if status == FallbackStatus.TO_REMOVE:
-                from app.llm_orchestration.models import GatewayError
-
                 msg = (
                     f"Usage du fallback '{fallback_type.value}' interdit pour "
                     f"la famille '{effective_feature}' (Gouvernance 66.21)"
@@ -170,8 +163,6 @@ class FallbackGovernanceRegistry:
         # 4. Vérification environnementale (AC9)
         if is_prod:
             if fallback_type == FallbackType.TEST_LOCAL:
-                from app.llm_orchestration.models import GatewayError
-
                 raise GatewayError(
                     f"Usage du fallback '{fallback_type.value}' strictement interdit en production",
                     details={"fallback_type": fallback_type.value, "call_site": call_site},
@@ -192,8 +183,6 @@ class FallbackGovernanceRegistry:
                 fallback_type.value,
                 call_site,
             )
-            from app.llm_orchestration.models import GatewayError
-
             raise GatewayError(
                 f"Dépendance nominale au fallback '{fallback_type.value}' interdite "
                 "(Statut: À RETIRER)",

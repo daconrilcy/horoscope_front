@@ -6,10 +6,10 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
+from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.infra.db.base import Base
-from app.llm_orchestration.providers.circuit_breaker import reset_circuit_breakers
-from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
-from app.llm_orchestration.services.execution_profile_registry import ExecutionProfileRegistry
+from app.infrastructure.providers.llm.circuit_breaker import reset_circuit_breakers
 from app.main import app
 
 

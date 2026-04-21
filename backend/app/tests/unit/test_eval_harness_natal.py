@@ -2,13 +2,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
-from app.llm_orchestration.services.eval_harness import run_eval
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.ops.llm.eval_harness import run_eval
 
 
 @pytest.fixture
 def mock_gateway():
-    with patch("app.llm_orchestration.services.eval_harness.LLMGateway") as mock:
+    with patch("app.ops.llm.eval_harness.LLMGateway") as mock:
         instance = mock.return_value
         instance.execute = AsyncMock()
         yield instance

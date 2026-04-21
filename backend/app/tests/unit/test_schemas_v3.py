@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from app.llm_orchestration.schemas import (
+from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
     AstroResponseV3,
     AstroSectionErrorV3,

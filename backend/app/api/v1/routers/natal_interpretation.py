@@ -25,14 +25,14 @@ from app.api.v1.schemas.natal_interpretation import (
 from app.application.llm.ai_engine_adapter import AIEngineAdapterError
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
-from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
-from app.infra.db.session import get_db_session
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     GatewayConfigError,
     InputValidationError,
     OutputValidationError,
     UnknownUseCaseError,
 )
+from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
+from app.infra.db.session import get_db_session
 from app.services.disclaimer_registry import get_disclaimers
 from app.services.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,

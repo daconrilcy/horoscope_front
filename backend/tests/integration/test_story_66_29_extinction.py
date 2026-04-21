@@ -2,8 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionUserInput,
     GatewayConfigError,
@@ -12,7 +11,8 @@ from app.llm_orchestration.models import (
     OutputValidationError,
     UseCaseConfig,
 )
-from app.llm_orchestration.services.output_validator import ValidationResult
+from app.domain.llm.runtime.gateway import LLMGateway
+from app.domain.llm.runtime.output_validator import ValidationResult
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
     )
 
     registry_path = (
-        "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync"
+        "app.domain.llm.configuration.assembly_registry.AssemblyRegistry.get_active_config_sync"
     )
 
     stage05 = UseCaseConfig(

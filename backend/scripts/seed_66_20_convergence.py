@@ -83,7 +83,7 @@ def seed_66_20_convergence():
                 return v.id
 
             # Create stub if missing
-            from app.prompts.catalog import PROMPT_CATALOG
+            from app.domain.llm.prompting.catalog import PROMPT_CATALOG
 
             entry = PROMPT_CATALOG.get(uc_key)
             if not entry:

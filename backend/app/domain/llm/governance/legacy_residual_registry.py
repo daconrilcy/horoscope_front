@@ -16,13 +16,13 @@ from typing import Any, Final
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.llm_orchestration.feature_taxonomy import (
+from app.domain.llm.governance.feature_taxonomy import (
     LEGACY_DAILY_FEATURE,
     LEGACY_NATAL_FEATURE,
     NATAL_SUBFEATURE_MAPPING,
 )
-from app.llm_orchestration.models import FallbackStatus, FallbackType
-from app.prompts.catalog import DEPRECATED_USE_CASE_MAPPING
+from app.domain.llm.prompting.catalog import DEPRECATED_USE_CASE_MAPPING
+from app.domain.llm.runtime.contracts import FallbackStatus, FallbackType
 
 _REGISTRY_PATH: Final[Path] = (
     Path(__file__).resolve().parent / "data" / "legacy_residual_registry.json"

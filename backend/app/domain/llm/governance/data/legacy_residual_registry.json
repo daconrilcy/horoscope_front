@@ -163,5 +163,24 @@
       "review_or_extinction_date": "2026-12-31"
     }
   ],
-  "deprecated_use_cases": []
+  "deprecated_use_cases": [
+    {
+      "stable_id": "deprecated.use_case.horoscope_daily_free",
+      "use_case_key": "horoscope_daily_free",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Clé use_case historique ; résolution via mapping vers horoscope_daily/narration/free.",
+      "perimeter": "Entrées sans feature canonique ; assembly obligatoire en nominal.",
+      "review_or_extinction_date": "2026-09-30"
+    },
+    {
+      "stable_id": "deprecated.use_case.horoscope_daily_full",
+      "use_case_key": "horoscope_daily_full",
+      "registry_status": "deprecated",
+      "owner": "platform-architecture",
+      "justification": "Clé use_case historique ; résolution via mapping vers horoscope_daily/narration/premium.",
+      "perimeter": "Entrées sans feature canonique ; assembly obligatoire en nominal.",
+      "review_or_extinction_date": "2026-09-30"
+    }
+  ]
 }

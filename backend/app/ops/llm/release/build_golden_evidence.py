@@ -19,7 +19,7 @@ if str(_BACKEND_ROOT) not in sys.path:
 from app.infra.db.models.llm_prompt import LlmUseCaseConfigModel
 from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.session import SessionLocal
-from app.llm_orchestration.services.golden_regression_service import GoldenRegressionService
+from app.ops.llm.services import GoldenRegressionService
 
 DEFAULT_GOLDEN_PATHS = {
     "natal": "tests/fixtures/golden/natal_test.yaml",

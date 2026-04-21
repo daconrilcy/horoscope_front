@@ -8,18 +8,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.domain.llm.configuration.admin_models import (
+    PromptAssemblyConfig,
+    PromptAssemblyPreview,
+)
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.configuration.assembly_resolver import (
     build_assembly_preview,
     validate_placeholders,
 )
+from app.domain.llm.runtime.observability import log_governance_event
+from app.domain.llm.runtime.providers import is_provider_supported
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
-from app.llm_orchestration.admin_models import (
-    PromptAssemblyConfig,
-    PromptAssemblyPreview,
-)
-from app.llm_orchestration.services.observability_service import log_governance_event
 
 logger = logging.getLogger(__name__)
 
@@ -121,8 +122,6 @@ class AssemblyAdminService:
         Validates that the provider for this config is nominally supported.
         Returns the resolved provider name.
         """
-        from app.llm_orchestration.supported_providers import is_provider_supported
-
         provider = "openai"  # Default
 
         if config.execution_profile_ref:
@@ -168,7 +167,7 @@ class AssemblyAdminService:
             raise ValueError(f"Config {config_id} not found")
 
         # Story 66.31: Centralized coherence validation
-        from app.llm_orchestration.services.config_coherence_validator import (
+        from app.domain.llm.configuration.coherence import (
             CoherenceError,
             ConfigCoherenceValidator,
         )

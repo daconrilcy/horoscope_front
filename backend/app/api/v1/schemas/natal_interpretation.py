@@ -5,7 +5,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
-from app.llm_orchestration.schemas import (
+from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
     AstroResponseV1,

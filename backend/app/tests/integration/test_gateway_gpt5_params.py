@@ -4,11 +4,11 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.base import Base
 from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
 @pytest.fixture

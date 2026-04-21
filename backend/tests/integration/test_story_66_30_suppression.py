@@ -3,15 +3,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionFlags,
     ExecutionUserInput,
     GatewayConfigError,
     LLMExecutionRequest,
 )
-from app.llm_orchestration.services.observability_service import log_governance_event
+from app.domain.llm.runtime.gateway import LLMGateway
+from app.domain.llm.runtime.observability_service import log_governance_event
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def test_story_66_30_runtime_rejection_emits_dedicated_counter():
         calls.append((name, value, labels or {}))
 
     with patch(
-        "app.llm_orchestration.services.observability_service.increment_counter",
+        "app.domain.llm.runtime.observability_service.increment_counter",
         side_effect=_spy_increment_counter,
     ):
         log_governance_event(
@@ -235,6 +235,7 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
     mock_assembly_db.interaction_mode = "chat"
     mock_assembly_db.user_question_policy = "required"
     mock_assembly_db.input_schema = None
+    mock_assembly_db.execution_profile_ref = None
 
     mock_resolved_assembly = MagicMock()
     mock_resolved_assembly.execution_config.model = "gpt-4o"
@@ -269,7 +270,7 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
                         return_value=mock_profile,
                     ):
                         with patch(
-                            "app.llm_orchestration.supported_providers.is_provider_supported",
+                            "app.domain.llm.runtime.supported_providers.is_provider_supported",
                             return_value=False,
                         ):
                             with pytest.raises(
@@ -312,6 +313,9 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
     mock_assembly_db.interaction_mode = "chat"
     mock_assembly_db.user_question_policy = "required"
     mock_assembly_db.input_schema = None
+    # Default MagicMock().execution_profile_ref is truthy; gateway would call get_profile_by_id
+    # with db=MagicMock and read a bogus MagicMock provider instead of the patched profile.
+    mock_assembly_db.execution_profile_ref = None
 
     mock_resolved_assembly = MagicMock()
     mock_resolved_assembly.execution_config.model = "gpt-4o"
@@ -346,7 +350,7 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
                         return_value=mock_profile,
                     ):
                         with patch(
-                            "app.llm_orchestration.supported_providers.is_provider_supported",
+                            "app.domain.llm.runtime.supported_providers.is_provider_supported",
                             return_value=True,
                         ):
                             with patch(
@@ -400,8 +404,10 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
         mock_config.user_question_policy = "none"
         mock_config.required_prompt_placeholders = []
 
-        with patch(
-            "app.domain.llm.runtime.gateway.LLMGateway._resolve_legacy_compat_config",
+        with patch.object(
+            gateway,
+            "_resolve_legacy_compat_config",
+            new_callable=AsyncMock,
             return_value=mock_config,
         ):
             with patch(
@@ -410,7 +416,7 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
                 return_value=None,
             ):
                 with patch(
-                    "app.domain.llm.runtime.gateway.resolve_legacy_model",
+                    "app.domain.llm.runtime.gateway.resolve_model",
                     return_value="gpt-4o-fallback",
                 ) as mock_resolve:
                     result, _ = await gateway._resolve_plan(request, db=MagicMock())

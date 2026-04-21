@@ -3,8 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     ContextCompensationStatus,
     ExecutionContext,
     ExecutionPathKind,
@@ -17,6 +16,7 @@ from app.llm_orchestration.models import (
     UsageInfo,
     UseCaseConfig,
 )
+from app.domain.llm.runtime.gateway import LLMGateway
 
 
 @pytest.fixture
@@ -65,7 +65,7 @@ async def test_observability_snapshot_canonical_assembly(gateway):
 
     with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan") as mock_resolve:
-            from app.llm_orchestration.models import ResolvedExecutionPlan
+            from app.domain.llm.runtime.contracts import ResolvedExecutionPlan
 
             plan = ResolvedExecutionPlan(
                 assembly_id=str(uuid.uuid4()),
@@ -117,7 +117,7 @@ async def test_observability_snapshot_non_nominal_provider(gateway):
         developer_prompt="Prompt",
     )
 
-    from app.llm_orchestration.models import ResolvedExecutionPlan
+    from app.domain.llm.runtime.contracts import ResolvedExecutionPlan
 
     plan = ResolvedExecutionPlan(
         feature="non_nominal",
@@ -177,7 +177,7 @@ async def test_observability_snapshot_context_compensation_injected(gateway):
         developer_prompt="Prompt",
     )
 
-    from app.llm_orchestration.models import ResolvedExecutionPlan
+    from app.domain.llm.runtime.contracts import ResolvedExecutionPlan
 
     plan = ResolvedExecutionPlan(
         feature="natal",
@@ -236,7 +236,7 @@ async def test_observability_snapshot_template_handled(gateway):
         developer_prompt="Prompt",
     )
 
-    from app.llm_orchestration.models import ResolvedExecutionPlan
+    from app.domain.llm.runtime.contracts import ResolvedExecutionPlan
 
     plan = ResolvedExecutionPlan(
         feature="natal",
@@ -296,7 +296,7 @@ async def test_observability_snapshot_legacy_path_length_budget(gateway):
         developer_prompt="Prompt",
     )
 
-    from app.llm_orchestration.models import ResolvedExecutionPlan
+    from app.domain.llm.runtime.contracts import ResolvedExecutionPlan
 
     # Plan representing a legacy resolution with length_budget_global
     plan = ResolvedExecutionPlan(

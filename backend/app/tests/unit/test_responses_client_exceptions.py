@@ -7,8 +7,8 @@ from app.ai_engine.config import ai_engine_settings
 from app.ai_engine.exceptions import (
     RetryBudgetExhaustedError,
 )
-from app.llm_orchestration.providers.provider_runtime_manager import ProviderRuntimeManager
-from app.llm_orchestration.providers.responses_client import ResponsesClient
+from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
+from app.infrastructure.providers.llm.openai_responses_client import ResponsesClient
 
 
 @pytest.mark.asyncio

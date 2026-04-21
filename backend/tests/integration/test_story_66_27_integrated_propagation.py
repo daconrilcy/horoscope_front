@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from sqlalchemy import select
 
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import (
+from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
+from app.domain.llm.runtime.contracts import (
     ContextCompensationStatus,
     ExecutionContext,
     ExecutionUserInput,
@@ -13,7 +13,7 @@ from app.llm_orchestration.models import (
     LLMExecutionRequest,
     UsageInfo,
 )
-from app.prompts.common_context import PromptCommonContext, QualifiedContext
+from app.domain.llm.runtime.gateway import LLMGateway
 
 
 @pytest.mark.asyncio
@@ -53,7 +53,7 @@ async def test_integrated_template_handled_propagation(db):
 
     # We need a developer prompt that handles partial quality
     # We'll mock the legacy compatibility resolver to return this prompt
-    from app.llm_orchestration.models import UseCaseConfig
+    from app.domain.llm.runtime.contracts import UseCaseConfig
 
     mock_config = UseCaseConfig(
         model="gpt-4o",
@@ -73,7 +73,9 @@ async def test_integrated_template_handled_propagation(db):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
+    with patch(
+        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+    ):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
@@ -129,7 +131,7 @@ async def test_integrated_injector_applied_propagation(db):
         payload=mock_payload, source="db", missing_fields=["birth_time"], context_quality="partial"
     )
 
-    from app.llm_orchestration.models import UseCaseConfig
+    from app.domain.llm.runtime.contracts import UseCaseConfig
 
     # No quality blocks here
     mock_config = UseCaseConfig(
@@ -147,7 +149,9 @@ async def test_integrated_injector_applied_propagation(db):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
+    with patch(
+        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+    ):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
@@ -207,7 +211,7 @@ async def test_integrated_not_needed_propagation(db):
         payload=mock_payload, source="db", missing_fields=[], context_quality="full"
     )
 
-    from app.llm_orchestration.models import UseCaseConfig
+    from app.domain.llm.runtime.contracts import UseCaseConfig
 
     mock_config = UseCaseConfig(
         model="gpt-4o", developer_prompt="Base prompt.", required_prompt_placeholders=[]
@@ -222,7 +226,9 @@ async def test_integrated_not_needed_propagation(db):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
+    with patch(
+        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+    ):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
                 "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",

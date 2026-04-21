@@ -4,6 +4,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.domain.llm.governance.feature_taxonomy import is_supported_feature
+from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
+from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
@@ -12,9 +15,6 @@ from app.infra.db.models.llm_prompt import (
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.llm_orchestration.feature_taxonomy import is_supported_feature
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
 
 
 @pytest.mark.evaluation
@@ -91,7 +91,7 @@ async def test_prompt_resolution_matrix(
         schema_id = None
         if feat == "natal" and plan == "premium":
             from app.infra.db.models import LlmOutputSchemaModel
-            from app.llm_orchestration.seeds.use_cases_seed import ASTRO_RESPONSE_V3_JSON_SCHEMA
+            from app.ops.llm.bootstrap.use_cases_seed import ASTRO_RESPONSE_V3_JSON_SCHEMA
 
             schema = LlmOutputSchemaModel(
                 id=uuid.uuid4(),
@@ -148,7 +148,7 @@ async def test_prompt_resolution_matrix(
         )
 
         # We need to mock CommonContextBuilder.build to return our desired quality
-        from app.prompts.common_context import PromptCommonContext, QualifiedContext
+        from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
 
         mock_payload = PromptCommonContext(
             natal_interpretation=ctx_data.get("natal_interpretation"),

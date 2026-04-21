@@ -5,22 +5,24 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from app.domain.llm.configuration.admin_models import (
+    ExecutionConfigAdmin,
+    LengthBudget,
+    PlaceholderInfo,
+    PlaceholderResolutionStatus,
+    PromptAssemblyPreview,
+    PromptAssemblyTarget,
+    ResolvedAssembly,
+)
 from app.domain.llm.governance.prompt_governance_registry import (
     PLACEHOLDER_ALLOWLIST,
     get_prompt_governance_registry,
 )
 from app.domain.llm.prompting.personas import compose_persona_block
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+from app.domain.llm.runtime.contracts import is_reasoning_model
+from app.domain.llm.runtime.policy import get_hard_policy
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.llm_orchestration.admin_models import (
-    ExecutionConfigAdmin,
-    PlaceholderInfo,
-    PromptAssemblyPreview,
-    PromptAssemblyTarget,
-    ResolvedAssembly,
-)
-from app.llm_orchestration.models import is_reasoning_model
-from app.llm_orchestration.policies.hard_policy import get_hard_policy
 
 logger = logging.getLogger(__name__)
 
@@ -135,8 +137,6 @@ def build_assembly_preview(
                 status = "fallback_used"
                 val_preview = (p_def.fallback or "")[:10]
 
-        from app.llm_orchestration.admin_models import PlaceholderResolutionStatus
-
         resolution_statuses.append(
             PlaceholderResolutionStatus(name=p, status=status, value_preview=val_preview)
         )
@@ -205,7 +205,7 @@ def resolve_assembly(
             plan_rules_content = rule.instruction
 
             # Story 66.17 AC4: Plan rules guard
-            from app.prompts.validators import validate_plan_rules_content
+            from app.domain.llm.prompting.validators import validate_plan_rules_content
 
             arch_violations = validate_plan_rules_content(plan_rules_content)
             for v in arch_violations:
@@ -236,8 +236,6 @@ def resolve_assembly(
     # 6. Length Budget (Story 66.12)
     length_budget = None
     if config.length_budget:
-        from app.llm_orchestration.admin_models import LengthBudget
-
         length_budget = LengthBudget(**config.length_budget)
 
     return ResolvedAssembly(

@@ -1,5 +1,5 @@
+from app.domain.llm.prompting.context import PromptCommonContext
 from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
-from app.prompts.common_context import PromptCommonContext
 
 
 def _make_common_context() -> PromptCommonContext:

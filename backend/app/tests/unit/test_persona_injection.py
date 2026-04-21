@@ -5,12 +5,12 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.base import Base
 from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_persona import PersonaTone, PersonaVerbosity
 from app.infra.db.models.llm_prompt import PromptStatus
-from app.llm_orchestration.gateway import LLMGateway
-from app.llm_orchestration.models import GatewayMeta, GatewayResult, UsageInfo
 
 
 @pytest.fixture
@@ -161,7 +161,7 @@ async def test_persona_injection_disabled(db_session, monkeypatch):
 @pytest.mark.asyncio
 async def test_persona_required_but_missing(db_session, monkeypatch):
     # Setup: Use case with strategy REQUIRED but no enabled persona
-    from app.llm_orchestration.models import GatewayConfigError
+    from app.domain.llm.runtime.contracts import GatewayConfigError
 
     use_case_config = LlmUseCaseConfigModel(
         key="req_use_case",

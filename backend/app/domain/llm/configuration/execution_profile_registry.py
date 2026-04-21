@@ -5,25 +5,54 @@ import uuid
 from threading import Lock
 from typing import Any, Optional
 
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_prompt import PromptStatus
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
-from app.infra.db.utils import reconstruct_orm
-from app.llm_orchestration.feature_taxonomy import (
+from app.domain.llm.governance.feature_taxonomy import (
     assert_nominal_feature_allowed,
     normalize_feature,
     normalize_subfeature,
 )
+from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.utils import reconstruct_orm
 
 logger = logging.getLogger(__name__)
 
-# Simple in-memory cache for published profiles
-# Story 66.32 AC14: Partition cache by active_snapshot_id
-_profile_cache: dict[str, LlmExecutionProfileModel] = {}
+# In-memory cache: map resolution key -> published profile id.
+# Never store ORM instances here: they are bound to the Session that loaded them
+# and will break subsequent requests (DetachedInstanceError / refresh on wrong session).
+_profile_cache: dict[str, uuid.UUID] = {}
 _cache_lock = Lock()
+
+
+def _profile_reload_stmt(profile_id: uuid.UUID):
+    return select(LlmExecutionProfileModel).where(
+        LlmExecutionProfileModel.id == profile_id,
+        LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
+    )
+
+
+def _load_cached_profile(db: Session, cache_key: str) -> Optional[LlmExecutionProfileModel]:
+    with _cache_lock:
+        profile_id = _profile_cache.get(cache_key)
+    if profile_id is None:
+        return None
+    profile = db.execute(_profile_reload_stmt(profile_id)).scalar_one_or_none()
+    if profile is None:
+        with _cache_lock:
+            _profile_cache.pop(cache_key, None)
+    return profile
+
+
+def _should_cache_profile_row(profile: LlmExecutionProfileModel, db: Session) -> bool:
+    try:
+        state = sa_inspect(profile)
+        return bool(state.persistent and object_session(profile) is db)
+    except Exception:
+        return False
 
 
 class ExecutionProfileRegistry:
@@ -70,9 +99,9 @@ class ExecutionProfileRegistry:
 
         cache_key = f"{snapshot_id}:{feature}:{subfeature}:{plan}:{locale}"
 
-        with _cache_lock:
-            if cache_key in _profile_cache:
-                return _profile_cache[cache_key]
+        cached_profile = _load_cached_profile(db, cache_key)
+        if cached_profile is not None:
+            return cached_profile
 
         resolved_profile = None
 
@@ -119,9 +148,9 @@ class ExecutionProfileRegistry:
                     resolved_profile = profile
                     break
 
-        if resolved_profile:
+        if resolved_profile and _should_cache_profile_row(resolved_profile, db):
             with _cache_lock:
-                _profile_cache[cache_key] = resolved_profile
+                _profile_cache[cache_key] = resolved_profile.id
 
         return resolved_profile
 

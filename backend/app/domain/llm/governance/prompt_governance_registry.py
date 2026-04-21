@@ -17,7 +17,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.llm_orchestration.placeholder_policy import PlaceholderDef
+from app.domain.llm.prompting.placeholder_policy import PlaceholderDef
 
 logger = logging.getLogger(__name__)
 

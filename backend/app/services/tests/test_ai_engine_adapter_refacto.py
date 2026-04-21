@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.application.llm.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
-from app.llm_orchestration.models import (
+from app.domain.llm.runtime.contracts import (
     GatewayMeta,
     GatewayResult,
     LLMExecutionRequest,
@@ -27,7 +27,7 @@ async def test_generate_chat_reply_canonical_request():
     )
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
     ) as mock_exec:
         mock_exec.return_value = mock_res
 
@@ -58,7 +58,7 @@ async def test_generate_guidance_daily_canonical():
     )
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
     ) as mock_exec:
         mock_exec.return_value = mock_res
 
@@ -90,7 +90,7 @@ async def test_generate_guidance_contextual_extra_context():
     )
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
     ) as mock_exec:
         mock_exec.return_value = mock_res
 
@@ -110,7 +110,7 @@ async def test_generate_guidance_contextual_extra_context():
 @pytest.mark.asyncio
 async def test_error_mapping_output_validation():
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
     ) as mock_exec:
         mock_exec.side_effect = OutputValidationError("invalid output")
 
@@ -133,7 +133,7 @@ async def test_chat_opening_stage_extra_context():
     context = {"chat_turn_stage": "opening"}
 
     with patch(
-        "app.llm_orchestration.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
     ) as mock_exec:
         mock_exec.return_value = MagicMock(spec=GatewayResult, usage=MagicMock(output_tokens=10))
 

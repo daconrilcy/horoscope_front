@@ -19,7 +19,7 @@ from app.infra.db.models.llm_observability import (
     LlmValidationStatus,
 )
 from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.llm_orchestration.policies.ops_contract import (
+from app.ops.llm.ops_contract import (
     NOMINAL_FAMILIES,
     REPAIR_MIN_OCCURRENCES,
     REPAIR_RATE_BASELINE_MULTIPLIER,

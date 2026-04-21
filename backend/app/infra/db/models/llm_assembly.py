@@ -74,7 +74,7 @@ class PromptAssemblyConfigModel(Base):
         AC5: Reject legacy nominal features on publication.
         """
         if value == PromptStatus.PUBLISHED:
-            from app.llm_orchestration.feature_taxonomy import (
+            from app.domain.llm.governance.feature_taxonomy import (
                 NATAL_CANONICAL_FEATURE,
                 assert_nominal_feature_allowed,
                 is_natal_subfeature_canonical,

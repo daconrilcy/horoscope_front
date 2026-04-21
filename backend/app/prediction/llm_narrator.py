@@ -10,10 +10,7 @@ from typing import Any
 
 import openai
 
-from app.domain.llm.legacy.bridge import (
-    get_legacy_max_tokens,
-    resolve_legacy_model,
-)
+from app.domain.llm.prompting.catalog import get_legacy_max_tokens, resolve_model
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +66,8 @@ class LLMNarrator:
         domain_ranking: list[dict[str, Any]] | None = None,
         variant_code: str | None = None,
     ) -> NarratorResult | None:
+        from app.domain.llm.runtime.contracts import FallbackType
         from app.domain.llm.runtime.fallback import FallbackGovernanceRegistry
-        from app.llm_orchestration.models import FallbackType
         from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
 
         # 0. Governance check (Story 66.21 AC8)
@@ -86,7 +83,7 @@ class LLMNarrator:
             # variant_code expected: "summary_only" | "full"
             use_case = self._resolve_use_case(variant_code)
 
-            model = resolve_legacy_model(use_case)
+            model = resolve_model(use_case)
             max_completion_tokens = (
                 get_legacy_max_tokens(use_case, default_use_case="horoscope_daily")
                 or self.DEFAULT_MAX_COMPLETION_TOKENS

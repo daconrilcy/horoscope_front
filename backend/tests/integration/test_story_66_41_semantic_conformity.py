@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from app.llm_orchestration.services.semantic_conformity_validator import (
+from app.ops.llm.semantic_conformity_validator import (
     SemanticConformityValidator,
     validate_assemble_prompt_transform_order,
     validate_gateway_prompt_transform_order,
@@ -170,7 +170,7 @@ def test_governed_registry_matches_runtime() -> None:
 
 
 def test_semantic_invariants_version_format() -> None:
-    from app.llm_orchestration.semantic_invariants_registry import SEMANTIC_INVARIANTS_VERSION
+    from app.ops.llm.semantic_invariants_registry import SEMANTIC_INVARIANTS_VERSION
 
     parts = SEMANTIC_INVARIANTS_VERSION.split(".")
     assert len(parts) == 3
