@@ -76,11 +76,11 @@ async def test_integrated_template_handled_propagation(db):
     with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
-                "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
+                "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
                 return_value=None,
             ):
                 with patch(
-                    "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id",
+                    "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id",
                     return_value=None,
                 ):
                     with patch(
@@ -150,11 +150,11 @@ async def test_integrated_injector_applied_propagation(db):
     with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
-                "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
+                "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
                 return_value=None,
             ):
                 with patch(
-                    "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id",
+                    "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id",
                     return_value=None,
                 ):
                     with patch(
@@ -225,11 +225,11 @@ async def test_integrated_not_needed_propagation(db):
     with patch("app.prompts.common_context.CommonContextBuilder.build", return_value=mock_ctx):
         with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
             with patch(
-                "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
+                "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
                 return_value=None,
             ):
                 with patch(
-                    "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id",
+                    "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_profile_by_id",
                     return_value=None,
                 ):
                     with patch(

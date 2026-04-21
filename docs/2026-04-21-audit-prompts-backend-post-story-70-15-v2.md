@@ -1,7 +1,7 @@
-# Audit backend génération de prompts LLM (post-story 70-15, AC18-AC40)
+# Audit backend génération de prompts LLM (post-story 70-15, AC18-AC52)
 
 Date: 2026-04-21  
-Dernière passe de review : 2026-04-21 (post-implémentation AC31-AC40)  
+Dernière passe de review : 2026-04-21 (post-implémentation AC41-AC52)  
 Périmètre : backend, flux runtime prompting/persona/configuration/gateway, consommateurs métier.
 
 ## Source de vérité canonique (état visé)
@@ -70,10 +70,19 @@ Périmètre : backend, flux runtime prompting/persona/configuration/gateway, con
 - Aucun import nominal vers `app.llm_orchestration.services.persona_composer`.
 - Les dépendances vers `legacy_prompt_runtime` restent bornées à `app.domain.llm.legacy.bridge`.
 
+## Validation de la passe AC41-AC52
+
+- AC41/AC44/AC45 confirmés : inventaire et classement des wrappers historiques alignés dans `backend/app/ops/llm/TRANSITION_WRAPPERS.md` ("supprimer maintenant" vs "conserver temporairement").
+- AC42 confirmé (delta nominal) : les points d’entrée canoniques runtime/configuration migrés vers des imports `app.domain.llm.*` directs pour `composition`, `validation`, `fallback`, `assemblies`, `execution_profiles`, et imports internes `gateway`/`assembly_admin_service`.
+- AC43/AC46/AC47 : aucune nouvelle dépendance tests/patches au renderer historique ; les migrations antérieures restent effectives. Les reliquats de tests historiques hors renderer sont explicitement traités comme dette bornée.
+- AC48 confirmé (partiel ciblé) : les modules canoniques touchés n’utilisent plus les wrappers historiques simples quand un module canonique existe ; les outils restant en historique sont maintenus avec justification de compatibilité.
+- AC49/AC50 confirmés : documentation de transition nettoyée et cohérente ; état résiduel `llm_orchestration` explicite, sans ambiguïté sur la référence canonique.
+- AC52 confirmé : la phase "wrappers namespace historiques" est clôturée comme stratégie diffuse ; les reliquats restants sont listés comme dette isolée et datée.
+
 ## Points de vigilance restants
 
 - Le registre `backend/app/ops/llm/TRANSITION_WRAPPERS.md` doit rester synchronisé à chaque suppression de shim.
-- Prochaine cible prioritaire : réduction des derniers wrappers historiques hors renderer (gateway/services namespace).
+- Reliquats assumés : wrappers `gateway/services` historiques encore nécessaires à la compatibilité tests/outils, à réduire par lots dédiés.
 
 ## Conclusion
 

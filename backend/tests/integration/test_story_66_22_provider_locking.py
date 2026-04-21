@@ -127,11 +127,11 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
 
     with (
         patch(
-            "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
+            "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
             return_value=mock_profile,
         ),
         patch(
-            "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
+            "app.domain.llm.configuration.assembly_registry.AssemblyRegistry.get_active_config_sync",
             return_value=mock_assembly_db,
         ),
         patch("app.domain.llm.runtime.gateway.resolve_assembly", return_value=mock_resolved),
@@ -243,11 +243,11 @@ async def test_gateway_nominal_path_accepts_openai():
 
     with (
         patch(
-            "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
+            "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
             return_value=mock_profile,
         ),
         patch(
-            "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
+            "app.domain.llm.configuration.assembly_registry.AssemblyRegistry.get_active_config_sync",
             return_value=mock_assembly_db,
         ),
         patch("app.domain.llm.runtime.gateway.resolve_assembly", return_value=mock_resolved),
@@ -313,11 +313,11 @@ async def test_gateway_non_nominal_accepts_fallback_and_logs():
 
     with (
         patch(
-            "app.llm_orchestration.services.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
+            "app.domain.llm.configuration.execution_profile_registry.ExecutionProfileRegistry.get_active_profile",
             return_value=mock_profile,
         ),
         patch(
-            "app.llm_orchestration.services.assembly_registry.AssemblyRegistry.get_active_config_sync",
+            "app.domain.llm.configuration.assembly_registry.AssemblyRegistry.get_active_config_sync",
             return_value=MagicMock(
                 id=uuid.uuid4(),
                 interaction_mode="chat",
@@ -335,7 +335,7 @@ async def test_gateway_non_nominal_accepts_fallback_and_logs():
         patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
-        patch("app.llm_orchestration.services.fallback_governance.increment_counter") as mock_inc,
+        patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_inc,
     ):
         plan, _ = await gateway._resolve_plan(request, db=MagicMock())
         assert plan.provider == "openai"  # Fallback explicit to supported provider

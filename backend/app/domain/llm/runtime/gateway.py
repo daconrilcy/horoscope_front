@@ -10,6 +10,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
+from app.domain.llm.configuration.assembly_resolver import (
+    assemble_developer_prompt,
+    resolve_assembly,
+)
+from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.domain.llm.legacy.bridge import (
     DEPRECATED_USE_CASE_MAPPING,
@@ -20,6 +26,10 @@ from app.domain.llm.legacy.bridge import (
 )
 from app.domain.llm.prompting.personas import compose_persona_block
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+from app.domain.llm.runtime.context_quality_injector import ContextQualityInjector
+from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
+from app.domain.llm.runtime.output_validator import ValidationResult, validate_output
+from app.domain.llm.runtime.provider_parameter_mapper import ProviderParameterMapper
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
@@ -55,18 +65,8 @@ from app.llm_orchestration.models import (
     is_reasoning_model,
 )
 from app.llm_orchestration.policies.hard_policy import get_hard_policy
-from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
-from app.llm_orchestration.services.assembly_resolver import (
-    assemble_developer_prompt,
-    resolve_assembly,
-)
-from app.llm_orchestration.services.context_quality_injector import ContextQualityInjector
-from app.llm_orchestration.services.execution_profile_registry import ExecutionProfileRegistry
-from app.llm_orchestration.services.fallback_governance import FallbackGovernanceRegistry
 from app.llm_orchestration.services.input_validator import validate_input
 from app.llm_orchestration.services.observability_service import log_call, log_governance_event
-from app.llm_orchestration.services.output_validator import ValidationResult, validate_output
-from app.llm_orchestration.services.provider_parameter_mapper import ProviderParameterMapper
 from app.llm_orchestration.services.repair_prompter import build_repair_prompt
 from app.prompts.common_context import CommonContextBuilder, QualifiedContext
 

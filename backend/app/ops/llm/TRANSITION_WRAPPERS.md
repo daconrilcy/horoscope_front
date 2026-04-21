@@ -8,7 +8,14 @@ Ce registre suit les wrappers de compatibilite introduces pendant la convergence
 - Toute nouvelle evolution doit cibler le chemin canonique, pas le wrapper.
 - Chaque wrapper doit avoir un **critere de sortie** clair.
 
-## Wrappers actifs (liste residuelle bornee)
+## Inventaire exhaustif des wrappers historiques restants (AC41)
+
+Classification:
+
+- **A supprimer maintenant**: wrappers sans utilite nominale actuelle (deja supprimes dans cette story ou remplaces par import canonique direct).
+- **A conserver temporairement (justifie)**: compatibilite transitoire pour tests legacy, scripts ou surfaces admin non encore absorbees.
+
+## Wrappers actifs (liste residuelle bornee et justifiee)
 
 | Wrapper transitoire | Cible canonique | Raison | Critere de sortie |
 | --- | --- | --- | --- |
@@ -30,6 +37,25 @@ Ce registre suit les wrappers de compatibilite introduces pendant la convergence
 
 - `backend/app/llm_orchestration/services/prompt_renderer.py` a ete **supprime**.
 - Le renderer canonique unique est `app.domain.llm.prompting.prompt_renderer`.
+- Les points d entree canoniques `app.domain.llm.runtime.composition`, `app.domain.llm.runtime.validation`, `app.domain.llm.runtime.fallback`, `app.domain.llm.configuration.assemblies`, `app.domain.llm.configuration.execution_profiles` n importent plus les wrappers `app.llm_orchestration.services.*` equivalents.
+
+## Classement wrappers "a supprimer maintenant" vs "a conserver"
+
+### A supprimer maintenant (statut: traite)
+
+- `backend/app/llm_orchestration/services/prompt_renderer.py` (supprime)
+- wrappers de passage via modules canoniques remplaces par imports directs vers `app.domain.llm.*` (plus d alias intermediaire dans les points d entree canoniques cites ci-dessus)
+
+### A conserver temporairement (statut: dette explicite)
+
+- `backend/app/llm_orchestration/gateway.py` (compat tests/patches)
+- `backend/app/llm_orchestration/prompt_version_lookup.py`
+- `backend/app/llm_orchestration/providers/provider_runtime_manager.py`
+- `backend/app/llm_orchestration/prompt_governance_registry.py`
+- `backend/app/llm_orchestration/legacy_residual_registry.py`
+- `backend/app/llm_orchestration/services/*` listés section active (hors renderer supprime)
+- wrappers scripts `backend/scripts/build_llm_*` pour compat CI/outils
+- wrappers namespace API admin `backend/app/api/v1/routers/admin/llm/*.py`
 
 ### Shims `llm_orchestration/services` et provider (post 70-15)
 

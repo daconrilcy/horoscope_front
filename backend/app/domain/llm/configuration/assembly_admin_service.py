@@ -8,16 +8,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
+from app.domain.llm.configuration.assembly_resolver import (
+    build_assembly_preview,
+    validate_placeholders,
+)
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.llm_orchestration.admin_models import (
     PromptAssemblyConfig,
     PromptAssemblyPreview,
-)
-from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
-from app.llm_orchestration.services.assembly_resolver import (
-    build_assembly_preview,
-    validate_placeholders,
 )
 from app.llm_orchestration.services.observability_service import log_governance_event
 

@@ -127,7 +127,7 @@ async def test_prompt_resolution_matrix(
         db.commit()
 
         # Story 66.24: Invalidate cache to avoid using stale data from previous iteration
-        from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+        from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 
         AssemblyRegistry(db).invalidate_cache()
 

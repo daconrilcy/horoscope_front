@@ -121,12 +121,12 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
                 ):
                     # CRITICAL: Ensure profile resolution returns None
                     with patch(
-                        "app.llm_orchestration.services.execution_profile_registry."
+                        "app.domain.llm.configuration.execution_profile_registry."
                         "ExecutionProfileRegistry.get_profile_by_id",
                         return_value=None,
                     ):
                         with patch(
-                            "app.llm_orchestration.services.execution_profile_registry."
+                            "app.domain.llm.configuration.execution_profile_registry."
                             "ExecutionProfileRegistry.get_active_profile",
                             return_value=None,
                         ):
@@ -264,7 +264,7 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
                     return_value="test prompt",
                 ):
                     with patch(
-                        "app.llm_orchestration.services.execution_profile_registry."
+                        "app.domain.llm.configuration.execution_profile_registry."
                         "ExecutionProfileRegistry.get_active_profile",
                         return_value=mock_profile,
                     ):
@@ -341,7 +341,7 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
                     return_value="test prompt",
                 ):
                     with patch(
-                        "app.llm_orchestration.services.execution_profile_registry."
+                        "app.domain.llm.configuration.execution_profile_registry."
                         "ExecutionProfileRegistry.get_active_profile",
                         return_value=mock_profile,
                     ):
@@ -405,7 +405,7 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
             return_value=mock_config,
         ):
             with patch(
-                "app.llm_orchestration.services.execution_profile_registry."
+                "app.domain.llm.configuration.execution_profile_registry."
                 "ExecutionProfileRegistry.get_active_profile",
                 return_value=None,
             ):

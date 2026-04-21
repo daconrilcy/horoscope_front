@@ -12,7 +12,7 @@ from app.infra.db.models.llm_prompt import (
 )
 from app.llm_orchestration.gateway import LLMGateway
 from app.llm_orchestration.models import ExecutionUserInput, LLMExecutionRequest
-from app.llm_orchestration.services.assembly_registry import AssemblyRegistry
+from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 
 
 @pytest.mark.evaluation

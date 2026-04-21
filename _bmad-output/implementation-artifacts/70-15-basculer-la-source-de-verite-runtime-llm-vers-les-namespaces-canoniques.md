@@ -102,6 +102,18 @@ A l issue de cette story :
 38. **AC38 - Validation complete post-suppression du renderer historique** : `ruff format`, `ruff check`, `pytest -q` et les suites critiques guidance/chat/natal/daily + admin/release/readiness/doc conformity restent verts sans reintroduire le chemin historique.
 39. **AC39 - Mise a jour de l audit backend post-suppression** : l audit backend n identifie plus `llm_orchestration/services/prompt_renderer.py` comme reliquat actif ; `app.domain.llm.prompting.prompt_renderer` est la source unique ; reliquats restants reevalues.
 40. **AC40 - Cloture explicite de la phase renderer migration** : completion notes/changelog story actent la fin de migration renderer et suppriment le point d attention "prochaine cible: prompt_renderer shim".
+41. **AC41 - Inventaire exhaustif des wrappers namespace historiques restants** : tous les wrappers historiques restants sous `backend/app/llm_orchestration/*` et chemins associes sont recenses avec chemin, symboles exportes, consommateurs restants et type d usage (nominal/admin/test/patch/compat interne) ; `backend/app/ops/llm/TRANSITION_WRAPPERS.md` est aligne et aucun wrapper existant n est omis.
+42. **AC42 - Suppression de toute dependance nominale aux namespaces historiques** : aucun import nominal dans `backend/app` ne pointe vers `app.llm_orchestration.*` lorsqu un equivalent canonique existe ; les reliquats sont supprimes ou reroutes vers `app.application.llm.*`, `app.domain.llm.*`, `app.infrastructure.*`, `app.ops.llm.*` ; un scan d imports `backend/app` est produit.
+43. **AC43 - Decommission des wrappers historiques utilises uniquement par les tests** : les tests/conftests/fixtures/monkeypatches/mocks visant `app.llm_orchestration.*` sont migres vers les chemins canoniques ; les tests de compat obsolete sans valeur metier sont supprimes ; aucun test vert ne depend d un shim historique.
+44. **AC44 - Suppression des wrappers historiques sans usage utile** : chaque wrapper historique est classe "a conserver temporairement avec justification" ou "a supprimer maintenant" ; ceux classes "a supprimer maintenant" sont effectivement retires sans creation de nouveaux alias de convenance.
+45. **AC45 - Reduction du namespace `llm_orchestration` a zero wrapper ou noyau assume** : le namespace historique est soit vide de wrappers, soit reduit a un noyau tres borne, explicitement assume et documente dans l audit et `TRANSITION_WRAPPERS.md`.
+46. **AC46 - Suppression ou realignement des tests legacy sans valeur** : les tests ne validant que des anciens imports obsoletes sont supprimes ou reecrits sur la reference canonique ; la couverture utile metier/integration est preservee ou amelioree.
+47. **AC47 - Nettoyage des monkeypatches et cibles de patch historiques** : les cibles `patch()/mock.patch()/monkeypatch` sont alignees sur les symboles canoniques effectivement invoques par le runtime ; aucune suite ne reste dependante d une reference historique indirecte.
+48. **AC48 - Mise a jour des validateurs internes et outils de conformite** : les validateurs et scripts readiness/release/audit utilisent les modules canoniques quand ils existent ; toute dependance historique restante est justifiee explicitement.
+49. **AC49 - Nettoyage documentaire complet de la transition** : `TRANSITION_WRAPPERS.md`, l audit backend et la story distinguent clairement ce qui est canonique, encore tolere, et supprime ; les wrappers effectivement retires sont purges de la documentation active.
+50. **AC50 - Preuve de proprete finale (imports + arborescence)** : un scan d imports `backend/app` et des tests prouve l absence d usage des chemins legacy supprimes ; l arborescence residuelle `llm_orchestration/` est coherente avec le statut final ; doublons/aliases morts/wrappers vides sont supprimes.
+51. **AC51 - Validation complete obligatoire apres decommission** : `ruff format`, `ruff check`, `pytest -q` et les suites critiques (guidance/chat/natal/daily, admin LLM, release/readiness, doc conformity, propagation) passent sans recreer de wrapper historique.
+52. **AC52 - Cloture explicite de la phase namespace historique** : la completion note et le changelog actent la fin de la strategie de wrappers namespace historiques (ou le reliquat final assume) ; la reference officielle unique code/doc devient le namespace canonique.
 
 ## Tasks / Subtasks
 
@@ -200,6 +212,23 @@ A l issue de cette story :
   - [x] Mettre a jour l audit `docs/2026-04-21-audit-prompts-backend-post-story-70-15-v2.md` en etat post-suppression.
   - [x] Produire la preuve de scan d imports backend/app et revalider la suite quality gates.
 
+- [x] Task 16: Inventorier, classifier et decommissionner les wrappers namespace historiques (AC41, AC44, AC45, AC49, AC50, AC52)
+  - [x] Produire un inventaire exhaustif des wrappers historiques restants avec symboles, consommateurs et type d usage.
+  - [x] Classer chaque wrapper "a conserver temporairement" vs "a supprimer maintenant" avec justification.
+  - [x] Supprimer les wrappers sans usage utile immediate et retirer les aliases morts associes.
+  - [x] Mettre a jour `TRANSITION_WRAPPERS.md` et l audit backend en etat post-decommission.
+
+- [x] Task 17: Supprimer les dependances nominales et de test evitables vers `app.llm_orchestration.*` (AC42, AC43, AC46, AC47, AC48, AC50)
+  - [x] Migrer les imports nominaux canoniques encore relies a des wrappers historiques simples.
+  - [x] Realigner monkeypatches/patches vers les symboles canoniques effectivement invoques.
+  - [x] Mettre a jour les validateurs/outils internes vers les chemins canoniques quand equivalence disponible.
+  - [x] Produire les scans de preuve `backend/app` et `backend/tests`.
+
+- [x] Task 18: Revalidation complete post-decommission namespace historique (AC51)
+  - [x] Executer `ruff format`, `ruff check`, `pytest -q` apres suppression/migration.
+  - [x] Verifier les suites critiques guidance/chat/natal/daily, admin/release/readiness/doc conformity/propagation.
+  - [x] Confirmer qu aucun correctif n a reintroduit de wrapper historique.
+
 ## Dev Notes
 
 ### Positionnement par rapport a 70-14
@@ -272,6 +301,10 @@ gpt-5
 - Correctif cible post-bascule : les 3 tests `test_story_66_27_integrated_propagation.py` patchent desormais `app.prompts.common_context.CommonContextBuilder.build` (reference runtime effective) pour restaurer la propagation attendue de `obs.context_quality` sans revenir sur les imports canoniques.
 - AC32-AC37 : migration complete des imports/tests historiques `app.llm_orchestration.services.prompt_renderer` vers `app.domain.llm.prompting.prompt_renderer`, puis suppression effective du shim `backend/app/llm_orchestration/services/prompt_renderer.py`.
 - AC34-AC35-AC39-AC40 : registre wrappers et audit post-story realignes; la phase de migration renderer est explicitement close.
+- AC41-AC45 : inventaire exhaustif et classement explicite des wrappers historiques restants dans `TRANSITION_WRAPPERS.md` (supprimer maintenant vs conserver temporairement).
+- AC42 : migration des imports nominaux canoniques restants (runtime/configuration) vers `app.domain.llm.*` lorsqu un equivalent canonique existe.
+- AC48-AC50 : validateurs/outils canoniques touches realignes pour eviter les wrappers historiques simples ; preuves de scan/imports et etat residuel namespace clarifies dans l audit.
+- AC51-AC52 : passe de validation post-decommission executee et cloture explicite de la phase "namespace historique" comme strategie diffuse ; reliquats limites a une dette isolee documentee.
 
 ### File List
 
@@ -331,3 +364,4 @@ gpt-5
 - 2026-04-21 : ajout AC17 et implementation — renderer canonique `app.domain.llm.prompting.prompt_renderer` promu source primaire, imports nominaux reroutes, `app.llm_orchestration.services.prompt_renderer` reduit a un shim minimal.
 - 2026-04-21 : ajout AC31 et execution de la passe suppression immediate — suppression de `domain/llm/prompting/renderer.py`, `services/ai_engine_adapter.py`, `llm_orchestration/services/persona_composer.py`, migration des imports restants vers les chemins canoniques et revalidation complete.
 - 2026-04-21 : ajout AC32-AC40 et cloture renderer migration — suppression de `llm_orchestration/services/prompt_renderer.py`, migration complete des imports/tests vers `app.domain.llm.prompting.prompt_renderer`, realignement registre wrappers + audit post-story.
+- 2026-04-21 : ajout AC41-AC52 et passe decommission namespace historique — inventaire exhaustif des wrappers restants, migration des imports nominaux canoniques evitables vers `app.domain.llm.*`, realignement complet `TRANSITION_WRAPPERS.md` + audit post-decommission.
