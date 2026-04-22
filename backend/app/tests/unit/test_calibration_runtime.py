@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from tempfile import mkdtemp
 
 import pytest
 from sqlalchemy import create_engine
@@ -9,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
 from app.jobs.calibration.runtime import resolve_calibration_runtime, resolve_project_root
-from app.tests.regression.helpers import create_session
+from app.tests.regression.helpers import cleanup_session, create_session, make_workspace_temp_dir
 
 
 @pytest.fixture
@@ -18,8 +17,7 @@ def db_session():
     try:
         yield session
     finally:
-        if "engine" in session.info:
-            session.info["engine"].dispose()
+        cleanup_session(session)
 
 
 def test_runtime_raises_on_reference_ruleset_mismatch(db_session: Session):
@@ -52,7 +50,7 @@ def test_runtime_raises_actionable_error_when_reference_missing(db_session: Sess
 
 
 def test_runtime_raises_actionable_error_when_ruleset_missing():
-    temp_dir = Path(mkdtemp(prefix="prediction-runtime-"))
+    temp_dir = make_workspace_temp_dir("prediction-runtime")
     db_path = temp_dir / "runtime.db"
     engine = create_engine(f"sqlite:///{db_path.as_posix()}")
     Base.metadata.create_all(bind=engine)

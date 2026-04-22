@@ -63,7 +63,7 @@ async def test_observability_snapshot_canonical_assembly(gateway):
         developer_prompt="Prompt",
     )
 
-    with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
+    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan") as mock_resolve:
             from app.domain.llm.runtime.contracts import ResolvedExecutionPlan
 
@@ -145,7 +145,7 @@ async def test_observability_snapshot_non_nominal_provider(gateway):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
+    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)
@@ -205,7 +205,7 @@ async def test_observability_snapshot_context_compensation_injected(gateway):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
+    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)
@@ -265,7 +265,7 @@ async def test_observability_snapshot_template_handled(gateway):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
+    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)
@@ -324,7 +324,7 @@ async def test_observability_snapshot_legacy_path_length_budget(gateway):
         meta=GatewayMeta(latency_ms=100, model="gpt-4o"),
     )
 
-    with patch.object(LLMGateway, "_resolve_legacy_compat_config", return_value=mock_config):
+    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
         with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
             with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
                 result = await gateway.execute_request(request)

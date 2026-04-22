@@ -26,9 +26,9 @@ from app.domain.llm.governance.feature_taxonomy import (
 )
 from app.domain.llm.prompting.catalog import (
     DEPRECATED_USE_CASE_MAPPING,
-    build_legacy_compat_use_case_config,
-    get_legacy_output_schema,
-    get_legacy_prompt_runtime_entry,
+    build_fallback_use_case_config,
+    get_output_schema,
+    get_prompt_runtime_entry,
     resolve_model,
 )
 from app.domain.llm.prompting.context import CommonContextBuilder, QualifiedContext
@@ -200,10 +200,10 @@ class LLMGateway:
         messages.append({"role": "user", "content": user_payload})
         return messages
 
-    async def _resolve_legacy_compat_config(
+    async def _resolve_fallback_use_case_config(
         self, db: Optional[Session], use_case: str, context: Dict[str, Any]
     ) -> UseCaseConfig:
-        """Resolve config for bounded legacy-only compatibility paths."""
+        """Resolve config for bounded fallback paths outside the nominal assembly flow."""
         config = None
         if db:
             try:
@@ -302,10 +302,10 @@ class LLMGateway:
                 )
 
         if not config:
-            config = build_legacy_compat_use_case_config(use_case)
+            config = build_fallback_use_case_config(use_case)
             if db and config:
                 # Still merge DB use-case config even when the prompt contract comes
-                # from the bounded legacy compatibility layer.
+                # from the bounded fallback registry.
                 use_case_stmt = select(LlmUseCaseConfigModel).where(
                     LlmUseCaseConfigModel.key == use_case
                 )
@@ -327,7 +327,7 @@ class LLMGateway:
                             context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
                 except Exception as e:
                     logger.error("gateway_db_use_case_merge_failed error=%s", str(e))
-            logger.warning("gateway_legacy_compat_config_used use_case=%s", use_case)
+            logger.warning("gateway_fallback_config_used use_case=%s", use_case)
 
         if not config:
             raise UnknownUseCaseError(f"Use case '{use_case}' not found in registry.")
@@ -473,11 +473,11 @@ class LLMGateway:
                 logger.error("gateway_invalid_schema_id schema_id=%s", config.output_schema_id)
 
         if not schema_dict and use_case not in PAID_USE_CASES:
-            legacy_schema = get_legacy_output_schema(use_case)
-            legacy_entry = get_legacy_prompt_runtime_entry(use_case)
-            if legacy_schema and legacy_entry:
-                schema_dict = legacy_schema
-                schema_name = re.sub(r"[^a-z0-9_-]", "_", str(legacy_entry["name"]).lower())
+            fallback_schema = get_output_schema(use_case)
+            fallback_entry = get_prompt_runtime_entry(use_case)
+            if fallback_schema and fallback_entry:
+                schema_dict = fallback_schema
+                schema_name = re.sub(r"[^a-z0-9_-]", "_", str(fallback_entry["name"]).lower())
 
         is_stub = config.prompt_version_id == "hardcoded-v1"
         is_prod = getattr(settings, "app_env", "development") in {"production", "prod"}
@@ -837,7 +837,7 @@ class LLMGateway:
 
                 if db:
                     try:
-                        config = await self._resolve_legacy_compat_config(
+                        config = await self._resolve_fallback_use_case_config(
                             db, use_case, context_dict
                         )
                         if config.prompt_version_id == "hardcoded-v1":
@@ -846,12 +846,14 @@ class LLMGateway:
                         source_base = "stub"
 
                 if not config:
-                    config = await self._resolve_legacy_compat_config(db, use_case, context_dict)
+                    config = await self._resolve_fallback_use_case_config(
+                        db, use_case, context_dict
+                    )
                     source_base = "stub"
 
                 FallbackGovernanceRegistry.track_fallback(
                     FallbackType.USE_CASE_FIRST,
-                    call_site=f"legacy_compat_config:{use_case}",
+                    call_site=f"fallback_config:{use_case}",
                     feature=request.user_input.feature,
                     is_nominal=bool(request.user_input.feature)
                     and not is_legacy_compatibility
@@ -1133,7 +1135,7 @@ class LLMGateway:
         # Final Stage 1 resolution
 
         model_source = source_base
-        entry = get_legacy_prompt_runtime_entry(use_case)
+        entry = get_prompt_runtime_entry(use_case)
         if entry and os.environ.get(str(entry["engine_env_key"])):
             model_source = "os_granular"
         else:
@@ -1474,7 +1476,7 @@ class LLMGateway:
             context_dict = request.context.model_dump()
             extra = context_dict.pop("extra_context", {})
             context_dict.update(extra)
-            config = await self._resolve_legacy_compat_config(db, use_case, context_dict)
+            config = await self._resolve_fallback_use_case_config(db, use_case, context_dict)
 
             if config.fallback_use_case:
                 logger.warning(
@@ -1872,7 +1874,7 @@ class LLMGateway:
             # Supported canonical families must be validated from the resolved plan instead of a
             # legacy use-case config resolved before assembly/profile lookup.
             if not is_supported_feature(request.user_input.feature):
-                config = await self._resolve_legacy_compat_config(db, use_case, context_dict)
+                config = await self._resolve_fallback_use_case_config(db, use_case, context_dict)
                 self._validate_input(config, user_input_dict, request.context)
 
             # Stage 1: Resolve Plan (Now includes QualifiedContext)

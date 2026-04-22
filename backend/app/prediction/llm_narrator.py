@@ -10,7 +10,7 @@ from typing import Any
 
 import openai
 
-from app.domain.llm.prompting.catalog import get_legacy_max_tokens, resolve_model
+from app.domain.llm.prompting.catalog import get_max_tokens, resolve_model
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class LLMNarrator:
 
     TIMEOUT_SECONDS = 60.0
     # Story 66.28: daily_prediction is absorbed into horoscope_daily
-    DEFAULT_MAX_COMPLETION_TOKENS = get_legacy_max_tokens("horoscope_daily") or 3000
+    DEFAULT_MAX_COMPLETION_TOKENS = get_max_tokens("horoscope_daily") or 3000
     MIN_DAILY_SYNTHESIS_SENTENCES = 10
     MIN_DAILY_SYNTHESIS_SENTENCES_FREE = 7
     MAX_NARRATION_ATTEMPTS = 2
@@ -85,7 +85,7 @@ class LLMNarrator:
 
             model = resolve_model(use_case)
             max_completion_tokens = (
-                get_legacy_max_tokens(use_case, default_use_case="horoscope_daily")
+                get_max_tokens(use_case, default_use_case="horoscope_daily")
                 or self.DEFAULT_MAX_COMPLETION_TOKENS
             )
             min_daily_synthesis_sentences = self._get_min_daily_synthesis_sentences(variant_code)

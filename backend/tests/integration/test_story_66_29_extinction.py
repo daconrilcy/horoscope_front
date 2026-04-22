@@ -46,7 +46,7 @@ async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
     # Story 70.13: once normalized to a supported family, Stage 0.5 must no longer
     # resolve a legacy use-case config before canonical assembly/profile resolution.
     with patch.object(
-        gateway, "_resolve_legacy_compat_config", new=AsyncMock(return_value=stage05)
+        gateway, "_resolve_fallback_use_case_config", new=AsyncMock(return_value=stage05)
     ) as mock_resolve_config:
         # We fail assembly resolution to stop the pipeline after Stage 1
         with patch(registry_path, return_value=None):
@@ -133,7 +133,7 @@ async def test_story_66_29_recovery_blocks_legacy_fallback_for_supported(gateway
     # Repair : execute_request imbriqué ; on l’interrompt pour tester le refus de fallback legacy.
     with patch.object(gateway, "execute_request", side_effect=abort_nested_repair):
         with patch.object(
-            gateway, "_resolve_legacy_compat_config", new=AsyncMock()
+            gateway, "_resolve_fallback_use_case_config", new=AsyncMock()
         ) as mock_resolve_config:
             with pytest.raises(OutputValidationError) as exc:
                 await gateway._handle_repair_or_fallback(
@@ -164,7 +164,7 @@ async def test_story_66_29_other_features_still_allow_prevalidation_and_fallback
 
     # Stage 0.5 should call the bounded legacy compatibility resolver.
     with patch.object(
-        gateway, "_resolve_legacy_compat_config", return_value=mock_config
+        gateway, "_resolve_fallback_use_case_config", return_value=mock_config
     ) as mock_resolve:
         # We simulate a failure in _resolve_plan to stop execution after Stage 0.5
         with patch.object(gateway, "_resolve_plan", side_effect=ValueError("stop here")):

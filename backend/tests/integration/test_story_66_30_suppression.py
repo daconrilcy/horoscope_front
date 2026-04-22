@@ -162,7 +162,7 @@ async def test_story_70_13_supported_perimeter_bypasses_stage_0_5_legacy_config(
     )
 
     with patch.object(
-        gateway, "_resolve_legacy_compat_config", new=AsyncMock()
+        gateway, "_resolve_fallback_use_case_config", new=AsyncMock()
     ) as mock_resolve_config:
         with patch.object(
             gateway,
@@ -406,7 +406,7 @@ async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
 
         with patch.object(
             gateway,
-            "_resolve_legacy_compat_config",
+            "_resolve_fallback_use_case_config",
             new_callable=AsyncMock,
             return_value=mock_config,
         ):

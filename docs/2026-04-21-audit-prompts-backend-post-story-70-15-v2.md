@@ -1,7 +1,7 @@
 # Audit backend génération de prompts LLM (post-story 70-15, AC18-AC52)
 
 Date: 2026-04-21  
-Dernière passe de review : 2026-04-21 (clôture AC54–AC55, AC63–AC65, AC68 : suppression physique `backend/app/llm_orchestration/`, retrait `TRANSITION_WRAPPERS.md`, tests déplacés sous `backend/tests/llm_orchestration/`, logger gateway `app.domain.llm.runtime.gateway`)  
+Dernière passe de review : 2026-04-21 (clôture AC54–AC55, AC63–AC70 : suppression physique `backend/app/llm_orchestration/`, retrait `TRANSITION_WRAPPERS.md`, extinction `legacy_prompt_runtime.py`, tests déplacés sous `backend/tests/llm_orchestration/`, logger gateway `app.domain.llm.runtime.gateway`)  
 Périmètre : backend, flux runtime prompting/persona/configuration/gateway, consommateurs métier.
 
 ## Source de vérité canonique (état visé)
@@ -10,7 +10,7 @@ Périmètre : backend, flux runtime prompting/persona/configuration/gateway, con
 - Runtime gateway : `app.domain.llm.runtime.gateway`
 - Prompt renderer officiel : `app.domain.llm.prompting.prompt_renderer`
 - Persona composer officiel : `app.domain.llm.prompting.personas`
-- Données runtime legacy : `app.domain.llm.prompting.catalog` / `legacy_prompt_runtime` (bridge `domain.llm.legacy` supprimé, AC57)
+- Données runtime et fallback borné : `app.domain.llm.prompting.catalog` (bridge `domain.llm.legacy` et `legacy_prompt_runtime.py` supprimés, AC57/AC68)
 
 ## Preuve d’adoption canonique (scan imports)
 
@@ -23,7 +23,7 @@ Périmètre : backend, flux runtime prompting/persona/configuration/gateway, con
   - usage nominal: **0**
   - statut : **supprimé**
 - `app.llm_orchestration.legacy_prompt_runtime`
-  - usage nominal direct: **0** (passage par `domain.llm.prompting.catalog` / `legacy_prompt_runtime`)
+  - usage nominal direct: **0** (contenu absorbé par `domain.llm.prompting.catalog`)
 
 ### Imports canoniques vérifiés
 
@@ -39,7 +39,7 @@ Périmètre : backend, flux runtime prompting/persona/configuration/gateway, con
 
 ## Reliquats de compatibilité tolérés (état courant)
 
-**Aucun** — conformément à **AC68** : le dossier `backend/app/llm_orchestration/` a été supprimé ; il ne subsiste aucun shim runtime sous ce namespace ; les suites LLM vivent sous `backend/tests/llm_orchestration/` avec imports canoniques uniquement. Les seules occurrences textuelles de `app.llm_orchestration` dans le périmètre tests sont des **littéraux de garde-fou** (`test_story_70_14_transition_guards.py`, préfixes interdits), pas des imports exécutables.
+**Aucun reliquat actif** : le dossier `backend/app/llm_orchestration/` a été supprimé ; `backend/app/domain/llm/prompting/legacy_prompt_runtime.py` n’existe plus ; les suites LLM vivent sous `backend/tests/llm_orchestration/` avec imports canoniques uniquement. Les seules occurrences textuelles de `app.llm_orchestration` ou `legacy_prompt_runtime` dans le périmètre tests sont des **littéraux de garde-fou** (`test_story_70_14_transition_guards.py`, préfixes interdits), pas des imports exécutables.
 
 ## Safe to delete next (AC30) — statut post AC31-AC40
 
@@ -63,7 +63,7 @@ Périmètre : backend, flux runtime prompting/persona/configuration/gateway, con
 - Import canonique confirmé : `app.domain.llm.prompting.prompt_renderer` est la référence runtime/config/admin.
 - Aucun import nominal vers `app.services.ai_engine_adapter`.
 - Aucun import nominal vers `app.llm_orchestration.services.persona_composer`.
-- Les dépendances vers les données `legacy_prompt_runtime` passent par `domain.llm.prompting.catalog` / `legacy_prompt_runtime` (plus de `domain.llm.legacy.bridge`).
+- Les dépendances vers les données runtime/fallback passent par `domain.llm.prompting.catalog` (plus de `domain.llm.legacy.bridge`, plus de `legacy_prompt_runtime.py`).
 
 ## Validation de la passe AC41-AC52
 
@@ -122,10 +122,10 @@ Le dossier **`backend/app/prompts/` a été supprimé** : plus de shims `catalog
 - Mise à jour passe AC53-AC70 (lot runtime contracts étape 7) : migration massive des tests et services de test de `app.llm_orchestration.models` vers `domain.llm.runtime.contracts` + reroutage `is_reasoning_model` dans `llm_orchestration/services/assembly_resolver`; reliquat côté `app/tests` réduit au seul `EvalReport`.
 - Mise à jour passe AC53-AC70 (lot runtime contracts étape 8) : migration complète des imports `app.llm_orchestration.models` dans `llm_orchestration/tests/*` vers `domain.llm.runtime.contracts`.
 - Mise à jour passe AC53-AC70 (lot runtime contracts étape 9) : ajout d alias de compatibilité runtime (`ReplayResult`, `Eval*`, `Performance*`, `GoldenRegression*`) puis reroutage des services legacy et seeds ; résultat net : plus aucun import direct `from app.llm_orchestration.models import ...` dans `backend/app` hors `domain.llm.runtime.contracts`.
-- Mise à jour passe AC53-AC70 (lot prompts étape 6) : suppression physique de `llm_orchestration/legacy_prompt_runtime.py` et migration du runtime data legacy vers `domain.llm.prompting.legacy_prompt_runtime` ; `domain.llm.prompting.catalog` reste le point d entrée nominal.
+- Mise à jour passe AC53-AC70 (lot prompts étape 6) : suppression physique de `llm_orchestration/legacy_prompt_runtime.py`, puis absorption du runtime data/fallback legacy dans `domain.llm.prompting.catalog` ; `domain.llm.prompting.catalog` devient le point d entrée canonique unique.
 - Mise à jour passe AC53-AC70 (lot runtime contracts étape 10) : `domain.llm.runtime.contracts` est désormais autonome (plus d import depuis `llm_orchestration.models`) et `llm_orchestration/models.py` devient un shim de compatibilité minimal.
 - Mise à jour passe AC53-AC70 (lot clôture étape 11) : derniers shims `llm_orchestration` retirés avant suppression du dossier ; tests legacy ajustés au comportement cible de rejet des use_case supprimés (`daily_prediction`, `chat`).
-- Mise à jour passe AC53-AC70 (lot validation backend étape 12 puis clôture AC54–AC68) : campagne `pytest` sur `backend/tests` incl. `tests/llm_orchestration` ; `STRUCTURAL_FILES` ne référence plus de chemins sous `app/llm_orchestration/`.
+- Mise à jour passe AC53-AC70 (lot validation backend étape 12 puis clôture AC67–AC70) : campagne complète backend exécutée dans le venv avec `ruff format .`, `ruff check .`, `pytest -q` ; résultat final `2964 passed, 12 skipped`. `STRUCTURAL_FILES` ne référence plus de chemins sous `app/llm_orchestration/`.
 
 ### Suivi opérationnel (post-suppression `app/prompts`)
 
@@ -147,5 +147,6 @@ Le dossier **`backend/app/prompts/` a été supprimé** : plus de shims `catalog
 
 - La source de vérité runtime reste alignée sur `app.application.llm.*` + `app.domain.llm.*` ; les opérations LLM release/eval/replay/golden/qualification sont ancrées sous **`app.ops.llm.*`**.
 - Le package **`app.prompts` a été retiré** ; toute évolution prompting nominale passe par `app.domain.llm.prompting.*`.
-- **AC54–AC55 / AC63–AC65 / AC64 / AC66–AC68** : plus de dossier `backend/app/llm_orchestration/` ; plus de registre `TRANSITION_WRAPPERS.md` ; scans `backend/app` sans import `app.llm_orchestration.*` ni `app.domain.llm.legacy.*` ; arborescence nominale lisible (`application` / `domain` / `infrastructure` / `ops`) ; cette section d’audit ne liste plus de reliquats actifs.
-- **AC67** : `pytest tests`, `pytest app/tests` et `pytest tests/llm_orchestration` verts sur la passe de clôture (2026-04-21).
+- **AC54–AC55 / AC63–AC65 / AC64 / AC66** : plus de dossier `backend/app/llm_orchestration/` ; plus de registre `TRANSITION_WRAPPERS.md` ; scans `backend/app` sans import `app.llm_orchestration.*` ni `app.domain.llm.legacy.*` ; arborescence nominale lisible (`application` / `domain` / `infrastructure` / `ops`).
+- **AC67** : validation complète tracée sur l’état final avec `ruff format .`, `ruff check .`, `pytest -q` verts (`2964 passed, 12 skipped`).
+- **AC68 / AC70** : migration backend LLM clôturée au sens strict ; plus aucun module ou point d’entrée transitoire actif n’est maintenu pour la compatibilité historique runtime.

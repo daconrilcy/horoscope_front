@@ -7,7 +7,7 @@ from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.prediction.persistence_service import PredictionPersistenceService
-from app.tests.regression.helpers import create_orchestrator, create_session
+from app.tests.regression.helpers import cleanup_session, create_orchestrator, create_session
 from app.tests.regression.test_engine_non_regression import build_engine_input, load_json
 
 
@@ -91,7 +91,4 @@ def test_engine_output_persists_without_manual_mapping() -> None:
         assert reused.was_reused is True
         assert reused.run.id == result.run.id
     finally:
-        session.close()
-        engine = session.info.get("engine")
-        if engine is not None:
-            engine.dispose()
+        cleanup_session(session)

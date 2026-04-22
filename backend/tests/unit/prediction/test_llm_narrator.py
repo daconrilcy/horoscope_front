@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.core.config import settings
-from app.domain.llm.prompting.catalog import get_legacy_max_tokens
+from app.domain.llm.prompting.catalog import get_max_tokens
 from app.domain.llm.prompting.context import PromptCommonContext
 from app.prediction.llm_narrator import LLMNarrator
 
@@ -66,7 +66,7 @@ async def test_narrate_success():
         }
         assert mock_client.chat.completions.create.await_args.kwargs[
             "max_completion_tokens"
-        ] == get_legacy_max_tokens("horoscope_daily")
+        ] == get_max_tokens("horoscope_daily")
 
 
 @pytest.mark.asyncio

@@ -16,15 +16,16 @@ from app.jobs.calibration.percentile_calculator import (
     compute_percentile,
     compute_percentiles,
 )
-from app.tests.regression.helpers import create_session
+from app.tests.regression.helpers import cleanup_session, create_session
 
 
 @pytest.fixture
 def db_session():
     session = create_session()
-    yield session
-    if "engine" in session.info:
-        session.info["engine"].dispose()
+    try:
+        yield session
+    finally:
+        cleanup_session(session)
 
 
 def test_compute_percentile_known_values():

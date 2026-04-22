@@ -111,7 +111,7 @@ async def test_governance_allows_transitory_fallback_on_permitted_perimeter(gate
         "app.domain.llm.configuration.assembly_registry.AssemblyRegistry.get_active_config_sync",
         return_value=None,
     ):
-        with patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config):
+        with patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config):
             # No mock on track_fallback here: we want to check it doesn't raise
             # because 'other_family' makes use_case_first TRANSITORY
             try:

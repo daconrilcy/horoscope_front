@@ -10,15 +10,16 @@ from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.schemas import EffectiveContext, EngineInput, EngineOutput
-from app.tests.regression.helpers import create_session
+from app.tests.regression.helpers import cleanup_session, create_session
 
 
 @pytest.fixture
 def db_session():
     session = create_session()
-    yield session
-    if "engine" in session.info:
-        session.info["engine"].dispose()
+    try:
+        yield session
+    finally:
+        cleanup_session(session)
 
 
 def test_calibration_label_in_db(db_session):

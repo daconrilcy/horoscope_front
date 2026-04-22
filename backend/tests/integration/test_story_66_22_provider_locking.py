@@ -139,7 +139,7 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
             "app.domain.llm.runtime.gateway.assemble_developer_prompt",
             return_value="Prompt",
         ),
-        patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config),
+        patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
@@ -255,7 +255,7 @@ async def test_gateway_nominal_path_accepts_openai():
             "app.domain.llm.runtime.gateway.assemble_developer_prompt",
             return_value="Prompt",
         ),
-        patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config),
+        patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
     ):
@@ -332,7 +332,7 @@ async def test_gateway_non_nominal_accepts_fallback_and_logs():
             "app.domain.llm.runtime.gateway.assemble_developer_prompt",
             return_value="Prompt",
         ),
-        patch.object(gateway, "_resolve_legacy_compat_config", return_value=mock_config),
+        patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
         patch.object(gateway, "_resolve_persona", return_value=(None, None, None)),
         patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_inc,

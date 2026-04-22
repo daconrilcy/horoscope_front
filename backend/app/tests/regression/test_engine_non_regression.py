@@ -8,6 +8,7 @@ from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import EngineInput
 from app.tests.regression.helpers import (
     assert_clamps,
+    cleanup_session,
     compute_ns_bounds,
     create_orchestrator,
     create_session,
@@ -48,7 +49,7 @@ def session():
     try:
         yield db_session
     finally:
-        db_session.close()
+        cleanup_session(db_session)
 
 
 @pytest.fixture(scope="module")

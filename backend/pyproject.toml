@@ -57,6 +57,7 @@ dev = [
 pythonpath = ["."]
 testpaths = ["app/tests", "app/ai_engine/tests", "tests/evaluation", "tests/integration"]
 asyncio_mode = "auto"
+addopts = "-p no:cacheprovider"
 filterwarnings = [
   "ignore:Skipped unsupported reflection of expression-based index ix_llm_assembly_config_active_unique:sqlalchemy.exc.SAWarning",
 ]
@@ -69,6 +70,7 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py313"
+extend-exclude = [".tmp-pytest", ".pytest_cache"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]

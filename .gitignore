@@ -33,3 +33,9 @@ frontend/.env
 
 # Cross-tool drift reports
 artifacts/cross-tool/
+
+# Local pytest temp artifacts
+.pytest_cache/
+.tmp-pytest/
+backend/.pytest_cache/
+backend/.tmp-pytest/

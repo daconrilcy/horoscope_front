@@ -10,7 +10,7 @@ from app.infra.db.models.calibration import CalibrationRawDayModel
 from app.infra.db.repositories.calibration_repository import CalibrationRepository
 from app.jobs.calibration.runtime import ResolvedCalibrationRuntime
 from app.jobs.generate_daily_calibration_dataset import run_job
-from app.tests.regression.helpers import create_session
+from app.tests.regression.helpers import cleanup_session, create_session
 
 _MOCK_RUNTIME = ResolvedCalibrationRuntime(reference_version="2.0.0", ruleset_version="2.0.0")
 
@@ -21,8 +21,7 @@ def db_session():
     try:
         yield session
     finally:
-        if "engine" in session.info:
-            session.info["engine"].dispose()
+        cleanup_session(session)
 
 
 def _mock_loaded_context(*category_codes: str) -> SimpleNamespace:

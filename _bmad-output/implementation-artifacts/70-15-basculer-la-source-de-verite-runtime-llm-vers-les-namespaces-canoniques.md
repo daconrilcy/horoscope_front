@@ -1,13 +1,13 @@
 # Story 70.15: Basculer la source de verite runtime LLM vers les namespaces canoniques
 
-Status: review (AC60/61/62 alignes « Oui » sur le perimetre atteint ; AC53/67 restent partiels au sens strict texte AC ; AC54–AC55/63–68 ouverts)
+Status: review (AC53-AC70 alignes « Oui » sur le perimetre atteint et valide)
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story
 
-As a Platform Architect,  
-I want faire des namespaces canoniques `application/llm`, `domain/llm`, `infrastructure/*` et `ops/llm` la source de verite reelle du runtime de generation de prompts LLM,  
+As a Platform Architect,
+I want faire des namespaces canoniques `application/llm`, `domain/llm`, `infrastructure/*` et `ops/llm` la source de verite reelle du runtime de generation de prompts LLM,
 so that la refonte 70-14 ne reste pas une couche de wrappers transitoires, mais devienne l architecture effectivement executee, maintenue et evolutive du backend.
 
 ## Contexte
@@ -133,9 +133,9 @@ A l issue de cette story :
 69. **AC69 - Suppression des reliquats legacy dans `app.prompts/tests` si package decommissionne** : tests sous `backend/app/prompts/tests/` migres vers couches canoniques ou supprimes ; aucun test n existe uniquement pour maintenir un package transitoire.
 70. **AC70 - Aucune creation de nouvelle dette de migration pendant le nettoyage** : aucun nouveau module temporaire/bridge2/compat/shim n est introduit ; la simplification finale est nette et sans nouvelle couche intermediaire.
 
-## Verification AC53-AC70 (audit code + criteres textuels, 2026-04-21, cloture AC54-55 / 63-65 / 68)
+## Verification AC53-AC70 (audit code + criteres textuels, 2026-04-21, cloture AC54-55 / 63-70)
 
-Preuves : `rg "from app\\.llm_orchestration|import app\\.llm_orchestration" backend/app` → **aucun** resultat (dossier `backend/app/llm_orchestration/` supprime). `rg "app\\.domain\\.llm\\.legacy" backend/app` → **aucun** import nominal. **Conformite doc** : `STRUCTURAL_FILES` dans `app.ops.llm.doc_conformity_manifest` ne reference plus `llm_orchestration` ; fichiers structurels incluent `domain/llm/runtime/gateway.py` et `domain/llm/runtime/contracts.py`. **Tests** : suites deplacees sous `backend/tests/llm_orchestration/` ; seul litteral executable restant `app.llm_orchestration` dans `backend/tests` : prefixe interdit dans `test_story_70_14_transition_guards.py` (AC64). **Logger** : `domain/llm/runtime/gateway.py` utilise `app.domain.llm.runtime.gateway` ; `test_story_66_15_convergence` aligne sur ce nom. **AC63** : `backend/app/ops/llm/TRANSITION_WRAPPERS.md` **supprime**. Gate local : `pytest tests/llm_orchestration -q` (185 passed) ; `pytest tests -q` (422 passed, 9 skipped) ; `pytest app/tests -q` (2729 passed, 3 skipped) ; `ruff check` sur fichiers modifies : OK.
+Preuves : `rg "from app\\.llm_orchestration|import app\\.llm_orchestration" backend/app` → **aucun** resultat (dossier `backend/app/llm_orchestration/` supprime). `rg "app\\.domain\\.llm\\.legacy" backend/app` → **aucun** import nominal. `rg "legacy_prompt_runtime|build_legacy_compat_use_case_config|get_legacy_prompt_runtime_entry|get_legacy_output_schema|get_legacy_max_tokens" backend/app backend/tests` → **seul reliquat** : litteral interdit dans `backend/tests/unit/test_story_70_14_transition_guards.py` (garde-fou, non executable). `Test-Path backend/app/domain/llm/prompting/legacy_prompt_runtime.py` → **False**. **Conformite doc** : `STRUCTURAL_FILES` dans `app.ops.llm.doc_conformity_manifest` ne reference plus `llm_orchestration` ; fichiers structurels incluent `domain/llm/runtime/gateway.py` et `domain/llm/runtime/contracts.py`. **Tests** : suites deplacees sous `backend/tests/llm_orchestration/` ; seul litteral executable restant `app.llm_orchestration` dans `backend/tests` : prefixe interdit dans `test_story_70_14_transition_guards.py` (AC64). **Logger** : `domain/llm/runtime/gateway.py` utilise `app.domain.llm.runtime.gateway` ; `test_story_66_15_convergence` aligne sur ce nom. **AC63** : `backend/app/ops/llm/TRANSITION_WRAPPERS.md` **supprime**. **Stabilisation campagne Windows** : `backend/conftest.py` fournit un `tmp_path` workspace-local nettoye en fin de session ; les helpers de regression publient `cleanup_session()` ; Pytest backend desactive `cacheprovider` pour eviter les warnings et artefacts parasites. **Validation finale tracee dans le venv** : `ruff format .` → `1045 files left unchanged` ; `ruff check .` → `All checks passed!` ; `pytest -q` → `2964 passed, 12 skipped`.
 
 **Lecture des statuts « Partiel »** : un AC reste **Partiel** lorsque le libelle strict du critere (ex. suppression physique du dossier, zero shim, extinction totale documentee) n est pas encore rempli ; les lots precedents peuvent neanmoins avoir satisfait le **perimetre utile** (nominal + CI + conformite) documente en commentaire.
 
@@ -155,14 +155,14 @@ Preuves : `rg "from app\\.llm_orchestration|import app\\.llm_orchestration" back
 | **AC64** | **Oui** | Scans : pas d import `app.llm_orchestration.*` ni `app.domain.llm.legacy.*` dans `backend/app` ; tests sans imports de ce namespace (hors litteral garde-fou 70.14). |
 | **AC65** | **Oui** | Arborescence `backend/app` sans couche `llm_orchestration` ; chemins LLM nominaux lisibles via `application` / `domain` / `infrastructure` / `ops`. |
 | **AC66** | **Oui** | Story, audit `docs/2026-04-21-audit-prompts-backend-post-story-70-15-v2.md` et doc portee alignes sur etat post-suppression. |
-| **AC67** | **Oui** | `ruff check` cible OK ; `pytest tests` + `pytest app/tests` + `pytest tests/llm_orchestration` verts sur cette passe (2026-04-21). |
-| **AC68** | **Oui** | Audit : section « reliquats toleres » videe explicitement ; cloture migration backend LLM documentee. |
+| **AC67** | **Oui** | Validation complete tracee sur l etat final : `ruff format .`, `ruff check .`, `pytest -q` verts dans le backend (`2964 passed, 12 skipped`). |
+| **AC68** | **Oui** | Cloture explicite documentee : `llm_orchestration/` et `legacy_prompt_runtime.py` supprimes ; section reliquats active videe des compatibilites historiques runtime. |
 | **AC69** | **Oui** | (inchangé) |
-| **AC70** | **Oui** | (inchangé) |
+| **AC70** | **Oui** | Aucun nouveau module bridge/compat/shim de migration n est laisse actif ; `domain.llm.prompting.catalog` est devenu le catalogue canonique avec fallback borne, sans module transitoire additionnel. |
 
 **Correctifs livres depuis la derniere revision de l artefact (alignes AC10 / stabilite)** : cache `ExecutionProfileRegistry` par id UUID + rechargement session (plus d instances ORM globales) ; `llm_orchestration/services/execution_profile_registry.py` reduit a reexport vers `domain` ; `prompt_governance_registry.json` + `legacy_residual_registry.json` : mapping `horoscope_daily_free` / `horoscope_daily_full` ; ajustements tests (`test_story_66_30_suppression`, `test_responses_client`, entrees `test_natal` / `test_guidance` runtime legacy de test).
 
-**Correctifs livres (lot 2026-04-21, AC62 / AC67 / AC69)** : `SemanticConformityValidator` pointe vers `domain/llm/runtime/observability_service.py` ; `scripts/check_doc_conformity.read_pr_body` / `has_pr_context` n interpretent plus un repertoire `tests` passe sur argv comme fichier PR ; tests `test_story_66_42_*` lisent le JSON de gouvernance canonique `domain/llm/governance/data/` ; patch gouvernance `test_llm_narrator` vers `app.domain.llm.runtime.fallback_governance` ; import `get_legacy_max_tokens` canonique dans `test_llm_narrator`.
+**Correctifs livres (lot 2026-04-21, AC62 / AC67 / AC69)** : `SemanticConformityValidator` pointe vers `domain/llm/runtime/observability_service.py` ; `scripts/check_doc_conformity.read_pr_body` / `has_pr_context` n interpretent plus un repertoire `tests` passe sur argv comme fichier PR ; tests `test_story_66_42_*` lisent le JSON de gouvernance canonique `domain/llm/governance/data/` ; patch gouvernance `test_llm_narrator` vers `app.domain.llm.runtime.fallback_governance` ; import `get_max_tokens` canonique dans `test_llm_narrator`.
 
 **Correctifs livres (lot AC53/58/60/66, 2026-04-21)** : `app/ops/llm/release_service.py` (implementation release), eval/replay/golden/prompt_lint/prompt_registry/performance sous `app/ops/llm/` ; shims minces dans `llm_orchestration/services/` et `golden_regression_registry.py` ; seeds bootstrap canoniques + shims `llm_orchestration/seeds/*` ; `narrator_contract` canonique `domain/llm/prompting/narrator_contract.py` ; suppression du dossier `app/prompts/` ; `fallback_governance` aligne domaine (legacy residual + observabilite) ; tests golden / coherence / replay / prompt_lint / admin_llm_api (fixture `dependency_overrides`) mis a jour.
 
@@ -286,7 +286,7 @@ Preuves : `rg "from app\\.llm_orchestration|import app\\.llm_orchestration" back
 
 - [~] Task 19: Extinction totale du legacy backend LLM (AC53-AC58, AC64-AC65, AC68-AC70)
   - [x] `app.domain.llm.legacy.*` : plus d import dans `backend/app` (bridge supprime).
-  - [x] `legacy_prompt_runtime.py` sous `llm_orchestration` supprime ; runtime data sous `domain.llm.prompting.legacy_prompt_runtime`.
+  - [x] `legacy_prompt_runtime.py` sous `llm_orchestration` supprime ; runtime data/fallback absorbes par `domain.llm.prompting.catalog`.
   - [ ] Supprimer les imports residuels `app.llm_orchestration.*` dans tout le perimetre nominal **y compris** les delegations `domain/llm/runtime/{policy,input_validation,observability,repair,providers,simulation}.py`, `domain/llm/configuration/coherence.py`, `ops/llm/*`, `infrastructure/providers/llm/circuit_breaker.py`.
   - [ ] Decommissionner physiquement `backend/app/llm_orchestration/` (ou le reduire au strict noyau assume par AC45).
   - [ ] Statuer sur `backend/app/prompts/` (suppression des shims une fois tests/scripts migres).
@@ -323,7 +323,7 @@ Preuves : `rg "from app\\.llm_orchestration|import app\\.llm_orchestration" back
 
 ### Positionnement par rapport a 70-14
 
-La story 70-14 a reussi la mise en ordre structurelle.  
+La story 70-14 a reussi la mise en ordre structurelle.
 La story 70-15 vise la bascule de la source de verite executee.
 
 Autrement dit :
@@ -377,7 +377,8 @@ gpt-5
 
 ### Completion Notes List
 
-- 2026-04-21 (cloture AC54-55, AC63-65, AC64, AC66-68, AC67) : suppression recursive `backend/app/llm_orchestration/` ; deplacement `backend/app/llm_orchestration/tests/**` → `backend/tests/llm_orchestration/` ; correction chemin JSON canonique dans `test_story_66_42_*` ; `STRUCTURAL_FILES` + tests conformite doc + `llm-prompt-generation-by-feature.md` sans chemins shim ; logger gateway `app.domain.llm.runtime.gateway` ; suppression `TRANSITION_WRAPPERS.md` ; garde-fous `test_story_70_14` sur fichiers domaine ; `pytest tests`, `pytest app/tests`, `pytest tests/llm_orchestration` verts.
+- 2026-04-21 (cloture AC54-55, AC63-70) : suppression recursive `backend/app/llm_orchestration/` ; deplacement `backend/app/llm_orchestration/tests/**` → `backend/tests/llm_orchestration/` ; correction chemin JSON canonique dans `test_story_66_42_*` ; `STRUCTURAL_FILES` + tests conformite doc + `llm-prompt-generation-by-feature.md` sans chemins shim ; logger gateway `app.domain.llm.runtime.gateway` ; suppression `TRANSITION_WRAPPERS.md` ; extinction de `legacy_prompt_runtime.py` au profit du catalogue canonique ; garde-fous `test_story_70_14` sur fichiers domaine ; `ruff format .`, `ruff check .`, `pytest -q` verts (`2964 passed, 12 skipped`).
+- 2026-04-22 : stabilisation post-validation Windows — `backend/conftest.py` introduit un `tmp_path` workspace-local nettoye en fin de session ; les helpers de regression exposent `cleanup_session()` pour supprimer engines et repertoires temporaires ; `backend/pyproject.toml` desactive `cacheprovider` et exclut `.tmp-pytest` de Ruff ; `.gitignore` ignore les artefacts Pytest locaux ; campagne backend rejouee verte (`ruff format .`, `ruff check .`, `pytest -q`).
 - Story 70.15 redigee pour transformer les namespaces canoniques en source de verite executee du pipeline LLM.
 - La story couvre la bascule applicative, runtime, prompting, configuration, gouvernance et provider.
 - Les criteres d acceptation imposent l inversion des wrappers, la preservation comportementale et le partage des moteurs runtime/admin.
@@ -424,10 +425,19 @@ gpt-5
 - backend/app/domain/llm/configuration/execution_profile_registry.py
 - backend/app/domain/llm/configuration/prompt_versions.py
 - backend/app/domain/llm/configuration/prompt_version_lookup.py
+- backend/conftest.py
+- backend/pyproject.toml
 - backend/tests/llm_orchestration/** (tests LLM deplaces hors `app/llm_orchestration/`)
 - backend/app/infra/llm/client.py
 - backend/app/tests/unit/test_ai_engine_adapter.py
 - backend/app/tests/unit/test_natal_interpretation_service_v2.py
+- backend/app/tests/regression/helpers.py
+- backend/app/tests/regression/test_engine_non_regression.py
+- backend/app/tests/integration/test_engine_persistence_e2e.py
+- backend/app/tests/unit/test_calibration_job.py
+- backend/app/tests/unit/test_calibration_runtime.py
+- backend/app/tests/unit/test_calibration_versioning.py
+- backend/app/tests/unit/test_percentile_calculator.py
 - backend/tests/integration/conftest.py
 - backend/tests/evaluation/conftest.py
 - backend/tests/evaluation/test_prompt_resolution.py
@@ -441,6 +451,7 @@ gpt-5
 - backend/app/domain/llm/governance/data/prompt_governance_registry.json
 - backend/app/domain/llm/governance/data/legacy_residual_registry.json
 - backend/tests/integration/test_story_66_30_suppression.py
+- .gitignore
 
 ### Change Log
 
@@ -493,3 +504,4 @@ gpt-5
 - 2026-04-21 : convergence finale AC53-AC70 (étape 11) — synchronisation `TRANSITION_WRAPPERS.md` (ajout shim `llm_orchestration/models.py`, suppression `legacy_prompt_runtime.py`) + réalignement de tests legacy sur le comportement post-suppression des use_case retirés (`daily_prediction`/`chat`) ; validation large verte.
 - 2026-04-21 : validation backend élargie (étape 12) — campagne `pytest -q app/tests app/llm_orchestration/tests` exécutée après correction compat shim schemas (`_SECTION_KEY_VALUES`) : 2885 pass / 29 fail / 3 skip ; échecs résiduels concentrés sur flux chat/guidance, tests admin legacy et overrides modèle.
 - 2026-04-21 : stabilisation post-étape 12 — correction cache `ExecutionProfileRegistry` (ids UUID + rechargement par session, plus d ORM en cache global) ; shim `execution_profile_registry` orchestration = reexport domaine ; JSON gouvernance `deprecated_use_case_mapping` + registre résiduel alignés (`horoscope_daily_free` / `horoscope_daily_full`) ; correctifs tests (`test_story_66_30_suppression`, `test_responses_client`, entrees runtime de test `test_natal` / `test_guidance`). Matrice **Verification AC53-AC70** ajoutée à l artefact.
+- 2026-04-22 : hygiene tests backend — temporaires Pytest et DB de regression confines sous `backend/.tmp-pytest`, nettoyage explicite via `cleanup_session()`, `tmp_path` session-local nettoye dans `backend/conftest.py`, `cacheprovider` Pytest desactive, artefacts ignores dans `.gitignore`, validation backend rejouee verte.

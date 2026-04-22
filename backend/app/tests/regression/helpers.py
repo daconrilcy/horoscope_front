@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import shutil
 from dataclasses import asdict, is_dataclass, replace
 from datetime import date, datetime
 from pathlib import Path
-from tempfile import mkdtemp
 from typing import Any
+from uuid import uuid4
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -19,6 +20,8 @@ from app.services.reference_data_service import ReferenceDataService
 from scripts.seed_31_prediction_reference_v2 import run_seed
 
 BACKEND_DIR = Path(__file__).resolve().parents[3]
+_WORKSPACE_TEMP_ROOT = BACKEND_DIR / ".tmp-pytest" / "regression-runtime"
+_WORKSPACE_TEMP_ROOT.mkdir(parents=True, exist_ok=True)
 
 NS_MIN = 0.75
 NS_MAX = 1.25
@@ -55,7 +58,7 @@ def serialize_output(engine_output: EngineOutput) -> dict[str, Any]:
 
 
 def create_session() -> Session:
-    temp_dir = Path(mkdtemp(prefix="prediction-regression-"))
+    temp_dir = make_workspace_temp_dir("prediction-regression")
     db_path = temp_dir / "regression.db"
     database_url = f"sqlite:///{db_path.as_posix()}"
 
@@ -71,6 +74,23 @@ def create_session() -> Session:
     session.info["engine"] = engine
     session.info["temp_dir"] = temp_dir
     return session
+
+
+def cleanup_session(session: Session) -> None:
+    engine = session.info.get("engine")
+    temp_dir = session.info.get("temp_dir")
+
+    session.close()
+    if engine is not None:
+        engine.dispose()
+    if isinstance(temp_dir, Path):
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def make_workspace_temp_dir(prefix: str) -> Path:
+    temp_dir = _WORKSPACE_TEMP_ROOT / f"{prefix}-{uuid4().hex}"
+    temp_dir.mkdir(parents=True, exist_ok=False)
+    return temp_dir
 
 
 def create_orchestrator(session: Session) -> EngineOrchestrator:

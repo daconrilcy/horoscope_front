@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import atexit
-import shutil
-import tempfile
+import uuid
 from pathlib import Path
 
 from sqlalchemy import create_engine, event
@@ -10,15 +9,20 @@ from sqlalchemy.orm import sessionmaker
 
 from app.infra.db import session as db_session_module
 
-_TEST_DB_DIR = Path(tempfile.mkdtemp(prefix="horoscope-pytest-db-"))
-_TEST_DB_PATH = _TEST_DB_DIR / "test.sqlite3"
+_TEST_DB_ROOT = Path(__file__).resolve().parents[2] / ".tmp-pytest"
+_TEST_DB_ROOT.mkdir(parents=True, exist_ok=True)
+_TEST_DB_PATH = _TEST_DB_ROOT / f"horoscope-pytest-db-{uuid.uuid4().hex}.sqlite3"
 
 
-def _cleanup_test_db_dir() -> None:
-    shutil.rmtree(_TEST_DB_DIR, ignore_errors=True)
+def _cleanup_test_db_file() -> None:
+    try:
+        _TEST_DB_PATH.unlink(missing_ok=True)
+    except PermissionError:
+        # Pytest can still hold a SQLite connection when the interpreter exits.
+        pass
 
 
-atexit.register(_cleanup_test_db_dir)
+atexit.register(_cleanup_test_db_file)
 
 
 def _build_test_engine():
