@@ -1,7 +1,7 @@
-# Audit backend génération de prompts LLM (post-story 70-15, AC18-AC52)
+# Audit backend génération de prompts LLM (post-story 70-15, AC18-AC70)
 
 Date: 2026-04-21  
-Dernière passe de review : 2026-04-21 (clôture AC54–AC55, AC63–AC70 : suppression physique `backend/app/llm_orchestration/`, retrait `TRANSITION_WRAPPERS.md`, extinction `legacy_prompt_runtime.py`, tests déplacés sous `backend/tests/llm_orchestration/`, logger gateway `app.domain.llm.runtime.gateway`)  
+Dernière passe de review : 2026-04-22 (vérification post-modifs story 70-15 : imports canoniques confirmés sur `runtime/*` et `configuration/*`, dossier source `backend/app/llm_orchestration/` toujours absent, mais reliquats filesystem résiduels constatés sous `backend/app/prompts/` et `backend/app/domain/llm/legacy/`)  
 Périmètre : backend, flux runtime prompting/persona/configuration/gateway, consommateurs métier.
 
 ## Source de vérité canonique (état visé)
@@ -39,7 +39,20 @@ Périmètre : backend, flux runtime prompting/persona/configuration/gateway, con
 
 ## Reliquats de compatibilité tolérés (état courant)
 
-**Aucun reliquat actif** : le dossier `backend/app/llm_orchestration/` a été supprimé ; `backend/app/domain/llm/prompting/legacy_prompt_runtime.py` n’existe plus ; les suites LLM vivent sous `backend/tests/llm_orchestration/` avec imports canoniques uniquement. Les seules occurrences textuelles de `app.llm_orchestration` ou `legacy_prompt_runtime` dans le périmètre tests sont des **littéraux de garde-fou** (`test_story_70_14_transition_guards.py`, préfixes interdits), pas des imports exécutables.
+**Aucun reliquat actif dans le code nominal scanné** : le dossier source `backend/app/llm_orchestration/` a bien été supprimé ; `legacy_prompt_runtime.py` n’existe plus ; les suites LLM vivent sous `backend/tests/llm_orchestration/` avec imports canoniques uniquement.
+
+Reliquats filesystem encore visibles au 2026-04-22 :
+
+- `backend/app/prompts/`
+  - statut : **répertoire résiduel uniquement**
+  - contenu observé : `tests/__init__.py` et `__pycache__/`
+  - modules historiques `catalog`, `common_context`, `validators`, `exceptions` : **absents en source**
+- `backend/app/domain/llm/legacy/`
+  - statut : **répertoire résiduel uniquement**
+  - contenu observé : `__pycache__/` seulement
+  - fichiers source legacy (`bridge.py`, `__init__.py`) : **absents**
+
+Dans `backend/app` et `backend/tests`, les seules occurrences textuelles restantes de `app.llm_orchestration`, `app.prompts` ou `app.domain.llm.legacy.*` relèvent des **garde-fous de tests** (`backend/tests/unit/test_story_70_14_transition_guards.py`) ou de la **documentation ops** (`backend/app/ops/llm/README.md`), pas d’imports nominaux exécutables.
 
 ## Safe to delete next (AC30) — statut post AC31-AC40
 
@@ -76,17 +89,20 @@ Périmètre : backend, flux runtime prompting/persona/configuration/gateway, con
 
 ## Package `backend/app/prompts` (AC58 — lot 2026-04-21)
 
-Le dossier **`backend/app/prompts/` a été supprimé** : plus de shims `catalog` / `common_context` / `validators` au chemin historique. Toute la surface correspondante est portée par **`app.domain.llm.prompting.*`** (catalogue, contexte, validators, exceptions, tests sous `app/domain/llm/prompting/tests/`).
+Le **package applicatif historique** `backend/app/prompts` a été retiré de la surface nominale : plus de shims source `catalog` / `common_context` / `validators` / `exceptions` au chemin historique. Toute la surface correspondante est portée par **`app.domain.llm.prompting.*`** (catalogue, contexte, validators, exceptions, tests sous `app/domain/llm/prompting/tests/`).
+
+À date du 2026-04-22, le répertoire **existe encore physiquement** mais uniquement comme reliquat filesystem (`tests/__init__.py` et `__pycache__/`) ; aucun module runtime source n’y subsiste.
 
 ### Constat actuel
 
-- Aucun import `app.prompts` dans le backend Python applicatif ; garde-fou optionnel dans `tests/unit/test_story_70_14_transition_guards.py` (préfixe interdit).
+- Aucun import `app.prompts` dans le backend Python applicatif scanné ; garde-fou optionnel dans `tests/unit/test_story_70_14_transition_guards.py` (préfixe interdit).
 - Les tests de qualification de contexte vivent sous `app/domain/llm/prompting/tests/`.
+- Le reliquat `backend/app/prompts/tests/` ne porte pas de point d’entrée canonique ; il ne remet pas en cause la migration runtime.
 
 ### Impact sur la lecture AC53-AC70 (passe en cours)
 
-- Le dossier `app.prompts` confirme l’état "migration contrôlée" : le runtime canonique est bien déplacé vers `app.domain.llm.*` / `app.application.llm.*`, mais ce package conserve des **points d’entrée de transition**.
-- Les dépendances legacy observées dans `app.prompts` sont conformes à la stratégie AC41-AC52 : explicites, traçables, limitées à la compatibilité, et non utilisées comme nouvelle voie nominale.
+- Le runtime canonique est bien déplacé vers `app.domain.llm.*` / `app.application.llm.*`.
+- `app.prompts` ne constitue plus un package de transition actif ; le reliquat observé est **structurel**, pas fonctionnel.
 - Aucune contradiction relevée avec la suppression effective des shims renderer/persona/adapter déjà actée.
 - Mise à jour passe AC53-AC70 : `app.prompts.common_context` et `app.domain.llm.prompting.context` n importent plus `app.llm_orchestration.services.fallback_governance` ni `get_legacy_use_case_name`.
 - Mise à jour passe AC53-AC70 (lot taxonomy) : création de `app.domain.llm.governance.feature_taxonomy` et migration des imports nominaux critiques hors `app.llm_orchestration.feature_taxonomy`.
@@ -127,6 +143,13 @@ Le dossier **`backend/app/prompts/` a été supprimé** : plus de shims `catalog
 - Mise à jour passe AC53-AC70 (lot clôture étape 11) : derniers shims `llm_orchestration` retirés avant suppression du dossier ; tests legacy ajustés au comportement cible de rejet des use_case supprimés (`daily_prediction`, `chat`).
 - Mise à jour passe AC53-AC70 (lot validation backend étape 12 puis clôture AC67–AC70) : campagne complète backend exécutée dans le venv avec `ruff format .`, `ruff check .`, `pytest -q` ; résultat final `2964 passed, 12 skipped`. `STRUCTURAL_FILES` ne référence plus de chemins sous `app/llm_orchestration/`.
 
+## Vérification ciblée du 2026-04-22
+
+- Les modules `backend/app/domain/llm/runtime/composition.py`, `fallback.py`, `validation.py` n’importent que des modules canoniques `app.domain.llm.runtime.*`.
+- Les modules `backend/app/domain/llm/configuration/assemblies.py`, `execution_profiles.py`, `prompt_versions.py` n’importent que des modules canoniques `app.domain.llm.configuration.*`.
+- Le test modifié `backend/tests/integration/test_story_66_21_governance.py` consomme `app.domain.llm.runtime.contracts`, `FallbackGovernanceRegistry` et `LLMGateway`, sans retour à `app.llm_orchestration.*`.
+- Aucun import nominal exécutable `app.llm_orchestration.*`, `app.prompts.*` ou `app.domain.llm.legacy.*` n’a été trouvé dans `backend/app`, `backend/tests` hors garde-fous et documentation.
+
 ### Suivi opérationnel (post-suppression `app/prompts`)
 
 - `backend/app/domain/llm/prompting/context.py` — **Statut**: source de vérité prompting contexte — **Action suivante**: surveillance.
@@ -141,12 +164,129 @@ Le dossier **`backend/app/prompts/` a été supprimé** : plus de shims `catalog
 ## Points de vigilance restants
 
 - Conserver les garde-fous (conformité doc, tests 70.14, invariants sémantiques) pour éviter toute réintroduction de namespace `app.llm_orchestration.*` dans le code nominal `backend/app`.
+- Nettoyer à l’occasion les reliquats filesystem `backend/app/prompts/` et `backend/app/domain/llm/legacy/` si l’objectif est une suppression physique stricte et non seulement logique.
 - La liste d’échecs historiques dans ce document pour les suites lourdes peut être obsolète après campagne verte unifiée ; vérifier avant prochain audit.
 
 ## Conclusion
 
 - La source de vérité runtime reste alignée sur `app.application.llm.*` + `app.domain.llm.*` ; les opérations LLM release/eval/replay/golden/qualification sont ancrées sous **`app.ops.llm.*`**.
-- Le package **`app.prompts` a été retiré** ; toute évolution prompting nominale passe par `app.domain.llm.prompting.*`.
-- **AC54–AC55 / AC63–AC65 / AC64 / AC66** : plus de dossier `backend/app/llm_orchestration/` ; plus de registre `TRANSITION_WRAPPERS.md` ; scans `backend/app` sans import `app.llm_orchestration.*` ni `app.domain.llm.legacy.*` ; arborescence nominale lisible (`application` / `domain` / `infrastructure` / `ops`).
+- Le package runtime **`app.prompts` a été retiré de la surface nominale** ; toute évolution prompting nominale passe par `app.domain.llm.prompting.*`. Le répertoire résiduel encore présent ne porte pas de modules source runtime actifs.
+- **AC54–AC55 / AC63–AC65 / AC64 / AC66** : plus de dossier source `backend/app/llm_orchestration/` ; plus de registre `TRANSITION_WRAPPERS.md` ; scans `backend/app` sans import nominal exécutable `app.llm_orchestration.*` ni `app.domain.llm.legacy.*` ; arborescence nominale lisible (`application` / `domain` / `infrastructure` / `ops`).
 - **AC67** : validation complète tracée sur l’état final avec `ruff format .`, `ruff check .`, `pytest -q` verts (`2964 passed, 12 skipped`).
-- **AC68 / AC70** : migration backend LLM clôturée au sens strict ; plus aucun module ou point d’entrée transitoire actif n’est maintenu pour la compatibilité historique runtime.
+- **AC68 / AC70** : migration backend LLM clôturée au sens strict au niveau des imports et points d’entrée actifs ; il subsiste seulement des reliquats filesystem non nominaux à nettoyer si l’on veut une extinction physique parfaite.
+
+## Annexe — État de l’arborescence liée à la génération de prompt
+
+Convention de lecture :
+
+- `actif` : fichier encore utilisé dans le flux nominal ou dans les outils d’admin/ops qui pilotent la génération de prompt.
+- `inactif` : doublon, reliquat, placeholder, doc ou support non exécuté dans le flux nominal.
+- Les répertoires `__pycache__/` sont exclus de cet inventaire.
+
+### `backend/app/application/llm`
+
+- `ai_engine_adapter.py` — **actif** — façade applicative consommée par les services métier ; construit les requêtes d’exécution et délègue au `LLMGateway`.
+
+### `backend/app/domain/llm/prompting`
+
+- `catalog.py` — **actif** — catalogue canonique des use cases, modèles, max tokens, schémas de sortie et fallback runtime.
+- `context.py` — **actif** — construit le contexte commun et qualifié injecté dans les prompts à partir des données utilisateur/natales.
+- `exceptions.py` — **actif** — exceptions de configuration prompting.
+- `narrator_contract.py` — **actif** — contrat de sortie dédié au narrateur horoscope.
+- `persona_boundary.py` — **actif** — garde-fous de contenu et validation des blocs de persona.
+- `persona_composer.py` — **inactif** — doublon source de `personas.py` ; aucun import nominal relevé dans le scan courant.
+- `personas.py` — **actif** — compose le bloc de persona canonique utilisé au runtime et en configuration.
+- `placeholder_policy.py` — **actif** — définit la politique de placeholders autorisés/attendus dans les templates.
+- `prompt_renderer.py` — **actif** — renderer canonique des prompts à partir des templates et variables autorisées.
+- `schemas.py` — **actif** — schémas Pydantic des sorties structurées (`AstroResponse*`, `ChatResponse*`).
+- `validation.py` — **inactif** — doublon/façade redondante de `validators.py` ; aucun import nominal relevé dans le scan courant.
+- `validators.py` — **actif** — valide le contenu des templates, plan rules, naming de use case et cohérence catalogue/DB.
+- `tests/conftest.py` — **actif** — support de tests unitaires prompting.
+- `tests/test_qualified_context.py` — **actif** — tests de qualification du contexte prompting.
+
+### `backend/app/domain/llm/runtime`
+
+- `composition.py` — **actif** — façade canonique exportant les helpers de composition runtime.
+- `context_quality_injector.py` — **actif** — enrichit la composition avec les métadonnées de qualité de contexte.
+- `contracts.py` — **actif** — source de vérité des contrats runtime (requêtes, résultats, erreurs, observabilité).
+- `crypto_utils.py` — **actif** — chiffrement utilitaire des snapshots d’entrée/logs runtime.
+- `execution_profiles_types.py` — **actif** — types runtime liés aux profils d’exécution.
+- `fallback_governance.py` — **actif** — gouvernance de fallback, métriques et décision de chemin dégradé.
+- `fallback.py` — **actif** — façade canonique exportant la gouvernance de fallback.
+- `gateway.py` — **actif** — orchestrateur central du pipeline de génération de prompt et d’appel provider.
+- `hard_policy.py` — **actif** — règles runtime “dures” appliquées à l’exécution.
+- `input_validation.py` — **actif** — façade canonique de validation d’entrée.
+- `input_validator.py` — **actif** — validation JSON Schema des payloads d’entrée.
+- `length_budget_injector.py` — **actif** — injecte les budgets de longueur/max tokens dans le plan résolu.
+- `observability.py` — **actif** — façade canonique de télémétrie runtime.
+- `observability_service.py` — **actif** — persistance et métriques des appels LLM, snapshots et événements de gouvernance.
+- `output_validator.py` — **actif** — validation JSON/schéma/evidence des sorties provider.
+- `policy.py` — **actif** — politiques runtime complémentaires utilisées par l’orchestration.
+- `provider_parameter_mapper.py` — **actif** — normalise les paramètres d’exécution selon le provider/famille de modèle.
+- `provider_runtime_manager.py` — **actif** — exécution provider avec résilience, retry, timeout et circuit breaker.
+- `providers.py` — **actif** — helpers de support provider côté runtime.
+- `repair.py` — **actif** — façade canonique de réparation de sortie invalide.
+- `repair_prompter.py` — **actif** — construit le prompt de réparation envoyé au provider après échec de validation.
+- `simulation.py` — **actif** — façade canonique pour la simulation d’incidents runtime.
+- `simulation_context.py` — **actif** — `ContextVar` de simulation d’erreurs pour tests/qualification.
+- `supported_providers.py` — **actif** — registre des providers supportés nominalement.
+- `validation.py` — **actif** — façade canonique de validation de sortie.
+
+### `backend/app/domain/llm/configuration`
+
+- `active_release.py` — **actif** — accès à la release LLM active côté configuration.
+- `admin_models.py` — **actif** — contrats Pydantic admin/configuration (assemblies, profils, preview, etc.).
+- `assemblies.py` — **actif** — façade canonique d’entrée pour l’admin et la résolution d’assemblies.
+- `assembly_admin_service.py` — **actif** — service admin CRUD/publish/rollback/preview des assemblies.
+- `assembly_registry.py` — **actif** — lecture/résolution des assemblies actives depuis snapshot ou tables.
+- `assembly_resolver.py` — **actif** — construit le prompt développeur final à partir des composants configurés.
+- `coherence.py` — **actif** — façade de cohérence de configuration.
+- `config_coherence_validator.py` — **actif** — valide la cohérence assembly/profile/schema/provider avant publication.
+- `execution_profile_registry.py` — **actif** — lecture/résolution/caching des profils d’exécution actifs.
+- `execution_profiles.py` — **actif** — façade canonique du registre des profils d’exécution.
+- `prompt_version_lookup.py` — **actif** — lecture nominale de la version de prompt active pour un use case.
+- `prompt_versions.py` — **actif** — façade canonique du lookup de version de prompt.
+
+### `backend/app/ops/llm`
+
+- `doc_conformity_manifest.py` — **actif** — manifeste des éléments documentaires qui doivent rester alignés avec le runtime prompting.
+- `doc_conformity_validator.py` — **actif** — contrôle de conformité doc/code sur taxonomy, providers, fallback et invariants ops.
+- `eval_harness.py` — **actif** — exécute les campagnes d’évaluation à partir de fixtures YAML.
+- `golden_regression_registry.py` — **actif** — registre des paramètres et classifications des campagnes golden regression.
+- `golden_regression_service.py` — **actif** — exécute et compare les campagnes golden.
+- `ops_contract.py` — **actif** — contrats partagés des outils ops LLM.
+- `performance_qualification.py` — **actif** — façade de qualification performance.
+- `performance_qualification_service.py` — **actif** — calcule les rapports de qualification performance.
+- `performance_registry.py` — **actif** — registres/SLO/SLA de performance ops.
+- `prompt_lint.py` — **actif** — lint des prompts et vérification des placeholders attendus.
+- `prompt_registry_v2.py` — **actif** — publication, rollback et résolution des prompts côté admin/ops.
+- `README.md` — **inactif** — documentation du sous-système ops LLM.
+- `release_service.py` — **actif** — construit, valide, active et historise les releases LLM.
+- `replay_service.py` — **actif** — rejoue un appel LLM à partir des snapshots observabilité.
+- `semantic_conformity_validator.py` — **actif** — contrôle sémantique automatisé des invariants d’architecture/story.
+- `semantic_invariants_registry.py` — **actif** — registre des invariants sémantiques attendus.
+- `services.py` — **actif** — façade d’agrégation des services ops utilisés par les routes admin et scripts.
+
+### `backend/app/ops/llm/bootstrap`
+
+- `seed_29_prompts.py` — **actif** — seed historique des prompts et schémas associés.
+- `seed_30_14_chat_prompt.py` — **actif** — seed dédié aux prompts chat.
+- `seed_30_8_v3_prompts.py` — **actif** — seed des prompts v3 plus denses/structurés.
+- `seed_66_20_taxonomy.py` — **actif** — seed de la taxonomy feature/subfeature utilisée par la gouvernance.
+- `seed_horoscope_narrator_assembly.py` — **actif** — seed de l’assembly narrateur horoscope et de ses dépendances.
+- `use_cases_seed.py` — **actif** — seed du référentiel nominal des use cases.
+
+### `backend/app/ops/llm/release`
+
+- `build_golden_evidence.py` — **actif** — script de génération d’évidence golden pour un candidat de release.
+- `build_qualification_evidence.py` — **actif** — script de génération d’évidence de qualification.
+- `build_release_candidate.py` — **actif** — script de construction d’un release candidate LLM.
+- `build_release_readiness_report.py` — **actif** — script de synthèse de readiness avant activation.
+- `build_smoke_evidence.py` — **actif** — script de génération d’évidence smoke.
+
+### Répertoires ou reliquats non nominaux
+
+- `backend/app/ops/llm/legacy/__init__.py` — **inactif** — placeholder de namespace, sans implémentation active observée.
+- `backend/app/ops/llm/migrations/__init__.py` — **inactif** — placeholder de namespace, sans implémentation active observée.
+- `backend/app/prompts/` — **inactif** — reliquat filesystem ; pas de module source runtime encore actif.
+- `backend/app/domain/llm/legacy/` — **inactif** — reliquat filesystem ; plus de source legacy active observée.
