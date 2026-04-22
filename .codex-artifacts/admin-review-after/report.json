@@ -1,0 +1,62 @@
+[
+  {
+    "name": "admin-home",
+    "metrics": {
+      "path": "/admin/",
+      "viewport": 1600,
+      "adminLayoutWidth": 1516,
+      "adminMainWidth": 1256,
+      "adminContainerWidth": 1192,
+      "shellContainerWidth": 1552,
+      "overflowX": 0
+    }
+  },
+  {
+    "name": "admin-prompts-catalog",
+    "metrics": {
+      "path": "/admin/prompts/catalog",
+      "viewport": 1600,
+      "adminLayoutWidth": 1516,
+      "adminMainWidth": 1256,
+      "adminContainerWidth": 1192,
+      "shellContainerWidth": 1552,
+      "overflowX": 0
+    }
+  },
+  {
+    "name": "admin-prompts-legacy",
+    "metrics": {
+      "path": "/admin/prompts/legacy",
+      "viewport": 1600,
+      "adminLayoutWidth": 1516,
+      "adminMainWidth": 1256,
+      "adminContainerWidth": 1192,
+      "shellContainerWidth": 1552,
+      "overflowX": 0
+    }
+  },
+  {
+    "name": "admin-prompts-release",
+    "metrics": {
+      "path": "/admin/prompts/release",
+      "viewport": 1600,
+      "adminLayoutWidth": 1516,
+      "adminMainWidth": 1256,
+      "adminContainerWidth": 1192,
+      "shellContainerWidth": 1552,
+      "overflowX": 0
+    }
+  },
+  {
+    "name": "admin-prompts-consumption",
+    "metrics": {
+      "path": "/admin/prompts/consumption",
+      "viewport": 1600,
+      "adminLayoutWidth": 1516,
+      "adminMainWidth": 1256,
+      "adminContainerWidth": 1192,
+      "shellContainerWidth": 1552,
+      "overflowX": 0
+    }
+  }
+]

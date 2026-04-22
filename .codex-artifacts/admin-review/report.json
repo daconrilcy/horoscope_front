@@ -1,0 +1,114 @@
+[
+  {
+    "name": "admin-home",
+    "url": "http://localhost:5173/admin/",
+    "metrics": {
+      "path": "/admin/",
+      "overflowX": 0,
+      "viewport": 1600,
+      "bodyScrollWidth": 1600,
+      "adminContainerWidth": 740,
+      "adminMainWidth": 804,
+      "masterDetailWidth": null,
+      "sampleWide": []
+    }
+  },
+  {
+    "name": "admin-dashboard",
+    "url": "http://localhost:5173/admin/dashboard",
+    "metrics": {
+      "path": "/admin/dashboard",
+      "overflowX": 0,
+      "viewport": 1600,
+      "bodyScrollWidth": 1600,
+      "adminContainerWidth": 740,
+      "adminMainWidth": 804,
+      "masterDetailWidth": null,
+      "sampleWide": []
+    }
+  },
+  {
+    "name": "admin-prompts-catalog",
+    "url": "http://localhost:5173/admin/prompts/catalog",
+    "metrics": {
+      "path": "/admin/prompts/catalog",
+      "overflowX": 0,
+      "viewport": 1600,
+      "bodyScrollWidth": 1600,
+      "adminContainerWidth": 740,
+      "adminMainWidth": 804,
+      "masterDetailWidth": 690,
+      "sampleWide": []
+    }
+  },
+  {
+    "name": "admin-prompts-legacy",
+    "url": "http://localhost:5173/admin/prompts/legacy",
+    "metrics": {
+      "path": "/admin/prompts/legacy",
+      "overflowX": 0,
+      "viewport": 1600,
+      "bodyScrollWidth": 1600,
+      "adminContainerWidth": 740,
+      "adminMainWidth": 804,
+      "masterDetailWidth": null,
+      "sampleWide": []
+    }
+  },
+  {
+    "name": "admin-prompts-release",
+    "url": "http://localhost:5173/admin/prompts/release",
+    "metrics": {
+      "path": "/admin/prompts/release",
+      "overflowX": 0,
+      "viewport": 1600,
+      "bodyScrollWidth": 1600,
+      "adminContainerWidth": 740,
+      "adminMainWidth": 804,
+      "masterDetailWidth": null,
+      "sampleWide": []
+    }
+  },
+  {
+    "name": "admin-prompts-consumption",
+    "url": "http://localhost:5173/admin/prompts/consumption",
+    "metrics": {
+      "path": "/admin/prompts/consumption",
+      "overflowX": 0,
+      "viewport": 1600,
+      "bodyScrollWidth": 1600,
+      "adminContainerWidth": 740,
+      "adminMainWidth": 804,
+      "masterDetailWidth": null,
+      "sampleWide": []
+    }
+  },
+  {
+    "name": "admin-users",
+    "url": "http://localhost:5173/admin/users",
+    "metrics": {
+      "path": "/admin/users",
+      "overflowX": 0,
+      "viewport": 1600,
+      "bodyScrollWidth": 1600,
+      "adminContainerWidth": 740,
+      "adminMainWidth": 804,
+      "masterDetailWidth": null,
+      "sampleWide": []
+    }
+  },
+  {
+    "name": "admin-logs",
+    "url": "http://localhost:5173/admin/logs",
+    "metrics": {
+      "path": "/admin/logs",
+      "overflowX": 0,
+      "viewport": 1600,
+      "bodyScrollWidth": 1600,
+      "adminContainerWidth": 740,
+      "adminMainWidth": 804,
+      "masterDetailWidth": null,
+      "sampleWide": []
+    }
+  }
+]
