@@ -205,11 +205,15 @@ gpt-5
 - Ajout d un seed idempotent `LlmQaSeedService` avec convergence de `cyril-test@test.com`, geocoding/reconciliation du lieu resolu, profil natal borne et startup optionnel via `seed_llm_qa_user`.
 - Ajout d un namespace interne `backend/app/api/v1/routers/internal/llm/qa.py` pour seed, guidance, chat, natal et horoscope daily, protege par RBAC ops/admin et monte conditionnellement via flags d environnement.
 - Ajout des tests d integration `test_llm_qa_seed.py` et `test_llm_qa_router.py`, plus revalidation des suites existantes `test_persona_injection.py`, `test_gateway_3_roles.py` et `test_validation_sequence.py` pour la preuve de placeholders, personas et normalisation gateway.
+- Correctif post-implementation le 2026-04-22 : restauration d un bootstrap canonique LLM local pour les bases vides afin que `natal_interpretation_short` et `natal_long_free` resolvent nominalement via assemblies/profiles publies au demarrage, sans retomber sur `USE_CASE_FIRST`/`RESOLVE_MODEL`.
+- Garde-fou runtime conserve : un fallback borne reste autorise uniquement en non-prod tant qu aucune assembly canonique n existe encore, pour ne pas casser le premier demarrage avant auto-heal.
+- Revalidation live constatee apres correctif : les logs backend montrent `gateway_execution_profile_applied ... source=waterfall model=gpt-4o provider=openai` et absence de `gateway_bootstrap_no_assembly_fallback` sur la generation natal free.
 
 ### File List
 
 - _bmad-output/implementation-artifacts/70-16-documenter-valider-et-exposer-des-routes-de-test-pour-la-generation-llm.md
 - backend/app/core/config.py
+- backend/app/domain/llm/runtime/gateway.py
 - backend/app/services/geocoding_service.py
 - backend/app/services/llm_qa_seed_service.py
 - backend/app/startup/__init__.py
@@ -220,9 +224,12 @@ gpt-5
 - backend/app/main.py
 - backend/app/tests/integration/test_llm_qa_seed.py
 - backend/app/tests/integration/test_llm_qa_router.py
+- backend/tests/llm_orchestration/test_story_66_20_convergence.py
+- backend/tests/unit/test_story_70_13_bootstrap.py
 - docs/llm-prompt-generation-by-feature.md
 - docs/llm-qa-runbook.md
 
 ### Change Log
 
 - 2026-04-22 : documentation post-70.15 alignee, seed QA idempotent ajoute, routes backend QA internes montees conditionnellement et campagne de validation backend executee dans le venv.
+- 2026-04-22 : correctif post-implementation du bootstrap canonique LLM local pour reseeder prompts/use cases/personas/assemblies/profiles quand la base locale est vide, avec tests unitaires et de convergence gateway associes.
