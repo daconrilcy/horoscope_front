@@ -70,7 +70,6 @@ class PromptRegistryV2:
                 "temperature": result.temperature,
                 "max_output_tokens": result.max_output_tokens,
                 "developer_prompt": result.developer_prompt,
-                "fallback_use_case_key": result.fallback_use_case_key,
                 "reasoning_effort": result.reasoning_effort,
                 "verbosity": result.verbosity,
                 "status": result.status,

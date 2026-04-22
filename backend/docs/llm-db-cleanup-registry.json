@@ -1,0 +1,528 @@
+{
+  "version": "1.2.0",
+  "generated_for_story": "70-17-db-cleanup-llm-canonique",
+  "governance_doc": "backend/docs/llm-db-governance.md",
+  "reviewed_migrations": [
+    "0be022f23e03_create_llm_prompt_registry_tables.py",
+    "12216bc815ed_extend_use_case_config_contract.py",
+    "1a16484f6ae0_add_llm_assembly_configs.py",
+    "20260408_0068_add_eval_fields_to_llm_use_case_configs.py",
+    "20260417_0069_add_llm_sample_payloads.py",
+    "20260419_0070_remap_llm_prompt_archived_to_inactive.py",
+    "20260420_0071_add_runtime_error_code_to_llm_call_logs.py",
+    "20260422_0072_archive_prompt_fallback_use_case.py",
+    "20260422_0073_drop_prompt_fallback_and_use_case_index.py",
+    "21011e7e01f2_add_execution_profile_ref_to_assembly.py",
+    "2219fc77cb83_add_persona_id_to_chat_conversations.py",
+    "2b616cdc516a_add_fallback_to_use_case_config.py",
+    "432a48efb602_add_assembly_interaction_fields.py",
+    "4665be3c5a76_add_llm_persona_model.py",
+    "4b2d52442492_add_reasoning_effort_verbosity_to_.py",
+    "51bdec8ae9a5_add_llm_observability_tables.py",
+    "577048f1686f_add_safety_profile_to_use_case.py",
+    "5e52f7244424_add_length_budget_to_assembly.py",
+    "8a572a8336bf_add_context_quality_to_llm_call_logs_.py",
+    "8a839be9fea4_add_story_66_25_observability_fields.py",
+    "8b2d52442493_add_input_schema_to_assembly.py",
+    "9a2d0fcc031f_add_golden_set_path_to_llm_use_case_.py",
+    "afe029f0f78d_create_llm_output_schemas_table.py",
+    "b91ce4044d7c_add_llm_release_tables_and_obs.py",
+    "caf87c3d461f_add_persona_strategy_to_use_case.py",
+    "c5c208c81831_create_astrologer_dedicated_tables.py",
+    "cc211a38294d_add_llm_execution_profiles.py",
+    "d86bb999566a_add_user_token_usage_logs.py",
+    "ee2645ed1a1c_add_interaction_modes_to_use_case.py",
+    "f44760fae191_add_astrologer_details_and_reviews.py"
+  ],
+  "compatibility_rules": [
+    {
+      "rule_id": "legacy-use-case-config-access",
+      "pattern": "LlmUseCaseConfigModel|llm_use_case_configs",
+      "allowed_paths": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/domain/llm/prompting/validation.py",
+        "backend/app/domain/llm/prompting/validators.py",
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/infra/db/models/",
+        "backend/app/infrastructure/db/repositories/llm/",
+        "backend/app/ops/llm/",
+        "backend/scripts/"
+      ]
+    },
+    {
+      "rule_id": "legacy-call-log-use-case-read",
+      "pattern": "LlmCallLogModel\\.use_case",
+      "allowed_paths": [
+        "backend/app/api/v1/routers/admin_ai.py",
+        "backend/app/api/v1/routers/admin_exports.py",
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/infra/db/models/llm_observability.py",
+        "backend/app/services/llm_canonical_consumption_service.py"
+      ]
+    },
+    {
+      "rule_id": "legacy-use-case-compat-export",
+      "pattern": "use_case_compat",
+      "allowed_paths": [
+        "backend/app/api/v1/routers/admin_exports.py",
+        "backend/app/services/llm_canonical_consumption_service.py"
+      ]
+    },
+    {
+      "rule_id": "legacy-fallback-use-case-key",
+      "pattern": "fallback_use_case_key",
+      "allowed_paths": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/domain/llm/configuration/admin_models.py",
+        "backend/app/domain/llm/configuration/canonical_use_case_registry.py",
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/infra/db/models/",
+        "backend/app/ops/llm/"
+      ]
+    },
+    {
+      "rule_id": "legacy-assembly-fallback-use-case",
+      "pattern": "\\bfallback_use_case\\b(?!_key)",
+      "allowed_paths": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/domain/llm/configuration/admin_models.py",
+        "backend/app/domain/llm/configuration/assembly_admin_service.py",
+        "backend/app/domain/llm/prompting/catalog.py",
+        "backend/app/domain/llm/runtime/contracts.py",
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/infra/db/models/llm_assembly.py",
+        "backend/app/ops/llm/"
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "object_id": "table:llm_use_case_configs",
+      "kind": "table",
+      "table": "llm_use_case_configs",
+      "historical_role": "Runtime and admin contract registry keyed by use_case.",
+      "target_role": "Legacy compatibility registry kept only for bounded admin and fallback reads.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/domain/llm/prompting/validation.py",
+        "backend/app/domain/llm/prompting/validators.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/use_cases_seed.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "freeze",
+      "justification": "Le bootstrap nominal a ete retire du legacy, mais des lectures bornees subsistent encore pour fallback/tests admin compat; pas safe a drop avant convergence complete."
+    },
+    {
+      "object_id": "column:llm_use_case_configs.fallback_use_case_key",
+      "kind": "column",
+      "table": "llm_use_case_configs",
+      "column": "fallback_use_case_key",
+      "historical_role": "Legacy fallback routing override per use_case.",
+      "target_role": "Compatibility-only fallback pointer until execution profiles fully own fallback semantics.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/use_cases_seed.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "freeze",
+      "justification": "Runtime fallback still reads it; new nominal consumers must be blocked outside the compatibility perimeter."
+    },
+    {
+      "object_id": "table:llm_prompt_versions",
+      "kind": "table",
+      "table": "llm_prompt_versions",
+      "historical_role": "Published template history and active prompt content.",
+      "target_role": "Canonical template storage backing assemblies, release snapshots and admin history.",
+      "known_readers": [
+        "backend/app/domain/llm/configuration/prompt_version_lookup.py",
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_30_14_chat_prompt.py",
+        "backend/app/ops/llm/bootstrap/seed_guidance_prompts.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Canonical prompt source remains the published template rows referenced by assemblies and releases."
+    },
+    {
+      "object_id": "column:llm_prompt_versions.model",
+      "kind": "column",
+      "table": "llm_prompt_versions",
+      "column": "model",
+      "historical_role": "Provider model setting embedded in prompt versions.",
+      "target_role": "Execution profile input to be kept only as bounded compatibility metadata.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_30_14_chat_prompt.py",
+        "backend/app/ops/llm/bootstrap/seed_guidance_prompts.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "migrate",
+      "justification": "Still consumed by bounded fallback paths and admin history, but nominal execution settings should come from execution profiles."
+    },
+    {
+      "object_id": "column:llm_prompt_versions.temperature",
+      "kind": "column",
+      "table": "llm_prompt_versions",
+      "column": "temperature",
+      "historical_role": "Prompt-local sampling override.",
+      "target_role": "Execution profile compatibility metadata.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_guidance_prompts.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "migrate",
+      "justification": "Should not regain nominal authority outside execution profiles."
+    },
+    {
+      "object_id": "column:llm_prompt_versions.max_output_tokens",
+      "kind": "column",
+      "table": "llm_prompt_versions",
+      "column": "max_output_tokens",
+      "historical_role": "Prompt-local output ceiling.",
+      "target_role": "Execution profile compatibility metadata.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_guidance_prompts.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "migrate",
+      "justification": "Still needed for bounded fallback flows but no longer a canonical source of truth."
+    },
+    {
+      "object_id": "column:llm_prompt_versions.fallback_use_case_key",
+      "kind": "column",
+      "table": "llm_prompt_versions",
+      "column": "fallback_use_case_key",
+      "historical_role": "Prompt-local fallback routing.",
+      "target_role": "Frozen compatibility bridge until runtime fallback is converged elsewhere.",
+      "known_readers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/docs/llm-db-governance.md"
+      ],
+      "known_writers": [],
+      "usage_status": "unused",
+      "decision": "drop",
+      "justification": "Archive migration 20260422_0072 preserves rollback evidence and 20260422_0073 removes the prompt-local fallback from the runtime path."
+    },
+    {
+      "object_id": "table:llm_prompt_version_fallback_archives",
+      "kind": "table",
+      "table": "llm_prompt_version_fallback_archives",
+      "historical_role": "Archive des fallback_use_case_key issus de llm_prompt_versions.",
+      "target_role": "Support de rollback et d'audit pour le drop du fallback prompt-local.",
+      "known_readers": [
+        "backend/migrations/versions/20260422_0073_drop_prompt_fallback_and_use_case_index.py",
+        "backend/app/tests/integration/test_migration_20260422_0073_cleanup_llm_legacy.py"
+      ],
+      "known_writers": [
+        "backend/migrations/versions/20260422_0072_archive_prompt_fallback_use_case.py",
+        "backend/migrations/versions/20260422_0073_drop_prompt_fallback_and_use_case_index.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "keep",
+      "justification": "Table minimale de sauvegarde necessaire au rollback Alembic et a la preuve de convergence."
+    },
+    {
+      "object_id": "column:llm_prompt_versions.reasoning_effort",
+      "kind": "column",
+      "table": "llm_prompt_versions",
+      "column": "reasoning_effort",
+      "historical_role": "Prompt-local reasoning hint.",
+      "target_role": "Execution profile compatibility metadata.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "migrate",
+      "justification": "Runtime should not regain profile authority from prompt rows."
+    },
+    {
+      "object_id": "column:llm_prompt_versions.verbosity",
+      "kind": "column",
+      "table": "llm_prompt_versions",
+      "column": "verbosity",
+      "historical_role": "Prompt-local verbosity hint.",
+      "target_role": "Execution profile compatibility metadata.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "migrate",
+      "justification": "Still surfaced in admin/debug flows, but canonical verbosity comes from execution profiles and persona overlays."
+    },
+    {
+      "object_id": "table:llm_output_schemas",
+      "kind": "table",
+      "table": "llm_output_schemas",
+      "historical_role": "Structured output schemas.",
+      "target_role": "Canonical contract registry for admin/runtime governance.",
+      "known_readers": [
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Still canonical for governed output contracts."
+    },
+    {
+      "object_id": "table:llm_personas",
+      "kind": "table",
+      "table": "llm_personas",
+      "historical_role": "Persona content and enablement flags.",
+      "target_role": "Canonical persona registry.",
+      "known_readers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/domain/llm/configuration/assembly_resolver.py",
+        "backend/app/domain/llm/runtime/observability_service.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/main.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Canonical persona management remains active."
+    },
+    {
+      "object_id": "table:llm_assembly_configs",
+      "kind": "table",
+      "table": "llm_assembly_configs",
+      "historical_role": "Feature and plan assembly source of truth.",
+      "target_role": "Canonical runtime assembly registry.",
+      "known_readers": [
+        "backend/app/domain/llm/configuration/assembly_registry.py",
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [
+        "backend/app/domain/llm/configuration/assembly_admin_service.py",
+        "backend/app/ops/llm/bootstrap/seed_horoscope_narrator_assembly.py",
+        "backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Primary canonical runtime source after story 70-15."
+    },
+    {
+      "object_id": "column:llm_assembly_configs.fallback_use_case",
+      "kind": "column",
+      "table": "llm_assembly_configs",
+      "column": "fallback_use_case",
+      "historical_role": "Assembly-level fallback bridge to legacy use_case identifiers.",
+      "target_role": "Frozen compatibility field until fallback semantics are fully canonicalized.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/domain/llm/configuration/admin_models.py"
+      ],
+      "known_writers": [
+        "backend/app/domain/llm/configuration/assembly_admin_service.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "freeze",
+      "justification": "Still carried in runtime contracts; must not spread outside bounded compatibility flows."
+    },
+    {
+      "object_id": "table:llm_execution_profiles",
+      "kind": "table",
+      "table": "llm_execution_profiles",
+      "historical_role": "Provider, model, timeout and provider-parameter profiles.",
+      "target_role": "Canonical execution settings source of truth.",
+      "known_readers": [
+        "backend/app/domain/llm/configuration/execution_profile_registry.py",
+        "backend/app/domain/llm/runtime/gateway.py",
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [
+        "backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Canonical runtime configuration source for provider and model resolution."
+    },
+    {
+      "object_id": "table:llm_release_snapshots",
+      "kind": "table",
+      "table": "llm_release_snapshots",
+      "historical_role": "Versioned release manifests.",
+      "target_role": "Canonical release history.",
+      "known_readers": [
+        "backend/app/domain/llm/configuration/assembly_registry.py",
+        "backend/app/domain/llm/configuration/execution_profile_registry.py",
+        "backend/app/api/v1/routers/admin_llm_release.py"
+      ],
+      "known_writers": [
+        "backend/app/ops/llm/release_service.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Canonical release truth and rollback anchor."
+    },
+    {
+      "object_id": "table:llm_active_releases",
+      "kind": "table",
+      "table": "llm_active_releases",
+      "historical_role": "Pointer to the active release snapshot.",
+      "target_role": "Canonical active release pointer.",
+      "known_readers": [
+        "backend/app/domain/llm/configuration/active_release.py",
+        "backend/app/api/v1/routers/admin_llm_release.py"
+      ],
+      "known_writers": [
+        "backend/app/ops/llm/release_service.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Runtime and admin release flows still depend on it canonically."
+    },
+    {
+      "object_id": "table:llm_call_logs",
+      "kind": "table",
+      "table": "llm_call_logs",
+      "historical_role": "LLM observability event log.",
+      "target_role": "Canonical observability and consumption source.",
+      "known_readers": [
+        "backend/app/services/llm_canonical_consumption_service.py",
+        "backend/app/services/llm_ops_monitoring_service.py",
+        "backend/app/api/v1/routers/admin_ai.py",
+        "backend/app/api/v1/routers/admin_exports.py",
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [
+        "backend/app/domain/llm/runtime/observability_service.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Canonical observability source; only compat columns inside the table remain under cleanup."
+    },
+    {
+      "object_id": "column:llm_call_logs.use_case",
+      "kind": "column",
+      "table": "llm_call_logs",
+      "column": "use_case",
+      "historical_role": "Legacy compatibility axis copied from pre-canonical runtime.",
+      "target_role": "Compatibility-only taxonomy residual for exports and bounded admin analytics.",
+      "known_readers": [
+        "backend/app/api/v1/routers/admin_ai.py",
+        "backend/app/api/v1/routers/admin_exports.py",
+        "backend/app/api/v1/routers/admin_llm.py",
+        "backend/app/services/llm_canonical_consumption_service.py"
+      ],
+      "known_writers": [
+        "backend/app/domain/llm/runtime/observability_service.py"
+      ],
+      "usage_status": "legacy",
+      "decision": "freeze",
+      "justification": "Still exposed for compatibility-only analytics, exports and the explicit legacy_removed bucket; canonical feature/subfeature/plan remain the nominal axes."
+    },
+    {
+      "object_id": "index:llm_call_logs.ix_llm_call_logs_use_case_timestamp",
+      "kind": "index",
+      "table": "llm_call_logs",
+      "index": "ix_llm_call_logs_use_case_timestamp",
+      "historical_role": "Legacy analytics acceleration on use_case.",
+      "target_role": "Temporary compatibility index until the last compat readers move to canonical dimensions.",
+      "known_readers": [
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [],
+      "usage_status": "unused",
+      "decision": "drop",
+      "justification": "Dropped by migration 20260422_0073 after admin readers were realigned on canonical feature analytics."
+    },
+    {
+      "object_id": "table:llm_replay_snapshots",
+      "kind": "table",
+      "table": "llm_replay_snapshots",
+      "historical_role": "Encrypted short-lived replay payloads.",
+      "target_role": "Canonical replay support surface.",
+      "known_readers": [
+        "backend/app/ops/llm/replay_service.py"
+      ],
+      "known_writers": [
+        "backend/app/domain/llm/runtime/observability_service.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Replay and incident workflows still require it."
+    },
+    {
+      "object_id": "table:llm_canonical_consumption_aggregates",
+      "kind": "table",
+      "table": "llm_canonical_consumption_aggregates",
+      "historical_role": "Read model for canonical consumption aggregates.",
+      "target_role": "Canonical reporting surface.",
+      "known_readers": [
+        "backend/app/services/llm_canonical_consumption_service.py",
+        "backend/app/api/v1/routers/admin_llm_consumption.py"
+      ],
+      "known_writers": [
+        "backend/app/services/llm_canonical_consumption_service.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Canonical admin consumption reporting source."
+    },
+    {
+      "object_id": "table:llm_sample_payloads",
+      "kind": "table",
+      "table": "llm_sample_payloads",
+      "historical_role": "Admin-managed sample payloads for preview and manual execute.",
+      "target_role": "Canonical admin QA surface.",
+      "known_readers": [
+        "backend/app/api/v1/routers/admin/llm/sample_payloads.py",
+        "backend/app/api/v1/routers/admin_llm.py"
+      ],
+      "known_writers": [
+        "backend/app/api/v1/routers/admin/llm/sample_payloads.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "Still part of the canonical admin preview workflow."
+    }
+  ]
+}

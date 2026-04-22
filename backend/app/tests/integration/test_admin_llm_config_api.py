@@ -8,6 +8,7 @@ from app.infra.db.models import (
     UserModel,
 )
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
@@ -57,72 +58,24 @@ def test_admin_output_schema_list():
     assert resp.json()["data"]["name"] == "test_schema"
 
 
-def test_admin_use_case_update_config():
+def test_admin_use_case_update_config_is_frozen():
     _cleanup_tables()
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    with SessionLocal() as db:
-        uc = LlmUseCaseConfigModel(
-            key="guidance_daily",
-            display_name="Guidance",
-            description="Test",
-        )
-        s = LlmOutputSchemaModel(name="chat_schema", json_schema={"type": "object"})
-        db.add_all([uc, s])
-        db.commit()
-        schema_id = str(s.id)
-
-    # Update config
     resp = client.patch(
         "/v1/admin/llm/use-cases/guidance_daily",
         headers=headers,
-        json={
-            "persona_strategy": "required",
-            "safety_profile": "support",
-            "output_schema_id": schema_id,
-            "fallback_use_case_key": "safe_fallback",
-        },
+        json={"persona_strategy": "required"},
     )
-    assert resp.status_code == 200
-    data = resp.json()["data"][0]
-    assert data["persona_strategy"] == "required"
-    assert data["safety_profile"] == "support"
-    assert data["output_schema_id"] == schema_id
-    assert data["fallback_use_case_key"] == "safe_fallback"
-
-    # Validate unknown safety profile fails
-    resp = client.patch(
-        "/v1/admin/llm/use-cases/guidance_daily",
-        headers=headers,
-        json={"safety_profile": "unknown"},
-    )
-    assert resp.status_code == 422
-    assert resp.json()["error"]["code"] == "invalid_safety_profile"
+    assert resp.status_code == 409
+    assert resp.json()["error"]["code"] == "forbidden_feature"
 
 
 def test_admin_use_case_list_exposes_legacy_alias_audit():
     _cleanup_tables()
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
-
-    with SessionLocal() as db:
-        db.add_all(
-            [
-                LlmUseCaseConfigModel(
-                    key="chat",
-                    display_name="Chat",
-                    description="Legacy alias exposed in admin",
-                    fallback_use_case_key="horoscope_daily_free",
-                ),
-                LlmUseCaseConfigModel(
-                    key="natal_psy_profile",
-                    display_name="Natal Psy Profile",
-                    description="Legacy registry only surface",
-                ),
-            ]
-        )
-        db.commit()
 
     resp = client.get("/v1/admin/llm/use-cases", headers=headers)
     assert resp.status_code == 200
@@ -178,3 +131,128 @@ def test_admin_assembly_publish_returns_structured_coherence_error():
     payload = resp.json()
     assert payload["error"]["code"] == "coherence_validation_failed"
     assert payload["error"]["details"]["errors"][0]["error_code"] == "missing_execution_profile"
+
+
+def test_admin_prompt_create_draft_rejects_frozen_prompt_local_fallback():
+    _cleanup_tables()
+    admin_token = _register_admin_and_token()
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    resp = client.post(
+        "/v1/admin/llm/use-cases/guidance_daily/prompts",
+        headers=headers,
+        json={
+            "developer_prompt": "Bonjour {{natal_chart_summary}} {{locale}} {{use_case}}",
+            "model": "gpt-4o-mini",
+            "fallback_use_case_key": "legacy_fallback",
+        },
+    )
+
+    assert resp.status_code == 409
+    assert resp.json()["error"]["code"] == "forbidden_feature"
+
+
+def test_admin_call_logs_filter_uses_canonical_feature_axis():
+    _cleanup_tables()
+    admin_token = _register_admin_and_token()
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    with SessionLocal() as db:
+        db.add_all(
+            [
+                LlmCallLogModel(
+                    use_case="legacy_chat_alias",
+                    feature="chat",
+                    subfeature="astrologer",
+                    plan="premium",
+                    model="gpt-4o-mini",
+                    latency_ms=120,
+                    tokens_in=10,
+                    tokens_out=20,
+                    cost_usd_estimated=0.001,
+                    validation_status=LlmValidationStatus.VALID,
+                    request_id="req-admin-llm-chat",
+                    trace_id="trace-admin-llm-chat",
+                    input_hash="hash-admin-llm-chat",
+                    environment="test",
+                ),
+                LlmCallLogModel(
+                    use_case="legacy_guidance_alias",
+                    feature="guidance",
+                    subfeature="daily",
+                    plan="free",
+                    model="gpt-4o-mini",
+                    latency_ms=220,
+                    tokens_in=11,
+                    tokens_out=21,
+                    cost_usd_estimated=0.002,
+                    validation_status=LlmValidationStatus.VALID,
+                    request_id="req-admin-llm-guidance",
+                    trace_id="trace-admin-llm-guidance",
+                    input_hash="hash-admin-llm-guidance",
+                    environment="test",
+                ),
+            ]
+        )
+        db.commit()
+
+    resp = client.get("/v1/admin/llm/call-logs?use_case=chat", headers=headers)
+
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert len(data) == 1
+    assert data[0]["request_id"] == "req-admin-llm-chat"
+
+
+def test_admin_dashboard_groups_by_canonical_feature_with_bounded_legacy_bucket():
+    _cleanup_tables()
+    admin_token = _register_admin_and_token()
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    with SessionLocal() as db:
+        db.add_all(
+            [
+                LlmCallLogModel(
+                    use_case="legacy_chat_alias",
+                    feature="chat",
+                    subfeature="astrologer",
+                    plan="premium",
+                    model="gpt-4o-mini",
+                    latency_ms=100,
+                    tokens_in=20,
+                    tokens_out=30,
+                    cost_usd_estimated=0.003,
+                    validation_status=LlmValidationStatus.VALID,
+                    request_id="req-dashboard-chat",
+                    trace_id="trace-dashboard-chat",
+                    input_hash="hash-dashboard-chat",
+                    environment="test",
+                ),
+                LlmCallLogModel(
+                    use_case="daily_prediction",
+                    feature=None,
+                    subfeature=None,
+                    plan="free",
+                    model="gpt-4o-mini",
+                    latency_ms=300,
+                    tokens_in=5,
+                    tokens_out=10,
+                    cost_usd_estimated=0.001,
+                    validation_status=LlmValidationStatus.ERROR,
+                    request_id="req-dashboard-legacy",
+                    trace_id="trace-dashboard-legacy",
+                    input_hash="hash-dashboard-legacy",
+                    environment="test",
+                ),
+            ]
+        )
+        db.commit()
+
+    resp = client.get("/v1/admin/llm/dashboard", headers=headers)
+
+    assert resp.status_code == 200
+    data = {item["use_case"]: item for item in resp.json()["data"]}
+    assert "chat" in data
+    assert "legacy_removed" in data
+    assert data["chat"]["request_count"] == 1
+    assert data["legacy_removed"]["request_count"] == 1

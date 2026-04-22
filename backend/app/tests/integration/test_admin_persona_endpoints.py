@@ -71,8 +71,8 @@ def test_admin_persona_crud_lifecycle() -> None:
     assert update_resp.json()["data"]["tone"] == "mystical"
     assert update_resp.json()["data"]["name"] == "Luna Mystica"
 
-    # 4. Associate to use case
-    # Create use case first
+    # 4. Legacy association endpoint is frozen
+    # Create use case first to verify canonical governance refusal on an existing key.
     with SessionLocal() as db:
         uc = LlmUseCaseConfigModel(
             key="guidance_daily",
@@ -87,8 +87,8 @@ def test_admin_persona_crud_lifecycle() -> None:
         headers=headers,
         json={"persona_id": persona_id},
     )
-    assert assoc_resp.status_code == 200
-    assert assoc_resp.json()["data"][0]["allowed_persona_ids"] == [persona_id]
+    assert assoc_resp.status_code == 409
+    assert assoc_resp.json()["error"]["code"] == "forbidden_feature"
 
     # 5. Disable (Delete)
     del_resp = client.delete(f"/v1/admin/llm/personas/{persona_id}", headers=headers)

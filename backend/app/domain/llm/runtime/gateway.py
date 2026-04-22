@@ -16,6 +16,7 @@ from app.domain.llm.configuration.assembly_resolver import (
     assemble_developer_prompt,
     resolve_assembly,
 )
+from app.domain.llm.configuration.canonical_use_case_registry import get_canonical_use_case_contract
 from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.domain.llm.governance.feature_taxonomy import (
@@ -234,6 +235,7 @@ class LLMGateway:
     ) -> UseCaseConfig:
         """Resolve config for bounded fallback paths outside the nominal assembly flow."""
         config = None
+        canonical_contract = get_canonical_use_case_contract(use_case)
         if db:
             try:
                 db_prompt = get_active_prompt_version(
@@ -241,14 +243,14 @@ class LLMGateway:
                     use_case,
                     override_prompt_version_id=context.get("_override_prompt_version_id"),
                 )
-
-                use_case_stmt = select(LlmUseCaseConfigModel).where(
-                    LlmUseCaseConfigModel.key == use_case
-                )
-                db_use_case = db.execute(use_case_stmt).scalar_one_or_none()
-
-                if db_use_case and "allowed_persona_ids" not in context:
-                    context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
+                db_use_case = None
+                if canonical_contract is None:
+                    use_case_stmt = select(LlmUseCaseConfigModel).where(
+                        LlmUseCaseConfigModel.key == use_case
+                    )
+                    db_use_case = db.execute(use_case_stmt).scalar_one_or_none()
+                    if db_use_case and "allowed_persona_ids" not in context:
+                        context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
 
                 if db_prompt:
                     logger.debug(
@@ -285,7 +287,9 @@ class LLMGateway:
                         "current_location",
                     }
 
-                    if db_use_case and db_use_case.required_prompt_placeholders:
+                    if canonical_contract and canonical_contract.required_prompt_placeholders:
+                        required = list(canonical_contract.required_prompt_placeholders)
+                    elif db_use_case and db_use_case.required_prompt_placeholders:
                         required = list(db_use_case.required_prompt_placeholders)
                     else:
                         placeholders = re.findall(
@@ -294,10 +298,10 @@ class LLMGateway:
                         required = [p for p in set(placeholders) if p in authorized_vars]
 
                     resolved_fallback = None
-                    if db_use_case and db_use_case.fallback_use_case_key:
+                    if canonical_contract and canonical_contract.fallback_use_case_key:
+                        resolved_fallback = canonical_contract.fallback_use_case_key
+                    elif db_use_case and db_use_case.fallback_use_case_key:
                         resolved_fallback = db_use_case.fallback_use_case_key
-                    elif db_prompt.fallback_use_case_key:
-                        resolved_fallback = db_prompt.fallback_use_case_key
 
                     config = UseCaseConfig(
                         model=db_prompt.model,
@@ -311,18 +315,36 @@ class LLMGateway:
                         required_prompt_placeholders=required,
                         fallback_use_case=resolved_fallback,
                         persona_strategy=(
-                            db_use_case.persona_strategy if db_use_case else "optional"
+                            canonical_contract.persona_strategy
+                            if canonical_contract
+                            else (db_use_case.persona_strategy if db_use_case else "optional")
                         ),
-                        safety_profile=(db_use_case.safety_profile if db_use_case else "astrology"),
-                        output_schema_id=(db_use_case.output_schema_id if db_use_case else None),
-                        input_schema=db_use_case.input_schema if db_use_case else None,
+                        safety_profile=(
+                            canonical_contract.safety_profile
+                            if canonical_contract
+                            else (db_use_case.safety_profile if db_use_case else "astrology")
+                        ),
+                        output_schema_id=(
+                            None
+                            if canonical_contract
+                            else (db_use_case.output_schema_id if db_use_case else None)
+                        ),
+                        input_schema=(
+                            canonical_contract.input_schema
+                            if canonical_contract
+                            else (db_use_case.input_schema if db_use_case else None)
+                        ),
                         reasoning_effort=db_prompt.reasoning_effort,
                         verbosity=db_prompt.verbosity,
                         interaction_mode=(
-                            db_use_case.interaction_mode if db_use_case else "structured"
+                            canonical_contract.interaction_mode
+                            if canonical_contract
+                            else (db_use_case.interaction_mode if db_use_case else "structured")
                         ),
                         user_question_policy=(
-                            db_use_case.user_question_policy if db_use_case else "none"
+                            canonical_contract.user_question_policy
+                            if canonical_contract
+                            else (db_use_case.user_question_policy if db_use_case else "none")
                         ),
                     )
             except Exception as e:
@@ -332,7 +354,18 @@ class LLMGateway:
 
         if not config:
             config = build_fallback_use_case_config(use_case)
-            if db and config:
+            if canonical_contract and config:
+                config = config.model_copy(
+                    update={
+                        "input_schema": canonical_contract.input_schema,
+                        "persona_strategy": canonical_contract.persona_strategy,
+                        "interaction_mode": canonical_contract.interaction_mode,
+                        "user_question_policy": canonical_contract.user_question_policy,
+                        "fallback_use_case": canonical_contract.fallback_use_case_key,
+                        "safety_profile": canonical_contract.safety_profile,
+                    }
+                )
+            elif db and config:
                 # Still merge DB use-case config even when the prompt contract comes
                 # from the bounded fallback registry.
                 use_case_stmt = select(LlmUseCaseConfigModel).where(
@@ -439,6 +472,14 @@ class LLMGateway:
                             resolved_persona_id = pid
                             persona_name = resolved_persona.name
                             break
+
+        if db and not allowed_ids and config.persona_strategy == "required":
+            stmt = select(LlmPersonaModel).where(LlmPersonaModel.enabled)
+            fallback_persona = db.execute(stmt).scalars().first()
+            if fallback_persona is not None:
+                persona_block = compose_persona_block(fallback_persona)
+                resolved_persona_id = str(fallback_persona.id)
+                persona_name = fallback_persona.name
 
         if not persona_block and config.persona_strategy == "required":
             raise GatewayConfigError(

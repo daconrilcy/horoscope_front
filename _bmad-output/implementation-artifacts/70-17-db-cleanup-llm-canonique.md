@@ -1,6 +1,6 @@
 # Story 70.17: Assainir la base de donnees LLM apres la convergence backend canonique
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -59,64 +59,71 @@ Produire et executer un plan de cleanup DB LLM qui :
 13. **AC13 - Garde-fou anti-derive schema/migrations** : un controle automatise detecte toute nouvelle migration LLM introduisant un objet, champ ou compatibilite non classes dans le registre de cleanup.
 14. **AC14 - Documentation de gouvernance post-cleanup** : la documentation backend LLM de reference explique quelles tables/colonnes restent sources de verite, quelles compatibilites sont encore tolerees, comment un futur changement DB LLM doit etre classe dans le registre, et pourquoi `DROP` ne doit jamais preceder la convergence logique.
 15. **AC15 - Validation locale obligatoire** : la story est terminee seulement si les validations backend passees dans le venv sont executees et tracees (`ruff format .`, `ruff check .`, `pytest -q` ou suites ciblees justifiees), avec couverture des garde-fous, des migrations de cleanup et des flux runtime/admin touches.
+16. **AC16 - Elimination prealable des dependances legacy backend actives** : avant tout drop physique supplementaire, les dependances backend encore actives a `llm_use_case_configs`, `fallback_use_case_key` et aux ecritures de configuration `use_case` sont retirees des chemins nominaux de bootstrap, runtime et administration. Les surfaces encore legacy autorisees restent explicitement bornees a la maintenance/compatibilite et ne pilotent plus aucun comportement nominal.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Produire le registre de cleanup DB LLM** (AC: 1, 2, 10, 13)
-  - [ ] Inventorier les tables, colonnes structurantes, index, contraintes et vues du perimetre LLM.
-  - [ ] Ajouter pour chaque objet son role historique, son role cible et sa classification `nominal / legacy / unused / unknown`.
-  - [ ] Distinguer explicitement `keep / migrate / freeze / archive / drop`.
-  - [ ] Versionner ce registre dans le depot a un emplacement stable cote backend/docs ou ops.
+- [x] **Task 1: Produire le registre de cleanup DB LLM** (AC: 1, 2, 10, 13)
+  - [x] Inventorier les tables, colonnes structurantes, index, contraintes et vues du perimetre LLM.
+  - [x] Ajouter pour chaque objet son role historique, son role cible et sa classification `nominal / legacy / unused / unknown`.
+  - [x] Distinguer explicitement `keep / migrate / freeze / archive / drop`.
+  - [x] Versionner ce registre dans le depot a un emplacement stable cote backend/docs ou ops.
 
-- [ ] **Task 2: Cartographier les dependances code -> DB** (AC: 1, 3, 8, 10)
-  - [ ] Scanner backend/app, backend/scripts et backend/tests pour les lecteurs et writers des objets LLM.
-  - [ ] Documenter explicitement les dependances autour de `llm_use_case_configs`, `llm_prompt_versions`, `llm_call_logs.use_case`, `admin_exports.use_case_compat`, `PromptAssemblyConfigModel.fallback_use_case` et des seeds `seed_use_cases()`.
-  - [ ] Revoir les routeurs admin/ops, les scripts release/replay/eval et les exports CSV.
-  - [ ] Marquer `unknown` tout objet ou colonne dont l usage n est pas prouve.
+- [x] **Task 2: Cartographier les dependances code -> DB** (AC: 1, 3, 8, 10)
+  - [x] Scanner backend/app, backend/scripts et backend/tests pour les lecteurs et writers des objets LLM.
+  - [x] Documenter explicitement les dependances autour de `llm_use_case_configs`, `llm_prompt_versions`, `llm_call_logs.use_case`, `admin_exports.use_case_compat`, `PromptAssemblyConfigModel.fallback_use_case` et des seeds `seed_use_cases()`.
+  - [x] Revoir les routeurs admin/ops, les scripts release/replay/eval et les exports CSV.
+  - [x] Marquer `unknown` tout objet ou colonne dont l usage n est pas prouve.
 
-- [ ] **Task 3: Classifier et prioriser les convergences logiques** (AC: 4, 5, 7, 8)
-  - [ ] Identifier les colonnes runtime redondantes a migrer hors `llm_prompt_versions`.
-  - [ ] Identifier les objets `use_case` strictement legacy a geler, conserver temporairement ou supprimer.
-  - [ ] Definir les cas ou une compatibilite reste autorisee, avec borne explicite et critere de suppression.
-  - [ ] Produire un plan par lots ordonnes : convergence logique -> archive -> drop.
+- [x] **Task 3: Classifier et prioriser les convergences logiques** (AC: 4, 5, 7, 8)
+  - [x] Identifier les colonnes runtime redondantes a migrer hors `llm_prompt_versions`.
+  - [x] Identifier les objets `use_case` strictement legacy a geler, conserver temporairement ou supprimer.
+  - [x] Definir les cas ou une compatibilite reste autorisee, avec borne explicite et critere de suppression.
+  - [x] Produire un plan par lots ordonnes : convergence logique -> archive -> drop.
 
-- [ ] **Task 4: Geler les ecritures legacy** (AC: 4, 7, 12)
-  - [ ] Neutraliser les ecritures applicatives nominales vers les objets / colonnes legacy non cibles.
-  - [ ] Ajouter si necessaire des garde-fous applicatifs ou validateurs startup/CI.
-  - [ ] Verifier que les familles canoniques n alimentent plus les structures `use_case` legacy sauf compatibilite explicitement bornee.
-  - [ ] Documenter les exceptions transitoires restantes.
+- [x] **Task 4: Geler les ecritures legacy** (AC: 4, 7, 12)
+  - [x] Neutraliser les ecritures applicatives nominales vers les objets / colonnes legacy non cibles.
+  - [x] Ajouter si necessaire des garde-fous applicatifs ou validateurs startup/CI.
+  - [x] Verifier que les familles canoniques n alimentent plus les structures `use_case` legacy sauf compatibilite explicitement bornee.
+  - [x] Documenter les exceptions transitoires restantes.
 
-- [ ] **Task 5: Realigner les lectures critiques** (AC: 3, 7, 8)
-  - [ ] Migrer `admin_ai.py` hors dependance structurante a `llm_call_logs.use_case` des qu un equivalent canonique existe.
-  - [ ] Realigner `admin_exports.py` et les exports de consommation pour que `use_case_compat` reste compat-only et jamais source primaire.
-  - [ ] Realigner les lectures runtime/startup (`main.py`, auto-heal, seeds) vers assemblies / execution profiles / release snapshots quand le comportement nominal le permet.
-  - [ ] Supprimer les lectures nominatives d objets classes `drop`.
+- [x] **Task 5: Realigner les lectures critiques** (AC: 3, 7, 8)
+  - [x] Migrer `admin_ai.py` hors dependance structurante a `llm_call_logs.use_case` des qu un equivalent canonique existe.
+  - [x] Realigner `admin_exports.py` et les exports de consommation pour que `use_case_compat` reste compat-only et jamais source primaire.
+  - [x] Realigner les lectures runtime/startup (`main.py`, auto-heal, seeds) vers assemblies / execution profiles / release snapshots quand le comportement nominal le permet.
+  - [x] Supprimer les lectures nominatives d objets classes `drop`.
 
-- [ ] **Task 6: Archiver les donnees a conserver** (AC: 5, 6, 9)
-  - [ ] Definir les objets contenant de la valeur d audit, de replay, de release history ou de reporting.
-  - [ ] Choisir le format d archive adapte (`*_archive`, export SQL/JSON/CSV, snapshot versionne).
-  - [ ] Executer et documenter l archivage avant les suppressions irreversibles.
-  - [ ] Lier chaque objet supprime a son emplacement d archive ou a sa justification de non-archive.
+- [x] **Task 6: Archiver les donnees a conserver** (AC: 5, 6, 9)
+  - [x] Definir les objets contenant de la valeur d audit, de replay, de release history ou de reporting.
+  - [x] Choisir le format d archive adapte (`*_archive`, export SQL/JSON/CSV, snapshot versionne).
+  - [x] Executer et documenter l archivage avant les suppressions irreversibles.
+  - [x] Lier chaque objet supprime a son emplacement d archive ou a sa justification de non-archive.
 
-- [ ] **Task 7: Supprimer physiquement les objets morts** (AC: 3, 9, 10)
-  - [ ] Ecrire des migrations ciblees pour les colonnes legacy mortes.
-  - [ ] Ecrire des migrations ciblees pour les tables legacy prouvees inutilisees.
-  - [ ] Supprimer les index/contraintes/vues devenus inutiles.
-  - [ ] Verifier qu aucun objet `unknown` n est supprime.
+- [x] **Task 7: Supprimer physiquement les objets morts** (AC: 3, 9, 10)
+  - [x] Ecrire des migrations ciblees pour les colonnes legacy mortes.
+  - [x] Ecrire des migrations ciblees pour les tables legacy prouvees inutilisees.
+  - [x] Supprimer les index/contraintes/vues devenus inutiles.
+  - [x] Verifier qu aucun objet `unknown` n est supprime.
 
-- [ ] **Task 8: Ajouter les garde-fous post-cleanup** (AC: 11, 12, 13, 14, 15)
-  - [ ] Ajouter un test ou validateur liant les objets DB LLM au registre de cleanup.
-  - [ ] Ajouter un garde qui detecte une nouvelle lecture nominale de champs / tables legacy interdits.
-  - [ ] Ajouter un garde qui detecte une nouvelle ecriture nominale dans un objet legacy gele.
-  - [ ] Ajouter un garde distinct qui detecte une derive schema/migration hors registre de cleanup.
-  - [ ] Mettre a jour la documentation de gouvernance DB LLM post-cleanup.
+- [x] **Task 8: Ajouter les garde-fous post-cleanup** (AC: 11, 12, 13, 14, 15)
+  - [x] Ajouter un test ou validateur liant les objets DB LLM au registre de cleanup.
+  - [x] Ajouter un garde qui detecte une nouvelle lecture nominale de champs / tables legacy interdits.
+  - [x] Ajouter un garde qui detecte une nouvelle ecriture nominale dans un objet legacy gele.
+  - [x] Ajouter un garde distinct qui detecte une derive schema/migration hors registre de cleanup.
+  - [x] Mettre a jour la documentation de gouvernance DB LLM post-cleanup.
 
-- [ ] **Task 9: Validation finale** (AC: 15)
-  - [ ] Activer le venv avant toute commande Python : `.\.venv\Scripts\Activate.ps1`
-  - [ ] Executer `cd backend ; ruff format .`
-  - [ ] Executer `cd backend ; ruff check .`
-  - [ ] Executer `cd backend ; pytest -q` ou une campagne ciblee justifiee
-  - [ ] Verifier les migrations de cleanup sur une base de test / preprod et confirmer le rollback documente.
+- [x] **Task 9: Validation finale** (AC: 15)
+  - [x] Activer le venv avant toute commande Python : `.\.venv\Scripts\Activate.ps1`
+  - [x] Executer `cd backend ; ruff format .`
+  - [x] Executer `cd backend ; ruff check .`
+  - [x] Executer `cd backend ; pytest -q` ou une campagne ciblee justifiee
+  - [x] Verifier les migrations de cleanup sur une base de test / preprod et confirmer le rollback documente.
+
+- [x] **Task 10: Retirer les dependances legacy backend encore actives** (AC: 4, 7, 8, 11, 12, 16)
+  - [x] Sortir le bootstrap local/runtime nominal de toute lecture structurante a `llm_use_case_configs`.
+  - [x] Basculer les contrats `use_case` nominaux vers un registre canonique partage cote backend.
+  - [x] Geler les endpoints admin qui ecrivent encore dans la configuration legacy `use_case`.
+  - [x] Reborner les lectures legacy restantes a la compatibilite explicite et mettre a jour les garde-fous associes.
 
 ## Dev Notes
 
@@ -212,6 +219,9 @@ gpt-5
 - Demande utilisateur : re-rediger la story 70-16 a partir d un draft de cleanup DB LLM post-convergence canonique.
 - Sources inspectees : workflow `bmad-create-story`, config BMAD, sprint status, story 70-15, audit backend post-70-15, architecture, backlog admin LLM preview/execution, modeles DB LLM, services de consommation/ops et routeurs admin.
 - Decision de cadrage : repositionner cette story en 70-17 pour conserver la vraie 70-16 et garder le cleanup DB en `ready-for-dev`.
+- 2026-04-22 : audit statique code/schema/migrations du perimetre LLM et construction d un registre JSON machine-readable.
+- 2026-04-22 : ajout d un validateur CI local (`check_llm_db_cleanup.py`) et de tests d integration pour bloquer la reintroduction de lectures/ecritures legacy hors allowlist.
+- 2026-04-22 : passe de correction post-review pour retirer la recreation ORM de l index legacy `use_case`, restaurer le detail persona sur les associations reelles et remettre le reseed bootstrap quand le prompt publie `natal_interpretation_short` manque.
 
 ### Completion Notes List
 
@@ -220,8 +230,55 @@ gpt-5
 - Le cadrage 70-17 reste base sur l etat reel du schema, des routeurs admin, de l observabilite et des services runtime/ops.
 - Gouvernance backlog clarifiee : la story cleanup DB a ete renumerotee en 70-17 pour preserver l historique reel de la story 70-16 deja livree ; aucun remplacement implicite de story done n est desormais tolere sans trace explicite.
 - Les hotspots legacy DB les plus dangereux (`use_case`, colonnes runtime redondantes, exports compat, auto-heal startup) sont explicitement nommes pour eviter un cleanup superficiel.
+- Registre `backend/docs/llm-db-cleanup-registry.json` ajoute avec classification `keep / migrate / freeze` du perimetre DB LLM couvert par la story.
+- Documentation `backend/docs/llm-db-governance.md` ajoutee pour fixer la source de verite canonique et la discipline `convergence -> archive -> drop`.
+- Validateur `backend/app/ops/llm/db_cleanup_validator.py` et script `backend/scripts/check_llm_db_cleanup.py` ajoutes pour surveiller couverture du registre, derive migrations et usages legacy hors allowlist.
+- Tests d integration `backend/tests/integration/test_story_70_17_llm_db_cleanup_registry.py` ajoutes et passes en cible.
+- Le bootstrap nominal et le runtime fallback canonique ne dependent plus structurellement de `llm_use_case_configs`; les contrats `use_case` nominaux vivent desormais dans un registre backend partage.
+- Les endpoints admin d ecriture sur la configuration legacy `use_case` sont geles en `409` pour empecher toute reactivation implicite de cette source de verite.
+- `admin_ai.py` ne depend plus structurellement de `llm_call_logs.use_case` pour ses categories nominales et derivees ; la lecture legacy restante est explicitement bornee au bucket `legacy_removed`.
+- `admin_llm.py` et `admin_exports.py` lisent maintenant les axes canoniques pour les usages nominaux ; `llm_call_logs.use_case` n y reste plus qu en compatibilite explicite.
+- La colonne `llm_prompt_versions.fallback_use_case_key` est archivee dans `llm_prompt_version_fallback_archives` puis retiree physiquement, avec rollback documente par migration ciblee.
+- Les imports de compatibilite de tests vers `use_cases_seed.py` sont maintenus comme re-export borne du registre canonique pour finir la convergence sans recreer une source de verite parallele.
+- Validation finale executee dans le venv : `ruff format .` OK, `ruff check .` OK, campagne pytest ciblee cleanup/admin/runtime OK (`app/tests/integration/test_admin_llm_config_api.py`, `app/tests/integration/test_admin_exports_api.py`, `app/tests/integration/test_migration_20260422_0073_cleanup_llm_legacy.py`, `app/tests/unit/test_gateway_behavioral.py`, `app/tests/unit/test_use_cases_seed_chat_schema.py`, `tests/integration/test_story_70_17_llm_db_cleanup_registry.py`, `tests/evaluation/test_output_contract.py`), `python scripts/check_llm_db_cleanup.py --json` OK, smoke import `from app.main import app` OK.
+- La suite backend complete `pytest -q` a ete relancee deux fois mais n a pas rendu de verdict dans la fenetre outil disponible (timeout a 10 minutes) ; la cloture repose donc sur la campagne ciblee justifiee par AC15.
+- Passe post-review appliquee : `backend/app/infra/db/models/llm_observability.py` ne recree plus l index `ix_llm_call_logs_use_case_timestamp`, `backend/app/api/v1/routers/admin_llm.py` re-affiche les vrais use cases associes a une persona, et `backend/app/main.py` re-declenche le bootstrap canonique si `natal_interpretation_short` n a plus de prompt publie.
+- Validation post-review executee dans le venv : `ruff check` cible OK ; `pytest -q app/tests/integration/test_admin_persona_endpoints.py tests/unit/test_story_70_13_bootstrap.py` OK (`7 passed`).
 
 ### File List
 
 - _bmad-output/implementation-artifacts/70-17-db-cleanup-llm-canonique.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
+- backend/docs/llm-db-cleanup-registry.json
+- backend/docs/llm-db-governance.md
+- backend/app/ops/llm/db_cleanup_validator.py
+- backend/app/domain/llm/configuration/canonical_use_case_registry.py
+- backend/app/api/v1/routers/admin_ai.py
+- backend/app/api/v1/routers/admin_exports.py
+- backend/app/api/v1/routers/admin_llm.py
+- backend/app/domain/llm/runtime/gateway.py
+- backend/app/infra/db/models/llm_observability.py
+- backend/app/infra/db/models/llm_prompt.py
+- backend/app/ops/llm/bootstrap/use_cases_seed.py
+- backend/app/ops/llm/prompt_registry_v2.py
+- backend/scripts/check_llm_db_cleanup.py
+- backend/migrations/versions/20260422_0072_archive_prompt_fallback_use_case.py
+- backend/migrations/versions/20260422_0073_drop_prompt_fallback_and_use_case_index.py
+- backend/app/tests/integration/test_admin_exports_api.py
+- backend/app/tests/integration/test_admin_llm_config_api.py
+- backend/app/tests/integration/test_admin_persona_endpoints.py
+- backend/app/tests/integration/test_migration_20260422_0073_cleanup_llm_legacy.py
+- backend/app/tests/unit/test_gateway_behavioral.py
+- backend/app/tests/unit/test_use_cases_seed_chat_schema.py
+- backend/tests/evaluation/test_output_contract.py
+- backend/tests/integration/test_story_70_17_llm_db_cleanup_registry.py
+
+### Change Log
+
+- 2026-04-22 : ajout du registre de cleanup DB LLM, de la documentation de gouvernance et des garde-fous automatises associes.
+- 2026-04-22 : AC16 ajoutee puis implementee pour retirer les dependances legacy backend encore actives du bootstrap nominal, du fallback runtime canonique et des ecritures admin `use_case`.
+- 2026-04-22 : `admin_ai.py` realigne sur l axe canonique `feature/subfeature/plan`; `llm_call_logs.use_case` n y reste plus lisible que pour le bucket de compatibilite `legacy_removed`.
+- 2026-04-22 : `admin_llm.py` et `admin_exports.py` converges sur les axes canoniques nominaux ; le filtrage `legacy_removed` et `use_case_compat` restent explicitement bornes a la compatibilite.
+- 2026-04-22 : migrations `20260422_0072` et `20260422_0073` ajoutees pour archiver puis supprimer `llm_prompt_versions.fallback_use_case_key` et l index `ix_llm_call_logs_use_case_timestamp`, avec rollback teste.
+- 2026-04-22 : validation finale cleanup/admin/runtime executee dans le venv ; la suite `pytest -q` complete reste trop longue pour la fenetre d execution outil et est remplacee par une campagne ciblee justifiee.
+- 2026-04-22 : corrections post-review appliquees sur l ORM d observabilite, le detail persona admin et le critere de reseed bootstrap ; tests cibles de non-regression ajoutes / realignes et executes.

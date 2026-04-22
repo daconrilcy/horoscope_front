@@ -188,11 +188,14 @@ def export_generations(
     # - nominal columns are feature/subfeature/plan
     # - legacy use_case is compatibility-only
     for r in rows:
+        if r.get("id") is not None:
+            r["id"] = str(r["id"])
         if isinstance(r["created_at"], datetime):
             r["created_at"] = r["created_at"].isoformat()
+        original_feature = r.get("feature")
         feature, subfeature, is_legacy_residual = (
             LlmCanonicalConsumptionService._normalize_taxonomy(
-                feature=r.get("feature"),
+                feature=original_feature,
                 subfeature=r.get("subfeature"),
                 use_case_compat=r.get("use_case_compat"),
             )
@@ -200,6 +203,8 @@ def export_generations(
         r["feature"] = feature
         r["subfeature"] = subfeature
         r["taxonomy_scope"] = "legacy_residual" if is_legacy_residual else "nominal"
+        if original_feature is not None and not is_legacy_residual:
+            r["use_case_compat"] = None
 
     # 1. Audit
     _record_export_audit(

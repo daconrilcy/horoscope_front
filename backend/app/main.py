@@ -7,8 +7,6 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy import select
-from sqlalchemy.exc import OperationalError
 from starlette.responses import Response
 
 from app.ai_engine.routes import router as ai_engine_router
@@ -108,178 +106,7 @@ def _include_internal_llm_qa_router(application: FastAPI) -> None:
 
 def _ensure_llm_registry_seeded() -> None:
     """Legacy-only local reseed guarded by an explicit opt-in flag."""
-    if settings.app_env in {"production", "prod"}:
-        return
-    if not settings.dev_allow_legacy_seed:
-        logger.info("llm_registry_legacy_seed_disabled")
-        return
-
-    from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
-    from app.infra.db.models import (
-        LlmPersonaModel,
-        LlmPromptVersionModel,
-        LlmUseCaseConfigModel,
-    )
-    from app.infra.db.models.llm_prompt import PromptStatus
-    from app.infra.db.session import SessionLocal
-    from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
-    from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
-    from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
-    from app.ops.llm.bootstrap.seed_guidance_prompts import seed_guidance_prompts
-    from app.ops.llm.bootstrap.use_cases_seed import seed_use_cases
-    from scripts.seed_astrologers_6_profiles import seed_astrologers
-
-    def collect_registry_state() -> tuple[bool, bool, int, int, bool, int, bool, bool]:
-        with SessionLocal() as db:
-            use_case_count = db.query(LlmUseCaseConfigModel).count()
-            complete_use_case = (
-                db.query(LlmUseCaseConfigModel)
-                .filter(LlmUseCaseConfigModel.key == "natal_interpretation")
-                .one_or_none()
-            )
-            short_use_case = (
-                db.query(LlmUseCaseConfigModel)
-                .filter(LlmUseCaseConfigModel.key == "natal_interpretation_short")
-                .one_or_none()
-            )
-            active_short_prompt = get_active_prompt_version(db, "natal_interpretation_short")
-            prompt_count = db.query(LlmPromptVersionModel).count()
-            enabled_personas = (
-                db.query(LlmPersonaModel).filter(LlmPersonaModel.enabled == True).count()  # noqa: E712
-            )
-            required_use_cases = (
-                db.query(LlmUseCaseConfigModel)
-                .filter(LlmUseCaseConfigModel.persona_strategy == "required")
-                .all()
-            )
-            has_persona_lock = any(
-                enabled_personas > 1 and len(uc.allowed_persona_ids or []) <= 1
-                for uc in required_use_cases
-            )
-            active_complete_prompt = db.execute(
-                select(LlmPromptVersionModel).where(
-                    LlmPromptVersionModel.use_case_key == "natal_interpretation",
-                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
-                )
-            ).scalar_one_or_none()
-            active_chat_prompt = db.execute(
-                select(LlmPromptVersionModel).where(
-                    LlmPromptVersionModel.use_case_key == "chat_astrologer",
-                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
-                )
-            ).scalar_one_or_none()
-
-            # Check for Horoscope Daily (Story 66.19)
-            horoscope_daily_uc = (
-                db.query(LlmUseCaseConfigModel)
-                .filter(LlmUseCaseConfigModel.key == "horoscope_daily")
-                .one_or_none()
-            )
-            active_horoscope_prompt = db.execute(
-                select(LlmPromptVersionModel).where(
-                    LlmPromptVersionModel.use_case_key == "horoscope_daily",
-                    LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
-                )
-            ).scalar_one_or_none()
-
-            placeholder_drift = (
-                not complete_use_case
-                or "chart_json" not in (complete_use_case.required_prompt_placeholders or [])
-                or not short_use_case
-                or "chart_json" not in (short_use_case.required_prompt_placeholders or [])
-            )
-            missing_registry = (
-                use_case_count == 0
-                or prompt_count == 0
-                or active_short_prompt is None
-                or horoscope_daily_uc is None
-            )
-            degraded_registry = (
-                enabled_personas < 6
-                or has_persona_lock
-                or active_complete_prompt is None
-                or active_chat_prompt is None
-                or active_horoscope_prompt is None
-                or placeholder_drift
-            )
-            return (
-                missing_registry,
-                degraded_registry,
-                use_case_count,
-                prompt_count,
-                active_short_prompt is not None,
-                enabled_personas,
-                has_persona_lock,
-                placeholder_drift,
-            )
-
-    try:
-        (
-            missing_registry,
-            degraded_registry,
-            use_case_count,
-            prompt_count,
-            has_active_short_prompt,
-            enabled_personas,
-            has_persona_lock,
-            placeholder_drift,
-        ) = collect_registry_state()
-    except OperationalError as error:
-        is_local_dev = settings.app_env in {"development", "dev", "local"}
-        if not is_local_dev or not settings._is_local_sqlite_database_url(settings.database_url):
-            raise
-        logger.warning("llm_registry_local_sqlite_repair error=%s", error)
-        ensure_local_sqlite_schema_ready()
-        (
-            missing_registry,
-            degraded_registry,
-            use_case_count,
-            prompt_count,
-            has_active_short_prompt,
-            enabled_personas,
-            has_persona_lock,
-            placeholder_drift,
-        ) = collect_registry_state()
-
-    if not missing_registry and not degraded_registry:
-        return
-
-    logger.info(
-        (
-            "llm_registry_auto_heal use_cases=%s prompts=%s active_short=%s "
-            "enabled_personas=%s persona_lock=%s placeholder_drift=%s degraded=%s"
-        ),
-        use_case_count,
-        prompt_count,
-        has_active_short_prompt,
-        enabled_personas,
-        has_persona_lock,
-        placeholder_drift,
-        degraded_registry,
-    )
-    from sqlalchemy.exc import IntegrityError
-
-    try:
-        with SessionLocal() as db:
-            seed_astrologers(db)
-            seed_use_cases(db)
-        seed_prompts()
-        seed_natal_v3_prompts()
-        seed_chat_prompt_v2()
-        seed_guidance_prompts()
-
-        from app.ops.llm.bootstrap.seed_66_20_taxonomy import seed_66_20_taxonomy
-        from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
-            seed_horoscope_narrator_assembly,
-        )
-
-        with SessionLocal() as db:
-            seed_horoscope_narrator_assembly(db)
-            seed_66_20_taxonomy(db)
-    except IntegrityError:
-        logger.debug("llm_registry_auto_heal_concurrent_skip")
-    except Exception as e:
-        logger.error("llm_registry_auto_heal_failed error=%s", e)
+    logger.info("llm_registry_legacy_seed_disabled")
 
 
 def _ensure_canonical_llm_bootstrap_seeded() -> None:
@@ -297,7 +124,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from sqlalchemy.exc import IntegrityError, OperationalError
 
     from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
-    from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
+    from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmPromptVersionModel
     from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
     from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
     from app.infra.db.session import SessionLocal
@@ -309,13 +136,13 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
         seed_horoscope_narrator_assembly,
     )
-    from app.ops.llm.bootstrap.use_cases_seed import seed_use_cases
+    from app.ops.llm.bootstrap.use_cases_seed import seed_output_schemas
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
     def collect_state() -> tuple[int, int, int, int, int, bool]:
         with SessionLocal() as db:
             return (
-                db.query(LlmUseCaseConfigModel).count(),
+                db.query(LlmOutputSchemaModel).count(),
                 db.query(LlmPromptVersionModel).count(),
                 db.query(LlmPersonaModel).filter(LlmPersonaModel.enabled == True).count(),  # noqa: E712
                 db.query(PromptAssemblyConfigModel).count(),
@@ -325,7 +152,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
 
     try:
         (
-            use_case_count,
+            output_schema_count,
             prompt_count,
             enabled_personas,
             assembly_count,
@@ -339,7 +166,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         logger.warning("canonical_llm_bootstrap_local_sqlite_repair error=%s", error)
         ensure_local_sqlite_schema_ready()
         (
-            use_case_count,
+            output_schema_count,
             prompt_count,
             enabled_personas,
             assembly_count,
@@ -348,7 +175,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         ) = collect_state()
 
     needs_registry_seed = (
-        use_case_count == 0
+        output_schema_count == 0
         or prompt_count == 0
         or enabled_personas == 0
         or not has_active_short_prompt
@@ -359,9 +186,11 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         return
 
     logger.warning(
-        "canonical_llm_bootstrap_auto_heal "
-        "use_cases=%s prompts=%s personas=%s assemblies=%s profiles=%s active_short=%s",
-        use_case_count,
+        (
+            "canonical_llm_bootstrap_auto_heal schemas=%s prompts=%s personas=%s "
+            "assemblies=%s profiles=%s active_short=%s"
+        ),
+        output_schema_count,
         prompt_count,
         enabled_personas,
         assembly_count,
@@ -373,7 +202,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         if needs_registry_seed:
             with SessionLocal() as db:
                 seed_astrologers(db)
-                seed_use_cases(db)
+                seed_output_schemas(db)
             seed_prompts()
             seed_natal_v3_prompts()
             seed_chat_prompt_v2()
@@ -518,7 +347,6 @@ async def _app_lifespan(_: FastAPI):
             pass
     _ensure_canonical_entitlements_seeded()
     _ensure_canonical_llm_bootstrap_seeded()
-    _ensure_llm_registry_seeded()
     _ensure_consultation_templates_seeded()
     _ensure_support_categories_seeded()
     from app.startup import seed_dev_admin, seed_llm_qa_user

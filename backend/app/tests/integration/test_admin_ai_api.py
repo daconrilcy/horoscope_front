@@ -190,3 +190,108 @@ def test_get_use_case_detail_success(admin_token):
     assert len(data["recent_failed_calls"]) >= 1
     assert data["recent_failed_calls"][0]["request_id_masked"] == "req_fail..."
     assert data["recent_failed_calls"][0]["error_code"] == "LLM_CALL_ERROR"
+
+
+def test_get_use_case_detail_uses_canonical_feature_axis_for_derived_categories(admin_token):
+    with db_session_module.SessionLocal() as db:
+        db.add_all(
+            [
+                LlmCallLogModel(
+                    use_case="legacy_chat_runtime",
+                    feature="chat",
+                    subfeature="unknown",
+                    plan="premium",
+                    model="gpt-4o",
+                    latency_ms=900,
+                    tokens_in=80,
+                    tokens_out=120,
+                    cost_usd_estimated=0.004,
+                    validation_status=LlmValidationStatus.ERROR,
+                    request_id="req-feature-fail",
+                    trace_id="trace-feature-fail",
+                    input_hash="hash-feature-fail",
+                    environment="test",
+                ),
+                LlmCallLogModel(
+                    use_case="another_chat_runtime",
+                    feature="chat",
+                    subfeature="unknown",
+                    plan="free",
+                    model="gpt-4o",
+                    latency_ms=450,
+                    tokens_in=50,
+                    tokens_out=50,
+                    cost_usd_estimated=0.002,
+                    validation_status=LlmValidationStatus.VALID,
+                    request_id="req-feature-ok",
+                    trace_id="trace-feature-ok",
+                    input_hash="hash-feature-ok",
+                    environment="test",
+                ),
+            ]
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/admin/ai/metrics/chat?period=30d",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["use_case"] == "chat"
+    assert data["metrics"]["call_count"] == 2
+    assert data["metrics"]["display_name"] == "chat"
+    assert data["recent_failed_calls"][0]["request_id_masked"] == "req-feat..."
+
+
+def test_get_use_case_detail_legacy_removed_is_explicitly_bounded(admin_token):
+    with db_session_module.SessionLocal() as db:
+        db.add_all(
+            [
+                LlmCallLogModel(
+                    use_case="daily_prediction",
+                    feature=None,
+                    subfeature=None,
+                    plan="free",
+                    model="gpt-4o",
+                    latency_ms=700,
+                    tokens_in=40,
+                    tokens_out=60,
+                    cost_usd_estimated=0.001,
+                    validation_status=LlmValidationStatus.ERROR,
+                    request_id="req-legacy-bounded",
+                    trace_id="trace-legacy-bounded",
+                    input_hash="hash-legacy-bounded",
+                    environment="test",
+                ),
+                LlmCallLogModel(
+                    use_case="daily_prediction",
+                    feature="guidance",
+                    subfeature="daily",
+                    plan="free",
+                    model="gpt-4o",
+                    latency_ms=650,
+                    tokens_in=30,
+                    tokens_out=55,
+                    cost_usd_estimated=0.001,
+                    validation_status=LlmValidationStatus.ERROR,
+                    request_id="req-legacy-ignored",
+                    trace_id="trace-legacy-ignored",
+                    input_hash="hash-legacy-ignored",
+                    environment="test",
+                ),
+            ]
+        )
+        db.commit()
+
+    response = client.get(
+        "/v1/admin/ai/metrics/legacy_removed?period=30d",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["use_case"] == "legacy_removed"
+    assert data["metrics"]["call_count"] == 1
+    assert data["recent_failed_calls"][0]["request_id_masked"] == "req-lega..."

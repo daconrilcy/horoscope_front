@@ -87,7 +87,6 @@ class LlmPromptVersionModel(Base):
     model: Mapped[str] = mapped_column(String(64))
     temperature: Mapped[float] = mapped_column(Float, default=0.7)
     max_output_tokens: Mapped[int] = mapped_column(Integer, default=2048)
-    fallback_use_case_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
     reasoning_effort: Mapped[str | None] = mapped_column(
         String(20),
         nullable=True,

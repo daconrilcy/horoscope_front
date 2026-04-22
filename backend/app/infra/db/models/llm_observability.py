@@ -133,7 +133,6 @@ class LlmCallLogModel(Base):
     )
 
     __table_args__ = (
-        Index("ix_llm_call_logs_use_case_timestamp", "use_case", "timestamp"),
         Index("ix_llm_call_logs_prompt_v_timestamp", "prompt_version_id", "timestamp"),
         Index("ix_llm_call_logs_status_timestamp", "validation_status", "timestamp"),
     )

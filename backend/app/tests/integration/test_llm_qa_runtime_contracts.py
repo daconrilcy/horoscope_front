@@ -118,8 +118,7 @@ async def test_llm_qa_runtime_contract_proves_prompt_persona_and_output_validati
     assert any("Locale=fr" in message["content"] for message in developer_messages)
     assert any('Chart={"sun":"taurus"}' in message["content"] for message in developer_messages)
     assert any(
-        "## Directives de persona : Luna QA" in message["content"]
-        for message in developer_messages
+        "## Directives de persona : Luna QA" in message["content"] for message in developer_messages
     )
     assert result.structured_output == {"message": "runtime-ok"}
     assert result.meta.validation_status == "valid"

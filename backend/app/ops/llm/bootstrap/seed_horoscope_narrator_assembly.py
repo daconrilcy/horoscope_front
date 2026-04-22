@@ -10,11 +10,7 @@ from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import (
-    LlmPromptVersionModel,
-    LlmUseCaseConfigModel,
-    PromptStatus,
-)
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 logger = logging.getLogger(__name__)
 
@@ -117,35 +113,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
         db.flush()
         logger.info("seed_narrator: updated NarratorResult_v1 schema")
 
-    # 2. Use Cases
-    use_cases = [
-        {
-            "key": "horoscope_daily",
-            "display_name": "Horoscope Quotidien Canonique",
-            "description": "Narration de l'horoscope quotidien (free/premium).",
-        },
-    ]
-
-    for uc_data in use_cases:
-        stmt_uc = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == uc_data["key"])
-        uc = db.execute(stmt_uc).scalar_one_or_none()
-        if not uc:
-            uc = LlmUseCaseConfigModel(
-                key=uc_data["key"],
-                display_name=uc_data["display_name"],
-                description=uc_data["description"],
-                output_schema_id=str(narrator_schema.id),
-                persona_strategy="required",
-                interaction_mode="structured",
-                user_question_policy="none",
-                safety_profile="astrology",
-                required_prompt_placeholders=["question"],  # standard placeholder
-            )
-            db.add(uc)
-            db.flush()
-            logger.info("seed_narrator: created use case %s", uc_data["key"])
-
-    # 3. Prompt Versions (System Prompts)
+    # 2. Prompt Versions (System Prompts)
     system_prompt_fr = (
         "Tu es un astrologue expert, précis et pédagogue. "
         "Réponds en français. "
@@ -185,7 +153,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             db.flush()
             logger.info("seed_narrator: created published prompt version for %s", uc_key)
 
-    # 4. Execution Profiles
+    # 3. Execution Profiles
     profiles = [
         {
             "name": "Horoscope Narration Standard",
@@ -222,7 +190,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             db.flush()
             logger.info("seed_narrator: created execution profile for %s", prof_data["feature"])
 
-    # 5. Assembly Configs
+    # 4. Assembly Configs
     # We need a persona
     stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled)
     persona = db.execute(stmt_persona).scalars().first()

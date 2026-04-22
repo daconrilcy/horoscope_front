@@ -124,6 +124,6 @@ def test_git_tracked_files_do_not_include_pycache_or_pyc() -> None:
     tracked = [line for line in result.stdout.splitlines() if line]
     polluted = [line for line in tracked if "__pycache__" in line or line.endswith(".pyc")]
 
-    assert not polluted, (
-        "Tracked files must not include Python cache artifacts.\n- " + "\n- ".join(polluted)
+    assert not polluted, "Tracked files must not include Python cache artifacts.\n- " + "\n- ".join(
+        polluted
     )

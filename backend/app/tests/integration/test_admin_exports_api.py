@@ -176,6 +176,45 @@ def test_export_generations_csv(admin_token: str) -> None:
     assert "use_case_compat" in response.text
 
 
+def test_export_generations_hides_use_case_compat_for_nominal_rows_with_canonical_feature(
+    admin_token: str,
+) -> None:
+    with db_session_module.SessionLocal() as db:
+        db.add(
+            LlmCallLogModel(
+                use_case="legacy_chat_alias",
+                feature="chat",
+                subfeature="astrologer",
+                plan="premium",
+                model="gpt-test",
+                validation_status=LlmValidationStatus.VALID,
+                latency_ms=250,
+                tokens_in=60,
+                tokens_out=80,
+                cost_usd_estimated=0.01,
+                request_id="req-export-canonical-feature",
+                trace_id="trace-export-canonical-feature",
+                input_hash="hash-export-canonical-feature",
+                environment="test",
+                evidence_warnings_count=0,
+            )
+        )
+        db.commit()
+
+    response = client.post(
+        "/v1/admin/exports/generations",
+        json={"period": None, "format": "json"},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 200
+    rows = response.json()
+    target_row = next(row for row in rows if row["request_id"] == "req-export-canonical-feature")
+    assert target_row["feature"] == "chat"
+    assert target_row["taxonomy_scope"] == "nominal"
+    assert target_row["use_case_compat"] is None
+
+
 def test_export_generations_csv_reclassifies_when_feature_null_but_use_case_compat_set(
     admin_token: str,
 ) -> None:

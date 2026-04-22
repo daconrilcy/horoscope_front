@@ -54,7 +54,7 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
         "app.infra.db.session.SessionLocal",
         _FakeSessionLocal(
             {
-                "LlmUseCaseConfigModel": 0,
+                "LlmOutputSchemaModel": 0,
                 "LlmPromptVersionModel": 0,
                 "LlmPersonaModel": 0,
                 "PromptAssemblyConfigModel": 0,
@@ -68,7 +68,7 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     )
 
     seed_astrologers = Mock()
-    seed_use_cases = Mock()
+    seed_output_schemas = Mock()
     seed_prompts = Mock()
     seed_natal_v3_prompts = Mock()
     seed_chat_prompt_v2 = Mock()
@@ -77,7 +77,10 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     seed_66_20_taxonomy = Mock()
 
     monkeypatch.setattr("scripts.seed_astrologers_6_profiles.seed_astrologers", seed_astrologers)
-    monkeypatch.setattr("app.ops.llm.bootstrap.use_cases_seed.seed_use_cases", seed_use_cases)
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.use_cases_seed.seed_output_schemas",
+        seed_output_schemas,
+    )
     monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
@@ -103,7 +106,7 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     main._ensure_canonical_llm_bootstrap_seeded()
 
     seed_astrologers.assert_called_once()
-    seed_use_cases.assert_called_once()
+    seed_output_schemas.assert_called_once()
     seed_prompts.assert_called_once()
     seed_natal_v3_prompts.assert_called_once()
     seed_chat_prompt_v2.assert_called_once()
@@ -118,7 +121,7 @@ def test_canonical_llm_bootstrap_skips_when_nominal_tables_exist(monkeypatch) ->
         "app.infra.db.session.SessionLocal",
         _FakeSessionLocal(
             {
-                "LlmUseCaseConfigModel": 3,
+                "LlmOutputSchemaModel": 3,
                 "LlmPromptVersionModel": 5,
                 "LlmPersonaModel": 1,
                 "PromptAssemblyConfigModel": 4,
@@ -143,3 +146,70 @@ def test_canonical_llm_bootstrap_skips_when_nominal_tables_exist(monkeypatch) ->
 
     seed_prompts.assert_not_called()
     seed_66_20_taxonomy.assert_not_called()
+
+
+def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(monkeypatch) -> None:
+    monkeypatch.setattr(main.settings, "app_env", "development")
+    monkeypatch.setattr(
+        "app.infra.db.session.SessionLocal",
+        _FakeSessionLocal(
+            {
+                "LlmOutputSchemaModel": 3,
+                "LlmPromptVersionModel": 5,
+                "LlmPersonaModel": 1,
+                "PromptAssemblyConfigModel": 4,
+                "LlmExecutionProfileModel": 2,
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+        lambda *_args, **_kwargs: None,
+    )
+
+    seed_astrologers = Mock()
+    seed_output_schemas = Mock()
+    seed_prompts = Mock()
+    seed_natal_v3_prompts = Mock()
+    seed_chat_prompt_v2 = Mock()
+    seed_guidance_prompts = Mock()
+    seed_horoscope_narrator_assembly = Mock()
+    seed_66_20_taxonomy = Mock()
+
+    monkeypatch.setattr("scripts.seed_astrologers_6_profiles.seed_astrologers", seed_astrologers)
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.use_cases_seed.seed_output_schemas",
+        seed_output_schemas,
+    )
+    monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
+        seed_natal_v3_prompts,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_30_14_chat_prompt.seed",
+        seed_chat_prompt_v2,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_guidance_prompts.seed_guidance_prompts",
+        seed_guidance_prompts,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_horoscope_narrator_assembly.seed_horoscope_narrator_assembly",
+        seed_horoscope_narrator_assembly,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_66_20_taxonomy.seed_66_20_taxonomy",
+        seed_66_20_taxonomy,
+    )
+
+    main._ensure_canonical_llm_bootstrap_seeded()
+
+    seed_astrologers.assert_called_once()
+    seed_output_schemas.assert_called_once()
+    seed_prompts.assert_called_once()
+    seed_natal_v3_prompts.assert_called_once()
+    seed_chat_prompt_v2.assert_called_once()
+    seed_guidance_prompts.assert_called_once()
+    seed_horoscope_narrator_assembly.assert_called_once()
+    seed_66_20_taxonomy.assert_called_once()

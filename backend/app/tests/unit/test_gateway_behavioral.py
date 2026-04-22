@@ -43,7 +43,7 @@ def create_mock_result(use_case, raw_output):
 
 @pytest.mark.asyncio
 async def test_check_1_fallback_priority(db_session):
-    """Point 1: Priorité fallback UseCaseConfig > PromptVersion."""
+    """Point 1: Le fallback nominal vient du contrat canonique / use-case config."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
     db_session.flush()
@@ -64,7 +64,6 @@ async def test_check_1_fallback_priority(db_session):
         model="m",
         developer_prompt="P {{locale}} {{last_user_msg}}",
         created_by="a",
-        fallback_use_case_key="fallback_B",  # Priority 2
     )
     p_A = LlmPromptVersionModel(
         use_case_key="fallback_A",

@@ -81,6 +81,25 @@ _REMOVED_LEGACY_USE_CASES = frozenset(
 )
 
 
+def _build_target_filters(category: dict[str, Any]) -> list[Any]:
+    target_filters: list[Any] = []
+    for target in category.get("targets", ()):
+        cond = [LlmCallLogModel.feature == target["feature"]]
+        if target.get("subfeature") is not None:
+            cond.append(LlmCallLogModel.subfeature == target["subfeature"])
+        if target.get("plan") is not None:
+            cond.append(LlmCallLogModel.plan == target["plan"])
+        target_filters.append(and_(*cond))
+    return target_filters
+
+
+def _legacy_removed_filter() -> Any:
+    return and_(
+        LlmCallLogModel.feature.is_(None),
+        LlmCallLogModel.use_case.in_(tuple(_REMOVED_LEGACY_USE_CASES)),
+    )
+
+
 def _matches_target(log: LlmCallLogModel, target: dict[str, str | None]) -> bool:
     if log.feature != target.get("feature"):
         return False
@@ -162,7 +181,7 @@ def _resolve_metric_category_or_raw(use_case: str) -> tuple[dict[str, Any], tupl
     fallback_category = {
         "key": use_case,
         "display_name": use_case,
-        "targets": tuple(),
+        "targets": ({"feature": use_case},),
     }
     return fallback_category, (use_case,)
 
@@ -235,20 +254,12 @@ def get_use_case_detail(
         func.avg(LlmCallLogModel.latency_ms).label("avg_latency"),
         func.sum(error_case).label("error_count"),
     ).where(LlmCallLogModel.timestamp >= start_date)
-    if raw_use_cases:
-        summary_stmt = summary_stmt.where(LlmCallLogModel.use_case.in_(raw_use_cases))
+    if use_case == "legacy_removed" and raw_use_cases:
+        summary_stmt = summary_stmt.where(_legacy_removed_filter())
     elif category.get("targets"):
-        target_filters = []
-        for target in category["targets"]:
-            cond = [LlmCallLogModel.feature == target["feature"]]
-            if target.get("subfeature") is not None:
-                cond.append(LlmCallLogModel.subfeature == target["subfeature"])
-            if target.get("plan") is not None:
-                cond.append(LlmCallLogModel.plan == target["plan"])
-            target_filters.append(and_(*cond))
-        summary_stmt = summary_stmt.where(or_(*target_filters))
+        summary_stmt = summary_stmt.where(or_(*_build_target_filters(category)))
     else:
-        summary_stmt = summary_stmt.where(LlmCallLogModel.use_case == use_case)
+        summary_stmt = summary_stmt.where(LlmCallLogModel.feature == use_case)
     s = db.execute(summary_stmt).first()
     if not s or s.call_count == 0:
         raise HTTPException(status_code=404, detail="No data for this use case")
@@ -272,20 +283,12 @@ def get_use_case_detail(
         .group_by(date_func)
         .order_by(date_func)
     )
-    if raw_use_cases:
-        trend_stmt = trend_stmt.where(LlmCallLogModel.use_case.in_(raw_use_cases))
+    if use_case == "legacy_removed" and raw_use_cases:
+        trend_stmt = trend_stmt.where(_legacy_removed_filter())
     elif category.get("targets"):
-        target_filters = []
-        for target in category["targets"]:
-            cond = [LlmCallLogModel.feature == target["feature"]]
-            if target.get("subfeature") is not None:
-                cond.append(LlmCallLogModel.subfeature == target["subfeature"])
-            if target.get("plan") is not None:
-                cond.append(LlmCallLogModel.plan == target["plan"])
-            target_filters.append(and_(*cond))
-        trend_stmt = trend_stmt.where(or_(*target_filters))
+        trend_stmt = trend_stmt.where(or_(*_build_target_filters(category)))
     else:
-        trend_stmt = trend_stmt.where(LlmCallLogModel.use_case == use_case)
+        trend_stmt = trend_stmt.where(LlmCallLogModel.feature == use_case)
     trend_rows = db.execute(trend_stmt).all()
     trend_data = [
         {"date": str(r[0]), "call_count": r[1], "error_count": int(r[2] or 0)} for r in trend_rows
@@ -300,20 +303,12 @@ def get_use_case_detail(
         .order_by(LlmCallLogModel.timestamp.desc())
         .limit(10)
     )
-    if raw_use_cases:
-        failed_stmt = failed_stmt.where(LlmCallLogModel.use_case.in_(raw_use_cases))
+    if use_case == "legacy_removed" and raw_use_cases:
+        failed_stmt = failed_stmt.where(_legacy_removed_filter())
     elif category.get("targets"):
-        target_filters = []
-        for target in category["targets"]:
-            cond = [LlmCallLogModel.feature == target["feature"]]
-            if target.get("subfeature") is not None:
-                cond.append(LlmCallLogModel.subfeature == target["subfeature"])
-            if target.get("plan") is not None:
-                cond.append(LlmCallLogModel.plan == target["plan"])
-            target_filters.append(and_(*cond))
-        failed_stmt = failed_stmt.where(or_(*target_filters))
+        failed_stmt = failed_stmt.where(or_(*_build_target_filters(category)))
     else:
-        failed_stmt = failed_stmt.where(LlmCallLogModel.use_case == use_case)
+        failed_stmt = failed_stmt.where(LlmCallLogModel.feature == use_case)
     failed_rows = db.scalars(failed_stmt).all()
     recent_failed_calls = [
         {

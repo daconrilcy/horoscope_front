@@ -5,22 +5,29 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.domain.llm.configuration.canonical_use_case_registry import (
+    get_canonical_use_case_contract,
+)
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import (
-    LlmPromptVersionModel,
-    LlmUseCaseConfigModel,
-    PromptStatus,
-)
+from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_output_contract_id(db: Session, schema_name: str | None) -> str | None:
+    if not schema_name:
+        return None
+    stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == schema_name)
+    schema = db.execute(stmt).scalar_one_or_none()
+    return str(schema.id) if schema else None
 
 
 def seed_66_20_taxonomy(db: Session) -> None:
     """Finalize canonical taxonomy for chat, guidance and natal (Story 66.20)."""
 
-    # 1. Get default persona
     stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled)
     persona = db.execute(stmt_persona).scalars().first()
     if not persona:
@@ -28,13 +35,9 @@ def seed_66_20_taxonomy(db: Session) -> None:
         return
     persona_id = persona.id
 
-    # 2. Define target assemblies
-    # (feature, subfeature, plan, template_key)
     target_assemblies = [
-        # CHAT
         ("chat", "astrologer", "free", "chat_astrologer"),
         ("chat", "astrologer", "premium", "chat_astrologer"),
-        # GUIDANCE
         ("guidance", "daily", "free", "guidance_daily"),
         ("guidance", "daily", "premium", "guidance_daily"),
         ("guidance", "weekly", "free", "guidance_weekly"),
@@ -43,7 +46,6 @@ def seed_66_20_taxonomy(db: Session) -> None:
         ("guidance", "contextual", "premium", "guidance_contextual"),
         ("guidance", "event", "free", "event_guidance"),
         ("guidance", "event", "premium", "event_guidance"),
-        # NATAL
         ("natal", "interpretation", "free", "natal_interpretation_short"),
         ("natal", "interpretation", "premium", "natal_interpretation"),
         ("natal", "psy_profile", "premium", "natal_psy_profile"),
@@ -56,40 +58,39 @@ def seed_66_20_taxonomy(db: Session) -> None:
         ("natal", "evolution_path", "premium", "natal_evolution_path"),
     ]
 
-    for f, sf, p, t_key in target_assemblies:
-        # A. Find template
-        stmt_t = (
+    for feature, subfeature, plan, template_key in target_assemblies:
+        stmt_template = (
             select(LlmPromptVersionModel)
             .where(
-                LlmPromptVersionModel.use_case_key == t_key,
+                LlmPromptVersionModel.use_case_key == template_key,
                 LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
             )
             .order_by(LlmPromptVersionModel.created_at.desc())
         )
-        template = db.execute(stmt_t).scalars().first()
-
+        template = db.execute(stmt_template).scalars().first()
         if not template:
-            logger.warning(f"seed_66_20_taxonomy: template {t_key} not found for {f}/{sf}")
+            logger.warning(
+                "seed_66_20_taxonomy: template %s not found for %s/%s",
+                template_key,
+                feature,
+                subfeature,
+            )
             continue
 
-        # A.2 Find Use Case Config for extra metadata (Story 66.29)
-        stmt_ucc = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == t_key)
-        ucc = db.execute(stmt_ucc).scalar_one_or_none()
-
-        # B. Upsert Assembly
-        stmt_exists = select(PromptAssemblyConfigModel).where(
-            PromptAssemblyConfigModel.feature == f,
-            PromptAssemblyConfigModel.subfeature == sf,
-            PromptAssemblyConfigModel.plan == p,
+        contract = get_canonical_use_case_contract(template_key)
+        stmt_existing = select(PromptAssemblyConfigModel).where(
+            PromptAssemblyConfigModel.feature == feature,
+            PromptAssemblyConfigModel.subfeature == subfeature,
+            PromptAssemblyConfigModel.plan == plan,
             PromptAssemblyConfigModel.locale == "fr-FR",
         )
-        existing = db.execute(stmt_exists).scalar_one_or_none()
+        existing = db.execute(stmt_existing).scalar_one_or_none()
 
         if not existing:
-            new_asm = PromptAssemblyConfigModel(
-                feature=f,
-                subfeature=sf,
-                plan=p,
+            existing = PromptAssemblyConfigModel(
+                feature=feature,
+                subfeature=subfeature,
+                plan=plan,
                 locale="fr-FR",
                 feature_template_ref=template.id,
                 persona_ref=persona_id,
@@ -99,62 +100,75 @@ def seed_66_20_taxonomy(db: Session) -> None:
                     "max_output_tokens": template.max_output_tokens or 2000,
                     "timeout_seconds": 60,
                 },
-                output_contract_ref=ucc.output_schema_id if ucc else None,
-                input_schema=ucc.input_schema if ucc else None,
-                interaction_mode=ucc.interaction_mode if ucc else "structured",
-                user_question_policy=ucc.user_question_policy if ucc else "none",
+                output_contract_ref=_resolve_output_contract_id(
+                    db,
+                    contract.output_schema_name if contract else None,
+                ),
+                input_schema=contract.input_schema if contract else None,
+                interaction_mode=contract.interaction_mode if contract else "structured",
+                user_question_policy=contract.user_question_policy if contract else "none",
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
             )
-            db.add(new_asm)
-            logger.info(f"seed_66_20_taxonomy: created assembly {f}/{sf}/{p}")
+            db.add(existing)
+            logger.info("seed_66_20_taxonomy: created assembly %s/%s/%s", feature, subfeature, plan)
         else:
             existing.feature_template_ref = template.id
-            if ucc:
-                existing.output_contract_ref = ucc.output_schema_id
-                existing.input_schema = ucc.input_schema
-                existing.interaction_mode = ucc.interaction_mode
-                existing.user_question_policy = ucc.user_question_policy
+            existing.output_contract_ref = _resolve_output_contract_id(
+                db,
+                contract.output_schema_name if contract else None,
+            )
+            existing.input_schema = contract.input_schema if contract else None
+            existing.interaction_mode = contract.interaction_mode if contract else "structured"
+            existing.user_question_policy = contract.user_question_policy if contract else "none"
             existing.status = PromptStatus.PUBLISHED
-            logger.info(f"seed_66_20_taxonomy: updated assembly {f}/{sf}/{p}")
+            logger.info("seed_66_20_taxonomy: updated assembly %s/%s/%s", feature, subfeature, plan)
 
-    # 3. Aligner ExecutionProfiles
-    # (feature, subfeature, plan, model)
     target_profiles = [
         ("chat", "astrologer", None, "gpt-4o"),
         ("guidance", None, None, "gpt-4o"),
         ("natal", None, None, "gpt-4o"),
     ]
 
-    for f, sf, p, model in target_profiles:
-        stmt_p = select(LlmExecutionProfileModel).where(
-            LlmExecutionProfileModel.feature == f,
-            LlmExecutionProfileModel.subfeature == sf,
-            LlmExecutionProfileModel.plan == p,
+    for feature, subfeature, plan, model in target_profiles:
+        stmt_profile = select(LlmExecutionProfileModel).where(
+            LlmExecutionProfileModel.feature == feature,
+            LlmExecutionProfileModel.subfeature == subfeature,
+            LlmExecutionProfileModel.plan == plan,
         )
-        profile = db.execute(stmt_p).scalar_one_or_none()
+        profile = db.execute(stmt_profile).scalar_one_or_none()
 
         if not profile:
-            new_profile = LlmExecutionProfileModel(
-                name=f"Profile {f} {sf or ''} {p or ''}".strip(),
-                feature=f,
-                subfeature=sf,
-                plan=p,
+            profile = LlmExecutionProfileModel(
+                name=f"Profile {feature} {subfeature or ''} {plan or ''}".strip(),
+                feature=feature,
+                subfeature=subfeature,
+                plan=plan,
                 model=model,
                 provider="openai",
                 reasoning_profile="off",
                 verbosity_profile="balanced",
-                output_mode="structured_json" if f in ["guidance", "natal"] else "free_text",
+                output_mode="structured_json" if feature in ["guidance", "natal"] else "free_text",
                 timeout_seconds=60,
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
             )
-            db.add(new_profile)
-            logger.info(f"seed_66_20_taxonomy: created profile {f}/{sf or ''}/{p or ''}")
+            db.add(profile)
+            logger.info(
+                "seed_66_20_taxonomy: created profile %s/%s/%s",
+                feature,
+                subfeature or "",
+                plan or "",
+            )
         else:
             profile.model = model
             profile.status = PromptStatus.PUBLISHED
-            logger.info(f"seed_66_20_taxonomy: updated profile {f}/{sf or ''}/{p or ''}")
+            logger.info(
+                "seed_66_20_taxonomy: updated profile %s/%s/%s",
+                feature,
+                subfeature or "",
+                plan or "",
+            )
 
     db.commit()
 

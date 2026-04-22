@@ -36,6 +36,11 @@ from app.domain.llm.configuration.assemblies import (
     assemble_developer_prompt,
     resolve_assembly,
 )
+from app.domain.llm.configuration.canonical_use_case_registry import (
+    get_canonical_output_schema_definition,
+    get_canonical_use_case_contract,
+    list_canonical_use_case_contracts,
+)
 from app.domain.llm.governance.governance import get_prompt_governance_registry
 from app.domain.llm.prompting.persona_boundary import (
     PersonaBoundaryViolation,
@@ -58,7 +63,6 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.domain.llm.runtime.observability import purge_expired_logs
-from app.domain.llm.runtime.policy import get_hard_policy
 from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
@@ -84,7 +88,6 @@ from app.infrastructure.db.repositories.llm.prompting_repository import (
     get_sample_payload,
     get_use_case_config,
     list_prompt_versions,
-    list_use_case_configs,
 )
 from app.infrastructure.db.repositories.llm.prompting_repository import (
     list_release_snapshots_timeline as repo_list_release_snapshots_timeline,
@@ -588,6 +591,72 @@ def _collect_catalog_facets(entries: list[AdminLlmCatalogEntry]) -> dict[str, li
         "release_health_status": values_for("release_health_status"),
         "catalog_visibility_status": values_for("catalog_visibility_status"),
     }
+
+
+def _resolve_output_schema_id_by_name(db: Session, schema_name: str | None) -> str | None:
+    if not schema_name:
+        return None
+    stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == schema_name)
+    schema = db.execute(stmt).scalar_one_or_none()
+    return str(schema.id) if schema else None
+
+
+def _resolve_allowed_persona_ids(db: Session, *, persona_strategy: str) -> list[str]:
+    if persona_strategy != "required":
+        return []
+    stmt = select(LlmPersonaModel.id).where(LlmPersonaModel.enabled)
+    return [str(persona_id) for persona_id in db.execute(stmt).scalars().all()]
+
+
+def _build_canonical_admin_use_case_config(db: Session, key: str) -> LlmUseCaseConfig | None:
+    contract = get_canonical_use_case_contract(key)
+    if contract is None:
+        return None
+    active_prompt = PromptRegistryV2.get_active_prompt(db, key)
+    return LlmUseCaseConfig(
+        key=contract.key,
+        display_name=contract.display_name,
+        description=contract.description,
+        input_schema=contract.input_schema,
+        output_schema_id=_resolve_output_schema_id_by_name(db, contract.output_schema_name),
+        persona_strategy=contract.persona_strategy,
+        safety_profile=contract.safety_profile,
+        fallback_use_case_key=contract.fallback_use_case_key,
+        required_prompt_placeholders=contract.required_prompt_placeholders,
+        allowed_persona_ids=_resolve_allowed_persona_ids(
+            db,
+            persona_strategy=contract.persona_strategy,
+        ),
+        eval_fixtures_path=contract.eval_fixtures_path,
+        eval_failure_threshold=contract.eval_failure_threshold,
+        golden_set_path=contract.golden_set_path,
+        active_prompt_version_id=active_prompt.id if active_prompt else None,
+    )
+
+
+def _legacy_removed_call_log_filter() -> Any:
+    return and_(
+        LlmCallLogModel.feature.is_(None),
+        LlmCallLogModel.use_case.in_(tuple(LEGACY_USE_CASE_KEYS_REMOVED)),
+    )
+
+
+def _call_log_scope_filter(use_case: str) -> Any:
+    if use_case == "legacy_removed":
+        return _legacy_removed_call_log_filter()
+    return LlmCallLogModel.feature == use_case
+
+
+def _serialize_prompt_version(db: Session, version: LlmPromptVersionModel) -> LlmPromptVersion:
+    serialized = LlmPromptVersion.model_validate(version)
+    canonical_contract = get_canonical_use_case_contract(version.use_case_key)
+    fallback_use_case_key = None
+    if canonical_contract is not None:
+        fallback_use_case_key = canonical_contract.fallback_use_case_key
+    else:
+        legacy_config = get_use_case_config(db, version.use_case_key)
+        fallback_use_case_key = legacy_config.fallback_use_case_key if legacy_config else None
+    return serialized.model_copy(update={"fallback_use_case_key": fallback_use_case_key})
 
 
 def _normalize_event_type(status: str | None) -> str:
@@ -1374,29 +1443,13 @@ def list_use_cases(
 ) -> Any:
     request_id = resolve_request_id(request)
 
-    use_cases = list_use_case_configs(db)
-
     result_data = []
-    for uc in use_cases:
-        if _is_removed_legacy_use_case_key(uc.key):
+    for contract in list_canonical_use_case_contracts():
+        if _is_removed_legacy_use_case_key(contract.key):
             continue
-        active_prompt = PromptRegistryV2.get_active_prompt(db, uc.key)
-        result_data.append(
-            LlmUseCaseConfig(
-                key=uc.key,
-                display_name=uc.display_name,
-                description=uc.description,
-                output_schema_id=uc.output_schema_id,
-                persona_strategy=uc.persona_strategy,
-                safety_profile=uc.safety_profile,
-                fallback_use_case_key=uc.fallback_use_case_key,
-                allowed_persona_ids=uc.allowed_persona_ids,
-                eval_fixtures_path=uc.eval_fixtures_path,
-                eval_failure_threshold=uc.eval_failure_threshold,
-                golden_set_path=uc.golden_set_path,
-                active_prompt_version_id=active_prompt.id if active_prompt else None,
-            )
-        )
+        payload = _build_canonical_admin_use_case_config(db, contract.key)
+        if payload is not None:
+            result_data.append(payload)
 
     return {"data": result_data, "meta": {"request_id": request_id}}
 
@@ -2945,8 +2998,8 @@ def update_use_case_config(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-
-    if _is_removed_legacy_use_case_key(key):
+    del payload, current_user
+    if _build_canonical_admin_use_case_config(db, key) is None:
         return _error_response(
             status_code=404,
             request_id=request_id,
@@ -2954,170 +3007,16 @@ def update_use_case_config(
             message=f"use case {key} not found",
             details={},
         )
-
-    uc = get_use_case_config(db, key)
-    if not uc:
-        return _error_response(
-            status_code=404,
-            request_id=request_id,
-            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
-            message=f"use case {key} not found",
-            details={},
-        )
-
-    # Story 66.28: Block modification of forbidden nominal features (AC5)
-    from app.domain.llm.governance.feature_taxonomy import is_nominal_feature_allowed
-
-    if not is_nominal_feature_allowed(key):
-        return _error_response(
-            status_code=403,
-            request_id=request_id,
-            code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
-            message=f"use case {key} is legacy and frozen. No modifications allowed.",
-            details={},
-        )
-
-    update_details = {}
-
-    if payload.persona_id is not None:
-        if payload.persona_id:
-            persona_uuid = uuid.UUID(payload.persona_id)
-            if not db.get(LlmPersonaModel, persona_uuid):
-                return _error_response(
-                    status_code=404,
-                    request_id=request_id,
-                    code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
-                    message=f"persona {payload.persona_id} not found",
-                    details={},
-                )
-            uc.allowed_persona_ids = [payload.persona_id]
-        else:
-            uc.allowed_persona_ids = []
-        update_details["allowed_persona_ids"] = uc.allowed_persona_ids
-
-    if payload.allowed_persona_ids is not None:
-        valid_ids = []
-        for pid in payload.allowed_persona_ids:
-            try:
-                persona_uuid = uuid.UUID(pid)
-                if db.get(LlmPersonaModel, persona_uuid):
-                    valid_ids.append(pid)
-                else:
-                    return _error_response(
-                        status_code=404,
-                        request_id=request_id,
-                        code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
-                        message=f"persona {pid} not found",
-                        details={},
-                    )
-            except (ValueError, TypeError):
-                return _error_response(
-                    status_code=422,
-                    request_id=request_id,
-                    code=AdminLlmErrorCode.INVALID_PERSONA_ID.value,
-                    message=f"persona_id {pid} is not a valid UUID",
-                    details={},
-                )
-        uc.allowed_persona_ids = valid_ids
-        update_details["allowed_persona_ids"] = uc.allowed_persona_ids
-
-    if payload.persona_strategy:
-        uc.persona_strategy = payload.persona_strategy
-        update_details["persona_strategy"] = uc.persona_strategy
-
-    if payload.safety_profile:
-        try:
-            get_hard_policy(payload.safety_profile)
-            uc.safety_profile = payload.safety_profile
-            update_details["safety_profile"] = uc.safety_profile
-        except ValueError as e:
-            return _error_response(
-                status_code=422,
-                request_id=request_id,
-                code=AdminLlmErrorCode.INVALID_SAFETY_PROFILE.value,
-                message=str(e),
-                details={},
-            )
-
-    if payload.output_schema_id is not None:
-        if payload.output_schema_id:
-            schema_uuid = uuid.UUID(payload.output_schema_id)
-            if not db.get(LlmOutputSchemaModel, schema_uuid):
-                return _error_response(
-                    status_code=404,
-                    request_id=request_id,
-                    code=AdminLlmErrorCode.SCHEMA_NOT_FOUND.value,
-                    message=f"schema {payload.output_schema_id} not found",
-                    details={},
-                )
-            uc.output_schema_id = payload.output_schema_id
-        else:
-            uc.output_schema_id = None
-        update_details["output_schema_id"] = uc.output_schema_id
-
-    if payload.fallback_use_case_key is not None:
-        uc.fallback_use_case_key = payload.fallback_use_case_key
-        update_details["fallback_use_case_key"] = uc.fallback_use_case_key
-
-    if payload.eval_fixtures_path is not None:
-        uc.eval_fixtures_path = payload.eval_fixtures_path
-        update_details["eval_fixtures_path"] = uc.eval_fixtures_path
-
-    if payload.eval_failure_threshold is not None:
-        uc.eval_failure_threshold = payload.eval_failure_threshold
-        update_details["eval_failure_threshold"] = uc.eval_failure_threshold
-
-    if payload.golden_set_path is not None:
-        uc.golden_set_path = payload.golden_set_path
-        update_details["golden_set_path"] = uc.golden_set_path
-
-    db.commit()
-    db.refresh(uc)
-
-    _record_audit_event(
-        db,
+    return _error_response(
+        status_code=409,
         request_id=request_id,
-        actor=current_user,
-        action="llm_use_case_update_config",
-        target_type="llm_use_case",
-        target_id=key,
-        status="success",
-        details=update_details,
+        code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
+        message=(
+            f"use case {key} is governed by the canonical registry. "
+            "Legacy DB config writes are frozen."
+        ),
+        details={},
     )
-    db.commit()
-
-    # H2: Check for coverage warning
-    warnings = []
-    if uc.persona_strategy == "required":
-        has_active = False
-        if uc.allowed_persona_ids:
-            p_uuids = [uuid.UUID(pid) for pid in uc.allowed_persona_ids]
-            active_stmt = select(func.count(LlmPersonaModel.id)).where(
-                and_(LlmPersonaModel.id.in_(p_uuids), LlmPersonaModel.enabled)
-            )
-            count = db.execute(active_stmt).scalar() or 0
-            has_active = count > 0
-
-        if not has_active:
-            warnings.append("use_case_persona_coverage_broken")
-
-    active_prompt = PromptRegistryV2.get_active_prompt(db, uc.key)
-    uc_data = LlmUseCaseConfig(
-        key=uc.key,
-        display_name=uc.display_name,
-        description=uc.description,
-        output_schema_id=uc.output_schema_id,
-        persona_strategy=uc.persona_strategy,
-        safety_profile=uc.safety_profile,
-        fallback_use_case_key=uc.fallback_use_case_key,
-        allowed_persona_ids=uc.allowed_persona_ids,
-        eval_fixtures_path=uc.eval_fixtures_path,
-        eval_failure_threshold=uc.eval_failure_threshold,
-        golden_set_path=uc.golden_set_path,
-        active_prompt_version_id=active_prompt.id if active_prompt else None,
-    )
-
-    return {"data": [uc_data], "meta": {"request_id": request_id, "warnings": warnings}}
 
 
 @router.patch("/use-cases/{key}/persona", response_model=LlmUseCaseListResponse)
@@ -3132,8 +3031,8 @@ def associate_persona(
     Spec 28.3 Task 4: Separate endpoint for persona association.
     """
     request_id = resolve_request_id(request)
-
-    if _is_removed_legacy_use_case_key(key):
+    del payload, current_user
+    if _build_canonical_admin_use_case_config(db, key) is None:
         return _error_response(
             status_code=404,
             request_id=request_id,
@@ -3141,79 +3040,16 @@ def associate_persona(
             message=f"use case {key} not found",
             details={},
         )
-
-    uc = get_use_case_config(db, key)
-    if not uc:
-        return _error_response(
-            status_code=404,
-            request_id=request_id,
-            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
-            message=f"use case {key} not found",
-            details={},
-        )
-
-    if payload.persona_id:
-        persona_uuid = uuid.UUID(payload.persona_id)
-        if not db.get(LlmPersonaModel, persona_uuid):
-            return _error_response(
-                status_code=404,
-                request_id=request_id,
-                code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
-                message=f"persona {payload.persona_id} not found",
-                details={},
-            )
-        uc.allowed_persona_ids = [payload.persona_id]
-    else:
-        uc.allowed_persona_ids = []
-
-    db.commit()
-    db.refresh(uc)
-
-    _record_audit_event(
-        db,
+    return _error_response(
+        status_code=409,
         request_id=request_id,
-        actor=current_user,
-        action="llm_use_case_associate_persona",
-        target_type="llm_use_case",
-        target_id=key,
-        status="success",
-        details={"persona_id": payload.persona_id},
+        code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
+        message=(
+            f"use case {key} persona assignment is derived from canonical governance. "
+            "Legacy DB config writes are frozen."
+        ),
+        details={},
     )
-    db.commit()
-
-    # H2: Check for coverage warning
-    warnings = []
-    if uc.persona_strategy == "required":
-        # Check if any allowed persona is actually enabled
-        has_active = False
-        if uc.allowed_persona_ids:
-            p_uuids = [uuid.UUID(pid) for pid in uc.allowed_persona_ids]
-            active_stmt = select(func.count(LlmPersonaModel.id)).where(
-                and_(LlmPersonaModel.id.in_(p_uuids), LlmPersonaModel.enabled)
-            )
-            count = db.execute(active_stmt).scalar() or 0
-            has_active = count > 0
-
-        if not has_active:
-            warnings.append("use_case_persona_coverage_broken")
-
-    active_prompt = PromptRegistryV2.get_active_prompt(db, uc.key)
-    uc_data = LlmUseCaseConfig(
-        key=uc.key,
-        display_name=uc.display_name,
-        description=uc.description,
-        output_schema_id=uc.output_schema_id,
-        persona_strategy=uc.persona_strategy,
-        safety_profile=uc.safety_profile,
-        fallback_use_case_key=uc.fallback_use_case_key,
-        allowed_persona_ids=uc.allowed_persona_ids,
-        eval_fixtures_path=uc.eval_fixtures_path,
-        eval_failure_threshold=uc.eval_failure_threshold,
-        golden_set_path=uc.golden_set_path,
-        active_prompt_version_id=active_prompt.id if active_prompt else None,
-    )
-
-    return {"data": [uc_data], "meta": {"request_id": request_id, "warnings": warnings}}
 
 
 @router.get("/use-cases/{key}/contract", response_model=LlmUseCaseContractResponse)
@@ -3234,39 +3070,58 @@ def get_use_case_contract(
             details={},
         )
 
-    uc = get_use_case_config(db, key)
-    if not uc:
-        return _error_response(
-            status_code=404,
-            request_id=request_id,
-            code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
-            message=f"use case {key} not found",
-            details={},
+    canonical_config = _build_canonical_admin_use_case_config(db, key)
+    if canonical_config is None:
+        uc = get_use_case_config(db, key)
+        if not uc:
+            return _error_response(
+                status_code=404,
+                request_id=request_id,
+                code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
+                message=f"use case {key} not found",
+                details={},
+            )
+
+        output_schema = None
+        if uc.output_schema_id:
+            schema_model = db.get(LlmOutputSchemaModel, uuid.UUID(uc.output_schema_id))
+            if schema_model:
+                output_schema = schema_model.json_schema
+
+        active_prompt = PromptRegistryV2.get_active_prompt(db, uc.key)
+        contract = LlmUseCaseContract(
+            key=uc.key,
+            display_name=uc.display_name,
+            description=uc.description,
+            input_schema=uc.input_schema,
+            output_schema=output_schema,
+            output_schema_id=uc.output_schema_id,
+            persona_strategy=uc.persona_strategy,
+            safety_profile=uc.safety_profile,
+            fallback_use_case_key=uc.fallback_use_case_key,
+            required_prompt_placeholders=uc.required_prompt_placeholders,
+            allowed_persona_ids=uc.allowed_persona_ids,
+            active_prompt_version_id=active_prompt.id if active_prompt else None,
         )
-
-    # Resolve output schema if any
-    output_schema = None
-    if uc.output_schema_id:
-        schema_model = db.get(LlmOutputSchemaModel, uuid.UUID(uc.output_schema_id))
-        if schema_model:
-            output_schema = schema_model.json_schema
-
-    active_prompt = PromptRegistryV2.get_active_prompt(db, uc.key)
-
-    contract = LlmUseCaseContract(
-        key=uc.key,
-        display_name=uc.display_name,
-        description=uc.description,
-        input_schema=uc.input_schema,
-        output_schema=output_schema,
-        output_schema_id=uc.output_schema_id,
-        persona_strategy=uc.persona_strategy,
-        safety_profile=uc.safety_profile,
-        fallback_use_case_key=uc.fallback_use_case_key,
-        required_prompt_placeholders=uc.required_prompt_placeholders,
-        allowed_persona_ids=uc.allowed_persona_ids,
-        active_prompt_version_id=active_prompt.id if active_prompt else None,
-    )
+    else:
+        canonical_contract = get_canonical_use_case_contract(key)
+        schema_definition = get_canonical_output_schema_definition(
+            canonical_contract.output_schema_name if canonical_contract else None
+        )
+        contract = LlmUseCaseContract(
+            key=canonical_config.key,
+            display_name=canonical_config.display_name,
+            description=canonical_config.description,
+            input_schema=canonical_config.input_schema,
+            output_schema=schema_definition.json_schema if schema_definition else None,
+            output_schema_id=canonical_config.output_schema_id,
+            persona_strategy=canonical_config.persona_strategy,
+            safety_profile=canonical_config.safety_profile,
+            fallback_use_case_key=canonical_config.fallback_use_case_key,
+            required_prompt_placeholders=canonical_config.required_prompt_placeholders,
+            allowed_persona_ids=canonical_config.allowed_persona_ids,
+            active_prompt_version_id=canonical_config.active_prompt_version_id,
+        )
 
     return {"data": contract, "meta": {"request_id": request_id}}
 
@@ -3286,7 +3141,7 @@ def list_prompt_history(
     versions = list_prompt_versions(db, key)
 
     return {
-        "data": [LlmPromptVersion.model_validate(v) for v in versions],
+        "data": [_serialize_prompt_version(db, v) for v in versions],
         "meta": {"request_id": request_id},
     }
 
@@ -3310,7 +3165,8 @@ def create_prompt_draft(
             details={},
         )
 
-    uc = get_use_case_config(db, key)
+    canonical_uc = _build_canonical_admin_use_case_config(db, key)
+    uc = canonical_uc or get_use_case_config(db, key)
     if not uc:
         return _error_response(
             status_code=404,
@@ -3346,6 +3202,18 @@ def create_prompt_draft(
             details={"errors": lint_result.errors, "warnings": lint_result.warnings},
         )
 
+    if payload.fallback_use_case_key is not None:
+        return _error_response(
+            status_code=409,
+            request_id=request_id,
+            code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
+            message=(
+                "Prompt-local fallback_use_case_key is frozen. "
+                "Fallback governance is owned by canonical contracts."
+            ),
+            details={},
+        )
+
     version = LlmPromptVersionModel(
         use_case_key=key,
         status=PromptStatus.DRAFT,
@@ -3353,7 +3221,6 @@ def create_prompt_draft(
         model=payload.model,
         temperature=payload.temperature,
         max_output_tokens=payload.max_output_tokens,
-        fallback_use_case_key=payload.fallback_use_case_key,
         created_by=str(current_user.id),
     )
     db.add(version)
@@ -3378,7 +3245,7 @@ def create_prompt_draft(
     )
     db.commit()
 
-    return {"data": LlmPromptVersion.model_validate(version), "meta": {"request_id": request_id}}
+    return {"data": _serialize_prompt_version(db, version), "meta": {"request_id": request_id}}
 
 
 @router.patch(
@@ -3402,7 +3269,8 @@ async def publish_prompt(
         )
     previous_published = PromptRegistryV2.get_active_prompt(db, key)
 
-    uc = get_use_case_config(db, key)
+    canonical_uc = _build_canonical_admin_use_case_config(db, key)
+    uc = canonical_uc or get_use_case_config(db, key)
     if not uc:
         return _error_response(
             status_code=404,
@@ -3483,7 +3351,7 @@ async def publish_prompt(
         db.commit()
 
         return {
-            "data": LlmPromptVersion.model_validate(version),
+            "data": _serialize_prompt_version(db, version),
             "meta": {
                 "request_id": request_id,
                 "warnings": warnings,
@@ -3566,7 +3434,7 @@ def rollback_prompt(
         db.commit()
 
         return {
-            "data": LlmPromptVersion.model_validate(version).model_dump(mode="json"),
+            "data": _serialize_prompt_version(db, version).model_dump(mode="json"),
             "meta": {"request_id": request_id},
         }
     except ValueError as err:
@@ -3606,7 +3474,7 @@ def list_call_logs(
 
     stmt = select(LlmCallLogModel)
     if use_case:
-        stmt = stmt.where(LlmCallLogModel.use_case == use_case)
+        stmt = stmt.where(_call_log_scope_filter(use_case))
     if status:
         stmt = stmt.where(LlmCallLogModel.validation_status == status)
     if prompt_version_id:
@@ -3625,7 +3493,7 @@ def list_call_logs(
     logs = db.execute(stmt).scalars().all()
 
     return {
-        "data": [LlmCallLog.model_validate(log) for log in logs],
+        "data": [LlmCallLog.model_validate(log, from_attributes=True) for log in logs],
         "meta": {
             "request_id": request_id,
             "total": total,
@@ -3645,10 +3513,22 @@ def get_dashboard(
     request_id = resolve_request_id(request)
 
     since = datetime.now(timezone.utc) - timedelta(hours=period_hours)
-    use_cases_stmt = (
-        select(LlmCallLogModel.use_case).where(LlmCallLogModel.timestamp >= since).distinct()
+    feature_stmt = (
+        select(LlmCallLogModel.feature)
+        .where(and_(LlmCallLogModel.timestamp >= since, LlmCallLogModel.feature.is_not(None)))
+        .distinct()
     )
-    use_cases = db.execute(use_cases_stmt).scalars().all()
+    use_cases = [value for value in db.execute(feature_stmt).scalars().all() if value]
+    legacy_removed_count = (
+        db.execute(
+            select(func.count(LlmCallLogModel.id)).where(
+                and_(LlmCallLogModel.timestamp >= since, _legacy_removed_call_log_filter())
+            )
+        ).scalar()
+        or 0
+    )
+    if legacy_removed_count:
+        use_cases.append("legacy_removed")
 
     metrics_list = []
     for uc in use_cases:
@@ -3664,7 +3544,7 @@ def get_dashboard(
             func.sum(sa.case((LlmCallLogModel.evidence_warnings_count > 0, 1), else_=0)).label(
                 "warning_count"
             ),
-        ).where(and_(LlmCallLogModel.use_case == uc, LlmCallLogModel.timestamp >= since))
+        ).where(and_(LlmCallLogModel.timestamp >= since, _call_log_scope_filter(uc)))
 
         stats = db.execute(base_stmt).first()
         count = stats.count or 0
@@ -3673,7 +3553,7 @@ def get_dashboard(
 
         dist_stmt = (
             select(LlmCallLogModel.validation_status, func.count(LlmCallLogModel.id))
-            .where(and_(LlmCallLogModel.use_case == uc, LlmCallLogModel.timestamp >= since))
+            .where(and_(LlmCallLogModel.timestamp >= since, _call_log_scope_filter(uc)))
             .group_by(LlmCallLogModel.validation_status)
         )
 
@@ -3686,13 +3566,13 @@ def get_dashboard(
             # PostgreSQL implementation
             p95_stmt = select(
                 func.percentile_cont(0.95).within_group(LlmCallLogModel.latency_ms)
-            ).where(and_(LlmCallLogModel.use_case == uc, LlmCallLogModel.timestamp >= since))
+            ).where(and_(LlmCallLogModel.timestamp >= since, _call_log_scope_filter(uc)))
             p95 = db.execute(p95_stmt).scalar() or 0
         else:
             # SQLite fallback (in-memory)
             latencies_stmt = (
                 select(LlmCallLogModel.latency_ms)
-                .where(and_(LlmCallLogModel.use_case == uc, LlmCallLogModel.timestamp >= since))
+                .where(and_(LlmCallLogModel.timestamp >= since, _call_log_scope_filter(uc)))
                 .order_by(LlmCallLogModel.latency_ms)
             )
             latencies = db.execute(latencies_stmt).scalars().all()
