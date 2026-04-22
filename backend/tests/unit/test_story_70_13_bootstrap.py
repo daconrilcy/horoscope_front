@@ -68,7 +68,6 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     )
 
     seed_astrologers = Mock()
-    seed_canonical_contracts = Mock()
     seed_prompts = Mock()
     seed_natal_v3_prompts = Mock()
     seed_chat_prompt_v2 = Mock()
@@ -77,10 +76,6 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     seed_66_20_taxonomy = Mock()
 
     monkeypatch.setattr("scripts.seed_astrologers_6_profiles.seed_astrologers", seed_astrologers)
-    monkeypatch.setattr(
-        "app.ops.llm.bootstrap.use_cases_seed.seed_canonical_contracts",
-        seed_canonical_contracts,
-    )
     monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
@@ -106,7 +101,6 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     main._ensure_canonical_llm_bootstrap_seeded()
 
     seed_astrologers.assert_called_once()
-    seed_canonical_contracts.assert_called_once()
     seed_prompts.assert_called_once()
     seed_natal_v3_prompts.assert_called_once()
     seed_chat_prompt_v2.assert_called_once()
@@ -168,7 +162,6 @@ def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(mon
     )
 
     seed_astrologers = Mock()
-    seed_canonical_contracts = Mock()
     seed_prompts = Mock()
     seed_natal_v3_prompts = Mock()
     seed_chat_prompt_v2 = Mock()
@@ -177,10 +170,6 @@ def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(mon
     seed_66_20_taxonomy = Mock()
 
     monkeypatch.setattr("scripts.seed_astrologers_6_profiles.seed_astrologers", seed_astrologers)
-    monkeypatch.setattr(
-        "app.ops.llm.bootstrap.use_cases_seed.seed_canonical_contracts",
-        seed_canonical_contracts,
-    )
     monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
@@ -206,7 +195,6 @@ def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(mon
     main._ensure_canonical_llm_bootstrap_seeded()
 
     seed_astrologers.assert_called_once()
-    seed_canonical_contracts.assert_called_once()
     seed_prompts.assert_called_once()
     seed_natal_v3_prompts.assert_called_once()
     seed_chat_prompt_v2.assert_called_once()

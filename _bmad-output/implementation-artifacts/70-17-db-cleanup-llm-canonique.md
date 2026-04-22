@@ -61,6 +61,7 @@ Produire et executer un plan de cleanup DB LLM qui :
 15. **AC15 - Validation locale obligatoire** : la story est terminee seulement si les validations backend passees dans le venv sont executees et tracees (`ruff format .`, `ruff check .`, `pytest -q` ou suites ciblees justifiees), avec couverture des garde-fous, des migrations de cleanup et des flux runtime/admin touches.
 16. **AC16 - Elimination prealable des dependances legacy backend actives** : avant tout drop physique supplementaire, les dependances backend encore actives a `llm_use_case_configs`, `fallback_use_case_key` et aux ecritures de configuration `use_case` sont retirees des chemins nominaux de bootstrap, runtime et administration. Les surfaces encore legacy autorisees restent explicitement bornees a la maintenance/compatibilite et ne pilotent plus aucun comportement nominal.
 17. **AC17 - Controle explicite de `backend\\horoscope.db` et alignement applicatif** : un controle automatise verifie que le fichier `backend\\horoscope.db` et toute base SQLite configuree pertinente sont migres jusqu a la revision Alembic attendue avant l execution des validations backend, sans recreation silencieuse de schema divergent. La preuve executee montre que l etat reel de la base locale reste aligne avec les modeles ORM, les migrations et les chemins nominaux de l application backend.
+18. **AC18 - Gouvernance enforcee du registre et des garde-fous locaux** : le registre DB LLM n est plus seulement descriptif. Le bootstrap local ne doit plus repeupler nominalement les structures legacy gelees, le garde SQLite doit exiger `alembic head` pour chaque fichier SQLite configure pertinent, et le validateur de cleanup doit couvrir aussi les objets gouvernes hors ORM et refuser les allowlists trop larges qui laisseraient reintroduire des usages legacy nominaux sans alerte.
 
 ## Tasks / Subtasks
 
@@ -112,20 +113,24 @@ Produire et executer un plan de cleanup DB LLM qui :
   - [x] Ajouter un garde qui detecte une nouvelle ecriture nominale dans un objet legacy gele.
   - [x] Ajouter un garde distinct qui detecte une derive schema/migration hors registre de cleanup.
   - [x] Mettre a jour la documentation de gouvernance DB LLM post-cleanup.
+  - [x] Durcir les allowlists du validateur pour cibler des fichiers explicites et non des repertoires entiers.
+  - [x] Etendre la couverture du validateur aux tables gouvernees declarees dans le registre, y compris les archives non exposees par l ORM.
 
-- [x] **Task 9: Validation finale** (AC: 15, 17)
+- [x] **Task 9: Validation finale** (AC: 15, 17, 18)
   - [x] Activer le venv avant toute commande Python : `.\.venv\Scripts\Activate.ps1`
   - [x] Executer `cd backend ; ruff format .`
   - [x] Executer `cd backend ; ruff check .`
   - [x] Executer `cd backend ; pytest -q` ou une campagne ciblee justifiee
   - [x] Verifier via le garde session `ensure_configured_sqlite_file_matches_alembic_head` que `backend\horoscope.db` et la base SQLite configuree restent alignees avec Alembic et le schema backend avant les tests applicatifs.
   - [x] Verifier les migrations de cleanup sur une base de test / preprod et confirmer le rollback documente.
+  - [x] Verifier que toute SQLite configuree secondaire echoue aussi si elle n est pas reellement a `alembic head`.
 
-- [x] **Task 10: Retirer les dependances legacy backend encore actives** (AC: 4, 7, 8, 11, 12, 16)
+- [x] **Task 10: Retirer les dependances legacy backend encore actives** (AC: 4, 7, 8, 11, 12, 16, 18)
   - [x] Sortir le bootstrap local/runtime nominal de toute lecture structurante a `llm_use_case_configs`.
   - [x] Basculer les contrats `use_case` nominaux vers un registre canonique partage cote backend.
   - [x] Geler les endpoints admin qui ecrivent encore dans la configuration legacy `use_case`.
   - [x] Reborner les lectures legacy restantes a la compatibilite explicite et mettre a jour les garde-fous associes.
+  - [x] Supprimer le reseed nominal local de `llm_use_case_configs` depuis le bootstrap de `main.py`.
 
 ## Dev Notes
 
@@ -251,6 +256,7 @@ gpt-5
 - Correction appliquee : `backend/app/main.py` appelle desormais `seed_canonical_contracts()` (alias neutre du seed canonique pour respecter les garde-fous 70-17), `backend/app/ops/llm/bootstrap/use_cases_seed.py` normalise `eval_failure_threshold` pour rester compatible avec le schema SQLite local, et `backend/tests/unit/test_story_70_13_bootstrap.py` verrouille ce comportement.
 - Reparation locale executee : la base `backend/horoscope.db` a ete reseedee/reparee jusqu a retrouver `22` assemblies publiees et un catalogue admin non vide ; verification reelle via API locale avec `facets.feature = ["chat", "guidance", "horoscope_daily", "natal"]` et resolution valide de `natal:interpretation:free:fr-FR`.
 - Front admin revalide : `frontend/src/pages/admin/AdminPromptsPage.tsx` initialise automatiquement une selection de contexte valide quand le catalogue retourne des donnees, et `frontend/src/tests/AdminPromptsCatalogFlow.test.tsx` couvre le flux avec les libelles/dom actuels.
+- Renforcement post-audit 70-17 : le bootstrap local n appelle plus `seed_canonical_contracts()` depuis `main.py`, le garde SQLite exige desormais `alembic head` pour toute base configuree pertinente, et le validateur refuse les allowlists de repertoires trop larges tout en couvrant aussi les tables gouvernees declarees uniquement dans le registre.
 
 ### File List
 
@@ -293,3 +299,4 @@ gpt-5
 - 2026-04-22 : validation finale cleanup/admin/runtime executee dans le venv ; la suite `pytest -q` complete reste trop longue pour la fenetre d execution outil et est remplacee par une campagne ciblee justifiee.
 - 2026-04-22 : corrections post-review appliquees sur l ORM d observabilite, le detail persona admin et le critere de reseed bootstrap ; tests cibles de non-regression ajoutes / realignes et executes.
 - 2026-04-22 : correctif post-livraison du catalogue admin des prompts : reseed bootstrap canonique local, reparation de `backend/horoscope.db`, bootstrap automatique de la selection front et verifications API/UI ciblees.
+- 2026-04-22 : AC18 ajoutee et implementee pour rendre la gouvernance 70-17 effectivement enforcee sur le bootstrap local, l alignement Alembic des SQLite configurees et la portee reelle du validateur de cleanup.

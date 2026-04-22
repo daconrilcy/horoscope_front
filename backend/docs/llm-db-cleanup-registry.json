@@ -43,10 +43,27 @@
         "backend/app/domain/llm/prompting/validation.py",
         "backend/app/domain/llm/prompting/validators.py",
         "backend/app/domain/llm/runtime/gateway.py",
-        "backend/app/infra/db/models/",
-        "backend/app/infrastructure/db/repositories/llm/",
-        "backend/app/ops/llm/",
-        "backend/scripts/"
+        "backend/app/infra/db/models/__init__.py",
+        "backend/app/infra/db/models/llm_prompt.py",
+        "backend/app/infrastructure/db/repositories/llm/prompting_repository.py",
+        "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_30_14_chat_prompt.py",
+        "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_guidance_prompts.py",
+        "backend/app/ops/llm/bootstrap/use_cases_seed.py",
+        "backend/app/ops/llm/prompt_registry_v2.py",
+        "backend/app/ops/llm/release/build_golden_evidence.py",
+        "backend/app/ops/llm/release/build_qualification_evidence.py",
+        "backend/scripts/seed_28_4.py",
+        "backend/scripts/seed_30_15_chat_naturalite.py",
+        "backend/scripts/seed_30_2_astroresponse_v2.py",
+        "backend/scripts/seed_30_3_gpt5_prompts.py",
+        "backend/scripts/seed_30_5_new_use_cases.py",
+        "backend/scripts/seed_66_15_assembly_convergence.py",
+        "backend/scripts/seed_66_20_convergence.py",
+        "backend/scripts/seed_natal_short.py",
+        "backend/scripts/update_all_prompts_59_5.py",
+        "backend/scripts/update_guidance_prompts_59_4.py"
       ]
     },
     {
@@ -76,8 +93,8 @@
         "backend/app/domain/llm/configuration/admin_models.py",
         "backend/app/domain/llm/configuration/canonical_use_case_registry.py",
         "backend/app/domain/llm/runtime/gateway.py",
-        "backend/app/infra/db/models/",
-        "backend/app/ops/llm/"
+        "backend/app/infra/db/models/llm_prompt.py",
+        "backend/app/ops/llm/bootstrap/use_cases_seed.py"
       ]
     },
     {
@@ -90,8 +107,7 @@
         "backend/app/domain/llm/prompting/catalog.py",
         "backend/app/domain/llm/runtime/contracts.py",
         "backend/app/domain/llm/runtime/gateway.py",
-        "backend/app/infra/db/models/llm_assembly.py",
-        "backend/app/ops/llm/"
+        "backend/app/infra/db/models/llm_assembly.py"
       ]
     }
   ],

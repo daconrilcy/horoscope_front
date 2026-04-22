@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from sqlalchemy import create_engine
+
+from app.infra.db.base import Base
 from app.infra.db.bootstrap import (
+    SqliteAlignmentStatus,
+    _is_strictly_aligned_configured_sqlite,
+    _stamp_sqlite_head_revision,
     ensure_configured_sqlite_file_matches_alembic_head,
     sqlite_alignment_status,
 )
@@ -22,3 +28,53 @@ def test_backend_horoscope_db_is_aligned_with_backend_application() -> None:
     assert status.current_revision == status.head_revision, status.as_debug_string()
     assert status.missing_tables == (), status.as_debug_string()
     assert status.is_aligned, status.as_debug_string()
+
+
+def test_secondary_sqlite_file_must_also_match_alembic_head() -> None:
+    secondary = SqliteAlignmentStatus(
+        database_url="sqlite:///tmp-secondary.sqlite3",
+        file_path=Path("tmp-secondary.sqlite3"),
+        exists=True,
+        current_revision=None,
+        head_revision="head-123",
+        missing_tables=(),
+    )
+
+    assert (
+        _is_strictly_aligned_configured_sqlite(
+            secondary,
+            primary_database_url="sqlite:///primary.sqlite3",
+        )
+        is False
+    )
+
+
+def test_secondary_sqlite_temp_file_is_stamped_to_head_for_pytest_harness() -> None:
+    backend_root = Path(__file__).resolve().parents[2]
+    sqlite_path = backend_root / ".tmp-pytest" / "sqlite-alignment-secondary.sqlite3"
+    sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+    sqlite_path.unlink(missing_ok=True)
+
+    database_url = f"sqlite:///{sqlite_path.as_posix()}"
+    engine = create_engine(
+        database_url,
+        connect_args={"check_same_thread": False, "timeout": 30},
+        future=True,
+    )
+    try:
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+    finally:
+        engine.dispose()
+
+    before_status = sqlite_alignment_status(database_url)
+    assert before_status.current_revision is None, before_status.as_debug_string()
+    assert before_status.missing_tables == (), before_status.as_debug_string()
+
+    _stamp_sqlite_head_revision(database_url, before_status.head_revision)
+
+    status = sqlite_alignment_status(database_url)
+    assert status.exists, status.as_debug_string()
+    assert status.current_revision == status.head_revision, status.as_debug_string()
+    assert status.is_aligned, status.as_debug_string()
+
+    sqlite_path.unlink(missing_ok=True)

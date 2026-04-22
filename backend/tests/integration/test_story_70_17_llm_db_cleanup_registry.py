@@ -5,8 +5,9 @@ from pathlib import Path
 
 from app.ops.llm.db_cleanup_validator import (
     LlmDbCleanupValidator,
-    discover_llm_tables,
+    discover_governed_llm_tables,
     scan_python_sources_for_legacy_patterns,
+    validate_compatibility_rules_structure,
     validate_registry_structure,
     validate_reviewed_migrations,
 )
@@ -43,7 +44,10 @@ def test_reviewed_migrations_guard_detects_missing_inventory_entry() -> None:
     root = _repo_root()
     registry = _load_registry()
     registry["reviewed_migrations"] = registry["reviewed_migrations"][:-1]
-    known_tables = discover_llm_tables(root / "backend" / "app" / "infra" / "db" / "models")
+    known_tables = discover_governed_llm_tables(
+        registry,
+        models_root=root / "backend" / "app" / "infra" / "db" / "models",
+    )
 
     violations = validate_reviewed_migrations(
         registry,
@@ -52,6 +56,32 @@ def test_reviewed_migrations_guard_detects_missing_inventory_entry() -> None:
     )
 
     assert any(violation.code == "UNREVIEWED_LLM_MIGRATION" for violation in violations)
+
+
+def test_reviewed_migrations_guard_detects_registry_only_archive_table() -> None:
+    root = _repo_root()
+    registry = _load_registry()
+    registry["reviewed_migrations"] = [
+        migration
+        for migration in registry["reviewed_migrations"]
+        if migration != "20260422_0072_archive_prompt_fallback_use_case.py"
+    ]
+    known_tables = discover_governed_llm_tables(
+        registry,
+        models_root=root / "backend" / "app" / "infra" / "db" / "models",
+    )
+
+    violations = validate_reviewed_migrations(
+        registry,
+        migrations_root=root / "backend" / "migrations" / "versions",
+        known_tables=known_tables,
+    )
+
+    assert any(
+        violation.code == "UNREVIEWED_LLM_MIGRATION"
+        and "20260422_0072_archive_prompt_fallback_use_case.py" in (violation.detail or "")
+        for violation in violations
+    )
 
 
 def test_legacy_usage_allowlist_detects_reintroduced_usage(tmp_path: Path) -> None:
@@ -80,9 +110,24 @@ def test_legacy_usage_allowlist_detects_reintroduced_usage(tmp_path: Path) -> No
     assert any(violation.code == "LEGACY_ACCESS_OUTSIDE_ALLOWLIST" for violation in violations)
 
 
+def test_compatibility_rules_reject_broad_directory_allowlists() -> None:
+    violations = validate_compatibility_rules_structure(
+        [
+            {
+                "rule_id": "legacy-call-log-use-case-read",
+                "pattern": "LlmCallLogModel\\.use_case",
+                "allowed_paths": ["backend/app/api/v1/routers/"],
+            }
+        ]
+    )
+
+    assert any(violation.code == "BROAD_COMPAT_ALLOWLIST" for violation in violations)
+
+
 def test_main_no_longer_depends_on_legacy_use_case_registry() -> None:
     root = _repo_root()
     content = (root / "backend" / "app" / "main.py").read_text(encoding="utf-8")
 
     assert "LlmUseCaseConfigModel" not in content
     assert "seed_use_cases" not in content
+    assert "seed_canonical_contracts" not in content

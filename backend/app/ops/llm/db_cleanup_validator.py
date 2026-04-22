@@ -159,6 +159,54 @@ def validate_registry_structure(
                 )
             )
 
+    compatibility_rules = registry.get("compatibility_rules")
+    if not isinstance(compatibility_rules, list) or not compatibility_rules:
+        violations.append(
+            LlmDbCleanupViolation(
+                code="REGISTRY_COMPAT_RULES",
+                message="Le registre doit definir des regles de compatibilite explicites.",
+            )
+        )
+    else:
+        violations.extend(validate_compatibility_rules_structure(compatibility_rules))
+
+    return violations
+
+
+def validate_compatibility_rules_structure(
+    compatibility_rules: list[dict[str, Any]],
+) -> list[LlmDbCleanupViolation]:
+    violations: list[LlmDbCleanupViolation] = []
+    for rule in compatibility_rules:
+        rule_id = str(rule.get("rule_id", "")).strip()
+        pattern = str(rule.get("pattern", "")).strip()
+        allowed_paths = list(rule.get("allowed_paths", []))
+        if not rule_id or not pattern or not allowed_paths:
+            violations.append(
+                LlmDbCleanupViolation(
+                    code="INVALID_COMPAT_RULE",
+                    message=(
+                        "Chaque regle de compatibilite doit definir "
+                        "rule_id, pattern et allowed_paths."
+                    ),
+                    detail=rule_id or pattern or "unknown_rule",
+                )
+            )
+            continue
+        for allowed_path in allowed_paths:
+            normalized = str(allowed_path).replace("\\", "/")
+            if normalized.endswith("/"):
+                violations.append(
+                    LlmDbCleanupViolation(
+                        code="BROAD_COMPAT_ALLOWLIST",
+                        message=(
+                            "Les allowlists de compatibilite doivent "
+                            "cibler des fichiers explicites,"
+                            " pas des repertoires entiers."
+                        ),
+                        detail=f"rule={rule_id} path={normalized}",
+                    )
+                )
     return violations
 
 
@@ -174,6 +222,19 @@ def discover_llm_tables(models_root: Path) -> set[str]:
             if match.startswith("llm_"):
                 table_names.add(match)
     return table_names
+
+
+def discover_governed_llm_tables(registry: dict[str, Any], *, models_root: Path) -> set[str]:
+    governed = discover_llm_tables(models_root)
+    for obj in registry.get("objects", []):
+        if not isinstance(obj, dict):
+            continue
+        if obj.get("kind") != "table":
+            continue
+        table_name = str(obj.get("table", "")).strip()
+        if table_name.startswith("llm_"):
+            governed.add(table_name)
+    return governed
 
 
 def validate_discovered_tables(
@@ -269,19 +330,6 @@ def scan_python_sources_for_legacy_patterns(
         allowed_paths = tuple(
             str(item).replace("\\", "/") for item in rule.get("allowed_paths", [])
         )
-        if not rule_id or not pattern or not allowed_paths:
-            violations.append(
-                LlmDbCleanupViolation(
-                    code="INVALID_COMPAT_RULE",
-                    message=(
-                        "Chaque regle de compatibilite doit definir rule_id, "
-                        "pattern et allowed_paths."
-                    ),
-                    detail=rule_id or pattern or "unknown_rule",
-                )
-            )
-            continue
-
         regex = re.compile(pattern)
         for path in python_files:
             relative_path = path.relative_to(root_path).as_posix()
@@ -309,7 +357,7 @@ class LlmDbCleanupValidator:
         registry = load_cleanup_registry(self.registry_path)
         models_root = self.root_path / "backend" / "app" / "infra" / "db" / "models"
         migrations_root = self.root_path / "backend" / "migrations" / "versions"
-        known_tables = discover_llm_tables(models_root)
+        known_tables = discover_governed_llm_tables(registry, models_root=models_root)
 
         violations: list[LlmDbCleanupViolation] = []
         violations.extend(validate_registry_structure(registry, root_path=self.root_path))
