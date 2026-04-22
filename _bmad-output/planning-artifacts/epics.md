@@ -558,6 +558,32 @@ So that je puisse revenir sur une modification et comprendre quand, pourquoi et 
 **Then** le statut de chaque version est visible explicitement
 **And** il n existe jamais plus d une version `published` simultanement pour un meme prompt canonique.
 
+### Story 70.16: Documenter, valider et exposer des routes de test pour la generation LLM
+
+As a platform architect,
+I want un socle post-70-15 de documentation, seed utilisateur canonique et routes backend QA dediees a la generation,
+So that la generation de prompt LLM reste verifiable, testable et stable apres la convergence canonique du runtime.
+
+**Acceptance Criteria:**
+
+**Given** la convergence backend de la story 70.15
+**When** un developpeur ou un operateur relit la documentation de reference
+**Then** il trouve une description exacte du pipeline canonique reel (`service metier -> AIEngineAdapter -> LLMGateway -> prompting/configuration -> provider -> validation`)
+**And** la documentation cite les fichiers porteurs reels sans reintroduire de legacy actif.
+
+**Given** le besoin de rejouer rapidement un flux LLM nominal
+**When** le seed ou script de la story 70.16 est execute
+**Then** l utilisateur `cyril-test@test.com` existe avec mot de passe `admin123`, profil de naissance resolu sur `Paris, France` et theme natal persiste
+**And** cet utilisateur est immediatement exploitable par les flux guidance, chat, natal et horoscope quotidien si ce dernier reste supporte.
+
+**Given** les routes backend QA dediees de la story 70.16
+**When** un admin ou un contexte dev/staging autorise les appelle
+**Then** elles declenchent les flux de generation canoniques a partir de l utilisateur de test
+**And** elles retournent uniquement la reponse utile au test runtime avec le minimum d enveloppe technique
+**And** elles ne sont pas exposees au trafic utilisateur normal ni a la production sans garde-fou explicite.
+
+**Artefact de cadrage :** [`70-16-documenter-valider-et-exposer-des-routes-de-test-pour-la-generation-llm.md`](../implementation-artifacts/70-16-documenter-valider-et-exposer-des-routes-de-test-pour-la-generation-llm.md)
+
 As a utilisateur,
 I want pouvoir basculer entre mes interprétations SHORT/COMPLETE, sélectionner une version précise, supprimer une interprétation et télécharger un PDF personnalisable,
 So that je garde le contrôle de mon historique et je peux exporter un rendu premium adapté à mes besoins.

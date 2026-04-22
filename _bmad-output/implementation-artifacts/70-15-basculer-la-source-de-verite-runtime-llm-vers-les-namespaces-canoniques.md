@@ -1,6 +1,6 @@
 # Story 70.15: Basculer la source de verite runtime LLM vers les namespaces canoniques
 
-Status: review (AC53-AC70 alignes « Oui » sur le perimetre atteint et valide)
+Status: review (AC53-AC71 alignes « Oui » sur le perimetre atteint et valide)
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -132,6 +132,7 @@ A l issue de cette story :
 68. **AC68 - Cloture explicite de la phase migration backend LLM** : completion notes/changelog/audit actent la fin de la compatibilite historique ; plus de section "reliquats toleres" non vide dans la doc d etat courant.
 69. **AC69 - Suppression des reliquats legacy dans `app.prompts/tests` si package decommissionne** : tests sous `backend/app/prompts/tests/` migres vers couches canoniques ou supprimes ; aucun test n existe uniquement pour maintenir un package transitoire.
 70. **AC70 - Aucune creation de nouvelle dette de migration pendant le nettoyage** : aucun nouveau module temporaire/bridge2/compat/shim n est introduit ; la simplification finale est nette et sans nouvelle couche intermediaire.
+71. **AC71 - Nettoyage physique final des reliquats et garde-fous depot** : les repertoires residuels vides ou quasi vides issus de la migration sont supprimes physiquement lorsqu ils ne portent plus de source active ; aucun fichier `__pycache__` ou `.pyc` ne pollue le repo tracke ; les tests garde-fous qui interdisent toute reintroduction de `app.llm_orchestration.*` dans le code nominal sont conserves et etendus si necessaire.
 
 ## Verification AC53-AC70 (audit code + criteres textuels, 2026-04-21, cloture AC54-55 / 63-70)
 
@@ -505,3 +506,4 @@ gpt-5
 - 2026-04-21 : validation backend élargie (étape 12) — campagne `pytest -q app/tests app/llm_orchestration/tests` exécutée après correction compat shim schemas (`_SECTION_KEY_VALUES`) : 2885 pass / 29 fail / 3 skip ; échecs résiduels concentrés sur flux chat/guidance, tests admin legacy et overrides modèle.
 - 2026-04-21 : stabilisation post-étape 12 — correction cache `ExecutionProfileRegistry` (ids UUID + rechargement par session, plus d ORM en cache global) ; shim `execution_profile_registry` orchestration = reexport domaine ; JSON gouvernance `deprecated_use_case_mapping` + registre résiduel alignés (`horoscope_daily_free` / `horoscope_daily_full`) ; correctifs tests (`test_story_66_30_suppression`, `test_responses_client`, entrees runtime de test `test_natal` / `test_guidance`). Matrice **Verification AC53-AC70** ajoutée à l artefact.
 - 2026-04-22 : hygiene tests backend — temporaires Pytest et DB de regression confines sous `backend/.tmp-pytest`, nettoyage explicite via `cleanup_session()`, `tmp_path` session-local nettoye dans `backend/conftest.py`, `cacheprovider` Pytest desactive, artefacts ignores dans `.gitignore`, validation backend rejouee verte.
+- 2026-04-22 : ajout AC71 et mise en oeuvre — suppression physique des reliquats non actifs (`backend/app/prompts`, `backend/app/domain/llm/legacy`, placeholders ops legacy/migrations), verification de l absence de pollution `__pycache__` dans les fichiers trackes et extension des garde-fous anti-reintroduction `app.llm_orchestration.*`.
