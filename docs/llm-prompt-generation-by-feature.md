@@ -101,6 +101,41 @@ Compatibilités legacy encore gérées :
 - `daily_prediction` comme feature legacy est mappé vers `horoscope_daily`
 - les anciennes clés `use_case` runtime supprimées sont désormais retirées du nominal et rejetées explicitement.
 
+## Flux métier réellement actifs après 70.15
+
+Les flux produit et QA doivent rester alignés sur les mêmes briques canoniques :
+
+- `guidance` : `GuidanceService` construit le contexte métier, puis appelle `AIEngineAdapter.generate_guidance()`, qui délègue à `LLMGateway`.
+- `chat` : `ChatGuidanceService` assemble messages/contexte, puis appelle `AIEngineAdapter.generate_chat_reply()`, qui délègue à `LLMGateway`.
+- `natal` : `NatalInterpretationServiceV2` prépare `NatalExecutionInput`, puis appelle `AIEngineAdapter.generate_natal_interpretation()`, qui délègue à `LLMGateway`.
+- `horoscope_daily` : `DailyPredictionService` calcule ou recharge le run astro, puis `PublicPredictionAssembler` appelle `AIEngineAdapter.generate_horoscope_narration()` pour la narration LLM quand elle est activée.
+
+Lecture d architecture volontairement stricte :
+
+1. `service métier`
+2. `AIEngineAdapter`
+3. `LLMGateway`
+4. `assembly/configuration`
+5. `PromptRenderer` + personas + contexte commun
+6. `ProviderRuntimeManager`
+7. `validate_output()` et normalisation de sortie
+
+Les routes QA internes ajoutées pour la story 70-16 ne créent pas de chaîne parallèle. Elles ne font que rejouer ces services métier sur un utilisateur canonique stable.
+
+## Doctrine anti-legacy post-70.15
+
+La doctrine post-convergence est explicite :
+
+- ne pas réintroduire d imports nominaux `app.llm_orchestration.*`, `app.prompts.*` ou `app.domain.llm.legacy.*` dans les routes, tests, seeds ou scripts QA ;
+- ne pas reconstruire un mini-gateway de test hors `AIEngineAdapter` / `LLMGateway` ;
+- ne pas documenter comme "actif" un helper qui n est plus sur le chemin nominal.
+
+Garde-fous actuellement attendus :
+
+- les tests de convergence 70-15 et de gouvernance runtime continuent de protéger l extinction du legacy ;
+- les routes QA 70-16 sont isolées sous `backend/app/api/v1/routers/internal/llm/qa.py`, montées conditionnellement et bornées à des rôles internes ;
+- le seed canonique 70-16 converge l utilisateur de recette sans écrire un état métier parallèle ni contourner les services de profil natal.
+
 ## Registre central de gouvernance (Story 66.42)
 
 La taxonomie canonique (familles, aliases nominaux, sous-familles natales), les aliases de `use_case` dépréciés et les placeholders autorisés sont définis dans un **seul artefact versionné** : `backend/app/domain/llm/governance/data/prompt_governance_registry.json` (champ `schema_version`, actuellement `1.0.0`).

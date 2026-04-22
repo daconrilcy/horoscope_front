@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: '2026-04-20T22:00:00+02:00'
+last_updated: '2026-04-22T13:15:00+02:00'
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -667,6 +667,6 @@ development_status:
   70-13-cleaner-le-backend-generation-de-prompt-et-fermer-les-compatibilites-legacy: done
   70-14-reorganiser-et-consolider-les-fichiers-du-process-llm-backend-de-facon-dry: done
   70-15-basculer-la-source-de-verite-runtime-llm-vers-les-namespaces-canoniques: done
-  70-16-documenter-valider-et-exposer-des-routes-de-test-pour-la-generation-llm: backlog
+  70-16-documenter-valider-et-exposer-des-routes-de-test-pour-la-generation-llm: done
   epic-70-retrospective: backlog
   67-to-69-deferred-work: done

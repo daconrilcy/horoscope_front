@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import desc, select
+from sqlalchemy import delete, desc, select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.chart_result import ChartResultModel
@@ -50,6 +50,14 @@ class ChartResultRepository:
             .limit(limit)
         )
         return list(rows)
+
+    def delete_for_user_except_chart_id(self, *, user_id: int, keep_chart_id: str) -> int:
+        result = self.db.execute(
+            delete(ChartResultModel)
+            .where(ChartResultModel.user_id == user_id)
+            .where(ChartResultModel.chart_id != keep_chart_id)
+        )
+        return int(result.rowcount or 0)
 
     def get_previous_comparable_for_chart(
         self,

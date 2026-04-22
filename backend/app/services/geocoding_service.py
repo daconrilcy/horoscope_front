@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+_timezone_finder_instance: object | None = None
 
 
 def _normalize_nominatim_base_url(raw_url: str) -> str:
@@ -193,6 +194,24 @@ def _build_query_key(
 
 class GeocodingService:
     """Client Nominatim côté serveur — proxy géocodage."""
+
+    @staticmethod
+    def derive_timezone(*, lat: float, lon: float) -> str | None:
+        global _timezone_finder_instance
+
+        try:
+            if _timezone_finder_instance is None:
+                from timezonefinder import TimezoneFinder
+
+                _timezone_finder_instance = TimezoneFinder()
+            return _timezone_finder_instance.timezone_at(lng=lon, lat=lat)
+        except Exception:
+            logger.warning(
+                "geocoding_timezone_derivation_unavailable lat=%s lon=%s",
+                lat,
+                lon,
+            )
+            return None
 
     @staticmethod
     def _build_nominatim_search_url(params: str) -> str:

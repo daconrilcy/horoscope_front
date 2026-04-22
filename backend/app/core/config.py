@@ -294,6 +294,16 @@ class Settings:
         )
         self.seed_admin = self._parse_bool_env("SEED_ADMIN", default=False)
         self.dev_allow_legacy_seed = self._parse_bool_env("DEV_ALLOW_LEGACY_SEED", default=False)
+        self.llm_qa_routes_enabled = self._parse_bool_env("LLM_QA_ROUTES_ENABLED", default=False)
+        self.llm_qa_routes_allow_production = self._parse_bool_env(
+            "LLM_QA_ROUTES_ALLOW_PRODUCTION", default=False
+        )
+        self.llm_qa_seed_user_enabled = self._parse_bool_env(
+            "LLM_QA_SEED_USER_ENABLED", default=False
+        )
+        self.llm_qa_seed_user_allow_production = self._parse_bool_env(
+            "LLM_QA_SEED_USER_ALLOW_PRODUCTION", default=False
+        )
         # pricing experiment settings
         self.pricing_experiment_enabled = self._parse_bool_env(
             "PRICING_EXPERIMENT_ENABLED",

@@ -93,6 +93,19 @@ from app.startup.stripe_portal_validation import run_stripe_portal_startup_valid
 logger = logging.getLogger(__name__)
 
 
+def _include_internal_llm_qa_router(application: FastAPI) -> None:
+    if not settings.llm_qa_routes_enabled:
+        logger.info("internal_llm_qa_router_disabled")
+        return
+    if settings.app_env in {"production", "prod"} and not settings.llm_qa_routes_allow_production:
+        logger.warning("internal_llm_qa_router_blocked_in_production")
+        return
+
+    from app.api.v1.routers.internal.llm.qa import router as internal_llm_qa_router
+
+    application.include_router(internal_llm_qa_router)
+
+
 def _ensure_llm_registry_seeded() -> None:
     """Legacy-only local reseed guarded by an explicit opt-in flag."""
     if settings.app_env in {"production", "prod"}:
@@ -399,9 +412,10 @@ async def _app_lifespan(_: FastAPI):
     _ensure_llm_registry_seeded()
     _ensure_consultation_templates_seeded()
     _ensure_support_categories_seeded()
-    from app.startup import seed_dev_admin
+    from app.startup import seed_dev_admin, seed_llm_qa_user
 
     await seed_dev_admin()
+    await seed_llm_qa_user()
 
     # Story 61.29: Enforcement du registre de scope au démarrage
     run_feature_scope_startup_validation(settings.feature_scope_validation_mode)
@@ -761,3 +775,4 @@ app.include_router(support_router)
 app.include_router(ai_engine_router)
 app.include_router(help_router)
 app.include_router(email_router, prefix="/api", tags=["email"])
+_include_internal_llm_qa_router(app)
