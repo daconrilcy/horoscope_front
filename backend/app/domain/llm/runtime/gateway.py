@@ -109,6 +109,35 @@ class LLMGateway:
         self.runtime_manager = ProviderRuntimeManager(self.client)
         self.renderer = PromptRenderer()
 
+    def _allows_nominal_bootstrap_fallback(self, db: Optional[Session]) -> bool:
+        """
+        Allow a bounded fallback in non-production only when the canonical assembly
+        store is entirely empty.
+
+        This preserves local/dev bootstrap behavior for supported families on
+        instances that have prompt/use-case data but no active release snapshot
+        and no published assembly rows yet.
+        """
+        if settings.app_env in {"production", "prod"}:
+            return False
+        if not isinstance(db, Session):
+            return False
+
+        from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+        from app.infra.db.models.llm_release import LlmActiveReleaseModel
+
+        has_active_release = (
+            db.execute(select(LlmActiveReleaseModel.id).limit(1)).scalar_one_or_none() is not None
+        )
+        if has_active_release:
+            return False
+
+        has_any_assembly = (
+            db.execute(select(PromptAssemblyConfigModel.id).limit(1)).scalar_one_or_none()
+            is not None
+        )
+        return not has_any_assembly
+
     def build_user_payload(
         self,
         use_case: str,
@@ -720,7 +749,12 @@ class LLMGateway:
 
                     # Story 66.29: Enforce mandatory assembly for ALL supported features. (AC1, AC6)
                     # Legacy aliases no longer bypass this rule for supported families.
-                    if not assembly_db and is_supported_feature(request.user_input.feature):
+                    allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+                    if (
+                        not assembly_db
+                        and is_supported_feature(request.user_input.feature)
+                        and not allow_bootstrap_fallback
+                    ):
                         msg = (
                             f"Mandatory assembly missing for supported "
                             f"{request.user_input.feature} family. Taxonomy: "
@@ -744,6 +778,27 @@ class LLMGateway:
                                 "plan": request.user_input.plan,
                                 "use_case": use_case,
                             },
+                        )
+                    if (
+                        not assembly_db
+                        and is_supported_feature(request.user_input.feature)
+                        and allow_bootstrap_fallback
+                    ):
+                        logger.warning(
+                            "gateway_bootstrap_no_assembly_fallback feature=%s subfeature=%s "
+                            "plan=%s use_case=%s",
+                            request.user_input.feature,
+                            request.user_input.subfeature,
+                            request.user_input.plan,
+                            use_case,
+                        )
+                        FallbackGovernanceRegistry.track_fallback(
+                            FallbackType.USE_CASE_FIRST,
+                            call_site=f"bootstrap_no_assembly:{use_case}",
+                            feature=request.user_input.feature,
+                            is_nominal=False,
+                            subfeature=request.user_input.subfeature,
+                            activation_reason="bootstrap_without_any_assembly",
                         )
                     if assembly_db:
                         # Assembly found! Override everything (AC10)
@@ -822,6 +877,7 @@ class LLMGateway:
                 if (
                     is_supported_feature(request.user_input.feature)
                     and not request.flags.test_fallback_active
+                    and not self._allows_nominal_bootstrap_fallback(db)
                 ):
                     raise GatewayConfigError(
                         f"Resolution failed for supported feature '{request.user_input.feature}'. "
@@ -851,13 +907,21 @@ class LLMGateway:
                     )
                     source_base = "stub"
 
+                allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+                fallback_is_nominal = (
+                    bool(request.user_input.feature)
+                    and not is_legacy_compatibility
+                    and not request.flags.test_fallback_active
+                    and not allow_bootstrap_fallback
+                )
                 FallbackGovernanceRegistry.track_fallback(
                     FallbackType.USE_CASE_FIRST,
                     call_site=f"fallback_config:{use_case}",
                     feature=request.user_input.feature,
-                    is_nominal=bool(request.user_input.feature)
-                    and not is_legacy_compatibility
-                    and not request.flags.test_fallback_active,
+                    # Local bootstrap without any assembly data is intentionally
+                    # treated as transitional, not as a nominal supported path.
+                    # The dedicated warning above preserves observability.
+                    is_nominal=fallback_is_nominal,
                 )
             else:
                 # config was set by assembly
@@ -1064,9 +1128,11 @@ class LLMGateway:
             )
         else:
             # Story 66.30 AC3: Explicit failure if missing profile on supported path
+            allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
             if (
                 is_supported_feature(request.user_input.feature)
                 and not request.flags.test_fallback_active
+                and not allow_bootstrap_fallback
             ):
                 log_governance_event(
                     event_type="runtime_rejected",
@@ -1088,13 +1154,17 @@ class LLMGateway:
 
             # Legacy/Fallback resolution
             model_id = resolve_model(use_case, fallback_model=config.model)
-            profile_source = "fallback_resolve_model"
+            profile_source = (
+                "bootstrap_no_execution_profile"
+                if allow_bootstrap_fallback
+                else "fallback_resolve_model"
+            )
 
             FallbackGovernanceRegistry.track_fallback(
                 FallbackType.RESOLVE_MODEL,
                 call_site=f"resolve_model:{use_case}",
                 feature=request.user_input.feature,
-                is_nominal=is_nominal,
+                is_nominal=is_nominal and not allow_bootstrap_fallback,
             )
 
             # Story 66.18 AC6: Compatibility for raw ExecutionConfigAdmin
@@ -1105,7 +1175,8 @@ class LLMGateway:
                     feature=request.user_input.feature,
                     is_nominal=bool(request.user_input.feature)
                     and not is_legacy_compatibility
-                    and not request.flags.test_fallback_active,
+                    and not request.flags.test_fallback_active
+                    and not allow_bootstrap_fallback,
                 )
                 logger.info(
                     "gateway_legacy_execution_config_used use_case=%s reasoning=%s verbosity=%s",

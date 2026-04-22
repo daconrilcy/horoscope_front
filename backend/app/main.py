@@ -280,6 +280,110 @@ def _ensure_llm_registry_seeded() -> None:
         logger.error("llm_registry_auto_heal_failed error=%s", e)
 
 
+def _ensure_canonical_llm_bootstrap_seeded() -> None:
+    """
+    Auto-heal the canonical LLM bootstrap locally when nominal tables are empty.
+
+    This preserves the local non-production startup path after disabling the
+    old explicit legacy reseed flag: published prompts/use-cases/personas are
+    still created when the database is blank, then canonical assemblies and
+    execution profiles are seeded so supported families resolve nominally.
+    """
+    if settings.app_env in {"production", "prod"}:
+        return
+
+    from sqlalchemy.exc import IntegrityError, OperationalError
+
+    from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+    from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
+    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+    from app.infra.db.session import SessionLocal
+    from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
+    from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
+    from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
+    from app.ops.llm.bootstrap.seed_66_20_taxonomy import seed_66_20_taxonomy
+    from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
+        seed_horoscope_narrator_assembly,
+    )
+    from app.ops.llm.bootstrap.use_cases_seed import seed_use_cases
+    from scripts.seed_astrologers_6_profiles import seed_astrologers
+
+    def collect_state() -> tuple[int, int, int, int, int, bool]:
+        with SessionLocal() as db:
+            return (
+                db.query(LlmUseCaseConfigModel).count(),
+                db.query(LlmPromptVersionModel).count(),
+                db.query(LlmPersonaModel).filter(LlmPersonaModel.enabled == True).count(),  # noqa: E712
+                db.query(PromptAssemblyConfigModel).count(),
+                db.query(LlmExecutionProfileModel).count(),
+                get_active_prompt_version(db, "natal_interpretation_short") is not None,
+            )
+
+    try:
+        (
+            use_case_count,
+            prompt_count,
+            enabled_personas,
+            assembly_count,
+            profile_count,
+            has_active_short_prompt,
+        ) = collect_state()
+    except OperationalError as error:
+        is_local_dev = settings.app_env in {"development", "dev", "local"}
+        if not is_local_dev or not settings._is_local_sqlite_database_url(settings.database_url):
+            raise
+        logger.warning("canonical_llm_bootstrap_local_sqlite_repair error=%s", error)
+        ensure_local_sqlite_schema_ready()
+        (
+            use_case_count,
+            prompt_count,
+            enabled_personas,
+            assembly_count,
+            profile_count,
+            has_active_short_prompt,
+        ) = collect_state()
+
+    needs_registry_seed = (
+        use_case_count == 0
+        or prompt_count == 0
+        or enabled_personas == 0
+        or not has_active_short_prompt
+    )
+    needs_canonical_seed = assembly_count == 0 or profile_count == 0
+
+    if not needs_registry_seed and not needs_canonical_seed:
+        return
+
+    logger.warning(
+        "canonical_llm_bootstrap_auto_heal "
+        "use_cases=%s prompts=%s personas=%s assemblies=%s profiles=%s active_short=%s",
+        use_case_count,
+        prompt_count,
+        enabled_personas,
+        assembly_count,
+        profile_count,
+        has_active_short_prompt,
+    )
+
+    try:
+        if needs_registry_seed:
+            with SessionLocal() as db:
+                seed_astrologers(db)
+                seed_use_cases(db)
+            seed_prompts()
+            seed_natal_v3_prompts()
+            seed_chat_prompt_v2()
+
+        with SessionLocal() as db:
+            seed_horoscope_narrator_assembly(db)
+            seed_66_20_taxonomy(db)
+    except IntegrityError:
+        logger.debug("canonical_llm_bootstrap_auto_heal_concurrent_skip")
+    except Exception as e:
+        logger.error("canonical_llm_bootstrap_auto_heal_failed error=%s", e)
+
+
 def _ensure_consultation_templates_seeded() -> None:
     """Auto-seed consultation templates when the table is empty (idempotent)."""
     from app.infra.db.models.consultation_template import ConsultationTemplateModel
@@ -409,6 +513,7 @@ async def _app_lifespan(_: FastAPI):
             # Error stored in ephemeris module state; accurate endpoints return 5xx.
             pass
     _ensure_canonical_entitlements_seeded()
+    _ensure_canonical_llm_bootstrap_seeded()
     _ensure_llm_registry_seeded()
     _ensure_consultation_templates_seeded()
     _ensure_support_categories_seeded()

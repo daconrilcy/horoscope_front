@@ -116,3 +116,32 @@ async def test_natal_convergence_nominal():
 
         # Message changed in Story 66.29
         assert "Mandatory assembly missing for supported natal family" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_natal_bootstrap_fallback_allowed_when_no_assembly_data_exists(db):
+    """Local bootstrap must keep natal generation operable before any assembly is seeded."""
+    gateway = LLMGateway()
+
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="natal_interpretation_short",
+            feature="natal",
+            subfeature="interpretation",
+            plan="free",
+            locale="fr-FR",
+        ),
+        context=ExecutionContext(),
+        flags=ExecutionFlags(skip_common_context=True),
+        user_id=1,
+        request_id="req-bootstrap",
+        trace_id="tr-bootstrap",
+    )
+
+    plan, _ = await gateway._resolve_plan(request, db=db)
+
+    assert plan.feature == "natal"
+    assert plan.subfeature == "interpretation"
+    assert plan.plan == "free"
+    assert plan.model_source != "assembly"
+    assert plan.execution_profile_source == "bootstrap_no_execution_profile"
