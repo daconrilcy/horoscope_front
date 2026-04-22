@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from alembic import command
@@ -15,6 +16,34 @@ from app.infra.db.base import Base
 from app.infra.db.session import engine
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class SqliteAlignmentStatus:
+    database_url: str
+    file_path: Path | None
+    exists: bool
+    current_revision: str | None
+    head_revision: str
+    missing_tables: tuple[str, ...]
+
+    @property
+    def is_aligned(self) -> bool:
+        return (
+            self.exists and self.current_revision == self.head_revision and not self.missing_tables
+        )
+
+    @property
+    def is_orm_aligned(self) -> bool:
+        return self.exists and not self.missing_tables
+
+    def as_debug_string(self) -> str:
+        file_label = str(self.file_path) if self.file_path is not None else "<memory-or-non-file>"
+        return (
+            f"url={self.database_url} file={file_label} exists={self.exists} "
+            f"current_revision={self.current_revision} head_revision={self.head_revision} "
+            f"missing_tables={list(self.missing_tables)}"
+        )
 
 
 def _is_pytest_runtime() -> bool:
@@ -85,6 +114,85 @@ def _alembic_config(*, database_url: str | None = None) -> Config:
 
 def _head_revision() -> str:
     return ScriptDirectory.from_config(_alembic_config()).get_current_head()
+
+
+def _sqlite_file_path_from_url(database_url: str) -> Path | None:
+    if not database_url.startswith("sqlite:///"):
+        return None
+    raw_path = database_url.removeprefix("sqlite:///")
+    if raw_path == ":memory:":
+        return None
+    return Path(raw_path)
+
+
+def sqlite_alignment_status(database_url: str) -> SqliteAlignmentStatus:
+    head_revision = _head_revision()
+    file_path = _sqlite_file_path_from_url(database_url)
+    if file_path is not None and not file_path.exists():
+        return SqliteAlignmentStatus(
+            database_url=database_url,
+            file_path=file_path,
+            exists=False,
+            current_revision=None,
+            head_revision=head_revision,
+            missing_tables=tuple(sorted(Base.metadata.tables)),
+        )
+
+    connect_args: dict[str, object] = {}
+    if database_url.startswith("sqlite"):
+        connect_args = {"check_same_thread": False, "timeout": 30}
+
+    sync_engine = create_engine(
+        database_url,
+        connect_args=connect_args,
+        future=True,
+    )
+    try:
+        inspector = inspect(sync_engine)
+        existing_tables = set(inspector.get_table_names())
+        current_revision: str | None = None
+        if "alembic_version" in existing_tables:
+            with sync_engine.connect() as connection:
+                current_revision = connection.execute(
+                    text("SELECT version_num FROM alembic_version")
+                ).scalar_one_or_none()
+        missing_tables = tuple(sorted(set(Base.metadata.tables) - existing_tables))
+        return SqliteAlignmentStatus(
+            database_url=database_url,
+            file_path=file_path,
+            exists=True,
+            current_revision=current_revision,
+            head_revision=head_revision,
+            missing_tables=missing_tables,
+        )
+    finally:
+        sync_engine.dispose()
+
+
+def configured_sqlite_alignment_statuses() -> tuple[SqliteAlignmentStatus, ...]:
+    from app.infra.db import session as session_module
+
+    candidate_urls = [str(session_module.engine.url), settings.database_url]
+    seen: set[str] = set()
+    statuses: list[SqliteAlignmentStatus] = []
+    for url in candidate_urls:
+        if url in seen:
+            continue
+        seen.add(url)
+        if not url.startswith("sqlite"):
+            continue
+        if ":memory:" in url:
+            continue
+        statuses.append(sqlite_alignment_status(url))
+    return tuple(statuses)
+
+
+def _is_strictly_aligned_configured_sqlite(
+    status: SqliteAlignmentStatus, *, primary_database_url: str
+) -> bool:
+    if status.database_url == primary_database_url:
+        return status.is_aligned
+    return status.is_orm_aligned
 
 
 def _repair_missing_tables(missing_tables: set[str]) -> None:
@@ -312,19 +420,10 @@ def ensure_configured_sqlite_file_matches_alembic_head() -> None:
     pytest cette voie est désactivée (`_should_auto_upgrade_local_sqlite`), ce qui
     provoque des « no such table » si une migration n'a pas été appliquée manuellement.
     """
-    from app.infra.db import session as session_module
-
-    candidate_urls = [str(session_module.engine.url), settings.database_url]
-    seen: set[str] = set()
-    for url in candidate_urls:
-        if url in seen:
-            continue
-        seen.add(url)
-        if not url.startswith("sqlite"):
-            continue
-        if ":memory:" in url:
-            continue
-
+    statuses = configured_sqlite_alignment_statuses()
+    seen = {status.database_url for status in statuses}
+    for status in statuses:
+        url = status.database_url
         command.upgrade(_alembic_config(database_url=url), "head")
 
     # Sur la base SQLite « secondaire » (souvent le fichier temporaire injecté par
@@ -348,3 +447,16 @@ def ensure_configured_sqlite_file_matches_alembic_head() -> None:
             Base.metadata.create_all(bind=sync_engine, checkfirst=True)
         finally:
             sync_engine.dispose()
+
+    post_statuses = configured_sqlite_alignment_statuses()
+    misaligned = [
+        status
+        for status in post_statuses
+        if not _is_strictly_aligned_configured_sqlite(status, primary_database_url=settings_url)
+    ]
+    if misaligned:
+        formatted = "; ".join(status.as_debug_string() for status in misaligned)
+        raise RuntimeError(
+            "Configured SQLite files are not aligned with Alembic head and ORM metadata: "
+            f"{formatted}"
+        )

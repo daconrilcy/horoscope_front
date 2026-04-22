@@ -358,7 +358,7 @@ describe("Admin prompts catalog flow", () => {
 
   async function selectCatalogFlowContext(plan: "free" | "premium") {
     const selector = await screen.findByRole("region", { name: "Sélection du contexte catalogue" })
-    await within(selector).findByRole("option", { name: "natal" })
+    await within(selector).findByRole("option", { name: "Natal" })
     await userEvent.selectOptions(within(selector).getByLabelText("Fonctionnalité"), "natal")
     await userEvent.selectOptions(within(selector).getByLabelText("Formule"), plan)
     await userEvent.selectOptions(within(selector).getByLabelText("Locale"), "fr-FR")
@@ -375,7 +375,7 @@ describe("Admin prompts catalog flow", () => {
 
     await selectCatalogFlowContext("free")
 
-    expect(await screen.findByText("Activation")).toBeInTheDocument()
+    expect((await screen.findAllByText("Activation")).length).toBeGreaterThan(0)
     expect(screen.getByText("Composants sélectionnés")).toBeInTheDocument()
     expect(screen.getByText("Artefacts runtime")).toBeInTheDocument()
     expect(screen.getAllByText("Use case overlay").length).toBeGreaterThan(0)
@@ -484,7 +484,7 @@ describe("Admin prompts catalog flow", () => {
 
     await selectCatalogFlowContext("premium")
 
-    expect(await screen.findByText("Persona overlay")).toBeInTheDocument()
+    expect((await screen.findAllByText("Persona overlay")).length).toBeGreaterThan(0)
     expect(screen.getAllByText("Developer prompt after persona").length).toBeGreaterThan(0)
     expect(screen.getByText(/second message developer/i)).toBeInTheDocument()
   })

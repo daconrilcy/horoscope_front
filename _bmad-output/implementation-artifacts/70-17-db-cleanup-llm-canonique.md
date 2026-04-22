@@ -60,6 +60,7 @@ Produire et executer un plan de cleanup DB LLM qui :
 14. **AC14 - Documentation de gouvernance post-cleanup** : la documentation backend LLM de reference explique quelles tables/colonnes restent sources de verite, quelles compatibilites sont encore tolerees, comment un futur changement DB LLM doit etre classe dans le registre, et pourquoi `DROP` ne doit jamais preceder la convergence logique.
 15. **AC15 - Validation locale obligatoire** : la story est terminee seulement si les validations backend passees dans le venv sont executees et tracees (`ruff format .`, `ruff check .`, `pytest -q` ou suites ciblees justifiees), avec couverture des garde-fous, des migrations de cleanup et des flux runtime/admin touches.
 16. **AC16 - Elimination prealable des dependances legacy backend actives** : avant tout drop physique supplementaire, les dependances backend encore actives a `llm_use_case_configs`, `fallback_use_case_key` et aux ecritures de configuration `use_case` sont retirees des chemins nominaux de bootstrap, runtime et administration. Les surfaces encore legacy autorisees restent explicitement bornees a la maintenance/compatibilite et ne pilotent plus aucun comportement nominal.
+17. **AC17 - Controle explicite de `backend\\horoscope.db` et alignement applicatif** : un controle automatise verifie que le fichier `backend\\horoscope.db` et toute base SQLite configuree pertinente sont migres jusqu a la revision Alembic attendue avant l execution des validations backend, sans recreation silencieuse de schema divergent. La preuve executee montre que l etat reel de la base locale reste aligne avec les modeles ORM, les migrations et les chemins nominaux de l application backend.
 
 ## Tasks / Subtasks
 
@@ -112,11 +113,12 @@ Produire et executer un plan de cleanup DB LLM qui :
   - [x] Ajouter un garde distinct qui detecte une derive schema/migration hors registre de cleanup.
   - [x] Mettre a jour la documentation de gouvernance DB LLM post-cleanup.
 
-- [x] **Task 9: Validation finale** (AC: 15)
+- [x] **Task 9: Validation finale** (AC: 15, 17)
   - [x] Activer le venv avant toute commande Python : `.\.venv\Scripts\Activate.ps1`
   - [x] Executer `cd backend ; ruff format .`
   - [x] Executer `cd backend ; ruff check .`
   - [x] Executer `cd backend ; pytest -q` ou une campagne ciblee justifiee
+  - [x] Verifier via le garde session `ensure_configured_sqlite_file_matches_alembic_head` que `backend\horoscope.db` et la base SQLite configuree restent alignees avec Alembic et le schema backend avant les tests applicatifs.
   - [x] Verifier les migrations de cleanup sur une base de test / preprod et confirmer le rollback documente.
 
 - [x] **Task 10: Retirer les dependances legacy backend encore actives** (AC: 4, 7, 8, 11, 12, 16)
@@ -163,6 +165,7 @@ Produire et executer un plan de cleanup DB LLM qui :
   - un test detectant une lecture nominale d un objet classe `drop` ou `freeze` ;
   - un test detectant une ecriture nominale legacy interdite ;
   - des tests de non-regression pour les surfaces admin/ops touchees ;
+  - un controle execute de l alignement de `backend\horoscope.db` et des SQLite configurees avec la tete Alembic avant la campagne applicative ;
   - des validations de migration / rollback sur base de test.
 - Si la suite complete est trop lourde, justifier explicitement les suites ciblees retenues, mais conserver `ruff format`, `ruff check` et une preuve pytest exploitable.
 
@@ -244,6 +247,10 @@ gpt-5
 - La suite backend complete `pytest -q` a ete relancee deux fois mais n a pas rendu de verdict dans la fenetre outil disponible (timeout a 10 minutes) ; la cloture repose donc sur la campagne ciblee justifiee par AC15.
 - Passe post-review appliquee : `backend/app/infra/db/models/llm_observability.py` ne recree plus l index `ix_llm_call_logs_use_case_timestamp`, `backend/app/api/v1/routers/admin_llm.py` re-affiche les vrais use cases associes a une persona, et `backend/app/main.py` re-declenche le bootstrap canonique si `natal_interpretation_short` n a plus de prompt publie.
 - Validation post-review executee dans le venv : `ruff check` cible OK ; `pytest -q app/tests/integration/test_admin_persona_endpoints.py tests/unit/test_story_70_13_bootstrap.py` OK (`7 passed`).
+- Incident post-cleanup documente : le catalogue admin `/admin/prompts/catalog` pouvait rester vide meme avec le front corrige, car le bootstrap local appelait encore le mauvais seed dans `backend/app/main.py` et ne repeuplait pas les contrats canoniques attendus par `/v1/admin/llm/catalog`.
+- Correction appliquee : `backend/app/main.py` appelle desormais `seed_canonical_contracts()` (alias neutre du seed canonique pour respecter les garde-fous 70-17), `backend/app/ops/llm/bootstrap/use_cases_seed.py` normalise `eval_failure_threshold` pour rester compatible avec le schema SQLite local, et `backend/tests/unit/test_story_70_13_bootstrap.py` verrouille ce comportement.
+- Reparation locale executee : la base `backend/horoscope.db` a ete reseedee/reparee jusqu a retrouver `22` assemblies publiees et un catalogue admin non vide ; verification reelle via API locale avec `facets.feature = ["chat", "guidance", "horoscope_daily", "natal"]` et resolution valide de `natal:interpretation:free:fr-FR`.
+- Front admin revalide : `frontend/src/pages/admin/AdminPromptsPage.tsx` initialise automatiquement une selection de contexte valide quand le catalogue retourne des donnees, et `frontend/src/tests/AdminPromptsCatalogFlow.test.tsx` couvre le flux avec les libelles/dom actuels.
 
 ### File List
 
@@ -271,7 +278,10 @@ gpt-5
 - backend/app/tests/unit/test_gateway_behavioral.py
 - backend/app/tests/unit/test_use_cases_seed_chat_schema.py
 - backend/tests/evaluation/test_output_contract.py
+- backend/tests/integration/test_backend_sqlite_alignment.py
 - backend/tests/integration/test_story_70_17_llm_db_cleanup_registry.py
+- frontend/src/pages/admin/AdminPromptsPage.tsx
+- frontend/src/tests/AdminPromptsCatalogFlow.test.tsx
 
 ### Change Log
 
@@ -282,3 +292,4 @@ gpt-5
 - 2026-04-22 : migrations `20260422_0072` et `20260422_0073` ajoutees pour archiver puis supprimer `llm_prompt_versions.fallback_use_case_key` et l index `ix_llm_call_logs_use_case_timestamp`, avec rollback teste.
 - 2026-04-22 : validation finale cleanup/admin/runtime executee dans le venv ; la suite `pytest -q` complete reste trop longue pour la fenetre d execution outil et est remplacee par une campagne ciblee justifiee.
 - 2026-04-22 : corrections post-review appliquees sur l ORM d observabilite, le detail persona admin et le critere de reseed bootstrap ; tests cibles de non-regression ajoutes / realignes et executes.
+- 2026-04-22 : correctif post-livraison du catalogue admin des prompts : reseed bootstrap canonique local, reparation de `backend/horoscope.db`, bootstrap automatique de la selection front et verifications API/UI ciblees.

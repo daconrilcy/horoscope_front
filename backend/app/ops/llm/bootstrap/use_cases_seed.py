@@ -17,6 +17,7 @@ from app.infra.db.session import SessionLocal
 __all__ = [
     "ASTRO_RESPONSE_V3_JSON_SCHEMA",
     "CHAT_RESPONSE_V1",
+    "seed_canonical_contracts",
     "seed_output_schemas",
     "seed_use_cases",
 ]
@@ -82,6 +83,11 @@ def seed_use_cases(db: Session) -> None:
     for contract in CANONICAL_USE_CASE_CONTRACTS:
         stmt = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == contract.key)
         use_case = db.execute(stmt).scalar_one_or_none()
+        eval_failure_threshold = (
+            contract.eval_failure_threshold
+            if contract.eval_failure_threshold is not None
+            else 0.20
+        )
 
         schema_id = None
         if contract.output_schema_name and contract.output_schema_name in schema_map:
@@ -102,7 +108,7 @@ def seed_use_cases(db: Session) -> None:
                 user_question_policy=contract.user_question_policy,
                 allowed_persona_ids=[],
                 eval_fixtures_path=contract.eval_fixtures_path,
-                eval_failure_threshold=contract.eval_failure_threshold,
+                eval_failure_threshold=eval_failure_threshold,
                 golden_set_path=contract.golden_set_path,
             )
             db.add(use_case)
@@ -118,13 +124,18 @@ def seed_use_cases(db: Session) -> None:
             use_case.interaction_mode = contract.interaction_mode
             use_case.user_question_policy = contract.user_question_policy
             use_case.eval_fixtures_path = contract.eval_fixtures_path
-            use_case.eval_failure_threshold = contract.eval_failure_threshold
+            use_case.eval_failure_threshold = eval_failure_threshold
             use_case.golden_set_path = contract.golden_set_path
 
         if use_case.persona_strategy == "required":
             use_case.allowed_persona_ids = enabled_persona_ids
 
     db.commit()
+
+
+def seed_canonical_contracts(db: Session) -> None:
+    """Neutral alias used by startup bootstrap without reviving legacy naming in main.py."""
+    seed_use_cases(db)
 
 
 if __name__ == "__main__":

@@ -487,6 +487,7 @@ export function AdminPromptsPage() {
     plan: "",
     locale: "",
   })
+  const [catalogSelectionBootstrapped, setCatalogSelectionBootstrapped] = useState(false)
   const [catalogSelection, setCatalogSelection] = useState<{
     feature: string
     plan: string
@@ -760,6 +761,37 @@ export function AdminPromptsPage() {
   const availableFeatures = catalogFacets?.feature ?? []
   const availablePlans = catalogFacets?.plan ?? []
   const availableLocales = catalogFacets?.locale ?? []
+
+  useEffect(() => {
+    if (activeTab !== "catalog" || catalogSelectionBootstrapped) {
+      return
+    }
+    const preferredEntry = pickPreferredCatalogEntry(catalogTableEntries)
+    const featureSeed = preferredEntry?.feature ?? availableFeatures[0] ?? ""
+    const planSeed = preferredEntry?.plan ?? availablePlans[0] ?? ""
+    const localeSeed = preferredEntry?.locale ?? availableLocales[0] ?? ""
+    if (!featureSeed || !planSeed || !localeSeed) {
+      return
+    }
+    setCatalogSelectionDraft({
+      feature: featureSeed,
+      plan: planSeed,
+      locale: localeSeed,
+    })
+    setCatalogSelection({
+      feature: featureSeed,
+      plan: planSeed,
+      locale: localeSeed,
+    })
+    setCatalogSelectionBootstrapped(true)
+  }, [
+    activeTab,
+    availableFeatures,
+    availableLocales,
+    availablePlans,
+    catalogSelectionBootstrapped,
+    catalogTableEntries,
+  ])
 
   const useCasesQuery = useAdminLlmUseCases({
     enabled: activeTab === "legacy" || activeTab === "catalog",

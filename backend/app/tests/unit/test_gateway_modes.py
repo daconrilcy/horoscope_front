@@ -290,7 +290,14 @@ async def test_schema_blocking_paid_use_case(db_session):
     gateway = LLMGateway(responses_client=MagicMock())
 
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_interpretation", locale="fr-FR"),
+        user_input=ExecutionUserInput(
+            use_case="natal_interpretation",
+            locale="fr-FR",
+            feature="natal",
+            subfeature="interpretation",
+            plan="premium",
+        ),
+        context=ExecutionContext(chart_json='{"sun_sign":"aries"}'),
         request_id="r",
         trace_id="t",
         user_id=1,
