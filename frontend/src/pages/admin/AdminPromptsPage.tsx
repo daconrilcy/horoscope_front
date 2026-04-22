@@ -134,6 +134,17 @@ function pickPreferredCatalogEntry(entries: AdminLlmCatalogEntry[]): AdminLlmCat
   })[0] ?? null
 }
 
+function formatCatalogFeatureLabel(feature: string): string {
+  const normalized = feature.trim().toLowerCase()
+  const labels: Record<string, string> = {
+    chat: "Chat",
+    guidance: "Consultations thematiques",
+    natal: "Natal",
+    horoscope_daily: "Horoscope quotidien",
+  }
+  return labels[normalized] ?? feature
+}
+
 function releaseDiffAxisBadgeClass(changed: boolean): string {
   return changed ? "badge badge--warning" : "badge badge--info"
 }
@@ -1063,7 +1074,7 @@ export function AdminPromptsPage() {
                     <option value="">{tCat.filterAllFeminine}</option>
                     {availableFeatures.map((value) => (
                       <option key={value} value={value}>
-                        {value}
+                        {formatCatalogFeatureLabel(value)}
                       </option>
                     ))}
                   </select>
@@ -1340,7 +1351,7 @@ export function AdminPromptsPage() {
                       <option value="">{tCat.filterAllFeminine}</option>
                       {availableFeatures.map((value) => (
                         <option key={value} value={value}>
-                          {value}
+                          {formatCatalogFeatureLabel(value)}
                         </option>
                       ))}
                     </select>

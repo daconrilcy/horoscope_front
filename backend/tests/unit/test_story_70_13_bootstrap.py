@@ -72,6 +72,7 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     seed_prompts = Mock()
     seed_natal_v3_prompts = Mock()
     seed_chat_prompt_v2 = Mock()
+    seed_guidance_prompts = Mock()
     seed_horoscope_narrator_assembly = Mock()
     seed_66_20_taxonomy = Mock()
 
@@ -85,6 +86,10 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.seed_30_14_chat_prompt.seed",
         seed_chat_prompt_v2,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_guidance_prompts.seed_guidance_prompts",
+        seed_guidance_prompts,
     )
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.seed_horoscope_narrator_assembly.seed_horoscope_narrator_assembly",
@@ -102,6 +107,7 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     seed_prompts.assert_called_once()
     seed_natal_v3_prompts.assert_called_once()
     seed_chat_prompt_v2.assert_called_once()
+    seed_guidance_prompts.assert_called_once()
     seed_horoscope_narrator_assembly.assert_called_once()
     seed_66_20_taxonomy.assert_called_once()
 

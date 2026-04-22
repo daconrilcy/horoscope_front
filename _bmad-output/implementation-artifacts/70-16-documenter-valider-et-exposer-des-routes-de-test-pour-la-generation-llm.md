@@ -208,24 +208,35 @@ gpt-5
 - Correctif post-implementation le 2026-04-22 : restauration d un bootstrap canonique LLM local pour les bases vides afin que `natal_interpretation_short` et `natal_long_free` resolvent nominalement via assemblies/profiles publies au demarrage, sans retomber sur `USE_CASE_FIRST`/`RESOLVE_MODEL`.
 - Garde-fou runtime conserve : un fallback borne reste autorise uniquement en non-prod tant qu aucune assembly canonique n existe encore, pour ne pas casser le premier demarrage avant auto-heal.
 - Revalidation live constatee apres correctif : les logs backend montrent `gateway_execution_profile_applied ... source=waterfall model=gpt-4o provider=openai` et absence de `gateway_bootstrap_no_assembly_fallback` sur la generation natal free.
+- Correctif post-implementation le 2026-04-22 : ajout du bootstrap canonique guidance pour les prompts/use cases/assemblies manquants (`guidance_daily`, `guidance_weekly`, `guidance_contextual`, `event_guidance`) afin que le catalogue admin LLM expose de nouveau la famille `guidance` et donc les consultations thematiques.
+- Alignement de gouvernance le 2026-04-22 : extension du registre central des placeholders guidance pour rendre coherentes les nouvelles assemblies guidance en mode `strict`, sans contourner `run_llm_coherence_startup_validation`.
+- Correctif UX admin le 2026-04-22 : remplacement des libelles bruts de `feature` dans le select catalogue par des labels controles (`Consultations thematiques`, `Horoscope quotidien`, etc.) pour eviter les labels parasites et clarifier le perimetre expose.
 
 ### File List
 
 - _bmad-output/implementation-artifacts/70-16-documenter-valider-et-exposer-des-routes-de-test-pour-la-generation-llm.md
 - backend/app/core/config.py
+- backend/app/domain/llm/governance/data/prompt_governance_registry.json
 - backend/app/domain/llm/runtime/gateway.py
 - backend/app/services/geocoding_service.py
 - backend/app/services/llm_qa_seed_service.py
+- backend/app/services/guidance_service.py
 - backend/app/startup/__init__.py
 - backend/app/startup/llm_qa_seed.py
 - backend/app/api/v1/routers/internal/__init__.py
 - backend/app/api/v1/routers/internal/llm/__init__.py
 - backend/app/api/v1/routers/internal/llm/qa.py
 - backend/app/main.py
+- backend/app/ops/llm/bootstrap/seed_guidance_prompts.py
+- backend/app/ops/llm/bootstrap/use_cases_seed.py
 - backend/app/tests/integration/test_llm_qa_seed.py
 - backend/app/tests/integration/test_llm_qa_router.py
+- backend/app/tests/unit/test_guidance_service.py
 - backend/tests/llm_orchestration/test_story_66_20_convergence.py
+- backend/tests/llm_orchestration/test_story_66_42_prompt_governance_registry.py
 - backend/tests/unit/test_story_70_13_bootstrap.py
+- backend/horoscope.db
+- frontend/src/pages/admin/AdminPromptsPage.tsx
 - docs/llm-prompt-generation-by-feature.md
 - docs/llm-qa-runbook.md
 
@@ -233,3 +244,4 @@ gpt-5
 
 - 2026-04-22 : documentation post-70.15 alignee, seed QA idempotent ajoute, routes backend QA internes montees conditionnellement et campagne de validation backend executee dans le venv.
 - 2026-04-22 : correctif post-implementation du bootstrap canonique LLM local pour reseeder prompts/use cases/personas/assemblies/profiles quand la base locale est vide, avec tests unitaires et de convergence gateway associes.
+- 2026-04-22 : correctif post-implementation de la famille guidance pour restaurer les entries catalogue admin des consultations thematiques, ajouter le seed guidance canonique, aligner la gouvernance des placeholders guidance en mode strict et normaliser les labels de feature du select admin.

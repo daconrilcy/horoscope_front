@@ -133,6 +133,20 @@ class AlwaysOffScopeGenerator:
         return "[off_scope] Erreur fatale."
 
 
+def test_compose_structured_guidance_full_text_includes_summary_points_and_advice() -> None:
+    full_text = GuidanceService._compose_structured_guidance_full_text(
+        "Synthese utile.",
+        ["Point A", "Point B"],
+        ["Conseil A"],
+    )
+
+    assert "Synthese utile." in full_text
+    assert "Points cles" in full_text
+    assert "- Point A" in full_text
+    assert "Conseils" in full_text
+    assert "- Conseil A" in full_text
+
+
 def set_test_generators(generator: object) -> None:
     from app.application.llm.ai_engine_adapter import (
         set_test_chat_generator,

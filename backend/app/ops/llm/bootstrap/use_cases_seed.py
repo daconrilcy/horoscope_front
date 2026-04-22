@@ -432,6 +432,22 @@ USE_CASES_CONTRACTS = [
         "user_question_policy": "none",
         "input_schema": None,
     },
+    {
+        "key": "guidance_contextual",
+        "display_name": "Guidance Contextuelle",
+        "description": (
+            "Lecture astrologique prudente pour une situation "
+            "ou consultation thematique."
+        ),
+        "output_schema_name": "AstroResponse_v1",
+        "persona_strategy": "optional",
+        "safety_profile": "astrology",
+        "fallback_use_case_key": "natal_interpretation_short",
+        "required_prompt_placeholders": ["situation", "objective", "natal_chart_summary"],
+        "interaction_mode": "chat",
+        "user_question_policy": "required",
+        "input_schema": None,
+    },
 ]
 
 

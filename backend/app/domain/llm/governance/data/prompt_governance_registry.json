@@ -45,6 +45,12 @@
       },
       { "name": "use_case", "classification": "optional" },
       { "name": "situation", "classification": "required" },
+      { "name": "objective", "classification": "optional" },
+      { "name": "time_horizon", "classification": "optional" },
+      { "name": "natal_chart_summary", "classification": "optional" },
+      { "name": "context_lines", "classification": "optional" },
+      { "name": "current_datetime", "classification": "optional" },
+      { "name": "chart_json", "classification": "optional" },
       { "name": "event_description", "classification": "optional" },
       { "name": "last_user_msg", "classification": "optional" }
     ],

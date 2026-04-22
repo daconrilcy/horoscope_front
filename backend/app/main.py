@@ -125,6 +125,7 @@ def _ensure_llm_registry_seeded() -> None:
     from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
     from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
     from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
+    from app.ops.llm.bootstrap.seed_guidance_prompts import seed_guidance_prompts
     from app.ops.llm.bootstrap.use_cases_seed import seed_use_cases
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
@@ -265,6 +266,7 @@ def _ensure_llm_registry_seeded() -> None:
         seed_prompts()
         seed_natal_v3_prompts()
         seed_chat_prompt_v2()
+        seed_guidance_prompts()
 
         from app.ops.llm.bootstrap.seed_66_20_taxonomy import seed_66_20_taxonomy
         from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
@@ -303,6 +305,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
     from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
     from app.ops.llm.bootstrap.seed_66_20_taxonomy import seed_66_20_taxonomy
+    from app.ops.llm.bootstrap.seed_guidance_prompts import seed_guidance_prompts
     from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
         seed_horoscope_narrator_assembly,
     )
@@ -374,6 +377,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             seed_prompts()
             seed_natal_v3_prompts()
             seed_chat_prompt_v2()
+            seed_guidance_prompts()
 
         with SessionLocal() as db:
             seed_horoscope_narrator_assembly(db)

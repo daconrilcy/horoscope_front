@@ -178,7 +178,7 @@ def test_governed_exception_does_not_apply_with_other_family() -> None:
             "id": "EXC-CHAT-ONLY",
             "owner": "platform-arch",
             "justification": "Compat transitoire chat_astrologer",
-            "scope": "placeholder:natal_chart_summary;family:chat;rule:GOV_PH_NOT_IN_REGISTRY",
+            "scope": "placeholder:legacy_only_ph;family:chat;rule:GOV_PH_NOT_IN_REGISTRY",
             "status": "active",
             "review_by": "2026-12-31",
         }
@@ -187,9 +187,9 @@ def test_governed_exception_does_not_apply_with_other_family() -> None:
     try:
         reg = PromptGovernanceRegistry.load(p)
         invalid, _violations = reg.validate_placeholders_in_template(
-            "X {{natal_chart_summary}}", "guidance", source="test"
+            "X {{legacy_only_ph}}", "guidance", source="test"
         )
-        assert invalid == ["natal_chart_summary"]
+        assert invalid == ["legacy_only_ph"]
     finally:
         p.unlink(missing_ok=True)
 

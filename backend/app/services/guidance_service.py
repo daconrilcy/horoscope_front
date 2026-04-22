@@ -122,6 +122,22 @@ class GuidanceService:
     _markdown_bold_pattern = re.compile(r"\*\*(?P<text>[^*]+)\*\*")
 
     @staticmethod
+    def _compose_structured_guidance_full_text(
+        summary_raw: str,
+        key_points: list[str],
+        advice: list[str],
+    ) -> str:
+        sections: list[str] = []
+        summary = summary_raw.strip()
+        if summary:
+            sections.append(summary)
+        if key_points:
+            sections.append("Points cles :\n" + "\n".join(f"- {item}" for item in key_points))
+        if advice:
+            sections.append("Conseils :\n" + "\n".join(f"- {item}" for item in advice))
+        return "\n\n".join(section for section in sections if section.strip())
+
+    @staticmethod
     def _detect_degraded_natal_mode(
         *,
         birth_time: str | None,
@@ -1064,11 +1080,17 @@ class GuidanceService:
                     advice = s.get("actionable_advice") or s.get("advice") or []
                     disclaimers = s.get("disclaimers") or []
                     disclaimer_raw = s.get("disclaimer") or (disclaimers[0] if disclaimers else "")
+                    full_text = GuidanceService._compose_structured_guidance_full_text(
+                        str(summary_raw),
+                        [str(item) for item in key_points if str(item).strip()],
+                        [str(item) for item in advice if str(item).strip()],
+                    )
                 else:
                     summary_raw = recovered_text
                     key_points = []
                     advice = []
                     disclaimer_raw = ""
+                    full_text = recovered_text
 
                 summary = GuidanceService._normalize_contextual_summary(summary_raw)
 
@@ -1103,7 +1125,7 @@ class GuidanceService:
                     objective=normalized_objective,
                     time_horizon=normalized_horizon,
                     summary=summary,
-                    full_text=recovered_text,
+                    full_text=full_text,
                     key_points=key_points[:2],  # Cap at 2 as per audit
                     actionable_advice=advice[:2],  # Cap at 2 as per audit
                     disclaimer=disclaimer,
