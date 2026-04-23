@@ -306,7 +306,9 @@ def _repair_llm_call_logs_columns() -> bool:
 
     columns = _table_columns("llm_call_logs")
     required_columns = {
-        "provider": "ALTER TABLE llm_call_logs ADD COLUMN provider VARCHAR(32) DEFAULT 'openai'",
+        "provider_compat": (
+            "ALTER TABLE llm_call_logs ADD COLUMN provider_compat VARCHAR(32) DEFAULT 'openai'"
+        ),
         "pipeline_kind": "ALTER TABLE llm_call_logs ADD COLUMN pipeline_kind VARCHAR(32)",
         "execution_path_kind": (
             "ALTER TABLE llm_call_logs ADD COLUMN execution_path_kind VARCHAR(40)"
@@ -352,6 +354,12 @@ def _repair_llm_call_logs_columns() -> bool:
         sorted(missing_columns),
     )
     with engine.begin() as connection:
+        if "provider_compat" not in columns and "provider" in columns:
+            connection.execute(
+                text("ALTER TABLE llm_call_logs RENAME COLUMN provider TO provider_compat")
+            )
+            columns = _table_columns("llm_call_logs")
+            missing_columns = [name for name in required_columns if name not in columns]
         for column_name in missing_columns:
             connection.execute(text(required_columns[column_name]))
     return True

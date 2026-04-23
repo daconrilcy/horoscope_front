@@ -1,3 +1,6 @@
+# Script d'emission des alertes SLA sur la file de revue ops.
+"""Lance le traitement des alertes de revue ops depuis la ligne de commande."""
+
 from __future__ import annotations
 
 import argparse
@@ -19,6 +22,7 @@ def _positive_int(raw_value: str) -> int:
 
 
 def main() -> int:
+    """Execute le script et retourne un code de sortie exploitable par l'ops."""
     _ensure_backend_root_on_path()
 
     parser = argparse.ArgumentParser(
@@ -32,6 +36,7 @@ def main() -> int:
     parser.add_argument("--limit", type=_positive_int, help="Maximum number of alerts to emit")
     args = parser.parse_args()
 
+    import app.infra.db.models.llm  # noqa: F401
     from app.infra.db.session import SessionLocal
     from app.services.canonical_entitlement_alert_service import CanonicalEntitlementAlertService
 

@@ -1,3 +1,6 @@
+# Validation de coherence des configurations LLM.
+"""Centralise les garde-fous de publication et de bootstrap des objets LLM."""
+
 from __future__ import annotations
 
 import logging
@@ -162,6 +165,7 @@ class ConfigCoherenceValidator:
 
         # 2. Provider Support (AC4)
         if profile:
+            self._validate_profile_owned_execution_config(config, profile, result)
             if not is_provider_supported(profile.provider):
                 if is_supported:
                     result.add_error(
@@ -196,6 +200,70 @@ class ConfigCoherenceValidator:
             self._validate_length_budget(config, result)
 
         return result
+
+    def _validate_profile_owned_execution_config(
+        self,
+        config: PromptAssemblyConfigModel,
+        profile: LlmExecutionProfileModel,
+        result: ValidationResult,
+    ) -> None:
+        """Empêche une assembly avec profil explicite de contredire ce profil."""
+        if not config.execution_profile_ref:
+            return
+
+        execution_config = dict(config.execution_config or {})
+        mismatches: dict[str, dict[str, Any]] = {}
+
+        model = execution_config.get("model")
+        if model is not None and str(model) != str(profile.model):
+            mismatches["model"] = {"assembly": model, "profile": profile.model}
+
+        provider = execution_config.get("provider")
+        if provider is not None and str(provider) != str(profile.provider):
+            mismatches["provider"] = {"assembly": provider, "profile": profile.provider}
+
+        timeout_seconds = execution_config.get("timeout_seconds")
+        if timeout_seconds is not None and int(timeout_seconds) != int(profile.timeout_seconds):
+            mismatches["timeout_seconds"] = {
+                "assembly": timeout_seconds,
+                "profile": profile.timeout_seconds,
+            }
+
+        max_output_tokens = execution_config.get("max_output_tokens")
+        if (
+            max_output_tokens is not None
+            and profile.max_output_tokens is not None
+            and int(max_output_tokens) != int(profile.max_output_tokens)
+        ):
+            mismatches["max_output_tokens"] = {
+                "assembly": max_output_tokens,
+                "profile": profile.max_output_tokens,
+            }
+
+        if execution_config.get("temperature") is not None:
+            mismatches["temperature"] = {
+                "assembly": execution_config.get("temperature"),
+                "profile": None,
+            }
+
+        if config.fallback_use_case:
+            mismatches["fallback_use_case"] = {
+                "assembly": config.fallback_use_case,
+                "profile": "fallback_profile_id",
+            }
+
+        if mismatches:
+            result.add_error(
+                "assembly_execution_config_override_forbidden",
+                (
+                    "L'assembly référence un profil d'exécution mais conserve des "
+                    "overrides runtime contradictoires."
+                ),
+                {
+                    "execution_profile_ref": str(config.execution_profile_ref),
+                    "mismatches": mismatches,
+                },
+            )
 
     async def _resolve_and_validate_profile(
         self,
@@ -500,6 +568,10 @@ class ConfigCoherenceValidator:
             ),
             "legacy_dependency_forbidden": (
                 "Une dépendance legacy interdite a été détectée sur une famille nominale fermée."
+            ),
+            "assembly_execution_config_override_forbidden": (
+                "Une assembly avec execution_profile_ref ne peut pas redéfinir librement "
+                "les paramètres détenus par le profil d'exécution."
             ),
         }
         return messages.get(error_code, "Unknown coherence error.")

@@ -8,17 +8,13 @@ from sqlalchemy import JSON, UUID, Boolean, DateTime, ForeignKey, Index, Integer
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
 
 
 class InterpretationLevel(str, Enum):
     SHORT = "short"
     COMPLETE = "complete"
-
-
-def utc_now() -> datetime:
-    return datetime_provider.utcnow()
 
 
 class UserNatalInterpretationModel(Base):

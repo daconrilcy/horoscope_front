@@ -5,12 +5,8 @@ from datetime import date, datetime
 from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
-
-
-def utc_now() -> datetime:
-    return datetime_provider.utcnow()
 
 
 class EnterpriseBillingPlanModel(Base):

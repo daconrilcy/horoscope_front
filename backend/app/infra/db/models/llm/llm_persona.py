@@ -4,26 +4,23 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import (
     JSON,
     UUID,
     Boolean,
-    DateTime,
     String,
     Text,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
-from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
-
-
-def utc_now() -> datetime:
-    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
-    return datetime_provider.utcnow()
+from app.infra.db.models.llm.llm_audit import CreatedUpdatedAtMixin
+from app.infra.db.models.llm.llm_json_validators import (
+    validate_persona_formatting,
+    validate_string_list_field,
+)
 
 
 class PersonaTone(str, Enum):
@@ -43,7 +40,7 @@ class PersonaVerbosity(str, Enum):
     LONG = "long"
 
 
-class LlmPersonaModel(Base):
+class LlmPersonaModel(CreatedUpdatedAtMixin, Base):
     """Décrit un persona LLM activable dans les flows de prompting."""
 
     __tablename__ = "llm_personas"
@@ -72,7 +69,12 @@ class LlmPersonaModel(Base):
 
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
+    @validates("style_markers", "boundaries", "allowed_topics", "disallowed_topics")
+    def validate_string_list(self, key: str, value: object) -> list[str]:
+        """Garantit que les listes JSON de persona restent des listes de textes."""
+        return validate_string_list_field(key, value)
+
+    @validates("formatting")
+    def validate_formatting(self, key: str, value: object) -> dict[str, bool]:
+        """Garantit le contrat JSON borne des options de presentation."""
+        return validate_persona_formatting(value)

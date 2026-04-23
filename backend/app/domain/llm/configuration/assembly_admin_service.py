@@ -1,3 +1,6 @@
+# Service admin de gestion des assemblages LLM.
+"""Expose les operations d administration des configurations d assemblage LLM."""
+
 from __future__ import annotations
 
 import logging
@@ -96,6 +99,7 @@ class AssemblyAdminService:
             feature_template_ref=config_in.feature_template_ref,
             subfeature_template_ref=config_in.subfeature_template_ref,
             persona_ref=config_in.persona_ref,
+            execution_profile_ref=config_in.execution_profile_ref,
             plan_rules_ref=config_in.plan_rules_ref,
             execution_config=config_in.execution_config.model_dump(),
             output_contract_ref=config_in.output_contract_ref,
@@ -106,10 +110,10 @@ class AssemblyAdminService:
             interaction_mode=config_in.interaction_mode,
             user_question_policy=config_in.user_question_policy,
             fallback_use_case=config_in.fallback_use_case,
-            feature_enabled=config_in.feature_enabled,
-            subfeature_enabled=config_in.subfeature_enabled,
-            persona_enabled=config_in.persona_enabled,
-            plan_rules_enabled=config_in.plan_rules_enabled,
+            feature_template_state=config_in.feature_template_state.value,
+            subfeature_template_state=config_in.subfeature_template_state.value,
+            persona_state=config_in.persona_state.value,
+            plan_rules_state=config_in.plan_rules_state.value,
             status=PromptStatus.DRAFT,
             created_by=created_by,
         )

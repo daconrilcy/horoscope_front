@@ -20,6 +20,7 @@ from app.domain.llm.runtime.execution_profiles_types import (
     VerbosityProfile,
 )
 from app.domain.llm.runtime.providers import is_provider_supported
+from app.infra.db.models.llm.llm_assembly import AssemblyComponentResolutionState
 from app.infra.db.models.llm.llm_prompt import PromptStatus
 
 
@@ -259,6 +260,14 @@ class PromptAssemblyConfig(BaseModel):
     interaction_mode: str = "structured"
     user_question_policy: str = "none"
     fallback_use_case: Optional[str] = None
+    feature_template_state: AssemblyComponentResolutionState = (
+        AssemblyComponentResolutionState.ENABLED
+    )
+    subfeature_template_state: AssemblyComponentResolutionState = (
+        AssemblyComponentResolutionState.ABSENT
+    )
+    persona_state: AssemblyComponentResolutionState = AssemblyComponentResolutionState.INHERITED
+    plan_rules_state: AssemblyComponentResolutionState = AssemblyComponentResolutionState.ABSENT
     feature_enabled: bool = True
     subfeature_enabled: bool = True
     persona_enabled: bool = True
@@ -270,7 +279,50 @@ class PromptAssemblyConfig(BaseModel):
         assert_nominal_feature_allowed(self.feature)
         self.feature = normalize_feature(self.feature)
         self.subfeature = normalize_subfeature(self.feature, self.subfeature)
+        self.feature_template_state = PromptAssemblyConfig._normalize_component_state(
+            fallback_enabled=self.feature_enabled,
+            explicit_state=self.feature_template_state,
+            has_reference=True,
+            can_inherit=False,
+        )
+        self.subfeature_template_state = PromptAssemblyConfig._normalize_component_state(
+            fallback_enabled=self.subfeature_enabled,
+            explicit_state=self.subfeature_template_state,
+            has_reference=self.subfeature_template_ref is not None,
+            can_inherit=self.subfeature is not None,
+        )
+        self.persona_state = PromptAssemblyConfig._normalize_component_state(
+            fallback_enabled=self.persona_enabled,
+            explicit_state=self.persona_state,
+            has_reference=self.persona_ref is not None,
+            can_inherit=True,
+        )
+        self.plan_rules_state = PromptAssemblyConfig._normalize_component_state(
+            fallback_enabled=self.plan_rules_enabled,
+            explicit_state=self.plan_rules_state,
+            has_reference=self.plan_rules_ref is not None,
+            can_inherit=self.plan is not None,
+        )
         return self
+
+    @staticmethod
+    def _normalize_component_state(
+        *,
+        fallback_enabled: bool,
+        explicit_state: AssemblyComponentResolutionState,
+        has_reference: bool,
+        can_inherit: bool,
+    ) -> AssemblyComponentResolutionState:
+        """Concilie les anciens booléens d'entrée avec les nouveaux états explicites."""
+        if explicit_state != AssemblyComponentResolutionState.ABSENT or not fallback_enabled:
+            if not fallback_enabled:
+                return AssemblyComponentResolutionState.DISABLED
+            return explicit_state
+        if has_reference:
+            return AssemblyComponentResolutionState.ENABLED
+        if can_inherit:
+            return AssemblyComponentResolutionState.INHERITED
+        return AssemblyComponentResolutionState.ABSENT
 
     model_config = ConfigDict(from_attributes=True)
 

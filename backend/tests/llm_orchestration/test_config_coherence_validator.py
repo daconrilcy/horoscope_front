@@ -118,6 +118,66 @@ async def test_validate_assembly_accepts_uuid_output_contract_ref(db):
 
 
 @pytest.mark.asyncio
+async def test_validate_assembly_rejects_execution_config_override_when_profile_ref(db):
+    """Empêche une assembly de contredire le profil d execution reference."""
+    prompt = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key="chat",
+        developer_prompt="{{last_user_msg}}",
+        status=PromptStatus.PUBLISHED,
+        model="gpt-4o",
+        created_by="test",
+    )
+    use_case = LlmUseCaseConfigModel(key="chat", display_name="Chat", description="test")
+    profile = LlmExecutionProfileModel(
+        id=uuid.uuid4(),
+        name="Chat Explicit",
+        feature="chat",
+        subfeature="astrologer",
+        provider="openai",
+        model="gpt-4o-mini",
+        max_output_tokens=1024,
+        timeout_seconds=45,
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    config = PromptAssemblyConfigModel(
+        feature="chat",
+        subfeature="astrologer",
+        plan="free",
+        locale="fr-FR",
+        feature_template_ref=prompt.id,
+        execution_profile_ref=profile.id,
+        execution_config={
+            "model": "gpt-4o",
+            "temperature": 0.2,
+            "max_output_tokens": 512,
+            "timeout_seconds": 30,
+        },
+        status=PromptStatus.DRAFT,
+        created_by="test",
+    )
+
+    db.add_all([use_case, prompt, profile, config])
+    db.commit()
+    db.refresh(config)
+
+    validator = ConfigCoherenceValidator(db)
+    result = await validator.validate_assembly(config)
+
+    assert result.is_valid is False
+    assert [error.error_code for error in result.errors] == [
+        "assembly_execution_config_override_forbidden"
+    ]
+    assert set(result.errors[0].details["mismatches"]) == {
+        "model",
+        "timeout_seconds",
+        "max_output_tokens",
+        "temperature",
+    }
+
+
+@pytest.mark.asyncio
 async def test_scan_active_configurations_ignores_older_published_versions(monkeypatch):
     mock_session = SimpleNamespace(execute=None)
     validator = ConfigCoherenceValidator(mock_session)

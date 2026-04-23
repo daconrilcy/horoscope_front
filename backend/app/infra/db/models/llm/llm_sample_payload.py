@@ -9,13 +9,8 @@ from datetime import datetime
 from sqlalchemy import JSON, UUID, Boolean, DateTime, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
-
-
-def utc_now() -> datetime:
-    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
-    return datetime_provider.utcnow()
 
 
 class LlmSamplePayloadModel(Base):
@@ -26,7 +21,9 @@ class LlmSamplePayloadModel(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     feature: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    locale: Mapped[str] = mapped_column(String(16), nullable=False, default="fr-FR", index=True)
+    subfeature: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    plan: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    locale: Mapped[str] = mapped_column(String(32), nullable=False, default="fr-FR", index=True)
     payload_json: Mapped[dict] = mapped_column(JSON, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -40,6 +37,8 @@ class LlmSamplePayloadModel(Base):
         Index(
             "ix_llm_sample_payload_feature_locale_name_unique",
             "feature",
+            "subfeature",
+            "plan",
             "locale",
             "name",
             unique=True,
@@ -47,6 +46,8 @@ class LlmSamplePayloadModel(Base):
         Index(
             "ix_llm_sample_payload_feature_locale_default_unique",
             "feature",
+            "subfeature",
+            "plan",
             "locale",
             unique=True,
             postgresql_where=(is_default == True),  # noqa: E712

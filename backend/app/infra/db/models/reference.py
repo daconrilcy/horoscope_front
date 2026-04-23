@@ -15,12 +15,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, Session, mapped_column, object_session, relationship
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
-
-
-def utc_now() -> datetime:
-    return datetime_provider.utcnow()
 
 
 class ReferenceVersionModel(Base):

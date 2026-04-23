@@ -3,14 +3,13 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from datetime import datetime
 from threading import Lock
 from typing import Any, Dict, Optional, Tuple
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
@@ -23,10 +22,6 @@ logger = logging.getLogger(__name__)
 # Cache for active prompts (use_case_key -> (serialized_data, expiry))
 _prompt_cache: Dict[str, Tuple[Dict[str, Any], float]] = {}
 _cache_lock = Lock()
-
-
-def utc_now() -> datetime:
-    return datetime_provider.utcnow()
 
 
 class PromptRegistryV2:

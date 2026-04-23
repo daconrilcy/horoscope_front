@@ -8,6 +8,7 @@ from app.infra.db.models.llm.llm_canonical_consumption import (
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_observability import (
     LlmCallLogModel,
+    LlmCallLogOperationalMetadataModel,
     LlmReplaySnapshotModel,
     LlmValidationStatus,
     map_status_to_enum,
@@ -32,6 +33,7 @@ from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 
 __all__ = [
     "LlmActiveReleaseModel",
+    "LlmCallLogOperationalMetadataModel",
     "LlmCallLogModel",
     "LlmCanonicalConsumptionAggregateModel",
     "LlmExecutionProfileModel",

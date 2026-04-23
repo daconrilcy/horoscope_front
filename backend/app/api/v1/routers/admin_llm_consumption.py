@@ -126,10 +126,10 @@ def _build_rows(
     for entries in grouped.values():
         sample = entries[0]
         request_count = sum(item.call_count for item in entries)
-        input_tokens = sum(item.input_tokens for item in entries)
-        output_tokens = sum(item.output_tokens for item in entries)
+        input_tokens = sum(item.tokens_in for item in entries)
+        output_tokens = sum(item.tokens_out for item in entries)
         total_tokens = sum(item.total_tokens for item in entries)
-        estimated_cost = float(sum(Decimal(str(item.estimated_cost)) for item in entries))
+        estimated_cost = float(sum(Decimal(str(item.cost_usd_estimated)) for item in entries))
         # Filled later from raw llm_call_logs to avoid invalid math on pre-aggregated percentiles.
         avg_latency_ms = 0.0
         weighted_error_rate = (
@@ -476,7 +476,7 @@ def get_canonical_consumption_drilldown(
             timestamp=item.timestamp,
             feature=item.feature,
             subfeature=item.subfeature,
-            provider=item.executed_provider or item.provider,
+            provider=item.executed_provider or item.provider_compat,
             active_snapshot_version=item.active_snapshot_version,
             manifest_entry_id=item.manifest_entry_id,
             validation_status=str(item.validation_status),

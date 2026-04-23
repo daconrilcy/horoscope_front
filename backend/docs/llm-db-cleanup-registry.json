@@ -12,6 +12,13 @@
     "20260420_0071_add_runtime_error_code_to_llm_call_logs.py",
     "20260422_0072_archive_prompt_fallback_use_case.py",
     "20260422_0073_drop_prompt_fallback_and_use_case_index.py",
+    "20260423_0074_llm_schema_release_sample_invariants.py",
+    "20260423_0075_add_llm_call_log_operational_indexes.py",
+    "20260423_0076_harmonize_consumption_aggregate_terms.py",
+    "20260423_0077_constrain_llm_domains_and_lengths.py",
+    "20260423_0078_add_call_log_operational_metadata.py",
+    "20260423_0079_finalize_llm_finite_domains_and_assembly_states.py",
+    "20260423_0080_rename_llm_call_log_provider_compat.py",
     "21011e7e01f2_add_execution_profile_ref_to_assembly.py",
     "2219fc77cb83_add_persona_id_to_chat_conversations.py",
     "2b616cdc516a_add_fallback_to_use_case_config.py",
@@ -44,7 +51,8 @@
         "backend/app/domain/llm/prompting/validators.py",
         "backend/app/domain/llm/runtime/gateway.py",
         "backend/app/infra/db/models/__init__.py",
-        "backend/app/infra/db/models/llm_prompt.py",
+        "backend/app/infra/db/models/llm/__init__.py",
+        "backend/app/infra/db/models/llm/llm_prompt.py",
         "backend/app/infra/db/repositories/llm/prompting_repository.py",
         "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
         "backend/app/ops/llm/bootstrap/seed_30_14_chat_prompt.py",
@@ -73,7 +81,7 @@
         "backend/app/api/v1/routers/admin_ai.py",
         "backend/app/api/v1/routers/admin_exports.py",
         "backend/app/api/v1/routers/admin_llm.py",
-        "backend/app/infra/db/models/llm_observability.py",
+        "backend/app/infra/db/models/llm/llm_observability.py",
         "backend/app/services/llm_canonical_consumption_service.py"
       ]
     },
@@ -93,7 +101,7 @@
         "backend/app/domain/llm/configuration/admin_models.py",
         "backend/app/domain/llm/configuration/canonical_use_case_registry.py",
         "backend/app/domain/llm/runtime/gateway.py",
-        "backend/app/infra/db/models/llm_prompt.py",
+        "backend/app/infra/db/models/llm/llm_prompt.py",
         "backend/app/ops/llm/bootstrap/use_cases_seed.py"
       ]
     },
@@ -104,10 +112,11 @@
         "backend/app/api/v1/routers/admin_llm.py",
         "backend/app/domain/llm/configuration/admin_models.py",
         "backend/app/domain/llm/configuration/assembly_admin_service.py",
+        "backend/app/domain/llm/configuration/config_coherence_validator.py",
         "backend/app/domain/llm/prompting/catalog.py",
         "backend/app/domain/llm/runtime/contracts.py",
         "backend/app/domain/llm/runtime/gateway.py",
-        "backend/app/infra/db/models/llm_assembly.py"
+        "backend/app/infra/db/models/llm/llm_assembly.py"
       ]
     }
   ],
@@ -454,6 +463,25 @@
       "usage_status": "nominal",
       "decision": "keep",
       "justification": "Canonical observability source; only compat columns inside the table remain under cleanup."
+    },
+    {
+      "object_id": "table:llm_call_log_operational_metadata",
+      "kind": "table",
+      "table": "llm_call_log_operational_metadata",
+      "historical_role": "Extension one-to-one des logs LLM pour la metadata operationnelle enrichie.",
+      "target_role": "Couche canonique separee pour hardening, erreurs runtime, breaker et release observability.",
+      "known_readers": [
+        "backend/app/domain/llm/runtime/observability_service.py",
+        "backend/tests/llm_orchestration/test_observability.py",
+        "backend/tests/integration/test_story_70_18_llm_db_invariants.py"
+      ],
+      "known_writers": [
+        "backend/app/domain/llm/runtime/observability_service.py",
+        "backend/migrations/versions/20260423_0078_add_call_log_operational_metadata.py"
+      ],
+      "usage_status": "nominal",
+      "decision": "keep",
+      "justification": "AC21 separe le coeur du log des metadonnees operationnelles sans casser les lecteurs existants."
     },
     {
       "object_id": "column:llm_call_logs.use_case",

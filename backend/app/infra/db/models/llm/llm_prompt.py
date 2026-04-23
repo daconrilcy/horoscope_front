@@ -4,29 +4,23 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from enum import Enum
+from typing import ClassVar
 
 from sqlalchemy import (
     JSON,
     UUID,
-    DateTime,
     Float,
     ForeignKey,
-    Index,
     Integer,
     String,
     Text,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
-
-
-def utc_now() -> datetime:
-    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
-    return datetime_provider.utcnow()
+from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, PublishedAtMixin
+from app.infra.db.models.llm.llm_indexes import published_unique_index
 
 
 class PromptStatus(str, Enum):
@@ -56,6 +50,13 @@ class LlmUseCaseConfigModel(Base):
     """Décrit le contrat fonctionnel et technique d'un use case LLM."""
 
     __tablename__ = "llm_use_case_configs"
+    legacy_identity_field: ClassVar[str] = "key"
+    canonical_scope_fields: ClassVar[frozenset[str]] = frozenset(
+        {"feature", "subfeature", "plan", "locale"}
+    )
+    legacy_compatibility_fields: ClassVar[frozenset[str]] = frozenset(
+        {"fallback_use_case_key", "allowed_persona_ids"}
+    )
 
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     display_name: Mapped[str] = mapped_column(String(255))
@@ -85,11 +86,20 @@ class LlmUseCaseConfigModel(Base):
     eval_failure_threshold: Mapped[float] = mapped_column(Float, default=0.20)
     golden_set_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
+    prompt_versions: Mapped[list["LlmPromptVersionModel"]] = relationship(
+        "LlmPromptVersionModel", back_populates="use_case", cascade="all, delete-orphan"
+    )
 
-class LlmPromptVersionModel(Base):
+
+class LlmPromptVersionModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin, Base):
     """Représente une version de prompt LLM liée à un use case."""
 
     __tablename__ = "llm_prompt_versions"
+    legacy_use_case_link_field: ClassVar[str] = "use_case_key"
+    legacy_execution_compatibility_fields: ClassVar[frozenset[str]] = frozenset(
+        {"model", "temperature", "max_output_tokens", "reasoning_effort", "verbosity"}
+    )
+    canonical_text_fields: ClassVar[frozenset[str]] = frozenset({"developer_prompt"})
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     use_case_key: Mapped[str] = mapped_column(
@@ -110,16 +120,15 @@ class LlmPromptVersionModel(Base):
         nullable=True,
         default=None,
     )
-    created_by: Mapped[str] = mapped_column(String(255))  # user_id
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
-    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    use_case: Mapped[LlmUseCaseConfigModel] = relationship(
+        "LlmUseCaseConfigModel", back_populates="prompt_versions"
+    )
 
     __table_args__ = (
-        Index(
+        published_unique_index(
             "ix_llm_prompt_version_active_unique",
             "use_case_key",
-            unique=True,
-            postgresql_where=(status == PromptStatus.PUBLISHED),
-            sqlite_where=(status == PromptStatus.PUBLISHED),
+            status_column=status,
         ),
     )

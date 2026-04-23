@@ -43,6 +43,8 @@ class AdminLlmSamplePayload(BaseModel):
     id: uuid.UUID
     name: str
     feature: str
+    subfeature: str
+    plan: str
     locale: str
     payload_json: dict[str, Any]
     description: str | None = None
@@ -58,6 +60,8 @@ class AdminLlmSamplePayloadSummary(BaseModel):
     id: uuid.UUID
     name: str
     feature: str
+    subfeature: str
+    plan: str
     locale: str
     description: str | None = None
     is_default: bool
@@ -93,6 +97,8 @@ class AdminLlmSamplePayloadDeleteResponse(BaseModel):
 class AdminLlmSamplePayloadCreatePayload(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     feature: str = Field(min_length=1, max_length=64)
+    subfeature: str | None = Field(default=None, max_length=64)
+    plan: str | None = Field(default=None, max_length=64)
     locale: str = Field(min_length=5, max_length=16)
     payload_json: dict[str, Any]
     description: str | None = Field(default=None, max_length=2000)
@@ -102,6 +108,8 @@ class AdminLlmSamplePayloadCreatePayload(BaseModel):
 
 class AdminLlmSamplePayloadUpdatePayload(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=128)
+    subfeature: str | None = Field(default=None, max_length=64)
+    plan: str | None = Field(default=None, max_length=64)
     locale: str | None = Field(default=None, min_length=5, max_length=16)
     payload_json: dict[str, Any] | None = None
     description: str | None = Field(default=None, max_length=2000)
@@ -159,6 +167,16 @@ def _validate_feature(feature: str) -> str:
     return normalized_feature
 
 
+def _normalize_scope_value(value: str | None) -> str:
+    """Normalise une dimension optionnelle de scope vers la valeur globale."""
+    if value is None:
+        return ""
+    normalized = value.strip()
+    if not normalized:
+        return ""
+    return normalized
+
+
 def _error_response(
     *, request_id: str, status_code: int, code: str, message: str, details: dict[str, Any]
 ) -> JSONResponse:
@@ -211,38 +229,38 @@ def _to_api_payload(model: LlmSamplePayloadModel) -> AdminLlmSamplePayload:
 
 
 def _sample_payload_name_conflict_response(
-    *, request_id: str, feature: str, locale: str
+    *, request_id: str, feature: str, subfeature: str, plan: str, locale: str
 ) -> JSONResponse:
     return _error_response(
         request_id=request_id,
         status_code=409,
         code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NAME_CONFLICT.value,
-        message="a sample payload with this name already exists for this feature/locale",
-        details={"feature": feature, "locale": locale},
+        message="a sample payload with this name already exists for this canonical scope",
+        details={"feature": feature, "subfeature": subfeature, "plan": plan, "locale": locale},
     )
 
 
 def _sample_payload_default_conflict_response(
-    *, request_id: str, feature: str, locale: str
+    *, request_id: str, feature: str, subfeature: str, plan: str, locale: str
 ) -> JSONResponse:
     return _error_response(
         request_id=request_id,
         status_code=409,
         code=AdminLlmErrorCode.SAMPLE_PAYLOAD_DEFAULT_CONFLICT.value,
-        message="another default sample payload already exists for this feature/locale",
-        details={"feature": feature, "locale": locale},
+        message="another default sample payload already exists for this canonical scope",
+        details={"feature": feature, "subfeature": subfeature, "plan": plan, "locale": locale},
     )
 
 
 def _sample_payload_generic_conflict_response(
-    *, request_id: str, feature: str, locale: str
+    *, request_id: str, feature: str, subfeature: str, plan: str, locale: str
 ) -> JSONResponse:
     return _error_response(
         request_id=request_id,
         status_code=409,
         code=AdminLlmErrorCode.SAMPLE_PAYLOAD_CONFLICT.value,
         message="sample payload update conflicts with existing data",
-        details={"feature": feature, "locale": locale},
+        details={"feature": feature, "subfeature": subfeature, "plan": plan, "locale": locale},
     )
 
 
@@ -250,6 +268,8 @@ def _find_name_conflict(
     db: Session,
     *,
     feature: str,
+    subfeature: str,
+    plan: str,
     locale: str,
     name: str,
     exclude_id: uuid.UUID | None = None,
@@ -257,6 +277,8 @@ def _find_name_conflict(
     stmt = (
         select(LlmSamplePayloadModel)
         .where(LlmSamplePayloadModel.feature == feature)
+        .where(LlmSamplePayloadModel.subfeature == subfeature)
+        .where(LlmSamplePayloadModel.plan == plan)
         .where(LlmSamplePayloadModel.locale == locale)
         .where(LlmSamplePayloadModel.name == name)
     )
@@ -269,12 +291,16 @@ def _find_default_conflict(
     db: Session,
     *,
     feature: str,
+    subfeature: str,
+    plan: str,
     locale: str,
     exclude_id: uuid.UUID | None = None,
 ) -> LlmSamplePayloadModel | None:
     stmt = (
         select(LlmSamplePayloadModel)
         .where(LlmSamplePayloadModel.feature == feature)
+        .where(LlmSamplePayloadModel.subfeature == subfeature)
+        .where(LlmSamplePayloadModel.plan == plan)
         .where(LlmSamplePayloadModel.locale == locale)
         .where(LlmSamplePayloadModel.is_default == True)  # noqa: E712
     )
@@ -295,6 +321,8 @@ def create_sample_payload(
     try:
         normalized_name = _normalize_name(payload.name)
         feature = _validate_feature(payload.feature)
+        subfeature = _normalize_scope_value(payload.subfeature)
+        plan = _normalize_scope_value(payload.plan)
         locale = _validate_locale(payload.locale)
         _validate_payload_json(feature, payload.payload_json)
     except ValueError as exc:
@@ -309,20 +337,28 @@ def create_sample_payload(
     if _find_name_conflict(
         db,
         feature=feature,
+        subfeature=subfeature,
+        plan=plan,
         locale=locale,
         name=normalized_name,
     ):
         return _sample_payload_name_conflict_response(
             request_id=request_id,
             feature=feature,
+            subfeature=subfeature,
+            plan=plan,
             locale=locale,
         )
 
     if payload.is_default:
-        if _find_default_conflict(db, feature=feature, locale=locale):
+        if _find_default_conflict(
+            db, feature=feature, subfeature=subfeature, plan=plan, locale=locale
+        ):
             existing_defaults = db.scalars(
                 select(LlmSamplePayloadModel)
                 .where(LlmSamplePayloadModel.feature == feature)
+                .where(LlmSamplePayloadModel.subfeature == subfeature)
+                .where(LlmSamplePayloadModel.plan == plan)
                 .where(LlmSamplePayloadModel.locale == locale)
                 .where(LlmSamplePayloadModel.is_default == True)  # noqa: E712
             ).all()
@@ -337,6 +373,8 @@ def create_sample_payload(
     model = LlmSamplePayloadModel(
         name=normalized_name,
         feature=feature,
+        subfeature=subfeature,
+        plan=plan,
         locale=locale,
         payload_json=payload.payload_json,
         description=payload.description,
@@ -351,6 +389,8 @@ def create_sample_payload(
         return _sample_payload_generic_conflict_response(
             request_id=request_id,
             feature=feature,
+            subfeature=subfeature,
+            plan=plan,
             locale=locale,
         )
     db.refresh(model)
@@ -363,6 +403,8 @@ def create_sample_payload(
         target_id=str(model.id),
         details={
             "feature": model.feature,
+            "subfeature": model.subfeature,
+            "plan": model.plan,
             "locale": model.locale,
             "is_default": model.is_default,
         },
@@ -375,6 +417,8 @@ def create_sample_payload(
 def list_sample_payloads(
     request: Request,
     feature: str = Query(..., min_length=1),
+    subfeature: str | None = Query(default=None, max_length=64),
+    plan: str | None = Query(default=None, max_length=64),
     locale: str = Query(..., min_length=5),
     include_inactive: bool = False,
     current_user: AuthenticatedUser = Depends(require_admin_user),
@@ -385,6 +429,8 @@ def list_sample_payloads(
 
     try:
         normalized_feature = _validate_feature(feature)
+        normalized_subfeature = _normalize_scope_value(subfeature)
+        normalized_plan = _normalize_scope_value(plan)
         normalized_locale = _validate_locale(locale)
     except ValueError as exc:
         return _error_response(
@@ -398,6 +444,8 @@ def list_sample_payloads(
     stmt = (
         select(LlmSamplePayloadModel)
         .where(LlmSamplePayloadModel.feature == normalized_feature)
+        .where(LlmSamplePayloadModel.subfeature == normalized_subfeature)
+        .where(LlmSamplePayloadModel.plan == normalized_plan)
         .where(LlmSamplePayloadModel.locale == normalized_locale)
         .order_by(LlmSamplePayloadModel.name.asc())
     )
@@ -458,6 +506,14 @@ def update_sample_payload(
         )
 
     next_name = payload.name if payload.name is not None else model.name
+    next_subfeature = (
+        _normalize_scope_value(payload.subfeature)
+        if "subfeature" in payload.model_fields_set
+        else model.subfeature
+    )
+    next_plan = (
+        _normalize_scope_value(payload.plan) if "plan" in payload.model_fields_set else model.plan
+    )
     next_locale = payload.locale if payload.locale is not None else model.locale
     next_feature = model.feature
     next_payload_json = (
@@ -481,6 +537,8 @@ def update_sample_payload(
     if _find_name_conflict(
         db,
         feature=next_feature,
+        subfeature=next_subfeature,
+        plan=next_plan,
         locale=next_locale,
         name=next_name,
         exclude_id=model.id,
@@ -488,16 +546,24 @@ def update_sample_payload(
         return _sample_payload_name_conflict_response(
             request_id=request_id,
             feature=next_feature,
+            subfeature=next_subfeature,
+            plan=next_plan,
             locale=next_locale,
         )
 
     if (
         payload.is_default is not False
         and model.is_default
-        and next_locale != model.locale
+        and (
+            next_subfeature != model.subfeature
+            or next_plan != model.plan
+            or next_locale != model.locale
+        )
         and _find_default_conflict(
             db,
             feature=next_feature,
+            subfeature=next_subfeature,
+            plan=next_plan,
             locale=next_locale,
             exclude_id=model.id,
         )
@@ -505,6 +571,8 @@ def update_sample_payload(
         return _sample_payload_default_conflict_response(
             request_id=request_id,
             feature=next_feature,
+            subfeature=next_subfeature,
+            plan=next_plan,
             locale=next_locale,
         )
 
@@ -512,6 +580,8 @@ def update_sample_payload(
         existing_defaults = db.scalars(
             select(LlmSamplePayloadModel)
             .where(LlmSamplePayloadModel.feature == next_feature)
+            .where(LlmSamplePayloadModel.subfeature == next_subfeature)
+            .where(LlmSamplePayloadModel.plan == next_plan)
             .where(LlmSamplePayloadModel.locale == next_locale)
             .where(LlmSamplePayloadModel.is_default == True)  # noqa: E712
             .where(LlmSamplePayloadModel.id != model.id)
@@ -523,6 +593,8 @@ def update_sample_payload(
         db.flush()
 
     model.name = next_name
+    model.subfeature = next_subfeature
+    model.plan = next_plan
     model.locale = next_locale
     model.payload_json = next_payload_json
     if "description" in payload.model_fields_set:
@@ -539,6 +611,8 @@ def update_sample_payload(
         return _sample_payload_generic_conflict_response(
             request_id=request_id,
             feature=next_feature,
+            subfeature=next_subfeature,
+            plan=next_plan,
             locale=next_locale,
         )
     db.refresh(model)
@@ -550,6 +624,8 @@ def update_sample_payload(
         target_id=str(model.id),
         details={
             "feature": model.feature,
+            "subfeature": model.subfeature,
+            "plan": model.plan,
             "locale": model.locale,
             "is_default": model.is_default,
             "is_active": model.is_active,
@@ -585,7 +661,12 @@ def delete_sample_payload(
         actor=current_user,
         action="llm_sample_payload_delete",
         target_id=str(sample_payload_id),
-        details={"feature": model.feature, "locale": model.locale},
+        details={
+            "feature": model.feature,
+            "subfeature": model.subfeature,
+            "plan": model.plan,
+            "locale": model.locale,
+        },
     )
     db.commit()
     return {"data": {"id": sample_payload_id}, "meta": {"request_id": request_id}}

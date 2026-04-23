@@ -15,6 +15,12 @@ Project type: `backend`
 - `app/services/`: business rules and use-case orchestration
 - `app/infra/`: persistence models/repositories and external integration helpers
 
+## Structure Governance
+- `app/infra/` is the only canonical infrastructure namespace.
+- `app/infrastructure/` is deprecated and must not be reintroduced.
+- New direct folders under `backend/` or `backend/app/` require explicit user approval.
+- The approved and tolerated folders are documented in `docs/backend-structure-governance.md`.
+
 ## Data Architecture
 - SQLAlchemy models in `app/infra/db/models/`
 - Migrations in `backend/migrations/versions/`

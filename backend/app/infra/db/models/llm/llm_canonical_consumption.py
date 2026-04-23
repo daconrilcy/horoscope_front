@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
+from app.infra.db.models.llm.llm_constraints import allowed_values_check
 
 
 class LlmCanonicalConsumptionAggregateModel(Base):
@@ -28,15 +29,12 @@ class LlmCanonicalConsumptionAggregateModel(Base):
     locale: Mapped[str] = mapped_column(String(32), nullable=False)
     executed_provider: Mapped[str] = mapped_column(String(32), nullable=False)
     active_snapshot_version: Mapped[str] = mapped_column(String(64), nullable=False)
-    taxonomy_scope: Mapped[str] = mapped_column(
-        String(32), nullable=False
-    )  # nominal | legacy_residual
     is_legacy_residual: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
-    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tokens_in: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tokens_out: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    estimated_cost_microusd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cost_usd_estimated_microusd: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     call_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     latency_p50_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     latency_p95_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -61,6 +59,11 @@ class LlmCanonicalConsumptionAggregateModel(Base):
             "active_snapshot_version",
             "is_legacy_residual",
             name="uq_llm_canonical_consumption_dims",
+        ),
+        allowed_values_check(
+            "ck_llm_canonical_consumption_granularity",
+            "granularity",
+            ("day", "month"),
         ),
         Index("ix_llm_canonical_consumption_period", "granularity", "period_start_utc"),
         Index("ix_llm_canonical_consumption_feature", "feature", "subfeature"),

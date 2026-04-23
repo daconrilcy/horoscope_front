@@ -5,12 +5,8 @@ from datetime import datetime
 from sqlalchemy import Boolean, DateTime, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
-
-
-def utc_now() -> datetime:
-    return datetime_provider.utcnow()
 
 
 class StripeWebhookEventModel(Base):

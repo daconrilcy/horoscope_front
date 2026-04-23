@@ -8,6 +8,7 @@ from sqlalchemy import engine_from_config, pool
 from app.core.config import settings
 from app.infra.db.base import Base
 from app.infra.db.models import *  # noqa: F401, F403
+from app.infra.db.models import llm as _llm_models  # noqa: F401
 
 config = context.config
 configured_url = config.attributes.get("configured_sqlalchemy_url") or settings.database_url

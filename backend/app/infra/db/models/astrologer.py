@@ -18,15 +18,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
 
 if TYPE_CHECKING:
     from app.infra.db.models.llm.llm_persona import LlmPersonaModel
-
-
-def utc_now() -> datetime:
-    return datetime_provider.utcnow()
 
 
 class AstrologerGender(str, Enum):

@@ -19,7 +19,15 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.datetime_provider import datetime_provider
+from app.domain.llm.runtime.execution_profiles_types import (
+    OutputMode,
+    ReasoningProfile,
+    ToolMode,
+    VerbosityProfile,
+)
 from app.infra.db.base import Base
+from app.infra.db.models.llm.llm_constraints import allowed_values_check
+from app.infra.db.models.llm.llm_indexes import published_unique_index
 from app.infra.db.models.llm.llm_prompt import PromptStatus
 
 
@@ -31,14 +39,18 @@ class LlmExecutionProfileModel(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False)  # Admin label
 
-    provider: Mapped[str] = mapped_column(String(50), nullable=False, default="openai")
+    provider: Mapped[str] = mapped_column(String(32), nullable=False, default="openai")
     model: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # Internal stable profiles (Story 66.11 D4)
-    reasoning_profile: Mapped[str] = mapped_column(String(20), nullable=False, default="off")
-    verbosity_profile: Mapped[str] = mapped_column(String(20), nullable=False, default="balanced")
-    output_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="free_text")
-    tool_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="none")
+    reasoning_profile: Mapped[ReasoningProfile] = mapped_column(
+        String(20), nullable=False, default="off"
+    )
+    verbosity_profile: Mapped[VerbosityProfile] = mapped_column(
+        String(20), nullable=False, default="balanced"
+    )
+    output_mode: Mapped[OutputMode] = mapped_column(String(20), nullable=False, default="free_text")
+    tool_mode: Mapped[ToolMode] = mapped_column(String(20), nullable=False, default="none")
 
     max_output_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     timeout_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
@@ -48,9 +60,9 @@ class LlmExecutionProfileModel(Base):
     )
 
     # Target (waterfall resolution)
-    feature: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    subfeature: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    plan: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    feature: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    subfeature: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    plan: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
     status: Mapped[PromptStatus] = mapped_column(
         String(20), nullable=False, default=PromptStatus.DRAFT
@@ -61,6 +73,27 @@ class LlmExecutionProfileModel(Base):
     )
     created_by: Mapped[str] = mapped_column(String(100), nullable=False)
     published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @validates("model")
+    def validate_model(self, key: str, value: str) -> str:
+        """Garantit qu un profil publie ou brouillon cible un modele explicite."""
+        if not str(value or "").strip():
+            raise ValueError("model must not be empty.")
+        return value
+
+    @validates("timeout_seconds")
+    def validate_timeout_seconds(self, key: str, value: int) -> int:
+        """Garantit un timeout runtime strictement positif."""
+        if int(value) <= 0:
+            raise ValueError("timeout_seconds must be positive.")
+        return value
+
+    @validates("max_output_tokens")
+    def validate_max_output_tokens(self, key: str, value: Optional[int]) -> Optional[int]:
+        """Garantit que la limite de sortie optionnelle reste exploitable."""
+        if value is not None and int(value) <= 0:
+            raise ValueError("max_output_tokens must be positive when provided.")
+        return value
 
     @validates("status")
     def validate_status_change(self, key: str, value: PromptStatus) -> PromptStatus:
@@ -80,14 +113,37 @@ class LlmExecutionProfileModel(Base):
     fallback_profile = relationship("LlmExecutionProfileModel", remote_side=[id])
 
     __table_args__ = (
-        Index(
+        published_unique_index(
             "ix_llm_execution_profile_active_unique",
             "feature",
             func.coalesce(subfeature, ""),
             func.coalesce(plan, ""),
-            unique=True,
-            postgresql_where=(status == PromptStatus.PUBLISHED),
-            sqlite_where=(status == PromptStatus.PUBLISHED),
+            status_column=status,
+        ),
+        allowed_values_check(
+            "ck_llm_execution_profiles_reasoning_profile",
+            "reasoning_profile",
+            ("off", "light", "medium", "deep"),
+        ),
+        allowed_values_check(
+            "ck_llm_execution_profiles_verbosity_profile",
+            "verbosity_profile",
+            ("concise", "balanced", "detailed"),
+        ),
+        allowed_values_check(
+            "ck_llm_execution_profiles_output_mode",
+            "output_mode",
+            ("free_text", "structured_json"),
+        ),
+        allowed_values_check(
+            "ck_llm_execution_profiles_tool_mode",
+            "tool_mode",
+            ("none", "optional", "required"),
+        ),
+        allowed_values_check(
+            "ck_llm_execution_profiles_provider",
+            "provider",
+            ("openai", "anthropic"),
         ),
         Index("ix_llm_execution_profiles_feature", "feature"),
         Index("ix_llm_execution_profiles_status", "status"),

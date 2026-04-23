@@ -1,3 +1,6 @@
+# Service d'observabilite runtime LLM.
+"""Journalise les appels LLM et leurs metadonnees operationnelles."""
+
 from __future__ import annotations
 
 import hashlib
@@ -16,6 +19,7 @@ from app.domain.llm.runtime.contracts import GatewayResult
 from app.domain.llm.runtime.crypto_utils import encrypt_input
 from app.infra.db.models.llm.llm_observability import (
     LlmCallLogModel,
+    LlmCallLogOperationalMetadataModel,
     LlmReplaySnapshotModel,
     LlmValidationStatus,
     map_status_to_enum,
@@ -401,7 +405,7 @@ async def log_call(
                 template_source=template_source,
                 prompt_version_id=prompt_version_id,
                 persona_id=persona_id,
-                provider=provider,
+                provider_compat=provider,
                 model=model,
                 latency_ms=latency_ms,
                 tokens_in=tokens_in,
@@ -441,6 +445,31 @@ async def log_call(
             db.add(log_entry)
 
             db.flush()  # Generate log_entry.id inside an isolated transaction scope.
+
+            db.add(
+                LlmCallLogOperationalMetadataModel(
+                    call_log_id=log_entry.id,
+                    pipeline_kind=pipeline_kind,
+                    execution_path_kind=execution_path_kind,
+                    fallback_kind=fallback_kind,
+                    requested_provider=requested_provider,
+                    resolved_provider=resolved_provider,
+                    executed_provider=executed_provider,
+                    context_quality=context_quality,
+                    context_compensation_status=context_compensation_status,
+                    max_output_tokens_source=max_output_tokens_source,
+                    max_output_tokens_final=max_output_tokens_final,
+                    executed_provider_mode=executed_provider_mode,
+                    attempt_count=attempt_count,
+                    provider_error_code=provider_error_code,
+                    runtime_error_code=runtime_error_code,
+                    breaker_state=breaker_state,
+                    breaker_scope=breaker_scope,
+                    active_snapshot_id=active_snapshot_id,
+                    active_snapshot_version=active_snapshot_version,
+                    manifest_entry_id=manifest_entry_id,
+                )
+            )
 
             if user_input:
                 snapshot = LlmReplaySnapshotModel(

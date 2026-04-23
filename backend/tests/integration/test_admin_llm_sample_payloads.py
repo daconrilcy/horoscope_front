@@ -94,6 +94,73 @@ def test_admin_llm_sample_payload_crud_list_and_recommended_default():
         db.close()
 
 
+def test_admin_llm_sample_payload_scopes_by_subfeature_and_plan():
+    """AC23: les payloads QA se distinguent par feature, subfeature, plan et locale."""
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    created_ids: list[uuid.UUID] = []
+    try:
+        db.execute(delete(LlmSamplePayloadModel))
+        db.commit()
+
+        premium = client.post(
+            "/v1/admin/llm/sample-payloads",
+            json=_build_payload(
+                name="same-name",
+                subfeature="interpretation",
+                plan="premium",
+                is_default=True,
+            ),
+        )
+        assert premium.status_code == 200
+        premium_item = premium.json()["data"]
+        created_ids.append(uuid.UUID(premium_item["id"]))
+        assert premium_item["subfeature"] == "interpretation"
+        assert premium_item["plan"] == "premium"
+
+        free = client.post(
+            "/v1/admin/llm/sample-payloads",
+            json=_build_payload(
+                name="same-name",
+                subfeature="interpretation",
+                plan="free",
+                is_default=True,
+            ),
+        )
+        assert free.status_code == 200
+        free_item = free.json()["data"]
+        created_ids.append(uuid.UUID(free_item["id"]))
+
+        premium_list = client.get(
+            "/v1/admin/llm/sample-payloads"
+            "?feature=natal&subfeature=interpretation&plan=premium&locale=fr-FR"
+        )
+        assert premium_list.status_code == 200
+        premium_items = premium_list.json()["data"]["items"]
+        assert [item["id"] for item in premium_items] == [premium_item["id"]]
+        assert premium_list.json()["data"]["recommended_default_id"] == premium_item["id"]
+
+        free_list = client.get(
+            "/v1/admin/llm/sample-payloads"
+            "?feature=natal&subfeature=interpretation&plan=free&locale=fr-FR"
+        )
+        assert free_list.status_code == 200
+        free_items = free_list.json()["data"]["items"]
+        assert [item["id"] for item in free_items] == [free_item["id"]]
+        assert free_list.json()["data"]["recommended_default_id"] == free_item["id"]
+    finally:
+        app.dependency_overrides.clear()
+        if created_ids:
+            db.execute(
+                delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id.in_(created_ids))
+            )
+            db.commit()
+        db.close()
+
+
 def test_admin_llm_sample_payload_post_default_switches_previous_default():
     db = open_app_db_session()
     client = TestClient(app)

@@ -1,15 +1,8 @@
-from datetime import datetime
-
 from sqlalchemy import select
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
 from app.infra.db.session import SessionLocal
-
-
-def utc_now() -> datetime:
-    return datetime_provider.utcnow()
-
 
 CATEGORIES = [
     {

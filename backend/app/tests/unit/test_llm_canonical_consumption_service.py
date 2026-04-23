@@ -88,7 +88,6 @@ def test_governed_feature_alias_is_nominal_when_subfeature_maps(db_session) -> N
     assert nominal[0].feature == "natal"
     assert nominal[0].subfeature == "full"
     assert nominal[0].is_legacy_residual is False
-    assert nominal[0].taxonomy_scope == "nominal"
 
 
 def test_null_feature_reclassifies_from_use_case_compat(db_session) -> None:
@@ -163,7 +162,6 @@ def test_nominal_scope_excludes_legacy_residual_and_keeps_user_dimension(db_sess
     assert result[0].feature == "natal"
     assert result[0].subfeature == "full"
     assert result[0].user_id == user_id
-    assert result[0].taxonomy_scope == "nominal"
 
 
 def test_monthly_aggregation_uses_utc_boundaries(db_session) -> None:
@@ -226,7 +224,7 @@ def test_plan_cost_provider_snapshot_are_frozen_from_call_log(db_session) -> Non
     assert len(result) == 1
     aggregate = result[0]
     assert aggregate.subscription_plan == "premium"
-    assert aggregate.estimated_cost == 0.0123
+    assert aggregate.cost_usd_estimated == 0.0123
     assert aggregate.executed_provider == "anthropic"
     assert aggregate.active_snapshot_version == "release-locked"
     assert aggregate.locale == "en-US"
@@ -259,7 +257,6 @@ def test_unknown_feature_is_marked_legacy_residual(db_session) -> None:
     assert nominal == []
     assert len(all_rows) == 1
     assert all_rows[0].is_legacy_residual is True
-    assert all_rows[0].taxonomy_scope == "legacy_residual"
 
 
 def test_duplicate_usage_rows_do_not_duplicate_llm_calls(db_session) -> None:
@@ -314,8 +311,8 @@ def test_duplicate_usage_rows_do_not_duplicate_llm_calls(db_session) -> None:
     )
     assert len(rows) == 1
     assert rows[0].call_count == 1
-    assert rows[0].input_tokens == 80
-    assert rows[0].output_tokens == 20
+    assert rows[0].tokens_in == 80
+    assert rows[0].tokens_out == 20
     assert rows[0].total_tokens == 100
     assert rows[0].user_id is None
 

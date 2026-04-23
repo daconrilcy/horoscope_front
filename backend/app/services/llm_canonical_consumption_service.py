@@ -57,12 +57,11 @@ class CanonicalConsumptionAggregate(BaseModel):
     locale: str
     executed_provider: str
     active_snapshot_version: str
-    taxonomy_scope: Literal["nominal", "legacy_residual"]
     is_legacy_residual: bool
-    input_tokens: int
-    output_tokens: int
+    tokens_in: int
+    tokens_out: int
     total_tokens: int
-    estimated_cost: float
+    cost_usd_estimated: float
     call_count: int
     latency_p50: float
     latency_p95: float
@@ -144,8 +143,8 @@ class LlmCanonicalConsumptionService:
         )
         for key, entries in grouped.items():
             latencies = sorted(float(entry.latency_ms) for entry in entries)
-            input_tokens = sum(entry.tokens_in for entry in entries)
-            output_tokens = sum(entry.tokens_out for entry in entries)
+            tokens_in = sum(entry.tokens_in for entry in entries)
+            tokens_out = sum(entry.tokens_out for entry in entries)
             call_count = len(entries)
             error_count = sum(1 for entry in entries if entry.is_error)
             (
@@ -171,12 +170,11 @@ class LlmCanonicalConsumptionService:
                     locale=locale,
                     executed_provider=executed_provider,
                     active_snapshot_version=active_snapshot_version,
-                    taxonomy_scope="legacy_residual" if is_legacy_residual else "nominal",
                     is_legacy_residual=is_legacy_residual,
-                    input_tokens=input_tokens,
-                    output_tokens=output_tokens,
-                    total_tokens=input_tokens + output_tokens,
-                    estimated_cost_microusd=int(
+                    tokens_in=tokens_in,
+                    tokens_out=tokens_out,
+                    total_tokens=tokens_in + tokens_out,
+                    cost_usd_estimated_microusd=int(
                         round(sum(entry.cost_usd_estimated for entry in entries) * 1_000_000)
                     ),
                     call_count=call_count,
@@ -262,12 +260,11 @@ class LlmCanonicalConsumptionService:
                 locale=row.locale,
                 executed_provider=row.executed_provider,
                 active_snapshot_version=row.active_snapshot_version,
-                taxonomy_scope=row.taxonomy_scope,  # type: ignore[arg-type]
                 is_legacy_residual=row.is_legacy_residual,
-                input_tokens=row.input_tokens,
-                output_tokens=row.output_tokens,
+                tokens_in=row.tokens_in,
+                tokens_out=row.tokens_out,
                 total_tokens=row.total_tokens,
-                estimated_cost=float(row.estimated_cost_microusd) / 1_000_000,
+                cost_usd_estimated=float(row.cost_usd_estimated_microusd) / 1_000_000,
                 call_count=row.call_count,
                 latency_p50=float(row.latency_p50_ms),
                 latency_p95=float(row.latency_p95_ms),
@@ -297,7 +294,7 @@ class LlmCanonicalConsumptionService:
                 LlmCallLogModel.active_snapshot_version.label("active_snapshot_version"),
                 LlmCallLogModel.tokens_in.label("tokens_in"),
                 LlmCallLogModel.tokens_out.label("tokens_out"),
-                LlmCallLogModel.cost_usd_estimated.label("estimated_cost"),
+                LlmCallLogModel.cost_usd_estimated.label("cost_usd_estimated"),
                 LlmCallLogModel.latency_ms.label("latency_ms"),
                 LlmCallLogModel.validation_status.label("validation_status"),
             )
@@ -362,7 +359,7 @@ class LlmCanonicalConsumptionService:
                 is_legacy_residual=is_legacy_residual,
                 tokens_in=int(row.tokens_in or 0),
                 tokens_out=int(row.tokens_out or 0),
-                cost_usd_estimated=float(row.estimated_cost or 0.0),
+                cost_usd_estimated=float(row.cost_usd_estimated or 0.0),
                 latency_ms=int(row.latency_ms or 0),
                 is_error=(row.validation_status == LlmValidationStatus.ERROR),
             )

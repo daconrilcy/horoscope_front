@@ -11,7 +11,11 @@ from app.domain.llm.runtime.observability_service import (
     count_evidence_warnings,
     log_call,
 )
-from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm.llm_observability import (
+    LlmCallLogModel,
+    LlmCallLogOperationalMetadataModel,
+    LlmValidationStatus,
+)
 from app.infra.db.models.user import UserModel
 
 
@@ -74,6 +78,14 @@ async def test_log_call_persists_to_db(db):
     assert log.input_hash == compute_input_hash(user_input)
     assert log.cost_usd_estimated == 0.001
 
+    metadata = db.execute(
+        select(LlmCallLogOperationalMetadataModel).where(
+            LlmCallLogOperationalMetadataModel.call_log_id == log.id
+        )
+    ).scalar_one()
+    assert metadata.call_log_id == log.id
+    assert metadata.executed_provider == log.executed_provider
+
 
 @pytest.mark.asyncio
 async def test_log_call_on_error(db):
@@ -116,6 +128,15 @@ async def test_log_call_on_error_persists_provider_runtime_metadata(db):
     assert log.provider_error_code == "UPSTREAM_CIRCUIT_OPEN"
     assert log.breaker_state == "open"
     assert log.breaker_scope == "openai:chat"
+
+    metadata = db.execute(
+        select(LlmCallLogOperationalMetadataModel).where(
+            LlmCallLogOperationalMetadataModel.call_log_id == log.id
+        )
+    ).scalar_one()
+    assert metadata.executed_provider_mode == "circuit_open"
+    assert metadata.provider_error_code == "UPSTREAM_CIRCUIT_OPEN"
+    assert metadata.breaker_state == "open"
 
 
 @pytest.mark.asyncio

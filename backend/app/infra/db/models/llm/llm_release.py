@@ -11,20 +11,17 @@ from typing import Optional
 from sqlalchemy import (
     JSON,
     UUID,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
-
-
-def utc_now() -> datetime:
-    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
-    return datetime_provider.utcnow()
 
 
 class ReleaseStatus(str, Enum):
@@ -61,17 +58,27 @@ class LlmReleaseSnapshotModel(Base):
 
     comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
+    active_release: Mapped[Optional["LlmActiveReleaseModel"]] = relationship(
+        "LlmActiveReleaseModel", back_populates="release_snapshot", uselist=False
+    )
+
+    __table_args__ = (UniqueConstraint("version", name="uq_llm_release_snapshots_version"),)
+
 
 class LlmActiveReleaseModel(Base):
     """Pointe vers le snapshot de release LLM actuellement actif."""
 
     __tablename__ = "llm_active_releases"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(primary_key=True, default=1)
     release_snapshot_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("llm_release_snapshots.id", ondelete="CASCADE")
     )
     activated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     activated_by: Mapped[str] = mapped_column(String(255))
 
-    release_snapshot: Mapped[LlmReleaseSnapshotModel] = relationship("LlmReleaseSnapshotModel")
+    release_snapshot: Mapped[LlmReleaseSnapshotModel] = relationship(
+        "LlmReleaseSnapshotModel", back_populates="active_release"
+    )
+
+    __table_args__ = (CheckConstraint("id = 1", name="ck_llm_active_releases_singleton_id"),)

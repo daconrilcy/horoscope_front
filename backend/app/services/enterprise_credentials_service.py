@@ -23,11 +23,6 @@ from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 
 
-def utc_now() -> datetime:
-    """Retourne l'instant actuel en UTC."""
-    return datetime_provider.utcnow()
-
-
 class EnterpriseCredentialsServiceError(Exception):
     """Exception levée lors d'erreurs de gestion des credentials."""
 
@@ -385,7 +380,7 @@ class EnterpriseCredentialsService:
             )
 
         active.status = "revoked"
-        active.revoked_at = utc_now()
+        active.revoked_at = datetime_provider.utcnow()
         db.flush()
 
         raw_secret = f"b2b_{token_urlsafe(32)}"

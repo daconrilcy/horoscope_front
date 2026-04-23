@@ -179,6 +179,24 @@ Endpoints utiles :
 - `POST /v1/admin/llm/releases/{snapshot_id}/release-health`
 - `POST /v1/admin/llm/releases/rollback`
 
+## Semantique snapshot et pointeur actif
+
+Un `llm_release_snapshots` est un artefact versionne immuable apres creation. Les
+etats `draft`, `validated`, `active` et `archived` decrivent la promotion de cet
+artefact, pas une pile de pointeurs actifs.
+
+La table `llm_active_releases` est un pointeur singleton vers le snapshot actif.
+Une activation ou un rollback remplace ce pointeur unique ; elle ne cree pas une
+nouvelle ligne logique a conserver comme historique. L historique de promotion
+reste porte par les snapshots eux-memes (`status`, `activated_at`, `activated_by`)
+et par `release_health.history` dans le manifest.
+
+Une release `draft` ou `validated` ne doit jamais etre lue comme configuration
+runtime active tant que `llm_active_releases.release_snapshot_id` ne pointe pas
+dessus. Les lectures runtime et les preuves d observabilite doivent donc
+correler `active_snapshot_id`, `active_snapshot_version` et `manifest_entry_id`
+avec le pointeur actif courant.
+
 ## Point de vigilance connu
 
 Le dernier run validé affiche une qualification `go-with-constraints` à cause d'une latence `p95` supérieure au seuil SLO. Ce point ne bloque pas mécaniquement l'activation mais doit être assumé explicitement avant production.
@@ -188,4 +206,3 @@ Le dernier run validé affiche une qualification `go-with-constraints` à cause 
 La promotion n'est autorisée que si cette phrase est vraie :
 
 > Nous activons le snapshot X, validé par qualification Y, golden Z, chaos report W, avec seuils de release health S et procédure de rollback R.
-

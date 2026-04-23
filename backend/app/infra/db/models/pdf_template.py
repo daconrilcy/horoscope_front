@@ -7,7 +7,7 @@ from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.datetime_provider import datetime_provider
+from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
 
 
@@ -15,10 +15,6 @@ class PdfTemplateStatus(str, Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
     DRAFT = "draft"
-
-
-def utc_now() -> datetime:
-    return datetime_provider.utcnow()
 
 
 class PdfTemplateModel(Base):

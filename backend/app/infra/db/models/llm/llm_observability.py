@@ -174,6 +174,12 @@ class LlmCallLogModel(Base):
         Index("ix_llm_call_logs_status_timestamp", "validation_status", "timestamp"),
     )
 
+    def __init__(self, **kwargs: object) -> None:
+        """Accepte temporairement `provider` en entrée sans réintroduire l'attribut legacy."""
+        if "provider" in kwargs and "provider_compat" not in kwargs:
+            kwargs["provider_compat"] = kwargs.pop("provider")
+        super().__init__(**kwargs)
+
 
 class LlmCallLogOperationalMetadataModel(Base):
     """Isole les dimensions operationnelles d'un appel LLM journalise."""
