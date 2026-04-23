@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from app.infra.db.base import Base
-from app.infra.db.models.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService

@@ -2,14 +2,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.infra.db.base import Base
-from app.infra.db.models import (
-    LlmOutputSchemaModel,
+from app.infra.db.models import UserModel
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
     LlmUseCaseConfigModel,
-    UserModel,
+    PromptStatus,
 )
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService

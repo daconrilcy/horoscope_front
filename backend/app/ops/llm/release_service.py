@@ -16,11 +16,11 @@ from app.domain.llm.configuration.config_coherence_validator import (
     ValidationResult,
 )
 from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
-from app.infra.db.models.llm_prompt import PromptStatus
-from app.infra.db.models.llm_release import (
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_release import (
     LlmActiveReleaseModel,
     LlmReleaseSnapshotModel,
     ReleaseStatus,

@@ -20,10 +20,10 @@ from app.domain.llm.governance.prompt_governance_registry import (
     get_prompt_governance_registry,
 )
 from app.infra.db.base import Base
-from app.infra.db.models.llm_canonical_consumption import (
+from app.infra.db.models.llm.llm_canonical_consumption import (
     LlmCanonicalConsumptionAggregateModel,
 )
-from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 
 LEGACY_FEATURE_TO_CANONICAL: dict[str, str] = (

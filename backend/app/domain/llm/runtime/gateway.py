@@ -68,7 +68,9 @@ from app.domain.llm.runtime.provider_parameter_mapper import ProviderParameterMa
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.domain.llm.runtime.providers import is_provider_supported
 from app.domain.llm.runtime.repair import build_repair_prompt
-from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
 from app.infra.providers.llm.openai_responses_client import ResponsesClient
 
@@ -124,8 +126,8 @@ class LLMGateway:
         if not isinstance(db, Session):
             return False
 
-        from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-        from app.infra.db.models.llm_release import LlmActiveReleaseModel
+        from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+        from app.infra.db.models.llm.llm_release import LlmActiveReleaseModel
 
         has_active_release = (
             db.execute(select(LlmActiveReleaseModel.id).limit(1)).scalar_one_or_none() is not None

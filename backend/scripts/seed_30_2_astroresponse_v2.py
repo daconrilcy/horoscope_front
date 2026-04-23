@@ -15,7 +15,8 @@ import logging
 
 from sqlalchemy import select
 
-from app.infra.db.models import LlmOutputSchemaModel, LlmUseCaseConfigModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_prompt import LlmUseCaseConfigModel
 from app.infra.db.session import SessionLocal
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")

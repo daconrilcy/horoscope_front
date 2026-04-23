@@ -20,6 +20,7 @@ Stack imposée:
 - KISS: pas d'over-engineering.
 - Vérifier ton travail: tests + lint + exécution locale. Pas de "ça doit marcher".
 - Lisibilité > astuce. Noms explicites, petites fonctions, responsabilités claires.
+- Documentation minimale obligatoire: tout fichier applicatif nouveau ou significativement modifié doit contenir un commentaire global en français en haut du fichier et des docstrings en français pour les modules/classes/fonctions publiques ou non triviales.
 
 3) Workflow attendu à CHAQUE changement
 - Comprendre la demande, proposer un mini-plan (3–7 étapes max).
@@ -67,6 +68,7 @@ Frontend (React obligatoire):
 - Lint/format: Ruff (format + lint) recommandé.
 - Tests: Pytest.
 - Logging structuré, pas de prints.
+- Commentaires/docstrings: français obligatoire pour le commentaire global de fichier et les docstrings. Les commentaires doivent expliquer l'intention métier/technique, pas paraphraser le code.
 
 Commandes standard (exemples PowerShell, toujours après activation venv):
 - Lint/format:

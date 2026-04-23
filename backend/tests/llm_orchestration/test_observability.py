@@ -11,7 +11,7 @@ from app.domain.llm.runtime.observability_service import (
     count_evidence_warnings,
     log_call,
 )
-from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.user import UserModel
 
 

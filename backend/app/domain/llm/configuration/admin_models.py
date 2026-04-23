@@ -20,7 +20,7 @@ from app.domain.llm.runtime.execution_profiles_types import (
     VerbosityProfile,
 )
 from app.domain.llm.runtime.providers import is_provider_supported
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_prompt import PromptStatus
 
 
 class LlmOutputSchema(BaseModel):

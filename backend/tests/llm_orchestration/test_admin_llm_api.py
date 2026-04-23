@@ -11,8 +11,8 @@ from sqlalchemy.pool import StaticPool
 
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.main import app
@@ -149,9 +149,7 @@ def test_admin_llm_crud_flow():
         },
     )
     v2_id = draft2_resp.json()["data"]["id"]
-    client.patch(
-        f"/v1/admin/llm/use-cases/{use_case_key}/prompts/{v2_id}/publish", headers=headers
-    )
+    client.patch(f"/v1/admin/llm/use-cases/{use_case_key}/prompts/{v2_id}/publish", headers=headers)
 
     hist_after_second_publish = client.get(
         f"/v1/admin/llm/use-cases/{use_case_key}/prompts",

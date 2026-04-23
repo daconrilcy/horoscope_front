@@ -91,7 +91,7 @@ def test_legacy_usage_allowlist_detects_reintroduced_usage(tmp_path: Path) -> No
     app_root.mkdir(parents=True)
     scripts_root.mkdir(parents=True)
     (app_root / "rogue_service.py").write_text(
-        "from app.infra.db.models.llm_observability import LlmCallLogModel\n"
+        "from app.infra.db.models.llm.llm_observability import LlmCallLogModel\n"
         "VALUE = LlmCallLogModel.use_case\n",
         encoding="utf-8",
     )

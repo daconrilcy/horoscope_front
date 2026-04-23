@@ -620,7 +620,7 @@ class ChatGuidanceService:
     @staticmethod
     async def _get_default_persona_id(db: Session) -> uuid.UUID:
         """Récupère l'ID du persona par défaut (Astrologue Standard)."""
-        from app.infra.db.models.llm_persona import LlmPersonaModel
+        from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 
         stmt = (
             select(LlmPersonaModel.id).where(LlmPersonaModel.name == "Astrologue Standard").limit(1)
@@ -670,7 +670,7 @@ class ChatGuidanceService:
     @staticmethod
     def _load_persona_sync(db: Session, persona_id: uuid.UUID | None) -> object:
         """Charge le LlmPersonaModel correspondant au persona_id."""
-        from app.infra.db.models.llm_persona import LlmPersonaModel
+        from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 
         if persona_id is not None:
             stmt = select(LlmPersonaModel).where(LlmPersonaModel.id == persona_id).limit(1)

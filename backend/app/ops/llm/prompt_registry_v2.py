@@ -11,8 +11,11 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.core.datetime_provider import datetime_provider
-from app.infra.db.models import LlmUseCaseConfigModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 from app.infra.observability.metrics import increment_counter
 
 logger = logging.getLogger(__name__)
@@ -139,7 +142,7 @@ class PromptRegistryV2:
             output_schema = None
             if db_uc and db_uc.output_schema_id:
                 # We need LlmOutputSchemaModel
-                from app.infra.db.models import LlmOutputSchemaModel
+                from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 
                 schema_model = db.get(LlmOutputSchemaModel, uuid.UUID(db_uc.output_schema_id))
                 if schema_model:

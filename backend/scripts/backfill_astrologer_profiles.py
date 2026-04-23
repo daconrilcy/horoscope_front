@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from app.infra.db.models import (
     AstrologerProfileModel,
     AstrologerPromptProfileModel,
-    LlmPersonaModel,
 )
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import SessionLocal
 from scripts.seed_astrologers_6_profiles import ASTROLOGERS, _build_prompt_content
 

@@ -1,3 +1,6 @@
+# Modèle DB des profils d'exécution LLM.
+"""Déclare les paramètres d'exécution administrables des moteurs LLM."""
+
 from __future__ import annotations
 
 import uuid
@@ -17,14 +20,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_prompt import PromptStatus
 
 
 class LlmExecutionProfileModel(Base):
-    """
-    Admin-managed execution parameters for LLM engines (Story 66.11).
-    Decouples engine choices from prompt text.
-    """
+    """Sépare les choix moteur LLM du texte des prompts pour une cible donnée."""
 
     __tablename__ = "llm_execution_profiles"
 
@@ -64,11 +64,7 @@ class LlmExecutionProfileModel(Base):
 
     @validates("status")
     def validate_status_change(self, key: str, value: PromptStatus) -> PromptStatus:
-        """
-        AC3.1: Enforce provider support when transition to PUBLISHED.
-        AC5: Reject legacy nominal features on publication.
-        (Story 66.31: Integration with central validator)
-        """
+        """Valide le support provider et la taxonomie avant publication."""
         if value == PromptStatus.PUBLISHED:
             from app.domain.llm.configuration.coherence import validate_execution_profile
 

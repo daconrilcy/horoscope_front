@@ -19,7 +19,7 @@ import sys
 
 from sqlalchemy import select
 
-from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.session import SessionLocal
 from app.ops.llm.bootstrap.use_cases_seed import CHAT_RESPONSE_V1
 

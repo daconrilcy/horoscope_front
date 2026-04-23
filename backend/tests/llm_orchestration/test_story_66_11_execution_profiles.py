@@ -5,8 +5,8 @@ import pytest
 from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_prompt import PromptStatus
 
 
 @pytest.mark.asyncio
@@ -66,9 +66,8 @@ async def test_execution_profile_waterfall_resolution(db):
 @pytest.mark.asyncio
 async def test_execution_profile_assembly_ref(db):
     """Test Story 66.11: Assembly explicit reference to execution profile."""
-    from app.infra.db.models import LlmUseCaseConfigModel
-    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-    from app.infra.db.models.llm_prompt import LlmPromptVersionModel
+    from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 
     # 1. Setup Profile
     profile = LlmExecutionProfileModel(

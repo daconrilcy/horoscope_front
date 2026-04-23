@@ -70,7 +70,7 @@ class PerformanceQualificationService:
 
         snapshot = None
         if db and active_snapshot_id and (not active_snapshot_version or not manifest_entry_id):
-            from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+            from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 
             stmt = select(LlmReleaseSnapshotModel).where(
                 LlmReleaseSnapshotModel.id == active_snapshot_id
@@ -186,7 +186,6 @@ class PerformanceQualificationService:
             budget_remaining = max(0.0, 1.0 - (error_rate / slo.max_error_rate))
         else:
             budget_remaining = 1.0 if error_rate == 0 else 0.0
-
 
         return PerformanceQualificationReport(
             active_snapshot_id=active_snapshot_id,

@@ -11,8 +11,11 @@ from app.domain.llm.runtime.contracts import (
     UsageInfo,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 
 
 @pytest.mark.asyncio
@@ -97,8 +100,8 @@ async def test_error_mapping_reaches_client_v2(db):
     db.commit()
 
     # 1.5 Seed dummy assembly to satisfy Story 66.20 enforcement
-    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+    from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+    from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
     asm = PromptAssemblyConfigModel(
         feature="chat",

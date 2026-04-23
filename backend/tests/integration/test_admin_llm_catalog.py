@@ -24,21 +24,21 @@ from app.domain.llm.runtime.contracts import (
     UnknownUseCaseError,
     UsageInfo,
 )
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import (
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.infra.db.models.llm_release import (
+from app.infra.db.models.llm.llm_release import (
     LlmActiveReleaseModel,
     LlmReleaseSnapshotModel,
     ReleaseStatus,
 )
-from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
+from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.session import get_db_session
 from app.infra.db.utils import serialize_orm
 from app.main import app

@@ -1,3 +1,6 @@
+# Modèle DB d'agrégation de consommation canonique LLM.
+"""Déclare le read model utilisé pour piloter les coûts et volumes LLM canoniques."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -10,9 +13,7 @@ from app.infra.db.base import Base
 
 
 class LlmCanonicalConsumptionAggregateModel(Base):
-    """
-    Read model historise pour le pilotage canonique de consommation LLM.
-    """
+    """Historise les métriques agrégées de consommation LLM par période et dimensions."""
 
     __tablename__ = "llm_canonical_consumption_aggregates"
 

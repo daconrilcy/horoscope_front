@@ -1,3 +1,6 @@
+# Registre racine des modèles SQLAlchemy hors périmètre LLM.
+"""Expose les modèles DB non-LLM conservés dans le namespace racine."""
+
 from app.infra.db.models.astrologer import (
     AstrologerProfileModel,
     AstrologerPromptProfileModel,
@@ -67,17 +70,6 @@ from app.infra.db.models.enterprise_feature_usage_counters import (
 from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_canonical_consumption import (
-    LlmCanonicalConsumptionAggregateModel,
-)
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_observability import LlmCallLogModel, LlmReplaySnapshotModel
-from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
-from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
-from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
@@ -169,18 +161,6 @@ __all__ = [
     "FeatureFlagModel",
     "GeoPlaceResolvedModel",
     "GeocodingQueryCacheModel",
-    "LlmCallLogModel",
-    "LlmCanonicalConsumptionAggregateModel",
-    "LlmReplaySnapshotModel",
-    "LlmActiveReleaseModel",
-    "LlmReleaseSnapshotModel",
-    "LlmSamplePayloadModel",
-    "PromptAssemblyConfigModel",
-    "LlmExecutionProfileModel",
-    "LlmOutputSchemaModel",
-    "LlmPersonaModel",
-    "LlmPromptVersionModel",
-    "LlmUseCaseConfigModel",
     "PdfTemplateModel",
     "PersonaConfigModel",
     "PlanCatalogModel",

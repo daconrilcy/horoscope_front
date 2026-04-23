@@ -1,3 +1,6 @@
+# Modèles DB des prompts et contrats de use case LLM.
+"""Déclare les use cases LLM et leurs versions de prompts publiables."""
+
 from __future__ import annotations
 
 import uuid
@@ -22,10 +25,13 @@ from app.infra.db.base import Base
 
 
 def utc_now() -> datetime:
+    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
     return datetime_provider.utcnow()
 
 
 class PromptStatus(str, Enum):
+    """Liste les statuts de cycle de vie d'un prompt LLM."""
+
     DRAFT = "draft"
     PUBLISHED = "published"
     INACTIVE = "inactive"
@@ -33,6 +39,7 @@ class PromptStatus(str, Enum):
 
     @classmethod
     def normalize(cls, value: "PromptStatus | str") -> "PromptStatus":
+        """Normalise les anciens statuts vers les statuts actifs."""
         if value == cls.ARCHIVED or value == cls.ARCHIVED.value:
             return cls.INACTIVE
         if isinstance(value, cls):
@@ -41,10 +48,13 @@ class PromptStatus(str, Enum):
 
     @classmethod
     def inactive_values(cls) -> tuple[str, str]:
+        """Retourne les statuts considérés inactifs, y compris l'ancien statut archivé."""
         return (cls.INACTIVE.value, cls.ARCHIVED.value)
 
 
 class LlmUseCaseConfigModel(Base):
+    """Décrit le contrat fonctionnel et technique d'un use case LLM."""
+
     __tablename__ = "llm_use_case_configs"
 
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -77,6 +87,8 @@ class LlmUseCaseConfigModel(Base):
 
 
 class LlmPromptVersionModel(Base):
+    """Représente une version de prompt LLM liée à un use case."""
+
     __tablename__ = "llm_prompt_versions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

@@ -25,10 +25,10 @@ from app.domain.llm.runtime.contracts import (
     LLMExecutionRequest,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_prompt import PromptStatus
-from app.infra.db.models.llm_release import (
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_release import (
     LlmActiveReleaseModel,
     LlmReleaseSnapshotModel,
     ReleaseStatus,

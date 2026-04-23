@@ -1,3 +1,6 @@
+# Ce module valide le contrat public du provider DateTime backend.
+"""Tests unitaires du provider centralise de date et heure."""
+
 from __future__ import annotations
 
 from datetime import UTC
@@ -7,6 +10,7 @@ from app.core.datetime_provider import DatetimeProvider
 
 
 def test_utcnow_returns_timezone_aware_utc_datetime() -> None:
+    """Verifie que l'horloge UTC retourne un datetime timezone-aware."""
     provider = DatetimeProvider()
 
     value = provider.utcnow()
@@ -15,6 +19,7 @@ def test_utcnow_returns_timezone_aware_utc_datetime() -> None:
 
 
 def test_now_accepts_timezone_name() -> None:
+    """Verifie la resolution d'une timezone IANA passee sous forme de chaine."""
     provider = DatetimeProvider()
 
     value = provider.now("Europe/Paris")
@@ -24,6 +29,7 @@ def test_now_accepts_timezone_name() -> None:
 
 
 def test_today_accepts_timezone_object() -> None:
+    """Verifie le calcul de date courante avec une timezone explicite."""
     provider = DatetimeProvider()
 
     value = provider.today(ZoneInfo("UTC"))

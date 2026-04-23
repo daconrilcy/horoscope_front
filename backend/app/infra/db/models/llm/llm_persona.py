@@ -1,3 +1,6 @@
+# Modèle DB des personas LLM.
+"""Déclare les personas, tons et niveaux de verbosité utilisés par le prompting LLM."""
+
 from __future__ import annotations
 
 import uuid
@@ -19,10 +22,13 @@ from app.infra.db.base import Base
 
 
 def utc_now() -> datetime:
+    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
     return datetime_provider.utcnow()
 
 
 class PersonaTone(str, Enum):
+    """Liste les tons autorisés pour un persona LLM."""
+
     WARM = "warm"
     DIRECT = "direct"
     MYSTICAL = "mystical"
@@ -30,12 +36,16 @@ class PersonaTone(str, Enum):
 
 
 class PersonaVerbosity(str, Enum):
+    """Liste les niveaux de verbosité autorisés pour un persona LLM."""
+
     SHORT = "short"
     MEDIUM = "medium"
     LONG = "long"
 
 
 class LlmPersonaModel(Base):
+    """Décrit un persona LLM activable dans les flows de prompting."""
+
     __tablename__ = "llm_personas"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

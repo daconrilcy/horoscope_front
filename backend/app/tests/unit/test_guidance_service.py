@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import select
 
 from app.infra.db.base import Base
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine

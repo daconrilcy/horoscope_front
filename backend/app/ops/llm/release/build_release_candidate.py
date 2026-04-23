@@ -20,7 +20,7 @@ _BACKEND_ROOT = Path(__file__).resolve().parents[4]
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel  # noqa: E402
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel  # noqa: E402
 from app.infra.db.session import SessionLocal  # noqa: E402
 from app.ops.llm.services import ReleaseService  # noqa: E402
 

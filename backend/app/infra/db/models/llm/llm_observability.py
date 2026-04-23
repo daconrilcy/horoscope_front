@@ -1,3 +1,6 @@
+# Modèles DB d'observabilité et de rejeu LLM.
+"""Déclare les journaux d'appels LLM et les instantanés chiffrés de rejeu."""
+
 from __future__ import annotations
 
 import uuid
@@ -25,6 +28,8 @@ from app.infra.db.base import Base
 
 
 class LlmValidationStatus(str, Enum):
+    """Liste les états de validation persistés pour une réponse LLM."""
+
     VALID = "valid"
     REPAIR_SUCCESS = "repair_success"
     FALLBACK = "fallback"
@@ -32,10 +37,7 @@ class LlmValidationStatus(str, Enum):
 
 
 def map_status_to_enum(raw_status: str) -> LlmValidationStatus:
-    """
-    Maps gateway string status to DB Enum values.
-    Ensures consistency between runtime and storage.
-    """
+    """Convertit un statut gateway en statut DB canonique."""
     if raw_status in ["valid", "omitted"]:
         return LlmValidationStatus.VALID
     if raw_status == "repaired":
@@ -46,10 +48,7 @@ def map_status_to_enum(raw_status: str) -> LlmValidationStatus:
 
 
 class LlmCallLogModel(Base):
-    """
-    Logs every call to the LLM Gateway for observability and evaluation.
-    Sensitive user data is NEVER stored in clear text here.
-    """
+    """Journalise chaque appel gateway LLM sans stocker de données sensibles en clair."""
 
     __tablename__ = "llm_call_logs"
 
@@ -140,10 +139,7 @@ class LlmCallLogModel(Base):
 
 
 class LlmReplaySnapshotModel(Base):
-    """
-    Stores encrypted input snapshots for a short period to allow replaying requests.
-    TTL is much shorter than call logs (7 days).
-    """
+    """Stocke brièvement les entrées chiffrées nécessaires au rejeu contrôlé."""
 
     __tablename__ = "llm_replay_snapshots"
 

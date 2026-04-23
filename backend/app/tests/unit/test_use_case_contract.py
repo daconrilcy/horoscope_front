@@ -17,8 +17,12 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.base import Base
-from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 
 
 @pytest.fixture

@@ -3,16 +3,16 @@ from __future__ import annotations
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.llm_prompt import (
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.infra.db.models.llm_release import (
+from app.infra.db.models.llm.llm_release import (
     LlmActiveReleaseModel,
     LlmReleaseSnapshotModel,
 )
-from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
+from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 
 
 def get_active_prompt_version(db: Session, use_case_key: str) -> LlmPromptVersionModel | None:

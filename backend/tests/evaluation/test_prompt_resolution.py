@@ -7,10 +7,10 @@ import pytest
 from app.domain.llm.governance.feature_taxonomy import is_supported_feature
 from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import (
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,
@@ -90,7 +90,7 @@ async def test_prompt_resolution_matrix(
         # Create Output Schema for paid cases so the gateway resolves a real contract.
         schema_id = None
         if feat == "natal" and plan == "premium":
-            from app.infra.db.models import LlmOutputSchemaModel
+            from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
             from app.ops.llm.bootstrap.use_cases_seed import ASTRO_RESPONSE_V3_JSON_SCHEMA
 
             schema = LlmOutputSchemaModel(

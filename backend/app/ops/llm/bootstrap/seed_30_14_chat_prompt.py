@@ -13,8 +13,11 @@ import logging
 
 from sqlalchemy import select
 
-from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 from app.infra.db.session import SessionLocal
 from app.ops.llm.services import PromptLint, PromptRegistryV2, utc_now
 

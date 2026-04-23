@@ -22,7 +22,7 @@ from app.domain.llm.prompting.personas import compose_persona_block
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.domain.llm.runtime.contracts import is_reasoning_model
 from app.domain.llm.runtime.policy import get_hard_policy
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ def build_assembly_preview(
             PlaceholderResolutionStatus(name=p, status=status, value_preview=val_preview)
         )
 
-    from app.infra.db.models.llm_prompt import PromptStatus
+    from app.infra.db.models.llm.llm_prompt import PromptStatus
 
     return PromptAssemblyPreview(
         target=resolved.target,

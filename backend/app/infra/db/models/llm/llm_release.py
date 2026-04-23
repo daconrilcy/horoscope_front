@@ -1,3 +1,6 @@
+# Modèles DB de release LLM.
+"""Déclare les snapshots de release LLM et le pointeur de release active."""
+
 from __future__ import annotations
 
 import uuid
@@ -20,10 +23,13 @@ from app.infra.db.base import Base
 
 
 def utc_now() -> datetime:
+    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
     return datetime_provider.utcnow()
 
 
 class ReleaseStatus(str, Enum):
+    """Liste les statuts de cycle de vie d'une release LLM."""
+
     DRAFT = "draft"
     VALIDATED = "validated"
     ACTIVE = "active"
@@ -31,10 +37,7 @@ class ReleaseStatus(str, Enum):
 
 
 class LlmReleaseSnapshotModel(Base):
-    """
-    Story 66.32: Atomic release snapshot for LLM configurations.
-    Stores a frozen manifest of all assemblies, profiles, personas and schemas.
-    """
+    """Stocke un manifeste figé des assemblages, profils, personas et schémas LLM."""
 
     __tablename__ = "llm_release_snapshots"
 
@@ -60,10 +63,7 @@ class LlmReleaseSnapshotModel(Base):
 
 
 class LlmActiveReleaseModel(Base):
-    """
-    Story 66.32: Pointer to the currently active LLM release snapshot.
-    Only one row should exist in this table (or the one with the latest activated_at is used).
-    """
+    """Pointe vers le snapshot de release LLM actuellement actif."""
 
     __tablename__ = "llm_active_releases"
 

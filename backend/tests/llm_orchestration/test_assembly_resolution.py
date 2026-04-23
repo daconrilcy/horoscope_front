@@ -18,10 +18,13 @@ from app.domain.llm.runtime.contracts import (
     LLMExecutionRequest,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models import LlmUseCaseConfigModel
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 
 
 @pytest.mark.asyncio
@@ -454,7 +457,7 @@ async def test_gateway_assembly_chat_mode(db):
     db.add(config)
 
     # Story 66.35: must have an ExecutionProfile for supported features
-    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+    from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
     profile = LlmExecutionProfileModel(
         name="test chat profile",

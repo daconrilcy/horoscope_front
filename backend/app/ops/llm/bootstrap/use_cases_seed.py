@@ -9,7 +9,9 @@ from app.domain.llm.configuration.canonical_use_case_registry import (
     CANONICAL_USE_CASE_CONTRACTS,
     CHAT_RESPONSE_V1,
 )
-from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import LlmUseCaseConfigModel
 from app.infra.db.session import SessionLocal
 
 # Legacy test imports remain temporarily supported here while the seed module

@@ -19,7 +19,7 @@ from app.api.v1.schemas.admin_exports import (
 )
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
-from app.infra.db.models.llm_observability import LlmCallLogModel
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session

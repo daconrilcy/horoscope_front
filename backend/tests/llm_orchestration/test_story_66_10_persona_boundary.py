@@ -5,7 +5,7 @@ import pytest
 
 from app.domain.llm.prompting.persona_boundary import validate_persona_block
 from app.domain.llm.prompting.personas import compose_persona_block
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 
 
 def test_validate_persona_block_violations():

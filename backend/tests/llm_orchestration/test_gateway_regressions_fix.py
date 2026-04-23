@@ -80,9 +80,12 @@ async def test_observability_success_persists_to_db():
     from sqlalchemy.orm import sessionmaker
 
     from app.infra.db.base import Base
-    from app.infra.db.models import LlmPromptVersionModel, LlmUseCaseConfigModel
-    from app.infra.db.models.llm_observability import LlmCallLogModel
-    from app.infra.db.models.llm_prompt import PromptStatus
+    from app.infra.db.models.llm.llm_observability import LlmCallLogModel
+    from app.infra.db.models.llm.llm_prompt import (
+        LlmPromptVersionModel,
+        LlmUseCaseConfigModel,
+        PromptStatus,
+    )
 
     # 1. Setup in-memory DB
     engine = create_engine("sqlite:///:memory:")
@@ -152,7 +155,7 @@ async def test_observability_success_ignores_missing_fk_references():
     from sqlalchemy.orm import sessionmaker
 
     from app.infra.db.base import Base
-    from app.infra.db.models.llm_observability import LlmCallLogModel
+    from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=engine)

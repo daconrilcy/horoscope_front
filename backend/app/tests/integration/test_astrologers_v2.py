@@ -6,8 +6,8 @@ from app.infra.db.base import Base
 from app.infra.db.models import (
     AstrologerProfileModel,
     AstrologerPromptProfileModel,
-    LlmPersonaModel,
 )
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from scripts.seed_astrologers_6_profiles import ASTROLOGERS, seed_astrologers

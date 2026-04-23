@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, update
 from sqlalchemy.orm import sessionmaker
 
 from app.infra.db.base import Base
-from app.infra.db.models.llm_prompt import (
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,

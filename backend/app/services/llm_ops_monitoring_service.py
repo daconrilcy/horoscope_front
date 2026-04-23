@@ -15,11 +15,11 @@ from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.datetime_provider import datetime_provider
-from app.infra.db.models.llm_observability import (
+from app.infra.db.models.llm.llm_observability import (
     LlmCallLogModel,
     LlmValidationStatus,
 )
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.ops.llm.ops_contract import (
     NOMINAL_FAMILIES,
     REPAIR_MIN_OCCURRENCES,

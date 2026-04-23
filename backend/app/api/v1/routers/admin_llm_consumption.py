@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
-from app.infra.db.models.llm_observability import LlmCallLogModel
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session

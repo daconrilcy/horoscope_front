@@ -10,10 +10,10 @@ from app.domain.llm.configuration.config_coherence_validator import (
 from app.domain.llm.configuration.execution_profile_registry import (
     ExecutionProfileRegistry,
 )
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
-from app.infra.db.models.llm_prompt import (
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,

@@ -5,10 +5,13 @@ import pytest
 from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models import LlmUseCaseConfigModel
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 
 
 @pytest.mark.asyncio
@@ -79,7 +82,7 @@ async def test_reasoning_profile_openai_mapping(db):
 @pytest.mark.asyncio
 async def test_max_tokens_priority(db):
     """Test Story 66.18: max_output_tokens priority resolution."""
-    from app.infra.db.models.llm_prompt import LlmPromptVersionModel
+    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
 
     # 1. Setup Profile with max_tokens=1000
     profile = LlmExecutionProfileModel(

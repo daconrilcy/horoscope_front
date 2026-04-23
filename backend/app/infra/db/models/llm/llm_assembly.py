@@ -1,3 +1,6 @@
+# Modèle DB de configuration d'assemblage LLM.
+"""Déclare la table qui assemble prompts, personas et profils d'exécution LLM."""
+
 from __future__ import annotations
 
 import uuid
@@ -18,15 +21,18 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 
 def utc_now() -> datetime:
+    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
     return datetime_provider.utcnow()
 
 
 class PromptAssemblyConfigModel(Base):
+    """Représente une configuration d'assemblage publiée ou brouillon pour une cible LLM."""
+
     __tablename__ = "llm_assembly_configs"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -71,9 +77,7 @@ class PromptAssemblyConfigModel(Base):
 
     @validates("status")
     def validate_status_change(self, key: str, value: PromptStatus) -> PromptStatus:
-        """
-        AC5: Reject legacy nominal features on publication.
-        """
+        """Bloque la publication si la configuration référence une taxonomie legacy."""
         if value == PromptStatus.PUBLISHED:
             from app.domain.llm.governance.feature_taxonomy import (
                 NATAL_CANONICAL_FEATURE,

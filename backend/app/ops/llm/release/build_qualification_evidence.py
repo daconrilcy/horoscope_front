@@ -24,8 +24,8 @@ from app.domain.llm.runtime.contracts import (
     LLMExecutionRequest,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models.llm_prompt import LlmUseCaseConfigModel
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.models.llm.llm_prompt import LlmUseCaseConfigModel
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.session import SessionLocal
 from app.ops.llm.performance_qualification import PerformanceQualificationService
 from app.ops.llm.services import GoldenRegressionService

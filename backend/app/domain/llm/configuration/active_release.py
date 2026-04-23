@@ -9,7 +9,7 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.llm_release import LlmActiveReleaseModel
+from app.infra.db.models.llm.llm_release import LlmActiveReleaseModel
 
 
 async def get_active_release_id(session: Union[AsyncSession, Session]) -> Optional[uuid.UUID]:

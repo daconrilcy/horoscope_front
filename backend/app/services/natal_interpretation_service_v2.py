@@ -28,7 +28,7 @@ from app.domain.llm.prompting.schemas import (
     AstroResponseV3,
 )
 from app.domain.llm.runtime.contracts import GatewayResult, NatalExecutionInput
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
     UserNatalInterpretationModel,

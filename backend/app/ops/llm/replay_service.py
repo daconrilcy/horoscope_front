@@ -10,7 +10,7 @@ from app.core.config import settings
 from app.domain.llm.runtime.contracts import GatewayError, ReplayResult
 from app.domain.llm.runtime.crypto_utils import decrypt_input
 from app.domain.llm.runtime.observability_service import compute_input_hash
-from app.infra.db.models.llm_observability import (
+from app.infra.db.models.llm.llm_observability import (
     LlmCallLogModel,
     LlmReplaySnapshotModel,
     map_status_to_enum,

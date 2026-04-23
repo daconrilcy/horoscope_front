@@ -5,8 +5,8 @@ import pytest
 from app.domain.llm.configuration.assembly_resolver import build_assembly_preview
 from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 
 @pytest.fixture

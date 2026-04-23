@@ -47,6 +47,8 @@ Etablir un backend avec :
 8. **AC8 - Cohérence avec l architecture du projet** : la structure finale reste coherente avec l architecture de reference du monorepo (`api`, `core`, `domain`, `services`, `infra`) et ne reintroduit pas de nouvelle taxonomie parallele.
 9. **AC9 - Validation backend obligatoire** : la story n est consideree terminee que si les verifications locales backend dans le venv ont ete executees et tracees (`ruff check`, suites pytest ciblees ou completes justifiees), avec preuve que la migration structurelle n a pas casse les imports ni les points d entree critiques.
 10. **AC10 - Horloge backend centralisee** : tout nouvel acces applicatif a l heure ou a la date courante backend passe par un provider canonique unique (`DatetimeProvider`) positionne dans la couche `core`, afin d eviter les appels disperses a `datetime.now(...)`, `date.today()` ou helpers locaux equivalents.
+11. **AC11 - Modeles DB LLM regroupes et non legacy** : tous les modeles SQLAlchemy relevant du perimetre LLM actuellement places directement sous `backend/app/infra/db/models/` sont regroupes sous le sous-namespace canonique `backend/app/infra/db/models/llm/`, avec migration complete des imports backend, scripts et tests vers `app.infra.db.models.llm.*`, preuve que les nouveaux fichiers sont effectivement utilises par le runtime/tests, et absence de fichier racine, import ou shim legacy conservant l ancien chemin.
+12. **AC12 - Commentaires et docstrings en français** : chaque fichier applicatif cree ou significativement modifie par cette story contient un commentaire global en français en haut de fichier et des docstrings en français pour les modules, classes, fonctions publiques ou fonctions non triviales, afin d expliciter l intention sans paraphraser le code.
 
 ## Tasks / Subtasks
 
@@ -86,6 +88,25 @@ Etablir un backend avec :
   - [ ] Ajouter un `DatetimeProvider` canonique dans `backend/app/core/`.
   - [ ] Migrer les usages applicatifs backend vers ce provider.
   - [ ] Ajouter un garde-fou de non-reintroduction pour les acces directs a l horloge courante.
+
+- [x] **Task 7: Regrouper les modeles DB LLM sous `models/llm`** (AC: 2, 3, 6, 8, 9, 11)
+  - [x] Identifier tous les fichiers `llm_*` et modeles associes au domaine LLM sous `backend/app/infra/db/models/`.
+  - [x] Deplacer ces modeles sous `backend/app/infra/db/models/llm/` sans changer les noms de tables SQLAlchemy ni les schemas DB.
+  - [x] Mettre a jour tous les imports backend, scripts, migrations et tests vers `app.infra.db.models.llm.*`.
+  - [x] Mettre a jour les exports/barrels eventuels de `app.infra.db.models` pour conserver les imports publics explicitement acceptes.
+  - [x] Ajouter ou mettre a jour un commentaire global en français en haut de chaque fichier LLM deplace ou modifie.
+  - [x] Ajouter ou mettre a jour les docstrings en français des classes SQLAlchemy, helpers et fonctions non triviales touchees.
+  - [x] Verifier que chaque fichier de `backend/app/infra/db/models/llm/` est effectivement reference par au moins un import runtime, migration, bootstrap ou test pertinent.
+  - [x] Verifier qu aucun ancien fichier LLM racine, import `app.infra.db.models.llm_*`, alias de compatibilite ou shim legacy ne subsiste hors exception explicitement documentee et temporaire.
+  - [x] Ajouter ou ajuster un garde-fou qui detecte la reintroduction de nouveaux modeles LLM directement a la racine `models/`.
+  - [x] Executer les tests d import, les tests LLM DB touches et `ruff check` apres migration.
+
+- [ ] **Task 8: Normaliser la documentation inline des fichiers touches** (AC: 4, 7, 9, 12)
+  - [ ] Verifier les fichiers applicatifs crees ou significativement modifies pendant la story.
+  - [ ] Ajouter un commentaire global en français en haut de fichier quand il manque.
+  - [ ] Ajouter ou corriger les docstrings en français pour les modules, classes, fonctions publiques et fonctions non triviales.
+  - [ ] Eviter les commentaires redondants qui paraphrasent une ligne de code evidente.
+  - [ ] Lancer `ruff check` pour verifier que les ajouts restent conformes.
 
 ## Dev Notes
 
@@ -150,12 +171,21 @@ gpt-5
 - La migration `app.infrastructure -> app.infra` est positionnee en Task 1 comme demande.
 - La gouvernance "pas de nouveau dossier de base backend sans accord" est incluse dans le cadrage de la story.
 - 2026-04-23 : AC10 et une tache dediee a la centralisation des acces DateTime backend ont ete ajoutes pour imposer un provider d horloge canonique en couche `core`.
+- 2026-04-23 : AC11 et une tache dediee ont ete ajoutes pour regrouper les modeles DB LLM sous `backend/app/infra/db/models/llm/` et migrer les imports associes.
+- 2026-04-23 : AC11 renforcee pour exiger la preuve que les nouveaux fichiers `models/llm` sont bien utilises et qu aucun ancien chemin legacy, alias ou shim durable ne subsiste.
+- 2026-04-23 : AC12 ajoutee pour imposer un commentaire global en français en haut des fichiers touches et des docstrings en français sur les modules/classes/fonctions publiques ou non triviales.
+- 2026-04-23 : AC11 mise en oeuvre : les 9 modeles DB LLM ont ete deplaces sous `backend/app/infra/db/models/llm/`, les imports backend/scripts/tests ont ete migres, le barrel racine `app.infra.db.models` ne reexporte plus les symboles LLM, et le garde-fou `test_story_70_18_llm_model_namespace_guard.py` verifie l absence de fichiers/imports legacy ainsi que l usage effectif de chaque fichier canonique.
 
 ### File List
 
 - _bmad-output/implementation-artifacts/70-18-cleaner-la-structure-backend-et-converger-les-namespaces-techniques.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
+- backend/app/infra/db/models/__init__.py
+- backend/app/infra/db/models/llm/
+- backend/tests/unit/test_story_70_18_llm_model_namespace_guard.py
+- Imports LLM mis a jour dans backend/app, backend/scripts et backend/tests.
 
 ### Change Log
 
 - 2026-04-23 : creation de la story 70-18 pour nettoyer la structure backend et converger les namespaces techniques, avec priorite explicite sur la migration `app.infrastructure -> app.infra`.
+- 2026-04-23 : implementation AC11, regroupement des modeles DB LLM sous `app.infra.db.models.llm`, suppression des exports legacy LLM du barrel racine et ajout du garde-fou de namespace.

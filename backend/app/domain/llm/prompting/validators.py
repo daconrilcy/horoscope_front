@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.domain.llm.prompting.catalog import PROMPT_CATALOG
 from app.domain.llm.prompting.exceptions import ConfigurationError
-from app.infra.db.models import LlmUseCaseConfigModel
+from app.infra.db.models.llm.llm_prompt import LlmUseCaseConfigModel
 
 logger = logging.getLogger(__name__)
 

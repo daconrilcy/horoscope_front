@@ -1,3 +1,6 @@
+# Ce module empeche la reintroduction d'acces directs a l'horloge backend.
+"""Garde-fou Story 70-18 pour la centralisation des appels DateTime."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -9,6 +12,7 @@ SCRIPT_ROOTS = (PROJECT_ROOT / "scripts", PROJECT_ROOT / "tools")
 
 
 def test_backend_current_time_accesses_are_centralized() -> None:
+    """Verifie que le code applicatif utilise le provider DateTime canonique."""
     forbidden_patterns = ("datetime.now(", "date.today(")
     offenders: list[str] = []
 

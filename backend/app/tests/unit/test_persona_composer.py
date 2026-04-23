@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.domain.llm.prompting.personas import compose_persona_block
 from app.infra.db.models import AstrologerPromptProfileModel
-from app.infra.db.models.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
 
 
 def test_compose_persona_block_all_fields():

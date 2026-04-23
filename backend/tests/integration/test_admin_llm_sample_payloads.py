@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.api.dependencies.auth import require_admin_user
-from app.infra.db.models.llm_sample_payload import LlmSamplePayloadModel
+from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.session import get_db_session
 from app.main import app
 from tests.integration.app_db import open_app_db_session

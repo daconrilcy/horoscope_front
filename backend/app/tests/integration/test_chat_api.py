@@ -21,7 +21,7 @@ from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.feature_flag import FeatureFlagModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,

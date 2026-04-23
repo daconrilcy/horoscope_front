@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from app.infra.db.models import (
     AstrologerProfileModel,
     AstrologerPromptProfileModel,
-    LlmPersonaModel,
 )
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import SessionLocal
 
 logger = logging.getLogger(__name__)

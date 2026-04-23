@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 
 
 class ChatRepository:

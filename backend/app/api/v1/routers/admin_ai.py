@@ -14,7 +14,7 @@ from app.api.v1.schemas.admin_ai import (
     AdminAiUseCaseDetailResponse,
 )
 from app.core.datetime_provider import datetime_provider
-from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.session import get_db_session
 
 logger = logging.getLogger(__name__)

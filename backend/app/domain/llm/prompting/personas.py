@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from app.infra.db.models import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 
 logger = logging.getLogger(__name__)
 

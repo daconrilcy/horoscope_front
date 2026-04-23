@@ -23,11 +23,11 @@ from app.domain.llm.governance.prompt_governance_registry import (
 )
 from app.domain.llm.prompting.validators import validate_plan_rules_content
 from app.domain.llm.runtime.providers import is_provider_supported
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import PromptStatus
 
 logger = logging.getLogger(__name__)
 gov_logger = logging.getLogger("app.domain.llm.configuration.coherence")
@@ -518,7 +518,7 @@ class ConfigCoherenceValidator:
 
         if active_snapshot_id:
             # Validate the snapshot manifest instead of live tables
-            from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+            from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 
             if isinstance(self.session, AsyncSession):
                 snapshot = await self.session.get(LlmReleaseSnapshotModel, active_snapshot_id)

@@ -1,3 +1,6 @@
+# Modèle DB des payloads d'exemple LLM.
+"""Déclare les exemples d'entrée administrables pour qualifier les use cases LLM."""
+
 from __future__ import annotations
 
 import uuid
@@ -11,10 +14,13 @@ from app.infra.db.base import Base
 
 
 def utc_now() -> datetime:
+    """Retourne l'instant UTC centralisé pour les colonnes d'audit LLM."""
     return datetime_provider.utcnow()
 
 
 class LlmSamplePayloadModel(Base):
+    """Représente un payload d'exemple versionné par feature et locale."""
+
     __tablename__ = "llm_sample_payloads"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

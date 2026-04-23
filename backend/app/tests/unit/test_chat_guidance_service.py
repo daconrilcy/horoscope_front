@@ -13,7 +13,7 @@ from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstroCharacteristicModel,

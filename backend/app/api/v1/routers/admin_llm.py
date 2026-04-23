@@ -65,17 +65,17 @@ from app.domain.llm.runtime.contracts import (
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.domain.llm.runtime.observability import purge_expired_logs
 from app.infra.db.models.billing import UserSubscriptionModel
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_observability import LlmCallLogModel
-from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import (
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.repositories.llm.prompting_repository import (
     get_active_prompt_version as repo_get_active_prompt_version,

@@ -10,14 +10,13 @@ from sqlalchemy.orm import sessionmaker
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.base import Base
-from app.infra.db.models import (
-    LlmOutputSchemaModel,
-    LlmPersonaModel,
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
+    PromptStatus,
 )
-from app.infra.db.models.llm_persona import PersonaTone, PersonaVerbosity
-from app.infra.db.models.llm_prompt import PromptStatus
 
 
 @pytest.fixture

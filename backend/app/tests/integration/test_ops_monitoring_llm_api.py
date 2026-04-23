@@ -6,8 +6,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.infra.db.base import Base
-from app.infra.db.models.llm_observability import LlmCallLogModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService

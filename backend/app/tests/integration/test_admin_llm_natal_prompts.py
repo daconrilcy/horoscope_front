@@ -10,7 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.infra.db.models.llm_prompt import (
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,

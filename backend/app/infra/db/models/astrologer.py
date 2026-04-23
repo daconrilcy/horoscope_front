@@ -22,7 +22,7 @@ from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
 
 if TYPE_CHECKING:
-    from app.infra.db.models.llm_persona import LlmPersonaModel
+    from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 
 
 def utc_now() -> datetime:

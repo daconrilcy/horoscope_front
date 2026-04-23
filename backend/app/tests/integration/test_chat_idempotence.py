@@ -8,7 +8,7 @@ from app.application.llm.ai_engine_adapter import set_test_chat_generator
 from app.infra.db.base import Base
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user import UserModel
 from app.services.chat_guidance_service import ChatGuidanceService
 

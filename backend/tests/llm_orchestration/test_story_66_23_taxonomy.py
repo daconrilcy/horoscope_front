@@ -14,7 +14,7 @@ from app.domain.llm.governance.feature_taxonomy import (
     LEGACY_NATAL_FEATURE,
     NATAL_CANONICAL_FEATURE,
 )
-from app.infra.db.models.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_prompt import PromptStatus
 
 
 @pytest.mark.asyncio
@@ -144,7 +144,7 @@ async def test_assembly_admin_service_hardening():
 async def test_execution_profile_admin_hardening():
     """Test Story 66.23: ExecutionProfile validation REJETTE les clés legacy (AC11)."""
     # Ici on teste via le validateur SQLAlchemy injecté dans le modèle
-    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+    from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
     prof = LlmExecutionProfileModel(
         name="Test",

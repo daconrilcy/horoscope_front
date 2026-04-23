@@ -14,9 +14,9 @@ from app.domain.llm.governance.feature_taxonomy import (
     normalize_feature,
     normalize_subfeature,
 )
-from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm_prompt import PromptStatus
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_prompt import PromptStatus
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.utils import reconstruct_orm
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,10 @@ class ExecutionProfileRegistry:
         """Fetch the currently active release snapshot."""
         from sqlalchemy import desc
 
-        from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
+        from app.infra.db.models.llm.llm_release import (
+            LlmActiveReleaseModel,
+            LlmReleaseSnapshotModel,
+        )
 
         stmt = (
             select(LlmReleaseSnapshotModel)

@@ -100,7 +100,7 @@ async def test_integrated_template_handled_propagation(db):
                 assert obs.context_compensation_status == ContextCompensationStatus.TEMPLATE_HANDLED
 
                 # 2. Validate real DB persistence (Story 66.27 AC4)
-                from app.infra.db.models.llm_observability import LlmCallLogModel
+                from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 
                 stmt = select(LlmCallLogModel).where(LlmCallLogModel.request_id == "test-66-27")
                 log_entry = db.execute(stmt).scalar_one()
@@ -177,7 +177,7 @@ async def test_integrated_injector_applied_propagation(db):
                 assert obs.context_compensation_status == ContextCompensationStatus.INJECTOR_APPLIED
 
                 # 2. Validate real DB persistence
-                from app.infra.db.models.llm_observability import LlmCallLogModel
+                from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 
                 stmt = select(LlmCallLogModel).where(
                     LlmCallLogModel.request_id == "test-66-27-injected"
@@ -256,7 +256,7 @@ async def test_integrated_not_needed_propagation(db):
                 assert obs.context_compensation_status == ContextCompensationStatus.NOT_NEEDED
 
                 # 2. Validate real DB persistence
-                from app.infra.db.models.llm_observability import LlmCallLogModel
+                from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 
                 stmt = select(LlmCallLogModel).where(
                     LlmCallLogModel.request_id == "test-66-27-full"

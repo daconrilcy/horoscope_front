@@ -29,7 +29,7 @@ async def test_pipeline_nominal_flow(db):
     )
 
     # Seed a minimal config
-    from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 
     prompt = LlmPromptVersionModel(
         id=uuid.uuid4(),
@@ -84,8 +84,8 @@ async def test_pipeline_repair_flow(db):
     )
 
     # Seed a minimal config
-    from app.infra.db.models.llm_output_schema import LlmOutputSchemaModel
-    from app.infra.db.models.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+    from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 
     schema_id = uuid.uuid4()
     schema = LlmOutputSchemaModel(id=schema_id, name="Test Schema", json_schema={"type": "object"})

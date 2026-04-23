@@ -15,10 +15,10 @@ from app.domain.llm.governance.feature_taxonomy import (
     normalize_feature,
     normalize_subfeature,
 )
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.utils import reconstruct_orm, serialize_orm
 
 logger = logging.getLogger(__name__)
@@ -120,7 +120,10 @@ class AssemblyRegistry:
 
     async def _get_active_release_snapshot(self) -> Optional[LlmReleaseSnapshotModel]:
         """Fetch the currently active release snapshot."""
-        from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
+        from app.infra.db.models.llm.llm_release import (
+            LlmActiveReleaseModel,
+            LlmReleaseSnapshotModel,
+        )
 
         stmt = (
             select(LlmReleaseSnapshotModel)
@@ -137,7 +140,10 @@ class AssemblyRegistry:
 
         if not isinstance(self.session, Session):
             return None
-        from app.infra.db.models.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
+        from app.infra.db.models.llm.llm_release import (
+            LlmActiveReleaseModel,
+            LlmReleaseSnapshotModel,
+        )
 
         stmt = (
             select(LlmReleaseSnapshotModel)

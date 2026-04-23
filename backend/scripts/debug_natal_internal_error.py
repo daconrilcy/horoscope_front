@@ -8,7 +8,7 @@ import uuid
 
 from sqlalchemy import select
 
-from app.infra.db.models.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import SessionLocal
 from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import UserBirthProfileService

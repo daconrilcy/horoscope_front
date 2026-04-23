@@ -16,7 +16,7 @@ async def test_daily_path_is_nominal_canonical(db: Session):
     This proves that absorption of daily_prediction into horoscope_daily is complete.
     """
     # Seed required data
-    from app.infra.db.models.llm_persona import LlmPersonaModel
+    from app.infra.db.models.llm.llm_persona import LlmPersonaModel
     from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
         seed_horoscope_narrator_assembly,
     )

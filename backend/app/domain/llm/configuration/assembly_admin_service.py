@@ -19,8 +19,8 @@ from app.domain.llm.configuration.assembly_resolver import (
 )
 from app.domain.llm.runtime.observability import log_governance_event
 from app.domain.llm.runtime.providers import is_provider_supported
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ class AssemblyAdminService:
         provider = "openai"  # Default
 
         if config.execution_profile_ref:
-            from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+            from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
             stmt_p = select(LlmExecutionProfileModel.provider).where(
                 LlmExecutionProfileModel.id == config.execution_profile_ref

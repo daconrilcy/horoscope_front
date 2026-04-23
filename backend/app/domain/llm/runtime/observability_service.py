@@ -14,13 +14,14 @@ from app.core.datetime_provider import datetime_provider
 from app.core.sensitive_data import Sink, sanitize_payload
 from app.domain.llm.runtime.contracts import GatewayResult
 from app.domain.llm.runtime.crypto_utils import encrypt_input
-from app.infra.db.models import LlmPersonaModel, LlmPromptVersionModel
-from app.infra.db.models.llm_observability import (
+from app.infra.db.models.llm.llm_observability import (
     LlmCallLogModel,
     LlmReplaySnapshotModel,
     LlmValidationStatus,
     map_status_to_enum,
 )
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
 from app.infra.observability.metrics import increment_counter
 
 logger = logging.getLogger(__name__)

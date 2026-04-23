@@ -22,7 +22,7 @@ from app.domain.llm.runtime.contracts import (
     LLMExecutionRequest,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 from app.ops.llm.golden_regression_registry import (
     GOLDEN_REGISTRY,
     GoldenRegressionThresholds,

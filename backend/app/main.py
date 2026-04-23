@@ -124,9 +124,11 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from sqlalchemy.exc import IntegrityError, OperationalError
 
     from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
-    from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmPromptVersionModel
-    from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+    from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+    from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+    from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+    from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
     from app.infra.db.session import SessionLocal
     from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
     from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts

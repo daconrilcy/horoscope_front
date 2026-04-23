@@ -12,7 +12,7 @@ Run with:
 from sqlalchemy import select
 
 from app.domain.llm.runtime.contracts import EVIDENCE_ID_REGEX
-from app.infra.db.models import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.session import SessionLocal
 
 FIXED_SCHEMAS = {

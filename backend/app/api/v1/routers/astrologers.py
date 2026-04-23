@@ -15,9 +15,9 @@ from app.infra.db.models import (
     AstrologerProfileModel,
     AstrologerReviewModel,
     ChatConversationModel,
-    LlmPersonaModel,
     UserNatalInterpretationModel,
 )
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import get_db_session
 
 router = APIRouter(prefix="/v1/astrologers", tags=["astrologers"])

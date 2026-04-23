@@ -5,9 +5,12 @@ import pytest
 
 from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models import LlmUseCaseConfigModel
-from app.infra.db.models.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
 from app.ops.llm.prompt_registry_v2 import PromptRegistryV2
 
 
@@ -35,7 +38,7 @@ async def test_deprecated_use_case_redirection(db):
     )
     db.add(uc_config)
 
-    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+    from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
     prof = LlmExecutionProfileModel(
         name="test",
@@ -156,7 +159,7 @@ async def test_deprecated_full_redirection(db):
     if not existing_uc:
         db.add(uc_config)
 
-    from app.infra.db.models.llm_execution_profile import LlmExecutionProfileModel
+    from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
     prof = LlmExecutionProfileModel(
         name="test full",

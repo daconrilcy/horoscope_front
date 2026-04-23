@@ -1,6 +1,6 @@
 import uuid
 
-from app.infra.db.models.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
 
 
 def test_llm_persona_model_init():

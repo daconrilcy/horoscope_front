@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.session import get_db_session
 from app.ops.llm.services import ReleaseService
 

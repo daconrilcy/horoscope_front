@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import require_admin_user
 from app.domain.llm.runtime.contracts import GoldenRegressionReport
-from app.infra.db.models.llm_prompt import (
+from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,
