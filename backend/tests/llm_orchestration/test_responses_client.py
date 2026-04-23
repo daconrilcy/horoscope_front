@@ -29,9 +29,7 @@ async def test_responses_client_execute_success():
     mock_raw_response.parse.return_value = mock_response
     mock_raw_response.headers = {"x-request-id": "req-1"}
 
-    with patch(
-        "app.infra.providers.llm.openai_responses_client.AsyncOpenAI"
-    ) as mock_openai_class:
+    with patch("app.infra.providers.llm.openai_responses_client.AsyncOpenAI") as mock_openai_class:
         mock_client_instance = mock_openai_class.return_value
         # Mock with_raw_response chain
         mock_with_raw = MagicMock()
@@ -61,9 +59,7 @@ async def test_responses_client_execute_success():
 @pytest.mark.asyncio
 async def test_responses_client_passes_through_rate_limit():
     # Arrange
-    with patch(
-        "app.infra.providers.llm.openai_responses_client.AsyncOpenAI"
-    ) as mock_openai_class:
+    with patch("app.infra.providers.llm.openai_responses_client.AsyncOpenAI") as mock_openai_class:
         mock_client_instance = mock_openai_class.return_value
         mock_with_raw = MagicMock()
         mock_client_instance.with_raw_response = mock_with_raw

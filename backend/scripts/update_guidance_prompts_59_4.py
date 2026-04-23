@@ -1,11 +1,12 @@
 """Script to update guidance prompts with astro context block (Story 59.4)."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
@@ -15,7 +16,7 @@ from app.infra.db.session import SessionLocal
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime_provider.utcnow()
 
 
 NEW_GUIDANCE_PROMPT = """Tu es un astrologue expert. Génère une guidance pour {{locale}}.

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
@@ -53,7 +54,7 @@ class CanonicalEntitlementAlertHandlingService:
         if is_noop:
             return handling
 
-        now = datetime.now(timezone.utc)
+        now = datetime_provider.utcnow()
         if is_creation:
             handling = CanonicalEntitlementMutationAlertEventHandlingModel(
                 alert_event_id=alert_event_id,
@@ -99,7 +100,7 @@ class CanonicalEntitlementAlertHandlingService:
             alert_event_id=alert_event_id,
             handling_status=handling_status,
             handled_by_user_id=handled_by_user_id,
-            handled_at=handled_at or datetime.now(timezone.utc),
+            handled_at=handled_at or datetime_provider.utcnow(),
             ops_comment=ops_comment,
             suppression_key=suppression_key,
             request_id=request_id,

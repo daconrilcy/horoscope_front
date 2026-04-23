@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Literal
 
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.services.entitlement_types import QuotaDefinition, UsageState
 from app.services.quota_usage_service import QuotaUsageService
@@ -36,7 +37,7 @@ class LlmTokenUsageService:
         and creates a detailed usage log.
         """
         if ref_dt is None:
-            ref_dt = datetime.now(timezone.utc)
+            ref_dt = datetime_provider.utcnow()
 
         tokens_total = tokens_in + tokens_out
         usage_states: list[UsageState] = []

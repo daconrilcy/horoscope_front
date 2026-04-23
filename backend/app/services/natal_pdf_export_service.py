@@ -3,7 +3,6 @@ from __future__ import annotations
 import io
 import logging
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -12,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from xhtml2pdf import pisa
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
@@ -267,7 +267,7 @@ class NatalPdfExportService:
                 "ascendant_sign_label": ascendant_sign_label,
             },
             "disclaimers": get_disclaimers(locale),
-            "generated_at": datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M"),
+            "generated_at": datetime_provider.utcnow().strftime("%d/%m/%Y %H:%M"),
             "config": template_config,
             "config_runtime": config_runtime,
         }

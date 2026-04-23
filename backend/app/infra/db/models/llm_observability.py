@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from enum import Enum
 
 from sqlalchemy import (
@@ -20,6 +20,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
 
 
@@ -117,11 +118,11 @@ class LlmCallLogModel(Base):
     manifest_entry_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime_provider.utcnow(), nullable=False
     )
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc) + timedelta(days=90),
+        default=lambda: datetime_provider.utcnow() + timedelta(days=90),
         nullable=False,
     )
 
@@ -158,7 +159,7 @@ class LlmReplaySnapshotModel(Base):
 
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc) + timedelta(days=7),
+        default=lambda: datetime_provider.utcnow() + timedelta(days=7),
         nullable=False,
     )
 

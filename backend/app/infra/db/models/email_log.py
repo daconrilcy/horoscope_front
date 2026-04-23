@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
 
 
@@ -21,7 +22,7 @@ class EmailLogModel(Base):
     email_type: Mapped[str] = mapped_column(String(50), nullable=False)  # welcome, education, etc.
     recipient_email: Mapped[str] = mapped_column(String(255), nullable=False)
     sent_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime_provider.utcnow(), nullable=False
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False)  # sent, failed, skipped
     provider_message_id: Mapped[str | None] = mapped_column(String(255), nullable=True)

@@ -5,10 +5,11 @@ import argparse
 import logging
 import os
 import sys
-from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from app.core.datetime_provider import datetime_provider
 
 # Add backend to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -123,7 +124,7 @@ def migrate_counters(dry_run: bool = False) -> None:
                                 legacy.used_count,
                             )
                             existing.used_count = legacy.used_count
-                            existing.updated_at = datetime.now(timezone.utc)
+                            existing.updated_at = datetime_provider.utcnow()
                             stats["migrated"] += 1
                         else:
                             logger.info(

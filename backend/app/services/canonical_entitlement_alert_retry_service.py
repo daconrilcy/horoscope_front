@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
@@ -47,7 +48,7 @@ class CanonicalEntitlementAlertRetryService:
         limit: int | None = None,
         alert_event_id: int | None = None,
     ) -> AlertRetryRunResult:
-        effective_now = now_utc or datetime.now(timezone.utc)
+        effective_now = now_utc or datetime_provider.utcnow()
         candidates = CanonicalEntitlementAlertRetryService._load_candidates(
             db,
             alert_event_id=alert_event_id,

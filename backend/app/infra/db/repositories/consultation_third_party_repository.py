@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.consultation_third_party import (
     ConsultationThirdPartyProfileModel,
     ConsultationThirdPartyUsageModel,
@@ -83,7 +84,7 @@ class ConsultationThirdPartyRepository:
         # Also update the updated_at of the profile
         profile = self.db.get(ConsultationThirdPartyProfileModel, third_party_profile_id)
         if profile:
-            profile.updated_at = datetime.now(timezone.utc)
+            profile.updated_at = datetime_provider.utcnow()
             self.db.flush()
 
         return model

@@ -1,11 +1,12 @@
 """Script to update all prompts with Common Context header (Story 59.5)."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
@@ -15,7 +16,7 @@ from app.infra.db.session import SessionLocal
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime_provider.utcnow()
 
 
 COMMON_HEADER = """## Contexte de base — {{ use_case_name }}

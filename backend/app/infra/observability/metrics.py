@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from threading import Lock
 from typing import NamedTuple
+
+from app.core.datetime_provider import datetime_provider
 
 _COUNTERS: defaultdict[str, float] = defaultdict(float)
 _HISTOGRAMS: defaultdict[str, deque[float]] = defaultdict(deque)
@@ -25,7 +27,7 @@ class HistogramEvent(NamedTuple):
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime_provider.utcnow()
 
 
 def _prune_events(

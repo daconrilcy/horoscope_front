@@ -1,13 +1,14 @@
 # backend/app/infra/db/models/calibration.py
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlalchemy import Column, Date, DateTime, Float, Integer, String, UniqueConstraint
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
 
 
 def utc_now() -> datetime:
-    return datetime.now(UTC)
+    return datetime_provider.utcnow()
 
 
 class CalibrationRawDayModel(Base):

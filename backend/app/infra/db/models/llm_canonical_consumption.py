@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
 
 
@@ -43,7 +44,7 @@ class LlmCanonicalConsumptionAggregateModel(Base):
     refreshed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime_provider.utcnow(),
     )
 
     __table_args__ = (

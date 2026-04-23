@@ -1,9 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.enterprise_feature_usage_counters import (
     EnterpriseFeatureUsageCounterModel,
 )
@@ -29,7 +30,7 @@ class EnterpriseQuotaUsageService:
         require_feature_scope(feature_code, FeatureScope.B2B)
 
         if ref_dt is None:
-            ref_dt = datetime.now(timezone.utc)
+            ref_dt = datetime_provider.utcnow()
 
         window = QuotaWindowResolver.compute_window(
             quota.period_unit, quota.period_value, quota.reset_mode, ref_dt
@@ -83,7 +84,7 @@ class EnterpriseQuotaUsageService:
             raise ValueError("amount must be >= 1")
 
         if ref_dt is None:
-            ref_dt = datetime.now(timezone.utc)
+            ref_dt = datetime_provider.utcnow()
 
         window = QuotaWindowResolver.compute_window(
             quota.period_unit, quota.period_value, quota.reset_mode, ref_dt

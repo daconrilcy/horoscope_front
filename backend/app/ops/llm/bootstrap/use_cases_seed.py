@@ -84,9 +84,7 @@ def seed_use_cases(db: Session) -> None:
         stmt = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == contract.key)
         use_case = db.execute(stmt).scalar_one_or_none()
         eval_failure_threshold = (
-            contract.eval_failure_threshold
-            if contract.eval_failure_threshold is not None
-            else 0.20
+            contract.eval_failure_threshold if contract.eval_failure_threshold is not None else 0.20
         )
 
         schema_id = None

@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 import jwt
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.email_log import EmailLogModel
 from app.infra.db.models.user import UserModel
 from app.services.email_provider import get_email_provider
@@ -25,7 +26,7 @@ class EmailService:
     @staticmethod
     def _render_template(template_name: str, **kwargs) -> str:
         template = jinja_env.get_template(f"emails/{template_name}")
-        kwargs.setdefault("year", datetime.now().year)
+        kwargs.setdefault("year", datetime_provider.now().year)
         kwargs.setdefault("app_url", settings.app_url)
         return template.render(**kwargs)
 
@@ -37,7 +38,7 @@ class EmailService:
         payload = {
             "user_id": user_id,
             "email_type": email_type,
-            "exp": datetime.now(timezone.utc) + timedelta(days=30),
+            "exp": datetime_provider.utcnow() + timedelta(days=30),
         }
         return jwt.encode(payload, settings.jwt_secret_key, algorithm="HS256")
 
@@ -73,7 +74,7 @@ class EmailService:
         """
         AC2: Schedule 4 onboarding emails (J1, J3, J5, J7).
         """
-        from datetime import datetime, timedelta, timezone
+        from datetime import timedelta
 
         from app.core.scheduler import scheduler
 
@@ -83,7 +84,7 @@ class EmailService:
             logger.info(f"Skipping onboarding sequence scheduling for unsubscribed user {user_id}")
             return
 
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime_provider.utcnow()
 
         # J1: Education
         scheduler.add_job(

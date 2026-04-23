@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -13,6 +13,7 @@ from app.api.v1.schemas.admin_ai import (
     AdminAiMetricsResponse,
     AdminAiUseCaseDetailResponse,
 )
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.session import get_db_session
 
@@ -147,8 +148,8 @@ def _derive_failed_call_error_code(log: LlmCallLogModel) -> str:
 
 def _resolve_start_date(period: str) -> datetime:
     if period == "7d":
-        return datetime.now(UTC) - timedelta(days=7)
-    return datetime.now(UTC) - timedelta(days=30)
+        return datetime_provider.utcnow() - timedelta(days=7)
+    return datetime_provider.utcnow() - timedelta(days=30)
 
 
 def _empty_metric_row(category: dict[str, Any]) -> dict[str, Any]:

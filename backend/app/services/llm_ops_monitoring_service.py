@@ -7,13 +7,14 @@ ops gouvernée, sans dépendre des métriques instance-locales.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any
 
 from pydantic import BaseModel
 from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.llm_observability import (
     LlmCallLogModel,
     LlmValidationStatus,
@@ -131,7 +132,7 @@ class LlmOpsMonitoringService:
             selected_window = "24h"
 
         duration = WINDOWS[selected_window]
-        now = datetime.now(timezone.utc)
+        now = datetime_provider.utcnow()
         since = now - duration
 
         dashboards = {
@@ -430,7 +431,7 @@ class LlmOpsMonitoringService:
                         ),
                         "runbook_url": "https://ops.example.com/runbooks/llm-repair-rate",
                     },
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=datetime_provider.utcnow(),
                 )
             )
 
@@ -469,7 +470,7 @@ class LlmOpsMonitoringService:
                     "description": f"Mécanisme de compatibilité activé sur {row.feature}.",
                     "runbook_url": "https://ops.example.com/runbooks/llm-nominal-fallback",
                 },
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime_provider.utcnow(),
             )
             for row in db.execute(stmt).all()
         ]
@@ -545,7 +546,7 @@ class LlmOpsMonitoringService:
                         ),
                         "runbook_url": "https://ops.example.com/runbooks/llm-provider-divergence",
                     },
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=datetime_provider.utcnow(),
                 )
             )
         return alerts
@@ -597,7 +598,7 @@ class LlmOpsMonitoringService:
                         "description": "Combinaison interdite de pipeline et chemin observée.",
                         "runbook_url": "https://ops.example.com/runbooks/llm-impossible-state",
                     },
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=datetime_provider.utcnow(),
                 )
             )
         return alerts
@@ -638,7 +639,7 @@ class LlmOpsMonitoringService:
                         "description": "État 'unknown' non autorisé sur un chemin protégé.",
                         "runbook_url": "https://ops.example.com/runbooks/llm-unknown-violation",
                     },
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=datetime_provider.utcnow(),
                 )
             )
         return alerts

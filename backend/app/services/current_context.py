@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Protocol
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from app.core.datetime_provider import datetime_provider
+
 _MONTH_NAMES_FR = {
     1: "janvier",
     2: "février",
@@ -64,7 +66,7 @@ def build_current_prompt_context(
     current_datetime = None
     if timezone_name is not None:
         tz = ZoneInfo(timezone_name)
-        current_now = now.astimezone(tz) if now is not None else datetime.now(tz)
+        current_now = now.astimezone(tz) if now is not None else datetime_provider.now(tz)
         current_datetime = _format_current_datetime(current_now, timezone_name)
 
     current_location = profile.current_location_display or (

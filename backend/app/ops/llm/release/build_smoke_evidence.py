@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from app.core.datetime_provider import datetime_provider
+
 
 def _utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime_provider.utcnow().isoformat()
 
 
 def _load_json(path_str: str) -> dict[str, Any]:

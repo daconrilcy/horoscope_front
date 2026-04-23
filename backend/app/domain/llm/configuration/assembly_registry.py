@@ -9,6 +9,7 @@ from sqlalchemy import and_, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.datetime_provider import datetime_provider
 from app.domain.llm.governance.feature_taxonomy import (
     assert_nominal_feature_allowed,
     normalize_feature,
@@ -369,9 +370,8 @@ class AssemblyRegistry:
 
         # 2. Publish this config
         config.status = PromptStatus.PUBLISHED
-        from datetime import datetime, timezone
 
-        config.published_at = datetime.now(timezone.utc)
+        config.published_at = datetime_provider.utcnow()
 
         # 3. Handle session commit/flush
         from sqlalchemy.ext.asyncio import AsyncSession
@@ -423,9 +423,8 @@ class AssemblyRegistry:
                 raise ValueError(f"Target config {target_id} not found")
 
             target_config.status = PromptStatus.PUBLISHED
-            from datetime import datetime, timezone
 
-            target_config.published_at = datetime.now(timezone.utc)
+            target_config.published_at = datetime_provider.utcnow()
             return target_config
 
         if isinstance(self.session, AsyncSession):

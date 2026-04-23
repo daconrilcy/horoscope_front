@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
+
+from app.core.datetime_provider import datetime_provider
 
 if TYPE_CHECKING:
     from .editorial_builder import EditorialOutput
@@ -334,7 +336,7 @@ class V3EngineOutput:
     evidence_pack: V3EvidencePack | None = None  # Story 42.15
 
     run_metadata: dict[str, Any] = field(default_factory=dict)
-    computed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    computed_at: datetime = field(default_factory=lambda: datetime_provider.utcnow())
 
 
 @dataclass(frozen=True)

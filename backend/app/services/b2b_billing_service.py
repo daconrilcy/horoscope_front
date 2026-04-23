@@ -8,7 +8,7 @@ calcul des consommations et génération des relevés.
 from __future__ import annotations
 
 import logging
-from datetime import UTC, date, datetime, timezone
+from datetime import date, datetime, timezone
 from time import monotonic
 
 from pydantic import BaseModel
@@ -16,6 +16,7 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_billing import (
     EnterpriseAccountBillingPlanModel,
@@ -371,7 +372,7 @@ class B2BBillingService:
             "fixed_amount_cents": fixed_amount,
             "variable_amount_cents": variable_amount,
             "total_amount_cents": total_amount,
-            "closed_at": datetime.now(UTC).isoformat(),
+            "closed_at": datetime_provider.utcnow().isoformat(),
         }
         created = EnterpriseBillingCycleModel(
             enterprise_account_id=account_id,

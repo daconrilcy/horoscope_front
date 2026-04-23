@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.domain.llm.governance.prompt_governance_registry import get_prompt_governance_registry
 from app.domain.llm.prompting.catalog import PROMPT_CATALOG
 from app.domain.llm.runtime.contracts import FallbackType
@@ -229,7 +230,7 @@ class CommonContextBuilder:
                 )
 
         # 4. Dates & Periods
-        today = date.today()
+        today = datetime_provider.today()
         today_date = cls._format_date_fr(today)
         period_label = f"journée du {cls._format_date_fr(today)}"
         if period == "weekly":

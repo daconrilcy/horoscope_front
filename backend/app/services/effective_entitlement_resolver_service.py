@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.product_entitlements import (
     AccessMode,
@@ -226,7 +226,7 @@ class EffectiveEntitlementResolverService:
             for b, f_code in db.execute(stmt):
                 bindings_map[f_code] = b
 
-        ref_dt = datetime.now(timezone.utc)
+        ref_dt = datetime_provider.utcnow()
 
         for f_code in features:
             binding = bindings_map.get(f_code)

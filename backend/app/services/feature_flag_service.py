@@ -8,12 +8,13 @@ Les modules hors périmètre historique ont été retirés.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.feature_flag import FeatureFlagModel
 
 logger = logging.getLogger(__name__)
@@ -208,7 +209,7 @@ class FeatureFlagService:
         model.target_roles_csv = FeatureFlagService._serialize_roles(payload.target_roles)
         model.target_user_ids_csv = FeatureFlagService._serialize_user_ids(payload.target_user_ids)
         model.updated_by_user_id = updated_by_user_id
-        model.updated_at = datetime.now(timezone.utc)
+        model.updated_at = datetime_provider.utcnow()
         db.flush()
         logger.info(
             "feature_flag_updated key=%s enabled=%s target_roles=%s target_users=%s updated_by=%s",

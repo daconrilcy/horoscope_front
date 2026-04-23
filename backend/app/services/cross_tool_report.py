@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import UTC, datetime
 from typing import Mapping
+
+from app.core.datetime_provider import datetime_provider
 
 MetricValues = Mapping[str, float]
 
@@ -98,7 +99,7 @@ def build_run_report(
 
     return {
         "dataset_id": dataset_id,
-        "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "generated_at": datetime_provider.utcnow().isoformat().replace("+00:00", "Z"),
         "dev_only": True,
         "summary": {
             "cases_count": len(case_reports),

@@ -7,12 +7,13 @@ import math
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -393,7 +394,7 @@ class GeocodingService:
         )
 
         if not nocache:
-            now = datetime.now(timezone.utc)
+            now = datetime_provider.utcnow()
             cached = db.execute(
                 select(GeocodingQueryCacheModel)
                 .where(GeocodingQueryCacheModel.query_key == query_key)
@@ -417,7 +418,7 @@ class GeocodingService:
         results = cls.search(query, limit, country_code=country_code, lang=lang)
 
         if not nocache:
-            expires_at = datetime.now(timezone.utc) + timedelta(
+            expires_at = datetime_provider.utcnow() + timedelta(
                 seconds=settings.geocoding_cache_ttl_seconds
             )
             serialized = json.dumps([r.model_dump(mode="json") for r in results])

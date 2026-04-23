@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.services.daily_prediction_service import DailyPredictionService
 from app.services.user_birth_profile_service import UserBirthProfileService
 
@@ -47,7 +48,7 @@ class AstroContextData(BaseModel):
     """Aggregated astro data for LLM injection."""
 
     user_id: int
-    computed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    computed_at: datetime = Field(default_factory=lambda: datetime_provider.utcnow())
     period_covered: PeriodCovered
     precision_level: Literal["full", "degraded"]
     lunar_phase: str

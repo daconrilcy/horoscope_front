@@ -8,12 +8,13 @@ permettant de personnaliser le ton, le style et le format du contenu généré.
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
 from app.infra.observability.metrics import increment_counter
@@ -134,8 +135,8 @@ class B2BEditorialService:
             preferred_terms=[],
             avoided_terms=[],
             created_by_credential_id=None,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime_provider.utcnow(),
+            updated_at=datetime_provider.utcnow(),
         )
 
     @staticmethod

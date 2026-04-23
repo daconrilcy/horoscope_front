@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import desc, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.llm_persona import LlmPersonaModel
@@ -98,7 +99,7 @@ class ChatRepository:
         self.db.add(model)
         conversation = self.db.get(ChatConversationModel, conversation_id)
         if conversation is not None:
-            conversation.updated_at = datetime.now(timezone.utc)
+            conversation.updated_at = datetime_provider.utcnow()
         self.db.flush()
         return model
 

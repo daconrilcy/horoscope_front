@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
@@ -39,7 +38,7 @@ class CanonicalEntitlementMutationAuditReviewService:
         if audit is None:
             raise AuditNotFoundError(audit_id)
 
-        now = datetime.now(timezone.utc)
+        now = datetime_provider.utcnow()
         review = CanonicalEntitlementMutationAuditReviewService._get_review_by_audit_id(
             db, audit_id
         )

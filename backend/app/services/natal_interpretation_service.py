@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.application.llm.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
+from app.core.datetime_provider import datetime_provider
 from app.services.current_context import build_current_prompt_context
 from app.services.user_birth_profile_service import UserBirthProfileData
 from app.services.user_natal_chart_service import UserNatalChartReadData
@@ -87,7 +88,7 @@ UNKNOWN_LOCATION_SENTINELS = {"", "unknown", "non spécifié"}
 class NatalInterpretationMetadata(BaseModel):
     """Métadonnées de l'interprétation."""
 
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime_provider.utcnow())
     cached: bool = False
     degraded_mode: str | None = None
     tokens_used: int = 0

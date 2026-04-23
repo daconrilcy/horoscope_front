@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.config_text import ConfigTextModel
 from app.infra.db.models.editorial_template import EditorialTemplateVersionModel
@@ -262,7 +263,7 @@ def _ensure_editorial_templates_seeded(db: Session) -> None:
         item[0]
         for item in db.execute(select(EditorialTemplateVersionModel.template_code).distinct()).all()
     }
-    now = datetime.now(timezone.utc)
+    now = datetime_provider.utcnow()
     for item in DEFAULT_EDITORIAL_TEMPLATES:
         if item["template_code"] in existing_codes:
             continue
@@ -592,7 +593,7 @@ def create_editorial_template_version(
         expected_tags=payload.expected_tags,
         example_render=payload.example_render,
         status="published",
-        published_at=datetime.now(timezone.utc),
+        published_at=datetime_provider.utcnow(),
         created_by_user_id=current_user.id,
     )
     db.add(version)
@@ -674,7 +675,7 @@ def rollback_editorial_template(
     if current_active and current_active.id != target.id:
         current_active.status = "archived"
     target.status = "published"
-    target.published_at = datetime.now(timezone.utc)
+    target.published_at = datetime_provider.utcnow()
     db.flush()
     _record_audit_event(
         db,

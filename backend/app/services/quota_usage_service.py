@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.services.entitlement_types import QuotaDefinition, UsageState
@@ -81,7 +82,7 @@ class QuotaUsageService:
         require_feature_scope(feature_code, FeatureScope.B2C)
 
         if ref_dt is None:
-            ref_dt = datetime.now(timezone.utc)
+            ref_dt = datetime_provider.utcnow()
 
         anchor_start, anchor_end = QuotaUsageService._resolve_billing_cycle_anchor(
             db,
@@ -147,7 +148,7 @@ class QuotaUsageService:
             raise ValueError("amount must be >= 1")
 
         if ref_dt is None:
-            ref_dt = datetime.now(timezone.utc)
+            ref_dt = datetime_provider.utcnow()
 
         anchor_start, anchor_end = QuotaUsageService._resolve_billing_cycle_anchor(
             db,
@@ -220,7 +221,7 @@ class QuotaUsageService:
             raise ValueError("amount must be >= 1")
 
         if ref_dt is None:
-            ref_dt = datetime.now(timezone.utc)
+            ref_dt = datetime_provider.utcnow()
 
         anchor_start, anchor_end = QuotaUsageService._resolve_billing_cycle_anchor(
             db,

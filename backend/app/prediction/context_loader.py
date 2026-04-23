@@ -6,6 +6,7 @@ from typing import Mapping
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
@@ -69,7 +70,7 @@ class PredictionContextLoader:
                                    or if required components are empty.
         """
         if reference_date is None:
-            reference_date = date.today()
+            reference_date = datetime_provider.today()
 
         # 1. Resolve reference_version_id
         rv_model = db.scalar(

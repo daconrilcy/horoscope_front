@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.daily_prediction import (
     DailyPredictionCategoryScoreModel,
     DailyPredictionRunModel,
@@ -190,7 +191,7 @@ class DailyPredictionRepository:
             overall_summary=overall_summary,
             overall_tone=overall_tone,
             main_turning_point_at=main_turning_point_at,
-            computed_at=datetime.now(UTC),
+            computed_at=datetime_provider.utcnow(),
         )
         self.db.add(run)
         self.db.flush()
@@ -402,7 +403,7 @@ class DailyPredictionRepository:
             )
 
             run.input_hash = input_hash
-            run.computed_at = datetime.now(UTC)
+            run.computed_at = datetime_provider.utcnow()
             run.needs_recompute = True
             self.db.flush()
             self.db.expire(run, ["category_scores", "turning_points", "time_blocks"])

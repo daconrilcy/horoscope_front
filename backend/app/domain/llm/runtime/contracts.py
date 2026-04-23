@@ -1,11 +1,13 @@
 """Canonical runtime contracts entrypoint."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from app.core.datetime_provider import datetime_provider
 
 EVIDENCE_ID_REGEX = r"^[A-Z0-9_\.:-]{3,80}$"
 
@@ -426,7 +428,7 @@ class PerformanceQualificationReport(BaseModel):
     budget_remaining: float
     verdict: Literal["go", "no-go", "go-with-constraints"]
     constraints: List[str] = Field(default_factory=list)
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime_provider.utcnow())
 
 
 class GoldenRegressionResult(BaseModel):
@@ -450,7 +452,7 @@ class GoldenRegressionReport(BaseModel):
     failed: int
     constrained: int
     results: List[GoldenRegressionResult] = Field(default_factory=list)
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime_provider.utcnow())
 
 
 class GatewayError(Exception):

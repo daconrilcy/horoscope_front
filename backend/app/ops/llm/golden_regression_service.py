@@ -5,7 +5,6 @@ import os
 import re
 import uuid
 from collections.abc import Mapping
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
@@ -13,6 +12,7 @@ import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionFlags,
@@ -600,5 +600,5 @@ class GoldenRegressionService:
             failed=failed_count,
             constrained=constrained_count,
             results=results,
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime_provider.utcnow(),
         )

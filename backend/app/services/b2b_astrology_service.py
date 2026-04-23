@@ -7,13 +7,14 @@ notamment la génération de résumés hebdomadaires par signe.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.reference import SignModel
 from app.services.b2b_editorial_service import B2BEditorialConfigData, B2BEditorialService
 
@@ -108,6 +109,6 @@ class B2BAstrologyService:
         return WeeklyBySignData(
             api_version="v1",
             reference_version=settings.active_reference_version,
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime_provider.utcnow(),
             items=items,
         )

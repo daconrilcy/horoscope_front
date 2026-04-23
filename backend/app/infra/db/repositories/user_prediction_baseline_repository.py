@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.user_prediction_baseline import (
     BaselineGranularity,
     UserPredictionBaselineModel,
@@ -288,7 +289,7 @@ class UserPredictionBaselineRepository:
         model.p50 = float(stats["p50"])
         model.p90 = float(stats["p90"])
         model.sample_size_days = int(stats["sample_size_days"])
-        model.computed_at = datetime.now(UTC)
+        model.computed_at = datetime_provider.utcnow()
 
     def _get_baseline_model(
         self,

@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.integrations.stripe_client import get_stripe_client
 
@@ -234,7 +235,7 @@ class StripeBillingProfileService:
         profile.last_stripe_event_id = event_id
         profile.last_stripe_event_created = event_created
         profile.last_stripe_event_type = event_type
-        profile.synced_at = datetime.now(timezone.utc)
+        profile.synced_at = datetime_provider.utcnow()
 
         # 5. Invalidation du cache de facturation (Story 61.58)
         # Import retardé pour éviter les dépendances circulaires
@@ -356,7 +357,7 @@ class StripeBillingProfileService:
             profile.scheduled_change_effective_at = None
             return
 
-        now_ts = datetime.now(timezone.utc).timestamp()
+        now_ts = datetime_provider.utcnow().timestamp()
         # On cherche la prochaine phase dont le début est futur
         next_phase = next(
             (p for p in phases if p.get("start_date", 0) > now_ts),

@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.observability.metrics import increment_counter
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class PricingExperimentEvent(BaseModel):
     event_version: str = EVENT_VERSION
     variant_id: str
     user_segment: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime_provider.utcnow())
     request_id: str | None = None
     user_id: int | None = None
     plan_code: str | None = None

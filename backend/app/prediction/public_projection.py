@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
 from app.prediction.public_astro_daily_events import PublicAstroDailyEventsPolicy
@@ -2062,7 +2063,9 @@ def _deserialize_evidence_pack(payload: dict[str, Any]) -> V3EvidencePack:
         )
 
     generated_at_raw = payload.get("generated_at")
-    generated_at = datetime.fromisoformat(generated_at_raw) if generated_at_raw else datetime.now()
+    generated_at = (
+        datetime.fromisoformat(generated_at_raw) if generated_at_raw else datetime_provider.now()
+    )
 
     return V3EvidencePack(
         version=payload.get("version", "unknown"),

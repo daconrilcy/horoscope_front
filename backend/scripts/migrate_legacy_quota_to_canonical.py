@@ -25,6 +25,7 @@ from typing import Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.billing import UserDailyQuotaUsageModel
 from app.infra.db.models.product_entitlements import (
     FeatureCatalogModel,
@@ -181,8 +182,8 @@ def _filter_rows_for_window(
 
 
 def migrate(days: int | None = None, dry_run: bool = False) -> dict[str, int]:
-    today = datetime.now(UTC).date()
-    ref_dt = datetime.now(UTC)
+    today = datetime_provider.utcnow().date()
+    ref_dt = datetime_provider.utcnow()
     cutoff = _resolve_row_cutoff(today=today, ref_dt=ref_dt, days=days)
     stats = {"processed": 0, "created_or_updated": 0, "skipped_disabled": 0, "anomalies": 0}
 

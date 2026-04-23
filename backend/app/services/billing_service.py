@@ -19,6 +19,7 @@ from sqlalchemy import case, desc, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.billing import (
     BillingPlanModel,
     UserSubscriptionModel,
@@ -173,13 +174,13 @@ class BillingService:
         Calcule l'usage des tokens pour un utilisateur sur une période donnée.
         Agrége les données depuis user_token_usage_logs.
         """
-        from datetime import timedelta, timezone
+        from datetime import timedelta
 
         from sqlalchemy import func
 
         from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 
-        now = datetime.now(timezone.utc)
+        now = datetime_provider.utcnow()
         window_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         window_end = window_start + timedelta(days=1)
         unit = "day"

@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.repositories.user_prediction_baseline_repository import (
     UserPredictionBaselineRepository,
 )
@@ -88,7 +89,9 @@ class RelativeScoringService:
                 results[b.category_code][V3Granularity.SEASON.value] = b
 
         # 3. SLOT level (We use current time to find the active slot)
-        now_local = datetime.now()  # This is a bit weak, should ideally use request context
+        now_local = (
+            datetime_provider.now()
+        )  # This is a bit weak, should ideally use request context
         # But for snapshots, we might look for common slots
         current_slot = self._get_time_slot(now_local)
         slot_baselines = repo.get_latest_baselines_for_user(

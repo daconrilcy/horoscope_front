@@ -8,7 +8,7 @@ pour les comptes entreprise B2B.
 from __future__ import annotations
 
 import hmac
-from datetime import datetime, timezone
+from datetime import datetime
 from hashlib import sha256
 from secrets import token_urlsafe
 
@@ -18,13 +18,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 
 
 def utc_now() -> datetime:
     """Retourne l'instant actuel en UTC."""
-    return datetime.now(timezone.utc)
+    return datetime_provider.utcnow()
 
 
 class EnterpriseCredentialsServiceError(Exception):

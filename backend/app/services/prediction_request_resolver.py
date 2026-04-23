@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.core.versions import LEGACY_RULESET_VERSION, get_active_ruleset_version
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
@@ -170,7 +171,7 @@ class PredictionRequestResolver:
     def _resolve_date(self, date_local: date | None, tz_str: str) -> date:
         if date_local is not None:
             return date_local
-        return datetime.now(ZoneInfo(tz_str)).date()
+        return datetime_provider.today(ZoneInfo(tz_str))
 
     def _resolve_natal_chart(self, db: Session, user_id: int) -> dict[str, Any]:
         from app.services.daily_prediction_types import DailyPredictionServiceError

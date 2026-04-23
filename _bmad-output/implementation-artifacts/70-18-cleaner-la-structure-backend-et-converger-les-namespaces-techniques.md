@@ -46,6 +46,7 @@ Etablir un backend avec :
 7. **AC7 - Aucun refactor cosmétique massif** : le nettoyage reste cible, oriente structure et maintenabilite. Il n introduit pas de refonte de style ou de deplacement sans justification fonctionnelle ou architecturale claire.
 8. **AC8 - Cohérence avec l architecture du projet** : la structure finale reste coherente avec l architecture de reference du monorepo (`api`, `core`, `domain`, `services`, `infra`) et ne reintroduit pas de nouvelle taxonomie parallele.
 9. **AC9 - Validation backend obligatoire** : la story n est consideree terminee que si les verifications locales backend dans le venv ont ete executees et tracees (`ruff check`, suites pytest ciblees ou completes justifiees), avec preuve que la migration structurelle n a pas casse les imports ni les points d entree critiques.
+10. **AC10 - Horloge backend centralisee** : tout nouvel acces applicatif a l heure ou a la date courante backend passe par un provider canonique unique (`DatetimeProvider`) positionne dans la couche `core`, afin d eviter les appels disperses a `datetime.now(...)`, `date.today()` ou helpers locaux equivalents.
 
 ## Tasks / Subtasks
 
@@ -79,6 +80,12 @@ Etablir un backend avec :
   - [ ] Executer une campagne `pytest -q` ciblee ou complete justifiee sur les zones touchees.
   - [ ] Verifier que les imports critiques backend demarrent toujours correctement apres convergence.
   - [ ] Lister clairement les limites restantes et les prochains dossiers potentiellement a converger.
+
+- [ ] **Task 6: Centraliser les acces DateTime backend** (AC: 8, 9, 10)
+  - [ ] Inventorier les appels backend a `datetime.now(...)`, `date.today()` et helpers locaux du type `utc_now()`.
+  - [ ] Ajouter un `DatetimeProvider` canonique dans `backend/app/core/`.
+  - [ ] Migrer les usages applicatifs backend vers ce provider.
+  - [ ] Ajouter un garde-fou de non-reintroduction pour les acces directs a l horloge courante.
 
 ## Dev Notes
 
@@ -142,6 +149,7 @@ gpt-5
 - Story 70-18 creee pour cadrer le nettoyage structurel backend au-dela du seul perimetre LLM.
 - La migration `app.infrastructure -> app.infra` est positionnee en Task 1 comme demande.
 - La gouvernance "pas de nouveau dossier de base backend sans accord" est incluse dans le cadrage de la story.
+- 2026-04-23 : AC10 et une tache dediee a la centralisation des acces DateTime backend ont ete ajoutes pour imposer un provider d horloge canonique en couche `core`.
 
 ### File List
 

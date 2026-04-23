@@ -7,13 +7,14 @@ conversations, latence, erreurs, quotas et expérimentations tarifaires.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.observability.metrics import (
     get_counter_sum_in_window,
@@ -477,7 +478,7 @@ class OpsMonitoringService:
         min_sample_size = max(1, settings.pricing_experiment_min_sample_size)
 
         if db is not None:
-            since = datetime.now(timezone.utc) - duration
+            since = datetime_provider.utcnow() - duration
             rows = db.scalars(
                 select(AuditEventModel).where(
                     AuditEventModel.action == "pricing_experiment_event",

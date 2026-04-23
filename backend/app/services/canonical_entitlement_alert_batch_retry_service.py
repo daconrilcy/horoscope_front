@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
@@ -53,7 +54,7 @@ class CanonicalEntitlementAlertBatchRetryService:
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ) -> BatchRetryResult:
-        effective_now = datetime.now(timezone.utc)
+        effective_now = datetime_provider.utcnow()
         candidates = CanonicalEntitlementAlertBatchRetryService._load_batch_candidates(
             db,
             limit=limit,

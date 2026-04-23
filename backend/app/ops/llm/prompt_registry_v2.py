@@ -3,13 +3,14 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from threading import Lock
 from typing import Any, Dict, Optional, Tuple
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models import LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.observability.metrics import increment_counter
@@ -22,7 +23,7 @@ _cache_lock = Lock()
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime_provider.utcnow()
 
 
 class PromptRegistryV2:

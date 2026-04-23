@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -9,6 +9,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
@@ -53,7 +54,7 @@ def get_kpis_snapshot(
     Covers total users, active users (7d/30d), MRR, and trials.
     """
     request_id = resolve_request_id(request)
-    now = datetime.now(UTC)
+    now = datetime_provider.utcnow()
 
     try:
         # 1. Inscrits totaux
@@ -137,7 +138,7 @@ def get_kpis_flux(
     Get flow KPIs (new users, churn, revenue) for a given period and plan segment.
     """
     request_id = resolve_request_id(request)
-    now = datetime.now(UTC)
+    now = datetime_provider.utcnow()
 
     # 1. Period calculation
     if period == "7d":
@@ -247,7 +248,7 @@ def get_kpis_billing(
     Get billing health KPIs (payment failures, estimated revenue) for a given period and plan.
     """
     request_id = resolve_request_id(request)
-    now = datetime.now(UTC)
+    now = datetime_provider.utcnow()
 
     # 1. Period calculation
     if period == "7d":

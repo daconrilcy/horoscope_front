@@ -4,7 +4,6 @@ import json
 import logging
 import re
 import uuid
-from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from sqlalchemy import select
@@ -17,6 +16,7 @@ from app.api.v1.schemas.natal_interpretation import (
 )
 from app.application.llm.ai_engine_adapter import AIEngineAdapter
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.domain.llm.prompting.schemas import (
@@ -777,7 +777,7 @@ class NatalInterpretationServiceV2:
 
         db.flush()
         meta.id = primary.id
-        meta.persisted_at = primary.created_at or datetime.now(timezone.utc)
+        meta.persisted_at = primary.created_at or datetime_provider.utcnow()
 
         return NatalInterpretationResponse(
             data=NatalInterpretationData(
@@ -875,7 +875,7 @@ class NatalInterpretationServiceV2:
                 level=item.level.value,
                 persona_id=str(item.persona_id) if item.persona_id else None,
                 created_at=item.created_at.isoformat(),
-                deleted_at=datetime.now(timezone.utc).isoformat(),
+                deleted_at=datetime_provider.utcnow().isoformat(),
             ).model_dump(exclude_none=True),
         )
 

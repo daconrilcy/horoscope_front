@@ -5,12 +5,12 @@ import json
 import logging
 import re
 import uuid
-from datetime import datetime, timezone
 from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.core.sensitive_data import Sink, sanitize_payload
 from app.domain.llm.runtime.contracts import GatewayResult
 from app.domain.llm.runtime.crypto_utils import encrypt_input
@@ -458,7 +458,7 @@ async def purge_expired_logs(db: Session) -> int:
     Deletes logs and snapshots that have reached their expiration date.
     Returns the number of deleted records.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime_provider.utcnow()
     from sqlalchemy import delete
 
     # Delete snapshots first

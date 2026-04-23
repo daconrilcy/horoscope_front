@@ -8,7 +8,7 @@ utilisateur conformément aux obligations RGPD.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from time import monotonic
 from uuid import uuid4
 
@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.core.security import hash_password
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import (
@@ -171,7 +172,7 @@ class PrivacyService:
         """Marque une demande comme échouée avec la raison."""
         request.status = "failed"
         request.error_reason = reason[:255]
-        request.completed_at = datetime.now(timezone.utc)
+        request.completed_at = datetime_provider.utcnow()
 
     @staticmethod
     def _to_request_data(request: UserPrivacyRequestModel) -> PrivacyRequestData:
@@ -319,7 +320,7 @@ class PrivacyService:
             ).all()
 
             request.status = "completed"
-            request.completed_at = datetime.now(timezone.utc)
+            request.completed_at = datetime_provider.utcnow()
             request.result_data = {
                 "user": {
                     "id": user.id,
@@ -457,14 +458,14 @@ class PrivacyService:
                 delete(UserSubscriptionModel).where(UserSubscriptionModel.user_id == user_id)
             )
 
-            deleted_timestamp = int(datetime.now(timezone.utc).timestamp())
+            deleted_timestamp = int(datetime_provider.utcnow().timestamp())
             anonymized_email = f"deleted-user-{user_id}-{deleted_timestamp}@deleted.local"
             user.email = anonymized_email
             user.password_hash = hash_password(uuid4().hex)
             user.role = "user"
 
             request.status = "completed"
-            request.completed_at = datetime.now(timezone.utc)
+            request.completed_at = datetime_provider.utcnow()
             request.result_data = {
                 "account_anonymized": True,
                 "deleted_entities": [

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
@@ -14,6 +13,7 @@ from app.api.v1.schemas.admin_users import (
     AdminUserSearchResponse,
     RevealStripeIdResponse,
 )
+from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import UserSubscriptionModel
@@ -541,7 +541,7 @@ def refresh_subscription(
         event_data = {
             "id": f"forced_refresh_{resolve_request_id(request)}",
             "type": "admin.forced_refresh",
-            "created": int(datetime.now(UTC).timestamp()),
+            "created": int(datetime_provider.utcnow().timestamp()),
             "data": {"object": subscription.to_dict()},
         }
         StripeBillingProfileService.update_from_event_payload(db, user_id, event_data)
@@ -652,7 +652,7 @@ def record_commercial_gesture(
         "gesture_type": gesture_type,
         "value": value,
         "reason": reason,
-        "granted_at": datetime.now(UTC).isoformat(),
+        "granted_at": datetime_provider.utcnow().isoformat(),
         "granted_by": current_user.id,
     }
     updated_gestures = [*existing_gestures, gesture]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.core.datetime_provider import datetime_provider
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
@@ -942,7 +943,7 @@ def get_review_queue_summary(
             details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
         )
 
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime_provider.utcnow()
     rows = CanonicalEntitlementReviewQueueService.build_review_queue_rows(
         db,
         now_utc=now_utc,
@@ -1040,7 +1041,7 @@ def get_review_queue(
             details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
         )
 
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime_provider.utcnow()
     rows = CanonicalEntitlementReviewQueueService.build_review_queue_rows(
         db,
         now_utc=now_utc,

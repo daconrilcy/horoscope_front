@@ -1,8 +1,8 @@
 import uuid
-from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.consultation_template import ConsultationTemplateModel
 from app.infra.db.session import SessionLocal
 
@@ -140,7 +140,7 @@ def seed_consultation_templates():
                 print(f"Updating template: {t_data['key']}")
                 for attr, value in t_data.items():
                     setattr(existing, attr, value)
-                existing.updated_at = datetime.now(timezone.utc)
+                existing.updated_at = datetime_provider.utcnow()
             else:
                 print(f"Creating template: {t_data['key']}")
                 new_t = ConsultationTemplateModel(id=uuid.uuid4(), **t_data)

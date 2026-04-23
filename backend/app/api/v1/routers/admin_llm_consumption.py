@@ -13,6 +13,7 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.llm_observability import LlmCallLogModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
@@ -402,7 +403,7 @@ def get_canonical_consumption_drilldown(
     request_id = resolve_request_id(request)
     selected_view = _normalize_view(view)
     if period_start_utc is None:
-        period_start_utc = datetime.now(timezone.utc)
+        period_start_utc = datetime_provider.utcnow()
     period_start = (
         period_start_utc
         if period_start_utc.tzinfo

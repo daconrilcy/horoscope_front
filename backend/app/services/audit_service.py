@@ -8,12 +8,13 @@ permettant la traçabilité des actions effectuées dans l'application.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.core.sensitive_data import Sink, sanitize_payload
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.observability.metrics import increment_counter
@@ -118,7 +119,7 @@ class AuditService:
             target_id=None if model.target_id is None else str(model.target_id),
             status=str(model.status or ""),
             details=model.details or {},
-            created_at=model.created_at or datetime.now(timezone.utc),
+            created_at=model.created_at or datetime_provider.utcnow(),
         )
 
     @staticmethod

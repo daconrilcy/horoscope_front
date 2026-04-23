@@ -4,7 +4,7 @@ import csv
 import io
 import json
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -17,6 +17,7 @@ from app.api.v1.schemas.admin_audit import (
     AdminAuditExportRequest,
     AdminAuditLogResponse,
 )
+from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
@@ -86,14 +87,14 @@ def _get_audit_query(
         stmt = stmt.where(AuditEventModel.target_type == target_type)
     if period in {"7d", "30d"}:
         days = 7 if period == "7d" else 30
-        start_date = datetime.now(UTC) - timedelta(days=days)
+        start_date = datetime_provider.utcnow() - timedelta(days=days)
         stmt = stmt.where(AuditEventModel.created_at >= start_date)
 
     return stmt
 
 
 def _build_export_filename(period: AuditPeriod | None) -> str:
-    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime_provider.utcnow().strftime("%Y%m%dT%H%M%SZ")
     suffix = period if period in {"7d", "30d"} else "all"
     return f"audit_log_{suffix}_{timestamp}.csv"
 

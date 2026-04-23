@@ -1,13 +1,14 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import select
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
 from app.infra.db.session import SessionLocal
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime_provider.utcnow()
 
 
 CATEGORIES = [

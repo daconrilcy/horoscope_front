@@ -9,6 +9,7 @@ from sqlalchemy import desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.datetime_provider import datetime_provider
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.configuration.config_coherence_validator import (
     ConfigCoherenceValidator,
@@ -42,7 +43,7 @@ class ReleaseService:
 
     @staticmethod
     def _utcnow() -> datetime:
-        return datetime.now(timezone.utc)
+        return datetime_provider.utcnow()
 
     @staticmethod
     def _iso(dt: datetime) -> str:
@@ -342,7 +343,7 @@ class ReleaseService:
 
         if result.is_valid:
             snapshot.status = ReleaseStatus.VALIDATED
-            snapshot.validated_at = datetime.now(timezone.utc)
+            snapshot.validated_at = datetime_provider.utcnow()
 
             if isinstance(self.session, AsyncSession):
                 await self.session.commit()
@@ -414,7 +415,7 @@ class ReleaseService:
             active = LlmActiveReleaseModel(
                 release_snapshot_id=snapshot_id,
                 activated_by=activated_by,
-                activated_at=datetime.now(timezone.utc),
+                activated_at=datetime_provider.utcnow(),
             )
             self.session.add(active)
 
@@ -427,7 +428,7 @@ class ReleaseService:
             )
 
             snapshot.status = ReleaseStatus.ACTIVE
-            snapshot.activated_at = datetime.now(timezone.utc)
+            snapshot.activated_at = datetime_provider.utcnow()
             snapshot.activated_by = activated_by
             manifest_copy = dict(snapshot.manifest or {})
             release_health = manifest_copy.setdefault("release_health", {})

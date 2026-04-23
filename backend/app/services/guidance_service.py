@@ -11,7 +11,7 @@ import asyncio
 import logging
 import random
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 from time import monotonic
 from typing import Any
 
@@ -25,6 +25,7 @@ from app.application.llm.ai_engine_adapter import (
     map_adapter_error_to_codes,
 )
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.llm.anonymizer import anonymize_text
 from app.infra.observability.metrics import increment_counter, observe_duration
@@ -684,13 +685,12 @@ class GuidanceService:
         )
 
         # Story 59.4: Build astro context before LLM call
-        from datetime import date
 
         from app.services.astro_context_builder import AstroContextBuilder
 
         astro_context = None
         try:
-            today = date.today()
+            today = datetime_provider.today()
             if normalized_period == "daily":
                 astro_context = AstroContextBuilder.build_daily(
                     user_id, today, current_context.current_timezone, db
@@ -823,7 +823,7 @@ class GuidanceService:
                     fallback_used=fallback_used,
                     recovery=recovery_metadata,
                     context_message_count=context_message_count,
-                    generated_at=datetime.now(timezone.utc),
+                    generated_at=datetime_provider.utcnow(),
                 )
             except (AIEngineAdapterError, TimeoutError, ConnectionError) as err:
                 last_error_code, last_error_message = map_adapter_error_to_codes(err)
@@ -1133,7 +1133,7 @@ class GuidanceService:
                     fallback_used=fallback_used,
                     recovery=recovery_metadata,
                     context_message_count=context_message_count,
-                    generated_at=datetime.now(timezone.utc),
+                    generated_at=datetime_provider.utcnow(),
                 )
             except (AIEngineAdapterError, TimeoutError, ConnectionError) as err:
                 last_error_code, last_error_message = map_adapter_error_to_codes(err)

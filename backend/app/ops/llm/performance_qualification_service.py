@@ -5,6 +5,7 @@ from typing import Literal, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.domain.llm.runtime.contracts import (
     PerformanceQualificationReport,
     PerformanceSLA,
@@ -186,7 +187,6 @@ class PerformanceQualificationService:
         else:
             budget_remaining = 1.0 if error_rate == 0 else 0.0
 
-        from datetime import datetime, timezone
 
         return PerformanceQualificationReport(
             active_snapshot_id=active_snapshot_id,
@@ -207,5 +207,5 @@ class PerformanceQualificationService:
             budget_remaining=budget_remaining,
             verdict=verdict,
             constraints=constraints,
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime_provider.utcnow(),
         )

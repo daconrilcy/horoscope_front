@@ -129,14 +129,16 @@ class TestAdminLlmNatalPrompts:
 
         mock_db.get.return_value = uc_mock
 
-        with patch(
-            "app.ops.llm.prompt_registry_v2.PromptRegistryV2.publish_prompt"
-        ) as mock_publish, patch(
-            "app.api.v1.routers.admin_llm.PromptRegistryV2.get_active_prompt",
-            return_value=version_mock,
-        ), patch(
-            "app.api.v1.routers.admin_llm._build_canonical_admin_use_case_config",
-            return_value=None,
+        with (
+            patch("app.ops.llm.prompt_registry_v2.PromptRegistryV2.publish_prompt") as mock_publish,
+            patch(
+                "app.api.v1.routers.admin_llm.PromptRegistryV2.get_active_prompt",
+                return_value=version_mock,
+            ),
+            patch(
+                "app.api.v1.routers.admin_llm._build_canonical_admin_use_case_config",
+                return_value=None,
+            ),
         ):
             mock_publish.return_value = version_mock
             version_mock.status = PromptStatus.PUBLISHED  # simulate effect
@@ -185,15 +187,20 @@ class TestAdminLlmNatalPrompts:
             created_at=datetime.now(timezone.utc),
         )
 
-        with patch("app.api.v1.routers.admin_llm.run_eval") as mock_run_eval, patch(
-            "app.api.v1.routers.admin_llm.PromptRegistryV2.get_active_prompt",
-            return_value=active_prompt,
-        ), patch(
-            "app.api.v1.routers.admin_llm._build_canonical_admin_use_case_config",
-            return_value=None,
-        ), patch(
-            "app.api.v1.routers.admin_llm.PromptRegistryV2.publish_prompt",
-            return_value=active_prompt,
+        with (
+            patch("app.api.v1.routers.admin_llm.run_eval") as mock_run_eval,
+            patch(
+                "app.api.v1.routers.admin_llm.PromptRegistryV2.get_active_prompt",
+                return_value=active_prompt,
+            ),
+            patch(
+                "app.api.v1.routers.admin_llm._build_canonical_admin_use_case_config",
+                return_value=None,
+            ),
+            patch(
+                "app.api.v1.routers.admin_llm.PromptRegistryV2.publish_prompt",
+                return_value=active_prompt,
+            ),
         ):
             mock_run_eval.return_value = report
 

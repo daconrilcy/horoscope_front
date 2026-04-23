@@ -4,12 +4,13 @@ import hashlib
 import hmac
 import os
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 import jwt
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 
 
 class SecurityError(Exception):
@@ -48,7 +49,7 @@ def create_token(
     expires_minutes: int,
     jti: str | None = None,
 ) -> str:
-    now = datetime.now(UTC)
+    now = datetime_provider.utcnow()
     payload = {
         "sub": subject,
         "role": role,

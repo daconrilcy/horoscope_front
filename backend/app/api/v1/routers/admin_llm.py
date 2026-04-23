@@ -18,6 +18,7 @@ from app.api.dependencies.auth import (
     require_admin_user,
 )
 from app.api.v1.routers.admin_llm_error_codes import AdminLlmErrorCode
+from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
 from app.domain.llm.configuration.admin_models import (
@@ -1655,7 +1656,7 @@ def list_llm_catalog(
             if row.manifest_entry_id and row.manifest_entry_id not in latest_logs:
                 latest_logs[row.manifest_entry_id] = row
 
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime_provider.utcnow()
     for manifest_entry_id, entry in entries_by_id.items():
         log_row = latest_logs.get(manifest_entry_id)
         if log_row is None:
@@ -3512,7 +3513,7 @@ def get_dashboard(
 ) -> Any:
     request_id = resolve_request_id(request)
 
-    since = datetime.now(timezone.utc) - timedelta(hours=period_hours)
+    since = datetime_provider.utcnow() - timedelta(hours=period_hours)
     feature_stmt = (
         select(LlmCallLogModel.feature)
         .where(and_(LlmCallLogModel.timestamp >= since, LlmCallLogModel.feature.is_not(None)))

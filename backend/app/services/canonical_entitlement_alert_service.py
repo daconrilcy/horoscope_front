@@ -4,7 +4,7 @@ import json
 import logging
 import urllib.request
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -12,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
@@ -47,7 +48,7 @@ class CanonicalEntitlementAlertService:
         limit: int | None = None,
     ) -> AlertRunResult:
         if now_utc is None:
-            now_utc = datetime.now(timezone.utc)
+            now_utc = datetime_provider.utcnow()
 
         if not settings.ops_review_queue_alerts_enabled:
             logger.info("ops_review_queue_alerts_disabled")
@@ -150,7 +151,7 @@ class CanonicalEntitlementAlertService:
                         )
                         if success:
                             event.delivery_status = "sent"
-                            event.delivered_at = datetime.now(timezone.utc)
+                            event.delivered_at = datetime_provider.utcnow()
                             emitted_count += 1
                         else:
                             event.delivery_status = "failed"
@@ -161,7 +162,7 @@ class CanonicalEntitlementAlertService:
                         logger.info("ops_review_queue_alert_log_delivery payload=%s", payload)
                         event.delivery_channel = "log"
                         event.delivery_status = "sent"
-                        event.delivered_at = datetime.now(timezone.utc)
+                        event.delivered_at = datetime_provider.utcnow()
                         emitted_count += 1
 
             except IntegrityError:

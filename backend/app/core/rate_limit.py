@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from math import ceil
 from threading import Lock
 from time import monotonic
+
+from app.core.datetime_provider import datetime_provider
 
 
 @dataclass
@@ -21,7 +22,7 @@ _LOCK = Lock()
 
 
 def _utc_iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime_provider.utcnow().isoformat()
 
 
 def check_rate_limit(*, key: str, limit: int, window_seconds: int) -> None:

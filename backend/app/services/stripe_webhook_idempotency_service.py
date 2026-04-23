@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 
 import stripe
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
 
 logger = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ class StripeWebhookIdempotencyService:
         record = db.query(StripeWebhookEventModel).filter_by(stripe_event_id=str(event_id)).first()
         if record:
             record.status = "processed"
-            record.processed_at = datetime.now(timezone.utc)
+            record.processed_at = datetime_provider.utcnow()
 
     @staticmethod
     def mark_failed(db: Session, event_id: str, error_message: str) -> None:

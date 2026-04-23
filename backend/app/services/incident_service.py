@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.observability.metrics import increment_counter, observe_duration
@@ -461,7 +462,7 @@ class IncidentService:
             model.status in {"resolved", "closed", "solved", "canceled"}
             and model.resolved_at is None
         ):
-            model.resolved_at = datetime.now(timezone.utc)
+            model.resolved_at = datetime_provider.utcnow()
         if model.status in {"open", "in_progress", "pending"}:
             model.resolved_at = None
 

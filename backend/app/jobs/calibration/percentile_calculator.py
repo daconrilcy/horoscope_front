@@ -4,12 +4,13 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import CategoryCalibrationModel, PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
@@ -195,7 +196,7 @@ class PercentileCalculatorService:
         self, results: list[PercentileResult], output_path: Path, metadata: dict
     ) -> None:
         report = {
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime_provider.now().isoformat(),
             **metadata,
             "categories": {
                 res.category_code: {

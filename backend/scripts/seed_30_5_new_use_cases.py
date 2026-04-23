@@ -1,8 +1,8 @@
 import logging
-from datetime import datetime, timezone
 
 from sqlalchemy import select
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models import LlmOutputSchemaModel, LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm_prompt import PromptStatus
 from app.infra.db.session import SessionLocal
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def utc_now():
-    return datetime.now(timezone.utc)
+    return datetime_provider.utcnow()
 
 
 EVENT_GUIDANCE_PROMPT = """Langue : français ({{locale}}). Contexte : use_case={{use_case}}.

@@ -7,9 +7,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from app.core.datetime_provider import datetime_provider
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[4]
 if str(_BACKEND_ROOT) not in sys.path:
@@ -22,7 +23,7 @@ from app.domain.llm.governance.legacy_residual_registry import (
 
 
 def _utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime_provider.utcnow().isoformat()
 
 
 def _load_optional_json(path_str: str | None) -> dict[str, Any] | None:

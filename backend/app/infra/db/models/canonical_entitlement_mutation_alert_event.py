@@ -5,13 +5,13 @@ from datetime import datetime
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
 
 
 def _utc_now() -> datetime:
-    from datetime import timezone
 
-    return datetime.now(timezone.utc)
+    return datetime_provider.utcnow()
 
 
 class CanonicalEntitlementMutationAlertEventModel(Base):

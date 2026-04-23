@@ -28,6 +28,7 @@ from app.application.llm.ai_engine_adapter import (
     map_adapter_error_to_codes,
 )
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.repositories.user_repository import UserRepository
 from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
@@ -287,7 +288,7 @@ class ChatGuidanceService:
     def _format_today_label(cls, current_datetime: str | None) -> str:
         if current_datetime:
             return current_datetime.split(" à ", 1)[0]
-        today = date.today()
+        today = datetime_provider.today()
         month_name = cls._MONTHS_FR[today.month - 1]
         return f"{today.day:02d} {month_name} {today.year}"
 
@@ -299,7 +300,7 @@ class ChatGuidanceService:
             birth_date = date.fromisoformat(birth_date_iso)
         except ValueError:
             return None
-        reference = today or date.today()
+        reference = today or datetime_provider.today()
         age = (
             reference.year
             - birth_date.year

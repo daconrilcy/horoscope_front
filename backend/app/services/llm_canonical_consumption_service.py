@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.datetime_provider import datetime_provider
 from app.domain.llm.governance.feature_taxonomy import (
     SUPPORTED_FAMILIES,
     is_natal_subfeature_canonical,
@@ -188,7 +189,7 @@ class LlmCanonicalConsumptionService:
                     error_rate_bps=int(
                         round(((error_count / call_count) if call_count else 0.0) * 10_000)
                     ),
-                    refreshed_at=datetime.now(timezone.utc),
+                    refreshed_at=datetime_provider.utcnow(),
                 )
             )
         db.commit()

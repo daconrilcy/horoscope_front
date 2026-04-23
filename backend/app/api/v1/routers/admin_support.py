@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -16,6 +15,7 @@ from app.api.v1.schemas.admin_support import (
     FlaggedContentReviewUpdate,
     TicketStatusUpdate,
 )
+from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.flagged_content import FlaggedContentModel
@@ -136,7 +136,7 @@ def update_ticket_status(
     before = ticket.status
     ticket.status = payload.status
     if payload.status == "resolved" and not ticket.resolved_at:
-        ticket.resolved_at = datetime.now(UTC)
+        ticket.resolved_at = datetime_provider.utcnow()
 
     AuditService.record_event(
         db,
@@ -203,7 +203,7 @@ def review_flagged_content(
         raise HTTPException(status_code=404, detail="Content not found")
 
     content.status = payload.status
-    content.reviewed_at = datetime.now(UTC)
+    content.reviewed_at = datetime_provider.utcnow()
     content.reviewed_by = current_user.id
 
     AuditService.record_event(
