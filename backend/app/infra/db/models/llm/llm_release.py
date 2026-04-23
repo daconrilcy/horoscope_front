@@ -1,5 +1,5 @@
 # Modèles DB de release LLM.
-"""Déclare les snapshots de release LLM et le pointeur de release active."""
+"""Declare les snapshots de release LLM et le pointeur de release active."""
 
 from __future__ import annotations
 
@@ -20,8 +20,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
+from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, utc_now
+from app.infra.db.models.llm.llm_field_lengths import SHORT_STATUS_LENGTH, VERSION_LENGTH
 
 
 class ReleaseStatus(str, Enum):
@@ -33,13 +34,13 @@ class ReleaseStatus(str, Enum):
     ARCHIVED = "archived"
 
 
-class LlmReleaseSnapshotModel(Base):
-    """Stocke un manifeste figé des assemblages, profils, personas et schémas LLM."""
+class LlmReleaseSnapshotModel(CreatedByMixin, CreatedAtMixin, Base):
+    """Stocke un manifeste fige des assemblages, profils, personas et schemas LLM."""
 
     __tablename__ = "llm_release_snapshots"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    version: Mapped[str] = mapped_column(String(64), index=True)
+    version: Mapped[str] = mapped_column(String(VERSION_LENGTH), index=True)
 
     # The manifest stores the map of target keys to resolved bundles.
     # Target Key: "feature:subfeature:plan:locale"
@@ -47,12 +48,8 @@ class LlmReleaseSnapshotModel(Base):
     manifest: Mapped[dict] = mapped_column(JSON)
 
     status: Mapped[ReleaseStatus] = mapped_column(
-        String(16), index=True, default=ReleaseStatus.DRAFT
+        String(SHORT_STATUS_LENGTH), index=True, default=ReleaseStatus.DRAFT
     )
-
-    created_by: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
-
     validated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     activated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 

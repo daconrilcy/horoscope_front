@@ -419,28 +419,6 @@ async def log_call(
                 input_hash=input_hash,
                 environment=settings.app_env,
                 evidence_warnings_count=evidence_warnings,
-                # AC 66.25
-                pipeline_kind=pipeline_kind,
-                execution_path_kind=execution_path_kind,
-                fallback_kind=fallback_kind,
-                requested_provider=requested_provider,
-                resolved_provider=resolved_provider,
-                executed_provider=executed_provider,
-                context_quality=context_quality,
-                context_compensation_status=context_compensation_status,
-                max_output_tokens_source=max_output_tokens_source,
-                max_output_tokens_final=max_output_tokens_final,
-                # AC 66.33
-                executed_provider_mode=executed_provider_mode,
-                attempt_count=attempt_count,
-                provider_error_code=provider_error_code,
-                runtime_error_code=runtime_error_code,
-                breaker_state=breaker_state,
-                breaker_scope=breaker_scope,
-                # Story 66.32
-                active_snapshot_id=active_snapshot_id,
-                active_snapshot_version=active_snapshot_version,
-                manifest_entry_id=manifest_entry_id,
             )
             db.add(log_entry)
 

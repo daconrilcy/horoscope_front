@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.llm.llm_observability import (
     LlmCallLogModel,
+    LlmCallLogOperationalMetadataModel,
     LlmValidationStatus,
 )
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
@@ -123,6 +124,21 @@ class LlmOpsMonitoringService:
             _DimensionSpec(key="max_output_tokens_source", column_name="max_output_tokens_source"),
         ],
     }
+    METADATA_DIMENSION_KEYS: frozenset[str] = frozenset(
+        {
+            "pipeline_kind",
+            "active_snapshot_version",
+            "active_snapshot_id",
+            "manifest_entry_id",
+            "execution_path_kind",
+            "fallback_kind",
+            "requested_provider",
+            "resolved_provider",
+            "executed_provider",
+            "context_quality",
+            "max_output_tokens_source",
+        }
+    )
 
     @staticmethod
     def get_llm_ops_data(db: Session, window: str = "24h") -> LlmOpsMonitoringData:
@@ -154,6 +170,8 @@ class LlmOpsMonitoringService:
             return LlmCallLogModel.persona_id
         if spec.column_name is None:
             raise ValueError(f"Unsupported dimension without column: {spec.key}")
+        if spec.key in LlmOpsMonitoringService.METADATA_DIMENSION_KEYS:
+            return getattr(LlmCallLogOperationalMetadataModel, spec.column_name)
         return getattr(LlmCallLogModel, spec.column_name)
 
     @staticmethod
@@ -191,6 +209,10 @@ class LlmOpsMonitoringService:
                 ),
             )
             .outerjoin(LlmPersonaModel, LlmCallLogModel.persona_id == LlmPersonaModel.id)
+            .outerjoin(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
+            )
             .where(LlmCallLogModel.timestamp >= since)
             .group_by(*group_cols)
         )
@@ -270,6 +292,10 @@ class LlmOpsMonitoringService:
 
         stmt = (
             select(LlmCallLogModel.latency_ms)
+            .outerjoin(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
+            )
             .where(and_(*filters))
             .order_by(LlmCallLogModel.latency_ms)
         )
@@ -334,18 +360,22 @@ class LlmOpsMonitoringService:
                 LlmCallLogModel.feature.label("feature"),
                 LlmCallLogModel.plan.label("plan"),
                 LlmCallLogModel.persona_id.label("persona_id"),
-                LlmCallLogModel.pipeline_kind.label("pipeline_kind"),
+                LlmCallLogOperationalMetadataModel.pipeline_kind.label("pipeline_kind"),
                 func.count(LlmCallLogModel.id).label("total"),
                 func.sum(case((LlmCallLogModel.repair_attempted.is_(True), 1), else_=0)).label(
                     "repairs"
                 ),
+            )
+            .join(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
             )
             .where(LlmCallLogModel.timestamp >= since)
             .group_by(
                 LlmCallLogModel.feature,
                 LlmCallLogModel.plan,
                 LlmCallLogModel.persona_id,
-                LlmCallLogModel.pipeline_kind,
+                LlmCallLogOperationalMetadataModel.pipeline_kind,
             )
         )
         baseline_stmt = (
@@ -353,11 +383,15 @@ class LlmOpsMonitoringService:
                 LlmCallLogModel.feature.label("feature"),
                 LlmCallLogModel.plan.label("plan"),
                 LlmCallLogModel.persona_id.label("persona_id"),
-                LlmCallLogModel.pipeline_kind.label("pipeline_kind"),
+                LlmCallLogOperationalMetadataModel.pipeline_kind.label("pipeline_kind"),
                 func.count(LlmCallLogModel.id).label("total"),
                 func.sum(case((LlmCallLogModel.repair_attempted.is_(True), 1), else_=0)).label(
                     "repairs"
                 ),
+            )
+            .join(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
             )
             .where(
                 and_(
@@ -369,7 +403,7 @@ class LlmOpsMonitoringService:
                 LlmCallLogModel.feature,
                 LlmCallLogModel.plan,
                 LlmCallLogModel.persona_id,
-                LlmCallLogModel.pipeline_kind,
+                LlmCallLogOperationalMetadataModel.pipeline_kind,
             )
         )
 
@@ -442,8 +476,12 @@ class LlmOpsMonitoringService:
         stmt = (
             select(
                 LlmCallLogModel.feature,
-                LlmCallLogModel.fallback_kind,
+                LlmCallLogOperationalMetadataModel.fallback_kind,
                 func.count(LlmCallLogModel.id).label("count"),
+            )
+            .join(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
             )
             .where(
                 and_(
@@ -452,7 +490,10 @@ class LlmOpsMonitoringService:
                     LlmCallLogModel.fallback_triggered.is_(True),
                 )
             )
-            .group_by(LlmCallLogModel.feature, LlmCallLogModel.fallback_kind)
+            .group_by(
+                LlmCallLogModel.feature,
+                LlmCallLogOperationalMetadataModel.fallback_kind,
+            )
         )
 
         return [
@@ -480,35 +521,39 @@ class LlmOpsMonitoringService:
         stmt = (
             select(
                 LlmCallLogModel.feature,
-                LlmCallLogModel.requested_provider,
-                LlmCallLogModel.resolved_provider,
-                LlmCallLogModel.executed_provider,
+                LlmCallLogOperationalMetadataModel.requested_provider,
+                LlmCallLogOperationalMetadataModel.resolved_provider,
+                LlmCallLogOperationalMetadataModel.executed_provider,
                 func.count(LlmCallLogModel.id).label("count"),
+            )
+            .join(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
             )
             .where(
                 and_(
                     LlmCallLogModel.timestamp >= since,
                     or_(
                         LlmOpsMonitoringService._provider_diff(
-                            LlmCallLogModel.requested_provider,
-                            LlmCallLogModel.resolved_provider,
+                            LlmCallLogOperationalMetadataModel.requested_provider,
+                            LlmCallLogOperationalMetadataModel.resolved_provider,
                         ),
                         LlmOpsMonitoringService._provider_diff(
-                            LlmCallLogModel.resolved_provider,
-                            LlmCallLogModel.executed_provider,
+                            LlmCallLogOperationalMetadataModel.resolved_provider,
+                            LlmCallLogOperationalMetadataModel.executed_provider,
                         ),
                         LlmOpsMonitoringService._provider_diff(
-                            LlmCallLogModel.requested_provider,
-                            LlmCallLogModel.executed_provider,
+                            LlmCallLogOperationalMetadataModel.requested_provider,
+                            LlmCallLogOperationalMetadataModel.executed_provider,
                         ),
                     ),
                 )
             )
             .group_by(
                 LlmCallLogModel.feature,
-                LlmCallLogModel.requested_provider,
-                LlmCallLogModel.resolved_provider,
-                LlmCallLogModel.executed_provider,
+                LlmCallLogOperationalMetadataModel.requested_provider,
+                LlmCallLogOperationalMetadataModel.resolved_provider,
+                LlmCallLogOperationalMetadataModel.executed_provider,
             )
         )
 
@@ -555,20 +600,24 @@ class LlmOpsMonitoringService:
     def _build_impossible_state_alerts(*, db: Session, since: datetime) -> list[LlmOpsAlert]:
         stmt = (
             select(
-                LlmCallLogModel.pipeline_kind,
-                LlmCallLogModel.execution_path_kind,
-                LlmCallLogModel.fallback_kind,
-                LlmCallLogModel.requested_provider,
-                LlmCallLogModel.executed_provider,
+                LlmCallLogOperationalMetadataModel.pipeline_kind,
+                LlmCallLogOperationalMetadataModel.execution_path_kind,
+                LlmCallLogOperationalMetadataModel.fallback_kind,
+                LlmCallLogOperationalMetadataModel.requested_provider,
+                LlmCallLogOperationalMetadataModel.executed_provider,
                 func.count(LlmCallLogModel.id).label("count"),
+            )
+            .join(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
             )
             .where(LlmCallLogModel.timestamp >= since)
             .group_by(
-                LlmCallLogModel.pipeline_kind,
-                LlmCallLogModel.execution_path_kind,
-                LlmCallLogModel.fallback_kind,
-                LlmCallLogModel.requested_provider,
-                LlmCallLogModel.executed_provider,
+                LlmCallLogOperationalMetadataModel.pipeline_kind,
+                LlmCallLogOperationalMetadataModel.execution_path_kind,
+                LlmCallLogOperationalMetadataModel.fallback_kind,
+                LlmCallLogOperationalMetadataModel.requested_provider,
+                LlmCallLogOperationalMetadataModel.executed_provider,
             )
         )
 
@@ -607,17 +656,24 @@ class LlmOpsMonitoringService:
     def _build_unknown_path_alerts(*, db: Session, since: datetime) -> list[LlmOpsAlert]:
         stmt = (
             select(
-                LlmCallLogModel.pipeline_kind,
-                LlmCallLogModel.execution_path_kind,
+                LlmCallLogOperationalMetadataModel.pipeline_kind,
+                LlmCallLogOperationalMetadataModel.execution_path_kind,
                 func.count(LlmCallLogModel.id).label("count"),
+            )
+            .join(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
             )
             .where(
                 and_(
                     LlmCallLogModel.timestamp >= since,
-                    LlmCallLogModel.execution_path_kind == "unknown",
+                    LlmCallLogOperationalMetadataModel.execution_path_kind == "unknown",
                 )
             )
-            .group_by(LlmCallLogModel.pipeline_kind, LlmCallLogModel.execution_path_kind)
+            .group_by(
+                LlmCallLogOperationalMetadataModel.pipeline_kind,
+                LlmCallLogOperationalMetadataModel.execution_path_kind,
+            )
         )
 
         alerts: list[LlmOpsAlert] = []

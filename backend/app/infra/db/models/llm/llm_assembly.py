@@ -1,11 +1,11 @@
 # Modèle DB de configuration d'assemblage LLM.
-"""Déclare la table qui assemble prompts, personas et profils d'exécution LLM."""
+"""Declare la table qui assemble prompts, personas et profils d execution LLM."""
 
 from __future__ import annotations
 
 import uuid
 from enum import Enum
-from typing import Any, ClassVar, Optional
+from typing import ClassVar, Optional
 
 from sqlalchemy import (
     JSON,
@@ -13,15 +13,22 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     String,
-    cast,
     func,
 )
-from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, PublishedAtMixin
+from app.infra.db.models.llm.llm_compatibility import ASSEMBLY_COMPATIBILITY_SPECS
 from app.infra.db.models.llm.llm_constraints import allowed_values_check
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_field_lengths import (
+    FEATURE_LENGTH,
+    LOCALE_LENGTH,
+    PLAN_LENGTH,
+    SHORT_STATUS_LENGTH,
+    SUBFEATURE_LENGTH,
+)
 from app.infra.db.models.llm.llm_indexes import published_unique_index
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
@@ -38,7 +45,7 @@ class AssemblyComponentResolutionState(str, Enum):
 
 
 class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin, Base):
-    """Représente une configuration d'assemblage publiée ou brouillon pour une cible LLM."""
+    """Represente une configuration d assemblage publiee ou brouillon pour une cible LLM."""
 
     __tablename__ = "llm_assembly_configs"
     legacy_runtime_compatibility_fields: ClassVar[frozenset[str]] = frozenset(
@@ -51,6 +58,7 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
             "fallback_use_case",
         }
     )
+    legacy_runtime_compatibility_specs: ClassVar[tuple] = ASSEMBLY_COMPATIBILITY_SPECS
     profile_controlled_execution_config_fields: ClassVar[frozenset[str]] = frozenset(
         {
             "model",
@@ -64,10 +72,12 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    feature: Mapped[str] = mapped_column(String(64), index=True)
-    subfeature: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
-    plan: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
-    locale: Mapped[str] = mapped_column(String(32), index=True, default="fr-FR")
+    feature: Mapped[str] = mapped_column(String(FEATURE_LENGTH), index=True)
+    subfeature: Mapped[Optional[str]] = mapped_column(
+        String(SUBFEATURE_LENGTH), nullable=True, index=True
+    )
+    plan: Mapped[Optional[str]] = mapped_column(String(PLAN_LENGTH), nullable=True, index=True)
+    locale: Mapped[str] = mapped_column(String(LOCALE_LENGTH), index=True, default="fr-FR")
 
     feature_template_ref: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("llm_prompt_versions.id", ondelete="RESTRICT")
@@ -81,33 +91,45 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
     execution_profile_ref: Mapped[Optional[uuid.UUID]] = mapped_column(
         ForeignKey("llm_execution_profiles.id", ondelete="SET NULL"), nullable=True
     )
-    plan_rules_ref: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    output_schema_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("llm_output_schemas.id", ondelete="SET NULL"), nullable=True
+    )
+    plan_rules_ref: Mapped[Optional[str]] = mapped_column(String(PLAN_LENGTH), nullable=True)
 
     execution_config: Mapped[dict] = mapped_column(JSON)
-    output_contract_ref: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     input_schema: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     length_budget: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    interaction_mode: Mapped[str] = mapped_column(String(16), default="structured")
-    user_question_policy: Mapped[str] = mapped_column(String(16), default="none")
-    fallback_use_case: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    interaction_mode: Mapped[str] = mapped_column(String(SHORT_STATUS_LENGTH), default="structured")
+    user_question_policy: Mapped[str] = mapped_column(String(SHORT_STATUS_LENGTH), default="none")
+    fallback_use_case: Mapped[Optional[str]] = mapped_column(String(FEATURE_LENGTH), nullable=True)
 
     feature_template_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(16), nullable=False, default=AssemblyComponentResolutionState.ENABLED.value
+        String(SHORT_STATUS_LENGTH),
+        nullable=False,
+        default=AssemblyComponentResolutionState.ENABLED.value,
     )
     subfeature_template_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(16), nullable=False, default=AssemblyComponentResolutionState.ABSENT.value
+        String(SHORT_STATUS_LENGTH),
+        nullable=False,
+        default=AssemblyComponentResolutionState.ABSENT.value,
     )
     persona_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(16), nullable=False, default=AssemblyComponentResolutionState.INHERITED.value
+        String(SHORT_STATUS_LENGTH),
+        nullable=False,
+        default=AssemblyComponentResolutionState.INHERITED.value,
     )
     plan_rules_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(16), nullable=False, default=AssemblyComponentResolutionState.ABSENT.value
+        String(SHORT_STATUS_LENGTH),
+        nullable=False,
+        default=AssemblyComponentResolutionState.ABSENT.value,
     )
 
-    status: Mapped[PromptStatus] = mapped_column(String(16), index=True, default=PromptStatus.DRAFT)
+    status: Mapped[PromptStatus] = mapped_column(
+        String(SHORT_STATUS_LENGTH), index=True, default=PromptStatus.DRAFT
+    )
 
-    @validates("plan_rules_ref", "output_contract_ref")
+    @validates("plan_rules_ref")
     def validate_optional_reference(self, key: str, value: Optional[str]) -> Optional[str]:
         """Bloque les references vides qui masquent une configuration incomplete."""
         if value is not None and not value.strip():
@@ -151,17 +173,28 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
         "LlmExecutionProfileModel", foreign_keys=[execution_profile_ref]
     )
     output_schema: Mapped[Optional[LlmOutputSchemaModel]] = relationship(
-        "LlmOutputSchemaModel",
-        primaryjoin=lambda: (
-            func.replace(foreign(PromptAssemblyConfigModel.output_contract_ref), "-", "")
-            == cast(LlmOutputSchemaModel.id, String)
-        ),
-        viewonly=True,
-        uselist=False,
+        "LlmOutputSchemaModel", foreign_keys=[output_schema_id], back_populates="assemblies"
     )
 
+    @property
+    def output_contract_ref(self) -> Optional[str]:
+        """Expose l alias legacy textuel a partir de la cle etrangere canonique."""
+        if self.output_schema_id is None:
+            return None
+        return str(self.output_schema_id)
+
+    @output_contract_ref.setter
+    def output_contract_ref(self, value: Optional[str]) -> None:
+        """Accepte transitoirement l alias legacy en le normalisant vers la FK canonique."""
+        if value is None:
+            self.output_schema_id = None
+            return
+        if not str(value).strip():
+            raise ValueError("output_contract_ref must not be empty when provided.")
+        self.output_schema_id = uuid.UUID(str(value))
+
     def component_resolution_states(self) -> dict[str, AssemblyComponentResolutionState]:
-        """Expose la semantique des composants optionnels sans ambiguité booléenne."""
+        """Expose la semantique des composants optionnels sans ambiguite booleenne."""
         return {
             "feature_template": AssemblyComponentResolutionState(
                 self.feature_template_state
@@ -213,102 +246,29 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
             return AssemblyComponentResolutionState.INHERITED
         return AssemblyComponentResolutionState.ABSENT
 
-    def __init__(self, **kwargs: Any) -> None:
-        """Absorbe temporairement les anciens flags `*_enabled` a l'initialisation."""
-        legacy_enabled_flags = {
-            "feature_enabled": kwargs.pop("feature_enabled", None),
-            "subfeature_enabled": kwargs.pop("subfeature_enabled", None),
-            "persona_enabled": kwargs.pop("persona_enabled", None),
-            "plan_rules_enabled": kwargs.pop("plan_rules_enabled", None),
-        }
-        super().__init__(**kwargs)
-        if self.feature_template_state is None:
-            self.feature_template_state = self.infer_component_state(
-                has_reference=self.feature_template_ref is not None,
-                is_enabled=True,
-                can_inherit=False,
-            ).value
-        if self.subfeature_template_state is None:
-            self.subfeature_template_state = self.infer_component_state(
-                has_reference=self.subfeature_template_ref is not None,
-                is_enabled=True,
-                can_inherit=self.subfeature is not None,
-            ).value
-        if self.persona_state is None:
-            self.persona_state = self.infer_component_state(
-                has_reference=self.persona_ref is not None,
-                is_enabled=True,
-                can_inherit=True,
-            ).value
-        if self.plan_rules_state is None:
-            self.plan_rules_state = self.infer_component_state(
-                has_reference=self.plan_rules_ref is not None,
-                is_enabled=True,
-                can_inherit=self.plan is not None,
-            ).value
-        for key, value in legacy_enabled_flags.items():
-            if value is not None:
-                setattr(self, key, value)
-
-    @property
-    def feature_enabled(self) -> bool:
-        """Expose la compatibilite legacy a partir de l'etat explicite."""
+    def is_feature_template_enabled(self) -> bool:
+        """Indique si le bloc feature participe au rendu nominal."""
         return self.component_resolution_states()["feature_template"] != (
             AssemblyComponentResolutionState.DISABLED
         )
 
-    @feature_enabled.setter
-    def feature_enabled(self, value: bool) -> None:
-        self.feature_template_state = self.infer_component_state(
-            has_reference=self.feature_template_ref is not None,
-            is_enabled=bool(value),
-            can_inherit=False,
-        ).value
-
-    @property
-    def subfeature_enabled(self) -> bool:
-        """Expose la compatibilite legacy a partir de l'etat explicite."""
+    def is_subfeature_template_enabled(self) -> bool:
+        """Indique si le bloc subfeature participe au rendu nominal."""
         return self.component_resolution_states()["subfeature_template"] != (
             AssemblyComponentResolutionState.DISABLED
         )
 
-    @subfeature_enabled.setter
-    def subfeature_enabled(self, value: bool) -> None:
-        self.subfeature_template_state = self.infer_component_state(
-            has_reference=self.subfeature_template_ref is not None,
-            is_enabled=bool(value),
-            can_inherit=self.subfeature is not None,
-        ).value
-
-    @property
-    def persona_enabled(self) -> bool:
-        """Expose la compatibilite legacy a partir de l'etat explicite."""
+    def is_persona_enabled(self) -> bool:
+        """Indique si le persona participe au rendu nominal."""
         return self.component_resolution_states()["persona"] != (
             AssemblyComponentResolutionState.DISABLED
         )
 
-    @persona_enabled.setter
-    def persona_enabled(self, value: bool) -> None:
-        self.persona_state = self.infer_component_state(
-            has_reference=self.persona_ref is not None,
-            is_enabled=bool(value),
-            can_inherit=True,
-        ).value
-
-    @property
-    def plan_rules_enabled(self) -> bool:
-        """Expose la compatibilite legacy a partir de l'etat explicite."""
+    def is_plan_rules_enabled(self) -> bool:
+        """Indique si les regles de plan participent au rendu nominal."""
         return self.component_resolution_states()["plan_rules"] != (
             AssemblyComponentResolutionState.DISABLED
         )
-
-    @plan_rules_enabled.setter
-    def plan_rules_enabled(self, value: bool) -> None:
-        self.plan_rules_state = self.infer_component_state(
-            has_reference=self.plan_rules_ref is not None,
-            is_enabled=bool(value),
-            can_inherit=self.plan is not None,
-        ).value
 
     __table_args__ = (
         published_unique_index(

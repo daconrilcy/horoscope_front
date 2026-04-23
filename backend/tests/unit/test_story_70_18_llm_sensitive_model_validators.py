@@ -32,6 +32,7 @@ def test_assembly_exposes_execution_profile_relationship() -> None:
     relationship_names = set(PromptAssemblyConfigModel.__mapper__.relationships.keys())
 
     assert "execution_profile" in relationship_names
+    assert "output_schema" in relationship_names
 
 
 def test_llm_orm_relationships_cover_canonical_graph() -> None:
@@ -96,7 +97,7 @@ def test_assembly_component_states_make_optional_resolution_explicit() -> None:
         persona_ref=None,
         plan="premium",
         plan_rules_ref="premium-rules",
-        persona_enabled=False,
+        persona_state=AssemblyComponentResolutionState.DISABLED.value,
     )
 
     states = assembly.component_resolution_states()
@@ -132,6 +133,15 @@ def test_assembly_rejects_empty_optional_references() -> None:
 
     with pytest.raises(ValueError, match="output_contract_ref must not be empty"):
         PromptAssemblyConfigModel(output_contract_ref=" ", created_by="test")
+
+
+def test_assembly_compatibility_alias_maps_to_canonical_output_schema_id() -> None:
+    """Verifie que l alias legacy est borne a la FK canonique de schema."""
+    schema_id = "11111111-1111-1111-1111-111111111111"
+    assembly = PromptAssemblyConfigModel(created_by="test", output_contract_ref=schema_id)
+
+    assert str(assembly.output_schema_id) == schema_id
+    assert assembly.output_contract_ref == schema_id
 
 
 def test_persona_rejects_invalid_json_string_lists() -> None:

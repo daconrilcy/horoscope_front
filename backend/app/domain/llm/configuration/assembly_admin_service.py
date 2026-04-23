@@ -23,6 +23,7 @@ from app.domain.llm.configuration.assembly_resolver import (
 from app.domain.llm.runtime.observability import log_governance_event
 from app.domain.llm.runtime.providers import is_provider_supported
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,8 @@ class AssemblyAdminService:
                         f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}"
                     )
 
+        output_schema_id = await self._resolve_output_schema_id(config_in.output_contract_ref)
+
         new_config = PromptAssemblyConfigModel(
             feature=config_in.feature,
             subfeature=config_in.subfeature,
@@ -102,7 +105,7 @@ class AssemblyAdminService:
             execution_profile_ref=config_in.execution_profile_ref,
             plan_rules_ref=config_in.plan_rules_ref,
             execution_config=config_in.execution_config.model_dump(),
-            output_contract_ref=config_in.output_contract_ref,
+            output_schema_id=output_schema_id,
             input_schema=config_in.input_schema,
             length_budget=(
                 config_in.length_budget.model_dump() if config_in.length_budget else None
@@ -120,6 +123,21 @@ class AssemblyAdminService:
         self.session.add(new_config)
         await self.session.flush()
         return new_config
+
+    async def _resolve_output_schema_id(self, raw_ref: str | None) -> uuid.UUID | None:
+        """Resolve un alias admin legacy vers la FK canonique du schema de sortie."""
+        if raw_ref is None:
+            return None
+        try:
+            return uuid.UUID(str(raw_ref))
+        except (TypeError, ValueError):
+            stmt = (
+                select(LlmOutputSchemaModel.id)
+                .where(LlmOutputSchemaModel.name == str(raw_ref))
+                .order_by(LlmOutputSchemaModel.version.desc())
+            )
+            res = await self._execute(stmt)
+            return res.scalars().first()
 
     async def _validate_provider_support(self, config: PromptAssemblyConfigModel) -> str:
         """

@@ -1,5 +1,5 @@
 # Modèle DB des personas LLM.
-"""Déclare les personas, tons et niveaux de verbosité utilisés par le prompting LLM."""
+"""Declare les personas, tons et niveaux de verbosite utilises par le prompting LLM."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from sqlalchemy import (
     JSON,
     UUID,
     Boolean,
+    Index,
     String,
     Text,
 )
@@ -17,7 +18,10 @@ from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import CreatedUpdatedAtMixin
+from app.infra.db.models.llm.llm_constraints import allowed_values_check
+from app.infra.db.models.llm.llm_field_lengths import FEATURE_LENGTH, SHORT_STATUS_LENGTH
 from app.infra.db.models.llm.llm_json_validators import (
+    persona_default_formatting,
     validate_persona_formatting,
     validate_string_list_field,
 )
@@ -46,12 +50,18 @@ class LlmPersonaModel(CreatedUpdatedAtMixin, Base):
     __tablename__ = "llm_personas"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    code: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)
+    code: Mapped[str | None] = mapped_column(
+        String(FEATURE_LENGTH), unique=True, index=True, nullable=True
+    )
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    tone: Mapped[PersonaTone] = mapped_column(String(32), default=PersonaTone.DIRECT)
-    verbosity: Mapped[PersonaVerbosity] = mapped_column(String(32), default=PersonaVerbosity.MEDIUM)
+    tone: Mapped[PersonaTone] = mapped_column(
+        String(SHORT_STATUS_LENGTH), default=PersonaTone.DIRECT
+    )
+    verbosity: Mapped[PersonaVerbosity] = mapped_column(
+        String(SHORT_STATUS_LENGTH), default=PersonaVerbosity.MEDIUM
+    )
 
     # JSON list of strings
     style_markers: Mapped[list[str]] = mapped_column(JSON, default=list)
@@ -63,9 +73,7 @@ class LlmPersonaModel(CreatedUpdatedAtMixin, Base):
     disallowed_topics: Mapped[list[str]] = mapped_column(JSON, default=list)
 
     # JSON : sections bool, bullets bool, emojis bool
-    formatting: Mapped[dict] = mapped_column(
-        JSON, default=lambda: {"sections": True, "bullets": False, "emojis": False}
-    )
+    formatting: Mapped[dict] = mapped_column(JSON, default=persona_default_formatting)
 
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -78,3 +86,17 @@ class LlmPersonaModel(CreatedUpdatedAtMixin, Base):
     def validate_formatting(self, key: str, value: object) -> dict[str, bool]:
         """Garantit le contrat JSON borne des options de presentation."""
         return validate_persona_formatting(value)
+
+    __table_args__ = (
+        allowed_values_check(
+            "ck_llm_personas_tone",
+            "tone",
+            tuple(item.value for item in PersonaTone),
+        ),
+        allowed_values_check(
+            "ck_llm_personas_verbosity",
+            "verbosity",
+            tuple(item.value for item in PersonaVerbosity),
+        ),
+        Index("ix_llm_personas_enabled", "enabled"),
+    )

@@ -19,7 +19,10 @@ from app.api.v1.schemas.admin_exports import (
 )
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
-from app.infra.db.models.llm.llm_observability import LlmCallLogModel
+from app.infra.db.models.llm.llm_observability import (
+    LlmCallLogModel,
+    LlmCallLogOperationalMetadataModel,
+)
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
@@ -162,14 +165,18 @@ def export_generations(
             LlmCallLogModel.feature,
             LlmCallLogModel.subfeature,
             LlmCallLogModel.plan.label("subscription_plan"),
-            LlmCallLogModel.executed_provider,
-            LlmCallLogModel.active_snapshot_version,
+            LlmCallLogOperationalMetadataModel.executed_provider,
+            LlmCallLogOperationalMetadataModel.active_snapshot_version,
             LlmCallLogModel.model,
             LlmCallLogModel.validation_status.label("status"),
             LlmCallLogModel.tokens_in.label("tokens_prompt"),
             LlmCallLogModel.tokens_out.label("tokens_completion"),
             LlmCallLogModel.latency_ms,
             LlmCallLogModel.request_id,
+        )
+        .outerjoin(
+            LlmCallLogOperationalMetadataModel,
+            LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
         )
         .order_by(LlmCallLogModel.timestamp.desc())
         .limit(5000)

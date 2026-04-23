@@ -67,7 +67,10 @@ from app.domain.llm.runtime.observability import purge_expired_logs
 from app.infra.db.models.billing import UserSubscriptionModel
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm.llm_observability import LlmCallLogModel
+from app.infra.db.models.llm.llm_observability import (
+    LlmCallLogModel,
+    LlmCallLogOperationalMetadataModel,
+)
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import (
@@ -1629,32 +1632,37 @@ def list_llm_catalog(
     if manifest_ids:
         latest_timestamps_subquery = (
             select(
-                LlmCallLogModel.manifest_entry_id.label("manifest_entry_id"),
+                LlmCallLogOperationalMetadataModel.manifest_entry_id.label("manifest_entry_id"),
                 func.max(LlmCallLogModel.timestamp).label("latest_timestamp"),
             )
-            .where(LlmCallLogModel.manifest_entry_id.in_(manifest_ids))
-            .group_by(LlmCallLogModel.manifest_entry_id)
+            .join(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
+            )
+            .where(LlmCallLogOperationalMetadataModel.manifest_entry_id.in_(manifest_ids))
+            .group_by(LlmCallLogOperationalMetadataModel.manifest_entry_id)
             .subquery()
         )
 
-        latest_log_rows = (
-            db.execute(
-                select(LlmCallLogModel).join(
-                    latest_timestamps_subquery,
-                    and_(
-                        LlmCallLogModel.manifest_entry_id
-                        == latest_timestamps_subquery.c.manifest_entry_id,
-                        LlmCallLogModel.timestamp == latest_timestamps_subquery.c.latest_timestamp,
-                    ),
-                )
+        latest_log_rows = db.execute(
+            select(LlmCallLogModel, LlmCallLogOperationalMetadataModel.manifest_entry_id)
+            .join(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
             )
-            .scalars()
-            .all()
-        )
+            .join(
+                latest_timestamps_subquery,
+                and_(
+                    LlmCallLogOperationalMetadataModel.manifest_entry_id
+                    == latest_timestamps_subquery.c.manifest_entry_id,
+                    LlmCallLogModel.timestamp == latest_timestamps_subquery.c.latest_timestamp,
+                ),
+            )
+        ).all()
 
-        for row in latest_log_rows:
-            if row.manifest_entry_id and row.manifest_entry_id not in latest_logs:
-                latest_logs[row.manifest_entry_id] = row
+        for log_row, manifest_entry_id in latest_log_rows:
+            if manifest_entry_id and manifest_entry_id not in latest_logs:
+                latest_logs[str(manifest_entry_id)] = log_row
 
     now_utc = datetime_provider.utcnow()
     for manifest_entry_id, entry in entries_by_id.items():

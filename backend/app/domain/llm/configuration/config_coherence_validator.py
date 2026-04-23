@@ -189,11 +189,11 @@ class ConfigCoherenceValidator:
         await self._validate_templates_placeholders(config, result)
 
         # 5. Persona Validation (AC6)
-        if config.persona_enabled and config.persona_ref:
+        if config.is_persona_enabled() and config.persona_ref:
             await self._validate_persona(config, result, bundle)
 
         # 6. Plan Rules & Length Budget (AC7)
-        if config.plan_rules_enabled and config.plan_rules_ref:
+        if config.is_plan_rules_enabled() and config.plan_rules_ref:
             self._validate_plan_rules(config, result)
 
         if config.length_budget:
@@ -390,7 +390,13 @@ class ConfigCoherenceValidator:
         except (TypeError, ValueError):
             contract_id = None
 
-        if contract_id is not None:
+        if config.output_schema_id is not None:
+            stmt = select(LlmOutputSchemaModel).where(
+                LlmOutputSchemaModel.id == config.output_schema_id
+            )
+            res = await self._execute(stmt)
+            contract = res.scalar_one_or_none()
+        elif contract_id is not None:
             stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.id == contract_id)
             res = await self._execute(stmt)
             contract = res.scalar_one_or_none()

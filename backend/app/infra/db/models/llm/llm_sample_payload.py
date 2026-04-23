@@ -11,6 +11,12 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
+from app.infra.db.models.llm.llm_field_lengths import (
+    FEATURE_LENGTH,
+    LOCALE_LENGTH,
+    PLAN_LENGTH,
+    SUBFEATURE_LENGTH,
+)
 
 
 class LlmSamplePayloadModel(Base):
@@ -20,10 +26,12 @@ class LlmSamplePayloadModel(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
-    feature: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    subfeature: Mapped[str] = mapped_column(String(64), nullable=False, default="")
-    plan: Mapped[str] = mapped_column(String(64), nullable=False, default="")
-    locale: Mapped[str] = mapped_column(String(32), nullable=False, default="fr-FR", index=True)
+    feature: Mapped[str] = mapped_column(String(FEATURE_LENGTH), nullable=False, index=True)
+    subfeature: Mapped[str] = mapped_column(String(SUBFEATURE_LENGTH), nullable=False, default="")
+    plan: Mapped[str] = mapped_column(String(PLAN_LENGTH), nullable=False, default="")
+    locale: Mapped[str] = mapped_column(
+        String(LOCALE_LENGTH), nullable=False, default="fr-FR", index=True
+    )
     payload_json: Mapped[dict] = mapped_column(JSON, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

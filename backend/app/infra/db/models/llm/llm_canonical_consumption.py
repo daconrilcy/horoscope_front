@@ -1,5 +1,5 @@
 # Modèle DB d'agrégation de consommation canonique LLM.
-"""Déclare le read model utilisé pour piloter les coûts et volumes LLM canoniques."""
+"""Declare le read model utilise pour piloter les couts et volumes LLM canoniques."""
 
 from __future__ import annotations
 
@@ -8,9 +8,18 @@ from datetime import datetime
 from sqlalchemy import Boolean, DateTime, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.datetime_provider import datetime_provider
 from app.infra.db.base import Base
+from app.infra.db.models.llm.llm_audit import utc_now
 from app.infra.db.models.llm.llm_constraints import allowed_values_check
+from app.infra.db.models.llm.llm_field_lengths import (
+    FEATURE_LENGTH,
+    LOCALE_LENGTH,
+    PLAN_LENGTH,
+    PROVIDER_LENGTH,
+    SHORT_STATUS_LENGTH,
+    SUBFEATURE_LENGTH,
+    VERSION_LENGTH,
+)
 
 
 class LlmCanonicalConsumptionAggregateModel(Base):
@@ -19,16 +28,18 @@ class LlmCanonicalConsumptionAggregateModel(Base):
     __tablename__ = "llm_canonical_consumption_aggregates"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    granularity: Mapped[str] = mapped_column(String(16), nullable=False)  # day | month
+    granularity: Mapped[str] = mapped_column(
+        String(SHORT_STATUS_LENGTH), nullable=False
+    )  # day | month
     period_start_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    subscription_plan: Mapped[str] = mapped_column(String(64), nullable=False)
-    feature: Mapped[str] = mapped_column(String(64), nullable=False)
-    subfeature: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    locale: Mapped[str] = mapped_column(String(32), nullable=False)
-    executed_provider: Mapped[str] = mapped_column(String(32), nullable=False)
-    active_snapshot_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    subscription_plan: Mapped[str] = mapped_column(String(PLAN_LENGTH), nullable=False)
+    feature: Mapped[str] = mapped_column(String(FEATURE_LENGTH), nullable=False)
+    subfeature: Mapped[str | None] = mapped_column(String(SUBFEATURE_LENGTH), nullable=True)
+    locale: Mapped[str] = mapped_column(String(LOCALE_LENGTH), nullable=False)
+    executed_provider: Mapped[str] = mapped_column(String(PROVIDER_LENGTH), nullable=False)
+    active_snapshot_version: Mapped[str] = mapped_column(String(VERSION_LENGTH), nullable=False)
     is_legacy_residual: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     tokens_in: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -43,7 +54,7 @@ class LlmCanonicalConsumptionAggregateModel(Base):
     refreshed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime_provider.utcnow(),
+        default=utc_now,
     )
 
     __table_args__ = (

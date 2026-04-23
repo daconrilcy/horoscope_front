@@ -144,7 +144,9 @@ def test_llm_call_logs_operational_indexes_cover_story_queries() -> None:
     """Verifie les index utiles aux recherches d exploitation sur les logs LLM."""
     db = open_app_db_session()
     try:
-        indexes = _index_columns(inspect(db.get_bind()), "llm_call_logs")
+        inspector = inspect(db.get_bind())
+        indexes = _index_columns(inspector, "llm_call_logs")
+        metadata_indexes = _index_columns(inspector, "llm_call_log_operational_metadata")
     finally:
         db.close()
 
@@ -156,10 +158,12 @@ def test_llm_call_logs_operational_indexes_cover_story_queries() -> None:
         "plan",
         "timestamp",
     ]
-    assert indexes["ix_llm_call_logs_active_snapshot_version"] == ["active_snapshot_version"]
-    assert indexes["ix_llm_call_logs_executed_provider_timestamp"] == [
+    assert metadata_indexes["ix_llm_call_log_operational_metadata_snapshot"] == [
+        "active_snapshot_version"
+    ]
+    assert metadata_indexes["ix_llm_call_log_operational_metadata_provider"] == [
         "executed_provider",
-        "timestamp",
+        "pipeline_kind",
     ]
 
 
@@ -218,8 +222,6 @@ def test_llm_finite_domains_are_database_constrained() -> None:
         "ck_llm_execution_profiles_provider",
         "ck_llm_call_logs_provider",
         "ck_llm_call_logs_environment",
-        "ck_llm_call_logs_pipeline_kind",
-        "ck_llm_call_logs_breaker_state",
     }.issubset(call_log_checks | execution_checks)
     assert {
         "ck_llm_call_log_operational_metadata_pipeline_kind",
@@ -284,6 +286,7 @@ def test_call_log_operational_metadata_is_split_from_base_log() -> None:
         "executed_provider",
         "pipeline_kind",
     ]
+    assert "ix_llm_call_log_operational_metadata_snapshot" in indexes
 
 
 def test_call_log_legacy_provider_column_is_explicitly_named_as_compatibility() -> None:
@@ -296,6 +299,38 @@ def test_call_log_legacy_provider_column_is_explicitly_named_as_compatibility() 
 
     assert "provider_compat" in columns
     assert "provider" not in columns
+    assert "executed_provider" not in columns
+    assert "manifest_entry_id" not in columns
+
+
+def test_assembly_output_schema_is_backed_by_real_foreign_key() -> None:
+    """Verifie que l assembly reference le schema de sortie via une vraie FK canonique."""
+    db = open_app_db_session()
+    try:
+        inspector = inspect(db.get_bind())
+        columns = {column["name"] for column in inspector.get_columns("llm_assembly_configs")}
+        foreign_keys = inspector.get_foreign_keys("llm_assembly_configs")
+    finally:
+        db.close()
+
+    assert "output_schema_id" in columns
+    assert "output_contract_ref" not in columns
+    assert any(
+        fk.get("referred_table") == "llm_output_schemas"
+        and fk.get("constrained_columns") == ["output_schema_id"]
+        for fk in foreign_keys
+    )
+
+
+def test_persona_domains_are_database_constrained() -> None:
+    """Verifie que tone et verbosity sont fermes aussi cote base."""
+    db = open_app_db_session()
+    try:
+        checks = _check_constraint_names(inspect(db.get_bind()), "llm_personas")
+    finally:
+        db.close()
+
+    assert {"ck_llm_personas_tone", "ck_llm_personas_verbosity"}.issubset(checks)
 
 
 def test_assembly_schema_uses_explicit_component_states_instead_of_boolean_flags() -> None:

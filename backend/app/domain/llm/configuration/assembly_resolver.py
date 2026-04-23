@@ -189,7 +189,7 @@ def resolve_assembly(
 
     # 2. Resolve Persona (AC1)
     persona_block = None
-    if config.persona_enabled and config.persona:
+    if config.is_persona_enabled() and config.persona:
         try:
             persona_block = compose_persona_block(config.persona)
         except Exception as e:
@@ -199,7 +199,7 @@ def resolve_assembly(
     plan_rules_content = None
     exec_dict = dict(config.execution_config or {})
 
-    if config.plan_rules_enabled and config.plan_rules_ref:
+    if config.is_plan_rules_enabled() and config.plan_rules_ref:
         rule = PLAN_RULES_REGISTRY.get(config.plan_rules_ref)
         if rule:
             plan_rules_content = rule.instruction
@@ -266,13 +266,13 @@ def assemble_developer_prompt(resolved: ResolvedAssembly, config: PromptAssembly
     blocks = []
 
     # None doit être traité comme activé (valeur SQL non chargée / instance détachée).
-    if config.feature_enabled is not False:
+    if config.is_feature_template_enabled():
         blocks.append(resolved.feature_template_prompt)
 
-    if config.subfeature_enabled is not False and resolved.subfeature_template_prompt:
+    if config.is_subfeature_template_enabled() and resolved.subfeature_template_prompt:
         blocks.append(resolved.subfeature_template_prompt)
 
-    if config.plan_rules_enabled is not False and resolved.plan_rules_content:
+    if config.is_plan_rules_enabled() and resolved.plan_rules_content:
         blocks.append(resolved.plan_rules_content)
 
     prompt = "\n\n".join(blocks)

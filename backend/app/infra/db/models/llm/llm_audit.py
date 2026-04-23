@@ -1,14 +1,23 @@
-# Mixins d'audit partages par les modeles LLM.
-"""Factorise les colonnes d'audit repetees dans les tables LLM."""
+# Mixins et helpers temporels partages par les modeles LLM.
+"""Factorise les colonnes d'audit et les defaults temporels communs du perimetre LLM."""
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.datetime_provider import utc_now
+from app.core.datetime_provider import datetime_provider, utc_now
+
+
+def utc_now_plus_days(days: int):
+    """Retourne un callable SQLAlchemy partage pour une expiration relative en UTC."""
+
+    def _factory() -> datetime:
+        return datetime_provider.utcnow() + timedelta(days=days)
+
+    return _factory
 
 
 class CreatedAtMixin:

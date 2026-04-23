@@ -6,6 +6,11 @@ from __future__ import annotations
 from typing import Any
 
 
+def persona_default_formatting() -> dict[str, bool]:
+    """Retourne le contrat de presentation par defaut des personas."""
+    return {"sections": True, "bullets": False, "emojis": False}
+
+
 def validate_string_list_field(field_name: str, value: Any) -> list[str]:
     """Valide et normalise une liste JSON de chaines non vides."""
     if not isinstance(value, list):
@@ -30,7 +35,7 @@ def validate_persona_formatting(value: Any) -> dict[str, bool]:
         unknown = ", ".join(sorted(str(key) for key in unknown_keys))
         raise ValueError(f"formatting contains unsupported keys: {unknown}.")
 
-    formatting = {"sections": True, "bullets": False, "emojis": False}
+    formatting = persona_default_formatting()
     for key, raw in value.items():
         if not isinstance(raw, bool):
             raise ValueError(f"formatting.{key} must be a boolean.")

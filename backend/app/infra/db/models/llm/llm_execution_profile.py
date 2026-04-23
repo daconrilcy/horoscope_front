@@ -1,15 +1,13 @@
 # Modèle DB des profils d'exécution LLM.
-"""Déclare les paramètres d'exécution administrables des moteurs LLM."""
+"""Déclare les paramètres d'execution administrables des moteurs LLM."""
 
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
     UUID,
-    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -18,7 +16,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
-from app.core.datetime_provider import datetime_provider
 from app.domain.llm.runtime.execution_profiles_types import (
     OutputMode,
     ReasoningProfile,
@@ -26,31 +23,44 @@ from app.domain.llm.runtime.execution_profiles_types import (
     VerbosityProfile,
 )
 from app.infra.db.base import Base
+from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, PublishedAtMixin
 from app.infra.db.models.llm.llm_constraints import allowed_values_check
+from app.infra.db.models.llm.llm_field_lengths import (
+    FEATURE_LENGTH,
+    MODEL_LENGTH,
+    PLAN_LENGTH,
+    PROVIDER_LENGTH,
+    SHORT_STATUS_LENGTH,
+    SUBFEATURE_LENGTH,
+)
 from app.infra.db.models.llm.llm_indexes import published_unique_index
 from app.infra.db.models.llm.llm_prompt import PromptStatus
 
 
-class LlmExecutionProfileModel(Base):
-    """Sépare les choix moteur LLM du texte des prompts pour une cible donnée."""
+class LlmExecutionProfileModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin, Base):
+    """Separe les choix moteur LLM du texte des prompts pour une cible donnee."""
 
     __tablename__ = "llm_execution_profiles"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)  # Admin label
+    name: Mapped[str] = mapped_column(String(MODEL_LENGTH), nullable=False)  # Admin label
 
-    provider: Mapped[str] = mapped_column(String(32), nullable=False, default="openai")
-    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    provider: Mapped[str] = mapped_column(String(PROVIDER_LENGTH), nullable=False, default="openai")
+    model: Mapped[str] = mapped_column(String(MODEL_LENGTH), nullable=False)
 
     # Internal stable profiles (Story 66.11 D4)
     reasoning_profile: Mapped[ReasoningProfile] = mapped_column(
-        String(20), nullable=False, default="off"
+        String(SHORT_STATUS_LENGTH), nullable=False, default="off"
     )
     verbosity_profile: Mapped[VerbosityProfile] = mapped_column(
-        String(20), nullable=False, default="balanced"
+        String(SHORT_STATUS_LENGTH), nullable=False, default="balanced"
     )
-    output_mode: Mapped[OutputMode] = mapped_column(String(20), nullable=False, default="free_text")
-    tool_mode: Mapped[ToolMode] = mapped_column(String(20), nullable=False, default="none")
+    output_mode: Mapped[OutputMode] = mapped_column(
+        String(SHORT_STATUS_LENGTH), nullable=False, default="free_text"
+    )
+    tool_mode: Mapped[ToolMode] = mapped_column(
+        String(SHORT_STATUS_LENGTH), nullable=False, default="none"
+    )
 
     max_output_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     timeout_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
@@ -60,19 +70,13 @@ class LlmExecutionProfileModel(Base):
     )
 
     # Target (waterfall resolution)
-    feature: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    subfeature: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    plan: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    feature: Mapped[Optional[str]] = mapped_column(String(FEATURE_LENGTH), nullable=True)
+    subfeature: Mapped[Optional[str]] = mapped_column(String(SUBFEATURE_LENGTH), nullable=True)
+    plan: Mapped[Optional[str]] = mapped_column(String(PLAN_LENGTH), nullable=True)
 
     status: Mapped[PromptStatus] = mapped_column(
-        String(20), nullable=False, default=PromptStatus.DRAFT
+        String(SHORT_STATUS_LENGTH), nullable=False, default=PromptStatus.DRAFT
     )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: datetime_provider.utcnow()
-    )
-    created_by: Mapped[str] = mapped_column(String(100), nullable=False)
-    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     @validates("model")
     def validate_model(self, key: str, value: str) -> str:

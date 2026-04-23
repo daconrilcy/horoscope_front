@@ -23,7 +23,11 @@ from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_canonical_consumption import (
     LlmCanonicalConsumptionAggregateModel,
 )
-from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.models.llm.llm_observability import (
+    LlmCallLogModel,
+    LlmCallLogOperationalMetadataModel,
+    LlmValidationStatus,
+)
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 
 LEGACY_FEATURE_TO_CANONICAL: dict[str, str] = (
@@ -289,9 +293,11 @@ class LlmCanonicalConsumptionService:
                 LlmCallLogModel.feature.label("feature"),
                 LlmCallLogModel.use_case.label("use_case_compat"),
                 LlmCallLogModel.subfeature.label("subfeature"),
-                LlmCallLogModel.manifest_entry_id.label("manifest_entry_id"),
-                LlmCallLogModel.executed_provider.label("executed_provider"),
-                LlmCallLogModel.active_snapshot_version.label("active_snapshot_version"),
+                LlmCallLogOperationalMetadataModel.manifest_entry_id.label("manifest_entry_id"),
+                LlmCallLogOperationalMetadataModel.executed_provider.label("executed_provider"),
+                LlmCallLogOperationalMetadataModel.active_snapshot_version.label(
+                    "active_snapshot_version"
+                ),
                 LlmCallLogModel.tokens_in.label("tokens_in"),
                 LlmCallLogModel.tokens_out.label("tokens_out"),
                 LlmCallLogModel.cost_usd_estimated.label("cost_usd_estimated"),
@@ -302,6 +308,10 @@ class LlmCanonicalConsumptionService:
             .outerjoin(
                 UserTokenUsageLogModel, UserTokenUsageLogModel.llm_call_log_id == LlmCallLogModel.id
             )
+            .outerjoin(
+                LlmCallLogOperationalMetadataModel,
+                LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
+            )
             .group_by(
                 LlmCallLogModel.id,
                 LlmCallLogModel.timestamp,
@@ -309,9 +319,9 @@ class LlmCanonicalConsumptionService:
                 LlmCallLogModel.feature,
                 LlmCallLogModel.use_case,
                 LlmCallLogModel.subfeature,
-                LlmCallLogModel.manifest_entry_id,
-                LlmCallLogModel.executed_provider,
-                LlmCallLogModel.active_snapshot_version,
+                LlmCallLogOperationalMetadataModel.manifest_entry_id,
+                LlmCallLogOperationalMetadataModel.executed_provider,
+                LlmCallLogOperationalMetadataModel.active_snapshot_version,
                 LlmCallLogModel.tokens_in,
                 LlmCallLogModel.tokens_out,
                 LlmCallLogModel.cost_usd_estimated,

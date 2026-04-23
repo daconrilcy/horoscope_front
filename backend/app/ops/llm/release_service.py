@@ -281,8 +281,8 @@ class ReleaseService:
             bundle["profile"] = self._serialize_profile(profile)
 
         # 3. Output Schema
-        if assembly.output_contract_ref:
-            schema = await self._resolve_output_schema(assembly.output_contract_ref)
+        if assembly.output_schema_id:
+            schema = await self._resolve_output_schema(str(assembly.output_schema_id))
             if schema:
                 bundle["schema"] = self._serialize_schema(schema)
 
