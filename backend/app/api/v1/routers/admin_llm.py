@@ -76,12 +76,10 @@ from app.infra.db.models.llm_prompt import (
 )
 from app.infra.db.models.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import get_db_session
-from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
-from app.infrastructure.db.repositories.llm.prompting_repository import (
+from app.infra.db.repositories.llm.prompting_repository import (
     get_active_prompt_version as repo_get_active_prompt_version,
 )
-from app.infrastructure.db.repositories.llm.prompting_repository import (
+from app.infra.db.repositories.llm.prompting_repository import (
     get_latest_active_release_snapshot,
     get_latest_prompt_version,
     get_release_snapshot,
@@ -89,9 +87,11 @@ from app.infrastructure.db.repositories.llm.prompting_repository import (
     get_use_case_config,
     list_prompt_versions,
 )
-from app.infrastructure.db.repositories.llm.prompting_repository import (
+from app.infra.db.repositories.llm.prompting_repository import (
     list_release_snapshots_timeline as repo_list_release_snapshots_timeline,
 )
+from app.infra.db.session import get_db_session
+from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
 from app.ops.llm.services import PromptLint, PromptRegistryV2, replay, run_eval
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 

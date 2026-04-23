@@ -13,7 +13,7 @@ from app.domain.llm.configuration.execution_profile_registry import ExecutionPro
 from app.infra.db.base import Base
 from app.infra.db.bootstrap import ensure_configured_sqlite_file_matches_alembic_head
 from app.infra.db.session import engine
-from app.infrastructure.providers.llm.circuit_breaker import reset_circuit_breakers
+from app.infra.providers.llm.circuit_breaker import reset_circuit_breakers
 from app.main import app
 
 # Keep reference-data seed integration flows deterministic without manual shell exports.

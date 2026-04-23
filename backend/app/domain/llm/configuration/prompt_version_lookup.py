@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.llm_prompt import LlmPromptVersionModel
-from app.infrastructure.db.repositories.llm.prompting_repository import (
+from app.infra.db.repositories.llm.prompting_repository import (
     get_active_prompt_version as repo_get_active_prompt_version,
 )
 

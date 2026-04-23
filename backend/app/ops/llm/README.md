@@ -21,5 +21,4 @@ Ce dossier centralise les scripts operationnels lies au process LLM.
 
 - Certains scripts restent physiquement sous `backend/scripts/` pendant la migration.
 - Les points d entree canoniques sous `app.ops.llm` sont les chemins a utiliser des maintenant.
-- Le registre `TRANSITION_WRAPPERS.md` a ete retire : plus de shims `app.llm_orchestration` ; le runtime LLM nominal vit sous `app.domain.llm.*`, `app.application.llm.*`, `app.infrastructure.*` et `app.ops.llm.*`.
-
+- Le registre `TRANSITION_WRAPPERS.md` a ete retire : plus de shims `app.llm_orchestration` ; le runtime LLM nominal vit sous `app.domain.llm.*`, `app.application.llm.*`, `app.infra.*` et `app.ops.llm.*`.

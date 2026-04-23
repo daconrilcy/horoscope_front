@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "generated_for_story": "70-17-db-cleanup-llm-canonique",
   "governance_doc": "backend/docs/llm-db-governance.md",
   "reviewed_migrations": [
@@ -45,7 +45,7 @@
         "backend/app/domain/llm/runtime/gateway.py",
         "backend/app/infra/db/models/__init__.py",
         "backend/app/infra/db/models/llm_prompt.py",
-        "backend/app/infrastructure/db/repositories/llm/prompting_repository.py",
+        "backend/app/infra/db/repositories/llm/prompting_repository.py",
         "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
         "backend/app/ops/llm/bootstrap/seed_30_14_chat_prompt.py",
         "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",

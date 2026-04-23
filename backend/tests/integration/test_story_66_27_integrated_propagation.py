@@ -88,7 +88,7 @@ async def test_integrated_template_handled_propagation(db):
                     return_value=None,
                 ):
                     with patch(
-                        "app.infrastructure.providers.llm.openai_responses_client.ResponsesClient.execute",
+                        "app.infra.providers.llm.openai_responses_client.ResponsesClient.execute",
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response
@@ -166,7 +166,7 @@ async def test_integrated_injector_applied_propagation(db):
                     return_value=None,
                 ):
                     with patch(
-                        "app.infrastructure.providers.llm.openai_responses_client.ResponsesClient.execute",
+                        "app.infra.providers.llm.openai_responses_client.ResponsesClient.execute",
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response
@@ -245,7 +245,7 @@ async def test_integrated_not_needed_propagation(db):
                     return_value=None,
                 ):
                     with patch(
-                        "app.infrastructure.providers.llm.openai_responses_client.ResponsesClient.execute",
+                        "app.infra.providers.llm.openai_responses_client.ResponsesClient.execute",
                         new_callable=AsyncMock,
                     ) as mock_exec:
                         mock_exec.return_value = mock_response

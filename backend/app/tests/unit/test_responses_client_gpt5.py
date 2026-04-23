@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.infrastructure.providers.llm.openai_responses_client import ResponsesClient
+from app.infra.providers.llm.openai_responses_client import ResponsesClient
 
 
 def _build_raw_response(

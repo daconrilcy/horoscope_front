@@ -10,7 +10,7 @@ from app.ai_engine.exceptions import (
 )
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
-from app.infrastructure.providers.llm.circuit_breaker import _breakers
+from app.infra.providers.llm.circuit_breaker import _breakers
 
 
 @pytest.fixture(autouse=True)
@@ -129,7 +129,7 @@ async def test_runtime_manager_recovers_headers_on_failure():
 @pytest.mark.asyncio
 async def test_circuit_breaker_sliding_window():
     # Arrange
-    from app.infrastructure.providers.llm.circuit_breaker import CircuitBreaker
+    from app.infra.providers.llm.circuit_breaker import CircuitBreaker
 
     # Threshold 2, window 1s
     breaker = CircuitBreaker(failure_threshold=2, recovery_timeout_sec=10, window_sec=1)

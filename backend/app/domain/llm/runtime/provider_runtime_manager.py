@@ -26,8 +26,8 @@ from app.ai_engine.exceptions import (
 )
 from app.domain.llm.runtime.contracts import GatewayResult
 from app.domain.llm.runtime.simulation import simulation_error
-from app.infrastructure.providers.llm.circuit_breaker import get_circuit_breaker
-from app.infrastructure.providers.llm.openai_responses_client import ResponsesClient
+from app.infra.providers.llm.circuit_breaker import get_circuit_breaker
+from app.infra.providers.llm.openai_responses_client import ResponsesClient
 
 logger = logging.getLogger(__name__)
 

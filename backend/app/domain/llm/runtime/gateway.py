@@ -70,7 +70,7 @@ from app.domain.llm.runtime.providers import is_provider_supported
 from app.domain.llm.runtime.repair import build_repair_prompt
 from app.infra.db.models import LlmOutputSchemaModel, LlmPersonaModel, LlmUseCaseConfigModel
 from app.infra.observability.metrics import increment_counter
-from app.infrastructure.providers.llm.openai_responses_client import ResponsesClient
+from app.infra.providers.llm.openai_responses_client import ResponsesClient
 
 # Conserver le nom de logger historique (observabilité / tests sur ce namespace).
 logger = logging.getLogger("app.domain.llm.runtime.gateway")

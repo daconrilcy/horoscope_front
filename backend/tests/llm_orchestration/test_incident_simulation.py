@@ -4,7 +4,7 @@ import pytest
 
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.domain.llm.runtime.simulation_context import simulation_error as simulation_error_ctx
-from app.infrastructure.providers.llm.circuit_breaker import get_circuit_breaker
+from app.infra.providers.llm.circuit_breaker import get_circuit_breaker
 
 
 @pytest.fixture(autouse=True)

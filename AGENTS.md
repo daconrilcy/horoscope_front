@@ -37,6 +37,7 @@ Monorepo:
 Backend (recommandé):
 - Framework API: FastAPI
 - Gestion des dépendances: pyproject.toml (PEP 621) - NE PAS créer de requirements.txt
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
 - Structure:
   backend/
     app/
@@ -119,6 +120,7 @@ Commandes standard (exemples PowerShell, toujours après activation venv):
 - Ne pas changer la stack (React obligatoire, Python 3.13 côté back).
 - Ne pas introduire 3 façons différentes de faire la même chose.
 - Ne pas "corriger" du style sans raison (refactor massif uniquement si demandé ou si nécessaire).
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
 
 13) Checklist de fin (obligatoire avant de conclure)
 - Le venv était activé pour toutes les commandes Python.

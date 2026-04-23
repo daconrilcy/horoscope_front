@@ -669,5 +669,6 @@ development_status:
   70-15-basculer-la-source-de-verite-runtime-llm-vers-les-namespaces-canoniques: done
   70-16-documenter-valider-et-exposer-des-routes-de-test-pour-la-generation-llm: done
   70-17-db-cleanup-llm-canonique: review
+  70-18-cleaner-la-structure-backend-et-converger-les-namespaces-techniques: ready-for-dev
   epic-70-retrospective: backlog
   67-to-69-deferred-work: done

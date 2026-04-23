@@ -62,6 +62,7 @@ Produire et executer un plan de cleanup DB LLM qui :
 16. **AC16 - Elimination prealable des dependances legacy backend actives** : avant tout drop physique supplementaire, les dependances backend encore actives a `llm_use_case_configs`, `fallback_use_case_key` et aux ecritures de configuration `use_case` sont retirees des chemins nominaux de bootstrap, runtime et administration. Les surfaces encore legacy autorisees restent explicitement bornees a la maintenance/compatibilite et ne pilotent plus aucun comportement nominal.
 17. **AC17 - Controle explicite de `backend\\horoscope.db` et alignement applicatif** : un controle automatise verifie que le fichier `backend\\horoscope.db` et toute base SQLite configuree pertinente sont migres jusqu a la revision Alembic attendue avant l execution des validations backend, sans recreation silencieuse de schema divergent. La preuve executee montre que l etat reel de la base locale reste aligne avec les modeles ORM, les migrations et les chemins nominaux de l application backend.
 18. **AC18 - Gouvernance enforcee du registre et des garde-fous locaux** : le registre DB LLM n est plus seulement descriptif. Le bootstrap local ne doit plus repeupler nominalement les structures legacy gelees, le garde SQLite doit exiger `alembic head` pour chaque fichier SQLite configure pertinent, et le validateur de cleanup doit couvrir aussi les objets gouvernes hors ORM et refuser les allowlists trop larges qui laisseraient reintroduire des usages legacy nominaux sans alerte.
+19. **AC19 - Conformite du perimetre `backend/app/infra/db` lie au LLM** : un audit cible du perimetre `backend/app/infra/db` recense les modeles, repositories, utilitaires et points de bootstrap lies au LLM, verifie leur conformite avec la gouvernance canonique post-70-15, et identifie explicitement ceux qui restent legitimes, ceux qui ne sont que des compatibilites bornees, et ceux qui constituent des reliquats legacy a supprimer, migrer ou sortir du chemin nominal. Aucun fichier LLM legacy encore present dans `infra/db` ne peut rester en place sans justification documentee dans le registre ou dans la gouvernance.
 
 ## Tasks / Subtasks
 
@@ -132,6 +133,12 @@ Produire et executer un plan de cleanup DB LLM qui :
   - [x] Reborner les lectures legacy restantes a la compatibilite explicite et mettre a jour les garde-fous associes.
   - [x] Supprimer le reseed nominal local de `llm_use_case_configs` depuis le bootstrap de `main.py`.
 
+- [ ] **Task 11: Auditer le perimetre `backend/app/infra/db` lie au LLM** (AC: 1, 3, 7, 8, 14, 19)
+  - [ ] Inventorier les fichiers `models`, `repositories`, `bootstrap`, `session` et utilitaires de `backend/app/infra/db` qui portent encore une responsabilite LLM.
+  - [ ] Verifier pour chacun s il reste aligne avec les tables et contrats canoniques post-70-15 ou s il ne sert plus qu a une compatibilite transitoire.
+  - [ ] Identifier explicitement les fichiers ou modules `infra/db` qui sont devenus legacy et documenter s ils doivent etre supprimes, migres, fusionnes ou simplement reclasses.
+  - [ ] Bloquer tout reliquat `infra/db` LLM non justifie dans le registre ou dans la documentation de gouvernance.
+
 ## Dev Notes
 
 ### Developer Context
@@ -147,6 +154,7 @@ Produire et executer un plan de cleanup DB LLM qui :
   - `backend/app/api/v1/routers/admin_exports.py` : `use_case_compat` explicitement deprecie mais encore expose
   - `backend/app/main.py` : auto-heal et seeds qui comptent encore `llm_use_case_configs` / `llm_prompt_versions`
   - `backend/app/ai_engine/*` : surfaces historiques `use_case` a auditer avant tout drop DB
+- En complement des objets DB eux-memes, la story doit auditer le perimetre fichier `backend/app/infra/db/*` lie au LLM : tout modele, repository, helper ou point de bootstrap conserve dans cette couche doit soit rester necessaire au runtime canonique, soit etre explicitement classe comme compatibilite transitoire, soit etre cible de suppression/migration s il ne sert plus que de reliquat legacy.
 
 ### Migration Order Requirements
 
@@ -261,6 +269,7 @@ gpt-5
 - Correctif post-review applique : le garde SQLite strict reste compatible avec `backend/app/tests` via une allowlist bornee aux seules tables ORM-only attendues apres migration, au lieu d accepter indistinctement toute table manquante sur une SQLite secondaire a `alembic head`.
 - Correctif systemique applique sur Alembic : `backend/migrations/env.py` consomme desormais explicitement l URL SQLite injectee par le helper applicatif/tests, ce qui garantit que les migrations ciblent bien la base temporaire de chaque test au lieu de retomber sur la configuration par defaut.
 - Validation finale etendue executee dans le venv apres correctifs 70-17 : `pytest -q` backend complet repasse (`2992 passed, 12 skipped`), ce qui clot la regression massive introduite sur les migrations SQLite temporaires et le harness `app/tests`.
+- Correctif post-migration 70-18 documente : apres le deplacement du repository LLM de `backend/app/infrastructure/db/repositories/llm/prompting_repository.py` vers `backend/app/infra/db/repositories/llm/prompting_repository.py`, le registre `backend/docs/llm-db-cleanup-registry.json` a ete mis a jour en `1.2.1` pour realigner l allowlist de la regle `legacy-use-case-config-access` sur le nouveau chemin canonique et restaurer le passage du garde-fou `tests/integration/test_story_70_17_llm_db_cleanup_registry.py`.
 
 ### File List
 
@@ -307,3 +316,4 @@ gpt-5
 - 2026-04-23 : clarification documentaire ajoutee dans l artefact 70-17 pour expliciter que l allowlist de tables manquantes a `alembic head` est reservee au harness `backend/app/tests` et ne doit jamais etre interpretee comme une regle generale du bootstrap backend.
 - 2026-04-23 : correctif post-review du garde SQLite et du routage Alembic de test : compatibilite restauree avec le harness `backend/app/tests`, allowlist des tables manquantes strictement bornee, et `backend/migrations/env.py` aligne sur l URL SQLite injectee pour que les migrations visent bien la base temporaire sous test.
 - 2026-04-23 : validation backend complete relancee dans le venv apres ces correctifs ; `pytest -q` passe avec `2992 passed, 12 skipped`.
+- 2026-04-23 : note de maintenance ajoutee apres la migration 70-18 des namespaces backend ; le registre `backend/docs/llm-db-cleanup-registry.json` passe en `1.2.1` pour remplacer l ancien chemin allowliste `backend/app/infrastructure/db/repositories/llm/prompting_repository.py` par `backend/app/infra/db/repositories/llm/prompting_repository.py` et garder le validateur 70-17 coherent avec la nouvelle structure.

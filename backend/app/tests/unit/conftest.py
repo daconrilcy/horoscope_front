@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.infra.db.base import Base
-from app.infrastructure.providers.llm.circuit_breaker import reset_circuit_breakers
+from app.infra.providers.llm.circuit_breaker import reset_circuit_breakers
 from app.main import app
 
 

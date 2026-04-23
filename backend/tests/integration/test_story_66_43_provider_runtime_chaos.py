@@ -24,7 +24,7 @@ from app.domain.llm.runtime.contracts import (
     UsageInfo,
 )
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
-from app.infrastructure.providers.llm.circuit_breaker import (
+from app.infra.providers.llm.circuit_breaker import (
     get_circuit_breaker,
     reset_circuit_breakers,
 )

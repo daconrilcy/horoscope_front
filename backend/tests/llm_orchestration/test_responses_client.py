@@ -3,13 +3,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from openai import RateLimitError
 
-from app.infrastructure.providers.llm.openai_responses_client import ResponsesClient
+from app.infra.providers.llm.openai_responses_client import ResponsesClient
 
 
 @pytest.fixture(autouse=True)
 def mock_settings():
     with patch(
-        "app.infrastructure.providers.llm.openai_responses_client.ai_engine_settings.openai_api_key",
+        "app.infra.providers.llm.openai_responses_client.ai_engine_settings.openai_api_key",
         "sk-test",
     ):
         yield
@@ -30,7 +30,7 @@ async def test_responses_client_execute_success():
     mock_raw_response.headers = {"x-request-id": "req-1"}
 
     with patch(
-        "app.infrastructure.providers.llm.openai_responses_client.AsyncOpenAI"
+        "app.infra.providers.llm.openai_responses_client.AsyncOpenAI"
     ) as mock_openai_class:
         mock_client_instance = mock_openai_class.return_value
         # Mock with_raw_response chain
@@ -62,7 +62,7 @@ async def test_responses_client_execute_success():
 async def test_responses_client_passes_through_rate_limit():
     # Arrange
     with patch(
-        "app.infrastructure.providers.llm.openai_responses_client.AsyncOpenAI"
+        "app.infra.providers.llm.openai_responses_client.AsyncOpenAI"
     ) as mock_openai_class:
         mock_client_instance = mock_openai_class.return_value
         mock_with_raw = MagicMock()

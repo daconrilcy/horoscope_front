@@ -8,9 +8,7 @@ from typing import Any, Dict, List, Optional
 from openai import AsyncOpenAI
 
 from app.ai_engine.config import ai_engine_settings
-from app.ai_engine.exceptions import (
-    ProviderNotConfiguredError,
-)
+from app.ai_engine.exceptions import ProviderNotConfiguredError
 from app.domain.llm.runtime.contracts import (
     GatewayMeta,
     GatewayResult,
@@ -52,7 +50,6 @@ class ResponsesClient:
 
     async def _get_async_client(self) -> "AsyncOpenAI":
         if self._async_client is None:
-            # Disable SDK-level retries (default is 2) to keep a single source of truth.
             self._async_client = AsyncOpenAI(
                 api_key=ai_engine_settings.openai_api_key,
                 max_retries=0,
@@ -63,12 +60,6 @@ class ResponsesClient:
     def _to_typed_content_blocks(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Convert simple role/content messages to typed content blocks required by GPT-5.
-        Format:
-        - user/system/developer -> {"type": "input_text", "text": "..."}
-        - assistant -> {"type": "output_text", "text": "..."}
-
-        Idempotent: if content is already a list (typed blocks), returns as-is.
-        Preserves all extra fields present on the message dict.
         """
         result = []
         for msg in messages:
@@ -103,12 +94,9 @@ class ResponsesClient:
         client = await self._get_async_client()
 
         start_time = time.monotonic()
-
-        # 1. GPT-5 requires typed content blocks.
         is_gpt5 = model == "gpt-5" or model.startswith("gpt-5-")
         effective_input = self._to_typed_content_blocks(messages) if is_gpt5 else messages
 
-        # 2. Base parameters
         params: Dict[str, Any] = {
             "model": model,
             "input": effective_input,  # type: ignore
@@ -116,7 +104,6 @@ class ResponsesClient:
             "timeout": timeout_seconds,
         }
 
-        # 3. Reasoning and Temperature
         is_reasoning = is_reasoning_model(model)
         if is_reasoning:
             if reasoning_effort:
@@ -134,15 +121,15 @@ class ResponsesClient:
                 nested = fmt.pop("json_schema")
                 fmt.update(nested)
 
-                def _enforce_strict(s: dict):
-                    if isinstance(s, dict):
-                        if s.get("type") == "object":
-                            s["additionalProperties"] = False
-                        for k, v in s.items():
-                            if isinstance(v, (dict, list)):
-                                _enforce_strict(v)
-                    elif isinstance(s, list):
-                        for item in s:
+                def _enforce_strict(schema: dict | list) -> None:
+                    if isinstance(schema, dict):
+                        if schema.get("type") == "object":
+                            schema["additionalProperties"] = False
+                        for value in schema.values():
+                            if isinstance(value, (dict, list)):
+                                _enforce_strict(value)
+                    elif isinstance(schema, list):
+                        for item in schema:
                             if isinstance(item, (dict, list)):
                                 _enforce_strict(item)
 
@@ -154,7 +141,6 @@ class ResponsesClient:
         if text_config:
             params["text"] = text_config
 
-        # Add tracing headers
         headers: Dict[str, str] = {}
         if request_id:
             headers["x-request-id"] = request_id
@@ -165,27 +151,23 @@ class ResponsesClient:
         if headers:
             params["extra_headers"] = headers
 
-        # Execute with raw response access to get headers (AC5)
         try:
             raw_api_response = await client.with_raw_response.responses.create(**params)
             response = raw_api_response.parse()
             resp_headers = _coerce_headers(getattr(raw_api_response, "headers", None))
         except Exception as err:
-            # Story 66.33 Finding High: Extract headers from exception if available
             resp_headers = {}
             if hasattr(err, "response") and hasattr(err.response, "headers"):
                 try:
                     resp_headers = _coerce_headers(err.response.headers)
                 except Exception:
                     pass
-            # Re-wrap error if it carries headers to propagate them
             setattr(err, "_provider_headers", resp_headers)
             if hasattr(err, "code"):
                 setattr(err, "_provider_error_code", str(getattr(err, "code")))
             raise err
 
         latency_ms = int((time.monotonic() - start_time) * 1000)
-
         output_text = response.output_text if hasattr(response, "output_text") else ""
 
         usage = UsageInfo(
@@ -216,5 +198,3 @@ class ResponsesClient:
             ),
         )
         return result, resp_headers
-
-    # Removed _execute_with_retry as it's now handled by ProviderRuntimeManager

@@ -51,7 +51,6 @@ class CircuitBreaker:
             return False
 
         if self.state == CircuitBreakerState.HALF_OPEN:
-            # If a probe is already in flight, block others to avoid flooding
             if self._probe_in_flight:
                 return False
             self._probe_in_flight = True
