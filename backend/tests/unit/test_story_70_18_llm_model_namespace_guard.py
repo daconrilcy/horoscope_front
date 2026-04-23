@@ -6,6 +6,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel
+
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 MODEL_ROOT = BACKEND_ROOT / "app" / "infra" / "db" / "models"
 LLM_MODEL_ROOT = MODEL_ROOT / "llm"
@@ -17,8 +19,12 @@ SCAN_ROOTS = (
 )
 CANONICAL_LLM_MODEL_FILES = (
     "llm_assembly.py",
+    "llm_audit.py",
     "llm_canonical_consumption.py",
+    "llm_constraints.py",
     "llm_execution_profile.py",
+    "llm_indexes.py",
+    "llm_json_validators.py",
     "llm_observability.py",
     "llm_output_schema.py",
     "llm_persona.py",
@@ -96,6 +102,19 @@ def test_root_model_barrel_does_not_reexport_llm_symbols() -> None:
     content = (MODEL_ROOT / "__init__.py").read_text(encoding="utf-8")
     offenders = [marker for marker in LEGACY_BARREL_EXPORT_MARKERS if marker in content]
     assert offenders == []
+
+
+def test_alembic_env_imports_canonical_llm_package_for_metadata() -> None:
+    """Garantit qu Alembic charge la metadata LLM sans réexport barrel racine."""
+    content = (BACKEND_ROOT / "migrations" / "env.py").read_text(encoding="utf-8")
+
+    assert "from app.infra.db.models import llm as _llm_models" in content
+
+
+def test_llm_call_log_model_does_not_keep_python_provider_alias() -> None:
+    """Interdit le retour de l alias applicatif `provider` sur le log LLM."""
+    assert "provider" not in LlmCallLogModel.__dict__
+    assert "provider_compat" in LlmCallLogModel.__dict__
 
 
 def test_each_canonical_llm_model_file_is_used_by_backend_code() -> None:
