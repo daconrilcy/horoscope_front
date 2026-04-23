@@ -4,6 +4,7 @@ import atexit
 import uuid
 from pathlib import Path
 
+import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
@@ -48,6 +49,9 @@ _TEST_SESSION_LOCAL = sessionmaker(
     autocommit=False,
     future=True,
 )
+_ORIGINAL_ENGINE = db_session_module.engine
+_ORIGINAL_SESSION_LOCAL = db_session_module.SessionLocal
+_ORIGINAL_LOCAL_SCHEMA_READY = db_session_module._local_schema_ready
 
 # Global redirection for the whole pytest process.
 # Many legacy tests import `engine` / `SessionLocal` directly from app.infra.db.session
@@ -55,3 +59,14 @@ _TEST_SESSION_LOCAL = sessionmaker(
 db_session_module.engine = _TEST_ENGINE
 db_session_module.SessionLocal = _TEST_SESSION_LOCAL
 db_session_module._local_schema_ready = False
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _restore_global_db_session_module_after_app_tests() -> None:
+    try:
+        yield
+    finally:
+        db_session_module.engine = _ORIGINAL_ENGINE
+        db_session_module.SessionLocal = _ORIGINAL_SESSION_LOCAL
+        db_session_module._local_schema_ready = _ORIGINAL_LOCAL_SCHEMA_READY
+        _TEST_ENGINE.dispose()

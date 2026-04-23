@@ -79,25 +79,18 @@ def test_admin_llm_crud_flow():
     _cleanup_tables()
     admin_token = _register_user("admin@example.com", "admin")
     headers = {"Authorization": f"Bearer {admin_token}", "X-Request-Id": "req-admin-llm-1"}
+    use_case_key = "account_support"
 
-    # 1. Setup use case
-    with SessionLocal() as db:
-        uc = LlmUseCaseConfigModel(
-            key="test_chat", display_name="Chat", description="Chat use case"
-        )
-        db.add(uc)
-        db.commit()
-
-    # 2. List use cases
+    # 1. List canonical use cases
     resp = client.get("/v1/admin/llm/use-cases", headers=headers)
     assert resp.status_code == 200
     data = resp.json()["data"]
     assert len(data) >= 1
-    assert any(uc["key"] == "test_chat" for uc in data)
+    assert any(uc["key"] == use_case_key for uc in data)
 
-    # 3. Create draft
+    # 2. Create draft
     draft_resp = client.post(
-        "/v1/admin/llm/use-cases/test_chat/prompts",
+        f"/v1/admin/llm/use-cases/{use_case_key}/prompts",
         headers=headers,
         json={
             "developer_prompt": "Prompt for {{locale}} and {{use_case}}",
@@ -114,19 +107,19 @@ def test_admin_llm_crud_flow():
             select(AuditEventModel).where(AuditEventModel.action == "llm_prompt_create_draft")
         ).scalar_one()
 
-    assert create_event.details["use_case_key"] == "test_chat"
+    assert create_event.details["use_case_key"] == use_case_key
     assert create_event.details["to_version"] == version_id
     assert create_event.details["from_version"] is None
 
-    # 4. List history
-    hist_resp = client.get("/v1/admin/llm/use-cases/test_chat/prompts", headers=headers)
+    # 3. List history
+    hist_resp = client.get(f"/v1/admin/llm/use-cases/{use_case_key}/prompts", headers=headers)
     assert hist_resp.status_code == 200
     assert len(hist_resp.json()["data"]) == 1
     assert hist_resp.json()["data"][0]["id"] == version_id
 
-    # 5. Publish
+    # 4. Publish
     pub_resp = client.patch(
-        f"/v1/admin/llm/use-cases/test_chat/prompts/{version_id}/publish",
+        f"/v1/admin/llm/use-cases/{use_case_key}/prompts/{version_id}/publish",
         headers=headers,
     )
     assert pub_resp.status_code == 200
@@ -137,18 +130,18 @@ def test_admin_llm_crud_flow():
             select(AuditEventModel).where(AuditEventModel.action == "llm_prompt_publish")
         ).scalar_one()
 
-    assert publish_event.details["use_case_key"] == "test_chat"
+    assert publish_event.details["use_case_key"] == use_case_key
     assert publish_event.details["from_version"] is None
     assert publish_event.details["to_version"] == version_id
 
-    # 6. Verify active prompt in use cases list
+    # 5. Verify active prompt in use cases list
     uc_list_resp = client.get("/v1/admin/llm/use-cases", headers=headers)
-    chat_uc = next(uc for uc in uc_list_resp.json()["data"] if uc["key"] == "test_chat")
+    chat_uc = next(uc for uc in uc_list_resp.json()["data"] if uc["key"] == use_case_key)
     assert chat_uc["active_prompt_version_id"] == version_id
 
-    # 7. Create another draft and publish to test rollback
+    # 6. Create another draft and publish to test rollback
     draft2_resp = client.post(
-        "/v1/admin/llm/use-cases/test_chat/prompts",
+        f"/v1/admin/llm/use-cases/{use_case_key}/prompts",
         headers=headers,
         json={
             "developer_prompt": "Prompt V2 for {{locale}} and {{use_case}}",
@@ -156,10 +149,12 @@ def test_admin_llm_crud_flow():
         },
     )
     v2_id = draft2_resp.json()["data"]["id"]
-    client.patch(f"/v1/admin/llm/use-cases/test_chat/prompts/{v2_id}/publish", headers=headers)
+    client.patch(
+        f"/v1/admin/llm/use-cases/{use_case_key}/prompts/{v2_id}/publish", headers=headers
+    )
 
     hist_after_second_publish = client.get(
-        "/v1/admin/llm/use-cases/test_chat/prompts",
+        f"/v1/admin/llm/use-cases/{use_case_key}/prompts",
         headers=headers,
     )
     assert hist_after_second_publish.status_code == 200
@@ -168,8 +163,8 @@ def test_admin_llm_crud_flow():
     assert history_by_id[version_id]["status"] == "inactive"
     assert history_by_id[v2_id]["status"] == "published"
 
-    # 8. Rollback
-    rb_resp = client.post("/v1/admin/llm/use-cases/test_chat/rollback", headers=headers)
+    # 7. Rollback
+    rb_resp = client.post(f"/v1/admin/llm/use-cases/{use_case_key}/rollback", headers=headers)
 
     assert rb_resp.status_code == 200, f"Rollback failed: {rb_resp.json()}"
     assert rb_resp.json()["data"]["id"] == version_id
