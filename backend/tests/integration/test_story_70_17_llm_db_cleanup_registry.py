@@ -124,6 +124,31 @@ def test_compatibility_rules_reject_broad_directory_allowlists() -> None:
     assert any(violation.code == "BROAD_COMPAT_ALLOWLIST" for violation in violations)
 
 
+def test_legacy_usage_allowlist_requires_exact_file_match(tmp_path: Path) -> None:
+    repo_root = tmp_path / "repo"
+    app_root = repo_root / "backend" / "app" / "api" / "v1" / "routers"
+    scripts_root = repo_root / "backend" / "scripts"
+    app_root.mkdir(parents=True)
+    scripts_root.mkdir(parents=True)
+    (app_root / "admin_llm.py_wrapper.py").write_text(
+        "VALUE = 'fallback_use_case_key'\n",
+        encoding="utf-8",
+    )
+
+    violations = scan_python_sources_for_legacy_patterns(
+        root_path=repo_root,
+        compatibility_rules=[
+            {
+                "rule_id": "legacy-fallback-use-case-key",
+                "pattern": "fallback_use_case_key",
+                "allowed_paths": ["backend/app/api/v1/routers/admin_llm.py"],
+            }
+        ],
+    )
+
+    assert any(violation.code == "LEGACY_ACCESS_OUTSIDE_ALLOWLIST" for violation in violations)
+
+
 def test_main_no_longer_depends_on_legacy_use_case_registry() -> None:
     root = _repo_root()
     content = (root / "backend" / "app" / "main.py").read_text(encoding="utf-8")

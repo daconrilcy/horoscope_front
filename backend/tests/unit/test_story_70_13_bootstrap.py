@@ -109,6 +109,42 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     seed_66_20_taxonomy.assert_called_once()
 
 
+def test_canonical_llm_bootstrap_does_not_reseed_legacy_use_case_registry(monkeypatch) -> None:
+    monkeypatch.setattr(main.settings, "app_env", "development")
+    monkeypatch.setattr(
+        "app.infra.db.session.SessionLocal",
+        _FakeSessionLocal(
+            {
+                "LlmOutputSchemaModel": 0,
+                "LlmPromptVersionModel": 0,
+                "LlmPersonaModel": 0,
+                "PromptAssemblyConfigModel": 0,
+                "LlmExecutionProfileModel": 0,
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+        lambda *_args, **_kwargs: None,
+    )
+
+    legacy_seed_use_cases = Mock()
+    legacy_seed_canonical_contracts = Mock()
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.use_cases_seed.seed_use_cases",
+        legacy_seed_use_cases,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.use_cases_seed.seed_canonical_contracts",
+        legacy_seed_canonical_contracts,
+    )
+
+    main._ensure_canonical_llm_bootstrap_seeded()
+
+    legacy_seed_use_cases.assert_not_called()
+    legacy_seed_canonical_contracts.assert_not_called()
+
+
 def test_canonical_llm_bootstrap_skips_when_nominal_tables_exist(monkeypatch) -> None:
     monkeypatch.setattr(main.settings, "app_env", "development")
     monkeypatch.setattr(

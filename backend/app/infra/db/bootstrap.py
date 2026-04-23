@@ -169,36 +169,6 @@ def sqlite_alignment_status(database_url: str) -> SqliteAlignmentStatus:
         sync_engine.dispose()
 
 
-def _stamp_sqlite_head_revision(database_url: str, head_revision: str) -> None:
-    connect_args: dict[str, object] = {}
-    if database_url.startswith("sqlite"):
-        connect_args = {"check_same_thread": False, "timeout": 30}
-
-    sync_engine = create_engine(
-        database_url,
-        connect_args=connect_args,
-        future=True,
-    )
-    try:
-        with sync_engine.begin() as connection:
-            connection.execute(
-                text(
-                    """
-                    CREATE TABLE IF NOT EXISTS alembic_version (
-                        version_num VARCHAR(32) NOT NULL
-                    )
-                    """
-                )
-            )
-            connection.execute(text("DELETE FROM alembic_version"))
-            connection.execute(
-                text("INSERT INTO alembic_version (version_num) VALUES (:head_revision)"),
-                {"head_revision": head_revision},
-            )
-    finally:
-        sync_engine.dispose()
-
-
 def configured_sqlite_alignment_statuses() -> tuple[SqliteAlignmentStatus, ...]:
     from app.infra.db import session as session_module
 
@@ -218,9 +188,19 @@ def configured_sqlite_alignment_statuses() -> tuple[SqliteAlignmentStatus, ...]:
 
 
 def _is_strictly_aligned_configured_sqlite(
-    status: SqliteAlignmentStatus, *, primary_database_url: str
+    status: SqliteAlignmentStatus,
+    *,
+    primary_database_url: str,
+    allowed_secondary_missing_tables_at_head: frozenset[str] = frozenset(),
 ) -> bool:
-    del primary_database_url
+    if (
+        allowed_secondary_missing_tables_at_head
+        and status.database_url != primary_database_url
+        and status.exists
+        and status.current_revision == status.head_revision
+        and set(status.missing_tables).issubset(allowed_secondary_missing_tables_at_head)
+    ):
+        return True
     return status.is_aligned
 
 
@@ -434,7 +414,9 @@ def ensure_local_sqlite_schema_ready() -> None:
         _repair_local_sqlite_known_drift()
 
 
-def ensure_configured_sqlite_file_matches_alembic_head() -> None:
+def ensure_configured_sqlite_file_matches_alembic_head(
+    *, allowed_secondary_missing_tables_at_head: frozenset[str] = frozenset()
+) -> None:
     """
     À appeler depuis les conftest lorsque les tests utilisent `SessionLocal` /
     le moteur SQLAlchemy applicatif (fichier SQLite).
@@ -450,47 +432,20 @@ def ensure_configured_sqlite_file_matches_alembic_head() -> None:
     provoque des « no such table » si une migration n'a pas été appliquée manuellement.
     """
     statuses = configured_sqlite_alignment_statuses()
-    seen = {status.database_url for status in statuses}
     for status in statuses:
         url = status.database_url
         command.upgrade(_alembic_config(database_url=url), "head")
 
-    # Sur la base SQLite « secondaire » (souvent le fichier temporaire injecté par
-    # `app/tests/conftest.py`), un filet ORM évite des tables manquantes si Alembic
-    # et le moteur patché divergent. On ne le fait pas sur `settings.database_url`
-    # pour ne pas perturber les tests qui s’appuient sur un schéma uniquement Alembic.
-    connect_args: dict[str, object] = {}
-    if _is_pytest_runtime():
-        connect_args = {"check_same_thread": False, "timeout": 30}
-
-    settings_url = settings.database_url
-    for url in seen:
-        if url == settings_url:
-            continue
-        sync_engine = create_engine(
-            url,
-            connect_args=connect_args,
-            future=True,
-        )
-        try:
-            Base.metadata.create_all(bind=sync_engine, checkfirst=True)
-        finally:
-            sync_engine.dispose()
-        secondary_status = sqlite_alignment_status(url)
-        if secondary_status.exists and secondary_status.current_revision is None:
-            if secondary_status.missing_tables:
-                formatted = secondary_status.as_debug_string()
-                raise RuntimeError(
-                    "Configured secondary SQLite file could not be stamped to Alembic head "
-                    f"because ORM metadata is incomplete: {formatted}"
-                )
-            _stamp_sqlite_head_revision(url, secondary_status.head_revision)
-
     post_statuses = configured_sqlite_alignment_statuses()
+    settings_url = settings.database_url
     misaligned = [
         status
         for status in post_statuses
-        if not _is_strictly_aligned_configured_sqlite(status, primary_database_url=settings_url)
+        if not _is_strictly_aligned_configured_sqlite(
+            status,
+            primary_database_url=settings_url,
+            allowed_secondary_missing_tables_at_head=allowed_secondary_missing_tables_at_head,
+        )
     ]
     if misaligned:
         formatted = "; ".join(status.as_debug_string() for status in misaligned)

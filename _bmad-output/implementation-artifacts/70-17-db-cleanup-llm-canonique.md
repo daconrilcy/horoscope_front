@@ -257,6 +257,7 @@ gpt-5
 - Reparation locale executee : la base `backend/horoscope.db` a ete reseedee/reparee jusqu a retrouver `22` assemblies publiees et un catalogue admin non vide ; verification reelle via API locale avec `facets.feature = ["chat", "guidance", "horoscope_daily", "natal"]` et resolution valide de `natal:interpretation:free:fr-FR`.
 - Front admin revalide : `frontend/src/pages/admin/AdminPromptsPage.tsx` initialise automatiquement une selection de contexte valide quand le catalogue retourne des donnees, et `frontend/src/tests/AdminPromptsCatalogFlow.test.tsx` couvre le flux avec les libelles/dom actuels.
 - Renforcement post-audit 70-17 : le bootstrap local n appelle plus `seed_canonical_contracts()` depuis `main.py`, le garde SQLite exige desormais `alembic head` pour toute base configuree pertinente, et le validateur refuse les allowlists de repertoires trop larges tout en couvrant aussi les tables gouvernees declarees uniquement dans le registre.
+- Clarification de gouvernance ajoutee : l allowlist de tables ORM manquantes encore toleree pour une SQLite secondaire a `alembic head` ne constitue pas une regle generale du bootstrap applicatif. C est un contrat strictement borne au harness d integration `backend/app/tests`, documente comme tel dans la gouvernance backend et dans le code du harness ; toute extension future doit etre traitee comme un changement de harness explicitement justifie, et non comme un assouplissement du garde SQLite nominal.
 
 ### File List
 
@@ -300,3 +301,4 @@ gpt-5
 - 2026-04-22 : corrections post-review appliquees sur l ORM d observabilite, le detail persona admin et le critere de reseed bootstrap ; tests cibles de non-regression ajoutes / realignes et executes.
 - 2026-04-22 : correctif post-livraison du catalogue admin des prompts : reseed bootstrap canonique local, reparation de `backend/horoscope.db`, bootstrap automatique de la selection front et verifications API/UI ciblees.
 - 2026-04-22 : AC18 ajoutee et implementee pour rendre la gouvernance 70-17 effectivement enforcee sur le bootstrap local, l alignement Alembic des SQLite configurees et la portee reelle du validateur de cleanup.
+- 2026-04-23 : clarification documentaire ajoutee dans l artefact 70-17 pour expliciter que l allowlist de tables manquantes a `alembic head` est reservee au harness `backend/app/tests` et ne doit jamais etre interpretee comme une regle generale du bootstrap backend.

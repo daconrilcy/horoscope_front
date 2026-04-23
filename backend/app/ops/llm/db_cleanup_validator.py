@@ -336,7 +336,7 @@ def scan_python_sources_for_legacy_patterns(
             content = path.read_text(encoding="utf-8")
             if not regex.search(content):
                 continue
-            if any(relative_path.startswith(prefix) for prefix in allowed_paths):
+            if relative_path in allowed_paths:
                 continue
             violations.append(
                 LlmDbCleanupViolation(

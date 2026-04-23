@@ -20,12 +20,29 @@ from app.main import app
 os.environ.setdefault("REFERENCE_SEED_ADMIN_TOKEN", "test-seed-token")
 os.environ.setdefault("ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", "1")
 
+_APP_TESTS_ALLOWED_ORM_ONLY_TABLES = frozenset(
+    {
+        "chat_conversations",
+        "chat_messages",
+        "llm_canonical_consumption_aggregates",
+        "user_natal_interpretations",
+    }
+)
+# Contrat strictement borne au harness `backend/app/tests`.
+# Cette allowlist n est pas une regle generale du bootstrap applicatif ni du garde SQLite:
+# elle autorise seulement, pour cette SQLite secondaire de tests, quelques tables ORM-only
+# creees juste apres l alignement Alembic via `Base.metadata.create_all(bind=engine)`.
+# Toute extension de cette liste doit etre traitee comme un changement de harness de test,
+# pas comme une relaxation generique de la gouvernance DB.
+
 
 @pytest.fixture(autouse=True, scope="session")
 def _ensure_db_schema() -> None:
     # Alignement Alembic (tables / révisions) sur SQLite fichier — même logique que
     # `backend/tests/conftest.py`, car sous pytest l'auto-migration runtime est désactivée.
-    ensure_configured_sqlite_file_matches_alembic_head()
+    ensure_configured_sqlite_file_matches_alembic_head(
+        allowed_secondary_missing_tables_at_head=_APP_TESTS_ALLOWED_ORM_ONLY_TABLES
+    )
     # Tables déclarées en ORM non encore couvertes par une migration (rare) :
     Base.metadata.create_all(bind=engine)
 

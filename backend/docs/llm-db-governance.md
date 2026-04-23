@@ -59,3 +59,18 @@ Le validateur `backend/scripts/check_llm_db_cleanup.py` et les tests associes do
 - un objet LLM n est pas classe dans le registre ;
 - une migration LLM n est pas referencee ;
 - une lecture ou ecriture legacy apparait hors des fichiers explicitement autorises.
+
+## Contrat du harness SQLite de tests
+
+L allowlist `allowed_secondary_missing_tables_at_head` utilisee par `backend/app/tests/integration/conftest.py`
+est un contrat de harness d integration uniquement.
+
+Elle ne definit pas une regle generale du bootstrap applicatif, ni une permission generique du garde SQLite
+pour accepter des bases secondaires incompletes.
+
+Son seul but est de tolerer, sur la SQLite secondaire de `backend/app/tests`, un petit ensemble borne de
+tables ORM-only creees immediatement apres l alignement Alembic par `Base.metadata.create_all(bind=engine)`.
+
+Toute extension de cette allowlist doit etre revue comme un changement de harness de test, avec justification
+explicite des tables ajoutees et verification qu aucune table attendue par les migrations ne devient
+silencieusement optionnelle.
