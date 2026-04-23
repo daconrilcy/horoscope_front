@@ -106,9 +106,9 @@ def _alembic_config(*, database_url: str | None = None) -> Config:
     backend_root = _resolve_backend_root()
     config = Config(str(backend_root / "alembic.ini"))
     config.set_main_option("script_location", str(backend_root / "migrations"))
-    config.set_main_option(
-        "sqlalchemy.url", database_url if database_url is not None else settings.database_url
-    )
+    resolved_database_url = database_url if database_url is not None else settings.database_url
+    config.attributes["configured_sqlalchemy_url"] = resolved_database_url
+    config.set_main_option("sqlalchemy.url", resolved_database_url)
     return config
 
 

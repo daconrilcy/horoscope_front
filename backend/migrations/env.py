@@ -10,7 +10,7 @@ from app.infra.db.base import Base
 from app.infra.db.models import *  # noqa: F401, F403
 
 config = context.config
-configured_url = config.get_main_option("sqlalchemy.url") or settings.database_url
+configured_url = config.attributes.get("configured_sqlalchemy_url") or settings.database_url
 config.set_main_option("sqlalchemy.url", configured_url)
 
 if config.config_file_name is not None:
