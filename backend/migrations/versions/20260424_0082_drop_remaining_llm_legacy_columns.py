@@ -37,6 +37,86 @@ def _check_names(table_name: str) -> set[str]:
     }
 
 
+def _ensure_use_case_legacy_archive_table() -> None:
+    """Cree la table d archive des champs legacy de use case si necessaire."""
+    if _has_table("llm_use_case_config_legacy_archives"):
+        return
+
+    op.create_table(
+        "llm_use_case_config_legacy_archives",
+        sa.Column("use_case_key", sa.String(length=64), primary_key=True, nullable=False),
+        sa.Column("output_schema_id", sa.String(length=64), nullable=True),
+        sa.Column("allowed_persona_ids", sa.JSON(), nullable=True),
+        sa.Column("input_schema", sa.JSON(), nullable=True),
+        sa.Column("interaction_mode", sa.String(length=32), nullable=True),
+        sa.Column("user_question_policy", sa.String(length=32), nullable=True),
+        sa.Column("persona_strategy", sa.String(length=32), nullable=True),
+        sa.Column("safety_profile", sa.String(length=64), nullable=True),
+        sa.Column("fallback_use_case_key", sa.String(length=64), nullable=True),
+        sa.Column(
+            "archived_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+    )
+
+
+def _archive_legacy_use_case_configs() -> None:
+    """Archive explicitement les champs legacy de use case avant leur suppression."""
+    if not _has_table("llm_use_case_configs"):
+        return
+
+    columns = _column_names("llm_use_case_configs")
+    expected_columns = (
+        "output_schema_id",
+        "allowed_persona_ids",
+        "input_schema",
+        "interaction_mode",
+        "user_question_policy",
+        "persona_strategy",
+        "safety_profile",
+        "fallback_use_case_key",
+    )
+    if not {"key", *expected_columns} <= columns:
+        return
+
+    _ensure_use_case_legacy_archive_table()
+    op.execute(
+        sa.text(
+            """
+            INSERT INTO llm_use_case_config_legacy_archives (
+                use_case_key,
+                output_schema_id,
+                allowed_persona_ids,
+                input_schema,
+                interaction_mode,
+                user_question_policy,
+                persona_strategy,
+                safety_profile,
+                fallback_use_case_key
+            )
+            SELECT
+                key,
+                output_schema_id,
+                allowed_persona_ids,
+                input_schema,
+                interaction_mode,
+                user_question_policy,
+                persona_strategy,
+                safety_profile,
+                fallback_use_case_key
+            FROM llm_use_case_configs
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM llm_use_case_config_legacy_archives AS archive
+                WHERE archive.use_case_key = llm_use_case_configs.key
+            )
+            """
+        )
+    )
+
+
 def _assert_columns_are_empty(
     table_name: str,
     column_names: Sequence[str],
@@ -159,50 +239,7 @@ def upgrade() -> None:
                     batch_op.drop_column(column_name)
 
     if _has_table("llm_use_case_configs"):
-        _assert_columns_are_empty(
-            "llm_use_case_configs",
-            (
-                "input_schema",
-                "output_schema_id",
-                "persona_strategy",
-                "interaction_mode",
-                "user_question_policy",
-                "safety_profile",
-                "fallback_use_case_key",
-                "allowed_persona_ids",
-            ),
-            empty_predicates={
-                "input_schema": (
-                    "input_schema IS NULL OR "
-                    "trim(CAST(input_schema AS TEXT)) IN ('', '{}', 'null')"
-                ),
-                "interaction_mode": (
-                    "interaction_mode IS NULL OR "
-                    "trim(CAST(interaction_mode AS TEXT)) IN ('', 'structured', 'chat')"
-                ),
-                "user_question_policy": (
-                    "user_question_policy IS NULL OR "
-                    "trim(CAST(user_question_policy AS TEXT)) IN "
-                    "('', 'none', 'optional', 'required')"
-                ),
-                "persona_strategy": (
-                    "persona_strategy IS NULL OR "
-                    "trim(CAST(persona_strategy AS TEXT)) IN ('', 'optional', 'required')"
-                ),
-                "safety_profile": (
-                    "safety_profile IS NULL OR "
-                    "trim(CAST(safety_profile AS TEXT)) IN ('', 'astrology')"
-                ),
-                "fallback_use_case_key": (
-                    "fallback_use_case_key IS NULL OR "
-                    "trim(CAST(fallback_use_case_key AS TEXT)) = ''"
-                ),
-                "allowed_persona_ids": (
-                    "allowed_persona_ids IS NULL OR "
-                    "trim(CAST(allowed_persona_ids AS TEXT)) IN ('', '[]', '{}', 'null')"
-                )
-            },
-        )
+        _archive_legacy_use_case_configs()
         columns = _column_names("llm_use_case_configs")
         with op.batch_alter_table("llm_use_case_configs") as batch_op:
             for column_name in (
@@ -309,6 +346,25 @@ def downgrade() -> None:
                 )
             if "allowed_persona_ids" not in columns:
                 batch_op.add_column(sa.Column("allowed_persona_ids", sa.JSON(), nullable=True))
+        if _has_table("llm_use_case_config_legacy_archives"):
+            op.execute(
+                sa.text(
+                    """
+                    UPDATE llm_use_case_configs
+                    SET
+                        output_schema_id = archive.output_schema_id,
+                        allowed_persona_ids = archive.allowed_persona_ids,
+                        input_schema = archive.input_schema,
+                        interaction_mode = archive.interaction_mode,
+                        user_question_policy = archive.user_question_policy,
+                        persona_strategy = archive.persona_strategy,
+                        safety_profile = archive.safety_profile,
+                        fallback_use_case_key = archive.fallback_use_case_key
+                    FROM llm_use_case_config_legacy_archives AS archive
+                    WHERE archive.use_case_key = llm_use_case_configs.key
+                    """
+                )
+            )
 
     if _has_table("llm_call_logs"):
         columns = _column_names("llm_call_logs")
@@ -345,3 +401,6 @@ def downgrade() -> None:
                     "ck_llm_call_logs_provider",
                     "provider_compat IN ('openai', 'anthropic')",
                 )
+
+    if _has_table("llm_use_case_config_legacy_archives"):
+        op.drop_table("llm_use_case_config_legacy_archives")

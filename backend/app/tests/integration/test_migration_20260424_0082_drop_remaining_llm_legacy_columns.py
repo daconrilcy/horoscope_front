@@ -18,6 +18,11 @@ def _alembic_config() -> Config:
     return config
 
 
+def _assert_json_empty_array(value: object) -> None:
+    """Accepte la representation SQLite brute ou deserailisee d un JSON vide."""
+    assert value in ("[]", [])
+
+
 def test_migration_0082_refuses_to_drop_non_empty_prompt_version_legacy_columns(
     monkeypatch: object, tmp_path: Path
 ) -> None:
@@ -122,7 +127,7 @@ def test_migration_0082_refuses_to_drop_non_empty_prompt_version_legacy_columns(
 def test_migration_0082_allows_seeded_empty_allowed_persona_ids(
     monkeypatch: object, tmp_path: Path
 ) -> None:
-    """L upgrade ne doit pas echouer sur `allowed_persona_ids=[]`, valeur legacy vide nominale."""
+    """L upgrade archive les champs legacy de use case au lieu de les effacer silencieusement."""
     db_path = tmp_path / "migration-20260424-0082-empty-allowed-persona-ids.db"
     database_url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setattr(settings, "database_url", database_url)
@@ -180,8 +185,39 @@ def test_migration_0082_allows_seeded_empty_allowed_persona_ids(
         use_case_columns = {
             column["name"] for column in inspect(connection).get_columns("llm_use_case_configs")
         }
+        archive_columns = {
+            column["name"]
+            for column in inspect(connection).get_columns("llm_use_case_config_legacy_archives")
+        }
+        archive_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT
+                        use_case_key,
+                        allowed_persona_ids,
+                        interaction_mode,
+                        user_question_policy,
+                        persona_strategy,
+                        safety_profile
+                    FROM llm_use_case_config_legacy_archives
+                    WHERE use_case_key = :use_case_key
+                    """
+                ),
+                {"use_case_key": "guidance_daily"},
+            )
+            .mappings()
+            .one()
+        )
 
     assert "allowed_persona_ids" not in use_case_columns
+    assert "allowed_persona_ids" in archive_columns
+    assert archive_row["use_case_key"] == "guidance_daily"
+    _assert_json_empty_array(archive_row["allowed_persona_ids"])
+    assert archive_row["interaction_mode"] == "structured"
+    assert archive_row["user_question_policy"] == "none"
+    assert archive_row["persona_strategy"] == "optional"
+    assert archive_row["safety_profile"] == "astrology"
 
     engine.dispose()
 
@@ -283,6 +319,47 @@ def test_migration_0082_restores_dropped_checks_and_provider_on_downgrade(
     command.upgrade(config, "20260423_0081")
 
     with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO llm_use_case_configs (
+                    key,
+                    display_name,
+                    description,
+                    output_schema_id,
+                    allowed_persona_ids,
+                    input_schema,
+                    required_prompt_placeholders,
+                    interaction_mode,
+                    user_question_policy,
+                    persona_strategy,
+                    safety_profile,
+                    fallback_use_case_key,
+                    eval_failure_threshold
+                ) VALUES (
+                    :key,
+                    :display_name,
+                    :description,
+                    NULL,
+                    '[]',
+                    NULL,
+                    '[]',
+                    'structured',
+                    'none',
+                    'optional',
+                    'astrology',
+                    NULL,
+                    :eval_failure_threshold
+                )
+                """
+            ),
+            {
+                "key": "guidance_daily",
+                "display_name": "Guidance Daily",
+                "description": "Test",
+                "eval_failure_threshold": 0.2,
+            },
+        )
         connection.execute(
             text(
                 """
@@ -410,6 +487,26 @@ def test_migration_0082_restores_dropped_checks_and_provider_on_downgrade(
             ),
             {"id": "33333333-3333-3333-3333-333333333333"},
         ).scalar_one()
+        restored_use_case = (
+            connection.execute(
+                text(
+                    """
+                    SELECT
+                        allowed_persona_ids,
+                        interaction_mode,
+                        user_question_policy,
+                        persona_strategy,
+                        safety_profile
+                    FROM llm_use_case_configs
+                    WHERE key = :key
+                    """
+                ),
+                {"key": "guidance_daily"},
+            )
+            .mappings()
+            .one_or_none()
+        )
+        remaining_tables = set(inspect(connection).get_table_names())
 
     assert "interaction_mode" in assembly_columns_after
     assert "user_question_policy" in assembly_columns_after
@@ -418,5 +515,12 @@ def test_migration_0082_restores_dropped_checks_and_provider_on_downgrade(
     assert "ck_llm_assembly_configs_user_question_policy" in assembly_checks_after
     assert "ck_llm_call_logs_provider" in call_log_checks_after
     assert restored_provider == "openai"
+    assert restored_use_case is not None
+    _assert_json_empty_array(restored_use_case["allowed_persona_ids"])
+    assert restored_use_case["interaction_mode"] == "structured"
+    assert restored_use_case["user_question_policy"] == "none"
+    assert restored_use_case["persona_strategy"] == "optional"
+    assert restored_use_case["safety_profile"] == "astrology"
+    assert "llm_use_case_config_legacy_archives" not in remaining_tables
 
     engine.dispose()
