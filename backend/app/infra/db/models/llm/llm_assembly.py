@@ -19,6 +19,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, PublishedAtMixin
+from app.infra.db.models.llm.llm_constraints import allowed_values_check
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_field_lengths import (
     FEATURE_LENGTH,
@@ -45,6 +46,9 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
     """Represente une configuration d assemblage publiee ou brouillon pour une cible LLM."""
 
     __tablename__ = "llm_assembly_configs"
+    _ASSEMBLY_COMPONENT_STATE_VALUES = tuple(
+        state.value for state in AssemblyComponentResolutionState
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     feature: Mapped[str] = mapped_column(String(FEATURE_LENGTH), index=True)
@@ -222,6 +226,26 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
         )
 
     __table_args__ = (
+        allowed_values_check(
+            "ck_llm_assembly_configs_feature_template_state",
+            "feature_template_state",
+            _ASSEMBLY_COMPONENT_STATE_VALUES,
+        ),
+        allowed_values_check(
+            "ck_llm_assembly_configs_subfeature_template_state",
+            "subfeature_template_state",
+            _ASSEMBLY_COMPONENT_STATE_VALUES,
+        ),
+        allowed_values_check(
+            "ck_llm_assembly_configs_persona_state",
+            "persona_state",
+            _ASSEMBLY_COMPONENT_STATE_VALUES,
+        ),
+        allowed_values_check(
+            "ck_llm_assembly_configs_plan_rules_state",
+            "plan_rules_state",
+            _ASSEMBLY_COMPONENT_STATE_VALUES,
+        ),
         published_unique_index(
             "ix_llm_assembly_config_active_unique",
             "feature",

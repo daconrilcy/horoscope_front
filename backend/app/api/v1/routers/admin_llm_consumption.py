@@ -476,7 +476,7 @@ def get_canonical_consumption_drilldown(
             timestamp=item.timestamp,
             feature=item.feature,
             subfeature=item.subfeature,
-            provider=item.executed_provider or item.provider_compat,
+            provider=item.executed_provider,
             active_snapshot_version=item.active_snapshot_version,
             manifest_entry_id=item.manifest_entry_id,
             validation_status=str(item.validation_status),

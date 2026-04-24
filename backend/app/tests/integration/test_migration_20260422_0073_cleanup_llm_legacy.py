@@ -1,3 +1,5 @@
+"""Valide la migration 0073 sans reintroduire les champs runtime legacy supprimes ensuite."""
+
 from pathlib import Path
 
 from alembic import command
@@ -170,7 +172,7 @@ def test_cleanup_migration_archives_and_drops_prompt_fallback_and_use_case_index
             },
         )
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "20260422_0073")
 
     with engine.connect() as connection:
         prompt_columns = {
@@ -197,6 +199,8 @@ def test_cleanup_migration_archives_and_drops_prompt_fallback_and_use_case_index
     assert "fallback_use_case_key" not in prompt_columns
     assert "ix_llm_call_logs_use_case_timestamp" not in call_log_indexes
     assert archive_row["fallback_use_case_key"] == "natal_interpretation_short"
+
+    command.upgrade(config, "head")
 
     command.downgrade(config, "20260422_0072")
 

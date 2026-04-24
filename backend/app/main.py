@@ -138,7 +138,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
         seed_horoscope_narrator_assembly,
     )
-    from app.ops.llm.bootstrap.use_cases_seed import seed_canonical_contracts
+    from app.ops.llm.bootstrap.use_cases_seed import seed_bootstrap_contracts
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
     def collect_state() -> tuple[int, int, int, int, int, bool]:
@@ -204,7 +204,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         if needs_registry_seed:
             with SessionLocal() as db:
                 seed_astrologers(db)
-                seed_canonical_contracts(db)
+                seed_bootstrap_contracts(db)
             seed_prompts()
             seed_natal_v3_prompts()
             seed_chat_prompt_v2()

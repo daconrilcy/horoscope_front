@@ -25,15 +25,12 @@ async def test_plan_differentiation(db):
     # 1. Setup
     feat = "natal"
     uc_key = "natal_test"
-    uc = LlmUseCaseConfigModel(
-        key=uc_key, display_name=uc_key, description="test", safety_profile="astrology"
-    )
+    uc = LlmUseCaseConfigModel(key=uc_key, display_name=uc_key, description="test")
     db.add(uc)
     v = LlmPromptVersionModel(
         id=uuid.uuid4(),
         use_case_key=uc_key,
         developer_prompt="BASE",
-        model="gpt-4o",
         status=PromptStatus.PUBLISHED,
         created_by="eval",
     )
@@ -69,7 +66,6 @@ async def test_plan_differentiation(db):
             execution_profile_ref=profile.id,
             plan_rules_ref="plan_free_concise" if plan == "free" else "plan_premium_full",
             plan_rules_state=AssemblyComponentResolutionState.ENABLED,
-            execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
             status=PromptStatus.PUBLISHED,
             created_by="eval",
         )
@@ -109,15 +105,12 @@ async def test_persona_differentiation(db, mock_personas):
     """Checks persona differentiation through the assembly path, not only via runtime override."""
     feat = "chat_persona_eval"
     uc_key = "chat_test"
-    uc = LlmUseCaseConfigModel(
-        key=uc_key, display_name=uc_key, description="test", safety_profile="astrology"
-    )
+    uc = LlmUseCaseConfigModel(key=uc_key, display_name=uc_key, description="test")
     db.add(uc)
     v = LlmPromptVersionModel(
         id=uuid.uuid4(),
         use_case_key=uc_key,
         developer_prompt="BASE",
-        model="gpt-4o",
         status=PromptStatus.PUBLISHED,
         created_by="eval",
     )
@@ -144,6 +137,23 @@ async def test_persona_differentiation(db, mock_personas):
         p_ids[p_type] = persona.id
     db.commit()
 
+    profile = LlmExecutionProfileModel(
+        id=uuid.uuid4(),
+        name="persona-eval-profile",
+        provider="openai",
+        model="gpt-4o",
+        reasoning_profile="off",
+        verbosity_profile="balanced",
+        output_mode="free_text",
+        tool_mode="none",
+        feature=feat,
+        plan="free",
+        status=PromptStatus.PUBLISHED,
+        created_by="eval",
+    )
+    db.add(profile)
+    db.flush()
+
     assembly = PromptAssemblyConfigModel(
         id=uuid.uuid4(),
         feature=feat,
@@ -152,7 +162,7 @@ async def test_persona_differentiation(db, mock_personas):
         feature_template_ref=v.id,
         persona_ref=p_ids["synthetique"],
         persona_state=AssemblyComponentResolutionState.ENABLED,
-        execution_config={"model": "gpt-4o", "max_output_tokens": 1200},
+        execution_profile_ref=profile.id,
         status=PromptStatus.PUBLISHED,
         created_by="eval",
     )

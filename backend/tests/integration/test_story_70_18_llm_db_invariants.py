@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 from pathlib import Path
 
@@ -49,10 +50,29 @@ def _column_lengths(inspector: Inspector, table_name: str) -> dict[str, int | No
 
 def _check_constraint_names(inspector: Inspector, table_name: str) -> set[str]:
     """Retourne les noms des contraintes CHECK presentes sur une table."""
-    return {
+    names = {
         str(check["name"])
         for check in inspector.get_check_constraints(table_name)
         if check.get("name")
+    }
+    if names or inspector.bind.dialect.name != "sqlite":
+        return names
+
+    with inspector.bind.connect() as connection:
+        create_table_sql = connection.exec_driver_sql(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (table_name,),
+        ).scalar_one_or_none()
+    if not create_table_sql:
+        return names
+
+    return {
+        match.group("name")
+        for match in re.finditer(
+            r"CONSTRAINT\s+(?P<name>ck_[A-Za-z0-9_]+)\s+CHECK",
+            create_table_sql,
+            flags=re.IGNORECASE,
+        )
     }
 
 

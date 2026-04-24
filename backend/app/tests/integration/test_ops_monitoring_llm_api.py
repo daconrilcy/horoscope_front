@@ -46,7 +46,6 @@ def _build_log(**overrides: object) -> LlmCallLogModel:
         "use_case": "chat_astrologer",
         "feature": "chat",
         "plan": "free",
-        "provider": "openai",
         "model": "gpt-4o",
         "latency_ms": 500,
         "tokens_in": 100,
@@ -106,7 +105,6 @@ def test_llm_ops_dashboard_exposes_canonical_views_and_release_correlation() -> 
             _build_log(
                 feature="guidance",
                 use_case="guidance",
-                provider="anthropic",
                 model="claude-3-sonnet",
                 latency_ms=1200,
                 requested_provider="openai",

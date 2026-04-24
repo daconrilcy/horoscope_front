@@ -62,6 +62,153 @@ def _ensure_use_case_legacy_archive_table() -> None:
     )
 
 
+def _ensure_prompt_version_legacy_archive_table() -> None:
+    """Cree la table d archive des champs d execution legacy des prompt versions."""
+    if _has_table("llm_prompt_version_legacy_archives"):
+        return
+
+    op.create_table(
+        "llm_prompt_version_legacy_archives",
+        sa.Column("prompt_version_id", sa.String(length=36), primary_key=True, nullable=False),
+        sa.Column("model", sa.String(length=100), nullable=True),
+        sa.Column("temperature", sa.Float(), nullable=True),
+        sa.Column("max_output_tokens", sa.Integer(), nullable=True),
+        sa.Column("reasoning_effort", sa.String(length=32), nullable=True),
+        sa.Column("verbosity", sa.String(length=32), nullable=True),
+        sa.Column(
+            "archived_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+    )
+
+
+def _archive_legacy_prompt_versions() -> None:
+    """Archive explicitement les champs runtime legacy des prompt versions."""
+    if not _has_table("llm_prompt_versions"):
+        return
+
+    columns = _column_names("llm_prompt_versions")
+    expected_columns = (
+        "model",
+        "temperature",
+        "max_output_tokens",
+        "reasoning_effort",
+        "verbosity",
+    )
+    if not {"id", *expected_columns} <= columns:
+        return
+
+    _ensure_prompt_version_legacy_archive_table()
+    op.execute(
+        sa.text(
+            """
+            INSERT INTO llm_prompt_version_legacy_archives (
+                prompt_version_id,
+                model,
+                temperature,
+                max_output_tokens,
+                reasoning_effort,
+                verbosity
+            )
+            SELECT
+                id,
+                model,
+                temperature,
+                max_output_tokens,
+                reasoning_effort,
+                verbosity
+            FROM llm_prompt_versions
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM llm_prompt_version_legacy_archives AS archive
+                WHERE archive.prompt_version_id = llm_prompt_versions.id
+            )
+            """
+        )
+    )
+
+
+def _ensure_assembly_legacy_archive_table() -> None:
+    """Cree la table d archive des champs legacy d assembly si necessaire."""
+    if _has_table("llm_assembly_config_legacy_archives"):
+        return
+
+    op.create_table(
+        "llm_assembly_config_legacy_archives",
+        sa.Column("assembly_id", sa.String(length=36), primary_key=True, nullable=False),
+        sa.Column("execution_config", sa.JSON(), nullable=True),
+        sa.Column("interaction_mode", sa.String(length=32), nullable=True),
+        sa.Column("user_question_policy", sa.String(length=32), nullable=True),
+        sa.Column("input_schema", sa.JSON(), nullable=True),
+        sa.Column("fallback_use_case", sa.String(length=64), nullable=True),
+        sa.Column("output_contract_ref", sa.String(length=64), nullable=True),
+        sa.Column(
+            "archived_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+    )
+
+
+def _archive_legacy_assembly_configs() -> None:
+    """Archive explicitement les colonnes legacy d assembly avant suppression."""
+    if not _has_table("llm_assembly_configs"):
+        return
+
+    columns = _column_names("llm_assembly_configs")
+    legacy_columns = (
+        "execution_config",
+        "interaction_mode",
+        "user_question_policy",
+        "input_schema",
+        "fallback_use_case",
+        "output_contract_ref",
+    )
+    if "id" not in columns:
+        return
+
+    existing_legacy_columns = [
+        column_name for column_name in legacy_columns if column_name in columns
+    ]
+    if not existing_legacy_columns:
+        return
+
+    _ensure_assembly_legacy_archive_table()
+    select_columns = [
+        "id",
+        *[
+            column_name if column_name in existing_legacy_columns else f"NULL AS {column_name}"
+            for column_name in legacy_columns
+        ],
+    ]
+    op.execute(
+        sa.text(
+            f"""
+            INSERT INTO llm_assembly_config_legacy_archives (
+                assembly_id,
+                execution_config,
+                interaction_mode,
+                user_question_policy,
+                input_schema,
+                fallback_use_case,
+                output_contract_ref
+            )
+            SELECT
+                {", ".join(select_columns)}
+            FROM llm_assembly_configs
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM llm_assembly_config_legacy_archives AS archive
+                WHERE archive.assembly_id = llm_assembly_configs.id
+            )
+            """
+        )
+    )
+
+
 def _archive_legacy_use_case_configs() -> None:
     """Archive explicitement les champs legacy de use case avant leur suppression."""
     if not _has_table("llm_use_case_configs"):
@@ -125,7 +272,9 @@ def _assert_columns_are_empty(
 ) -> None:
     """Bloque la suppression si des colonnes legacy contiennent encore des donnees."""
     empty_predicates = empty_predicates or {}
-    existing_columns = [column_name for column_name in column_names if column_name in _column_names(table_name)]
+    existing_columns = [
+        column_name for column_name in column_names if column_name in _column_names(table_name)
+    ]
     if not existing_columns:
         return
 
@@ -156,6 +305,44 @@ def _assert_provider_compat_is_migrated() -> None:
             "Cannot drop llm_call_logs.provider_compat: operational metadata table is missing."
         )
 
+    op.execute(
+        sa.text(
+            """
+            INSERT INTO llm_call_log_operational_metadata (
+                id,
+                call_log_id,
+                executed_provider
+            )
+            SELECT
+                lower(hex(randomblob(16))),
+                logs.id,
+                logs.provider_compat
+            FROM llm_call_logs AS logs
+            WHERE logs.provider_compat IS NOT NULL
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM llm_call_log_operational_metadata AS meta
+                  WHERE meta.call_log_id = logs.id
+              )
+            """
+        )
+    )
+    op.execute(
+        sa.text(
+            """
+            UPDATE llm_call_log_operational_metadata AS meta
+            SET executed_provider = logs.provider_compat
+            FROM llm_call_logs AS logs
+            WHERE logs.id = meta.call_log_id
+              AND logs.provider_compat IS NOT NULL
+              AND (
+                  meta.executed_provider IS NULL
+                  OR meta.executed_provider != logs.provider_compat
+              )
+            """
+        )
+    )
+
     query = sa.text(
         """
         SELECT COUNT(*)
@@ -180,17 +367,7 @@ def _assert_provider_compat_is_migrated() -> None:
 def upgrade() -> None:
     """Supprime les residus legacy des assemblies, prompts, use cases et logs."""
     if _has_table("llm_assembly_configs"):
-        _assert_columns_are_empty(
-            "llm_assembly_configs",
-            (
-                "execution_config",
-                "interaction_mode",
-                "user_question_policy",
-                "input_schema",
-                "fallback_use_case",
-                "output_contract_ref",
-            ),
-        )
+        _archive_legacy_assembly_configs()
         columns = _column_names("llm_assembly_configs")
         checks = _check_names("llm_assembly_configs")
         with op.batch_alter_table("llm_assembly_configs") as batch_op:
@@ -222,10 +399,7 @@ def upgrade() -> None:
                     batch_op.drop_column(column_name)
 
     if _has_table("llm_prompt_versions"):
-        _assert_columns_are_empty(
-            "llm_prompt_versions",
-            ("model", "temperature", "max_output_tokens", "reasoning_effort", "verbosity"),
-        )
+        _archive_legacy_prompt_versions()
         columns = _column_names("llm_prompt_versions")
         with op.batch_alter_table("llm_prompt_versions") as batch_op:
             for column_name in (
@@ -298,6 +472,23 @@ def downgrade() -> None:
                 batch_op.add_column(
                     sa.Column("output_contract_ref", sa.String(length=64), nullable=True)
                 )
+        if _has_table("llm_assembly_config_legacy_archives"):
+            op.execute(
+                sa.text(
+                    """
+                    UPDATE llm_assembly_configs
+                    SET
+                        execution_config = archive.execution_config,
+                        interaction_mode = archive.interaction_mode,
+                        user_question_policy = archive.user_question_policy,
+                        input_schema = archive.input_schema,
+                        fallback_use_case = archive.fallback_use_case,
+                        output_contract_ref = archive.output_contract_ref
+                    FROM llm_assembly_config_legacy_archives AS archive
+                    WHERE archive.assembly_id = llm_assembly_configs.id
+                    """
+                )
+            )
 
     if _has_table("llm_prompt_versions"):
         columns = _column_names("llm_prompt_versions")
@@ -314,6 +505,22 @@ def downgrade() -> None:
                 )
             if "verbosity" not in columns:
                 batch_op.add_column(sa.Column("verbosity", sa.String(length=32), nullable=True))
+        if _has_table("llm_prompt_version_legacy_archives"):
+            op.execute(
+                sa.text(
+                    """
+                    UPDATE llm_prompt_versions
+                    SET
+                        model = archive.model,
+                        temperature = archive.temperature,
+                        max_output_tokens = archive.max_output_tokens,
+                        reasoning_effort = archive.reasoning_effort,
+                        verbosity = archive.verbosity
+                    FROM llm_prompt_version_legacy_archives AS archive
+                    WHERE archive.prompt_version_id = llm_prompt_versions.id
+                    """
+                )
+            )
 
     if _has_table("llm_use_case_configs"):
         columns = _column_names("llm_use_case_configs")
@@ -404,3 +611,7 @@ def downgrade() -> None:
 
     if _has_table("llm_use_case_config_legacy_archives"):
         op.drop_table("llm_use_case_config_legacy_archives")
+    if _has_table("llm_prompt_version_legacy_archives"):
+        op.drop_table("llm_prompt_version_legacy_archives")
+    if _has_table("llm_assembly_config_legacy_archives"):
+        op.drop_table("llm_assembly_config_legacy_archives")

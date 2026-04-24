@@ -74,9 +74,6 @@ class TestAdminLlmNatalPrompts:
         )
         payload = {
             "developer_prompt": prompt_text,
-            "model": "gpt-4o-mini",
-            "temperature": 0.7,
-            "max_output_tokens": 3000,
         }
 
         response = test_client.post(f"/v1/admin/llm/use-cases/{key}/prompts", json=payload)
@@ -99,7 +96,6 @@ class TestAdminLlmNatalPrompts:
         # Missing {{persona_name}}
         payload = {
             "developer_prompt": "Langue: {{locale}}. UC: {{use_case}}. Chart: {{chart_json}}",
-            "model": "gpt-4o-mini",
         }
 
         response = test_client.post(f"/v1/admin/llm/use-cases/{key}/prompts", json=payload)
@@ -120,9 +116,6 @@ class TestAdminLlmNatalPrompts:
             use_case_key=key,
             status=PromptStatus.DRAFT,
             developer_prompt="...",
-            model="gpt-4o-mini",
-            temperature=0.7,
-            max_output_tokens=2048,
             created_by="1",
             created_at=datetime.now(timezone.utc),
         )
@@ -182,7 +175,6 @@ class TestAdminLlmNatalPrompts:
             use_case_key=key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="...",
-            model="gpt-4o-mini",
             created_by="qa",
             created_at=datetime.now(timezone.utc),
         )

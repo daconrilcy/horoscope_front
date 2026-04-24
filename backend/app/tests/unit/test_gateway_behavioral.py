@@ -1,9 +1,12 @@
+"""Valide des comportements runtime du gateway sans dependre du registre LLM global."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import app.domain.llm.runtime.gateway as gateway_module
 from app.domain.llm.runtime.contracts import (
     ExecutionUserInput,
     GatewayError,
@@ -11,6 +14,7 @@ from app.domain.llm.runtime.contracts import (
     GatewayResult,
     LLMExecutionRequest,
     UsageInfo,
+    UseCaseConfig,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.base import Base
@@ -45,8 +49,21 @@ def create_mock_result(use_case, raw_output):
     )
 
 
+def _install_fallback_registry(
+    monkeypatch: pytest.MonkeyPatch, configs: dict[str, UseCaseConfig]
+) -> None:
+    """Injecte un registre fallback borne aux use cases du test."""
+    monkeypatch.setattr(
+        gateway_module,
+        "build_fallback_use_case_config",
+        lambda use_case: configs.get(use_case),
+    )
+
+
 @pytest.mark.asyncio
-async def test_check_1_fallback_priority(db_session):
+async def test_check_1_fallback_priority(
+    db_session, monkeypatch: pytest.MonkeyPatch
+):
     """Point 1: Le fallback nominal vient du contrat canonique / use-case config."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
@@ -56,8 +73,6 @@ async def test_check_1_fallback_priority(db_session):
         key="primary",
         display_name="P",
         description="D",
-        fallback_use_case_key="fallback_A",  # Priority 1
-        output_schema_id=str(schema.id),
     )
     fallback_A = LlmUseCaseConfigModel(key="fallback_A", display_name="A", description="D")
     db_session.add_all([use_case, fallback_A])
@@ -65,19 +80,36 @@ async def test_check_1_fallback_priority(db_session):
     p1 = LlmPromptVersionModel(
         use_case_key="primary",
         status=PromptStatus.PUBLISHED,
-        model="m",
         developer_prompt="P {{locale}} {{last_user_msg}}",
         created_by="a",
     )
     p_A = LlmPromptVersionModel(
         use_case_key="fallback_A",
         status=PromptStatus.PUBLISHED,
-        model="m",
         developer_prompt="A {{locale}} {{last_user_msg}}",
         created_by="a",
     )
     db_session.add_all([p1, p_A])
     db_session.commit()
+
+    _install_fallback_registry(
+        monkeypatch,
+        {
+            "primary": UseCaseConfig(
+                model="gpt-4o-mini",
+                developer_prompt="registry-primary",
+                prompt_version_id="registry-primary",
+                output_schema_id=str(schema.id),
+                fallback_target_use_case="fallback_A",
+            ),
+            "fallback_A": UseCaseConfig(
+                model="gpt-4o-mini",
+                developer_prompt="registry-fallback",
+                prompt_version_id="registry-fallback",
+                output_schema_id=str(schema.id),
+            ),
+        },
+    )
 
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
@@ -105,24 +137,35 @@ async def test_check_1_fallback_priority(db_session):
 
 
 @pytest.mark.asyncio
-async def test_check_3_repair_call_stable_prompt(db_session):
+async def test_check_3_repair_call_stable_prompt(
+    db_session, monkeypatch: pytest.MonkeyPatch
+):
     """Point 3: Repair call utilise un developer_prompt technique minimal."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
     db_session.flush()
 
-    uc = LlmUseCaseConfigModel(
-        key="test", display_name="T", description="D", output_schema_id=str(schema.id)
-    )
+    uc = LlmUseCaseConfigModel(key="test", display_name="T", description="D")
     p = LlmPromptVersionModel(
         use_case_key="test",
         status=PromptStatus.PUBLISHED,
-        model="m",
         developer_prompt="ORIGINAL {{locale}} {{last_user_msg}}",
         created_by="a",
     )
     db_session.add_all([uc, p])
     db_session.commit()
+
+    _install_fallback_registry(
+        monkeypatch,
+        {
+            "test": UseCaseConfig(
+                model="gpt-4o-mini",
+                developer_prompt="registry-test",
+                prompt_version_id="registry-test",
+                output_schema_id=str(schema.id),
+            )
+        },
+    )
 
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
@@ -153,7 +196,9 @@ async def test_check_3_repair_call_stable_prompt(db_session):
 
 
 @pytest.mark.asyncio
-async def test_check_4_repair_limit_and_anti_loop(db_session):
+async def test_check_4_repair_limit_and_anti_loop(
+    db_session, monkeypatch: pytest.MonkeyPatch
+):
     """Point 4 & B: Une seule tentative de repair + protection anti-boucle fallback."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
@@ -164,32 +209,46 @@ async def test_check_4_repair_limit_and_anti_loop(db_session):
         key="A",
         display_name="A",
         description="D",
-        output_schema_id=str(schema.id),
-        fallback_use_case_key="B",
     )
     uc_b = LlmUseCaseConfigModel(
         key="B",
         display_name="B",
         description="D",
-        output_schema_id=str(schema.id),
-        fallback_use_case_key="A",
     )
     p_a = LlmPromptVersionModel(
         use_case_key="A",
         status=PromptStatus.PUBLISHED,
-        model="m",
         developer_prompt="A {{locale}} {{last_user_msg}}",
         created_by="a",
     )
     p_b = LlmPromptVersionModel(
         use_case_key="B",
         status=PromptStatus.PUBLISHED,
-        model="m",
         developer_prompt="B {{locale}} {{last_user_msg}}",
         created_by="a",
     )
     db_session.add_all([uc_a, uc_b, p_a, p_b])
     db_session.commit()
+
+    _install_fallback_registry(
+        monkeypatch,
+        {
+            "A": UseCaseConfig(
+                model="gpt-4o-mini",
+                developer_prompt="registry-A",
+                prompt_version_id="registry-A",
+                output_schema_id=str(schema.id),
+                fallback_target_use_case="B",
+            ),
+            "B": UseCaseConfig(
+                model="gpt-4o-mini",
+                developer_prompt="registry-B",
+                prompt_version_id="registry-B",
+                output_schema_id=str(schema.id),
+                fallback_target_use_case="A",
+            ),
+        },
+    )
 
     mock_client = MagicMock()
 

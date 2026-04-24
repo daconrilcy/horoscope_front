@@ -41,27 +41,19 @@ def test_get_use_case_contract():
             name="AstroResponse_v1", json_schema={"type": "object", "title": "Astro"}
         )
         db.add(s)
-        db.flush()
-
-        uc = LlmUseCaseConfigModel(
-            key="natal",
-            display_name="Natal",
-            description="Test",
-            output_schema_id=str(s.id),
-            persona_strategy="required",
-            safety_profile="astrology",
-            required_prompt_placeholders=["chart_json"],
-        )
-        db.add(uc)
         db.commit()
 
-    resp = client.get("/v1/admin/llm/use-cases/natal/contract", headers=headers)
+    resp = client.get(
+        "/v1/admin/llm/use-cases/natal_interpretation_short/contract",
+        headers=headers,
+    )
     assert resp.status_code == 200
     data = resp.json()["data"]
-    assert data["key"] == "natal"
+    assert data["key"] == "natal_interpretation_short"
     assert data["output_schema_id"] is not None
-    assert data["output_schema"]["title"] == "Astro"
-    assert data["persona_strategy"] == "required"
+    assert data["output_schema"]["type"] == "object"
+    assert "title" in data["output_schema"]["properties"]
+    assert data["persona_strategy"] == "optional"
     assert "chart_json" in data["required_prompt_placeholders"]
     assert data["use_case_audit"] == {
         "maintenance_surface": "legacy_maintenance",
@@ -76,16 +68,6 @@ def test_get_use_case_contract_hides_removed_legacy_use_case():
     _cleanup_tables()
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
-
-    with SessionLocal() as db:
-        uc = LlmUseCaseConfigModel(
-            key="chat",
-            display_name="Chat",
-            description="Legacy chat alias",
-            fallback_use_case_key="horoscope_daily_free",
-        )
-        db.add(uc)
-        db.commit()
 
     resp = client.get("/v1/admin/llm/use-cases/chat/contract", headers=headers)
     assert resp.status_code == 404

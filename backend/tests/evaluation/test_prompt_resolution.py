@@ -62,9 +62,7 @@ async def test_prompt_resolution_matrix(
 
         # Create Template
         uc_key = f"{feat}_test"
-        uc = LlmUseCaseConfigModel(
-            key=uc_key, display_name=uc_key, description="test", safety_profile="astrology"
-        )
+        uc = LlmUseCaseConfigModel(key=uc_key, display_name=uc_key, description="test")
         db.add(uc)
         v = LlmPromptVersionModel(
             id=uuid.uuid4(),
@@ -73,7 +71,6 @@ async def test_prompt_resolution_matrix(
                 f"BASE PROMPT FOR {feat} "
                 "{{#context_quality:minimal}}MINIMAL{{/context_quality}}"
             ),
-            model="gpt-4o",
             status=PromptStatus.PUBLISHED,
             created_by="eval",
         )
@@ -85,6 +82,13 @@ async def test_prompt_resolution_matrix(
             name="Eval Profile",
             provider="openai",
             model="gpt-4o",
+            reasoning_profile="off",
+            verbosity_profile="balanced",
+            output_mode="structured_json",
+            tool_mode="none",
+            feature=feat,
+            subfeature=subfeat,
+            plan=plan,
             status=PromptStatus.PUBLISHED,
             created_by="eval",
         )
@@ -104,7 +108,6 @@ async def test_prompt_resolution_matrix(
             )
             db.add(schema)
             schema_id = str(schema.id)
-            uc.output_schema_id = schema_id
 
         # Create Assembly
         assembly = PromptAssemblyConfigModel(
@@ -117,7 +120,6 @@ async def test_prompt_resolution_matrix(
             persona_ref=persona.id,
             persona_state=AssemblyComponentResolutionState.ENABLED,
             execution_profile_ref=prof.id,
-            execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
             output_schema_id=uuid.UUID(schema_id) if schema_id else None,
             length_budget={
                 "target_response_length": "standard" if plan == "premium" else "concise",

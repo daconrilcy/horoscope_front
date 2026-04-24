@@ -47,9 +47,6 @@ async def test_publish_prompt_blocks_on_golden_regression():
             use_case_key="natal_test_66_36",
             status=PromptStatus.DRAFT,
             developer_prompt="Test",
-            model="gpt-4o",
-            temperature=0.7,
-            max_output_tokens=1000,
             created_by="test",
             created_at=datetime.now(timezone.utc),
         )
@@ -116,9 +113,6 @@ async def test_publish_prompt_blocks_on_golden_invalid():
             use_case_key="natal_test_invalid",
             status=PromptStatus.DRAFT,
             developer_prompt="Test",
-            model="gpt-4o",
-            temperature=0.7,
-            max_output_tokens=1000,
             created_by="test",
             created_at=datetime.now(timezone.utc),
         )
@@ -184,9 +178,6 @@ async def test_publish_prompt_warns_on_golden_constrained():
             use_case_key="natal_test_warn",
             status=PromptStatus.DRAFT,
             developer_prompt="Test",
-            model="gpt-4o",
-            temperature=0.7,
-            max_output_tokens=1000,
             created_by="test",
             created_at=datetime.now(timezone.utc),
         )
@@ -256,9 +247,6 @@ async def test_publish_prompt_passes_on_golden_success():
             use_case_key="natal_test_ok",
             status=PromptStatus.DRAFT,
             developer_prompt="Test",
-            model="gpt-4o",
-            temperature=0.7,
-            max_output_tokens=1000,
             created_by="test",
             created_at=datetime.now(timezone.utc),
         )

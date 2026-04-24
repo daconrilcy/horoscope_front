@@ -144,14 +144,6 @@ def test_admin_persona_detail_and_deactivation_audit() -> None:
             )
         )
         db.flush()
-        db.add(
-            LlmUseCaseConfigModel(
-                key="chat",
-                display_name="Chat",
-                description="Conversation astrologique",
-                allowed_persona_ids=[persona_id],
-            )
-        )
         user = UserModel(
             email="persona-user@example.com",
             password_hash="x",
@@ -171,7 +163,7 @@ def test_admin_persona_detail_and_deactivation_audit() -> None:
     assert detail_resp.status_code == 200
     payload = detail_resp.json()["data"]
     assert payload["persona"]["name"] == "Luna"
-    assert payload["use_cases"] == ["chat"]
+    assert payload["use_cases"] == []
     assert payload["affected_users_count"] == 1
 
     deactivate_resp = client.patch(

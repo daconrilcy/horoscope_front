@@ -1,3 +1,5 @@
+"""Valide le backfill historique 8b2d puis sa convergence vers le schema canonique actuel."""
+
 import json
 import uuid
 from pathlib import Path
@@ -201,17 +203,17 @@ def test_migration_8b2d_backfills_existing_assembly_metadata(
             },
         )
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "8b2d52442493")
 
     with engine.connect() as connection:
-        columns = {
+        columns_after_8b2d = {
             column["name"] for column in inspect(connection).get_columns("llm_assembly_configs")
         }
-        row = (
+        row_after_8b2d = (
             connection.execute(
                 text(
                     """
-                SELECT input_schema, output_schema_id, interaction_mode, user_question_policy
+                SELECT input_schema, interaction_mode, user_question_policy
                 FROM llm_assembly_configs
                 WHERE id = :assembly_id
                 """
@@ -222,12 +224,44 @@ def test_migration_8b2d_backfills_existing_assembly_metadata(
             .one()
         )
 
-    assert "input_schema" in columns
-    assert "output_contract_ref" not in columns
-    assert "output_schema_id" in columns
-    assert json.loads(row["input_schema"]) == input_schema
-    assert row["output_schema_id"] is None
-    assert row["interaction_mode"] == "chat"
-    assert row["user_question_policy"] == "required"
+    assert "input_schema" in columns_after_8b2d
+    assert json.loads(row_after_8b2d["input_schema"]) == input_schema
+    assert row_after_8b2d["interaction_mode"] == "chat"
+    assert row_after_8b2d["user_question_policy"] == "required"
+
+    command.upgrade(config, "head")
+
+    with engine.connect() as connection:
+        columns_at_head = {
+            column["name"] for column in inspect(connection).get_columns("llm_assembly_configs")
+        }
+        archive_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT
+                        input_schema,
+                        interaction_mode,
+                        user_question_policy,
+                        execution_config
+                    FROM llm_assembly_config_legacy_archives
+                    WHERE assembly_id = :assembly_id
+                    """
+                ),
+                {"assembly_id": assembly_id},
+            )
+            .mappings()
+            .one()
+        )
+
+    assert "input_schema" not in columns_at_head
+    assert "output_contract_ref" not in columns_at_head
+    assert "output_schema_id" in columns_at_head
+    assert "interaction_mode" not in columns_at_head
+    assert "user_question_policy" not in columns_at_head
+    assert json.loads(archive_row["input_schema"]) == input_schema
+    assert archive_row["interaction_mode"] == "chat"
+    assert archive_row["user_question_policy"] == "required"
+    assert archive_row["execution_config"] is not None
 
     engine.dispose()

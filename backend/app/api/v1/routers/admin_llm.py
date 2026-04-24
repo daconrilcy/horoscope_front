@@ -2359,7 +2359,11 @@ def _build_admin_resolved_catalog_view(
                     "status": (
                         str(active_prompt_version.status) if active_prompt_version else "fallback"
                     ),
-                    "model": active_prompt_version.model if active_prompt_version else None,
+                    "model": (
+                        getattr(active_prompt_version, "model", None)
+                        if active_prompt_version
+                        else None
+                    ),
                     "fallback_to_feature_template": not bool(active_prompt_version),
                 },
             )

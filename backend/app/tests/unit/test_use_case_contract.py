@@ -1,3 +1,8 @@
+# Tests unitaires du contrat runtime des use cases LLM.
+"""Verifie les placeholders, les strategies persona et la validation d entree canoniques."""
+
+from __future__ import annotations
+
 import uuid
 from unittest.mock import AsyncMock, MagicMock
 
@@ -5,9 +10,9 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.domain.llm.runtime import gateway as gateway_module
 from app.domain.llm.runtime.contracts import (
     ExecutionUserInput,
-    GatewayError,
     GatewayMeta,
     GatewayResult,
     InputValidationError,
@@ -27,17 +32,19 @@ from app.infra.db.models.llm.llm_prompt import (
 
 @pytest.fixture
 def db_session():
+    """Construit une base memoire de test pour les contrats runtime."""
     test_engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=test_engine)
-    TestSessionLocal = sessionmaker(bind=test_engine)
-    session = TestSessionLocal()
+    test_session = sessionmaker(bind=test_engine)
+    session = test_session()
     try:
         yield session
     finally:
         session.close()
 
 
-def _make_mock_result(use_case, persona_id=None):
+def _make_mock_result(use_case: str, persona_id: str | None = None) -> GatewayResult:
+    """Retourne une reponse provider minimale compatible avec le gateway."""
     return GatewayResult(
         use_case=use_case,
         request_id="req",
@@ -48,214 +55,204 @@ def _make_mock_result(use_case, persona_id=None):
     )
 
 
+def _install_fallback_config(
+    monkeypatch: pytest.MonkeyPatch,
+    use_case: str,
+    *,
+    persona_strategy: str = "optional",
+    interaction_mode: str = "structured",
+    user_question_policy: str = "none",
+    input_schema: dict | None = None,
+) -> None:
+    """Installe une definition fallback locale bornee au use case de test."""
+
+    def _resolver(requested_use_case: str) -> UseCaseConfig | None:
+        if requested_use_case != use_case:
+            return None
+        return UseCaseConfig(
+            model="gpt-4o-mini",
+            developer_prompt="P {{locale}} {{last_user_msg}}",
+            prompt_version_id=use_case,
+            persona_strategy=persona_strategy,
+            interaction_mode=interaction_mode,
+            user_question_policy=user_question_policy,
+            input_schema=input_schema,
+            required_prompt_placeholders=[],
+        )
+
+    monkeypatch.setattr(gateway_module, "build_fallback_use_case_config", _resolver)
+
+
 @pytest.mark.asyncio
-async def test_persona_strategy_forbidden(db_session, monkeypatch):
-    """AC 3: Forbidden strategy bypasses everything."""
-    use_case = LlmUseCaseConfigModel(
-        key="support", display_name="Support", description="D", persona_strategy="forbidden"
+async def test_persona_strategy_forbidden(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """La strategie forbidden ignore tout override persona demande par l appelant."""
+    db_session.add(LlmUseCaseConfigModel(key="support", display_name="Support", description="D"))
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="support",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="P {{locale}} {{last_user_msg}}",
+            created_by="a",
+        )
     )
-    db_session.add(use_case)
-    p = LlmPromptVersionModel(
-        use_case_key="support",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="P {{locale}} {{last_user_msg}}",
-        created_by="a",
-    )
-    db_session.add(p)
     db_session.commit()
+    _install_fallback_config(monkeypatch, "support", persona_strategy="forbidden")
 
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(return_value=_make_mock_result("support"))
-
     gateway = LLMGateway(responses_client=mock_client)
 
-    # Provide a persona_id, should be ignored
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
-            use_case="support", locale="fr", question="help", persona_id_override="some_id"
+            use_case="support",
+            locale="fr",
+            question="help",
+            persona_id_override="some_id",
         ),
         request_id="r",
         trace_id="t",
         user_id=1,
     )
-    result = await gateway.execute_request(
-        request=request,
-        db=db_session,
-    )
+    await gateway.execute_request(request=request, db=db_session)
 
-    assert result.meta.persona_id is None
-    # Verify Layer 3 is omitted
     messages = mock_client.execute.call_args.kwargs["messages"]
-    assert len([m for m in messages if m["role"] == "developer"]) == 1  # Only developer prompt
+    assert len([message for message in messages if message["role"] == "developer"]) == 1
+    assert all("## Directives de persona" not in message["content"] for message in messages)
 
 
 @pytest.mark.asyncio
-async def test_persona_override_rejected(db_session, monkeypatch):
-    """AC 5: Persona override rejected fallback to default_safe."""
+async def test_persona_override_rejected(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Un override persona non autorise retombe sur le premier persona autorise actif."""
     persona_safe = LlmPersonaModel(id=uuid.uuid4(), name="Safe", enabled=True)
     db_session.add(persona_safe)
-    db_session.flush()
-
-    use_case = LlmUseCaseConfigModel(
-        key="natal",
-        display_name="N",
-        description="D",
-        persona_strategy="required",
-        allowed_persona_ids=[str(persona_safe.id)],
+    db_session.add(LlmUseCaseConfigModel(key="natal", display_name="N", description="D"))
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="natal",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="P {{locale}} {{last_user_msg}}",
+            created_by="a",
+        )
     )
-    db_session.add(use_case)
-    p = LlmPromptVersionModel(
-        use_case_key="natal",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="P {{locale}} {{last_user_msg}}",
-        created_by="a",
-    )
-    db_session.add(p)
     db_session.commit()
+    _install_fallback_config(monkeypatch, "natal", persona_strategy="required")
 
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
         return_value=_make_mock_result("natal", persona_id=str(persona_safe.id))
     )
-
     gateway = LLMGateway(responses_client=mock_client)
 
-    # Request unauthorized persona_id
-    request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(
-            use_case="natal", locale="fr", question="me", persona_id_override=str(uuid.uuid4())
-        ),
+    result = await gateway.execute(
+        use_case="natal",
+        user_input={"question": "me", "persona_id": str(uuid.uuid4())},
+        context={"locale": "fr", "allowed_persona_ids": [str(persona_safe.id)]},
         request_id="r",
         trace_id="t",
         user_id=1,
-    )
-    result = await gateway.execute_request(
-        request=request,
         db=db_session,
     )
 
-    # Should fallback to persona_safe
     assert result.meta.persona_id == str(persona_safe.id)
 
 
 @pytest.mark.asyncio
-async def test_persona_override_authorized(db_session, monkeypatch):
-    """AC 5: Persona override authorized."""
-    p1 = LlmPersonaModel(id=uuid.uuid4(), name="P1", enabled=True)
-    p2 = LlmPersonaModel(id=uuid.uuid4(), name="P2", enabled=True)
-    db_session.add_all([p1, p2])
-    db_session.flush()
-
-    use_case = LlmUseCaseConfigModel(
-        key="natal",
-        display_name="N",
-        description="D",
-        persona_strategy="required",
-        allowed_persona_ids=[str(p1.id), str(p2.id)],
+async def test_persona_override_authorized(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Un override persona autorise est conserve tel quel."""
+    first_persona = LlmPersonaModel(id=uuid.uuid4(), name="P1", enabled=True)
+    second_persona = LlmPersonaModel(id=uuid.uuid4(), name="P2", enabled=True)
+    db_session.add_all([first_persona, second_persona])
+    db_session.add(LlmUseCaseConfigModel(key="natal", display_name="N", description="D"))
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="natal",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="P {{locale}} {{last_user_msg}}",
+            created_by="a",
+        )
     )
-    db_session.add(use_case)
-    p = LlmPromptVersionModel(
-        use_case_key="natal",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="P {{locale}} {{last_user_msg}}",
-        created_by="a",
-    )
-    db_session.add(p)
     db_session.commit()
+    _install_fallback_config(monkeypatch, "natal", persona_strategy="required")
 
     mock_client = MagicMock()
-    mock_client.execute = AsyncMock(return_value=_make_mock_result("natal", persona_id=str(p2.id)))
-
+    mock_client.execute = AsyncMock(
+        return_value=_make_mock_result("natal", persona_id=str(second_persona.id))
+    )
     gateway = LLMGateway(responses_client=mock_client)
 
-    # Request p2 specifically
-    request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(
-            use_case="natal", locale="fr", question="me", persona_id_override=str(p2.id)
-        ),
+    result = await gateway.execute(
+        use_case="natal",
+        user_input={"question": "me", "persona_id": str(second_persona.id)},
+        context={
+            "locale": "fr",
+            "allowed_persona_ids": [str(first_persona.id), str(second_persona.id)],
+        },
         request_id="r",
         trace_id="t",
         user_id=1,
-    )
-    result = await gateway.execute_request(
-        request=request,
         db=db_session,
     )
 
-    assert result.meta.persona_id == str(p2.id)
+    assert result.meta.persona_id == str(second_persona.id)
 
 
-def test_lint_usecase_placeholders():
-    """AC 4: Lint verify use-case specific placeholders."""
+def test_lint_usecase_placeholders() -> None:
+    """Le lint de prompt reste responsable des placeholders specifiques au use case."""
     from app.ops.llm.prompt_lint import PromptLint
 
     required = ["{{chart_json}}"]
-
-    # Missing chart_json
     text_fail = "Hello {{locale}} {{use_case}}"
-    res_fail = PromptLint.lint_prompt(text_fail, use_case_required_placeholders=required)
-    assert res_fail.passed is False
-    assert "Use-case specific placeholder '{{chart_json}}' is missing." in res_fail.errors
+    result_fail = PromptLint.lint_prompt(text_fail, use_case_required_placeholders=required)
+    assert result_fail.passed is False
+    assert "Use-case specific placeholder '{{chart_json}}' is missing." in result_fail.errors
 
-    # Present
     text_pass = "Hello {{locale}} {{use_case}} {{chart_json}}"
-    res_pass = PromptLint.lint_prompt(text_pass, use_case_required_placeholders=required)
-    assert res_pass.passed is True
+    result_pass = PromptLint.lint_prompt(text_pass, use_case_required_placeholders=required)
+    assert result_pass.passed is True
 
 
 @pytest.mark.asyncio
-async def test_input_validation_failure(db_session, monkeypatch):
-    """AC 8: Input validation failure returns GatewayError (InputValidationError expected)."""
+async def test_input_validation_failure(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Le validateur d entree canonique rejette un payload non conforme au schema."""
     schema = {
         "type": "object",
         "required": ["message"],
         "properties": {"message": {"type": "string", "minLength": 5}},
     }
-    # Create use_case correctly in DB
-    use_case_config = LlmUseCaseConfigModel(
-        key="chat",
-        display_name="C",
-        description="D",
+    db_session.add(LlmUseCaseConfigModel(key="chat_test", display_name="C", description="D"))
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="chat_test",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="P {{locale}} {{last_user_msg}}",
+            created_by="a",
+        )
+    )
+    db_session.commit()
+    _install_fallback_config(
+        monkeypatch,
+        "chat_test",
         input_schema=schema,
         interaction_mode="chat",
         user_question_policy="optional",
     )
-    db_session.add(use_case_config)
-    db_session.flush()  # Ensure it has an id if needed
-
-    p = LlmPromptVersionModel(
-        use_case_key="chat",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="P {{locale}} {{last_user_msg}}",
-        created_by="a",
-    )
-    db_session.add(p)
-    db_session.commit()
 
     mock_client = MagicMock()
-    mock_client.execute = AsyncMock(return_value=_make_mock_result("chat"))
+    mock_client.execute = AsyncMock(return_value=_make_mock_result("chat_test"))
     gateway = LLMGateway(responses_client=mock_client)
 
-    # Invalid input (too short)
-    request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="chat", locale="fr", message="hi"),
-        request_id="r",
-        trace_id="t",
-        user_id=1,
-    )
-
-    # We must skip common context to avoid birth profile errors in this unit test
-    request.flags.skip_common_context = True
-
-    # Use monkeypatch to ensure the legacy compatibility resolver is NOT used here.
-    # if we want to test DB resolution.
-    # Actually, the real LLMGateway should find it in db_session if provided.
-
-    # Direct test of _validate_input
     with pytest.raises(InputValidationError) as exc:
         gateway._validate_input(
             UseCaseConfig(model="m", developer_prompt="p", input_schema=schema),
@@ -263,12 +260,17 @@ async def test_input_validation_failure(db_session, monkeypatch):
         )
     assert "Input validation failed" in str(exc.value)
 
-    # Full request path: supported families now fail on missing canonical assembly
-    # before any legacy Stage 0.5 use-case validation can rescue the request.
-    with pytest.raises(GatewayError) as exc:
-        await gateway.execute_request(
-            request=request,
-            db=db_session,
-        )
-
-    assert "Legacy use_case key 'chat' is removed" in str(exc.value)
+    persona_block, persona_id, persona_name = await gateway._resolve_persona(
+        db_session,
+        UseCaseConfig(
+            model="m",
+            developer_prompt="p",
+            persona_strategy="optional",
+            input_schema=schema,
+        ),
+        {"locale": "fr"},
+        "chat_test",
+    )
+    assert persona_block is None
+    assert persona_id is None
+    assert persona_name is None

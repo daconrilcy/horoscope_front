@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
@@ -23,11 +22,10 @@ def _assert_json_empty_array(value: object) -> None:
     assert value in ("[]", [])
 
 
-def test_migration_0082_refuses_to_drop_non_empty_prompt_version_legacy_columns(
+def test_migration_0082_archives_prompt_version_legacy_columns_before_drop(
     monkeypatch: object, tmp_path: Path
 ) -> None:
-    """L upgrade doit echouer si une colonne legacy de prompt version contient encore des
-    donnees."""
+    """L upgrade archive les champs runtime legacy des prompt versions avant suppression."""
     db_path = tmp_path / "migration-20260424-0082-non-empty-prompt-legacy.db"
     database_url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setattr(settings, "database_url", database_url)
@@ -118,8 +116,62 @@ def test_migration_0082_refuses_to_drop_non_empty_prompt_version_legacy_columns(
             },
         )
 
-    with pytest.raises(RuntimeError, match="Cannot drop legacy columns from llm_prompt_versions"):
-        command.upgrade(config, "20260424_0082")
+    command.upgrade(config, "20260424_0082")
+
+    with engine.connect() as connection:
+        prompt_columns = {
+            column["name"] for column in inspect(connection).get_columns("llm_prompt_versions")
+        }
+        archive_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT
+                        prompt_version_id,
+                        model,
+                        temperature,
+                        max_output_tokens
+                    FROM llm_prompt_version_legacy_archives
+                    WHERE prompt_version_id = :prompt_version_id
+                    """
+                ),
+                {"prompt_version_id": "11111111-1111-1111-1111-111111111111"},
+            )
+            .mappings()
+            .one()
+        )
+
+    assert "model" not in prompt_columns
+    assert "temperature" not in prompt_columns
+    assert "max_output_tokens" not in prompt_columns
+    assert archive_row["prompt_version_id"] == "11111111-1111-1111-1111-111111111111"
+    assert archive_row["model"] == "gpt-4o-mini"
+    assert archive_row["temperature"] == 0.7
+    assert archive_row["max_output_tokens"] == 256
+
+    command.downgrade(config, "20260423_0081")
+
+    with engine.connect() as connection:
+        restored_prompt = (
+            connection.execute(
+                text(
+                    """
+                    SELECT model, temperature, max_output_tokens
+                    FROM llm_prompt_versions
+                    WHERE id = :prompt_version_id
+                    """
+                ),
+                {"prompt_version_id": "11111111-1111-1111-1111-111111111111"},
+            )
+            .mappings()
+            .one()
+        )
+        remaining_tables = set(inspect(connection).get_table_names())
+
+    assert restored_prompt["model"] == "gpt-4o-mini"
+    assert restored_prompt["temperature"] == 0.7
+    assert restored_prompt["max_output_tokens"] == 256
+    assert "llm_prompt_version_legacy_archives" not in remaining_tables
 
     engine.dispose()
 
@@ -222,11 +274,10 @@ def test_migration_0082_allows_seeded_empty_allowed_persona_ids(
     engine.dispose()
 
 
-def test_migration_0082_refuses_to_drop_unmigrated_provider_compat(
+def test_migration_0082_backfills_provider_compat_into_operational_metadata(
     monkeypatch: object, tmp_path: Path
 ) -> None:
-    """L upgrade doit echouer si provider_compat n est pas miroir dans les
-    metadonnees canoniques."""
+    """L upgrade doit recopier `provider_compat` dans les metadonnees canoniques."""
     db_path = tmp_path / "migration-20260424-0082-provider-compat.db"
     database_url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setattr(settings, "database_url", database_url)
@@ -300,8 +351,29 @@ def test_migration_0082_refuses_to_drop_unmigrated_provider_compat(
             },
         )
 
-    with pytest.raises(RuntimeError, match="Cannot drop llm_call_logs.provider_compat"):
-        command.upgrade(config, "20260424_0082")
+    command.upgrade(config, "20260424_0082")
+
+    with engine.connect() as connection:
+        call_log_columns = {
+            column["name"] for column in inspect(connection).get_columns("llm_call_logs")
+        }
+        metadata_row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT executed_provider
+                    FROM llm_call_log_operational_metadata
+                    WHERE call_log_id = :call_log_id
+                    """
+                ),
+                {"call_log_id": "22222222-2222-2222-2222-222222222222"},
+            )
+            .mappings()
+            .one()
+        )
+
+    assert "provider_compat" not in call_log_columns
+    assert metadata_row["executed_provider"] == "openai"
 
     engine.dispose()
 

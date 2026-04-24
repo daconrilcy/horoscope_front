@@ -142,11 +142,13 @@ def test_auto_upgrade_repairs_only_legacy_llm_call_logs_provider_column(
             after_columns = {
                 row[1] for row in connection.execute(text("PRAGMA table_info(llm_call_logs)"))
             }
+            metadata_tables = set(inspect(test_engine).get_table_names())
         assert "provider" in before_columns
         assert "provider_compat" not in before_columns
         assert "provider" not in after_columns
-        assert "provider_compat" in after_columns
+        assert "provider_compat" not in after_columns
         assert "executed_provider_mode" not in after_columns
         assert "provider_error_code" not in after_columns
+        assert "llm_call_log_operational_metadata" in metadata_tables
     finally:
         test_engine.dispose()

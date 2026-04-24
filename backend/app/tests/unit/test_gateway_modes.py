@@ -1,3 +1,8 @@
+# Tests unitaires du gateway sur les modes d interaction et la resolution de schema.
+"""Valide les comportements chat/structured et les schemas canoniques du gateway LLM."""
+
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -5,6 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.domain.llm.prompting.catalog import NATAL_FREE_SHORT_SCHEMA
+from app.domain.llm.runtime import gateway as gateway_module
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionUserInput,
@@ -14,6 +20,7 @@ from app.domain.llm.runtime.contracts import (
     InputValidationError,
     LLMExecutionRequest,
     UsageInfo,
+    UseCaseConfig,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.base import Base
@@ -29,17 +36,23 @@ from app.infra.db.models.llm.llm_prompt import (
 
 @pytest.fixture
 def db_session():
+    """Construit une base SQLite memoire isolee pour les tests du gateway."""
     test_engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=test_engine)
-    TestSessionLocal = sessionmaker(bind=test_engine)
-    session = TestSessionLocal()
+    test_session = sessionmaker(bind=test_engine)
+    session = test_session()
     try:
         yield session
     finally:
         session.close()
 
 
-def create_mock_result(use_case, raw_output, structured_output=None):
+def _make_mock_result(
+    use_case: str,
+    raw_output: str,
+    structured_output: dict | None = None,
+) -> GatewayResult:
+    """Fabrique une reponse provider minimaliste exploitable par le gateway."""
     return GatewayResult(
         use_case=use_case,
         request_id="req",
@@ -51,131 +64,169 @@ def create_mock_result(use_case, raw_output, structured_output=None):
     )
 
 
+def _install_fallback_registry(
+    monkeypatch: pytest.MonkeyPatch,
+    *configs: UseCaseConfig,
+) -> None:
+    """Installe un registre fallback local borne aux use cases testes."""
+    registry = {config.prompt_version_id: config for config in configs}
+
+    def _resolver(use_case: str) -> UseCaseConfig | None:
+        return registry.get(use_case)
+
+    monkeypatch.setattr(gateway_module, "build_fallback_use_case_config", _resolver)
+
+
+def _fallback_config(
+    use_case: str,
+    *,
+    developer_prompt: str = "Dev",
+    interaction_mode: str = "structured",
+    user_question_policy: str = "none",
+    output_schema_id: str | None = None,
+    model: str = "gpt-4o-mini",
+) -> UseCaseConfig:
+    """Construit un contrat fallback canonique pour un test unitaire."""
+    return UseCaseConfig(
+        model=model,
+        developer_prompt=developer_prompt,
+        prompt_version_id=use_case,
+        interaction_mode=interaction_mode,
+        user_question_policy=user_question_policy,
+        output_schema_id=output_schema_id,
+        required_prompt_placeholders=[],
+    )
+
+
 @pytest.mark.asyncio
-async def test_structured_mode_no_question(db_session):
-    """Test interaction_mode=structured, user_question_policy=none."""
-    uc = LlmUseCaseConfigModel(
-        key="test_none",
-        display_name="T",
-        description="D",
-        interaction_mode="structured",
-        user_question_policy="none",
+async def test_structured_mode_no_question(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ignore la question utilisateur en mode structured quand la policy vaut none."""
+    db_session.add(
+        LlmUseCaseConfigModel(key="test_none", display_name="T", description="D")
     )
-    p = LlmPromptVersionModel(
-        use_case_key="test_none",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="Dev",
-        created_by="a",
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="test_none",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Dev",
+            created_by="a",
+        )
     )
-    db_session.add_all([uc, p])
     db_session.commit()
+    _install_fallback_registry(
+        monkeypatch,
+        _fallback_config("test_none", interaction_mode="structured", user_question_policy="none"),
+    )
 
     mock_client = MagicMock()
-    mock_client.execute = AsyncMock(return_value=create_mock_result("test_none", "Result"))
-
+    mock_client.execute = AsyncMock(return_value=_make_mock_result("test_none", "Result"))
     gateway = LLMGateway(responses_client=mock_client)
+
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="test_none", locale="fr", question="Ignored?"),
         request_id="r",
         trace_id="t",
         user_id=1,
     )
-    await gateway.execute_request(
-        request=request,
-        db=db_session,
-    )
+    await gateway.execute_request(request=request, db=db_session)
 
-    args = mock_client.execute.call_args.kwargs
-    messages = args["messages"]
-    user_msg = next(m for m in messages if m["role"] == "user")
+    messages = mock_client.execute.call_args.kwargs["messages"]
+    user_msg = next(message for message in messages if message["role"] == "user")
     assert "Ignored?" not in user_msg["content"]
-    # L2-fix: fallback message is now locale-aware (locale="fr" → French)
-    assert "Interpr" in user_msg["content"]  # "Interprète les données astrologiques fournies."
+    assert "Interpr" in user_msg["content"]
 
 
 @pytest.mark.asyncio
-async def test_structured_mode_optional_question(db_session):
-    """Test interaction_mode=structured, user_question_policy=optional."""
-    uc = LlmUseCaseConfigModel(
-        key="test_opt",
-        display_name="T",
-        description="D",
-        interaction_mode="structured",
-        user_question_policy="optional",
+async def test_structured_mode_optional_question(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Injecte la question uniquement quand elle existe en mode structured optional."""
+    db_session.add(
+        LlmUseCaseConfigModel(key="test_opt", display_name="T", description="D")
     )
-    p = LlmPromptVersionModel(
-        use_case_key="test_opt",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="Dev",
-        created_by="a",
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="test_opt",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Dev",
+            created_by="a",
+        )
     )
-    db_session.add_all([uc, p])
     db_session.commit()
+    _install_fallback_registry(
+        monkeypatch,
+        _fallback_config(
+            "test_opt",
+            interaction_mode="structured",
+            user_question_policy="optional",
+        ),
+    )
 
     mock_client = MagicMock()
-    mock_client.execute = AsyncMock(return_value=create_mock_result("test_opt", "Result"))
-
+    mock_client.execute = AsyncMock(return_value=_make_mock_result("test_opt", "Result"))
     gateway = LLMGateway(responses_client=mock_client)
 
-    # With question
-    request1 = LLMExecutionRequest(
+    request_with_question = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="test_opt", locale="fr", question="How am I?"),
         request_id="r1",
-        trace_id="t",
+        trace_id="t1",
         user_id=1,
     )
-    await gateway.execute_request(
-        request=request1,
-        db=db_session,
-    )
+    await gateway.execute_request(request=request_with_question, db=db_session)
     user_msg = next(
-        m for m in mock_client.execute.call_args.kwargs["messages"] if m["role"] == "user"
+        message
+        for message in mock_client.execute.call_args.kwargs["messages"]
+        if message["role"] == "user"
     )
     assert "How am I?" in user_msg["content"]
 
-    # Without question
-    request2 = LLMExecutionRequest(
+    request_without_question = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="test_opt", locale="fr"),
         request_id="r2",
-        trace_id="t",
+        trace_id="t2",
         user_id=1,
     )
-    await gateway.execute_request(
-        request=request2,
-        db=db_session,
-    )
+    await gateway.execute_request(request=request_without_question, db=db_session)
     user_msg = next(
-        m for m in mock_client.execute.call_args.kwargs["messages"] if m["role"] == "user"
+        message
+        for message in mock_client.execute.call_args.kwargs["messages"]
+        if message["role"] == "user"
     )
-    # L2-fix: fallback is locale-aware (locale="fr" → French fallback)
-    assert "Interpr" in user_msg["content"]  # "Interprète les données astrologiques fournies."
+    assert "Interpr" in user_msg["content"]
 
 
 @pytest.mark.asyncio
-async def test_structured_mode_required_question(db_session):
-    """Test interaction_mode=structured, user_question_policy=required."""
-    uc = LlmUseCaseConfigModel(
-        key="test_req",
-        display_name="T",
-        description="D",
-        interaction_mode="structured",
-        user_question_policy="required",
+async def test_structured_mode_required_question(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exige une question en mode structured quand la policy vaut required."""
+    db_session.add(
+        LlmUseCaseConfigModel(key="test_req", display_name="T", description="D")
     )
-    p = LlmPromptVersionModel(
-        use_case_key="test_req",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="Dev",
-        created_by="a",
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="test_req",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Dev",
+            created_by="a",
+        )
     )
-    db_session.add_all([uc, p])
     db_session.commit()
+    _install_fallback_registry(
+        monkeypatch,
+        _fallback_config(
+            "test_req",
+            interaction_mode="structured",
+            user_question_policy="required",
+        ),
+    )
 
     gateway = LLMGateway(responses_client=MagicMock())
-
-    # Missing question
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="test_req", locale="fr"),
         request_id="r",
@@ -183,40 +234,38 @@ async def test_structured_mode_required_question(db_session):
         user_id=1,
     )
     with pytest.raises(InputValidationError) as exc:
-        await gateway.execute_request(
-            request=request,
-            db=db_session,
-        )
+        await gateway.execute_request(request=request, db=db_session)
     assert "User question is required" in str(exc.value)
 
 
 @pytest.mark.asyncio
-async def test_chat_mode_with_history(db_session):
-    """Test interaction_mode=chat with history injection."""
-    uc = LlmUseCaseConfigModel(
-        key="test_chat",
-        display_name="T",
-        description="D",
-        interaction_mode="chat",
-        user_question_policy="optional",
+async def test_chat_mode_with_history(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Injecte l historique complet en mode chat avant le message utilisateur courant."""
+    db_session.add(
+        LlmUseCaseConfigModel(key="test_chat", display_name="T", description="D")
     )
-    p = LlmPromptVersionModel(
-        use_case_key="test_chat",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="Dev",
-        created_by="a",
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="test_chat",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Dev",
+            created_by="a",
+        )
     )
-    db_session.add_all([uc, p])
     db_session.commit()
+    _install_fallback_registry(
+        monkeypatch,
+        _fallback_config("test_chat", interaction_mode="chat", user_question_policy="optional"),
+    )
 
     mock_client = MagicMock()
-    mock_client.execute = AsyncMock(return_value=create_mock_result("test_chat", "Reply"))
-
+    mock_client.execute = AsyncMock(return_value=_make_mock_result("test_chat", "Reply"))
     gateway = LLMGateway(responses_client=mock_client)
 
     history = [{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi there"}]
-
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="test_chat", locale="fr", question="How are you?"),
         context=ExecutionContext(history=history),
@@ -224,15 +273,9 @@ async def test_chat_mode_with_history(db_session):
         trace_id="t",
         user_id=1,
     )
-    await gateway.execute_request(
-        request=request,
-        db=db_session,
-    )
+    await gateway.execute_request(request=request, db=db_session)
 
-    args = mock_client.execute.call_args.kwargs
-    messages = args["messages"]
-
-    # system, developer, persona (skipped here), user (hello), assistant (hi), user (how are you)
+    messages = mock_client.execute.call_args.kwargs["messages"]
     assert len(messages) == 5
     assert messages[2]["content"] == "Hello"
     assert messages[3]["content"] == "Hi there"
@@ -240,22 +283,21 @@ async def test_chat_mode_with_history(db_session):
 
 
 @pytest.mark.asyncio
-async def test_schema_blocking_paid_use_case(db_session):
-    """Point 0.2: Rendre schema_dict absent bloquant pour natal_interpretation."""
-    uc = LlmUseCaseConfigModel(
-        key="natal_interpretation",
-        display_name="N",
-        description="D",
-        output_schema_id=None,  # Missing schema
+async def test_schema_blocking_paid_use_case(db_session) -> None:
+    """Bloque un use case payant nominal si aucun schema de sortie n est resolu."""
+    use_case = "natal_interpretation"
+    db_session.add(
+        LlmUseCaseConfigModel(key=use_case, display_name="N", description="D")
     )
-    p = LlmPromptVersionModel(
-        use_case_key="natal_interpretation",
+    prompt = LlmPromptVersionModel(
+        use_case_key=use_case,
         status=PromptStatus.PUBLISHED,
-        model="m",
         developer_prompt="Dev",
         created_by="a",
     )
-    db_session.add_all([uc, p])
+    db_session.add(prompt)
+    db_session.flush()
+
     profile = LlmExecutionProfileModel(
         name="natal-paid-test",
         provider="openai",
@@ -278,9 +320,8 @@ async def test_schema_blocking_paid_use_case(db_session):
             subfeature="interpretation",
             plan="premium",
             locale="fr-FR",
-            feature_template_ref=p.id,
+            feature_template_ref=prompt.id,
             execution_profile_ref=profile.id,
-            execution_config={"model": "gpt-4o", "max_output_tokens": 2048},
             status=PromptStatus.PUBLISHED,
             created_by="test",
         )
@@ -288,10 +329,9 @@ async def test_schema_blocking_paid_use_case(db_session):
     db_session.commit()
 
     gateway = LLMGateway(responses_client=MagicMock())
-
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
-            use_case="natal_interpretation",
+            use_case=use_case,
             locale="fr-FR",
             feature="natal",
             subfeature="interpretation",
@@ -303,104 +343,77 @@ async def test_schema_blocking_paid_use_case(db_session):
         user_id=1,
     )
     with pytest.raises(GatewayConfigError) as exc:
-        await gateway.execute_request(
-            request=request,
-            db=db_session,
-        )
+        await gateway.execute_request(request=request, db=db_session)
     assert "Mandatory output schema missing" in str(exc.value)
 
 
 @pytest.mark.asyncio
-async def test_schema_name_in_payload(db_session):
-    """Point 0.1: Correct schema.name in payload."""
+async def test_schema_name_in_payload(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reprend le nom canonique du schema SQLAlchemy dans le payload provider."""
     schema = LlmOutputSchemaModel(name="test_schema", json_schema={"type": "object"})
     db_session.add(schema)
     db_session.flush()
-
-    uc = LlmUseCaseConfigModel(
-        key="test_schema", display_name="T", description="D", output_schema_id=str(schema.id)
+    db_session.add(
+        LlmUseCaseConfigModel(key="test_schema", display_name="T", description="D")
     )
-    p = LlmPromptVersionModel(
-        use_case_key="test_schema",
-        status=PromptStatus.PUBLISHED,
-        model="m",
-        developer_prompt="Dev",
-        created_by="a",
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key="test_schema",
+            status=PromptStatus.PUBLISHED,
+            developer_prompt="Dev",
+            created_by="a",
+        )
     )
-    db_session.add_all([uc, p])
     db_session.commit()
+    _install_fallback_registry(
+        monkeypatch,
+        _fallback_config("test_schema", output_schema_id=str(schema.id)),
+    )
 
     mock_client = MagicMock()
-    mock_client.execute = AsyncMock(return_value=create_mock_result("test_schema", "{}"))
-
+    mock_client.execute = AsyncMock(return_value=_make_mock_result("test_schema", "{}"))
     gateway = LLMGateway(responses_client=mock_client)
+
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="test_schema", locale="fr"),
         request_id="r",
         trace_id="t",
         user_id=1,
     )
-    await gateway.execute_request(
-        request=request,
-        db=db_session,
-    )
+    await gateway.execute_request(request=request, db=db_session)
 
-    args = mock_client.execute.call_args.kwargs
-    resp_format = args["response_format"]
-    assert resp_format["json_schema"]["name"] == "test_schema"
+    response_format = mock_client.execute.call_args.kwargs["response_format"]
+    assert response_format["json_schema"]["name"] == "test_schema"
 
 
 @pytest.mark.asyncio
-async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
-    uc = LlmUseCaseConfigModel(
-        key="natal_long_free",
-        display_name="Free Natal",
-        description="D",
-    )
-    prompt = LlmPromptVersionModel(
-        use_case_key="natal_long_free",
-        status=PromptStatus.PUBLISHED,
-        model="gpt-4o-mini",
-        developer_prompt="Dev {{locale}}",
-        created_by="test",
-    )
-    db_session.add_all([uc, prompt])
-    db_session.flush()
-    profile = LlmExecutionProfileModel(
-        name="natal-free-test",
-        provider="openai",
-        model="gpt-4o-mini",
-        reasoning_profile="off",
-        verbosity_profile="balanced",
-        output_mode="structured_json",
-        tool_mode="none",
-        feature="natal",
-        subfeature="interpretation",
-        plan="free",
-        status=PromptStatus.PUBLISHED,
-        created_by="test",
-    )
-    db_session.add(profile)
-    db_session.flush()
+async def test_catalog_schema_is_used_for_free_natal_fallback(
+    db_session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reutilise le schema catalogue pour `natal_long_free` hors chemin assembly."""
+    use_case = "natal_long_free"
     db_session.add(
-        PromptAssemblyConfigModel(
-            feature="natal",
-            subfeature="interpretation",
-            plan="free",
-            locale="fr-FR",
-            feature_template_ref=prompt.id,
-            execution_profile_ref=profile.id,
-            execution_config={"model": "gpt-4o-mini", "max_output_tokens": 2048},
+        LlmUseCaseConfigModel(key=use_case, display_name="Free Natal", description="D")
+    )
+    db_session.add(
+        LlmPromptVersionModel(
+            use_case_key=use_case,
             status=PromptStatus.PUBLISHED,
+            developer_prompt="Dev {{locale}}",
             created_by="test",
         )
     )
     db_session.commit()
+    _install_fallback_registry(monkeypatch, _fallback_config(use_case))
 
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
-        return_value=create_mock_result(
-            "natal_long_free",
+        return_value=_make_mock_result(
+            use_case,
             (
                 '{"title":"Votre thème révèle une intuition vibrante.",'
                 '"summary":"Resume","accordion_titles":["A","B"]}'
@@ -412,31 +425,16 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(db_session):
             },
         )
     )
-
     gateway = LLMGateway(responses_client=mock_client)
+
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_long_free", locale="fr-FR"),
+        user_input=ExecutionUserInput(use_case=use_case, locale="fr-FR"),
         context=ExecutionContext(chart_json='{"meta": {"birth_date": "2017-03-14"}}'),
         request_id="r",
         trace_id="t",
         user_id=1,
     )
-    await gateway.execute_request(
-        request=request,
-        db=db_session,
-    )
+    await gateway.execute_request(request=request, db=db_session)
 
-    args = mock_client.execute.call_args.kwargs
-    resp_format = args["response_format"]
-    assert resp_format is not None
-    assert resp_format["json_schema"]["name"] == "natal_long_free"
-    # Access the dict through json_schema key directly
-    assert resp_format["json_schema"]["schema"]["required"] == [
-        "title",
-        "summary",
-        "accordion_titles",
-    ]
-
-
-def test_catalog_free_natal_schema_is_openai_responses_compatible():
-    assert NATAL_FREE_SHORT_SCHEMA["additionalProperties"] is False
+    response_format = mock_client.execute.call_args.kwargs["response_format"]
+    assert response_format["json_schema"]["schema"] == NATAL_FREE_SHORT_SCHEMA

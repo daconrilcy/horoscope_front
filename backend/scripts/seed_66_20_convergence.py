@@ -98,7 +98,6 @@ def seed_66_20_convergence():
                     key=uc_key,
                     display_name=uc_key.replace("_", " ").title(),
                     description=entry.description,
-                    safety_profile="astrology",
                 )
                 db.add(uc)
                 db.flush()
@@ -107,9 +106,6 @@ def seed_66_20_convergence():
                 id=uuid.uuid4(),
                 use_case_key=uc_key,
                 developer_prompt=entry.description,
-                model="gpt-4o-mini",
-                max_output_tokens=entry.max_tokens,
-                temperature=entry.temperature,
                 status=PromptStatus.PUBLISHED,
                 created_by="system_66_20",
             )
@@ -201,11 +197,6 @@ def seed_66_20_convergence():
                 )
             ).scalar_one_or_none()
 
-            coherent_execution_config = {
-                "model": base_prof.model,
-                "timeout_seconds": base_prof.timeout_seconds,
-            }
-
             if not existing_asm:
                 asm = PromptAssemblyConfigModel(
                     id=uuid.uuid4(),
@@ -215,7 +206,6 @@ def seed_66_20_convergence():
                     locale="fr-FR",
                     feature_template_ref=v_id,
                     execution_profile_ref=target_prof_id,
-                    execution_config=coherent_execution_config,
                     status=PromptStatus.PUBLISHED,
                     created_by="system_66_20",
                 )
@@ -224,7 +214,6 @@ def seed_66_20_convergence():
             else:
                 existing_asm.feature_template_ref = v_id
                 existing_asm.execution_profile_ref = target_prof_id
-                existing_asm.execution_config = coherent_execution_config
                 print(f"Updated assembly: {f}/{sf}/{p}")
 
         db.commit()

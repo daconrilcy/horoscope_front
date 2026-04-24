@@ -106,6 +106,8 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
     mock_assembly_db._active_snapshot_id = None
     mock_assembly_db._active_snapshot_version = None
     mock_assembly_db._manifest_entry_id = None
+    mock_assembly_db.execution_profile = mock_profile
+    mock_assembly_db.feature_template = MagicMock(use_case_key="chat_astrologer")
 
     mock_resolved = MagicMock()
     mock_resolved.feature_template_id = uuid.uuid4()
@@ -120,6 +122,7 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
     mock_resolved.execution_config.fallback_use_case = None
     mock_resolved.persona_block = "Persona"
     mock_resolved.persona_ref = None
+    mock_resolved.output_schema_id = None
     mock_resolved.output_contract_ref = None
 
     db_mock = MagicMock()
@@ -138,6 +141,10 @@ async def test_gateway_nominal_path_rejects_unsupported_provider():
         patch(
             "app.domain.llm.runtime.gateway.assemble_developer_prompt",
             return_value="Prompt",
+        ),
+        patch(
+            "app.domain.llm.runtime.gateway.get_canonical_use_case_contract",
+            return_value=None,
         ),
         patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),
@@ -222,6 +229,8 @@ async def test_gateway_nominal_path_accepts_openai():
     mock_assembly_db._active_snapshot_id = None
     mock_assembly_db._active_snapshot_version = None
     mock_assembly_db._manifest_entry_id = None
+    mock_assembly_db.execution_profile = mock_profile
+    mock_assembly_db.feature_template = MagicMock(use_case_key="chat_astrologer")
 
     mock_resolved = MagicMock()
     mock_resolved.feature_template_id = uuid.uuid4()
@@ -236,6 +245,7 @@ async def test_gateway_nominal_path_accepts_openai():
     mock_resolved.execution_config.fallback_use_case = None
     mock_resolved.persona_block = "Persona"
     mock_resolved.persona_ref = None
+    mock_resolved.output_schema_id = None
     mock_resolved.output_contract_ref = None
 
     db_mock = MagicMock()
@@ -254,6 +264,10 @@ async def test_gateway_nominal_path_accepts_openai():
         patch(
             "app.domain.llm.runtime.gateway.assemble_developer_prompt",
             return_value="Prompt",
+        ),
+        patch(
+            "app.domain.llm.runtime.gateway.get_canonical_use_case_contract",
+            return_value=None,
         ),
         patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config),
         patch.object(gateway, "_resolve_schema", return_value=(None, "test", "v1")),

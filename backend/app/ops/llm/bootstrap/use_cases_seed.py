@@ -1,3 +1,5 @@
+"""Seeds canoniques LLM utilises par le bootstrap local et les scripts de convergence."""
+
 from __future__ import annotations
 
 from sqlalchemy import select
@@ -19,6 +21,7 @@ from app.infra.db.session import SessionLocal
 __all__ = [
     "ASTRO_RESPONSE_V3_JSON_SCHEMA",
     "CHAT_RESPONSE_V1",
+    "seed_bootstrap_contracts",
     "seed_canonical_contracts",
     "seed_output_schemas",
     "seed_use_cases",
@@ -101,6 +104,11 @@ def seed_use_cases(db: Session) -> None:
 
 def seed_canonical_contracts(db: Session) -> None:
     """Neutral alias used by startup bootstrap without reviving legacy naming in main.py."""
+    seed_use_cases(db)
+
+
+def seed_bootstrap_contracts(db: Session) -> None:
+    """Expose un point d'entree canonique pour le bootstrap local sans contrat legacy."""
     seed_use_cases(db)
 
 

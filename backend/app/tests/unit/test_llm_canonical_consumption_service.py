@@ -42,7 +42,6 @@ def _build_call_log(
         feature=feature,
         subfeature=subfeature,
         plan=plan,
-        provider="openai",
         model="gpt-4.1-mini",
         latency_ms=latency_ms,
         tokens_in=tokens_in,

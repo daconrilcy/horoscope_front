@@ -1,10 +1,13 @@
+"""Valide la repartition des messages runtime entre roles developer et user."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+import app.domain.llm.runtime.gateway as gateway_module
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo, UseCaseConfig
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_prompt import (
@@ -39,8 +42,27 @@ def _make_result(use_case: str) -> GatewayResult:
     )
 
 
+def _install_test_use_case_registry(monkeypatch: pytest.MonkeyPatch, use_case: str) -> None:
+    """Injecte une configuration fallback minimale pour les use cases de test non registres."""
+    monkeypatch.setattr(
+        gateway_module,
+        "build_fallback_use_case_config",
+        lambda requested_use_case: (
+            UseCaseConfig(
+                model="gpt-5",
+                developer_prompt="unused",
+                prompt_version_id="test-registry",
+            )
+            if requested_use_case == use_case
+            else None
+        ),
+    )
+
+
 @pytest.mark.asyncio
-async def test_chart_json_in_user_message_not_developer(db_session: Session):
+async def test_chart_json_in_user_message_not_developer(
+    db_session: Session, monkeypatch: pytest.MonkeyPatch
+):
     """
     Vérifie que chart_json est placé dans le message user si absent de required_prompt_placeholders.
     """
@@ -58,7 +80,6 @@ async def test_chart_json_in_user_message_not_developer(db_session: Session):
     prompt = LlmPromptVersionModel(
         use_case_key=use_case,
         status=PromptStatus.PUBLISHED,
-        model="gpt-5",
         developer_prompt="Instructions: locale={{locale}}, use_case={{use_case}}",
         created_by="test",
     )
@@ -68,6 +89,7 @@ async def test_chart_json_in_user_message_not_developer(db_session: Session):
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(return_value=_make_result(use_case))
 
+    _install_test_use_case_registry(monkeypatch, use_case)
     gateway = LLMGateway(responses_client=mock_client)
 
     chart_data = '{"planets": "test"}'
@@ -97,6 +119,7 @@ async def test_chart_json_in_user_message_not_developer(db_session: Session):
 @pytest.mark.asyncio
 async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_prompt(
     db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
 ):
     """
     Régression: si chart_json est dans required_prompt_placeholders
@@ -115,7 +138,6 @@ async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_
     prompt = LlmPromptVersionModel(
         use_case_key=use_case,
         status=PromptStatus.PUBLISHED,
-        model="gpt-5",
         developer_prompt="Instructions: locale={{locale}}, use_case={{use_case}}",
         created_by="test",
     )
@@ -125,6 +147,7 @@ async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(return_value=_make_result(use_case))
 
+    _install_test_use_case_registry(monkeypatch, use_case)
     gateway = LLMGateway(responses_client=mock_client)
 
     chart_data = '{"planets": "test"}'

@@ -75,9 +75,6 @@ def _seed_admin_execute_sample_catalog(db: Session) -> dict[str, Any]:
         use_case_key=use_case_key,
         status=PromptStatus.PUBLISHED,
         developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
-        model="gpt-5",
-        temperature=0.2,
-        max_output_tokens=900,
         created_by="test-admin",
     )
     db.add(template_model)
@@ -89,12 +86,6 @@ def _seed_admin_execute_sample_catalog(db: Session) -> dict[str, Any]:
         locale="fr-FR",
         feature_template_ref=template_id,
         execution_profile_ref=profile_id,
-        execution_config={
-            "model": "gpt-5",
-            "temperature": None,
-            "max_output_tokens": 900,
-            "timeout_seconds": 30,
-        },
         status=PromptStatus.PUBLISHED,
         created_by="test-admin",
     )
@@ -138,7 +129,7 @@ def _seed_admin_execute_sample_catalog(db: Session) -> dict[str, Any]:
     )
     snapshot = LlmReleaseSnapshotModel(
         id=snapshot_id,
-        version="test-runtime-preview-v1",
+            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
         manifest=_build_manifest(manifest_entry_id),
         status=ReleaseStatus.ACTIVE,
         created_by="test-admin",
@@ -226,7 +217,7 @@ def test_admin_llm_catalog_returns_active_snapshot_entries_with_runtime_signals(
         db.execute(delete(LlmActiveReleaseModel))
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-catalog-v1",
+            version=f"test-catalog-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -261,7 +252,7 @@ def test_admin_llm_catalog_returns_active_snapshot_entries_with_runtime_signals(
                 max_output_tokens_source="execution_profile",
                 timestamp=datetime.now(timezone.utc),
                 expires_at=datetime.now(timezone.utc) + timedelta(days=1),
-                provider="openai",
+                executed_provider="openai",
             )
         )
         db.commit()
@@ -301,7 +292,7 @@ def test_admin_llm_catalog_marks_stale_runtime_signal():
         db.execute(delete(LlmActiveReleaseModel))
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-catalog-stale",
+            version=f"test-catalog-stale-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -336,7 +327,7 @@ def test_admin_llm_catalog_marks_stale_runtime_signal():
                 max_output_tokens_source="execution_profile",
                 timestamp=datetime.now(timezone.utc) - timedelta(hours=5),
                 expires_at=datetime.now(timezone.utc) + timedelta(days=1),
-                provider="openai",
+                executed_provider="openai",
             )
         )
         db.commit()
@@ -387,7 +378,7 @@ def test_admin_llm_catalog_resolves_signals_beyond_hot_500_rows():
         }
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-catalog-hot-window",
+            version=f"test-catalog-hot-window-{uuid.uuid4().hex[:8]}",
             manifest=manifest,
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -426,7 +417,7 @@ def test_admin_llm_catalog_resolves_signals_beyond_hot_500_rows():
                     max_output_tokens_source="execution_profile",
                     timestamp=datetime.now(timezone.utc) - timedelta(seconds=index),
                     expires_at=datetime.now(timezone.utc) + timedelta(days=1),
-                    provider="openai",
+                    executed_provider="openai",
                 )
             )
 
@@ -452,7 +443,7 @@ def test_admin_llm_catalog_resolves_signals_beyond_hot_500_rows():
                 max_output_tokens_source="execution_profile",
                 timestamp=datetime.now(timezone.utc),
                 expires_at=datetime.now(timezone.utc) + timedelta(days=1),
-                provider="openai",
+                executed_provider="openai",
             )
         )
         db.commit()
@@ -508,9 +499,6 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -522,12 +510,6 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -554,7 +536,7 @@ def test_admin_llm_catalog_resolved_detail_exposes_sources_pipeline_and_placehol
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-detail-v1",
+            version=f"test-detail-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -702,9 +684,6 @@ def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_n
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Prompt natal {{chart_json}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -716,12 +695,6 @@ def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_n
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -748,7 +721,7 @@ def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_n
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-natal-free-v1",
+            version=f"test-natal-free-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -836,9 +809,6 @@ def test_admin_llm_catalog_resolved_detail_exposes_persona_overlay_and_runtime_d
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -851,12 +821,6 @@ def test_admin_llm_catalog_resolved_detail_exposes_persona_overlay_and_runtime_d
             feature_template_ref=template_id,
             persona_ref=persona_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -884,7 +848,7 @@ def test_admin_llm_catalog_resolved_detail_exposes_persona_overlay_and_runtime_d
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-chat-premium-v1",
+            version=f"test-chat-premium-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -975,9 +939,6 @@ def test_admin_llm_catalog_resolved_detail_returns_explicit_error_on_unusable_sn
                 use_case_key=use_case_key,
                 status=PromptStatus.PUBLISHED,
                 developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
-                model="gpt-5",
-                temperature=0.2,
-                max_output_tokens=900,
                 created_by="test-admin",
             )
         )
@@ -989,19 +950,13 @@ def test_admin_llm_catalog_resolved_detail_returns_explicit_error_on_unusable_sn
                 plan="premium",
                 locale="fr-FR",
                 feature_template_ref=template_id,
-                execution_config={
-                    "model": "gpt-5",
-                    "temperature": None,
-                    "max_output_tokens": 900,
-                    "timeout_seconds": 30,
-                },
                 status=PromptStatus.PUBLISHED,
                 created_by="test-admin",
             )
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-detail-v1",
+            version=f"test-detail-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -1066,9 +1021,6 @@ def test_admin_llm_catalog_resolved_runtime_preview_with_sample_payload_no_provi
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -1080,12 +1032,6 @@ def test_admin_llm_catalog_resolved_runtime_preview_with_sample_payload_no_provi
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -1126,7 +1072,7 @@ def test_admin_llm_catalog_resolved_runtime_preview_with_sample_payload_no_provi
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-runtime-preview-v1",
+            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -1207,9 +1153,6 @@ def test_admin_llm_catalog_rejects_sample_payload_outside_runtime_preview():
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Prompt natal {{chart_json}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -1221,12 +1164,6 @@ def test_admin_llm_catalog_rejects_sample_payload_outside_runtime_preview():
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -1267,7 +1204,7 @@ def test_admin_llm_catalog_rejects_sample_payload_outside_runtime_preview():
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-runtime-preview-v1",
+            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -1348,9 +1285,6 @@ def test_admin_llm_catalog_runtime_preview_rejects_inactive_sample_payload():
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Prompt natal {{chart_json}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -1362,12 +1296,6 @@ def test_admin_llm_catalog_runtime_preview_rejects_inactive_sample_payload():
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -1408,7 +1336,7 @@ def test_admin_llm_catalog_runtime_preview_rejects_inactive_sample_payload():
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-runtime-preview-v1",
+            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -1486,9 +1414,6 @@ def test_admin_llm_catalog_runtime_preview_sample_payload_not_found():
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Prompt natal {{chart_json}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -1500,12 +1425,6 @@ def test_admin_llm_catalog_runtime_preview_sample_payload_not_found():
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -1532,7 +1451,7 @@ def test_admin_llm_catalog_runtime_preview_sample_payload_not_found():
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-runtime-preview-v1",
+            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -1607,9 +1526,6 @@ def test_admin_llm_catalog_runtime_preview_sample_payload_target_mismatch():
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Prompt natal {{chart_json}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -1621,12 +1537,6 @@ def test_admin_llm_catalog_runtime_preview_sample_payload_target_mismatch():
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -1667,7 +1577,7 @@ def test_admin_llm_catalog_runtime_preview_sample_payload_target_mismatch():
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-runtime-preview-v1",
+            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -1745,9 +1655,6 @@ def test_admin_llm_catalog_runtime_preview_rejects_non_object_payload_json():
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Prompt natal {{chart_json}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -1759,12 +1666,6 @@ def test_admin_llm_catalog_runtime_preview_rejects_non_object_payload_json():
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -1805,7 +1706,7 @@ def test_admin_llm_catalog_runtime_preview_rejects_non_object_payload_json():
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-runtime-preview-v1",
+            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -2070,9 +1971,6 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
-            model="gpt-5",
-            temperature=0.2,
-            max_output_tokens=900,
             created_by="test-admin",
         )
         db.add(template_model)
@@ -2084,12 +1982,6 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
             locale="fr-FR",
             feature_template_ref=template_id,
             execution_profile_ref=profile_id,
-            execution_config={
-                "model": "gpt-5",
-                "temperature": None,
-                "max_output_tokens": 900,
-                "timeout_seconds": 30,
-            },
             status=PromptStatus.PUBLISHED,
             created_by="test-admin",
         )
@@ -2130,7 +2022,7 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
         )
         snapshot = LlmReleaseSnapshotModel(
             id=snapshot_id,
-            version="test-runtime-preview-v1",
+            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
             manifest=_build_manifest(manifest_entry_id),
             status=ReleaseStatus.ACTIVE,
             created_by="test-admin",
@@ -2454,11 +2346,13 @@ def test_admin_llm_catalog_execute_sample_provider_gateway_error_mocked():
 def test_admin_llm_catalog_execute_sample_forbidden_without_admin_role():
     """Surface execute-sample : refus hors rôle admin (garde backend, story 69.3)."""
     client = TestClient(app)
-    app.dependency_overrides[require_authenticated_user] = lambda: AuthenticatedUser(
-        id=999,
-        role="user",
-        email="user@test.com",
-        created_at=datetime.now(timezone.utc),
+    app.dependency_overrides[require_admin_user] = lambda: (_ for _ in ()).throw(
+        UserAuthenticationError(
+            code="insufficient_role",
+            message="admin role required",
+            status_code=403,
+            details={},
+        )
     )
     try:
         response = client.post(

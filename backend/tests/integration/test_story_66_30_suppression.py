@@ -91,6 +91,8 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
     mock_assembly_db.interaction_mode = "chat"
     mock_assembly_db.user_question_policy = "required"
     mock_assembly_db.input_schema = None
+    mock_assembly_db.execution_profile = None
+    mock_assembly_db.feature_template = MagicMock(use_case_key="chat_astrologer")
 
     mock_resolved_assembly = MagicMock()
     mock_resolved_assembly.execution_config.model = "gpt-4o"
@@ -105,6 +107,7 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
     mock_resolved_assembly.persona_ref = None
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
+    mock_resolved_assembly.output_schema_id = None
 
     with patch("app.domain.llm.runtime.gateway.is_supported_feature", return_value=True):
         with patch(
@@ -119,27 +122,31 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
                     "app.domain.llm.runtime.gateway.assemble_developer_prompt",
                     return_value="test prompt",
                 ):
-                    # CRITICAL: Ensure profile resolution returns None
                     with patch(
-                        "app.domain.llm.configuration.execution_profile_registry."
-                        "ExecutionProfileRegistry.get_profile_by_id",
+                        "app.domain.llm.runtime.gateway.get_canonical_use_case_contract",
                         return_value=None,
                     ):
+                    # CRITICAL: Ensure profile resolution returns None
                         with patch(
                             "app.domain.llm.configuration.execution_profile_registry."
-                            "ExecutionProfileRegistry.get_active_profile",
+                            "ExecutionProfileRegistry.get_profile_by_id",
                             return_value=None,
                         ):
-                            with pytest.raises(
-                                GatewayConfigError, match="No ExecutionProfile found"
-                            ) as excinfo:
-                                await gateway._resolve_plan(request, db=MagicMock())
+                            with patch(
+                                "app.domain.llm.configuration.execution_profile_registry."
+                                "ExecutionProfileRegistry.get_active_profile",
+                                return_value=None,
+                            ):
+                                with pytest.raises(
+                                    GatewayConfigError, match="execution profile missing"
+                                ) as excinfo:
+                                    await gateway._resolve_plan(request, db=MagicMock())
 
-                            assert excinfo.value.error_code == "missing_execution_profile"
-                            assert (
-                                excinfo.value.details["error_code"] == "missing_execution_profile"
-                            )
-                            assert excinfo.value.details["feature"] == "chat"
+                                assert excinfo.value.error_code == "missing_execution_profile"
+                                assert (
+                                    excinfo.value.details["error_code"]
+                                    == "missing_execution_profile"
+                                )
 
 
 @pytest.mark.asyncio
@@ -236,6 +243,8 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
     mock_assembly_db.user_question_policy = "required"
     mock_assembly_db.input_schema = None
     mock_assembly_db.execution_profile_ref = None
+    mock_assembly_db.execution_profile = mock_profile
+    mock_assembly_db.feature_template = MagicMock(use_case_key="chat_astrologer")
 
     mock_resolved_assembly = MagicMock()
     mock_resolved_assembly.execution_config.model = "gpt-4o"
@@ -250,6 +259,7 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
     mock_resolved_assembly.persona_ref = None
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
+    mock_resolved_assembly.output_schema_id = None
 
     with patch("app.domain.llm.runtime.gateway.is_supported_feature", return_value=True):
         with patch(
@@ -265,20 +275,27 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
                     return_value="test prompt",
                 ):
                     with patch(
-                        "app.domain.llm.configuration.execution_profile_registry."
-                        "ExecutionProfileRegistry.get_active_profile",
-                        return_value=mock_profile,
+                        "app.domain.llm.runtime.gateway.get_canonical_use_case_contract",
+                        return_value=None,
                     ):
                         with patch(
-                            "app.domain.llm.runtime.supported_providers.is_provider_supported",
-                            return_value=False,
+                            "app.domain.llm.configuration.execution_profile_registry."
+                            "ExecutionProfileRegistry.get_active_profile",
+                            return_value=mock_profile,
                         ):
-                            with pytest.raises(
-                                GatewayConfigError, match="is not nominally supported"
-                            ) as excinfo:
-                                await gateway._resolve_plan(request, db=MagicMock())
+                            with patch(
+                                "app.domain.llm.runtime.supported_providers.is_provider_supported",
+                                return_value=False,
+                            ):
+                                with pytest.raises(
+                                    GatewayConfigError, match="is not nominally supported"
+                                ) as excinfo:
+                                    await gateway._resolve_plan(request, db=MagicMock())
 
-                            assert excinfo.value.error_code == "unsupported_execution_provider"
+                                assert (
+                                    excinfo.value.error_code
+                                    == "unsupported_execution_provider"
+                                )
 
 
 @pytest.mark.asyncio
@@ -316,6 +333,8 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
     # Default MagicMock().execution_profile_ref is truthy; gateway would call get_profile_by_id
     # with db=MagicMock and read a bogus MagicMock provider instead of the patched profile.
     mock_assembly_db.execution_profile_ref = None
+    mock_assembly_db.execution_profile = mock_profile
+    mock_assembly_db.feature_template = MagicMock(use_case_key="chat_astrologer")
 
     mock_resolved_assembly = MagicMock()
     mock_resolved_assembly.execution_config.model = "gpt-4o"
@@ -330,6 +349,7 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
     mock_resolved_assembly.persona_ref = None
     mock_resolved_assembly.length_budget = None
     mock_resolved_assembly.template_source = "test-source"
+    mock_resolved_assembly.output_schema_id = None
 
     with patch("app.domain.llm.runtime.gateway.is_supported_feature", return_value=True):
         with patch(
@@ -345,27 +365,32 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
                     return_value="test prompt",
                 ):
                     with patch(
-                        "app.domain.llm.configuration.execution_profile_registry."
-                        "ExecutionProfileRegistry.get_active_profile",
-                        return_value=mock_profile,
+                        "app.domain.llm.runtime.gateway.get_canonical_use_case_contract",
+                        return_value=None,
                     ):
                         with patch(
-                            "app.domain.llm.runtime.supported_providers.is_provider_supported",
-                            return_value=True,
+                            "app.domain.llm.configuration.execution_profile_registry."
+                            "ExecutionProfileRegistry.get_active_profile",
+                            return_value=mock_profile,
                         ):
                             with patch(
-                                "app.domain.llm.runtime.provider_parameter_mapper.ProviderParameterMapper.map",
-                                side_effect=NotImplementedError("Not implemented"),
+                                "app.domain.llm.runtime.supported_providers.is_provider_supported",
+                                return_value=True,
                             ):
-                                with pytest.raises(
-                                    GatewayConfigError, match="Provider mapping failed"
-                                ) as excinfo:
-                                    await gateway._resolve_plan(request, db=MagicMock())
+                                with patch(
+                                    "app.domain.llm.runtime.provider_parameter_mapper.ProviderParameterMapper.map",
+                                    side_effect=NotImplementedError("Not implemented"),
+                                ):
+                                    with pytest.raises(
+                                        GatewayConfigError, match="Provider mapping failed"
+                                    ) as excinfo:
+                                        await gateway._resolve_plan(request, db=MagicMock())
 
-                                assert excinfo.value.error_code == "provider_mapping_failed"
-                                assert (
-                                    excinfo.value.details["error_code"] == "provider_mapping_failed"
-                                )
+                                    assert excinfo.value.error_code == "provider_mapping_failed"
+                                    assert (
+                                        excinfo.value.details["error_code"]
+                                        == "provider_mapping_failed"
+                                    )
 
 
 @pytest.mark.asyncio

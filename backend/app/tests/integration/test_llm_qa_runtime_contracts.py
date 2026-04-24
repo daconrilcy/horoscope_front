@@ -7,9 +7,18 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.domain.llm.runtime.contracts import (
+    ExecutionContext,
+    ExecutionUserInput,
+    GatewayMeta,
+    GatewayResult,
+    LLMExecutionRequest,
+    UsageInfo,
+)
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.base import Base
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
 from app.infra.db.models.llm.llm_prompt import (
@@ -72,20 +81,54 @@ async def test_llm_qa_runtime_contract_proves_prompt_persona_and_output_validati
         key=use_case_key,
         display_name="QA Runtime Contract",
         description="Verifies canonical QA runtime proofs",
-        output_schema_id=str(schema.id),
-        allowed_persona_ids=[str(persona.id)],
         required_prompt_placeholders=["locale", "chart_json"],
     )
     db_session.add(use_case)
 
     prompt = LlmPromptVersionModel(
+        id=uuid.uuid4(),
         use_case_key=use_case_key,
         status=PromptStatus.PUBLISHED,
         developer_prompt="Locale={{locale}}\nChart={{chart_json}}",
-        model="gpt-5",
         created_by="qa",
     )
     db_session.add(prompt)
+    db_session.flush()
+
+    profile = LlmExecutionProfileModel(
+        id=uuid.uuid4(),
+        name="qa-runtime-profile",
+        provider="openai",
+        model="gpt-5",
+        reasoning_profile="medium",
+        verbosity_profile="balanced",
+        output_mode="structured_json",
+        tool_mode="none",
+        timeout_seconds=30,
+        feature="natal",
+        subfeature="interpretation",
+        plan="premium",
+        status=PromptStatus.PUBLISHED,
+        created_by="qa",
+    )
+    db_session.add(profile)
+    db_session.flush()
+
+    db_session.add(
+        PromptAssemblyConfigModel(
+            id=uuid.uuid4(),
+            feature="natal",
+            subfeature="interpretation",
+            plan="premium",
+            locale="fr-FR",
+            feature_template_ref=prompt.id,
+            persona_ref=persona.id,
+            execution_profile_ref=profile.id,
+            output_schema_id=schema.id,
+            status=PromptStatus.PUBLISHED,
+            created_by="qa",
+        )
+    )
     db_session.commit()
 
     mock_client = MagicMock()
@@ -98,18 +141,24 @@ async def test_llm_qa_runtime_contract_proves_prompt_persona_and_output_validati
 
     gateway = LLMGateway(responses_client=mock_client)
 
-    with patch("app.domain.llm.runtime.gateway.get_canonical_use_case_contract", return_value=None):
-        result = await gateway.execute(
-            use_case=use_case_key,
-            user_input={},
-            context={
-                "locale": "fr-FR",
-                "use_case": use_case_key,
-                "chart_json": '{"sun":"taurus"}',
-            },
-            request_id="req-qa-runtime",
-            trace_id="trace-qa-runtime",
-            user_id=1,
+    with patch(
+        "app.domain.llm.runtime.gateway.CommonContextBuilder.build",
+        side_effect=RuntimeError,
+    ):
+        result = await gateway.execute_request(
+            LLMExecutionRequest(
+                user_input=ExecutionUserInput(
+                    use_case=use_case_key,
+                    feature="natal",
+                    subfeature="interpretation",
+                    plan="premium",
+                    locale="fr-FR",
+                ),
+                context=ExecutionContext(chart_json='{"sun":"taurus"}'),
+                request_id="req-qa-runtime",
+                trace_id="trace-qa-runtime",
+                user_id=1,
+            ),
             db=db_session,
         )
 
