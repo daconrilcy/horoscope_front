@@ -28,27 +28,94 @@ def _column_names(table_name: str) -> set[str]:
     return {str(column["name"]) for column in sa.inspect(op.get_bind()).get_columns(table_name)}
 
 
+def _check_names(table_name: str) -> set[str]:
+    """Retourne les contraintes CHECK presentes pour une table."""
+    return {
+        str(check["name"])
+        for check in sa.inspect(op.get_bind()).get_check_constraints(table_name)
+        if check.get("name")
+    }
+
+
+def _assert_columns_are_empty(table_name: str, column_names: Sequence[str]) -> None:
+    """Bloque la suppression si des colonnes legacy contiennent encore des donnees."""
+    existing_columns = [column_name for column_name in column_names if column_name in _column_names(table_name)]
+    if not existing_columns:
+        return
+
+    where_clause = " OR ".join(f"{column_name} IS NOT NULL" for column_name in existing_columns)
+    query = sa.text(f"SELECT COUNT(*) FROM {table_name} WHERE {where_clause}")
+    row_count = int(op.get_bind().execute(query).scalar() or 0)
+    if row_count > 0:
+        raise RuntimeError(
+            f"Cannot drop legacy columns from {table_name}: {row_count} rows still carry data in "
+            f"{', '.join(existing_columns)}."
+        )
+
+
+def _assert_provider_compat_is_migrated() -> None:
+    """Verifie que `provider_compat` a bien ete reporte dans les metadonnees canoniques."""
+    if not _has_table("llm_call_logs") or "provider_compat" not in _column_names("llm_call_logs"):
+        return
+    if not _has_table("llm_call_log_operational_metadata"):
+        raise RuntimeError(
+            "Cannot drop llm_call_logs.provider_compat: operational metadata table is missing."
+        )
+
+    query = sa.text(
+        """
+        SELECT COUNT(*)
+        FROM llm_call_logs AS logs
+        LEFT JOIN llm_call_log_operational_metadata AS meta
+            ON meta.call_log_id = logs.id
+        WHERE logs.provider_compat IS NOT NULL
+          AND (
+              meta.executed_provider IS NULL
+              OR meta.executed_provider != logs.provider_compat
+          )
+        """
+    )
+    row_count = int(op.get_bind().execute(query).scalar() or 0)
+    if row_count > 0:
+        raise RuntimeError(
+            "Cannot drop llm_call_logs.provider_compat: some rows are not mirrored into "
+            "llm_call_log_operational_metadata.executed_provider."
+        )
+
+
 def upgrade() -> None:
     """Supprime les residus legacy des assemblies, prompts, use cases et logs."""
     if _has_table("llm_assembly_configs"):
+        _assert_columns_are_empty(
+            "llm_assembly_configs",
+            (
+                "execution_config",
+                "interaction_mode",
+                "user_question_policy",
+                "input_schema",
+                "fallback_use_case",
+                "output_contract_ref",
+            ),
+        )
         columns = _column_names("llm_assembly_configs")
+        checks = _check_names("llm_assembly_configs")
         with op.batch_alter_table("llm_assembly_configs") as batch_op:
-            if "interaction_mode" in columns:
-                try:
-                    batch_op.drop_constraint(
-                        "ck_llm_assembly_configs_interaction_mode",
-                        type_="check",
-                    )
-                except ValueError:
-                    pass
-            if "user_question_policy" in columns:
-                try:
-                    batch_op.drop_constraint(
-                        "ck_llm_assembly_configs_user_question_policy",
-                        type_="check",
-                    )
-                except ValueError:
-                    pass
+            if (
+                "interaction_mode" in columns
+                and "ck_llm_assembly_configs_interaction_mode" in checks
+            ):
+                batch_op.drop_constraint(
+                    "ck_llm_assembly_configs_interaction_mode",
+                    type_="check",
+                )
+            if (
+                "user_question_policy" in columns
+                and "ck_llm_assembly_configs_user_question_policy" in checks
+            ):
+                batch_op.drop_constraint(
+                    "ck_llm_assembly_configs_user_question_policy",
+                    type_="check",
+                )
             for column_name in (
                 "execution_config",
                 "interaction_mode",
@@ -61,6 +128,10 @@ def upgrade() -> None:
                     batch_op.drop_column(column_name)
 
     if _has_table("llm_prompt_versions"):
+        _assert_columns_are_empty(
+            "llm_prompt_versions",
+            ("model", "temperature", "max_output_tokens", "reasoning_effort", "verbosity"),
+        )
         columns = _column_names("llm_prompt_versions")
         with op.batch_alter_table("llm_prompt_versions") as batch_op:
             for column_name in (
@@ -74,6 +145,19 @@ def upgrade() -> None:
                     batch_op.drop_column(column_name)
 
     if _has_table("llm_use_case_configs"):
+        _assert_columns_are_empty(
+            "llm_use_case_configs",
+            (
+                "input_schema",
+                "output_schema_id",
+                "persona_strategy",
+                "interaction_mode",
+                "user_question_policy",
+                "safety_profile",
+                "fallback_use_case_key",
+                "allowed_persona_ids",
+            ),
+        )
         columns = _column_names("llm_use_case_configs")
         with op.batch_alter_table("llm_use_case_configs") as batch_op:
             for column_name in (
@@ -90,13 +174,12 @@ def upgrade() -> None:
                     batch_op.drop_column(column_name)
 
     if _has_table("llm_call_logs"):
+        _assert_provider_compat_is_migrated()
         columns = _column_names("llm_call_logs")
+        checks = _check_names("llm_call_logs")
         with op.batch_alter_table("llm_call_logs") as batch_op:
-            if "provider_compat" in columns:
-                try:
-                    batch_op.drop_constraint("ck_llm_call_logs_provider", type_="check")
-                except ValueError:
-                    pass
+            if "provider_compat" in columns and "ck_llm_call_logs_provider" in checks:
+                batch_op.drop_constraint("ck_llm_call_logs_provider", type_="check")
                 batch_op.drop_column("provider_compat")
 
 
@@ -111,9 +194,17 @@ def downgrade() -> None:
                 batch_op.add_column(
                     sa.Column("interaction_mode", sa.String(length=32), nullable=True)
                 )
+                batch_op.create_check_constraint(
+                    "ck_llm_assembly_configs_interaction_mode",
+                    "interaction_mode IN ('structured', 'chat')",
+                )
             if "user_question_policy" not in columns:
                 batch_op.add_column(
                     sa.Column("user_question_policy", sa.String(length=32), nullable=True)
+                )
+                batch_op.create_check_constraint(
+                    "ck_llm_assembly_configs_user_question_policy",
+                    "user_question_policy IN ('none', 'optional', 'required')",
                 )
             if "input_schema" not in columns:
                 batch_op.add_column(sa.Column("input_schema", sa.JSON(), nullable=True))
@@ -180,4 +271,8 @@ def downgrade() -> None:
             if "provider_compat" not in columns:
                 batch_op.add_column(
                     sa.Column("provider_compat", sa.String(length=32), nullable=True)
+                )
+                batch_op.create_check_constraint(
+                    "ck_llm_call_logs_provider",
+                    "provider_compat IN ('openai', 'anthropic')",
                 )

@@ -6,7 +6,6 @@ Optimise selon les recommandations GPT-5.2 pour une concision et une structure m
 from __future__ import annotations
 
 import logging
-import uuid
 
 from sqlalchemy import select
 
@@ -168,10 +167,7 @@ def seed_prompts() -> None:
                     key=key,
                     display_name=config["display_name"],
                     description=config["description"],
-                    output_schema_id=str(astro_schema.id),
-                    persona_strategy=config["persona_strategy"],
                     required_prompt_placeholders=config["required_prompt_placeholders"],
-                    safety_profile="astrology",
                     eval_fixtures_path=config["eval_fixtures_path"],
                     eval_failure_threshold=config["eval_failure_threshold"],
                 )
@@ -180,25 +176,6 @@ def seed_prompts() -> None:
                 logger.info("Updating use case config for %s...", key)
                 uc.display_name = config["display_name"]
                 uc.description = config["description"]
-                current_schema = None
-                if uc.output_schema_id:
-                    try:
-                        current_schema = db.get(
-                            LlmOutputSchemaModel, uuid.UUID(uc.output_schema_id)
-                        )
-                    except (ValueError, TypeError):
-                        pass
-
-                if not current_schema or current_schema.version < 3:
-                    uc.output_schema_id = str(astro_schema.id)
-                else:
-                    logger.info(
-                        "Schema for %s is already at version %s. Skipping schema update.",
-                        key,
-                        current_schema.version,
-                    )
-
-                uc.persona_strategy = config["persona_strategy"]
                 uc.required_prompt_placeholders = config["required_prompt_placeholders"]
                 uc.eval_fixtures_path = config["eval_fixtures_path"]
                 uc.eval_failure_threshold = config["eval_failure_threshold"]
@@ -221,8 +198,6 @@ def seed_prompts() -> None:
             if (
                 current_p
                 and current_p.developer_prompt == config["developer_prompt"]
-                and current_p.max_output_tokens == config["max_output_tokens"]
-                and current_p.temperature == config["temperature"]
             ):
                 logger.info("Prompt for %s already published and identical. Skipping.", key)
                 continue
@@ -235,9 +210,6 @@ def seed_prompts() -> None:
                 use_case_key=key,
                 status=PromptStatus.PUBLISHED,
                 developer_prompt=config["developer_prompt"],
-                model=config["model"],
-                temperature=config["temperature"],
-                max_output_tokens=config["max_output_tokens"],
                 created_by="system",
                 published_at=utc_now(),
             )

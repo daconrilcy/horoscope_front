@@ -441,11 +441,6 @@ def seed() -> None:
                 for prompt_version in published_versions:
                     if (
                         prompt_version.developer_prompt == prompt_cfg["developer_prompt"]
-                        and prompt_version.model == prompt_cfg["model"]
-                        and prompt_version.temperature == prompt_cfg["temperature"]
-                        and prompt_version.max_output_tokens == prompt_cfg["max_output_tokens"]
-                        and prompt_version.reasoning_effort == prompt_cfg["reasoning_effort"]
-                        and prompt_version.verbosity == prompt_cfg["verbosity"]
                     ):
                         logger.info(
                             "Prompt v3 for %s already published and identical. Skipping.", key
@@ -467,11 +462,6 @@ def seed() -> None:
                 use_case_key=key,
                 status=PromptStatus.PUBLISHED,
                 developer_prompt=prompt_cfg["developer_prompt"],
-                model=prompt_cfg["model"],
-                temperature=prompt_cfg["temperature"],
-                max_output_tokens=prompt_cfg["max_output_tokens"],
-                reasoning_effort=prompt_cfg["reasoning_effort"],
-                verbosity=prompt_cfg["verbosity"],
                 created_by="system",
                 published_at=utc_now(),
             )
@@ -479,13 +469,7 @@ def seed() -> None:
             db.commit()
 
             PromptRegistryV2.invalidate_cache(key)
-            logger.info(
-                "Published GPT-5 v3 prompt for %s (model=%s, reasoning_effort=%s, verbosity=%s)",
-                key,
-                prompt_cfg["model"],
-                prompt_cfg["reasoning_effort"],
-                prompt_cfg["verbosity"],
-            )
+            logger.info("Published GPT-5 v3 prompt for %s", key)
         logger.info("Seed v3 completed successfully.")
     except Exception:
         db.rollback()

@@ -110,8 +110,6 @@ def seed_guidance_prompts() -> None:
                     key=key,
                     display_name=config["display_name"],
                     description=config["description"],
-                    safety_profile="astrology",
-                    persona_strategy="optional",
                     required_prompt_placeholders=config["required_prompt_placeholders"],
                 )
                 db.add(uc)
@@ -138,9 +136,6 @@ def seed_guidance_prompts() -> None:
             if (
                 current
                 and current.developer_prompt == config["developer_prompt"]
-                and current.max_output_tokens == config["max_output_tokens"]
-                and current.temperature == config["temperature"]
-                and current.model == config["model"]
             ):
                 continue
 
@@ -152,9 +147,6 @@ def seed_guidance_prompts() -> None:
                     use_case_key=key,
                     status=PromptStatus.PUBLISHED,
                     developer_prompt=config["developer_prompt"],
-                    model=config["model"],
-                    temperature=config["temperature"],
-                    max_output_tokens=config["max_output_tokens"],
                     created_by="system",
                     published_at=utc_now(),
                 )

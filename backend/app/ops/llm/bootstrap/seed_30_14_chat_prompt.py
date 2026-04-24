@@ -91,8 +91,6 @@ def seed() -> None:
         if (
             current_published
             and current_published.developer_prompt == CHAT_ASTROLOGER_PROMPT_V3
-            and current_published.model == "gpt-4o-mini"
-            and current_published.max_output_tokens == 1200
         ):
             logger.info("Prompt chat_astrologer already up-to-date. Skipping.")
             return
@@ -104,9 +102,6 @@ def seed() -> None:
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
             developer_prompt=CHAT_ASTROLOGER_PROMPT_V3,
-            model="gpt-4o-mini",
-            temperature=0.5,
-            max_output_tokens=1200,
             created_by="system",
             published_at=utc_now(),
         )

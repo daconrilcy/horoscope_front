@@ -68,6 +68,7 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     )
 
     seed_astrologers = Mock()
+    seed_canonical_contracts = Mock()
     seed_prompts = Mock()
     seed_natal_v3_prompts = Mock()
     seed_chat_prompt_v2 = Mock()
@@ -76,6 +77,10 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     seed_66_20_taxonomy = Mock()
 
     monkeypatch.setattr("scripts.seed_astrologers_6_profiles.seed_astrologers", seed_astrologers)
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.use_cases_seed.seed_canonical_contracts",
+        seed_canonical_contracts,
+    )
     monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
@@ -101,6 +106,7 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     main._ensure_canonical_llm_bootstrap_seeded()
 
     seed_astrologers.assert_called_once()
+    seed_canonical_contracts.assert_called_once()
     seed_prompts.assert_called_once()
     seed_natal_v3_prompts.assert_called_once()
     seed_chat_prompt_v2.assert_called_once()
@@ -109,7 +115,7 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     seed_66_20_taxonomy.assert_called_once()
 
 
-def test_canonical_llm_bootstrap_does_not_reseed_legacy_use_case_registry(monkeypatch) -> None:
+def test_canonical_llm_bootstrap_only_seeds_canonical_use_case_registry(monkeypatch) -> None:
     monkeypatch.setattr(main.settings, "app_env", "development")
     monkeypatch.setattr(
         "app.infra.db.session.SessionLocal",
@@ -128,21 +134,50 @@ def test_canonical_llm_bootstrap_does_not_reseed_legacy_use_case_registry(monkey
         lambda *_args, **_kwargs: None,
     )
 
+    seed_astrologers = Mock()
+    seed_prompts = Mock()
+    seed_natal_v3_prompts = Mock()
+    seed_chat_prompt_v2 = Mock()
+    seed_guidance_prompts = Mock()
+    seed_horoscope_narrator_assembly = Mock()
+    seed_66_20_taxonomy = Mock()
     legacy_seed_use_cases = Mock()
-    legacy_seed_canonical_contracts = Mock()
+    canonical_seed_contracts = Mock()
+    monkeypatch.setattr("scripts.seed_astrologers_6_profiles.seed_astrologers", seed_astrologers)
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.use_cases_seed.seed_use_cases",
         legacy_seed_use_cases,
     )
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.use_cases_seed.seed_canonical_contracts",
-        legacy_seed_canonical_contracts,
+        canonical_seed_contracts,
+    )
+    monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
+        seed_natal_v3_prompts,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_30_14_chat_prompt.seed",
+        seed_chat_prompt_v2,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_guidance_prompts.seed_guidance_prompts",
+        seed_guidance_prompts,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_horoscope_narrator_assembly.seed_horoscope_narrator_assembly",
+        seed_horoscope_narrator_assembly,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_66_20_taxonomy.seed_66_20_taxonomy",
+        seed_66_20_taxonomy,
     )
 
     main._ensure_canonical_llm_bootstrap_seeded()
 
     legacy_seed_use_cases.assert_not_called()
-    legacy_seed_canonical_contracts.assert_not_called()
+    canonical_seed_contracts.assert_called_once()
 
 
 def test_canonical_llm_bootstrap_skips_when_nominal_tables_exist(monkeypatch) -> None:
@@ -198,6 +233,7 @@ def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(mon
     )
 
     seed_astrologers = Mock()
+    seed_canonical_contracts = Mock()
     seed_prompts = Mock()
     seed_natal_v3_prompts = Mock()
     seed_chat_prompt_v2 = Mock()
@@ -206,6 +242,10 @@ def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(mon
     seed_66_20_taxonomy = Mock()
 
     monkeypatch.setattr("scripts.seed_astrologers_6_profiles.seed_astrologers", seed_astrologers)
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.use_cases_seed.seed_canonical_contracts",
+        seed_canonical_contracts,
+    )
     monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
     monkeypatch.setattr(
         "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
@@ -231,6 +271,7 @@ def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(mon
     main._ensure_canonical_llm_bootstrap_seeded()
 
     seed_astrologers.assert_called_once()
+    seed_canonical_contracts.assert_called_once()
     seed_prompts.assert_called_once()
     seed_natal_v3_prompts.assert_called_once()
     seed_chat_prompt_v2.assert_called_once()
