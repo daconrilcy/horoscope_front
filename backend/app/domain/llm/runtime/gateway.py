@@ -23,6 +23,7 @@ from app.domain.llm.governance.feature_taxonomy import (
     assert_nominal_feature_allowed,
     is_supported_feature,
     normalize_feature,
+    normalize_plan_scope,
     normalize_subfeature,
 )
 from app.domain.llm.prompting.catalog import (
@@ -690,15 +691,7 @@ class LLMGateway:
         Collapses various commercial plan codes into canonical assembly plans (free/premium).
         (Story 66.20 High Issue 2)
         """
-        if not plan:
-            return "free"
-
-        plan_lower = plan.lower()
-        if plan_lower in {"premium", "pro", "ultra", "full"}:
-            return "premium"
-
-        # All others (free, basic, trial, none, guest, unknown) resolve to 'free' assembly
-        return "free"
+        return normalize_plan_scope(plan)
 
     async def _resolve_plan(
         self,

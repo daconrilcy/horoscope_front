@@ -211,7 +211,7 @@ def test_migration_8b2d_backfills_existing_assembly_metadata(
             connection.execute(
                 text(
                     """
-                SELECT input_schema, output_contract_ref, interaction_mode, user_question_policy
+                SELECT input_schema, output_schema_id, interaction_mode, user_question_policy
                 FROM llm_assembly_configs
                 WHERE id = :assembly_id
                 """
@@ -223,8 +223,10 @@ def test_migration_8b2d_backfills_existing_assembly_metadata(
         )
 
     assert "input_schema" in columns
+    assert "output_contract_ref" not in columns
+    assert "output_schema_id" in columns
     assert json.loads(row["input_schema"]) == input_schema
-    assert row["output_contract_ref"] == "ChatResponse_v1"
+    assert row["output_schema_id"] is None
     assert row["interaction_mode"] == "chat"
     assert row["user_question_policy"] == "required"
 

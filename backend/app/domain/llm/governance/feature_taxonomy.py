@@ -1,3 +1,5 @@
+"""Helpers de taxonomie canonique LLM partagés entre admin et runtime."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -30,6 +32,17 @@ def normalize_feature(feature: str) -> str:
 
 def normalize_subfeature(feature: str, subfeature: str | None) -> str | None:
     return _reg.normalize_subfeature(feature, subfeature)
+
+
+def normalize_plan_scope(plan: str | None) -> str:
+    """Ramène les codes commerciaux variés au scope canonique d'assembly."""
+    if not plan:
+        return "free"
+
+    normalized_plan = plan.strip().lower()
+    if normalized_plan in {"premium", "pro", "ultra", "full"}:
+        return "premium"
+    return "free"
 
 
 def is_nominal_feature_allowed(feature: str) -> bool:

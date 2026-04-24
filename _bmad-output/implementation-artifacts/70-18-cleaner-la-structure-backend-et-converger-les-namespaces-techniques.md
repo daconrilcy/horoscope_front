@@ -1,6 +1,6 @@
 # Story 70.18: Cleaner la structure backend et converger les namespaces techniques
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -258,6 +258,10 @@ gpt-5
 - 2026-04-23 16:23 : AC26/AC27/AC28 finalises : `AssemblyComponentResolutionState` explicite les etats `absent/inherited/enabled/disabled`, `LlmUseCaseConfigModel` et `LlmPromptVersionModel` materialisent les frontieres legacy/canonique, et les relations ORM couvrent assembly -> output schema, prompt -> use case, release snapshot <-> active release, plus metadata operationnelle des logs.
 - 2026-04-23 19:30 : correctif post-refacto sur AC14/AC20 : `LlmCallLogModel` accepte encore `provider=` a l instanciation en le remappant vers `provider_compat` sans restaurer un attribut ORM ambigu, et `seed_66_20_convergence` regenere une `execution_config` minimale coherente avec `execution_profile_ref` pour eviter a la fois le blocage de coherence startup et l echec runtime de resolution d assembly.
 - 2026-04-23 19:30 : validation finale executee dans le venv apres correctif de regression : `ruff check app\\infra\\db\\models\\llm\\llm_observability.py scripts\\seed_66_20_convergence.py`, `pytest -q app\\tests\\unit\\test_llm_canonical_consumption_service.py app\\tests\\integration\\test_admin_llm_canonical_consumption_api.py tests\\integration\\test_admin_llm_catalog.py app\\tests\\integration\\test_ops_monitoring_llm_api.py app\\tests\\integration\\test_load_smoke_critical_flows.py` (`49 passed`), puis `pytest -q` complet backend (`3003 passed, 12 skipped`).
+- 2026-04-24 : correctif post-review AC23/AC33 : le garde-fou admin de preview/runtime compare desormais le scope canonique complet `feature/subfeature/plan/locale`, les sample payloads admin sont normalises sur la taxonomie canonique, et le bootstrap SQLite local ne recree plus les colonnes legacy de `llm_call_logs`.
+- 2026-04-24 : correctifs de regression post-review : normalisation de la tonalite legacy `calm` dans le seed astrologues, tests d evaluation migres vers `persona_state` / `plan_rules_state`, test de migration 8b2d aligne sur `output_schema_id`, et registre 70-17 complete avec la migration `20260423_0081_finalize_llm_canonical_perimeter.py` et les nouveaux chemins de compatibilite bornes.
+- 2026-04-24 : validations ciblees executees dans le venv : `ruff check scripts\\seed_astrologers_6_profiles.py app\\tests\\integration\\test_migration_8b2d52442493_add_input_schema_to_assembly.py tests\\evaluation\\test_differentiation.py tests\\evaluation\\test_prompt_resolution.py`, puis `pytest -q app\\tests\\integration\\test_astrologers_v2.py app\\tests\\integration\\test_migration_8b2d52442493_add_input_schema_to_assembly.py tests\\evaluation\\test_differentiation.py tests\\evaluation\\test_prompt_resolution.py tests\\integration\\test_story_70_17_llm_db_cleanup_registry.py` (`17 passed`).
+- 2026-04-24 : validation utilisateur complementaire : confirmation que le `pytest -q` complet backend repasse apres integration des correctifs.
 
 ### File List
 
@@ -314,16 +318,26 @@ gpt-5
 - backend/tests/unit/test_story_70_18_llm_sensitive_model_validators.py
 - backend/app/services/llm_canonical_consumption_service.py
 - backend/app/api/v1/routers/admin_llm_consumption.py
+- backend/app/api/v1/routers/admin_llm.py
 - backend/app/tests/unit/test_llm_canonical_consumption_service.py
 - backend/app/tests/integration/test_admin_llm_canonical_consumption_api.py
 - backend/migrations/versions/20260423_0076_harmonize_consumption_aggregate_terms.py
 - backend/tests/integration/test_story_70_18_llm_db_invariants.py
 - backend/docs/llm-canonical-consumption-rebuild.md
 - backend/app/api/v1/routers/admin_llm_sample_payloads.py
+- backend/app/domain/llm/governance/feature_taxonomy.py
+- backend/app/domain/llm/runtime/gateway.py
+- backend/app/infra/db/bootstrap.py
 - backend/migrations/versions/20260423_0074_llm_schema_release_sample_invariants.py
 - backend/migrations/versions/20260423_0075_add_llm_call_log_operational_indexes.py
 - backend/migrations/env.py
 - backend/tests/integration/test_admin_llm_sample_payloads.py
+- backend/tests/integration/test_admin_llm_catalog.py
+- backend/app/tests/integration/test_db_bootstrap_partial_upgrade.py
+- backend/app/tests/integration/test_migration_8b2d52442493_add_input_schema_to_assembly.py
+- backend/scripts/seed_astrologers_6_profiles.py
+- backend/tests/evaluation/test_differentiation.py
+- backend/tests/evaluation/test_prompt_resolution.py
 - backend/tests/integration/test_story_70_18_llm_db_invariants.py
 - backend/tests/unit/test_story_70_18_llm_sensitive_model_validators.py
 - backend/app/infra/db/models/pdf_template.py
@@ -368,6 +382,7 @@ gpt-5
 - 2026-04-23 : ajout des index d exploitation AC22 sur `llm_call_logs`, avec migration Alembic, registre DB cleanup et test d inspection de schema.
 - 2026-04-23 : documentation AC19 de la strategie de recalcul des agregats canoniques LLM et de la frontiere canonique/legacy.
 - 2026-04-23 : clarification AC18 de la semantique snapshot de release et pointeur actif singleton dans le runbook LLM.
+- 2026-04-24 : correctifs post-review sur preview admin, normalisation canonique des sample payloads, bootstrap SQLite local, seeding astrologues et registre 70-17, avec validations ciblees puis confirmation utilisateur du `pytest -q` complet backend.
 - 2026-04-23 : ajout des validateurs AC31 sur colonnes sensibles LLM et relation ORM AC28 entre assembly et execution profile, avec tests unitaires.
 - 2026-04-23 : factorisation AC30 de la convention d index partiel `published` et chargement explicite du package LLM dans Alembic.
 - 2026-04-23 : documentation AC13 de la source de verite runtime LLM entre assembly, release, prompt, execution profile et output schema.

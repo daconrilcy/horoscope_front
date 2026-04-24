@@ -5,7 +5,10 @@ import pytest
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_assembly import (
+    AssemblyComponentResolutionState,
+    PromptAssemblyConfigModel,
+)
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import (
@@ -65,7 +68,7 @@ async def test_plan_differentiation(db):
             feature_template_ref=v.id,
             execution_profile_ref=profile.id,
             plan_rules_ref="plan_free_concise" if plan == "free" else "plan_premium_full",
-            plan_rules_enabled=True,
+            plan_rules_state=AssemblyComponentResolutionState.ENABLED,
             execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
             status=PromptStatus.PUBLISHED,
             created_by="eval",
@@ -148,7 +151,7 @@ async def test_persona_differentiation(db, mock_personas):
         locale="fr-FR",
         feature_template_ref=v.id,
         persona_ref=p_ids["synthetique"],
-        persona_enabled=True,
+        persona_state=AssemblyComponentResolutionState.ENABLED,
         execution_config={"model": "gpt-4o", "max_output_tokens": 1200},
         status=PromptStatus.PUBLISHED,
         created_by="eval",

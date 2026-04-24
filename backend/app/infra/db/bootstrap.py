@@ -1,3 +1,5 @@
+"""Bootstrap SQLite local et rattrapages de drift connus du backend."""
+
 from __future__ import annotations
 
 import logging
@@ -300,68 +302,31 @@ def _repair_email_logs_primary_key() -> bool:
 
 
 def _repair_llm_call_logs_columns() -> bool:
+    """Répare uniquement la colonne legacy encore tolérée sur `llm_call_logs`."""
     inspector = inspect(engine)
     if "llm_call_logs" not in inspector.get_table_names():
         return False
 
     columns = _table_columns("llm_call_logs")
-    required_columns = {
-        "provider_compat": (
-            "ALTER TABLE llm_call_logs ADD COLUMN provider_compat VARCHAR(32) DEFAULT 'openai'"
-        ),
-        "pipeline_kind": "ALTER TABLE llm_call_logs ADD COLUMN pipeline_kind VARCHAR(32)",
-        "execution_path_kind": (
-            "ALTER TABLE llm_call_logs ADD COLUMN execution_path_kind VARCHAR(40)"
-        ),
-        "fallback_kind": "ALTER TABLE llm_call_logs ADD COLUMN fallback_kind VARCHAR(40)",
-        "requested_provider": "ALTER TABLE llm_call_logs ADD COLUMN requested_provider VARCHAR(32)",
-        "resolved_provider": "ALTER TABLE llm_call_logs ADD COLUMN resolved_provider VARCHAR(32)",
-        "executed_provider": "ALTER TABLE llm_call_logs ADD COLUMN executed_provider VARCHAR(32)",
-        "context_quality": "ALTER TABLE llm_call_logs ADD COLUMN context_quality VARCHAR(32)",
-        "context_compensation_status": (
-            "ALTER TABLE llm_call_logs ADD COLUMN context_compensation_status VARCHAR(32)"
-        ),
-        "max_output_tokens_source": (
-            "ALTER TABLE llm_call_logs ADD COLUMN max_output_tokens_source VARCHAR(32)"
-        ),
-        "max_output_tokens_final": (
-            "ALTER TABLE llm_call_logs ADD COLUMN max_output_tokens_final INTEGER"
-        ),
-        "executed_provider_mode": (
-            "ALTER TABLE llm_call_logs ADD COLUMN executed_provider_mode VARCHAR(32)"
-        ),
-        "attempt_count": "ALTER TABLE llm_call_logs ADD COLUMN attempt_count INTEGER",
-        "provider_error_code": (
-            "ALTER TABLE llm_call_logs ADD COLUMN provider_error_code VARCHAR(50)"
-        ),
-        "breaker_state": "ALTER TABLE llm_call_logs ADD COLUMN breaker_state VARCHAR(20)",
-        "breaker_scope": "ALTER TABLE llm_call_logs ADD COLUMN breaker_scope VARCHAR(100)",
-        "active_snapshot_id": "ALTER TABLE llm_call_logs ADD COLUMN active_snapshot_id NUMERIC",
-        "active_snapshot_version": (
-            "ALTER TABLE llm_call_logs ADD COLUMN active_snapshot_version VARCHAR(64)"
-        ),
-        "manifest_entry_id": (
-            "ALTER TABLE llm_call_logs ADD COLUMN manifest_entry_id VARCHAR(100)"
-        ),
-    }
-
-    missing_columns = [name for name in required_columns if name not in columns]
-    if not missing_columns:
+    if "provider_compat" in columns:
         return False
 
-    logger.warning(
-        "local_sqlite_schema_repair_llm_call_logs missing_columns=%s",
-        sorted(missing_columns),
-    )
     with engine.begin() as connection:
-        if "provider_compat" not in columns and "provider" in columns:
+        if "provider" in columns:
+            logger.warning(
+                "local_sqlite_schema_repair_llm_call_logs rename_provider_to_compat=true"
+            )
             connection.execute(
                 text("ALTER TABLE llm_call_logs RENAME COLUMN provider TO provider_compat")
             )
-            columns = _table_columns("llm_call_logs")
-            missing_columns = [name for name in required_columns if name not in columns]
-        for column_name in missing_columns:
-            connection.execute(text(required_columns[column_name]))
+        else:
+            logger.warning("local_sqlite_schema_repair_llm_call_logs add_provider_compat_only=true")
+            connection.execute(
+                text(
+                    "ALTER TABLE llm_call_logs "
+                    "ADD COLUMN provider_compat VARCHAR(32) DEFAULT 'openai'"
+                )
+            )
     return True
 
 

@@ -112,7 +112,7 @@ def test_auto_upgrade_repairs_email_logs_sqlite_primary_key_shape(
         test_engine.dispose()
 
 
-def test_auto_upgrade_repairs_missing_llm_call_logs_operational_columns(
+def test_auto_upgrade_repairs_only_legacy_llm_call_logs_provider_column(
     monkeypatch: object, tmp_path: Path
 ) -> None:
     db_path = tmp_path / "bootstrap-llm-provider-repair.db"
@@ -142,9 +142,11 @@ def test_auto_upgrade_repairs_missing_llm_call_logs_operational_columns(
             after_columns = {
                 row[1] for row in connection.execute(text("PRAGMA table_info(llm_call_logs)"))
             }
-        assert "executed_provider_mode" not in before_columns
-        assert "provider_error_code" not in before_columns
-        assert "executed_provider_mode" in after_columns
-        assert "provider_error_code" in after_columns
+        assert "provider" in before_columns
+        assert "provider_compat" not in before_columns
+        assert "provider" not in after_columns
+        assert "provider_compat" in after_columns
+        assert "executed_provider_mode" not in after_columns
+        assert "provider_error_code" not in after_columns
     finally:
         test_engine.dispose()

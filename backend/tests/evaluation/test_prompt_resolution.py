@@ -7,7 +7,10 @@ import pytest
 from app.domain.llm.governance.feature_taxonomy import is_supported_feature
 from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_assembly import (
+    AssemblyComponentResolutionState,
+    PromptAssemblyConfigModel,
+)
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import (
@@ -112,10 +115,10 @@ async def test_prompt_resolution_matrix(
             locale="fr-FR",
             feature_template_ref=v.id,
             persona_ref=persona.id,
-            persona_enabled=True,
+            persona_state=AssemblyComponentResolutionState.ENABLED,
             execution_profile_ref=prof.id,
             execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
-            output_contract_ref=schema_id,
+            output_schema_id=uuid.UUID(schema_id) if schema_id else None,
             length_budget={
                 "target_response_length": "standard" if plan == "premium" else "concise",
                 "global_max_tokens": 2000 if plan == "premium" else 500,

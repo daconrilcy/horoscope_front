@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.api.dependencies.auth import require_admin_user
+from app.domain.llm.governance.feature_taxonomy import NATAL_SUBFEATURE_MAPPING
 from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.session import get_db_session
 from app.main import app
@@ -48,6 +49,8 @@ def test_admin_llm_sample_payload_crud_list_and_recommended_default():
         item_1 = response_1.json()["data"]
         created_ids.append(uuid.UUID(item_1["id"]))
         assert item_1["feature"] == "natal"
+        assert item_1["subfeature"] == ""
+        assert item_1["plan"] == "free"
         assert item_1["payload_json"]["chart_json"] == {"sun": "aries", "moon": "leo"}
 
         response_2 = client.post(
@@ -157,6 +160,42 @@ def test_admin_llm_sample_payload_scopes_by_subfeature_and_plan():
             db.execute(
                 delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id.in_(created_ids))
             )
+            db.commit()
+        db.close()
+
+
+def test_admin_llm_sample_payload_normalizes_scope_to_canonical_taxonomy():
+    """Les scopes admin sont persistés selon les conventions canoniques runtime."""
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    created_id: uuid.UUID | None = None
+    try:
+        db.execute(delete(LlmSamplePayloadModel))
+        db.commit()
+
+        legacy_subfeature = next(iter(NATAL_SUBFEATURE_MAPPING))
+        response = client.post(
+            "/v1/admin/llm/sample-payloads",
+            json=_build_payload(
+                name="canonical-scope",
+                subfeature=legacy_subfeature,
+                plan="pro",
+                is_default=False,
+            ),
+        )
+        assert response.status_code == 200
+        item = response.json()["data"]
+        created_id = uuid.UUID(item["id"])
+
+        assert item["subfeature"] == "interpretation"
+        assert item["plan"] == "premium"
+    finally:
+        app.dependency_overrides.clear()
+        if created_id is not None:
+            db.execute(delete(LlmSamplePayloadModel).where(LlmSamplePayloadModel.id == created_id))
             db.commit()
         db.close()
 

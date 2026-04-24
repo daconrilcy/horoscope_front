@@ -15,6 +15,10 @@ from app.infra.db.session import SessionLocal
 
 logger = logging.getLogger(__name__)
 
+LEGACY_TONE_MAPPING = {
+    "calm": "warm",
+}
+
 ASTROLOGERS = [
     {
         "id": "c0a80101-8edb-4e1a-8f1a-8f1a8f1a8f1a",
@@ -404,8 +408,9 @@ def _build_prompt_content(data: dict[str, object]) -> str:
     if dedicated_prompt:
         return dedicated_prompt
 
+    tone = _normalize_persona_tone(str(data["tone"]))
     lines = [
-        f"Adopte un ton {data['tone']}.",
+        f"Adopte un ton {tone}.",
         f"Longueur de réponse attendue : {data['verbosity']}.",
     ]
     style_markers = [str(marker) for marker in data.get("style_markers", [])]
@@ -424,6 +429,11 @@ def _build_prompt_content(data: dict[str, object]) -> str:
     return "\n".join(lines)
 
 
+def _normalize_persona_tone(tone: str) -> str:
+    """Mappe les anciennes tonalites vers le domaine ferme persiste en base."""
+    return LEGACY_TONE_MAPPING.get(tone, tone)
+
+
 def seed_astrologers(db: Session) -> None:
     canonical_ids_by_name = {item["name"]: uuid.UUID(item["id"]) for item in ASTROLOGERS}
     canonical_persona_ids = {uuid.UUID(item["id"]) for item in ASTROLOGERS}
@@ -437,7 +447,7 @@ def seed_astrologers(db: Session) -> None:
                 id=uuid.UUID(data["id"]),
                 name=data["name"],
                 description=data["description"],
-                tone=data["tone"],
+                tone=_normalize_persona_tone(str(data["tone"])),
                 verbosity=data["verbosity"],
                 style_markers=data["style_markers"],
                 boundaries=data["boundaries"],
@@ -451,7 +461,7 @@ def seed_astrologers(db: Session) -> None:
         else:
             persona.name = data["name"]
             persona.description = data["description"]
-            persona.tone = data["tone"]
+            persona.tone = _normalize_persona_tone(str(data["tone"]))
             persona.verbosity = data["verbosity"]
             persona.style_markers = data["style_markers"]
             persona.boundaries = data["boundaries"]

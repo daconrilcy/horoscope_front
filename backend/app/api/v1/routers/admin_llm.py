@@ -42,6 +42,11 @@ from app.domain.llm.configuration.canonical_use_case_registry import (
     get_canonical_use_case_contract,
     list_canonical_use_case_contracts,
 )
+from app.domain.llm.governance.feature_taxonomy import (
+    normalize_feature,
+    normalize_plan_scope,
+    normalize_subfeature,
+)
 from app.domain.llm.governance.governance import get_prompt_governance_registry
 from app.domain.llm.prompting.persona_boundary import (
     PersonaBoundaryViolation,
@@ -2033,20 +2038,38 @@ def _build_admin_resolved_catalog_view(
                 message="sample payload is inactive and cannot be used for runtime preview",
                 details={"sample_payload_id": str(sample_payload_id)},
             )
+        sample_feature = normalize_feature(sample_payload.feature)
+        sample_subfeature = normalize_subfeature(sample_feature, sample_payload.subfeature) or ""
+        sample_plan = normalize_plan_scope(sample_payload.plan)
+        target_feature = normalize_feature(assembly_model.feature)
+        target_subfeature = (
+            normalize_subfeature(
+                target_feature,
+                assembly_model.subfeature,
+            )
+            or ""
+        )
+        target_plan = normalize_plan_scope(assembly_model.plan)
         if (
-            sample_payload.feature != assembly_model.feature
+            sample_feature != target_feature
+            or sample_subfeature != target_subfeature
+            or sample_plan != target_plan
             or sample_payload.locale != assembly_model.locale
         ):
             return _error_response(
                 status_code=422,
                 request_id=request_id,
                 code=AdminLlmErrorCode.SAMPLE_PAYLOAD_TARGET_MISMATCH.value,
-                message=("sample payload feature/locale mismatch with requested manifest entry"),
+                message=("sample payload canonical scope mismatch with requested manifest entry"),
                 details={
                     "sample_payload_id": str(sample_payload_id),
-                    "sample_feature": sample_payload.feature,
+                    "sample_feature": sample_feature,
+                    "sample_subfeature": sample_subfeature,
+                    "sample_plan": sample_plan,
                     "sample_locale": sample_payload.locale,
-                    "target_feature": assembly_model.feature,
+                    "target_feature": target_feature,
+                    "target_subfeature": target_subfeature,
+                    "target_plan": target_plan,
                     "target_locale": assembly_model.locale,
                 },
             )

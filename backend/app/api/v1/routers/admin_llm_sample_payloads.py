@@ -1,3 +1,5 @@
+"""Routes admin de gestion des sample payloads LLM alignés sur le scope canonique."""
+
 from __future__ import annotations
 
 import re
@@ -17,7 +19,12 @@ from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.routers.admin_llm_error_codes import AdminLlmErrorCode
 from app.core.request_id import resolve_request_id
 from app.core.sensitive_data import DataCategory, classify_field
-from app.domain.llm.governance.feature_taxonomy import is_supported_feature, normalize_feature
+from app.domain.llm.governance.feature_taxonomy import (
+    is_supported_feature,
+    normalize_feature,
+    normalize_plan_scope,
+    normalize_subfeature,
+)
 from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
@@ -177,6 +184,17 @@ def _normalize_scope_value(value: str | None) -> str:
     return normalized
 
 
+def _normalize_scope_dimensions(
+    feature: str,
+    subfeature: str | None,
+    plan: str | None,
+) -> tuple[str, str]:
+    """Aligne le scope admin sur les clés canoniques réellement utilisées au runtime."""
+    normalized_subfeature = normalize_subfeature(feature, subfeature)
+    normalized_plan = normalize_plan_scope(plan)
+    return normalized_subfeature or "", normalized_plan
+
+
 def _error_response(
     *, request_id: str, status_code: int, code: str, message: str, details: dict[str, Any]
 ) -> JSONResponse:
@@ -321,8 +339,9 @@ def create_sample_payload(
     try:
         normalized_name = _normalize_name(payload.name)
         feature = _validate_feature(payload.feature)
-        subfeature = _normalize_scope_value(payload.subfeature)
-        plan = _normalize_scope_value(payload.plan)
+        raw_subfeature = _normalize_scope_value(payload.subfeature) or None
+        raw_plan = _normalize_scope_value(payload.plan) or None
+        subfeature, plan = _normalize_scope_dimensions(feature, raw_subfeature, raw_plan)
         locale = _validate_locale(payload.locale)
         _validate_payload_json(feature, payload.payload_json)
     except ValueError as exc:
@@ -429,8 +448,11 @@ def list_sample_payloads(
 
     try:
         normalized_feature = _validate_feature(feature)
-        normalized_subfeature = _normalize_scope_value(subfeature)
-        normalized_plan = _normalize_scope_value(plan)
+        normalized_subfeature, normalized_plan = _normalize_scope_dimensions(
+            normalized_feature,
+            _normalize_scope_value(subfeature) or None,
+            _normalize_scope_value(plan) or None,
+        )
         normalized_locale = _validate_locale(locale)
     except ValueError as exc:
         return _error_response(
@@ -507,12 +529,14 @@ def update_sample_payload(
 
     next_name = payload.name if payload.name is not None else model.name
     next_subfeature = (
-        _normalize_scope_value(payload.subfeature)
+        _normalize_scope_value(payload.subfeature) or None
         if "subfeature" in payload.model_fields_set
         else model.subfeature
     )
     next_plan = (
-        _normalize_scope_value(payload.plan) if "plan" in payload.model_fields_set else model.plan
+        _normalize_scope_value(payload.plan) or None
+        if "plan" in payload.model_fields_set
+        else model.plan
     )
     next_locale = payload.locale if payload.locale is not None else model.locale
     next_feature = model.feature
@@ -523,6 +547,11 @@ def update_sample_payload(
     try:
         next_name = _normalize_name(next_name)
         next_feature = _validate_feature(next_feature)
+        next_subfeature, next_plan = _normalize_scope_dimensions(
+            next_feature,
+            next_subfeature,
+            next_plan,
+        )
         next_locale = _validate_locale(next_locale)
         _validate_payload_json(next_feature, next_payload_json)
     except ValueError as exc:

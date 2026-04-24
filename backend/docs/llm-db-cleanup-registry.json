@@ -1,5 +1,5 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.2",
   "generated_for_story": "70-17-db-cleanup-llm-canonique",
   "governance_doc": "backend/docs/llm-db-governance.md",
   "reviewed_migrations": [
@@ -19,6 +19,7 @@
     "20260423_0078_add_call_log_operational_metadata.py",
     "20260423_0079_finalize_llm_finite_domains_and_assembly_states.py",
     "20260423_0080_rename_llm_call_log_provider_compat.py",
+    "20260423_0081_finalize_llm_canonical_perimeter.py",
     "21011e7e01f2_add_execution_profile_ref_to_assembly.py",
     "2219fc77cb83_add_persona_id_to_chat_conversations.py",
     "2b616cdc516a_add_fallback_to_use_case_config.py",
@@ -52,6 +53,7 @@
         "backend/app/domain/llm/runtime/gateway.py",
         "backend/app/infra/db/models/__init__.py",
         "backend/app/infra/db/models/llm/__init__.py",
+        "backend/app/infra/db/models/llm/llm_canonical_perimeter.py",
         "backend/app/infra/db/models/llm/llm_prompt.py",
         "backend/app/infra/db/repositories/llm/prompting_repository.py",
         "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
@@ -116,7 +118,8 @@
         "backend/app/domain/llm/prompting/catalog.py",
         "backend/app/domain/llm/runtime/contracts.py",
         "backend/app/domain/llm/runtime/gateway.py",
-        "backend/app/infra/db/models/llm/llm_assembly.py"
+        "backend/app/infra/db/models/llm/llm_assembly.py",
+        "backend/app/infra/db/models/llm/llm_compatibility.py"
       ]
     }
   ],
