@@ -52,7 +52,6 @@ def test_publish_and_get_active(db):
         use_case_key="test_uc",
         status=PromptStatus.DRAFT,
         developer_prompt="Prompt V1 {{locale}} {{use_case}}",
-        model="gpt-4",
         created_by="test-user",
     )
     db.add(v1)
@@ -78,7 +77,6 @@ def test_publish_archives_previous(db):
         use_case_key="test_uc",
         status=PromptStatus.PUBLISHED,
         developer_prompt="P1",
-        model="m",
         created_by="u",
     )
     v2 = LlmPromptVersionModel(
@@ -86,7 +84,6 @@ def test_publish_archives_previous(db):
         use_case_key="test_uc",
         status=PromptStatus.DRAFT,
         developer_prompt="P2",
-        model="m",
         created_by="u",
     )
     db.add_all([v1, v2])
@@ -114,7 +111,6 @@ def test_rollback(db):
         use_case_key="test_uc",
         status=PromptStatus.INACTIVE,
         developer_prompt="P1",
-        model="m",
         created_by="u",
         published_at=datetime.now(),
     )
@@ -123,7 +119,6 @@ def test_rollback(db):
         use_case_key="test_uc",
         status=PromptStatus.PUBLISHED,
         developer_prompt="P2",
-        model="m",
         created_by="u",
         published_at=datetime.now(),
     )
@@ -149,7 +144,6 @@ def test_cache_ttl(db):
         use_case_key="test_uc",
         status=PromptStatus.PUBLISHED,
         developer_prompt="P1",
-        model="m",
         created_by="u",
     )
     db.add(v1)
@@ -191,7 +185,6 @@ def test_publish_prompt_forbidden_for_legacy_daily_prediction(db):
         use_case_key="daily_prediction",
         status=PromptStatus.DRAFT,
         developer_prompt="Legacy daily prompt",
-        model="gpt-4o-mini",
         created_by="test-user",
     )
     db.add(version)
@@ -215,7 +208,6 @@ def test_rollback_prompt_forbidden_for_legacy_daily_prediction(db):
         use_case_key="daily_prediction",
         status=PromptStatus.INACTIVE,
         developer_prompt="Legacy daily prompt",
-        model="gpt-4o-mini",
         created_by="test-user",
         published_at=datetime.now(),
     )
@@ -236,7 +228,6 @@ def test_rollback_supports_legacy_archived_versions(db):
         use_case_key="test_uc",
         status=PromptStatus.ARCHIVED,
         developer_prompt="Legacy archived",
-        model="m",
         created_by="u",
         published_at=datetime.now(),
     )
@@ -245,7 +236,6 @@ def test_rollback_supports_legacy_archived_versions(db):
         use_case_key="test_uc",
         status=PromptStatus.PUBLISHED,
         developer_prompt="Current published",
-        model="m",
         created_by="u",
         published_at=datetime.now(),
     )

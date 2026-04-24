@@ -2227,9 +2227,7 @@ def _build_admin_resolved_catalog_view(
         final_max_output_tokens = 2048
         max_output_tokens_source = "default"
     final_timeout_seconds = (
-        effective_profile_timeout
-        if effective_profile_timeout is not None
-        else 30
+        effective_profile_timeout if effective_profile_timeout is not None else 30
     )
 
     render_error_kind = _classify_admin_render_error_kind(inspection_mode, render_exc)
@@ -3262,7 +3260,7 @@ def create_prompt_draft(
             "use_case_key": key,
             "from_version": str(previous_version.id) if previous_version else None,
             "to_version": str(version.id),
-            "result_status": PromptStatus.normalize(version.status).value,
+            "result_status": version.status.value,
         },
     )
     db.commit()
@@ -3364,7 +3362,7 @@ async def publish_prompt(
                 "use_case_key": key,
                 "from_version": str(previous_published.id) if previous_published else None,
                 "to_version": str(version.id),
-                "result_status": PromptStatus.normalize(version.status).value,
+                "result_status": version.status.value,
                 "eval_run": eval_report is not None,
                 "golden_campaign": golden_report is not None,
                 "golden_verdict": golden_report.verdict if golden_report else None,
@@ -3450,7 +3448,7 @@ def rollback_prompt(
                 "use_case_key": key,
                 "from_version": str(previous_version.id) if previous_version else None,
                 "to_version": str(version.id),
-                "result_status": PromptStatus.normalize(version.status).value,
+                "result_status": version.status.value,
             },
         )
         db.commit()

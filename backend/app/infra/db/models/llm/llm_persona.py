@@ -19,7 +19,11 @@ from sqlalchemy.orm import Mapped, mapped_column, validates
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import CreatedUpdatedAtMixin
 from app.infra.db.models.llm.llm_constraints import allowed_values_check
-from app.infra.db.models.llm.llm_field_lengths import FEATURE_LENGTH, SHORT_STATUS_LENGTH
+from app.infra.db.models.llm.llm_field_lengths import (
+    FEATURE_LENGTH,
+    PERSONA_NAME_LENGTH,
+    SHORT_STATUS_LENGTH,
+)
 from app.infra.db.models.llm.llm_json_validators import (
     persona_default_formatting,
     validate_persona_formatting,
@@ -53,7 +57,7 @@ class LlmPersonaModel(CreatedUpdatedAtMixin, Base):
     code: Mapped[str | None] = mapped_column(
         String(FEATURE_LENGTH), unique=True, index=True, nullable=True
     )
-    name: Mapped[str] = mapped_column(String(255))
+    name: Mapped[str] = mapped_column(String(PERSONA_NAME_LENGTH))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     tone: Mapped[PersonaTone] = mapped_column(

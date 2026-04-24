@@ -22,7 +22,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, utc_now
-from app.infra.db.models.llm.llm_field_lengths import SHORT_STATUS_LENGTH, VERSION_LENGTH
+from app.infra.db.models.llm.llm_field_lengths import (
+    ACTOR_IDENTIFIER_LENGTH,
+    SHORT_STATUS_LENGTH,
+    VERSION_LENGTH,
+)
 
 
 class ReleaseStatus(str, Enum):
@@ -72,7 +76,7 @@ class LlmActiveReleaseModel(Base):
         ForeignKey("llm_release_snapshots.id", ondelete="CASCADE")
     )
     activated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
-    activated_by: Mapped[str] = mapped_column(String(255))
+    activated_by: Mapped[str] = mapped_column(String(ACTOR_IDENTIFIER_LENGTH))
 
     release_snapshot: Mapped[LlmReleaseSnapshotModel] = relationship(
         "LlmReleaseSnapshotModel", back_populates="active_release"

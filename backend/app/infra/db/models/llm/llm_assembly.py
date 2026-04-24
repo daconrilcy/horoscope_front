@@ -25,6 +25,7 @@ from app.infra.db.models.llm.llm_field_lengths import (
     FEATURE_LENGTH,
     LOCALE_LENGTH,
     PLAN_LENGTH,
+    SHORT_STATUS_LENGTH,
     SUBFEATURE_LENGTH,
 )
 from app.infra.db.models.llm.llm_indexes import published_unique_index
@@ -77,28 +78,28 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
     length_budget: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     feature_template_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(32),
+        String(SHORT_STATUS_LENGTH),
         nullable=False,
         default=AssemblyComponentResolutionState.ENABLED.value,
     )
     subfeature_template_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(32),
+        String(SHORT_STATUS_LENGTH),
         nullable=False,
         default=AssemblyComponentResolutionState.ABSENT.value,
     )
     persona_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(32),
+        String(SHORT_STATUS_LENGTH),
         nullable=False,
         default=AssemblyComponentResolutionState.INHERITED.value,
     )
     plan_rules_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(32),
+        String(SHORT_STATUS_LENGTH),
         nullable=False,
         default=AssemblyComponentResolutionState.ABSENT.value,
     )
 
     status: Mapped[PromptStatus] = mapped_column(
-        String(32), index=True, default=PromptStatus.DRAFT
+        String(SHORT_STATUS_LENGTH), index=True, default=PromptStatus.DRAFT
     )
 
     @validates("plan_rules_ref")

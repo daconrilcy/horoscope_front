@@ -151,7 +151,7 @@ class LlmPromptVersion(BaseModel):
 
     @field_serializer("status")
     def serialize_status(self, status: PromptStatus) -> str:
-        return PromptStatus.normalize(status).value
+        return status.value
 
     @model_validator(mode="after")
     def populate_admin_audit(self) -> "LlmPromptVersion":
@@ -212,6 +212,7 @@ class RuntimeSettingsAdmin(BaseModel):
     timeout_seconds: int = 30
     reasoning_effort: Optional[Literal["low", "medium", "high"]] = None
     verbosity: Optional[Literal["verbose", "normal", "concise"]] = None
+
     @model_validator(mode="after")
     def validate_provider_params(self) -> "RuntimeSettingsAdmin":
         is_reasoning = is_reasoning_model(self.model)

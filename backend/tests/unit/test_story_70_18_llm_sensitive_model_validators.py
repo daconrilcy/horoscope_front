@@ -11,9 +11,19 @@ from app.infra.db.models.llm.llm_assembly import (
 )
 from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, PublishedAtMixin
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_field_lengths import (
+    ACTOR_IDENTIFIER_LENGTH,
+    INPUT_HASH_HEX_LENGTH,
+    PERSONA_NAME_LENGTH,
+    SAMPLE_PAYLOAD_NAME_LENGTH,
+    SHORT_STATUS_LENGTH,
+    USE_CASE_DISPLAY_NAME_LENGTH,
+)
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
 from app.infra.db.models.llm.llm_release import LlmActiveReleaseModel, LlmReleaseSnapshotModel
+from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 
 
 def test_published_unique_index_helper_keeps_known_index_names() -> None:
@@ -69,8 +79,8 @@ def test_assembly_marks_legacy_runtime_compatibility_fields() -> None:
 
 
 def test_prompt_models_mark_legacy_and_canonical_boundaries() -> None:
-    """Documente la frontiere entre use_case legacy et scope canonique."""
-    assert LlmUseCaseConfigModel.legacy_identity_field == "key"
+    """Documente la frontiere entre surface historique admin et scope canonique."""
+    assert LlmUseCaseConfigModel.historical_identity_field == "key"
     assert LlmUseCaseConfigModel.canonical_scope_fields == {
         "feature",
         "subfeature",
@@ -78,8 +88,31 @@ def test_prompt_models_mark_legacy_and_canonical_boundaries() -> None:
         "locale",
     }
     assert LlmUseCaseConfigModel.runtime_surface == "historical_admin_only"
-    assert LlmPromptVersionModel.legacy_use_case_link_field == "use_case_key"
+    assert not hasattr(LlmUseCaseConfigModel, "legacy_identity_field")
+    assert LlmPromptVersionModel.historical_use_case_link_field == "use_case_key"
+    assert not hasattr(LlmPromptVersionModel, "legacy_use_case_link_field")
     assert LlmPromptVersionModel.canonical_text_fields == {"developer_prompt"}
+
+
+def test_llm_shared_lengths_use_canonical_constants() -> None:
+    """Verifie les longueurs canonisees ou explicitement nommees des champs partages."""
+    assert (
+        PromptAssemblyConfigModel.__table__.c.feature_template_state.type.length
+        == SHORT_STATUS_LENGTH
+    )
+    assert PromptAssemblyConfigModel.__table__.c.subfeature_template_state.type.length == (
+        SHORT_STATUS_LENGTH
+    )
+    assert PromptAssemblyConfigModel.__table__.c.persona_state.type.length == SHORT_STATUS_LENGTH
+    assert PromptAssemblyConfigModel.__table__.c.plan_rules_state.type.length == SHORT_STATUS_LENGTH
+    assert PromptAssemblyConfigModel.__table__.c.status.type.length == SHORT_STATUS_LENGTH
+    assert (
+        LlmUseCaseConfigModel.__table__.c.display_name.type.length == USE_CASE_DISPLAY_NAME_LENGTH
+    )
+    assert LlmPersonaModel.__table__.c.name.type.length == PERSONA_NAME_LENGTH
+    assert LlmSamplePayloadModel.__table__.c.name.type.length == SAMPLE_PAYLOAD_NAME_LENGTH
+    assert LlmCallLogModel.__table__.c.input_hash.type.length == INPUT_HASH_HEX_LENGTH
+    assert LlmActiveReleaseModel.__table__.c.activated_by.type.length == ACTOR_IDENTIFIER_LENGTH
 
 
 def test_assembly_component_states_make_optional_resolution_explicit() -> None:

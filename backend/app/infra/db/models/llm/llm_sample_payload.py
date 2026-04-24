@@ -14,6 +14,7 @@ from app.infra.db.models.llm.llm_field_lengths import (
     FEATURE_LENGTH,
     LOCALE_LENGTH,
     PLAN_LENGTH,
+    SAMPLE_PAYLOAD_NAME_LENGTH,
     SUBFEATURE_LENGTH,
 )
 
@@ -24,7 +25,7 @@ class LlmSamplePayloadModel(CreatedUpdatedAtMixin, Base):
     __tablename__ = "llm_sample_payloads"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    name: Mapped[str] = mapped_column(String(SAMPLE_PAYLOAD_NAME_LENGTH), nullable=False)
     feature: Mapped[str] = mapped_column(String(FEATURE_LENGTH), nullable=False, index=True)
     subfeature: Mapped[str] = mapped_column(String(SUBFEATURE_LENGTH), nullable=False, default="")
     plan: Mapped[str] = mapped_column(String(PLAN_LENGTH), nullable=False, default="")

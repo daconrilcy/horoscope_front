@@ -20,8 +20,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, PublishedAtMixin
 from app.infra.db.models.llm.llm_field_lengths import (
+    ARTIFACT_PATH_LENGTH,
     FEATURE_LENGTH,
     SHORT_STATUS_LENGTH,
+    USE_CASE_DISPLAY_NAME_LENGTH,
 )
 from app.infra.db.models.llm.llm_indexes import published_unique_index
 
@@ -35,17 +37,8 @@ class PromptStatus(str, Enum):
     ARCHIVED = "archived"
 
     @classmethod
-    def normalize(cls, value: "PromptStatus | str") -> "PromptStatus":
-        """Normalise les anciens statuts vers les statuts actifs."""
-        if value == cls.ARCHIVED or value == cls.ARCHIVED.value:
-            return cls.INACTIVE
-        if isinstance(value, cls):
-            return value
-        return cls(str(value))
-
-    @classmethod
     def inactive_values(cls) -> tuple[str, str]:
-        """Retourne les statuts considérés inactifs, y compris l'ancien statut archivé."""
+        """Retourne les statuts non publies reutilisables dans les parcours d historique."""
         return (cls.INACTIVE.value, cls.ARCHIVED.value)
 
 
@@ -53,19 +46,21 @@ class LlmUseCaseConfigModel(Base):
     """Porte le read model historique/admin des use cases LLM hors runtime nominal."""
 
     __tablename__ = "llm_use_case_configs"
-    legacy_identity_field: ClassVar[str] = "key"
+    historical_identity_field: ClassVar[str] = "key"
     canonical_scope_fields: ClassVar[frozenset[str]] = frozenset(
         {"feature", "subfeature", "plan", "locale"}
     )
     runtime_surface: ClassVar[str] = "historical_admin_only"
 
     key: Mapped[str] = mapped_column(String(FEATURE_LENGTH), primary_key=True)
-    display_name: Mapped[str] = mapped_column(String(255))
+    display_name: Mapped[str] = mapped_column(String(USE_CASE_DISPLAY_NAME_LENGTH))
     description: Mapped[str] = mapped_column(Text)
     required_prompt_placeholders: Mapped[list[str]] = mapped_column(JSON, default=list)
-    eval_fixtures_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    eval_fixtures_path: Mapped[str | None] = mapped_column(
+        String(ARTIFACT_PATH_LENGTH), nullable=True
+    )
     eval_failure_threshold: Mapped[float] = mapped_column(Float, default=0.20)
-    golden_set_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    golden_set_path: Mapped[str | None] = mapped_column(String(ARTIFACT_PATH_LENGTH), nullable=True)
 
     prompt_versions: Mapped[list["LlmPromptVersionModel"]] = relationship(
         "LlmPromptVersionModel", back_populates="use_case", cascade="all, delete-orphan"
@@ -76,7 +71,7 @@ class LlmPromptVersionModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin, Ba
     """Représente une version de prompt LLM liée à un use case."""
 
     __tablename__ = "llm_prompt_versions"
-    legacy_use_case_link_field: ClassVar[str] = "use_case_key"
+    historical_use_case_link_field: ClassVar[str] = "use_case_key"
     canonical_text_fields: ClassVar[frozenset[str]] = frozenset({"developer_prompt"})
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

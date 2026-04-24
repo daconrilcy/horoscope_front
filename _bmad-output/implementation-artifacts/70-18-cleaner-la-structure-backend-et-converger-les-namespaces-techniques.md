@@ -109,6 +109,9 @@ Etablir un backend avec :
 70. **AC70 - Seeds et fixtures alignes exclusivement canonique** : tous les seeds, fixtures de test, payloads admin et jeux de donnees de bootstrap doivent etre reecrits pour utiliser exclusivement les champs canoniques. Aucun seed ne doit recreer une colonne, un attribut ou un payload legacy pour "faire passer" un ancien scenario.
 71. **AC71 - Migration SQLite locale et Alembic alignees** : le bootstrap SQLite local, les migrations Alembic et les tests de schema doivent converger sur le meme schema canonique sans recreer de colonnes legacy pour compatibilite historique.
 72. **AC72 - Validation complete post-suppression legacy** : la suppression complete du legacy n est consideree terminee que si `ruff check`, les tests de perimetre canonique, les tests admin LLM, les tests runtime LLM, les tests migrations/bootstrap et le `pytest -q` complet backend passent avec preuve tracee.
+73. **AC73 - DRY strict sur les longueurs de statuts d assembly** : `PromptAssemblyConfigModel` ne doit plus coder en dur de `String(32)` pour les champs de statut ou d etat partage (`feature_template_state`, `subfeature_template_state`, `persona_state`, `plan_rules_state`, `status`) ; ces colonnes doivent reutiliser la constante canonique `SHORT_STATUS_LENGTH` issue de `llm_field_lengths.py`.
+74. **AC74 - Conventions de tailles locales explicites ou centralisees** : tout `String(255)`, `String(128)` ou `String(64)` residuel sur des concepts potentiellement partages du perimetre LLM, notamment `name`, `activated_by` et `input_hash`, doit soit etre remplace par une constante commune, soit etre explicitement documente comme choix local volontaire non mutualise. Aucun litteral de longueur ne doit rester ambigu sur son statut DRY.
+75. **AC75 - Plus aucun marqueur legacy nominal dans `llm_prompt.py`** : le modele `LlmPromptVersionModel` et ses aides ne doivent plus exposer de noms ou comportements nominalement prefixes `legacy`, notamment `legacy_identity_field`, `legacy_use_case_link_field` ou la normalisation explicite de `PromptStatus.ARCHIVED` vers `INACTIVE`. Si une compatibilite historique doit survivre temporairement, elle doit etre renommee comme historique/admin, isolee hors du modele nominal et documentee comme telle.
 
 ## Tasks / Subtasks
 
@@ -177,14 +180,16 @@ Etablir un backend avec :
   - [x] Documenter la strategie de recalcul des agregats non additifs et la frontiere canonique/legacy.
   - [x] Ajouter les migrations Alembic, tests de schema et tests de non-regression associes.
 
-- [ ] **Task 10: Eteindre completement le legacy LLM residuel** (AC: 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72)
-  - [ ] Supprimer du modele d assembly toute colonne, propriete ou alias legacy et basculer les DTO/services vers les references canoniques.
-  - [ ] Supprimer des prompt versions tout champ d execution legacy et reporter les decisions runtime sur `LlmExecutionProfileModel` et les snapshots.
-  - [ ] Clarifier `LlmUseCaseConfigModel` comme residu historique/admin non runtime ou le retirer du chemin nominal.
-  - [ ] Purger `provider_compat` et tout alias `provider=` des logs LLM, puis migrer les lecteurs vers `operational_metadata.executed_provider`.
-  - [ ] Ecrire les migrations Alembic destructives et aligner le bootstrap SQLite local sur le schema final, sans recreation de colonnes legacy.
-  - [ ] Renforcer les tests de perimetre, de migrations, d admin et de runtime pour bloquer toute reintroduction de noms legacy.
-  - [ ] Nettoyer la documentation canonique et les payloads/fixtures pour qu ils ne mentionnent plus de sources legacy runtime.
+- [x] **Task 10: Eteindre completement le legacy LLM residuel** (AC: 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75)
+  - [x] Supprimer du modele d assembly toute colonne, propriete ou alias legacy et basculer les DTO/services vers les references canoniques.
+  - [x] Supprimer des prompt versions tout champ d execution legacy et reporter les decisions runtime sur `LlmExecutionProfileModel` et les snapshots.
+  - [x] Clarifier `LlmUseCaseConfigModel` comme residu historique/admin non runtime ou le retirer du chemin nominal.
+  - [x] Purger `provider_compat` et tout alias `provider=` des logs LLM, puis migrer les lecteurs vers `operational_metadata.executed_provider`.
+  - [x] Remplacer dans `llm_assembly.py` les longueurs de statut encore codees en dur par `SHORT_STATUS_LENGTH`, puis traiter les autres longueurs locales residuelles soit par centralisation, soit par documentation explicite.
+  - [x] Nettoyer `llm_prompt.py` de tout marqueur nominal `legacy` restant et retirer la compatibilite explicite `PromptStatus.ARCHIVED -> INACTIVE` si elle n est plus strictement necessaire hors historique/admin.
+  - [x] Ecrire les migrations Alembic destructives et aligner le bootstrap SQLite local sur le schema final, sans recreation de colonnes legacy.
+  - [x] Renforcer les tests de perimetre, de migrations, d admin et de runtime pour bloquer toute reintroduction de noms legacy.
+  - [x] Nettoyer la documentation canonique et les payloads/fixtures pour qu ils ne mentionnent plus de sources legacy runtime.
 
 ## Dev Notes
 
@@ -294,11 +299,14 @@ gpt-5
 - 2026-04-24 : validations ciblees executees dans le venv : `ruff check scripts\\seed_astrologers_6_profiles.py app\\tests\\integration\\test_migration_8b2d52442493_add_input_schema_to_assembly.py tests\\evaluation\\test_differentiation.py tests\\evaluation\\test_prompt_resolution.py`, puis `pytest -q app\\tests\\integration\\test_astrologers_v2.py app\\tests\\integration\\test_migration_8b2d52442493_add_input_schema_to_assembly.py tests\\evaluation\\test_differentiation.py tests\\evaluation\\test_prompt_resolution.py tests\\integration\\test_story_70_17_llm_db_cleanup_registry.py` (`17 passed`).
 - 2026-04-24 : validation utilisateur complementaire : confirmation que le `pytest -q` complet backend repasse apres integration des correctifs.
 - 2026-04-24 : AC51/AC52 ajoutees et mises en oeuvre : `LlmSamplePayloadModel` reutilise maintenant `CreatedUpdatedAtMixin`, et les tests 70-18 renforcent le perimetre canonique pour bloquer toute reintroduction de colonnes operationnelles dans `llm_call_logs` ainsi que toute redeclaration locale de colonnes d audit dans `models.llm`.
+- 2026-04-24 : AC73 a AC75 ajoutees apres revue de fermeture pour materialiser les residus encore ouverts sur le DRY des longueurs SQLAlchemy dans `llm_assembly.py`, l explicitation des tailles locales partagees et la disparition complete des marqueurs legacy nominaux dans `llm_prompt.py`.
+- 2026-04-24 : AC73 a AC75 mises en oeuvre : `PromptAssemblyConfigModel` reutilise `SHORT_STATUS_LENGTH`, les longueurs partagees residuelles sont centralisees dans `llm_field_lengths.py`, `LlmUseCaseConfigModel` et `LlmPromptVersionModel` exposent des marqueurs `historical_*` a la place des noms `legacy_*`, et `PromptStatus.normalize()` est retire au profit d un contrat de statut explicite.
 - 2026-04-24 : correctif du runtime natal Free post-story 70-18 : l auto-heal canonique local relance desormais le bootstrap LLM si des assemblies publiees existent sans `execution_profile_ref`, ce qui evite les erreurs `Assembly execution profile missing.` sur `natal_long_free` et `natal_interpretation_short`.
 - 2026-04-24 : correction SQLite locale complementaire : `ensure_local_sqlite_schema_ready()` reconstruit maintenant `llm_call_logs` quand une ancienne contrainte `ck_llm_call_logs_environment` refuse encore `development`, afin que l observabilite best-effort ne masque plus l erreur metier nominale.
 - 2026-04-24 : correction du seed canonique `seed_66_20_taxonomy` : `output_schema_id` reste typé UUID et le seed cree/met a jour des execution profiles cibles par `(feature, subfeature, plan)` avant de rattacher explicitement les assemblies nominales a ces profils.
 - 2026-04-24 : validations ciblees executees dans le venv pour ce correctif : `ruff check app\\main.py app\\infra\\db\\bootstrap.py app\\ops\\llm\\bootstrap\\seed_66_20_taxonomy.py tests\\unit\\test_story_70_13_bootstrap.py app\\tests\\integration\\test_db_bootstrap_partial_upgrade.py`, `pytest -q app\\tests\\integration\\test_db_bootstrap_partial_upgrade.py` (`5 passed`) et `pytest -q tests\\unit\\test_story_70_13_bootstrap.py --confcutdir=tests\\unit` (`6 passed`).
 - 2026-04-24 : reparation locale verifiee sur `backend/horoscope.db` : les assemblies `natal/interpretation/free` et `natal/interpretation/premium` portent a nouveau un `execution_profile_ref`, et `llm_call_logs` accepte bien `environment='development'`.
+- 2026-04-24 : validation finale utilisateur confirmee apres extinction des residus Task 10 : tous les tests backend passent, y compris les garde-fous 70-18 et les suites ciblees `test_prompt_registry_v2`, `test_assembly_resolution` et `test_admin_llm_catalog`.
 
 ### File List
 
@@ -424,6 +432,7 @@ gpt-5
 - 2026-04-23 : clarification AC18 de la semantique snapshot de release et pointeur actif singleton dans le runbook LLM.
 - 2026-04-24 : correctifs post-review sur preview admin, normalisation canonique des sample payloads, bootstrap SQLite local, seeding astrologues et registre 70-17, avec validations ciblees puis confirmation utilisateur du `pytest -q` complet backend.
 - 2026-04-24 : ajout des AC51/AC52 pour verrouiller les proxys operationnels de `LlmCallLogModel` et finaliser le DRY des timestamps sur les modeles LLM restants.
+- 2026-04-24 : finalisation de la Task 10 avec extinction des reliquats legacy DB LLM, centralisation complementaire des longueurs partagees et nettoyage des marqueurs legacy nominaux dans `llm_prompt.py`, puis validation complete des suites ciblees backend.
 - 2026-04-24 : correctif post-story sur le runtime natal Free : auto-heal canonique local et `seed_66_20_taxonomy` maintenant capables de recreer/reattacher les execution profiles cibles pour les assemblies nominales `natal/*`, sans fallback legacy.
 - 2026-04-24 : correctif SQLite local sur `llm_call_logs` : reconstruction de la table quand une ancienne contrainte `environment` n accepte pas `development`, avec tests d integration et de bootstrap dedies.
 - 2026-04-23 : ajout des validateurs AC31 sur colonnes sensibles LLM et relation ORM AC28 entre assembly et execution profile, avec tests unitaires.

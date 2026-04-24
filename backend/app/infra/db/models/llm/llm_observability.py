@@ -31,6 +31,7 @@ from app.infra.db.models.llm.llm_field_lengths import (
     EXECUTION_PATH_KIND_LENGTH,
     FALLBACK_KIND_LENGTH,
     FEATURE_LENGTH,
+    INPUT_HASH_HEX_LENGTH,
     MANIFEST_ENTRY_ID_LENGTH,
     MODEL_LENGTH,
     PIPELINE_KIND_LENGTH,
@@ -131,7 +132,7 @@ class LlmCallLogModel(Base):
     request_id: Mapped[str] = mapped_column(String(REQUEST_ID_LENGTH), nullable=False, index=True)
     trace_id: Mapped[str] = mapped_column(String(TRACE_ID_LENGTH), nullable=False)
 
-    input_hash: Mapped[str] = mapped_column(String(64), nullable=False)  # SHA-256
+    input_hash: Mapped[str] = mapped_column(String(INPUT_HASH_HEX_LENGTH), nullable=False)
     environment: Mapped[str] = mapped_column(
         String(SHORT_STATUS_LENGTH), nullable=False
     )  # dev, staging, prod

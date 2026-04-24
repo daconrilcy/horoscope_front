@@ -9,6 +9,7 @@ from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.datetime_provider import datetime_provider, utc_now
+from app.infra.db.models.llm.llm_field_lengths import ACTOR_IDENTIFIER_LENGTH
 
 
 def utc_now_plus_days(days: int):
@@ -37,7 +38,7 @@ class UpdatedAtMixin:
 class CreatedByMixin:
     """Ajoute l'identifiant de createur commun aux modeles administrables."""
 
-    created_by: Mapped[str] = mapped_column(String(255))
+    created_by: Mapped[str] = mapped_column(String(ACTOR_IDENTIFIER_LENGTH))
 
 
 class PublishedAtMixin:

@@ -65,12 +65,7 @@ class PromptRegistryV2:
             data = {
                 "id": result.id,
                 "use_case_key": result.use_case_key,
-                "model": result.model,
-                "temperature": result.temperature,
-                "max_output_tokens": result.max_output_tokens,
                 "developer_prompt": result.developer_prompt,
-                "reasoning_effort": result.reasoning_effort,
-                "verbosity": result.verbosity,
                 "status": result.status,
                 "created_by": result.created_by,
                 "created_at": result.created_at,
