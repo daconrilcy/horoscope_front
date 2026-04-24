@@ -128,7 +128,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
     from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
     from app.infra.db.models.llm.llm_persona import LlmPersonaModel
-    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
+    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
     from app.infra.db.session import SessionLocal
     from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
     from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
@@ -141,7 +141,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.ops.llm.bootstrap.use_cases_seed import seed_bootstrap_contracts
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
-    def collect_state() -> tuple[int, int, int, int, int, bool]:
+    def collect_state() -> tuple[int, int, int, int, int, int, bool]:
         with SessionLocal() as db:
             return (
                 db.query(LlmOutputSchemaModel).count(),
@@ -149,6 +149,12 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
                 db.query(LlmPersonaModel).filter(LlmPersonaModel.enabled == True).count(),  # noqa: E712
                 db.query(PromptAssemblyConfigModel).count(),
                 db.query(LlmExecutionProfileModel).count(),
+                db.query(PromptAssemblyConfigModel)
+                .filter(
+                    PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+                    PromptAssemblyConfigModel.execution_profile_ref == None,  # noqa: E711
+                )
+                .count(),
                 get_active_prompt_version(db, "natal_interpretation_short") is not None,
             )
 
@@ -159,6 +165,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             enabled_personas,
             assembly_count,
             profile_count,
+            missing_execution_profile_count,
             has_active_short_prompt,
         ) = collect_state()
     except OperationalError as error:
@@ -173,6 +180,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             enabled_personas,
             assembly_count,
             profile_count,
+            missing_execution_profile_count,
             has_active_short_prompt,
         ) = collect_state()
 
@@ -182,7 +190,9 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         or enabled_personas == 0
         or not has_active_short_prompt
     )
-    needs_canonical_seed = assembly_count == 0 or profile_count == 0
+    needs_canonical_seed = (
+        assembly_count == 0 or profile_count == 0 or missing_execution_profile_count > 0
+    )
 
     if not needs_registry_seed and not needs_canonical_seed:
         return
@@ -190,13 +200,14 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     logger.warning(
         (
             "canonical_llm_bootstrap_auto_heal schemas=%s prompts=%s personas=%s "
-            "assemblies=%s profiles=%s active_short=%s"
+            "assemblies=%s profiles=%s missing_execution_profiles=%s active_short=%s"
         ),
         output_schema_count,
         prompt_count,
         enabled_personas,
         assembly_count,
         profile_count,
+        missing_execution_profile_count,
         has_active_short_prompt,
     )
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import uuid
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -16,12 +17,27 @@ from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStat
 
 logger = logging.getLogger(__name__)
 
-def _resolve_output_schema_id(db: Session, schema_name: str | None) -> str | None:
+
+def _resolve_output_schema_id(db: Session, schema_name: str | None) -> uuid.UUID | None:
     if not schema_name:
         return None
     stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == schema_name)
     schema = db.execute(stmt).scalar_one_or_none()
-    return str(schema.id) if schema else None
+    return schema.id if schema else None
+
+
+def _profile_defaults_for_target(
+    feature: str,
+    plan: str | None,
+) -> dict[str, str | int]:
+    """Retourne les valeurs par défaut du profil nominal pour une cible taxonomique."""
+    is_premium = plan == "premium"
+    return {
+        "model": "gpt-4o" if is_premium else "gpt-4o-mini",
+        "verbosity_profile": "detailed" if is_premium else "balanced",
+        "output_mode": "free_text" if feature == "chat" else "structured_json",
+        "timeout_seconds": 60,
+    }
 
 
 def seed_66_20_taxonomy(db: Session) -> None:
@@ -123,53 +139,8 @@ def seed_66_20_taxonomy(db: Session) -> None:
             existing.status = PromptStatus.PUBLISHED
             logger.info("seed_66_20_taxonomy: updated assembly %s/%s/%s", feature, subfeature, plan)
 
-    target_profiles = [
-        ("chat", "astrologer", None, "gpt-4o"),
-        ("guidance", None, None, "gpt-4o"),
-        ("natal", None, None, "gpt-4o"),
-    ]
-
-    for feature, subfeature, plan, model in target_profiles:
-        stmt_profile = select(LlmExecutionProfileModel).where(
-            LlmExecutionProfileModel.feature == feature,
-            LlmExecutionProfileModel.subfeature == subfeature,
-            LlmExecutionProfileModel.plan == plan,
-        )
-        profile = db.execute(stmt_profile).scalar_one_or_none()
-
-        if not profile:
-            profile = LlmExecutionProfileModel(
-                name=f"Profile {feature} {subfeature or ''} {plan or ''}".strip(),
-                feature=feature,
-                subfeature=subfeature,
-                plan=plan,
-                model=model,
-                provider="openai",
-                reasoning_profile="off",
-                verbosity_profile="balanced",
-                output_mode="structured_json" if feature in ["guidance", "natal"] else "free_text",
-                timeout_seconds=60,
-                status=PromptStatus.PUBLISHED,
-                created_by="system",
-            )
-            db.add(profile)
-            logger.info(
-                "seed_66_20_taxonomy: created profile %s/%s/%s",
-                feature,
-                subfeature or "",
-                plan or "",
-            )
-        else:
-            profile.model = model
-            profile.status = PromptStatus.PUBLISHED
-            logger.info(
-                "seed_66_20_taxonomy: updated profile %s/%s/%s",
-                feature,
-                subfeature or "",
-                plan or "",
-            )
-
     for feature, subfeature, plan, _template_key in target_assemblies:
+        defaults = _profile_defaults_for_target(feature, plan)
         profile_stmt = (
             select(LlmExecutionProfileModel)
             .where(
@@ -181,7 +152,38 @@ def seed_66_20_taxonomy(db: Session) -> None:
         )
         profile = db.execute(profile_stmt).scalars().first()
         if profile is None:
-            continue
+            profile = LlmExecutionProfileModel(
+                name=f"Profile {feature} {subfeature or ''} {plan or ''}".strip(),
+                feature=feature,
+                subfeature=subfeature,
+                plan=plan,
+                model=str(defaults["model"]),
+                provider="openai",
+                reasoning_profile="off",
+                verbosity_profile=str(defaults["verbosity_profile"]),
+                output_mode=str(defaults["output_mode"]),
+                tool_mode="none",
+                timeout_seconds=int(defaults["timeout_seconds"]),
+                status=PromptStatus.PUBLISHED,
+                created_by="system",
+            )
+            db.add(profile)
+            db.flush()
+            logger.info(
+                "seed_66_20_taxonomy: created targeted profile %s/%s/%s",
+                feature,
+                subfeature or "",
+                plan or "",
+            )
+        else:
+            profile.model = str(defaults["model"])
+            profile.provider = "openai"
+            profile.reasoning_profile = "off"
+            profile.verbosity_profile = str(defaults["verbosity_profile"])
+            profile.output_mode = str(defaults["output_mode"])
+            profile.tool_mode = "none"
+            profile.timeout_seconds = int(defaults["timeout_seconds"])
+            profile.status = PromptStatus.PUBLISHED
 
         assembly_stmt = select(PromptAssemblyConfigModel).where(
             PromptAssemblyConfigModel.feature == feature,

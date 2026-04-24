@@ -320,10 +320,166 @@ def _repair_llm_call_logs_columns() -> bool:
     return True
 
 
+def _repair_llm_call_logs_environment_constraint() -> bool:
+    """Reconstruit `llm_call_logs` si une ancienne contrainte d'environnement subsiste."""
+    inspector = inspect(engine)
+    if "llm_call_logs" not in inspector.get_table_names():
+        return False
+
+    with engine.connect() as connection:
+        create_sql = connection.execute(
+            text("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'llm_call_logs'")
+        ).scalar_one_or_none()
+
+    if not create_sql or "'development'" in create_sql:
+        return False
+    if "ck_llm_call_logs_environment" not in create_sql:
+        return False
+
+    logger.warning("local_sqlite_schema_repair_llm_call_logs_environment_constraint")
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE llm_call_logs__rebuild (
+                    id NUMERIC NOT NULL PRIMARY KEY,
+                    use_case VARCHAR(100) NOT NULL,
+                    assembly_id NUMERIC NULL REFERENCES llm_assembly_configs (id),
+                    feature VARCHAR(64) NULL,
+                    subfeature VARCHAR(64) NULL,
+                    "plan" VARCHAR(64) NULL,
+                    template_source VARCHAR(32) NULL,
+                    prompt_version_id NUMERIC NULL REFERENCES llm_prompt_versions (id),
+                    persona_id NUMERIC NULL REFERENCES llm_personas (id),
+                    model VARCHAR(100) NOT NULL,
+                    latency_ms INTEGER NOT NULL,
+                    tokens_in INTEGER NOT NULL,
+                    tokens_out INTEGER NOT NULL,
+                    cost_usd_estimated FLOAT NOT NULL,
+                    validation_status VARCHAR(14) NOT NULL,
+                    repair_attempted BOOLEAN NOT NULL,
+                    fallback_triggered BOOLEAN NOT NULL,
+                    request_id VARCHAR(100) NOT NULL,
+                    trace_id VARCHAR(100) NOT NULL,
+                    input_hash VARCHAR(64) NOT NULL,
+                    environment VARCHAR(20) NOT NULL,
+                    evidence_warnings_count INTEGER NOT NULL,
+                    timestamp DATETIME NOT NULL,
+                    expires_at DATETIME NOT NULL,
+                    CONSTRAINT ck_llm_call_logs_environment CHECK (
+                        environment IN (
+                            'development', 'dev', 'staging', 'production',
+                            'prod', 'test', 'testing', 'local'
+                        )
+                    )
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO llm_call_logs__rebuild (
+                    id,
+                    use_case,
+                    assembly_id,
+                    feature,
+                    subfeature,
+                    "plan",
+                    template_source,
+                    prompt_version_id,
+                    persona_id,
+                    model,
+                    latency_ms,
+                    tokens_in,
+                    tokens_out,
+                    cost_usd_estimated,
+                    validation_status,
+                    repair_attempted,
+                    fallback_triggered,
+                    request_id,
+                    trace_id,
+                    input_hash,
+                    environment,
+                    evidence_warnings_count,
+                    timestamp,
+                    expires_at
+                )
+                SELECT
+                    id,
+                    use_case,
+                    assembly_id,
+                    feature,
+                    subfeature,
+                    "plan",
+                    template_source,
+                    prompt_version_id,
+                    persona_id,
+                    model,
+                    latency_ms,
+                    tokens_in,
+                    tokens_out,
+                    cost_usd_estimated,
+                    validation_status,
+                    repair_attempted,
+                    fallback_triggered,
+                    request_id,
+                    trace_id,
+                    input_hash,
+                    environment,
+                    evidence_warnings_count,
+                    timestamp,
+                    expires_at
+                FROM llm_call_logs
+                """
+            )
+        )
+        connection.execute(text("DROP TABLE llm_call_logs"))
+        connection.execute(text("ALTER TABLE llm_call_logs__rebuild RENAME TO llm_call_logs"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_request_id "
+                "ON llm_call_logs (request_id)"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_timestamp "
+                "ON llm_call_logs (timestamp)"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_trace_id "
+                "ON llm_call_logs (trace_id)"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_scope_timestamp "
+                "ON llm_call_logs (feature, subfeature, \"plan\", timestamp)"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_prompt_v_timestamp "
+                "ON llm_call_logs (prompt_version_id, timestamp)"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_status_timestamp "
+                "ON llm_call_logs (validation_status, timestamp)"
+            )
+        )
+    return True
+
+
 def _repair_local_sqlite_known_drift() -> bool:
     repaired = False
     repaired = _repair_email_logs_primary_key() or repaired
     repaired = _repair_llm_call_logs_columns() or repaired
+    repaired = _repair_llm_call_logs_environment_constraint() or repaired
     return repaired
 
 

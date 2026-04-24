@@ -294,6 +294,11 @@ gpt-5
 - 2026-04-24 : validations ciblees executees dans le venv : `ruff check scripts\\seed_astrologers_6_profiles.py app\\tests\\integration\\test_migration_8b2d52442493_add_input_schema_to_assembly.py tests\\evaluation\\test_differentiation.py tests\\evaluation\\test_prompt_resolution.py`, puis `pytest -q app\\tests\\integration\\test_astrologers_v2.py app\\tests\\integration\\test_migration_8b2d52442493_add_input_schema_to_assembly.py tests\\evaluation\\test_differentiation.py tests\\evaluation\\test_prompt_resolution.py tests\\integration\\test_story_70_17_llm_db_cleanup_registry.py` (`17 passed`).
 - 2026-04-24 : validation utilisateur complementaire : confirmation que le `pytest -q` complet backend repasse apres integration des correctifs.
 - 2026-04-24 : AC51/AC52 ajoutees et mises en oeuvre : `LlmSamplePayloadModel` reutilise maintenant `CreatedUpdatedAtMixin`, et les tests 70-18 renforcent le perimetre canonique pour bloquer toute reintroduction de colonnes operationnelles dans `llm_call_logs` ainsi que toute redeclaration locale de colonnes d audit dans `models.llm`.
+- 2026-04-24 : correctif du runtime natal Free post-story 70-18 : l auto-heal canonique local relance desormais le bootstrap LLM si des assemblies publiees existent sans `execution_profile_ref`, ce qui evite les erreurs `Assembly execution profile missing.` sur `natal_long_free` et `natal_interpretation_short`.
+- 2026-04-24 : correction SQLite locale complementaire : `ensure_local_sqlite_schema_ready()` reconstruit maintenant `llm_call_logs` quand une ancienne contrainte `ck_llm_call_logs_environment` refuse encore `development`, afin que l observabilite best-effort ne masque plus l erreur metier nominale.
+- 2026-04-24 : correction du seed canonique `seed_66_20_taxonomy` : `output_schema_id` reste typé UUID et le seed cree/met a jour des execution profiles cibles par `(feature, subfeature, plan)` avant de rattacher explicitement les assemblies nominales a ces profils.
+- 2026-04-24 : validations ciblees executees dans le venv pour ce correctif : `ruff check app\\main.py app\\infra\\db\\bootstrap.py app\\ops\\llm\\bootstrap\\seed_66_20_taxonomy.py tests\\unit\\test_story_70_13_bootstrap.py app\\tests\\integration\\test_db_bootstrap_partial_upgrade.py`, `pytest -q app\\tests\\integration\\test_db_bootstrap_partial_upgrade.py` (`5 passed`) et `pytest -q tests\\unit\\test_story_70_13_bootstrap.py --confcutdir=tests\\unit` (`6 passed`).
+- 2026-04-24 : reparation locale verifiee sur `backend/horoscope.db` : les assemblies `natal/interpretation/free` et `natal/interpretation/premium` portent a nouveau un `execution_profile_ref`, et `llm_call_logs` accepte bien `environment='development'`.
 
 ### File List
 
@@ -359,13 +364,16 @@ gpt-5
 - backend/app/api/v1/routers/admin_llm_sample_payloads.py
 - backend/app/domain/llm/governance/feature_taxonomy.py
 - backend/app/domain/llm/runtime/gateway.py
+- backend/app/main.py
 - backend/app/infra/db/bootstrap.py
+- backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py
 - backend/migrations/versions/20260423_0074_llm_schema_release_sample_invariants.py
 - backend/migrations/versions/20260423_0075_add_llm_call_log_operational_indexes.py
 - backend/migrations/env.py
 - backend/tests/integration/test_admin_llm_sample_payloads.py
 - backend/tests/integration/test_admin_llm_catalog.py
 - backend/app/tests/integration/test_db_bootstrap_partial_upgrade.py
+- backend/tests/unit/test_story_70_13_bootstrap.py
 - backend/app/tests/integration/test_migration_8b2d52442493_add_input_schema_to_assembly.py
 - backend/scripts/seed_astrologers_6_profiles.py
 - backend/tests/evaluation/test_differentiation.py
@@ -416,6 +424,8 @@ gpt-5
 - 2026-04-23 : clarification AC18 de la semantique snapshot de release et pointeur actif singleton dans le runbook LLM.
 - 2026-04-24 : correctifs post-review sur preview admin, normalisation canonique des sample payloads, bootstrap SQLite local, seeding astrologues et registre 70-17, avec validations ciblees puis confirmation utilisateur du `pytest -q` complet backend.
 - 2026-04-24 : ajout des AC51/AC52 pour verrouiller les proxys operationnels de `LlmCallLogModel` et finaliser le DRY des timestamps sur les modeles LLM restants.
+- 2026-04-24 : correctif post-story sur le runtime natal Free : auto-heal canonique local et `seed_66_20_taxonomy` maintenant capables de recreer/reattacher les execution profiles cibles pour les assemblies nominales `natal/*`, sans fallback legacy.
+- 2026-04-24 : correctif SQLite local sur `llm_call_logs` : reconstruction de la table quand une ancienne contrainte `environment` n accepte pas `development`, avec tests d integration et de bootstrap dedies.
 - 2026-04-23 : ajout des validateurs AC31 sur colonnes sensibles LLM et relation ORM AC28 entre assembly et execution profile, avec tests unitaires.
 - 2026-04-23 : factorisation AC30 de la convention d index partiel `published` et chargement explicite du package LLM dans Alembic.
 - 2026-04-23 : documentation AC13 de la source de verite runtime LLM entre assembly, release, prompt, execution profile et output schema.
