@@ -4,13 +4,12 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
-from sqlalchemy import JSON, UUID, Boolean, DateTime, Index, String, Text
+from sqlalchemy import JSON, UUID, Boolean, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
+from app.infra.db.models.llm.llm_audit import CreatedUpdatedAtMixin
 from app.infra.db.models.llm.llm_field_lengths import (
     FEATURE_LENGTH,
     LOCALE_LENGTH,
@@ -19,7 +18,7 @@ from app.infra.db.models.llm.llm_field_lengths import (
 )
 
 
-class LlmSamplePayloadModel(Base):
+class LlmSamplePayloadModel(CreatedUpdatedAtMixin, Base):
     """Représente un payload d'exemple versionné par feature et locale."""
 
     __tablename__ = "llm_sample_payloads"
@@ -36,10 +35,6 @@ class LlmSamplePayloadModel(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
 
     __table_args__ = (
         Index(

@@ -87,6 +87,8 @@ Etablir un backend avec :
 48. **AC48 - Documentation de structure modele generee depuis le code** : la documentation du package `models.llm` doit etre alignee automatiquement ou semi-automatiquement sur le code, en listant pour chaque table : role, source de verite, champs legacy toleres, relations ORM, contraintes majeures, et statut canonique/compatibilite.
 49. **AC49 - Aucune colonne nominale sans justification d usage** : toute colonne du sous-package `models.llm` doit avoir soit un consommateur runtime/admin/test identifie, soit une justification de conservation transitoire documentee. A defaut, elle doit etre supprimee.
 50. **AC50 - Definition formelle du perimetre canonique LLM** : le repo doit contenir une definition executable ou au minimum controlee par test de ce qui constitue le perimetre canonique LLM en base : tables autorisees, helpers autorises, champs d execution autoritaires, champs de compatibilite toleres, et dependances admises. Toute derive hors de ce perimetre doit faire echouer la validation structurelle.
+51. **AC51 - Compatibilite operationnelle sans repollution du log coeur** : les proprietes de compatibilite exposees par `LlmCallLogModel` pour les champs operationnels doivent rester de simples proxys vers `LlmCallLogOperationalMetadataModel`. Aucun champ operationnel enrichi (`pipeline_kind`, `requested_provider`, `executed_provider`, `breaker_state`, `active_snapshot_version`, etc.) ne doit redevenir une colonne persistee de `llm_call_logs`. Un test de perimetre canonique doit echouer si ces colonnes reapparaissent dans la table coeur.
+52. **AC52 - DRY complet des timestamps sur les modeles LLM restants** : tous les modeles LLM portant a la fois `created_at` et `updated_at` doivent utiliser `CreatedUpdatedAtMixin`, et tous les modeles portant uniquement `created_at`, `created_by` ou `published_at` doivent utiliser les mixins dedies. Aucune redeclaration locale de colonnes d audit ou de defaults temporels ne doit subsister dans `backend/app/infra/db/models/llm/`, sauf justification explicite documentee et testee.
 
 ## Tasks / Subtasks
 
@@ -146,7 +148,7 @@ Etablir un backend avec :
   - [x] Eviter les commentaires redondants qui paraphrasent une ligne de code evidente.
   - [x] Lancer `ruff check` pour verifier que les ajouts restent conformes.
 
-- [x] **Task 9: Refactorer les modeles DB LLM apres regroupement namespace** (AC: 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)
+- [x] **Task 9: Refactorer les modeles DB LLM apres regroupement namespace** (AC: 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52)
   - [x] Clarifier la source de verite runtime entre assembly, prompt version, execution profile, release et output schema.
   - [x] Supprimer ou deprecier les champs redondants avant d ajouter des migrations destructives.
   - [x] Introduire les enums, check constraints, unicites et index necessaires sans casser les donnees existantes.
@@ -262,6 +264,7 @@ gpt-5
 - 2026-04-24 : correctifs de regression post-review : normalisation de la tonalite legacy `calm` dans le seed astrologues, tests d evaluation migres vers `persona_state` / `plan_rules_state`, test de migration 8b2d aligne sur `output_schema_id`, et registre 70-17 complete avec la migration `20260423_0081_finalize_llm_canonical_perimeter.py` et les nouveaux chemins de compatibilite bornes.
 - 2026-04-24 : validations ciblees executees dans le venv : `ruff check scripts\\seed_astrologers_6_profiles.py app\\tests\\integration\\test_migration_8b2d52442493_add_input_schema_to_assembly.py tests\\evaluation\\test_differentiation.py tests\\evaluation\\test_prompt_resolution.py`, puis `pytest -q app\\tests\\integration\\test_astrologers_v2.py app\\tests\\integration\\test_migration_8b2d52442493_add_input_schema_to_assembly.py tests\\evaluation\\test_differentiation.py tests\\evaluation\\test_prompt_resolution.py tests\\integration\\test_story_70_17_llm_db_cleanup_registry.py` (`17 passed`).
 - 2026-04-24 : validation utilisateur complementaire : confirmation que le `pytest -q` complet backend repasse apres integration des correctifs.
+- 2026-04-24 : AC51/AC52 ajoutees et mises en oeuvre : `LlmSamplePayloadModel` reutilise maintenant `CreatedUpdatedAtMixin`, et les tests 70-18 renforcent le perimetre canonique pour bloquer toute reintroduction de colonnes operationnelles dans `llm_call_logs` ainsi que toute redeclaration locale de colonnes d audit dans `models.llm`.
 
 ### File List
 
@@ -383,6 +386,7 @@ gpt-5
 - 2026-04-23 : documentation AC19 de la strategie de recalcul des agregats canoniques LLM et de la frontiere canonique/legacy.
 - 2026-04-23 : clarification AC18 de la semantique snapshot de release et pointeur actif singleton dans le runbook LLM.
 - 2026-04-24 : correctifs post-review sur preview admin, normalisation canonique des sample payloads, bootstrap SQLite local, seeding astrologues et registre 70-17, avec validations ciblees puis confirmation utilisateur du `pytest -q` complet backend.
+- 2026-04-24 : ajout des AC51/AC52 pour verrouiller les proxys operationnels de `LlmCallLogModel` et finaliser le DRY des timestamps sur les modeles LLM restants.
 - 2026-04-23 : ajout des validateurs AC31 sur colonnes sensibles LLM et relation ORM AC28 entre assembly et execution profile, avec tests unitaires.
 - 2026-04-23 : factorisation AC30 de la convention d index partiel `published` et chargement explicite du package LLM dans Alembic.
 - 2026-04-23 : documentation AC13 de la source de verite runtime LLM entre assembly, release, prompt, execution profile et output schema.

@@ -4,18 +4,30 @@
 from __future__ import annotations
 
 import uuid
+from pathlib import Path
 
 import pytest
 from sqlalchemy import delete, inspect
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import IntegrityError
 
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_audit import (
+    CreatedAtMixin,
+    CreatedByMixin,
+    CreatedUpdatedAtMixin,
+    PublishedAtMixin,
+)
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
 from app.infra.db.models.llm.llm_release import (
     LlmActiveReleaseModel,
     LlmReleaseSnapshotModel,
     ReleaseStatus,
 )
+from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from tests.integration.app_db import open_app_db_session
 
 
@@ -303,6 +315,62 @@ def test_call_log_legacy_provider_column_is_explicitly_named_as_compatibility() 
     assert "manifest_entry_id" not in columns
 
 
+def test_call_log_operational_compatibility_fields_do_not_repollute_core_table() -> None:
+    """Verifie que les champs operationnels restent hors de `llm_call_logs`."""
+    db = open_app_db_session()
+    try:
+        columns = {column["name"] for column in inspect(db.get_bind()).get_columns("llm_call_logs")}
+    finally:
+        db.close()
+
+    assert {
+        "pipeline_kind",
+        "requested_provider",
+        "resolved_provider",
+        "executed_provider",
+        "breaker_state",
+        "breaker_scope",
+        "active_snapshot_version",
+        "manifest_entry_id",
+    }.isdisjoint(columns)
+
+
+def test_call_log_operational_compatibility_fields_are_proxy_backed() -> None:
+    """Verifie que les alias de compatibilite ecrivent dans la relation metadata dediee."""
+    call_log = LlmCallLogModel(
+        use_case="story-70-18",
+        provider="openai",
+        model="gpt-4o",
+        latency_ms=120,
+        tokens_in=10,
+        tokens_out=20,
+        cost_usd_estimated=0.01,
+        validation_status="valid",
+        request_id="req-story-70-18",
+        trace_id="trace-story-70-18",
+        input_hash="a" * 64,
+        environment="test",
+        pipeline_kind="nominal_canonical",
+        requested_provider="openai",
+        executed_provider="openai",
+        breaker_state="closed",
+        active_snapshot_version="snapshot-v1",
+    )
+
+    assert call_log.operational_metadata is not None
+    assert call_log.pipeline_kind == "nominal_canonical"
+    assert call_log.requested_provider == "openai"
+    assert call_log.executed_provider == "openai"
+    assert call_log.breaker_state == "closed"
+    assert call_log.active_snapshot_version == "snapshot-v1"
+    assert call_log.provider_compat == "openai"
+    assert "pipeline_kind" not in call_log.__dict__
+    assert "requested_provider" not in call_log.__dict__
+    assert "executed_provider" not in call_log.__dict__
+    assert "breaker_state" not in call_log.__dict__
+    assert "active_snapshot_version" not in call_log.__dict__
+
+
 def test_assembly_output_schema_is_backed_by_real_foreign_key() -> None:
     """Verifie que l assembly reference le schema de sortie via une vraie FK canonique."""
     db = open_app_db_session()
@@ -355,3 +423,48 @@ def test_assembly_schema_uses_explicit_component_states_instead_of_boolean_flags
         "persona_enabled",
         "plan_rules_enabled",
     }.isdisjoint(columns)
+
+
+def test_sample_payload_model_uses_created_updated_at_mixin() -> None:
+    """Verifie que les payloads QA reutilisent le mixin canonique de timestamps."""
+    assert issubclass(LlmSamplePayloadModel, CreatedUpdatedAtMixin)
+
+
+def test_llm_models_with_audit_columns_use_shared_mixins() -> None:
+    """Verifie que les modeles LLM attendus heritent bien des mixins d audit communs."""
+    assert issubclass(LlmSamplePayloadModel, CreatedUpdatedAtMixin)
+    assert issubclass(PromptAssemblyConfigModel, CreatedAtMixin)
+    assert issubclass(PromptAssemblyConfigModel, CreatedByMixin)
+    assert issubclass(PromptAssemblyConfigModel, PublishedAtMixin)
+    assert issubclass(LlmExecutionProfileModel, CreatedAtMixin)
+    assert issubclass(LlmExecutionProfileModel, CreatedByMixin)
+    assert issubclass(LlmExecutionProfileModel, PublishedAtMixin)
+    assert issubclass(LlmPromptVersionModel, CreatedAtMixin)
+    assert issubclass(LlmPromptVersionModel, CreatedByMixin)
+    assert issubclass(LlmPromptVersionModel, PublishedAtMixin)
+    assert issubclass(LlmReleaseSnapshotModel, CreatedAtMixin)
+    assert issubclass(LlmReleaseSnapshotModel, CreatedByMixin)
+
+
+def test_llm_models_do_not_redeclare_local_audit_columns_or_time_defaults() -> None:
+    """Bloque la reintroduction de colonnes d audit locales dans `models.llm`."""
+    llm_models_root = (
+        Path(__file__).resolve().parents[2] / "app" / "infra" / "db" / "models" / "llm"
+    )
+    forbidden_fragments = (
+        "created_at: Mapped",
+        "updated_at: Mapped",
+        "created_by: Mapped",
+        "published_at: Mapped",
+    )
+
+    offenders: list[str] = []
+    for path in llm_models_root.glob("*.py"):
+        if path.name == "llm_audit.py":
+            continue
+        content = path.read_text(encoding="utf-8")
+        for fragment in forbidden_fragments:
+            if fragment in content:
+                offenders.append(f"{path.name}:{fragment}")
+
+    assert offenders == []
