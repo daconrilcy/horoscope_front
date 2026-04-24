@@ -143,9 +143,6 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                 use_case_key=uc_key,
                 status=PromptStatus.PUBLISHED,
                 developer_prompt=system_prompt_fr,
-                model="gpt-4o",
-                temperature=0.7,
-                max_output_tokens=3000,
                 created_by="system",
                 published_at=db.execute(select(func.now())).scalar(),
             )
@@ -250,13 +247,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
                 feature_template_ref=pv.id,
                 persona_ref=persona.id if persona else None,
                 execution_profile_ref=prof.id,
-                output_contract_ref=str(narrator_schema.id),
-                execution_config={
-                    "model": "gpt-4o",
-                    "temperature": 0.7,
-                    "max_output_tokens": ass_data["max_tokens"],
-                    "timeout_seconds": 60,
-                },
+                output_schema_id=narrator_schema.id,
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
                 published_at=db.execute(select(func.now())).scalar(),
@@ -283,13 +274,7 @@ def seed_horoscope_narrator_assembly(db: Session) -> None:
             ass.feature_template_ref = pv.id
             ass.persona_ref = persona.id if persona else None
             ass.execution_profile_ref = prof.id
-            ass.output_contract_ref = str(narrator_schema.id)
-            ass.execution_config = {
-                "model": "gpt-4o",
-                "temperature": 0.7,
-                "max_output_tokens": ass_data["max_tokens"],
-                "timeout_seconds": 60,
-            }
+            ass.output_schema_id = narrator_schema.id
             ass.status = PromptStatus.PUBLISHED
             logger.info(
                 "seed_narrator: updated assembly for %s / %s",

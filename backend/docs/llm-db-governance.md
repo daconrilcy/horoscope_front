@@ -16,24 +16,12 @@ Les decisions runtime nominales doivent venir des familles d objets suivantes :
 
 `llm_prompt_versions` reste canonique pour le contenu des templates publies et leur historique, mais les champs de parametrage runtime qu il transporte encore ne doivent plus redevenir une source de verite implicite.
 
-## Compatibilites legacy encore tolerees
+## Compatibilites legacy
 
-Les compatibilites suivantes restent tolerees tant qu elles restent bornees aux fichiers explicitement listes dans [llm-db-cleanup-registry.json](./llm-db-cleanup-registry.json) :
-
-- `llm_use_case_configs`
-- `llm_use_case_configs.fallback_use_case_key`
-- `llm_prompt_versions.model`
-- `llm_prompt_versions.temperature`
-- `llm_prompt_versions.max_output_tokens`
-- `llm_prompt_versions.reasoning_effort`
-- `llm_prompt_versions.verbosity`
-- `llm_assembly_configs.fallback_use_case`
-- `llm_call_logs.use_case`
-- `use_case_compat` dans les exports et la reclassification de consommation
-
-Ces compatibilites sont en mode `freeze` ou `migrate`. Elles ne doivent pas recevoir de nouveaux consommateurs nominaux hors du perimetre deja documente.
-
-`llm_prompt_versions.fallback_use_case_key` n est plus une compatibilite active : la colonne est archivee dans `llm_prompt_version_fallback_archives` puis supprimee par les migrations `20260422_0072` et `20260422_0073`. Le rollback documente restaure la colonne a partir de cette archive.
+Le perimetre canonique ne doit plus reintroduire de lecture ou d ecriture legacy
+sur les objets LLM assainis. Les suppressions physiques sont portees par les
+migrations Alembic et les traces historiques restent documentees dans
+[llm-db-cleanup-registry.json](./llm-db-cleanup-registry.json).
 
 ## Regles de changement
 

@@ -106,7 +106,6 @@ def test_admin_assembly_publish_returns_structured_coherence_error():
             use_case_key="chat",
             status=PromptStatus.PUBLISHED,
             developer_prompt="{{last_user_msg}}",
-            model="gpt-4o",
             created_by="test",
         )
         db.add(prompt)
@@ -119,7 +118,6 @@ def test_admin_assembly_publish_returns_structured_coherence_error():
             plan="free",
             locale="fr-FR",
             feature_template_ref=prompt.id,
-            execution_config={"model": "gpt-4o", "max_output_tokens": 256},
             status=PromptStatus.DRAFT,
             created_by="test",
         )
@@ -149,8 +147,7 @@ def test_admin_prompt_create_draft_rejects_frozen_prompt_local_fallback():
         },
     )
 
-    assert resp.status_code == 409
-    assert resp.json()["error"]["code"] == "forbidden_feature"
+    assert resp.status_code == 422
 
 
 def test_admin_call_logs_filter_uses_canonical_feature_axis():

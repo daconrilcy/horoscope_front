@@ -5,7 +5,7 @@ Documentation generee depuis `app.infra.db.models.llm.llm_canonical_perimeter`.
 ## Perimetre canonique
 
 - Tables autorisees : llm_active_releases, llm_assembly_configs, llm_call_log_operational_metadata, llm_call_logs, llm_canonical_consumption_aggregates, llm_execution_profiles, llm_output_schemas, llm_personas, llm_prompt_versions, llm_release_snapshots, llm_replay_snapshots, llm_sample_payloads, llm_use_case_configs
-- Helpers autorises : llm_audit, llm_canonical_perimeter, llm_compatibility, llm_constraints, llm_field_lengths, llm_indexes, llm_json_validators
+- Helpers autorises : llm_audit, llm_canonical_perimeter, llm_constraints, llm_field_lengths, llm_indexes, llm_json_validators
 - Champs d execution autoritaires : execution_profile_ref, output_schema_id, requested_provider, resolved_provider, executed_provider
 
 ## Tables
@@ -16,14 +16,8 @@ Documentation generee depuis `app.infra.db.models.llm.llm_canonical_perimeter`.
 - Source de verite : feature, subfeature, plan, locale, feature_template_ref, execution_profile_ref, output_schema_id
 - Relations ORM : feature_template, subfeature_template, persona, execution_profile, output_schema
 - Contraintes majeures : published_unique_index, component_state_checks, output_schema_fk
-- Statut : canonical_with_compat_layer
-- Compatibilite legacy toleree :
-  - `execution_config` -> consommateur `admin preview et historique de publication`, suppression cible `2026-06-30`, test `backend/tests/unit/test_story_70_18_llm_canonical_perimeter.py`
-  - `interaction_mode` -> consommateur `lecture admin historique uniquement`, suppression cible `2026-06-30`, test `backend/tests/unit/test_story_70_18_llm_canonical_perimeter.py`
-  - `user_question_policy` -> consommateur `lecture admin historique uniquement`, suppression cible `2026-06-30`, test `backend/tests/unit/test_story_70_18_llm_canonical_perimeter.py`
-  - `input_schema` -> consommateur `inspection admin et migrations de transition`, suppression cible `2026-06-30`, test `backend/tests/unit/test_story_70_18_llm_canonical_perimeter.py`
-  - `output_contract_ref` -> consommateur `adaptateur admin/API vers output_schema_id`, suppression cible `2026-06-30`, test `backend/tests/unit/test_story_70_18_llm_canonical_perimeter.py`
-  - `fallback_use_case` -> consommateur `lecture admin historique uniquement`, suppression cible `2026-06-30`, test `backend/tests/unit/test_story_70_18_llm_canonical_perimeter.py`
+- Statut : canonical
+- Compatibilite legacy toleree : aucune
 
 ### `llm_execution_profiles`
 
@@ -55,12 +49,11 @@ Documentation generee depuis `app.infra.db.models.llm.llm_canonical_perimeter`.
 ### `llm_call_logs`
 
 - Role : journal coeur des appels LLM
-- Source de verite : latency_ms, tokens_in, tokens_out, validation_status, provider_compat
+- Source de verite : latency_ms, tokens_in, tokens_out, validation_status
 - Relations ORM : operational_metadata, prompt_version, persona, replay_snapshot
-- Contraintes majeures : provider_compat_check, trace_indexes
-- Statut : canonical_with_compat_layer
-- Compatibilite legacy toleree :
-  - `provider_compat` -> consommateur `lecture des logs historiques pre-0080`, suppression cible `2026-06-30`, test `backend/tests/unit/test_story_70_18_llm_canonical_perimeter.py`
+- Contraintes majeures : environment_check, trace_indexes
+- Statut : canonical
+- Compatibilite legacy toleree : aucune
 
 ### `llm_call_log_operational_metadata`
 

@@ -16,6 +16,8 @@ from app.domain.llm.governance.feature_taxonomy import (
     normalize_subfeature,
 )
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
 from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
@@ -56,6 +58,10 @@ class AssemblyRegistry:
             data["_subfeature_template"] = serialize_orm(config.subfeature_template)
         if config.persona:
             data["_persona"] = serialize_orm(config.persona)
+        if config.execution_profile:
+            data["_execution_profile"] = serialize_orm(config.execution_profile)
+        if config.output_schema:
+            data["_output_schema"] = serialize_orm(config.output_schema)
 
         # Story 66.32 AC12: Persist runtime observability metadata in serialized data
         for attr in [
@@ -84,6 +90,8 @@ class AssemblyRegistry:
         feat_data = data_copy.pop("_feature_template", None)
         sub_data = data_copy.pop("_subfeature_template", None)
         pers_data = data_copy.pop("_persona", None)
+        profile_data = data_copy.pop("_execution_profile", None)
+        output_schema_data = data_copy.pop("_output_schema", None)
 
         # Metadata fields
         meta = {}
@@ -115,6 +123,10 @@ class AssemblyRegistry:
             config.subfeature_template = reconstruct_orm(LlmPromptVersionModel, sub_data)
         if pers_data:
             config.persona = reconstruct_orm(LlmPersonaModel, pers_data)
+        if profile_data:
+            config.execution_profile = reconstruct_orm(LlmExecutionProfileModel, profile_data)
+        if output_schema_data:
+            config.output_schema = reconstruct_orm(LlmOutputSchemaModel, output_schema_data)
 
         return config
 
@@ -232,6 +244,8 @@ class AssemblyRegistry:
                         selectinload(PromptAssemblyConfigModel.feature_template),
                         selectinload(PromptAssemblyConfigModel.subfeature_template),
                         selectinload(PromptAssemblyConfigModel.persona),
+                        selectinload(PromptAssemblyConfigModel.execution_profile),
+                        selectinload(PromptAssemblyConfigModel.output_schema),
                     )
                 )
                 result = await self._execute(stmt)
@@ -313,6 +327,8 @@ class AssemblyRegistry:
                         selectinload(PromptAssemblyConfigModel.feature_template),
                         selectinload(PromptAssemblyConfigModel.subfeature_template),
                         selectinload(PromptAssemblyConfigModel.persona),
+                        selectinload(PromptAssemblyConfigModel.execution_profile),
+                        selectinload(PromptAssemblyConfigModel.output_schema),
                     )
                 )
                 from sqlalchemy.orm import Session
@@ -340,6 +356,8 @@ class AssemblyRegistry:
                 selectinload(PromptAssemblyConfigModel.feature_template),
                 selectinload(PromptAssemblyConfigModel.subfeature_template),
                 selectinload(PromptAssemblyConfigModel.persona),
+                selectinload(PromptAssemblyConfigModel.execution_profile),
+                selectinload(PromptAssemblyConfigModel.output_schema),
             )
         )
         result = await self._execute(stmt)

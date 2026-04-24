@@ -23,7 +23,6 @@ from app.domain.llm.configuration.assembly_resolver import (
 from app.domain.llm.runtime.observability import log_governance_event
 from app.domain.llm.runtime.providers import is_provider_supported
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 logger = logging.getLogger(__name__)
@@ -92,8 +91,6 @@ class AssemblyAdminService:
                         f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}"
                     )
 
-        output_schema_id = await self._resolve_output_schema_id(config_in.output_contract_ref)
-
         new_config = PromptAssemblyConfigModel(
             feature=config_in.feature,
             subfeature=config_in.subfeature,
@@ -103,16 +100,11 @@ class AssemblyAdminService:
             subfeature_template_ref=config_in.subfeature_template_ref,
             persona_ref=config_in.persona_ref,
             execution_profile_ref=config_in.execution_profile_ref,
+            output_schema_id=config_in.output_schema_id,
             plan_rules_ref=config_in.plan_rules_ref,
-            execution_config=config_in.execution_config.model_dump(),
-            output_schema_id=output_schema_id,
-            input_schema=config_in.input_schema,
             length_budget=(
                 config_in.length_budget.model_dump() if config_in.length_budget else None
             ),
-            interaction_mode=config_in.interaction_mode,
-            user_question_policy=config_in.user_question_policy,
-            fallback_use_case=config_in.fallback_use_case,
             feature_template_state=config_in.feature_template_state.value,
             subfeature_template_state=config_in.subfeature_template_state.value,
             persona_state=config_in.persona_state.value,
@@ -124,28 +116,12 @@ class AssemblyAdminService:
         await self.session.flush()
         return new_config
 
-    async def _resolve_output_schema_id(self, raw_ref: str | None) -> uuid.UUID | None:
-        """Resolve un alias admin legacy vers la FK canonique du schema de sortie."""
-        if raw_ref is None:
-            return None
-        try:
-            return uuid.UUID(str(raw_ref))
-        except (TypeError, ValueError):
-            stmt = (
-                select(LlmOutputSchemaModel.id)
-                .where(LlmOutputSchemaModel.name == str(raw_ref))
-                .order_by(LlmOutputSchemaModel.version.desc())
-            )
-            res = await self._execute(stmt)
-            return res.scalars().first()
-
     async def _validate_provider_support(self, config: PromptAssemblyConfigModel) -> str:
         """
         Validates that the provider for this config is nominally supported.
         Returns the resolved provider name.
         """
-        provider = "openai"  # Default
-
+        provider = "openai"
         if config.execution_profile_ref:
             from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
@@ -156,10 +132,6 @@ class AssemblyAdminService:
             profile_provider = res_p.scalar_one_or_none()
             if profile_provider:
                 provider = profile_provider
-        else:
-            # Check if provider is explicitly in execution_config
-            # (even if not in current admin_models)
-            provider = config.execution_config.get("provider", "openai")
 
         if not is_provider_supported(provider):
             log_governance_event(

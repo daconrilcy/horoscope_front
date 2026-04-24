@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 
-from app.domain.llm.configuration.admin_models import ExecutionConfigAdmin, PromptAssemblyConfig
+from app.domain.llm.configuration.admin_models import PromptAssemblyConfig
 from app.domain.llm.configuration.assembly_admin_service import AssemblyAdminService
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.configuration.assembly_resolver import (
@@ -19,12 +19,42 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,
 )
+
+
+def _create_execution_profile(
+    db,
+    *,
+    feature: str | None,
+    subfeature: str | None = None,
+    plan: str | None = None,
+    model: str = "gpt-4o",
+    provider: str = "openai",
+    created_by: str = "test",
+    status: PromptStatus = PromptStatus.PUBLISHED,
+) -> LlmExecutionProfileModel:
+    """Crée un profil d'exécution canonique pour les tests d'orchestration."""
+
+    profile = LlmExecutionProfileModel(
+        id=uuid.uuid4(),
+        name=f"profile-{feature or 'generic'}-{subfeature or 'none'}-{plan or 'none'}",
+        feature=feature,
+        subfeature=subfeature,
+        plan=plan,
+        provider=provider,
+        model=model,
+        status=status,
+        created_by=created_by,
+    )
+    db.add(profile)
+    db.flush()
+    return profile
 
 
 @pytest.mark.asyncio
@@ -35,17 +65,14 @@ async def test_assembly_resolution_basic(db):
         use_case_key="feature_test",
         developer_prompt="FEATURE PROMPT {{locale}}",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
     db.add(feature_v)
 
-    # M2 Fix: Need UseCaseConfig to resolve safety_profile
     uc_config = LlmUseCaseConfigModel(
         key="feature_test",
         display_name="Feature Test",
         description="test",
-        safety_profile="astrology",
     )
     db.add(uc_config)
 
@@ -58,6 +85,7 @@ async def test_assembly_resolution_basic(db):
         enabled=True,
     )
     db.add(persona)
+    profile = _create_execution_profile(db, feature="feature_test", model="gpt-4o")
     db.commit()
 
     config = PromptAssemblyConfigModel(
@@ -65,7 +93,7 @@ async def test_assembly_resolution_basic(db):
         locale="fr-FR",
         feature_template_ref=feature_v.id,
         persona_ref=persona.id,
-        execution_config={"model": "gpt-4o", "temperature": 0.5, "max_output_tokens": 100},
+        execution_profile_ref=profile.id,
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )
@@ -82,7 +110,7 @@ async def test_assembly_resolution_basic(db):
     resolved = resolve_assembly(resolved_db)
     assert resolved.feature_template_prompt == "FEATURE PROMPT {{locale}}"
     assert "Adopte un ton direct" in resolved.persona_block
-    assert resolved.execution_config.temperature == 0.5
+    assert resolved.execution_profile_ref == profile.id
     assert "interprétation astrologique" in resolved.policy_layer_content
     # 4. Test Assembly concatenation
     full_prompt = assemble_developer_prompt(resolved, resolved_db)
@@ -102,20 +130,13 @@ def test_validate_placeholders_logic():
     # Invalid for natal
     assert validate_placeholders("Theme {{situation}}", "natal") == ["situation"]
 
-
-def test_execution_config_admin_accepts_reasoning_model_without_temperature():
-    config = ExecutionConfigAdmin(model="gpt-5", max_output_tokens=32000, reasoning_effort="low")
-    assert config.temperature is None
-
-
 @pytest.mark.asyncio
-async def test_resolve_assembly_clears_legacy_temperature_for_reasoning_model(db):
+async def test_resolve_assembly_keeps_execution_profile_ref_for_reasoning_model(db):
     feature_v = LlmPromptVersionModel(
         id=uuid.uuid4(),
         use_case_key="reasoning_feature",
         developer_prompt="FEATURE PROMPT {{locale}}",
         status=PromptStatus.PUBLISHED,
-        model="gpt-5",
         created_by="test",
     )
     db.add(feature_v)
@@ -124,21 +145,16 @@ async def test_resolve_assembly_clears_legacy_temperature_for_reasoning_model(db
         key="reasoning_feature",
         display_name="Reasoning Feature",
         description="test",
-        safety_profile="astrology",
     )
     db.add(uc_config)
+    profile = _create_execution_profile(db, feature="reasoning_feature", model="gpt-5")
     db.commit()
 
     config = PromptAssemblyConfigModel(
         feature="reasoning_feature",
         locale="fr-FR",
         feature_template_ref=feature_v.id,
-        execution_config={
-            "model": "gpt-5",
-            "temperature": 0.7,
-            "max_output_tokens": 32000,
-            "reasoning_effort": "low",
-        },
+        execution_profile_ref=profile.id,
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )
@@ -150,9 +166,7 @@ async def test_resolve_assembly_clears_legacy_temperature_for_reasoning_model(db
 
     resolved = resolve_assembly(resolved_db)
 
-    assert resolved.execution_config.model == "gpt-5"
-    assert resolved.execution_config.temperature is None
-    assert resolved.execution_config.reasoning_effort == "low"
+    assert resolved.execution_profile_ref == profile.id
 
 
 @pytest.mark.asyncio
@@ -163,10 +177,16 @@ async def test_assembly_waterfall_fallback(db):
         use_case_key="f",
         developer_prompt="GENERIC",
         status=PromptStatus.PUBLISHED,
-        model="m",
         created_by="t",
     )
     db.add(fv)
+    generic_profile = _create_execution_profile(db, feature="feat", model="m")
+    specific_profile = _create_execution_profile(
+        db,
+        feature="feat",
+        subfeature="sub",
+        model="m-spec",
+    )
     db.commit()
 
     c_gen = PromptAssemblyConfigModel(
@@ -175,7 +195,7 @@ async def test_assembly_waterfall_fallback(db):
         plan=None,
         locale="fr-FR",
         feature_template_ref=fv.id,
-        execution_config={"model": "m"},
+        execution_profile_ref=generic_profile.id,
         status=PromptStatus.PUBLISHED,
         created_by="t",
     )
@@ -185,7 +205,7 @@ async def test_assembly_waterfall_fallback(db):
         plan=None,
         locale="fr-FR",
         feature_template_ref=fv.id,
-        execution_config={"model": "m-spec"},
+        execution_profile_ref=specific_profile.id,
         status=PromptStatus.PUBLISHED,
         created_by="t",
     )
@@ -196,11 +216,11 @@ async def test_assembly_waterfall_fallback(db):
 
     # Precise match
     res1 = await registry.get_active_config("feat", "sub", "anyplan", "fr-FR")
-    assert res1.execution_config["model"] == "m-spec"
+    assert res1.execution_profile.model == "m-spec"
 
     # Fallback to generic
     res2 = await registry.get_active_config("feat", "other", None, "fr-FR")
-    assert res2.execution_config["model"] == "m"
+    assert res2.execution_profile.model == "m"
 
 
 @pytest.mark.asyncio
@@ -211,17 +231,17 @@ async def test_gateway_uses_assembly(db):
         use_case_key="feat_gw",
         developer_prompt="FROM ASSEMBLY",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="t",
     )
     db.add(fv)
+    profile = _create_execution_profile(db, feature="feat_gw", model="gpt-4o-assembly")
     db.commit()
 
     config = PromptAssemblyConfigModel(
         feature="feat_gw",
         locale="fr-FR",
         feature_template_ref=fv.id,
-        execution_config={"model": "gpt-4o-assembly", "max_output_tokens": 500},
+        execution_profile_ref=profile.id,
         status=PromptStatus.PUBLISHED,
         created_by="t",
     )
@@ -251,7 +271,6 @@ async def test_gateway_assembly_sets_default_persona_name_when_missing(db):
         use_case_key="feat_persona",
         developer_prompt="Persona {{persona_name}}",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="t",
     )
     db.add(feature_v)
@@ -260,16 +279,16 @@ async def test_gateway_assembly_sets_default_persona_name_when_missing(db):
         key="feat_persona",
         display_name="Feature Persona",
         description="test",
-        safety_profile="astrology",
     )
     db.add(uc_config)
+    profile = _create_execution_profile(db, feature="feat_persona", model="gpt-4o")
     db.commit()
 
     config = PromptAssemblyConfigModel(
         feature="feat_persona",
         locale="fr-FR",
         feature_template_ref=feature_v.id,
-        execution_config={"model": "gpt-4o"},
+        execution_profile_ref=profile.id,
         status=PromptStatus.PUBLISHED,
         created_by="t",
     )
@@ -300,10 +319,16 @@ async def test_gateway_assembly_priority_id(db):
         use_case_key="priority",
         developer_prompt="PROMPT",
         status=PromptStatus.PUBLISHED,
-        model="m",
         created_by="t",
     )
     db.add(fv)
+    profile_1 = _create_execution_profile(db, feature="priority", model="m1")
+    profile_2 = _create_execution_profile(
+        db,
+        feature="priority",
+        model="m2",
+        status=PromptStatus.DRAFT,
+    )
     db.commit()
 
     c1 = PromptAssemblyConfigModel(
@@ -311,7 +336,7 @@ async def test_gateway_assembly_priority_id(db):
         feature="priority",
         status=PromptStatus.PUBLISHED,
         feature_template_ref=fv.id,
-        execution_config={"model": "m1"},
+        execution_profile_ref=profile_1.id,
         created_by="t",
     )
     c2 = PromptAssemblyConfigModel(
@@ -319,7 +344,7 @@ async def test_gateway_assembly_priority_id(db):
         feature="priority",
         status=PromptStatus.DRAFT,  # Even draft works with ID
         feature_template_ref=fv.id,
-        execution_config={"model": "m2"},
+        execution_profile_ref=profile_2.id,
         created_by="t",
     )
     db.add_all([c1, c2])
@@ -355,10 +380,16 @@ async def test_assembly_rollback_with_hot_cache(db):
         use_case_key="rb",
         developer_prompt="P",
         status=PromptStatus.PUBLISHED,
-        model="m",
         created_by="t",
     )
     db.add(fv)
+    profile_1 = _create_execution_profile(
+        db,
+        feature="rb",
+        model="m1",
+        status=PromptStatus.ARCHIVED,
+    )
+    profile_2 = _create_execution_profile(db, feature="rb", model="m2")
     db.commit()
 
     c1 = PromptAssemblyConfigModel(
@@ -366,7 +397,7 @@ async def test_assembly_rollback_with_hot_cache(db):
         feature="rb",
         locale="fr-FR",
         feature_template_ref=fv.id,
-        execution_config={"model": "m1"},
+        execution_profile_ref=profile_1.id,
         status=PromptStatus.ARCHIVED,
         created_by="t",
     )
@@ -375,7 +406,7 @@ async def test_assembly_rollback_with_hot_cache(db):
         feature="rb",
         locale="fr-FR",
         feature_template_ref=fv.id,
-        execution_config={"model": "m2"},
+        execution_profile_ref=profile_2.id,
         status=PromptStatus.PUBLISHED,
         created_by="t",
     )
@@ -386,14 +417,14 @@ async def test_assembly_rollback_with_hot_cache(db):
 
     # 2. Heat cache
     res_heat = await registry.get_active_config("rb", None, None, "fr-FR")
-    assert res_heat.execution_config["model"] == "m2"
+    assert res_heat.execution_profile.model == "m2"
 
     # 3. Rollback to c1
     await registry.rollback_config("rb", None, None, "fr-FR", c1.id)
 
     # 4. Verify DB and Cache (cache should be invalidated)
     res_final = await registry.get_active_config("rb", None, None, "fr-FR")
-    assert res_final.execution_config["model"] == "m1"
+    assert res_final.execution_profile.model == "m1"
     assert res_final.id == c1.id
 
 
@@ -404,7 +435,6 @@ async def test_assembly_admin_validate_all_templates(db):
         use_case_key="val_feat",
         developer_prompt="Valid {{locale}}",
         status=PromptStatus.PUBLISHED,
-        model="m",
         created_by="t",
     )
     sv_invalid = LlmPromptVersionModel(
@@ -412,7 +442,6 @@ async def test_assembly_admin_validate_all_templates(db):
         use_case_key="val_sub",
         developer_prompt="Invalid {{forbidden}}",
         status=PromptStatus.PUBLISHED,
-        model="m",
         created_by="t",
     )
     db.add_all([fv_valid, sv_invalid])
@@ -423,7 +452,6 @@ async def test_assembly_admin_validate_all_templates(db):
         feature="guidance",
         feature_template_ref=fv_valid.id,
         subfeature_template_ref=sv_invalid.id,
-        execution_config=ExecutionConfigAdmin(model="gpt-4o"),
     )
 
     # Should raise error because of subfeature_template_ref
@@ -435,46 +463,43 @@ async def test_assembly_admin_validate_all_templates(db):
 async def test_gateway_assembly_chat_mode(db):
     fv = LlmPromptVersionModel(
         id=uuid.uuid4(),
-        use_case_key="chat",
+        use_case_key="chat_astrologer",
         developer_prompt="CHAT PROMPT {{last_user_msg}}",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="t",
     )
     db.add(fv)
-    db.commit()
-
+    profile = _create_execution_profile(
+        db,
+        feature="chat",
+        subfeature="astrologer",
+        plan="free",
+        model="gpt-4o",
+        created_by="t",
+    )
     config = PromptAssemblyConfigModel(
         feature="chat",
+        subfeature="astrologer",
+        plan="free",
         locale="fr-FR",
         feature_template_ref=fv.id,
-        execution_config={"model": "gpt-4o"},
-        interaction_mode="chat",
-        user_question_policy="required",
+        execution_profile_ref=profile.id,
         status=PromptStatus.PUBLISHED,
         created_by="t",
     )
     db.add(config)
-
-    # Story 66.35: must have an ExecutionProfile for supported features
-    from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
-
-    profile = LlmExecutionProfileModel(
-        name="test chat profile",
-        feature="chat",
-        model="gpt-4o",
-        provider="openai",
-        status=PromptStatus.PUBLISHED,
-        created_by="t",
-    )
-    db.add(profile)
     db.commit()
 
     gateway = LLMGateway()
 
     # 1. Test missing question triggers InputValidationError (policy=required)
     req_fail = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="chat", feature="chat"),
+        user_input=ExecutionUserInput(
+            use_case="chat_astrologer",
+            feature="chat",
+            subfeature="astrologer",
+            plan="free",
+        ),
         request_id="r1",
         trace_id="t1",
     )
@@ -483,7 +508,13 @@ async def test_gateway_assembly_chat_mode(db):
 
     # 2. Test successful plan resolution with chat mode
     req_ok = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="chat", feature="chat", message="Hello"),
+        user_input=ExecutionUserInput(
+            use_case="chat_astrologer",
+            feature="chat",
+            subfeature="astrologer",
+            plan="free",
+            message="Hello",
+        ),
         context=ExecutionContext(history=[ExecutionMessage(role="user", content="Hi")]),
         request_id="r2",
         trace_id="t2",

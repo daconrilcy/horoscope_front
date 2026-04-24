@@ -6,13 +6,13 @@ from typing import Optional
 from pydantic import BaseModel
 
 from app.domain.llm.configuration.admin_models import (
-    ExecutionConfigAdmin,
     LengthBudget,
     PlaceholderInfo,
     PlaceholderResolutionStatus,
     PromptAssemblyPreview,
     PromptAssemblyTarget,
     ResolvedAssembly,
+    RuntimeSettingsAdmin,
 )
 from app.domain.llm.governance.prompt_governance_registry import (
     PLACEHOLDER_ALLOWLIST,
@@ -20,7 +20,6 @@ from app.domain.llm.governance.prompt_governance_registry import (
 )
 from app.domain.llm.prompting.personas import compose_persona_block
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
-from app.domain.llm.runtime.contracts import is_reasoning_model
 from app.domain.llm.runtime.policy import get_hard_policy
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
 
@@ -152,12 +151,39 @@ def build_assembly_preview(
         template_source=resolved.template_source,
         rendered_developer_prompt=rendered_prompt,
         hard_policy_block=hard_policy,
-        output_contract_ref=resolved.output_contract_ref,
+        output_schema_id=str(resolved.output_schema_id) if resolved.output_schema_id else None,
         available_variables=variables,
         placeholder_resolution_status=resolution_statuses,
-        resolved_execution_config=resolved.execution_config,
+        resolved_runtime_settings=_build_runtime_settings(config),
         length_budget=resolved.length_budget,
         draft_preview=(config.status != PromptStatus.PUBLISHED),
+    )
+
+
+def _build_runtime_settings(config: PromptAssemblyConfigModel) -> RuntimeSettingsAdmin:
+    """Construit une vue runtime nominale strictement derivee du profil d execution."""
+    profile = config.execution_profile
+    if profile is None:
+        raise ValueError(
+            "A published assembly must reference an execution profile."
+        )
+
+    reasoning_effort = (
+        None if profile.reasoning_profile == "off" else str(profile.reasoning_profile)
+    )
+    verbosity = {
+        "balanced": "normal",
+        "concise": "concise",
+        "detailed": "verbose",
+    }.get(str(profile.verbosity_profile), "normal")
+
+    return RuntimeSettingsAdmin(
+        model=profile.model,
+        temperature=None,
+        max_output_tokens=profile.max_output_tokens or 2048,
+        timeout_seconds=profile.timeout_seconds,
+        reasoning_effort=reasoning_effort,
+        verbosity=verbosity,
     )
 
 
@@ -197,8 +223,6 @@ def resolve_assembly(
 
     # 3. Resolve Plan Rules (AC11)
     plan_rules_content = None
-    exec_dict = dict(config.execution_config or {})
-
     if config.is_plan_rules_enabled() and config.plan_rules_ref:
         rule = PLAN_RULES_REGISTRY.get(config.plan_rules_ref)
         if rule:
@@ -214,19 +238,6 @@ def resolve_assembly(
                     v.violation_type,
                     v.excerpt,
                 )
-
-            if rule.max_output_tokens_override is not None:
-                # AC11: Constraint max_output_tokens downwards
-                current_max = exec_dict.get("max_output_tokens", 2048)
-                exec_dict["max_output_tokens"] = min(current_max, rule.max_output_tokens_override)
-
-    # 4. Execution Config (AC5)
-    # Backward compatibility: legacy persisted configs may still contain
-    # a temperature for reasoning models, which is now forbidden.
-    if is_reasoning_model(str(exec_dict.get("model", ""))):
-        exec_dict["temperature"] = None
-
-    execution_config = ExecutionConfigAdmin(**exec_dict)
 
     # 5. Policy Layer (Architectural Note 1)
     # M2 Fix: Default safety_profile to astrology
@@ -248,9 +259,8 @@ def resolve_assembly(
         persona_ref=config.persona_ref,
         persona_block=persona_block,
         plan_rules_content=plan_rules_content,
-        execution_config=execution_config,
-        output_contract_ref=config.output_contract_ref,
-        input_schema=config.input_schema,
+        execution_profile_ref=config.execution_profile_ref,
+        output_schema_id=config.output_schema_id,
         length_budget=length_budget,
         context_quality=context_quality,
         policy_layer_content=policy_layer_content,

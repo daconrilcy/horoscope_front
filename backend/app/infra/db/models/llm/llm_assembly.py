@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import uuid
 from enum import Enum
-from typing import ClassVar, Optional
+from typing import Optional
 
 from sqlalchemy import (
     JSON,
@@ -19,14 +19,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, PublishedAtMixin
-from app.infra.db.models.llm.llm_compatibility import ASSEMBLY_COMPATIBILITY_SPECS
-from app.infra.db.models.llm.llm_constraints import allowed_values_check
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_field_lengths import (
     FEATURE_LENGTH,
     LOCALE_LENGTH,
     PLAN_LENGTH,
-    SHORT_STATUS_LENGTH,
     SUBFEATURE_LENGTH,
 )
 from app.infra.db.models.llm.llm_indexes import published_unique_index
@@ -48,28 +45,6 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
     """Represente une configuration d assemblage publiee ou brouillon pour une cible LLM."""
 
     __tablename__ = "llm_assembly_configs"
-    legacy_runtime_compatibility_fields: ClassVar[frozenset[str]] = frozenset(
-        {
-            "execution_config",
-            "interaction_mode",
-            "user_question_policy",
-            "input_schema",
-            "output_contract_ref",
-            "fallback_use_case",
-        }
-    )
-    legacy_runtime_compatibility_specs: ClassVar[tuple] = ASSEMBLY_COMPATIBILITY_SPECS
-    profile_controlled_execution_config_fields: ClassVar[frozenset[str]] = frozenset(
-        {
-            "model",
-            "provider",
-            "temperature",
-            "timeout_seconds",
-            "max_output_tokens",
-            "reasoning_effort",
-            "verbosity",
-        }
-    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     feature: Mapped[str] = mapped_column(String(FEATURE_LENGTH), index=True)
@@ -95,38 +70,31 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
         ForeignKey("llm_output_schemas.id", ondelete="SET NULL"), nullable=True
     )
     plan_rules_ref: Mapped[Optional[str]] = mapped_column(String(PLAN_LENGTH), nullable=True)
-
-    execution_config: Mapped[dict] = mapped_column(JSON)
-    input_schema: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     length_budget: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    interaction_mode: Mapped[str] = mapped_column(String(SHORT_STATUS_LENGTH), default="structured")
-    user_question_policy: Mapped[str] = mapped_column(String(SHORT_STATUS_LENGTH), default="none")
-    fallback_use_case: Mapped[Optional[str]] = mapped_column(String(FEATURE_LENGTH), nullable=True)
-
     feature_template_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
+        String(32),
         nullable=False,
         default=AssemblyComponentResolutionState.ENABLED.value,
     )
     subfeature_template_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
+        String(32),
         nullable=False,
         default=AssemblyComponentResolutionState.ABSENT.value,
     )
     persona_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
+        String(32),
         nullable=False,
         default=AssemblyComponentResolutionState.INHERITED.value,
     )
     plan_rules_state: Mapped[AssemblyComponentResolutionState] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
+        String(32),
         nullable=False,
         default=AssemblyComponentResolutionState.ABSENT.value,
     )
 
     status: Mapped[PromptStatus] = mapped_column(
-        String(SHORT_STATUS_LENGTH), index=True, default=PromptStatus.DRAFT
+        String(32), index=True, default=PromptStatus.DRAFT
     )
 
     @validates("plan_rules_ref")
@@ -175,23 +143,6 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
     output_schema: Mapped[Optional[LlmOutputSchemaModel]] = relationship(
         "LlmOutputSchemaModel", foreign_keys=[output_schema_id], back_populates="assemblies"
     )
-
-    @property
-    def output_contract_ref(self) -> Optional[str]:
-        """Expose l alias legacy textuel a partir de la cle etrangere canonique."""
-        if self.output_schema_id is None:
-            return None
-        return str(self.output_schema_id)
-
-    @output_contract_ref.setter
-    def output_contract_ref(self, value: Optional[str]) -> None:
-        """Accepte transitoirement l alias legacy en le normalisant vers la FK canonique."""
-        if value is None:
-            self.output_schema_id = None
-            return
-        if not str(value).strip():
-            raise ValueError("output_contract_ref must not be empty when provided.")
-        self.output_schema_id = uuid.UUID(str(value))
 
     def component_resolution_states(self) -> dict[str, AssemblyComponentResolutionState]:
         """Expose la semantique des composants optionnels sans ambiguite booleenne."""
@@ -278,36 +229,6 @@ class PromptAssemblyConfigModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin
             func.coalesce(plan, ""),
             "locale",
             status_column=status,
-        ),
-        allowed_values_check(
-            "ck_llm_assembly_configs_interaction_mode",
-            "interaction_mode",
-            ("structured", "chat"),
-        ),
-        allowed_values_check(
-            "ck_llm_assembly_configs_user_question_policy",
-            "user_question_policy",
-            ("none", "optional", "required"),
-        ),
-        allowed_values_check(
-            "ck_llm_assembly_configs_feature_template_state",
-            "feature_template_state",
-            ("absent", "inherited", "enabled", "disabled"),
-        ),
-        allowed_values_check(
-            "ck_llm_assembly_configs_subfeature_template_state",
-            "subfeature_template_state",
-            ("absent", "inherited", "enabled", "disabled"),
-        ),
-        allowed_values_check(
-            "ck_llm_assembly_configs_persona_state",
-            "persona_state",
-            ("absent", "inherited", "enabled", "disabled"),
-        ),
-        allowed_values_check(
-            "ck_llm_assembly_configs_plan_rules_state",
-            "plan_rules_state",
-            ("absent", "inherited", "enabled", "disabled"),
         ),
         Index("ix_llm_assembly_configs_created_at", "created_at"),
     )

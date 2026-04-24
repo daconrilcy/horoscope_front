@@ -180,7 +180,7 @@ class UseCaseConfig(BaseModel):
     input_schema: Optional[Dict[str, Any]] = None
     output_schema_id: Optional[str] = None
     required_prompt_placeholders: List[str] = Field(default_factory=list)
-    fallback_use_case: Optional[str] = None
+    fallback_target_use_case: Optional[str] = None
     reasoning_effort: Optional[str] = None
     verbosity: Optional[str] = None
 

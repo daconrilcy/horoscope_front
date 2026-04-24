@@ -222,8 +222,6 @@ def test_llm_finite_domains_are_database_constrained() -> None:
         "ck_llm_execution_profiles_tool_mode",
     }.issubset(execution_checks)
     assert {
-        "ck_llm_assembly_configs_interaction_mode",
-        "ck_llm_assembly_configs_user_question_policy",
         "ck_llm_assembly_configs_feature_template_state",
         "ck_llm_assembly_configs_subfeature_template_state",
         "ck_llm_assembly_configs_persona_state",
@@ -232,7 +230,6 @@ def test_llm_finite_domains_are_database_constrained() -> None:
     assert "ck_llm_canonical_consumption_granularity" in consumption_checks
     assert {
         "ck_llm_execution_profiles_provider",
-        "ck_llm_call_logs_provider",
         "ck_llm_call_logs_environment",
     }.issubset(call_log_checks | execution_checks)
     assert {
@@ -255,7 +252,6 @@ def test_llm_shared_text_fields_use_homogeneous_lengths() -> None:
 
     assert execution_columns["provider"] == 32
     assert execution_columns["model"] == 100
-    assert call_log_columns["provider_compat"] == 32
     assert call_log_columns["model"] == 100
 
     assert execution_columns["feature"] == 64
@@ -301,15 +297,15 @@ def test_call_log_operational_metadata_is_split_from_base_log() -> None:
     assert "ix_llm_call_log_operational_metadata_snapshot" in indexes
 
 
-def test_call_log_legacy_provider_column_is_explicitly_named_as_compatibility() -> None:
-    """Verifie que le provider legacy des logs n'utilise plus le nom ambigu `provider`."""
+def test_call_log_no_longer_persists_legacy_provider_columns() -> None:
+    """Verifie que le log coeur ne persiste plus aucun provider ambigu ou legacy."""
     db = open_app_db_session()
     try:
         columns = {column["name"] for column in inspect(db.get_bind()).get_columns("llm_call_logs")}
     finally:
         db.close()
 
-    assert "provider_compat" in columns
+    assert "provider_compat" not in columns
     assert "provider" not in columns
     assert "executed_provider" not in columns
     assert "manifest_entry_id" not in columns
@@ -335,11 +331,26 @@ def test_call_log_operational_compatibility_fields_do_not_repollute_core_table()
     }.isdisjoint(columns)
 
 
-def test_call_log_operational_compatibility_fields_are_proxy_backed() -> None:
-    """Verifie que les alias de compatibilite ecrivent dans la relation metadata dediee."""
+def test_call_log_requires_canonical_provider_metadata_only() -> None:
+    """Verifie que le log refuse l alias `provider=` et ecrit via les metadata canoniques."""
+    with pytest.raises(TypeError, match="provider"):
+        LlmCallLogModel(
+            use_case="story-70-18",
+            provider="openai",
+            model="gpt-4o",
+            latency_ms=120,
+            tokens_in=10,
+            tokens_out=20,
+            cost_usd_estimated=0.01,
+            validation_status="valid",
+            request_id="req-story-70-18",
+            trace_id="trace-story-70-18",
+            input_hash="a" * 64,
+            environment="test",
+        )
+
     call_log = LlmCallLogModel(
         use_case="story-70-18",
-        provider="openai",
         model="gpt-4o",
         latency_ms=120,
         tokens_in=10,
@@ -363,7 +374,6 @@ def test_call_log_operational_compatibility_fields_are_proxy_backed() -> None:
     assert call_log.executed_provider == "openai"
     assert call_log.breaker_state == "closed"
     assert call_log.active_snapshot_version == "snapshot-v1"
-    assert call_log.provider_compat == "openai"
     assert "pipeline_kind" not in call_log.__dict__
     assert "requested_provider" not in call_log.__dict__
     assert "executed_provider" not in call_log.__dict__

@@ -22,7 +22,7 @@ class CanonicalUseCaseContract(BaseModel):
     output_schema_name: str | None = None
     persona_strategy: str = "optional"
     safety_profile: str = "astrology"
-    fallback_use_case_key: str | None = None
+    fallback_target_key: str | None = None
     required_prompt_placeholders: list[str] = Field(default_factory=list)
     interaction_mode: str = "structured"
     user_question_policy: str = "none"
@@ -184,7 +184,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Analyse approfondie du thème de naissance.",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -235,7 +235,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         display_name="Guidance Événementielle",
         description="Analyse d'un événement spécifique via l'astrologie.",
         output_schema_name="AstroResponse_v1",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "event_description"],
         interaction_mode="chat",
         user_question_policy="required",
@@ -273,7 +273,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Portrait psychologique astrologique (dynamique, non clinique).",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -290,7 +290,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Schémas répétitifs, déclencheurs et leviers d'intégration.",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -307,7 +307,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Style de leadership, motivation et environnement idéal.",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -324,7 +324,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Inspiration, blocages créatifs et pratiques de ressourcement.",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -341,7 +341,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Besoins affectifs, gestion du conflit et style d'engagement.",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -358,7 +358,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Place dans le collectif, collaboration et énergie sociale.",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -375,7 +375,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Rapport aux valeurs, à la sécurité et aux limites personnelles.",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -392,7 +392,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         description="Zone de confort, croissance et étapes d'intégration.",
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["chart_json", "persona_name"],
         input_schema={
             "type": "object",
@@ -408,7 +408,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         display_name="Guidance Quotidienne",
         description="Conseils astrologiques pour la journée.",
         output_schema_name="AstroResponse_v1",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["natal_chart_summary"],
         interaction_mode="chat",
         user_question_policy="optional",
@@ -418,7 +418,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         display_name="Guidance Hebdomadaire",
         description="Conseils astrologiques pour la semaine.",
         output_schema_name="AstroResponse_v1",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["natal_chart_summary"],
         interaction_mode="chat",
     ),
@@ -427,7 +427,7 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         display_name="Guidance Contextuelle",
         description="Lecture astrologique prudente pour une situation ou consultation thématique.",
         output_schema_name="AstroResponse_v1",
-        fallback_use_case_key="natal_interpretation_short",
+        fallback_target_key="natal_interpretation_short",
         required_prompt_placeholders=["situation", "objective", "natal_chart_summary"],
         interaction_mode="chat",
         user_question_policy="required",

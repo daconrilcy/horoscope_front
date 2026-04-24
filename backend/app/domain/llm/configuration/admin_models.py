@@ -142,14 +142,7 @@ class LlmPromptVersion(BaseModel):
     use_case_key: str
     status: PromptStatus
     developer_prompt: str
-    model: str
-    temperature: float
-    max_output_tokens: int
-    fallback_use_case_key: Optional[str] = None
     use_case_audit: AdminUseCaseAudit | None = None
-    fallback_use_case_audit: AdminUseCaseAudit | None = None
-    reasoning_effort: Optional[str] = None
-    verbosity: Optional[str] = None
     created_by: str
     created_at: datetime
     published_at: Optional[datetime] = None
@@ -163,18 +156,13 @@ class LlmPromptVersion(BaseModel):
     @model_validator(mode="after")
     def populate_admin_audit(self) -> "LlmPromptVersion":
         self.use_case_audit = build_admin_use_case_audit(self.use_case_key)
-        self.fallback_use_case_audit = build_admin_use_case_audit(self.fallback_use_case_key)
         return self
 
 
 class LlmPromptVersionCreate(BaseModel):
     developer_prompt: str
-    model: str
-    temperature: Optional[float] = 0.7
-    max_output_tokens: int = 2048
-    fallback_use_case_key: Optional[str] = None
-    reasoning_effort: Optional[str] = None
-    verbosity: Optional[str] = None
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class LlmUseCaseConfig(BaseModel):
@@ -189,21 +177,17 @@ class LlmUseCaseConfig(BaseModel):
     user_question_policy: str = "none"
     safety_profile: str = "astrology"
     required_prompt_placeholders: List[str] = Field(default_factory=list)
-    fallback_use_case_key: Optional[str] = None
-    allowed_persona_ids: List[str] = Field(default_factory=list)
     eval_fixtures_path: Optional[str] = None
     eval_failure_threshold: Optional[float] = None
     golden_set_path: Optional[str] = None
     active_prompt_version_id: Optional[uuid.UUID] = None
     use_case_audit: AdminUseCaseAudit | None = None
-    fallback_use_case_audit: AdminUseCaseAudit | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="after")
     def populate_admin_audit(self) -> "LlmUseCaseConfig":
         self.use_case_audit = build_admin_use_case_audit(self.key)
-        self.fallback_use_case_audit = build_admin_use_case_audit(self.fallback_use_case_key)
         return self
 
 
@@ -221,17 +205,15 @@ class PromptAssemblyTarget(BaseModel):
         return self
 
 
-class ExecutionConfigAdmin(BaseModel):
+class RuntimeSettingsAdmin(BaseModel):
     model: str
     temperature: Optional[float] = None
     max_output_tokens: int = 2048
     timeout_seconds: int = 30
     reasoning_effort: Optional[Literal["low", "medium", "high"]] = None
     verbosity: Optional[Literal["verbose", "normal", "concise"]] = None
-    fallback_use_case: Optional[str] = None
-
     @model_validator(mode="after")
-    def validate_provider_params(self) -> "ExecutionConfigAdmin":
+    def validate_provider_params(self) -> "RuntimeSettingsAdmin":
         is_reasoning = is_reasoning_model(self.model)
         if is_reasoning:
             if self.temperature is not None:
@@ -252,14 +234,9 @@ class PromptAssemblyConfig(BaseModel):
     subfeature_template_ref: Optional[uuid.UUID] = None
     persona_ref: Optional[uuid.UUID] = None
     execution_profile_ref: Optional[uuid.UUID] = None
+    output_schema_id: Optional[uuid.UUID] = None
     plan_rules_ref: Optional[str] = None
-    execution_config: ExecutionConfigAdmin
-    output_contract_ref: Optional[str] = None
-    input_schema: Optional[Dict[str, Any]] = None
     length_budget: Optional[LengthBudget] = None
-    interaction_mode: str = "structured"
-    user_question_policy: str = "none"
-    fallback_use_case: Optional[str] = None
     feature_template_state: AssemblyComponentResolutionState = (
         AssemblyComponentResolutionState.ENABLED
     )
@@ -273,6 +250,8 @@ class PromptAssemblyConfig(BaseModel):
     persona_enabled: bool = True
     plan_rules_enabled: bool = True
     published_at: Optional[datetime] = None
+
+    model_config = ConfigDict(extra="forbid")
 
     @model_validator(mode="after")
     def normalize_taxonomy(self) -> "PromptAssemblyConfig":
@@ -337,9 +316,8 @@ class ResolvedAssembly(BaseModel):
     persona_ref: Optional[uuid.UUID] = None
     persona_block: Optional[str] = None
     plan_rules_content: Optional[str] = None
-    execution_config: ExecutionConfigAdmin
-    output_contract_ref: Optional[str] = None
-    input_schema: Optional[Dict[str, Any]] = None
+    execution_profile_ref: Optional[uuid.UUID] = None
+    output_schema_id: Optional[uuid.UUID] = None
     length_budget: Optional[LengthBudget] = None
     context_quality: str = "full"
     context_quality_instruction_injected: bool = False
@@ -375,10 +353,10 @@ class PromptAssemblyPreview(BaseModel):
     template_source: str
     rendered_developer_prompt: str
     hard_policy_block: str
-    output_contract_ref: Optional[str] = None
+    output_schema_id: Optional[str] = None
     available_variables: List[PlaceholderInfo]
     placeholder_resolution_status: List[PlaceholderResolutionStatus] = Field(default_factory=list)
-    resolved_execution_config: ExecutionConfigAdmin
+    resolved_runtime_settings: RuntimeSettingsAdmin
     length_budget: Optional[LengthBudget] = None
     draft_preview: bool = True
 
@@ -465,7 +443,6 @@ class ResolvedExecutionProfile(BaseModel):
 __all__ = [
     "AdminUseCaseAudit",
     "DraftPublishResponse",
-    "ExecutionConfigAdmin",
     "LengthBudget",
     "LlmExecutionProfile",
     "LlmExecutionProfileCreate",
@@ -483,6 +460,7 @@ __all__ = [
     "PromptAssemblyTarget",
     "ResolvedAssembly",
     "ResolvedExecutionProfile",
+    "RuntimeSettingsAdmin",
     "SectionBudget",
     "build_admin_use_case_audit",
 ]

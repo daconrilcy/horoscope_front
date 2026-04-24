@@ -302,31 +302,21 @@ def _repair_email_logs_primary_key() -> bool:
 
 
 def _repair_llm_call_logs_columns() -> bool:
-    """Répare uniquement la colonne legacy encore tolérée sur `llm_call_logs`."""
+    """Nettoie les reliquats legacy connus sur `llm_call_logs` sans les recréer."""
     inspector = inspect(engine)
     if "llm_call_logs" not in inspector.get_table_names():
         return False
 
     columns = _table_columns("llm_call_logs")
-    if "provider_compat" in columns:
+    if "provider" not in columns and "provider_compat" not in columns:
         return False
 
     with engine.begin() as connection:
+        logger.warning("local_sqlite_schema_repair_llm_call_logs legacy_provider_columns_detected")
         if "provider" in columns:
-            logger.warning(
-                "local_sqlite_schema_repair_llm_call_logs rename_provider_to_compat=true"
-            )
-            connection.execute(
-                text("ALTER TABLE llm_call_logs RENAME COLUMN provider TO provider_compat")
-            )
-        else:
-            logger.warning("local_sqlite_schema_repair_llm_call_logs add_provider_compat_only=true")
-            connection.execute(
-                text(
-                    "ALTER TABLE llm_call_logs "
-                    "ADD COLUMN provider_compat VARCHAR(32) DEFAULT 'openai'"
-                )
-            )
+            connection.execute(text("ALTER TABLE llm_call_logs DROP COLUMN provider"))
+        if "provider_compat" in columns:
+            connection.execute(text("ALTER TABLE llm_call_logs DROP COLUMN provider_compat"))
     return True
 
 

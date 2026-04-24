@@ -252,17 +252,9 @@ class LLMGateway:
                         LlmUseCaseConfigModel.key == use_case
                     )
                     db_use_case = db.execute(use_case_stmt).scalar_one_or_none()
-                    if db_use_case and "allowed_persona_ids" not in context:
-                        context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
 
                 if db_prompt:
-                    logger.debug(
-                        "gateway_db_prompt_found use_case=%s model=%s effort=%s verbosity=%s",
-                        use_case,
-                        db_prompt.model,
-                        db_prompt.reasoning_effort,
-                        db_prompt.verbosity,
-                    )
+                    logger.debug("gateway_db_prompt_found use_case=%s", use_case)
                     authorized_vars = {
                         "locale",
                         "use_case",
@@ -300,54 +292,47 @@ class LLMGateway:
                         )
                         required = [p for p in set(placeholders) if p in authorized_vars]
 
-                    resolved_fallback = None
-                    if canonical_contract and canonical_contract.fallback_use_case_key:
-                        resolved_fallback = canonical_contract.fallback_use_case_key
-                    elif db_use_case and db_use_case.fallback_use_case_key:
-                        resolved_fallback = db_use_case.fallback_use_case_key
+                    registry_config = build_fallback_use_case_config(use_case)
+                    if registry_config is None:
+                        raise UnknownUseCaseError(f"Use case '{use_case}' not found in registry.")
 
                     config = UseCaseConfig(
-                        model=db_prompt.model,
-                        temperature=db_prompt.temperature,
-                        max_output_tokens=db_prompt.max_output_tokens,
+                        model=registry_config.model,
+                        temperature=registry_config.temperature,
+                        max_output_tokens=registry_config.max_output_tokens,
+                        timeout_seconds=registry_config.timeout_seconds,
                         system_core_key="default_v1",
                         developer_prompt=db_prompt.developer_prompt,
                         prompt_version_id=(
                             str(db_prompt.id) if hasattr(db_prompt, "id") else "hardcoded-v1"
                         ),
                         required_prompt_placeholders=required,
-                        fallback_use_case=resolved_fallback,
+                        fallback_target_use_case=registry_config.fallback_target_use_case,
                         persona_strategy=(
                             canonical_contract.persona_strategy
                             if canonical_contract
-                            else (db_use_case.persona_strategy if db_use_case else "optional")
+                            else "optional"
                         ),
                         safety_profile=(
                             canonical_contract.safety_profile
                             if canonical_contract
-                            else (db_use_case.safety_profile if db_use_case else "astrology")
+                            else "astrology"
                         ),
-                        output_schema_id=(
-                            None
-                            if canonical_contract
-                            else (db_use_case.output_schema_id if db_use_case else None)
-                        ),
+                        output_schema_id=registry_config.output_schema_id,
                         input_schema=(
-                            canonical_contract.input_schema
-                            if canonical_contract
-                            else (db_use_case.input_schema if db_use_case else None)
+                            canonical_contract.input_schema if canonical_contract else None
                         ),
-                        reasoning_effort=db_prompt.reasoning_effort,
-                        verbosity=db_prompt.verbosity,
+                        reasoning_effort=registry_config.reasoning_effort,
+                        verbosity=registry_config.verbosity,
                         interaction_mode=(
                             canonical_contract.interaction_mode
                             if canonical_contract
-                            else (db_use_case.interaction_mode if db_use_case else "structured")
+                            else registry_config.interaction_mode
                         ),
                         user_question_policy=(
                             canonical_contract.user_question_policy
                             if canonical_contract
-                            else (db_use_case.user_question_policy if db_use_case else "none")
+                            else registry_config.user_question_policy
                         ),
                     )
             except Exception as e:
@@ -364,7 +349,7 @@ class LLMGateway:
                         "persona_strategy": canonical_contract.persona_strategy,
                         "interaction_mode": canonical_contract.interaction_mode,
                         "user_question_policy": canonical_contract.user_question_policy,
-                        "fallback_use_case": canonical_contract.fallback_use_case_key,
+                        "fallback_target_use_case": canonical_contract.fallback_target_key,
                         "safety_profile": canonical_contract.safety_profile,
                     }
                 )
@@ -380,16 +365,10 @@ class LLMGateway:
                         new_data = config.model_dump()
                         new_data.update(
                             {
-                                "input_schema": db_use_case.input_schema,
-                                "output_schema_id": db_use_case.output_schema_id,
-                                "persona_strategy": db_use_case.persona_strategy,
-                                "interaction_mode": db_use_case.interaction_mode,
-                                "user_question_policy": db_use_case.user_question_policy,
+                                "input_schema": None,
                             }
                         )
                         config = UseCaseConfig(**new_data)
-                        if "allowed_persona_ids" not in context:
-                            context["allowed_persona_ids"] = db_use_case.allowed_persona_ids
                 except Exception as e:
                     logger.error("gateway_db_use_case_merge_failed error=%s", str(e))
             logger.warning("gateway_fallback_config_used use_case=%s", use_case)
@@ -840,6 +819,9 @@ class LLMGateway:
                         # Assembly found! Override everything (AC10)
                         resolved_assembly = resolve_assembly(assembly_db)
                         dev_prompt = assemble_developer_prompt(resolved_assembly, assembly_db)
+                        canonical_contract = get_canonical_use_case_contract(
+                            assembly_db.feature_template.use_case_key
+                        )
 
                         # Story 66.23: Auto-detect required placeholders for assembly prompt
                         placeholders = re.findall(r"\{\{([a-zA-Z0-9_]+)\}\}", dev_prompt)
@@ -848,24 +830,50 @@ class LLMGateway:
                         required = list(set(placeholders))
 
                         # Map ResolvedAssembly to UseCaseConfig for compatibility with Stage 1.5+
+                        profile = assembly_db.execution_profile
+                        if profile is None:
+                            raise GatewayConfigError(
+                                "Assembly execution profile missing.",
+                                error_code="missing_execution_profile",
+                            )
                         config = UseCaseConfig(
-                            model=resolved_assembly.execution_config.model,
-                            temperature=resolved_assembly.execution_config.temperature or 0.7,
-                            max_output_tokens=resolved_assembly.execution_config.max_output_tokens,
-                            timeout_seconds=resolved_assembly.execution_config.timeout_seconds,
+                            model=profile.model,
+                            temperature=0.7,
+                            max_output_tokens=profile.max_output_tokens or 2048,
+                            timeout_seconds=profile.timeout_seconds,
                             system_core_key="default_v1",  # Hard policy handled later
                             developer_prompt=dev_prompt,
                             prompt_version_id=str(assembly_db.id),
                             required_prompt_placeholders=required,
                             persona_strategy="forbidden",  # Persona already handled in assembly
-                            interaction_mode=assembly_db.interaction_mode,
-                            user_question_policy=assembly_db.user_question_policy,
-                            output_schema_id=resolved_assembly.output_contract_ref,
-                            # Story 66.29: Carry input schema (Issue 2)
-                            input_schema=assembly_db.input_schema,
-                            reasoning_effort=resolved_assembly.execution_config.reasoning_effort,
-                            verbosity=resolved_assembly.execution_config.verbosity,
-                            fallback_use_case=resolved_assembly.execution_config.fallback_use_case,
+                            interaction_mode=(
+                                canonical_contract.interaction_mode
+                                if canonical_contract
+                                else "structured"
+                            ),
+                            user_question_policy=(
+                                canonical_contract.user_question_policy
+                                if canonical_contract
+                                else "none"
+                            ),
+                            output_schema_id=(
+                                str(resolved_assembly.output_schema_id)
+                                if resolved_assembly.output_schema_id
+                                else None
+                            ),
+                            input_schema=(
+                                canonical_contract.input_schema if canonical_contract else None
+                            ),
+                            reasoning_effort=(
+                                None
+                                if str(profile.reasoning_profile) == "off"
+                                else str(profile.reasoning_profile)
+                            ),
+                            verbosity={
+                                "balanced": "normal",
+                                "concise": "concise",
+                                "detailed": "verbose",
+                            }.get(str(profile.verbosity_profile), "normal"),
                         )
                         source_base = "assembly"
                         # CRITICAL FIX: ensure model_id is updated from this config
@@ -1585,18 +1593,18 @@ class LLMGateway:
             context_dict.update(extra)
             config = await self._resolve_fallback_use_case_config(db, use_case, context_dict)
 
-            if config.fallback_use_case:
+            if config.fallback_target_use_case:
                 logger.warning(
                     "gateway_step:fallback_invoked use_case=%s fallback=%s",
                     use_case,
-                    config.fallback_use_case,
+                    config.fallback_target_use_case,
                 )
                 increment_counter(
                     "llm_fallback_invoked_total",
                     labels={"use_case": use_case, "schema_version": plan.output_schema_version},
                 )
                 fallback_request = request.model_copy(deep=True)
-                fallback_request.user_input.use_case = config.fallback_use_case
+                fallback_request.user_input.use_case = config.fallback_target_use_case
                 fallback_request.flags.visited_use_cases = request.flags.visited_use_cases + [
                     use_case
                 ]

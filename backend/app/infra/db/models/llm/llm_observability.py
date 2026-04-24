@@ -24,7 +24,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import utc_now, utc_now_plus_days
-from app.infra.db.models.llm.llm_compatibility import CALL_LOG_COMPATIBILITY_SPECS
 from app.infra.db.models.llm.llm_constraints import allowed_values_check
 from app.infra.db.models.llm.llm_field_lengths import (
     CONTEXT_QUALITY_LENGTH,
@@ -73,7 +72,6 @@ class LlmCallLogModel(Base):
     authoritative_provider_fields: ClassVar[frozenset[str]] = frozenset(
         {"requested_provider", "resolved_provider", "executed_provider"}
     )
-    compatibility_specs: ClassVar[tuple] = CALL_LOG_COMPATIBILITY_SPECS
     operational_metadata_fields: ClassVar[frozenset[str]] = frozenset(
         {
             "pipeline_kind",
@@ -118,9 +116,6 @@ class LlmCallLogModel(Base):
         UUID(as_uuid=True), ForeignKey("llm_personas.id"), nullable=True
     )
 
-    provider_compat: Mapped[str] = mapped_column(
-        String(PROVIDER_LENGTH), nullable=False, default="openai"
-    )
     model: Mapped[str] = mapped_column(String(MODEL_LENGTH), nullable=False)
     latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     tokens_in: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -164,10 +159,6 @@ class LlmCallLogModel(Base):
 
     def __init__(self, **kwargs: object) -> None:
         """Isole explicitement les champs operationnels dans la relation one-to-one dediee."""
-        provider = kwargs.pop("provider", None)
-        if provider is not None and "provider_compat" not in kwargs:
-            kwargs["provider_compat"] = provider
-
         metadata_kwargs = {
             key: kwargs.pop(key)
             for key in tuple(kwargs)
@@ -195,11 +186,6 @@ class LlmCallLogModel(Base):
         setattr(self.operational_metadata, field_name, value)
 
     __table_args__ = (
-        allowed_values_check(
-            "ck_llm_call_logs_provider",
-            "provider_compat",
-            ("openai", "anthropic"),
-        ),
         allowed_values_check(
             "ck_llm_call_logs_environment",
             "environment",

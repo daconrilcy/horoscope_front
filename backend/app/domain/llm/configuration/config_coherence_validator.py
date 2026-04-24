@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
@@ -165,7 +164,6 @@ class ConfigCoherenceValidator:
 
         # 2. Provider Support (AC4)
         if profile:
-            self._validate_profile_owned_execution_config(config, profile, result)
             if not is_provider_supported(profile.provider):
                 if is_supported:
                     result.add_error(
@@ -175,14 +173,14 @@ class ConfigCoherenceValidator:
                     )
 
         # 3. Output Contract Validation (AC3)
-        if config.output_contract_ref:
+        if config.output_schema_id:
             res_contract = await self._validate_output_contract(config, profile, bundle)
             contract_valid, contract_error_code = res_contract
             if not contract_valid:
                 result.add_error(
                     contract_error_code,
                     self._get_error_message(contract_error_code),
-                    {"output_contract_ref": config.output_contract_ref},
+                    {"output_schema_id": str(config.output_schema_id)},
                 )
 
         # 4. Placeholders Validation (AC5)
@@ -200,70 +198,6 @@ class ConfigCoherenceValidator:
             self._validate_length_budget(config, result)
 
         return result
-
-    def _validate_profile_owned_execution_config(
-        self,
-        config: PromptAssemblyConfigModel,
-        profile: LlmExecutionProfileModel,
-        result: ValidationResult,
-    ) -> None:
-        """Empêche une assembly avec profil explicite de contredire ce profil."""
-        if not config.execution_profile_ref:
-            return
-
-        execution_config = dict(config.execution_config or {})
-        mismatches: dict[str, dict[str, Any]] = {}
-
-        model = execution_config.get("model")
-        if model is not None and str(model) != str(profile.model):
-            mismatches["model"] = {"assembly": model, "profile": profile.model}
-
-        provider = execution_config.get("provider")
-        if provider is not None and str(provider) != str(profile.provider):
-            mismatches["provider"] = {"assembly": provider, "profile": profile.provider}
-
-        timeout_seconds = execution_config.get("timeout_seconds")
-        if timeout_seconds is not None and int(timeout_seconds) != int(profile.timeout_seconds):
-            mismatches["timeout_seconds"] = {
-                "assembly": timeout_seconds,
-                "profile": profile.timeout_seconds,
-            }
-
-        max_output_tokens = execution_config.get("max_output_tokens")
-        if (
-            max_output_tokens is not None
-            and profile.max_output_tokens is not None
-            and int(max_output_tokens) != int(profile.max_output_tokens)
-        ):
-            mismatches["max_output_tokens"] = {
-                "assembly": max_output_tokens,
-                "profile": profile.max_output_tokens,
-            }
-
-        if execution_config.get("temperature") is not None:
-            mismatches["temperature"] = {
-                "assembly": execution_config.get("temperature"),
-                "profile": None,
-            }
-
-        if config.fallback_use_case:
-            mismatches["fallback_use_case"] = {
-                "assembly": config.fallback_use_case,
-                "profile": "fallback_profile_id",
-            }
-
-        if mismatches:
-            result.add_error(
-                "assembly_execution_config_override_forbidden",
-                (
-                    "L'assembly référence un profil d'exécution mais conserve des "
-                    "overrides runtime contradictoires."
-                ),
-                {
-                    "execution_profile_ref": str(config.execution_profile_ref),
-                    "mismatches": mismatches,
-                },
-            )
 
     async def _resolve_and_validate_profile(
         self,
@@ -371,12 +305,10 @@ class ConfigCoherenceValidator:
         """
         AC3: Output contract validity and compatibility.
         """
-        contract_ref = config.output_contract_ref
-
         # Story 66.32: Try from bundle first (Finding 5)
         if bundle and "schema" in bundle:
             schema_data = bundle["schema"]
-            if schema_data.get("id") == contract_ref or schema_data.get("name") == contract_ref:
+            if schema_data.get("id") == str(config.output_schema_id):
                 return True, None
 
         # Finding 5 hardening: if bundle is provided, NEVER fall back to live DB
@@ -385,24 +317,10 @@ class ConfigCoherenceValidator:
 
         contract = None
 
-        try:
-            contract_id = uuid.UUID(contract_ref)
-        except (TypeError, ValueError):
-            contract_id = None
-
         if config.output_schema_id is not None:
             stmt = select(LlmOutputSchemaModel).where(
                 LlmOutputSchemaModel.id == config.output_schema_id
             )
-            res = await self._execute(stmt)
-            contract = res.scalar_one_or_none()
-        elif contract_id is not None:
-            stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.id == contract_id)
-            res = await self._execute(stmt)
-            contract = res.scalar_one_or_none()
-
-        if contract is None:
-            stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == contract_ref)
             res = await self._execute(stmt)
             contract = res.scalar_one_or_none()
 
@@ -574,10 +492,6 @@ class ConfigCoherenceValidator:
             ),
             "legacy_dependency_forbidden": (
                 "Une dépendance legacy interdite a été détectée sur une famille nominale fermée."
-            ),
-            "assembly_execution_config_override_forbidden": (
-                "Une assembly avec execution_profile_ref ne peut pas redéfinir librement "
-                "les paramètres détenus par le profil d'exécution."
             ),
         }
         return messages.get(error_code, "Unknown coherence error.")

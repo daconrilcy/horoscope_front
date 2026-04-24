@@ -41,29 +41,16 @@ bootstrap, le runtime peut lire les tables sources publiees dans cet ordre :
 3. execution profile explicite ou resolu par waterfall canonique ;
 4. output schema reference par l assembly.
 
-## Compatibilite legacy
+## Legacy supprime
 
-Dans `llm_assembly_configs`, les champs `execution_config`, `interaction_mode`,
-`user_question_policy`, `input_schema`, `output_contract_ref` et
-`fallback_use_case` sont des champs de compatibilite ou de reference bornee, pas
-des sources libres d execution runtime.
+Les champs legacy d assembly, de prompt version, de use case config et de call
+log ne doivent plus etre consultes par le runtime nominal.
 
-Quand `execution_profile_ref` est present, `execution_config` peut seulement
-rester comme miroir historique compatible. La validation de coherence refuse a
-la publication les valeurs qui contredisent le profil reference pour `model`,
-`provider`, `timeout_seconds`, `max_output_tokens` ou `temperature`.
+Le runtime ne lit plus ses parametres d execution que depuis :
 
-Les champs `use_case`, `fallback_use_case`, `fallback_use_case_key`, `model`,
-`temperature`, `reasoning_effort`, `verbosity` et `max_output_tokens` presents
-sur d autres anciens objets ne doivent pas reprendre une autorite runtime
-nominale si une source canonique existe.
+- `llm_execution_profiles` ;
+- le snapshot de release actif ;
+- les objets canoniques explicitement references par l assembly.
 
-Ces champs restent toleres uniquement pour :
-
-- lire l historique admin ;
-- reclasser des lignes d observabilite anciennes ;
-- executer un fallback explicitement documente ;
-- permettre un rollback encadre par une migration ou un runbook.
-
-Tout nouveau consommateur nominal doit donc partir de l assembly canonique ou du
-snapshot actif, puis descendre vers les composants references.
+Tout payload legacy doit echouer explicitement ou passer par une migration
+ponctuelle hors runtime nominal.

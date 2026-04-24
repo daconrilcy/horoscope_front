@@ -12,7 +12,6 @@ from sqlalchemy import (
     UUID,
     Float,
     ForeignKey,
-    Integer,
     String,
     Text,
 )
@@ -22,7 +21,6 @@ from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_audit import CreatedAtMixin, CreatedByMixin, PublishedAtMixin
 from app.infra.db.models.llm.llm_field_lengths import (
     FEATURE_LENGTH,
-    MODEL_LENGTH,
     SHORT_STATUS_LENGTH,
 )
 from app.infra.db.models.llm.llm_indexes import published_unique_index
@@ -52,41 +50,19 @@ class PromptStatus(str, Enum):
 
 
 class LlmUseCaseConfigModel(Base):
-    """Décrit le contrat fonctionnel et technique d'un use case LLM."""
+    """Porte le read model historique/admin des use cases LLM hors runtime nominal."""
 
     __tablename__ = "llm_use_case_configs"
     legacy_identity_field: ClassVar[str] = "key"
     canonical_scope_fields: ClassVar[frozenset[str]] = frozenset(
         {"feature", "subfeature", "plan", "locale"}
     )
-    legacy_compatibility_fields: ClassVar[frozenset[str]] = frozenset(
-        {"fallback_use_case_key", "allowed_persona_ids"}
-    )
+    runtime_surface: ClassVar[str] = "historical_admin_only"
 
     key: Mapped[str] = mapped_column(String(FEATURE_LENGTH), primary_key=True)
     display_name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text)
-    input_schema: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    output_schema_id: Mapped[str | None] = mapped_column(String(FEATURE_LENGTH), nullable=True)
-    persona_strategy: Mapped[str] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
-        default="optional",  # optional, required, forbidden
-    )
-    interaction_mode: Mapped[str] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
-        default="structured",  # structured, chat
-    )
-    user_question_policy: Mapped[str] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
-        default="none",  # none, optional, required
-    )
-    safety_profile: Mapped[str] = mapped_column(
-        String(FEATURE_LENGTH),
-        default="astrology",  # astrology, support, transactional
-    )
     required_prompt_placeholders: Mapped[list[str]] = mapped_column(JSON, default=list)
-    fallback_use_case_key: Mapped[str | None] = mapped_column(String(FEATURE_LENGTH), nullable=True)
-    allowed_persona_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
     eval_fixtures_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     eval_failure_threshold: Mapped[float] = mapped_column(Float, default=0.20)
     golden_set_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -101,9 +77,6 @@ class LlmPromptVersionModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin, Ba
 
     __tablename__ = "llm_prompt_versions"
     legacy_use_case_link_field: ClassVar[str] = "use_case_key"
-    legacy_execution_compatibility_fields: ClassVar[frozenset[str]] = frozenset(
-        {"model", "temperature", "max_output_tokens", "reasoning_effort", "verbosity"}
-    )
     canonical_text_fields: ClassVar[frozenset[str]] = frozenset({"developer_prompt"})
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -114,19 +87,6 @@ class LlmPromptVersionModel(CreatedByMixin, CreatedAtMixin, PublishedAtMixin, Ba
         String(SHORT_STATUS_LENGTH), index=True, default=PromptStatus.DRAFT
     )
     developer_prompt: Mapped[str] = mapped_column(Text)
-    model: Mapped[str] = mapped_column(String(MODEL_LENGTH))
-    temperature: Mapped[float] = mapped_column(Float, default=0.7)
-    max_output_tokens: Mapped[int] = mapped_column(Integer, default=2048)
-    reasoning_effort: Mapped[str | None] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
-        nullable=True,
-        default=None,
-    )
-    verbosity: Mapped[str | None] = mapped_column(
-        String(SHORT_STATUS_LENGTH),
-        nullable=True,
-        default=None,
-    )
 
     use_case: Mapped[LlmUseCaseConfigModel] = relationship(
         "LlmUseCaseConfigModel", back_populates="prompt_versions"

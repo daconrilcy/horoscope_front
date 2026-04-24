@@ -22,7 +22,6 @@ CANONICAL_LLM_MODEL_FILES = (
     "llm_audit.py",
     "llm_canonical_consumption.py",
     "llm_canonical_perimeter.py",
-    "llm_compatibility.py",
     "llm_constraints.py",
     "llm_execution_profile.py",
     "llm_field_lengths.py",
@@ -117,7 +116,7 @@ def test_alembic_env_imports_canonical_llm_package_for_metadata() -> None:
 def test_llm_call_log_model_does_not_keep_python_provider_alias() -> None:
     """Interdit le retour de l alias applicatif `provider` sur le log LLM."""
     assert "provider" not in LlmCallLogModel.__dict__
-    assert "provider_compat" in LlmCallLogModel.__dict__
+    assert "provider_compat" not in LlmCallLogModel.__dict__
 
 
 def test_each_canonical_llm_model_file_is_used_by_backend_code() -> None:

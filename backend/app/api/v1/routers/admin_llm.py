@@ -179,11 +179,9 @@ class LlmOutputSchemaApiResponse(BaseModel):
 
 class UseCaseUpdatePayload(BaseModel):
     persona_id: Optional[str] = None
-    allowed_persona_ids: Optional[List[str]] = None
     persona_strategy: Optional[str] = None
     safety_profile: Optional[str] = None
     output_schema_id: Optional[str] = None
-    fallback_use_case_key: Optional[str] = None
     eval_fixtures_path: Optional[str] = None
     eval_failure_threshold: Optional[float] = None
     golden_set_path: Optional[str] = None
@@ -271,7 +269,7 @@ class AdminLlmCatalogEntry(BaseModel):
     assembly_status: str
     execution_profile_id: str | None = None
     execution_profile_ref: str | None = None
-    output_contract_ref: str | None = None
+    output_schema_id: str | None = None
     active_snapshot_id: str | None = None
     active_snapshot_version: str | None = None
     provider: str | None = None
@@ -610,13 +608,6 @@ def _resolve_output_schema_id_by_name(db: Session, schema_name: str | None) -> s
     return str(schema.id) if schema else None
 
 
-def _resolve_allowed_persona_ids(db: Session, *, persona_strategy: str) -> list[str]:
-    if persona_strategy != "required":
-        return []
-    stmt = select(LlmPersonaModel.id).where(LlmPersonaModel.enabled)
-    return [str(persona_id) for persona_id in db.execute(stmt).scalars().all()]
-
-
 def _build_canonical_admin_use_case_config(db: Session, key: str) -> LlmUseCaseConfig | None:
     contract = get_canonical_use_case_contract(key)
     if contract is None:
@@ -630,17 +621,43 @@ def _build_canonical_admin_use_case_config(db: Session, key: str) -> LlmUseCaseC
         output_schema_id=_resolve_output_schema_id_by_name(db, contract.output_schema_name),
         persona_strategy=contract.persona_strategy,
         safety_profile=contract.safety_profile,
-        fallback_use_case_key=contract.fallback_use_case_key,
         required_prompt_placeholders=contract.required_prompt_placeholders,
-        allowed_persona_ids=_resolve_allowed_persona_ids(
-            db,
-            persona_strategy=contract.persona_strategy,
-        ),
         eval_fixtures_path=contract.eval_fixtures_path,
         eval_failure_threshold=contract.eval_failure_threshold,
         golden_set_path=contract.golden_set_path,
         active_prompt_version_id=active_prompt.id if active_prompt else None,
     )
+
+
+def _ensure_admin_use_case_shadow_row(
+    db: Session,
+    config: LlmUseCaseConfig,
+) -> LlmUseCaseConfigModel:
+    """Maintient la ligne FK minimale requise pour les versions de prompt admin."""
+
+    use_case = db.get(LlmUseCaseConfigModel, config.key)
+    if use_case is None:
+        use_case = LlmUseCaseConfigModel(
+            key=config.key,
+            display_name=config.display_name,
+            description=config.description,
+            required_prompt_placeholders=config.required_prompt_placeholders,
+            eval_fixtures_path=config.eval_fixtures_path,
+            eval_failure_threshold=config.eval_failure_threshold or 0.20,
+            golden_set_path=config.golden_set_path,
+        )
+        db.add(use_case)
+        db.flush()
+        return use_case
+
+    use_case.display_name = config.display_name
+    use_case.description = config.description
+    use_case.required_prompt_placeholders = config.required_prompt_placeholders
+    use_case.eval_fixtures_path = config.eval_fixtures_path
+    use_case.eval_failure_threshold = config.eval_failure_threshold or 0.20
+    use_case.golden_set_path = config.golden_set_path
+    db.flush()
+    return use_case
 
 
 def _legacy_removed_call_log_filter() -> Any:
@@ -657,15 +674,8 @@ def _call_log_scope_filter(use_case: str) -> Any:
 
 
 def _serialize_prompt_version(db: Session, version: LlmPromptVersionModel) -> LlmPromptVersion:
-    serialized = LlmPromptVersion.model_validate(version)
-    canonical_contract = get_canonical_use_case_contract(version.use_case_key)
-    fallback_use_case_key = None
-    if canonical_contract is not None:
-        fallback_use_case_key = canonical_contract.fallback_use_case_key
-    else:
-        legacy_config = get_use_case_config(db, version.use_case_key)
-        fallback_use_case_key = legacy_config.fallback_use_case_key if legacy_config else None
-    return serialized.model_copy(update={"fallback_use_case_key": fallback_use_case_key})
+    del db
+    return LlmPromptVersion.model_validate(version)
 
 
 def _normalize_event_type(status: str | None) -> str:
@@ -919,10 +929,10 @@ def _snapshot_diff_entries(
         to_profile = to_bundle.get("profile") or {}
 
         from_output_contract = (
-            from_assembly.get("output_contract_ref") if isinstance(from_assembly, dict) else None
+            from_assembly.get("output_schema_id") if isinstance(from_assembly, dict) else None
         )
         to_output_contract = (
-            to_assembly.get("output_contract_ref") if isinstance(to_assembly, dict) else None
+            to_assembly.get("output_schema_id") if isinstance(to_assembly, dict) else None
         )
         assembly_changed = from_assembly != to_assembly
         execution_profile_changed = from_profile != to_profile
@@ -1284,10 +1294,7 @@ def get_persona_detail(
             details={},
         )
 
-    use_case_models = db.scalars(select(LlmUseCaseConfigModel)).all()
-    use_cases = [
-        item.key for item in use_case_models if str(id) in (item.allowed_persona_ids or [])
-    ]
+    use_cases: list[str] = []
     affected_users_count = int(
         db.scalar(
             select(func.count(func.distinct(UserModel.id)))
@@ -1580,8 +1587,8 @@ def list_llm_catalog(
             assembly_status=str(assembly_data.get("status") or "unknown"),
             execution_profile_id=str(profile_data.get("id")) if profile_data.get("id") else None,
             execution_profile_ref=str(profile_data.get("id")) if profile_data.get("id") else None,
-            output_contract_ref=str(assembly_data.get("output_contract_ref"))
-            if assembly_data.get("output_contract_ref")
+            output_schema_id=str(assembly_data.get("output_schema_id"))
+            if assembly_data.get("output_schema_id")
             else None,
             active_snapshot_id=str(active_snapshot.id) if active_snapshot else None,
             active_snapshot_version=active_snapshot.version if active_snapshot else None,
@@ -1621,7 +1628,7 @@ def list_llm_catalog(
             assembly_status=str(assembly.status),
             execution_profile_id=str(profile.id) if profile else None,
             execution_profile_ref=str(profile.id) if profile else None,
-            output_contract_ref=assembly.output_contract_ref,
+            output_schema_id=str(assembly.output_schema_id) if assembly.output_schema_id else None,
             active_snapshot_id=None,
             active_snapshot_version=None,
             provider=profile.provider if profile else None,
@@ -1929,7 +1936,7 @@ def _build_admin_resolved_catalog_view(
         if snapshot_profile_data and snapshot_profile_data.get("model")
         else execution_profile_model.model
         if execution_profile_model
-        else str(profile_data.get("model") or resolved.execution_config.model)
+        else str(profile_data.get("model") or "unknown")
     )
     effective_reasoning_profile = (
         str(snapshot_profile_data.get("reasoning_profile"))
@@ -2217,12 +2224,12 @@ def _build_admin_resolved_catalog_view(
         final_max_output_tokens = recommended_tokens
         max_output_tokens_source = "verbosity_fallback"
     else:
-        final_max_output_tokens = resolved.execution_config.max_output_tokens
-        max_output_tokens_source = "assembly_execution_config"
+        final_max_output_tokens = 2048
+        max_output_tokens_source = "default"
     final_timeout_seconds = (
         effective_profile_timeout
         if effective_profile_timeout is not None
-        else resolved.execution_config.timeout_seconds
+        else 30
     )
 
     render_error_kind = _classify_admin_render_error_kind(inspection_mode, render_exc)
@@ -2244,15 +2251,11 @@ def _build_admin_resolved_catalog_view(
         ),
         "provider": effective_profile_provider,
         "model": effective_profile_model,
-        "reasoning": effective_reasoning_profile or resolved.execution_config.reasoning_effort,
-        "verbosity": effective_verbosity_profile or resolved.execution_config.verbosity,
+        "reasoning": effective_reasoning_profile,
+        "verbosity": effective_verbosity_profile,
         "provider_params": sanitize_payload(
             {
-                "temperature": (
-                    translated_provider_params.get("temperature")
-                    if "temperature" in translated_provider_params
-                    else resolved.execution_config.temperature
-                ),
+                "temperature": translated_provider_params.get("temperature"),
                 "max_output_tokens_final": final_max_output_tokens,
                 "timeout_seconds": final_timeout_seconds,
                 "max_output_tokens_source": max_output_tokens_source,
@@ -2403,14 +2406,14 @@ def _build_admin_resolved_catalog_view(
                 "Contrat de sortie résolu pour ce contexte. Référence visible, "
                 "texte non dupliqué dans l'admin."
             ),
-            ref=str(assembly_model.output_contract_ref)
-            if assembly_model.output_contract_ref is not None
+            ref=str(assembly_model.output_schema_id)
+            if assembly_model.output_schema_id is not None
             else None,
             source_label="output_schema",
             impact_status="reference_only",
             meta={
-                "output_contract_ref": str(assembly_model.output_contract_ref)
-                if assembly_model.output_contract_ref is not None
+                "output_schema_id": str(assembly_model.output_schema_id)
+                if assembly_model.output_schema_id is not None
                 else None
             },
         )
@@ -2577,8 +2580,8 @@ def _build_admin_resolved_catalog_view(
             provider_target=f"{effective_profile_provider} / {effective_profile_model}",
             policy_family="astrology",
             output_schema=(
-                str(assembly_model.output_contract_ref)
-                if assembly_model.output_contract_ref is not None
+                str(assembly_model.output_schema_id)
+                if assembly_model.output_schema_id is not None
                 else None
             ),
             injector_set=[
@@ -3125,14 +3128,12 @@ def get_use_case_contract(
             key=uc.key,
             display_name=uc.display_name,
             description=uc.description,
-            input_schema=uc.input_schema,
+            input_schema=None,
             output_schema=output_schema,
-            output_schema_id=uc.output_schema_id,
-            persona_strategy=uc.persona_strategy,
-            safety_profile=uc.safety_profile,
-            fallback_use_case_key=uc.fallback_use_case_key,
+            output_schema_id=None,
+            persona_strategy="optional",
+            safety_profile="astrology",
             required_prompt_placeholders=uc.required_prompt_placeholders,
-            allowed_persona_ids=uc.allowed_persona_ids,
             active_prompt_version_id=active_prompt.id if active_prompt else None,
         )
     else:
@@ -3149,9 +3150,7 @@ def get_use_case_contract(
             output_schema_id=canonical_config.output_schema_id,
             persona_strategy=canonical_config.persona_strategy,
             safety_profile=canonical_config.safety_profile,
-            fallback_use_case_key=canonical_config.fallback_use_case_key,
             required_prompt_placeholders=canonical_config.required_prompt_placeholders,
-            allowed_persona_ids=canonical_config.allowed_persona_ids,
             active_prompt_version_id=canonical_config.active_prompt_version_id,
         )
 
@@ -3220,6 +3219,9 @@ def create_prompt_draft(
             details={},
         )
 
+    if canonical_uc is not None:
+        _ensure_admin_use_case_shadow_row(db, canonical_uc)
+
     previous_version = get_latest_prompt_version(db, key)
 
     lint_result = PromptLint.lint_prompt(
@@ -3234,25 +3236,10 @@ def create_prompt_draft(
             details={"errors": lint_result.errors, "warnings": lint_result.warnings},
         )
 
-    if payload.fallback_use_case_key is not None:
-        return _error_response(
-            status_code=409,
-            request_id=request_id,
-            code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
-            message=(
-                "Prompt-local fallback_use_case_key is frozen. "
-                "Fallback governance is owned by canonical contracts."
-            ),
-            details={},
-        )
-
     version = LlmPromptVersionModel(
         use_case_key=key,
         status=PromptStatus.DRAFT,
         developer_prompt=payload.developer_prompt,
-        model=payload.model,
-        temperature=payload.temperature,
-        max_output_tokens=payload.max_output_tokens,
         created_by=str(current_user.id),
     )
     db.add(version)
@@ -3269,7 +3256,6 @@ def create_prompt_draft(
         status="success",
         details={
             "use_case_key": key,
-            "model": version.model,
             "from_version": str(previous_version.id) if previous_version else None,
             "to_version": str(version.id),
             "result_status": PromptStatus.normalize(version.status).value,

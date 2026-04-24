@@ -16,8 +16,7 @@ from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStat
 
 logger = logging.getLogger(__name__)
 
-
-def _resolve_output_contract_id(db: Session, schema_name: str | None) -> str | None:
+def _resolve_output_schema_id(db: Session, schema_name: str | None) -> str | None:
     if not schema_name:
         return None
     stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == schema_name)
@@ -87,6 +86,17 @@ def seed_66_20_taxonomy(db: Session) -> None:
         existing = db.execute(stmt_existing).scalar_one_or_none()
 
         if not existing:
+            profile_stmt = (
+                select(LlmExecutionProfileModel)
+                .where(
+                    LlmExecutionProfileModel.feature == feature,
+                    LlmExecutionProfileModel.subfeature == subfeature,
+                    LlmExecutionProfileModel.plan == plan,
+                    LlmExecutionProfileModel.status == PromptStatus.PUBLISHED,
+                )
+                .order_by(LlmExecutionProfileModel.created_at.desc())
+            )
+            profile = db.execute(profile_stmt).scalars().first()
             existing = PromptAssemblyConfigModel(
                 feature=feature,
                 subfeature=subfeature,
@@ -94,19 +104,11 @@ def seed_66_20_taxonomy(db: Session) -> None:
                 locale="fr-FR",
                 feature_template_ref=template.id,
                 persona_ref=persona_id,
-                execution_config={
-                    "model": template.model or "gpt-4o",
-                    "temperature": template.temperature or 0.7,
-                    "max_output_tokens": template.max_output_tokens or 2000,
-                    "timeout_seconds": 60,
-                },
-                output_contract_ref=_resolve_output_contract_id(
+                execution_profile_ref=profile.id if profile else None,
+                output_schema_id=_resolve_output_schema_id(
                     db,
                     contract.output_schema_name if contract else None,
                 ),
-                input_schema=contract.input_schema if contract else None,
-                interaction_mode=contract.interaction_mode if contract else "structured",
-                user_question_policy=contract.user_question_policy if contract else "none",
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
             )
@@ -114,13 +116,10 @@ def seed_66_20_taxonomy(db: Session) -> None:
             logger.info("seed_66_20_taxonomy: created assembly %s/%s/%s", feature, subfeature, plan)
         else:
             existing.feature_template_ref = template.id
-            existing.output_contract_ref = _resolve_output_contract_id(
+            existing.output_schema_id = _resolve_output_schema_id(
                 db,
                 contract.output_schema_name if contract else None,
             )
-            existing.input_schema = contract.input_schema if contract else None
-            existing.interaction_mode = contract.interaction_mode if contract else "structured"
-            existing.user_question_policy = contract.user_question_policy if contract else "none"
             existing.status = PromptStatus.PUBLISHED
             logger.info("seed_66_20_taxonomy: updated assembly %s/%s/%s", feature, subfeature, plan)
 
@@ -169,6 +168,30 @@ def seed_66_20_taxonomy(db: Session) -> None:
                 subfeature or "",
                 plan or "",
             )
+
+    for feature, subfeature, plan, _template_key in target_assemblies:
+        profile_stmt = (
+            select(LlmExecutionProfileModel)
+            .where(
+                LlmExecutionProfileModel.feature == feature,
+                LlmExecutionProfileModel.subfeature == subfeature,
+                LlmExecutionProfileModel.plan == plan,
+            )
+            .order_by(LlmExecutionProfileModel.created_at.desc())
+        )
+        profile = db.execute(profile_stmt).scalars().first()
+        if profile is None:
+            continue
+
+        assembly_stmt = select(PromptAssemblyConfigModel).where(
+            PromptAssemblyConfigModel.feature == feature,
+            PromptAssemblyConfigModel.subfeature == subfeature,
+            PromptAssemblyConfigModel.plan == plan,
+            PromptAssemblyConfigModel.locale == "fr-FR",
+        )
+        assembly = db.execute(assembly_stmt).scalar_one_or_none()
+        if assembly is not None:
+            assembly.execution_profile_ref = profile.id
 
     db.commit()
 

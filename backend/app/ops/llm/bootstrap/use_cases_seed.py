@@ -68,19 +68,7 @@ def seed_use_cases(db: Session) -> None:
         db.add(default_persona)
         db.flush()
 
-    default_persona_id = str(default_persona.id)
-    enabled_personas = (
-        db.execute(
-            select(LlmPersonaModel)
-            .where(LlmPersonaModel.enabled == True)  # noqa: E712
-            .order_by(LlmPersonaModel.name)
-        )
-        .scalars()
-        .all()
-    )
-    enabled_persona_ids = [str(persona.id) for persona in enabled_personas] or [default_persona_id]
-
-    schema_map = seed_output_schemas(db)
+    seed_output_schemas(db)
 
     for contract in CANONICAL_USE_CASE_CONTRACTS:
         stmt = select(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == contract.key)
@@ -89,24 +77,12 @@ def seed_use_cases(db: Session) -> None:
             contract.eval_failure_threshold if contract.eval_failure_threshold is not None else 0.20
         )
 
-        schema_id = None
-        if contract.output_schema_name and contract.output_schema_name in schema_map:
-            schema_id = str(schema_map[contract.output_schema_name].id)
-
         if not use_case:
             use_case = LlmUseCaseConfigModel(
                 key=contract.key,
                 display_name=contract.display_name,
                 description=contract.description,
-                input_schema=contract.input_schema,
-                output_schema_id=schema_id,
-                persona_strategy=contract.persona_strategy,
-                safety_profile=contract.safety_profile,
                 required_prompt_placeholders=contract.required_prompt_placeholders,
-                fallback_use_case_key=contract.fallback_use_case_key,
-                interaction_mode=contract.interaction_mode,
-                user_question_policy=contract.user_question_policy,
-                allowed_persona_ids=[],
                 eval_fixtures_path=contract.eval_fixtures_path,
                 eval_failure_threshold=eval_failure_threshold,
                 golden_set_path=contract.golden_set_path,
@@ -115,20 +91,10 @@ def seed_use_cases(db: Session) -> None:
         else:
             use_case.display_name = contract.display_name
             use_case.description = contract.description
-            use_case.input_schema = contract.input_schema
-            use_case.output_schema_id = schema_id
-            use_case.persona_strategy = contract.persona_strategy
-            use_case.safety_profile = contract.safety_profile
             use_case.required_prompt_placeholders = contract.required_prompt_placeholders
-            use_case.fallback_use_case_key = contract.fallback_use_case_key
-            use_case.interaction_mode = contract.interaction_mode
-            use_case.user_question_policy = contract.user_question_policy
             use_case.eval_fixtures_path = contract.eval_fixtures_path
             use_case.eval_failure_threshold = eval_failure_threshold
             use_case.golden_set_path = contract.golden_set_path
-
-        if use_case.persona_strategy == "required":
-            use_case.allowed_persona_ids = enabled_persona_ids
 
     db.commit()
 

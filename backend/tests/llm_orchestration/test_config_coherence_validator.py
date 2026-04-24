@@ -26,13 +26,14 @@ async def test_validate_assembly_accepts_waterfall_profile_without_explicit_ref(
 
     prompt = LlmPromptVersionModel(
         id=uuid.uuid4(),
-        use_case_key="chat",
+        use_case_key="chat_astrologer",
         developer_prompt="{{last_user_msg}}",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
-    use_case = LlmUseCaseConfigModel(key="chat", display_name="Chat", description="test")
+    use_case = LlmUseCaseConfigModel(
+        key="chat_astrologer", display_name="Chat", description="test"
+    )
     profile = LlmExecutionProfileModel(
         id=uuid.uuid4(),
         name="Chat Waterfall",
@@ -49,7 +50,6 @@ async def test_validate_assembly_accepts_waterfall_profile_without_explicit_ref(
         plan="free",
         locale="fr-FR",
         feature_template_ref=prompt.id,
-        execution_config={"model": "gpt-4o-mini", "max_output_tokens": 512},
         status=PromptStatus.DRAFT,
         created_by="test",
     )
@@ -66,18 +66,19 @@ async def test_validate_assembly_accepts_waterfall_profile_without_explicit_ref(
 
 
 @pytest.mark.asyncio
-async def test_validate_assembly_accepts_uuid_output_contract_ref(db):
+async def test_validate_assembly_accepts_uuid_output_schema_id(db):
     ExecutionProfileRegistry.invalidate_cache()
 
     prompt = LlmPromptVersionModel(
         id=uuid.uuid4(),
-        use_case_key="chat",
+        use_case_key="chat_astrologer",
         developer_prompt="{{last_user_msg}}",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
-    use_case = LlmUseCaseConfigModel(key="chat", display_name="Chat", description="test")
+    use_case = LlmUseCaseConfigModel(
+        key="chat_astrologer", display_name="Chat", description="test"
+    )
     profile = LlmExecutionProfileModel(
         id=uuid.uuid4(),
         name="Chat Explicit",
@@ -100,8 +101,7 @@ async def test_validate_assembly_accepts_uuid_output_contract_ref(db):
         locale="fr-FR",
         feature_template_ref=prompt.id,
         execution_profile_ref=profile.id,
-        execution_config={"model": "gpt-4o-mini", "max_output_tokens": 512},
-        output_contract_ref=str(schema.id),
+        output_schema_id=schema.id,
         status=PromptStatus.DRAFT,
         created_by="test",
     )
@@ -118,17 +118,18 @@ async def test_validate_assembly_accepts_uuid_output_contract_ref(db):
 
 
 @pytest.mark.asyncio
-async def test_validate_assembly_rejects_execution_config_override_when_profile_ref(db):
-    """Empêche une assembly de contredire le profil d execution reference."""
+async def test_validate_assembly_keeps_profile_owned_runtime_when_profile_ref(db):
+    """Valide qu'une assembly canonique se contente de référencer son profil d'exécution."""
     prompt = LlmPromptVersionModel(
         id=uuid.uuid4(),
-        use_case_key="chat",
+        use_case_key="chat_astrologer",
         developer_prompt="{{last_user_msg}}",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
-    use_case = LlmUseCaseConfigModel(key="chat", display_name="Chat", description="test")
+    use_case = LlmUseCaseConfigModel(
+        key="chat_astrologer", display_name="Chat", description="test"
+    )
     profile = LlmExecutionProfileModel(
         id=uuid.uuid4(),
         name="Chat Explicit",
@@ -148,12 +149,6 @@ async def test_validate_assembly_rejects_execution_config_override_when_profile_
         locale="fr-FR",
         feature_template_ref=prompt.id,
         execution_profile_ref=profile.id,
-        execution_config={
-            "model": "gpt-4o",
-            "temperature": 0.2,
-            "max_output_tokens": 512,
-            "timeout_seconds": 30,
-        },
         status=PromptStatus.DRAFT,
         created_by="test",
     )
@@ -165,16 +160,8 @@ async def test_validate_assembly_rejects_execution_config_override_when_profile_
     validator = ConfigCoherenceValidator(db)
     result = await validator.validate_assembly(config)
 
-    assert result.is_valid is False
-    assert [error.error_code for error in result.errors] == [
-        "assembly_execution_config_override_forbidden"
-    ]
-    assert set(result.errors[0].details["mismatches"]) == {
-        "model",
-        "timeout_seconds",
-        "max_output_tokens",
-        "temperature",
-    }
+    assert result.is_valid is True
+    assert result.errors == []
 
 
 @pytest.mark.asyncio

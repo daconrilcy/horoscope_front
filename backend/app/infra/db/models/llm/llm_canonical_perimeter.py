@@ -5,12 +5,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.infra.db.models.llm.llm_compatibility import (
-    ASSEMBLY_COMPATIBILITY_SPECS,
-    CALL_LOG_COMPATIBILITY_SPECS,
-    LegacyCompatSpec,
-)
-
 ALLOWED_MODEL_TABLES: tuple[str, ...] = (
     "llm_active_releases",
     "llm_assembly_configs",
@@ -29,7 +23,6 @@ ALLOWED_MODEL_TABLES: tuple[str, ...] = (
 ALLOWED_HELPER_MODULES: tuple[str, ...] = (
     "llm_audit",
     "llm_canonical_perimeter",
-    "llm_compatibility",
     "llm_constraints",
     "llm_field_lengths",
     "llm_indexes",
@@ -53,7 +46,6 @@ class ModelStructureEntry:
     source_of_truth: str
     canonical_relations: tuple[str, ...]
     major_constraints: tuple[str, ...]
-    compatibility_specs: tuple[LegacyCompatSpec, ...] = ()
     status: str = "canonical"
 
 
@@ -73,8 +65,6 @@ MODEL_STRUCTURE: tuple[ModelStructureEntry, ...] = (
             "output_schema",
         ),
         major_constraints=("published_unique_index", "component_state_checks", "output_schema_fk"),
-        compatibility_specs=ASSEMBLY_COMPATIBILITY_SPECS,
-        status="canonical_with_compat_layer",
     ),
     ModelStructureEntry(
         table_name="llm_execution_profiles",
@@ -103,16 +93,14 @@ MODEL_STRUCTURE: tuple[ModelStructureEntry, ...] = (
     ModelStructureEntry(
         table_name="llm_call_logs",
         role="journal coeur des appels LLM",
-        source_of_truth="latency_ms, tokens_in, tokens_out, validation_status, provider_compat",
+        source_of_truth="latency_ms, tokens_in, tokens_out, validation_status",
         canonical_relations=(
             "operational_metadata",
             "prompt_version",
             "persona",
             "replay_snapshot",
         ),
-        major_constraints=("provider_compat_check", "trace_indexes"),
-        compatibility_specs=CALL_LOG_COMPATIBILITY_SPECS,
-        status="canonical_with_compat_layer",
+        major_constraints=("environment_check", "trace_indexes"),
     ),
     ModelStructureEntry(
         table_name="llm_call_log_operational_metadata",
@@ -163,16 +151,7 @@ def render_structure_markdown() -> str:
                 f"- Statut : {entry.status}",
             ]
         )
-        if entry.compatibility_specs:
-            lines.append("- Compatibilite legacy toleree :")
-            for spec in entry.compatibility_specs:
-                lines.append(
-                    "  - "
-                    f"`{spec.field_name}` -> consommateur `{spec.consumer}`, suppression cible "
-                    f"`{spec.removal_target}`, test `{spec.non_reintroduction_test}`"
-                )
-        else:
-            lines.append("- Compatibilite legacy toleree : aucune")
+        lines.append("- Compatibilite legacy toleree : aucune")
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"

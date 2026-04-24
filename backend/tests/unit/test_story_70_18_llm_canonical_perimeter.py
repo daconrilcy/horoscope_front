@@ -51,7 +51,7 @@ def test_assembly_uses_fk_output_schema_and_keeps_legacy_alias_outside_columns()
 def test_call_log_core_table_no_longer_redeclares_operational_columns() -> None:
     """Interdit le retour des colonnes operationnelles dans la table coeur des logs."""
     columns = set(LlmCallLogModel.__table__.columns.keys())
-    assert "provider_compat" in columns
+    assert "provider_compat" not in columns
     assert "manifest_entry_id" not in columns
     assert "executed_provider" not in columns
     assert "pipeline_kind" not in columns

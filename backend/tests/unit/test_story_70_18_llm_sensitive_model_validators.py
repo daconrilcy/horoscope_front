@@ -56,18 +56,16 @@ def test_llm_models_reuse_audit_mixins() -> None:
 
 
 def test_assembly_marks_legacy_runtime_compatibility_fields() -> None:
-    """Documente les champs assembly qui ne portent plus l autorite runtime nominale."""
-    assert PromptAssemblyConfigModel.legacy_runtime_compatibility_fields == {
+    """Verifie que les anciens champs runtime assembly n existent plus sur le modele."""
+    for legacy_name in (
         "execution_config",
         "interaction_mode",
         "user_question_policy",
         "input_schema",
         "output_contract_ref",
         "fallback_use_case",
-    }
-    assert {"model", "provider", "temperature"}.issubset(
-        PromptAssemblyConfigModel.profile_controlled_execution_config_fields
-    )
+    ):
+        assert not hasattr(PromptAssemblyConfigModel, legacy_name)
 
 
 def test_prompt_models_mark_legacy_and_canonical_boundaries() -> None:
@@ -79,11 +77,8 @@ def test_prompt_models_mark_legacy_and_canonical_boundaries() -> None:
         "plan",
         "locale",
     }
-    assert "fallback_use_case_key" in LlmUseCaseConfigModel.legacy_compatibility_fields
+    assert LlmUseCaseConfigModel.runtime_surface == "historical_admin_only"
     assert LlmPromptVersionModel.legacy_use_case_link_field == "use_case_key"
-    assert {"model", "temperature", "max_output_tokens"}.issubset(
-        LlmPromptVersionModel.legacy_execution_compatibility_fields
-    )
     assert LlmPromptVersionModel.canonical_text_fields == {"developer_prompt"}
 
 
@@ -130,18 +125,6 @@ def test_assembly_rejects_empty_optional_references() -> None:
     """Empêche les references optionnelles vides sur les assemblies."""
     with pytest.raises(ValueError, match="plan_rules_ref must not be empty"):
         PromptAssemblyConfigModel(plan_rules_ref="", created_by="test")
-
-    with pytest.raises(ValueError, match="output_contract_ref must not be empty"):
-        PromptAssemblyConfigModel(output_contract_ref=" ", created_by="test")
-
-
-def test_assembly_compatibility_alias_maps_to_canonical_output_schema_id() -> None:
-    """Verifie que l alias legacy est borne a la FK canonique de schema."""
-    schema_id = "11111111-1111-1111-1111-111111111111"
-    assembly = PromptAssemblyConfigModel(created_by="test", output_contract_ref=schema_id)
-
-    assert str(assembly.output_schema_id) == schema_id
-    assert assembly.output_contract_ref == schema_id
 
 
 def test_persona_rejects_invalid_json_string_lists() -> None:
