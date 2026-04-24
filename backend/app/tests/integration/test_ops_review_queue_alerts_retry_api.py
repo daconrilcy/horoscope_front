@@ -8,20 +8,20 @@ from sqlalchemy import delete
 from app.core.rate_limit import RateLimitError
 from app.core.security import create_access_token
 from app.infra.db.base import Base
-from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
-    CanonicalEntitlementMutationAlertEventModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling_event import (
-    CanonicalEntitlementMutationAlertEventHandlingEventModel,
-)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.handling import (
+    CanonicalEntitlementMutationAlertEventHandlingModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.handling_event import (
+    CanonicalEntitlementMutationAlertEventHandlingEventModel,
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine

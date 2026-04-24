@@ -713,6 +713,14 @@ Les tests couvrent :
 - discipline datetime respectée ;
 - design final conforme à la cible.
 
+### Review Findings
+
+- [ ] [Review][Patch] Le sous-domaine `entitlement_mutation/` imposé par la story n’existe pas et les modèles restent à plat sous `backend\app\infra\db\models`, ce qui viole directement AC1, AC2 et AC18. [backend/app/infra/db/models/__init__.py:18]
+- [ ] [Review][Patch] `CanonicalEntitlementMutationAlertEventModel` conserve un modèle d’alerte centré sur `delivery_status`/`delivery_error`/`delivered_at` et n’introduit pas les champs de cycle de vie courant exigés (`alert_status`, `last_delivery_status`, `delivery_attempt_count`, suppression, `updated_at`, `closed_at`). L’implémentation actuelle ne sépare donc toujours pas statut métier et état technique de delivery comme demandé par AC5. [backend/app/infra/db/models/canonical_entitlement_mutation_alert_event.py:39]
+- [ ] [Review][Patch] La traçabilité relationnelle d’application de suppression n’est pas implémentée: aucun modèle `CanonicalEntitlementMutationAlertSuppressionApplicationModel` n’existe et le current/history handling ne stocke qu’un `suppression_key` libre. Cela bloque AC4, AC7, AC8 et AC17. [backend/app/infra/db/models/canonical_entitlement_mutation_alert_event_handling.py:32]
+- [ ] [Review][Patch] Le current review d’audit n’est ni versionné ni complètement tracé: `review_version`, `request_id`, `created_at` et `updated_at` manquent encore, ce qui ne satisfait pas AC9. [backend/app/infra/db/models/canonical_entitlement_mutation_audit_review.py:27]
+- [ ] [Review][Patch] Les tables d’historique ne sont pas encore des event logs explicitement typés conformes à la story: `CanonicalEntitlementMutationAuditReviewEventModel` n’a pas de `event_type`, et le handling history ne porte ni `event_type`, ni `resolution_code`, ni `incident_key`, ni suivi de follow-up. AC8 et AC10 restent donc non couverts. [backend/app/infra/db/models/canonical_entitlement_mutation_audit_review_event.py:26]
+
 ## Dev Notes
 
 ### Non-negotiable implementation rules

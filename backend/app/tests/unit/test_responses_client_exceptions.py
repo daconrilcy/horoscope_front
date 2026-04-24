@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from openai import APIConnectionError, APITimeoutError, RateLimitError
 
-from app.ai_engine.config import ai_engine_settings
-from app.ai_engine.exceptions import (
+from app.core.llm_settings import ai_engine_settings
+from app.domain.llm.runtime.errors import (
     RetryBudgetExhaustedError,
 )
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager

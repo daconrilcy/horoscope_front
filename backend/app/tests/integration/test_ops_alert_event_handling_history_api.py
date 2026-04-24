@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 
 from app.core.rate_limit import RateLimitError
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling_event import (
+from app.infra.db.models.entitlement_mutation.alert.handling_event import (
     CanonicalEntitlementMutationAlertEventHandlingEventModel,
 )
 from app.infra.db.session import SessionLocal

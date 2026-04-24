@@ -8,11 +8,6 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.ai_engine.exceptions import (
-    UpstreamError,
-    UpstreamRateLimitError,
-    UpstreamTimeoutError,
-)
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.routers.users import ErrorEnvelope
 from app.api.v1.schemas.natal_interpretation import (
@@ -31,16 +26,21 @@ from app.domain.llm.runtime.contracts import (
     OutputValidationError,
     UnknownUseCaseError,
 )
+from app.domain.llm.runtime.errors import (
+    UpstreamError,
+    UpstreamRateLimitError,
+    UpstreamTimeoutError,
+)
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.session import get_db_session
 from app.services.disclaimer_registry import get_disclaimers
+from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
     NatalChartLongEntitlementGate,
     NatalChartLongEntitlementResult,
     NatalChartLongQuotaExceededError,
 )
-from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,

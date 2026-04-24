@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 
 from app.core.rate_limit import RateLimitError
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.infra.db.session import SessionLocal
@@ -321,3 +321,4 @@ def test_get_alerts_summary_requires_ops_role() -> None:
 
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "insufficient_role"
+

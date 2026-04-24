@@ -6,13 +6,13 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
@@ -294,3 +294,4 @@ def test_retry_failed_alerts_raises_not_retryable_when_rule_matches(
             db_session,
             alert_event_id=event.id,
         )
+

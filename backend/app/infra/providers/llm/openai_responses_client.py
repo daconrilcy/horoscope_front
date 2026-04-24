@@ -7,14 +7,14 @@ from typing import Any, Dict, List, Optional
 
 from openai import AsyncOpenAI
 
-from app.ai_engine.config import ai_engine_settings
-from app.ai_engine.exceptions import ProviderNotConfiguredError
+from app.core.llm_settings import ai_engine_settings
 from app.domain.llm.runtime.contracts import (
     GatewayMeta,
     GatewayResult,
     UsageInfo,
     is_reasoning_model,
 )
+from app.domain.llm.runtime.errors import ProviderNotConfiguredError
 
 logger = logging.getLogger(__name__)
 

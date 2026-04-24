@@ -26,20 +26,23 @@ from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.public_projection import PublicPredictionAssembler
-from app.services.chat_guidance_service import ChatGuidanceService, ChatGuidanceServiceError
 from app.services.daily_prediction_service import DailyPredictionService
 from app.services.daily_prediction_types import ComputeMode, DailyPredictionServiceError
-from app.services.guidance_service import GuidanceService, GuidanceServiceError
 from app.services.horoscope_daily_entitlement_gate import (
     HoroscopeDailyAccessDeniedError,
     HoroscopeDailyEntitlementGate,
 )
+from app.services.llm_generation.chat_guidance_service import (
+    ChatGuidanceService,
+    ChatGuidanceServiceError,
+)
+from app.services.llm_generation.guidance_service import GuidanceService, GuidanceServiceError
+from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.llm_qa_seed_service import (
     LLM_QA_TEST_USER_EMAIL,
     LlmQaSeedResult,
     LlmQaSeedService,
 )
-from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,

@@ -381,7 +381,7 @@ class TestNatalInterpretationEndpointV2:
         assert response.json()["error"]["code"] == "unknown_use_case"
 
     def test_upstream_timeout(self, test_client, mock_db) -> None:
-        from app.ai_engine.exceptions import UpstreamTimeoutError
+        from app.domain.llm.runtime.errors import UpstreamTimeoutError
 
         mock_db.execute.return_value.scalar_one_or_none.return_value = None
         with (

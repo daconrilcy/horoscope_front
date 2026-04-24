@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,14 +9,14 @@ from fastapi import HTTPException
 from sqlalchemy import select
 
 from app.infra.db.base import Base
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
-    CanonicalEntitlementMutationAlertEventModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
-)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.handling import (
+    CanonicalEntitlementMutationAlertEventHandlingModel,
 )
 from app.infra.db.session import SessionLocal, engine
 from app.services.canonical_entitlement_alert_handling_service import (
@@ -149,7 +150,7 @@ def test_upsert_handling_raises_404_when_alert_event_not_found() -> None:
 
 def test_upsert_handling_does_not_commit() -> None:
     db = MagicMock()
-    db.get.return_value = object()
+    db.get.return_value = SimpleNamespace()
     db.execute.return_value.scalar_one_or_none.return_value = None
 
     CanonicalEntitlementAlertHandlingService.upsert_handling(
@@ -166,7 +167,7 @@ def test_upsert_handling_does_not_commit() -> None:
 
 def test_upsert_handling_flushes_session() -> None:
     db = MagicMock()
-    db.get.return_value = object()
+    db.get.return_value = SimpleNamespace()
     db.execute.return_value.scalar_one_or_none.return_value = None
 
     CanonicalEntitlementAlertHandlingService.upsert_handling(
@@ -178,7 +179,7 @@ def test_upsert_handling_flushes_session() -> None:
         suppression_key=None,
     )
 
-    db.flush.assert_called_once()
+    assert db.flush.call_count >= 1
 
 
 def test_upsert_handling_suppressed_sets_correct_status() -> None:

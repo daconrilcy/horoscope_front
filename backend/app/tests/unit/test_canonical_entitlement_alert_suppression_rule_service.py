@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertEventHandlingModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.services.canonical_entitlement_alert_suppression_rule_service import (

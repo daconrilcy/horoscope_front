@@ -9,13 +9,13 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
-from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertEventHandlingModel,
 )
 from app.services.canonical_entitlement_alert_retry_service import (
@@ -155,7 +155,7 @@ class CanonicalEntitlementAlertBatchRetryService:
     ) -> list[CanonicalEntitlementMutationAlertEventModel]:
         from sqlalchemy import literal
 
-        from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+        from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
             CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
         )
 
@@ -195,3 +195,4 @@ class CanonicalEntitlementAlertBatchRetryService:
             query = query.where(model.created_at <= date_to)
         query = query.order_by(model.id.asc()).limit(limit)
         return list(db.scalars(query).all())
+

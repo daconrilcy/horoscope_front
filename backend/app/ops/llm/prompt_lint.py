@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from jinja2 import Environment, TemplateSyntaxError
 
-from app.ai_engine.config import ai_engine_settings
+from app.core.llm_settings import ai_engine_settings
 
 logger = logging.getLogger(__name__)
 

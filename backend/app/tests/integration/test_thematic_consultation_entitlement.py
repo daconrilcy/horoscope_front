@@ -288,7 +288,7 @@ def test_generate_canonical_quota_ok() -> None:
             side_effect=_dynamic_snapshot,
         ),
         patch(
-            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+            "app.services.llm_generation.consultation_generation_service.ConsultationGenerationService.generate",
             return_value=_generate_payload(),
         ),
     ):
@@ -315,7 +315,7 @@ def test_generate_canonical_unlimited_ok() -> None:
             side_effect=_dynamic_snapshot,
         ),
         patch(
-            "app.services.consultation_generation_service.ConsultationGenerationService.generate",
+            "app.services.llm_generation.consultation_generation_service.ConsultationGenerationService.generate",
             return_value=_generate_payload(),
         ),
     ):

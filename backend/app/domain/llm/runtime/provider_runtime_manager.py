@@ -13,8 +13,9 @@ from openai import (
     RateLimitError,
 )
 
-from app.ai_engine.config import ai_engine_settings
-from app.ai_engine.exceptions import (
+from app.core.llm_settings import ai_engine_settings
+from app.domain.llm.runtime.contracts import GatewayResult
+from app.domain.llm.runtime.errors import (
     RetryBudgetExhaustedError,
     UpstreamAuthError,
     UpstreamBadRequestError,
@@ -24,7 +25,6 @@ from app.ai_engine.exceptions import (
     UpstreamServerError,
     UpstreamTimeoutError,
 )
-from app.domain.llm.runtime.contracts import GatewayResult
 from app.domain.llm.runtime.simulation import simulation_error
 from app.infra.providers.llm.circuit_breaker import get_circuit_breaker
 from app.infra.providers.llm.openai_responses_client import ResponsesClient

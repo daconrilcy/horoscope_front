@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.guidance_service import (
+from app.services.llm_generation.guidance_service import (
     ContextualGuidanceData,
     GuidanceData,
     GuidanceService,

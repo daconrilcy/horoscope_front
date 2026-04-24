@@ -49,16 +49,15 @@ from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
-from app.services.chat_guidance_service import ChatGuidanceServiceError
-from app.services.llm_token_usage_service import LlmTokenUsageService
+from app.core.llm_settings import ai_engine_settings
+from app.services.llm_generation.chat_guidance_service import ChatGuidanceServiceError
+from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
     # Ensure no API key is present for these tests to use stubs
-    from app.ai_engine.config import ai_engine_settings
-
     ai_engine_settings.openai_api_key = ""
 
     BillingService.reset_subscription_status_cache()
@@ -1159,7 +1158,7 @@ def test_send_chat_message_rolls_back_partial_canonical_consumption() -> None:
         return original_record_usage(*args, **kwargs)
 
     monkeypatch.setattr(
-        "app.services.chat_guidance_service.LlmTokenUsageService.record_usage",
+        "app.services.llm_generation.chat_guidance_service.LlmTokenUsageService.record_usage",
         _record_then_fail,
     )
 

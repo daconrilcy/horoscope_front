@@ -100,9 +100,12 @@ from app.infra.db.repositories.llm.prompting_repository import (
     list_release_snapshots_timeline as repo_list_release_snapshots_timeline,
 )
 from app.infra.db.session import get_db_session
-from app.infra.llm.anonymizer import LLMAnonymizationError, anonymize_text
 from app.ops.llm.services import PromptLint, PromptRegistryV2, replay, run_eval
 from app.services.audit_service import AuditEventCreatePayload, AuditService
+from app.services.llm_generation.anonymization_service import (
+    LLMAnonymizationError,
+    anonymize_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1152,7 +1155,7 @@ def _record_audit_event(
     status: str,
     details: Any,
 ) -> None:
-    from app.schemas.audit_details import to_safe_details
+    from app.domain.audit.safe_details import to_safe_details
 
     AuditService.record_event(
         db,

@@ -9,7 +9,7 @@ from app.domain.llm.runtime.contracts import (
     NatalExecutionInput,
     UsageInfo,
 )
-from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
+from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 
 
 @pytest.mark.asyncio
@@ -50,9 +50,11 @@ async def test_interpret_calls_adapter_canonical(db):
 
         # Mock dependencies
         with (
-            patch("app.services.natal_interpretation_service_v2.build_chart_json") as mock_chart,
             patch(
-                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog"
+                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json"
+            ) as mock_chart,
+            patch(
+                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog"
             ) as mock_catalog,
         ):
             mock_chart.return_value = {"planets": []}
@@ -103,9 +105,11 @@ async def test_generate_free_short_calls_adapter_canonical(db):
         birth_profile = MagicMock(birth_time="12:00", birth_lat=48.8, birth_lon=2.3)
 
         with (
-            patch("app.services.natal_interpretation_service_v2.build_chart_json") as mock_chart,
             patch(
-                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog"
+                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json"
+            ) as mock_chart,
+            patch(
+                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog"
             ) as mock_catalog,
         ):
             mock_chart.return_value = {"planets": []}

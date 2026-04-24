@@ -42,7 +42,17 @@ from typing import Any, Awaitable, Callable, NoReturn, Optional
 
 from sqlalchemy.orm import Session
 
-from app.ai_engine.exceptions import (
+from app.core.config import settings
+from app.domain.llm.runtime.contracts import (
+    ExecutionContext,
+    ExecutionFlags,
+    ExecutionMessage,
+    ExecutionUserInput,
+    GatewayResult,
+    LLMExecutionRequest,
+    NatalExecutionInput,
+)
+from app.domain.llm.runtime.errors import (
     AIEngineError,
     ContextTooLargeError,
     ProviderNotConfiguredError,
@@ -56,18 +66,8 @@ from app.ai_engine.exceptions import (
     UpstreamServerError,
     UpstreamTimeoutError,
 )
-from app.ai_engine.exceptions import (
+from app.domain.llm.runtime.errors import (
     ValidationError as AIEngineValidationError,
-)
-from app.core.config import settings
-from app.domain.llm.runtime.contracts import (
-    ExecutionContext,
-    ExecutionFlags,
-    ExecutionMessage,
-    ExecutionUserInput,
-    GatewayResult,
-    LLMExecutionRequest,
-    NatalExecutionInput,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.prediction.llm_narrator import NarratorAdvice, NarratorResult

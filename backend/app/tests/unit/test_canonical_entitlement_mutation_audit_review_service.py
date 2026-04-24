@@ -10,10 +10,10 @@ from app.infra.db.base import Base
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
+from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_audit_review_event import (
+from app.infra.db.models.entitlement_mutation.audit.review_event import (
     CanonicalEntitlementMutationAuditReviewEventModel,
 )
 from app.infra.db.session import SessionLocal, engine

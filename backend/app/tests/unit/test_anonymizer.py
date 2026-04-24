@@ -1,4 +1,4 @@
-from app.infra.llm.anonymizer import anonymize_text
+from app.services.llm_generation.anonymization_service import anonymize_text
 
 
 def test_anonymize_text_redacts_direct_identifiers() -> None:

@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 
 if TYPE_CHECKING:
-    from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+    from app.infra.db.models.entitlement_mutation.alert.alert_event import (
         CanonicalEntitlementMutationAlertEventModel,
     )
 
@@ -100,3 +100,4 @@ class CanonicalEntitlementAlertSuppressionRuleService:
             if match:
                 results[event.id] = match
         return results
+

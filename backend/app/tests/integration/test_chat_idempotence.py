@@ -10,7 +10,7 @@ from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user import UserModel
-from app.services.chat_guidance_service import ChatGuidanceService
+from app.services.llm_generation.chat_guidance_service import ChatGuidanceService
 
 # Setup in-memory DB
 engine = create_engine("sqlite:///:memory:")

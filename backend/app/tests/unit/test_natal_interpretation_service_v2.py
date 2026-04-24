@@ -19,7 +19,7 @@ from app.domain.astrology.natal_calculation import (
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
-from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
+from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
 from app.services.user_birth_profile_service import UserBirthProfileData
 
 
@@ -224,13 +224,13 @@ class TestNatalInterpretationServiceV2UserInput:
         mock_persisted.created_at = None
 
         with (
-            patch("app.services.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
             patch(
-                "app.services.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -239,7 +239,7 @@ class TestNatalInterpretationServiceV2UserInput:
             ),
             _patch_entitlement_snapshot(),
             patch(
-                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                "app.services.llm_generation.natal_interpretation_service_v2.UserNatalInterpretationModel",
                 return_value=mock_persisted,
             ),
         ):
@@ -281,13 +281,13 @@ class TestNatalInterpretationServiceV2UserInput:
         mock_persisted.created_at = None
 
         with (
-            patch("app.services.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
             patch(
-                "app.services.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -296,7 +296,7 @@ class TestNatalInterpretationServiceV2UserInput:
             ),
             _patch_entitlement_snapshot(),
             patch(
-                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                "app.services.llm_generation.natal_interpretation_service_v2.UserNatalInterpretationModel",
                 return_value=mock_persisted,
             ),
         ):
@@ -334,13 +334,13 @@ class TestNatalInterpretationServiceV2UserInput:
         mock_persisted.created_at = None
 
         with (
-            patch("app.services.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
             patch(
-                "app.services.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -349,7 +349,7 @@ class TestNatalInterpretationServiceV2UserInput:
             ),
             _patch_entitlement_snapshot(),
             patch(
-                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                "app.services.llm_generation.natal_interpretation_service_v2.UserNatalInterpretationModel",
                 return_value=mock_persisted,
             ),
         ):
@@ -387,13 +387,13 @@ class TestNatalInterpretationServiceV2SchemaVersion:
         mock_persisted.created_at = None
 
         with (
-            patch("app.services.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
             patch(
-                "app.services.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -402,7 +402,7 @@ class TestNatalInterpretationServiceV2SchemaVersion:
             ),
             _patch_entitlement_snapshot(),
             patch(
-                "app.services.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                "app.services.llm_generation.natal_interpretation_service_v2.UserNatalInterpretationModel",
                 return_value=mock_persisted,
             ),
         ):
@@ -447,13 +447,13 @@ class TestNatalInterpretationServiceV2Modules:
         mock_gw_instance.execute_request = AsyncMock(return_value=gw_result)
 
         with (
-            patch("app.services.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
             patch(
-                "app.services.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(

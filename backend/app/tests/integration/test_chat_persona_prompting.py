@@ -21,7 +21,7 @@ from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.chat_guidance_service import ChatGuidanceService
+from app.services.llm_generation.chat_guidance_service import ChatGuidanceService
 
 
 def _cleanup_tables() -> None:
@@ -251,7 +251,7 @@ def test_persona_fallback_on_none_persona_id_returns_default(
         boundaries=[],
     )
 
-    with caplog.at_level("WARNING", logger="app.services.chat_guidance_service"):
+    with caplog.at_level("WARNING", logger="app.services.llm_generation.chat_guidance_service"):
         with SessionLocal() as db:
             persona = ChatGuidanceService._load_persona_sync(db, None)
 
@@ -280,7 +280,7 @@ def test_persona_fallback_on_unknown_persona_id_returns_default(
     )
 
     unknown_id = uuid.uuid4()
-    with caplog.at_level("WARNING", logger="app.services.chat_guidance_service"):
+    with caplog.at_level("WARNING", logger="app.services.llm_generation.chat_guidance_service"):
         with SessionLocal() as db:
             persona = ChatGuidanceService._load_persona_sync(db, unknown_id)
 

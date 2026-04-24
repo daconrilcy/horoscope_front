@@ -13,19 +13,19 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.core.datetime_provider import datetime_provider
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
-from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertEventHandlingModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
+from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
 from app.infra.db.session import get_db_session
@@ -1722,7 +1722,7 @@ def get_alert_handling_history(
     ) is not None:
         return err
 
-    from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling_event import (
+    from app.infra.db.models.entitlement_mutation.alert.handling_event import (
         CanonicalEntitlementMutationAlertEventHandlingEventModel,
     )
 
@@ -2081,7 +2081,7 @@ def get_review_history(
     from app.infra.db.models.canonical_entitlement_mutation_audit import (
         CanonicalEntitlementMutationAuditModel,
     )
-    from app.infra.db.models.canonical_entitlement_mutation_audit_review_event import (
+    from app.infra.db.models.entitlement_mutation.audit.review_event import (
         CanonicalEntitlementMutationAuditReviewEventModel,
     )
 
@@ -2127,3 +2127,4 @@ def get_review_history(
         },
         "meta": {"request_id": request_id},
     }
+

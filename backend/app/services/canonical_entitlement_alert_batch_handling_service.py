@@ -7,10 +7,10 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertEventHandlingModel,
 )
 from app.services.canonical_entitlement_alert_handling_service import (
@@ -152,3 +152,4 @@ class CanonicalEntitlementAlertBatchHandlingService:
             query = query.where(model.created_at <= date_to)
         query = query.order_by(model.id.asc()).limit(limit)
         return list(db.scalars(query).all())
+

@@ -7,7 +7,7 @@ from unittest.mock import patch
 from app.api.v1.routers import admin_llm as admin_llm_router
 from app.api.v1.routers.admin_llm import _build_admin_manual_execute_response_payload
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
-from app.infra.llm.anonymizer import LLMAnonymizationError
+from app.services.llm_generation.anonymization_service import LLMAnonymizationError
 
 
 def test_build_admin_manual_execute_response_redacts_structured_sensitive_keys() -> None:

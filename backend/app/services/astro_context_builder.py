@@ -65,7 +65,7 @@ class AstroContextBuilder:
     def _get_lunar_phase_label(jdut: float) -> str:
         """Calculate human-readable lunar phase."""
         from app.domain.astrology.ephemeris_provider import calculate_planets
-        from app.services.natal_interpretation_service import _longitude_to_sign
+        from app.services.llm_generation.natal_interpretation_service import _longitude_to_sign
 
         res = calculate_planets(jdut)
         sun = next(p for p in res.planets if p.planet_id == "sun")

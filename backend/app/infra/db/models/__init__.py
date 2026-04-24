@@ -15,29 +15,8 @@ from app.infra.db.models.billing import (
     UserSubscriptionModel,
 )
 from app.infra.db.models.calibration import CalibrationRawDayModel
-from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
-    CanonicalEntitlementMutationAlertEventModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling_event import (
-    CanonicalEntitlementMutationAlertEventHandlingEventModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
-    CanonicalEntitlementMutationAlertSuppressionRuleModel,
-)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
-    CanonicalEntitlementMutationAuditReviewModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_audit_review_event import (
-    CanonicalEntitlementMutationAuditReviewEventModel,
 )
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
@@ -66,6 +45,30 @@ from app.infra.db.models.enterprise_billing import (
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
 from app.infra.db.models.enterprise_feature_usage_counters import (
     EnterpriseFeatureUsageCounterModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.handling import (
+    CanonicalEntitlementMutationAlertHandlingModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.handling_event import (
+    CanonicalEntitlementMutationAlertHandlingEventModel,
+)
+from app.infra.db.models.entitlement_mutation.audit.review import (
+    CanonicalEntitlementMutationAuditReviewModel,
+)
+from app.infra.db.models.entitlement_mutation.audit.review_event import (
+    CanonicalEntitlementMutationAuditReviewEventModel,
+)
+from app.infra.db.models.entitlement_mutation.suppression.suppression_application import (
+    CanonicalEntitlementMutationAlertSuppressionApplicationModel,
+)
+from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
+    CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
@@ -135,8 +138,9 @@ __all__ = [
     "CanonicalEntitlementMutationAuditReviewEventModel",
     "CanonicalEntitlementMutationAlertDeliveryAttemptModel",
     "CanonicalEntitlementMutationAlertEventModel",
-    "CanonicalEntitlementMutationAlertEventHandlingModel",
-    "CanonicalEntitlementMutationAlertEventHandlingEventModel",
+    "CanonicalEntitlementMutationAlertHandlingModel",
+    "CanonicalEntitlementMutationAlertHandlingEventModel",
+    "CanonicalEntitlementMutationAlertSuppressionApplicationModel",
     "CanonicalEntitlementMutationAlertSuppressionRuleModel",
     "ChartResultModel",
     "ChatConversationModel",

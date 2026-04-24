@@ -1,3 +1,6 @@
+# Service d'émission initiale des alertes entitlement mutation.
+"""Construit et persiste les alertes SLA tout en alimentant leur cycle de vie courant."""
+
 from __future__ import annotations
 
 import json
@@ -13,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.services.canonical_entitlement_mutation_audit_query_service import (
@@ -125,8 +128,9 @@ class CanonicalEntitlementAlertService:
                         audit_id=row.audit.id,
                         dedupe_key=dedupe_key,
                         alert_kind=alert_kind,
+                        alert_status="open",
                         risk_level_snapshot=row.diff.risk_level,
-                        effective_review_status_snapshot=row.effective_review_status,
+                        review_status_snapshot=row.effective_review_status,
                         feature_code_snapshot=row.audit.feature_code,
                         plan_id_snapshot=row.audit.plan_id,
                         plan_code_snapshot=row.audit.plan_code_snapshot,
@@ -136,9 +140,10 @@ class CanonicalEntitlementAlertService:
                         due_at_snapshot=row.due_at,
                         age_seconds_snapshot=row.age_seconds,
                         delivery_channel="log",  # Default, updated below
-                        delivery_status="sent",  # Default, updated below
+                        last_delivery_status="sent",  # Default, updated below
                         request_id=request_id,
                         payload=payload,
+                        delivery_attempt_count=1,
                     )
                     db.add(event)
                     db.flush()
@@ -150,8 +155,10 @@ class CanonicalEntitlementAlertService:
                             settings.ops_review_queue_alert_webhook_url, payload
                         )
                         if success:
+                            delivered_at = datetime_provider.utcnow()
                             event.delivery_status = "sent"
-                            event.delivered_at = datetime_provider.utcnow()
+                            event.first_delivered_at = delivered_at
+                            event.delivered_at = delivered_at
                             emitted_count += 1
                         else:
                             event.delivery_status = "failed"
@@ -161,8 +168,10 @@ class CanonicalEntitlementAlertService:
                         # Fallback log
                         logger.info("ops_review_queue_alert_log_delivery payload=%s", payload)
                         event.delivery_channel = "log"
+                        delivered_at = datetime_provider.utcnow()
                         event.delivery_status = "sent"
-                        event.delivered_at = datetime_provider.utcnow()
+                        event.first_delivered_at = delivered_at
+                        event.delivered_at = delivered_at
                         emitted_count += 1
 
             except IntegrityError:

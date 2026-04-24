@@ -1,3 +1,6 @@
+# Service de retry des alertes en échec.
+"""Journalise les tentatives de retry et maintient le current state de delivery."""
+
 from __future__ import annotations
 
 import logging
@@ -9,11 +12,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
-from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
 from app.services.canonical_entitlement_alert_service import CanonicalEntitlementAlertService
 
@@ -98,18 +101,23 @@ class CanonicalEntitlementAlertRetryService:
                 CanonicalEntitlementMutationAlertDeliveryAttemptModel(
                     alert_event_id=event.id,
                     attempt_number=attempt_number,
-                    delivery_channel=delivery_channel,
+                    delivery_provider=delivery_channel,
                     delivery_status=delivery_status,
                     delivery_error=delivery_error,
                     request_id=request_id,
                     payload=event.payload,
                     delivered_at=delivered_at,
+                    is_retryable=(delivery_status == "failed"),
                 )
             )
 
             event.delivery_status = delivery_status
             event.delivery_error = delivery_error
             event.delivered_at = delivered_at
+            event.delivery_attempt_count = attempt_number
+            event.updated_at = effective_now
+            if delivered_at is not None and event.first_delivered_at is None:
+                event.first_delivered_at = delivered_at
             retried_count += 1
 
         db.flush()
@@ -128,7 +136,7 @@ class CanonicalEntitlementAlertRetryService:
         alert_event_id: int | None,
         limit: int | None,
     ) -> list[CanonicalEntitlementMutationAlertEventModel]:
-        from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+        from app.infra.db.models.entitlement_mutation.alert.handling import (
             CanonicalEntitlementMutationAlertEventHandlingModel as HandlingModel,
         )
         from app.services.canonical_entitlement_alert_suppression_rule_service import (

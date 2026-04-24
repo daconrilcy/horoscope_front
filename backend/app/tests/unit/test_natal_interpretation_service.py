@@ -14,7 +14,7 @@ from app.domain.astrology.natal_calculation import (
     PlanetPosition,
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
-from app.services.natal_interpretation_service import (
+from app.services.llm_generation.natal_interpretation_service import (
     NatalInterpretationService,
     NatalInterpretationServiceError,
     _detect_degraded_mode,

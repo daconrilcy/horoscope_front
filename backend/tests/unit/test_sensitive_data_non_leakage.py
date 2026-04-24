@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.ai_engine.services.log_sanitizer import SensitiveDataFilter
+from app.core.llm_logging import SensitiveDataFilter
 from app.core.sensitive_data import (
     DataCategory,
     PolicyAction,

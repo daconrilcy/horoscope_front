@@ -14,7 +14,7 @@ from app.infra.db.base import Base
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
+from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
 from app.infra.db.models.user import UserModel
@@ -1794,3 +1794,4 @@ def test_review_queue_summary_oldest_pending_none_when_no_pending() -> None:
     assert response.status_code == 200
     data = response.json()["data"]
     assert "oldest_pending_age_seconds" not in data
+

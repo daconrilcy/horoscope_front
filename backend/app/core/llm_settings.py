@@ -1,0 +1,84 @@
+"""Centralise la configuration runtime commune du moteur LLM."""
+
+from __future__ import annotations
+
+from functools import lru_cache
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class AIEngineSettings(BaseSettings):
+    """Porte les paramètres runtime partagés par l’orchestration LLM."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    openai_model_default: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL_DEFAULT")
+    timeout_seconds: int = Field(default=30, alias="AI_ENGINE_TIMEOUT_SECONDS")
+    timeout_seconds_chat: int = Field(default=30, alias="AI_ENGINE_TIMEOUT_SECONDS_CHAT")
+    timeout_seconds_guidance: int = Field(default=30, alias="AI_ENGINE_TIMEOUT_SECONDS_GUIDANCE")
+    timeout_seconds_natal: int = Field(default=120, alias="AI_ENGINE_TIMEOUT_SECONDS_NATAL")
+    timeout_seconds_horoscope_daily: int = Field(
+        default=60, alias="AI_ENGINE_TIMEOUT_SECONDS_HOROSCOPE_DAILY"
+    )
+
+    max_retries: int = Field(default=2, alias="AI_ENGINE_MAX_RETRIES")
+    context_max_tokens: int = Field(default=4000, alias="AI_ENGINE_CONTEXT_MAX_TOKENS")
+    retry_base_delay_ms: int = Field(default=500, alias="AI_ENGINE_RETRY_BASE_DELAY_MS")
+    retry_max_delay_ms: int = Field(default=5000, alias="AI_ENGINE_RETRY_MAX_DELAY_MS")
+
+    circuit_breaker_failure_threshold: int = Field(
+        default=5, alias="AI_ENGINE_CB_FAILURE_THRESHOLD"
+    )
+    circuit_breaker_recovery_timeout_sec: int = Field(
+        default=60, alias="AI_ENGINE_CB_RECOVERY_TIMEOUT_SEC"
+    )
+
+    cost_per_1k_input_tokens: float = Field(
+        default=0.00015, alias="AI_ENGINE_COST_PER_1K_INPUT_TOKENS"
+    )
+    cost_per_1k_output_tokens: float = Field(
+        default=0.0006, alias="AI_ENGINE_COST_PER_1K_OUTPUT_TOKENS"
+    )
+
+    rate_limit_per_min: int = Field(default=30, alias="AI_ENGINE_RATE_LIMIT_PER_MIN")
+    rate_limit_enabled: bool = Field(default=True, alias="AI_ENGINE_RATE_LIMIT_ENABLED")
+
+    cache_enabled: bool = Field(default=False, alias="AI_ENGINE_CACHE_ENABLED")
+    cache_ttl_seconds: int = Field(default=3600, alias="AI_ENGINE_CACHE_TTL_SECONDS")
+
+    llm_prompt_forbidden_words: list[str] = Field(
+        default_factory=lambda: [
+            "ignore all",
+            "disregard previous",
+            "forget previous",
+            "stop instruction",
+        ],
+        alias="LLM_PROMPT_FORBIDDEN_WORDS",
+    )
+
+    redis_url: str | None = Field(default=None, alias="REDIS_URL")
+
+    @property
+    def is_openai_configured(self) -> bool:
+        """Indique si la clé OpenAI est disponible."""
+        return bool(self.openai_api_key)
+
+    @property
+    def is_redis_configured(self) -> bool:
+        """Indique si Redis est disponible pour les briques optionnelles."""
+        return bool(self.redis_url)
+
+
+@lru_cache
+def get_ai_engine_settings() -> AIEngineSettings:
+    """Retourne l’instance de configuration LLM mise en cache."""
+    return AIEngineSettings()
+
+
+ai_engine_settings = get_ai_engine_settings()

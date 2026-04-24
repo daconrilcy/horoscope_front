@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.ai_engine.exceptions import UpstreamCircuitOpenError
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.domain.llm.runtime.errors import UpstreamCircuitOpenError
 from app.domain.llm.runtime.observability_service import (
     compute_input_hash,
     count_evidence_warnings,

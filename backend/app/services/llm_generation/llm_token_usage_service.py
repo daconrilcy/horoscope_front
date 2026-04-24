@@ -1,0 +1,96 @@
+"""Enregistre la consommation de tokens issue des flux de génération LLM."""
+
+from __future__ import annotations
+
+import logging
+import uuid
+from datetime import datetime
+from typing import Literal
+
+from sqlalchemy.orm import Session
+
+from app.core.datetime_provider import datetime_provider
+from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
+from app.services.entitlement_types import QuotaDefinition, UsageState
+from app.services.quota_usage_service import QuotaUsageService
+
+logger = logging.getLogger(__name__)
+
+
+class LlmTokenUsageService:
+    """Porte l’écriture transactionnelle des journaux de consommation LLM."""
+
+    @staticmethod
+    def record_usage(
+        db: Session,
+        *,
+        user_id: int,
+        feature_code: str,
+        quotas: list[QuotaDefinition] | None,
+        provider_model: str,
+        tokens_in: int,
+        tokens_out: int,
+        request_id: str,
+        llm_call_log_id: uuid.UUID | None = None,
+        ref_dt: datetime | None = None,
+        quota_mode: Literal["strict", "cap"] = "strict",
+    ) -> UsageState | None:
+        """Enregistre la consommation LLM et met à jour les quotas associés."""
+        if ref_dt is None:
+            ref_dt = datetime_provider.utcnow()
+
+        tokens_total = tokens_in + tokens_out
+        usage_states: list[UsageState] = []
+
+        # 1. Increment all matching usage counters (within the same transaction)
+        for quota in quotas or []:
+            if quota_mode == "cap":
+                usage_states.append(
+                    QuotaUsageService.consume_up_to_limit(
+                        db,
+                        user_id=user_id,
+                        feature_code=feature_code,
+                        quota=quota,
+                        amount=tokens_total,
+                        ref_dt=ref_dt,
+                    )
+                )
+            else:
+                usage_states.append(
+                    QuotaUsageService.consume(
+                        db,
+                        user_id=user_id,
+                        feature_code=feature_code,
+                        quota=quota,
+                        amount=tokens_total,
+                        ref_dt=ref_dt,
+                    )
+                )
+
+        # 2. Create the usage log (within transaction)
+        usage_log = UserTokenUsageLogModel(
+            user_id=user_id,
+            feature_code=feature_code,
+            provider_model=provider_model,
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+            tokens_total=tokens_total,
+            request_id=request_id,
+            llm_call_log_id=llm_call_log_id,
+            created_at=ref_dt,
+        )
+        db.add(usage_log)
+
+        # Flush to ensure constraints are checked and IDs are generated
+        db.flush()
+
+        logger.info(
+            "Recorded %d tokens for user %d (feature: %s, request_id: %s, quota_applied: %s)",
+            tokens_total,
+            user_id,
+            feature_code,
+            request_id,
+            bool(quotas),
+        )
+
+        return usage_states[0] if usage_states else None

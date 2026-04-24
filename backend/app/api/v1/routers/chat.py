@@ -19,14 +19,14 @@ from app.services.chat_entitlement_gate import (
     ChatEntitlementResult,
     ChatQuotaExceededError,
 )
-from app.services.chat_guidance_service import (
+from app.services.entitlement_types import QuotaDefinition
+from app.services.llm_generation.chat_guidance_service import (
     ChatConversationHistoryData,
     ChatConversationListData,
     ChatGuidanceService,
     ChatGuidanceServiceError,
     ChatReplyData,
 )
-from app.services.entitlement_types import QuotaDefinition
 from app.services.quota_usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)

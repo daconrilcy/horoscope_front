@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 
 from app.infra.db.base import Base
-from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.infra.db.models.user import UserModel
@@ -196,3 +196,4 @@ def test_rules_api_returns_429_when_rate_limited(monkeypatch: object) -> None:
 
     assert response.status_code == 429
     assert response.json()["error"]["request_id"] == "rid-alert-rules-429"
+

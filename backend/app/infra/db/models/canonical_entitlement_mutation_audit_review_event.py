@@ -1,36 +1,8 @@
-from __future__ import annotations
+# Shim legacy pour l'ancien chemin d'import de l'historique de review.
+"""Réexporte le modèle canonique d'historique de review pour préserver la compatibilité locale."""
 
-from datetime import datetime
+from app.infra.db.models.entitlement_mutation.audit.review_event import (
+    CanonicalEntitlementMutationAuditReviewEventModel,
+)
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
-
-from app.core.datetime_provider import datetime_provider
-from app.infra.db.base import Base
-
-
-def _utc_now() -> datetime:
-    return datetime_provider.utcnow()
-
-
-class CanonicalEntitlementMutationAuditReviewEventModel(Base):
-    __tablename__ = "canonical_entitlement_mutation_audit_review_events"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    audit_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("canonical_entitlement_mutation_audits.id"),
-        nullable=False,
-        index=True,
-    )
-    previous_review_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    new_review_status: Mapped[str] = mapped_column(String(32), nullable=False)
-    previous_review_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
-    new_review_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
-    previous_incident_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    new_incident_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    reviewed_by_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    occurred_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=_utc_now, index=True
-    )
-    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+__all__ = ["CanonicalEntitlementMutationAuditReviewEventModel"]

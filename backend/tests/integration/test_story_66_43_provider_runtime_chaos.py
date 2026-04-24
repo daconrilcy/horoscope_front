@@ -12,8 +12,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from openai import APITimeoutError, InternalServerError, RateLimitError
 
-from app.ai_engine.config import ai_engine_settings
-from app.ai_engine.exceptions import RetryBudgetExhaustedError, UpstreamCircuitOpenError
+from app.core.llm_settings import ai_engine_settings
 from app.domain.llm.runtime.contracts import (
     ContextCompensationStatus,
     ExecutionObservabilitySnapshot,
@@ -23,6 +22,7 @@ from app.domain.llm.runtime.contracts import (
     MaxTokensSource,
     UsageInfo,
 )
+from app.domain.llm.runtime.errors import RetryBudgetExhaustedError, UpstreamCircuitOpenError
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.infra.providers.llm.circuit_breaker import (
     get_circuit_breaker,

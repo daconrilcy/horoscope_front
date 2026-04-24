@@ -1,3 +1,6 @@
+# Service de gestion de la review courante et de son historique append-only.
+"""Maintient la review courante d'un audit et son event log versionné."""
+
 from __future__ import annotations
 
 from sqlalchemy import select
@@ -8,10 +11,10 @@ from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
+from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_audit_review_event import (
+from app.infra.db.models.entitlement_mutation.audit.review_event import (
     CanonicalEntitlementMutationAuditReviewEventModel,
 )
 
@@ -56,6 +59,8 @@ class CanonicalEntitlementMutationAuditReviewService:
                 reviewed_at=now,
                 review_comment=review_comment,
                 incident_key=incident_key,
+                request_id=request_id,
+                review_version=1,
             )
             try:
                 with db.begin_nested():
@@ -87,10 +92,13 @@ class CanonicalEntitlementMutationAuditReviewService:
             review.reviewed_at = now
             review.review_comment = review_comment
             review.incident_key = incident_key
+            review.request_id = request_id
+            review.review_version += 1
+            review.updated_at = now
 
-        # INSERT événement (reached only if creation OR real change)
         event = CanonicalEntitlementMutationAuditReviewEventModel(
             audit_id=audit_id,
+            event_type="created" if is_creation else "updated",
             previous_review_status=previous_status,
             new_review_status=review_status,
             previous_review_comment=previous_comment,

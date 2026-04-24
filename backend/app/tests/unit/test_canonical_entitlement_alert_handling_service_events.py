@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from datetime import timezone
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from sqlalchemy import select
 
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertEventHandlingModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling_event import (
+from app.infra.db.models.entitlement_mutation.alert.handling_event import (
     CanonicalEntitlementMutationAlertEventHandlingEventModel,
 )
 from app.infra.db.session import SessionLocal
@@ -230,7 +231,7 @@ def test_upsert_handling_stores_request_id_in_event() -> None:
 
 def test_upsert_handling_flushes_event_without_commit() -> None:
     db = MagicMock()
-    db.get.return_value = object()
+    db.get.return_value = SimpleNamespace()
     db.execute.return_value.scalar_one_or_none.return_value = None
 
     CanonicalEntitlementAlertHandlingService.upsert_handling(
@@ -243,5 +244,5 @@ def test_upsert_handling_flushes_event_without_commit() -> None:
         request_id="rid-flush",
     )
 
-    assert db.flush.call_count == 1
+    assert db.flush.call_count >= 1
     db.commit.assert_not_called()

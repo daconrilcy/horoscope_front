@@ -57,7 +57,7 @@ def _get_redis_client() -> "object | None":
             return _redis_client
 
         try:
-            from app.ai_engine.config import ai_engine_settings
+            from app.core.llm_settings import ai_engine_settings
 
             if not ai_engine_settings.redis_url:
                 return None
@@ -80,7 +80,7 @@ def _get_redis_client() -> "object | None":
 def _check_redis() -> ServiceStatus:
     """Check Redis connection."""
     try:
-        from app.ai_engine.config import ai_engine_settings
+        from app.core.llm_settings import ai_engine_settings
 
         if not ai_engine_settings.redis_url:
             return ServiceStatus(status="ok", message="not configured")

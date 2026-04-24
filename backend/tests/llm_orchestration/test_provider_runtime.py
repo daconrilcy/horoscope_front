@@ -3,12 +3,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from openai import APITimeoutError, RateLimitError
 
-from app.ai_engine.exceptions import (
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.domain.llm.runtime.errors import (
     RetryBudgetExhaustedError,
     UpstreamCircuitOpenError,
     UpstreamRateLimitError,
 )
-from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.infra.providers.llm.circuit_breaker import _breakers
 

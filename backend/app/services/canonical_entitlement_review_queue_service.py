@@ -7,7 +7,7 @@ from typing import Any, Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.canonical_entitlement_mutation_audit_review import (
+from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
 from app.services.canonical_entitlement_mutation_audit_query_service import (
@@ -268,3 +268,4 @@ class CanonicalEntitlementReviewQueueService:
         if occurred_at.tzinfo is None:
             return occurred_at.replace(tzinfo=timezone.utc)
         return occurred_at
+

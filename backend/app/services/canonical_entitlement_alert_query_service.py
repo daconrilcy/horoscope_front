@@ -8,13 +8,13 @@ from typing import Literal
 from sqlalchemy import case, func, literal, select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.canonical_entitlement_mutation_alert_delivery_attempt import (
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
+from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertEventHandlingModel,
 )
 
@@ -148,7 +148,7 @@ class CanonicalEntitlementAlertQueryService:
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ) -> AlertSummaryResult:
-        from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+        from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
             CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
         )
 
@@ -266,7 +266,7 @@ class CanonicalEntitlementAlertQueryService:
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ):
-        from app.infra.db.models.canonical_entitlement_mutation_alert_suppression_rule import (
+        from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
             CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
         )
 
@@ -345,3 +345,4 @@ class CanonicalEntitlementAlertQueryService:
         for attempt in attempts:
             attempts_by_event[attempt.alert_event_id].append(attempt)
         return attempts_by_event
+

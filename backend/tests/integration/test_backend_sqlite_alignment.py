@@ -126,3 +126,25 @@ def test_secondary_sqlite_file_with_orm_tables_but_without_alembic_head_fails_gu
     assert status.current_revision is None, status.as_debug_string()
 
     patched_engine.dispose()
+
+
+def test_secondary_sqlite_file_at_head_is_repaired_with_missing_orm_tables(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    sqlite_path = tmp_path / "sqlite-alignment-secondary-repair.sqlite3"
+    database_url = f"sqlite:///{sqlite_path.as_posix()}"
+    patched_engine = create_engine(
+        database_url,
+        connect_args={"check_same_thread": False, "timeout": 30},
+        future=True,
+    )
+    monkeypatch.setattr(session_module, "engine", patched_engine)
+
+    try:
+        ensure_configured_sqlite_file_matches_alembic_head()
+        status = sqlite_alignment_status(database_url)
+        assert status.current_revision == status.head_revision, status.as_debug_string()
+        assert status.missing_tables == (), status.as_debug_string()
+    finally:
+        patched_engine.dispose()

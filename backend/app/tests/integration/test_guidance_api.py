@@ -40,7 +40,7 @@ from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
-from app.services.guidance_service import GuidanceServiceError
+from app.services.llm_generation.guidance_service import GuidanceServiceError
 
 client = TestClient(app)
 

@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.infra.db.base import Base
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
@@ -207,3 +207,4 @@ def test_script_limit_prefers_oldest_pending_item(temp_db, db_session_temp: Sess
     assert res.returncode == 0
     event = db_session_temp.query(CanonicalEntitlementMutationAlertEventModel).one()
     assert event.audit_id == older_overdue.id
+

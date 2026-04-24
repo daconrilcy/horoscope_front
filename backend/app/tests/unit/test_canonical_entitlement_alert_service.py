@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.services.canonical_entitlement_alert_service import (
@@ -203,3 +203,4 @@ def test_emit_concurrent_insert_handled_as_skipped_duplicate(
 
                     assert result.skipped_duplicate_count == 1
                     assert result.emitted_count == 0
+

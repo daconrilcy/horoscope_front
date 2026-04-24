@@ -16,9 +16,9 @@ from sqlalchemy.orm import Session
 
 from app.core.datetime_provider import datetime_provider
 from app.core.sensitive_data import Sink, sanitize_payload
+from app.domain.audit.safe_details import to_safe_details
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.observability.metrics import increment_counter
-from app.schemas.audit_details import to_safe_details
 
 logger = logging.getLogger(__name__)
 

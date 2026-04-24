@@ -224,6 +224,36 @@ def _repair_missing_tables(missing_tables: set[str]) -> None:
             raise
 
 
+def _repair_missing_tables_for_database_url(
+    database_url: str,
+    *,
+    missing_tables: set[str],
+) -> None:
+    """Crée les tables ORM manquantes uniquement sur une SQLite secondaire ciblée."""
+    if not missing_tables:
+        return
+
+    tables_to_create = [
+        table for table in Base.metadata.sorted_tables if table.name in missing_tables
+    ]
+    if not tables_to_create:
+        return
+
+    connect_args: dict[str, object] = {}
+    if database_url.startswith("sqlite"):
+        connect_args = {"check_same_thread": False, "timeout": 30}
+
+    sync_engine = create_engine(
+        database_url,
+        connect_args=connect_args,
+        future=True,
+    )
+    try:
+        Base.metadata.create_all(bind=sync_engine, tables=tables_to_create, checkfirst=True)
+    finally:
+        sync_engine.dispose()
+
+
 def _table_columns(table_name: str) -> dict[str, dict[str, object]]:
     inspector = inspect(engine)
     return {str(column["name"]): column for column in inspector.get_columns(table_name)}
@@ -444,20 +474,16 @@ def _repair_llm_call_logs_environment_constraint() -> bool:
         )
         connection.execute(
             text(
-                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_timestamp "
-                "ON llm_call_logs (timestamp)"
+                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_timestamp ON llm_call_logs (timestamp)"
             )
         )
         connection.execute(
-            text(
-                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_trace_id "
-                "ON llm_call_logs (trace_id)"
-            )
+            text("CREATE INDEX IF NOT EXISTS ix_llm_call_logs_trace_id ON llm_call_logs (trace_id)")
         )
         connection.execute(
             text(
                 "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_scope_timestamp "
-                "ON llm_call_logs (feature, subfeature, \"plan\", timestamp)"
+                'ON llm_call_logs (feature, subfeature, "plan", timestamp)'
             )
         )
         connection.execute(
@@ -555,8 +581,27 @@ def ensure_configured_sqlite_file_matches_alembic_head(
         url = status.database_url
         command.upgrade(_alembic_config(database_url=url), "head")
 
-    post_statuses = configured_sqlite_alignment_statuses()
     settings_url = settings.database_url
+    repaired_secondary_urls: set[str] = set()
+    intermediate_statuses = configured_sqlite_alignment_statuses()
+    for status in intermediate_statuses:
+        if status.database_url == settings_url:
+            continue
+        if not status.exists:
+            continue
+        if status.current_revision != status.head_revision:
+            continue
+        if not status.missing_tables:
+            continue
+        if status.database_url in repaired_secondary_urls:
+            continue
+        _repair_missing_tables_for_database_url(
+            status.database_url,
+            missing_tables=set(status.missing_tables),
+        )
+        repaired_secondary_urls.add(status.database_url)
+
+    post_statuses = configured_sqlite_alignment_statuses()
     misaligned = [
         status
         for status in post_statuses

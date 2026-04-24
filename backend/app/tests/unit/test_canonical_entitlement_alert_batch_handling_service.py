@@ -5,14 +5,14 @@ from unittest.mock import patch
 
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.canonical_entitlement_mutation_alert_event import (
-    CanonicalEntitlementMutationAlertEventModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_alert_event_handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
-)
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
     CanonicalEntitlementMutationAuditModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.handling import (
+    CanonicalEntitlementMutationAlertEventHandlingModel,
 )
 from app.services.canonical_entitlement_alert_batch_handling_service import (
     CanonicalEntitlementAlertBatchHandlingService,
