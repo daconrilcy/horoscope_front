@@ -119,6 +119,73 @@ def test_migration_0082_refuses_to_drop_non_empty_prompt_version_legacy_columns(
     engine.dispose()
 
 
+def test_migration_0082_allows_seeded_empty_allowed_persona_ids(
+    monkeypatch: object, tmp_path: Path
+) -> None:
+    """L upgrade ne doit pas echouer sur `allowed_persona_ids=[]`, valeur legacy vide nominale."""
+    db_path = tmp_path / "migration-20260424-0082-empty-allowed-persona-ids.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = _alembic_config()
+
+    command.upgrade(config, "20260423_0081")
+
+    engine = create_engine(database_url, future=True)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO llm_use_case_configs (
+                    key,
+                    display_name,
+                    description,
+                    output_schema_id,
+                    allowed_persona_ids,
+                    input_schema,
+                    required_prompt_placeholders,
+                    interaction_mode,
+                    user_question_policy,
+                    persona_strategy,
+                    safety_profile,
+                    fallback_use_case_key,
+                    eval_failure_threshold
+                ) VALUES (
+                    :key,
+                    :display_name,
+                    :description,
+                    NULL,
+                    '[]',
+                    NULL,
+                    '[]',
+                    'structured',
+                    'none',
+                    'optional',
+                    'astrology',
+                    NULL,
+                    :eval_failure_threshold
+                )
+                """
+            ),
+            {
+                "key": "guidance_daily",
+                "display_name": "Guidance Daily",
+                "description": "Test",
+                "eval_failure_threshold": 0.2,
+            },
+        )
+
+    command.upgrade(config, "20260424_0082")
+
+    with engine.connect() as connection:
+        use_case_columns = {
+            column["name"] for column in inspect(connection).get_columns("llm_use_case_configs")
+        }
+
+    assert "allowed_persona_ids" not in use_case_columns
+
+    engine.dispose()
+
+
 def test_migration_0082_refuses_to_drop_unmigrated_provider_compat(
     monkeypatch: object, tmp_path: Path
 ) -> None:
@@ -203,18 +270,105 @@ def test_migration_0082_refuses_to_drop_unmigrated_provider_compat(
     engine.dispose()
 
 
-def test_migration_0082_restores_dropped_checks_on_downgrade(
+def test_migration_0082_restores_dropped_checks_and_provider_on_downgrade(
     monkeypatch: object, tmp_path: Path
 ) -> None:
-    """Le downgrade doit reconstruire les colonnes et contraintes retirees a l upgrade."""
-    db_path = tmp_path / "migration-20260424-0082-downgrade-checks.db"
+    """Le downgrade doit reconstruire le schema et recopier `provider_compat`."""
+    db_path = tmp_path / "migration-20260424-0082-downgrade-provider-restore.db"
     database_url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setattr(settings, "database_url", database_url)
     config = _alembic_config()
 
+    engine = create_engine(database_url, future=True)
+    command.upgrade(config, "20260423_0081")
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO llm_call_logs (
+                    id,
+                    use_case,
+                    provider_compat,
+                    model,
+                    latency_ms,
+                    tokens_in,
+                    tokens_out,
+                    cost_usd_estimated,
+                    validation_status,
+                    repair_attempted,
+                    fallback_triggered,
+                    request_id,
+                    trace_id,
+                    input_hash,
+                    environment,
+                    evidence_warnings_count,
+                    timestamp,
+                    expires_at
+                ) VALUES (
+                    :id,
+                    :use_case,
+                    :provider_compat,
+                    :model,
+                    :latency_ms,
+                    :tokens_in,
+                    :tokens_out,
+                    :cost_usd_estimated,
+                    :validation_status,
+                    :repair_attempted,
+                    :fallback_triggered,
+                    :request_id,
+                    :trace_id,
+                    :input_hash,
+                    :environment,
+                    :evidence_warnings_count,
+                    CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP
+                )
+                """
+            ),
+            {
+                "id": "33333333-3333-3333-3333-333333333333",
+                "use_case": "guidance_daily",
+                "provider_compat": "openai",
+                "model": "gpt-4o-mini",
+                "latency_ms": 100,
+                "tokens_in": 10,
+                "tokens_out": 20,
+                "cost_usd_estimated": 0.001,
+                "validation_status": "VALID",
+                "repair_attempted": 0,
+                "fallback_triggered": 0,
+                "request_id": "req-provider-restore",
+                "trace_id": "trace-provider-restore",
+                "input_hash": "hash-provider-restore",
+                "environment": "test",
+                "evidence_warnings_count": 0,
+            },
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO llm_call_log_operational_metadata (
+                    id,
+                    call_log_id,
+                    executed_provider
+                ) VALUES (
+                    :id,
+                    :call_log_id,
+                    :executed_provider
+                )
+                """
+            ),
+            {
+                "id": "44444444-4444-4444-4444-444444444444",
+                "call_log_id": "33333333-3333-3333-3333-333333333333",
+                "executed_provider": "openai",
+            },
+        )
+
     command.upgrade(config, "20260424_0082")
 
-    engine = create_engine(database_url, future=True)
     with engine.connect() as connection:
         assembly_columns = {
             column["name"] for column in inspect(connection).get_columns("llm_assembly_configs")
@@ -246,6 +400,16 @@ def test_migration_0082_restores_dropped_checks_on_downgrade(
             for check in inspect(connection).get_check_constraints("llm_call_logs")
             if check.get("name")
         }
+        restored_provider = connection.execute(
+            text(
+                """
+                SELECT provider_compat
+                FROM llm_call_logs
+                WHERE id = :id
+                """
+            ),
+            {"id": "33333333-3333-3333-3333-333333333333"},
+        ).scalar_one()
 
     assert "interaction_mode" in assembly_columns_after
     assert "user_question_policy" in assembly_columns_after
@@ -253,5 +417,6 @@ def test_migration_0082_restores_dropped_checks_on_downgrade(
     assert "ck_llm_assembly_configs_interaction_mode" in assembly_checks_after
     assert "ck_llm_assembly_configs_user_question_policy" in assembly_checks_after
     assert "ck_llm_call_logs_provider" in call_log_checks_after
+    assert restored_provider == "openai"
 
     engine.dispose()

@@ -37,13 +37,27 @@ def _check_names(table_name: str) -> set[str]:
     }
 
 
-def _assert_columns_are_empty(table_name: str, column_names: Sequence[str]) -> None:
+def _assert_columns_are_empty(
+    table_name: str,
+    column_names: Sequence[str],
+    *,
+    empty_predicates: dict[str, str] | None = None,
+) -> None:
     """Bloque la suppression si des colonnes legacy contiennent encore des donnees."""
+    empty_predicates = empty_predicates or {}
     existing_columns = [column_name for column_name in column_names if column_name in _column_names(table_name)]
     if not existing_columns:
         return
 
-    where_clause = " OR ".join(f"{column_name} IS NOT NULL" for column_name in existing_columns)
+    violation_clauses = []
+    for column_name in existing_columns:
+        empty_predicate = empty_predicates.get(column_name)
+        if empty_predicate is None:
+            violation_clauses.append(f"{column_name} IS NOT NULL")
+        else:
+            violation_clauses.append(f"NOT ({empty_predicate})")
+
+    where_clause = " OR ".join(violation_clauses)
     query = sa.text(f"SELECT COUNT(*) FROM {table_name} WHERE {where_clause}")
     row_count = int(op.get_bind().execute(query).scalar() or 0)
     if row_count > 0:
@@ -157,6 +171,37 @@ def upgrade() -> None:
                 "fallback_use_case_key",
                 "allowed_persona_ids",
             ),
+            empty_predicates={
+                "input_schema": (
+                    "input_schema IS NULL OR "
+                    "trim(CAST(input_schema AS TEXT)) IN ('', '{}', 'null')"
+                ),
+                "interaction_mode": (
+                    "interaction_mode IS NULL OR "
+                    "trim(CAST(interaction_mode AS TEXT)) IN ('', 'structured', 'chat')"
+                ),
+                "user_question_policy": (
+                    "user_question_policy IS NULL OR "
+                    "trim(CAST(user_question_policy AS TEXT)) IN "
+                    "('', 'none', 'optional', 'required')"
+                ),
+                "persona_strategy": (
+                    "persona_strategy IS NULL OR "
+                    "trim(CAST(persona_strategy AS TEXT)) IN ('', 'optional', 'required')"
+                ),
+                "safety_profile": (
+                    "safety_profile IS NULL OR "
+                    "trim(CAST(safety_profile AS TEXT)) IN ('', 'astrology')"
+                ),
+                "fallback_use_case_key": (
+                    "fallback_use_case_key IS NULL OR "
+                    "trim(CAST(fallback_use_case_key AS TEXT)) = ''"
+                ),
+                "allowed_persona_ids": (
+                    "allowed_persona_ids IS NULL OR "
+                    "trim(CAST(allowed_persona_ids AS TEXT)) IN ('', '[]', '{}', 'null')"
+                )
+            },
         )
         columns = _column_names("llm_use_case_configs")
         with op.batch_alter_table("llm_use_case_configs") as batch_op:
@@ -272,6 +317,30 @@ def downgrade() -> None:
                 batch_op.add_column(
                     sa.Column("provider_compat", sa.String(length=32), nullable=True)
                 )
+        if _has_table("llm_call_log_operational_metadata"):
+            op.execute(
+                sa.text(
+                    """
+                    UPDATE llm_call_logs
+                    SET provider_compat = (
+                        SELECT metadata.executed_provider
+                        FROM llm_call_log_operational_metadata AS metadata
+                        WHERE metadata.call_log_id = llm_call_logs.id
+                    )
+                    WHERE provider_compat IS NULL
+                      AND EXISTS (
+                          SELECT 1
+                          FROM llm_call_log_operational_metadata AS metadata
+                          WHERE metadata.call_log_id = llm_call_logs.id
+                            AND metadata.executed_provider IS NOT NULL
+                      )
+                    """
+                )
+            )
+        columns = _column_names("llm_call_logs")
+        checks = _check_names("llm_call_logs")
+        with op.batch_alter_table("llm_call_logs") as batch_op:
+            if "provider_compat" in columns and "ck_llm_call_logs_provider" not in checks:
                 batch_op.create_check_constraint(
                     "ck_llm_call_logs_provider",
                     "provider_compat IN ('openai', 'anthropic')",
