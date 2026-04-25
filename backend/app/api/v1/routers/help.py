@@ -16,7 +16,7 @@ from app.core.request_id import resolve_request_id
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
 from app.infra.db.session import get_db_session
-from app.services.incident_service import (
+from app.services.ops.incident_service import (
     IncidentService,
     SupportIncidentCreatePayload,
 )

@@ -48,8 +48,8 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.billing_service import BillingService
-from app.services.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.billing.service import BillingService
 from app.services.reference_data_service import ReferenceDataService
 
 
@@ -188,7 +188,7 @@ def _create_enterprise_api_key(email: str) -> str:
 
             # Binding
             from app.infra.db.models.product_entitlements import FeatureCatalogModel
-            from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
+            from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
 
             feat = db.scalar(
                 select(FeatureCatalogModel).where(

@@ -42,7 +42,7 @@ def test_get_or_compute_reads_runtime_versions_at_call_time(
             return_value=101,
         ) as resolve_ref,
         patch.object(service.resolver, "_resolve_ruleset_id", return_value=202) as resolve_ruleset,
-        patch("app.services.prediction_run_reuse_policy.DailyPredictionRepository") as daily_repo,
+        patch("app.services.prediction.run_reuse_policy.DailyPredictionRepository") as daily_repo,
     ):
         daily_repo.return_value.get_run.return_value = None
 
@@ -70,7 +70,7 @@ def test_resolve_ruleset_id_consistency_check_fails(service, mock_db):
         is_locked=True,
     )
 
-    with patch("app.services.prediction_request_resolver.PredictionRulesetRepository") as MockRepo:
+    with patch("app.services.prediction.request_resolver.PredictionRulesetRepository") as MockRepo:
         mock_repo_instance = MockRepo.return_value
         mock_repo_instance.get_ruleset.return_value = mock_ruleset
 
@@ -99,7 +99,7 @@ def test_resolve_ruleset_id_consistency_check_passes(service, mock_db):
         is_locked=True,
     )
 
-    with patch("app.services.prediction_request_resolver.PredictionRulesetRepository") as MockRepo:
+    with patch("app.services.prediction.request_resolver.PredictionRulesetRepository") as MockRepo:
         mock_repo_instance = MockRepo.return_value
         mock_repo_instance.get_ruleset.return_value = mock_ruleset
 
@@ -125,7 +125,7 @@ def test_resolve_ruleset_id_without_expected_ref_passes(service, mock_db):
         is_locked=True,
     )
 
-    with patch("app.services.prediction_request_resolver.PredictionRulesetRepository") as MockRepo:
+    with patch("app.services.prediction.request_resolver.PredictionRulesetRepository") as MockRepo:
         mock_repo_instance = MockRepo.return_value
         mock_repo_instance.get_ruleset.return_value = mock_ruleset
 

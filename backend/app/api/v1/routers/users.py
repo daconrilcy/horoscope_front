@@ -24,17 +24,17 @@ from app.services.llm_generation.natal.interpretation_service import (
     NatalInterpretationService,
     NatalInterpretationServiceError,
 )
-from app.services.user_astro_profile_service import (
+from app.services.user_profile.astro_profile_service import (
     UserAstroProfileData,
     UserAstroProfileService,
     UserAstroProfileServiceError,
 )
-from app.services.user_birth_profile_service import (
+from app.services.user_profile.birth_profile_service import (
     UserBirthProfileData,
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
-from app.services.user_natal_chart_service import (
+from app.services.user_profile.natal_chart_service import (
     UserNatalChartConsistencyData,
     UserNatalChartGenerationData,
     UserNatalChartReadData,

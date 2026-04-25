@@ -82,7 +82,7 @@ from app.domain.astrology.natal_preparation import (
 from app.domain.llm.runtime.contracts import InputValidationError
 from app.infra.db.bootstrap import ensure_local_sqlite_schema_ready
 from app.infra.observability.metrics import increment_counter, observe_duration
-from app.services.pricing_experiment_service import PricingExperimentService
+from app.services.billing.pricing_experiment_service import PricingExperimentService
 from app.startup.canonical_db_validation import run_canonical_db_startup_validation
 from app.startup.feature_scope_validation import run_feature_scope_startup_validation
 from app.startup.llm_coherence_validation import run_llm_coherence_startup_validation

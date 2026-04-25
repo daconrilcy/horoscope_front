@@ -19,9 +19,9 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
 )
 from app.infra.db.models.user import UserModel
-from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
-from app.services.billing_service import BillingService
-from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
+from app.services.b2b.canonical_plan_resolver import resolve_b2b_canonical_plan
+from app.services.b2b.enterprise_quota_usage_service import EnterpriseQuotaUsageService
+from app.services.billing.service import BillingService
 from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,

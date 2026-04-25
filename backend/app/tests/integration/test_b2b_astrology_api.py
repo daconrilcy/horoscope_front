@@ -38,9 +38,9 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
-from app.services.audit_service import AuditServiceError
 from app.services.auth_service import AuthService
-from app.services.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.ops.audit_service import AuditServiceError
 from app.services.reference_data_service import ReferenceDataService
 
 client = TestClient(app)

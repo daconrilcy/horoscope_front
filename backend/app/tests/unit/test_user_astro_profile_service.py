@@ -25,13 +25,16 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.natal_calculation_service import NatalCalculationService
+from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
-from app.services.user_astro_profile_service import (
+from app.services.user_profile.astro_profile_service import (
     UserAstroProfileService,
     UserAstroProfileServiceError,
 )
-from app.services.user_birth_profile_service import UserBirthProfileData, UserBirthProfileService
+from app.services.user_profile.birth_profile_service import (
+    UserBirthProfileData,
+    UserBirthProfileService,
+)
 
 
 def _cleanup_tables() -> None:
@@ -384,11 +387,11 @@ def test_astro_profile_forwards_geo_fields_to_birth_input(monkeypatch: pytest.Mo
         return _FakeNatalResult()
 
     monkeypatch.setattr(
-        "app.services.user_astro_profile_service.UserBirthProfileService.get_for_user",
+        "app.services.user_profile.astro_profile_service.UserBirthProfileService.get_for_user",
         _fake_get_for_user,
     )
     monkeypatch.setattr(
-        "app.services.user_astro_profile_service.NatalCalculationService.calculate",
+        "app.services.user_profile.astro_profile_service.NatalCalculationService.calculate",
         _fake_calculate,
     )
 
@@ -459,15 +462,15 @@ def test_astro_profile_resolves_coordinates_from_place_id_when_missing_on_profil
         return _FakeNatalResult()
 
     monkeypatch.setattr(
-        "app.services.user_astro_profile_service.UserBirthProfileService.get_for_user",
+        "app.services.user_profile.astro_profile_service.UserBirthProfileService.get_for_user",
         _fake_get_for_user,
     )
     monkeypatch.setattr(
-        "app.services.user_astro_profile_service.UserBirthProfileService.resolve_coordinates",
+        "app.services.user_profile.astro_profile_service.UserBirthProfileService.resolve_coordinates",
         _fake_resolve_coordinates,
     )
     monkeypatch.setattr(
-        "app.services.user_astro_profile_service.NatalCalculationService.calculate",
+        "app.services.user_profile.astro_profile_service.NatalCalculationService.calculate",
         _fake_calculate,
     )
 
@@ -538,15 +541,15 @@ def test_astro_profile_prioritizes_resolved_coordinates_over_legacy(
         return _FakeNatalResult()
 
     monkeypatch.setattr(
-        "app.services.user_astro_profile_service.UserBirthProfileService.get_for_user",
+        "app.services.user_profile.astro_profile_service.UserBirthProfileService.get_for_user",
         _fake_get_for_user,
     )
     monkeypatch.setattr(
-        "app.services.user_astro_profile_service.UserBirthProfileService.resolve_coordinates",
+        "app.services.user_profile.astro_profile_service.UserBirthProfileService.resolve_coordinates",
         _fake_resolve_coordinates,
     )
     monkeypatch.setattr(
-        "app.services.user_astro_profile_service.NatalCalculationService.calculate",
+        "app.services.user_profile.astro_profile_service.NatalCalculationService.calculate",
         _fake_calculate,
     )
 

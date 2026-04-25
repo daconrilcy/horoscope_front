@@ -18,7 +18,10 @@ from app.domain.astrology.ephemeris_provider import SIDM_RESET, calculate_planet
 from app.domain.astrology.houses_provider import calculate_houses
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.natal_preparation import BirthPreparedData
-from app.services.user_natal_chart_service import UserNatalChartMetadata, UserNatalChartService
+from app.services.user_profile.natal_chart_service import (
+    UserNatalChartMetadata,
+    UserNatalChartService,
+)
 from app.tests.golden.fixtures import GOLDEN_J2000
 
 # ---------------------------------------------------------------------------
@@ -276,7 +279,9 @@ class TestMetadataResultInvariants:
 
         db = MagicMock()
 
-        with patch("app.services.user_natal_chart_service.ChartResultRepository") as MockRepo:
+        with patch(
+            "app.services.user_profile.natal_chart_service.ChartResultRepository"
+        ) as MockRepo:
             MockRepo.return_value.get_latest_by_user_id.return_value = mock_model
             read_data = UserNatalChartService.get_latest_for_user(db=db, user_id=1)
 

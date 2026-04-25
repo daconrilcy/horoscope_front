@@ -15,14 +15,14 @@ from app.api.dependencies.b2b_auth import (
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
-from app.services.b2b_billing_service import (
+from app.services.b2b.billing_service import (
     B2BBillingClosePayload,
     B2BBillingCycleData,
     B2BBillingCycleListData,
     B2BBillingService,
     B2BBillingServiceError,
 )
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
 
 
 class ResponseMeta(BaseModel):

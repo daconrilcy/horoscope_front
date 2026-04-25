@@ -24,7 +24,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import reset_metrics
 from app.main import app
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 
 client = TestClient(app)
 

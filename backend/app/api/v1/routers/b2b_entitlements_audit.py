@@ -12,7 +12,7 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.b2b_audit_service import B2BAuditService
+from app.services.b2b.audit_service import B2BAuditService
 
 
 class ResponseMeta(BaseModel):

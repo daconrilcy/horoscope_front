@@ -9,7 +9,7 @@ from app.services.llm_generation.shared.natal_context import (
     build_user_natal_chart_summary_context,
     detect_degraded_natal_mode,
 )
-from app.services.user_natal_chart_service import UserNatalChartServiceError
+from app.services.user_profile.natal_chart_service import UserNatalChartServiceError
 
 
 def test_detect_degraded_natal_mode_handles_missing_time_and_location() -> None:

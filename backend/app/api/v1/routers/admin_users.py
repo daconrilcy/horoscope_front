@@ -38,9 +38,9 @@ from app.infra.db.models.user_natal_interpretation import (
 )
 from app.infra.db.session import get_db_session
 from app.integrations.stripe_client import get_stripe_client
-from app.services.audit_service import AuditEventCreatePayload, AuditService
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 from app.services.entitlement.entitlement_types import QuotaDefinition
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 from app.services.quota_usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
@@ -525,7 +525,7 @@ def refresh_subscription(
             status_code=400, detail="No active Stripe subscription found for this user"
         )
 
-    from app.services.stripe_billing_profile_service import StripeBillingProfileService
+    from app.services.billing.stripe_billing_profile_service import StripeBillingProfileService
 
     stripe_client = get_stripe_client()
     if not stripe_client:
@@ -590,7 +590,7 @@ def assign_plan(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
     )
     if not profile:
-        from app.services.stripe_billing_profile_service import StripeBillingProfileService
+        from app.services.billing.stripe_billing_profile_service import StripeBillingProfileService
 
         profile = StripeBillingProfileService.get_or_create_profile(db, user_id)
 
@@ -610,7 +610,7 @@ def assign_plan(
             details={"before": before, "after": plan_code, "reason": reason},
         ),
     )
-    from app.services.billing_service import BillingService
+    from app.services.billing.service import BillingService
 
     BillingService._invalidate_cached_subscription_status(user_id)
     db.commit()

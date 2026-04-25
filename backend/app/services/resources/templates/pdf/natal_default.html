@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            border-bottom: 1px solid #bdc3c7;
+            margin: 0 0 8px 0;
+        }
+        .summary {
+            font-style: italic;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 5px solid #2980b9;
+            margin: 20px 0;
+        }
+        .section-content {
+            margin-bottom: 15px;
+        }
+        .section { margin-bottom: 8px; }
+        .section h2 {
+            page-break-after: avoid;
+        }
+        .section-head {
+            margin-top: 20px;
+            page-break-inside: avoid;
+        }
+        .para-wrap {
+            page-break-inside: avoid;
+        }
+        p.para {
+            margin: 0 0 10px 0;
+            page-break-inside: avoid;
+        }
+        .highlights, .advice {
+            background-color: #e8f4f8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .highlights ul, .advice ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 9pt;
+            color: #7f8c8d;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        .metadata {
+            font-size: 9pt;
+            color: #95a5a6;
+            margin-bottom: 30px;
+        }
+        .generated-at {
+            text-align: right;
+            font-size: 8pt;
+            color: #bdc3c7;
+        }
+        .pagination-debug {
+            color: #95a5a6;
+            font-size: 7pt;
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="metadata">
+        Réf: {{ meta.chart_id | e }} | Niveau: {{ meta.level | e }} |
+        Persona: {{ (meta.persona_name or "Standard") | e }} | Date: {{ meta.created_at | e }}
+        {% if meta.sun_sign_label %}| Signe: {{ meta.sun_sign_label | e }}{% endif %}
+        {% if meta.ascendant_sign_label %}
+        | Ascendant: {{ meta.ascendant_sign_label | e }}
+        {% endif %}
+    </div>
+
+    <h1>{{ title | e }}</h1>
+
+    <div class="summary">
+        {{ summary | e }}
+    </div>
+
+    <div class="highlights">
+        <h3>Points clés</h3>
+        <ul>
+            {% for h in highlights %}
+            <li>{{ h | e }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if config_runtime and config_runtime.sections_start_new_page
+       and render_sections and render_sections|length > 0 %}
+    <pdf:nextpage />
+    {% endif %}
+
+    {% for section in (render_sections if render_sections else sections) %}
+    <div class="section">
+        {% if section.blocks and section.blocks|length > 0 %}
+            {% set head_block = section.blocks[0] %}
+            {% if head_block.force_page_break %}<pdf:nextpage />{% endif %}
+            <div class="section-head">
+                <h2>{{ section.heading | e }}</h2>
+                {% if head_block.text %}
+                {% if section.show_pagination_debug %}
+                <div class="pagination-debug">
+                    [rem={{ head_block.debug_remaining_before }},
+                    cost={{ head_block.debug_cost }},
+                    pb={{ head_block.force_page_break }}]
+                </div>
+                {% endif %}
+                <div class="para-wrap">
+                    <p class="para">{{ head_block.text | e }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% if section.blocks|length > 1 %}
+            <div class="section-content">
+                {% for block in section.blocks[1:] %}
+                    {% if block.force_page_break %}<pdf:nextpage />{% endif %}
+                    {% if section.show_pagination_debug %}
+                    <div class="pagination-debug">
+                        [rem={{ block.debug_remaining_before }},
+                        cost={{ block.debug_cost }},
+                        pb={{ block.force_page_break }}]
+                    </div>
+                    {% endif %}
+                    <div class="para-wrap">
+                        <p class="para">{{ block.text | e }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% elif section.paragraphs and section.paragraphs|length > 0 %}
+        <div class="section-head">
+            <h2>{{ section.heading | e }}</h2>
+            <div class="para-wrap">
+                <p class="para">{{ section.paragraphs[0] | e }}</p>
+            </div>
+        </div>
+        <div class="section-content">
+            {% for p in section.paragraphs[1:] %}
+            <div class="para-wrap">
+                <p class="para">{{ p | e }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <h2>{{ section.heading | e }}</h2>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="advice">
+        <h3>Conseils</h3>
+        <ul>
+            {% for a in advice %}
+            <li>{{ a | e }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="footer">
+        {% for d in disclaimers %}
+        <p>{{ d | e }}</p>
+        {% endfor %}
+    </div>
+    
+    <div class="generated-at">
+        Généré le {{ generated_at | e }} UTC
+    </div>
+</body>
+</html>

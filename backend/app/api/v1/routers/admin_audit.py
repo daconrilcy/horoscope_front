@@ -22,7 +22,7 @@ from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,8 @@ from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import increment_counter, observe_duration, reset_metrics
-from app.services.audit_service import AuditEventCreatePayload, AuditService
-from app.services.ops_monitoring_service import OpsMonitoringService, OpsMonitoringServiceError
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
+from app.services.ops.monitoring_service import OpsMonitoringService, OpsMonitoringServiceError
 
 
 def test_get_conversation_kpis_returns_zeroes_when_no_metrics() -> None:

@@ -8,7 +8,7 @@ from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
     UserNatalInterpretationModel,
 )
-from app.services.natal_pdf_export_service import NatalPdfExportService
+from app.services.natal.pdf_export_service import NatalPdfExportService
 
 
 class TestNatalPdfExportService:

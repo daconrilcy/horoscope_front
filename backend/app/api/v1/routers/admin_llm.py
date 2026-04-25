@@ -101,11 +101,11 @@ from app.infra.db.repositories.llm.prompting_repository import (
 )
 from app.infra.db.session import get_db_session
 from app.ops.llm.services import PromptLint, PromptRegistryV2, replay, run_eval
-from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.llm_generation.anonymization_service import (
     LLMAnonymizationError,
     anonymize_text,
 )
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
 

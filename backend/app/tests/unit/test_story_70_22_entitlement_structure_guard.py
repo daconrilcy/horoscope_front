@@ -3,17 +3,13 @@
 from pathlib import Path
 
 ROOT_ALLOWLIST = {
-    "b2b_api_entitlement_gate.py",
-    "b2b_canonical_plan_resolver.py",
-    "b2b_canonical_usage_service.py",
-    "b2b_entitlement_repair_service.py",
-    "enterprise_quota_usage_service.py",
     "quota_usage_service.py",
     "quota_window_resolver.py",
 }
 
 ENTITLEMENT_NAMESPACE_ALLOWLIST = {
     "__init__.py",
+    "b2c_runtime_gate.py",
     "chat_entitlement_gate.py",
     "entitlement_types.py",
     "effective_entitlement_gate_helpers.py",
@@ -118,18 +114,7 @@ def test_entitlement_root_allowlist_matches_canonical_cartography() -> None:
     current_files = {
         path.name
         for path in services_root.iterdir()
-        if path.is_file()
-        and (
-            "entitlement" in path.name
-            or path.name.startswith("quota_")
-            or path.name == "enterprise_quota_usage_service.py"
-            or path.name
-            in {
-                "b2b_canonical_plan_resolver.py",
-                "b2b_canonical_usage_service.py",
-                "b2b_entitlement_repair_service.py",
-            }
-        )
+        if path.is_file() and ("entitlement" in path.name or path.name.startswith("quota_"))
     }
 
     assert current_files == ROOT_ALLOWLIST

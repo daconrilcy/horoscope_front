@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: "2026-04-25T15:25:00+02:00"
+last_updated: "2026-04-25T22:52:47+02:00"
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -675,4 +675,5 @@ development_status:
   70-19-entitlement-mutation-refactor: done
   70-20-auditer-et-assainir-ai-engine-adapter: done
   70-21-analyser-factoriser-et-deplacer-les-services-llm-residuels-sous-services: review
+  70-23-durcir-backend-app-services-pour-imposer-dry-strict-et-zero-legacy: review
   epic-70-retrospective: backlog

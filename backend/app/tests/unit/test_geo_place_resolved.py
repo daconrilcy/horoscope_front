@@ -366,7 +366,7 @@ def test_natal_service_propagates_birth_lat_lon_to_birth_input():
     """AC5 — generate_for_user passe birth_lat/birth_lon au BirthInput depuis le profil."""
     from datetime import date
 
-    from app.services.user_natal_chart_service import UserNatalChartService
+    from app.services.user_profile.natal_chart_service import UserNatalChartService
 
     # Mock du profil avec lat/lon renseignés
     mock_profile = MagicMock()
@@ -393,11 +393,11 @@ def test_natal_service_propagates_birth_lat_lon_to_birth_input():
 
     with (
         patch(
-            "app.services.user_natal_chart_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.natal_chart_service.UserBirthProfileService.get_for_user",
             return_value=mock_profile,
         ),
         patch(
-            "app.services.user_natal_chart_service.NatalCalculationService.calculate",
+            "app.services.user_profile.natal_chart_service.NatalCalculationService.calculate",
             side_effect=mock_calculate,
         ),
     ):
@@ -416,7 +416,7 @@ def test_natal_service_propagates_none_lat_lon_when_absent():
     """AC5 (transitoire) — birth_lat/lon passés None si absents du profil."""
     from datetime import date
 
-    from app.services.user_natal_chart_service import UserNatalChartService
+    from app.services.user_profile.natal_chart_service import UserNatalChartService
 
     mock_profile = MagicMock()
     mock_profile.birth_date = date(1990, 1, 1)
@@ -442,11 +442,11 @@ def test_natal_service_propagates_none_lat_lon_when_absent():
 
     with (
         patch(
-            "app.services.user_natal_chart_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.natal_chart_service.UserBirthProfileService.get_for_user",
             return_value=mock_profile,
         ),
         patch(
-            "app.services.user_natal_chart_service.NatalCalculationService.calculate",
+            "app.services.user_profile.natal_chart_service.NatalCalculationService.calculate",
             side_effect=mock_calculate,
         ),
     ):
@@ -461,7 +461,7 @@ def test_natal_service_prioritizes_resolved_coordinates_over_legacy_conflict():
     """Conflit source: coords résolues doivent gagner sur les coords legacy."""
     from datetime import date
 
-    from app.services.user_natal_chart_service import UserNatalChartService
+    from app.services.user_profile.natal_chart_service import UserNatalChartService
 
     mock_profile = MagicMock()
     mock_profile.birth_date = date(1990, 1, 1)
@@ -495,15 +495,15 @@ def test_natal_service_prioritizes_resolved_coordinates_over_legacy_conflict():
 
     with (
         patch(
-            "app.services.user_natal_chart_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.natal_chart_service.UserBirthProfileService.get_for_user",
             return_value=mock_profile,
         ),
         patch(
-            "app.services.user_natal_chart_service.UserBirthProfileService.resolve_coordinates",
+            "app.services.user_profile.natal_chart_service.UserBirthProfileService.resolve_coordinates",
             return_value=_ResolvedCoordinates(),
         ),
         patch(
-            "app.services.user_natal_chart_service.NatalCalculationService.calculate",
+            "app.services.user_profile.natal_chart_service.NatalCalculationService.calculate",
             side_effect=mock_calculate,
         ),
     ):

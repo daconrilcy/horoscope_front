@@ -388,16 +388,16 @@ def test_calculate_natal_logs_structured_swisseph_error_fields(
     def _capture_error(message: str, *args: object, **kwargs: object) -> None:
         captured_messages.append(message % args if args else message)
 
-    monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.services.natal.calculation_service.settings.swisseph_enabled", True)
     monkeypatch.setattr(
         "app.core.ephemeris.get_bootstrap_result",
         lambda: _Bootstrap(),
     )
     monkeypatch.setattr(
-        "app.services.natal_calculation_service.build_natal_result",
+        "app.services.natal.calculation_service.build_natal_result",
         lambda *args, **kwargs: (_ for _ in ()).throw(EphemerisCalcError("calc failed")),
     )
-    monkeypatch.setattr("app.services.natal_calculation_service.logger.error", _capture_error)
+    monkeypatch.setattr("app.services.natal.calculation_service.logger.error", _capture_error)
 
     response = client.post(
         "/v1/astrology-engine/natal/calculate",

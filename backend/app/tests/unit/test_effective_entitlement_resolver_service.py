@@ -24,7 +24,7 @@ from app.infra.db.models.product_entitlements import (
     SourceOrigin,
 )
 from app.infra.db.models.user import UserModel
-from app.services.billing_service import BillingPlanData, SubscriptionStatusData
+from app.services.billing.service import BillingPlanData, SubscriptionStatusData
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )

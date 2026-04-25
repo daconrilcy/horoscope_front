@@ -28,7 +28,7 @@ from app.domain.llm.governance.feature_taxonomy import (
 from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 router = APIRouter(prefix="/v1/admin/llm/sample-payloads", tags=["admin-llm"])
 

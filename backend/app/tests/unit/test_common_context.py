@@ -93,7 +93,7 @@ async def test_build_common_context_with_interpretation() -> None:
             return_value=mock_persona,
         ),
         patch(
-            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user",
             return_value=mock_profile,
         ),
         patch("app.domain.llm.prompting.context.select"),
@@ -129,11 +129,11 @@ async def test_build_common_context_without_interpretation() -> None:
             return_value=mock_persona,
         ),
         patch(
-            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user",
             return_value=mock_profile,
         ),
         patch(
-            "app.services.user_natal_chart_service.UserNatalChartService.get_latest_for_user",
+            "app.services.user_profile.natal_chart_service.UserNatalChartService.get_latest_for_user",
             return_value=mock_chart,
         ),
         patch("app.domain.llm.prompting.context.select"),
@@ -177,11 +177,11 @@ async def test_build_common_context_accepts_canonical_horoscope_daily_key() -> N
             return_value=mock_persona,
         ),
         patch(
-            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user",
             return_value=mock_profile,
         ),
         patch(
-            "app.services.user_natal_chart_service.UserNatalChartService.get_latest_for_user",
+            "app.services.user_profile.natal_chart_service.UserNatalChartService.get_latest_for_user",
             return_value=mock_chart,
         ),
         patch("app.domain.llm.prompting.context.select"),

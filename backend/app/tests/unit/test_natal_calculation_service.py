@@ -17,7 +17,7 @@ from app.infra.db.models.reference import (
 )
 from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import get_counter_sum_in_window
-from app.services.natal_calculation_service import NatalCalculationService
+from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 
 SIGNS = [
@@ -364,15 +364,15 @@ def test_resolve_calculation_options_applies_ruleset_defaults(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "app.services.natal_calculation_service.settings.natal_ruleset_default_zodiac",
+        "app.services.natal.calculation_service.settings.natal_ruleset_default_zodiac",
         ZodiacType.TROPICAL,
     )
     monkeypatch.setattr(
-        "app.services.natal_calculation_service.settings.natal_ruleset_default_frame",
+        "app.services.natal.calculation_service.settings.natal_ruleset_default_frame",
         FrameType.GEOCENTRIC,
     )
     monkeypatch.setattr(
-        "app.services.natal_calculation_service.settings.natal_ruleset_default_house_system",
+        "app.services.natal.calculation_service.settings.natal_ruleset_default_house_system",
         HouseSystemType.PLACIDUS,
     )
 
@@ -507,7 +507,7 @@ def test_calculate_natal_topocentric_without_coordinates_fails_422(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Story 23-3: topocentric sans coordinates doit retourner 422 (pas 503)."""
-    monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.services.natal.calculation_service.settings.swisseph_enabled", True)
     _cleanup_reference_tables()
     payload = BirthInput(
         birth_date="1990-06-15",
@@ -528,7 +528,7 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Story 23-3 AC2: ASC ou MC doit différer (> 0.001deg) entre geo et topo."""
-    monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.services.natal.calculation_service.settings.swisseph_enabled", True)
 
     from unittest.mock import MagicMock
 
@@ -573,7 +573,7 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
         )
 
     monkeypatch.setattr(
-        "app.services.natal_calculation_service.build_natal_result", _mock_build_natal_result
+        "app.services.natal.calculation_service.build_natal_result", _mock_build_natal_result
     )
 
     _cleanup_reference_tables()
@@ -618,7 +618,7 @@ def test_calculate_natal_simplified_engine_rejects_non_equal_house_system(
 ) -> None:
     _cleanup_reference_tables()
     monkeypatch.setattr(
-        "app.services.natal_calculation_service.settings.natal_engine_default", "simplified"
+        "app.services.natal.calculation_service.settings.natal_engine_default", "simplified"
     )
     payload = BirthInput(
         birth_date="1990-06-15",

@@ -14,7 +14,7 @@ from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
 from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 
 client = TestClient(app)
 
@@ -78,11 +78,11 @@ async def test_webhook_success_flow():
         mock_event.data.object.id = "cs_123"
 
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
             return_value=mock_event,
         ):
             with patch(
-                "app.services.stripe_webhook_service.StripeWebhookService.handle_event"
+                "app.services.billing.stripe_webhook_service.StripeWebhookService.handle_event"
             ) as mock_handle:
                 mock_handle.return_value = "processed"
 
@@ -112,11 +112,11 @@ async def test_webhook_app_error_returns_200():
         mock_event.data.object.id = "cs_123"
 
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
             return_value=mock_event,
         ):
             with patch(
-                "app.services.stripe_webhook_service.StripeWebhookService.handle_event"
+                "app.services.billing.stripe_webhook_service.StripeWebhookService.handle_event"
             ) as mock_handle:
                 mock_handle.side_effect = Exception("Internal error")
 
@@ -145,18 +145,18 @@ async def test_webhook_subscription_trial_will_end():
         mock_event.data.object.customer = "cus_123"
 
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
             return_value=mock_event,
         ):
             with patch(
-                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+                "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
             ) as mock_get_profile:
                 mock_profile = MagicMock()
                 mock_profile.user_id = 42
                 mock_get_profile.return_value = mock_profile
 
                 with patch(
-                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
+                    "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
                 ) as mock_update:
                     response = client.post(
                         "/v1/billing/stripe-webhook", content=payload, headers=headers
@@ -185,18 +185,18 @@ async def test_webhook_duplicate_ignored():
         mock_event.data.object.customer = "cus_123"
 
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
             return_value=mock_event,
         ):
             with patch(
-                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+                "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
             ) as mock_get_profile:
                 mock_profile = MagicMock()
                 mock_profile.user_id = 42
                 mock_get_profile.return_value = mock_profile
 
                 with patch(
-                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
+                    "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
                 ) as mock_update:
                     # Premier passage -> processed
                     response = client.post(
@@ -233,18 +233,18 @@ async def test_webhook_business_failure_persists_failed_and_retry_is_accepted():
         mock_event.to_dict.return_value = {"id": event_id, "type": "invoice.paid"}
 
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
             return_value=mock_event,
         ):
             with patch(
-                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+                "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
             ) as mock_get_profile:
                 mock_profile = MagicMock()
                 mock_profile.user_id = 42
                 mock_get_profile.return_value = mock_profile
 
                 with patch(
-                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload",
+                    "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload",
                     side_effect=[RuntimeError("boom"), None],
                 ) as mock_update:
                     first_response = client.post(
@@ -300,18 +300,18 @@ async def test_webhook_subscription_paused():
         mock_event.data.object.customer = "cus_123"
 
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
             return_value=mock_event,
         ):
             with patch(
-                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+                "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
             ) as mock_get_profile:
                 mock_profile = MagicMock()
                 mock_profile.user_id = 42
                 mock_get_profile.return_value = mock_profile
 
                 with patch(
-                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
+                    "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
                 ) as mock_update:
                     response = client.post(
                         "/v1/billing/stripe-webhook", content=payload, headers=headers
@@ -339,18 +339,18 @@ async def test_webhook_subscription_resumed():
         mock_event.data.object.customer = "cus_123"
 
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
             return_value=mock_event,
         ):
             with patch(
-                "app.services.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
+                "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.get_by_stripe_customer_id"
             ) as mock_get_profile:
                 mock_profile = MagicMock()
                 mock_profile.user_id = 42
                 mock_get_profile.return_value = mock_profile
 
                 with patch(
-                    "app.services.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
+                    "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService.update_from_event_payload"
                 ) as mock_update:
                     response = client.post(
                         "/v1/billing/stripe-webhook", content=payload, headers=headers
@@ -416,11 +416,11 @@ async def test_webhook_invalidates_billing_cache_for_next_read():
 
     with patch("app.core.config.settings.stripe_webhook_secret", secret):
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
             return_value=mock_event,
         ):
             with patch.dict(
-                "app.services.stripe_billing_profile_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                "app.services.billing.stripe_billing_profile_service.STRIPE_PRICE_ENTITLEMENT_MAP",
                 {"price_basic": "basic"},
                 clear=True,
             ):

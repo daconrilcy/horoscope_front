@@ -7,11 +7,11 @@ from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialC
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.b2b_editorial_service import (
+from app.services.b2b.editorial_service import (
     B2BEditorialConfigUpdatePayload,
     B2BEditorialService,
 )
-from app.services.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 
 
 def _cleanup_tables() -> None:

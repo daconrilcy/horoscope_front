@@ -22,7 +22,7 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 from app.services.privacy_service import PrivacyService
 
 client = TestClient(app)

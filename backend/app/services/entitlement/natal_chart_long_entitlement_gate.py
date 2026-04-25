@@ -7,15 +7,11 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.services.entitlement.effective_entitlement_gate_helpers import (
-    map_b2c_reason_to_legacy,
-    select_quota_usage_state,
+from app.services.entitlement.b2c_runtime_gate import (
+    consume_b2c_quota,
+    resolve_b2c_access,
 )
-from app.services.entitlement.effective_entitlement_resolver_service import (
-    EffectiveEntitlementResolverService,
-)
-from app.services.entitlement.entitlement_types import QuotaDefinition, UsageState
-from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
+from app.services.entitlement.entitlement_types import UsageState
 
 
 class NatalChartLongAccessDeniedError(Exception):
@@ -54,88 +50,35 @@ class NatalChartLongEntitlementGate:
 
     @staticmethod
     def check_access(db: Session, *, user_id: int) -> NatalChartLongEntitlementResult:
-        """
-        Only checks if the user has access and enough quota, WITHOUT consuming.
-        """
-        snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
-            db, app_user_id=user_id
+        """Verifie l acces natal long sans consommer de quota."""
+        access_snapshot = resolve_b2c_access(
+            db,
+            user_id=user_id,
+            feature_code=NatalChartLongEntitlementGate.FEATURE_CODE,
+            denied_error_factory=NatalChartLongAccessDeniedError,
+            quota_error_factory=NatalChartLongQuotaExceededError,
         )
-        access = snapshot.entitlements.get(NatalChartLongEntitlementGate.FEATURE_CODE)
-
-        if not access or not access.granted:
-            reason_code = access.reason_code if access else "subject_not_eligible"
-            if reason_code == "quota_exhausted":
-                exhausted_state = select_quota_usage_state(access)
-                quota_key = NatalChartLongEntitlementGate.FEATURE_CODE
-                if exhausted_state:
-                    quota_key = exhausted_state.quota_key
-                used = (
-                    exhausted_state.used
-                    if exhausted_state
-                    else (access.quota_used if access else 0)
-                )
-                limit = (
-                    exhausted_state.quota_limit
-                    if exhausted_state
-                    else (access.quota_limit if access else 0)
-                )
-                raise NatalChartLongQuotaExceededError(
-                    quota_key=quota_key,
-                    used=used,
-                    limit=limit,
-                    window_end=exhausted_state.window_end if exhausted_state else None,
-                )
-            raise NatalChartLongAccessDeniedError(
-                reason=map_b2c_reason_to_legacy(snapshot, access),
-                reason_code=reason_code,
-                billing_status=snapshot.billing_status,
-                plan_code=snapshot.plan_code,
-            )
-
-        path = "canonical_unlimited" if access.access_mode == "unlimited" else "canonical_quota"
         return NatalChartLongEntitlementResult(
-            path=path,
-            variant_code=access.variant_code,
-            usage_states=access.usage_states,
+            path=access_snapshot.path,
+            variant_code=access_snapshot.variant_code,
+            usage_states=access_snapshot.usage_states,
         )
 
     @staticmethod
     def check_and_consume(db: Session, *, user_id: int) -> NatalChartLongEntitlementResult:
-        """
-        Simple flow: check access and consume 1 unit immediately.
-        """
+        """Verifie puis consomme les quotas natal long applicables."""
         result = NatalChartLongEntitlementGate.check_access(db, user_id=user_id)
 
         if result.path == "canonical_unlimited":
             return result
 
-        # access_mode == "quota" — consommer
-        consumed_states: list[UsageState] = []
-        for state in result.usage_states:
-            # Note: natal_chart_long is not tokenized yet, so we always consume 1 unit
-            q_def = QuotaDefinition(
-                quota_key=state.quota_key,
-                quota_limit=state.quota_limit,
-                period_unit=state.period_unit,
-                period_value=state.period_value,
-                reset_mode=state.reset_mode,
-            )
-            try:
-                new_state = QuotaUsageService.consume(
-                    db,
-                    user_id=user_id,
-                    feature_code=NatalChartLongEntitlementGate.FEATURE_CODE,
-                    quota=q_def,
-                    amount=1,
-                )
-                consumed_states.append(new_state)
-            except QuotaExhaustedError as exc:
-                raise NatalChartLongQuotaExceededError(
-                    quota_key=exc.quota_key,
-                    used=exc.used,
-                    limit=exc.limit,
-                    window_end=state.window_end,
-                ) from exc
+        consumed_states = consume_b2c_quota(
+            db,
+            user_id=user_id,
+            feature_code=NatalChartLongEntitlementGate.FEATURE_CODE,
+            usage_states=result.usage_states,
+            quota_error_factory=NatalChartLongQuotaExceededError,
+        )
 
         return NatalChartLongEntitlementResult(
             path="canonical_quota",

@@ -19,8 +19,8 @@ from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
 from app.services.persona_config_service import PersonaConfigService
-from app.services.user_birth_profile_service import UserBirthProfileService
-from app.services.user_natal_chart_service import UserNatalChartService
+from app.services.user_profile.birth_profile_service import UserBirthProfileService
+from app.services.user_profile.natal_chart_service import UserNatalChartService
 
 logger = logging.getLogger(__name__)
 

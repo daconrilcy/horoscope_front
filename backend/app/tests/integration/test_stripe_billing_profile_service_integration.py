@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.infra.db.base import Base
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.stripe_billing_profile_service import StripeBillingProfileService
+from app.services.billing.stripe_billing_profile_service import StripeBillingProfileService
 
 
 @pytest.fixture(scope="function")

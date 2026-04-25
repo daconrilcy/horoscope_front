@@ -27,7 +27,7 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
+from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
 
 client = TestClient(app)
 

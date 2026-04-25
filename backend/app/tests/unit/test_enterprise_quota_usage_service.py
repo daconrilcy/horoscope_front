@@ -17,7 +17,7 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
+from app.services.b2b.enterprise_quota_usage_service import EnterpriseQuotaUsageService
 from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.entitlement.feature_scope_registry import (
     InvalidQuotaScopeError,

@@ -48,11 +48,14 @@ from app.services.llm_generation.qa_seed_service import (
     LlmQaSeedResult,
     LlmQaSeedService,
 )
-from app.services.user_birth_profile_service import (
+from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
-from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError
+from app.services.user_profile.natal_chart_service import (
+    UserNatalChartService,
+    UserNatalChartServiceError,
+)
 
 logger = logging.getLogger(__name__)
 

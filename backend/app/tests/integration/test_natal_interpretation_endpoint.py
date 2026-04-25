@@ -26,8 +26,8 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.infra.db.session import get_db_session
 from app.main import app
-from app.services.user_birth_profile_service import UserBirthProfileData
-from app.services.user_natal_chart_service import (
+from app.services.user_profile.birth_profile_service import UserBirthProfileData
+from app.services.user_profile.natal_chart_service import (
     UserNatalChartMetadata,
     UserNatalChartReadData,
 )
@@ -195,7 +195,9 @@ def test_client(mock_db):
     app.dependency_overrides[get_db_session] = lambda: mock_db
 
     # Mock gate by default to avoid entitlement service side effects with mock_db
-    from app.services.entitlement.natal_chart_long_entitlement_gate import NatalChartLongEntitlementResult
+    from app.services.entitlement.natal_chart_long_entitlement_gate import (
+        NatalChartLongEntitlementResult,
+    )
 
     result = NatalChartLongEntitlementResult(
         path="canonical_unlimited", variant_code="single_astrologer"
@@ -320,7 +322,7 @@ class TestNatalInterpretationEndpointV2:
         assert response.json()["error"]["code"] == "natal_input_invalid"
 
     def test_chart_not_found(self, test_client) -> None:
-        from app.services.user_natal_chart_service import UserNatalChartServiceError
+        from app.services.user_profile.natal_chart_service import UserNatalChartServiceError
 
         with patch(
             "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",

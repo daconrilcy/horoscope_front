@@ -17,7 +17,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
 )
-from app.services.b2b_audit_service import B2BAuditEntry, B2BAuditService
+from app.services.b2b.audit_service import B2BAuditEntry, B2BAuditService
 from app.services.entitlement.entitlement_types import UsageState
 
 
@@ -26,7 +26,7 @@ def db_session() -> MagicMock:
     return MagicMock(spec=Session)
 
 
-@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+@patch("app.services.b2b.audit_service.resolve_b2b_canonical_plan")
 def test_audit_admin_user_id_absent_does_not_block_canonical_resolution(
     mock_resolve: MagicMock,
     db_session: MagicMock,
@@ -50,7 +50,7 @@ def test_audit_admin_user_id_absent_does_not_block_canonical_resolution(
     assert entry.admin_user_id_present is False
 
 
-@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+@patch("app.services.b2b.audit_service.resolve_b2b_canonical_plan")
 def test_audit_no_canonical_plan(
     mock_resolve: MagicMock,
     db_session: MagicMock,
@@ -67,7 +67,7 @@ def test_audit_no_canonical_plan(
     assert entry.manual_review_required is False
 
 
-@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+@patch("app.services.b2b.audit_service.resolve_b2b_canonical_plan")
 def test_audit_manual_review_required_without_canonical_plan(
     mock_resolve: MagicMock,
     db_session: MagicMock,
@@ -86,7 +86,7 @@ def test_audit_manual_review_required_without_canonical_plan(
     assert entry.manual_review_required is True
 
 
-@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+@patch("app.services.b2b.audit_service.resolve_b2b_canonical_plan")
 def test_audit_missing_binding_uses_settings_fallback(
     mock_resolve: MagicMock,
     db_session: MagicMock,
@@ -103,7 +103,7 @@ def test_audit_missing_binding_uses_settings_fallback(
     assert entry.binding_status == "missing"
 
 
-@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+@patch("app.services.b2b.audit_service.resolve_b2b_canonical_plan")
 def test_audit_canonical_disabled(
     mock_resolve: MagicMock,
     db_session: MagicMock,
@@ -121,7 +121,7 @@ def test_audit_canonical_disabled(
     assert entry.binding_status == "disabled"
 
 
-@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+@patch("app.services.b2b.audit_service.resolve_b2b_canonical_plan")
 def test_audit_canonical_unlimited(
     mock_resolve: MagicMock,
     db_session: MagicMock,
@@ -139,8 +139,8 @@ def test_audit_canonical_unlimited(
     assert entry.binding_status == "unlimited"
 
 
-@patch("app.services.b2b_audit_service.EnterpriseQuotaUsageService.get_usage")
-@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+@patch("app.services.b2b.audit_service.EnterpriseQuotaUsageService.get_usage")
+@patch("app.services.b2b.audit_service.resolve_b2b_canonical_plan")
 def test_audit_canonical_quota(
     mock_resolve: MagicMock,
     mock_get_usage: MagicMock,
@@ -182,7 +182,7 @@ def test_audit_canonical_quota(
     assert entry.remaining == 900
 
 
-@patch("app.services.b2b_audit_service.resolve_b2b_canonical_plan")
+@patch("app.services.b2b.audit_service.resolve_b2b_canonical_plan")
 def test_audit_zero_quota_falls_back_to_manual_review(
     mock_resolve: MagicMock,
     db_session: MagicMock,

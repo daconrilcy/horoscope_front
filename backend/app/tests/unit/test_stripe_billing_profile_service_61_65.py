@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.infra.db.base import Base
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.stripe_billing_profile_service import (
+from app.services.billing.stripe_billing_profile_service import (
     STRIPE_PRICE_ENTITLEMENT_MAP,
     StripeBillingProfileService,
 )
@@ -159,7 +159,7 @@ def test_update_from_event_payload_cancel_cleanup(db: Session, user_id: int):
     assert profile.scheduled_change_effective_at is None
 
 
-@patch("app.services.stripe_billing_profile_service.get_stripe_client")
+@patch("app.services.billing.stripe_billing_profile_service.get_stripe_client")
 def test_update_from_event_payload_downgrade_schedule(mock_get_client, db: Session, user_id: int):
     # Mock Stripe Client
     mock_client = MagicMock()

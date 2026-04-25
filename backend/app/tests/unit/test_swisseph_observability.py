@@ -316,7 +316,7 @@ def _run_failing_natal_calc(
 ) -> list:
     """Lance un calcul natal qui déclenche EphemerisCalcError et capture les logs ERROR."""
     from app.domain.astrology.natal_preparation import BirthInput
-    from app.services.natal_calculation_service import NatalCalculationService
+    from app.services.natal.calculation_service import NatalCalculationService
 
     service_module = importlib.import_module(NatalCalculationService.__module__)
 

@@ -6,8 +6,8 @@ from app.api.v1.schemas.consultation import (
     SafeguardIssue,
     UserProfileQuality,
 )
-from app.services.consultation_precheck_service import ConsultationPrecheckService
-from app.services.user_birth_profile_service import (
+from app.services.consultation.precheck_service import ConsultationPrecheckService
+from app.services.user_profile.birth_profile_service import (
     UserBirthProfileData,
     UserBirthProfileService,
     UserBirthProfileServiceError,

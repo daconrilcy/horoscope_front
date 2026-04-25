@@ -13,8 +13,8 @@ from app.services.daily_prediction_service import (
     DailyPredictionService,
     DailyPredictionServiceError,
 )
-from app.services.prediction_compute_runner import ComputeResult
-from app.services.prediction_run_reuse_policy import ReuseDecision
+from app.services.prediction.compute_runner import ComputeResult
+from app.services.prediction.run_reuse_policy import ReuseDecision
 
 
 @pytest.fixture

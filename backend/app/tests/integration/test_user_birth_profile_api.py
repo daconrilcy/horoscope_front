@@ -9,7 +9,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
-from app.services.user_astro_profile_service import UserAstroProfileServiceError
+from app.services.user_profile.astro_profile_service import UserAstroProfileServiceError
 
 client = TestClient(app)
 

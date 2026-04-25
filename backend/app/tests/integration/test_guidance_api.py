@@ -35,7 +35,7 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 from app.services.llm_generation.guidance.guidance_service import GuidanceServiceError
 from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_guidance_generator
 

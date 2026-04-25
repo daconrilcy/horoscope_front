@@ -13,7 +13,7 @@ from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.reference_data_service import ReferenceDataService
 
 

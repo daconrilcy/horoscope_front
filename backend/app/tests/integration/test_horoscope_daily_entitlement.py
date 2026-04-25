@@ -12,8 +12,10 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import engine
-from app.services.billing_service import BillingService
-from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.billing.service import BillingService
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
 from app.services.entitlement.horoscope_daily_entitlement_gate import HoroscopeDailyEntitlementGate
 
 

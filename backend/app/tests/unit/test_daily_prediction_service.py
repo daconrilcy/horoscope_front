@@ -72,7 +72,7 @@ def _build_mock_snapshot(
 
 
 def test_user_without_natal(service, db):
-    res_path = "app.services.prediction_request_resolver"
+    res_path = "app.services.prediction.request_resolver"
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
         patch(f"{res_path}.ChartResultRepository") as mock_chart_repo,
@@ -102,7 +102,7 @@ def test_user_without_natal(service, db):
 
 
 def test_user_missing_profile(service, db):
-    res_path = "app.services.prediction_request_resolver"
+    res_path = "app.services.prediction.request_resolver"
     with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo:
         mock_profile_repo.return_value.get_by_user_id.return_value = None
 
@@ -112,7 +112,7 @@ def test_user_missing_profile(service, db):
 
 
 def test_timezone_missing_raises(service, db):
-    res_path = "app.services.prediction_request_resolver"
+    res_path = "app.services.prediction.request_resolver"
     with patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo:
         mock_prof = MagicMock()
         mock_prof.current_timezone = None
@@ -125,7 +125,7 @@ def test_timezone_missing_raises(service, db):
 
 
 def test_location_missing_raises(service, db):
-    res_path = "app.services.prediction_request_resolver"
+    res_path = "app.services.prediction.request_resolver"
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
         patch(f"{res_path}.UserBirthProfileService.resolve_coordinates") as mock_resolve,
@@ -143,9 +143,9 @@ def test_location_missing_raises(service, db):
 
 
 def test_birth_coordinates_fallback_when_current_location_missing(service, db):
-    res_path = "app.services.prediction_request_resolver"
-    reuse_path = "app.services.prediction_run_reuse_policy"
-    comp_path = "app.services.prediction_compute_runner"
+    res_path = "app.services.prediction.request_resolver"
+    reuse_path = "app.services.prediction.run_reuse_policy"
+    comp_path = "app.services.prediction.compute_runner"
 
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
@@ -194,12 +194,12 @@ def test_birth_coordinates_fallback_when_current_location_missing(service, db):
 
 
 def test_ruleset_auto_seed_in_local_dev(service, db):
-    repair_path = "app.services.prediction_context_repair_service"
+    repair_path = "app.services.prediction.context_repair_service"
 
     with (
         patch(f"{repair_path}.settings") as mock_settings,
         patch(
-            "app.services.prediction_context_repair_service.PredictionContextRepairService.try_repair",
+            "app.services.prediction.context_repair_service.PredictionContextRepairService.try_repair",
             return_value=True,
         ),
     ):
@@ -213,7 +213,7 @@ def test_ruleset_auto_seed_in_local_dev(service, db):
         ]
 
         with patch(
-            "app.services.prediction_request_resolver.PredictionRulesetRepository",
+            "app.services.prediction.request_resolver.PredictionRulesetRepository",
             return_value=ruleset_repo,
         ):
             ruleset_id = service.resolver._resolve_ruleset_id(
@@ -223,12 +223,12 @@ def test_ruleset_auto_seed_in_local_dev(service, db):
 
 
 def test_reference_version_auto_seed_in_local_dev(service, db):
-    repair_path = "app.services.prediction_context_repair_service"
+    repair_path = "app.services.prediction.context_repair_service"
 
     with (
         patch(f"{repair_path}.settings") as mock_settings,
         patch(
-            "app.services.prediction_context_repair_service.PredictionContextRepairService.try_repair",
+            "app.services.prediction.context_repair_service.PredictionContextRepairService.try_repair",
             return_value=True,
         ),
     ):
@@ -250,7 +250,7 @@ def test_reference_version_auto_seed_in_local_dev(service, db):
 
 def test_ruleset_auto_seed_repairs_locked_incomplete_reference(service, db):
     # This test checks the repair service logic
-    from app.services.prediction_context_repair_service import PredictionContextRepairService
+    from app.services.prediction.context_repair_service import PredictionContextRepairService
     from scripts.seed_31_prediction_reference_v2 import SeedAbortError
 
     repair_service = PredictionContextRepairService()
@@ -261,8 +261,10 @@ def test_ruleset_auto_seed_repairs_locked_incomplete_reference(service, db):
     )
 
     with (
-        patch("app.services.prediction_context_repair_service.settings") as mock_settings,
-        patch("scripts.seed_31_prediction_reference_v2.run_seed") as mock_run_seed,
+        patch("app.services.prediction.context_repair_service.settings") as mock_settings,
+        patch(
+            "app.services.prediction.reference_seed_service.run_prediction_reference_seed"
+        ) as mock_run_seed,
         patch("app.services.reference_data_service.ReferenceDataService.seed_reference_version"),
     ):
         mock_settings.app_env = "development"
@@ -292,7 +294,7 @@ def test_ruleset_seed_abort_is_wrapped_as_service_error(service, db):
         ruleset_repo.get_ruleset.return_value = None
 
         with patch(
-            "app.services.prediction_request_resolver.PredictionRulesetRepository",
+            "app.services.prediction.request_resolver.PredictionRulesetRepository",
             return_value=ruleset_repo,
         ):
             with pytest.raises(DailyPredictionServiceError) as excinfo:
@@ -301,10 +303,10 @@ def test_ruleset_seed_abort_is_wrapped_as_service_error(service, db):
 
 
 def test_incomplete_prediction_context_is_auto_repaired_in_local_dev(service, db):
-    from app.services.prediction_compute_runner import ComputeResult
+    from app.services.prediction.compute_runner import ComputeResult
 
-    res_path = "app.services.prediction_request_resolver"
-    reuse_path = "app.services.prediction_run_reuse_policy"
+    res_path = "app.services.prediction.request_resolver"
+    reuse_path = "app.services.prediction.run_reuse_policy"
 
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
@@ -357,9 +359,9 @@ def test_incomplete_prediction_context_is_auto_repaired_in_local_dev(service, db
 
 
 def test_user_with_natal_full_compute(service, db):
-    res_path = "app.services.prediction_request_resolver"
-    reuse_path = "app.services.prediction_run_reuse_policy"
-    comp_path = "app.services.prediction_compute_runner"
+    res_path = "app.services.prediction.request_resolver"
+    reuse_path = "app.services.prediction.run_reuse_policy"
+    comp_path = "app.services.prediction.compute_runner"
 
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
@@ -406,8 +408,8 @@ def test_user_with_natal_full_compute(service, db):
 
 
 def test_identical_hash_not_recomputed(service, db):
-    res_path = "app.services.prediction_request_resolver"
-    reuse_path = "app.services.prediction_run_reuse_policy"
+    res_path = "app.services.prediction.request_resolver"
+    reuse_path = "app.services.prediction.run_reuse_policy"
 
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
@@ -446,7 +448,7 @@ def test_identical_hash_not_recomputed(service, db):
 
 
 def test_read_only_existing(service, db):
-    res_path = "app.services.prediction_request_resolver"
+    res_path = "app.services.prediction.request_resolver"
 
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
@@ -488,8 +490,8 @@ def test_read_only_existing(service, db):
 
 
 def test_relative_enrichment_preserves_absolute_snapshot_fields(service, db):
-    res_path = "app.services.prediction_request_resolver"
-    reuse_path = "app.services.prediction_run_reuse_policy"
+    res_path = "app.services.prediction.request_resolver"
+    reuse_path = "app.services.prediction.run_reuse_policy"
 
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,
@@ -548,8 +550,8 @@ def test_relative_enrichment_preserves_absolute_snapshot_fields(service, db):
 
 
 def test_daily_prediction_still_returns_snapshot_when_baseline_is_missing(service, db):
-    res_path = "app.services.prediction_request_resolver"
-    reuse_path = "app.services.prediction_run_reuse_policy"
+    res_path = "app.services.prediction.request_resolver"
+    reuse_path = "app.services.prediction.run_reuse_policy"
     relative_repo_path = "app.services.relative_scoring_service.UserPredictionBaselineRepository"
 
     with (

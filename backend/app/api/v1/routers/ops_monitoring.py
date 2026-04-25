@@ -17,7 +17,7 @@ from app.core.request_id import resolve_request_id
 from app.domain.llm.runtime.contracts import PerformanceQualificationReport
 from app.infra.db.session import get_db_session
 from app.ops.llm.performance_qualification import PerformanceQualificationService
-from app.services.ops_monitoring_service import (
+from app.services.ops.monitoring_service import (
     OpsMonitoringKpisData,
     OpsMonitoringOperationalSummaryData,
     OpsMonitoringPersonaKpisData,

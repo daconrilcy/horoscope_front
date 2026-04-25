@@ -143,7 +143,7 @@ def test_engine_selection_swisseph_when_accurate_and_enabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """engine=swisseph quand accurate=True et swisseph_enabled=True."""
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
 
@@ -191,7 +191,7 @@ def test_engine_selection_swisseph_when_accurate_and_enabled(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
@@ -209,7 +209,7 @@ def test_engine_selection_simplified_when_not_accurate(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """engine=swisseph par défaut quand non accurate et default configuré sur swisseph."""
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
     monkeypatch.setattr(natal_calculation_service.settings, "natal_engine_default", "swisseph")
@@ -256,7 +256,7 @@ def test_engine_selection_simplified_when_not_accurate(
     mock_bootstrap.path_version = "se-test-v1"
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
@@ -270,7 +270,7 @@ def test_engine_selection_error_when_accurate_and_swisseph_disabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Accurate mode requires swisseph_enabled=True, else raises NatalCalculationError."""
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", False)
 
@@ -279,7 +279,7 @@ def test_engine_selection_error_when_accurate_and_swisseph_disabled(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         with pytest.raises(NatalCalculationError) as exc_info:
@@ -294,7 +294,7 @@ def test_engine_selection_internal_override_simplified_when_enabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Override interne vers simplified autorisé si le feature flag est activé."""
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
     monkeypatch.setattr(natal_calculation_service.settings, "natal_engine_default", "swisseph")
@@ -337,7 +337,7 @@ def test_engine_selection_internal_override_simplified_when_enabled(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         natal_calculation_service.NatalCalculationService.calculate(
@@ -355,7 +355,7 @@ def test_engine_selection_internal_override_rejected_when_disabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Override interne vers simplified refusé si feature flag désactivé."""
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
     monkeypatch.setattr(natal_calculation_service.settings, "natal_engine_default", "swisseph")
@@ -369,7 +369,7 @@ def test_engine_selection_internal_override_rejected_when_disabled(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         with pytest.raises(NatalCalculationError) as exc_info:
@@ -394,7 +394,7 @@ def test_bootstrap_data_missing_error_propagated(
 ) -> None:
     """EphemerisDataMissingError stockée dans bootstrap est re-levée."""
     from app.core.ephemeris import EphemerisDataMissingError
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
 
@@ -408,7 +408,7 @@ def test_bootstrap_data_missing_error_propagated(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
@@ -425,7 +425,7 @@ def test_bootstrap_init_error_propagated(
 ) -> None:
     """SwissEphInitError stockée dans bootstrap est re-levée."""
     from app.core.ephemeris import SwissEphInitError
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
 
@@ -439,7 +439,7 @@ def test_bootstrap_init_error_propagated(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
@@ -456,7 +456,7 @@ def test_bootstrap_none_raises_init_error(
 ) -> None:
     """Si bootstrap non appelé (None), SwissEphInitError est levée."""
     from app.core.ephemeris import SwissEphInitError
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
 
@@ -465,7 +465,7 @@ def test_bootstrap_none_raises_init_error(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=None):
@@ -682,7 +682,7 @@ def test_missing_timezone_in_accurate_mode() -> None:
     """generate_for_user(accurate=True) avec birth_timezone absent lève missing_timezone."""
     from unittest.mock import MagicMock
 
-    from app.services.user_natal_chart_service import (
+    from app.services.user_profile.natal_chart_service import (
         UserNatalChartService,
         UserNatalChartServiceError,
     )
@@ -704,11 +704,11 @@ def test_missing_timezone_in_accurate_mode() -> None:
     mock_coordinates.resolved_from_place = True
 
     with patch(
-        "app.services.user_natal_chart_service.UserBirthProfileService.get_for_user",
+        "app.services.user_profile.natal_chart_service.UserBirthProfileService.get_for_user",
         return_value=mock_profile,
     ):
         with patch(
-            "app.services.user_natal_chart_service.UserBirthProfileService.resolve_coordinates",
+            "app.services.user_profile.natal_chart_service.UserBirthProfileService.resolve_coordinates",
             return_value=mock_coordinates,
         ):
             with pytest.raises(UserNatalChartServiceError) as exc_info:
@@ -719,7 +719,7 @@ def test_missing_timezone_in_accurate_mode() -> None:
 
 def test_accurate_false_does_not_check_timezone() -> None:
     """generate_for_user(accurate=False) ne fait pas la vérification missing_timezone."""
-    from app.services.user_natal_chart_service import (
+    from app.services.user_profile.natal_chart_service import (
         UserNatalChartService,
         UserNatalChartServiceError,
     )
@@ -735,7 +735,7 @@ def test_accurate_false_does_not_check_timezone() -> None:
     mock_profile.birth_place_resolved_id = None
 
     with patch(
-        "app.services.user_natal_chart_service.UserBirthProfileService.get_for_user",
+        "app.services.user_profile.natal_chart_service.UserBirthProfileService.get_for_user",
         return_value=mock_profile,
     ):
         with pytest.raises(UserNatalChartServiceError) as exc_info:

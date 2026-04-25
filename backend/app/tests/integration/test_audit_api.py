@@ -18,8 +18,8 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
-from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.auth_service import AuthService
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 client = TestClient(app)
 

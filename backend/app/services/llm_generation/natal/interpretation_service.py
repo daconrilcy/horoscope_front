@@ -47,8 +47,8 @@ from app.services.chart_json_builder import (
 from app.services.disclaimer_registry import get_disclaimers
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 from app.services.llm_generation.natal.prompt_context import _detect_degraded_mode
-from app.services.user_birth_profile_service import UserBirthProfileData
-from app.services.user_natal_chart_service import UserNatalChartReadData
+from app.services.user_profile.birth_profile_service import UserBirthProfileData
+from app.services.user_profile.natal_chart_service import UserNatalChartReadData
 
 logger = logging.getLogger(__name__)
 
@@ -971,7 +971,7 @@ class NatalInterpretationService:
 
         # Audit before delete
         from app.domain.audit.safe_details import NatalInterpretationAuditDetails
-        from app.services.audit_service import AuditEventCreatePayload, AuditService
+        from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
         audit_payload = AuditEventCreatePayload(
             request_id=request_id,

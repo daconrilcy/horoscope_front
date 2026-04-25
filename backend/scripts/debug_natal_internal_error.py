@@ -11,8 +11,8 @@ from sqlalchemy import select
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import SessionLocal
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
-from app.services.user_birth_profile_service import UserBirthProfileService
-from app.services.user_natal_chart_service import UserNatalChartService
+from app.services.user_profile.birth_profile_service import UserBirthProfileService
+from app.services.user_profile.natal_chart_service import UserNatalChartService
 
 
 def _setup_logging(debug: bool) -> None:
@@ -127,4 +127,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

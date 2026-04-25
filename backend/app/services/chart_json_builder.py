@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.domain.astrology.natal_calculation import NatalResult
-    from app.services.user_birth_profile_service import UserBirthProfileData
+    from app.services.user_profile.birth_profile_service import UserBirthProfileData
 
 SIGNS = [
     "aries",

@@ -7,13 +7,13 @@ from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
-from app.services.audit_service import (
+from app.services.auth_service import AuthService
+from app.services.ops.audit_service import (
     AuditEventCreatePayload,
     AuditEventListFilters,
     AuditService,
     AuditServiceError,
 )
-from app.services.auth_service import AuthService
 
 
 def _cleanup_tables() -> None:

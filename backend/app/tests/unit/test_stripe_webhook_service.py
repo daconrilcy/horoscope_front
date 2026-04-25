@@ -6,10 +6,13 @@ import pytest
 import stripe
 from sqlalchemy.orm import Session
 
-from app.services.stripe_webhook_service import StripeWebhookService, StripeWebhookServiceError
+from app.services.billing.stripe_webhook_service import (
+    StripeWebhookService,
+    StripeWebhookServiceError,
+)
 
 STRIPE_BILLING_SERVICE_PATH = (
-    "app.services.stripe_billing_profile_service.StripeBillingProfileService"
+    "app.services.billing.stripe_billing_profile_service.StripeBillingProfileService"
 )
 UPDATE_EVENT_PAYLOAD_PATH = f"{STRIPE_BILLING_SERVICE_PATH}.update_from_event_payload"
 GET_BY_CUSTOMER_ID_PATH = f"{STRIPE_BILLING_SERVICE_PATH}.get_by_stripe_customer_id"
@@ -86,7 +89,7 @@ class TestStripeWebhookService:
         }
 
         with patch(
-            "app.services.stripe_webhook_service.StripeCustomerPortalService."
+            "app.services.billing.stripe_webhook_service.StripeCustomerPortalService."
             "apply_paid_subscription_upgrade_checkout_session"
         ) as mock_apply:
             result = StripeWebhookService.handle_event(db, mock_event)
@@ -259,11 +262,11 @@ class TestStripeWebhookService:
         mock_event.to_dict.return_value = {"id": "evt_idempotent"}
 
         with patch(
-            "app.services.stripe_webhook_service.StripeWebhookIdempotencyService.claim_event",
+            "app.services.billing.stripe_webhook_service.StripeWebhookIdempotencyService.claim_event",
             side_effect=["accepted", "duplicate_ignored"],
         ) as mock_claim:
             with patch(
-                "app.services.stripe_webhook_service.StripeWebhookIdempotencyService.mark_processed"
+                "app.services.billing.stripe_webhook_service.StripeWebhookIdempotencyService.mark_processed"
             ) as mock_mark_processed:
                 with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
                     mock_profile = MagicMock()

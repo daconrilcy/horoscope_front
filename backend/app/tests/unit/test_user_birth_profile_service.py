@@ -9,7 +9,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.user_birth_profile_service import (
+from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )

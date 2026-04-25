@@ -17,7 +17,7 @@ from app.domain.llm.configuration.admin_models import (
 from app.domain.llm.configuration.assembly_admin_service import AssemblyAdminService
 from app.domain.llm.configuration.coherence import CoherenceError
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 router = APIRouter(prefix="/v1/admin/llm/assembly", tags=["admin-llm-assembly"])
 

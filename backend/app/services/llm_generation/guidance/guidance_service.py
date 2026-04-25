@@ -33,7 +33,7 @@ from app.services.llm_generation.shared.natal_context import (
     detect_degraded_natal_mode,
 )
 from app.services.persona_config_service import PersonaConfigService
-from app.services.user_birth_profile_service import (
+from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
@@ -662,7 +662,7 @@ class GuidanceService:
 
         # Story 59.4: Build astro context before LLM call
 
-        from app.services.astro_context_builder import AstroContextBuilder
+        from app.services.natal.astro_context_builder import AstroContextBuilder
 
         astro_context = None
         try:

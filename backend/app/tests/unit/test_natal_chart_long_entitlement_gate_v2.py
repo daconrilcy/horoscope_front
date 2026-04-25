@@ -2,7 +2,9 @@ from unittest.mock import patch
 
 import pytest
 
-from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
 from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,

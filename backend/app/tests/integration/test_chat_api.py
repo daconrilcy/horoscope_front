@@ -45,7 +45,7 @@ from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 from app.services.llm_generation.chat.chat_guidance_service import ChatGuidanceServiceError
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator

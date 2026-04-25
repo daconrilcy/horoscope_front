@@ -2,7 +2,17 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+CONSULTATION_TYPE_ALIASES = {
+    "work": "career",
+    "relation": "relationship",
+}
+
+
+def normalize_consultation_type(value: str) -> str:
+    """Normalise les aliases legacy des consultations vers les cles canoniques."""
+    return CONSULTATION_TYPE_ALIASES.get(value, value)
 
 
 class PrecisionLevel(str, Enum):
@@ -62,6 +72,12 @@ class ConsultationPrecheckRequest(BaseModel):
     horizon: Optional[str] = None
     other_person: Optional[OtherPersonData] = None
 
+    @field_validator("consultation_type")
+    @classmethod
+    def normalize_type(cls, value: str) -> str:
+        """Convertit les anciennes cles de consultation en cles canoniques."""
+        return normalize_consultation_type(value)
+
 
 class ConsultationPrecheckData(BaseModel):
     consultation_type: str
@@ -95,6 +111,12 @@ class ConsultationGenerateRequest(BaseModel):
     save_third_party: bool = False
     third_party_nickname: Optional[str] = Field(None, max_length=100)
     third_party_external_id: Optional[str] = Field(None, max_length=36)
+
+    @field_validator("consultation_type")
+    @classmethod
+    def normalize_type(cls, value: str) -> str:
+        """Convertit les anciennes cles de consultation en cles canoniques."""
+        return normalize_consultation_type(value)
 
 
 class ConsultationBlockKind(str, Enum):

@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import jwt
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -23,6 +23,16 @@ jinja_env = Environment(
 
 
 class EmailService:
+    @staticmethod
+    def _assign_sqlite_email_log_id_if_needed(db: Session, log_entry: EmailLogModel) -> None:
+        """Assigne un identifiant explicite sur SQLite quand le schéma local legacy l'exige."""
+        bind = db.get_bind()
+        if bind is None or bind.dialect.name != "sqlite" or log_entry.id is not None:
+            return
+
+        next_id = db.scalar(select(func.coalesce(func.max(EmailLogModel.id), 0) + 1))
+        log_entry.id = int(next_id or 1)
+
     @staticmethod
     def _render_template(template_name: str, **kwargs) -> str:
         template = jinja_env.get_template(f"emails/{template_name}")
@@ -281,6 +291,7 @@ class EmailService:
         log_entry = EmailLogModel(
             user_id=user_id, email_type=email_type, recipient_email=email, status="pending"
         )
+        EmailService._assign_sqlite_email_log_id_if_needed(db, log_entry)
         db.add(log_entry)
         db.commit()
 

@@ -40,10 +40,10 @@ from app.services.llm_generation.natal.prompt_context import (
 )
 from app.services.llm_generation.off_scope_policy import assess_off_scope
 from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
-from app.services.user_birth_profile_service import (
+from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
 )
-from app.services.user_natal_chart_service import UserNatalChartService
+from app.services.user_profile.natal_chart_service import UserNatalChartService
 
 logger = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ from app.prediction.schemas import (
     TimeBlock,
     V3EngineOutput,
 )
-from app.services.user_prediction_baseline_service import UserPredictionBaselineService
+from app.services.user_profile.prediction_baseline_service import UserPredictionBaselineService
 from app.tests.helpers.db_utils import (
     create_chart_result,
     create_prediction_category,
@@ -76,7 +76,9 @@ def test_generate_baseline_granularities(db_session: Session, mock_context_loade
         ),
     )
 
-    with patch("app.services.user_prediction_baseline_service.EngineOrchestrator") as mock_orch_cls:
+    with patch(
+        "app.services.user_profile.prediction_baseline_service.EngineOrchestrator"
+    ) as mock_orch_cls:
         mock_orch = mock_orch_cls.return_value
         mock_orch.with_context_loader.return_value = mock_orch
         mock_orch.run.return_value = mock_bundle

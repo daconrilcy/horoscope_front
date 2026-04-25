@@ -21,10 +21,13 @@ from app.infra.db.repositories.chart_result_repository import ChartResultReposit
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.chart_result_service import ChartResultService
-from app.services.natal_calculation_service import NatalCalculationService
+from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
-from app.services.user_birth_profile_service import UserBirthProfileService
-from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError
+from app.services.user_profile.birth_profile_service import UserBirthProfileService
+from app.services.user_profile.natal_chart_service import (
+    UserNatalChartService,
+    UserNatalChartServiceError,
+)
 
 
 def _cleanup_tables() -> None:
@@ -230,7 +233,7 @@ def test_generate_for_user_maps_timeout_error(monkeypatch: pytest.MonkeyPatch) -
         raise TimeoutError("timeout")
 
     monkeypatch.setattr(
-        "app.services.user_natal_chart_service.NatalCalculationService.calculate",
+        "app.services.user_profile.natal_chart_service.NatalCalculationService.calculate",
         _raise_timeout,
     )
 
@@ -257,7 +260,9 @@ def test_generate_for_user_enforces_timeout_budget(monkeypatch: pytest.MonkeyPat
             return 0.0
         return 9999.0
 
-    monkeypatch.setattr("app.services.user_natal_chart_service.perf_counter", _fake_perf_counter)
+    monkeypatch.setattr(
+        "app.services.user_profile.natal_chart_service.perf_counter", _fake_perf_counter
+    )
 
     with SessionLocal() as db:
         with pytest.raises(UserNatalChartServiceError) as error:

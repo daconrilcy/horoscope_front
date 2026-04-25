@@ -19,7 +19,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
 )
-from app.services.billing_service import BillingPlanData, SubscriptionStatusData
+from app.services.billing.service import BillingPlanData, SubscriptionStatusData
 from scripts.migrate_legacy_quota_to_canonical import migrate
 
 

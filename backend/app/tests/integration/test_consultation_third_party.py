@@ -10,7 +10,9 @@ from app.infra.db.repositories.consultation_third_party_repository import (
 )
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
-from app.services.entitlement.thematic_consultation_entitlement_gate import ConsultationEntitlementResult
+from app.services.entitlement.thematic_consultation_entitlement_gate import (
+    ConsultationEntitlementResult,
+)
 
 client = TestClient(app)
 

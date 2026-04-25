@@ -15,9 +15,9 @@ from app.core.rbac import is_valid_role
 from app.core.request_id import resolve_request_id
 from app.core.security import SecurityError, decode_token
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.auth_service import AuthResponse, AuthService, AuthServiceError, AuthTokens
 from app.services.email_service import EmailService
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 
 class ResponseMeta(BaseModel):

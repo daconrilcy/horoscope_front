@@ -95,11 +95,11 @@ def test_refresh_subscription_success(admin_token, monkeypatch):
 
     # Mock settings for price mapping
     monkeypatch.setattr(
-        "app.services.stripe_billing_profile_service.settings.stripe_price_premium",
+        "app.services.billing.stripe_billing_profile_service.settings.stripe_price_premium",
         "price_premium_id",
     )
     # Rebuild map
-    from app.services import stripe_billing_profile_service
+    from app.services.billing import stripe_billing_profile_service
 
     monkeypatch.setattr(
         stripe_billing_profile_service,

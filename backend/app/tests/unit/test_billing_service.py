@@ -9,7 +9,7 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.billing_service import (
+from app.services.billing.service import (
     BillingService,
 )
 
@@ -120,8 +120,8 @@ def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscript
 def test_get_subscription_status_defaults_to_free_in_local_runtime(monkeypatch) -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    monkeypatch.setattr("app.services.billing_service.settings.app_env", "development")
-    monkeypatch.setattr(BillingService, "_is_pytest_runtime", staticmethod(lambda: False))
+    monkeypatch.setattr("app.services.billing.service.settings.app_env", "development")
+    monkeypatch.setattr("app.services.billing.subscription_status.is_pytest_runtime", lambda: False)
 
     with SessionLocal() as db:
         status = BillingService.get_subscription_status(db, user_id=user_id)

@@ -26,8 +26,8 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.reference_data_service import ReferenceDataService
-from app.services.user_birth_profile_service import UserBirthProfileService
-from app.services.user_natal_chart_service import (
+from app.services.user_profile.birth_profile_service import UserBirthProfileService
+from app.services.user_profile.natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
 )
@@ -37,7 +37,7 @@ from app.services.user_natal_chart_service import (
 def mock_swisseph(monkeypatch: pytest.MonkeyPatch) -> None:
     """Active SwissEph et mock le bootstrap pour les tests d'intégration."""
     from app.core import ephemeris
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
 
@@ -197,7 +197,7 @@ def test_accurate_mode_swisseph_disabled_raises_error(
     """accurate=True mais SWISSEPH_ENABLED=False -> NatalCalculationError."""
     _cleanup()
 
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", False)
 
@@ -209,7 +209,7 @@ def test_accurate_mode_swisseph_disabled_raises_error(
             birth_place="Paris",
             birth_timezone="Europe/Paris",
         )
-        from app.services.natal_calculation_service import NatalCalculationService
+        from app.services.natal.calculation_service import NatalCalculationService
 
         with pytest.raises(NatalCalculationError) as exc_info:
             NatalCalculationService.calculate(

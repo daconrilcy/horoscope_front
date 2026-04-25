@@ -23,7 +23,7 @@ from app.prediction.schemas import (
     EffectiveContext,
     PersistablePredictionBundle,
 )
-from app.services.user_prediction_baseline_service import UserPredictionBaselineService
+from app.services.user_profile.prediction_baseline_service import UserPredictionBaselineService
 
 
 def _alembic_config() -> Config:

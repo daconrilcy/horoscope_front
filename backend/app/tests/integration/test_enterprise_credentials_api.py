@@ -157,7 +157,7 @@ def test_generate_returns_503_when_audit_unavailable(monkeypatch: object) -> Non
     )
     _attach_enterprise_account(admin_user_id)
 
-    from app.services.audit_service import AuditServiceError
+    from app.services.ops.audit_service import AuditServiceError
 
     def _audit_unavailable(*args: object, **kwargs: object) -> None:
         raise AuditServiceError(

@@ -4,13 +4,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.services.b2b_api_entitlement_gate import (
+from app.services.b2b.api_entitlement_gate import (
     B2BApiAccessDeniedError,
     B2BApiEntitlementGate,
     B2BApiQuotaExceededError,
 )
-from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
+from app.services.b2b.enterprise_quota_usage_service import EnterpriseQuotaUsageService
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
 from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,

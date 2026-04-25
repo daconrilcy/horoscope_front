@@ -17,17 +17,17 @@ from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
-from app.services.b2b_api_entitlement_gate import (
+from app.services.b2b.api_entitlement_gate import (
     B2BApiAccessDeniedError,
     B2BApiEntitlementGate,
     B2BApiQuotaExceededError,
 )
-from app.services.b2b_astrology_service import (
+from app.services.b2b.astrology_service import (
     B2BAstrologyService,
     B2BAstrologyServiceError,
     WeeklyBySignData,
 )
-from app.services.b2b_editorial_service import B2BEditorialService, B2BEditorialServiceError
+from app.services.b2b.editorial_service import B2BEditorialService, B2BEditorialServiceError
 
 
 class ResponseMeta(BaseModel):

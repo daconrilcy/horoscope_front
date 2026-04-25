@@ -146,7 +146,7 @@ class TestNatalInterpretationsHistory:
         )
         mock_db.execute.return_value.scalar_one_or_none.return_value = item
 
-        with patch("app.services.audit_service.AuditService.record_event") as mock_audit:
+        with patch("app.services.ops.audit_service.AuditService.record_event") as mock_audit:
             response = test_client.delete("/v1/natal/interpretations/123")
             assert response.status_code == 204
             mock_db.delete.assert_called_once()

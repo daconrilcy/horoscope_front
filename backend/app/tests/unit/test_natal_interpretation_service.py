@@ -33,8 +33,8 @@ from app.services.llm_generation.natal.prompt_context import (
     _longitude_to_sign,
     build_natal_chart_summary,
 )
-from app.services.user_birth_profile_service import UserBirthProfileData
-from app.services.user_natal_chart_service import (
+from app.services.user_profile.birth_profile_service import UserBirthProfileData
+from app.services.user_profile.natal_chart_service import (
     UserNatalChartMetadata,
     UserNatalChartReadData,
 )

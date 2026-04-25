@@ -53,13 +53,13 @@ async def test_build_full_context(db):
     # Mock dependencies to avoid DB lookup issues in this test
     with (
         patch(
-            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user"
+            "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user"
         ) as mock_profile,
         patch(
             "app.services.persona_config_service.PersonaConfigService.get_active"
         ) as mock_persona,
         patch(
-            "app.services.user_natal_chart_service.UserNatalChartService.get_latest_for_user"
+            "app.services.user_profile.natal_chart_service.UserNatalChartService.get_latest_for_user"
         ) as mock_chart,
     ):
         mock_profile.return_value = MagicMock(birth_time="12:00", birth_place="Paris")

@@ -20,7 +20,7 @@ from app.domain.astrology.natal_calculation import (
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
-from app.services.user_birth_profile_service import UserBirthProfileData
+from app.services.user_profile.birth_profile_service import UserBirthProfileData
 
 
 def _make_natal_result() -> NatalResult:

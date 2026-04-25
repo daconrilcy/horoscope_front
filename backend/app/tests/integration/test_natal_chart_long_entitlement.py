@@ -30,8 +30,10 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine, get_db_session
 from app.main import app
-from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
-from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.billing.service import BillingPlanData, BillingService, SubscriptionStatusData
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
 from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
@@ -325,11 +327,11 @@ def _get_counter(user_id: int) -> FeatureUsageCounterModel | None:
 def _patch_interpretation_dependencies(side_effect=None):
     return (
         patch(
-            "app.services.user_natal_chart_service.UserNatalChartService.get_latest_for_user",
+            "app.services.user_profile.natal_chart_service.UserNatalChartService.get_latest_for_user",
             return_value=MagicMock(chart_id="test_chart", result={}),
         ),
         patch(
-            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user",
             return_value=MagicMock(),
         ),
         patch(
@@ -356,10 +358,10 @@ def mock_user_and_chart():
     app.dependency_overrides[require_authenticated_user] = _override_auth
     with (
         patch(
-            "app.services.user_natal_chart_service.UserNatalChartService.get_latest_for_user"
+            "app.services.user_profile.natal_chart_service.UserNatalChartService.get_latest_for_user"
         ) as mock_chart,
         patch(
-            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user"
+            "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user"
         ) as mock_profile,
     ):
         chart_obj = MagicMock()

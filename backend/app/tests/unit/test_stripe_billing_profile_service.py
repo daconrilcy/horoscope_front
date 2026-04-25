@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
 from app.infra.db.session import SessionLocal, engine
-from app.services import stripe_billing_profile_service as svc
 from app.services.auth_service import AuthService
-from app.services.stripe_billing_profile_service import (
+from app.services.billing import stripe_billing_profile_service as svc
+from app.services.billing.stripe_billing_profile_service import (
     STRIPE_PRICE_ENTITLEMENT_MAP,
     StripeBillingProfileService,
     derive_entitlement_plan,
@@ -219,7 +219,7 @@ def test_transition_entitlement_plan(db: Session, user_id: int):
         assert StripeBillingProfileService.get_entitlement_plan(db, user_id) == "free"
 
 
-@patch("app.services.stripe_billing_profile_service.get_stripe_client")
+@patch("app.services.billing.stripe_billing_profile_service.get_stripe_client")
 def test_checkout_session_hydrates_subscription_period_fields(
     mock_get_client, db: Session, user_id: int
 ):
@@ -262,7 +262,7 @@ def test_checkout_session_hydrates_subscription_period_fields(
     assert profile.current_period_end is not None
 
 
-@patch("app.services.stripe_billing_profile_service.get_stripe_client")
+@patch("app.services.billing.stripe_billing_profile_service.get_stripe_client")
 def test_checkout_session_keeps_partial_profile_when_subscription_hydration_fails(
     mock_get_client, db: Session, user_id: int
 ):

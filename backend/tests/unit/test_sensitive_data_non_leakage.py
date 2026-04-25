@@ -18,7 +18,7 @@ from app.core.sensitive_data import (
     sanitize_payload,
 )
 from app.infra.db.base import Base
-from app.services.audit_service import AuditEventCreatePayload, AuditService
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 
 def test_classify_field():

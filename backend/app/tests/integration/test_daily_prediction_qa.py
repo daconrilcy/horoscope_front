@@ -331,7 +331,7 @@ def _fetch_prediction_for_fixture(fixture_name: str) -> dict:
         mock_bundle = _build_mock_bundle(fixture_data)
 
         with patch(
-            "app.services.prediction_compute_runner.EngineOrchestrator.run",
+            "app.services.prediction.compute_runner.EngineOrchestrator.run",
             return_value=mock_bundle,
         ):
             response = client.get(
@@ -620,8 +620,8 @@ def test_v2_v3_dual_comparison_qa():
     Implements all Gates from v3-migration-gates.md.
     """
     from app.prediction.context_loader import PredictionContextLoader
-    from app.services.prediction_compute_runner import PredictionComputeRunner
-    from app.services.prediction_request_resolver import PredictionRequestResolver
+    from app.services.prediction.compute_runner import PredictionComputeRunner
+    from app.services.prediction.request_resolver import PredictionRequestResolver
 
     # Use calm_day for Sobriety check
     fixture_data = get_calm_day()
@@ -694,8 +694,8 @@ def test_v3_inter_run_stability():
     Task 4 Story 42.17: Vérifier la stabilité inter-runs (idempotence).
     """
     from app.prediction.context_loader import PredictionContextLoader
-    from app.services.prediction_compute_runner import PredictionComputeRunner
-    from app.services.prediction_request_resolver import PredictionRequestResolver
+    from app.services.prediction.compute_runner import PredictionComputeRunner
+    from app.services.prediction.request_resolver import PredictionRequestResolver
 
     with SessionLocal() as db:
         _setup_qa_user_and_natal(db)
@@ -731,8 +731,8 @@ def test_v3_runtime_slo():
       Le seuil doit absorber le coût DB/seed/orchestration réel de l'end-to-end.
     """
     from app.prediction.context_loader import PredictionContextLoader
-    from app.services.prediction_compute_runner import PredictionComputeRunner
-    from app.services.prediction_request_resolver import PredictionRequestResolver
+    from app.services.prediction.compute_runner import PredictionComputeRunner
+    from app.services.prediction.request_resolver import PredictionRequestResolver
 
     with SessionLocal() as db:
         _setup_qa_user_and_natal(db)

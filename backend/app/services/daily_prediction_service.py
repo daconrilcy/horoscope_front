@@ -12,11 +12,11 @@ from app.infra.db.repositories.daily_prediction_repository import DailyPredictio
 from app.infra.observability.metrics import increment_counter
 from app.prediction.exceptions import PredictionContextError
 from app.services.daily_prediction_types import ComputeMode, DailyPredictionServiceError
-from app.services.prediction_compute_runner import PredictionComputeRunner
-from app.services.prediction_context_repair_service import PredictionContextRepairService
-from app.services.prediction_fallback_policy import PredictionFallbackPolicy
-from app.services.prediction_request_resolver import PredictionRequestResolver
-from app.services.prediction_run_reuse_policy import PredictionRunReusePolicy
+from app.services.prediction.compute_runner import PredictionComputeRunner
+from app.services.prediction.context_repair_service import PredictionContextRepairService
+from app.services.prediction.fallback_policy import PredictionFallbackPolicy
+from app.services.prediction.request_resolver import PredictionRequestResolver
+from app.services.prediction.run_reuse_policy import PredictionRunReusePolicy
 from app.services.relative_scoring_service import RelativeScoringService
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
     from app.prediction.persistence_service import PredictionPersistenceService
     from app.prediction.schemas import PersistablePredictionBundle
-    from app.services.prediction_request_resolver import ResolvedPredictionRequest
+    from app.services.prediction.request_resolver import ResolvedPredictionRequest
 
 logger = logging.getLogger()
 

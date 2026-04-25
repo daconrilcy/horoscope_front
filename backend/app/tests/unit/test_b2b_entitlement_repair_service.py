@@ -18,8 +18,8 @@ from app.infra.db.models.product_entitlements import (
     SourceOrigin,
 )
 from app.infra.db.models.user import UserModel
-from app.services.b2b_audit_service import B2BAuditEntry
-from app.services.b2b_entitlement_repair_service import (
+from app.services.b2b.audit_service import B2BAuditEntry
+from app.services.b2b.entitlement_repair_service import (
     B2BEntitlementRepairService,
     RepairValidationError,
 )
@@ -57,15 +57,15 @@ def test_run_auto_repair_dry_run_no_mutation(db, feature):
 
     # Mock audit to return no_canonical_plan
     with (
-        patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
+        patch("app.services.b2b.audit_service.B2BAuditService._audit_account") as mock_audit,
         patch(
-            "app.services.b2b_audit_service.B2BAuditService._prefetch_canonical_plans",
+            "app.services.b2b.audit_service.B2BAuditService._prefetch_canonical_plans",
             return_value={},
         ),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_bindings", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_quotas", return_value={}),
         patch(
-            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            "app.services.b2b.entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
             return_value=(
                 True,
                 True,
@@ -118,15 +118,15 @@ def test_run_auto_repair_full_backfill(db, feature):
     db.scalar.side_effect = [None]
 
     with (
-        patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
+        patch("app.services.b2b.audit_service.B2BAuditService._audit_account") as mock_audit,
         patch(
-            "app.services.b2b_audit_service.B2BAuditService._prefetch_canonical_plans",
+            "app.services.b2b.audit_service.B2BAuditService._prefetch_canonical_plans",
             return_value={},
         ),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_bindings", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_quotas", return_value={}),
         patch(
-            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            "app.services.b2b.entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
             return_value=(
                 True,
                 True,
@@ -200,15 +200,15 @@ def test_run_auto_repair_shared_enterprise_plan_reuses_in_memory_backfill(db, fe
     db.begin_nested.return_value = nested_transaction
 
     with (
-        patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
+        patch("app.services.b2b.audit_service.B2BAuditService._audit_account") as mock_audit,
         patch(
-            "app.services.b2b_audit_service.B2BAuditService._prefetch_canonical_plans",
+            "app.services.b2b.audit_service.B2BAuditService._prefetch_canonical_plans",
             return_value={},
         ),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_bindings", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_quotas", return_value={}),
         patch(
-            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            "app.services.b2b.entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
             return_value=(
                 True,
                 True,
@@ -277,15 +277,15 @@ def test_run_auto_repair_already_canonical_skipped(db, feature):
     db.scalars.return_value.all.side_effect = [[account], [acc_plan], [ent_plan]]
 
     with (
-        patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
+        patch("app.services.b2b.audit_service.B2BAuditService._audit_account") as mock_audit,
         patch(
-            "app.services.b2b_audit_service.B2BAuditService._prefetch_canonical_plans",
+            "app.services.b2b.audit_service.B2BAuditService._prefetch_canonical_plans",
             return_value={},
         ),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_bindings", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_quotas", return_value={}),
         patch(
-            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            "app.services.b2b.entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
             return_value=(
                 True,
                 True,
@@ -335,15 +335,15 @@ def test_run_auto_repair_admin_missing_no_longer_blocker(db, feature):
     db.scalar.side_effect = [None]
 
     with (
-        patch("app.services.b2b_audit_service.B2BAuditService._audit_account") as mock_audit,
+        patch("app.services.b2b.audit_service.B2BAuditService._audit_account") as mock_audit,
         patch(
-            "app.services.b2b_audit_service.B2BAuditService._prefetch_canonical_plans",
+            "app.services.b2b.audit_service.B2BAuditService._prefetch_canonical_plans",
             return_value={},
         ),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_bindings", return_value={}),
-        patch("app.services.b2b_audit_service.B2BAuditService._prefetch_quotas", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_bindings", return_value={}),
+        patch("app.services.b2b.audit_service.B2BAuditService._prefetch_quotas", return_value={}),
         patch(
-            "app.services.b2b_entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
+            "app.services.b2b.entitlement_repair_service.B2BEntitlementRepairService._backfill_binding_and_quota",
             return_value=(
                 True,
                 True,

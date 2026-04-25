@@ -503,7 +503,7 @@ def test_build_natal_result_topocentric_propagates_frame_and_coordinates_to_plan
 
 def test_user_natal_chart_metadata_timezone_used() -> None:
     """UserNatalChartMetadata.timezone_used est dérivé de prepared_input.birth_timezone."""
-    from app.services.user_natal_chart_service import UserNatalChartMetadata
+    from app.services.user_profile.natal_chart_service import UserNatalChartMetadata
 
     result = NatalResult(
         reference_version="1.0.0",
@@ -550,7 +550,7 @@ def test_user_natal_chart_metadata_timezone_used() -> None:
 
 def test_user_natal_chart_metadata_ephemeris_path_version_none_for_simplified() -> None:
     """ephemeris_path_version=None pour le moteur simplified."""
-    from app.services.user_natal_chart_service import UserNatalChartMetadata
+    from app.services.user_profile.natal_chart_service import UserNatalChartMetadata
 
     result = NatalResult(
         reference_version="1.0.0",
@@ -589,7 +589,7 @@ def test_user_natal_chart_metadata_ephemeris_path_version_none_for_simplified() 
 
 def test_user_natal_chart_metadata_historical_fields_preserved() -> None:
     """reference_version, ruleset_version, house_system toujours présents (champs historiques)."""
-    from app.services.user_natal_chart_service import UserNatalChartMetadata
+    from app.services.user_profile.natal_chart_service import UserNatalChartMetadata
 
     metadata = UserNatalChartMetadata(
         reference_version="v2.0",
@@ -613,7 +613,7 @@ def test_user_natal_chart_metadata_historical_fields_preserved() -> None:
 
 def test_user_natal_chart_metadata_audit_grade_fields_present_and_consistent() -> None:
     """Story 27.1: metadata audit-grade inclut tous les champs requis."""
-    from app.services.user_natal_chart_service import UserNatalChartMetadata
+    from app.services.user_profile.natal_chart_service import UserNatalChartMetadata
 
     prepared = BirthPreparedData(
         birth_datetime_local="1990-06-15T12:00:00+02:00",
@@ -681,7 +681,7 @@ def test_natal_calculation_service_extracts_ephemeris_path_version(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """NatalCalculationService.calculate() extrait path_version du bootstrap pour swisseph."""
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", True)
 
@@ -715,7 +715,7 @@ def test_natal_calculation_service_extracts_ephemeris_path_version(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
@@ -735,7 +735,7 @@ def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """NatalCalculationService.calculate() passe ephemeris_path_version=None pour simplified."""
-    from app.services import natal_calculation_service
+    from app.services.natal import calculation_service as natal_calculation_service
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", False)
 
@@ -763,7 +763,7 @@ def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal_calculation_service.ReferenceDataService.get_active_reference_data",
+        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
         return_value=ref_data,
     ):
         natal_calculation_service.NatalCalculationService.calculate(

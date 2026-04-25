@@ -20,7 +20,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureBindingModel,
 )
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
 

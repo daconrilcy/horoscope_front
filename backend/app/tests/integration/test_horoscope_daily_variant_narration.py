@@ -23,7 +23,7 @@ from app.infra.db.session import engine
 from app.main import app
 from app.prediction.llm_narrator import NarratorResult
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 from app.services.daily_prediction_service import ServiceResult
 
 

@@ -10,11 +10,11 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
+from app.services.billing.stripe_customer_portal_service import StripeCustomerPortalService
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
-from app.services.stripe_customer_portal_service import StripeCustomerPortalService
 
 client = TestClient(app)
 
@@ -84,7 +84,7 @@ class TestStripeCustomerPortalApi:
         token = _register_user_with_role("user@example.com", "user")
         # No profile created yet
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client",
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
             return_value=MagicMock(),
         ):
             response = client.post(
@@ -103,7 +103,7 @@ class TestStripeCustomerPortalApi:
             db.commit()
 
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client",
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
             return_value=MagicMock(),
         ):
             response = client.post(
@@ -122,7 +122,8 @@ class TestStripeCustomerPortalApi:
             db.commit()
 
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client", return_value=None
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
+            return_value=None,
         ):
             response = client.post(
                 "/v1/billing/stripe-customer-portal-session",
@@ -157,7 +158,7 @@ class TestStripeCustomerPortalApi:
 
         with (
             patch(
-                "app.services.stripe_customer_portal_service.get_stripe_client",
+                "app.services.billing.stripe_customer_portal_service.get_stripe_client",
                 return_value=mock_client,
             ),
             patch.object(
@@ -200,7 +201,7 @@ class TestStripeCustomerPortalApi:
         mock_client.billing_portal.sessions.create.side_effect = stripe.StripeError("API down")
 
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client",
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
             return_value=mock_client,
         ):
             response = client.post(
@@ -231,7 +232,7 @@ class TestStripeCustomerPortalApi:
 
         with (
             patch(
-                "app.services.stripe_customer_portal_service.get_stripe_client",
+                "app.services.billing.stripe_customer_portal_service.get_stripe_client",
                 return_value=mock_client,
             ),
             patch.object(
@@ -272,7 +273,7 @@ class TestStripeCustomerPortalApi:
 
         with (
             patch(
-                "app.services.stripe_customer_portal_service.get_stripe_client",
+                "app.services.billing.stripe_customer_portal_service.get_stripe_client",
                 return_value=mock_client,
             ),
             patch.object(
@@ -372,7 +373,7 @@ class TestStripeCustomerPortalApi:
             db.commit()
 
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client",
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
             return_value=None,
         ):
             response = client.post(
@@ -401,7 +402,7 @@ class TestStripeCustomerPortalApi:
         mock_client.billing_portal.sessions.create.side_effect = stripe.StripeError("API down")
 
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client",
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
             return_value=mock_client,
         ):
             response = client.post(
@@ -438,7 +439,7 @@ class TestStripeCustomerPortalApi:
         )
 
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client",
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
             return_value=mock_client,
         ):
             response = client.post(
@@ -473,7 +474,7 @@ class TestStripeCustomerPortalApi:
         )
 
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client",
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
             return_value=mock_client,
         ):
             response = client.post(
@@ -559,7 +560,7 @@ class TestStripeCustomerPortalApi:
             message="No such configuration: 'bpc_invalid'", param="configuration"
         )
         with patch(
-            "app.services.stripe_customer_portal_service.get_stripe_client",
+            "app.services.billing.stripe_customer_portal_service.get_stripe_client",
             return_value=mock_client,
         ):
             response = client.post(

@@ -35,7 +35,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
 )
 from app.infra.db.session import SessionLocal
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 from app.services.quota_window_resolver import QuotaWindow, QuotaWindowResolver
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")

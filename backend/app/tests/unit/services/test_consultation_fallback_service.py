@@ -4,7 +4,7 @@ from app.api.v1.schemas.consultation import (
     FallbackMode,
     PrecisionLevel,
 )
-from app.services.consultation_fallback_service import ConsultationFallbackService
+from app.services.consultation.fallback_service import ConsultationFallbackService
 
 
 def test_resolve_route_key_period_full():
@@ -34,31 +34,31 @@ def test_resolve_route_key_period_degraded():
     assert ConsultationFallbackService.resolve_route_key(data) == "period_no_birth_time"
 
 
-def test_resolve_route_key_relation_full_full():
+def test_resolve_route_key_relationship_full_full():
     data = ConsultationPrecheckData(
-        consultation_type="relation",
+        consultation_type="relationship",
         user_profile_quality="complete",
         precision_level=PrecisionLevel.high,
         status=ConsultationStatus.nominal,
         missing_fields=[],
-        available_modes=["relation_full"],
+        available_modes=["relationship_full"],
         blocking_reasons=[],
     )
-    assert ConsultationFallbackService.resolve_route_key(data) == "relation_full_full"
+    assert ConsultationFallbackService.resolve_route_key(data) == "relationship_full_full"
 
 
-def test_resolve_route_key_relation_user_only():
+def test_resolve_route_key_relationship_user_only():
     data = ConsultationPrecheckData(
-        consultation_type="relation",
+        consultation_type="relationship",
         user_profile_quality="complete",
         precision_level=PrecisionLevel.medium,
         status=ConsultationStatus.degraded,
         missing_fields=["other_person"],
-        available_modes=["relation_user_only"],
+        available_modes=["relationship_user_only"],
         fallback_mode=FallbackMode.relation_user_only,
         blocking_reasons=[],
     )
-    assert ConsultationFallbackService.resolve_route_key(data) == "relation_user_only"
+    assert ConsultationFallbackService.resolve_route_key(data) == "relationship_user_only"
 
 
 def test_resolve_route_key_blocked():

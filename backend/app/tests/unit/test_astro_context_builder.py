@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.services.astro_context_builder import AstroContextBuilder, AstroContextData
-from app.services.user_birth_profile_service import UserBirthProfileData
+from app.services.natal.astro_context_builder import AstroContextBuilder, AstroContextData
+from app.services.user_profile.birth_profile_service import UserBirthProfileData
 
 
 def test_get_lunar_phase_label() -> None:
@@ -51,14 +51,14 @@ async def test_build_daily_success() -> None:
 
     with (
         patch(
-            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user",
             return_value=profile,
         ),
         patch(
             "app.services.daily_prediction_service.DailyPredictionService.get_or_compute"
         ) as mock_compute,
         patch(
-            "app.services.astro_context_builder.AstroContextBuilder._get_lunar_phase_label",
+            "app.services.natal.astro_context_builder.AstroContextBuilder._get_lunar_phase_label",
             return_value="Mock Phase",
         ),
     ):
@@ -87,7 +87,7 @@ async def test_build_daily_degraded_mode() -> None:
 
     with (
         patch(
-            "app.services.user_birth_profile_service.UserBirthProfileService.get_for_user",
+            "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user",
             return_value=profile,
         ),
         patch(
@@ -95,7 +95,7 @@ async def test_build_daily_degraded_mode() -> None:
             return_value=MagicMock(run=MagicMock()),
         ),
         patch(
-            "app.services.astro_context_builder.AstroContextBuilder._get_lunar_phase_label",
+            "app.services.natal.astro_context_builder.AstroContextBuilder._get_lunar_phase_label",
             return_value="Mock Phase",
         ),
     ):

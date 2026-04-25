@@ -7,7 +7,7 @@ from app.services.chart_json_builder import (
     build_chart_json,
     build_evidence_catalog,
 )
-from app.services.user_birth_profile_service import UserBirthProfileData
+from app.services.user_profile.birth_profile_service import UserBirthProfileData
 
 
 @pytest.fixture

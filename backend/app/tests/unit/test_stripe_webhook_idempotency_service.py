@@ -6,7 +6,7 @@ import stripe
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
-from app.services.stripe_webhook_idempotency_service import StripeWebhookIdempotencyService
+from app.services.billing.stripe_webhook_idempotency_service import StripeWebhookIdempotencyService
 
 
 def make_mock_event(

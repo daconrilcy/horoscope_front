@@ -24,28 +24,28 @@ def _get_imported_names(module_name: str) -> set[str]:
 
 
 def test_b2b_gate_does_not_import_quota_usage_service():
-    names = _get_imported_names("app.services.b2b_api_entitlement_gate")
+    names = _get_imported_names("app.services.b2b.api_entitlement_gate")
     assert "QuotaUsageService" not in names, (
         "b2b_api_entitlement_gate ne doit pas importer QuotaUsageService"
     )
 
 
 def test_b2b_usage_summary_does_not_import_quota_usage_service():
-    names = _get_imported_names("app.services.b2b_canonical_usage_service")
+    names = _get_imported_names("app.services.b2b.canonical_usage_service")
     assert "QuotaUsageService" not in names, (
         "b2b_canonical_usage_service ne doit pas importer QuotaUsageService"
     )
 
 
 def test_b2b_billing_does_not_import_quota_usage_service():
-    names = _get_imported_names("app.services.b2b_billing_service")
+    names = _get_imported_names("app.services.b2b.billing_service")
     assert "QuotaUsageService" not in names, (
         "b2b_billing_service ne doit pas importer QuotaUsageService"
     )
 
 
 def test_b2b_reconciliation_does_not_import_quota_usage_service():
-    names = _get_imported_names("app.services.b2b_reconciliation_service")
+    names = _get_imported_names("app.services.b2b.reconciliation_service")
     assert "QuotaUsageService" not in names, (
         "b2b_reconciliation_service ne doit pas importer QuotaUsageService"
     )

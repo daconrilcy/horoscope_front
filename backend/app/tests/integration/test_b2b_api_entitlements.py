@@ -31,10 +31,12 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
-from app.services.b2b_astrology_service import B2BAstrologyServiceError
-from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
+from app.services.b2b.astrology_service import B2BAstrologyServiceError
+from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
 from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
@@ -100,7 +102,7 @@ def _mock_b2b_snapshot(
 def _dynamic_b2b_snapshot(
     db: Session, *, enterprise_account_id: int
 ) -> EffectiveEntitlementsSnapshot:
-    from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
+    from app.services.b2b.canonical_plan_resolver import resolve_b2b_canonical_plan
 
     feature_code = B2BApiEntitlementGate.FEATURE_CODE
     canonical_plan = resolve_b2b_canonical_plan(db, enterprise_account_id)

@@ -1,5 +1,5 @@
 from app.infra.observability.metrics import get_metrics_snapshot, reset_metrics
-from app.services.pricing_experiment_service import (
+from app.services.billing.pricing_experiment_service import (
     EVENT_VERSION,
     PricingExperimentEvent,
     PricingExperimentService,

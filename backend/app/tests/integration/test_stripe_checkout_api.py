@@ -10,7 +10,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.billing_service import BillingService
+from app.services.billing.service import BillingService
 
 client = TestClient(app)
 
@@ -67,7 +67,7 @@ def test_stripe_checkout_invalid_plan(clean_db):
 
 def test_stripe_checkout_stripe_unavailable(clean_db):
     token = _register_user_with_role("user@example.com", "user")
-    with patch("app.services.stripe_checkout_service.get_stripe_client", return_value=None):
+    with patch("app.services.billing.stripe_checkout_service.get_stripe_client", return_value=None):
         response = client.post(
             "/v1/billing/stripe-checkout-session",
             headers={"Authorization": f"Bearer {token}"},
@@ -85,10 +85,12 @@ def test_stripe_checkout_nominal_200(clean_db):
     mock_client = MagicMock()
     mock_client.checkout.sessions.create.return_value = mock_session
 
-    with patch("app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client):
+    with patch(
+        "app.services.billing.stripe_checkout_service.get_stripe_client", return_value=mock_client
+    ):
         # We also need to mock the price map to ensure "basic" is found
         with patch(
-            "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+            "app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
             {"price_123": "basic"},
         ):
             response = client.post(
@@ -115,8 +117,10 @@ def test_stripe_checkout_nominal_200(clean_db):
 def test_stripe_checkout_plan_not_configured(clean_db):
     token = _register_user_with_role("user@example.com", "user")
     mock_client = MagicMock()
-    with patch("app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client):
-        with patch("app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP", {}):
+    with patch(
+        "app.services.billing.stripe_checkout_service.get_stripe_client", return_value=mock_client
+    ):
+        with patch("app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP", {}):
             response = client.post(
                 "/v1/billing/stripe-checkout-session",
                 headers={"Authorization": f"Bearer {token}"},
@@ -147,10 +151,11 @@ def test_stripe_checkout_with_tax_enabled(clean_db):
         mock_settings.stripe_trial_missing_payment_method_behavior = None
 
         with patch(
-            "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
+            "app.services.billing.stripe_checkout_service.get_stripe_client",
+            return_value=mock_client,
         ):
             with patch(
-                "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                "app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
                 {"price_123": "basic"},
             ):
                 response = client.post(
@@ -188,10 +193,11 @@ def test_stripe_checkout_tax_disabled_no_regression(clean_db):
         mock_settings.stripe_trial_missing_payment_method_behavior = None
 
         with patch(
-            "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
+            "app.services.billing.stripe_checkout_service.get_stripe_client",
+            return_value=mock_client,
         ):
             with patch(
-                "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                "app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
                 {"price_123": "basic"},
             ):
                 response = client.post(
@@ -228,10 +234,11 @@ def test_stripe_checkout_audit_enriched_with_tax_flags(clean_db):
         mock_settings.stripe_trial_missing_payment_method_behavior = None
 
         with patch(
-            "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
+            "app.services.billing.stripe_checkout_service.get_stripe_client",
+            return_value=mock_client,
         ):
             with patch(
-                "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                "app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
                 {"price_123": "basic"},
             ):
                 with patch("app.api.v1.routers.billing._record_audit_event") as mock_audit:
@@ -271,10 +278,11 @@ def test_stripe_checkout_with_trial_enabled(clean_db):
         mock_settings.stripe_checkout_billing_address_collection = "auto"
 
         with patch(
-            "app.services.stripe_checkout_service.get_stripe_client", return_value=mock_client
+            "app.services.billing.stripe_checkout_service.get_stripe_client",
+            return_value=mock_client,
         ):
             with patch(
-                "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+                "app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
                 {"price_123": "basic"},
             ):
                 with patch("app.api.v1.routers.billing._record_audit_event") as mock_audit:

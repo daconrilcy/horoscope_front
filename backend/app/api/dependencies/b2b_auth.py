@@ -9,11 +9,11 @@ from sqlalchemy.orm import Session
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
-from app.services.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
-from app.services.enterprise_credentials_service import (
+from app.services.b2b.enterprise_credentials_service import (
     EnterpriseCredentialsService,
     EnterpriseCredentialsServiceError,
 )
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
 
 
 class AuthenticatedEnterpriseClient(BaseModel):

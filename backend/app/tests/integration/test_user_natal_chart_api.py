@@ -25,17 +25,17 @@ from app.infra.db.repositories.chart_result_repository import ChartResultReposit
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.natal_calculation_service import NatalCalculationService
+from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
-from app.services.user_astro_profile_service import UserAstroProfileServiceError
-from app.services.user_natal_chart_service import UserNatalChartServiceError
+from app.services.user_profile.astro_profile_service import UserAstroProfileServiceError
+from app.services.user_profile.natal_chart_service import UserNatalChartServiceError
 
 
 @pytest.fixture(autouse=True)
 def _mock_swisseph(monkeypatch: object) -> None:
     from app.core import ephemeris
 
-    monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.services.natal.calculation_service.settings.swisseph_enabled", True)
 
     mock_result = ephemeris._BootstrapResult(success=True, path_version="test-v1")
     monkeypatch.setattr("app.core.ephemeris.get_bootstrap_result", lambda: mock_result)
@@ -749,13 +749,13 @@ def test_generate_natal_chart_sidereal_with_simplified_override_fails(monkeypatc
     )
 
     from app.domain.astrology.natal_preparation import BirthInput
-    from app.services.natal_calculation_service import NatalCalculationService
+    from app.services.natal.calculation_service import NatalCalculationService
 
     # Mock settings to allow simplified engine for internal requests
     monkeypatch.setattr(
-        "app.services.natal_calculation_service.settings.natal_engine_simplified_enabled", True
+        "app.services.natal.calculation_service.settings.natal_engine_simplified_enabled", True
     )
-    monkeypatch.setattr("app.services.natal_calculation_service.settings.app_env", "test")
+    monkeypatch.setattr("app.services.natal.calculation_service.settings.app_env", "test")
 
     with SessionLocal() as db:
         birth_input = BirthInput(

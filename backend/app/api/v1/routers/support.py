@@ -18,9 +18,9 @@ from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService
-from app.services.billing_service import BillingService, SubscriptionStatusData
-from app.services.incident_service import (
+from app.services.billing.service import BillingService, SubscriptionStatusData
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
+from app.services.ops.incident_service import (
     IncidentService,
     IncidentServiceError,
     SupportIncidentCreatePayload,

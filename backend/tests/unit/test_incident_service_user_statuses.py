@@ -7,7 +7,7 @@ from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.incident_service import (
+from app.services.ops.incident_service import (
     ALLOWED_STATUS_TRANSITIONS,
     IncidentService,
     SupportIncidentUpdatePayload,

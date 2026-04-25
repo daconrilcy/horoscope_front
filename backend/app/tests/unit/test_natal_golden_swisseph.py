@@ -16,7 +16,7 @@ from app.infra.db.models.reference import (
     SignModel,
 )
 from app.infra.db.session import SessionLocal, engine
-from app.services.natal_calculation_service import NatalCalculationService
+from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 
 PLANET_TOLERANCE_DEG = 0.01
@@ -68,7 +68,7 @@ def test_natal_swisseph_golden_paris_1973_includes_planets_and_angles(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _cleanup_reference_tables()
-    monkeypatch.setattr("app.services.natal_calculation_service.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.services.natal.calculation_service.settings.swisseph_enabled", True)
     monkeypatch.setattr(
         "app.core.ephemeris.get_bootstrap_result",
         lambda: SimpleNamespace(success=True, error=None, path_version="moshier-local"),

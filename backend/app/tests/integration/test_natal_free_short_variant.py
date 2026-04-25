@@ -21,9 +21,12 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import get_db_session
 from app.main import app
-from app.services.billing_service import BillingService
-from app.services.user_birth_profile_service import UserBirthProfileData
-from app.services.user_natal_chart_service import UserNatalChartMetadata, UserNatalChartReadData
+from app.services.billing.service import BillingService
+from app.services.user_profile.birth_profile_service import UserBirthProfileData
+from app.services.user_profile.natal_chart_service import (
+    UserNatalChartMetadata,
+    UserNatalChartReadData,
+)
 
 
 @pytest.fixture

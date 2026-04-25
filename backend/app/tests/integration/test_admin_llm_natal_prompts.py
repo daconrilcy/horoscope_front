@@ -41,7 +41,7 @@ def test_client(mock_db):
     app.dependency_overrides[get_db_session] = lambda: mock_db
     client = TestClient(app)
     # Mocking AuditService to avoid DB side effects and validation errors
-    with patch("app.services.audit_service.AuditService.record_event"):
+    with patch("app.services.ops.audit_service.AuditService.record_event"):
         yield client
     app.dependency_overrides.clear()
 

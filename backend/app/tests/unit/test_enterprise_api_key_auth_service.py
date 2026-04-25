@@ -6,7 +6,7 @@ from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentia
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.enterprise_credentials_service import (
+from app.services.b2b.enterprise_credentials_service import (
     EnterpriseCredentialsService,
     EnterpriseCredentialsServiceError,
 )

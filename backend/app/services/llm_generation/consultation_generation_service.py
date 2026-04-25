@@ -20,19 +20,19 @@ from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationE
 from app.infra.db.repositories.consultation_third_party_repository import (
     ConsultationThirdPartyRepository,
 )
-from app.services.consultation_catalogue_service import ConsultationCatalogueService
-from app.services.consultation_fallback_service import ConsultationFallbackService
-from app.services.consultation_precheck_service import ConsultationPrecheckService
-from app.services.consultation_third_party_service import ConsultationThirdPartyService
+from app.services.consultation.catalogue_service import ConsultationCatalogueService
+from app.services.consultation.fallback_service import ConsultationFallbackService
+from app.services.consultation.precheck_service import ConsultationPrecheckService
+from app.services.consultation.third_party_service import ConsultationThirdPartyService
 from app.services.llm_generation.guidance.guidance_service import GuidanceService
 from app.services.llm_generation.shared.contextual_text import parse_structured_guidance_blocks
 from app.services.llm_generation.shared.natal_context import (
     build_natal_chart_summary_with_defaults,
     build_user_natal_chart_summary_context,
 )
-from app.services.natal_calculation_service import NatalCalculationService
+from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
-from app.services.user_birth_profile_service import (
+from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
@@ -194,10 +194,8 @@ class ConsultationGenerationService:
         objective_by_type = {
             "period": "Comprendre le climat astrologique de la periode demandee.",
             "career": "Eclairer une interaction ou une decision liee au travail.",
-            "work": "Eclairer une interaction ou une decision liee au travail.",
             "orientation": "Clarifier une direction de vie ou une decision structurante.",
             "relationship": "Lire la dynamique relationnelle de maniere prudente et non fataliste.",
-            "relation": "Lire la dynamique relationnelle de maniere prudente et non fataliste.",
             "timing": "Identifier le bon tempo d action avec une lecture astrologique prudente.",
         }
         return objective_by_type.get(

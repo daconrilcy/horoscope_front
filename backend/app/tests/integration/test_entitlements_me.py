@@ -19,7 +19,7 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.session import get_db_session
 from app.main import app
-from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
+from app.services.billing.service import BillingPlanData, BillingService, SubscriptionStatusData
 
 client = TestClient(app)
 

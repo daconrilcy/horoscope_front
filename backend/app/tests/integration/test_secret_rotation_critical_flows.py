@@ -20,7 +20,7 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.auth_service import AuthService
-from app.services.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.reference_data_service import ReferenceDataService
 
 
@@ -79,7 +79,7 @@ def _create_enterprise_api_key(email: str) -> str:
 
         # Binding
         from app.infra.db.models.product_entitlements import FeatureCatalogModel
-        from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
+        from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
 
         feat = db.scalar(
             select(FeatureCatalogModel).where(
@@ -134,7 +134,7 @@ def _create_enterprise_api_key(email: str) -> str:
 
 
 def _seed_reference_data() -> None:
-    from app.services.billing_service import BillingService
+    from app.services.billing.service import BillingService
 
     BillingService.reset_subscription_status_cache()
     with SessionLocal() as db:
@@ -241,7 +241,7 @@ def _run_pre_rotation_journey(client: TestClient, run_id: str) -> tuple[dict[str
         from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
         from app.infra.db.models.stripe_billing import StripeBillingProfileModel
         from app.infra.db.models.user import UserModel
-        from app.services.billing_service import BillingService
+        from app.services.billing.service import BillingService
 
         BillingService.ensure_default_plans(db)
 

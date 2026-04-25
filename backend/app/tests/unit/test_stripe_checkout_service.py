@@ -4,7 +4,10 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
-from app.services.stripe_checkout_service import StripeCheckoutService, StripeCheckoutServiceError
+from app.services.billing.stripe_checkout_service import (
+    StripeCheckoutService,
+    StripeCheckoutServiceError,
+)
 
 
 @pytest.fixture
@@ -14,7 +17,7 @@ def db():
 
 @pytest.fixture
 def mock_stripe_client():
-    with patch("app.services.stripe_checkout_service.get_stripe_client") as mock:
+    with patch("app.services.billing.stripe_checkout_service.get_stripe_client") as mock:
         client = MagicMock()
         mock.return_value = client
         yield client
@@ -22,14 +25,14 @@ def mock_stripe_client():
 
 @pytest.fixture
 def mock_profile_service():
-    with patch("app.services.stripe_checkout_service.StripeBillingProfileService") as mock:
+    with patch("app.services.billing.stripe_checkout_service.StripeBillingProfileService") as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_price_map():
     with patch(
-        "app.services.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
+        "app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
         {"price_basic_123": "basic", "price_premium_456": "premium"},
     ):
         yield
@@ -117,7 +120,7 @@ def test_create_checkout_session_invalid_plan(db, mock_stripe_client, mock_price
 
 
 def test_create_checkout_session_stripe_unavailable(db, mock_price_map):
-    with patch("app.services.stripe_checkout_service.get_stripe_client", return_value=None):
+    with patch("app.services.billing.stripe_checkout_service.get_stripe_client", return_value=None):
         with pytest.raises(StripeCheckoutServiceError) as excinfo:
             StripeCheckoutService.create_checkout_session(
                 db, user_id=1, user_email="t@e.c", plan="basic", success_url="h", cancel_url="c"

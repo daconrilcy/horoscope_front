@@ -5,13 +5,13 @@ import pytest
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
-from app.services.entitlement.horoscope_daily_entitlement_gate import (
-    HoroscopeDailyAccessDeniedError,
-    HoroscopeDailyEntitlementGate,
-)
 from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
+)
+from app.services.entitlement.horoscope_daily_entitlement_gate import (
+    HoroscopeDailyAccessDeniedError,
+    HoroscopeDailyEntitlementGate,
 )
 
 
@@ -123,3 +123,29 @@ def test_check_and_get_variant_default_full(db_session):
         result = HoroscopeDailyEntitlementGate.check_and_get_variant(db_session, user_id=1)
 
     assert result.variant_code == "full"
+
+
+def test_check_and_get_variant_rejects_missing_feature_binding(db_session):
+    snapshot = make_snapshot(entitlements={})
+
+    with patch.object(
+        EffectiveEntitlementResolverService,
+        "resolve_b2c_user_snapshot",
+        return_value=snapshot,
+    ):
+        with pytest.raises(HoroscopeDailyAccessDeniedError) as excinfo:
+            HoroscopeDailyEntitlementGate.check_and_get_variant(db_session, user_id=1)
+
+    assert excinfo.value.reason_code == "feature_not_configured"
+
+
+def test_check_and_get_variant_rejects_resolution_failures(db_session):
+    with patch.object(
+        EffectiveEntitlementResolverService,
+        "resolve_b2c_user_snapshot",
+        side_effect=RuntimeError("resolver down"),
+    ):
+        with pytest.raises(HoroscopeDailyAccessDeniedError) as excinfo:
+            HoroscopeDailyEntitlementGate.check_and_get_variant(db_session, user_id=1)
+
+    assert excinfo.value.reason_code == "entitlement_resolution_failed"

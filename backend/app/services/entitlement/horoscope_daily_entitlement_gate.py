@@ -39,8 +39,14 @@ class HoroscopeDailyEntitlementGate:
 
     @staticmethod
     def check_and_get_variant(db: Session, *, user_id: int) -> HoroscopeDailyEntitlementResult:
+        """Retourne le variant canonique ou refuse explicitement l'accès."""
         if not isinstance(db, Session):
-            return HoroscopeDailyEntitlementResult(variant_code="full")
+            raise HoroscopeDailyAccessDeniedError(
+                reason="invalid_db_session",
+                billing_status="unknown",
+                plan_code="none",
+                reason_code="invalid_db_session",
+            )
 
         try:
             snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
@@ -48,27 +54,25 @@ class HoroscopeDailyEntitlementGate:
             )
         except Exception as exc:
             logger.warning(
-                "horoscope_daily_entitlement_fallback_full user_id=%s reason=%s",
+                "horoscope_daily_entitlement_resolution_failed user_id=%s reason=%s",
                 user_id,
                 exc.__class__.__name__,
             )
-            return HoroscopeDailyEntitlementResult(variant_code="full")
+            raise HoroscopeDailyAccessDeniedError(
+                reason="entitlement_resolution_failed",
+                billing_status="unknown",
+                plan_code="none",
+                reason_code="entitlement_resolution_failed",
+            ) from exc
         access = snapshot.entitlements.get(HoroscopeDailyEntitlementGate.FEATURE_CODE)
 
-        # Backward compatibility: if the canonical feature is not catalogued yet,
-        # keep the legacy full-horoscope behavior instead of hard-blocking the route.
         if access is None:
-            return HoroscopeDailyEntitlementResult(variant_code="full")
-
-        # Legacy compatibility for older tests and non-migrated flows:
-        # when no canonical plan is attached yet, the daily prediction route
-        # keeps its historical behavior instead of returning 403.
-        if (
-            not access.granted
-            and snapshot.plan_code == "none"
-            and access.reason_code in {"feature_not_in_plan", "billing_inactive"}
-        ):
-            return HoroscopeDailyEntitlementResult(variant_code="full")
+            raise HoroscopeDailyAccessDeniedError(
+                reason="feature_not_configured",
+                billing_status=snapshot.billing_status,
+                plan_code=snapshot.plan_code,
+                reason_code="feature_not_configured",
+            )
 
         if not access.granted:
             raise HoroscopeDailyAccessDeniedError(

@@ -12,8 +12,7 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
-from app.services.b2b_reconciliation_service import (
+from app.services.b2b.reconciliation_service import (
     B2BReconciliationService,
     B2BReconciliationServiceError,
     ReconciliationActionPayload,
@@ -22,6 +21,7 @@ from app.services.b2b_reconciliation_service import (
     ReconciliationIssueListData,
     ReconciliationSeverity,
 )
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
 
 
 class ResponseMeta(BaseModel):

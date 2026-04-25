@@ -1,4 +1,4 @@
-from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
+from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
 from app.services.entitlement import feature_scope_registry
 from app.services.entitlement.chat_entitlement_gate import ChatEntitlementGate
 from app.services.entitlement.natal_chart_long_entitlement_gate import NatalChartLongEntitlementGate

@@ -1,0 +1,449 @@
+# Story 70-23: Durcir `backend/app/services` pour imposer DRY strict et zero legacy
+
+Status: review
+
+## Story
+
+As a Platform Architect,  
+I want assainir structurellement `backend/app/services` jusqu a ne laisser qu un namespace de services factorise, explicite et sans reliquat legacy,  
+so that le backend n accepte plus ni duplication active, ni coexistence ambiguë de chemins concurrents, ni wrappers de compatibilite conserves par inertie.
+
+## Contexte
+
+L audit du dossier `backend/app/services` montre un etat de convergence inacheve :
+
+- des sous-domaines sont deja bien engages dans une organisation cible (`canonical_entitlement/`, `entitlement/`, `llm_generation/`, `llm_observability/`) ;
+- une partie importante des services reste encore a plat a la racine de `backend/app/services/` ;
+- plusieurs services sont volumineux, multi-responsabilites et difficiles a faire evoluer sans duplication ;
+- des reliquats legacy ou transitoires restent visibles dans le code nominal ;
+- un vrai doublon metier existe encore dans `backend/app/services/tests/__init__.py`, qui porte une ancienne implementation de service natal au lieu de simples helpers de test.
+
+L audit a releve des problemes structurels concrets qui doivent maintenant etre traites comme une dette de gouvernance backend, pas comme un simple rangement cosmetique :
+
+- duplication quasi integrale des runtime gates B2C (`chat`, `thematic_consultation`, `natal_chart_long`) ;
+- couplage de `PredictionContextRepairService` a un script de seed versionne (`seed_31_prediction_reference_v2`) ;
+- `BillingService` monolithique, melangeant catalogue, statut d abonnement, compatibilite tests, quotas et logique Stripe-first ;
+- duplication ou redefinition partielle d helpers natals entre `llm_generation/natal/prompt_context.py`, `llm_generation/shared/natal_context.py`, `astro_context_builder.py` et le doublon de test ;
+- coexistence de surfaces legacy explicites dans plusieurs services (`billing`, `consultation_catalogue`, `user_natal_chart`, `llm_observability`, `llm_generation/natal`) ;
+- niveau racine `backend/app/services/` devenu une zone de depot pour des services qui auraient du etre rattaches a des sous-domaines stables.
+
+Les stories 70-18, 70-20, 70-21 et 70-22 ont deja pose plusieurs regles fortes :
+
+- pas de shim durable ;
+- pas de chemin legacy maintenu "par securite" ;
+- pas de duplication active entre couches ou namespaces ;
+- reutiliser un sous-dossier canonique existant avant d en creer un nouveau ;
+- ajouter des garde-fous qui echouent si un ancien chemin ou une structure interdite reapparait.
+
+La story 70-23 doit prolonger cette gouvernance sur l ensemble de `backend/app/services`, avec deux objectifs non negociables :
+
+- **DRY strict** : toute duplication active, nominale ou cachee dans un faux helper de test doit etre factorisee ou supprimee ;
+- **legacy supprime** : tout chemin, wrapper, suffixe technique, import inverse, fallback nominal ou service concurrent conserve "au cas ou" doit disparaitre du runtime de production.
+
+## Objectif
+
+Obtenir un dossier `backend/app/services` ou :
+
+- chaque responsabilite applicative possede un chemin canonique unique ;
+- la racine `services/` est gouvernee par une allowlist explicite de fichiers autorises ;
+- aucun ancien chemin deplace ne reste present sous forme de forwarder, alias, shim ou re-export ;
+- aucun module applicatif ne depend d un module de test, d un script versionne ou d un chemin legacy ;
+- les services mono-domaine sont rattaches a un sous-package metier stable ;
+- les duplications actives identifiees sont supprimees par extraction, fusion ou suppression, pas seulement deplacees ;
+- les eventuelles compatibilites residuelles sont non nominales, non importees par le runtime, documentees avec consommateur et story d extinction ;
+- les tests structurels echouent si une dette supprimee reapparait.
+
+### Regle sur les compatibilites
+
+Par defaut, aucun module `compat/`, alias d import, shim, forwarder ou re-export legacy n est autorise sous `backend/app/services`.
+
+Une exception n est acceptable que si les trois conditions suivantes sont reunies :
+
+- le consommateur est explicitement identifie ;
+- le module n appartient pas au chemin runtime nominal ;
+- une story d extinction datee est creee et referencee dans le Dev Agent Record.
+
+Tout module `compat/` eventuel doit etre couvert par un test prouvant qu aucun import nominal de production ne l utilise.
+
+## Regle de convergence attendue
+
+La story doit partir de cette cible et la confirmer par audit d implementation :
+
+- **reutiliser les namespaces existants** avant de creer de nouveaux sous-dossiers ;
+- **ne laisser a la racine `services/` que des services transverses clairement justifies** ;
+- **sortir les services mono-domaine de la racine** vers des sous-packages metier ou techniques stables ;
+- **supprimer les doublons au lieu de les deplacer ensemble** ;
+- **privilegier un chemin canonique unique** par responsabilite et migrer tous les imports vers ce chemin ;
+- **ne tolerer aucun legacy nominal** dans le code de production, les tests nominaux, les patch targets ou `services/__init__.py`.
+
+Les sous-familles pressenties minimales sont :
+
+- `services/billing/`
+- `services/consultation/`
+- `services/natal/`
+- `services/prediction/`
+- `services/b2b/`
+- `services/user_profile/`
+- `services/ops/`
+
+Si l audit d implementation montre une cible strictement meilleure en reutilisant un namespace deja existant, elle est autorisee.  
+En revanche, il est interdit de conserver la situation actuelle "a plat + exceptions + wrappers".
+
+## Acceptance Criteria
+
+1. **AC1 - Cartographie exhaustive et opposable par fichier racine**  
+   La story produit une cartographie versionnee de tous les fichiers Python directement presents sous `backend/app/services/`.
+   Pour chaque fichier, la cartographie doit indiquer :
+   - chemin actuel ;
+   - responsabilite dominante ;
+   - consommateurs principaux ;
+   - decision : conserver, deplacer, fusionner, supprimer ou follow-up ;
+   - chemin canonique cible si deplacement/fusion ;
+   - justification si conservation a la racine ;
+   - tests impactes ou patch targets connus.  
+   Aucun fichier racine n est laisse sans decision.  
+   La cartographie doit etre inscrite dans le Dev Agent Record ou dans un artefact dedie sous `_bmad-output/implementation-artifacts/`.
+
+2. **AC2 - Racine `services/` gouvernee par allowlist**  
+   Apres implementation, la racine `backend/app/services/` ne contient que :
+   - `__init__.py` ;
+   - les fichiers explicitement conserves dans une allowlist documentee ;
+   - aucun service mono-domaine ;
+   - aucun ancien chemin deplace conserve comme wrapper.  
+   Un test structurel doit comparer le contenu reel de la racine a l allowlist finale.  
+   Toute conservation a la racine doit etre justifiee par une responsabilite transverse reelle et par au moins deux consommateurs de domaines distincts.
+
+3. **AC3 - Runtime gates B2C factorisees autour d un noyau commun**  
+   Les gates B2C `chat`, `thematic_consultation` et `natal_chart_long` doivent deleguer leur logique commune a un composant canonique unique.
+   Ce composant doit porter au minimum :
+   - resolution d acces ;
+   - mapping des refus d acces ;
+   - detection quota exhausted ;
+   - consommation des quotas ;
+   - selection du `UsageState` pertinent ;
+   - normalisation des erreurs retournees au caller.  
+   Les gates specifiques ne doivent conserver que :
+   - le feature code ;
+   - les DTO propres au use case ;
+   - les exceptions strictement specifiques ;
+   - les adaptations d entree/sortie.  
+   Un test doit prouver que les trois gates utilisent le composant partage et qu aucune duplication structurante de la logique commune ne subsiste.
+
+4. **AC4 - Aucun package de test sous `backend/app/services`**  
+   Le package `backend/app/services/tests/` ne doit plus exister comme package importable applicatif.  
+   L ancienne implementation metier natal presente dans `backend/app/services/tests/__init__.py` doit etre supprimee.  
+   Les fixtures, factories ou helpers reellement utiles doivent etre deplaces sous le repertoire de tests backend approprie, par exemple `backend/tests/...`, sans import depuis le runtime de production.  
+   Un test structurel doit echouer si un dossier ou module `tests` reapparait sous `backend/app/services/`.
+
+5. **AC5 - Aucun import `scripts/*` depuis `app.services`**  
+   Aucun module sous `backend/app/services/` ne doit importer directement ou indirectement un module `scripts/*`.  
+   L interdiction couvre :
+   - imports statiques ;
+   - imports dynamiques via `importlib` ;
+   - chemins string-based ;
+   - appels a des fonctions de seed versionnees.  
+   `PredictionContextRepairService` doit etre refactorise pour dependre d un composant applicatif ou infra canonique, jamais d un script `seed_*`.  
+   Un test AST ou equivalent doit echouer si `app.services` reference `scripts.` ou un chemin `scripts/`.
+
+6. **AC6 - `BillingService` cesse d etre un god service**  
+   `backend/app/services/billing_service.py` ne doit plus concentrer la logique principale de billing.
+   La cible doit separer au minimum :
+   - catalogue des plans ;
+   - statut d abonnement ;
+   - quotas et usage courant ;
+   - integration Stripe ou provider externe ;
+   - cache eventuel ;
+   - fixtures ou comportements de test.  
+   Les comportements de test ne doivent pas etre presents dans le chemin nominal de production.  
+   Si un `BillingService` est conserve, il doit etre une facade fine d orchestration, sans logique de catalogue, sans logique Stripe directe, sans fallback test-only et sans cache metier embarque.  
+   Un test ou une revue structurelle doit prouver que les responsabilites ci-dessus ne sont plus implementees dans un seul fichier monolithique.
+
+7. **AC7 - Conventions natales partagees centralisees sans god helper**  
+   Les primitives natales partagees doivent provenir d un ou plusieurs modules canoniques explicitement nommes.  
+   La story doit distinguer :
+   - les primitives de domaine natal reutilisables ;
+   - les adaptations de prompt LLM ;
+   - les adaptations specifiques chat/guidance/consultation/natal.  
+   Les modules `llm_generation/natal/prompt_context.py`, `llm_generation/shared/natal_context.py`, `astro_context_builder.py` et les parcours consommateurs ne doivent plus redefinir les memes mappings, resumes, hints ou modes degrages.  
+   Les modules specifiques peuvent conserver uniquement de l adaptation locale, pas une variante concurrente de la logique partagee.
+
+8. **AC8 - Aucun suffixe technique ambigu dans les noms canoniques**  
+   Aucun fichier, classe, fonction publique, fixture nominale ou patch target canonique sous `backend/app/services/` ne doit utiliser un suffixe technique de type `_v2`, `_legacy`, `_old`, `_tmp`, `_refacto`, `_new`.  
+   Une exception n est acceptable que si le suffixe correspond a une version metier explicitement supportee et documentee.  
+   La story doit statuer explicitement sur :
+   - `natal_interpretation_service.py` / `interpretation_service.py` ;
+   - les references `*_v2_refacto` ;
+   - les helpers ou champs de compatibilite encore utilises par inertie ;
+   - tout script de seed versionne encore reference par un service.  
+   Un test structurel doit echouer si ces suffixes reapparaissent comme noms canoniques dans `app.services`.
+
+9. **AC9 - Legacy supprime physiquement du chemin nominal**  
+   Tout legacy identifie et actif dans le runtime nominal doit etre supprime ou migre.  
+   Il est interdit de conserver :
+   - un ancien fichier deplace comme forwarder ;
+   - un alias d import ;
+   - un re-export dans `services/__init__.py` ;
+   - un commentaire indiquant un ancien chemin a utiliser ;
+   - un fallback nominal ;
+   - un shim pour les tests.  
+   Les anciens chemins deplaces doivent disparaitre physiquement du package applicatif, sauf exception `compat/` validee selon la regle dediee.
+
+10. **AC10 - Imports, patch targets, overrides et references string-based migres**  
+    Tous les imports de production, tests, fixtures, dependency overrides, patch targets, `mock.patch`, `monkeypatch`, `importlib.import_module`, chemins string-based et reexports sont migres vers les chemins canoniques.  
+    La story doit inclure une recherche negative documentee sur les anciens chemins supprimes.  
+    Aucun test nominal ne doit continuer a patcher un ancien chemin pour faire passer la compatibilite.
+
+11. **AC11 - Garde-fous structurels anti-reintroduction**  
+    La story ajoute ou met a jour des tests structurels qui echouent si :
+    - un dossier ou module `tests` existe sous `backend/app/services/` ;
+    - un fichier non autorise apparait a la racine `backend/app/services/` ;
+    - un ancien chemin deplace existe encore comme fichier Python ;
+    - un import ou patch target vise un ancien chemin legacy ;
+    - un module sous `app.services` reference `scripts.*` ou `scripts/` ;
+    - un suffixe technique interdit est utilise dans un nom canonique ;
+    - `services/__init__.py` re-exporte un service metier, un chemin legacy ou un module de compatibilite ;
+    - une gate B2C reimplemente localement une logique commune censee etre factorisee.  
+    Les tests doivent etre suffisamment cibles pour echouer en cas de regression structurelle, meme si les tests fonctionnels continuent de passer.
+
+12. **AC12 - Follow-up autorise uniquement hors dette identifiee**  
+    Toute refactorisation hors dette identifiee peut etre reportee en follow-up.  
+    En revanche, les dettes explicitement listees dans les hotspots de cette story ne peuvent pas etre reportees sans justification bloquante documentee :
+    - gates B2C dupliquees ;
+    - `services/tests/__init__.py` ;
+    - dependance a `seed_31_prediction_reference_v2` ;
+    - `BillingService` monolithique ;
+    - helpers natals concurrents ;
+    - suffixes ou chemins legacy nommes dans l AC8.  
+    Un follow-up ne peut pas servir a valider la story en conservant une duplication active ou un legacy nominal deja identifie.
+
+13. **AC13 - Documentation francaise conforme AGENTS**  
+    Tout fichier Python cree ou significativement modifie contient :
+    - un commentaire global en francais en tete de fichier ;
+    - des docstrings en francais pour les classes, fonctions publiques et fonctions non triviales.  
+    Les commentaires de transition en anglais ou les docstrings legacy incoherentes doivent etre corriges.
+
+14. **AC14 - Validation backend obligatoire dans le venv**  
+    La story n est terminee que si les verifications backend ont ete executees dans le venv :
+    - `.\.venv\Scripts\Activate.ps1`
+    - `cd backend`
+    - `ruff format .`
+    - `ruff check .`
+    - `pytest -q`  
+    Si `pytest -q` complet est disproportionne, le Dev Agent Record doit fournir :
+    - la raison precise ;
+    - les suites ciblees executees ;
+    - les tests structurels ajoutes ;
+    - les tests des domaines touches ;
+    - les recherches negatives effectuees sur les anciens chemins.  
+    Une validation partielle sans justification et sans couverture des domaines modifies ne satisfait pas cet AC.
+
+15. **AC15 - Preuve d absence de legacy residuel dans le perimetre traite**  
+    Le Dev Agent Record doit lister explicitement :
+    - les doublons supprimes ;
+    - les chemins legacy supprimes ;
+    - les compatibilites eventuellement releguees en `compat/` avec raison ;
+    - les fichiers deplaces, fusionnes ou supprimes ;
+    - les garde-fous ajoutes ;
+    - les points reportes en follow-up.  
+    Une simple affirmation "cleanup effectue" n est pas acceptable.
+
+16. **AC16 - Chaque sous-package cree possede une responsabilite bornee**  
+    Tout nouveau sous-package cree sous `backend/app/services/` doit contenir un `__init__.py` minimal et une responsabilite clairement bornee.  
+    Il est interdit de creer un sous-package fourre-tout ou miroir de la racine.  
+    Pour chaque sous-package cree ou fortement modifie, le Dev Agent Record doit preciser :
+    - responsabilite du package ;
+    - modules publics attendus ;
+    - modules internes ;
+    - consommateurs principaux ;
+    - raison pour laquelle un namespace existant n etait pas suffisant.
+
+17. **AC17 - Les anciens chemins deplaces echouent explicitement**  
+    Les anciens chemins de modules deplaces ne doivent plus etre importables, sauf exception `compat/` validee.  
+    Les tests structurels doivent verifier l absence physique des anciens fichiers et l absence de forwarders.  
+    La migration doit privilegier la correction des consommateurs plutot que la conservation d alias.
+
+18. **AC18 - Convention de nommage stable des services**  
+    Les fichiers de service deplaces doivent adopter une convention homogene :
+    - nom metier clair ;
+    - pas de suffixe de transition ;
+    - pas de doublon entre nom de package et nom de fichier ;
+    - pas de coexistence entre deux noms pour la meme responsabilite.  
+    Des noms comme `billing_service_v2.py`, `new_billing_service.py` ou `billing_refacto.py` sont interdits.
+
+## Tasks / Subtasks
+
+- [x] **Task 1: Produire la cartographie opposable et les listes de controle**  
+  AC: 1, 2, 11, 12  
+  - [x] Lister tous les fichiers Python directement presents sous `backend/app/services/`.
+  - [x] Identifier pour chacun les consommateurs production, tests et patch targets.
+  - [x] Classer chaque fichier par responsabilite dominante.
+  - [x] Definir l allowlist finale des fichiers autorises a la racine.
+  - [x] Definir la denylist des anciens chemins, suffixes et modules interdits.
+  - [x] Produire une decision explicite : conserver, deplacer, fusionner, supprimer ou follow-up.
+
+- [x] **Task 2: Supprimer les duplications actives les plus critiques**  
+  AC: 3, 4, 7, 8, 9  
+  - [x] Factoriser la logique commune des runtime gates B2C.
+  - [x] Supprimer l implementation metier legacy residuelle dans `backend/app/services/tests/__init__.py`.
+  - [x] Supprimer physiquement les anciens fichiers deplaces, sauf exception `compat/` validee.
+  - [x] Verifier qu aucun ancien chemin ne reste importable via forwarder.
+  - [x] Unifier les helpers natals partages et supprimer les redefinitions concurrentes.
+  - [x] Statuer explicitement sur tout suffixe technique ambigu encore expose dans le perimetre.
+
+- [x] **Task 3: Sortir les services mono-domaine de la racine**  
+  AC: 2, 6, 7, 9, 10  
+  - [x] Creer ou reutiliser les sous-namespaces cibles strictement necessaires.
+  - [x] Deplacer les services `billing`, `consultation`, `natal`, `prediction`, `b2b`, `ops`, `user_profile` selon la cartographie retenue.
+  - [x] Maintenir a la racine uniquement les services transverses reellement justifies.
+  - [x] Migrer tous les imports de production et de tests vers les nouveaux chemins.
+
+- [x] **Task 4: Decoupler le runtime des scripts et assainir les services monolithiques**  
+  AC: 5, 6, 9, 10  
+  - [x] Refactoriser `PredictionContextRepairService` pour eliminer toute dependance directe a `scripts/*`.
+  - [x] Scinder ou factoriser `BillingService` en composants coherents.
+  - [x] Verifier qu aucun service nominal ne conserve de fallback legacy "tests only" dans son chemin principal.
+  - [x] Reporter en follow-up seulement ce qui depasse clairement le perimetre de l audit.
+
+- [x] **Task 5: Ajouter les garde-fous structurels et legacy**  
+  AC: 11, 15  
+  - [x] Ajouter un test de structure sur la racine `backend/app/services/`.
+  - [x] Ajouter un test interdisant les imports `scripts/*` depuis `app.services`.
+  - [x] Ajouter un test interdisant le retour de doublons metiers dans `backend/app/services/tests/`.
+  - [x] Ajouter un test interdisant les anciens chemins ou suffixes canoniques interdits.
+  - [x] Ajouter des recherches negatives documentees sur les anciens chemins supprimes.
+  - [x] Ajouter un test sur `services/__init__.py` pour interdire les reexports metier.
+  - [x] Ajouter un test sur les suffixes interdits dans fichiers, classes et fonctions publiques.
+
+- [x] **Task 6: Documenter et valider dans le venv**  
+  AC: 13, 14, 15  
+  - [x] Mettre a jour les commentaires globaux et docstrings en francais sur les fichiers touches.
+  - [x] Activer le venv avant toute commande Python.
+  - [x] Executer `ruff format`, `ruff check` et les tests backend pertinents.
+  - [x] Tracer precisement la validation, les limites et les follow-ups dans le Dev Agent Record.
+
+## Dev Notes
+
+### Developer Context
+
+- Cette story n est **pas** une simple suite cosmetique de 70-22. Elle doit fermer la dette structurelle du dossier `backend/app/services` au sens large.
+- Le perimetre prioritaire vient directement de l audit utilisateur sur `backend/app/services`.
+- Les deux objectifs non negociables sont :
+  - **DRY strict** ;
+  - **legacy supprime**.
+- Toute solution de type "on laisse le doublon mais on documente", "on garde le fallback pour les tests", "on cree un alias temporaire", "on conserve l ancien chemin comme forwarder", "on deplace sans factoriser" ou "on reporte un hotspot deja identifie en follow-up" doit etre consideree comme invalide par defaut.
+
+### Frontieres et contraintes
+
+- Reutiliser les sous-dossiers deja introduits par 70-21 et 70-22 avant d en creer de nouveaux.
+- Respecter `docs/backend-structure-governance.md` : pas de nouveau dossier de base backend sans accord explicite.
+- Ne pas recréer de couche parallele equivalente a `services/`.
+- Aucun import de production ne doit pointer vers un module de test ou vers `scripts/*`.
+- Aucun re-export de compatibilite ne doit etre ajoute dans `backend/app/services/__init__.py`.
+- Les tests doivent etre adaptes aux chemins canoniques. Il est interdit de faire passer les tests en patchant les anciens chemins ou en ajoutant des alias de compatibilite.
+
+### Intelligence des stories precedentes
+
+- **70-18** a verrouille la gouvernance structurelle backend et la regle anti-dossiers concurrents.
+- **70-20** a impose une ligne dure contre les facades/app adapters qui conservent du legacy par inertie.
+- **70-21** a commence a sortir les residus LLM de la racine `services/`.
+- **70-22** a cree un namespace `services/entitlement/` et a deja demontre le pattern attendu : cartographie, deplacement, migrations d imports et garde-fous.
+- **70-23** doit appliquer cette logique a l ensemble du dossier `services`, avec un niveau de durcissement superieur car il ne s agit plus seulement d un sous-domaine.
+
+### Hotspots issus de l audit initial
+
+- `backend/app/services/tests/__init__.py` : doublon metier legacy a supprimer.
+- `backend/app/services/entitlement/*` : gates B2C a factoriser.
+- `backend/app/services/prediction_context_repair_service.py` : dependance directe a un script de seed.
+- `backend/app/services/billing_service.py` : service monolithique a scinder ou factoriser.
+- `backend/app/services/llm_generation/natal/prompt_context.py`
+- `backend/app/services/llm_generation/shared/natal_context.py`
+- `backend/app/services/astro_context_builder.py`
+
+### Validation attendue
+
+- La preuve de convergence ne repose pas seulement sur les deplacements de fichiers.
+- Le dev agent doit montrer que :
+  - les chemins legacy n existent plus ;
+  - les imports ont ete migres ;
+  - la duplication active a disparu ;
+  - les garde-fous echoueraient en cas de retour arriere.
+
+## References
+
+- [Source: AGENTS.md]
+- [Source: docs/backend-structure-governance.md]
+- [Source: _bmad-output/implementation-artifacts/70-18-cleaner-la-structure-backend-et-converger-les-namespaces-techniques.md]
+- [Source: _bmad-output/implementation-artifacts/70-20-auditer-et-assainir-ai-engine-adapter.md]
+- [Source: _bmad-output/implementation-artifacts/70-21-analyser-factoriser-et-deplacer-les-services-llm-residuels-sous-services.md]
+- [Source: _bmad-output/implementation-artifacts/70-22-cartographier-et-converger-les-services-entitlement.md]
+
+## Dev Agent Record
+
+### Agent Model Used
+
+gpt-5
+
+### Debug Log References
+
+- Story redigee a partir de l audit local de `backend/app/services` demande par l utilisateur le 2026-04-25.
+- Cartographie racine produite dans `_bmad-output/implementation-artifacts/70-23-services-root-cartography.md`.
+- Reorganisation effectuee vers les sous-packages `billing/`, `consultation/`, `natal/`, `prediction/`, `b2b/`, `ops/` et `user_profile/`.
+- Factorisation B2C centralisee dans `app/services/entitlement/b2c_runtime_gate.py`.
+- Validation Python executee apres activation du venv avec `.\.venv\Scripts\Activate.ps1`.
+- `pytest -q` complet lance deux fois depuis `backend/` puis interrompu pour timeout ; validation ciblee documentee ci-dessous.
+- Correctifs de revue appliques le 2026-04-26 : retrait des bypass legacy nominaux sur `horoscope_daily` et sur le catalogue de consultations, renforcement des garde-fous structurels, puis correctif du fallback SQLite `email_logs.id` dans `EmailService`.
+
+### Completion Notes List
+
+- Cartographie exhaustive de la racine `backend/app/services/` versionnee dans `_bmad-output/implementation-artifacts/70-23-services-root-cartography.md`, avec allowlist finale et denylist de chemins/suffixes interdits.
+- Les services mono-domaine a la racine ont ete migres vers des namespaces canoniques ; les anciens fichiers deplaces ont ete supprimes physiquement sans forwarder ni re-export.
+- `backend/app/services/tests/` a ete retire du runtime applicatif ; les reliquats utiles ont ete deplaces sous `backend/app/tests/unit/legacy_services/`.
+- Les gates B2C `chat`, `thematic_consultation` et `natal_chart_long` deleguent desormais leur logique commune a `app/services/entitlement/b2c_runtime_gate.py`.
+- `PredictionContextRepairService` ne depend plus d un script versionne ; le runtime passe par `app/services/prediction/reference_seed_service.py` et le script de seed ne sert plus que de wrapper de compatibilite hors runtime nominal.
+- `BillingService` a ete reduit a une facade d orchestration fine, avec extraction du catalogue, du cache, du provider Stripe, des quotas runtime et du statut d abonnement dans des modules dedies du package `app/services/billing/`.
+- Les helpers natals concurrents ont ete converges autour de `app/services/llm_generation/shared/natal_context.py`, `prompt_context.py` devenant un simple point de re-export interne.
+- Les imports de production, de tests et les patch targets ont ete migres vers les chemins canoniques ; les garde-fous structurels couvrent l allowlist racine, l interdiction de `scripts/*`, l absence de `services/tests/`, l interdiction des suffixes techniques et la non-reintroduction de logique B2C dupliquee.
+- Validation ciblee executee dans le venv : `ruff format .`, `ruff check .`, puis suites de tests des zones touchees dont `test_story_70_22_entitlement_structure_guard.py`, `test_story_70_23_services_structure_guard.py`, `test_daily_prediction_service.py`, `test_billing_service.py`, `test_effective_entitlement_resolver_service.py`, `test_natal_chart_long_entitlement_gate.py`, `test_natal_chart_long_entitlement_gate_v2.py` et `test_thematic_consultation_entitlement_gate_v2.py` avec `60 passed`.
+- Passage de revue complete : la normalisation des types de consultation legacy est maintenant faite a l entree API via les schemas Pydantic, le service canonique `consultation/catalogue_service.py` ne conserve plus de mapping legacy, et `horoscope_daily_entitlement_gate.py` refuse explicitement les etats non canoniques au lieu de revenir silencieusement a `full`.
+- Le garde-fou `test_story_70_23_services_structure_guard.py` couvre desormais explicitement l interdiction de bypass legacy nominaux dans les services canoniques concernes par la revue.
+- Le blocage residuel de validation integration sur `email_logs.id` a ete corrige dans `app/services/email_service.py` en rendant l ecriture compatible avec la forme SQLite legacy encore presente dans certaines bases de test.
+- Validation complementaire executee dans le venv apres revue : `test_consultation_request_schema.py`, `test_horoscope_daily_entitlement_gate.py`, `test_consultation_fallback_service.py`, `test_consultation_precheck_service.py`, `test_story_70_23_services_structure_guard.py`, `test_consultations_router.py`, `test_horoscope_daily_entitlement.py` et `test_consultation_catalogue.py` avec `40 passed`.
+- Limite connue de validation : `pytest -q` complet n a pas termine dans la fenetre de temps allouee malgre deux tentatives ; aucun autre follow-up bloquant n a ete laisse dans le perimetre impose par la story.
+
+### File List
+
+- _bmad-output/implementation-artifacts/70-23-durcir-backend-app-services-pour-imposer-dry-strict-et-zero-legacy.md
+- _bmad-output/implementation-artifacts/70-23-services-root-cartography.md
+- backend/app/services/entitlement/b2c_runtime_gate.py
+- backend/app/services/entitlement/chat_entitlement_gate.py
+- backend/app/services/entitlement/thematic_consultation_entitlement_gate.py
+- backend/app/services/entitlement/natal_chart_long_entitlement_gate.py
+- backend/app/services/prediction/reference_seed_service.py
+- backend/app/services/prediction/context_repair_service.py
+- backend/scripts/seed_31_prediction_reference_v2.py
+- backend/app/services/billing/service.py
+- backend/app/services/billing/models.py
+- backend/app/services/billing/subscription_cache.py
+- backend/app/services/billing/plan_catalog.py
+- backend/app/services/billing/quota_runtime.py
+- backend/app/services/billing/stripe_provider.py
+- backend/app/services/billing/subscription_status.py
+- backend/app/services/llm_generation/shared/natal_context.py
+- backend/app/services/llm_generation/natal/prompt_context.py
+- backend/app/services/natal/astro_context_builder.py
+- backend/app/api/v1/schemas/consultation.py
+- backend/app/api/v1/routers/consultations.py
+- backend/app/services/consultation/catalogue_service.py
+- backend/app/services/consultation/fallback_service.py
+- backend/app/services/consultation/precheck_service.py
+- backend/app/services/entitlement/horoscope_daily_entitlement_gate.py
+- backend/app/services/email_service.py
+- backend/app/tests/unit/test_story_70_22_entitlement_structure_guard.py
+- backend/app/tests/unit/test_story_70_23_services_structure_guard.py
+- backend/app/tests/unit/test_consultation_request_schema.py
+- backend/app/tests/unit/legacy_services/legacy_natal_interpretation_service.py
+
+## Change Log
+
+- 2026-04-25 - Implementation de la convergence structurelle de `backend/app/services`, suppression des reliquats legacy nominaux, ajout des garde-fous de non-regression et validation ciblee dans le venv.
+- 2026-04-26 - Correctifs post-review : suppression des bypass legacy nominaux restants, durcissement des tests structurels et correction du fallback SQLite `email_logs.id`, avec validation integration complementaire.

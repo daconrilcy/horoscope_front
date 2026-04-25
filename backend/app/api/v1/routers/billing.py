@@ -15,29 +15,29 @@ from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService
-from app.services.billing_service import (
+from app.services.billing.pricing_experiment_service import (
+    PricingExperimentService,
+    PricingExperimentServiceError,
+)
+from app.services.billing.service import (
     BillingPlanData,
     BillingService,
     SubscriptionStatusData,
     TokenUsageData,
 )
-from app.services.pricing_experiment_service import (
-    PricingExperimentService,
-    PricingExperimentServiceError,
-)
-from app.services.stripe_checkout_service import (
+from app.services.billing.stripe_checkout_service import (
     StripeCheckoutService,
     StripeCheckoutServiceError,
 )
-from app.services.stripe_customer_portal_service import (
+from app.services.billing.stripe_customer_portal_service import (
     StripeCustomerPortalService,
     StripeCustomerPortalServiceError,
 )
-from app.services.stripe_webhook_service import (
+from app.services.billing.stripe_webhook_service import (
     StripeWebhookService,
     StripeWebhookServiceError,
 )
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 
 class ResponseMeta(BaseModel):

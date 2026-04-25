@@ -20,8 +20,8 @@ from app.infra.db.repositories.geo_place_resolved_repository import (
 from app.infra.db.repositories.user_repository import UserRepository
 from app.services.chart_result_service import ChartResultService
 from app.services.geocoding_service import GeocodingService
-from app.services.user_birth_profile_service import UserBirthProfileService
-from app.services.user_natal_chart_service import UserNatalChartService
+from app.services.user_profile.birth_profile_service import UserBirthProfileService
+from app.services.user_profile.natal_chart_service import UserNatalChartService
 
 logger = logging.getLogger(__name__)
 

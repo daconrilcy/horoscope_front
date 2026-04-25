@@ -75,7 +75,7 @@ def _register_user_with_role_and_token(email: str, role: str) -> str:
 def _set_active_subscription(access_token: str, plan_code: str) -> None:
     from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
     from app.infra.db.models.stripe_billing import StripeBillingProfileModel
-    from app.services.billing_service import BillingService
+    from app.services.billing.service import BillingService
 
     with SessionLocal() as db:
         user = db.query(UserModel).order_by(UserModel.id.desc()).first()
@@ -96,7 +96,7 @@ def _set_active_subscription(access_token: str, plan_code: str) -> None:
             )
         )
         # 2. Also ensure UserSubscriptionModel exists
-        from app.services.billing_service import STRIPE_ENTITLEMENT_TO_PLAN_CODE
+        from app.services.billing.service import STRIPE_ENTITLEMENT_TO_PLAN_CODE
 
         legacy_code = STRIPE_ENTITLEMENT_TO_PLAN_CODE.get(plan_code, plan_code)
         plan = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == legacy_code))

@@ -22,15 +22,15 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.b2b_billing_service import B2BBillingService
-from app.services.b2b_reconciliation_service import (
+from app.services.b2b.billing_service import B2BBillingService
+from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
+from app.services.b2b.reconciliation_service import (
     B2BReconciliationService,
     ReconciliationActionCode,
     ReconciliationActionPayload,
     ReconciliationSeverity,
     ReconciliationStatus,
 )
-from app.services.enterprise_credentials_service import EnterpriseCredentialsService
 
 
 def _cleanup_tables() -> None:

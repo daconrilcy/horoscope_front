@@ -41,11 +41,14 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongQuotaExceededError,
 )
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
-from app.services.user_birth_profile_service import (
+from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
-from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError
+from app.services.user_profile.natal_chart_service import (
+    UserNatalChartService,
+    UserNatalChartServiceError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -548,7 +551,7 @@ async def download_natal_interpretation_pdf(
         )
 
     try:
-        from app.services.natal_pdf_export_service import NatalPdfExportService
+        from app.services.natal.pdf_export_service import NatalPdfExportService
 
         pdf_bytes = NatalPdfExportService.generate_pdf(
             db=db,

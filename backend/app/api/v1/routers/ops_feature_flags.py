@@ -11,7 +11,6 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
 from app.services.feature_flag_service import (
     FeatureFlagData,
     FeatureFlagListData,
@@ -19,6 +18,7 @@ from app.services.feature_flag_service import (
     FeatureFlagServiceError,
     FeatureFlagUpdatePayload,
 )
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
 
 router = APIRouter(prefix="/v1/ops/feature-flags", tags=["ops-feature-flags"])
 
