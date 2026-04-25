@@ -1,0 +1,8 @@
+interface:
+  display_name: "CONDAMAD Dev Story"
+  short_description: "Codex-native story development"
+  brand_color: "#7C3AED"
+  default_prompt: "Use $condamad-dev-story on the provided story markdown. Generate the CONDAMAD capsule if missing, then implement end-to-end with DRY/No Legacy evidence."
+
+policy:
+  allow_implicit_invocation: false
