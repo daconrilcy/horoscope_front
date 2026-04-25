@@ -277,7 +277,7 @@ def _ensure_canonical_entitlements_seeded() -> None:
 
     from app.infra.db.models.product_entitlements import FeatureCatalogModel
     from app.infra.db.session import SessionLocal
-    from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+    from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY
     from scripts.seed_product_entitlements import seed as seed_product_entitlements
 
     def _missing_feature_codes() -> set[str]:

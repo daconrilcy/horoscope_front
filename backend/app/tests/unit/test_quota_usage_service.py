@@ -10,8 +10,8 @@ from app.infra.db.base import Base
 from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
-from app.services.entitlement_types import QuotaDefinition
-from app.services.feature_scope_registry import (
+from app.services.entitlement.entitlement_types import QuotaDefinition
+from app.services.entitlement.feature_scope_registry import (
     InvalidQuotaScopeError,
     UnknownFeatureCodeError,
 )

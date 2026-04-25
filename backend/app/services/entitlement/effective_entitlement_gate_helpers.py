@@ -1,6 +1,8 @@
+"""Helpers partages pour les runtime gates entitlement."""
+
 from __future__ import annotations
 
-from app.services.entitlement_types import (
+from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
     UsageState,

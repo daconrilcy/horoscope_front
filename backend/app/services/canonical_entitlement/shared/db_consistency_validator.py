@@ -15,7 +15,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureBindingModel,
     PlanFeatureQuotaModel,
 )
-from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY, FeatureScope
+from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY, FeatureScope
 
 logger = logging.getLogger(__name__)
 

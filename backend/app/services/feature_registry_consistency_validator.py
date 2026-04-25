@@ -1,8 +1,8 @@
-from app.services import feature_scope_registry
 from app.services.b2b_api_entitlement_gate import B2BApiEntitlementGate
-from app.services.chat_entitlement_gate import ChatEntitlementGate
-from app.services.natal_chart_long_entitlement_gate import NatalChartLongEntitlementGate
-from app.services.thematic_consultation_entitlement_gate import (
+from app.services.entitlement import feature_scope_registry
+from app.services.entitlement.chat_entitlement_gate import ChatEntitlementGate
+from app.services.entitlement.natal_chart_long_entitlement_gate import NatalChartLongEntitlementGate
+from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ThematicConsultationEntitlementGate,
 )
 

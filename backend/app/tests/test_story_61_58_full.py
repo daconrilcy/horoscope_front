@@ -5,7 +5,7 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal
 from app.services.billing_service import BillingService
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
 
 
 def test_full_reconciliation_chain():

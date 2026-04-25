@@ -1,3 +1,5 @@
+"""Gate entitlement canonique pour la variation horoscope daily."""
+
 from __future__ import annotations
 
 import logging
@@ -5,7 +7,9 @@ from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
 
 logger = logging.getLogger(__name__)
 

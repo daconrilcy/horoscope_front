@@ -339,7 +339,7 @@ class NatalInterpretationService:
             user_plan = "free"
             if db is not None:
                 # Story 66.15: resolve user plan for assembly when DB context is available.
-                from app.services.effective_entitlement_resolver_service import (
+                from app.services.entitlement.effective_entitlement_resolver_service import (
                     EffectiveEntitlementResolverService,
                 )
 

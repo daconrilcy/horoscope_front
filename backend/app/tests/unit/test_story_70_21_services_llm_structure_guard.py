@@ -75,3 +75,23 @@ def test_admin_routes_no_longer_call_private_consumption_helpers() -> None:
         content = file_path.read_text(encoding="utf-8")
         for forbidden in forbidden_snippets:
             assert forbidden not in content, f"{forbidden} found in {file_path}"
+
+
+def test_consultation_generation_no_longer_reuses_guidance_private_context_helper() -> None:
+    services_root = Path(__file__).resolve().parents[2] / "services" / "llm_generation"
+    consultation_service = services_root / "consultation_generation_service.py"
+    content = consultation_service.read_text(encoding="utf-8")
+
+    assert "GuidanceService.build_natal_chart_summary_context" not in content
+    assert "detect_degraded_natal_mode" not in content
+
+
+def test_llm_shared_helpers_do_not_redefine_entitlement_logic() -> None:
+    shared_root = Path(__file__).resolve().parents[2] / "services" / "llm_generation" / "shared"
+    for file_path in shared_root.glob("*.py"):
+        content = file_path.read_text(encoding="utf-8")
+        assert "EffectiveEntitlementResolverService" not in content, (
+            f"forbidden import in {file_path}"
+        )
+        assert "LlmTokenUsageService" not in content, f"forbidden import in {file_path}"
+        assert "QuotaDefinition" not in content, f"forbidden import in {file_path}"

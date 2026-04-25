@@ -2,16 +2,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.entitlement_types import (
-    EffectiveEntitlementsSnapshot,
-    EffectiveFeatureAccess,
-    UsageState,
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
 )
-from app.services.thematic_consultation_entitlement_gate import (
+from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ConsultationAccessDeniedError,
     ConsultationQuotaExceededError,
     ThematicConsultationEntitlementGate,
+)
+from app.services.entitlement.entitlement_types import (
+    EffectiveEntitlementsSnapshot,
+    EffectiveFeatureAccess,
+    UsageState,
 )
 
 
@@ -100,7 +102,7 @@ def test_check_and_consume_skips_tokens_quota(db_session):
             return_value=snapshot,
         ),
         patch(
-            "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume"
+            "app.services.entitlement.thematic_consultation_entitlement_gate.QuotaUsageService.consume"
         ) as mock_consume,
     ):
         result = ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
@@ -133,7 +135,7 @@ def test_check_and_consume_processes_legacy_quota(db_session):
             return_value=snapshot,
         ),
         patch(
-            "app.services.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
+            "app.services.entitlement.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
             return_value=legacy_state,
         ) as mock_consume,
     ):

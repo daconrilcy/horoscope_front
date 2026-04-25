@@ -11,7 +11,7 @@ from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
-from app.services.effective_entitlement_resolver_service import (
+from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
 from app.services.stripe_customer_portal_service import StripeCustomerPortalService

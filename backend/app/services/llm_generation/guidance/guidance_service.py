@@ -20,17 +20,23 @@ from app.domain.llm.runtime.adapter_errors import AIEngineAdapterError, map_adap
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.observability.metrics import increment_counter, observe_duration
 from app.services.current_context import build_current_prompt_context
-from app.services.entitlement_types import QuotaDefinition
+from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.llm_generation.anonymization_service import anonymize_text
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
-from app.services.llm_generation.natal.prompt_context import build_natal_chart_summary
 from app.services.llm_generation.off_scope_policy import assess_off_scope
+from app.services.llm_generation.shared.contextual_text import (
+    compose_structured_guidance_full_text,
+    normalize_structured_string_list,
+)
+from app.services.llm_generation.shared.natal_context import (
+    build_user_natal_chart_summary_context,
+    detect_degraded_natal_mode,
+)
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
-from app.services.user_natal_chart_service import UserNatalChartService, UserNatalChartServiceError
 
 
 class GuidanceServiceError(Exception):
@@ -120,28 +126,13 @@ class GuidanceService:
         key_points: list[str],
         advice: list[str],
     ) -> str:
-        sections: list[str] = []
-        summary = summary_raw.strip()
-        if summary:
-            sections.append(summary)
-        if key_points:
-            sections.append("Points cles :\n" + "\n".join(f"- {item}" for item in key_points))
-        if advice:
-            sections.append("Conseils :\n" + "\n".join(f"- {item}" for item in advice))
-        return "\n\n".join(section for section in sections if section.strip())
+        """Delegue au formateur partage des guidances structurees."""
+        return compose_structured_guidance_full_text(summary_raw, key_points, advice)
 
     @staticmethod
     def _normalize_structured_string_list(raw_value: Any) -> list[str]:
-        """Normalise une sortie structurée LLM potentiellement mal typée en liste de chaînes."""
-        if raw_value is None:
-            return []
-        if isinstance(raw_value, str):
-            normalized = raw_value.strip()
-            return [normalized] if normalized else []
-        if isinstance(raw_value, (list, tuple)):
-            return [str(item).strip() for item in raw_value if str(item).strip()]
-        normalized = str(raw_value).strip()
-        return [normalized] if normalized else []
+        """Delegue au normaliseur partage des listes structurees LLM."""
+        return normalize_structured_string_list(raw_value)
 
     @staticmethod
     def _detect_degraded_natal_mode(
@@ -149,15 +140,11 @@ class GuidanceService:
         birth_time: str | None,
         birth_place: str | None,
     ) -> str | None:
-        no_time = birth_time is None or birth_time.strip() == ""
-        no_location = birth_place is None or birth_place.strip() == ""
-        if no_time and no_location:
-            return "no_location_no_time"
-        if no_time:
-            return "no_time"
-        if no_location:
-            return "no_location"
-        return None
+        """Delegue au helper partage de mode degrade natal."""
+        return detect_degraded_natal_mode(
+            birth_time=birth_time,
+            birth_place=birth_place,
+        )
 
     @staticmethod
     def build_natal_chart_summary_context(
@@ -168,30 +155,14 @@ class GuidanceService:
         birth_time: str | None,
         birth_place: str | None,
     ) -> str | None:
-        try:
-            natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
-        except UserNatalChartServiceError as error:
-            if error.code == "natal_chart_not_found":
-                return None
-            GuidanceService.logger.warning(
-                "guidance_natal_chart_context_unavailable user_id=%s code=%s",
-                user_id,
-                error.code,
-            )
-            return None
-
-        fallback_birth_time = birth_time or "00:00"
-        fallback_birth_place = birth_place or "Non connu"
-        degraded_mode = GuidanceService._detect_degraded_natal_mode(
+        """Construit le resume natal partage en conservant le contrat du service."""
+        return build_user_natal_chart_summary_context(
+            db,
+            user_id=user_id,
+            birth_date=birth_date,
             birth_time=birth_time,
             birth_place=birth_place,
-        )
-        return build_natal_chart_summary(
-            natal_result=natal_chart.result,
-            birth_place=fallback_birth_place,
-            birth_date=birth_date,
-            birth_time=fallback_birth_time,
-            degraded_mode=degraded_mode,
+            warning_event="guidance_natal_chart_context_unavailable",
         )
 
     @staticmethod
@@ -729,7 +700,7 @@ class GuidanceService:
             attempts += 1
             try:
                 # Story 66.15: Resolve user plan for assembly
-                from app.services.effective_entitlement_resolver_service import (
+                from app.services.entitlement.effective_entitlement_resolver_service import (
                     EffectiveEntitlementResolverService,
                 )
 
@@ -1039,7 +1010,7 @@ class GuidanceService:
             attempts += 1
             try:
                 # Story 66.15: Resolve user plan for assembly
-                from app.services.effective_entitlement_resolver_service import (
+                from app.services.entitlement.effective_entitlement_resolver_service import (
                     EffectiveEntitlementResolverService,
                 )
 

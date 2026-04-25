@@ -40,7 +40,7 @@ from app.infra.db.session import get_db_session
 from app.integrations.stripe_client import get_stripe_client
 from app.services.audit_service import AuditEventCreatePayload, AuditService
 from app.services.billing_service import BillingService
-from app.services.entitlement_types import QuotaDefinition
+from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.quota_usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)

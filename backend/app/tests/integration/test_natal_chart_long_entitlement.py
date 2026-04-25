@@ -31,13 +31,13 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine, get_db_session
 from app.main import app
 from app.services.billing_service import BillingPlanData, BillingService, SubscriptionStatusData
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.entitlement_types import (
+from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
     UsageState,
 )
-from app.services.natal_chart_long_entitlement_gate import (
+from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
     NatalChartLongEntitlementResult,
     NatalChartLongQuotaExceededError,
@@ -379,7 +379,7 @@ def test_short_level_bypasses_gate(mock_user_and_chart):
     """use_case_level=short → gate non appelé, entitlement_info=None."""
     with (
         patch(
-            "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume"
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume"
         ) as mock_gate,
         patch(
             "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret"
@@ -402,7 +402,7 @@ def test_complete_canonical_quota_ok(mock_user_and_chart):
 
     with (
         patch(
-            "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
             return_value=result,
         ),
         patch(
@@ -427,7 +427,7 @@ def test_complete_canonical_unlimited_ok(mock_user_and_chart):
 
     with (
         patch(
-            "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
             return_value=result,
         ),
         patch(
@@ -446,7 +446,7 @@ def test_complete_canonical_unlimited_ok(mock_user_and_chart):
 
 def test_complete_no_plan_rejected(mock_user_and_chart):
     with patch(
-        "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
         side_effect=NatalChartLongAccessDeniedError(
             reason="no_plan", billing_status="none", plan_code=""
         ),
@@ -460,7 +460,7 @@ def test_complete_no_plan_rejected(mock_user_and_chart):
 
 def test_complete_quota_exhausted_rejected(mock_user_and_chart):
     with patch(
-        "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
         side_effect=NatalChartLongQuotaExceededError(
             quota_key="interpretations", used=1, limit=1, window_end=None
         ),
@@ -474,7 +474,7 @@ def test_complete_quota_exhausted_rejected(mock_user_and_chart):
 
 def test_complete_disabled_binding_returns_disabled_by_plan(mock_user_and_chart):
     with patch(
-        "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
         side_effect=NatalChartLongAccessDeniedError(
             reason="disabled_by_plan", billing_status="active", plan_code="free"
         ),
@@ -487,7 +487,7 @@ def test_complete_disabled_binding_returns_disabled_by_plan(mock_user_and_chart)
 
 def test_complete_no_canonical_binding_returns_no_binding(mock_user_and_chart):
     with patch(
-        "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
         side_effect=NatalChartLongAccessDeniedError(
             reason="canonical_no_binding", billing_status="active", plan_code="basic"
         ),
@@ -504,7 +504,7 @@ def test_complete_rolls_back_on_access_denied(mock_user_and_chart, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     with patch(
-        "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
         side_effect=NatalChartLongAccessDeniedError(
             reason="no_plan", billing_status="none", plan_code=""
         ),

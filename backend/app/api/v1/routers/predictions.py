@@ -23,7 +23,7 @@ from app.services.daily_prediction_types import (
     ComputeMode,
     DailyPredictionServiceError,
 )
-from app.services.horoscope_daily_entitlement_gate import (
+from app.services.entitlement.horoscope_daily_entitlement_gate import (
     HoroscopeDailyAccessDeniedError,
     HoroscopeDailyEntitlementGate,
 )

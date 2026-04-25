@@ -28,8 +28,10 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.session import get_db_session
 from app.services.billing_service import BillingService
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.entitlement_types import EffectiveFeatureAccess, UsageState
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
+from app.services.entitlement.entitlement_types import EffectiveFeatureAccess, UsageState
 
 router = APIRouter(prefix="/v1/entitlements", tags=["entitlements"])
 

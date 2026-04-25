@@ -167,7 +167,7 @@ PERSONA_ID = "12345678-1234-5678-1234-567812345678"
 
 def _patch_entitlement_snapshot(plan_code: str = "premium"):
     return patch(
-        "app.services.effective_entitlement_resolver_service."
+        "app.services.entitlement.effective_entitlement_resolver_service."
         "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
         return_value=MagicMock(plan_code=plan_code),
     )

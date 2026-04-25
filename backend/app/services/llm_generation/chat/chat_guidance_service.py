@@ -23,9 +23,12 @@ from app.domain.llm.runtime.adapter_errors import AIEngineAdapterError, map_adap
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.repositories.user_repository import UserRepository
 from app.infra.observability.metrics import increment_counter, observe_duration
-from app.services.chat_entitlement_gate import ChatEntitlementResult, ChatQuotaExceededError
 from app.services.current_context import build_current_prompt_context
-from app.services.entitlement_types import QuotaDefinition
+from app.services.entitlement.chat_entitlement_gate import (
+    ChatEntitlementResult,
+    ChatQuotaExceededError,
+)
+from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.llm_generation.anonymization_service import (
     LLMAnonymizationError,
     anonymize_text,
@@ -952,7 +955,7 @@ class ChatGuidanceService:
         # Story 66.20 High Issue 1: Resolve user plan for assembly resolution
         from types import SimpleNamespace
 
-        from app.services.effective_entitlement_resolver_service import (
+        from app.services.entitlement.effective_entitlement_resolver_service import (
             EffectiveEntitlementResolverService,
         )
 

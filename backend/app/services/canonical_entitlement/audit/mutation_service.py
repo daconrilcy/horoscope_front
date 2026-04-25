@@ -22,7 +22,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     SourceOrigin,
 )
-from app.services.feature_scope_registry import (
+from app.services.entitlement.feature_scope_registry import (
     FeatureScope,
     UnknownFeatureCodeError,
     get_feature_scope,

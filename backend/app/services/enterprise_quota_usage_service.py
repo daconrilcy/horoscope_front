@@ -8,8 +8,8 @@ from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.enterprise_feature_usage_counters import (
     EnterpriseFeatureUsageCounterModel,
 )
-from app.services.entitlement_types import QuotaDefinition, UsageState
-from app.services.feature_scope_registry import (
+from app.services.entitlement.entitlement_types import QuotaDefinition, UsageState
+from app.services.entitlement.feature_scope_registry import (
     FeatureScope,
     require_feature_scope,
 )

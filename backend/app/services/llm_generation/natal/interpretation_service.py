@@ -502,7 +502,7 @@ class NatalInterpretationService:
             )
 
         # 3.5 Resolve Plan (Story 66.20)
-        from app.services.effective_entitlement_resolver_service import (
+        from app.services.entitlement.effective_entitlement_resolver_service import (
             EffectiveEntitlementResolverService,
         )
 
@@ -762,7 +762,7 @@ class NatalInterpretationService:
         use_case_key = "natal_long_free"
 
         # 3.5 Resolve Plan (Story 66.20)
-        from app.services.effective_entitlement_resolver_service import (
+        from app.services.entitlement.effective_entitlement_resolver_service import (
             EffectiveEntitlementResolverService,
         )
 

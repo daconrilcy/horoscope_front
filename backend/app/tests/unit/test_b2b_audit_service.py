@@ -18,7 +18,7 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
 )
 from app.services.b2b_audit_service import B2BAuditEntry, B2BAuditService
-from app.services.entitlement_types import UsageState
+from app.services.entitlement.entitlement_types import UsageState
 
 
 @pytest.fixture

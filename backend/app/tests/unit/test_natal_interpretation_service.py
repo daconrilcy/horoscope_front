@@ -477,7 +477,7 @@ class TestNatalInterpretationService:
                 return_value=[],
             ),
             patch(
-                "app.services.effective_entitlement_resolver_service."
+                "app.services.entitlement.effective_entitlement_resolver_service."
                 "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
                 return_value=MagicMock(plan_code="premium"),
             ),

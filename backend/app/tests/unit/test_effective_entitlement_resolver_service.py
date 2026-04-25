@@ -25,7 +25,7 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.user import UserModel
 from app.services.billing_service import BillingPlanData, SubscriptionStatusData
-from app.services.effective_entitlement_resolver_service import (
+from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
 
@@ -53,7 +53,7 @@ def test_resolve_b2c_user_snapshot_no_plan(db):
     )
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=1)
@@ -83,7 +83,7 @@ def test_resolve_b2c_user_snapshot_normalizes_missing_subscription_to_none(db):
     )
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=2)
@@ -151,7 +151,7 @@ def test_resolve_b2c_user_snapshot_granted_quota(db):
     )
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=1)
@@ -246,7 +246,7 @@ def test_resolve_b2c_user_snapshot_past_due_preserves_access(db):
     )
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=1)
@@ -289,7 +289,7 @@ def test_resolve_b2c_user_snapshot_trialing_is_treated_as_active(db):
     )
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=7)
@@ -364,7 +364,7 @@ def test_resolve_b2c_user_snapshot_quota_exhausted(db):
     )
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=1)
@@ -407,7 +407,7 @@ def test_resolve_b2c_user_snapshot_disabled(db):
     )
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=1)
@@ -525,7 +525,7 @@ def test_resolve_b2c_user_snapshot_quota_binding_without_quotas_is_denied(db):
     )
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
@@ -584,7 +584,7 @@ def test_resolve_b2c_user_snapshot_does_not_create_missing_usage_counter(db):
     assert db.scalar(select(FeatureUsageCounterModel.id).limit(1)) is None
 
     with patch(
-        "app.services.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
         return_value=mock_sub,
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(

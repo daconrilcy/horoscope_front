@@ -17,7 +17,7 @@ from app.services.canonical_entitlement.shared.db_consistency_validator import (
     CanonicalEntitlementDbConsistencyError,
     CanonicalEntitlementDbConsistencyValidator,
 )
-from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY
 
 
 @pytest.fixture

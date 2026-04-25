@@ -33,8 +33,8 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine, get_db_session
 from app.main import app
 from app.services.billing_service import BillingService
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.entitlement_types import (
+from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
     UsageState,

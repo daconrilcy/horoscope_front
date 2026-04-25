@@ -141,7 +141,7 @@ def _seed_reference_data() -> None:
         ReferenceDataService.seed_reference_version(db)
 
         # Seed canonical features
-        from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+        from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY
 
         for feature_code in FEATURE_SCOPE_REGISTRY:
             f = db.scalar(

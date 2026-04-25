@@ -88,7 +88,7 @@ def _cleanup_tables() -> None:
             db.execute(delete(model))
 
         # Seed canonical features
-        from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+        from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY
 
         features = {}
         for feature_code in FEATURE_SCOPE_REGISTRY:

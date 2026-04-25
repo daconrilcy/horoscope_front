@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
-from app.services.entitlement_types import QuotaDefinition, UsageState
-from app.services.feature_scope_registry import (
+from app.services.entitlement.entitlement_types import QuotaDefinition, UsageState
+from app.services.entitlement.feature_scope_registry import (
     FeatureScope,
     require_feature_scope,
 )

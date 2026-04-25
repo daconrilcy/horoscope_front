@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.feature_scope_registry import (
+from app.services.entitlement.feature_scope_registry import (
     FeatureScope,
     InvalidQuotaScopeError,
     UnknownFeatureCodeError,

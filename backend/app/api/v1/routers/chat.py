@@ -13,13 +13,13 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.chat_entitlement_gate import (
+from app.services.entitlement.chat_entitlement_gate import (
     ChatAccessDeniedError,
     ChatEntitlementGate,
     ChatEntitlementResult,
     ChatQuotaExceededError,
 )
-from app.services.entitlement_types import QuotaDefinition
+from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.llm_generation.chat.chat_guidance_service import (
     ChatConversationHistoryData,
     ChatConversationListData,

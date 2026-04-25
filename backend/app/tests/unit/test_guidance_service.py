@@ -11,7 +11,7 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.entitlement_types import UsageState
+from app.services.entitlement.entitlement_types import UsageState
 from app.services.llm_generation.guidance.guidance_service import (
     GuidanceRecoveryMetadata,
     GuidanceService,
@@ -486,11 +486,11 @@ def test_request_contextual_guidance_injects_latest_natal_summary(
         result = object()
 
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance.guidance_service.UserNatalChartService.get_latest_for_user",
+        "app.services.llm_generation.shared.natal_context.UserNatalChartService.get_latest_for_user",
         lambda db, user_id: _FakeChart(),
     )
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance.guidance_service.build_natal_chart_summary",
+        "app.services.llm_generation.shared.natal_context.build_natal_chart_summary",
         lambda **kwargs: "SOLEIL: Belier\nLUNE: Cancer",
     )
 

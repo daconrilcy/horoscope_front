@@ -6,10 +6,12 @@ from typing import Literal
 
 from sqlalchemy.orm import Session
 
-from app.services.effective_entitlement_gate_helpers import select_quota_usage_state
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
 from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
-from app.services.entitlement_types import QuotaDefinition, UsageState
+from app.services.entitlement.effective_entitlement_gate_helpers import select_quota_usage_state
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
+from app.services.entitlement.entitlement_types import QuotaDefinition, UsageState
 from app.services.quota_usage_service import QuotaExhaustedError
 
 logger = logging.getLogger(__name__)

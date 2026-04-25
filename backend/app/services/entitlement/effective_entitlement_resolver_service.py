@@ -1,3 +1,5 @@
+"""Resolution canonique des droits effectifs pour les sujets B2C et B2B."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,14 +22,14 @@ from app.infra.db.models.user import UserModel
 from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
 from app.services.billing_service import BillingService
 from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
-from app.services.entitlement_types import (
+from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
     QuotaDefinition,
     UpgradeHint,
     UsageState,
 )
-from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY, FeatureScope
+from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY, FeatureScope
 from app.services.quota_usage_service import QuotaUsageService
 
 

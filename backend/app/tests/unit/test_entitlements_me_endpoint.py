@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.main import app
-from app.services.entitlement_types import (
+from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
     UsageState,
@@ -64,10 +64,10 @@ def test_role_guard_b2b_user():
 
 
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
 )
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
 )
 def test_no_plan_user(mock_resolve, mock_hints):
     """
@@ -114,10 +114,10 @@ def test_no_plan_user(mock_resolve, mock_hints):
 
 
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
 )
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
 )
 def test_billing_inactive(mock_resolve, mock_hints):
     """Vérifie le retour quand le billing est inactif (ex: past_due)."""
@@ -156,10 +156,10 @@ def test_billing_inactive(mock_resolve, mock_hints):
 
 @patch("app.services.quota_usage_service.QuotaUsageService.consume")
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
 )
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
 )
 def test_quota_path_no_consume(mock_resolve, mock_hints, mock_consume):
     """Vérifie que l'endpoint n'appelle JAMAIS consume (lecture seule)."""
@@ -210,10 +210,10 @@ def test_quota_path_no_consume(mock_resolve, mock_hints, mock_consume):
 
 
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
 )
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
 )
 def test_unknown_feature_ignored_gracefully(mock_resolve, mock_hints):
     """Vérifie qu'une feature présente dans le snapshot mais hors FEATURES_TO_QUERY est ignorée."""
@@ -251,10 +251,10 @@ def test_unknown_feature_ignored_gracefully(mock_resolve, mock_hints):
 
 
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
 )
 @patch(
-    "app.services.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
+    "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.resolve_b2c_user_snapshot"
 )
 def test_missing_priority_feature_is_returned_as_denied(mock_resolve, mock_hints):
     """Vérifie qu'une feature prioritaire absente du snapshot reste présente dans la réponse."""

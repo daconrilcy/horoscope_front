@@ -31,7 +31,7 @@ def _phase_1() -> int:
             PlanFeatureBindingModel,
             SourceOrigin,
         )
-        from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+        from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY
 
         features = {}
         for feature_code in FEATURE_SCOPE_REGISTRY:

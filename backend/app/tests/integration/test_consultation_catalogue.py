@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from app.infra.db.models.consultation_template import ConsultationTemplateModel
 from app.infra.db.session import SessionLocal
 from app.main import app
-from app.services.thematic_consultation_entitlement_gate import ConsultationEntitlementResult
+from app.services.entitlement.thematic_consultation_entitlement_gate import ConsultationEntitlementResult
 
 client = TestClient(app)
 

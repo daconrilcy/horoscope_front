@@ -1,12 +1,18 @@
+"""Registre canonique du scope entitlement par feature code."""
+
 from enum import Enum
 
 
 class FeatureScope(str, Enum):
+    """Scopes supportes pour les features entitlement."""
+
     B2C = "b2c"
     B2B = "b2b"
 
 
 class UnknownFeatureCodeError(ValueError):
+    """Erreur levee quand une feature n est pas enregistree dans le registre."""
+
     def __init__(self, feature_code: str) -> None:
         self.feature_code = feature_code
         super().__init__(
@@ -16,6 +22,8 @@ class UnknownFeatureCodeError(ValueError):
 
 
 class InvalidQuotaScopeError(ValueError):
+    """Erreur levee quand un service de quota est utilise sur le mauvais scope."""
+
     def __init__(
         self,
         feature_code: str,

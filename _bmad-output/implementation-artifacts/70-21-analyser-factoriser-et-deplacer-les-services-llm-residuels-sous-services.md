@@ -260,6 +260,40 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
    Cela inclut notamment les resumes natals, hints de chat, conventions de prompt, mapping de variantes, serialisation de reponse ou tracking d usage si ces mecanismes existent en double.  
    Aucun code legacy natal conserve uniquement pour compatibilite interne n est autorise sans statut explicite de follow-up ; par defaut, il doit etre supprime ou absorbe dans la cible canonique.
 
+23. **AC23 - Audit DRY explicite entre `consultation_generation_service.py` et `llm_generation/guidance/`**  
+   La story produit un audit comparatif explicite entre :
+   - `backend/app/services/llm_generation/consultation_generation_service.py`
+   - `backend/app/services/llm_generation/guidance/guidance_service.py`  
+   Cet audit doit couvrir au minimum :
+   - les consommateurs nominaux production/tests ;
+   - la responsabilite reelle de chaque service ;
+   - les helpers, transformations de contenu, constructions de contexte natal, conventions de degraded mode, gestion d entitlement et tracking LLM potentiellement dupliques ;
+   - les dependances croisees entre consultation, guidance, chat et natal ;
+   - les indices de legacy, de couplage opportuniste ou de reutilisation dans le mauvais sens.  
+   La conclusion doit produire une matrice explicite :
+   - responsabilite conservee dans `consultation` ;
+   - responsabilite transferee a `guidance` ;
+   - responsabilite factorisee dans un module partage nomme par responsabilite ;
+   - responsabilite supprimee comme legacy ou duplication.
+
+24. **AC24 - Refactorisation obligatoire si duplication ou legacy confirmes sur consultation/guidance**  
+   Si l audit de AC23 revele une duplication active directement portee par `consultation_generation_service.py` et `llm_generation/guidance/`, la story la supprime dans le meme lot.  
+   Sont particulierement vises :
+   - calcul du contexte natal partage ;
+   - regles `degraded_mode` ou equivalents ;
+   - normalisation ou assemblage de texte ou de sections ;
+   - debit ou tracage d usage LLM ;
+   - resolution d entitlement passee au runtime de generation.  
+   La factorisation doit se faire vers :
+   - un service canonique unique lorsque la responsabilite appartient clairement a une seule famille ;
+   - ou un module partage nomme par responsabilite lorsque la logique est reellement transverse.  
+   Il est interdit de conserver deux implementations paralleles sous pretexte de prudence, d historique ou de differences de forme mineures.  
+   Si l audit revele une dette plus large non strictement necessaire a la convergence consultation/guidance, elle est documentee comme follow-up separe et ne doit pas etre absorbee opportunistement dans cette story.
+
+25. **AC25 - Frontiere explicite avec les services entitlement**  
+   La story verifie uniquement que les refactorisations LLM de consultation, guidance, chat, natal et QA ne deplacent pas, ne dupliquent pas et ne redefinissent pas de logique entitlement.  
+   Toute dette structurelle detectee dans `backend/app/services/*entitlement*` ou `backend/app/services/canonical_entitlement/` est documentee comme follow-up separe et ne doit pas etre traitee dans cette story, sauf si elle bloque directement la suppression d un doublon LLM couvert par les AC23 et AC24.
+
 ## Tasks / Subtasks
 
 - [x] **Task 1: Cartographier le perimetre reel et decider la destination de chaque fichier**  
@@ -332,6 +366,20 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
   - [x] Ajouter des tests ou garde-fous qui echouent si un service natal concurrent ou suffixe `_v2` reapparait comme chemin canonique.
   - [x] Ajouter des tests ou garde-fous qui echouent si la generation LLM `horoscope_daily` reste hors du sous-namespace cible sans justification explicite.
   - [x] Ajouter des tests ou garde-fous qui echouent si des helpers natals dupliques restent consommes en parallele par `chat`, `guidance` ou `consultation`.
+
+- [x] **Task 12: Auditer et converger consultation/guidance**  
+  AC: 23, 24  
+  - [x] Comparer `consultation_generation_service.py` et `guidance/guidance_service.py`.
+  - [x] Identifier les duplications de contexte, degraded mode, entitlement et tracking.
+  - [x] Factoriser ou supprimer les duplications confirmees.
+  - [x] Migrer imports/tests/patch targets.
+  - [x] Documenter ce qui reste specifique a `consultation` vs `guidance`.
+
+- [x] **Task 13: Documenter le follow-up entitlement**  
+  AC: 25  
+  - [x] Verifier que la refactorisation LLM ne deplace ni ne redefinit de logique entitlement.
+  - [x] Documenter toute dette structurelle entitlement detectee comme follow-up separe.
+  - [x] Referencer la story separee `70-22` pour la convergence entitlement.
 
 ## Dev Notes
 
@@ -427,13 +475,29 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
   - `backend/app/services/ops_monitoring_service.py` reste hors perimetre car il couvre le monitoring applicatif general instance-local, distinct du monitoring LLM persistant.
 - Garde-fous ajoutes:
   - nouveau test `backend/app/tests/unit/test_story_70_21_services_llm_structure_guard.py` pour bloquer le retour de fichiers `llm_*_service.py` a la racine, les imports legacy et les appels routeurs a des helpers prives du service de consommation.
+- Consultation vs guidance:
+  - la story exige desormais une preuve explicite de convergence DRY entre `consultation_generation_service.py` et `guidance/guidance_service.py` via une matrice de responsabilites et une refactorisation bornee aux duplications directement portees par ces deux services.
+- Audit explicite consultation vs guidance:
+  - responsabilite conservee dans `consultation` : orchestration metier de consultation, relationnel avec tiers, persistance d usage `ConsultationThirdParty*`, mapping vers `ConsultationSection` et DTO de consultation.
+  - responsabilite conservee dans `guidance` : resolution de contexte conversationnel, assemblage du prompt guidance, appel `AIEngineAdapter`, fallback hors scope, resolution du plan effectif et debit de tokens.
+  - responsabilite factorisee dans un module partage nomme par responsabilite :
+    - `backend/app/services/llm_generation/shared/natal_context.py` pour le calcul du `degraded_mode` et la construction du resume natal reutilise par guidance et consultation ;
+    - `backend/app/services/llm_generation/shared/contextual_text.py` pour le format texte canonique des guidances contextuelles et son parsing structurel cote consultation.
+  - responsabilite supprimee comme duplication : logique locale du `degraded_mode` dans `consultation_generation_service.py`, reconstruction locale du resume natal via `GuidanceService.build_natal_chart_summary_context`, et parsing/formatage texte redondants non nommes par responsabilite.
+- Frontiere entitlement:
+  - la convergence structurelle entitlement est explicitement sortie du perimetre de 70-21 et doit vivre dans une story dediee `70-22`.
+  - 70-21 ne couvre plus que la verification d absence de duplication, de deplacement ou de redefinition opportuniste de logique entitlement depuis le perimetre LLM.
+- Verification entitlement executee:
+  - les nouveaux modules `llm_generation/shared/*` ne referencent ni `EffectiveEntitlementResolverService`, ni `QuotaDefinition`, ni `LlmTokenUsageService`.
+  - la resolution du plan effectif et le debit de tokens restent confines a `guidance/guidance_service.py`.
+  - aucun fichier du perimetre `backend/app/services/*entitlement*` ou `backend/app/services/canonical_entitlement/` n a ete modifie dans ce lot.
 - Correctifs post-review appliques:
   - `interpret_chart()` ne passe plus par un chemin natal premium implicite pour les routes historiques `/users`; il force maintenant la variante canonique `free_short` et n ouvre plus de persistance avec `variant_code=None`.
   - le calcul de `degraded_mode` est desormais centralise sur `_detect_degraded_mode` afin d eliminer la divergence entre le service natal canonique et les helpers partages `chat` / `guidance`.
   - les tests unitaires natals couvrent a nouveau les arguments reels du wrapper `/users` et la reutilisation de la regle partagee de degradation.
 - Ajustements complementaires necessaires pour cloturer la validation:
   - mise a jour de `backend/docs/llm-db-cleanup-registry.json` afin d autoriser les nouveaux chemins de consommation/monitoring.
-  - correction de quelques depassements `E501` preexistants dans le perimetre `canonical_entitlement` afin d obtenir `ruff check .` vert sur tout le backend.
+  - aucun blocage supplementaire identifie sur `consultation/guidance` apres factorisation des helpers partages.
 
 ### Validation Evidence
 
@@ -444,12 +508,16 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
   - `cd backend ; pytest -q`
   - `cd backend ; python -c "from app.main import app; print(app.title)"`
   - `cd backend ; pytest -q app/tests/unit/test_natal_interpretation_service.py app/tests/unit/test_natal_interpretation_service_v2.py app/tests/integration/test_natal_interpretation_endpoint.py app/tests/integration/test_natal_free_short_variant.py app/tests/unit/test_story_70_21_services_llm_structure_guard.py`
+  - `cd backend ; ruff format app/services/llm_generation app/tests/unit/test_guidance_service.py app/tests/unit/test_llm_generation_shared_contextual_text.py app/tests/unit/test_llm_generation_shared_natal_context.py app/tests/unit/test_story_70_21_services_llm_structure_guard.py`
+  - `cd backend ; ruff check app/services/llm_generation app/tests/unit/test_guidance_service.py app/tests/unit/test_llm_generation_shared_contextual_text.py app/tests/unit/test_llm_generation_shared_natal_context.py app/tests/unit/test_story_70_21_services_llm_structure_guard.py`
+  - `cd backend ; pytest -q app/tests/unit/test_guidance_service.py app/tests/unit/test_llm_generation_shared_contextual_text.py app/tests/unit/test_llm_generation_shared_natal_context.py app/tests/unit/test_story_70_21_services_llm_structure_guard.py app/tests/integration/test_consultations_router.py`
 - Resultats:
   - `ruff format .` OK
   - `ruff check .` OK
   - `pytest -q` OK, `3036 passed, 12 skipped`
   - smoke import backend OK, sortie `horoscope-backend`
   - validation ciblee post-review OK, `43 passed`
+  - validation ciblee consultation/guidance/shared OK, `44 passed`
 
 ### File List
 
@@ -466,6 +534,9 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
 - backend/app/services/llm_generation/natal/__init__.py
 - backend/app/services/llm_generation/natal/interpretation_service.py
 - backend/app/services/llm_generation/natal/prompt_context.py
+- backend/app/services/llm_generation/shared/__init__.py
+- backend/app/services/llm_generation/shared/contextual_text.py
+- backend/app/services/llm_generation/shared/natal_context.py
 - backend/app/api/v1/routers/admin_llm_consumption.py
 - backend/app/api/v1/routers/admin_exports.py
 - backend/app/api/v1/routers/ops_monitoring_llm.py
@@ -481,6 +552,8 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
 - backend/app/tests/unit/test_llm_canonical_consumption_service.py
 - backend/app/tests/unit/test_chat_guidance_service.py
 - backend/app/tests/unit/test_guidance_service.py
+- backend/app/tests/unit/test_llm_generation_shared_contextual_text.py
+- backend/app/tests/unit/test_llm_generation_shared_natal_context.py
 - backend/app/tests/unit/test_natal_interpretation_service.py
 - backend/app/tests/unit/test_natal_interpretation_service_v2.py
 - backend/app/tests/unit/test_story_70_21_services_llm_structure_guard.py
@@ -500,6 +573,7 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
 - backend/app/services/canonical_entitlement/alert/query.py
 - backend/app/services/canonical_entitlement/alert/retry.py
 - backend/app/services/tests/test_natal_interpretation_service_v2_refacto.py
+- _bmad-output/implementation-artifacts/70-22-cartographier-et-converger-les-services-entitlement.md
 - backend/app/prediction/llm_gateway_narrator.py (supprime)
 - backend/app/services/llm_canonical_consumption_service.py (supprime)
 - backend/app/services/llm_ops_monitoring_service.py (supprime)

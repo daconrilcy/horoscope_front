@@ -1,3 +1,5 @@
+"""Types partages canoniques du sous-domaine entitlement."""
+
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -60,6 +62,8 @@ class EffectiveEntitlementsSnapshot:
 
 @dataclass(frozen=True)
 class UpgradeHint:
+    """Suggestion canonique d upgrade pour une feature bridee."""
+
     feature_code: str
     current_plan_code: str
     target_plan_code: str

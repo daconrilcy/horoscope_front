@@ -5,8 +5,8 @@ from fastapi.testclient import TestClient
 
 from app.api.v1.routers.chat import QuotaInfo
 from app.main import app
-from app.services.chat_entitlement_gate import ChatEntitlementResult
-from app.services.entitlement_types import UsageState
+from app.services.entitlement.chat_entitlement_gate import ChatEntitlementResult
+from app.services.entitlement.entitlement_types import UsageState
 
 client = TestClient(app)
 
@@ -167,7 +167,7 @@ def test_send_message_canonical_unlimited_ok(mock_user):
 
 
 def test_send_message_no_plan_rejected(mock_user):
-    from app.services.chat_entitlement_gate import ChatAccessDeniedError
+    from app.services.entitlement.chat_entitlement_gate import ChatAccessDeniedError
 
     error = ChatAccessDeniedError(reason="no_plan", billing_status="inactive", plan_code="none")
 
@@ -192,7 +192,7 @@ def test_send_message_no_plan_rejected(mock_user):
 def test_send_message_quota_exhausted_rejected(mock_user):
     from datetime import datetime
 
-    from app.services.chat_entitlement_gate import ChatQuotaExceededError
+    from app.services.entitlement.chat_entitlement_gate import ChatQuotaExceededError
 
     now = datetime.now()
     error = ChatQuotaExceededError(quota_key="daily", used=5, limit=5, window_end=now)

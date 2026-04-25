@@ -21,14 +21,14 @@ from app.infra.db.session import get_db_session as get_db
 from app.services.consultation_catalogue_service import ConsultationCatalogueService
 from app.services.consultation_precheck_service import ConsultationPrecheckService
 from app.services.consultation_third_party_service import ConsultationThirdPartyService
-from app.services.llm_generation.consultation_generation_service import (
-    ConsultationGenerationService,
-)
-from app.services.thematic_consultation_entitlement_gate import (
+from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ConsultationAccessDeniedError,
     ConsultationEntitlementResult,
     ConsultationQuotaExceededError,
     ThematicConsultationEntitlementGate,
+)
+from app.services.llm_generation.consultation_generation_service import (
+    ConsultationGenerationService,
 )
 
 router = APIRouter()

@@ -1,3 +1,5 @@
+"""Gate entitlement canonique pour l'acces chat cote runtime."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -5,12 +7,14 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.services.effective_entitlement_gate_helpers import (
+from app.services.entitlement.effective_entitlement_gate_helpers import (
     map_b2c_reason_to_legacy,
     select_quota_usage_state,
 )
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.entitlement_types import QuotaDefinition, UsageState
+from app.services.entitlement.effective_entitlement_resolver_service import (
+    EffectiveEntitlementResolverService,
+)
+from app.services.entitlement.entitlement_types import QuotaDefinition, UsageState
 from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
 
 

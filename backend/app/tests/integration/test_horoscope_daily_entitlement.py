@@ -13,8 +13,8 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import engine
 from app.services.billing_service import BillingService
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.horoscope_daily_entitlement_gate import HoroscopeDailyEntitlementGate
+from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement.horoscope_daily_entitlement_gate import HoroscopeDailyEntitlementGate
 
 
 @pytest.fixture
@@ -77,7 +77,7 @@ def seeded_catalog(db_session: Session):
 
 
 def test_resolve_horoscope_daily_variant_by_plan(db_session: Session, seeded_catalog):
-    from app.services.feature_scope_registry import FEATURE_SCOPE_REGISTRY
+    from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY
 
     print(f"DEBUG: FEATURE_SCOPE_REGISTRY = {list(FEATURE_SCOPE_REGISTRY.keys())}")
 

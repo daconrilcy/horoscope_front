@@ -492,7 +492,7 @@ class BillingService:
             PlanFeatureBindingModel,
             PlanFeatureQuotaModel,
         )
-        from app.services.entitlement_types import QuotaDefinition
+        from app.services.entitlement.entitlement_types import QuotaDefinition
         from app.services.quota_usage_service import QuotaUsageService
 
         # 1. Plan canonique

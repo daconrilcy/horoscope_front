@@ -1,7 +1,6 @@
 """Orchestre la génération LLM des consultations thématiques à partir du contexte métier."""
 
 import logging
-import re
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -26,7 +25,11 @@ from app.services.consultation_fallback_service import ConsultationFallbackServi
 from app.services.consultation_precheck_service import ConsultationPrecheckService
 from app.services.consultation_third_party_service import ConsultationThirdPartyService
 from app.services.llm_generation.guidance.guidance_service import GuidanceService
-from app.services.llm_generation.natal.prompt_context import build_natal_chart_summary
+from app.services.llm_generation.shared.contextual_text import parse_structured_guidance_blocks
+from app.services.llm_generation.shared.natal_context import (
+    build_natal_chart_summary_with_defaults,
+    build_user_natal_chart_summary_context,
+)
 from app.services.natal_calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 from app.services.user_birth_profile_service import (
@@ -36,117 +39,29 @@ from app.services.user_birth_profile_service import (
 
 
 class ConsultationGenerationService:
+    """Orchestre la preparation metier et le rendu des consultations thematiques."""
+
     logger = logging.getLogger(__name__)
-    _inline_formatting_pattern = re.compile(r"\*\*(?P<bold>[^*]+)\*\*")
-    _heading_pattern = re.compile(r"^(#{1,6})\s*(.+)$")
-    _numbered_heading_pattern = re.compile(r"^\d+[\).\s]+(.+)$")
-    _bullet_pattern = re.compile(r"^[-*•]\s+(.+)$")
-    _blank_line_pattern = re.compile(r"^\s*$")
-
-    @staticmethod
-    def _clean_inline_formatting(text: str) -> str:
-        cleaned = text.strip()
-        cleaned = ConsultationGenerationService._inline_formatting_pattern.sub(
-            lambda match: match.group("bold").strip(),
-            cleaned,
-        )
-        cleaned = re.sub(r"\s+", " ", cleaned)
-        return cleaned.strip(" :.-")
-
-    @staticmethod
-    def _flush_paragraph(
-        paragraph_lines: list[str],
-        blocks: list[ConsultationBlock],
-    ) -> None:
-        if not paragraph_lines:
-            return
-        paragraph = " ".join(line.strip() for line in paragraph_lines if line.strip()).strip()
-        if paragraph:
-            blocks.append(
-                ConsultationBlock(
-                    kind=ConsultationBlockKind.paragraph,
-                    text=paragraph,
-                )
-            )
-        paragraph_lines.clear()
-
-    @staticmethod
-    def _flush_bullets(
-        bullet_items: list[str],
-        blocks: list[ConsultationBlock],
-    ) -> None:
-        if not bullet_items:
-            return
-        blocks.append(
-            ConsultationBlock(
-                kind=ConsultationBlockKind.bullet_list,
-                items=bullet_items.copy(),
-            )
-        )
-        bullet_items.clear()
 
     @staticmethod
     def _parse_section_blocks(content: str) -> list[ConsultationBlock]:
-        blocks: list[ConsultationBlock] = []
-        paragraph_lines: list[str] = []
-        bullet_items: list[str] = []
-
-        for raw_line in content.splitlines():
-            line = raw_line.strip()
-            if ConsultationGenerationService._blank_line_pattern.match(line):
-                ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
-                ConsultationGenerationService._flush_bullets(bullet_items, blocks)
-                continue
-
-            heading_match = ConsultationGenerationService._heading_pattern.match(line)
-            if heading_match:
-                ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
-                ConsultationGenerationService._flush_bullets(bullet_items, blocks)
-                heading_text = ConsultationGenerationService._clean_inline_formatting(
-                    heading_match.group(2)
-                )
-                heading_level = len(heading_match.group(1))
-                blocks.append(
-                    ConsultationBlock(
-                        kind=(
-                            ConsultationBlockKind.title
-                            if heading_level <= 2
-                            else ConsultationBlockKind.subtitle
-                        ),
-                        text=heading_text,
-                    )
-                )
-                continue
-
-            bullet_match = ConsultationGenerationService._bullet_pattern.match(line)
-            if bullet_match:
-                ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
-                bullet_items.append(
-                    ConsultationGenerationService._clean_inline_formatting(bullet_match.group(1))
-                )
-                continue
-
-            numbered_heading_match = ConsultationGenerationService._numbered_heading_pattern.match(
-                line
-            )
-            if numbered_heading_match and not line.lower().startswith("http"):
-                ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
-                ConsultationGenerationService._flush_bullets(bullet_items, blocks)
-                blocks.append(
-                    ConsultationBlock(
-                        kind=ConsultationBlockKind.subtitle,
-                        text=ConsultationGenerationService._clean_inline_formatting(
-                            numbered_heading_match.group(1)
-                        ),
-                    )
-                )
-                continue
-
-            paragraph_lines.append(ConsultationGenerationService._clean_inline_formatting(line))
-
-        ConsultationGenerationService._flush_paragraph(paragraph_lines, blocks)
-        ConsultationGenerationService._flush_bullets(bullet_items, blocks)
-        return blocks
+        """Mappe le texte guidance canonique vers les blocs consultation."""
+        shared_blocks = parse_structured_guidance_blocks(content)
+        kind_mapping = {
+            "title": ConsultationBlockKind.title,
+            "subtitle": ConsultationBlockKind.subtitle,
+            "paragraph": ConsultationBlockKind.paragraph,
+            "bullet_list": ConsultationBlockKind.bullet_list,
+        }
+        consultation_blocks: list[ConsultationBlock] = []
+        for block in shared_blocks:
+            payload: dict[str, object] = {"kind": kind_mapping[block.kind]}
+            if block.text is not None:
+                payload["text"] = block.text
+            if block.items is not None:
+                payload["items"] = block.items
+            consultation_blocks.append(ConsultationBlock(**payload))
+        return consultation_blocks
 
     @staticmethod
     def _build_text_blocks(content: str) -> list[ConsultationBlock]:
@@ -162,22 +77,6 @@ class ConsultationGenerationService:
                 )
             )
         return blocks
-
-    @staticmethod
-    def _detect_degraded_mode(
-        *,
-        birth_time: str | None,
-        birth_place: str | None,
-    ) -> str | None:
-        no_time = birth_time is None or birth_time.strip() == ""
-        no_location = birth_place is None or birth_place.strip() == ""
-        if no_time and no_location:
-            return "no_location_no_time"
-        if no_time:
-            return "no_time"
-        if no_location:
-            return "no_location"
-        return None
 
     @staticmethod
     def _calculate_other_person_natal_summary(
@@ -237,16 +136,11 @@ class ConsultationGenerationService:
             )
             return None
 
-        degraded_mode = ConsultationGenerationService._detect_degraded_mode(
+        return build_natal_chart_summary_with_defaults(
+            natal_result=natal_result,
+            birth_date=other_person.birth_date,
             birth_time=other_person.birth_time if other_person.birth_time_known else None,
             birth_place=other_person.birth_place,
-        )
-        return build_natal_chart_summary(
-            natal_result=natal_result,
-            birth_place=other_person.birth_place,
-            birth_date=other_person.birth_date,
-            birth_time=(other_person.birth_time if other_person.birth_time_known else "00:00"),
-            degraded_mode=degraded_mode,
         )
 
     @staticmethod
@@ -261,12 +155,13 @@ class ConsultationGenerationService:
         except UserBirthProfileServiceError:
             return None, False
 
-        user_summary = GuidanceService.build_natal_chart_summary_context(
+        user_summary = build_user_natal_chart_summary_context(
             db,
             user_id=user_id,
             birth_date=user_profile.birth_date,
             birth_time=user_profile.birth_time,
             birth_place=user_profile.birth_place,
+            warning_event="consultation_natal_chart_context_unavailable",
         )
         other_summary = ConsultationGenerationService._calculate_other_person_natal_summary(
             db,

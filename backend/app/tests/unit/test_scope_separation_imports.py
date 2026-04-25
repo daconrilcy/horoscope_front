@@ -52,21 +52,21 @@ def test_b2b_reconciliation_does_not_import_quota_usage_service():
 
 
 def test_chat_gate_does_not_import_enterprise_quota_usage_service():
-    names = _get_imported_names("app.services.chat_entitlement_gate")
+    names = _get_imported_names("app.services.entitlement.chat_entitlement_gate")
     assert "EnterpriseQuotaUsageService" not in names, (
         "chat_entitlement_gate ne doit pas importer EnterpriseQuotaUsageService"
     )
 
 
 def test_thematic_consultation_gate_does_not_import_enterprise_quota_usage_service():
-    names = _get_imported_names("app.services.thematic_consultation_entitlement_gate")
+    names = _get_imported_names("app.services.entitlement.thematic_consultation_entitlement_gate")
     assert "EnterpriseQuotaUsageService" not in names, (
         "thematic_consultation_entitlement_gate ne doit pas importer EnterpriseQuotaUsageService"
     )
 
 
 def test_natal_chart_long_gate_does_not_import_enterprise_quota_usage_service():
-    names = _get_imported_names("app.services.natal_chart_long_entitlement_gate")
+    names = _get_imported_names("app.services.entitlement.natal_chart_long_entitlement_gate")
     assert "EnterpriseQuotaUsageService" not in names, (
         "natal_chart_long_entitlement_gate ne doit pas importer EnterpriseQuotaUsageService"
     )

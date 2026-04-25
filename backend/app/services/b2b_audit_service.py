@@ -23,7 +23,7 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.services.b2b_canonical_plan_resolver import resolve_b2b_canonical_plan
 from app.services.enterprise_quota_usage_service import EnterpriseQuotaUsageService
-from app.services.entitlement_types import QuotaDefinition
+from app.services.entitlement.entitlement_types import QuotaDefinition
 
 
 @dataclass

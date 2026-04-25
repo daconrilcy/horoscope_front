@@ -2,12 +2,12 @@ from unittest.mock import patch
 
 import pytest
 
-from app.services.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
-from app.services.entitlement_types import (
+from app.services.entitlement.effective_entitlement_resolver_service import EffectiveEntitlementResolverService
+from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
 )
-from app.services.natal_chart_long_entitlement_gate import (
+from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
     NatalChartLongEntitlementGate,
     NatalChartLongQuotaExceededError,

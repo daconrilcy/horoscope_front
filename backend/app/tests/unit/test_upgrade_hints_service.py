@@ -2,10 +2,10 @@ from unittest.mock import MagicMock, patch
 
 from app.infra.db.models.billing import BillingPlanModel
 from app.infra.db.models.product_entitlements import Audience, PlanCatalogModel
-from app.services.effective_entitlement_resolver_service import (
+from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
-from app.services.entitlement_types import (
+from app.services.entitlement.entitlement_types import (
     EffectiveEntitlementsSnapshot,
     EffectiveFeatureAccess,
 )
@@ -45,7 +45,7 @@ def test_is_restricted_variant():
 
 
 @patch(
-    "app.services.effective_entitlement_resolver_service."
+    "app.services.entitlement.effective_entitlement_resolver_service."
     "EffectiveEntitlementResolverService._get_next_plan"
 )
 def test_compute_upgrade_hints_free_user(mock_next_plan, db_session):
@@ -82,7 +82,7 @@ def test_compute_upgrade_hints_free_user(mock_next_plan, db_session):
 
 def test_compute_upgrade_hints_no_next_plan(db_session):
     with patch(
-        "app.services.effective_entitlement_resolver_service."
+        "app.services.entitlement.effective_entitlement_resolver_service."
         "EffectiveEntitlementResolverService._get_next_plan"
     ) as mock_next:
         mock_next.return_value = None

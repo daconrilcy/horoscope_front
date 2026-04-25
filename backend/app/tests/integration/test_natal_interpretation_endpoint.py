@@ -195,7 +195,7 @@ def test_client(mock_db):
     app.dependency_overrides[get_db_session] = lambda: mock_db
 
     # Mock gate by default to avoid entitlement service side effects with mock_db
-    from app.services.natal_chart_long_entitlement_gate import NatalChartLongEntitlementResult
+    from app.services.entitlement.natal_chart_long_entitlement_gate import NatalChartLongEntitlementResult
 
     result = NatalChartLongEntitlementResult(
         path="canonical_unlimited", variant_code="single_astrologer"
@@ -207,7 +207,7 @@ def test_client(mock_db):
             return_value=result,
         ),
         patch(
-            "app.services.effective_entitlement_resolver_service."
+            "app.services.entitlement.effective_entitlement_resolver_service."
             "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
             return_value=MagicMock(plan_code="free"),
         ),
