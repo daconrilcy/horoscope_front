@@ -154,4 +154,3 @@ if __name__ == "__main__":
     if generated < 5:
         logger.error(f"AC1 VIOLATION: only {generated} case(s) generated, minimum 5 required")
         sys.exit(1)
-

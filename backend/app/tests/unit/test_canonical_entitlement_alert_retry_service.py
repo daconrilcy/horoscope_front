@@ -307,5 +307,3 @@ def test_retry_failed_alerts_raises_not_retryable_when_rule_matches(
     )
     assert len(applications) == 1
     assert applications[0].application_mode == "rule"
-
-

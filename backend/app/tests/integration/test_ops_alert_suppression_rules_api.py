@@ -196,4 +196,3 @@ def test_rules_api_returns_429_when_rate_limited(monkeypatch: object) -> None:
 
     assert response.status_code == 429
     assert response.json()["error"]["request_id"] == "rid-alert-rules-429"
-

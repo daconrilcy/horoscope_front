@@ -321,4 +321,3 @@ def test_get_alerts_summary_requires_ops_role() -> None:
 
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "insufficient_role"
-

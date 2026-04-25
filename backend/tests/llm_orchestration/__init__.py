@@ -157,4 +157,3 @@ async def test_scenario_low_events():
     assert result["astro_foundation"] is None
     assert len(result["time_windows"]) == 4
     assert result["time_windows"][0]["period_key"] == "nuit"
-

@@ -172,9 +172,12 @@ class CanonicalEntitlementAlertQueryService:
             handling_model.handling_status.label("handling_status"),
         ).subquery("h")
 
-        rule_application_event_ids = (
-            CanonicalEntitlementAlertSuppressionApplicationService.active_rule_application_event_ids_subquery()
-            .subquery("active_rule_applications")
+        active_rule_application_service = CanonicalEntitlementAlertSuppressionApplicationService
+        active_rule_application_event_ids = (
+            active_rule_application_service.active_rule_application_event_ids_subquery()
+        )
+        rule_application_event_ids = active_rule_application_event_ids.subquery(
+            "active_rule_applications"
         )
 
         joined = (
@@ -265,8 +268,9 @@ class CanonicalEntitlementAlertQueryService:
         model = CanonicalEntitlementMutationAlertEventModel
         handling_model = CanonicalEntitlementMutationAlertHandlingModel
         query = select(model)
+        active_rule_application_service = CanonicalEntitlementAlertSuppressionApplicationService
         active_rule_application_event_ids = (
-            CanonicalEntitlementAlertSuppressionApplicationService.active_rule_application_event_ids_subquery()
+            active_rule_application_service.active_rule_application_event_ids_subquery()
         )
 
         if alert_kind is not None:

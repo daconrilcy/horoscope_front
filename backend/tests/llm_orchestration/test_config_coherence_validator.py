@@ -31,9 +31,7 @@ async def test_validate_assembly_accepts_waterfall_profile_without_explicit_ref(
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )
-    use_case = LlmUseCaseConfigModel(
-        key="chat_astrologer", display_name="Chat", description="test"
-    )
+    use_case = LlmUseCaseConfigModel(key="chat_astrologer", display_name="Chat", description="test")
     profile = LlmExecutionProfileModel(
         id=uuid.uuid4(),
         name="Chat Waterfall",
@@ -76,9 +74,7 @@ async def test_validate_assembly_accepts_uuid_output_schema_id(db):
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )
-    use_case = LlmUseCaseConfigModel(
-        key="chat_astrologer", display_name="Chat", description="test"
-    )
+    use_case = LlmUseCaseConfigModel(key="chat_astrologer", display_name="Chat", description="test")
     profile = LlmExecutionProfileModel(
         id=uuid.uuid4(),
         name="Chat Explicit",
@@ -127,9 +123,7 @@ async def test_validate_assembly_keeps_profile_owned_runtime_when_profile_ref(db
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )
-    use_case = LlmUseCaseConfigModel(
-        key="chat_astrologer", display_name="Chat", description="test"
-    )
+    use_case = LlmUseCaseConfigModel(key="chat_astrologer", display_name="Chat", description="test")
     profile = LlmExecutionProfileModel(
         id=uuid.uuid4(),
         name="Chat Explicit",

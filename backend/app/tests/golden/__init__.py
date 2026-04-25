@@ -313,4 +313,3 @@ def get_intense_neutral_day() -> dict[str, Any]:
         expected_pivot_range=(0, 2),
         expected_window_range=(0, 2),
     )
-

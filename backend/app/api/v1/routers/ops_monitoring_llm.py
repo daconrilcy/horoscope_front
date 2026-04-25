@@ -16,7 +16,7 @@ from app.api.dependencies.auth import (
 )
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.llm_ops_monitoring_service import (
+from app.services.llm_observability.monitoring_service import (
     LlmOpsMonitoringData,
     LlmOpsMonitoringService,
 )

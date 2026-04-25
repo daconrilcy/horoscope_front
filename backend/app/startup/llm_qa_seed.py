@@ -1,10 +1,15 @@
+"""Bootstrap du seed QA canonique pour les environnements internes autorises."""
+
 from __future__ import annotations
 
 import logging
 
 from app.core.config import settings
 from app.infra.db.session import SessionLocal
-from app.services.llm_qa_seed_service import LlmQaSeedService, LlmQaSeedServiceError
+from app.services.llm_generation.qa_seed_service import (
+    LlmQaSeedService,
+    LlmQaSeedServiceError,
+)
 
 logger = logging.getLogger(__name__)
 

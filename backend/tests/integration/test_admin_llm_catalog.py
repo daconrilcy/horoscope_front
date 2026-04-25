@@ -129,7 +129,7 @@ def _seed_admin_execute_sample_catalog(db: Session) -> dict[str, Any]:
     )
     snapshot = LlmReleaseSnapshotModel(
         id=snapshot_id,
-            version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
+        version=f"test-runtime-preview-v1-{uuid.uuid4().hex[:8]}",
         manifest=_build_manifest(manifest_entry_id),
         status=ReleaseStatus.ACTIVE,
         created_by="test-admin",

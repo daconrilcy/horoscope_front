@@ -195,10 +195,7 @@ def seed_prompts() -> None:
             )
             current_p = db.execute(stmt_p).scalar_one_or_none()
 
-            if (
-                current_p
-                and current_p.developer_prompt == config["developer_prompt"]
-            ):
+            if current_p and current_p.developer_prompt == config["developer_prompt"]:
                 logger.info("Prompt for %s already published and identical. Skipping.", key)
                 continue
 

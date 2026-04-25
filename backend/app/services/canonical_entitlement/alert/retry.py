@@ -147,13 +147,9 @@ class CanonicalEntitlementAlertRetryService:
                     f"Alert event {alert_event_id} is suppressed or resolved"
                 )
             # Check rules
-            match = (
-                CanonicalEntitlementAlertSuppressionApplicationService.match_and_ensure_rule_application(
-                    db,
-                    alert_event=event,
-                    active_rules=active_rules,
-                )
-            )
+            suppression_service = CanonicalEntitlementAlertSuppressionApplicationService
+            matcher = suppression_service.match_and_ensure_rule_application
+            match = matcher(db, alert_event=event, active_rules=active_rules)
             if match is not None:
                 raise AlertEventNotRetryableError(
                     f"Alert event {alert_event_id} is matched by a suppression rule"
@@ -189,13 +185,9 @@ class CanonicalEntitlementAlertRetryService:
             if ev.id in suppressed_event_ids:
                 continue
 
-            match = (
-                CanonicalEntitlementAlertSuppressionApplicationService.match_and_ensure_rule_application(
-                    db,
-                    alert_event=ev,
-                    active_rules=active_rules,
-                )
-            )
+            suppression_service = CanonicalEntitlementAlertSuppressionApplicationService
+            matcher = suppression_service.match_and_ensure_rule_application
+            match = matcher(db, alert_event=ev, active_rules=active_rules)
             if match is not None:
                 continue
 

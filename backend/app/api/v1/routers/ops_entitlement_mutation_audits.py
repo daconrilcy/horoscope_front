@@ -606,11 +606,11 @@ def _load_active_rule_applications_by_event_ids(
 ) -> dict[int, Any]:
     if not event_ids:
         return {}
-    return (
-        CanonicalEntitlementAlertSuppressionApplicationService.load_active_rule_applications_by_event_ids(
-            db,
-            event_ids=event_ids,
-        )
+    suppression_service = CanonicalEntitlementAlertSuppressionApplicationService
+    loader = suppression_service.load_active_rule_applications_by_event_ids
+    return loader(
+        db,
+        event_ids=event_ids,
     )
 
 

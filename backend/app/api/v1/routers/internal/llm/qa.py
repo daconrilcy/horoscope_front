@@ -1,3 +1,5 @@
+"""Routeur interne QA pour executer les parcours de generation LLM canoniques."""
+
 from __future__ import annotations
 
 import logging
@@ -38,7 +40,7 @@ from app.services.llm_generation.chat_guidance_service import (
 )
 from app.services.llm_generation.guidance_service import GuidanceService, GuidanceServiceError
 from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
-from app.services.llm_qa_seed_service import (
+from app.services.llm_generation.qa_seed_service import (
     LLM_QA_TEST_USER_EMAIL,
     LlmQaSeedResult,
     LlmQaSeedService,

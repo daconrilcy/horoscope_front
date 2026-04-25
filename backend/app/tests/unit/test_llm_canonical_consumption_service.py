@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.services.auth_service import AuthService
-from app.services.llm_canonical_consumption_service import (
+from app.services.llm_observability.consumption_service import (
     CanonicalConsumptionFilters,
     LlmCanonicalConsumptionService,
 )

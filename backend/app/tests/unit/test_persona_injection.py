@@ -218,6 +218,4 @@ async def test_persona_required_but_missing(
             "req_use_case",
         )
 
-    assert "No active persona available for required use case 'req_use_case'" in str(
-        exc_info.value
-    )
+    assert "No active persona available for required use case 'req_use_case'" in str(exc_info.value)

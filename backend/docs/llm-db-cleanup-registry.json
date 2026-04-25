@@ -85,7 +85,7 @@
         "backend/app/api/v1/routers/admin_exports.py",
         "backend/app/api/v1/routers/admin_llm.py",
         "backend/app/infra/db/models/llm/llm_observability.py",
-        "backend/app/services/llm_canonical_consumption_service.py"
+        "backend/app/services/llm_observability/consumption_service.py"
       ]
     },
     {
@@ -93,7 +93,7 @@
       "pattern": "use_case_compat",
       "allowed_paths": [
         "backend/app/api/v1/routers/admin_exports.py",
-        "backend/app/services/llm_canonical_consumption_service.py"
+        "backend/app/services/llm_observability/consumption_service.py"
       ]
     },
     {
@@ -455,8 +455,8 @@
       "historical_role": "LLM observability event log.",
       "target_role": "Canonical observability and consumption source.",
       "known_readers": [
-        "backend/app/services/llm_canonical_consumption_service.py",
-        "backend/app/services/llm_ops_monitoring_service.py",
+        "backend/app/services/llm_observability/consumption_service.py",
+        "backend/app/services/llm_observability/monitoring_service.py",
         "backend/app/api/v1/routers/admin_ai.py",
         "backend/app/api/v1/routers/admin_exports.py",
         "backend/app/api/v1/routers/admin_llm.py"
@@ -498,7 +498,7 @@
         "backend/app/api/v1/routers/admin_ai.py",
         "backend/app/api/v1/routers/admin_exports.py",
         "backend/app/api/v1/routers/admin_llm.py",
-        "backend/app/services/llm_canonical_consumption_service.py"
+        "backend/app/services/llm_observability/consumption_service.py"
       ],
       "known_writers": [
         "backend/app/domain/llm/runtime/observability_service.py"
@@ -545,11 +545,11 @@
       "historical_role": "Read model for canonical consumption aggregates.",
       "target_role": "Canonical reporting surface.",
       "known_readers": [
-        "backend/app/services/llm_canonical_consumption_service.py",
+        "backend/app/services/llm_observability/consumption_service.py",
         "backend/app/api/v1/routers/admin_llm_consumption.py"
       ],
       "known_writers": [
-        "backend/app/services/llm_canonical_consumption_service.py"
+        "backend/app/services/llm_observability/consumption_service.py"
       ],
       "usage_status": "nominal",
       "decision": "keep",

@@ -379,4 +379,3 @@ def test_batch_retry_dry_run_excludes_rule_suppressed_alerts(db_session: Session
     assert result.candidate_count == 1
     assert result.retried_count == 1
     assert result.alert_event_ids == [open_event.id]
-

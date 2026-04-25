@@ -88,10 +88,7 @@ def seed() -> None:
             )
         ).scalar_one_or_none()
 
-        if (
-            current_published
-            and current_published.developer_prompt == CHAT_ASTROLOGER_PROMPT_V3
-        ):
+        if current_published and current_published.developer_prompt == CHAT_ASTROLOGER_PROMPT_V3:
             logger.info("Prompt chat_astrologer already up-to-date. Skipping.")
             return
 

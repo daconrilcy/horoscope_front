@@ -20,4 +20,3 @@ def get_stripe_client() -> stripe.StripeClient | None:
             stripe_version=settings.stripe_api_version,
         )
     return _client_cache[api_key]
-

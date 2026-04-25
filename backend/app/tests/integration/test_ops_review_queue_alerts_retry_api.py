@@ -395,4 +395,3 @@ def test_post_retry_returns_429_when_rate_limited(monkeypatch: object) -> None:
     payload = response.json()["error"]
     assert payload["code"] == "rate_limit_exceeded"
     assert payload["request_id"] == "rid-retry-429"
-

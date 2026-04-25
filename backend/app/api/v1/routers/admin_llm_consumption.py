@@ -1,25 +1,25 @@
+"""Routeur admin de lecture et drilldown de consommation canonique LLM."""
+
 from __future__ import annotations
 
 import csv
 import io
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy import desc, func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
-from app.infra.db.models.llm.llm_observability import LlmCallLogModel
-from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
-from app.services.llm_canonical_consumption_service import (
+from app.services.llm_observability.consumption_service import (
     CanonicalConsumptionAggregate,
     CanonicalConsumptionFilters,
     Granularity,
@@ -95,14 +95,6 @@ def _safe_sort_value(row: CanonicalConsumptionViewRow, field: str) -> Any:
     return (0, str(value).lower())
 
 
-def _resolve_bucket_end(granularity: Granularity, period_start_utc: datetime) -> datetime:
-    if granularity == "month":
-        if period_start_utc.month == 12:
-            return period_start_utc.replace(year=period_start_utc.year + 1, month=1, day=1)
-        return period_start_utc.replace(month=period_start_utc.month + 1, day=1)
-    return period_start_utc.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-
-
 def _group_key(row: CanonicalConsumptionAggregate, view: ConsumptionView) -> tuple[Any, ...]:
     if view == "subscription":
         return (row.period_start_utc, row.subscription_plan)
@@ -170,20 +162,11 @@ def _resolve_exact_average_latencies(
     view: ConsumptionView,
     filters: CanonicalConsumptionFilters,
 ) -> None:
-    normalized_calls = LlmCanonicalConsumptionService._normalized_calls(db=db, filters=filters)
-    grouped_latencies: dict[tuple[Any, ...], list[int]] = {}
-    for call in normalized_calls:
-        period_start = LlmCanonicalConsumptionService._period_start_utc(
-            timestamp=call.timestamp,
-            granularity=filters.granularity,
-        )
-        if view == "user":
-            key = (period_start, call.user_id)
-        elif view == "subscription":
-            key = (period_start, call.subscription_plan)
-        else:
-            key = (period_start, call.feature, call.subfeature)
-        grouped_latencies.setdefault(key, []).append(int(call.latency_ms))
+    grouped_latencies = LlmCanonicalConsumptionService.get_average_latency_index(
+        db=db,
+        filters=filters,
+        view=view,  # type: ignore[arg-type]
+    )
 
     for row in rows:
         if view == "user":
@@ -192,8 +175,7 @@ def _resolve_exact_average_latencies(
             key = (row.period_start_utc, row.subscription_plan)
         else:
             key = (row.period_start_utc, row.feature, row.subfeature)
-        latencies = grouped_latencies.get(key, [])
-        row.avg_latency_ms = round(sum(latencies) / len(latencies), 2) if latencies else 0.0
+        row.avg_latency_ms = grouped_latencies.get(key, 0.0)
 
 
 def _apply_search(
@@ -402,94 +384,29 @@ def get_canonical_consumption_drilldown(
     del current_user
     request_id = resolve_request_id(request)
     selected_view = _normalize_view(view)
-    if period_start_utc is None:
-        period_start_utc = datetime_provider.utcnow()
-    period_start = (
-        period_start_utc
-        if period_start_utc.tzinfo
-        else period_start_utc.replace(tzinfo=timezone.utc)
-    )
-    period_end = _resolve_bucket_end(granularity, period_start)
-
-    stmt = (
-        select(LlmCallLogModel)
-        .where(LlmCallLogModel.timestamp >= period_start)
-        .where(LlmCallLogModel.timestamp < period_end)
-    )
     capped_limit = max(1, min(limit, DEFAULT_DRILLDOWN_LIMIT))
-    if selected_view == "user":
-        if user_id is not None:
-            call_ids_subquery = (
-                select(UserTokenUsageLogModel.llm_call_log_id)
-                .join(
-                    LlmCallLogModel,
-                    UserTokenUsageLogModel.llm_call_log_id == LlmCallLogModel.id,
-                )
-                .where(UserTokenUsageLogModel.user_id == user_id)
-                .where(LlmCallLogModel.timestamp >= period_start)
-                .where(LlmCallLogModel.timestamp < period_end)
-                .group_by(UserTokenUsageLogModel.llm_call_log_id)
-                .order_by(desc(func.max(LlmCallLogModel.timestamp)))
-                .limit(capped_limit)
-                .subquery()
-            )
-            stmt = select(LlmCallLogModel).where(
-                LlmCallLogModel.id.in_(select(call_ids_subquery.c.llm_call_log_id))
-            )
-        else:
-            ambiguous_call_ids_subquery = (
-                select(UserTokenUsageLogModel.llm_call_log_id)
-                .join(
-                    LlmCallLogModel,
-                    UserTokenUsageLogModel.llm_call_log_id == LlmCallLogModel.id,
-                )
-                .where(LlmCallLogModel.timestamp >= period_start)
-                .where(LlmCallLogModel.timestamp < period_end)
-                .group_by(UserTokenUsageLogModel.llm_call_log_id)
-                .having(func.count(func.distinct(UserTokenUsageLogModel.user_id)) > 1)
-                .order_by(desc(func.max(LlmCallLogModel.timestamp)))
-                .limit(capped_limit)
-                .subquery()
-            )
-            stmt = select(LlmCallLogModel).where(
-                LlmCallLogModel.id.in_(select(ambiguous_call_ids_subquery.c.llm_call_log_id))
-            )
-    elif selected_view == "subscription":
-        if subscription_plan is not None:
-            stmt = stmt.where(LlmCallLogModel.plan == subscription_plan)
-    else:
-        if feature is not None:
-            stmt = stmt.where(LlmCallLogModel.feature == feature)
-        if subfeature is None:
-            stmt = stmt.where(LlmCallLogModel.subfeature.is_(None))
-        else:
-            stmt = stmt.where(LlmCallLogModel.subfeature == subfeature)
-
-    logs = (
-        db.execute(stmt.order_by(desc(LlmCallLogModel.timestamp)).limit(capped_limit))
-        .scalars()
-        .all()
+    data = LlmCanonicalConsumptionService.get_drilldown_entries(
+        db=db,
+        view=selected_view,  # type: ignore[arg-type]
+        granularity=granularity,
+        period_start_utc=period_start_utc,
+        user_id=user_id,
+        subscription_plan=subscription_plan,
+        feature=feature,
+        subfeature=subfeature,
+        limit=capped_limit,
     )
-    data = [
-        CanonicalConsumptionDrilldownRow(
-            request_id=item.request_id,
-            timestamp=item.timestamp,
-            feature=item.feature,
-            subfeature=item.subfeature,
-            provider=item.executed_provider,
-            active_snapshot_version=item.active_snapshot_version,
-            manifest_entry_id=item.manifest_entry_id,
-            validation_status=str(item.validation_status),
-        )
-        for item in logs
-    ]
     return {
-        "data": data,
+        "data": [CanonicalConsumptionDrilldownRow(**item.model_dump()) for item in data],
         "meta": {
             "request_id": request_id,
             "view": selected_view,
             "granularity": granularity,
-            "period_start_utc": period_start.isoformat(),
+            "period_start_utc": (
+                period_start_utc.isoformat()
+                if isinstance(period_start_utc, datetime)
+                else datetime_provider.utcnow().isoformat()
+            ),
             "limit": capped_limit,
             "count": len(data),
             "order": "timestamp_desc",

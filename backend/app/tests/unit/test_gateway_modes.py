@@ -104,9 +104,7 @@ async def test_structured_mode_no_question(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Ignore la question utilisateur en mode structured quand la policy vaut none."""
-    db_session.add(
-        LlmUseCaseConfigModel(key="test_none", display_name="T", description="D")
-    )
+    db_session.add(LlmUseCaseConfigModel(key="test_none", display_name="T", description="D"))
     db_session.add(
         LlmPromptVersionModel(
             use_case_key="test_none",
@@ -145,9 +143,7 @@ async def test_structured_mode_optional_question(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Injecte la question uniquement quand elle existe en mode structured optional."""
-    db_session.add(
-        LlmUseCaseConfigModel(key="test_opt", display_name="T", description="D")
-    )
+    db_session.add(LlmUseCaseConfigModel(key="test_opt", display_name="T", description="D"))
     db_session.add(
         LlmPromptVersionModel(
             use_case_key="test_opt",
@@ -205,9 +201,7 @@ async def test_structured_mode_required_question(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Exige une question en mode structured quand la policy vaut required."""
-    db_session.add(
-        LlmUseCaseConfigModel(key="test_req", display_name="T", description="D")
-    )
+    db_session.add(LlmUseCaseConfigModel(key="test_req", display_name="T", description="D"))
     db_session.add(
         LlmPromptVersionModel(
             use_case_key="test_req",
@@ -244,9 +238,7 @@ async def test_chat_mode_with_history(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Injecte l historique complet en mode chat avant le message utilisateur courant."""
-    db_session.add(
-        LlmUseCaseConfigModel(key="test_chat", display_name="T", description="D")
-    )
+    db_session.add(LlmUseCaseConfigModel(key="test_chat", display_name="T", description="D"))
     db_session.add(
         LlmPromptVersionModel(
             use_case_key="test_chat",
@@ -286,9 +278,7 @@ async def test_chat_mode_with_history(
 async def test_schema_blocking_paid_use_case(db_session) -> None:
     """Bloque un use case payant nominal si aucun schema de sortie n est resolu."""
     use_case = "natal_interpretation"
-    db_session.add(
-        LlmUseCaseConfigModel(key=use_case, display_name="N", description="D")
-    )
+    db_session.add(LlmUseCaseConfigModel(key=use_case, display_name="N", description="D"))
     prompt = LlmPromptVersionModel(
         use_case_key=use_case,
         status=PromptStatus.PUBLISHED,
@@ -356,9 +346,7 @@ async def test_schema_name_in_payload(
     schema = LlmOutputSchemaModel(name="test_schema", json_schema={"type": "object"})
     db_session.add(schema)
     db_session.flush()
-    db_session.add(
-        LlmUseCaseConfigModel(key="test_schema", display_name="T", description="D")
-    )
+    db_session.add(LlmUseCaseConfigModel(key="test_schema", display_name="T", description="D"))
     db_session.add(
         LlmPromptVersionModel(
             use_case_key="test_schema",
@@ -396,9 +384,7 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(
 ) -> None:
     """Reutilise le schema catalogue pour `natal_long_free` hors chemin assembly."""
     use_case = "natal_long_free"
-    db_session.add(
-        LlmUseCaseConfigModel(key=use_case, display_name="Free Natal", description="D")
-    )
+    db_session.add(LlmUseCaseConfigModel(key=use_case, display_name="Free Natal", description="D"))
     db_session.add(
         LlmPromptVersionModel(
             use_case_key=use_case,

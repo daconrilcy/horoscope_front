@@ -126,7 +126,7 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
                         "app.domain.llm.runtime.gateway.get_canonical_use_case_contract",
                         return_value=None,
                     ):
-                    # CRITICAL: Ensure profile resolution returns None
+                        # CRITICAL: Ensure profile resolution returns None
                         with patch(
                             "app.domain.llm.configuration.execution_profile_registry."
                             "ExecutionProfileRegistry.get_profile_by_id",
@@ -292,10 +292,7 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
                                 ) as excinfo:
                                     await gateway._resolve_plan(request, db=MagicMock())
 
-                                assert (
-                                    excinfo.value.error_code
-                                    == "unsupported_execution_provider"
-                                )
+                                assert excinfo.value.error_code == "unsupported_execution_provider"
 
 
 @pytest.mark.asyncio

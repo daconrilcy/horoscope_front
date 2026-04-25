@@ -172,4 +172,3 @@ def test_v3_persistence_v2_compatibility(db_session: Session, seed_data):
     cat_score = next(s for s in snapshot.category_scores if s.category_code == "work")
     assert cat_score.note_20 == 10
     assert cat_score.score_20 is None
-

@@ -164,9 +164,7 @@ def _build_runtime_settings(config: PromptAssemblyConfigModel) -> RuntimeSetting
     """Construit une vue runtime nominale strictement derivee du profil d execution."""
     profile = config.execution_profile
     if profile is None:
-        raise ValueError(
-            "A published assembly must reference an execution profile."
-        )
+        raise ValueError("A published assembly must reference an execution profile.")
 
     reasoning_effort = (
         None if profile.reasoning_profile == "off" else str(profile.reasoning_profile)

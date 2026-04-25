@@ -130,6 +130,7 @@ def test_validate_placeholders_logic():
     # Invalid for natal
     assert validate_placeholders("Theme {{situation}}", "natal") == ["situation"]
 
+
 @pytest.mark.asyncio
 async def test_resolve_assembly_keeps_execution_profile_ref_for_reasoning_model(db):
     feature_v = LlmPromptVersionModel(

@@ -7,11 +7,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from app.core.rate_limit import RateLimitError
-from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
@@ -369,5 +369,3 @@ def test_post_retry_batch_does_not_affect_sent_events() -> None:
         assert refreshed_failed.delivery_status == "sent"
         assert refreshed_sent.delivery_status == "sent"
         assert len(attempts) == 1
-
-

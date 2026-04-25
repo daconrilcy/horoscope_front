@@ -61,9 +61,7 @@ def _install_fallback_registry(
 
 
 @pytest.mark.asyncio
-async def test_check_1_fallback_priority(
-    db_session, monkeypatch: pytest.MonkeyPatch
-):
+async def test_check_1_fallback_priority(db_session, monkeypatch: pytest.MonkeyPatch):
     """Point 1: Le fallback nominal vient du contrat canonique / use-case config."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
@@ -137,9 +135,7 @@ async def test_check_1_fallback_priority(
 
 
 @pytest.mark.asyncio
-async def test_check_3_repair_call_stable_prompt(
-    db_session, monkeypatch: pytest.MonkeyPatch
-):
+async def test_check_3_repair_call_stable_prompt(db_session, monkeypatch: pytest.MonkeyPatch):
     """Point 3: Repair call utilise un developer_prompt technique minimal."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)
@@ -196,9 +192,7 @@ async def test_check_3_repair_call_stable_prompt(
 
 
 @pytest.mark.asyncio
-async def test_check_4_repair_limit_and_anti_loop(
-    db_session, monkeypatch: pytest.MonkeyPatch
-):
+async def test_check_4_repair_limit_and_anti_loop(db_session, monkeypatch: pytest.MonkeyPatch):
     """Point 4 & B: Une seule tentative de repair + protection anti-boucle fallback."""
     schema = LlmOutputSchemaModel(name="s", json_schema={"type": "object", "required": ["ok"]})
     db_session.add(schema)

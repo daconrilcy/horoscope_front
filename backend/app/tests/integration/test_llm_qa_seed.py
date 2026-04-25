@@ -16,7 +16,7 @@ from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.services.chart_result_service import ChartResultService
-from app.services.llm_qa_seed_service import (
+from app.services.llm_generation.qa_seed_service import (
     LLM_QA_TEST_BIRTH_DATE,
     LLM_QA_TEST_BIRTH_PLACE,
     LLM_QA_TEST_BIRTH_TIME,
@@ -109,7 +109,7 @@ def _stub_generate_for_user(db, user_id: int, *args, **kwargs):
 
 
 def test_llm_qa_seed_is_idempotent(test_db, monkeypatch: pytest.MonkeyPatch):
-    from app.services import llm_qa_seed_service as seed_module
+    from app.services.llm_generation import qa_seed_service as seed_module
 
     monkeypatch.setattr(seed_module.settings, "app_env", "dev")
     monkeypatch.setattr(seed_module.settings, "active_reference_version", "ref-test")
@@ -153,7 +153,7 @@ def test_llm_qa_seed_is_idempotent(test_db, monkeypatch: pytest.MonkeyPatch):
 
 
 def test_llm_qa_seed_is_blocked_in_production(test_db, monkeypatch: pytest.MonkeyPatch):
-    from app.services import llm_qa_seed_service as seed_module
+    from app.services.llm_generation import qa_seed_service as seed_module
 
     monkeypatch.setattr(seed_module.settings, "app_env", "production")
     monkeypatch.setattr(seed_module.settings, "llm_qa_seed_user_allow_production", False)
@@ -167,7 +167,7 @@ def test_llm_qa_seed_is_blocked_in_production(test_db, monkeypatch: pytest.Monke
 
 
 def test_llm_qa_seed_prunes_obsolete_chart_versions(test_db, monkeypatch: pytest.MonkeyPatch):
-    from app.services import llm_qa_seed_service as seed_module
+    from app.services.llm_generation import qa_seed_service as seed_module
 
     monkeypatch.setattr(seed_module.settings, "app_env", "dev")
     monkeypatch.setattr(seed_module.settings, "active_reference_version", "ref-v1")

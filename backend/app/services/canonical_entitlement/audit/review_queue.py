@@ -271,4 +271,3 @@ class CanonicalEntitlementReviewQueueService:
         if occurred_at.tzinfo is None:
             return occurred_at.replace(tzinfo=timezone.utc)
         return occurred_at
-

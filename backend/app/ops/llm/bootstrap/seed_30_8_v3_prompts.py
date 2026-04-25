@@ -439,9 +439,7 @@ def seed() -> None:
             is_identical = False
             if published_versions:
                 for prompt_version in published_versions:
-                    if (
-                        prompt_version.developer_prompt == prompt_cfg["developer_prompt"]
-                    ):
+                    if prompt_version.developer_prompt == prompt_cfg["developer_prompt"]:
                         logger.info(
                             "Prompt v3 for %s already published and identical. Skipping.", key
                         )

@@ -103,4 +103,3 @@ class CanonicalEntitlementAlertSuppressionRuleService:
             if match:
                 results[event.id] = match
         return results
-

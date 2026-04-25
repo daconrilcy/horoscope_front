@@ -227,8 +227,7 @@ def test_auto_upgrade_repairs_stale_llm_call_logs_environment_constraint(
         with test_engine.begin() as connection:
             checks = connection.execute(
                 text(
-                    "SELECT sql FROM sqlite_master "
-                    "WHERE type = 'table' AND name = 'llm_call_logs'"
+                    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'llm_call_logs'"
                 )
             ).scalar_one()
             connection.execute(

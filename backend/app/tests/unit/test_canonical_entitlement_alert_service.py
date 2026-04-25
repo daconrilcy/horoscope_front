@@ -203,5 +203,3 @@ def test_emit_concurrent_insert_handled_as_skipped_duplicate(
 
                     assert result.skipped_duplicate_count == 1
                     assert result.emitted_count == 0
-
-

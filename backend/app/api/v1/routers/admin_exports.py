@@ -1,10 +1,11 @@
+"""Routeur d exports admin avec consommation canonique LLM normalisee."""
+
 from __future__ import annotations
 
 import csv
 import io
 import json
 import logging
-from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
@@ -19,15 +20,11 @@ from app.api.v1.schemas.admin_exports import (
 )
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
-from app.infra.db.models.llm.llm_observability import (
-    LlmCallLogModel,
-    LlmCallLogOperationalMetadataModel,
-)
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.services.audit_service import AuditEventCreatePayload, AuditService
-from app.services.llm_canonical_consumption_service import LlmCanonicalConsumptionService
+from app.services.llm_observability.consumption_service import LlmCanonicalConsumptionService
 
 logger = logging.getLogger(__name__)
 
@@ -157,61 +154,14 @@ def export_generations(
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    stmt = (
-        select(
-            LlmCallLogModel.id,
-            LlmCallLogModel.timestamp.label("created_at"),
-            LlmCallLogModel.use_case.label("use_case_compat"),
-            LlmCallLogModel.feature,
-            LlmCallLogModel.subfeature,
-            LlmCallLogModel.plan.label("subscription_plan"),
-            LlmCallLogOperationalMetadataModel.executed_provider,
-            LlmCallLogOperationalMetadataModel.active_snapshot_version,
-            LlmCallLogModel.model,
-            LlmCallLogModel.validation_status.label("status"),
-            LlmCallLogModel.tokens_in.label("tokens_prompt"),
-            LlmCallLogModel.tokens_out.label("tokens_completion"),
-            LlmCallLogModel.latency_ms,
-            LlmCallLogModel.request_id,
+    rows = [
+        row.model_dump(mode="json")
+        for row in LlmCanonicalConsumptionService.get_export_rows(
+            db,
+            from_utc=payload.period.start if payload.period else None,
+            to_utc=payload.period.end if payload.period else None,
         )
-        .outerjoin(
-            LlmCallLogOperationalMetadataModel,
-            LlmCallLogOperationalMetadataModel.call_log_id == LlmCallLogModel.id,
-        )
-        .order_by(LlmCallLogModel.timestamp.desc())
-        .limit(5000)
-    )
-
-    if payload.period:
-        if payload.period.start:
-            stmt = stmt.where(LlmCallLogModel.timestamp >= payload.period.start)
-        if payload.period.end:
-            stmt = stmt.where(LlmCallLogModel.timestamp <= payload.period.end)
-
-    results = db.execute(stmt).all()
-    rows = [dict(r._mapping) for r in results]
-
-    # Canonical export doctrine:
-    # - nominal columns are feature/subfeature/plan
-    # - legacy use_case is compatibility-only
-    for r in rows:
-        if r.get("id") is not None:
-            r["id"] = str(r["id"])
-        if isinstance(r["created_at"], datetime):
-            r["created_at"] = r["created_at"].isoformat()
-        original_feature = r.get("feature")
-        feature, subfeature, is_legacy_residual = (
-            LlmCanonicalConsumptionService._normalize_taxonomy(
-                feature=original_feature,
-                subfeature=r.get("subfeature"),
-                use_case_compat=r.get("use_case_compat"),
-            )
-        )
-        r["feature"] = feature
-        r["subfeature"] = subfeature
-        r["taxonomy_scope"] = "legacy_residual" if is_legacy_residual else "nominal"
-        if original_feature is not None and not is_legacy_residual:
-            r["use_case_compat"] = None
+    ]
 
     # 1. Audit
     _record_export_audit(

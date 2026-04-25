@@ -133,10 +133,7 @@ def seed_guidance_prompts() -> None:
             )
             current = db.execute(stmt_p).scalar_one_or_none()
 
-            if (
-                current
-                and current.developer_prompt == config["developer_prompt"]
-            ):
+            if current and current.developer_prompt == config["developer_prompt"]:
                 continue
 
             if current:
