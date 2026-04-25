@@ -23,7 +23,7 @@ from app.services.current_context import build_current_prompt_context
 from app.services.entitlement_types import QuotaDefinition
 from app.services.llm_generation.anonymization_service import anonymize_text
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
-from app.services.llm_generation.natal_interpretation_service import build_natal_chart_summary
+from app.services.llm_generation.natal.prompt_context import build_natal_chart_summary
 from app.services.llm_generation.off_scope_policy import assess_off_scope
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import (

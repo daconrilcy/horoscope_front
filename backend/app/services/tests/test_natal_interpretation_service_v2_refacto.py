@@ -9,7 +9,7 @@ from app.domain.llm.runtime.contracts import (
     NatalExecutionInput,
     UsageInfo,
 )
-from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
+from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 
 
 @pytest.mark.asyncio
@@ -51,16 +51,16 @@ async def test_interpret_calls_adapter_canonical(db):
         # Mock dependencies
         with (
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json"
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json"
             ) as mock_chart,
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog"
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog"
             ) as mock_catalog,
         ):
             mock_chart.return_value = {"planets": []}
             mock_catalog.return_value = ["EVID"]
 
-            await NatalInterpretationServiceV2.interpret(
+            await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
                 chart_id="c1",
@@ -106,16 +106,16 @@ async def test_generate_free_short_calls_adapter_canonical(db):
 
         with (
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json"
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json"
             ) as mock_chart,
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog"
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog"
             ) as mock_catalog,
         ):
             mock_chart.return_value = {"planets": []}
             mock_catalog.return_value = ["EVID"]
 
-            await NatalInterpretationServiceV2.interpret(
+            await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
                 chart_id="c1",

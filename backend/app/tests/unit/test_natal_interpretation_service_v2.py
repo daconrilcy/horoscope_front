@@ -1,4 +1,4 @@
-"""Tests unitaires pour NatalInterpretationServiceV2.
+"""Tests unitaires pour NatalInterpretationService.
 
 Couverture story 30-5:
 - C1: 'question' absent de user_input pour level='complete'
@@ -19,7 +19,7 @@ from app.domain.astrology.natal_calculation import (
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
-from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
+from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 from app.services.user_birth_profile_service import UserBirthProfileData
 
 
@@ -204,7 +204,7 @@ def _make_db_mock(has_persona: bool = True) -> MagicMock:
     return db
 
 
-class TestNatalInterpretationServiceV2UserInput:
+class TestNatalInterpretationServiceUserInput:
     """Verifie la construction de user_input transmis au gateway (story 30-5)."""
 
     @pytest.mark.asyncio
@@ -224,13 +224,13 @@ class TestNatalInterpretationServiceV2UserInput:
         mock_persisted.created_at = None
 
         with (
-            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal.interpretation_service.select"),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -239,11 +239,11 @@ class TestNatalInterpretationServiceV2UserInput:
             ),
             _patch_entitlement_snapshot(),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                "app.services.llm_generation.natal.interpretation_service.UserNatalInterpretationModel",
                 return_value=mock_persisted,
             ),
         ):
-            await NatalInterpretationServiceV2.interpret(
+            await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
                 chart_id="chart-abc",
@@ -281,13 +281,13 @@ class TestNatalInterpretationServiceV2UserInput:
         mock_persisted.created_at = None
 
         with (
-            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal.interpretation_service.select"),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -296,11 +296,11 @@ class TestNatalInterpretationServiceV2UserInput:
             ),
             _patch_entitlement_snapshot(),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                "app.services.llm_generation.natal.interpretation_service.UserNatalInterpretationModel",
                 return_value=mock_persisted,
             ),
         ):
-            await NatalInterpretationServiceV2.interpret(
+            await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
                 chart_id="chart-abc",
@@ -334,13 +334,13 @@ class TestNatalInterpretationServiceV2UserInput:
         mock_persisted.created_at = None
 
         with (
-            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal.interpretation_service.select"),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -349,11 +349,11 @@ class TestNatalInterpretationServiceV2UserInput:
             ),
             _patch_entitlement_snapshot(),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                "app.services.llm_generation.natal.interpretation_service.UserNatalInterpretationModel",
                 return_value=mock_persisted,
             ),
         ):
-            await NatalInterpretationServiceV2.interpret(
+            await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
                 chart_id="chart-abc",
@@ -372,7 +372,7 @@ class TestNatalInterpretationServiceV2UserInput:
         assert "interprète" in user_input_sent.question.lower()
 
 
-class TestNatalInterpretationServiceV2SchemaVersion:
+class TestNatalInterpretationServiceSchemaVersion:
     @pytest.mark.asyncio
     async def test_complete_level_sets_v2(self):
         natal_result = _make_natal_result()
@@ -387,13 +387,13 @@ class TestNatalInterpretationServiceV2SchemaVersion:
         mock_persisted.created_at = None
 
         with (
-            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal.interpretation_service.select"),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -402,11 +402,11 @@ class TestNatalInterpretationServiceV2SchemaVersion:
             ),
             _patch_entitlement_snapshot(),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.UserNatalInterpretationModel",
+                "app.services.llm_generation.natal.interpretation_service.UserNatalInterpretationModel",
                 return_value=mock_persisted,
             ),
         ):
-            resp = await NatalInterpretationServiceV2.interpret(
+            resp = await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
                 chart_id="chart-abc",
@@ -423,7 +423,7 @@ class TestNatalInterpretationServiceV2SchemaVersion:
         assert resp.data.meta.schema_version == "v2"
 
 
-class TestNatalInterpretationServiceV2Modules:
+class TestNatalInterpretationServiceModules:
     @pytest.mark.asyncio
     async def test_complete_module_bypasses_persistence_and_injects_module_context(self):
         natal_result = _make_natal_result()
@@ -447,13 +447,13 @@ class TestNatalInterpretationServiceV2Modules:
         mock_gw_instance.execute_request = AsyncMock(return_value=gw_result)
 
         with (
-            patch("app.services.llm_generation.natal_interpretation_service_v2.select"),
+            patch("app.services.llm_generation.natal.interpretation_service.select"),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json",
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal_interpretation_service_v2.build_enriched_evidence_catalog",
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
                 return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
@@ -462,7 +462,7 @@ class TestNatalInterpretationServiceV2Modules:
             ),
             _patch_entitlement_snapshot(),
         ):
-            resp = await NatalInterpretationServiceV2.interpret(
+            resp = await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
                 chart_id="chart-abc",

@@ -11,6 +11,24 @@ def test_no_llm_service_module_remains_at_services_root() -> None:
     assert root_llm_modules == []
 
 
+def test_feature_specific_llm_generation_modules_are_not_flat_anymore() -> None:
+    llm_generation_root = Path(__file__).resolve().parents[2] / "services" / "llm_generation"
+    forbidden_flat_modules = {
+        "chat_guidance_service.py",
+        "guidance_service.py",
+        "natal_interpretation_service.py",
+        "natal_interpretation_service_v2.py",
+    }
+    current_modules = {path.name for path in llm_generation_root.glob("*.py")}
+    assert forbidden_flat_modules.isdisjoint(current_modules)
+
+
+def test_no_canonical_natal_module_uses_v2_suffix() -> None:
+    llm_generation_root = Path(__file__).resolve().parents[2] / "services" / "llm_generation"
+    suffixed_modules = sorted(path.as_posix() for path in llm_generation_root.rglob("*_v2.py"))
+    assert suffixed_modules == []
+
+
 def test_no_legacy_llm_service_import_path_is_reintroduced() -> None:
     project_root = Path(__file__).resolve().parents[2]
     files_to_guard = [
@@ -28,6 +46,11 @@ def test_no_legacy_llm_service_import_path_is_reintroduced() -> None:
         "from app.services import llm_qa_seed_service",
         "from app.services import llm_canonical_consumption_service",
         "from app.services import llm_ops_monitoring_service",
+        "app.services.llm_generation.natal_interpretation_service",
+        "app.services.llm_generation.natal_interpretation_service_v2",
+        "app.services.llm_generation.chat_guidance_service",
+        "app.services.llm_generation.guidance_service",
+        "app.prediction.llm_gateway_narrator",
     ]
 
     for file_path in files_to_guard:

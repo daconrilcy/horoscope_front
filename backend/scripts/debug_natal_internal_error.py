@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import SessionLocal
-from app.services.natal_interpretation_service_v2 import NatalInterpretationServiceV2
+from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 from app.services.user_birth_profile_service import UserBirthProfileService
 from app.services.user_natal_chart_service import UserNatalChartService
 
@@ -61,10 +61,10 @@ async def _run(
         uuid.UUID(str(resolved_persona_id))
 
         logger.info(
-            "Calling NatalInterpretationServiceV2.interpret(level=complete, force_refresh=%s)",
+            "Calling NatalInterpretationService.interpret(level=complete, force_refresh=%s)",
             force_refresh,
         )
-        resp = await NatalInterpretationServiceV2.interpret(
+        resp = await NatalInterpretationService.interpret(
             db=db,
             user_id=user_id,
             chart_id=chart.chart_id,
@@ -127,3 +127,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

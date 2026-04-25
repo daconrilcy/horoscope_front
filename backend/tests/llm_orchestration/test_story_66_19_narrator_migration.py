@@ -10,8 +10,10 @@ from app.domain.llm.runtime.contracts import (
     OutputValidationError,
     UsageInfo,
 )
-from app.prediction.llm_gateway_narrator import map_gateway_result_to_narrator_result
 from app.prediction.llm_narrator import NarratorResult
+from app.services.llm_generation.horoscope_daily.narration_service import (
+    map_gateway_result_to_narrator_result,
+)
 
 
 def _make_dummy_context():

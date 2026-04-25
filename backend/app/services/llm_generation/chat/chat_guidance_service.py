@@ -31,7 +31,7 @@ from app.services.llm_generation.anonymization_service import (
     anonymize_text,
 )
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
-from app.services.llm_generation.natal_interpretation_service import (
+from app.services.llm_generation.natal.prompt_context import (
     _detect_degraded_mode,
     build_chat_natal_hint,
 )

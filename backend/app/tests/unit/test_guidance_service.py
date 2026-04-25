@@ -12,7 +12,7 @@ from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.entitlement_types import UsageState
-from app.services.llm_generation.guidance_service import (
+from app.services.llm_generation.guidance.guidance_service import (
     GuidanceRecoveryMetadata,
     GuidanceService,
     GuidanceServiceError,
@@ -486,11 +486,11 @@ def test_request_contextual_guidance_injects_latest_natal_summary(
         result = object()
 
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance_service.UserNatalChartService.get_latest_for_user",
+        "app.services.llm_generation.guidance.guidance_service.UserNatalChartService.get_latest_for_user",
         lambda db, user_id: _FakeChart(),
     )
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance_service.build_natal_chart_summary",
+        "app.services.llm_generation.guidance.guidance_service.build_natal_chart_summary",
         lambda **kwargs: "SOLEIL: Belier\nLUNE: Cancer",
     )
 
@@ -663,11 +663,11 @@ def test_request_guidance_accepts_string_in_structured_lists(
         )
 
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance_service.AIEngineAdapter.generate_guidance",
+        "app.services.llm_generation.guidance.guidance_service.AIEngineAdapter.generate_guidance",
         fake_generate_guidance,
     )
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance_service.GuidanceService._apply_off_scope_recovery_async",
+        "app.services.llm_generation.guidance.guidance_service.GuidanceService._apply_off_scope_recovery_async",
         fake_recovery,
     )
 
@@ -718,11 +718,11 @@ def test_request_contextual_guidance_accepts_string_in_structured_lists(
         )
 
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance_service.AIEngineAdapter.generate_guidance",
+        "app.services.llm_generation.guidance.guidance_service.AIEngineAdapter.generate_guidance",
         fake_generate_guidance,
     )
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance_service.GuidanceService._apply_off_scope_recovery_async",
+        "app.services.llm_generation.guidance.guidance_service.GuidanceService._apply_off_scope_recovery_async",
         fake_recovery,
     )
 
@@ -861,11 +861,11 @@ async def test_guidance_recovery_records_tokens_for_each_recovery_attempt(monkey
     )
 
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance_service.AIEngineAdapter.generate_guidance",
+        "app.services.llm_generation.guidance.guidance_service.AIEngineAdapter.generate_guidance",
         fake_generate_guidance,
     )
     monkeypatch.setattr(
-        "app.services.llm_generation.guidance_service.LlmTokenUsageService.record_usage",
+        "app.services.llm_generation.guidance.guidance_service.LlmTokenUsageService.record_usage",
         fake_record_usage,
     )
 

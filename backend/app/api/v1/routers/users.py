@@ -19,7 +19,7 @@ from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationE
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
-from app.services.llm_generation.natal_interpretation_service import (
+from app.services.llm_generation.natal.interpretation_service import (
     NatalInterpretationData,
     NatalInterpretationService,
     NatalInterpretationServiceError,

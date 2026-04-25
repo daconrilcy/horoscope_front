@@ -34,7 +34,7 @@ from app.domain.llm.runtime.errors import (
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.session import get_db_session
 from app.services.disclaimer_registry import get_disclaimers
-from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
+from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 from app.services.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
     NatalChartLongEntitlementGate,
@@ -171,7 +171,7 @@ async def interpret_natal_chart(
 
         # Step B to F: Orchestration via Service V2
         current_step = "service_interpret"
-        response = await NatalInterpretationServiceV2.interpret(
+        response = await NatalInterpretationService.interpret(
             db=db,
             user_id=current_user.id,
             chart_id=chart.chart_id,
@@ -350,7 +350,7 @@ async def list_natal_interpretations(
 
     start_time = monotonic()
     try:
-        items, total = NatalInterpretationServiceV2.list_interpretations(
+        items, total = NatalInterpretationService.list_interpretations(
             db=db,
             user_id=current_user.id,
             chart_id=chart_id,
@@ -427,7 +427,7 @@ async def get_natal_interpretation(
 
     start_time = monotonic()
 
-    item = NatalInterpretationServiceV2.get_interpretation_by_id(
+    item = NatalInterpretationService.get_interpretation_by_id(
         db=db,
         user_id=current_user.id,
         interpretation_id=interpretation_id,
@@ -454,7 +454,7 @@ async def get_natal_interpretation(
         persisted_at=item.created_at,
     )
 
-    result = NatalInterpretationServiceV2.format_interpretation_response(item, meta, locale)
+    result = NatalInterpretationService.format_interpretation_response(item, meta, locale)
     observe_duration("natal_interpretation_get_latency", (monotonic() - start_time) * 1000)
     logger.info(
         "Fetched natal interpretation user_id=%s id=%s chart_id=%s",
@@ -484,7 +484,7 @@ async def delete_natal_interpretation(
 
     start_time = monotonic()
 
-    success = NatalInterpretationServiceV2.delete_interpretation(
+    success = NatalInterpretationService.delete_interpretation(
         db=db,
         user_id=current_user.id,
         interpretation_id=interpretation_id,
@@ -537,7 +537,7 @@ async def download_natal_interpretation_pdf(
 
     start_time = monotonic()
 
-    item = NatalInterpretationServiceV2.get_interpretation_by_id(
+    item = NatalInterpretationService.get_interpretation_by_id(
         db=db,
         user_id=current_user.id,
         interpretation_id=interpretation_id,

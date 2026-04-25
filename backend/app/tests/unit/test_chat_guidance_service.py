@@ -24,7 +24,7 @@ from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.llm_generation.anonymization_service import LLMAnonymizationError
-from app.services.llm_generation.chat_guidance_service import (
+from app.services.llm_generation.chat.chat_guidance_service import (
     ChatGuidanceService,
     ChatGuidanceServiceError,
 )
@@ -228,11 +228,11 @@ def test_send_message_normalizes_structured_chat_json_before_persisting(
         )
 
     monkeypatch.setattr(
-        "app.services.llm_generation.chat_guidance_service.AIEngineAdapter.generate_chat_reply",
+        "app.services.llm_generation.chat.chat_guidance_service.AIEngineAdapter.generate_chat_reply",
         _structured_chat_reply,
     )
     monkeypatch.setattr(
-        "app.services.llm_generation.chat_guidance_service.ChatGuidanceService._record_tokens",
+        "app.services.llm_generation.chat.chat_guidance_service.ChatGuidanceService._record_tokens",
         lambda *args, **kwargs: None,
     )
 
@@ -316,11 +316,11 @@ def test_send_message_follow_up_turn_restores_extended_context(
             self.result = {"sun": "aries"}
 
     monkeypatch.setattr(
-        "app.services.llm_generation.chat_guidance_service.UserNatalChartService.get_latest_for_user",
+        "app.services.llm_generation.chat.chat_guidance_service.UserNatalChartService.get_latest_for_user",
         lambda db, user_id: _FakeNatalChart(),
     )
     monkeypatch.setattr(
-        "app.services.llm_generation.chat_guidance_service.build_chat_natal_hint",
+        "app.services.llm_generation.chat.chat_guidance_service.build_chat_natal_hint",
         lambda natal_result, degraded_mode: "Résumé natal synthétique",
     )
 
@@ -622,7 +622,7 @@ def test_send_message_raises_llm_anonymization_failed_when_anonymizer_fails(
         raise LLMAnonymizationError("boom")
 
     monkeypatch.setattr(
-        "app.services.llm_generation.chat_guidance_service.anonymize_text",
+        "app.services.llm_generation.chat.chat_guidance_service.anonymize_text",
         _raise_anonymization_error,
     )
 

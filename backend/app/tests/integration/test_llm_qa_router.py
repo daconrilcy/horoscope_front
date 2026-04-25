@@ -164,7 +164,7 @@ def test_internal_llm_qa_routes_run_canonical_flows(
         "get_for_user",
         lambda db, user_id: SimpleNamespace(birth_date="1973-04-24", birth_time="11:00"),
     )
-    monkeypatch.setattr(qa_module.NatalInterpretationServiceV2, "interpret", fake_natal)
+    monkeypatch.setattr(qa_module.NatalInterpretationService, "interpret", fake_natal)
     monkeypatch.setattr(
         qa_module.HoroscopeDailyEntitlementGate,
         "check_and_get_variant",

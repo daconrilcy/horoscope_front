@@ -34,12 +34,15 @@ from app.services.horoscope_daily_entitlement_gate import (
     HoroscopeDailyAccessDeniedError,
     HoroscopeDailyEntitlementGate,
 )
-from app.services.llm_generation.chat_guidance_service import (
+from app.services.llm_generation.chat.chat_guidance_service import (
     ChatGuidanceService,
     ChatGuidanceServiceError,
 )
-from app.services.llm_generation.guidance_service import GuidanceService, GuidanceServiceError
-from app.services.llm_generation.natal_interpretation_service_v2 import NatalInterpretationServiceV2
+from app.services.llm_generation.guidance.guidance_service import (
+    GuidanceService,
+    GuidanceServiceError,
+)
+from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 from app.services.llm_generation.qa_seed_service import (
     LLM_QA_TEST_USER_EMAIL,
     LlmQaSeedResult,
@@ -358,7 +361,7 @@ async def run_natal_generation(
         target_user = _resolve_target_user(db, requested_email=payload.target_email)
         chart = UserNatalChartService.get_latest_for_user(db, target_user.id)
         profile = UserBirthProfileService.get_for_user(db, target_user.id)
-        response = await NatalInterpretationServiceV2.interpret(
+        response = await NatalInterpretationService.interpret(
             db=db,
             user_id=target_user.id,
             chart_id=chart.chart_id,

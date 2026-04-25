@@ -7,6 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.api.v1.schemas.natal_interpretation import (
+    InterpretationMeta,
+    NatalInterpretationResponse,
+)
+from app.api.v1.schemas.natal_interpretation import (
+    NatalInterpretationData as NatalGatewayInterpretationData,
+)
 from app.domain.astrology.natal_calculation import (
     AspectResult,
     HouseResult,
@@ -14,9 +21,13 @@ from app.domain.astrology.natal_calculation import (
     PlanetPosition,
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
-from app.services.llm_generation.natal_interpretation_service import (
+from app.domain.llm.prompting.schemas import AstroResponseV1
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.services.llm_generation.natal.interpretation_service import (
     NatalInterpretationService,
     NatalInterpretationServiceError,
+)
+from app.services.llm_generation.natal.prompt_context import (
     _detect_degraded_mode,
     _format_longitude,
     _longitude_to_sign,
@@ -99,6 +110,44 @@ def _make_birth_profile() -> UserBirthProfileData:
         birth_time="14:30",
         birth_place="Paris, France",
         birth_timezone="Europe/Paris",
+    )
+
+
+def _make_gateway_result(use_case: str) -> GatewayResult:
+    """Crée un résultat gateway minimal pour exercer le parcours canonique natal."""
+    return GatewayResult(
+        use_case=use_case,
+        request_id="req-test",
+        trace_id="trace-test",
+        raw_output="{}",
+        structured_output={
+            "title": "Titre natal",
+            "summary": "Synthèse de test détaillée.",
+            "sections": [
+                {
+                    "key": "overall",
+                    "heading": "Vue d'ensemble",
+                    "content": "Contenu principal.",
+                },
+                {
+                    "key": "strengths",
+                    "heading": "Forces",
+                    "content": "Contenu complémentaire.",
+                },
+            ],
+            "highlights": ["Point A", "Point B", "Point C"],
+            "advice": ["Conseil A", "Conseil B", "Conseil C"],
+            "evidence": ["SUN_GEMINI", "MOON_CANCER"],
+        },
+        usage=UsageInfo(),
+        meta=GatewayMeta(
+            latency_ms=250,
+            model="gpt-5",
+            prompt_version_id="11111111-1111-1111-1111-111111111111",
+            validation_status="valid",
+            fallback_triggered=False,
+            repair_attempted=False,
+        ),
     )
 
 
@@ -278,37 +327,79 @@ class TestNatalInterpretationService:
     async def test_interpret_chart_success(self) -> None:
         natal_chart = _make_natal_chart_read_data()
         birth_profile = _make_birth_profile()
+        db = MagicMock()
 
-        mock_result = MagicMock()
-        mock_result.raw_output = "Raw text"
-        mock_result.structured_output = {
-            "summary": "Synthèse du thème.",
-            "key_points": ["Point A", "Point B"],
-            "actionable_advice": ["Conseil A"],
-            "disclaimer": "Disclaimer important.",
-        }
-        mock_result.meta.cached = False
-        mock_result.meta.latency_ms = 1200
-        mock_result.usage.total_tokens = 500
+        response = NatalInterpretationResponse(
+            data=NatalGatewayInterpretationData(
+                chart_id="chart-123",
+                use_case="natal_interpretation",
+                interpretation=AstroResponseV1(
+                    title="Titre",
+                    summary="Synthèse du thème.",
+                    sections=[
+                        {
+                            "key": "overall",
+                            "heading": "Vue d'ensemble",
+                            "content": "Texte détaillé",
+                        },
+                        {
+                            "key": "strengths",
+                            "heading": "Forces",
+                            "content": "Points forts",
+                        },
+                    ],
+                    highlights=["Point A", "Point B", "Point C"],
+                    advice=["Conseil A", "Conseil B", "Conseil C"],
+                    evidence=[],
+                    disclaimers=["Disclaimer important."],
+                ),
+                meta=InterpretationMeta(
+                    level="complete",
+                    use_case="natal_interpretation",
+                    validation_status="valid",
+                    latency_ms=1200,
+                ),
+            ),
+            disclaimers=["Disclaimer important."],
+        )
 
-        with patch(
-            "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_guidance",
-            new_callable=AsyncMock,
-            return_value=mock_result,
-        ):
+        with patch.object(
+            NatalInterpretationService,
+            "interpret",
+            new=AsyncMock(return_value=response),
+        ) as mock_interpret:
             result = await NatalInterpretationService.interpret_chart(
                 natal_chart=natal_chart,
                 birth_profile=birth_profile,
                 user_id=1,
                 request_id="req-123",
+                trace_id="trace-123",
+                persona_id="persona-ignoree",
+                db=db,
             )
 
+        mock_interpret.assert_awaited_once_with(
+            db=db,
+            user_id=1,
+            chart_id="chart-123",
+            natal_result=natal_chart.result,
+            birth_profile=birth_profile,
+            level="complete",
+            persona_id=None,
+            locale="fr-FR",
+            question=None,
+            request_id="req-123",
+            trace_id="trace-123",
+            force_refresh=False,
+            module=None,
+            variant_code="free_short",
+        )
         assert result.chart_id == "chart-123"
-        assert result.text == "Raw text"
+        assert "Synthèse du thème." in result.text
         assert result.summary == "Synthèse du thème."
-        assert len(result.key_points) == 2
+        assert len(result.key_points) == 3
         assert result.metadata.cached is False
-        assert result.metadata.tokens_used == 500
+        assert result.metadata.latency_ms == 1200
 
     @pytest.mark.asyncio
     async def test_interpret_chart_degraded_mode(self) -> None:
@@ -319,42 +410,109 @@ class TestNatalInterpretationService:
             birth_place="Paris",
             birth_timezone="Europe/Paris",
         )
+        db = MagicMock()
+        response = NatalInterpretationResponse(
+            data=NatalGatewayInterpretationData(
+                chart_id="chart-123",
+                use_case="natal_interpretation",
+                interpretation=AstroResponseV1(
+                    title="Titre",
+                    summary="Synthèse",
+                    sections=[
+                        {"key": "overall", "heading": "Vue", "content": "Texte"},
+                        {"key": "strengths", "heading": "Forces", "content": "Points"},
+                    ],
+                    highlights=["A", "B", "C"],
+                    advice=["Conseil A", "Conseil B", "Conseil C"],
+                    evidence=[],
+                    disclaimers=["Disclaimer"],
+                ),
+                meta=InterpretationMeta(
+                    level="complete",
+                    use_case="natal_interpretation",
+                    validation_status="valid",
+                ),
+                degraded_mode="no_time",
+            ),
+            disclaimers=["Disclaimer"],
+        )
 
-        mock_result = MagicMock()
-        mock_result.raw_output = "Raw"
-        mock_result.structured_output = {
-            "summary": "Synthèse",
-            "key_points": ["Points"],
-            "actionable_advice": ["Conseils"],
-            "disclaimer": "Disclaimer",
-        }
-        mock_result.meta.cached = False
-        mock_result.meta.latency_ms = 1000
-        mock_result.usage.total_tokens = 300
-
-        with patch(
-            "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_guidance",
-            new_callable=AsyncMock,
-            return_value=mock_result,
+        with patch.object(
+            NatalInterpretationService,
+            "interpret",
+            new=AsyncMock(return_value=response),
         ):
             result = await NatalInterpretationService.interpret_chart(
                 natal_chart=natal_chart,
                 birth_profile=birth_profile,
                 user_id=1,
                 request_id="req-456",
+                db=db,
             )
 
         assert result.metadata.degraded_mode == "no_time"
+
+    @pytest.mark.asyncio
+    async def test_interpret_uses_shared_degraded_mode_detection(self) -> None:
+        natal_result = _make_natal_result()
+        birth_profile = UserBirthProfileData(
+            birth_date="1990-06-15",
+            birth_time="00:00",
+            birth_place="Paris, France",
+            birth_lat=48.8566,
+            birth_lon=2.3522,
+            birth_timezone="Europe/Paris",
+        )
+        db = MagicMock()
+        db.execute.return_value.scalars.return_value.all.return_value = []
+        db.get.return_value = None
+
+        with (
+            patch(
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+                return_value={"planets": []},
+            ) as mock_build_chart_json,
+            patch(
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+                return_value=[],
+            ),
+            patch(
+                "app.services.effective_entitlement_resolver_service."
+                "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
+                return_value=MagicMock(plan_code="premium"),
+            ),
+            patch.object(NatalInterpretationService, "_record_token_usage"),
+            patch(
+                "app.services.llm_generation.natal.interpretation_service."
+                "AIEngineAdapter.generate_natal_interpretation",
+                new=AsyncMock(return_value=_make_gateway_result("natal_interpretation")),
+            ),
+        ):
+            await NatalInterpretationService.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-123",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="complete",
+                persona_id=None,
+                locale="fr-FR",
+                question=None,
+                request_id="req-shared-degraded-mode",
+                trace_id="trace-shared-degraded-mode",
+            )
+
+        assert mock_build_chart_json.call_args.args[2] == "no_time"
 
     @pytest.mark.asyncio
     async def test_interpret_chart_timeout_error(self) -> None:
         natal_chart = _make_natal_chart_read_data()
         birth_profile = _make_birth_profile()
 
-        with patch(
-            "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_guidance",
-            new_callable=AsyncMock,
-            side_effect=TimeoutError("AI Engine timeout"),
+        with patch.object(
+            NatalInterpretationService,
+            "interpret",
+            new=AsyncMock(side_effect=TimeoutError("AI Engine timeout")),
         ):
             with pytest.raises(NatalInterpretationServiceError) as exc_info:
                 await NatalInterpretationService.interpret_chart(
@@ -362,6 +520,7 @@ class TestNatalInterpretationService:
                     birth_profile=birth_profile,
                     user_id=1,
                     request_id="req-timeout",
+                    db=MagicMock(),
                 )
 
         assert exc_info.value.code == "ai_engine_timeout"

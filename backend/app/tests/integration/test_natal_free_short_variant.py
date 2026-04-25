@@ -175,7 +175,7 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
             "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user"
         ) as mock_get_profile,
         patch(
-            "app.services.llm_generation.natal_interpretation_service_v2.build_chart_json"
+            "app.services.llm_generation.natal.interpretation_service.build_chart_json"
         ) as mock_build_json,
     ):
         mock_get_chart.return_value = mock_chart_data

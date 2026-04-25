@@ -124,7 +124,7 @@ def test_evidence_pattern_valid_v2():
 def test_routing_logic(level, fallback_triggered, expected_class):
     """Valide la logique de routage v1/v2 du service en isolation.
 
-    Reproduit la branche décisionnelle de NatalInterpretationServiceV2:
+    Reproduit la branche décisionnelle de NatalInterpretationService:
         if level == "complete" and not fallback_triggered → AstroResponseV2
         else → AstroResponseV1
     """

@@ -420,7 +420,7 @@ class TestNatalInterpretationEndpointV2:
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.NatalInterpretationServiceV2.interpret",
+                "app.api.v1.routers.natal_interpretation.NatalInterpretationService.interpret",
                 new_callable=AsyncMock,
                 side_effect=RuntimeError("empty complete interpretation"),
             ),

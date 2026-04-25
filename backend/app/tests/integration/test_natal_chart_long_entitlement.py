@@ -333,7 +333,7 @@ def _patch_interpretation_dependencies(side_effect=None):
             return_value=MagicMock(),
         ),
         patch(
-            "app.services.llm_generation.natal_interpretation_service_v2.NatalInterpretationServiceV2.interpret",
+            "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret",
             new=AsyncMock(
                 side_effect=side_effect,
                 return_value=None
@@ -382,7 +382,7 @@ def test_short_level_bypasses_gate(mock_user_and_chart):
             "app.services.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume"
         ) as mock_gate,
         patch(
-            "app.services.llm_generation.natal_interpretation_service_v2.NatalInterpretationServiceV2.interpret"
+            "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret"
         ) as mock_interpret,
     ):
         mock_interpret.return_value = _make_valid_interpretation_response(level="short")
@@ -406,7 +406,7 @@ def test_complete_canonical_quota_ok(mock_user_and_chart):
             return_value=result,
         ),
         patch(
-            "app.services.llm_generation.natal_interpretation_service_v2.NatalInterpretationServiceV2.interpret"
+            "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret"
         ) as mock_interpret,
     ):
         mock_interpret.return_value = _make_valid_interpretation_response(level="complete")
@@ -431,7 +431,7 @@ def test_complete_canonical_unlimited_ok(mock_user_and_chart):
             return_value=result,
         ),
         patch(
-            "app.services.llm_generation.natal_interpretation_service_v2.NatalInterpretationServiceV2.interpret"
+            "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret"
         ) as mock_interpret,
     ):
         mock_interpret.return_value = _make_valid_interpretation_response(level="complete")

@@ -88,7 +88,7 @@ def test_send_message_canonical_quota_ok(mock_user):
             return_value=mock_result,
         ),
         patch(
-            "app.services.llm_generation.chat_guidance_service.ChatGuidanceService.send_message",
+            "app.services.llm_generation.chat.chat_guidance_service.ChatGuidanceService.send_message",
             return_value=mock_reply,
         ),
         patch(
@@ -150,7 +150,7 @@ def test_send_message_canonical_unlimited_ok(mock_user):
             return_value=mock_result,
         ),
         patch(
-            "app.services.llm_generation.chat_guidance_service.ChatGuidanceService.send_message",
+            "app.services.llm_generation.chat.chat_guidance_service.ChatGuidanceService.send_message",
             return_value=mock_reply,
         ),
         patch("app.infra.db.session.get_db_session"),

@@ -23,8 +23,10 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.domain.llm.runtime.errors import AIEngineError
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.prediction.llm_gateway_narrator import generate_horoscope_narration_via_gateway
 from app.prediction.llm_narrator import NarratorResult
+from app.services.llm_generation.horoscope_daily.narration_service import (
+    generate_horoscope_narration_via_gateway,
+)
 
 logger = logging.getLogger(__name__)
 

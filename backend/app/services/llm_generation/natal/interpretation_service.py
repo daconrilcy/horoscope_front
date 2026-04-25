@@ -1,4 +1,4 @@
-"""Gère la génération et la persistance des interprétations natales LLM versionnées."""
+"""Porte le service canonique de génération LLM pour le domaine natal."""
 
 from __future__ import annotations
 
@@ -6,15 +6,19 @@ import json
 import logging
 import re
 import uuid
+from datetime import datetime
 from typing import Literal, Optional
 
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.v1.schemas.natal_interpretation import (
     InterpretationMeta,
-    NatalInterpretationData,
     NatalInterpretationResponse,
+)
+from app.api.v1.schemas.natal_interpretation import (
+    NatalInterpretationData as NatalGatewayInterpretationData,
 )
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
@@ -42,7 +46,9 @@ from app.services.chart_json_builder import (
 )
 from app.services.disclaimer_registry import get_disclaimers
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
+from app.services.llm_generation.natal.prompt_context import _detect_degraded_mode
 from app.services.user_birth_profile_service import UserBirthProfileData
+from app.services.user_natal_chart_service import UserNatalChartReadData
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +62,38 @@ MODULE_TO_USE_CASE_KEY: dict[str, str] = {
     "NATAL_VALUES_SECURITY": "natal_values_security",
     "NATAL_EVOLUTION_PATH": "natal_evolution_path",
 }
+
+
+class NatalInterpretationMetadata(BaseModel):
+    """Décrit les métadonnées attendues par les routes historiques `/users`."""
+
+    generated_at: datetime = Field(default_factory=lambda: datetime_provider.utcnow())
+    cached: bool = False
+    degraded_mode: str | None = None
+    tokens_used: int = 0
+    latency_ms: int = 0
+
+
+class NatalInterpretationData(BaseModel):
+    """Expose le format simplifié historique d'interprétation natal."""
+
+    chart_id: str
+    text: str
+    summary: str
+    key_points: list[str]
+    advice: list[str]
+    disclaimer: str
+    metadata: NatalInterpretationMetadata
+
+
+class NatalInterpretationServiceError(Exception):
+    """Porte une erreur homogène pour les routes applicatives historiques."""
+
+    def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
+        self.code = code
+        self.message = message
+        self.details = details or {}
+        super().__init__(message)
 
 
 def _parse_prompt_version_uuid(prompt_version_id: str | None) -> uuid.UUID | None:
@@ -107,10 +145,8 @@ def _normalize_free_short_title(title: str, summary: str) -> str:
     return normalized
 
 
-class NatalInterpretationServiceV2:
-    """
-    Service for natal interpretation using LLM Gateway V2.
-    """
+class NatalInterpretationService:
+    """Orchestre le rendu, la persistance et la projection applicative du natal."""
 
     @staticmethod
     def _record_token_usage(
@@ -132,6 +168,89 @@ class NatalInterpretationServiceV2:
             tokens_out=gateway_result.usage.output_tokens,
             request_id=gateway_result.request_id,
         )
+
+    @staticmethod
+    def _compose_legacy_text(interpretation: object) -> str:
+        """Reconstruit un texte lisible pour les routes historiques `/users`."""
+        sections = getattr(interpretation, "sections", []) or []
+        section_texts = [
+            section.content.strip()
+            for section in sections
+            if hasattr(section, "content") and isinstance(section.content, str) and section.content
+        ]
+        summary = getattr(interpretation, "summary", "")
+        return "\n\n".join([part for part in [summary, *section_texts] if part]).strip()
+
+    @staticmethod
+    def _to_legacy_payload(response: NatalInterpretationResponse) -> NatalInterpretationData:
+        """Projette la réponse canonique vers le format simplifié historique."""
+        interpretation = response.data.interpretation
+        disclaimer = "\n".join(response.disclaimers)
+        highlights = list(getattr(interpretation, "highlights", []) or [])
+        advice = list(getattr(interpretation, "advice", []) or [])
+
+        return NatalInterpretationData(
+            chart_id=response.data.chart_id,
+            text=NatalInterpretationService._compose_legacy_text(interpretation),
+            summary=getattr(interpretation, "summary", ""),
+            key_points=highlights,
+            advice=advice,
+            disclaimer=disclaimer,
+            metadata=NatalInterpretationMetadata(
+                cached=response.data.meta.cached,
+                degraded_mode=response.data.degraded_mode,
+                latency_ms=response.data.meta.latency_ms or 0,
+            ),
+        )
+
+    @staticmethod
+    async def interpret_chart(
+        natal_chart: UserNatalChartReadData,
+        birth_profile: UserBirthProfileData,
+        user_id: int,
+        request_id: str,
+        trace_id: str | None = None,
+        persona_id: str | None = None,
+        db: Session | None = None,
+    ) -> NatalInterpretationData:
+        """Maintient le contrat des routes `/users` via la variante canonique free short."""
+        if db is None:
+            raise NatalInterpretationServiceError(
+                code="natal_db_required",
+                message="A database session is required for natal interpretation.",
+                details={"request_id": request_id},
+            )
+
+        try:
+            response = await NatalInterpretationService.interpret(
+                db=db,
+                user_id=user_id,
+                chart_id=natal_chart.chart_id,
+                natal_result=natal_chart.result,
+                birth_profile=birth_profile,
+                level="complete",
+                # Les routes historiques `/users` ne doivent pas ouvrir un parcours
+                # premium implicite ni persister un variant_code vide.
+                persona_id=None,
+                locale="fr-FR",
+                question=None,
+                request_id=request_id,
+                trace_id=trace_id or request_id,
+                force_refresh=False,
+                module=None,
+                variant_code="free_short",
+            )
+        except Exception as error:
+            error_code = getattr(error, "code", "ai_engine_error")
+            if "timeout" in str(error_code).lower() or isinstance(error, TimeoutError):
+                error_code = "ai_engine_timeout"
+            raise NatalInterpretationServiceError(
+                code=str(error_code),
+                message=f"AI Engine error: {error}",
+                details={"request_id": request_id},
+            ) from error
+
+        return NatalInterpretationService._to_legacy_payload(response)
 
     @staticmethod
     def _is_empty_complete_payload(payload: dict[str, object] | None) -> bool:
@@ -163,7 +282,7 @@ class NatalInterpretationServiceV2:
             return False
         if model.variant_code == "free_short" or model.use_case == "natal_long_free":
             return False
-        return NatalInterpretationServiceV2._is_empty_complete_payload(
+        return NatalInterpretationService._is_empty_complete_payload(
             model.interpretation_payload if isinstance(model.interpretation_payload, dict) else None
         )
 
@@ -277,7 +396,7 @@ class NatalInterpretationServiceV2:
             existing_rows = list(db.execute(stmt).scalars().all())
             valid_existing_rows: list[UserNatalInterpretationModel] = []
             for row in existing_rows:
-                if NatalInterpretationServiceV2._is_invalid_complete_interpretation(row):
+                if NatalInterpretationService._is_invalid_complete_interpretation(row):
                     logger.warning(
                         (
                             "Deleting empty persisted natal interpretation "
@@ -325,7 +444,7 @@ class NatalInterpretationServiceV2:
 
             if existing:
                 interpretation, schema_version = (
-                    NatalInterpretationServiceV2._deserialize_persisted_interpretation(
+                    NatalInterpretationService._deserialize_persisted_interpretation(
                         existing,
                         level=level,
                         locale=locale,
@@ -349,28 +468,19 @@ class NatalInterpretationServiceV2:
                     persisted_at=existing.created_at,
                     module=module,
                 )
-                return NatalInterpretationServiceV2.format_interpretation_response(
+                return NatalInterpretationService.format_interpretation_response(
                     existing, meta, locale
                 )
 
         # 1. Normalization (N1)
-        no_time = birth_profile.birth_time is None
-        no_location = birth_profile.birth_lat is None or birth_profile.birth_lon is None
-
-        degraded_mode_str = None
-        if no_time and no_location:
-            degraded_mode_str = "no_location_no_time"
-        elif no_time:
-            degraded_mode_str = "no_time"
-        elif no_location:
-            degraded_mode_str = "no_location"
+        degraded_mode_str = _detect_degraded_mode(birth_profile)
 
         chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str)
         evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
 
         # 3. Use case selection
         if level == "complete" and variant_code == "free_short":
-            return await NatalInterpretationServiceV2._generate_free_short(
+            return await NatalInterpretationService._generate_free_short(
                 db=db,
                 user_id=user_id,
                 chart_id=chart_id,
@@ -439,7 +549,7 @@ class NatalInterpretationServiceV2:
             natal_input=natal_input, db=db
         )
 
-        NatalInterpretationServiceV2._record_token_usage(
+        NatalInterpretationService._record_token_usage(
             db,
             user_id=user_id,
             gateway_result=gateway_result,
@@ -459,7 +569,7 @@ class NatalInterpretationServiceV2:
         full_output = {**base_output, "disclaimers": disclaimers}
 
         if level == "complete" and variant_code != "free_short":
-            if NatalInterpretationServiceV2._is_empty_complete_payload(base_output):
+            if NatalInterpretationService._is_empty_complete_payload(base_output):
                 logger.error(
                     "Gateway returned empty complete interpretation request_id=%s use_case=%s",
                     request_id,
@@ -621,7 +731,7 @@ class NatalInterpretationServiceV2:
             )
 
         return NatalInterpretationResponse(
-            data=NatalInterpretationData(
+            data=NatalGatewayInterpretationData(
                 chart_id=chart_id,
                 use_case=gateway_result.use_case,
                 interpretation=interpretation,
@@ -684,7 +794,7 @@ class NatalInterpretationServiceV2:
             natal_input=natal_input, db=db
         )
 
-        NatalInterpretationServiceV2._record_token_usage(
+        NatalInterpretationService._record_token_usage(
             db,
             user_id=user_id,
             gateway_result=gateway_result,
@@ -782,7 +892,7 @@ class NatalInterpretationServiceV2:
         meta.persisted_at = primary.created_at or datetime_provider.utcnow()
 
         return NatalInterpretationResponse(
-            data=NatalInterpretationData(
+            data=NatalGatewayInterpretationData(
                 chart_id=chart_id,
                 use_case=use_case_key,
                 interpretation=interpretation,
@@ -831,7 +941,7 @@ class NatalInterpretationServiceV2:
         valid_rows: list[UserNatalInterpretationModel] = []
         deleted_any = False
         for row in rows:
-            if NatalInterpretationServiceV2._is_invalid_complete_interpretation(row):
+            if NatalInterpretationService._is_invalid_complete_interpretation(row):
                 db.delete(row)
                 deleted_any = True
                 continue
@@ -902,7 +1012,7 @@ class NatalInterpretationServiceV2:
             UserNatalInterpretationModel.user_id == user_id,
         )
         item = db.execute(stmt).scalar_one_or_none()
-        if item and NatalInterpretationServiceV2._is_invalid_complete_interpretation(item):
+        if item and NatalInterpretationService._is_invalid_complete_interpretation(item):
             db.delete(item)
             db.commit()
             return None
@@ -922,7 +1032,7 @@ class NatalInterpretationServiceV2:
         disclaimers = get_disclaimers(locale)
         level = "complete" if model.level == InterpretationLevel.COMPLETE else "short"
         interpretation, schema_version = (
-            NatalInterpretationServiceV2._deserialize_persisted_interpretation(
+            NatalInterpretationService._deserialize_persisted_interpretation(
                 model,
                 level=level,
                 locale=locale,
@@ -932,7 +1042,7 @@ class NatalInterpretationServiceV2:
         meta.schema_version = schema_version
 
         return NatalInterpretationResponse(
-            data=NatalInterpretationData(
+            data=NatalGatewayInterpretationData(
                 chart_id=model.chart_id,
                 use_case=model.use_case,
                 interpretation=interpretation,

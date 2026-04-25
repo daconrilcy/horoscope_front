@@ -20,7 +20,7 @@ from app.services.chat_entitlement_gate import (
     ChatQuotaExceededError,
 )
 from app.services.entitlement_types import QuotaDefinition
-from app.services.llm_generation.chat_guidance_service import (
+from app.services.llm_generation.chat.chat_guidance_service import (
     ChatConversationHistoryData,
     ChatConversationListData,
     ChatGuidanceService,

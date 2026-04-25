@@ -25,8 +25,8 @@ from app.services.consultation_catalogue_service import ConsultationCatalogueSer
 from app.services.consultation_fallback_service import ConsultationFallbackService
 from app.services.consultation_precheck_service import ConsultationPrecheckService
 from app.services.consultation_third_party_service import ConsultationThirdPartyService
-from app.services.llm_generation.guidance_service import GuidanceService
-from app.services.llm_generation.natal_interpretation_service import build_natal_chart_summary
+from app.services.llm_generation.guidance.guidance_service import GuidanceService
+from app.services.llm_generation.natal.prompt_context import build_natal_chart_summary
 from app.services.natal_calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 from app.services.user_birth_profile_service import (

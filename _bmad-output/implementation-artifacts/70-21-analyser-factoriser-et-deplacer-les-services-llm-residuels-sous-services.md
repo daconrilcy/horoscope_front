@@ -51,6 +51,12 @@ Cette story doit terminer le travail de convergence sans rouvrir de dette :
 - aucun wrapper legacy ;
 - aucun fichier `llm_*_service.py` maintenu a plat par confort.
 
+Une dette adjacente doit egalement etre couverte explicitement dans le meme lot de cadrage :
+
+- plusieurs fichiers de `backend/app/services/llm_generation/` portent en realite des responsabilites de generation par feature (`natal`, `chat`, `guidance`) sans sous-namespace dedie ;
+- la generation LLM de l horoscope quotidien reste a identifier et a positionner explicitement dans cette organisation cible ;
+- deux services natals coexistent encore sous des noms quasi identiques (`natal_interpretation_service.py` et `natal_interpretation_service_v2.py`), ce qui fait peser un doute fort sur le DRY, la frontiere canonique et la presence d un legacy technique interdit.
+
 ## Objectif
 
 Obtenir une organisation cible ou :
@@ -59,7 +65,9 @@ Obtenir une organisation cible ou :
 - chaque fichier est deplace vers un sous-namespace `services` explicite, coherent avec sa responsabilite ;
 - les helpers utilises hors du module ne restent pas exposes uniquement via des methodes privees ;
 - les imports production/tests sont migrés integralement ;
-- des garde-fous empechent toute reintroduction de fichiers LLM a plat.
+- des garde-fous empechent toute reintroduction de fichiers LLM a plat ;
+- `backend/app/services/llm_generation/` n est plus un namespace fourre-tout plat pour les services de generation applicative par feature ;
+- le domaine natal ne conserve qu un chemin canonique explicite, sans doublon technique ambigu ni suffixe `v2` maintenu par inertie.
 
 ## Regle de destination attendue
 
@@ -202,6 +210,56 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
    - endpoints internes QA de guidance, chat, natal et horoscope daily.
    Les endpoints concernes ne doivent plus importer les anciens modules, ne doivent plus appeler de helpers prives, et doivent conserver leurs schemas de reponse existants sauf justification explicite.
 
+17. **AC17 - Sous-namespace explicites par famille de generation applicative**  
+   Les fichiers de `backend/app/services/llm_generation/` dont la responsabilite principale est la generation de prompts, d appels gateway ou d assemblage de reponses pour une feature applicative sont regroupes dans des sous-dossiers dedies par famille metier ou par responsabilite stable, plutot que de rester a plat.  
+   La solution cible doit au minimum statuer explicitement sur les familles suivantes :
+   - `natal`
+   - `chat`
+   - `guidance`
+   - `horoscope_daily`  
+   Les utilitaires transverses restent separes des services feature-specifics et ne sont pas deplaces dans un sous-dossier metier s ils sont reellement partages.
+
+18. **AC18 - Identification et relocalisation explicite du service horoscope LLM**  
+   La story identifie le ou les fichiers reels portant aujourd hui la generation LLM de l horoscope quotidien.  
+   Si cette responsabilite est noyee dans un service plus large, elle est extraite vers un composant dedie.  
+   Le code de generation LLM `horoscope_daily` est ensuite positionne dans le sous-namespace de generation defini par AC17, avec migration complete des imports et sans laisser une logique LLM horoscope orpheline dans un service generique ou mal nomme.
+
+19. **AC19 - Analyse comparative obligatoire des deux services natal**  
+   La story produit une analyse comparative explicite de :
+   - `backend/app/services/llm_generation/natal_interpretation_service.py`
+   - `backend/app/services/llm_generation/natal_interpretation_service_v2.py`  
+   Cette analyse doit couvrir au minimum :
+   - leurs consommateurs reels production/tests ;
+   - les responsabilites respectives ;
+   - les doublons fonctionnels ;
+   - les divergences de contrats, schemas, persistance, prompting et observabilite ;
+   - les indices de legacy, de dette transitoire ou de coexistence non justifiee ;  
+   La conclusion doit designer un chemin canonique cible et expliciter ce qui est supprime, fusionne, scinde ou deplace.
+
+20. **AC20 - Verrou DRY et interdiction du suffixe technique ambigu**  
+   A l issue de la refactorisation, il ne subsiste plus deux services nominaux concurrents pour l interpretation natale.  
+   Aucun suffixe technique du type `_v2` ne reste comme nom canonique d un service applicatif si ce suffixe ne correspond pas a une version metier explicitement supportee.  
+   Toute logique dupliquee entre les deux services natals est factorisee dans :
+   - un service canonique unique ;
+   - ou des modules de support dedies et nommes par responsabilite ;  
+   il est interdit de conserver deux implementations paralleles par prudence ou confort.
+
+21. **AC21 - Responsabilites du service natal scindees de facon stricte**  
+   Si `natal_interpretation_service_v2.py` ou son successeur concentre plusieurs responsabilites heterogenes, la story le demonte en composants cohérents.  
+   Les responsabilites suivantes doivent etre distinguees explicitement lorsqu elles coexistent :
+   - preparation de contexte / chart evidence ;
+   - resolution prompt / appel gateway ;
+   - normalisation et validation des schemas de sortie ;
+   - persistance / cache / relecture ;
+   - enregistrement de consommation / observabilite ;
+   - assemblage de DTO de reponse.  
+   Un unique fichier orchestrateur peut subsister, mais il ne doit plus porter seul l ensemble de ces responsabilites sous forme monolithique.
+
+22. **AC22 - Factorisation complete du legacy natal et des helpers partages**  
+   Toute duplication active entre les parcours `natal`, `chat`, `guidance` et `consultation` provenant des helpers natals est reevaluee et factorisee strictement lorsque la logique est commune.  
+   Cela inclut notamment les resumes natals, hints de chat, conventions de prompt, mapping de variantes, serialisation de reponse ou tracking d usage si ces mecanismes existent en double.  
+   Aucun code legacy natal conserve uniquement pour compatibilite interne n est autorise sans statut explicite de follow-up ; par defaut, il doit etre supprime ou absorbe dans la cible canonique.
+
 ## Tasks / Subtasks
 
 - [x] **Task 1: Cartographier le perimetre reel et decider la destination de chaque fichier**  
@@ -255,6 +313,25 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
   - [x] Executer `cd backend ; ruff check .`
   - [x] Executer `cd backend ; pytest -q` ou une campagne ciblee explicitement justifiee.
   - [x] Verifier qu aucun import `app.services.llm_*_service` ne subsiste dans le code nominal et dans les tests.
+
+- [x] **Task 9: Structurer `llm_generation/` par familles metier de generation**  
+  AC: 17, 18  
+  - [x] Inventorier les services feature-specifics de `llm_generation/` et distinguer utilitaires transverses vs services applicatifs.
+  - [x] Definir la cible de sous-dossiers dedies pour `natal`, `chat`, `guidance` et `horoscope_daily`.
+  - [x] Extraire ou deplacer la generation LLM horoscope dans le sous-namespace retenu si elle n y est pas deja.
+
+- [x] **Task 10: Mener l analyse comparative puis la convergence des services natals**  
+  AC: 19, 20, 21, 22  
+  - [x] Cartographier tous les imports, patch targets et consommateurs de `natal_interpretation_service.py` et `natal_interpretation_service_v2.py`.
+  - [x] Lister les chevauchements fonctionnels, les divergences de contrat et les duplications actives.
+  - [x] Designer la cible canonique unique et supprimer toute coexistence legacy non justifiee.
+  - [x] Recomposer les responsabilites dans des modules plus petits si le service natal concentre trop de couches.
+
+- [x] **Task 11: Verrouiller la non-regression structurelle sur le perimetre natal et horoscope**  
+  AC: 17, 18, 20, 21, 22  
+  - [x] Ajouter des tests ou garde-fous qui echouent si un service natal concurrent ou suffixe `_v2` reapparait comme chemin canonique.
+  - [x] Ajouter des tests ou garde-fous qui echouent si la generation LLM `horoscope_daily` reste hors du sous-namespace cible sans justification explicite.
+  - [x] Ajouter des tests ou garde-fous qui echouent si des helpers natals dupliques restent consommes en parallele par `chat`, `guidance` ou `consultation`.
 
 ## Dev Notes
 
@@ -339,6 +416,10 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
   - creation de `backend/app/services/llm_observability/` pour les services de lecture, agregat et monitoring LLM.
   - reutilisation de `backend/app/services/llm_generation/` pour le seed QA.
   - suppression des trois fichiers LLM residuels a plat sous `backend/app/services/`.
+- Structuration finale de `llm_generation/` :
+  - creation des sous-namespaces `chat/`, `guidance/`, `natal/` et `horoscope_daily/` pour sortir du namespace plat.
+  - deplacement de la narration horoscope vers `backend/app/services/llm_generation/horoscope_daily/narration_service.py`.
+  - convergence du domaine natal vers `backend/app/services/llm_generation/natal/interpretation_service.py` avec extraction des helpers partages dans `prompt_context.py`.
 - Seed QA:
   - `build_llm_qa_seed_chart_payload` n avait pas de consommateur nominal hors ancien module. Il a ete supprime au lieu d etre conserve publiquement.
 - Perimetre adjacent verifie:
@@ -346,6 +427,10 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
   - `backend/app/services/ops_monitoring_service.py` reste hors perimetre car il couvre le monitoring applicatif general instance-local, distinct du monitoring LLM persistant.
 - Garde-fous ajoutes:
   - nouveau test `backend/app/tests/unit/test_story_70_21_services_llm_structure_guard.py` pour bloquer le retour de fichiers `llm_*_service.py` a la racine, les imports legacy et les appels routeurs a des helpers prives du service de consommation.
+- Correctifs post-review appliques:
+  - `interpret_chart()` ne passe plus par un chemin natal premium implicite pour les routes historiques `/users`; il force maintenant la variante canonique `free_short` et n ouvre plus de persistance avec `variant_code=None`.
+  - le calcul de `degraded_mode` est desormais centralise sur `_detect_degraded_mode` afin d eliminer la divergence entre le service natal canonique et les helpers partages `chat` / `guidance`.
+  - les tests unitaires natals couvrent a nouveau les arguments reels du wrapper `/users` et la reutilisation de la regle partagee de degradation.
 - Ajustements complementaires necessaires pour cloturer la validation:
   - mise a jour de `backend/docs/llm-db-cleanup-registry.json` afin d autoriser les nouveaux chemins de consommation/monitoring.
   - correction de quelques depassements `E501` preexistants dans le perimetre `canonical_entitlement` afin d obtenir `ruff check .` vert sur tout le backend.
@@ -358,11 +443,13 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
   - `cd backend ; ruff check .`
   - `cd backend ; pytest -q`
   - `cd backend ; python -c "from app.main import app; print(app.title)"`
+  - `cd backend ; pytest -q app/tests/unit/test_natal_interpretation_service.py app/tests/unit/test_natal_interpretation_service_v2.py app/tests/integration/test_natal_interpretation_endpoint.py app/tests/integration/test_natal_free_short_variant.py app/tests/unit/test_story_70_21_services_llm_structure_guard.py`
 - Resultats:
   - `ruff format .` OK
   - `ruff check .` OK
   - `pytest -q` OK, `3036 passed, 12 skipped`
   - smoke import backend OK, sortie `horoscope-backend`
+  - validation ciblee post-review OK, `43 passed`
 
 ### File List
 
@@ -370,22 +457,62 @@ En revanche, il est interdit de conserver les trois fichiers a plat ou de creer 
 - backend/app/services/llm_observability/consumption_service.py
 - backend/app/services/llm_observability/monitoring_service.py
 - backend/app/services/llm_generation/qa_seed_service.py
+- backend/app/services/llm_generation/chat/__init__.py
+- backend/app/services/llm_generation/chat/chat_guidance_service.py
+- backend/app/services/llm_generation/guidance/__init__.py
+- backend/app/services/llm_generation/guidance/guidance_service.py
+- backend/app/services/llm_generation/horoscope_daily/__init__.py
+- backend/app/services/llm_generation/horoscope_daily/narration_service.py
+- backend/app/services/llm_generation/natal/__init__.py
+- backend/app/services/llm_generation/natal/interpretation_service.py
+- backend/app/services/llm_generation/natal/prompt_context.py
 - backend/app/api/v1/routers/admin_llm_consumption.py
 - backend/app/api/v1/routers/admin_exports.py
 - backend/app/api/v1/routers/ops_monitoring_llm.py
 - backend/app/api/v1/routers/internal/llm/qa.py
+- backend/app/api/v1/routers/chat.py
+- backend/app/api/v1/routers/guidance.py
+- backend/app/api/v1/routers/natal_interpretation.py
+- backend/app/api/v1/routers/users.py
 - backend/app/startup/llm_qa_seed.py
+- backend/app/domain/llm/runtime/adapter.py
+- backend/app/services/astro_context_builder.py
+- backend/app/services/llm_generation/consultation_generation_service.py
 - backend/app/tests/unit/test_llm_canonical_consumption_service.py
+- backend/app/tests/unit/test_chat_guidance_service.py
+- backend/app/tests/unit/test_guidance_service.py
+- backend/app/tests/unit/test_natal_interpretation_service.py
+- backend/app/tests/unit/test_natal_interpretation_service_v2.py
 - backend/app/tests/unit/test_story_70_21_services_llm_structure_guard.py
+- backend/app/tests/unit/test_astro_response_v2.py
 - backend/app/tests/integration/test_llm_qa_seed.py
+- backend/app/tests/integration/test_chat_api.py
+- backend/app/tests/integration/test_chat_entitlement.py
+- backend/app/tests/integration/test_chat_idempotence.py
+- backend/app/tests/integration/test_chat_persona_prompting.py
+- backend/app/tests/integration/test_guidance_api.py
+- backend/app/tests/integration/test_natal_chart_long_entitlement.py
+- backend/app/tests/integration/test_natal_free_short_variant.py
+- backend/app/tests/integration/test_natal_interpretation_endpoint.py
+- backend/app/tests/integration/test_llm_qa_router.py
 - backend/docs/llm-db-cleanup-registry.json
 - backend/app/api/v1/routers/ops_entitlement_mutation_audits.py
 - backend/app/services/canonical_entitlement/alert/query.py
 - backend/app/services/canonical_entitlement/alert/retry.py
+- backend/app/services/tests/test_natal_interpretation_service_v2_refacto.py
+- backend/app/prediction/llm_gateway_narrator.py (supprime)
 - backend/app/services/llm_canonical_consumption_service.py (supprime)
 - backend/app/services/llm_ops_monitoring_service.py (supprime)
 - backend/app/services/llm_qa_seed_service.py (supprime)
+- backend/app/services/llm_generation/chat_guidance_service.py (supprime)
+- backend/app/services/llm_generation/guidance_service.py (supprime)
+- backend/app/services/llm_generation/natal_interpretation_service.py (supprime)
+- backend/app/services/llm_generation/natal_interpretation_service_v2.py (supprime)
+- backend/scripts/__init__.py
+- backend/scripts/debug_natal_internal_error.py
+- backend/tests/llm_orchestration/test_story_66_19_narrator_migration.py
 
 ### Change Log
 
 - 2026-04-25: relocalisation finale des services LLM residuels sous `llm_observability/` et `llm_generation/`, factorisation de l API publique de consommation, migration complete des imports/tests, ajout des garde-fous structurels et validation backend complete.
+- 2026-04-25: correction post-review du wrapper natal historique `/users` pour forcer la variante canonique `free_short`, unification de la regle `degraded_mode` et validation ciblee des fichiers impactes.
