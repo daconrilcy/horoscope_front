@@ -13,14 +13,10 @@ from typing import Any
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.application.llm.ai_engine_adapter import (
-    AIEngineAdapter,
-    AIEngineAdapterError,
-    assess_off_scope,
-    map_adapter_error_to_codes,
-)
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
+from app.domain.llm.runtime.adapter import AIEngineAdapter
+from app.domain.llm.runtime.adapter_errors import AIEngineAdapterError, map_adapter_error_to_codes
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.observability.metrics import increment_counter, observe_duration
 from app.services.current_context import build_current_prompt_context
@@ -28,6 +24,7 @@ from app.services.entitlement_types import QuotaDefinition
 from app.services.llm_generation.anonymization_service import anonymize_text
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 from app.services.llm_generation.natal_interpretation_service import build_natal_chart_summary
+from app.services.llm_generation.off_scope_policy import assess_off_scope
 from app.services.persona_config_service import PersonaConfigService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,
@@ -132,6 +129,19 @@ class GuidanceService:
         if advice:
             sections.append("Conseils :\n" + "\n".join(f"- {item}" for item in advice))
         return "\n\n".join(section for section in sections if section.strip())
+
+    @staticmethod
+    def _normalize_structured_string_list(raw_value: Any) -> list[str]:
+        """Normalise une sortie structurée LLM potentiellement mal typée en liste de chaînes."""
+        if raw_value is None:
+            return []
+        if isinstance(raw_value, str):
+            normalized = raw_value.strip()
+            return [normalized] if normalized else []
+        if isinstance(raw_value, (list, tuple)):
+            return [str(item).strip() for item in raw_value if str(item).strip()]
+        normalized = str(raw_value).strip()
+        return [normalized] if normalized else []
 
     @staticmethod
     def _detect_degraded_natal_mode(
@@ -759,8 +769,12 @@ class GuidanceService:
                 if not recovery_metadata.recovery_applied and result.structured_output:
                     s = result.structured_output
                     summary_raw = s.get("summary") or s.get("text") or result.raw_output
-                    key_points = s.get("key_points") or s.get("highlights") or []
-                    advice = s.get("actionable_advice") or s.get("advice") or []
+                    key_points = GuidanceService._normalize_structured_string_list(
+                        s.get("key_points") or s.get("highlights")
+                    )
+                    advice = GuidanceService._normalize_structured_string_list(
+                        s.get("actionable_advice") or s.get("advice")
+                    )
                     disclaimers = s.get("disclaimers") or []
                     disclaimer_raw = s.get("disclaimer") or (disclaimers[0] if disclaimers else "")
                 else:
@@ -1071,8 +1085,12 @@ class GuidanceService:
                 if not recovery_metadata.recovery_applied and result.structured_output:
                     s = result.structured_output
                     summary_raw = s.get("summary") or s.get("text") or result.raw_output
-                    key_points = s.get("key_points") or s.get("highlights") or []
-                    advice = s.get("actionable_advice") or s.get("advice") or []
+                    key_points = GuidanceService._normalize_structured_string_list(
+                        s.get("key_points") or s.get("highlights")
+                    )
+                    advice = GuidanceService._normalize_structured_string_list(
+                        s.get("actionable_advice") or s.get("advice")
+                    )
                     disclaimers = s.get("disclaimers") or []
                     disclaimer_raw = s.get("disclaimer") or (disclaimers[0] if disclaimers else "")
                     full_text = GuidanceService._compose_structured_guidance_full_text(

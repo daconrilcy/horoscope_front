@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.application.llm.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
 from app.core.datetime_provider import datetime_provider
+from app.domain.llm.runtime.adapter import AIEngineAdapter, AIEngineAdapterError
 from app.services.current_context import build_current_prompt_context
 from app.services.user_birth_profile_service import UserBirthProfileData
 from app.services.user_natal_chart_service import UserNatalChartReadData
@@ -429,4 +429,3 @@ class NatalInterpretationService:
                 message=f"AI Engine error: {error}",
                 details={"request_id": request_id},
             ) from error
-

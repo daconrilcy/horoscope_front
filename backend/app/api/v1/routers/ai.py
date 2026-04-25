@@ -18,8 +18,8 @@ from app.api.v1.schemas.ai import (
     GenerateResponse,
     UsageInfo,
 )
-from app.application.llm.ai_engine_adapter import AIEngineAdapter
 from app.core.request_id import resolve_request_id
+from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.errors import AIEngineError, RateLimitExceededError
 from app.infra.db.session import get_db_session
 from app.infra.llm.rate_limiter import RateLimiter

@@ -17,9 +17,9 @@ from app.api.v1.schemas.natal_interpretation import (
     NatalInterpretationResponse,
     NatalPdfTemplateListResponse,
 )
-from app.application.llm.ai_engine_adapter import AIEngineAdapterError
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
+from app.domain.llm.runtime.adapter import AIEngineAdapterError
 from app.domain.llm.runtime.contracts import (
     GatewayConfigError,
     InputValidationError,

@@ -16,14 +16,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.application.llm.ai_engine_adapter import (
-    AIEngineAdapter,
-    AIEngineAdapterError,
-    assess_off_scope,
-    map_adapter_error_to_codes,
-)
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
+from app.domain.llm.runtime.adapter import AIEngineAdapter
+from app.domain.llm.runtime.adapter_errors import AIEngineAdapterError, map_adapter_error_to_codes
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.repositories.user_repository import UserRepository
 from app.infra.observability.metrics import increment_counter, observe_duration
@@ -39,6 +35,7 @@ from app.services.llm_generation.natal_interpretation_service import (
     _detect_degraded_mode,
     build_chat_natal_hint,
 )
+from app.services.llm_generation.off_scope_policy import assess_off_scope
 from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
 from app.services.user_birth_profile_service import (
     UserBirthProfileService,

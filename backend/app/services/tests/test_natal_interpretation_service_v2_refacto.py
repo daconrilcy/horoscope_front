@@ -39,7 +39,7 @@ async def test_interpret_calls_adapter_canonical(db):
     persona_id = str(uuid.uuid4())
 
     with patch(
-        "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_natal_interpretation",
+        "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_natal_interpretation",
         new_callable=AsyncMock,
     ) as mock_gen:
         mock_gen.return_value = mock_res
@@ -96,7 +96,7 @@ async def test_generate_free_short_calls_adapter_canonical(db):
     )
 
     with patch(
-        "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_natal_interpretation",
+        "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_natal_interpretation",
         new_callable=AsyncMock,
     ) as mock_gen:
         mock_gen.return_value = mock_res

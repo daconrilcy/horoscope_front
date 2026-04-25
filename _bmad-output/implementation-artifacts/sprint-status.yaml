@@ -1,5 +1,5 @@
 generated: 2026-03-25 00:00:00
-last_updated: "2026-04-23T00:00:00+02:00"
+last_updated: "2026-04-25T14:08:00+02:00"
 project: horoscope_front
 project_key: NOKEY
 tracking_system: file-system
@@ -650,6 +650,7 @@ development_status:
   69-1-executer-manuellement-cible-canonique-depuis-sample-payload: done
   69-2-afficher-retour-llm-brut-structure-metadonnees-execution: done
   69-3-securiser-surface-execution-manuelle-et-qa: done
+  67-to-69-deferred-work: done
   epic-69-retrospective: backlog
   epic-70: in-progress
   70-1-reorganiser-la-navigation-admin-prompts-en-routes-dediees: done
@@ -669,6 +670,8 @@ development_status:
   70-15-basculer-la-source-de-verite-runtime-llm-vers-les-namespaces-canoniques: done
   70-16-documenter-valider-et-exposer-des-routes-de-test-pour-la-generation-llm: done
   70-17-db-cleanup-llm-canonique: done
-  70-18-cleaner-la-structure-backend-et-converger-les-namespaces-techniques: review
+  70-18-cleaner-la-structure-backend-et-converger-les-namespaces-techniques: done
+  70-18b-cleanup-generation-prompts-llm: done
+  70-19-entitlement-mutation-refactor: done
+  70-20-auditer-et-assainir-ai-engine-adapter: done
   epic-70-retrospective: backlog
-  67-to-69-deferred-work: done

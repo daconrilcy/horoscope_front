@@ -16,12 +16,12 @@ from typing import Any
 
 import pytest
 
-from app.application.llm.ai_engine_adapter import reset_test_generators, set_test_chat_generator
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.llm_generation.chat_guidance_service import ChatGuidanceService
+from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator
 
 
 def _cleanup_tables() -> None:

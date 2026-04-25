@@ -4,10 +4,6 @@ from types import SimpleNamespace
 import pytest
 from sqlalchemy import delete
 
-from app.application.llm.ai_engine_adapter import (
-    reset_test_generators,
-    set_test_chat_generator,
-)
 from app.core.config import settings
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
@@ -33,6 +29,7 @@ from app.services.llm_generation.chat_guidance_service import (
     ChatGuidanceServiceError,
 )
 from app.services.persona_config_service import PersonaConfigService, PersonaConfigUpdatePayload
+from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator
 
 
 def _cleanup_tables() -> None:

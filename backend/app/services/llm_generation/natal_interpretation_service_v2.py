@@ -16,7 +16,6 @@ from app.api.v1.schemas.natal_interpretation import (
     NatalInterpretationData,
     NatalInterpretationResponse,
 )
-from app.application.llm.ai_engine_adapter import AIEngineAdapter
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.domain.astrology.natal_calculation import NatalResult
@@ -29,6 +28,7 @@ from app.domain.llm.prompting.schemas import (
     AstroResponseV2,
     AstroResponseV3,
 )
+from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.contracts import GatewayResult, NatalExecutionInput
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user_natal_interpretation import (

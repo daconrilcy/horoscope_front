@@ -4,11 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
-from app.application.llm.ai_engine_adapter import (
-    reset_test_generators,
-    set_test_chat_generator,
-)
 from app.core.config import settings
+from app.core.llm_settings import ai_engine_settings
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.infra.db.base import Base
 from app.infra.db.models.billing import (
@@ -49,9 +46,9 @@ from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
-from app.core.llm_settings import ai_engine_settings
 from app.services.llm_generation.chat_guidance_service import ChatGuidanceServiceError
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
+from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator
 
 client = TestClient(app)
 

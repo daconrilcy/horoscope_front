@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.application.llm.ai_engine_adapter import AIEngineAdapter, AIEngineAdapterError
+from app.domain.llm.runtime.adapter import AIEngineAdapter, AIEngineAdapterError
 from app.domain.llm.runtime.contracts import (
     GatewayMeta,
     GatewayResult,

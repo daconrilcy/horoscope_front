@@ -2,14 +2,15 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.application.llm.ai_engine_adapter import AIEngineAdapter
 from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
+from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.contracts import (
     GatewayMeta,
     GatewayResult,
     OutputValidationError,
     UsageInfo,
 )
+from app.prediction.llm_gateway_narrator import map_gateway_result_to_narrator_result
 from app.prediction.llm_narrator import NarratorResult
 
 
@@ -335,7 +336,7 @@ async def test_map_gateway_result_to_narrator_result_nominal():
         meta=GatewayMeta(latency_ms=0, model="test"),
     )
 
-    res = AIEngineAdapter._map_gateway_result_to_narrator_result(result)
+    res = map_gateway_result_to_narrator_result(result)
 
     assert isinstance(res, NarratorResult)
     assert res.daily_synthesis == "Synth"
@@ -359,7 +360,7 @@ async def test_map_gateway_result_to_narrator_result_empty():
         usage=UsageInfo(),
         meta=GatewayMeta(latency_ms=0, model="test"),
     )
-    res = AIEngineAdapter._map_gateway_result_to_narrator_result(result)
+    res = map_gateway_result_to_narrator_result(result)
     assert res is None
 
     result2 = GatewayResult(
@@ -371,7 +372,7 @@ async def test_map_gateway_result_to_narrator_result_empty():
         usage=UsageInfo(),
         meta=GatewayMeta(latency_ms=0, model="test"),
     )
-    res2 = AIEngineAdapter._map_gateway_result_to_narrator_result(result2)
+    res2 = map_gateway_result_to_narrator_result(result2)
     assert res2 is None
 
 

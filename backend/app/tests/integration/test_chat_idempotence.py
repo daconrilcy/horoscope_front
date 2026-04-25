@@ -4,13 +4,13 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.application.llm.ai_engine_adapter import set_test_chat_generator
 from app.infra.db.base import Base
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user import UserModel
 from app.services.llm_generation.chat_guidance_service import ChatGuidanceService
+from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator
 
 # Setup in-memory DB
 engine = create_engine("sqlite:///:memory:")
@@ -33,8 +33,6 @@ def mock_llm():
 
     set_test_chat_generator(mock_generator)
     yield
-    from app.application.llm.ai_engine_adapter import reset_test_generators
-
     reset_test_generators()
 
 

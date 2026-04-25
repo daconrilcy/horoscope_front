@@ -1,10 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
-from app.application.llm.ai_engine_adapter import (
-    reset_test_generators,
-    set_test_guidance_generator,
-)
 from app.infra.db.base import Base
 from app.infra.db.models.billing import (
     BillingPlanModel,
@@ -41,6 +37,7 @@ from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing_service import BillingService
 from app.services.llm_generation.guidance_service import GuidanceServiceError
+from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_guidance_generator
 
 client = TestClient(app)
 

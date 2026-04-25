@@ -12,13 +12,23 @@ from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.entitlement_types import UsageState
-from app.services.llm_generation.guidance_service import GuidanceService, GuidanceServiceError
+from app.services.llm_generation.guidance_service import (
+    GuidanceRecoveryMetadata,
+    GuidanceService,
+    GuidanceServiceError,
+)
 from app.services.persona_config_service import PersonaConfigService, PersonaConfigUpdatePayload
+from app.tests.helpers.llm_adapter_stub import (
+    reset_test_generators,
+    set_test_chat_generator,
+    set_test_guidance_generator,
+)
 
 
 def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    reset_test_generators()
 
 
 def _create_user_id(email: str = "guidance-user@example.com") -> int:
@@ -148,11 +158,6 @@ def test_compose_structured_guidance_full_text_includes_summary_points_and_advic
 
 
 def set_test_generators(generator: object) -> None:
-    from app.application.llm.ai_engine_adapter import (
-        set_test_chat_generator,
-        set_test_guidance_generator,
-    )
-
     if hasattr(generator, "generate_chat"):
         set_test_chat_generator(generator.generate_chat)  # type: ignore
     elif callable(generator):
@@ -620,6 +625,117 @@ def test_request_contextual_guidance_summary_uses_first_clean_paragraph() -> Non
     )
     assert "#" not in response.summary
     assert "*" not in response.summary
+
+
+def test_request_guidance_accepts_string_in_structured_lists(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _cleanup_tables()
+    user_id = _create_user_id("guidance-structured-daily@example.com")
+    _seed_birth_profile(user_id)
+
+    async def fake_generate_guidance(*args, **kwargs):
+        return SimpleNamespace(
+            raw_output="Synthese brute.",
+            structured_output={
+                "summary": "Synthese propre.",
+                "key_points": "Point unique",
+                "actionable_advice": "Conseil unique",
+                "disclaimer": "Disclaimer.",
+            },
+            request_id="rid-guidance-structured-daily",
+            usage=SimpleNamespace(input_tokens=10, output_tokens=5),
+            meta=SimpleNamespace(model="gpt-4o-mini"),
+        )
+
+    async def fake_recovery(*args, **kwargs):
+        return (
+            "Synthese brute.",
+            False,
+            GuidanceRecoveryMetadata(
+                off_scope_detected=False,
+                off_scope_score=0.0,
+                recovery_strategy="none",
+                recovery_applied=False,
+                recovery_attempts=0,
+                recovery_reason=None,
+            ),
+        )
+
+    monkeypatch.setattr(
+        "app.services.llm_generation.guidance_service.AIEngineAdapter.generate_guidance",
+        fake_generate_guidance,
+    )
+    monkeypatch.setattr(
+        "app.services.llm_generation.guidance_service.GuidanceService._apply_off_scope_recovery_async",
+        fake_recovery,
+    )
+
+    with SessionLocal() as db:
+        response = GuidanceService.request_guidance(
+            db=db,
+            user_id=user_id,
+            period="daily",
+        )
+
+    assert response.key_points == ["Point unique"]
+    assert response.actionable_advice == ["Conseil unique"]
+
+
+def test_request_contextual_guidance_accepts_string_in_structured_lists(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _cleanup_tables()
+    user_id = _create_user_id("guidance-structured-contextual@example.com")
+    _seed_birth_profile(user_id)
+
+    async def fake_generate_guidance(*args, **kwargs):
+        return SimpleNamespace(
+            raw_output="Synthese contextuelle brute.",
+            structured_output={
+                "summary": "Synthese contextuelle propre.",
+                "key_points": "Point contextuel",
+                "actionable_advice": "Conseil contextuel",
+                "disclaimer": "Disclaimer contextuel.",
+            },
+            request_id="rid-guidance-structured-contextual",
+            usage=SimpleNamespace(input_tokens=12, output_tokens=7),
+            meta=SimpleNamespace(model="gpt-4o-mini"),
+        )
+
+    async def fake_recovery(*args, **kwargs):
+        return (
+            "Synthese contextuelle brute.",
+            False,
+            GuidanceRecoveryMetadata(
+                off_scope_detected=False,
+                off_scope_score=0.0,
+                recovery_strategy="none",
+                recovery_applied=False,
+                recovery_attempts=0,
+                recovery_reason=None,
+            ),
+        )
+
+    monkeypatch.setattr(
+        "app.services.llm_generation.guidance_service.AIEngineAdapter.generate_guidance",
+        fake_generate_guidance,
+    )
+    monkeypatch.setattr(
+        "app.services.llm_generation.guidance_service.GuidanceService._apply_off_scope_recovery_async",
+        fake_recovery,
+    )
+
+    with SessionLocal() as db:
+        response = GuidanceService.request_contextual_guidance(
+            db=db,
+            user_id=user_id,
+            situation="Situation structuree",
+            objective="Objectif structure",
+        )
+
+    assert response.key_points == ["Point contextuel"]
+    assert response.actionable_advice == ["Conseil contextuel"]
 
 
 def test_request_contextual_guidance_invalid_context_rejected() -> None:

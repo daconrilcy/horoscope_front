@@ -314,9 +314,7 @@ class LLMGateway:
                             else "optional"
                         ),
                         safety_profile=(
-                            canonical_contract.safety_profile
-                            if canonical_contract
-                            else "astrology"
+                            canonical_contract.safety_profile if canonical_contract else "astrology"
                         ),
                         output_schema_id=registry_config.output_schema_id,
                         input_schema=(
@@ -1440,7 +1438,7 @@ class LLMGateway:
         user_data_block = extra.get("user_data_block")
         if not user_data_block:
             if extra.get("chat_turn_stage") == "opening":
-                from app.application.llm.ai_engine_adapter import (
+                from app.domain.llm.prompting.chat_opening import (
                     build_opening_chat_user_data_block,
                 )
 

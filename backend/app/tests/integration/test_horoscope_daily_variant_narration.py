@@ -165,7 +165,7 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
                 # AC9: Ensure canonical path is used
                 with patch(
-                    "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration"
+                    "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration"
                 ) as mock_adapter:
                     mock_adapter.return_value = NarratorResult(
                         daily_synthesis="Synthèse du jour canonique.",
@@ -232,7 +232,7 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
                 with (
                     patch(
-                        "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration"
+                        "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration"
                     ) as mock_adapter,
                     patch("app.prediction.llm_narrator.LLMNarrator.narrate") as mock_narrate,
                 ):
@@ -319,7 +319,7 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
         patch("app.domain.llm.prompting.context.CommonContextBuilder.build") as mock_ctx_build,
         patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls,
         patch(
-            "app.application.llm.ai_engine_adapter.AIEngineAdapter.generate_horoscope_narration"
+            "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration"
         ) as mock_adapter,
     ):
         mock_settings_router.llm_narrator_enabled = True
