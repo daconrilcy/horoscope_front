@@ -26,7 +26,7 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.user import UserModel
 from app.services.b2b_audit_service import B2BAuditService
-from app.services.canonical_entitlement_mutation_service import (
+from app.services.canonical_entitlement.audit.mutation_service import (
     CanonicalEntitlementMutationService,
     CanonicalMutationContext,
 )

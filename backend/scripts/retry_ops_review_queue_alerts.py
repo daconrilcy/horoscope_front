@@ -30,7 +30,7 @@ def main() -> int:
     args = parser.parse_args()
 
     from app.infra.db.session import SessionLocal
-    from app.services.canonical_entitlement_alert_retry_service import (
+    from app.services.canonical_entitlement.alert.retry import (
         AlertEventNotFoundError,
         AlertEventNotRetryableError,
         CanonicalEntitlementAlertRetryService,

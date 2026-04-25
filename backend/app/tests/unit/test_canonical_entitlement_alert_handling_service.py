@@ -19,7 +19,7 @@ from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.session import SessionLocal, engine
-from app.services.canonical_entitlement_alert_handling_service import (
+from app.services.canonical_entitlement.alert.handling import (
     CanonicalEntitlementAlertHandlingService,
 )
 

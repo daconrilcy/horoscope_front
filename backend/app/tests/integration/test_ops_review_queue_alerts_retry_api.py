@@ -185,8 +185,8 @@ def test_post_retry_creates_new_attempt() -> None:
         alert_event_id = event.id
 
     with patch(
-        "app.services.canonical_entitlement_alert_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         response = client.post(
@@ -395,3 +395,4 @@ def test_post_retry_returns_429_when_rate_limited(monkeypatch: object) -> None:
     payload = response.json()["error"]
     assert payload["code"] == "rate_limit_exceeded"
     assert payload["request_id"] == "rid-retry-429"
+

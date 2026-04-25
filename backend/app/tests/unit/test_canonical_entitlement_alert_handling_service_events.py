@@ -13,7 +13,7 @@ from app.infra.db.models.entitlement_mutation.alert.handling_event import (
     CanonicalEntitlementMutationAlertHandlingEventModel,
 )
 from app.infra.db.session import SessionLocal
-from app.services.canonical_entitlement_alert_handling_service import (
+from app.services.canonical_entitlement.alert.handling import (
     CanonicalEntitlementAlertHandlingService,
 )
 from app.tests.unit.test_canonical_entitlement_alert_handling_service import (

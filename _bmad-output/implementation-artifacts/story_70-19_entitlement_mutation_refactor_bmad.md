@@ -125,6 +125,46 @@ Contraintes associées :
 - les `__init__.py` doivent réexporter explicitement les symboles publics utiles ;
 - les imports applicatifs, ORM et de tests doivent pointer uniquement vers cette nouvelle arborescence.
 
+L’organisation cible des services du périmètre canonical entitlement est aussi imposée :
+
+```text
+backend/
+  app/
+    services/
+      canonical_entitlement/
+        __init__.py
+        alert/
+          __init__.py
+          batch_handling.py
+          batch_retry.py
+          handling.py
+          query.py
+          retry.py
+          service.py
+        audit/
+          __init__.py
+          audit_query.py
+          audit_review.py
+          diff_service.py
+          mutation_service.py
+          review_queue.py
+        shared/
+          __init__.py
+          alert_delivery_runtime.py
+          db_consistency_validator.py
+        suppression/
+          __init__.py
+          application.py
+          rule.py
+```
+
+Contraintes associées :
+
+- aucun service canonical entitlement concerné par cette story ne doit rester à plat dans `backend\app\services` ;
+- aucun shim, wrapper ou réexport legacy ne doit être conservé à la racine de `backend\app\services` ;
+- les imports applicatifs, scripts et tests doivent pointer uniquement vers cette nouvelle arborescence ;
+- la logique transverse partagée entre `alert/service.py`, `alert/retry.py` et `alert/batch_retry.py` doit être factorisée dans `shared/alert_delivery_runtime.py`.
+
 ## Acceptance Criteria
 
 ### AC1 — Les modèles entitlement mutation sont isolés dans un sous-domaine dédié
@@ -430,6 +470,42 @@ Tout service orchestrateur éventuel :
 - ne contient pas de logique de persistance dupliquée ;
 - délègue les écritures spécialisées à des composants dédiés ;
 - ne masque pas la séparation canonique current state / history / référentiel / application.
+
+### AC27 — Les services canonical entitlement sont regroupés dans un sous-domaine dédié avec une liste de fichiers fermée
+Les fichiers suivants sont les seuls fichiers de services canonical entitlement concernés par cette story et ils doivent vivre exclusivement dans `backend/app/services/canonical_entitlement` :
+- `backend/app/services/canonical_entitlement/alert/batch_handling.py`
+- `backend/app/services/canonical_entitlement/alert/batch_retry.py`
+- `backend/app/services/canonical_entitlement/alert/handling.py`
+- `backend/app/services/canonical_entitlement/alert/query.py`
+- `backend/app/services/canonical_entitlement/alert/retry.py`
+- `backend/app/services/canonical_entitlement/alert/service.py`
+- `backend/app/services/canonical_entitlement/audit/audit_query.py`
+- `backend/app/services/canonical_entitlement/audit/audit_review.py`
+- `backend/app/services/canonical_entitlement/audit/diff_service.py`
+- `backend/app/services/canonical_entitlement/audit/mutation_service.py`
+- `backend/app/services/canonical_entitlement/audit/review_queue.py`
+- `backend/app/services/canonical_entitlement/shared/alert_delivery_runtime.py`
+- `backend/app/services/canonical_entitlement/shared/db_consistency_validator.py`
+- `backend/app/services/canonical_entitlement/suppression/application.py`
+- `backend/app/services/canonical_entitlement/suppression/rule.py`
+
+Les anciens fichiers plats correspondants doivent être supprimés :
+- `backend/app/services/canonical_entitlement_alert_batch_handling_service.py`
+- `backend/app/services/canonical_entitlement_alert_batch_retry_service.py`
+- `backend/app/services/canonical_entitlement_alert_handling_service.py`
+- `backend/app/services/canonical_entitlement_alert_query_service.py`
+- `backend/app/services/canonical_entitlement_alert_retry_service.py`
+- `backend/app/services/canonical_entitlement_alert_service.py`
+- `backend/app/services/canonical_entitlement_alert_suppression_application_service.py`
+- `backend/app/services/canonical_entitlement_alert_suppression_rule_service.py`
+- `backend/app/services/canonical_entitlement_db_consistency_validator.py`
+- `backend/app/services/canonical_entitlement_mutation_audit_query_service.py`
+- `backend/app/services/canonical_entitlement_mutation_audit_review_service.py`
+- `backend/app/services/canonical_entitlement_mutation_diff_service.py`
+- `backend/app/services/canonical_entitlement_mutation_service.py`
+- `backend/app/services/canonical_entitlement_review_queue_service.py`
+
+Aucun autre chemin stable, alias local durable ou module de compatibilité ne doit subsister pour ces services.
 
 ## Tasks / Subtasks
 
@@ -815,11 +891,28 @@ Tout service orchestrateur éventuel :
 
 ### Review Findings
 
-- [ ] [Review][Patch] Le sous-domaine `entitlement_mutation/` imposé par la story n’existe pas et les modèles restent à plat sous `backend\app\infra\db\models`, ce qui viole directement AC1, AC2 et AC18. [backend/app/infra/db/models/__init__.py:18]
-- [ ] [Review][Patch] `CanonicalEntitlementMutationAlertEventModel` conserve un modèle d’alerte centré sur `delivery_status`/`delivery_error`/`delivered_at` et n’introduit pas les champs de cycle de vie courant exigés (`alert_status`, `last_delivery_status`, `delivery_attempt_count`, suppression, `updated_at`, `closed_at`). L’implémentation actuelle ne sépare donc toujours pas statut métier et état technique de delivery comme demandé par AC5. [backend/app/infra/db/models/canonical_entitlement_mutation_alert_event.py:39]
-- [ ] [Review][Patch] La traçabilité relationnelle d’application de suppression n’est pas implémentée: aucun modèle `CanonicalEntitlementMutationAlertSuppressionApplicationModel` n’existe et le current/history handling ne stocke qu’un `suppression_key` libre. Cela bloque AC4, AC7, AC8 et AC17. [backend/app/infra/db/models/canonical_entitlement_mutation_alert_event_handling.py:32]
-- [ ] [Review][Patch] Le current review d’audit n’est ni versionné ni complètement tracé: `review_version`, `request_id`, `created_at` et `updated_at` manquent encore, ce qui ne satisfait pas AC9. [backend/app/infra/db/models/canonical_entitlement_mutation_audit_review.py:27]
-- [ ] [Review][Patch] Les tables d’historique ne sont pas encore des event logs explicitement typés conformes à la story: `CanonicalEntitlementMutationAuditReviewEventModel` n’a pas de `event_type`, et le handling history ne porte ni `event_type`, ni `resolution_code`, ni `incident_key`, ni suivi de follow-up. AC8 et AC10 restent donc non couverts. [backend/app/infra/db/models/canonical_entitlement_mutation_audit_review_event.py:26]
+- [x] [Review][Patch] Le sous-domaine `entitlement_mutation/` imposé par la story n’existe pas et les modèles restent à plat sous `backend\app\infra\db\models`, ce qui viole directement AC1, AC2 et AC18. [backend/app/infra/db/models/__init__.py:18]
+- [x] [Review][Patch] `CanonicalEntitlementMutationAlertEventModel` conserve un modèle d’alerte centré sur `delivery_status`/`delivery_error`/`delivered_at` et n’introduit pas les champs de cycle de vie courant exigés (`alert_status`, `last_delivery_status`, `delivery_attempt_count`, suppression, `updated_at`, `closed_at`). L’implémentation actuelle ne sépare donc toujours pas statut métier et état technique de delivery comme demandé par AC5. [backend/app/infra/db/models/canonical_entitlement_mutation_alert_event.py:39]
+- [x] [Review][Patch] La traçabilité relationnelle d’application de suppression n’est pas implémentée: aucun modèle `CanonicalEntitlementMutationAlertSuppressionApplicationModel` n’existe et le current/history handling ne stocke qu’un `suppression_key` libre. Cela bloque AC4, AC7, AC8 et AC17. [backend/app/infra/db/models/canonical_entitlement_mutation_alert_event_handling.py:32]
+- [x] [Review][Patch] Le current review d’audit n’est ni versionné ni complètement tracé: `review_version`, `request_id`, `created_at` et `updated_at` manquent encore, ce qui ne satisfait pas AC9. [backend/app/infra/db/models/canonical_entitlement_mutation_audit_review.py:27]
+- [x] [Review][Patch] Les tables d’historique ne sont pas encore des event logs explicitement typés conformes à la story: `CanonicalEntitlementMutationAuditReviewEventModel` n’a pas de `event_type`, et le handling history ne porte ni `event_type`, ni `resolution_code`, ni `incident_key`, ni suivi de follow-up. AC8 et AC10 restent donc non couverts. [backend/app/infra/db/models/canonical_entitlement_mutation_audit_review_event.py:26]
+
+## Implementation Outcome
+
+L’implémentation finale couvre aussi la réorganisation stricte des services canonical entitlement dans :
+
+- `backend/app/services/canonical_entitlement/alert`
+- `backend/app/services/canonical_entitlement/audit`
+- `backend/app/services/canonical_entitlement/shared`
+- `backend/app/services/canonical_entitlement/suppression`
+
+Les anciens fichiers plats `backend/app/services/canonical_entitlement_*` ont été supprimés, les imports applicatifs/scripts/tests ont été réalignés vers les chemins canoniques, et la logique transverse de delivery d’alertes a été factorisée dans `backend/app/services/canonical_entitlement/shared/alert_delivery_runtime.py` pour respecter DRY sans wrapper legacy.
+
+Les validations ciblées exécutées sur le périmètre final sont :
+
+- `ruff check` sur les services canonical entitlement, le router ops, le startup validation et les scripts associés ;
+- `145 passed` sur le sous-ensemble unitaire canonical entitlement ;
+- `99 passed` sur le sous-ensemble d’intégration ops/alerts lié à ce refactor.
 
 ## Dev Notes
 

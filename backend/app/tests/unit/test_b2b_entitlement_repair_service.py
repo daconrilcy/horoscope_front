@@ -418,7 +418,7 @@ def test_classify_zero_units_quota_valid(db, feature):
     db.scalar.side_effect = [feature, None]
 
     with patch(
-        "app.services.canonical_entitlement_mutation_service.CanonicalEntitlementMutationService.upsert_plan_feature_configuration",
+        "app.services.canonical_entitlement.audit.mutation_service.CanonicalEntitlementMutationService.upsert_plan_feature_configuration",
         return_value=PlanFeatureBindingModel(
             id=10,
             plan_id=200,

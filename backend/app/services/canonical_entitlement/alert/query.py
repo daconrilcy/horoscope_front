@@ -1,3 +1,6 @@
+# Service de lecture des alertes entitlement mutation.
+"""Construit les vues de liste et de synthèse sur le schéma canonique des alertes."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -17,7 +20,7 @@ from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
-from app.services.canonical_entitlement_alert_suppression_application_service import (
+from app.services.canonical_entitlement.suppression.application import (
     CanonicalEntitlementAlertSuppressionApplicationService,
 )
 

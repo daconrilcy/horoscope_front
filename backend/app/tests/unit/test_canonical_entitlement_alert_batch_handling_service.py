@@ -14,7 +14,7 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
-from app.services.canonical_entitlement_alert_batch_handling_service import (
+from app.services.canonical_entitlement.alert.batch_handling import (
     CanonicalEntitlementAlertBatchHandlingService,
 )
 
@@ -130,7 +130,7 @@ def test_batch_handle_dry_run_does_not_call_upsert(db_session: Session) -> None:
     )
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_handling_service."
+        "app.services.canonical_entitlement.alert.batch_handling."
         "CanonicalEntitlementAlertHandlingService.upsert_handling"
     ) as upsert_mock:
         result = CanonicalEntitlementAlertBatchHandlingService.batch_handle(
@@ -154,7 +154,7 @@ def test_batch_handle_calls_upsert_for_each_candidate(db_session: Session) -> No
     second = _seed_alert_event(db_session, audit_id=audit.id)
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_handling_service."
+        "app.services.canonical_entitlement.alert.batch_handling."
         "CanonicalEntitlementAlertHandlingService.upsert_handling"
     ) as upsert_mock:
         result = CanonicalEntitlementAlertBatchHandlingService.batch_handle(
@@ -182,7 +182,7 @@ def test_batch_handle_skips_already_handled_with_same_state(db_session: Session)
     )
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_handling_service."
+        "app.services.canonical_entitlement.alert.batch_handling."
         "CanonicalEntitlementAlertHandlingService.upsert_handling"
     ) as upsert_mock:
         result = CanonicalEntitlementAlertBatchHandlingService.batch_handle(
@@ -210,7 +210,7 @@ def test_batch_handle_processes_when_status_differs(db_session: Session) -> None
     )
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_handling_service."
+        "app.services.canonical_entitlement.alert.batch_handling."
         "CanonicalEntitlementAlertHandlingService.upsert_handling"
     ) as upsert_mock:
         result = CanonicalEntitlementAlertBatchHandlingService.batch_handle(
@@ -238,7 +238,7 @@ def test_batch_handle_processes_when_comment_differs(db_session: Session) -> Non
     )
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_handling_service."
+        "app.services.canonical_entitlement.alert.batch_handling."
         "CanonicalEntitlementAlertHandlingService.upsert_handling"
     ) as upsert_mock:
         result = CanonicalEntitlementAlertBatchHandlingService.batch_handle(
@@ -260,7 +260,7 @@ def test_batch_handle_passes_request_id_to_upsert(db_session: Session) -> None:
     _seed_alert_event(db_session, audit_id=audit.id)
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_handling_service."
+        "app.services.canonical_entitlement.alert.batch_handling."
         "CanonicalEntitlementAlertHandlingService.upsert_handling"
     ) as upsert_mock:
         CanonicalEntitlementAlertBatchHandlingService.batch_handle(
@@ -280,7 +280,7 @@ def test_batch_handle_passes_handled_by_user_id(db_session: Session) -> None:
     _seed_alert_event(db_session, audit_id=audit.id)
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_handling_service."
+        "app.services.canonical_entitlement.alert.batch_handling."
         "CanonicalEntitlementAlertHandlingService.upsert_handling"
     ) as upsert_mock:
         CanonicalEntitlementAlertBatchHandlingService.batch_handle(
@@ -313,7 +313,7 @@ def test_batch_handle_limit_is_respected(db_session: Session) -> None:
     )
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_handling_service."
+        "app.services.canonical_entitlement.alert.batch_handling."
         "CanonicalEntitlementAlertHandlingService.upsert_handling"
     ) as upsert_mock:
         result = CanonicalEntitlementAlertBatchHandlingService.batch_handle(

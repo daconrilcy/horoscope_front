@@ -3,9 +3,7 @@
 
 from __future__ import annotations
 
-import json
 import logging
-import urllib.request
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -19,18 +17,21 @@ from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.services.canonical_entitlement_alert_suppression_application_service import (
-    CanonicalEntitlementAlertSuppressionApplicationService,
-)
-from app.services.canonical_entitlement_alert_suppression_rule_service import (
-    CanonicalEntitlementAlertSuppressionRuleService,
-)
-from app.services.canonical_entitlement_mutation_audit_query_service import (
+from app.services.canonical_entitlement.audit.audit_query import (
     CanonicalEntitlementMutationAuditQueryService,
 )
-from app.services.canonical_entitlement_review_queue_service import (
+from app.services.canonical_entitlement.audit.review_queue import (
     CanonicalEntitlementReviewQueueService,
     ReviewQueueRow,
+)
+from app.services.canonical_entitlement.shared.alert_delivery_runtime import (
+    CanonicalEntitlementAlertDeliveryRuntime,
+)
+from app.services.canonical_entitlement.suppression.application import (
+    CanonicalEntitlementAlertSuppressionApplicationService,
+)
+from app.services.canonical_entitlement.suppression.rule import (
+    CanonicalEntitlementAlertSuppressionRuleService,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AlertRunResult:
+    """Résume une exécution d'émission des alertes SLA."""
+
     sql_count: int
     candidate_count: int
     emitted_count: int
@@ -47,6 +50,8 @@ class AlertRunResult:
 
 
 class CanonicalEntitlementAlertService:
+    """Émet les alertes SLA initiales à partir de la review queue canonique."""
+
     @staticmethod
     def emit_sla_alerts(
         db: Session,
@@ -162,30 +167,21 @@ class CanonicalEntitlementAlertService:
                     )
 
                     # 5. Delivery
-                    if settings.ops_review_queue_alert_webhook_url:
-                        event.delivery_channel = "webhook"
-                        success, error_msg = CanonicalEntitlementAlertService._deliver_webhook(
-                            settings.ops_review_queue_alert_webhook_url, payload
-                        )
-                        if success:
-                            delivered_at = datetime_provider.utcnow()
-                            event.delivery_status = "sent"
-                            event.first_delivered_at = delivered_at
-                            event.delivered_at = delivered_at
-                            emitted_count += 1
-                        else:
-                            event.delivery_status = "failed"
-                            event.delivery_error = error_msg
-                            failed_count += 1
-                    else:
-                        # Fallback log
-                        logger.info("ops_review_queue_alert_log_delivery payload=%s", payload)
-                        event.delivery_channel = "log"
-                        delivered_at = datetime_provider.utcnow()
-                        event.delivery_status = "sent"
-                        event.first_delivered_at = delivered_at
-                        event.delivered_at = delivered_at
+                    outcome = CanonicalEntitlementAlertDeliveryRuntime.deliver_payload(
+                        payload,
+                        log_message="ops_review_queue_alert_log_delivery",
+                        delivered_at=now_utc,
+                    )
+                    CanonicalEntitlementAlertDeliveryRuntime.apply_delivery_state(
+                        alert_event=event,
+                        outcome=outcome,
+                        attempt_number=1,
+                        updated_at=now_utc,
+                    )
+                    if outcome.status == "sent":
                         emitted_count += 1
+                    else:
+                        failed_count += 1
 
             except IntegrityError:
                 # Race condition handled
@@ -238,21 +234,3 @@ class CanonicalEntitlementAlertService:
             payload["detail_url"] = f"{base}/v1/ops/entitlements/mutation-audits/{row.audit.id}"
 
         return payload
-
-    @staticmethod
-    def _deliver_webhook(url: str, payload: dict[str, Any]) -> tuple[bool, str | None]:
-        try:
-            data = json.dumps(payload).encode("utf-8")
-            req = urllib.request.Request(
-                url,
-                data=data,
-                headers={"Content-Type": "application/json"},
-                method="POST",
-            )
-            # Timeout arbitraire de 10s pour ne pas bloquer trop longtemps
-            with urllib.request.urlopen(req, timeout=10) as response:
-                if 200 <= response.status < 300:
-                    return True, None
-                return False, f"HTTP {response.status}"
-        except Exception as e:
-            return False, str(e)

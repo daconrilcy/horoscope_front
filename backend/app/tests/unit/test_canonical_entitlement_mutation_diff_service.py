@@ -1,4 +1,4 @@
-from app.services.canonical_entitlement_mutation_diff_service import (
+from app.services.canonical_entitlement.audit.diff_service import (
     CanonicalEntitlementMutationDiffService,
 )
 

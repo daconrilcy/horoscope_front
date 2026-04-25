@@ -1,12 +1,12 @@
 from unittest.mock import MagicMock, patch
 
-from app.services.canonical_entitlement_db_consistency_validator import (
+from app.services.canonical_entitlement.shared.db_consistency_validator import (
     CanonicalEntitlementDbConsistencyError,
 )
 from scripts.check_canonical_entitlement_db_consistency import main
 
 VALIDATE_PATH_CLI = (
-    "app.services.canonical_entitlement_db_consistency_validator"
+    "app.services.canonical_entitlement.shared.db_consistency_validator"
     ".CanonicalEntitlementDbConsistencyValidator.validate"
 )
 

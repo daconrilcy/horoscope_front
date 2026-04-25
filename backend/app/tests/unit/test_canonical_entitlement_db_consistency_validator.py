@@ -13,7 +13,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
 )
-from app.services.canonical_entitlement_db_consistency_validator import (
+from app.services.canonical_entitlement.shared.db_consistency_validator import (
     CanonicalEntitlementDbConsistencyError,
     CanonicalEntitlementDbConsistencyValidator,
 )

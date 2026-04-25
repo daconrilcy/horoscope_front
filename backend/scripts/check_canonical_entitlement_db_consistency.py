@@ -12,7 +12,7 @@ def _ensure_backend_root_on_path() -> None:
 def main() -> int:
     _ensure_backend_root_on_path()
     from app.infra.db.session import SessionLocal
-    from app.services.canonical_entitlement_db_consistency_validator import (
+    from app.services.canonical_entitlement.shared.db_consistency_validator import (
         CanonicalEntitlementDbConsistencyError,
         CanonicalEntitlementDbConsistencyValidator,
     )

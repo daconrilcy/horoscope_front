@@ -34,7 +34,7 @@ from app.infra.db.models.product_entitlements import (
     SourceOrigin,
 )
 from app.infra.db.session import SessionLocal
-from app.services.canonical_entitlement_mutation_service import (
+from app.services.canonical_entitlement.audit.mutation_service import (
     CanonicalEntitlementMutationService,
     CanonicalMutationContext,
 )

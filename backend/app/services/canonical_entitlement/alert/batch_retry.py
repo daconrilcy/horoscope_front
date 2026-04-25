@@ -1,32 +1,30 @@
+# Service de batch retry des alertes entitlement mutation.
+"""Applique les retries de masse en réutilisant les primitives canoniques de delivery."""
+
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
-from app.services.canonical_entitlement_alert_retry_service import (
+from app.services.canonical_entitlement.alert.retry import (
     CanonicalEntitlementAlertRetryService,
 )
-from app.services.canonical_entitlement_alert_service import CanonicalEntitlementAlertService
-from app.services.canonical_entitlement_alert_suppression_application_service import (
+from app.services.canonical_entitlement.shared.alert_delivery_runtime import (
+    CanonicalEntitlementAlertDeliveryRuntime,
+)
+from app.services.canonical_entitlement.suppression.application import (
     CanonicalEntitlementAlertSuppressionApplicationService,
 )
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -92,43 +90,30 @@ class CanonicalEntitlementAlertBatchRetryService:
             attempt_number = CanonicalEntitlementAlertRetryService._next_attempt_number(
                 db, alert_event_id=event.id
             )
-            delivery_channel = "log"
-            delivery_status = "sent"
-            delivery_error = None
-            delivered_at = effective_now
-
-            if settings.ops_review_queue_alert_webhook_url:
-                delivery_channel = "webhook"
-                success, error_message = CanonicalEntitlementAlertService._deliver_webhook(
-                    settings.ops_review_queue_alert_webhook_url,
-                    event.payload,
-                )
-                if success:
-                    sent_count += 1
-                else:
-                    delivery_status = "failed"
-                    delivery_error = error_message
-                    delivered_at = None
-                    failed_count += 1
-            else:
-                logger.info("ops_alert_batch_retry_log_delivery payload=%s", event.payload)
-                sent_count += 1
-
-            db.add(
-                CanonicalEntitlementMutationAlertDeliveryAttemptModel(
-                    alert_event_id=event.id,
-                    attempt_number=attempt_number,
-                    delivery_channel=delivery_channel,
-                    delivery_status=delivery_status,
-                    delivery_error=delivery_error,
-                    request_id=request_id,
-                    payload=event.payload,
-                    delivered_at=delivered_at,
-                )
+            outcome = CanonicalEntitlementAlertDeliveryRuntime.deliver_payload(
+                event.payload,
+                log_message="ops_alert_batch_retry_log_delivery",
+                delivered_at=effective_now,
             )
-            event.delivery_status = delivery_status
-            event.delivery_error = delivery_error
-            event.delivered_at = delivered_at
+            if outcome.status == "sent":
+                sent_count += 1
+            else:
+                failed_count += 1
+
+            CanonicalEntitlementAlertDeliveryRuntime.add_delivery_attempt(
+                db=db,
+                alert_event=event,
+                attempt_number=attempt_number,
+                request_id=request_id,
+                payload=event.payload,
+                outcome=outcome,
+            )
+            CanonicalEntitlementAlertDeliveryRuntime.apply_delivery_state(
+                alert_event=event,
+                outcome=outcome,
+                attempt_number=attempt_number,
+                updated_at=effective_now,
+            )
             retried_count += 1
 
         db.flush()

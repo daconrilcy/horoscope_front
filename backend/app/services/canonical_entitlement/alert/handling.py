@@ -22,7 +22,7 @@ from app.infra.db.models.entitlement_mutation.alert.handling_event import (
 from app.infra.db.models.entitlement_mutation.suppression.suppression_application import (
     CanonicalEntitlementMutationAlertSuppressionApplicationModel,
 )
-from app.services.canonical_entitlement_alert_suppression_application_service import (
+from app.services.canonical_entitlement.suppression.application import (
     CanonicalEntitlementAlertSuppressionApplicationService,
 )
 

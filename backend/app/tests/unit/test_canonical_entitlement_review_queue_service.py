@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from sqlalchemy.orm import Session
 
-from app.services.canonical_entitlement_review_queue_service import (
+from app.services.canonical_entitlement.audit.review_queue import (
     CanonicalEntitlementReviewQueueService,
 )
 
@@ -18,7 +18,7 @@ def test_build_review_queue_rows_empty(db_session: Session):
         mock_query = MagicMock()
         mock_query.list_mutation_audits.return_value = ([], 0)
         mp.setattr(
-            "app.services.canonical_entitlement_review_queue_service.CanonicalEntitlementMutationAuditQueryService",
+            "app.services.canonical_entitlement.audit.review_queue.CanonicalEntitlementMutationAuditQueryService",
             mock_query,
         )
 
@@ -115,7 +115,7 @@ def test_build_review_queue_rows_returns_business_sorted_rows(
     mock_query = MagicMock()
     mock_query.list_mutation_audits.return_value = ([newer_audit, older_audit], 2)
     monkeypatch.setattr(
-        "app.services.canonical_entitlement_review_queue_service."
+        "app.services.canonical_entitlement.audit.review_queue."
         "CanonicalEntitlementMutationAuditQueryService",
         mock_query,
     )
@@ -123,7 +123,7 @@ def test_build_review_queue_rows_returns_business_sorted_rows(
     mock_diff = MagicMock()
     mock_diff.risk_level = "high"
     monkeypatch.setattr(
-        "app.services.canonical_entitlement_review_queue_service."
+        "app.services.canonical_entitlement.audit.review_queue."
         "CanonicalEntitlementMutationDiffService.compute_diff",
         lambda before_payload, after_payload: mock_diff,
     )

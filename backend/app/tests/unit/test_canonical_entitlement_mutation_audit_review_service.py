@@ -17,7 +17,7 @@ from app.infra.db.models.entitlement_mutation.audit.review_event import (
     CanonicalEntitlementMutationAuditReviewEventModel,
 )
 from app.infra.db.session import SessionLocal, engine
-from app.services.canonical_entitlement_mutation_audit_review_service import (
+from app.services.canonical_entitlement.audit.audit_review import (
     AuditNotFoundError,
     CanonicalEntitlementMutationAuditReviewService,
 )

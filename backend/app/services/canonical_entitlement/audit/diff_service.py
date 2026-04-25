@@ -1,4 +1,6 @@
-# backend/app/services/canonical_entitlement_mutation_diff_service.py
+# Service de calcul du diff canonique des mutations entitlement.
+"""Calcule un diff stable et un niveau de risque pour les mutations canoniques."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -6,6 +8,8 @@ from dataclasses import dataclass
 
 @dataclass
 class QuotaChangeSummary:
+    """Résume les changements de quotas détectés dans une mutation."""
+
     added: list[dict]
     removed: list[dict]
     updated: list[dict]  # inclut before_quota_limit et quota_limit
@@ -13,6 +17,8 @@ class QuotaChangeSummary:
 
 @dataclass
 class MutationDiffResult:
+    """Expose le diff canonique consommé par les services d'audit et d'alerte."""
+
     change_kind: str  # "binding_created" | "binding_updated"
     changed_fields: list[str]  # trié, chemins stables
     risk_level: str  # "high" | "medium" | "low"
@@ -20,6 +26,8 @@ class MutationDiffResult:
 
 
 class CanonicalEntitlementMutationDiffService:
+    """Calcule le diff métier canonique entre deux snapshots de binding."""
+
     _BINDING_FIELDS = ["is_enabled", "access_mode", "variant_code", "source_origin"]
 
     @staticmethod

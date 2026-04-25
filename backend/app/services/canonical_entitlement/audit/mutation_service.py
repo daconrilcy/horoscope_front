@@ -1,3 +1,6 @@
+# Service de mutation canonique des entitlements produit.
+"""Valide, persiste et audite les mutations de configuration plan-feature."""
+
 from __future__ import annotations
 
 import logging
@@ -39,6 +42,8 @@ _ALLOWED_ACTOR_TYPES: tuple[ActorType, ...] = ("script", "service", "ops", "syst
 
 @dataclass(frozen=True)
 class CanonicalMutationContext:
+    """Porte le contexte d'acteur à tracer pour une mutation canonique."""
+
     actor_type: ActorType
     actor_identifier: str  # ex: "seed_product_entitlements.py"
     request_id: str | None = None
@@ -71,6 +76,8 @@ class CanonicalMutationValidationError(ValueError):
 
 
 class CanonicalEntitlementMutationService:
+    """Expose l'upsert canonique d'un binding plan-feature et de ses quotas."""
+
     @staticmethod
     def upsert_plan_feature_configuration(
         db: Session,

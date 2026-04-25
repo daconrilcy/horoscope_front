@@ -22,7 +22,7 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_applicatio
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
-from app.services.canonical_entitlement_alert_query_service import (
+from app.services.canonical_entitlement.alert.query import (
     CanonicalEntitlementAlertQueryService,
 )
 

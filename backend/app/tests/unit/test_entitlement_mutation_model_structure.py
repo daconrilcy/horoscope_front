@@ -28,10 +28,10 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_applicatio
     CanonicalEntitlementMutationAlertSuppressionApplicationModel,
 )
 from app.infra.db.session import SessionLocal, engine
-from app.services.canonical_entitlement_alert_handling_service import (
+from app.services.canonical_entitlement.alert.handling import (
     CanonicalEntitlementAlertHandlingService,
 )
-from app.services.canonical_entitlement_mutation_audit_review_service import (
+from app.services.canonical_entitlement.audit.audit_review import (
     CanonicalEntitlementMutationAuditReviewService,
 )
 
@@ -263,3 +263,49 @@ def test_legacy_root_model_shims_are_removed() -> None:
     models_root = Path(__file__).resolve().parents[2] / "infra" / "db" / "models"
 
     assert all(not (models_root / name).exists() for name in legacy_files)
+
+
+def test_canonical_entitlement_services_live_only_in_dedicated_subdomain() -> None:
+    legacy_service_files = [
+        "canonical_entitlement_alert_batch_handling_service.py",
+        "canonical_entitlement_alert_batch_retry_service.py",
+        "canonical_entitlement_alert_handling_service.py",
+        "canonical_entitlement_alert_query_service.py",
+        "canonical_entitlement_alert_retry_service.py",
+        "canonical_entitlement_alert_service.py",
+        "canonical_entitlement_alert_suppression_application_service.py",
+        "canonical_entitlement_alert_suppression_rule_service.py",
+        "canonical_entitlement_db_consistency_validator.py",
+        "canonical_entitlement_mutation_audit_query_service.py",
+        "canonical_entitlement_mutation_audit_review_service.py",
+        "canonical_entitlement_mutation_diff_service.py",
+        "canonical_entitlement_mutation_service.py",
+        "canonical_entitlement_review_queue_service.py",
+    ]
+    expected_service_files = [
+        "alert/__init__.py",
+        "alert/batch_handling.py",
+        "alert/batch_retry.py",
+        "alert/handling.py",
+        "alert/query.py",
+        "alert/retry.py",
+        "alert/service.py",
+        "audit/__init__.py",
+        "audit/audit_query.py",
+        "audit/audit_review.py",
+        "audit/diff_service.py",
+        "audit/mutation_service.py",
+        "audit/review_queue.py",
+        "shared/__init__.py",
+        "shared/alert_delivery_runtime.py",
+        "shared/db_consistency_validator.py",
+        "suppression/__init__.py",
+        "suppression/application.py",
+        "suppression/rule.py",
+    ]
+    services_root = Path(__file__).resolve().parents[2] / "services"
+    canonical_root = services_root / "canonical_entitlement"
+
+    assert canonical_root.exists()
+    assert all((canonical_root / name).exists() for name in expected_service_files)
+    assert all(not (services_root / name).exists() for name in legacy_service_files)

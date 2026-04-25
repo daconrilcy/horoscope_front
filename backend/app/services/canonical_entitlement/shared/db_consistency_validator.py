@@ -1,3 +1,6 @@
+# Validateur partagé de cohérence canonical entitlement.
+"""Contrôle l'alignement entre le registre métier et la base entitlements."""
+
 from __future__ import annotations
 
 import logging
@@ -35,6 +38,8 @@ class CanonicalEntitlementDbConsistencyError(ValueError):
 
 
 class CanonicalEntitlementDbConsistencyValidator:
+    """Vérifie les invariants structurants de la base canonical entitlement."""
+
     @staticmethod
     def validate(db: Session) -> None:
         errors: list[str] = []

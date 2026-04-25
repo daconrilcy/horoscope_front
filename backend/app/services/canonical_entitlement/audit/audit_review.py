@@ -20,6 +20,8 @@ from app.infra.db.models.entitlement_mutation.audit.review_event import (
 
 
 class AuditNotFoundError(Exception):
+    """Exception levée lorsqu'un audit demandé n'existe pas."""
+
     def __init__(self, audit_id: int) -> None:
         self.audit_id = audit_id
         super().__init__(f"Audit {audit_id} not found")

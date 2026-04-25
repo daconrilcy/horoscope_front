@@ -1,3 +1,6 @@
+# Service de résolution des règles de suppression entitlement mutation.
+"""Expose la sélection canonique de la meilleure règle applicable à une alerte."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

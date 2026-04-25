@@ -8,11 +8,11 @@ from app.core.config import settings
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.services.canonical_entitlement_alert_service import (
+from app.services.canonical_entitlement.alert.service import (
     AlertRunResult,
     CanonicalEntitlementAlertService,
 )
-from app.services.canonical_entitlement_review_queue_service import ReviewQueueRow
+from app.services.canonical_entitlement.audit.review_queue import ReviewQueueRow
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_emit_disabled_config_short_circuits(db_session: Session):
 
 def test_emit_dry_run_creates_no_rows(db_session: Session, mock_row):
     with patch.object(settings, "ops_review_queue_alerts_enabled", True):
-        service_path = "app.services.canonical_entitlement_review_queue_service"
+        service_path = "app.services.canonical_entitlement.audit.review_queue"
         mock_target = (
             f"{service_path}.CanonicalEntitlementReviewQueueService.build_review_queue_rows"
         )
@@ -70,7 +70,7 @@ def test_emit_dry_run_creates_no_rows(db_session: Session, mock_row):
 
 
 def test_emit_due_soon_alert_once(db_session: Session, mock_row):
-    service_path = "app.services.canonical_entitlement_review_queue_service"
+    service_path = "app.services.canonical_entitlement.audit.review_queue"
     mock_target = f"{service_path}.CanonicalEntitlementReviewQueueService.build_review_queue_rows"
     with patch.object(settings, "ops_review_queue_alerts_enabled", True):
         with patch.object(settings, "ops_review_queue_alert_webhook_url", None):
@@ -89,7 +89,7 @@ def test_emit_due_soon_alert_once(db_session: Session, mock_row):
 
 
 def test_emit_skips_duplicate_dedupe_key(db_session: Session, mock_row):
-    service_path = "app.services.canonical_entitlement_review_queue_service"
+    service_path = "app.services.canonical_entitlement.audit.review_queue"
     mock_target = f"{service_path}.CanonicalEntitlementReviewQueueService.build_review_queue_rows"
     with patch.object(settings, "ops_review_queue_alerts_enabled", True):
         with patch.object(settings, "ops_review_queue_alert_webhook_url", None):
@@ -106,7 +106,7 @@ def test_emit_skips_duplicate_dedupe_key(db_session: Session, mock_row):
 
 
 def test_emit_new_alert_when_status_phase_changes(db_session: Session, mock_row):
-    service_path = "app.services.canonical_entitlement_review_queue_service"
+    service_path = "app.services.canonical_entitlement.audit.review_queue"
     mock_target = f"{service_path}.CanonicalEntitlementReviewQueueService.build_review_queue_rows"
     with patch.object(settings, "ops_review_queue_alerts_enabled", True):
         with patch.object(settings, "ops_review_queue_alert_webhook_url", None):
@@ -128,7 +128,7 @@ def test_emit_new_alert_when_status_phase_changes(db_session: Session, mock_row)
 
 def test_emit_ignores_closed_and_expected_items(db_session: Session, mock_row):
     with patch.object(settings, "ops_review_queue_alerts_enabled", True):
-        service_path = "app.services.canonical_entitlement_review_queue_service"
+        service_path = "app.services.canonical_entitlement.audit.review_queue"
         mock_target = (
             f"{service_path}.CanonicalEntitlementReviewQueueService.build_review_queue_rows"
         )
@@ -144,13 +144,13 @@ def test_emit_ignores_closed_and_expected_items(db_session: Session, mock_row):
 def test_emit_failed_webhook_persists_failed_event(db_session: Session, mock_row):
     with patch.object(settings, "ops_review_queue_alerts_enabled", True):
         with patch.object(settings, "ops_review_queue_alert_webhook_url", "http://fail"):
-            service_path = "app.services.canonical_entitlement_review_queue_service"
-            alert_service_path = "app.services.canonical_entitlement_alert_service"
+            service_path = "app.services.canonical_entitlement.audit.review_queue"
+            alert_service_path = "app.services.canonical_entitlement.alert.service"
             mock_target_queue = (
                 f"{service_path}.CanonicalEntitlementReviewQueueService.build_review_queue_rows"
             )
             mock_target_webhook = (
-                f"{alert_service_path}.CanonicalEntitlementAlertService._deliver_webhook"
+                f"{alert_service_path}.CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook"
             )
 
             with patch(mock_target_queue) as mock_build:
@@ -169,7 +169,7 @@ def test_emit_failed_webhook_persists_failed_event(db_session: Session, mock_row
 
 
 @patch(
-    "app.services.canonical_entitlement_alert_service.CanonicalEntitlementAlertService._deliver_webhook"
+    "app.services.canonical_entitlement.alert.service.CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook"
 )
 def test_emit_concurrent_insert_handled_as_skipped_duplicate(
     mock_deliver, db_session: Session, mock_row
@@ -177,7 +177,7 @@ def test_emit_concurrent_insert_handled_as_skipped_duplicate(
     mock_deliver.return_value = (True, None)
     with patch.object(settings, "ops_review_queue_alerts_enabled", True):
         with patch.object(settings, "ops_review_queue_alert_webhook_url", "http://ok"):
-            service_path = "app.services.canonical_entitlement_review_queue_service"
+            service_path = "app.services.canonical_entitlement.audit.review_queue"
             mock_target = (
                 f"{service_path}.CanonicalEntitlementReviewQueueService.build_review_queue_rows"
             )
@@ -203,4 +203,5 @@ def test_emit_concurrent_insert_handled_as_skipped_duplicate(
 
                     assert result.skipped_duplicate_count == 1
                     assert result.emitted_count == 0
+
 

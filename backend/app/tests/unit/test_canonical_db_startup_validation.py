@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.services.canonical_entitlement_db_consistency_validator import (
+from app.services.canonical_entitlement.shared.db_consistency_validator import (
     CanonicalEntitlementDbConsistencyError,
 )
 from app.startup.canonical_db_validation import run_canonical_db_startup_validation

@@ -1,3 +1,6 @@
+# Service de construction de la review queue entitlement mutation.
+"""Compose les lignes SLA à partir des audits, des reviews et du diff canonique."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,10 +13,10 @@ from sqlalchemy.orm import Session
 from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
-from app.services.canonical_entitlement_mutation_audit_query_service import (
+from app.services.canonical_entitlement.audit.audit_query import (
     CanonicalEntitlementMutationAuditQueryService,
 )
-from app.services.canonical_entitlement_mutation_diff_service import (
+from app.services.canonical_entitlement.audit.diff_service import (
     CanonicalEntitlementMutationDiffService,
 )
 

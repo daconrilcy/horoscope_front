@@ -38,7 +38,7 @@ def main() -> int:
 
     import app.infra.db.models.llm  # noqa: F401
     from app.infra.db.session import SessionLocal
-    from app.services.canonical_entitlement_alert_service import CanonicalEntitlementAlertService
+    from app.services.canonical_entitlement.alert.service import CanonicalEntitlementAlertService
 
     try:
         with SessionLocal() as db:

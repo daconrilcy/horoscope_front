@@ -29,25 +29,25 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_rule impor
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.infra.db.session import get_db_session
-from app.services.canonical_entitlement_alert_handling_service import (
+from app.services.canonical_entitlement.alert.handling import (
     CanonicalEntitlementAlertHandlingService,
 )
-from app.services.canonical_entitlement_alert_suppression_application_service import (
-    CanonicalEntitlementAlertSuppressionApplicationService,
-)
-from app.services.canonical_entitlement_mutation_audit_query_service import (
+from app.services.canonical_entitlement.audit.audit_query import (
     CanonicalEntitlementMutationAuditQueryService,
 )
-from app.services.canonical_entitlement_mutation_audit_review_service import (
+from app.services.canonical_entitlement.audit.audit_review import (
     AuditNotFoundError,
     CanonicalEntitlementMutationAuditReviewService,
 )
-from app.services.canonical_entitlement_mutation_diff_service import (
+from app.services.canonical_entitlement.audit.diff_service import (
     CanonicalEntitlementMutationDiffService,
 )
-from app.services.canonical_entitlement_review_queue_service import (
+from app.services.canonical_entitlement.audit.review_queue import (
     CanonicalEntitlementReviewQueueService,
     ReviewQueueRow,
+)
+from app.services.canonical_entitlement.suppression.application import (
+    CanonicalEntitlementAlertSuppressionApplicationService,
 )
 
 router = APIRouter(prefix="/v1/ops/entitlements", tags=["ops-entitlement-audits"])
@@ -1157,7 +1157,7 @@ def get_alert_events_summary(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    from app.services.canonical_entitlement_alert_query_service import (
+    from app.services.canonical_entitlement.alert.query import (
         CanonicalEntitlementAlertQueryService,
     )
 
@@ -1229,7 +1229,7 @@ def list_alert_events(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    from app.services.canonical_entitlement_alert_query_service import (
+    from app.services.canonical_entitlement.alert.query import (
         CanonicalEntitlementAlertQueryService,
     )
 
@@ -1527,7 +1527,7 @@ def batch_retry_alerts(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    from app.services.canonical_entitlement_alert_batch_retry_service import (
+    from app.services.canonical_entitlement.alert.batch_retry import (
         CanonicalEntitlementAlertBatchRetryService,
     )
 
@@ -1592,7 +1592,7 @@ def batch_handle_alerts(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    from app.services.canonical_entitlement_alert_batch_handling_service import (
+    from app.services.canonical_entitlement.alert.batch_handling import (
         CanonicalEntitlementAlertBatchHandlingService,
     )
 
@@ -1898,7 +1898,7 @@ def retry_alert(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    from app.services.canonical_entitlement_alert_retry_service import (
+    from app.services.canonical_entitlement.alert.retry import (
         AlertEventNotFoundError,
         AlertEventNotRetryableError,
         CanonicalEntitlementAlertRetryService,

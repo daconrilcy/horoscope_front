@@ -71,8 +71,8 @@ def test_post_retry_batch_real_retries_multiple_failed() -> None:
         db.commit()
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.batch_retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         response = client.post(
@@ -338,8 +338,8 @@ def test_post_retry_batch_does_not_affect_sent_events() -> None:
         db.commit()
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.batch_retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         response = client.post(
@@ -369,4 +369,5 @@ def test_post_retry_batch_does_not_affect_sent_events() -> None:
         assert refreshed_failed.delivery_status == "sent"
         assert refreshed_sent.delivery_status == "sent"
         assert len(attempts) == 1
+
 

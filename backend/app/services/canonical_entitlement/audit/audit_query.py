@@ -1,3 +1,6 @@
+# Service de lecture des audits entitlement mutation.
+"""Expose les requêtes de pagination et d'accès direct sur les audits canoniques."""
+
 from __future__ import annotations
 
 from datetime import datetime

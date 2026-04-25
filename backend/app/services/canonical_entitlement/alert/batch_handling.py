@@ -1,3 +1,6 @@
+# Service de batch handling des alertes entitlement mutation.
+"""Applique des handlings de masse sans dupliquer la logique de current state."""
+
 from __future__ import annotations
 
 import logging
@@ -13,7 +16,7 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
-from app.services.canonical_entitlement_alert_handling_service import (
+from app.services.canonical_entitlement.alert.handling import (
     CanonicalEntitlementAlertHandlingService,
 )
 

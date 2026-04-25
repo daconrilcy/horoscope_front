@@ -23,7 +23,7 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_applicatio
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
-from app.services.canonical_entitlement_alert_batch_retry_service import (
+from app.services.canonical_entitlement.alert.batch_retry import (
     CanonicalEntitlementAlertBatchRetryService,
 )
 
@@ -166,8 +166,8 @@ def test_batch_retry_real_retries_all_failed_candidates(db_session: Session) -> 
     second = _seed_alert_event(db_session, audit_id=second_audit.id)
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.batch_retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         result = CanonicalEntitlementAlertBatchRetryService.batch_retry(
@@ -204,8 +204,8 @@ def test_batch_retry_respects_limit(db_session: Session) -> None:
     )
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.batch_retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         result = CanonicalEntitlementAlertBatchRetryService.batch_retry(
@@ -303,8 +303,8 @@ def test_batch_retry_skipped_count_is_zero_when_all_retried(db_session: Session)
     _seed_alert_event(db_session, audit_id=audit.id)
 
     with patch(
-        "app.services.canonical_entitlement_alert_batch_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.batch_retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         result = CanonicalEntitlementAlertBatchRetryService.batch_retry(
@@ -379,3 +379,4 @@ def test_batch_retry_dry_run_excludes_rule_suppressed_alerts(db_session: Session
     assert result.candidate_count == 1
     assert result.retried_count == 1
     assert result.alert_event_ids == [open_event.id]
+

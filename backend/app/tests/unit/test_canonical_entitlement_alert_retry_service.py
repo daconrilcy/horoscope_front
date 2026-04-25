@@ -21,7 +21,7 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_applicatio
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
-from app.services.canonical_entitlement_alert_retry_service import (
+from app.services.canonical_entitlement.alert.retry import (
     AlertEventNotFoundError,
     AlertEventNotRetryableError,
     CanonicalEntitlementAlertRetryService,
@@ -92,8 +92,8 @@ def test_retry_failed_alert_creates_attempt(db_session: Session) -> None:
     event = _seed_alert_event(db_session, audit_id=audit.id)
 
     with patch(
-        "app.services.canonical_entitlement_alert_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         result = CanonicalEntitlementAlertRetryService.retry_failed_alerts(
@@ -120,12 +120,12 @@ def test_retry_failed_alert_updates_parent_status_on_success(db_session: Session
     now_utc = datetime(2026, 3, 29, 12, 0, tzinfo=timezone.utc)
 
     with patch(
-        "app.services.canonical_entitlement_alert_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         with patch(
-            "app.services.canonical_entitlement_alert_retry_service."
+            "app.services.canonical_entitlement.shared.alert_delivery_runtime."
             "settings.ops_review_queue_alert_webhook_url",
             "https://example.test/webhook",
         ):
@@ -146,12 +146,12 @@ def test_retry_failed_alert_keeps_failed_on_delivery_failure(db_session: Session
     event = _seed_alert_event(db_session, audit_id=audit.id)
 
     with patch(
-        "app.services.canonical_entitlement_alert_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(False, "Timeout"),
     ):
         with patch(
-            "app.services.canonical_entitlement_alert_retry_service."
+            "app.services.canonical_entitlement.shared.alert_delivery_runtime."
             "settings.ops_review_queue_alert_webhook_url",
             "https://example.test/webhook",
         ):
@@ -177,8 +177,8 @@ def test_retry_dry_run_persists_nothing(db_session: Session) -> None:
     original_error = event.delivery_error
 
     with patch(
-        "app.services.canonical_entitlement_alert_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         side_effect=AssertionError("webhook should not be called in dry-run"),
     ):
         result = CanonicalEntitlementAlertRetryService.retry_failed_alerts(
@@ -238,8 +238,8 @@ def test_retry_attempt_number_increments(db_session: Session) -> None:
     db_session.flush()
 
     with patch(
-        "app.services.canonical_entitlement_alert_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         CanonicalEntitlementAlertRetryService.retry_failed_alerts(
@@ -263,8 +263,8 @@ def test_retry_ignores_non_failed_events_in_batch_mode(db_session: Session) -> N
     )
 
     with patch(
-        "app.services.canonical_entitlement_alert_retry_service."
-        "CanonicalEntitlementAlertService._deliver_webhook",
+        "app.services.canonical_entitlement.alert.retry."
+        "CanonicalEntitlementAlertDeliveryRuntime._deliver_webhook",
         return_value=(True, None),
     ):
         result = CanonicalEntitlementAlertRetryService.retry_failed_alerts(db_session)
@@ -307,4 +307,5 @@ def test_retry_failed_alerts_raises_not_retryable_when_rule_matches(
     )
     assert len(applications) == 1
     assert applications[0].application_mode == "rule"
+
 
