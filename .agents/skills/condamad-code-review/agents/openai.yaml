@@ -1,0 +1,8 @@
+interface:
+  display_name: "CONDAMAD Code Review"
+  short_description: "Adversarial story code review"
+  brand_color: "#7C3AED"
+  default_prompt: "Use $condamad-code-review to review the current implementation adversarially with repository, story, validation, and DRY / No Legacy evidence."
+
+policy:
+  allow_implicit_invocation: false
