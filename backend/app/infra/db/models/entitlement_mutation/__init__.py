@@ -8,11 +8,9 @@ from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
     CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling_event import (
-    CanonicalEntitlementMutationAlertEventHandlingEventModel,
     CanonicalEntitlementMutationAlertHandlingEventModel,
 )
 from app.infra.db.models.entitlement_mutation.audit.review import (
@@ -31,8 +29,6 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_rule impor
 __all__ = [
     "CanonicalEntitlementMutationAlertDeliveryAttemptModel",
     "CanonicalEntitlementMutationAlertEventModel",
-    "CanonicalEntitlementMutationAlertEventHandlingEventModel",
-    "CanonicalEntitlementMutationAlertEventHandlingModel",
     "CanonicalEntitlementMutationAlertHandlingEventModel",
     "CanonicalEntitlementMutationAlertHandlingModel",
     "CanonicalEntitlementMutationAlertSuppressionApplicationModel",

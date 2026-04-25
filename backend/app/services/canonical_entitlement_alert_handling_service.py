@@ -22,6 +22,9 @@ from app.infra.db.models.entitlement_mutation.alert.handling_event import (
 from app.infra.db.models.entitlement_mutation.suppression.suppression_application import (
     CanonicalEntitlementMutationAlertSuppressionApplicationModel,
 )
+from app.services.canonical_entitlement_alert_suppression_application_service import (
+    CanonicalEntitlementAlertSuppressionApplicationService,
+)
 
 
 class CanonicalEntitlementAlertHandlingService:
@@ -166,17 +169,17 @@ class CanonicalEntitlementAlertHandlingService:
         request_id: str | None,
         applied_at: datetime,
     ) -> CanonicalEntitlementMutationAlertSuppressionApplicationModel:
-        application = CanonicalEntitlementMutationAlertSuppressionApplicationModel(
-            alert_event_id=alert_event_id,
-            suppression_key=suppression_key,
-            application_mode="manual",
-            application_reason=ops_comment,
-            applied_by_user_id=handled_by_user_id,
-            request_id=request_id,
-            applied_at=applied_at,
+        application = (
+            CanonicalEntitlementAlertSuppressionApplicationService.ensure_manual_application(
+                db,
+                alert_event_id=alert_event_id,
+                suppression_key=suppression_key,
+                ops_comment=ops_comment,
+                handled_by_user_id=handled_by_user_id,
+                request_id=request_id,
+                applied_at=applied_at,
+            )
         )
-        db.add(application)
-        db.flush()
         return application
 
     @staticmethod

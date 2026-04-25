@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 from sqlalchemy import create_engine
 
 from app.core.config import settings
@@ -37,6 +36,7 @@ def test_secondary_sqlite_file_must_also_match_alembic_head() -> None:
         database_url="sqlite:///tmp-secondary.sqlite3",
         file_path=Path("tmp-secondary.sqlite3"),
         exists=True,
+        existing_table_count=0,
         current_revision=None,
         head_revision="head-123",
         missing_tables=(),
@@ -56,6 +56,7 @@ def test_secondary_sqlite_file_at_head_can_be_bounded_for_app_test_harness() -> 
         database_url="sqlite:///tmp-secondary.sqlite3",
         file_path=Path("tmp-secondary.sqlite3"),
         exists=True,
+        existing_table_count=1,
         current_revision="head-123",
         head_revision="head-123",
         missing_tables=("chat_messages",),
@@ -76,6 +77,7 @@ def test_secondary_sqlite_file_at_head_still_fails_for_unexpected_missing_tables
         database_url="sqlite:///tmp-secondary.sqlite3",
         file_path=Path("tmp-secondary.sqlite3"),
         exists=True,
+        existing_table_count=1,
         current_revision="head-123",
         head_revision="head-123",
         missing_tables=("rogue_runtime_table",),
@@ -91,7 +93,7 @@ def test_secondary_sqlite_file_at_head_still_fails_for_unexpected_missing_tables
     )
 
 
-def test_secondary_sqlite_file_with_orm_tables_but_without_alembic_head_fails_guard(
+def test_secondary_sqlite_file_with_orm_tables_but_without_alembic_head_is_stamped_and_repaired(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
@@ -119,11 +121,11 @@ def test_secondary_sqlite_file_with_orm_tables_but_without_alembic_head_fails_gu
     monkeypatch.setattr(session_module, "engine", patched_engine)
     monkeypatch.setattr(settings, "database_url", database_url)
 
-    with pytest.raises(Exception):
-        ensure_configured_sqlite_file_matches_alembic_head()
+    ensure_configured_sqlite_file_matches_alembic_head()
 
     status = sqlite_alignment_status(database_url)
-    assert status.current_revision is None, status.as_debug_string()
+    assert status.current_revision == status.head_revision, status.as_debug_string()
+    assert status.missing_tables == (), status.as_debug_string()
 
     patched_engine.dispose()
 

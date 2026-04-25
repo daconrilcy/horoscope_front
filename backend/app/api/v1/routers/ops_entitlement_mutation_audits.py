@@ -13,27 +13,27 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.core.datetime_provider import datetime_provider
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
-from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
-from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
-from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
-    CanonicalEntitlementMutationAlertSuppressionRuleModel,
+from app.infra.db.models.entitlement_mutation.alert.handling import (
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
+)
+from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
+    CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.infra.db.session import get_db_session
 from app.services.canonical_entitlement_alert_handling_service import (
     CanonicalEntitlementAlertHandlingService,
 )
-from app.services.canonical_entitlement_alert_suppression_rule_service import (
-    MatchedAlertSuppressionRule,
+from app.services.canonical_entitlement_alert_suppression_application_service import (
+    CanonicalEntitlementAlertSuppressionApplicationService,
 )
 from app.services.canonical_entitlement_mutation_audit_query_service import (
     CanonicalEntitlementMutationAuditQueryService,
@@ -198,6 +198,7 @@ class ReviewApiResponse(BaseModel):
 class ReviewEventItem(BaseModel):
     id: int
     audit_id: int
+    event_type: str
     previous_review_status: PersistedReviewStatusLiteral | None = None
     new_review_status: PersistedReviewStatusLiteral
     previous_review_comment: str | None = None
@@ -448,9 +449,14 @@ class HandleAlertApiResponse(BaseModel):
 class AlertHandlingHistoryItem(BaseModel):
     id: int
     alert_event_id: int
+    event_type: str
     handling_status: str
     handled_by_user_id: int | None = None
     handled_at: datetime
+    resolution_code: str | None = None
+    incident_key: str | None = None
+    requires_followup: bool = False
+    followup_due_at: datetime | None = None
     ops_comment: str | None = None
     suppression_key: str | None = None
     request_id: str | None = None
@@ -584,15 +590,28 @@ def _compute_review_state(
 
 def _load_handlings_by_event_ids(
     db: Session, event_ids: list[int]
-) -> dict[int, CanonicalEntitlementMutationAlertEventHandlingModel]:
+) -> dict[int, CanonicalEntitlementMutationAlertHandlingModel]:
     if not event_ids:
         return {}
     result = db.execute(
-        select(CanonicalEntitlementMutationAlertEventHandlingModel).where(
-            CanonicalEntitlementMutationAlertEventHandlingModel.alert_event_id.in_(event_ids)
+        select(CanonicalEntitlementMutationAlertHandlingModel).where(
+            CanonicalEntitlementMutationAlertHandlingModel.alert_event_id.in_(event_ids)
         )
     )
     return {r.alert_event_id: r for r in result.scalars().all()}
+
+
+def _load_active_rule_applications_by_event_ids(
+    db: Session, event_ids: list[int]
+) -> dict[int, Any]:
+    if not event_ids:
+        return {}
+    return (
+        CanonicalEntitlementAlertSuppressionApplicationService.load_active_rule_applications_by_event_ids(
+            db,
+            event_ids=event_ids,
+        )
+    )
 
 
 def _normalize_optional_rule_field(value: str | None) -> str | None:
@@ -604,8 +623,8 @@ def _normalize_optional_rule_field(value: str | None) -> str | None:
 
 def _compute_alert_handling_state(
     delivery_status: str,
-    handling_record: CanonicalEntitlementMutationAlertEventHandlingModel | None,
-    rule_match: MatchedAlertSuppressionRule | None = None,
+    handling_record: CanonicalEntitlementMutationAlertHandlingModel | None,
+    rule_application: Any | None = None,
 ) -> AlertHandlingState | None:
     if handling_record is not None:
         return AlertHandlingState(
@@ -616,13 +635,13 @@ def _compute_alert_handling_state(
             ops_comment=handling_record.ops_comment,
             suppression_key=handling_record.suppression_key,
         )
-    if rule_match is not None:
+    if rule_application is not None:
         return AlertHandlingState(
             handling_status="suppressed",
             source="rule",
-            suppression_rule_id=rule_match.rule_id,
-            ops_comment=rule_match.ops_comment,
-            suppression_key=rule_match.suppression_key,
+            suppression_rule_id=rule_application.suppression_rule_id,
+            ops_comment=rule_application.application_reason,
+            suppression_key=rule_application.suppression_key,
         )
     if delivery_status == "failed":
         return AlertHandlingState(
@@ -1074,22 +1093,12 @@ def get_review_queue(
 
 def _alert_event_to_item(
     row: Any,
-    handling_record: CanonicalEntitlementMutationAlertEventHandlingModel | None = None,
-    active_rules: list[CanonicalEntitlementMutationAlertSuppressionRuleModel] | None = None,
+    handling_record: CanonicalEntitlementMutationAlertHandlingModel | None = None,
+    rule_application: Any | None = None,
 ) -> dict[str, Any]:
     event = row.event
-    rule_match = None
-    if active_rules and handling_record is None:
-        from app.services.canonical_entitlement_alert_suppression_rule_service import (
-            CanonicalEntitlementAlertSuppressionRuleService,
-        )
-
-        rule_match = CanonicalEntitlementAlertSuppressionRuleService.match_event(
-            event, active_rules=active_rules
-        )
-
     handling_state = _compute_alert_handling_state(
-        event.delivery_status, handling_record, rule_match
+        event.delivery_status, handling_record, rule_application
     )
     return {
         "id": event.id,
@@ -1253,12 +1262,7 @@ def list_alert_events(
     )
     event_ids = [row.event.id for row in rows]
     handlings = _load_handlings_by_event_ids(db, event_ids)
-
-    from app.services.canonical_entitlement_alert_suppression_rule_service import (
-        CanonicalEntitlementAlertSuppressionRuleService,
-    )
-
-    active_rules = CanonicalEntitlementAlertSuppressionRuleService.load_active_rules(db)
+    rule_applications = _load_active_rule_applications_by_event_ids(db, event_ids)
 
     return {
         "data": {
@@ -1266,7 +1270,7 @@ def list_alert_events(
                 _alert_event_to_item(
                     row,
                     handling_record=handlings.get(row.event.id),
-                    active_rules=active_rules,
+                    rule_application=rule_applications.get(row.event.id),
                 )
                 for row in rows
             ],
@@ -1382,6 +1386,12 @@ def create_alert_suppression_rule(
             and existing.ops_comment == normalized_ops_comment
             and existing.is_active == body.is_active
         ):
+            CanonicalEntitlementAlertSuppressionApplicationService.apply_rule_to_matching_alerts(
+                db,
+                rule=existing,
+                request_id=request_id,
+            )
+            db.commit()
             from fastapi.encoders import jsonable_encoder
 
             return JSONResponse(
@@ -1414,6 +1424,12 @@ def create_alert_suppression_rule(
         updated_by_user_id=current_user.id,
     )
     db.add(new_rule)
+    db.flush()
+    CanonicalEntitlementAlertSuppressionApplicationService.apply_rule_to_matching_alerts(
+        db,
+        rule=new_rule,
+        request_id=request_id,
+    )
     db.commit()
     db.refresh(new_rule)
 
@@ -1481,6 +1497,11 @@ def update_alert_suppression_rule(
         setattr(rule, key, value)
 
     rule.updated_by_user_id = current_user.id
+    CanonicalEntitlementAlertSuppressionApplicationService.apply_rule_to_matching_alerts(
+        db,
+        rule=rule,
+        request_id=request_id,
+    )
     db.commit()
     db.refresh(rule)
 
@@ -1723,7 +1744,7 @@ def get_alert_handling_history(
         return err
 
     from app.infra.db.models.entitlement_mutation.alert.handling_event import (
-        CanonicalEntitlementMutationAlertEventHandlingEventModel,
+        CanonicalEntitlementMutationAlertHandlingEventModel,
     )
 
     alert_event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
@@ -1738,22 +1759,18 @@ def get_alert_handling_history(
 
     total_count = db.execute(
         select(func.count())
-        .select_from(CanonicalEntitlementMutationAlertEventHandlingEventModel)
-        .where(
-            CanonicalEntitlementMutationAlertEventHandlingEventModel.alert_event_id
-            == alert_event_id
-        )
+        .select_from(CanonicalEntitlementMutationAlertHandlingEventModel)
+        .where(CanonicalEntitlementMutationAlertHandlingEventModel.alert_event_id == alert_event_id)
     ).scalar_one()
     events = (
         db.execute(
-            select(CanonicalEntitlementMutationAlertEventHandlingEventModel)
+            select(CanonicalEntitlementMutationAlertHandlingEventModel)
             .where(
-                CanonicalEntitlementMutationAlertEventHandlingEventModel.alert_event_id
-                == alert_event_id
+                CanonicalEntitlementMutationAlertHandlingEventModel.alert_event_id == alert_event_id
             )
             .order_by(
-                CanonicalEntitlementMutationAlertEventHandlingEventModel.handled_at.desc(),
-                CanonicalEntitlementMutationAlertEventHandlingEventModel.id.desc(),
+                CanonicalEntitlementMutationAlertHandlingEventModel.handled_at.desc(),
+                CanonicalEntitlementMutationAlertHandlingEventModel.id.desc(),
             )
             .limit(limit)
             .offset(offset)
@@ -1768,9 +1785,14 @@ def get_alert_handling_history(
                 {
                     "id": event.id,
                     "alert_event_id": event.alert_event_id,
+                    "event_type": event.event_type,
                     "handling_status": event.handling_status,
                     "handled_by_user_id": event.handled_by_user_id,
                     "handled_at": event.handled_at,
+                    "resolution_code": event.resolution_code,
+                    "incident_key": event.incident_key,
+                    "requires_followup": event.requires_followup,
+                    "followup_due_at": event.followup_due_at,
                     "ops_comment": event.ops_comment,
                     "suppression_key": event.suppression_key,
                     "request_id": event.request_id,
@@ -2111,6 +2133,7 @@ def get_review_history(
                 {
                     "id": e.id,
                     "audit_id": e.audit_id,
+                    "event_type": e.event_type,
                     "previous_review_status": e.previous_review_status,
                     "new_review_status": e.new_review_status,
                     "previous_review_comment": e.previous_review_comment,
@@ -2127,4 +2150,3 @@ def get_review_history(
         },
         "meta": {"request_id": request_id},
     }
-

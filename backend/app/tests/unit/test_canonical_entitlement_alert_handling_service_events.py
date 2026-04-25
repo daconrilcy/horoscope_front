@@ -7,10 +7,10 @@ from unittest.mock import MagicMock
 from sqlalchemy import select
 
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling_event import (
-    CanonicalEntitlementMutationAlertEventHandlingEventModel,
+    CanonicalEntitlementMutationAlertHandlingEventModel,
 )
 from app.infra.db.session import SessionLocal
 from app.services.canonical_entitlement_alert_handling_service import (
@@ -24,11 +24,11 @@ from app.tests.unit.test_canonical_entitlement_alert_handling_service import (
 
 def _list_events(
     db: SessionLocal,
-) -> list[CanonicalEntitlementMutationAlertEventHandlingEventModel]:
+) -> list[CanonicalEntitlementMutationAlertHandlingEventModel]:
     return (
         db.execute(
-            select(CanonicalEntitlementMutationAlertEventHandlingEventModel).order_by(
-                CanonicalEntitlementMutationAlertEventHandlingEventModel.id.asc()
+            select(CanonicalEntitlementMutationAlertHandlingEventModel).order_by(
+                CanonicalEntitlementMutationAlertHandlingEventModel.id.asc()
             )
         )
         .scalars()
@@ -64,6 +64,7 @@ def test_append_handling_event_inserts_record() -> None:
         events = _list_events(db)
         assert len(events) == 1
         assert events[0].alert_event_id == alert_event.id
+        assert events[0].event_type == "updated"
         assert events[0].handling_status == "suppressed"
         assert events[0].handled_by_user_id == 7
         assert events[0].ops_comment == "Known noise"
@@ -88,6 +89,7 @@ def test_upsert_handling_creates_event_on_insert() -> None:
 
         events = _list_events(db)
         assert len(events) == 1
+        assert events[0].event_type == "created"
         assert events[0].handling_status == "suppressed"
 
 
@@ -115,6 +117,7 @@ def test_upsert_handling_creates_event_on_status_change() -> None:
 
         events = _list_events(db)
         assert len(events) == 2
+        assert [event.event_type for event in events] == ["created", "updated"]
         assert [event.handling_status for event in events] == ["suppressed", "resolved"]
 
 
@@ -144,8 +147,8 @@ def test_upsert_handling_no_event_when_no_change() -> None:
 
         events = _list_events(db)
         handling = db.execute(
-            select(CanonicalEntitlementMutationAlertEventHandlingModel).where(
-                CanonicalEntitlementMutationAlertEventHandlingModel.alert_event_id == alert_event.id
+            select(CanonicalEntitlementMutationAlertHandlingModel).where(
+                CanonicalEntitlementMutationAlertHandlingModel.alert_event_id == alert_event.id
             )
         ).scalar_one()
         assert second.id == first.id

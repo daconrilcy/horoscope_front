@@ -11,7 +11,7 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.services.canonical_entitlement_alert_handling_service import (
     CanonicalEntitlementAlertHandlingService,
@@ -105,15 +105,13 @@ class CanonicalEntitlementAlertBatchHandlingService:
     @staticmethod
     def _load_existing_handlings(
         db: Session, *, alert_event_ids: list[int]
-    ) -> dict[int, CanonicalEntitlementMutationAlertEventHandlingModel]:
+    ) -> dict[int, CanonicalEntitlementMutationAlertHandlingModel]:
         if not alert_event_ids:
             return {}
 
         result = db.execute(
-            select(CanonicalEntitlementMutationAlertEventHandlingModel).where(
-                CanonicalEntitlementMutationAlertEventHandlingModel.alert_event_id.in_(
-                    alert_event_ids
-                )
+            select(CanonicalEntitlementMutationAlertHandlingModel).where(
+                CanonicalEntitlementMutationAlertHandlingModel.alert_event_id.in_(alert_event_ids)
             )
         )
         return {handling.alert_event_id: handling for handling in result.scalars().all()}
@@ -152,4 +150,3 @@ class CanonicalEntitlementAlertBatchHandlingService:
             query = query.where(model.created_at <= date_to)
         query = query.order_by(model.id.asc()).limit(limit)
         return list(db.scalars(query).all())
-

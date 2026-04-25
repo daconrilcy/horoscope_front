@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.core.rate_limit import RateLimitError
 from app.infra.db.models.entitlement_mutation.alert.handling_event import (
-    CanonicalEntitlementMutationAlertEventHandlingEventModel,
+    CanonicalEntitlementMutationAlertHandlingEventModel,
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
@@ -41,7 +41,7 @@ def _insert_history_event(
 ) -> None:
     with SessionLocal() as db:
         db.add(
-            CanonicalEntitlementMutationAlertEventHandlingEventModel(
+            CanonicalEntitlementMutationAlertHandlingEventModel(
                 alert_event_id=alert_event_id,
                 handling_status=handling_status,
                 handled_by_user_id=handled_by_user_id,
@@ -94,6 +94,7 @@ def test_get_handling_history_returns_single_event_after_first_handle() -> None:
     assert history.status_code == 200
     items = history.json()["data"]["items"]
     assert len(items) == 1
+    assert items[0]["event_type"] == "created"
     assert items[0]["handling_status"] == "suppressed"
     assert items[0]["ops_comment"] == "Known noise"
 
@@ -123,6 +124,7 @@ def test_get_handling_history_returns_multiple_events_on_status_change() -> None
 
     items = history.json()["data"]["items"]
     assert len(items) == 2
+    assert [item["event_type"] for item in items] == ["updated", "created"]
     assert [item["handling_status"] for item in items] == ["resolved", "suppressed"]
 
 

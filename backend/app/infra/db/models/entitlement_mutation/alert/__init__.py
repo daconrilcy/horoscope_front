@@ -8,19 +8,15 @@ from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
     CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling_event import (
-    CanonicalEntitlementMutationAlertEventHandlingEventModel,
     CanonicalEntitlementMutationAlertHandlingEventModel,
 )
 
 __all__ = [
     "CanonicalEntitlementMutationAlertDeliveryAttemptModel",
     "CanonicalEntitlementMutationAlertEventModel",
-    "CanonicalEntitlementMutationAlertEventHandlingEventModel",
-    "CanonicalEntitlementMutationAlertEventHandlingModel",
     "CanonicalEntitlementMutationAlertHandlingEventModel",
     "CanonicalEntitlementMutationAlertHandlingModel",
 ]

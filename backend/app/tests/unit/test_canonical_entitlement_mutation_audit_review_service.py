@@ -305,6 +305,7 @@ def test_upsert_creates_event_on_first_review() -> None:
         assert len(events) == 1
         assert events[0].audit_id == audit_id
         assert events[0].previous_review_status is None
+        assert events[0].event_type == "created"
         assert events[0].new_review_status == "acknowledged"
         assert events[0].new_review_comment == "First review"
         assert events[0].new_incident_key == "INC-001"
@@ -351,6 +352,7 @@ def test_upsert_creates_event_on_status_change() -> None:
             .all()
         )
         assert len(events) == 2
+        assert [event.event_type for event in events] == ["created", "updated"]
         assert events[1].previous_review_status == "investigating"
         assert events[1].new_review_status == "closed"
         assert events[1].previous_review_comment == "Investigating..."
@@ -418,6 +420,7 @@ def test_upsert_event_carries_request_id() -> None:
 
     with SessionLocal() as db:
         event = db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalar_one()
+        assert event.event_type == "created"
         assert event.request_id == "trace-abc-123"
 
 

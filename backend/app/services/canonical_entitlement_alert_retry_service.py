@@ -19,6 +19,9 @@ from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
 from app.services.canonical_entitlement_alert_service import CanonicalEntitlementAlertService
+from app.services.canonical_entitlement_alert_suppression_application_service import (
+    CanonicalEntitlementAlertSuppressionApplicationService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +140,7 @@ class CanonicalEntitlementAlertRetryService:
         limit: int | None,
     ) -> list[CanonicalEntitlementMutationAlertEventModel]:
         from app.infra.db.models.entitlement_mutation.alert.handling import (
-            CanonicalEntitlementMutationAlertEventHandlingModel as HandlingModel,
+            CanonicalEntitlementMutationAlertHandlingModel as HandlingModel,
         )
         from app.services.canonical_entitlement_alert_suppression_rule_service import (
             CanonicalEntitlementAlertSuppressionRuleService,
@@ -164,10 +167,14 @@ class CanonicalEntitlementAlertRetryService:
                     f"Alert event {alert_event_id} is suppressed or resolved"
                 )
             # Check rules
-            match = CanonicalEntitlementAlertSuppressionRuleService.match_event(
-                event, active_rules=active_rules
+            match = (
+                CanonicalEntitlementAlertSuppressionApplicationService.match_and_ensure_rule_application(
+                    db,
+                    alert_event=event,
+                    active_rules=active_rules,
+                )
             )
-            if match:
+            if match is not None:
                 raise AlertEventNotRetryableError(
                     f"Alert event {alert_event_id} is matched by a suppression rule"
                 )
@@ -202,10 +209,14 @@ class CanonicalEntitlementAlertRetryService:
             if ev.id in suppressed_event_ids:
                 continue
 
-            match = CanonicalEntitlementAlertSuppressionRuleService.match_event(
-                ev, active_rules=active_rules
+            match = (
+                CanonicalEntitlementAlertSuppressionApplicationService.match_and_ensure_rule_application(
+                    db,
+                    alert_event=ev,
+                    active_rules=active_rules,
+                )
             )
-            if match:
+            if match is not None:
                 continue
 
             results.append(ev)

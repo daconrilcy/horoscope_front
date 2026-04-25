@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.core.rate_limit import RateLimitError
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
@@ -40,7 +40,7 @@ def _insert_handling(
 ) -> None:
     with SessionLocal() as db:
         db.add(
-            CanonicalEntitlementMutationAlertEventHandlingModel(
+            CanonicalEntitlementMutationAlertHandlingModel(
                 alert_event_id=alert_event_id,
                 handling_status=handling_status,
                 handled_by_user_id=handled_by_user_id,
@@ -103,9 +103,7 @@ def test_post_handle_updates_existing_handling() -> None:
     assert response.json()["data"]["ops_comment"] == "Solved"
 
     with SessionLocal() as db:
-        rows = (
-            db.execute(select(CanonicalEntitlementMutationAlertEventHandlingModel)).scalars().all()
-        )
+        rows = db.execute(select(CanonicalEntitlementMutationAlertHandlingModel)).scalars().all()
         assert len(rows) == 1
         assert rows[0].handling_status == "resolved"
 

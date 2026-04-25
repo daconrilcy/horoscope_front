@@ -6,17 +6,20 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+from app.infra.db.models.canonical_entitlement_mutation_audit import (
+    CanonicalEntitlementMutationAuditModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
+from app.infra.db.models.entitlement_mutation.suppression.suppression_application import (
+    CanonicalEntitlementMutationAlertSuppressionApplicationModel,
+)
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
-)
-from app.infra.db.models.canonical_entitlement_mutation_audit import (
-    CanonicalEntitlementMutationAuditModel,
 )
 from app.services.canonical_entitlement_alert_retry_service import (
     AlertEventNotFoundError,
@@ -294,4 +297,14 @@ def test_retry_failed_alerts_raises_not_retryable_when_rule_matches(
             db_session,
             alert_event_id=event.id,
         )
+
+    applications = (
+        db_session.query(CanonicalEntitlementMutationAlertSuppressionApplicationModel)
+        .filter(
+            CanonicalEntitlementMutationAlertSuppressionApplicationModel.alert_event_id == event.id
+        )
+        .all()
+    )
+    assert len(applications) == 1
+    assert applications[0].application_mode == "rule"
 

@@ -4,7 +4,7 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
@@ -144,7 +144,7 @@ def test_manual_handling_still_has_priority_over_rule() -> None:
         event,
         active_rules=[_build_rule(1)],
     )
-    manual_handling = CanonicalEntitlementMutationAlertEventHandlingModel(
+    manual_handling = CanonicalEntitlementMutationAlertHandlingModel(
         alert_event_id=event.id,
         handling_status="resolved",
         handled_by_user_id=99,

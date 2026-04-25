@@ -7,10 +7,10 @@ from sqlalchemy import select
 
 from app.core.rate_limit import RateLimitError
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling_event import (
-    CanonicalEntitlementMutationAlertEventHandlingEventModel,
+    CanonicalEntitlementMutationAlertHandlingEventModel,
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
@@ -59,7 +59,7 @@ def _insert_handling(
 ) -> None:
     with SessionLocal() as db:
         db.add(
-            CanonicalEntitlementMutationAlertEventHandlingModel(
+            CanonicalEntitlementMutationAlertHandlingModel(
                 alert_event_id=alert_event_id,
                 handling_status=handling_status,
                 handled_by_user_id=handled_by_user_id,
@@ -74,17 +74,16 @@ def _insert_handling(
 def _count_handlings() -> int:
     with SessionLocal() as db:
         return len(
-            db.execute(select(CanonicalEntitlementMutationAlertEventHandlingModel)).scalars().all()
+            db.execute(select(CanonicalEntitlementMutationAlertHandlingModel)).scalars().all()
         )
 
 
 def _count_handling_events(*, alert_event_id: int | None = None) -> int:
     with SessionLocal() as db:
-        query = select(CanonicalEntitlementMutationAlertEventHandlingEventModel)
+        query = select(CanonicalEntitlementMutationAlertHandlingEventModel)
         if alert_event_id is not None:
             query = query.where(
-                CanonicalEntitlementMutationAlertEventHandlingEventModel.alert_event_id
-                == alert_event_id
+                CanonicalEntitlementMutationAlertHandlingEventModel.alert_event_id == alert_event_id
             )
         return len(db.execute(query).scalars().all())
 
@@ -109,9 +108,7 @@ def test_batch_handle_suppresses_failed_alerts() -> None:
     assert data["alert_event_ids"] == [first_id, second_id]
 
     with SessionLocal() as db:
-        rows = (
-            db.execute(select(CanonicalEntitlementMutationAlertEventHandlingModel)).scalars().all()
-        )
+        rows = db.execute(select(CanonicalEntitlementMutationAlertHandlingModel)).scalars().all()
         assert [row.handling_status for row in rows] == ["suppressed", "suppressed"]
 
 
@@ -131,8 +128,8 @@ def test_batch_handle_resolves_failed_alerts() -> None:
 
     with SessionLocal() as db:
         row = db.execute(
-            select(CanonicalEntitlementMutationAlertEventHandlingModel).where(
-                CanonicalEntitlementMutationAlertEventHandlingModel.alert_event_id == alert_event_id
+            select(CanonicalEntitlementMutationAlertHandlingModel).where(
+                CanonicalEntitlementMutationAlertHandlingModel.alert_event_id == alert_event_id
             )
         ).scalar_one_or_none()
         assert row is not None
@@ -202,8 +199,8 @@ def test_batch_handle_rehandles_when_state_changes() -> None:
 
     with SessionLocal() as db:
         row = db.execute(
-            select(CanonicalEntitlementMutationAlertEventHandlingModel).where(
-                CanonicalEntitlementMutationAlertEventHandlingModel.alert_event_id == alert_event_id
+            select(CanonicalEntitlementMutationAlertHandlingModel).where(
+                CanonicalEntitlementMutationAlertHandlingModel.alert_event_id == alert_event_id
             )
         ).scalar_one_or_none()
         assert row is not None
@@ -421,7 +418,7 @@ def test_batch_retry_still_excludes_suppressed_after_61_45() -> None:
         excluded_id = _seed_alert_event(db, audit_id=excluded_audit.id, delivery_status="failed").id
         included_id = _seed_alert_event(db, audit_id=included_audit.id, delivery_status="failed").id
         db.add(
-            CanonicalEntitlementMutationAlertEventHandlingModel(
+            CanonicalEntitlementMutationAlertHandlingModel(
                 alert_event_id=excluded_id,
                 handling_status="suppressed",
                 handled_by_user_id=7,

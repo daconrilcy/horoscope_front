@@ -16,7 +16,7 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.session import SessionLocal, engine
 from app.services.canonical_entitlement_alert_handling_service import (
@@ -124,9 +124,7 @@ def test_upsert_handling_updates_existing_record() -> None:
         assert updated.suppression_key is None
 
     with SessionLocal() as db:
-        rows = (
-            db.execute(select(CanonicalEntitlementMutationAlertEventHandlingModel)).scalars().all()
-        )
+        rows = db.execute(select(CanonicalEntitlementMutationAlertHandlingModel)).scalars().all()
         assert len(rows) == 1
         assert rows[0].handling_status == "resolved"
 

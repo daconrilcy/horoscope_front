@@ -19,6 +19,12 @@ from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.services.canonical_entitlement_alert_suppression_application_service import (
+    CanonicalEntitlementAlertSuppressionApplicationService,
+)
+from app.services.canonical_entitlement_alert_suppression_rule_service import (
+    CanonicalEntitlementAlertSuppressionRuleService,
+)
 from app.services.canonical_entitlement_mutation_audit_query_service import (
     CanonicalEntitlementMutationAuditQueryService,
 )
@@ -63,6 +69,7 @@ class CanonicalEntitlementAlertService:
             page_size=1,
         )
         max_sql_rows = max(settings.ops_review_queue_alert_max_candidates, limit or 0, 1)
+        active_rules = CanonicalEntitlementAlertSuppressionRuleService.load_active_rules(db)
 
         # 1. Charger tous les candidats potentiels (SLA status is not None)
         # On ne filtre pas encore sur sla_status=overdue/due_soon via SQL pour réutiliser
@@ -147,6 +154,12 @@ class CanonicalEntitlementAlertService:
                     )
                     db.add(event)
                     db.flush()
+                    CanonicalEntitlementAlertSuppressionApplicationService.match_and_ensure_rule_application(
+                        db,
+                        alert_event=event,
+                        active_rules=active_rules,
+                        request_id=request_id,
+                    )
 
                     # 5. Delivery
                     if settings.ops_review_queue_alert_webhook_url:

@@ -1,6 +1,6 @@
 # Story 70-19: Refactoriser et durcir les modèles SQLAlchemy des mutations d’entitlements dans un sous-domaine dédié
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -52,11 +52,12 @@ Cette story couvre exclusivement :
 - les colonnes, FKs, index et contraintes associées ;
 - les migrations DB requises ;
 - les adaptations minimales des imports et usages applicatifs pour supporter le nouveau schéma ;
+- les services de `backend\app\services` qui lisent ou écrivent ces modèles lorsque leur alignement est nécessaire pour respecter la cible canonique ;
 - les tests structurels et d’intégration DB liés à ce refactoring.
 
 Cette story ne couvre pas :
 
-- une refonte fonctionnelle large des services métier ;
+- une refonte fonctionnelle large des services métier hors périmètre entitlement mutation ;
 - une refonte UI ;
 - une refonte d’API ;
 - l’ajout de nouveaux comportements métier hors ce qui est strictement nécessaire pour supporter la cible de persistance ;
@@ -285,31 +286,31 @@ La contrainte d’unicité `(alert_event_id, attempt_number)` est conservée.
 
 Une contrainte d’unicité logique empêche les doublons fonctionnels.
 
-### AC13 — Le DRY est appliqué via bases et mixins dédiés au sous-domaine
-Les champs techniques et transverses réellement partagés sont factorisés dans `shared/base_mixins.py`.
+### AC13 — Les champs transverses des modèles ont une source de vérité unique
+Les champs techniques et transverses réellement partagés sont factorisés dans `entitlement_mutation/shared/base_mixins.py` ou `entitlement_mutation/shared/timestamps.py`.
 
-La story mutualise au minimum, là où pertinent :
-- les timestamps ;
-- `request_id` ;
-- `ops_comment` ;
-- les utilisateurs d’action quand la factorisation reste lisible.
+Pour chaque groupe de champs mutualisé retenu par la story, il n’existe qu’une seule implémentation de référence dans le sous-domaine.
 
-Aucune duplication évitable de colonnes identiques ne subsiste dans les modèles refactorés.
+Il est interdit de redéclarer localement dans un modèle :
+- un timestamp déjà couvert par un mixin commun ;
+- un `request_id` déjà couvert par un mixin commun ;
+- un champ de commentaire ops déjà couvert par un mixin commun ;
+- une logique de valeur par défaut datetime déjà couverte par les utilitaires partagés.
 
-### AC14 — Toute gestion de datetime utilise exclusivement le provider backend central
-Toute gestion de date ou datetime dans les modèles refactorés, dans leurs valeurs par défaut et dans les mixins associés, utilise exclusivement le provider central défini dans `backend\app\core\datetime_provider.py`. fileciteturn1file0
+### AC14 — Toute gestion de datetime du sous-domaine utilise directement `datetime_provider`
+Toute gestion de date ou datetime dans les modèles, mixins et services du sous-domaine entitlement mutation utilise directement `datetime_provider` défini dans `backend/app/core/datetime_provider.py`.
 
 Sont autorisés :
 - `datetime_provider.utcnow()`
 - `datetime_provider.now(...)`
 - `datetime_provider.today(...)`
-- ou, si nécessaire pour compatibilité locale, les wrappers du même module (`utc_now`, `current_datetime`, `current_date`)
 
 Sont interdits dans ce sous-domaine :
-- tout appel direct à `datetime.now(...)` ;
-- tout appel direct à `date.today()` ;
+- `datetime.now(...)` ;
+- `date.today()` ;
 - toute redéclaration locale d’un helper `_utc_now()` ;
-- toute source de temps concurrente à `datetime_provider`.
+- l’usage des wrappers legacy (`utc_now`, `current_datetime`, `current_date`) ;
+- toute autre source de temps concurrente.
 
 ### AC15 — Le helper datetime partagé du sous-domaine s’appuie sur `datetime_provider`
 Si un helper de timestamp est introduit dans `entitlement_mutation/shared/timestamps.py`, il doit être un simple point de réutilisation local du sous-domaine s’appuyant exclusivement sur le provider central backend, sans logique concurrente ni comportement divergent. fileciteturn1file0
@@ -361,6 +362,75 @@ Les tests couvrent :
 - l’absence de helper `_utc_now()` local ;
 - l’usage exclusif de `datetime_provider` comme source de temps.
 
+### AC21 — Les services entitlement mutation de `backend/app/services` utilisent une unique source de vérité d’import ORM
+Tout service de `backend/app/services` qui manipule les reviews, alertes, tentatives de delivery, handlings ou suppressions du sous-domaine entitlement mutation importe les modèles exclusivement depuis les modules canoniques sous `app.infra.db.models.entitlement_mutation`.
+
+Pour chaque modèle du sous-domaine, il n’existe plus qu’un seul chemin d’import applicatif stable autorisé.
+
+Sont interdits :
+- tout import depuis les anciens fichiers racine supprimés ;
+- tout réexport ou alias legacy conservé pour compatibilité interne ;
+- toute coexistence de plusieurs chemins d’import vers la même classe ORM ;
+- tout renommage local durable masquant le nom canonique du modèle.
+
+La conformité doit être vérifiable par recherche de code et par tests structurels.
+
+### AC22 — Les services entitlement mutation respectent strictement la séparation de responsabilités du schéma canonique
+Les services de `backend/app/services` qui écrivent dans le sous-domaine entitlement mutation respectent explicitement la séparation entre :
+- current state ;
+- history append-only ;
+- référentiel de règles ;
+- suppression appliquée.
+
+En particulier :
+- aucun service ne lit une table d’historique comme source de vérité courante ;
+- aucune suppression effective n’est persistée sans écriture explicite de `CanonicalEntitlementMutationAlertSuppressionApplicationModel` ;
+- aucun service ne porte durablement, dans une même responsabilité principale, la gestion simultanée du current state, de l’historique et du référentiel, sauf service d’orchestration explicitement nommé comme tel ;
+- tout service d’orchestration éventuel délègue les écritures spécialisées à des helpers ou composants dédiés, sans réimplémenter localement les règles de persistance.
+
+### AC23 — Les primitives transverses du sous-domaine sont factorisées et ne peuvent plus être réimplémentées localement
+La couche `backend/app/services` du périmètre entitlement mutation expose des primitives communes dédiées pour les opérations transverses du schéma canonique.
+
+Les opérations suivantes doivent être implémentées une seule fois chacune et réutilisées par tous les flux concernés :
+- résolution des règles de suppression ;
+- matérialisation d’une suppression appliquée ;
+- synchronisation des écritures current state / history ;
+- résolution du modèle current state canonique à lire ;
+- mapping des noms et types canoniques du sous-domaine.
+
+Ces primitives communes ne peuvent pas être recopiées ou réinterprétées localement dans plusieurs services métier.
+
+Toute duplication de logique métier ou de persistance portant sur l’une de ces opérations constitue une non-conformité à la story.
+
+### AC24 — Les tests couvrent explicitement l’absence de legacy et la mutualisation attendue dans `backend/app/services`
+Les tests de la story couvrent, pour les services de `backend/app/services` du périmètre entitlement mutation :
+- l’usage exclusif des imports canoniques ;
+- l’absence d’import depuis les anciens chemins ou alias legacy ;
+- l’écriture obligatoire de `CanonicalEntitlementMutationAlertSuppressionApplicationModel` lors de toute suppression effective ;
+- la cohérence entre current state et historique ;
+- l’absence de lecture d’une table history comme current state ;
+- l’usage des primitives communes du sous-domaine pour les opérations transverses définies par AC23 ;
+- l’absence de duplication persistante des logiques de suppression appliquée, de synchronisation current/history et de résolution des règles.
+
+La conformité doit être démontrée par combinaison de tests fonctionnels et de tests structurels.
+
+### AC25 — Aucun adaptateur ou wrapper de compatibilité legacy ne subsiste dans le périmètre entitlement mutation
+Le refactoring ne conserve aucun wrapper, façade, helper ou module de compatibilité destiné à maintenir un ancien nom, un ancien chemin d’import, ou une ancienne structure de persistance dans le périmètre entitlement mutation.
+
+Toute compatibilité transitoire introduite pendant le refactoring doit être supprimée avant clôture de la story.
+
+La DoD ne peut pas être atteinte si un wrapper legacy interne subsiste dans `backend/app/services` ou `backend/app/infra/db/models` pour ce sous-domaine.
+
+### AC26 — Les services entitlement mutation sont découpés selon des responsabilités stables et non par accumulation historique
+La couche `backend/app/services` du périmètre entitlement mutation ne conserve pas de service devenu fourre-tout par accumulation de logique historique.
+
+Un service ne doit pas cumuler durablement plusieurs responsabilités de persistance hétérogènes du sous-domaine, sauf composant explicitement identifié comme orchestrateur.
+
+Tout service orchestrateur éventuel :
+- ne contient pas de logique de persistance dupliquée ;
+- délègue les écritures spécialisées à des composants dédiés ;
+- ne masque pas la séparation canonique current state / history / référentiel / application.
+
 ## Tasks / Subtasks
 
 ### Task 1 — Créer l’arborescence cible du sous-domaine entitlement mutation
@@ -408,7 +478,7 @@ Les tests couvrent :
    - utilisateur d’action si partagé sans perte de clarté
 5. Vérifier que chaque mixin introduit est utilisé par au moins deux modèles du sous-domaine.
 6. Ne pas créer de mixin spéculatif non utilisé dans cette story.
-7. Vérifier que tous les defaults datetime reposent sur `datetime_provider` et non sur `datetime.now()` ou `date.today()`. fileciteturn1file0
+7. Vérifier que tous les defaults datetime reposent directement sur `datetime_provider` et non sur `datetime.now()`, `date.today()` ou les wrappers legacy du module. fileciteturn1file0
 
 #### Exit criteria
 - aucune source de temps concurrente ;
@@ -655,6 +725,32 @@ Les tests couvrent :
 - flux d’écriture compatibles ;
 - aucune dépendance illégitime à l’historique comme source de vérité.
 
+### Task 13b — Réaligner strictement les services de `backend/app/services` sur le schéma canonique
+#### Subtasks
+1. Identifier exhaustivement tous les services de `backend/app/services` appartenant au périmètre entitlement mutation.
+2. Lister pour chacun :
+   - ses imports ORM ;
+   - les tables qu’il lit ;
+   - les tables qu’il écrit ;
+   - sa responsabilité principale réelle.
+3. Remplacer tous les imports non canoniques par les imports depuis `app.infra.db.models.entitlement_mutation`.
+4. Supprimer tout alias ou wrapper legacy maintenant un ancien nom de modèle.
+5. Introduire une primitive commune unique de résolution des règles de suppression.
+6. Introduire une primitive commune unique de matérialisation de `AlertSuppressionApplication`.
+7. Introduire une primitive commune unique de synchronisation des écritures current state / history.
+8. Faire migrer tous les services concernés vers ces primitives communes.
+9. Vérifier qu’aucun service ne lit une table history comme current state.
+10. Vérifier qu’aucun service ne persiste une suppression effective sans `AlertSuppressionApplication`.
+11. Vérifier qu’aucune logique transverse désormais mutualisée n’est encore recopiée dans un service local.
+12. Supprimer les helpers et chemins legacy devenus inutiles.
+13. Ajouter les tests structurels et fonctionnels prouvant cette convergence.
+
+#### Exit criteria
+- services du périmètre alignés sur l’arborescence canonique ;
+- aucune dépendance à un chemin legacy ;
+- aucune primitive transverse canonique n’est dupliquée localement ;
+- la convergence est prouvée par tests structurels et fonctionnels.
+
 ### Task 14 — Supprimer les anciens fichiers obsolètes et éliminer les doubles déclarations ORM
 #### Subtasks
 1. Identifier les anciens fichiers de modèles du sous-domaine restés à la racine.
@@ -684,7 +780,11 @@ Les tests couvrent :
 10. Ajouter un test vérifiant que les defaults datetime de ce sous-domaine s’appuient sur `datetime_provider`.
 11. Ajouter un test vérifiant que les colonnes héritées via mixins sont bien matérialisées.
 12. Ajouter un test vérifiant que les imports canoniques passent par `entitlement_mutation`.
-13. Ajouter au moins un test de flux complet :
+13. Ajouter un test structurel vérifiant l’absence d’import, d’alias ou de wrapper legacy dans `backend/app/services` et `backend/app/infra/db/models` pour ce sous-domaine.
+14. Ajouter un test fonctionnel vérifiant que toute suppression effective persiste `CanonicalEntitlementMutationAlertSuppressionApplicationModel`.
+15. Ajouter un test structurel ou fonctionnel vérifiant l’usage des primitives transverses communes imposées par AC23.
+16. Ajouter un test vérifiant qu’aucun service ne lit une table history comme current state.
+17. Ajouter au moins un test de flux complet :
     `audit review -> alert event -> delivery attempt -> alert handling -> suppression application`
 
 #### Exit criteria
@@ -695,7 +795,7 @@ Les tests couvrent :
 ### Task 16 — Effectuer le contrôle final anti-dérive
 #### Subtasks
 1. Vérifier qu’aucun modèle refactoré ne redéclare `_utc_now()`.
-2. Vérifier qu’aucun modèle refactoré n’utilise `datetime.now()` ou `date.today()` directement.
+2. Vérifier qu’aucun modèle, mixin ou service du sous-domaine n’utilise `datetime.now()`, `date.today()` ou un wrapper legacy du module datetime provider.
 3. Vérifier que toute source de temps provient de `datetime_provider`. fileciteturn1file0
 4. Vérifier que chaque modèle appartient clairement à une catégorie :
    - current state
@@ -730,11 +830,13 @@ Les tests couvrent :
 - Ne pas introduire de découpage alternatif à `shared / audit / alert / suppression`.
 - Ne pas conserver les anciens fichiers racine une fois les imports migrés et les tests passés.
 - Ne pas conserver deux chemins d’import durables pour une même source de vérité.
+- Ne pas conserver de wrapper, façade ou alias legacy interne pour maintenir un ancien nom ou un ancien chemin.
 - Ne pas introduire de mixin non utilisé dans cette story.
 - Ne pas déplacer la responsabilité des snapshots hors de l’alerte.
 - Ne pas utiliser une table d’historique comme source de vérité courante.
 - Ne pas redéclarer `_utc_now()` localement.
-- Ne pas utiliser `datetime.now(...)`, `date.today()` ou toute autre source de temps concurrente.
+- Ne pas utiliser `datetime.now(...)`, `date.today()`, les wrappers legacy de `datetime_provider` ou toute autre source de temps concurrente.
+- Ne pas dupliquer localement une primitive transverse canonique du sous-domaine dans plusieurs services.
 - Toute gestion de datetime doit provenir exclusivement du provider central `backend\app\core\datetime_provider.py`. fileciteturn1file0
 
 ## Testing
@@ -747,6 +849,11 @@ Les tests doivent démontrer :
 - la validité des contraintes d’unicité ;
 - le respect de la structure de modules imposée ;
 - le respect de la discipline datetime centralisée ;
+- l’alignement des services entitlement mutation sur les imports canoniques ;
+- l’absence de wrapper, alias ou chemin legacy dans `backend/app/services` et `backend/app/infra/db/models` pour ce sous-domaine ;
+- la matérialisation des suppressions effectives depuis la couche services ;
+- l’usage des primitives transverses communes du sous-domaine ;
+- l’absence de duplication persistante des logiques transverses imposées par AC23 ;
 - la compatibilité du flux principal de bout en bout.
 
 ## Definition of Done
@@ -760,8 +867,12 @@ La story est Done uniquement si :
 - les bases/mixins partagés sont introduits et réellement utilisés ;
 - toute gestion de datetime passe exclusivement par `datetime_provider` ;
 - aucun helper `_utc_now()` local ne subsiste ;
+- aucun wrapper legacy interne n’existe encore dans `backend/app/services` ou `backend/app/infra/db/models` pour ce sous-domaine ;
 - la table de suppression appliquée existe ;
 - current states, histories, référentiels et applications sont clairement séparés ;
+- les services entitlement mutation de `backend\app\services` sont alignés sur les modèles et imports canoniques ;
+- les primitives transverses du sous-domaine ont chacune une unique source de vérité réutilisée ;
+- aucun service fourre-tout ne masque la séparation canonique du schéma ;
 - les migrations passent ;
 - les tests passent ;
 - aucun reliquat structurel ambigu ne subsiste.

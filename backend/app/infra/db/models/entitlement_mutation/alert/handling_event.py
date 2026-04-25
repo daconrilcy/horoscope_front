@@ -47,12 +47,4 @@ class CanonicalEntitlementMutationAlertHandlingEventModel(
     suppression_key = synonym("suppression_application_key")
 
 
-# Alias legacy conservé pour éviter les régressions durant la migration des imports.
-CanonicalEntitlementMutationAlertEventHandlingEventModel = (
-    CanonicalEntitlementMutationAlertHandlingEventModel
-)
-
-__all__ = [
-    "CanonicalEntitlementMutationAlertEventHandlingEventModel",
-    "CanonicalEntitlementMutationAlertHandlingEventModel",
-]
+__all__ = ["CanonicalEntitlementMutationAlertHandlingEventModel"]

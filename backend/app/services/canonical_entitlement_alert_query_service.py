@@ -8,14 +8,17 @@ from typing import Literal
 from sqlalchemy import case, func, literal, select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
+)
+from app.services.canonical_entitlement_alert_suppression_application_service import (
+    CanonicalEntitlementAlertSuppressionApplicationService,
 )
 
 AlertDeliveryStatus = Literal["sent", "failed"]
@@ -148,10 +151,6 @@ class CanonicalEntitlementAlertQueryService:
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ) -> AlertSummaryResult:
-        from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
-            CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
-        )
-
         base = CanonicalEntitlementAlertQueryService._build_filtered_query(
             alert_kind=alert_kind,
             delivery_status=delivery_status,
@@ -164,34 +163,28 @@ class CanonicalEntitlementAlertQueryService:
             date_from=date_from,
             date_to=date_to,
         ).subquery()
-        handling_model = CanonicalEntitlementMutationAlertEventHandlingModel
+        handling_model = CanonicalEntitlementMutationAlertHandlingModel
         handling_subquery = select(
             handling_model.alert_event_id,
             handling_model.handling_status.label("handling_status"),
         ).subquery("h")
 
-        rule_matches_expr = (
-            select(literal(1))
-            .where(
-                RuleModel.is_active.is_(True),
-                RuleModel.alert_kind == base.c.alert_kind,
-                (RuleModel.feature_code.is_(None))
-                | (RuleModel.feature_code == base.c.feature_code_snapshot),
-                (RuleModel.plan_code.is_(None))
-                | (RuleModel.plan_code == base.c.plan_code_snapshot),
-                (RuleModel.actor_type.is_(None))
-                | (RuleModel.actor_type == base.c.actor_type_snapshot),
-            )
-            .exists()
+        rule_application_event_ids = (
+            CanonicalEntitlementAlertSuppressionApplicationService.active_rule_application_event_ids_subquery()
+            .subquery("active_rule_applications")
         )
 
         joined = (
             select(
                 base,
                 handling_subquery.c.handling_status.label("hs"),
-                rule_matches_expr.label("rule_matches"),
+                rule_application_event_ids.c.alert_event_id.is_not(None).label("rule_applied"),
             )
             .outerjoin(handling_subquery, base.c.id == handling_subquery.c.alert_event_id)
+            .outerjoin(
+                rule_application_event_ids,
+                base.c.id == rule_application_event_ids.c.alert_event_id,
+            )
             .subquery()
         )
 
@@ -222,7 +215,7 @@ class CanonicalEntitlementAlertQueryService:
                     case(
                         (
                             (joined.c.hs == "suppressed")
-                            | (joined.c.hs.is_(None) & joined.c.rule_matches),
+                            | (joined.c.hs.is_(None) & joined.c.rule_applied),
                             1,
                         )
                     )
@@ -233,7 +226,7 @@ class CanonicalEntitlementAlertQueryService:
                         (
                             (joined.c.delivery_status == "failed")
                             & joined.c.hs.is_(None)
-                            & (~joined.c.rule_matches),
+                            & (~joined.c.rule_applied),
                             1,
                         )
                     )
@@ -266,21 +259,11 @@ class CanonicalEntitlementAlertQueryService:
         date_from: datetime | None = None,
         date_to: datetime | None = None,
     ):
-        from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
-            CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
-        )
-
         model = CanonicalEntitlementMutationAlertEventModel
-        handling_model = CanonicalEntitlementMutationAlertEventHandlingModel
+        handling_model = CanonicalEntitlementMutationAlertHandlingModel
         query = select(model)
-
-        rule_matching_subquery = select(literal(1)).where(
-            RuleModel.is_active.is_(True),
-            RuleModel.alert_kind == model.alert_kind,
-            (RuleModel.feature_code.is_(None))
-            | (RuleModel.feature_code == model.feature_code_snapshot),
-            (RuleModel.plan_code.is_(None)) | (RuleModel.plan_code == model.plan_code_snapshot),
-            (RuleModel.actor_type.is_(None)) | (RuleModel.actor_type == model.actor_type_snapshot),
+        active_rule_application_event_ids = (
+            CanonicalEntitlementAlertSuppressionApplicationService.active_rule_application_event_ids_subquery()
         )
 
         if alert_kind is not None:
@@ -308,14 +291,14 @@ class CanonicalEntitlementAlertQueryService:
             any_manual = select(handling_model.alert_event_id)
             query = query.where(
                 (model.id.in_(manual_suppressed))
-                | (model.id.notin_(any_manual) & rule_matching_subquery.exists())
+                | (model.id.notin_(any_manual) & model.id.in_(active_rule_application_event_ids))
             )
         elif handling_status == "pending_retry":
             any_manual = select(handling_model.alert_event_id)
             query = query.where(
                 model.delivery_status == "failed",
                 model.id.notin_(any_manual),
-                ~rule_matching_subquery.exists(),
+                model.id.notin_(active_rule_application_event_ids),
             )
 
         if request_id is not None:
@@ -345,4 +328,3 @@ class CanonicalEntitlementAlertQueryService:
         for attempt in attempts:
             attempts_by_event[attempt.alert_event_id].append(attempt)
         return attempts_by_event
-

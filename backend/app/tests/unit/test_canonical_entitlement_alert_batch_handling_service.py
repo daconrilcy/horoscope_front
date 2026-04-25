@@ -12,7 +12,7 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.services.canonical_entitlement_alert_batch_handling_service import (
     CanonicalEntitlementAlertBatchHandlingService,
@@ -84,8 +84,8 @@ def _seed_handling(
     handling_status: str,
     ops_comment: str | None = None,
     suppression_key: str | None = None,
-) -> CanonicalEntitlementMutationAlertEventHandlingModel:
-    handling = CanonicalEntitlementMutationAlertEventHandlingModel(
+) -> CanonicalEntitlementMutationAlertHandlingModel:
+    handling = CanonicalEntitlementMutationAlertHandlingModel(
         alert_event_id=alert_event_id,
         handling_status=handling_status,
         handled_by_user_id=42,

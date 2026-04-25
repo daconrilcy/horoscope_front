@@ -1032,6 +1032,7 @@ def test_get_review_history_after_one_review() -> None:
     data = response.json()["data"]
     assert data["total_count"] == 1
     item = data["items"][0]
+    assert item["event_type"] == "created"
     assert item["new_review_status"] == "acknowledged"
     assert item["new_review_comment"] == "Checked"
     # previous_* fields should be omitted because they are None
@@ -1075,6 +1076,7 @@ def test_get_review_history_chain_of_transitions() -> None:
     assert len(items) == 3
 
     # Order ASC: occurred_at
+    assert [item["event_type"] for item in items] == ["created", "updated", "updated"]
     assert items[0]["new_review_status"] == "acknowledged"
     assert "previous_review_status" not in items[0]
 

@@ -15,7 +15,10 @@ from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
+)
+from app.infra.db.models.entitlement_mutation.suppression.suppression_application import (
+    CanonicalEntitlementMutationAlertSuppressionApplicationModel,
 )
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
@@ -81,6 +84,30 @@ def _seed_alert_event(
 
 def _attempt_count(db: Session) -> int:
     return db.query(CanonicalEntitlementMutationAlertDeliveryAttemptModel).count()
+
+
+def _seed_rule_application(
+    db: Session,
+    *,
+    event: CanonicalEntitlementMutationAlertEventModel,
+) -> CanonicalEntitlementMutationAlertSuppressionApplicationModel:
+    rule = CanonicalEntitlementMutationAlertSuppressionRuleModel(
+        alert_kind=event.alert_kind,
+        feature_code=event.feature_code_snapshot,
+        plan_code=event.plan_code_snapshot,
+        actor_type=event.actor_type_snapshot,
+        is_active=True,
+    )
+    db.add(rule)
+    db.flush()
+    application = CanonicalEntitlementMutationAlertSuppressionApplicationModel(
+        alert_event_id=event.id,
+        suppression_rule_id=rule.id,
+        application_mode="rule",
+    )
+    db.add(application)
+    db.flush()
+    return application
 
 
 def test_batch_retry_dry_run_returns_candidate_count_without_writes(
@@ -313,17 +340,9 @@ def test_batch_retry_excludes_rule_suppressed_alerts(db_session: Session) -> Non
     audit = _seed_audit(db_session)
     matching = _seed_alert_event(db_session, audit_id=audit.id, feature_code="feature-rule")
     retryable = _seed_alert_event(db_session, audit_id=audit.id, feature_code="feature-open")
+    _seed_rule_application(db_session, event=matching)
     db_session.add(
-        CanonicalEntitlementMutationAlertSuppressionRuleModel(
-            alert_kind=matching.alert_kind,
-            feature_code=matching.feature_code_snapshot,
-            plan_code=matching.plan_code_snapshot,
-            actor_type=matching.actor_type_snapshot,
-            is_active=True,
-        )
-    )
-    db_session.add(
-        CanonicalEntitlementMutationAlertEventHandlingModel(
+        CanonicalEntitlementMutationAlertHandlingModel(
             alert_event_id=retryable.id,
             handling_status="resolved",
             handled_by_user_id=1,
@@ -348,15 +367,7 @@ def test_batch_retry_dry_run_excludes_rule_suppressed_alerts(db_session: Session
     audit = _seed_audit(db_session)
     matching = _seed_alert_event(db_session, audit_id=audit.id, feature_code="feature-rule")
     open_event = _seed_alert_event(db_session, audit_id=audit.id, feature_code="feature-open")
-    db_session.add(
-        CanonicalEntitlementMutationAlertSuppressionRuleModel(
-            alert_kind=matching.alert_kind,
-            feature_code=matching.feature_code_snapshot,
-            plan_code=matching.plan_code_snapshot,
-            actor_type=matching.actor_type_snapshot,
-            is_active=True,
-        )
-    )
+    _seed_rule_application(db_session, event=matching)
     db_session.commit()
 
     result = CanonicalEntitlementAlertBatchRetryService.batch_retry(

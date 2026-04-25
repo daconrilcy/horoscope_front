@@ -7,6 +7,7 @@ Entitlement mutation.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlalchemy import select
 
@@ -228,3 +229,37 @@ def test_current_handling_contains_hardening_fields() -> None:
     assert "request_id" in columns
     assert "created_at" in columns
     assert "updated_at" in columns
+
+
+def test_history_tables_expose_typed_event_log_fields() -> None:
+    from app.infra.db.models.entitlement_mutation.alert.handling_event import (
+        CanonicalEntitlementMutationAlertHandlingEventModel,
+    )
+    from app.infra.db.models.entitlement_mutation.audit.review_event import (
+        CanonicalEntitlementMutationAuditReviewEventModel,
+    )
+
+    review_columns = CanonicalEntitlementMutationAuditReviewEventModel.__table__.columns.keys()
+    handling_columns = CanonicalEntitlementMutationAlertHandlingEventModel.__table__.columns.keys()
+
+    assert "event_type" in review_columns
+    assert "event_type" in handling_columns
+    assert "resolution_code" in handling_columns
+    assert "incident_key" in handling_columns
+    assert "requires_followup" in handling_columns
+    assert "followup_due_at" in handling_columns
+
+
+def test_legacy_root_model_shims_are_removed() -> None:
+    legacy_files = [
+        "canonical_entitlement_mutation_alert_delivery_attempt.py",
+        "canonical_entitlement_mutation_alert_event.py",
+        "canonical_entitlement_mutation_alert_event_handling.py",
+        "canonical_entitlement_mutation_alert_event_handling_event.py",
+        "canonical_entitlement_mutation_alert_suppression_rule.py",
+        "canonical_entitlement_mutation_audit_review.py",
+        "canonical_entitlement_mutation_audit_review_event.py",
+    ]
+    models_root = Path(__file__).resolve().parents[2] / "infra" / "db" / "models"
+
+    assert all(not (models_root / name).exists() for name in legacy_files)

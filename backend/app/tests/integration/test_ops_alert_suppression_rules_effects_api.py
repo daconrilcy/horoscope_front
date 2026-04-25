@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.canonical_entitlement_mutation_audit import (
@@ -13,7 +13,10 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
+)
+from app.infra.db.models.entitlement_mutation.suppression.suppression_application import (
+    CanonicalEntitlementMutationAlertSuppressionApplicationModel,
 )
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
@@ -35,7 +38,7 @@ def _cleanup_tables() -> None:
     with SessionLocal() as db:
         db.execute(delete(UserModel))
         db.execute(delete(CanonicalEntitlementMutationAuditModel))
-        db.execute(delete(CanonicalEntitlementMutationAlertEventHandlingModel))
+        db.execute(delete(CanonicalEntitlementMutationAlertHandlingModel))
         db.execute(delete(CanonicalEntitlementMutationAlertEventModel))
         db.execute(delete(CanonicalEntitlementMutationAlertSuppressionRuleModel))
         db.commit()
@@ -129,6 +132,45 @@ def test_list_alerts_marks_matching_future_alert_as_rule_suppressed() -> None:
     assert item["handling"]["suppression_rule_id"] == rule_id
     assert item["retryable"] is False
 
+    with SessionLocal() as db:
+        application = db.execute(
+            select(CanonicalEntitlementMutationAlertSuppressionApplicationModel)
+        ).scalar_one()
+        assert application.application_mode == "rule"
+        assert application.suppression_rule_id == rule_id
+        assert application.suppression_key == "noise"
+
+
+def test_create_rule_materializes_suppression_application_for_existing_alert() -> None:
+    _cleanup_tables()
+    ops_token = _register_user_with_role_and_token("ops-applications@example.com", "ops")
+    headers = {"Authorization": f"Bearer {ops_token}", "X-Request-Id": "rid-rule-apply"}
+
+    with SessionLocal() as db:
+        audit = _seed_audit(db)
+        event = _seed_alert(db, audit.id, dedupe_suffix="existing", feature_code="feature-a")
+        event_id = event.id
+        db.commit()
+
+    rule_id = _create_rule(
+        headers,
+        alert_kind="sla_overdue",
+        feature_code="feature-a",
+        ops_comment="Known noise",
+        suppression_key="noise",
+    )
+
+    with SessionLocal() as db:
+        application = db.execute(
+            select(CanonicalEntitlementMutationAlertSuppressionApplicationModel).where(
+                CanonicalEntitlementMutationAlertSuppressionApplicationModel.alert_event_id
+                == event_id
+            )
+        ).scalar_one()
+        assert application.application_mode == "rule"
+        assert application.suppression_rule_id == rule_id
+        assert application.request_id == "rid-rule-apply"
+
 
 def test_list_alerts_manual_resolved_wins_over_rule() -> None:
     _cleanup_tables()
@@ -139,7 +181,7 @@ def test_list_alerts_manual_resolved_wins_over_rule() -> None:
         audit = _seed_audit(db)
         event = _seed_alert(db, audit.id, dedupe_suffix="resolved", feature_code="feature-a")
         db.add(
-            CanonicalEntitlementMutationAlertEventHandlingModel(
+            CanonicalEntitlementMutationAlertHandlingModel(
                 alert_event_id=event.id,
                 handling_status="resolved",
                 handled_by_user_id=1,

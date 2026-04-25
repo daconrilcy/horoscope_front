@@ -25,6 +25,7 @@ class SqliteAlignmentStatus:
     database_url: str
     file_path: Path | None
     exists: bool
+    existing_table_count: int
     current_revision: str | None
     head_revision: str
     missing_tables: tuple[str, ...]
@@ -43,6 +44,7 @@ class SqliteAlignmentStatus:
         file_label = str(self.file_path) if self.file_path is not None else "<memory-or-non-file>"
         return (
             f"url={self.database_url} file={file_label} exists={self.exists} "
+            f"existing_table_count={self.existing_table_count} "
             f"current_revision={self.current_revision} head_revision={self.head_revision} "
             f"missing_tables={list(self.missing_tables)}"
         )
@@ -135,6 +137,7 @@ def sqlite_alignment_status(database_url: str) -> SqliteAlignmentStatus:
             database_url=database_url,
             file_path=file_path,
             exists=False,
+            existing_table_count=0,
             current_revision=None,
             head_revision=head_revision,
             missing_tables=tuple(sorted(Base.metadata.tables)),
@@ -163,6 +166,7 @@ def sqlite_alignment_status(database_url: str) -> SqliteAlignmentStatus:
             database_url=database_url,
             file_path=file_path,
             exists=True,
+            existing_table_count=len(existing_tables),
             current_revision=current_revision,
             head_revision=head_revision,
             missing_tables=missing_tables,
@@ -579,7 +583,25 @@ def ensure_configured_sqlite_file_matches_alembic_head(
     statuses = configured_sqlite_alignment_statuses()
     for status in statuses:
         url = status.database_url
-        command.upgrade(_alembic_config(database_url=url), "head")
+        config = _alembic_config(database_url=url)
+        if status.exists and status.current_revision is None and status.existing_table_count > 0:
+            logger.warning(
+                (
+                    "configured_sqlite_schema_stamp_existing_metadata "
+                    "database_url=%s existing_table_count=%s missing_tables=%s"
+                ),
+                url,
+                status.existing_table_count,
+                sorted(status.missing_tables),
+            )
+            _repair_missing_tables_for_database_url(
+                url,
+                missing_tables=set(status.missing_tables),
+            )
+            command.stamp(config, "head")
+            continue
+
+        command.upgrade(config, "head")
 
     settings_url = settings.database_url
     repaired_secondary_urls: set[str] = set()

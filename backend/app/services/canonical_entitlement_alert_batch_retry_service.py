@@ -9,19 +9,22 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
-from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
 from app.infra.db.models.entitlement_mutation.alert.alert_event import (
     CanonicalEntitlementMutationAlertEventModel,
 )
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.services.canonical_entitlement_alert_retry_service import (
     CanonicalEntitlementAlertRetryService,
 )
 from app.services.canonical_entitlement_alert_service import CanonicalEntitlementAlertService
+from app.services.canonical_entitlement_alert_suppression_application_service import (
+    CanonicalEntitlementAlertSuppressionApplicationService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -153,29 +156,18 @@ class CanonicalEntitlementAlertBatchRetryService:
         date_from: datetime | None,
         date_to: datetime | None,
     ) -> list[CanonicalEntitlementMutationAlertEventModel]:
-        from sqlalchemy import literal
-
-        from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
-            CanonicalEntitlementMutationAlertSuppressionRuleModel as RuleModel,
-        )
-
         model = CanonicalEntitlementMutationAlertEventModel
-        handling_model = CanonicalEntitlementMutationAlertEventHandlingModel
+        handling_model = CanonicalEntitlementMutationAlertHandlingModel
         query = select(model).where(model.delivery_status == "failed")
         excluded_subquery = select(handling_model.alert_event_id).where(
             handling_model.handling_status.in_(["suppressed", "resolved"])
         )
         query = query.where(model.id.notin_(excluded_subquery))
-
-        rule_matching_subquery = select(literal(1)).where(
-            RuleModel.is_active.is_(True),
-            RuleModel.alert_kind == model.alert_kind,
-            (RuleModel.feature_code.is_(None))
-            | (RuleModel.feature_code == model.feature_code_snapshot),
-            (RuleModel.plan_code.is_(None)) | (RuleModel.plan_code == model.plan_code_snapshot),
-            (RuleModel.actor_type.is_(None)) | (RuleModel.actor_type == model.actor_type_snapshot),
+        query = query.where(
+            model.id.notin_(
+                CanonicalEntitlementAlertSuppressionApplicationService.active_rule_application_event_ids_subquery()
+            )
         )
-        query = query.where(~rule_matching_subquery.exists())
 
         if alert_kind is not None:
             query = query.where(model.alert_kind == alert_kind)
@@ -195,4 +187,3 @@ class CanonicalEntitlementAlertBatchRetryService:
             query = query.where(model.created_at <= date_to)
         query = query.order_by(model.id.asc()).limit(limit)
         return list(db.scalars(query).all())
-

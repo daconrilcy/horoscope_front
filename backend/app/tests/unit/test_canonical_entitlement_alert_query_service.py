@@ -14,7 +14,10 @@ from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
 from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertEventHandlingModel,
+    CanonicalEntitlementMutationAlertHandlingModel,
+)
+from app.infra.db.models.entitlement_mutation.suppression.suppression_application import (
+    CanonicalEntitlementMutationAlertSuppressionApplicationModel,
 )
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
@@ -107,6 +110,34 @@ def _seed_attempt(
     db.add(attempt)
     db.flush()
     return attempt
+
+
+def _seed_rule_application(
+    db: Session,
+    *,
+    event: CanonicalEntitlementMutationAlertEventModel,
+) -> CanonicalEntitlementMutationAlertSuppressionApplicationModel:
+    rule = CanonicalEntitlementMutationAlertSuppressionRuleModel(
+        alert_kind=event.alert_kind,
+        feature_code=event.feature_code_snapshot,
+        plan_code=event.plan_code_snapshot,
+        actor_type=event.actor_type_snapshot,
+        is_active=True,
+        suppression_key="known-noise",
+        ops_comment="ignore this alert family",
+    )
+    db.add(rule)
+    db.flush()
+    application = CanonicalEntitlementMutationAlertSuppressionApplicationModel(
+        alert_event_id=event.id,
+        suppression_rule_id=rule.id,
+        suppression_key=rule.suppression_key,
+        application_mode="rule",
+        application_reason=rule.ops_comment,
+    )
+    db.add(application)
+    db.flush()
+    return application
 
 
 def test_list_alert_events_empty(db_session: Session) -> None:
@@ -338,17 +369,7 @@ def test_list_alert_events_includes_rule_suppressed_handling(db_session: Session
         dedupe_suffix="rule-suppressed",
         delivery_status="failed",
     )
-    db_session.add(
-        CanonicalEntitlementMutationAlertSuppressionRuleModel(
-            alert_kind=event.alert_kind,
-            feature_code=event.feature_code_snapshot,
-            plan_code=event.plan_code_snapshot,
-            actor_type=event.actor_type_snapshot,
-            is_active=True,
-            suppression_key="known-noise",
-            ops_comment="ignore this alert family",
-        )
-    )
+    _seed_rule_application(db_session, event=event)
     db_session.commit()
 
     rows, total_count = CanonicalEntitlementAlertQueryService.list_alert_events(
@@ -375,17 +396,9 @@ def test_summary_counts_rule_suppressed_alerts(db_session: Session) -> None:
         delivery_status="failed",
         feature_code_snapshot="feature-other",
     )
+    _seed_rule_application(db_session, event=rule_suppressed_event)
     db_session.add(
-        CanonicalEntitlementMutationAlertSuppressionRuleModel(
-            alert_kind=rule_suppressed_event.alert_kind,
-            feature_code=rule_suppressed_event.feature_code_snapshot,
-            plan_code=rule_suppressed_event.plan_code_snapshot,
-            actor_type=rule_suppressed_event.actor_type_snapshot,
-            is_active=True,
-        )
-    )
-    db_session.add(
-        CanonicalEntitlementMutationAlertEventHandlingModel(
+        CanonicalEntitlementMutationAlertHandlingModel(
             alert_event_id=manual_resolved_event.id,
             handling_status="resolved",
             handled_by_user_id=1,
@@ -415,15 +428,7 @@ def test_pending_retry_excludes_rule_suppressed_alerts(db_session: Session) -> N
         delivery_status="failed",
         feature_code_snapshot="feature-retryable",
     )
-    db_session.add(
-        CanonicalEntitlementMutationAlertSuppressionRuleModel(
-            alert_kind=matching_event.alert_kind,
-            feature_code=matching_event.feature_code_snapshot,
-            plan_code=matching_event.plan_code_snapshot,
-            actor_type=matching_event.actor_type_snapshot,
-            is_active=True,
-        )
-    )
+    _seed_rule_application(db_session, event=matching_event)
     db_session.commit()
 
     rows, total_count = CanonicalEntitlementAlertQueryService.list_alert_events(
