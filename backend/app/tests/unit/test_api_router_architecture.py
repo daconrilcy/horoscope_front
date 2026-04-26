@@ -57,9 +57,10 @@ SHARED_CONSTANT_NAMES = {
     "VALID_VIEWS",
 }
 TARGET_RESPONSIBILITY_LIMITS = {
-    Path("router_logic") / "admin" / "llm" / "prompts.py": 52_000,
+    Path("..") / ".." / "services" / "llm_generation" / "admin_prompts.py": 52_000,
     Path("routers") / "ops" / "entitlement_mutation_audits.py": 50_000,
 }
+REMOVED_ROUTE_SUPPORT_PACKAGE = "router" + "_logic"
 
 
 class ExpectedRouterRoot(NamedTuple):
@@ -189,7 +190,7 @@ def test_router_modules_do_not_define_local_schemas() -> None:
 
 
 def test_router_modules_do_not_define_private_helpers() -> None:
-    """La logique non HTTP doit rester dans le package router_logic."""
+    """La logique non HTTP doit rester hors des routeurs."""
     offenders: list[str] = []
     for path in _python_files():
         relative_path = path.relative_to(ROUTERS_ROOT)
@@ -309,32 +310,72 @@ def test_router_root_audit_lists_every_registered_api_v1_router_module() -> None
     assert missing == []
 
 
-def test_router_logic_does_not_define_fastapi_routers_or_wildcards() -> None:
-    """La couche router_logic ne doit plus exposer de routeur HTTP ni importer en wildcard."""
-    logic_root = API_V1_ROOT / "router_logic"
+def test_removed_route_support_namespace_directory_is_absent() -> None:
+    """L'ancien namespace de support des routeurs API v1 ne doit plus exister."""
+    assert not (API_V1_ROOT / REMOVED_ROUTE_SUPPORT_PACKAGE).exists()
+
+
+def test_removed_route_support_namespace_is_not_importable() -> None:
+    """L'ancien namespace de support ne doit pas rester importable via un shim."""
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module(f"app.api.v1.{REMOVED_ROUTE_SUPPORT_PACKAGE}")
+
+
+def test_backend_code_does_not_reference_removed_route_support_namespace() -> None:
+    """Aucun code backend ne doit cibler l'ancien chemin Python de support."""
+    forbidden = f"app.api.v1.{REMOVED_ROUTE_SUPPORT_PACKAGE}"
+    backend_root = Path(__file__).resolve().parents[3]
     offenders: list[str] = []
-    for path in sorted(logic_root.rglob("*.py")):
-        if "__pycache__" in path.parts:
-            continue
-        relative_path = path.relative_to(API_V1_ROOT)
-        tree = _source_tree(path)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom):
-                if any(alias.name == "*" for alias in node.names):
-                    offenders.append(f"{relative_path}:{node.lineno} wildcard import")
-                if node.module == "fastapi" and any(
-                    alias.name == "APIRouter" for alias in node.names
-                ):
-                    offenders.append(f"{relative_path}:{node.lineno} imports APIRouter")
-            if isinstance(node, ast.Assign):
-                assigns_router = any(
-                    isinstance(target, ast.Name) and target.id == "router"
-                    for target in node.targets
-                )
-                if assigns_router and isinstance(node.value, ast.Call):
-                    function = node.value.func
-                    if isinstance(function, ast.Name) and function.id == "APIRouter":
-                        offenders.append(f"{relative_path}:{node.lineno} defines APIRouter")
+    for directory_name in ("app", "tests"):
+        for path in sorted((backend_root / directory_name).rglob("*.py")):
+            if "__pycache__" in path.parts or path == Path(__file__):
+                continue
+            content = path.read_text(encoding="utf-8")
+            if forbidden in content:
+                offenders.append(str(path.relative_to(backend_root)))
+
+    assert offenders == []
+
+
+def test_api_v1_support_handler_namespace_is_absent() -> None:
+    """La couche API v1 ne doit pas contenir de namespace de support hors routeurs."""
+    assert not (API_V1_ROOT / "handlers").exists()
+
+
+def test_service_modules_do_not_import_fastapi_or_wildcards() -> None:
+    """Les services ne doivent pas dépendre des adaptateurs HTTP FastAPI."""
+    service_roots = [API_V1_ROOT.parents[1] / "services"]
+    offenders: list[str] = []
+    for root in service_roots:
+        for path in sorted(root.rglob("*.py")):
+            if "__pycache__" in path.parts:
+                continue
+            relative_path = path.relative_to(API_V1_ROOT.parents[1])
+            tree = _source_tree(path)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom):
+                    if any(alias.name == "*" for alias in node.names):
+                        offenders.append(f"{relative_path}:{node.lineno} wildcard import")
+                    if node.module and (
+                        node.module == "fastapi" or node.module.startswith("fastapi.")
+                    ):
+                        imported = ", ".join(alias.name for alias in node.names)
+                        offenders.append(
+                            f"{relative_path}:{node.lineno} imports {imported} from {node.module}"
+                        )
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name == "fastapi" or alias.name.startswith("fastapi."):
+                            offenders.append(f"{relative_path}:{node.lineno} imports {alias.name}")
+                if isinstance(node, ast.Assign):
+                    assigns_router = any(
+                        isinstance(target, ast.Name) and target.id == "router"
+                        for target in node.targets
+                    )
+                    if assigns_router and isinstance(node.value, ast.Call):
+                        function = node.value.func
+                        if isinstance(function, ast.Name) and function.id == "APIRouter":
+                            offenders.append(f"{relative_path}:{node.lineno} defines APIRouter")
 
     assert offenders == []
 

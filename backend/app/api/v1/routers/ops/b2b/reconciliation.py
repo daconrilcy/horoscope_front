@@ -9,14 +9,8 @@ from fastapi import APIRouter, Body, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.ops.b2b.reconciliation import (
-    _enforce_limits,
-    _ensure_ops_role,
-    _error_response,
-    _record_reconciliation_audit,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.ops.b2b.reconciliation import (
-    ErrorEnvelope,
     ReconciliationActionApiResponse,
     ReconciliationIssueDetailApiResponse,
     ReconciliationIssueListApiResponse,
@@ -24,6 +18,12 @@ from app.api.v1.schemas.routers.ops.b2b.reconciliation import (
 from app.core.rate_limit import RateLimitError
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
+from app.services.b2b.ops_reconciliation_api import (
+    _enforce_limits,
+    _ensure_ops_role,
+    _error_response,
+    _record_reconciliation_audit,
+)
 from app.services.b2b.reconciliation_service import (
     B2BReconciliationService,
     B2BReconciliationServiceError,

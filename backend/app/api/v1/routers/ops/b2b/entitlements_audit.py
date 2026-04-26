@@ -9,19 +9,19 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.constants import VALID_RESOLUTION_SOURCES
-from app.api.v1.router_logic.ops.b2b.entitlements_audit import (
-    _enforce_limits,
-    _ensure_ops_role,
-    _error_response,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.ops.b2b.entitlements_audit import (
     B2BAuditEntryPayload,
     B2BAuditListApiResponse,
-    ErrorEnvelope,
 )
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.services.b2b.audit_service import B2BAuditService
+from app.services.b2b.ops_entitlements_audit_api import (
+    _enforce_limits,
+    _ensure_ops_role,
+    _error_response,
+)
 
 router = APIRouter(prefix="/v1/ops/b2b/entitlements", tags=["ops-b2b-entitlements"])
 

@@ -235,7 +235,7 @@ def test_b2b_usage_summary_returns_429_when_rate_limited(monkeypatch: object) ->
             status_code=429,
         )
 
-    monkeypatch.setattr("app.api.v1.router_logic.b2b.usage.check_rate_limit", _always_rate_limited)
+    monkeypatch.setattr("app.services.b2b.api_usage.check_rate_limit", _always_rate_limited)
     response = client.get(
         "/v1/b2b/usage/summary",
         headers={"X-API-Key": api_key, "X-Request-Id": "rid-b2b-usage-429"},
@@ -281,7 +281,7 @@ def test_b2b_usage_summary_returns_503_when_audit_unavailable(monkeypatch: objec
         )
 
     monkeypatch.setattr(
-        "app.api.v1.router_logic.b2b.usage.AuditService.record_event",
+        "app.services.b2b.api_usage.AuditService.record_event",
         _raise_audit_error,
     )
     response = client.get(

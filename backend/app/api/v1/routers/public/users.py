@@ -14,12 +14,8 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.constants import VALID_ASTROLOGER_PROFILES
-from app.api.v1.router_logic.public.users import (
-    _natal_inconsistent_metric_name,
-    _should_log_inconsistent_result_event,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.users import (
-    ErrorEnvelope,
     NatalChartGenerateRequest,
     NatalInterpretationApiResponse,
     UserBirthProfileApiResponse,
@@ -52,6 +48,10 @@ from app.services.user_profile.birth_profile_service import (
 from app.services.user_profile.natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
+)
+from app.services.user_profile.public_users import (
+    _natal_inconsistent_metric_name,
+    _should_log_inconsistent_result_event,
 )
 
 router = APIRouter(prefix="/v1/users", tags=["users"])

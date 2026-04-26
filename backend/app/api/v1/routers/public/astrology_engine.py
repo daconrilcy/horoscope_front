@@ -6,15 +6,10 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.astrology_engine import (
-    _build_engine_diff,
-    _error_response,
-    _status_code_for_natal_error,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.astrology_engine import (
     BirthPrepareResponse,
     ChartResultAuditResponse,
-    ErrorEnvelope,
     NatalCalculateRequest,
     NatalCalculateResponse,
     NatalCompareRequest,
@@ -27,6 +22,11 @@ from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_calculation import NatalCalculationError
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
 from app.infra.db.session import get_db_session
+from app.services.chart.public_astrology_engine import (
+    _build_engine_diff,
+    _error_response,
+    _status_code_for_natal_error,
+)
 from app.services.chart.result_service import (
     ChartResultService,
     ChartResultServiceError,

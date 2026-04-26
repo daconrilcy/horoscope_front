@@ -5,19 +5,19 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, get_optional_authenticated_user
-from app.api.v1.router_logic.public.reference_data import (
-    _error_response,
-    _record_reference_audit,
-    _validate_seed_access,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.reference_data import (
     CloneReferenceVersionPayload,
-    ErrorEnvelope,
 )
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.services.ops.audit_service import AuditServiceError
+from app.services.reference_data.public_support import (
+    _error_response,
+    _record_reference_audit,
+    _validate_seed_access,
+)
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
 
 router = APIRouter(prefix="/v1/reference-data", tags=["reference-data"])

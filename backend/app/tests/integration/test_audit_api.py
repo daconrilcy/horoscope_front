@@ -140,9 +140,7 @@ def test_audit_events_returns_429_when_rate_limited(monkeypatch: object) -> None
             status_code=429,
         )
 
-    monkeypatch.setattr(
-        "app.api.v1.router_logic.public.audit.check_rate_limit", _always_rate_limited
-    )
+    monkeypatch.setattr("app.services.ops.public_audit.check_rate_limit", _always_rate_limited)
 
     response = client.get("/v1/audit/events", headers=headers)
     assert response.status_code == 429

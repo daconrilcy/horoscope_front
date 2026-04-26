@@ -9,15 +9,8 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.support import (
-    _enforce_support_limits,
-    _ensure_support_role,
-    _error_response,
-    _recent_audit_events_for_user,
-    _record_audit_event,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.support import (
-    ErrorEnvelope,
     PrivacyRequestSummary,
     SupportContextApiResponse,
     SupportContextData,
@@ -38,6 +31,13 @@ from app.services.ops.incident_service import (
     SupportIncidentData,
     SupportIncidentListFilters,
     SupportIncidentUpdatePayload,
+)
+from app.services.ops.public_support import (
+    _enforce_support_limits,
+    _ensure_support_role,
+    _error_response,
+    _recent_audit_events_for_user,
+    _record_audit_event,
 )
 
 logger = logging.getLogger(__name__)

@@ -4,11 +4,11 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from app.api.v1.router_logic.admin.llm import manual_execution as admin_llm_logic
-from app.api.v1.router_logic.admin.llm.manual_execution import (
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.services.llm_generation import admin_manual_execution as admin_llm_logic
+from app.services.llm_generation.admin_manual_execution import (
     _build_admin_manual_execute_response_payload,
 )
-from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.services.llm_generation.anonymization_service import LLMAnonymizationError
 
 

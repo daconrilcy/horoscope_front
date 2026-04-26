@@ -8,11 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.entitlements import (
-    _get_available_feature_codes,
-    _missing_feature_response,
-    _to_feature_response,
-)
 from app.api.v1.schemas.routers.public.entitlements import (
     EntitlementsMeResponse,
     PlanCatalogData,
@@ -32,6 +27,11 @@ from app.infra.db.session import get_db_session
 from app.services.billing.service import BillingService
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
+)
+from app.services.entitlement.public_entitlements import (
+    _get_available_feature_codes,
+    _missing_feature_response,
+    _to_feature_response,
 )
 
 router = APIRouter(prefix="/v1/entitlements", tags=["entitlements"])

@@ -9,20 +9,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.billing import (
-    AuditWriteError,
-    _audit_unavailable_response,
-    _create_stripe_subscription_flow_session_response,
-    _enforce_billing_limits,
-    _ensure_user_role,
-    _error_response,
-    _record_audit_event,
-    _record_pricing_event_safely,
-    _resolve_portal_service_status_code,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.billing import (
     BillingPlansApiResponse,
-    ErrorEnvelope,
     StripeCheckoutApiResponse,
     StripeCheckoutRequest,
     StripePortalApiResponse,
@@ -36,6 +25,17 @@ from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel
 from app.infra.db.session import get_db_session
+from app.services.billing.public_billing import (
+    AuditWriteError,
+    _audit_unavailable_response,
+    _create_stripe_subscription_flow_session_response,
+    _enforce_billing_limits,
+    _ensure_user_role,
+    _error_response,
+    _record_audit_event,
+    _record_pricing_event_safely,
+    _resolve_portal_service_status_code,
+)
 from app.services.billing.service import (
     BillingService,
 )
@@ -393,8 +393,9 @@ def create_stripe_portal_subscription_update_session(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    request_id = resolve_request_id(request)
     return _create_stripe_subscription_flow_session_response(
-        request=request,
+        request_id=request_id,
         current_user=current_user,
         db=db,
         operation="stripe_portal_subscription_update_session",
@@ -425,8 +426,9 @@ def create_stripe_portal_subscription_cancel_session(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    request_id = resolve_request_id(request)
     return _create_stripe_subscription_flow_session_response(
-        request=request,
+        request_id=request_id,
         current_user=current_user,
         db=db,
         operation="stripe_portal_subscription_cancel_session",

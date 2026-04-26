@@ -9,16 +9,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.auth import (
-    AuditWriteError,
-    _audit_unavailable_response,
-    _record_audit_event,
-    _resolve_refresh_actor,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.auth import (
     AuthApiResponse,
     AuthMeApiResponse,
-    ErrorEnvelope,
     LoginRequest,
     RefreshApiResponse,
     RefreshRequest,
@@ -27,6 +21,12 @@ from app.api.v1.schemas.routers.public.auth import (
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
+from app.services.auth.public_support import (
+    AuditWriteError,
+    _audit_unavailable_response,
+    _record_audit_event,
+    _resolve_refresh_actor,
+)
 from app.services.auth_service import AuthService, AuthServiceError
 from app.services.email.service import EmailService
 

@@ -3,9 +3,6 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.consultations import (
-    _build_consultation_quota_info,
-)
 from app.api.v1.schemas.routers.public.consultation import (
     ConsultationCatalogueResponse,
     ConsultationGenerateRequest,
@@ -22,6 +19,9 @@ from app.api.v1.schemas.routers.public.consultation import (
 from app.infra.db.session import get_db_session as get_db
 from app.services.consultation.catalogue_service import ConsultationCatalogueService
 from app.services.consultation.precheck_service import ConsultationPrecheckService
+from app.services.consultation.public_consultations import (
+    _build_consultation_quota_info,
+)
 from app.services.consultation.third_party_service import ConsultationThirdPartyService
 from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ConsultationAccessDeniedError,

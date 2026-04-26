@@ -182,7 +182,7 @@ def test_rules_api_returns_429_when_rate_limited(monkeypatch: object) -> None:
         )
 
     monkeypatch.setattr(
-        "app.api.v1.router_logic.ops.entitlement_mutation_audits.check_rate_limit",
+        "app.services.canonical_entitlement.audit.api_mutation_audits.check_rate_limit",
         _always_rate_limited,
     )
 

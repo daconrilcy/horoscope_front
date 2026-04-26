@@ -9,15 +9,10 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.ops.b2b.entitlement_repair import (
-    _enforce_limits,
-    _ensure_ops_role,
-    _error_response,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.ops.b2b.entitlement_repair import (
     ClassifyZeroUnitsRequest,
     ClassifyZeroUnitsResponse,
-    ErrorEnvelope,
     RepairRunResponse,
     SetAdminUserRequest,
     SetAdminUserResponse,
@@ -27,6 +22,11 @@ from app.infra.db.session import get_db_session
 from app.services.b2b.entitlement_repair_service import (
     B2BEntitlementRepairService,
     RepairValidationError,
+)
+from app.services.b2b.ops_entitlement_repair_api import (
+    _enforce_limits,
+    _ensure_ops_role,
+    _error_response,
 )
 
 logger = logging.getLogger(__name__)

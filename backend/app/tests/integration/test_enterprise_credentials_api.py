@@ -140,7 +140,7 @@ def test_enterprise_credentials_returns_429_when_rate_limited(monkeypatch: objec
         )
 
     monkeypatch.setattr(
-        "app.api.v1.router_logic.b2b.credentials.check_rate_limit",
+        "app.services.b2b.api_credentials.check_rate_limit",
         _always_rate_limited,
     )
 

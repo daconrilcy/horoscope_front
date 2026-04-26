@@ -253,9 +253,7 @@ def test_ops_monitoring_returns_429_when_rate_limited(monkeypatch: object) -> No
             status_code=429,
         )
 
-    monkeypatch.setattr(
-        "app.api.v1.router_logic.ops.monitoring.check_rate_limit", _always_rate_limited
-    )
+    monkeypatch.setattr("app.services.ops.api_monitoring.check_rate_limit", _always_rate_limited)
 
     response = client.get("/v1/ops/monitoring/conversation-kpis", headers=headers)
     assert response.status_code == 429

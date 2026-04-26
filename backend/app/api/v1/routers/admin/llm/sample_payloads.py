@@ -11,7 +11,19 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.router_logic.admin.llm.sample_payloads import (
+from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.api.v1.schemas.routers.admin.llm.sample_payloads import (
+    AdminLlmSamplePayloadCreatePayload,
+    AdminLlmSamplePayloadDeleteResponse,
+    AdminLlmSamplePayloadListResponse,
+    AdminLlmSamplePayloadResponse,
+    AdminLlmSamplePayloadSummary,
+    AdminLlmSamplePayloadUpdatePayload,
+)
+from app.core.request_id import resolve_request_id
+from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
+from app.infra.db.session import get_db_session
+from app.services.llm_generation.admin_sample_payloads import (
     _error_response,
     _find_default_conflict,
     _find_name_conflict,
@@ -27,18 +39,6 @@ from app.api.v1.router_logic.admin.llm.sample_payloads import (
     _validate_locale,
     _validate_payload_json,
 )
-from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
-from app.api.v1.schemas.routers.admin.llm.sample_payloads import (
-    AdminLlmSamplePayloadCreatePayload,
-    AdminLlmSamplePayloadDeleteResponse,
-    AdminLlmSamplePayloadListResponse,
-    AdminLlmSamplePayloadResponse,
-    AdminLlmSamplePayloadSummary,
-    AdminLlmSamplePayloadUpdatePayload,
-)
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
-from app.infra.db.session import get_db_session
 
 router = APIRouter(prefix="/v1/admin/llm/sample-payloads", tags=["admin-llm"])
 

@@ -3,29 +3,13 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
-from app.api.v1.constants import DEFAULT_DRILLDOWN_LIMIT, MAX_PAGE_SIZE, VALID_VIEWS
 
-import csv
-import io
 from datetime import datetime
-from decimal import Decimal
 from typing import Any
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.core.datetime_provider import datetime_provider
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.user import UserModel
-from app.infra.db.session import get_db_session
 from app.services.llm_observability.consumption_service import (
-    CanonicalConsumptionAggregate,
-    CanonicalConsumptionFilters,
     Granularity,
-    LlmCanonicalConsumptionService,
-    Scope,
 )
 
 router = APIRouter(prefix="/v1/admin/llm/consumption", tags=["admin-llm-consumption"])

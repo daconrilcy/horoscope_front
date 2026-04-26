@@ -867,7 +867,7 @@ def test_admin_llm_catalog_resolved_detail_exposes_persona_overlay_and_runtime_d
         )
         db.commit()
 
-        from app.api.v1.router_logic.admin.llm import prompts as admin_llm_logic
+        from app.services.llm_generation import admin_prompts as admin_llm_logic
 
         real_resolve_assembly = admin_llm_logic.resolve_assembly
 
@@ -876,7 +876,7 @@ def test_admin_llm_catalog_resolved_detail_exposes_persona_overlay_and_runtime_d
             return resolved.model_copy(update={"persona_block": None})
 
         with patch(
-            "app.api.v1.router_logic.admin.llm.prompts.resolve_assembly",
+            "app.services.llm_generation.admin_prompts.resolve_assembly",
             side_effect=resolve_without_embedded_persona,
         ):
             response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")

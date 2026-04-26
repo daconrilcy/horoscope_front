@@ -3,55 +3,11 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
-from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
 
 from datetime import datetime
-from typing import Any, Literal
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from typing import Literal
+from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.core.datetime_provider import datetime_provider
-from app.core.rate_limit import RateLimitError, check_rate_limit
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.entitlement_mutation.alert.alert_event import (
-    CanonicalEntitlementMutationAlertEventModel,
-)
-from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
-from app.infra.db.models.entitlement_mutation.alert.handling import (
-    CanonicalEntitlementMutationAlertHandlingModel,
-)
-from app.infra.db.models.entitlement_mutation.audit.review import (
-    CanonicalEntitlementMutationAuditReviewModel,
-)
-from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
-    CanonicalEntitlementMutationAlertSuppressionRuleModel,
-)
-from app.infra.db.session import get_db_session
-from app.services.canonical_entitlement.alert.handling import (
-    CanonicalEntitlementAlertHandlingService,
-)
-from app.services.canonical_entitlement.audit.audit_query import (
-    CanonicalEntitlementMutationAuditQueryService,
-)
-from app.services.canonical_entitlement.audit.audit_review import (
-    AuditNotFoundError,
-    CanonicalEntitlementMutationAuditReviewService,
-)
-from app.services.canonical_entitlement.audit.diff_service import (
-    CanonicalEntitlementMutationDiffService,
-)
-from app.services.canonical_entitlement.audit.review_queue import (
-    CanonicalEntitlementReviewQueueService,
-    ReviewQueueRow,
-)
-from app.services.canonical_entitlement.suppression.application import (
-    CanonicalEntitlementAlertSuppressionApplicationService,
-)
 
 router = APIRouter(prefix="/v1/ops/entitlements", tags=["ops-entitlement-audits"])
 WritableReviewStatusLiteral = Literal["acknowledged", "expected", "investigating", "closed"]

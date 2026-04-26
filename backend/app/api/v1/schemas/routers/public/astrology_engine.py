@@ -3,28 +3,15 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
-from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
 
 import logging
 from typing import Any
-from fastapi import APIRouter, Depends, Request, status
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ValidationError
-from sqlalchemy.orm import Session
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.core import ephemeris
-from app.core.config import settings
-from app.core.request_id import resolve_request_id
-from app.domain.astrology.natal_calculation import NatalCalculationError
-from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
-from app.infra.db.session import get_db_session
+from fastapi import APIRouter
+from pydantic import BaseModel
+from app.domain.astrology.natal_preparation import BirthInput
 from app.services.chart.result_service import (
     ChartResultAuditRecord,
-    ChartResultService,
-    ChartResultServiceError,
 )
-from app.services.natal.calculation_service import NatalCalculationService
-from app.services.natal.preparation_service import NatalPreparationService
 
 router = APIRouter(prefix="/v1/astrology-engine", tags=["astrology-engine"])
 logger = logging.getLogger(__name__)

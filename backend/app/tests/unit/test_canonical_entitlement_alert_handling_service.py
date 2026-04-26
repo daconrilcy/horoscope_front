@@ -5,7 +5,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi import HTTPException
 from sqlalchemy import select
 
 from app.infra.db.base import Base
@@ -20,6 +19,7 @@ from app.infra.db.models.entitlement_mutation.alert.handling import (
 )
 from app.infra.db.session import SessionLocal, engine
 from app.services.canonical_entitlement.alert.handling import (
+    AlertEventNotFoundError,
     CanonicalEntitlementAlertHandlingService,
 )
 
@@ -132,7 +132,7 @@ def test_upsert_handling_updates_existing_record() -> None:
 def test_upsert_handling_raises_404_when_alert_event_not_found() -> None:
     _setup()
     with SessionLocal() as db:
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(AlertEventNotFoundError) as exc_info:
             CanonicalEntitlementAlertHandlingService.upsert_handling(
                 db,
                 alert_event_id=99999,
@@ -142,8 +142,7 @@ def test_upsert_handling_raises_404_when_alert_event_not_found() -> None:
                 suppression_key=None,
             )
 
-        assert exc_info.value.status_code == 404
-        assert exc_info.value.detail == "alert event not found"
+        assert str(exc_info.value) == "alert event not found"
 
 
 def test_upsert_handling_does_not_commit() -> None:

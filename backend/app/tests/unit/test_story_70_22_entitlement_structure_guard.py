@@ -14,6 +14,7 @@ ENTITLEMENT_NAMESPACE_ALLOWLIST = {
     "feature_scope_registry.py",
     "horoscope_daily_entitlement_gate.py",
     "natal_chart_long_entitlement_gate.py",
+    "public_entitlements.py",
     "thematic_consultation_entitlement_gate.py",
 }
 
@@ -29,6 +30,7 @@ CANONICAL_ENTITLEMENT_ALLOWLIST = {
     "audit/__init__.py",
     "audit/audit_query.py",
     "audit/audit_review.py",
+    "audit/api_mutation_audits.py",
     "audit/diff_service.py",
     "audit/mutation_service.py",
     "audit/review_queue.py",

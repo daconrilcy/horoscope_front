@@ -208,9 +208,7 @@ def test_ops_persona_returns_429_when_rate_limited(monkeypatch: object) -> None:
             status_code=429,
         )
 
-    monkeypatch.setattr(
-        "app.api.v1.router_logic.ops.persona.check_rate_limit", _always_rate_limited
-    )
+    monkeypatch.setattr("app.services.ops.api_persona.check_rate_limit", _always_rate_limited)
 
     response = client.get("/v1/ops/persona/config", headers=headers)
     assert response.status_code == 429

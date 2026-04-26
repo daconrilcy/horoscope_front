@@ -7,18 +7,9 @@ from app.api.v1.constants import PDF_TEMPLATE_CONFIG_DOC
 
 import logging
 from typing import Any, Optional
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from app.api.dependencies.auth import (
-    AuthenticatedUser,
-    require_admin_user,
-)
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
-from app.infra.db.session import get_db_session
+from app.infra.db.models.pdf_template import PdfTemplateStatus
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/admin/pdf-templates", tags=["admin-pdf-templates"])

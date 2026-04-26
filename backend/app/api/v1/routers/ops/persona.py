@@ -10,15 +10,8 @@ from app.api.dependencies.auth import (
     AuthenticatedUser,
     require_ops_user,
 )
-from app.api.v1.router_logic.ops.persona import (
-    _audit_failure_or_503,
-    _enforce_limits,
-    _error_response,
-    _persona_profile_mutation,
-    _record_audit_event,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.ops.persona import (
-    ErrorEnvelope,
     PersonaConfigApiResponse,
     PersonaProfileListApiResponse,
     PersonaRollbackApiResponse,
@@ -30,6 +23,13 @@ from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigServiceError,
     PersonaConfigUpdatePayload,
     PersonaProfileCreatePayload,
+)
+from app.services.ops.api_persona import (
+    _audit_failure_or_503,
+    _enforce_limits,
+    _error_response,
+    _persona_profile_mutation,
+    _record_audit_event,
 )
 from app.services.ops.audit_service import AuditServiceError
 
@@ -259,8 +259,9 @@ def activate_persona_profile(
     current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    request_id = resolve_request_id(request)
     return _persona_profile_mutation(
-        request=request,
+        request_id=request_id,
         profile_id=profile_id,
         operation="activate_profile",
         action="ops_persona_activate",
@@ -287,8 +288,9 @@ def archive_persona_profile(
     current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    request_id = resolve_request_id(request)
     return _persona_profile_mutation(
-        request=request,
+        request_id=request_id,
         profile_id=profile_id,
         operation="archive_profile",
         action="ops_persona_archive",
@@ -315,8 +317,9 @@ def restore_persona_profile(
     current_user: AuthenticatedUser = Depends(require_ops_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    request_id = resolve_request_id(request)
     return _persona_profile_mutation(
-        request=request,
+        request_id=request_id,
         profile_id=profile_id,
         operation="restore_profile",
         action="ops_persona_restore",

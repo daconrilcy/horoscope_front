@@ -9,19 +9,19 @@ from app.api.dependencies.b2b_auth import (
     AuthenticatedEnterpriseClient,
     require_authenticated_b2b_client,
 )
-from app.api.v1.router_logic.b2b.usage import (
-    _enforce_limits,
-    _error_response,
-    _record_usage_audit,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.b2b.usage import (
     B2BUsageSummaryApiResponse,
-    ErrorEnvelope,
 )
 from app.core.rate_limit import RateLimitError
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.services.b2b.api_entitlement_gate import B2BApiAccessDeniedError
+from app.services.b2b.api_usage import (
+    _enforce_limits,
+    _error_response,
+    _record_usage_audit,
+)
 from app.services.b2b.canonical_usage_service import (
     B2BCanonicalUsageSummaryService,
 )

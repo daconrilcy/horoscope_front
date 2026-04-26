@@ -217,9 +217,7 @@ def test_b2b_billing_latest_returns_429_when_rate_limited(monkeypatch: object) -
             status_code=429,
         )
 
-    monkeypatch.setattr(
-        "app.api.v1.router_logic.b2b.billing.check_rate_limit", _always_rate_limited
-    )
+    monkeypatch.setattr("app.services.b2b.api_billing.check_rate_limit", _always_rate_limited)
 
     response = client.get(
         "/v1/b2b/billing/cycles/latest",

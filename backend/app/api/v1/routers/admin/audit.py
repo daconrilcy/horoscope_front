@@ -12,18 +12,18 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.router_logic.admin.audit import (
-    _build_export_filename,
-    _get_audit_query,
-    _mask_email,
-    _mask_target_id,
-)
 from app.api.v1.schemas.routers.admin.audit import (
     AdminAuditExportRequest,
     AdminAuditLogResponse,
 )
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
+from app.services.ops.admin_audit import (
+    _build_export_filename,
+    _get_audit_query,
+    _mask_email,
+    _mask_target_id,
+)
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)

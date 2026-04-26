@@ -187,7 +187,7 @@ def test_register_returns_503_when_audit_write_fails(monkeypatch: object) -> Non
         raise RuntimeError("audit unavailable")
 
     monkeypatch.setattr(
-        "app.api.v1.router_logic.public.auth.AuditService.record_event", _raise_audit_error
+        "app.services.auth.public_support.AuditService.record_event", _raise_audit_error
     )
     response = client.post(
         "/v1/auth/register",

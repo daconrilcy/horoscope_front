@@ -9,12 +9,8 @@ from app.api.dependencies.auth import (
     AuthenticatedUser,
     require_ops_user,
 )
-from app.api.v1.router_logic.ops.monitoring import (
-    _enforce_limits,
-    _error_response,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.ops.monitoring import (
-    ErrorEnvelope,
     OpsMonitoringApiResponse,
     OpsMonitoringOperationalSummaryApiResponse,
     OpsMonitoringPersonaKpisApiResponse,
@@ -25,6 +21,10 @@ from app.api.v1.schemas.routers.ops.monitoring import (
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.ops.llm.performance_qualification import PerformanceQualificationService
+from app.services.ops.api_monitoring import (
+    _enforce_limits,
+    _error_response,
+)
 from app.services.ops.monitoring_service import (
     OpsMonitoringService,
     OpsMonitoringServiceError,

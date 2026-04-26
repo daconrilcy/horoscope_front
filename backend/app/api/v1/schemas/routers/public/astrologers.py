@@ -3,23 +3,9 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
-import uuid
-from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
+from typing import List, Optional
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session
-from app.api.dependencies.auth import get_optional_authenticated_user as get_current_user_optional
-from app.core.request_id import resolve_request_id
-from app.infra.db.models import (
-    AstrologerProfileModel,
-    AstrologerReviewModel,
-    ChatConversationModel,
-    UserNatalInterpretationModel,
-)
-from app.infra.db.models.llm.llm_persona import LlmPersonaModel
-from app.infra.db.session import get_db_session
 
 router = APIRouter(prefix="/v1/astrologers", tags=["astrologers"])
 

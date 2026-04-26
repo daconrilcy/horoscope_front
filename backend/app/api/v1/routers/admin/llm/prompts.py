@@ -19,30 +19,6 @@ from app.api.v1.constants import (
     ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
     ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
 )
-from app.api.v1.router_logic.admin.llm.manual_execution import (
-    _build_admin_manual_execute_response_payload,
-    _record_admin_manual_execution_audit,
-    _record_audit_event,
-)
-from app.api.v1.router_logic.admin.llm.prompts import (
-    _admin_catalog_runtime_preview_blocking_reasons,
-    _build_admin_resolved_catalog_view,
-    _build_canonical_admin_use_case_config,
-    _call_log_scope_filter,
-    _catalog_sort_value,
-    _collect_catalog_facets,
-    _ensure_admin_use_case_shadow_row,
-    _error_response,
-    _is_removed_legacy_use_case_key,
-    _legacy_removed_call_log_filter,
-    _serialize_prompt_version,
-    _to_manifest_entry,
-    _to_none_if_literal_none,
-)
-from app.api.v1.router_logic.admin.llm.release_snapshots import (
-    _build_snapshot_timeline_events,
-    _snapshot_diff_entries,
-)
 from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.api.v1.schemas.routers.admin.llm.prompts import (
     AdminCatalogManualExecutePayload,
@@ -133,6 +109,30 @@ from app.infra.db.repositories.llm.prompting_repository import (
 )
 from app.infra.db.session import get_db_session
 from app.ops.llm.services import PromptLint, PromptRegistryV2, replay, run_eval
+from app.services.llm_generation.admin_manual_execution import (
+    _build_admin_manual_execute_response_payload,
+    _record_admin_manual_execution_audit,
+    _record_audit_event,
+)
+from app.services.llm_generation.admin_prompts import (
+    _admin_catalog_runtime_preview_blocking_reasons,
+    _build_admin_resolved_catalog_view,
+    _build_canonical_admin_use_case_config,
+    _call_log_scope_filter,
+    _catalog_sort_value,
+    _collect_catalog_facets,
+    _ensure_admin_use_case_shadow_row,
+    _error_response,
+    _is_removed_legacy_use_case_key,
+    _legacy_removed_call_log_filter,
+    _serialize_prompt_version,
+    _to_manifest_entry,
+    _to_none_if_literal_none,
+)
+from app.services.llm_generation.admin_release_snapshots import (
+    _build_snapshot_timeline_events,
+    _snapshot_diff_entries,
+)
 
 logger = logging.getLogger(__name__)
 

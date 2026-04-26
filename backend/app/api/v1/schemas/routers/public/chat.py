@@ -3,36 +3,17 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
-from app.api.v1.constants import CHAT_TEMPORARY_UNAVAILABLE_MESSAGE
 
-from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
 
 import logging
-import uuid
 from datetime import datetime
-from typing import Any
-from fastapi import APIRouter, Body, Depends, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, ValidationError
-from sqlalchemy.orm import Session
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.core.request_id import resolve_request_id
-from app.infra.db.session import get_db_session
-from app.services.entitlement.chat_entitlement_gate import (
-    ChatAccessDeniedError,
-    ChatEntitlementGate,
-    ChatEntitlementResult,
-    ChatQuotaExceededError,
-)
-from app.services.entitlement.entitlement_types import QuotaDefinition
+from fastapi import APIRouter
+from pydantic import BaseModel, Field
 from app.services.llm_generation.chat.chat_guidance_service import (
     ChatConversationHistoryData,
     ChatConversationListData,
-    ChatGuidanceService,
-    ChatGuidanceServiceError,
     ChatReplyData,
 )
-from app.services.quota.usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/chat", tags=["chat"])

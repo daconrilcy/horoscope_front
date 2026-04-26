@@ -11,14 +11,11 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.constants import CHAT_TEMPORARY_UNAVAILABLE_MESSAGE
-from app.api.v1.router_logic.public.chat import (
-    _build_post_turn_quota_info,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.chat import (
     ChatConversationHistoryApiResponse,
     ChatConversationListApiResponse,
     ChatMessageRequest,
-    ErrorEnvelope,
     GetOrCreateConversationApiResponse,
 )
 from app.core.request_id import resolve_request_id
@@ -31,6 +28,9 @@ from app.services.entitlement.chat_entitlement_gate import (
 from app.services.llm_generation.chat.chat_guidance_service import (
     ChatGuidanceService,
     ChatGuidanceServiceError,
+)
+from app.services.llm_generation.chat.public_chat import (
+    _build_post_turn_quota_info,
 )
 
 logger = logging.getLogger(__name__)

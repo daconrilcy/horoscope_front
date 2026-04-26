@@ -6,9 +6,6 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.router_logic.admin.llm.assemblies import (
-    _error_response,
-)
 from app.api.v1.schemas.routers.admin.llm.assemblies import (
     AssemblyConfigListResponse,
     AssemblyConfigResponse,
@@ -23,6 +20,9 @@ from app.domain.llm.configuration.admin_models import (
 from app.domain.llm.configuration.assembly_admin_service import AssemblyAdminService
 from app.domain.llm.configuration.coherence import CoherenceError
 from app.infra.db.session import get_db_session
+from app.services.llm_generation.admin_assemblies import (
+    _error_response,
+)
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 router = APIRouter(prefix="/v1/admin/llm/assembly", tags=["admin-llm-assembly"])

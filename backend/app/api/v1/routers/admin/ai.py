@@ -8,7 +8,13 @@ from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.router_logic.admin.ai import (
+from app.api.v1.schemas.routers.admin.ai import (
+    AdminAiMetricsResponse,
+    AdminAiUseCaseDetailResponse,
+)
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.session import get_db_session
+from app.services.llm_observability.admin_ai import (
     _build_target_filters,
     _derive_failed_call_error_code,
     _empty_metric_row,
@@ -17,12 +23,6 @@ from app.api.v1.router_logic.admin.ai import (
     _resolve_metric_category_or_raw,
     _resolve_start_date,
 )
-from app.api.v1.schemas.routers.admin.ai import (
-    AdminAiMetricsResponse,
-    AdminAiUseCaseDetailResponse,
-)
-from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
-from app.infra.db.session import get_db_session
 
 logger = logging.getLogger(__name__)
 

@@ -12,19 +12,18 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.router_logic.admin.exports import (
-    _generate_csv_response,
-    _record_export_audit,
-)
+from app.api.v1.response_exports import generate_csv_response
 from app.api.v1.schemas.routers.admin.exports import (
     AdminExportRequest,
     AdminGenerationExportRequest,
 )
+from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.services.llm_observability.consumption_service import LlmCanonicalConsumptionService
+from app.services.ops.admin_exports import _record_export_audit
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +37,7 @@ def export_users(
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    request_id = resolve_request_id(request)
     stmt = (
         select(
             UserModel.id,
@@ -67,7 +67,7 @@ def export_users(
     # 1. Audit
     _record_export_audit(
         db,
-        request,
+        request_id,
         current_user,
         "users",
         len(rows),
@@ -86,7 +86,7 @@ def export_users(
         "subscription_status",
         "stripe_customer_id",
     ]
-    return _generate_csv_response(rows, fieldnames, "users_export.csv")
+    return generate_csv_response(rows, fieldnames, "users_export.csv")
 
 
 @router.post("/generations")
@@ -96,6 +96,7 @@ def export_generations(
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    request_id = resolve_request_id(request)
     rows = [
         row.model_dump(mode="json")
         for row in LlmCanonicalConsumptionService.get_export_rows(
@@ -108,7 +109,7 @@ def export_generations(
     # 1. Audit
     _record_export_audit(
         db,
-        request,
+        request_id,
         current_user,
         "generations",
         len(rows),
@@ -139,7 +140,7 @@ def export_generations(
         "latency_ms",
         "request_id",
     ]
-    return _generate_csv_response(
+    return generate_csv_response(
         rows,
         fieldnames,
         "generations_export.csv",
@@ -153,6 +154,7 @@ def export_billing(
     current_user: AuthenticatedUser = Depends(require_admin_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    request_id = resolve_request_id(request)
     stmt = (
         select(
             UserSubscriptionModel.user_id,
@@ -181,7 +183,7 @@ def export_billing(
     # 1. Audit
     _record_export_audit(
         db,
-        request,
+        request_id,
         current_user,
         "billing",
         len(rows),
@@ -198,4 +200,4 @@ def export_billing(
         "started_at",
         "failure_reason",
     ]
-    return _generate_csv_response(rows, fieldnames, "billing_export.csv")
+    return generate_csv_response(rows, fieldnames, "billing_export.csv")

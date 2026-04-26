@@ -76,7 +76,7 @@
         "backend/scripts/update_all_prompts_59_5.py",
         "backend/scripts/update_guidance_prompts_59_4.py",
         "backend/app/api/v1/schemas/routers/admin/llm/prompts.py",
-        "backend/app/api/v1/router_logic/admin/llm/prompts.py"
+        "backend/app/services/llm_generation/admin_prompts.py"
       ]
     },
     {
@@ -88,8 +88,8 @@
         "backend/app/api/v1/routers/admin_llm.py",
         "backend/app/infra/db/models/llm/llm_observability.py",
         "backend/app/services/llm_observability/consumption_service.py",
-        "backend/app/api/v1/router_logic/admin/ai.py",
-        "backend/app/api/v1/router_logic/admin/llm/prompts.py"
+        "backend/app/services/llm_observability/admin_ai.py",
+        "backend/app/services/llm_generation/admin_prompts.py"
       ]
     },
     {
@@ -98,7 +98,7 @@
       "allowed_paths": [
         "backend/app/api/v1/routers/admin_exports.py",
         "backend/app/services/llm_observability/consumption_service.py",
-        "backend/app/api/v1/router_logic/admin/exports.py",
+        "backend/app/services/ops/admin_exports.py",
         "backend/app/api/v1/routers/admin/exports.py"
       ]
     },

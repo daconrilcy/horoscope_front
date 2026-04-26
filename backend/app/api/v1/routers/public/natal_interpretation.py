@@ -8,18 +8,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.natal_interpretation import (
-    _build_natal_entitlement_info,
-    _create_error_response,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.natal_interpretation import (
+    InterpretationMeta,
     NatalChartLongEntitlementInfo,
     NatalInterpretationListResponse,
     NatalInterpretationRequest,
     NatalInterpretationResponse,
     NatalPdfTemplateListResponse,
 )
-from app.api.v1.schemas.routers.public.users import ErrorEnvelope
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.domain.llm.runtime.adapter import AIEngineAdapterError
@@ -42,6 +39,10 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongQuotaExceededError,
 )
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
+from app.services.llm_generation.natal.public_interpretation import (
+    _build_natal_entitlement_info,
+    _create_error_response,
+)
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
@@ -408,7 +409,6 @@ async def get_natal_interpretation(
             404, "interpretation_not_found", "Interpretation not found or access denied", request_id
         )
 
-    from app.api.v1.schemas.routers.public.natal_interpretation import InterpretationMeta
     from app.infra.db.models.user_natal_interpretation import InterpretationLevel
 
     meta = InterpretationMeta(

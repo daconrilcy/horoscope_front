@@ -8,7 +8,16 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.privacy import (
+from app.api.v1.schemas.common import ErrorEnvelope
+from app.api.v1.schemas.routers.public.privacy import (
+    DeleteRequestPayload,
+    PrivacyApiResponse,
+    PrivacyEvidenceApiResponse,
+)
+from app.core.request_id import resolve_request_id
+from app.infra.db.session import get_db_session
+from app.services.billing.service import BillingService
+from app.services.privacy.public_support import (
     AuditWriteError,
     _enforce_privacy_limits,
     _ensure_support_or_ops_role,
@@ -17,15 +26,6 @@ from app.api.v1.router_logic.public.privacy import (
     _record_audit_event,
     _record_failed_audit_or_503,
 )
-from app.api.v1.schemas.routers.public.privacy import (
-    DeleteRequestPayload,
-    ErrorEnvelope,
-    PrivacyApiResponse,
-    PrivacyEvidenceApiResponse,
-)
-from app.core.request_id import resolve_request_id
-from app.infra.db.session import get_db_session
-from app.services.billing.service import BillingService
 from app.services.privacy_service import (
     PrivacyService,
     PrivacyServiceError,

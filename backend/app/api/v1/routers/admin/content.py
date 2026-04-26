@@ -10,17 +10,6 @@ from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.constants import (
     CALIBRATION_RULE_DESCRIPTIONS,
 )
-from app.api.v1.router_logic.admin.content import (
-    _ensure_config_texts_seeded,
-    _ensure_editorial_templates_seeded,
-    _error_response,
-    _get_latest_ruleset,
-    _record_audit_event,
-    _serialize_calibration_value,
-    _to_config_text_data,
-    _to_editorial_version_data,
-    _to_feature_flag_data,
-)
 from app.api.v1.schemas.routers.admin.content import (
     AdminFeatureFlagListResponse,
     AdminFeatureFlagResponse,
@@ -44,6 +33,17 @@ from app.infra.db.models.editorial_template import EditorialTemplateVersionModel
 from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.prediction_ruleset import RulesetParameterModel
 from app.infra.db.session import get_db_session
+from app.services.ops.admin_content import (
+    _ensure_config_texts_seeded,
+    _ensure_editorial_templates_seeded,
+    _error_response,
+    _get_latest_ruleset,
+    _record_audit_event,
+    _serialize_calibration_value,
+    _to_config_text_data,
+    _to_editorial_version_data,
+    _to_feature_flag_data,
+)
 from app.services.ops.feature_flag_service import (
     FeatureFlagService,
     FeatureFlagServiceError,

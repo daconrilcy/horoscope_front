@@ -8,10 +8,10 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.guidance import (
     ContextualGuidanceApiResponse,
     ContextualGuidanceRequest,
-    ErrorEnvelope,
     GuidanceApiResponse,
     GuidanceRequest,
 )

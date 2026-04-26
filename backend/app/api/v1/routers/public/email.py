@@ -8,12 +8,12 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from app.api.v1.router_logic.public.email import (
-    _get_confirmation_html,
-)
 from app.core.config import settings
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
+from app.services.email.public_email import (
+    _get_confirmation_html,
+)
 
 router = APIRouter(prefix="/email", tags=["email"])
 logger = logging.getLogger(__name__)

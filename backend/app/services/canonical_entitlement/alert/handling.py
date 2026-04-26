@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -27,6 +26,10 @@ from app.services.canonical_entitlement.suppression.application import (
 )
 
 
+class AlertEventNotFoundError(Exception):
+    """Signale qu'un événement d'alerte entitlement est introuvable."""
+
+
 class CanonicalEntitlementAlertHandlingService:
     @staticmethod
     def upsert_handling(
@@ -41,7 +44,7 @@ class CanonicalEntitlementAlertHandlingService:
     ) -> CanonicalEntitlementMutationAlertHandlingModel:
         alert_event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
         if alert_event is None:
-            raise HTTPException(status_code=404, detail="alert event not found")
+            raise AlertEventNotFoundError("alert event not found")
 
         handling = db.execute(
             select(CanonicalEntitlementMutationAlertHandlingModel).where(

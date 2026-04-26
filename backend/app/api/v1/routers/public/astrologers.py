@@ -8,10 +8,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import get_optional_authenticated_user as get_current_user_optional
-from app.api.v1.router_logic.public.astrologers import (
-    _build_user_alias,
-    _error_response,
-)
 from app.api.v1.schemas.routers.public.astrologers import (
     Astrologer,
     AstrologerActionState,
@@ -32,6 +28,10 @@ from app.infra.db.models import (
 )
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import get_db_session
+from app.services.user_profile.public_astrologers import (
+    _build_user_alias,
+    _error_response,
+)
 
 router = APIRouter(prefix="/v1/astrologers", tags=["astrologers"])
 

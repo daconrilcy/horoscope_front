@@ -9,9 +9,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.router_logic.admin.dashboard import (
-    _apply_user_plan_filter,
-)
 from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
@@ -19,6 +16,9 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
+from app.services.ops.admin_dashboard import (
+    _apply_user_plan_filter,
+)
 
 logger = logging.getLogger(__name__)
 

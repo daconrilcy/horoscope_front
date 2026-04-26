@@ -3,117 +3,23 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
-from app.api.v1.constants import (
-    LEGACY_USE_CASE_KEYS_REMOVED,
-    ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
-    ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
-    ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
-)
 
-import json
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Any, List, Literal, Optional
-import sqlalchemy as sa
-from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, desc, func, select
-from sqlalchemy.orm import Session, selectinload
-from app.api.dependencies.auth import (
-    AuthenticatedUser,
-    require_admin_user,
-)
-from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
-from app.core.datetime_provider import datetime_provider
-from app.core.request_id import resolve_request_id
-from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
 from app.domain.llm.configuration.admin_models import (
     AdminUseCaseAudit,
     LlmOutputSchema,
     LlmPersona,
-    LlmPersonaCreate,
-    LlmPersonaUpdate,
     LlmPromptVersion,
-    LlmPromptVersionCreate,
     LlmUseCaseConfig,
-    build_admin_use_case_audit,
 )
-from app.domain.llm.configuration.assemblies import (
-    AssemblyRegistry,
-    assemble_developer_prompt,
-    resolve_assembly,
-)
-from app.domain.llm.configuration.canonical_use_case_registry import (
-    get_canonical_output_schema_definition,
-    get_canonical_use_case_contract,
-    list_canonical_use_case_contracts,
-)
-from app.domain.llm.governance.feature_taxonomy import (
-    normalize_feature,
-    normalize_plan_scope,
-    normalize_subfeature,
-)
-from app.domain.llm.governance.governance import get_prompt_governance_registry
 from app.domain.llm.prompting.persona_boundary import (
     PersonaBoundaryViolation,
-    validate_persona_block,
 )
-from app.domain.llm.prompting.personas import compose_persona_block
-from app.domain.llm.prompting.prompt_renderer import PromptRenderer
-from app.domain.llm.runtime.composition import ContextQualityInjector, ProviderParameterMapper
-from app.domain.llm.runtime.contracts import (
-    ExecutionContext,
-    ExecutionUserInput,
-    GatewayConfigError,
-    GatewayError,
-    GatewayResult,
-    InputValidationError,
-    LLMExecutionRequest,
-    OutputValidationError,
-    PromptRenderError,
-    UnknownUseCaseError,
-)
-from app.domain.llm.runtime.gateway import LLMGateway
-from app.domain.llm.runtime.observability import purge_expired_logs
-from app.infra.db.models.billing import UserSubscriptionModel
-from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
-from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm.llm_observability import (
-    LlmCallLogModel,
-    LlmCallLogOperationalMetadataModel,
-)
-from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
-from app.infra.db.models.llm.llm_persona import LlmPersonaModel
-from app.infra.db.models.llm.llm_prompt import (
-    LlmPromptVersionModel,
-    LlmUseCaseConfigModel,
-    PromptStatus,
-)
-from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
-from app.infra.db.models.user import UserModel
-from app.infra.db.repositories.llm.prompting_repository import (
-    get_active_prompt_version as repo_get_active_prompt_version,
-)
-from app.infra.db.repositories.llm.prompting_repository import (
-    get_latest_active_release_snapshot,
-    get_latest_prompt_version,
-    get_release_snapshot,
-    get_sample_payload,
-    get_use_case_config,
-    list_prompt_versions,
-)
-from app.infra.db.repositories.llm.prompting_repository import (
-    list_release_snapshots_timeline as repo_list_release_snapshots_timeline,
-)
-from app.infra.db.session import get_db_session
-from app.ops.llm.services import PromptLint, PromptRegistryV2, replay, run_eval
-from app.services.llm_generation.anonymization_service import (
-    LLMAnonymizationError,
-    anonymize_text,
-)
-from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])

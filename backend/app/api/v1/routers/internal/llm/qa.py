@@ -11,22 +11,10 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_ops_user
-from app.api.v1.router_logic.internal.llm.qa import (
-    _error_response,
-    _map_chat_error,
-    _map_guidance_error,
-    _map_natal_error,
-    _resolve_target_user,
-    _seed_result_to_response,
-)
-from app.api.v1.router_logic.public.predictions import (
-    _extract_llm_narrative_payload,
-    _raise_daily_prediction_service_error,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.internal.llm.qa import (
     ChatQaRequest,
     DailyQaRequest,
-    ErrorEnvelope,
     GuidanceQaRequest,
     NatalQaRequest,
 )
@@ -52,11 +40,24 @@ from app.services.llm_generation.guidance.guidance_service import (
     GuidanceService,
     GuidanceServiceError,
 )
+from app.services.llm_generation.internal_qa import (
+    QATargetUserNotFoundError,
+    _error_response,
+    _map_chat_error,
+    _map_guidance_error,
+    _map_natal_error,
+    _resolve_target_user,
+    _seed_result_to_response,
+)
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 from app.services.llm_generation.qa_seed_service import (
     LlmQaSeedService,
 )
 from app.services.prediction import DailyPredictionService
+from app.services.prediction.public_predictions import (
+    _extract_llm_narrative_payload,
+    _resolve_daily_prediction_service_error,
+)
 from app.services.prediction.types import ComputeMode, DailyPredictionServiceError
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
@@ -137,6 +138,15 @@ async def run_guidance_generation(
             message=error.message,
             details=error.details,
         )
+    except QATargetUserNotFoundError as error:
+        db.rollback()
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="qa_target_user_not_found",
+            message="target user was not found",
+            details={"target_email": error.target_email},
+        )
     except HTTPException as error:
         db.rollback()
         detail = error.detail if isinstance(error.detail, dict) else {"message": str(error.detail)}
@@ -188,6 +198,15 @@ async def run_chat_generation(
             message=error.message,
             details=error.details,
         )
+    except QATargetUserNotFoundError as error:
+        db.rollback()
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="qa_target_user_not_found",
+            message="target user was not found",
+            details={"target_email": error.target_email},
+        )
     except HTTPException as error:
         db.rollback()
         detail = error.detail if isinstance(error.detail, dict) else {"message": str(error.detail)}
@@ -238,6 +257,15 @@ async def run_natal_generation(
             variant_code=None,
         )
         db.commit()
+    except QATargetUserNotFoundError as error:
+        db.rollback()
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="qa_target_user_not_found",
+            message="target user was not found",
+            details={"target_email": error.target_email},
+        )
     except HTTPException as error:
         db.rollback()
         detail = error.detail if isinstance(error.detail, dict) else {"message": str(error.detail)}
@@ -373,18 +401,25 @@ async def run_horoscope_daily_generation(
                     logger.warning("llm_qa_daily_llm_payload_persist_failed", exc_info=True)
     except DailyPredictionServiceError as error:
         db.rollback()
-        try:
-            _raise_daily_prediction_service_error(error, not_found_codes={"natal_missing"})
-        except HTTPException as http_error:
-            detail = http_error.detail if isinstance(http_error.detail, dict) else {}
-            return _error_response(
-                status_code=http_error.status_code,
-                request_id=request_id,
-                code=detail.get("code", error.code),
-                message=detail.get("message", error.message),
-                details=detail.get("details", {}),
-            )
-        raise
+        status_code, detail = _resolve_daily_prediction_service_error(
+            error, not_found_codes={"natal_missing"}
+        )
+        return _error_response(
+            status_code=status_code,
+            request_id=request_id,
+            code=detail.get("code", error.code),
+            message=detail.get("message", error.message),
+            details={},
+        )
+    except QATargetUserNotFoundError as error:
+        db.rollback()
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="qa_target_user_not_found",
+            message="target user was not found",
+            details={"target_email": error.target_email},
+        )
     except HTTPException as error:
         db.rollback()
         detail = error.detail if isinstance(error.detail, dict) else {"message": str(error.detail)}

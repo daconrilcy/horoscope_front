@@ -14,16 +14,8 @@ from app.api.dependencies.auth import (
     get_optional_authenticated_user,
     require_authenticated_user,
 )
-from app.api.v1.router_logic.public.geocoding import (
-    _error_response,
-    _normalize_query,
-    _resolved_place_to_dict,
-    _result_to_dict,
-    _validate_nocache_access,
-    _validate_resolve_snapshot,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.geocoding import (
-    ErrorEnvelope,
     GeocodingResolveRequest,
     ReverseGeocodingRequest,
 )
@@ -33,6 +25,14 @@ from app.infra.db.repositories.geo_place_resolved_repository import (
     GeoPlaceResolvedRepository,
 )
 from app.infra.db.session import get_db_session
+from app.services.geocoding.public_support import (
+    _error_response,
+    _normalize_query,
+    _resolved_place_to_dict,
+    _result_to_dict,
+    _validate_nocache_access,
+    _validate_resolve_snapshot,
+)
 from app.services.geocoding_service import (
     GeocodingSearchResult,
     GeocodingService,

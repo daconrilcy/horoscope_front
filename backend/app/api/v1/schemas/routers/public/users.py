@@ -3,48 +3,27 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
-from app.api.v1.constants import VALID_ASTROLOGER_PROFILES
 
-from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
 
-import asyncio
 import logging
-import random
 from threading import Lock
 from time import monotonic
 from typing import Any
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ValidationError
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
-from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.core.request_id import resolve_request_id
-from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
-from app.infra.db.models.user import UserModel
-from app.infra.db.session import get_db_session
-from app.infra.observability.metrics import increment_counter
+from fastapi import APIRouter
+from pydantic import BaseModel
 from app.services.llm_generation.natal.interpretation_service import (
     NatalInterpretationData,
-    NatalInterpretationService,
-    NatalInterpretationServiceError,
 )
 from app.services.user_profile.astro_profile_service import (
     UserAstroProfileData,
-    UserAstroProfileService,
-    UserAstroProfileServiceError,
 )
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileData,
-    UserBirthProfileService,
-    UserBirthProfileServiceError,
 )
 from app.services.user_profile.natal_chart_service import (
     UserNatalChartConsistencyData,
     UserNatalChartGenerationData,
     UserNatalChartReadData,
-    UserNatalChartService,
-    UserNatalChartServiceError,
 )
 
 router = APIRouter(prefix="/v1/users", tags=["users"])

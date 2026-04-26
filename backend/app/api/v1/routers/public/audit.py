@@ -7,14 +7,9 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.audit import (
-    _enforce_audit_limits,
-    _ensure_allowed_role,
-    _error_response,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.audit import (
     AuditEventsApiResponse,
-    ErrorEnvelope,
 )
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
@@ -22,6 +17,11 @@ from app.services.ops.audit_service import (
     AuditEventListFilters,
     AuditService,
     AuditServiceError,
+)
+from app.services.ops.public_audit import (
+    _enforce_audit_limits,
+    _ensure_allowed_role,
+    _error_response,
 )
 
 router = APIRouter(prefix="/v1/audit", tags=["audit"])

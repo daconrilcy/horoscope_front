@@ -3,25 +3,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.ops.entitlement_mutation_audits import (
-    _alert_event_to_item,
-    _enforce_limits,
-    _ensure_ops_role,
-    _error_response,
-    _load_active_rule_applications_by_event_ids,
-    _load_handlings_by_event_ids,
-    _load_reviews_by_audit_ids,
-    _normalize_optional_rule_field,
-    _row_to_queue_item,
-    _to_item,
-    build_mutation_audit_list_response,
-)
+from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import (
     AlertAttemptsApiResponse,
     AlertEventListApiResponse,
@@ -37,7 +25,6 @@ from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import (
     BatchRetryApiResponse,
     BatchRetryRequestBody,
     CreateAlertSuppressionRuleRequestBody,
-    ErrorEnvelope,
     HandleAlertApiResponse,
     HandleAlertRequestBody,
     MutationAuditDetailApiResponse,
@@ -62,7 +49,21 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_rule impor
 )
 from app.infra.db.session import get_db_session
 from app.services.canonical_entitlement.alert.handling import (
+    AlertEventNotFoundError,
     CanonicalEntitlementAlertHandlingService,
+)
+from app.services.canonical_entitlement.audit.api_mutation_audits import (
+    _alert_event_to_item,
+    _enforce_limits,
+    _ensure_ops_role,
+    _error_response,
+    _load_active_rule_applications_by_event_ids,
+    _load_handlings_by_event_ids,
+    _load_reviews_by_audit_ids,
+    _normalize_optional_rule_field,
+    _row_to_queue_item,
+    _to_item,
+    build_mutation_audit_list_response,
 )
 from app.services.canonical_entitlement.audit.audit_query import (
     CanonicalEntitlementMutationAuditQueryService,
@@ -908,16 +909,14 @@ def handle_alert_event(
             request_id=request_id,
         )
         db.commit()
-    except HTTPException as exc:
-        if exc.status_code == 404 and exc.detail == "alert event not found":
-            return _error_response(
-                status_code=404,
-                request_id=request_id,
-                code="alert_event_not_found",
-                message=f"Alert event {alert_event_id} not found",
-                details={"alert_event_id": alert_event_id},
-            )
-        raise
+    except AlertEventNotFoundError:
+        return _error_response(
+            status_code=404,
+            request_id=request_id,
+            code="alert_event_not_found",
+            message=f"Alert event {alert_event_id} not found",
+            details={"alert_event_id": alert_event_id},
+        )
 
     return {
         "data": {

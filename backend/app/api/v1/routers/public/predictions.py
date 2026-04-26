@@ -7,10 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.router_logic.public.predictions import (
-    _extract_llm_narrative_payload,
-    _raise_daily_prediction_service_error,
-)
 from app.api.v1.schemas.routers.public.predictions import (
     DailyHistoryItem,
     DailyHistoryResponse,
@@ -34,6 +30,10 @@ from app.services.entitlement.horoscope_daily_entitlement_gate import (
     HoroscopeDailyEntitlementGate,
 )
 from app.services.prediction import DailyPredictionService
+from app.services.prediction.public_predictions import (
+    _extract_llm_narrative_payload,
+    _resolve_daily_prediction_service_error,
+)
 from app.services.prediction.types import (
     ComputeMode,
     DailyPredictionServiceError,
@@ -85,10 +85,11 @@ def debug_daily_prediction(
             ruleset_version=settings.ruleset_version,
         )
     except DailyPredictionServiceError as error:
-        _raise_daily_prediction_service_error(
+        status_code, detail = _resolve_daily_prediction_service_error(
             error,
             not_found_codes={"natal_missing", "profile_missing"},
         )
+        raise HTTPException(status_code=status_code, detail=detail)
 
     if result is None:
         raise HTTPException(
@@ -273,7 +274,10 @@ async def get_daily_prediction(
             ruleset_version=settings.ruleset_version,
         )
     except DailyPredictionServiceError as error:
-        _raise_daily_prediction_service_error(error, not_found_codes={"natal_missing"})
+        status_code, detail = _resolve_daily_prediction_service_error(
+            error, not_found_codes={"natal_missing"}
+        )
+        raise HTTPException(status_code=status_code, detail=detail)
 
     if result is None:
         raise HTTPException(status_code=404, detail="Prediction not found")
