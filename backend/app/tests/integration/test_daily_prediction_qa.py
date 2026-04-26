@@ -3,6 +3,7 @@ import statistics
 import time
 import uuid
 from datetime import date, datetime, timedelta
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -75,6 +76,15 @@ FIXTURE_BUILDERS = {
     "ambiguous_day": get_ambiguous_day,
     "intense_neutral_day": get_intense_neutral_day,
 }
+
+
+@pytest.fixture(autouse=True)
+def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Neutralise la gate entitlement pour les QA qui ciblent le payload prediction."""
+    monkeypatch.setattr(
+        "app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
+        lambda db, user_id: SimpleNamespace(variant_code="full"),
+    )
 
 
 def _build_mock_bundle(fixture_data: dict) -> PersistablePredictionBundle:

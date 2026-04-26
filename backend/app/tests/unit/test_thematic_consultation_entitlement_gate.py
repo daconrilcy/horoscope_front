@@ -102,7 +102,7 @@ def test_check_and_consume_skips_tokens_quota(db_session):
             return_value=snapshot,
         ),
         patch(
-            "app.services.entitlement.thematic_consultation_entitlement_gate.QuotaUsageService.consume"
+            "app.services.entitlement.b2c_runtime_gate.QuotaUsageService.consume"
         ) as mock_consume,
     ):
         result = ThematicConsultationEntitlementGate.check_and_consume(db_session, user_id=42)
@@ -135,7 +135,7 @@ def test_check_and_consume_processes_legacy_quota(db_session):
             return_value=snapshot,
         ),
         patch(
-            "app.services.entitlement.thematic_consultation_entitlement_gate.QuotaUsageService.consume",
+            "app.services.entitlement.b2c_runtime_gate.QuotaUsageService.consume",
             return_value=legacy_state,
         ) as mock_consume,
     ):

@@ -2,10 +2,7 @@
 
 from pathlib import Path
 
-ROOT_ALLOWLIST = {
-    "quota_usage_service.py",
-    "quota_window_resolver.py",
-}
+ROOT_ALLOWLIST: set[str] = set()
 
 ENTITLEMENT_NAMESPACE_ALLOWLIST = {
     "__init__.py",

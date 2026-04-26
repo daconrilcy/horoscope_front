@@ -4,7 +4,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[4]
 RUNBOOK_PATH = REPO_ROOT / "docs" / "billing-webhook-local-testing.md"
 LEGACY_DOC_PATH = REPO_ROOT / "docs" / "stripe-webhook-dev.md"
-SERVICE_PATH = REPO_ROOT / "backend" / "app" / "services" / "stripe_webhook_service.py"
+SERVICE_PATH = REPO_ROOT / "backend" / "app" / "services" / "billing" / "stripe_webhook_service.py"
 POWERSHELL_SCRIPT_PATH = REPO_ROOT / "scripts" / "stripe-listen-webhook.ps1"
 BASH_SCRIPT_PATH = REPO_ROOT / "scripts" / "stripe-listen-webhook.sh"
 

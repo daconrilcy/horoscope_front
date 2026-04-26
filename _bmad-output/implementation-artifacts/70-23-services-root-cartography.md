@@ -97,3 +97,9 @@
 
 - `backend/app/tests/unit/test_story_70_22_entitlement_structure_guard.py`
 - `backend/app/tests/unit/test_story_70_23_services_structure_guard.py`
+
+## Notes de stabilisation post-refactor
+
+- `app/services/billing/service.py` conserve un perimetre de compatibilite strictement intra-module pour absorber des appels historiques encore presents dans certains routeurs/tests (`settings`, `_BILLING_QUOTA_FEATURE`, `_to_plan_data`, `_to_stripe_subscription_data`).
+- Cette compatibilite ne reintroduit aucun ancien chemin de module a la racine `services/` et ne contredit donc pas l allowlist ci-dessus.
+- Les suites d integration prediction qui valident la projection publique, mais pas l entitlement, doivent neutraliser explicitement `app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant` afin d eviter des faux 403 apres convergence du domaine entitlement.

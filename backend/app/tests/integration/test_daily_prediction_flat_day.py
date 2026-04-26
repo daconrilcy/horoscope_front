@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,6 +15,15 @@ from app.prediction.persisted_snapshot import (
 )
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Neutralise la gate entitlement pour cette suite centree projection publique."""
+    monkeypatch.setattr(
+        "app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
+        lambda db, user_id: SimpleNamespace(variant_code="full"),
+    )
 
 
 @pytest.fixture

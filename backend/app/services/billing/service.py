@@ -7,6 +7,7 @@ from datetime import timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core import config as billing_config
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.services.billing.models import (
@@ -24,6 +25,7 @@ from app.services.billing.models import (
     TokenUsageSummary,
 )
 from app.services.billing.plan_catalog import ensure_default_plans
+from app.services.billing.plan_catalog import to_plan_data as build_plan_data
 from app.services.billing.subscription_cache import (
     invalidate_cached_subscription_status,
     reset_subscription_status_cache,
@@ -32,13 +34,19 @@ from app.services.billing.subscription_status import (
     get_subscription_status,
     resolve_runtime_billing_status,
     resolve_runtime_plan_code,
+    to_stripe_subscription_data,
 )
+
+# Alias de compatibilite conserve pour les tests qui monkeypatchent
+# `app.services.billing.service.settings`.
+settings = billing_config.settings
 
 
 class BillingService:
     """Facade fine d orchestration pour le domaine billing."""
 
     BILLING_QUOTA_FEATURE = "astrologer_chat"
+    _BILLING_QUOTA_FEATURE = BILLING_QUOTA_FEATURE
 
     @staticmethod
     def get_token_usage(
@@ -124,6 +132,11 @@ class BillingService:
         return ensure_default_plans(db)
 
     @staticmethod
+    def _to_plan_data(plan_model) -> BillingPlanData:
+        """Compatibilite avec les anciens appels routeur/tests vers le helper prive."""
+        return build_plan_data(plan_model)
+
+    @staticmethod
     def get_subscription_status(db: Session, *, user_id: int) -> SubscriptionStatusData:
         """Retourne le statut d abonnement runtime d un utilisateur."""
         return get_subscription_status(
@@ -161,6 +174,16 @@ class BillingService:
     def _invalidate_cached_subscription_status(user_id: int) -> None:
         """Compatibilite locale pour les appels internes encore relies a l ancien helper prive."""
         invalidate_cached_subscription_status(user_id)
+
+    @staticmethod
+    def _to_stripe_subscription_data(db: Session, *, profile) -> SubscriptionStatusData:
+        """Compatibilite avec les anciens appels routeur vers la projection Stripe."""
+        return to_stripe_subscription_data(
+            db,
+            user_id=profile.user_id,
+            feature_code=BillingService.BILLING_QUOTA_FEATURE,
+            profile=profile,
+        )
 
     @staticmethod
     def reset_subscription_status_cache() -> None:
