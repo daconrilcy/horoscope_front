@@ -249,7 +249,9 @@ def test_support_endpoints_return_429_when_rate_limited(monkeypatch: object) -> 
             status_code=429,
         )
 
-    monkeypatch.setattr("app.api.v1.routers.support.check_rate_limit", _always_rate_limited)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.public.support.check_rate_limit", _always_rate_limited
+    )
 
     response = client.get(
         f"/v1/support/users/{customer_id}/context",

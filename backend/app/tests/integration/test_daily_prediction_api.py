@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, delete
 from sqlalchemy.orm import sessionmaker
 
-from app.api.v1.routers.predictions import get_daily_prediction_service
+from app.api.v1.routers.public.predictions import get_daily_prediction_service
 from app.core.config import settings
 from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
@@ -39,7 +39,7 @@ client = TestClient(app)
 def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
     """Neutralise la gate d entitlement pour les tests du routeur prediction."""
     monkeypatch.setattr(
-        "app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
+        "app.api.v1.routers.public.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
         lambda db, user_id: SimpleNamespace(variant_code="full"),
     )
 
@@ -164,8 +164,8 @@ def test_daily_prediction_nominal_200():
     _override_service(mock_service)
 
     mock_categories = [MagicMock(id=1, code="love")]
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     with (
         patch(repo_path, return_value=snapshot),
@@ -216,8 +216,8 @@ def test_daily_prediction_categories_sorted_by_rank():
 
     mock_categories = [MagicMock(id=1, code="cat1"), MagicMock(id=2, code="cat2")]
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     with (
         patch(repo_path, return_value=snapshot),
@@ -272,8 +272,8 @@ def test_daily_prediction_timeline_chronological():
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=[]):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
@@ -295,8 +295,8 @@ def test_daily_prediction_date_param():
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=[]):
         response = client.get(
@@ -318,12 +318,12 @@ def test_daily_prediction_returns_500_on_malformed_json_payload():
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
     # Assembler raises ValueError on malformed data
     with (
         patch(repo_path, return_value=snapshot),
         patch(
-            "app.api.v1.routers.predictions.PublicPredictionAssembler.assemble",
+            "app.api.v1.routers.public.predictions.PublicPredictionAssembler.assemble",
             side_effect=ValueError("Broken"),
         ),
     ):
@@ -356,8 +356,8 @@ def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effec
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=[]):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
@@ -381,8 +381,8 @@ def test_daily_prediction_meta_falls_back_to_engine_output_house_system_effectiv
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=[]):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
@@ -423,7 +423,7 @@ def test_debug_200_admin_nominal():
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
     with patch(repo_path, return_value=snapshot):
         response = client.get(
             "/v1/predictions/daily/debug",
@@ -446,7 +446,7 @@ def test_debug_no_recompute():
     )
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
     with patch(repo_path, return_value=snapshot):
         client.get(
             "/v1/predictions/daily/debug",
@@ -482,8 +482,8 @@ def test_daily_prediction_timeline_summary_non_null():
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     # Important: category_notes must have the category otherwise it's filtered out
     mock_categories = [MagicMock(id=1, code="work")]
@@ -523,11 +523,11 @@ def test_daily_prediction_turning_points_summary_humanized():
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
     with (
         patch(repo_path, return_value=snapshot),
         patch(
-            "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories",
+            "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories",
             return_value=[],
         ),
     ):
@@ -558,8 +558,8 @@ def test_daily_prediction_is_provisional_per_category():
     _override_service(mock_service)
 
     mock_categories = [MagicMock(id=1, code="love"), MagicMock(id=2, code="work")]
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=mock_categories):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
@@ -632,7 +632,7 @@ def test_daily_prediction_decision_windows():
 
     with (
         patch(
-            "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run",
+            "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run",
             return_value=snapshot,
         ),
         patch("app.prediction.public_projection.PublicDecisionWindowPolicy.build") as mock_build,
@@ -666,7 +666,7 @@ def test_daily_prediction_summary_includes_best_window():
 
     with (
         patch(
-            "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run",
+            "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run",
             return_value=snapshot,
         ),
         patch("app.prediction.public_projection.PublicDecisionWindowPolicy.build") as mock_dw_build,
@@ -720,8 +720,8 @@ def test_daily_prediction_filters_decision_windows_to_major_aspects():
 
     mock_categories = [MagicMock(id=1, code="love"), MagicMock(id=2, code="work")]
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=mock_categories):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
@@ -778,8 +778,8 @@ def test_daily_prediction_turning_points_follow_major_aspect_boundaries():
 
     mock_categories = [MagicMock(id=1, code="love"), MagicMock(id=2, code="work")]
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=mock_categories):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
@@ -809,11 +809,11 @@ def test_daily_prediction_turning_points_expose_numeric_severity():
     mock_service.get_or_compute.return_value = mock_result
     _override_service(mock_service)
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
     with (
         patch(repo_path, return_value=snapshot),
         patch(
-            "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories",
+            "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories",
             return_value=[],
         ),
     ):
@@ -905,7 +905,7 @@ def test_daily_prediction_exposes_enriched_turning_point_fields():
     }
 
     with patch(
-        "app.api.v1.routers.predictions.PublicPredictionAssembler.assemble",
+        "app.api.v1.routers.public.predictions.PublicPredictionAssembler.assemble",
         return_value=assembled_payload,
     ):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
@@ -965,8 +965,8 @@ def test_daily_prediction_hides_non_actionable_turning_points_when_no_windows():
         MagicMock(id=1, code="energy"),
         MagicMock(id=2, code="mood"),
     ]
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
 
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=mock_categories):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
@@ -1014,8 +1014,8 @@ def test_daily_prediction_pivot_windows_use_score_twelve():
 
     mock_categories = [MagicMock(id=1, code="love")]
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=mock_categories):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
@@ -1056,8 +1056,8 @@ def test_daily_prediction_rebuilds_decision_windows_for_reused_run():
 
     mock_categories = [MagicMock(id=1, code="love"), MagicMock(id=2, code="work")]
 
-    repo_path = "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
-    ref_path = "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+    repo_path = "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+    ref_path = "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
     with patch(repo_path, return_value=snapshot), patch(ref_path, return_value=mock_categories):
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 

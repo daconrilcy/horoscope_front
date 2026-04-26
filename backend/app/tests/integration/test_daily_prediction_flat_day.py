@@ -21,7 +21,7 @@ client = TestClient(app)
 def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
     """Neutralise la gate entitlement pour cette suite centree projection publique."""
     monkeypatch.setattr(
-        "app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
+        "app.api.v1.routers.public.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
         lambda db, user_id: SimpleNamespace(variant_code="full"),
     )
 
@@ -96,7 +96,9 @@ def test_flat_day_projection(mock_snapshot_flat):
     db.get.return_value = MagicMock(version="2.0.0")
     app.dependency_overrides[get_db_session] = lambda: db
 
-    with patch("app.api.v1.routers.predictions.DailyPredictionService.get_or_compute") as mock_get:
+    with patch(
+        "app.api.v1.routers.public.predictions.DailyPredictionService.get_or_compute"
+    ) as mock_get:
         mock_res = MagicMock()
         mock_res.run.run_id = 1
         mock_res.bundle = None
@@ -104,12 +106,12 @@ def test_flat_day_projection(mock_snapshot_flat):
         mock_get.return_value = mock_res
 
         with patch(
-            "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+            "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
         ) as mock_repo:
             mock_repo.return_value = mock_snapshot_flat
 
             with patch(
-                "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+                "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
             ) as mock_ref:
                 # Mock return objects with id and code attributes
                 cat1 = MagicMock(id=1, code="love")
@@ -139,7 +141,9 @@ def test_active_day_no_micro_trends(mock_snapshot_active):
     db.get.return_value = MagicMock(version="2.0.0")
     app.dependency_overrides[get_db_session] = lambda: db
 
-    with patch("app.api.v1.routers.predictions.DailyPredictionService.get_or_compute") as mock_get:
+    with patch(
+        "app.api.v1.routers.public.predictions.DailyPredictionService.get_or_compute"
+    ) as mock_get:
         mock_res = MagicMock()
         mock_res.run.run_id = 2
         mock_res.bundle = None
@@ -162,10 +166,10 @@ def test_active_day_no_micro_trends(mock_snapshot_active):
 
         with (
             patch(
-                "app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run"
+                "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
             ) as mock_repo,
             patch(
-                "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+                "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
             ) as mock_ref,
         ):
             mock_repo.return_value = mock_snapshot_active
@@ -201,10 +205,14 @@ def test_flat_day_projection_supports_percentile_only_micro_trends(mock_snapshot
     )
 
     with (
-        patch("app.api.v1.routers.predictions.DailyPredictionService.get_or_compute") as mock_get,
-        patch("app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run") as mock_repo,
         patch(
-            "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+            "app.api.v1.routers.public.predictions.DailyPredictionService.get_or_compute"
+        ) as mock_get,
+        patch(
+            "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+        ) as mock_repo,
+        patch(
+            "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
         ) as mock_ref,
     ):
         mock_res = MagicMock()
@@ -234,10 +242,14 @@ def test_flat_day_summary_stays_consistent_with_micro_trends(mock_snapshot_flat)
     app.dependency_overrides[get_db_session] = lambda: db
 
     with (
-        patch("app.api.v1.routers.predictions.DailyPredictionService.get_or_compute") as mock_get,
-        patch("app.api.v1.routers.predictions.DailyPredictionRepository.get_full_run") as mock_repo,
         patch(
-            "app.api.v1.routers.predictions.PredictionReferenceRepository.get_categories"
+            "app.api.v1.routers.public.predictions.DailyPredictionService.get_or_compute"
+        ) as mock_get,
+        patch(
+            "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run"
+        ) as mock_repo,
+        patch(
+            "app.api.v1.routers.public.predictions.PredictionReferenceRepository.get_categories"
         ) as mock_ref,
     ):
         mock_res = MagicMock()

@@ -205,7 +205,7 @@ def test_client(mock_db):
 
     with (
         patch(
-            "app.api.v1.routers.natal_interpretation.NatalChartLongEntitlementGate.check_and_consume",
+            "app.api.v1.routers.public.natal_interpretation.NatalChartLongEntitlementGate.check_and_consume",
             return_value=result,
         ),
         patch(
@@ -228,11 +228,11 @@ class TestNatalInterpretationEndpointV2:
 
         with (
             patch(
-                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
@@ -267,11 +267,11 @@ class TestNatalInterpretationEndpointV2:
         mock_db.get.return_value = persona_mock
         with (
             patch(
-                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
@@ -302,11 +302,11 @@ class TestNatalInterpretationEndpointV2:
 
         with (
             patch(
-                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
@@ -325,7 +325,7 @@ class TestNatalInterpretationEndpointV2:
         from app.services.user_profile.natal_chart_service import UserNatalChartServiceError
 
         with patch(
-            "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+            "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user",
             side_effect=UserNatalChartServiceError(
                 code="natal_chart_not_found", message="not found"
             ),
@@ -340,11 +340,11 @@ class TestNatalInterpretationEndpointV2:
         mock_db.execute.return_value.scalar_one_or_none.return_value = None
         with (
             patch(
-                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
@@ -364,11 +364,11 @@ class TestNatalInterpretationEndpointV2:
         mock_db.execute.return_value.scalar_one_or_none.return_value = None
         with (
             patch(
-                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
@@ -388,11 +388,11 @@ class TestNatalInterpretationEndpointV2:
         mock_db.execute.return_value.scalar_one_or_none.return_value = None
         with (
             patch(
-                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
@@ -414,15 +414,15 @@ class TestNatalInterpretationEndpointV2:
 
         with (
             patch(
-                "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user",
                 return_value=_make_chart_read_data(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user",
+                "app.api.v1.routers.public.natal_interpretation.UserBirthProfileService.get_for_user",
                 return_value=_make_birth_profile(),
             ),
             patch(
-                "app.api.v1.routers.natal_interpretation.NatalInterpretationService.interpret",
+                "app.api.v1.routers.public.natal_interpretation.NatalInterpretationService.interpret",
                 new_callable=AsyncMock,
                 side_effect=RuntimeError("empty complete interpretation"),
             ),

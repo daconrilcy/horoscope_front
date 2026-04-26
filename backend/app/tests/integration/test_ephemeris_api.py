@@ -53,7 +53,7 @@ def _reset_ephemeris_state() -> None:
 
 def test_status_disabled_when_swisseph_not_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
     """SWISSEPH_ENABLED=false → 200 {"status": "disabled"}."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", False)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", False)
 
     response = client.get("/v1/ephemeris/status")
 
@@ -69,7 +69,7 @@ def test_status_disabled_when_swisseph_not_enabled(monkeypatch: pytest.MonkeyPat
 
 def test_status_ok_after_successful_bootstrap(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     """Bootstrap réussi → 200 {"status": "ok", "path_version": "..."}."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
 
     mock_swe = _make_swe_mock()
     required_file = tmp_path / "sepl_18.se1"
@@ -99,7 +99,7 @@ def test_status_ok_after_successful_bootstrap(monkeypatch: pytest.MonkeyPatch, t
 
 def test_status_503_when_data_path_empty(monkeypatch: pytest.MonkeyPatch) -> None:
     """SWISSEPH_DATA_PATH vide → 503 code=ephemeris_data_missing."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
 
     try:
         ephemeris.bootstrap_swisseph(data_path="", path_version="v1")
@@ -120,7 +120,7 @@ def test_status_503_when_data_path_empty(monkeypatch: pytest.MonkeyPatch) -> Non
 
 def test_status_503_when_data_path_nonexistent(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     """SWISSEPH_DATA_PATH inexistant → 503 code=ephemeris_data_missing."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
     bad_path = str(tmp_path / "no_such_dir")
 
     try:
@@ -139,7 +139,7 @@ def test_status_503_response_does_not_contain_filesystem_path(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
     """La réponse 5xx ne doit pas exposer le path brut du filesystem (sans PII)."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
     bad_path = str(tmp_path / "secret_internal_path")
 
     try:
@@ -162,7 +162,7 @@ def test_status_503_response_does_not_contain_filesystem_path(
 
 def test_status_503_when_swisseph_init_fails(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     """Échec d'initialisation pyswisseph → 503 code=swisseph_init_failed."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
 
     mock_swe = _make_swe_mock(set_ephe_path_side_effect=RuntimeError("swe error"))
     with patch.dict("sys.modules", {"swisseph": mock_swe}):
@@ -187,7 +187,7 @@ def test_status_503_when_swisseph_module_not_installed(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
     """pyswisseph non installé → 503 code=swisseph_init_failed."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
 
     with patch.dict("sys.modules", {"swisseph": None}):
         try:
@@ -211,7 +211,7 @@ def test_status_503_when_enabled_but_not_initialized(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """SwissEph activé mais bootstrap non appelé → 503 swisseph_not_initialized."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
     # _reset_ephemeris_state fixture garantit que bootstrap_result est None
 
     response = client.get("/v1/ephemeris/status")
@@ -230,8 +230,12 @@ def test_natal_calculate_includes_ephemeris_version_in_meta(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
     """AC4: metadata.ephemeris_path_version est présent dans les réponses engine."""
-    monkeypatch.setattr("app.api.v1.routers.astrology_engine.settings.swisseph_enabled", True)
-    monkeypatch.setattr("app.api.v1.routers.astrology_engine.settings.swisseph_pro_mode", True)
+    monkeypatch.setattr(
+        "app.api.v1.routers.public.astrology_engine.settings.swisseph_enabled", True
+    )
+    monkeypatch.setattr(
+        "app.api.v1.routers.public.astrology_engine.settings.swisseph_pro_mode", True
+    )
 
     # Mock successful bootstrap
     mock_swe = _make_swe_mock()
@@ -266,7 +270,9 @@ def test_natal_calculate_metadata_is_none_when_disabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """metadata.ephemeris_path_version est null quand SwissEph est désactivé."""
-    monkeypatch.setattr("app.api.v1.routers.astrology_engine.settings.swisseph_enabled", False)
+    monkeypatch.setattr(
+        "app.api.v1.routers.public.astrology_engine.settings.swisseph_enabled", False
+    )
 
     payload = {
         "birth_date": "1990-01-01",
@@ -406,7 +412,7 @@ def test_status_503_includes_details_and_request_id_when_data_path_empty(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """AC1+2: /v1/ephemeris/status 503 inclut details et request_id."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
 
     try:
         ephemeris.bootstrap_swisseph(data_path="", path_version="v1")
@@ -427,7 +433,7 @@ def test_status_503_includes_missing_file_in_details_when_file_absent(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
     """AC1: /v1/ephemeris/status inclut details.missing_file quand fichier requis absent."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
     mock_swe = _make_swe_mock()
 
     with patch.dict("sys.modules", {"swisseph": mock_swe}):
@@ -454,7 +460,7 @@ def test_status_503_includes_details_and_request_id_when_init_failed(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
     """AC2: /v1/ephemeris/status 503 init failure inclut details et request_id."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
 
     mock_swe = _make_swe_mock(set_ephe_path_side_effect=RuntimeError("boom"))
     with patch.dict("sys.modules", {"swisseph": mock_swe}):
@@ -477,7 +483,7 @@ def test_status_503_not_initialized_includes_details_and_request_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """swisseph_not_initialized → details et request_id présents."""
-    monkeypatch.setattr("app.api.v1.routers.ephemeris.settings.swisseph_enabled", True)
+    monkeypatch.setattr("app.api.v1.routers.public.ephemeris.settings.swisseph_enabled", True)
 
     response = client.get("/v1/ephemeris/status")
 
@@ -546,7 +552,7 @@ def test_natal_calculate_endpoint_returns_503_when_swisseph_init_failed(
         raise SwissEphInitError("bootstrap failed")
 
     monkeypatch.setattr(
-        "app.api.v1.routers.astrology_engine.NatalCalculationService.calculate",
+        "app.api.v1.routers.public.astrology_engine.NatalCalculationService.calculate",
         _raise_init_error,
     )
 
@@ -578,7 +584,7 @@ def test_natal_calculate_endpoint_returns_503_when_ephemeris_data_missing(
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.astrology_engine.NatalCalculationService.calculate",
+        "app.api.v1.routers.public.astrology_engine.NatalCalculationService.calculate",
         _raise_data_missing,
     )
 

@@ -421,7 +421,7 @@ def test_generate_natal_chart_timeout_returns_retryable_503(
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.users.UserNatalChartService.generate_for_user",
+        "app.api.v1.routers.public.users.UserNatalChartService.generate_for_user",
         _raise_timeout,
     )
 
@@ -449,7 +449,7 @@ def test_generate_natal_chart_engine_unavailable_returns_retryable_503(
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.users.UserNatalChartService.generate_for_user",
+        "app.api.v1.routers.public.users.UserNatalChartService.generate_for_user",
         _raise_unavailable,
     )
 
@@ -485,19 +485,19 @@ def test_generate_natal_chart_logs_inconsistent_result_event(
         metrics.append((name, value))
 
     monkeypatch.setattr(
-        "app.api.v1.routers.users.UserNatalChartService.generate_for_user",
+        "app.api.v1.routers.public.users.UserNatalChartService.generate_for_user",
         _raise_inconsistent,
     )
     monkeypatch.setattr(
-        "app.api.v1.routers.users._should_log_inconsistent_result_event",
+        "app.api.v1.routers.public.users._should_log_inconsistent_result_event",
         lambda: True,
     )
     monkeypatch.setattr(
-        "app.api.v1.routers.users.logger.warning",
+        "app.api.v1.routers.public.users.logger.warning",
         _spy_logger_error,
     )
     monkeypatch.setattr(
-        "app.api.v1.routers.users.increment_counter",
+        "app.api.v1.routers.public.users.increment_counter",
         _spy_increment_counter,
     )
 
@@ -1085,7 +1085,7 @@ def test_get_latest_natal_chart_returns_200_when_astro_profile_service_error(
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.users.UserAstroProfileService.get_for_user",
+        "app.api.v1.routers.public.users.UserAstroProfileService.get_for_user",
         _raise_service_error,
     )
 
@@ -1125,7 +1125,7 @@ def test_get_latest_natal_chart_returns_500_on_unexpected_astro_profile_error(
         raise RuntimeError("boom")
 
     monkeypatch.setattr(
-        "app.api.v1.routers.users.UserAstroProfileService.get_for_user",
+        "app.api.v1.routers.public.users.UserAstroProfileService.get_for_user",
         _raise_runtime_error,
     )
 

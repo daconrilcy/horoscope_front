@@ -172,10 +172,10 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
 
     with (
         patch(
-            "app.api.v1.routers.natal_interpretation.UserNatalChartService.get_latest_for_user"
+            "app.api.v1.routers.public.natal_interpretation.UserNatalChartService.get_latest_for_user"
         ) as mock_get_chart,
         patch(
-            "app.api.v1.routers.natal_interpretation.UserBirthProfileService.get_for_user"
+            "app.api.v1.routers.public.natal_interpretation.UserBirthProfileService.get_for_user"
         ) as mock_get_profile,
         patch(
             "app.services.llm_generation.natal.interpretation_service.build_chart_json"

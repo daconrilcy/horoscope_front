@@ -54,9 +54,7 @@ async def test_build_daily_success() -> None:
             "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user",
             return_value=profile,
         ),
-        patch(
-            "app.services.prediction.DailyPredictionService.get_or_compute"
-        ) as mock_compute,
+        patch("app.services.prediction.DailyPredictionService.get_or_compute") as mock_compute,
         patch(
             "app.services.natal.astro_context_builder.AstroContextBuilder._get_lunar_phase_label",
             return_value="Mock Phase",

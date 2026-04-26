@@ -61,7 +61,7 @@ def _get_profile_snapshot(email: str) -> dict[str, object]:
 @pytest.fixture
 def clean_db():
     _cleanup_tables()
-    patch_path = "app.api.v1.routers.billing.settings.stripe_portal_configuration_id"
+    patch_path = "app.api.v1.routers.public.billing.settings.stripe_portal_configuration_id"
     with patch(patch_path, "bpc_test_123"):
         yield
 
@@ -533,7 +533,9 @@ class TestStripeCustomerPortalApi:
             db.commit()
 
         # Mock settings.stripe_portal_configuration_id to None
-        with patch("app.api.v1.routers.billing.settings.stripe_portal_configuration_id", None):
+        with patch(
+            "app.api.v1.routers.public.billing.settings.stripe_portal_configuration_id", None
+        ):
             response = client.post(
                 "/v1/billing/stripe-customer-portal-session",
                 headers={"Authorization": f"Bearer {token}"},

@@ -232,7 +232,7 @@ def test_get_alerts_list_returns_429_when_rate_limited(monkeypatch: object) -> N
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.ops_entitlement_mutation_audits.check_rate_limit",
+        "app.api.v1.router_logic.ops.entitlement_mutation_audits.check_rate_limit",
         _always_rate_limited,
     )
 

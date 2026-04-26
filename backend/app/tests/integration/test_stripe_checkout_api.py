@@ -138,7 +138,7 @@ def test_stripe_checkout_with_tax_enabled(clean_db):
     mock_client = MagicMock()
     mock_client.checkout.sessions.create.return_value = mock_session
 
-    with patch("app.api.v1.routers.billing.settings") as mock_settings:
+    with patch("app.api.v1.routers.public.billing.settings") as mock_settings:
         mock_settings.stripe_tax_enabled = True
         mock_settings.stripe_tax_id_collection_enabled = True
         mock_settings.stripe_checkout_billing_address_collection = "required"
@@ -180,7 +180,7 @@ def test_stripe_checkout_tax_disabled_no_regression(clean_db):
     mock_client = MagicMock()
     mock_client.checkout.sessions.create.return_value = mock_session
 
-    with patch("app.api.v1.routers.billing.settings") as mock_settings:
+    with patch("app.api.v1.routers.public.billing.settings") as mock_settings:
         mock_settings.stripe_tax_enabled = False
         mock_settings.stripe_tax_id_collection_enabled = False
         mock_settings.stripe_checkout_billing_address_collection = "auto"
@@ -221,7 +221,7 @@ def test_stripe_checkout_audit_enriched_with_tax_flags(clean_db):
     mock_client = MagicMock()
     mock_client.checkout.sessions.create.return_value = mock_session
 
-    with patch("app.api.v1.routers.billing.settings") as mock_settings:
+    with patch("app.api.v1.routers.public.billing.settings") as mock_settings:
         mock_settings.stripe_tax_enabled = True
         mock_settings.stripe_tax_id_collection_enabled = False
         mock_settings.stripe_checkout_billing_address_collection = "auto"
@@ -241,7 +241,7 @@ def test_stripe_checkout_audit_enriched_with_tax_flags(clean_db):
                 "app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
                 {"price_123": "basic"},
             ):
-                with patch("app.api.v1.routers.billing._record_audit_event") as mock_audit:
+                with patch("app.api.v1.routers.public.billing._record_audit_event") as mock_audit:
                     client.post(
                         "/v1/billing/stripe-checkout-session",
                         headers={"Authorization": f"Bearer {token}"},
@@ -266,7 +266,7 @@ def test_stripe_checkout_with_trial_enabled(clean_db):
     mock_client = MagicMock()
     mock_client.checkout.sessions.create.return_value = mock_session
 
-    with patch("app.api.v1.routers.billing.settings") as mock_settings:
+    with patch("app.api.v1.routers.public.billing.settings") as mock_settings:
         mock_settings.stripe_trial_enabled = True
         mock_settings.stripe_trial_period_days = 14
         mock_settings.stripe_payment_method_collection = "if_required"
@@ -285,7 +285,7 @@ def test_stripe_checkout_with_trial_enabled(clean_db):
                 "app.services.billing.stripe_checkout_service.STRIPE_PRICE_ENTITLEMENT_MAP",
                 {"price_123": "basic"},
             ):
-                with patch("app.api.v1.routers.billing._record_audit_event") as mock_audit:
+                with patch("app.api.v1.routers.public.billing._record_audit_event") as mock_audit:
                     response = client.post(
                         "/v1/billing/stripe-checkout-session",
                         headers={"Authorization": f"Bearer {token}"},

@@ -4,8 +4,8 @@ import uuid
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from app.api.v1.routers import admin_llm as admin_llm_router
-from app.api.v1.routers.admin_llm import _build_admin_manual_execute_response_payload
+from app.api.v1.router_logic.admin.llm import prompts as admin_llm_logic
+from app.api.v1.router_logic.admin.llm.prompts import _build_admin_manual_execute_response_payload
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.services.llm_generation.anonymization_service import LLMAnonymizationError
 
@@ -101,7 +101,7 @@ def test_build_admin_manual_execute_anonymization_failure_returns_placeholder() 
         ),
     )
     with patch.object(
-        admin_llm_router,
+        admin_llm_logic,
         "anonymize_text",
         side_effect=LLMAnonymizationError("salt misconfigured"),
     ):

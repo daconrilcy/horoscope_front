@@ -13,8 +13,7 @@ from app.api.dependencies.auth import (
     require_admin_user,
     require_authenticated_user,
 )
-from app.api.v1.routers import admin_llm
-from app.api.v1.routers.admin_llm import ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER
+from app.api.v1.routers.admin.llm.prompts import ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER
 from app.domain.llm.runtime.contracts import (
     GatewayError,
     GatewayMeta,
@@ -868,14 +867,16 @@ def test_admin_llm_catalog_resolved_detail_exposes_persona_overlay_and_runtime_d
         )
         db.commit()
 
-        real_resolve_assembly = admin_llm.resolve_assembly
+        from app.api.v1.router_logic.admin.llm import prompts as admin_llm_logic
+
+        real_resolve_assembly = admin_llm_logic.resolve_assembly
 
         def resolve_without_embedded_persona(*args: Any, **kwargs: Any):
             resolved = real_resolve_assembly(*args, **kwargs)
             return resolved.model_copy(update={"persona_block": None})
 
         with patch(
-            "app.api.v1.routers.admin_llm.resolve_assembly",
+            "app.api.v1.router_logic.admin.llm.prompts.resolve_assembly",
             side_effect=resolve_without_embedded_persona,
         ):
             response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
@@ -2042,7 +2043,7 @@ def test_admin_llm_catalog_execute_sample_rejects_incomplete_runtime_preview():
         db.commit()
 
         with patch(
-            "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit"
+            "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit"
         ) as mocked_audit:
             response = client.post(
                 f"/v1/admin/llm/catalog/{manifest_entry_id}/execute-sample",
@@ -2107,12 +2108,12 @@ def test_admin_llm_catalog_execute_sample_success_mocked_gateway():
         )
         with (
             patch(
-                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 return_value=gw_result,
             ) as mocked_execute,
             patch(
-                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit"
+                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit"
             ) as mocked_audit,
         ):
             response = client.post(
@@ -2175,12 +2176,12 @@ def test_admin_llm_catalog_execute_sample_success_without_structured_output_mock
         )
         with (
             patch(
-                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 return_value=gw_result,
             ),
             patch(
-                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
             ),
         ):
             response = client.post(
@@ -2211,12 +2212,12 @@ def test_admin_llm_catalog_execute_sample_unknown_use_case_error_mocked():
     try:
         with (
             patch(
-                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 side_effect=UnknownUseCaseError("use case not registered"),
             ),
             patch(
-                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
             ) as mocked_audit,
         ):
             response = client.post(
@@ -2246,14 +2247,14 @@ def test_admin_llm_catalog_execute_sample_output_validation_error_mocked():
     try:
         with (
             patch(
-                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 side_effect=OutputValidationError(
                     "schema mismatch", details={"errors": ["missing title"]}
                 ),
             ),
             patch(
-                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
             ) as mocked_audit,
         ):
             response = client.post(
@@ -2283,12 +2284,12 @@ def test_admin_llm_catalog_execute_sample_prompt_render_error_mocked():
     try:
         with (
             patch(
-                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 side_effect=PromptRenderError("missing placeholder"),
             ),
             patch(
-                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
             ) as mocked_audit,
         ):
             response = client.post(
@@ -2318,12 +2319,12 @@ def test_admin_llm_catalog_execute_sample_provider_gateway_error_mocked():
     try:
         with (
             patch(
-                "app.api.v1.routers.admin_llm.LLMGateway.execute_request",
+                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 side_effect=GatewayError("upstream unavailable", error_code="provider_upstream"),
             ),
             patch(
-                "app.api.v1.routers.admin_llm._record_admin_manual_execution_audit",
+                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
             ) as mocked_audit,
         ):
             response = client.post(

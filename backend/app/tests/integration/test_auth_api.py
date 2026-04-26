@@ -186,7 +186,9 @@ def test_register_returns_503_when_audit_write_fails(monkeypatch: object) -> Non
     def _raise_audit_error(*args: object, **kwargs: object) -> None:
         raise RuntimeError("audit unavailable")
 
-    monkeypatch.setattr("app.api.v1.routers.auth.AuditService.record_event", _raise_audit_error)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.public.auth.AuditService.record_event", _raise_audit_error
+    )
     response = client.post(
         "/v1/auth/register",
         json={"email": "register-audit-fail@example.com", "password": "strong-pass-123"},
@@ -203,15 +205,15 @@ def test_register_skips_onboarding_sequence_when_flag_disabled(
     onboarding_sequence_mock = MagicMock()
 
     monkeypatch.setattr(
-        "app.api.v1.routers.auth.EmailService.send_welcome_email",
+        "app.api.v1.routers.public.auth.EmailService.send_welcome_email",
         welcome_email_mock,
     )
     monkeypatch.setattr(
-        "app.api.v1.routers.auth.EmailService.schedule_onboarding_sequence",
+        "app.api.v1.routers.public.auth.EmailService.schedule_onboarding_sequence",
         onboarding_sequence_mock,
     )
     monkeypatch.setattr(
-        "app.api.v1.routers.auth.settings.email_onboarding_sequence_enabled",
+        "app.api.v1.routers.public.auth.settings.email_onboarding_sequence_enabled",
         False,
     )
 

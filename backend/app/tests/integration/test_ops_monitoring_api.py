@@ -111,7 +111,7 @@ def _set_active_subscription(access_token: str, plan_code: str) -> None:
 
 
 def _record_manual_pricing_events(user_email: str) -> None:
-    from app.api.v1.routers.billing import _record_pricing_event_safely
+    from app.api.v1.routers.public.billing import _record_pricing_event_safely
 
     with SessionLocal() as db:
         user = db.query(UserModel).filter_by(email=user_email).one()
@@ -253,7 +253,9 @@ def test_ops_monitoring_returns_429_when_rate_limited(monkeypatch: object) -> No
             status_code=429,
         )
 
-    monkeypatch.setattr("app.api.v1.routers.ops_monitoring.check_rate_limit", _always_rate_limited)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.ops.monitoring.check_rate_limit", _always_rate_limited
+    )
 
     response = client.get("/v1/ops/monitoring/conversation-kpis", headers=headers)
     assert response.status_code == 429

@@ -597,7 +597,7 @@ def test_get_birth_data_returns_200_when_astro_profile_service_error(
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.users.UserAstroProfileService.get_for_user",
+        "app.api.v1.routers.public.users.UserAstroProfileService.get_for_user",
         _raise_service_error,
     )
 
@@ -630,7 +630,7 @@ def test_get_birth_data_returns_500_on_unexpected_astro_profile_error(
         raise RuntimeError("boom")
 
     monkeypatch.setattr(
-        "app.api.v1.routers.users.UserAstroProfileService.get_for_user",
+        "app.api.v1.routers.public.users.UserAstroProfileService.get_for_user",
         _raise_runtime_error,
     )
 

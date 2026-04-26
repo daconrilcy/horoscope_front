@@ -9,7 +9,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session
 
-from app.api.v1.routers.admin_llm_release import ActivationQualificationEvidence
+from app.api.v1.schemas.routers.admin.llm.releases import ActivationQualificationEvidence
 from app.core.config import settings
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.configuration.config_coherence_validator import (

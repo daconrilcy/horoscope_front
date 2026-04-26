@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import delete
 
-from app.api.v1.routers.ops_entitlement_mutation_audits import ReviewEventItem
+from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import ReviewEventItem
 from app.core.rate_limit import RateLimitError
 from app.core.security import create_access_token
 from app.infra.db.base import Base
@@ -448,7 +448,7 @@ def test_list_returns_429_when_rate_limited(monkeypatch: object) -> None:
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.ops_entitlement_mutation_audits.check_rate_limit",
+        "app.api.v1.router_logic.ops.entitlement_mutation_audits.check_rate_limit",
         _always_rate_limited,
     )
 
@@ -692,7 +692,7 @@ def test_filter_returns_400_when_diff_scope_is_too_large(monkeypatch: object) ->
         return [], 10_001
 
     monkeypatch.setattr(
-        "app.api.v1.routers.ops_entitlement_mutation_audits."
+        "app.api.v1.routers.ops.entitlement_mutation_audits."
         "CanonicalEntitlementMutationAuditQueryService.list_mutation_audits",
         _list_mutation_audits,
     )
@@ -1483,7 +1483,7 @@ def test_review_queue_returns_400_when_diff_scope_is_too_large(monkeypatch: obje
         return [], 10_001
 
     monkeypatch.setattr(
-        "app.api.v1.routers.ops_entitlement_mutation_audits."
+        "app.api.v1.routers.ops.entitlement_mutation_audits."
         "CanonicalEntitlementMutationAuditQueryService.list_mutation_audits",
         _list_mutation_audits,
     )
@@ -1503,7 +1503,7 @@ def test_review_queue_summary_returns_400_when_diff_scope_is_too_large(monkeypat
         return [], 10_001
 
     monkeypatch.setattr(
-        "app.api.v1.routers.ops_entitlement_mutation_audits."
+        "app.api.v1.routers.ops.entitlement_mutation_audits."
         "CanonicalEntitlementMutationAuditQueryService.list_mutation_audits",
         _list_mutation_audits,
     )

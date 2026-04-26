@@ -265,7 +265,7 @@ def test_compare_dev_only_returns_structured_diff(monkeypatch: object) -> None:
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.astrology_engine.NatalCalculationService.calculate",
+        "app.api.v1.routers.public.astrology_engine.NatalCalculationService.calculate",
         _fake_calc,
     )
 
@@ -330,7 +330,7 @@ def test_calculate_natal_maps_technical_errors_to_503(
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.astrology_engine.NatalCalculationService.calculate",
+        "app.api.v1.routers.public.astrology_engine.NatalCalculationService.calculate",
         _raise_technical,
     )
 

@@ -317,7 +317,7 @@ def test_search_missing_q_returns_422():
 
 def test_search_returns_429_on_nominatim_rate_limit():
     with patch(
-        "app.api.v1.routers.geocoding.GeocodingService.search_with_cache",
+        "app.api.v1.routers.public.geocoding.GeocodingService.search_with_cache",
         side_effect=GeocodingServiceError(code="geocoding_rate_limited", message="Rate limited"),
     ):
         response = client.get("/v1/geocoding/search", params={"q": "Paris rate429"})
@@ -328,7 +328,7 @@ def test_search_returns_429_on_nominatim_rate_limit():
 
 def test_search_returns_503_on_nominatim_unavailable():
     with patch(
-        "app.api.v1.routers.geocoding.GeocodingService.search_with_cache",
+        "app.api.v1.routers.public.geocoding.GeocodingService.search_with_cache",
         side_effect=GeocodingServiceError(
             code="geocoding_provider_unavailable", message="Unavailable"
         ),
@@ -351,7 +351,7 @@ def test_search_returns_503_on_nominatim_timeout():
 
 def test_error_response_includes_request_id():
     with patch(
-        "app.api.v1.routers.geocoding.GeocodingService.search_with_cache",
+        "app.api.v1.routers.public.geocoding.GeocodingService.search_with_cache",
         side_effect=GeocodingServiceError(
             code="geocoding_provider_unavailable", message="Unavailable"
         ),
@@ -585,7 +585,7 @@ def test_resolve_rejects_invalid_snapshot_payload():
 
 def test_resolve_without_snapshot_uses_lookup_strategy():
     with patch(
-        "app.api.v1.routers.geocoding.GeocodingService.resolve_place_snapshot",
+        "app.api.v1.routers.public.geocoding.GeocodingService.resolve_place_snapshot",
         return_value=RESOLVE_SNAPSHOT_PARIS,
     ) as mock_resolve:
         response = client.post(
@@ -603,7 +603,7 @@ def test_resolve_without_snapshot_uses_lookup_strategy():
 
 def test_resolve_without_snapshot_maps_provider_error_to_503():
     with patch(
-        "app.api.v1.routers.geocoding.GeocodingService.resolve_place_snapshot",
+        "app.api.v1.routers.public.geocoding.GeocodingService.resolve_place_snapshot",
         side_effect=GeocodingServiceError(
             code="geocoding_provider_unavailable",
             message="Nominatim unavailable",

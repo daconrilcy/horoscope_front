@@ -108,7 +108,7 @@ def test_refresh_subscription_success(admin_token, monkeypatch):
     )
 
     # Critical: monkeypatch the router's imported name
-    monkeypatch.setattr("app.api.v1.routers.admin_users.get_stripe_client", lambda: mock_stripe)
+    monkeypatch.setattr("app.api.v1.routers.admin.users.get_stripe_client", lambda: mock_stripe)
 
     response = client.post(
         f"/v1/admin/users/{user_id}/refresh-subscription",

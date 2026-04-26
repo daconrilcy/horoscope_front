@@ -265,7 +265,7 @@ def test_guidance_timeout_returns_503(monkeypatch: object) -> None:
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.guidance.GuidanceService.request_guidance",
+        "app.api.v1.routers.public.guidance.GuidanceService.request_guidance",
         _raise_timeout,
     )
     response = client.post(

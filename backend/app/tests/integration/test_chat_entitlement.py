@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.v1.routers.chat import QuotaInfo
+from app.api.v1.schemas.routers.public.chat import QuotaInfo
 from app.main import app
 from app.services.entitlement.chat_entitlement_gate import ChatEntitlementResult
 from app.services.entitlement.entitlement_types import UsageState
@@ -84,7 +84,7 @@ def test_send_message_canonical_quota_ok(mock_user):
 
     with (
         patch(
-            "app.api.v1.routers.chat.ChatEntitlementGate.check_access",
+            "app.api.v1.routers.public.chat.ChatEntitlementGate.check_access",
             return_value=mock_result,
         ),
         patch(
@@ -92,7 +92,7 @@ def test_send_message_canonical_quota_ok(mock_user):
             return_value=mock_reply,
         ),
         patch(
-            "app.api.v1.routers.chat._build_post_turn_quota_info",
+            "app.api.v1.routers.public.chat._build_post_turn_quota_info",
             return_value=QuotaInfo(remaining=2, limit=5),
         ),
         patch("app.infra.db.session.get_db_session"),
@@ -146,7 +146,7 @@ def test_send_message_canonical_unlimited_ok(mock_user):
 
     with (
         patch(
-            "app.api.v1.routers.chat.ChatEntitlementGate.check_access",
+            "app.api.v1.routers.public.chat.ChatEntitlementGate.check_access",
             return_value=mock_result,
         ),
         patch(
@@ -173,7 +173,7 @@ def test_send_message_no_plan_rejected(mock_user):
 
     with (
         patch(
-            "app.api.v1.routers.chat.ChatEntitlementGate.check_access",
+            "app.api.v1.routers.public.chat.ChatEntitlementGate.check_access",
             side_effect=error,
         ),
         patch("app.infra.db.session.get_db_session"),
@@ -199,7 +199,7 @@ def test_send_message_quota_exhausted_rejected(mock_user):
 
     with (
         patch(
-            "app.api.v1.routers.chat.ChatEntitlementGate.check_access",
+            "app.api.v1.routers.public.chat.ChatEntitlementGate.check_access",
             side_effect=error,
         ),
         patch("app.infra.db.session.get_db_session"),

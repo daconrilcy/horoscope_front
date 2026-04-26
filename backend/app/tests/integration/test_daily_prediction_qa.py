@@ -82,7 +82,7 @@ FIXTURE_BUILDERS = {
 def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
     """Neutralise la gate entitlement pour les QA qui ciblent le payload prediction."""
     monkeypatch.setattr(
-        "app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
+        "app.api.v1.routers.public.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
         lambda db, user_id: SimpleNamespace(variant_code="full"),
     )
 

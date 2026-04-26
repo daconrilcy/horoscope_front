@@ -323,4 +323,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     migrate(days=args.days, dry_run=args.dry_run)
-

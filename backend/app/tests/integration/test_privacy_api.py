@@ -175,7 +175,9 @@ def test_privacy_export_returns_429_when_rate_limited(monkeypatch: object) -> No
             status_code=429,
         )
 
-    monkeypatch.setattr("app.api.v1.routers.privacy.check_rate_limit", _always_rate_limited)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.public.privacy.check_rate_limit", _always_rate_limited
+    )
 
     response = client.post("/v1/privacy/export", headers=headers)
     assert response.status_code == 429
@@ -194,7 +196,9 @@ def test_privacy_export_uses_user_plan_rate_limit_key(monkeypatch: object) -> No
     def _capture_rate_limit(*, key: str, limit: int, window_seconds: int) -> None:
         seen_keys.append(key)
 
-    monkeypatch.setattr("app.api.v1.routers.privacy.check_rate_limit", _capture_rate_limit)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.public.privacy.check_rate_limit", _capture_rate_limit
+    )
 
     response = client.post("/v1/privacy/export", headers=headers)
     assert response.status_code == 200
@@ -222,7 +226,9 @@ def test_privacy_export_returns_503_when_audit_write_fails(monkeypatch: object) 
     def _raise_audit_error(*args: object, **kwargs: object) -> None:
         raise RuntimeError("audit unavailable")
 
-    monkeypatch.setattr("app.api.v1.routers.privacy.AuditService.record_event", _raise_audit_error)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.public.privacy.AuditService.record_event", _raise_audit_error
+    )
 
     response = client.post("/v1/privacy/export", headers=headers)
     assert response.status_code == 503
@@ -247,10 +253,12 @@ def test_privacy_export_returns_503_when_service_error_and_audit_write_fails(
         raise RuntimeError("audit unavailable")
 
     monkeypatch.setattr(
-        "app.api.v1.routers.privacy.PrivacyService.request_export",
+        "app.api.v1.routers.public.privacy.PrivacyService.request_export",
         _raise_privacy_error,
     )
-    monkeypatch.setattr("app.api.v1.routers.privacy.AuditService.record_event", _raise_audit_error)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.public.privacy.AuditService.record_event", _raise_audit_error
+    )
 
     response = client.post("/v1/privacy/export", headers=headers)
     assert response.status_code == 503
@@ -267,7 +275,9 @@ def test_privacy_delete_returns_503_when_validation_error_and_audit_write_fails(
     def _raise_audit_error(*args: object, **kwargs: object) -> None:
         raise RuntimeError("audit unavailable")
 
-    monkeypatch.setattr("app.api.v1.routers.privacy.AuditService.record_event", _raise_audit_error)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.public.privacy.AuditService.record_event", _raise_audit_error
+    )
 
     response = client.post("/v1/privacy/delete", headers=headers, json={})
     assert response.status_code == 503
@@ -289,7 +299,7 @@ def test_privacy_delete_invalid_confirmation_writes_failed_audit(monkeypatch: ob
         seen_error_codes.append(error_code if isinstance(error_code, str) else None)
 
     monkeypatch.setattr(
-        "app.api.v1.routers.privacy.AuditService.record_event",
+        "app.api.v1.router_logic.public.privacy.AuditService.record_event",
         _capture_record_event,
     )
 

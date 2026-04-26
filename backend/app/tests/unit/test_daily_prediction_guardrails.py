@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import require_authenticated_user
-from app.api.v1.routers.predictions import get_daily_prediction_service
+from app.api.v1.routers.public.predictions import get_daily_prediction_service
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.main import app
 from app.services.prediction import (
@@ -21,7 +21,7 @@ from app.services.prediction.run_reuse_policy import ReuseDecision
 def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
     """Neutralise la gate d entitlement pour les tests focalises sur le routeur."""
     monkeypatch.setattr(
-        "app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
+        "app.api.v1.routers.public.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
         lambda db, user_id: SimpleNamespace(variant_code="full"),
     )
 

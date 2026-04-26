@@ -404,7 +404,9 @@ def test_b2b_astrology_returns_429_when_rate_limited(monkeypatch: object) -> Non
             status_code=429,
         )
 
-    monkeypatch.setattr("app.api.v1.routers.b2b_astrology.check_rate_limit", _always_rate_limited)
+    monkeypatch.setattr(
+        "app.api.v1.router_logic.b2b.astrology.check_rate_limit", _always_rate_limited
+    )
 
     response = client.get(
         "/v1/b2b/astrology/weekly-by-sign",

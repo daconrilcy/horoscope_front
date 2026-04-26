@@ -32,9 +32,9 @@ def test_no_canonical_natal_module_uses_v2_suffix() -> None:
 def test_no_legacy_llm_service_import_path_is_reintroduced() -> None:
     project_root = Path(__file__).resolve().parents[2]
     files_to_guard = [
-        project_root / "api" / "v1" / "routers" / "admin_llm_consumption.py",
-        project_root / "api" / "v1" / "routers" / "admin_exports.py",
-        project_root / "api" / "v1" / "routers" / "ops_monitoring_llm.py",
+        project_root / "api" / "v1" / "routers" / "admin" / "llm" / "consumption.py",
+        project_root / "api" / "v1" / "routers" / "admin" / "exports.py",
+        project_root / "api" / "v1" / "routers" / "ops" / "monitoring_llm.py",
         project_root / "api" / "v1" / "routers" / "internal" / "llm" / "qa.py",
         project_root / "startup" / "llm_qa_seed.py",
         project_root / "services" / "__init__.py",
@@ -62,8 +62,8 @@ def test_no_legacy_llm_service_import_path_is_reintroduced() -> None:
 def test_admin_routes_no_longer_call_private_consumption_helpers() -> None:
     project_root = Path(__file__).resolve().parents[2]
     files_to_guard = [
-        project_root / "api" / "v1" / "routers" / "admin_llm_consumption.py",
-        project_root / "api" / "v1" / "routers" / "admin_exports.py",
+        project_root / "api" / "v1" / "routers" / "admin" / "llm" / "consumption.py",
+        project_root / "api" / "v1" / "routers" / "admin" / "exports.py",
     ]
     forbidden_snippets = [
         "LlmCanonicalConsumptionService._normalized_calls",

@@ -121,7 +121,7 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
     # Mock settings to enable LLM narration
     with (
-        patch("app.api.v1.routers.predictions.settings") as mock_settings_router,
+        patch("app.api.v1.routers.public.predictions.settings") as mock_settings_router,
         patch("app.prediction.public_projection.settings") as mock_settings_proj,
     ):
         mock_settings_router.llm_narrator_enabled = True
@@ -159,7 +159,9 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
             mock_result = ServiceResult(run=dummy_run, bundle=None, was_reused=True)
 
-            with patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls:
+            with patch(
+                "app.api.v1.routers.public.predictions.DailyPredictionService"
+            ) as mock_service_cls:
                 mock_service = mock_service_cls.return_value
                 mock_service.get_or_compute.return_value = mock_result
 
@@ -211,7 +213,7 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
     app.dependency_overrides[require_authenticated_user] = lambda: auth_user_basic
 
     with (
-        patch("app.api.v1.routers.predictions.settings") as mock_settings_router,
+        patch("app.api.v1.routers.public.predictions.settings") as mock_settings_router,
         patch("app.prediction.public_projection.settings") as mock_settings_proj,
     ):
         mock_settings_router.llm_narrator_enabled = True
@@ -226,7 +228,9 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
             mock_ctx.payload.model_dump.return_value = {}
             mock_ctx_build.return_value = mock_ctx
 
-            with patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls:
+            with patch(
+                "app.api.v1.routers.public.predictions.DailyPredictionService"
+            ) as mock_service_cls:
                 mock_service = mock_service_cls.return_value
                 mock_service.get_or_compute.return_value = mock_result
 
@@ -314,10 +318,10 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
     mock_result = ServiceResult(run=dummy_run, bundle=None, was_reused=True)
 
     with (
-        patch("app.api.v1.routers.predictions.settings") as mock_settings_router,
+        patch("app.api.v1.routers.public.predictions.settings") as mock_settings_router,
         patch("app.prediction.public_projection.settings") as mock_settings_proj,
         patch("app.domain.llm.prompting.context.CommonContextBuilder.build") as mock_ctx_build,
-        patch("app.api.v1.routers.predictions.DailyPredictionService") as mock_service_cls,
+        patch("app.api.v1.routers.public.predictions.DailyPredictionService") as mock_service_cls,
         patch(
             "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration"
         ) as mock_adapter,

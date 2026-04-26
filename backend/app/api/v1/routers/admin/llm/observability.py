@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.routers.admin_llm import (
+from app.api.v1.routers.admin.llm.prompts import (
     LlmCallLogListResponse,
     LlmDashboardResponse,
     get_dashboard,

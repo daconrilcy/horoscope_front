@@ -446,7 +446,7 @@ def test_b2b_astrology_rolls_back_canonical_usage_when_downstream_fails(monkeypa
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.b2b_astrology.B2BAstrologyService.get_weekly_by_sign",
+        "app.api.v1.routers.b2b.astrology.B2BAstrologyService.get_weekly_by_sign",
         _raise_downstream,
     )
 

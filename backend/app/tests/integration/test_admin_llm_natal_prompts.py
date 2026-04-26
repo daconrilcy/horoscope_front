@@ -125,11 +125,11 @@ class TestAdminLlmNatalPrompts:
         with (
             patch("app.ops.llm.prompt_registry_v2.PromptRegistryV2.publish_prompt") as mock_publish,
             patch(
-                "app.api.v1.routers.admin_llm.PromptRegistryV2.get_active_prompt",
+                "app.api.v1.routers.admin.llm.prompts.PromptRegistryV2.get_active_prompt",
                 return_value=version_mock,
             ),
             patch(
-                "app.api.v1.routers.admin_llm._build_canonical_admin_use_case_config",
+                "app.api.v1.routers.admin.llm.prompts._build_canonical_admin_use_case_config",
                 return_value=None,
             ),
         ):
@@ -180,17 +180,17 @@ class TestAdminLlmNatalPrompts:
         )
 
         with (
-            patch("app.api.v1.routers.admin_llm.run_eval") as mock_run_eval,
+            patch("app.api.v1.routers.admin.llm.prompts.run_eval") as mock_run_eval,
             patch(
-                "app.api.v1.routers.admin_llm.PromptRegistryV2.get_active_prompt",
+                "app.api.v1.routers.admin.llm.prompts.PromptRegistryV2.get_active_prompt",
                 return_value=active_prompt,
             ),
             patch(
-                "app.api.v1.routers.admin_llm._build_canonical_admin_use_case_config",
+                "app.api.v1.routers.admin.llm.prompts._build_canonical_admin_use_case_config",
                 return_value=None,
             ),
             patch(
-                "app.api.v1.routers.admin_llm.PromptRegistryV2.publish_prompt",
+                "app.api.v1.routers.admin.llm.prompts.PromptRegistryV2.publish_prompt",
                 return_value=active_prompt,
             ),
         ):

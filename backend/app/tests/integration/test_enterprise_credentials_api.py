@@ -140,7 +140,7 @@ def test_enterprise_credentials_returns_429_when_rate_limited(monkeypatch: objec
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.enterprise_credentials.check_rate_limit",
+        "app.api.v1.router_logic.public.enterprise_credentials.check_rate_limit",
         _always_rate_limited,
     )
 
@@ -167,7 +167,7 @@ def test_generate_returns_503_when_audit_unavailable(monkeypatch: object) -> Non
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.enterprise_credentials._record_audit_event",
+        "app.api.v1.routers.public.enterprise_credentials._record_audit_event",
         _audit_unavailable,
     )
 

@@ -683,7 +683,9 @@ def test_send_chat_message_timeout_returns_503(monkeypatch: object) -> None:
             details={"retryable": "true", "action": "retry_message"},
         )
 
-    monkeypatch.setattr("app.api.v1.routers.chat.ChatGuidanceService.send_message", _raise_timeout)
+    monkeypatch.setattr(
+        "app.api.v1.routers.public.chat.ChatGuidanceService.send_message", _raise_timeout
+    )
     response = client.post(
         "/v1/chat/messages",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -706,7 +708,7 @@ def test_send_chat_message_unavailable_returns_503(monkeypatch: object) -> None:
         )
 
     monkeypatch.setattr(
-        "app.api.v1.routers.chat.ChatGuidanceService.send_message",
+        "app.api.v1.routers.public.chat.ChatGuidanceService.send_message",
         _raise_unavailable,
     )
     response = client.post(

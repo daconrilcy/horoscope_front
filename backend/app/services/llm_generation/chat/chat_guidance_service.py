@@ -23,7 +23,6 @@ from app.domain.llm.runtime.adapter_errors import AIEngineAdapterError, map_adap
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.db.repositories.user_repository import UserRepository
 from app.infra.observability.metrics import increment_counter, observe_duration
-from app.services.llm_generation.guidance.current_context import build_current_prompt_context
 from app.services.entitlement.chat_entitlement_gate import (
     ChatEntitlementResult,
     ChatQuotaExceededError,
@@ -33,6 +32,7 @@ from app.services.llm_generation.anonymization_service import (
     LLMAnonymizationError,
     anonymize_text,
 )
+from app.services.llm_generation.guidance.current_context import build_current_prompt_context
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 from app.services.llm_generation.natal.prompt_context import (
     _detect_degraded_mode,
