@@ -19,13 +19,13 @@ from app.infra.db.models.editorial_template import EditorialTemplateVersionModel
 from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel, RulesetParameterModel
 from app.infra.db.session import get_db_session
-from app.services.feature_flag_service import (
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
+from app.services.ops.feature_flag_service import (
     FeatureFlagData,
     FeatureFlagService,
     FeatureFlagServiceError,
     FeatureFlagUpdatePayload,
 )
-from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 router = APIRouter(prefix="/v1/admin/content", tags=["admin-content"])
 

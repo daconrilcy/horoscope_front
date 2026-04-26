@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.services.cross_tool_report import (
+from scripts.cross_tool_report import (
     build_run_report,
     ensure_dev_only_runtime,
     render_markdown_report,

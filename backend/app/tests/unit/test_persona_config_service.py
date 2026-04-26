@@ -6,7 +6,7 @@ from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.persona_config_service import (
+from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigService,
     PersonaConfigServiceError,
     PersonaConfigUpdatePayload,

@@ -33,7 +33,6 @@ from app.domain.llm.runtime.errors import (
 )
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.session import get_db_session
-from app.services.disclaimer_registry import get_disclaimers
 from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
     NatalChartLongEntitlementGate,
@@ -41,6 +40,7 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongQuotaExceededError,
 )
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
+from app.services.resources.templates.disclaimer_registry import get_disclaimers
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,

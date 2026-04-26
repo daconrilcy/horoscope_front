@@ -9,7 +9,7 @@ from app.api.dependencies.auth import require_authenticated_user
 from app.api.v1.routers.predictions import get_daily_prediction_service
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.main import app
-from app.services.daily_prediction_service import (
+from app.services.prediction import (
     DailyPredictionService,
     DailyPredictionServiceError,
 )

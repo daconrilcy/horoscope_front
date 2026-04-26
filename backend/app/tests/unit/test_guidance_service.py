@@ -17,7 +17,10 @@ from app.services.llm_generation.guidance.guidance_service import (
     GuidanceService,
     GuidanceServiceError,
 )
-from app.services.persona_config_service import PersonaConfigService, PersonaConfigUpdatePayload
+from app.services.llm_generation.guidance.persona_config_service import (
+    PersonaConfigService,
+    PersonaConfigUpdatePayload,
+)
 from app.tests.helpers.llm_adapter_stub import (
     reset_test_generators,
     set_test_chat_generator,

@@ -12,7 +12,7 @@ from app.core.config import DailyEngineMode, settings
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.persisted_relative_score import PersistedRelativeScore
 from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
-from app.services.daily_prediction_service import (
+from app.services.prediction import (
     DailyPredictionService,
     ServiceResult,
 )

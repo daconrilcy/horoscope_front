@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.datetime_provider import datetime_provider
-from app.services.daily_prediction_service import DailyPredictionService
 from app.services.llm_generation.shared.natal_context import SIGN_NAMES_FR, _longitude_to_sign
+from app.services.prediction import DailyPredictionService
 from app.services.user_profile.birth_profile_service import UserBirthProfileService
 
 logger = logging.getLogger(__name__)

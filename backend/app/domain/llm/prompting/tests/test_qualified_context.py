@@ -56,7 +56,7 @@ async def test_build_full_context(db):
             "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user"
         ) as mock_profile,
         patch(
-            "app.services.persona_config_service.PersonaConfigService.get_active"
+            "app.services.llm_generation.guidance.persona_config_service.PersonaConfigService.get_active"
         ) as mock_persona,
         patch(
             "app.services.user_profile.natal_chart_service.UserNatalChartService.get_latest_for_user"

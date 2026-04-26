@@ -18,7 +18,7 @@ from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistr
 from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
-from app.services.persona_config_service import PersonaConfigService
+from app.services.llm_generation.guidance.persona_config_service import PersonaConfigService
 from app.services.user_profile.birth_profile_service import UserBirthProfileService
 from app.services.user_profile.natal_chart_service import UserNatalChartService
 

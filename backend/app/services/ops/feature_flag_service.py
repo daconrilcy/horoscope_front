@@ -1,8 +1,8 @@
 """
 Service de gestion des feature flags.
 
-Ce module gère les drapeaux de fonctionnalités pour le déploiement progressif.
-Les modules hors périmètre historique ont été retirés.
+Ce module porte l'administration opérationnelle des drapeaux de fonctionnalités
+utilisés par les routeurs ops et admin.
 """
 
 from __future__ import annotations

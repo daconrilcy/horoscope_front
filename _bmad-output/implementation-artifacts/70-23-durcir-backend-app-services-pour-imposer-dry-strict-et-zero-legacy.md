@@ -539,6 +539,8 @@ gpt-5
 - Nouvelle passe d audit du 2026-04-26 : familles mono-domaine residuelles identifiees a la racine (`email`, `quota`, `chart`, `daily_prediction_types`) puis converges vers des namespaces canoniques uniques.
 - Correctif final du 2026-04-26 : isolation SQLite de `app/tests/integration/test_daily_prediction_api.py` pour supprimer le bruit de contraintes FK quand la suite partageait une meme base avec d autres modules.
 - Passe documentaire finale du 2026-04-26 : re-audit des fichiers encore presents directement sous `backend/app/services/`, confirmation de leur statut transverse vis-a-vis de l allowlist, puis ajout de commentaires globaux en francais sur les survivants qui n en avaient pas encore.
+- Passe de convergence supplementaire du 2026-04-26 : `current_context.py`, `persona_config_service.py`, `feature_flag_service.py` et `cross_tool_report.py` ont quitte la racine ; la facade racine `daily_prediction_service.py` a ete supprimee apres migration complete des imports vers `app.services.prediction`.
+- Verification utilisateur du 2026-04-26 : `disclaimer_registry.py` est desormais canonique sous `app/services/resources/templates/`, avec suppression du dernier reliquat racine dans la cartographie et migration des imports encore restants.
 
 ### Completion Notes List
 
@@ -566,6 +568,9 @@ gpt-5
 - Validation consolidee executee dans le venv apres ce correctif : `ruff format app/tests/integration/test_daily_prediction_api.py`, `ruff check app/tests/integration/test_daily_prediction_api.py`, puis la suite groupee `test_story_70_23_services_structure_guard.py`, `test_quota_usage_service.py`, `test_quota_window_resolver.py`, `test_chart_result_service.py`, `test_chart_json_builder.py`, `test_daily_prediction_service.py`, `test_daily_prediction_version_consistency.py`, `test_chat_entitlement_gate.py`, `test_b2b_api_entitlement_gate.py`, `test_effective_entitlement_resolver_service.py`, `test_email_idempotence.py`, `test_user_natal_chart_service.py`, `tests/integration/test_email_unsubscribe.py` et `app/tests/integration/test_daily_prediction_api.py` avec `163 passed`.
 - Audit final des fichiers isoles restants a la racine `backend/app/services/` : `__init__.py`, `auth_service.py`, `cross_tool_report.py`, `current_context.py`, `daily_prediction_service.py`, `disclaimer_registry.py`, `feature_flag_service.py`, `feature_registry_consistency_validator.py`, `geocoding_service.py`, `persona_config_service.py`, `privacy_service.py` et `reference_data_service.py` ; aucun nouveau regroupement mono-domaine bloquant n a ete identifie sur ce lot.
 - Les fichiers racine qui n avaient pas encore de commentaire global francais ont ete completes : `services/__init__.py`, `cross_tool_report.py`, `current_context.py`, `feature_registry_consistency_validator.py` et `geocoding_service.py`.
+- La racine `backend/app/services/` a encore ete reduite : `current_context.py` et `persona_config_service.py` vivent maintenant sous `app/services/llm_generation/guidance/`, `feature_flag_service.py` sous `app/services/ops/`, `cross_tool_report.py` sous `backend/scripts/`, et `daily_prediction_service.py` a disparu au profit du package canonique `app.services.prediction`.
+- Les imports de production, de jobs, de scripts et de tests ont ete migres vers `app.services.prediction`, `app.services.llm_generation.guidance.*`, `app.services.ops.feature_flag_service` et `scripts.cross_tool_report`.
+- `disclaimer_registry.py` ne fait plus partie des survivants de la racine : son chemin canonique est maintenant `app.services.resources.templates.disclaimer_registry`, utilise par les routes natales, l export PDF et la generation LLM associee.
 - Limite connue de validation : `pytest -q` complet n a pas termine dans la fenetre de temps allouee malgre deux tentatives ; aucun autre follow-up bloquant n a ete laisse dans le perimetre impose par la story.
 
 ### File List
@@ -601,6 +606,8 @@ gpt-5
 - backend/app/services/llm_generation/shared/natal_context.py
 - backend/app/services/llm_generation/natal/prompt_context.py
 - backend/app/services/natal/astro_context_builder.py
+- backend/app/services/resources/templates/__init__.py
+- backend/app/services/resources/templates/disclaimer_registry.py
 - backend/app/api/v1/schemas/consultation.py
 - backend/app/api/v1/routers/consultations.py
 - backend/app/services/consultation/catalogue_service.py
@@ -608,11 +615,10 @@ gpt-5
 - backend/app/services/consultation/precheck_service.py
 - backend/app/services/entitlement/horoscope_daily_entitlement_gate.py
 - backend/app/services/__init__.py
-- backend/app/services/cross_tool_report.py
-- backend/app/services/current_context.py
 - backend/app/services/feature_registry_consistency_validator.py
 - backend/app/services/geocoding_service.py
 - backend/app/tests/unit/test_story_70_22_entitlement_structure_guard.py
+- backend/app/tests/unit/test_disclaimer_registry.py
 - backend/app/tests/unit/test_story_70_23_services_structure_guard.py
 - backend/app/tests/integration/test_daily_prediction_api.py
 - backend/app/tests/unit/test_consultation_request_schema.py
@@ -628,3 +634,4 @@ gpt-5
 - 2026-04-26 - Mise en oeuvre des AC 23 a 34 : convergence des familles `email`, `quota`, `chart` et `daily_prediction_types` vers des sous-packages canoniques, migration complete des imports et durcissement de l allowlist racine.
 - 2026-04-26 - Audit final des survivants de la racine `services/` et ajout des commentaires globaux francais manquants sur les fichiers transverses restants.
 - 2026-04-26 - Correctif de la limite restante de validation : isolation SQLite de `test_daily_prediction_api.py` et validation consolidee verte sur la suite ciblee partagee.
+- 2026-04-26 - Realignement final du registre de disclaimers vers `services/resources/templates/`, retrait de la racine et mise a jour de la cartographie/story.

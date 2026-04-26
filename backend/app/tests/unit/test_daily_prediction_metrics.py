@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.services.daily_prediction_service import DailyPredictionService
+from app.services.prediction import DailyPredictionService
 from app.services.prediction.compute_runner import ComputeResult
 from app.services.prediction.run_reuse_policy import ReuseDecision
 

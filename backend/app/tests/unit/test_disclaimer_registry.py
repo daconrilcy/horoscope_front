@@ -4,7 +4,7 @@ Story 30-8 T5.
 
 from __future__ import annotations
 
-from app.services.disclaimer_registry import get_disclaimers
+from app.services.resources.templates.disclaimer_registry import get_disclaimers
 
 
 class TestGetDisclaimers:

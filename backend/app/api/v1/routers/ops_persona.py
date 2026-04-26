@@ -14,8 +14,7 @@ from app.api.dependencies.auth import (
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
-from app.services.ops.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
-from app.services.persona_config_service import (
+from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigData,
     PersonaConfigService,
     PersonaConfigServiceError,
@@ -24,6 +23,7 @@ from app.services.persona_config_service import (
     PersonaProfileListData,
     PersonaRollbackData,
 )
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
 
 
 class ResponseMeta(BaseModel):

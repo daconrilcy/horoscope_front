@@ -24,7 +24,7 @@ from app.main import app
 from app.prediction.llm_narrator import NarratorResult
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.services.billing.service import BillingService
-from app.services.daily_prediction_service import ServiceResult
+from app.services.prediction import ServiceResult
 
 
 @pytest.fixture
@@ -261,7 +261,7 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
     from app.infra.db.models.user_birth_profile import UserBirthProfileModel
     from app.infra.db.session import get_db_session
     from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
-    from app.services.daily_prediction_service import ServiceResult
+    from app.services.prediction import ServiceResult
 
     app.dependency_overrides[get_db_session] = lambda: db_session
     client = TestClient(app)

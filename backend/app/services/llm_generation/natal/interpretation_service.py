@@ -44,9 +44,9 @@ from app.services.chart.json_builder import (
     build_chart_json,
     build_enriched_evidence_catalog,
 )
-from app.services.disclaimer_registry import get_disclaimers
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 from app.services.llm_generation.natal.prompt_context import _detect_degraded_mode
+from app.services.resources.templates.disclaimer_registry import get_disclaimers
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 from app.services.user_profile.natal_chart_service import UserNatalChartReadData
 

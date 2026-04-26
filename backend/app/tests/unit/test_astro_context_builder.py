@@ -55,7 +55,7 @@ async def test_build_daily_success() -> None:
             return_value=profile,
         ),
         patch(
-            "app.services.daily_prediction_service.DailyPredictionService.get_or_compute"
+            "app.services.prediction.DailyPredictionService.get_or_compute"
         ) as mock_compute,
         patch(
             "app.services.natal.astro_context_builder.AstroContextBuilder._get_lunar_phase_label",
@@ -91,7 +91,7 @@ async def test_build_daily_degraded_mode() -> None:
             return_value=profile,
         ),
         patch(
-            "app.services.daily_prediction_service.DailyPredictionService.get_or_compute",
+            "app.services.prediction.DailyPredictionService.get_or_compute",
             return_value=MagicMock(run=MagicMock()),
         ),
         patch(

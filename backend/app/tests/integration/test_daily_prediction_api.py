@@ -26,7 +26,7 @@ from app.prediction.persisted_snapshot import (
     PersistedTurningPoint,
 )
 from app.services.auth_service import AuthService
-from app.services.daily_prediction_service import (
+from app.services.prediction import (
     ComputeMode,
     DailyPredictionServiceError,
     ServiceResult,

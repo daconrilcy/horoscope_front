@@ -15,7 +15,7 @@ from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
-from app.services.disclaimer_registry import get_disclaimers
+from app.services.resources.templates.disclaimer_registry import get_disclaimers
 
 logger = logging.getLogger(__name__)
 

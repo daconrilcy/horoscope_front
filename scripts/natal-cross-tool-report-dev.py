@@ -17,12 +17,12 @@ from app.core.ephemeris import bootstrap_swisseph  # noqa: E402
 from app.domain.astrology.ephemeris_provider import calculate_planets  # noqa: E402
 from app.domain.astrology.houses_provider import calculate_houses  # noqa: E402
 from app.domain.astrology.natal_preparation import BirthInput, prepare_birth_data  # noqa: E402
-from app.services.cross_tool_report import (  # noqa: E402
+from app.tests.golden.pro_fixtures import load_golden_pro_dataset  # noqa: E402
+from scripts.cross_tool_report import (  # noqa: E402
     build_run_report,
     ensure_dev_only_runtime,
     render_markdown_report,
 )
-from app.tests.golden.pro_fixtures import load_golden_pro_dataset  # noqa: E402
 
 
 def _build_case_payload(case: object) -> dict[str, object]:

@@ -1,8 +1,8 @@
 """
-Service de configuration des personas.
+Service de configuration des personas astrologues.
 
-Ce module gère les profils de persona de l'assistant astrologique : création,
-activation, archivage et rollback des configurations.
+Ce module porte le cycle de vie des personas utilisés par les guidances LLM
+et par le routeur d'administration dédié.
 """
 
 from __future__ import annotations

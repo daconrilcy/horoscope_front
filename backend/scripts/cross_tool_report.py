@@ -1,4 +1,4 @@
-"""Utilitaires transverses pour agréger et résumer des métriques multi-outils."""
+"""Utilitaires dev-only pour construire un rapport de dérive cross-tool hors runtime applicatif."""
 
 from __future__ import annotations
 

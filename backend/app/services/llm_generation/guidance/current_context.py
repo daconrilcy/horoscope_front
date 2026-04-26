@@ -1,4 +1,4 @@
-"""Primitives transverses pour décrire le contexte courant d'exécution utilisateur."""
+"""Primitives de guidance pour décrire le contexte courant injecté dans les prompts LLM."""
 
 from __future__ import annotations
 

@@ -89,7 +89,7 @@ async def test_build_common_context_with_interpretation() -> None:
 
     with (
         patch(
-            "app.services.persona_config_service.PersonaConfigService.get_active",
+            "app.services.llm_generation.guidance.persona_config_service.PersonaConfigService.get_active",
             return_value=mock_persona,
         ),
         patch(
@@ -125,7 +125,7 @@ async def test_build_common_context_without_interpretation() -> None:
 
     with (
         patch(
-            "app.services.persona_config_service.PersonaConfigService.get_active",
+            "app.services.llm_generation.guidance.persona_config_service.PersonaConfigService.get_active",
             return_value=mock_persona,
         ),
         patch(
@@ -173,7 +173,7 @@ async def test_build_common_context_accepts_canonical_horoscope_daily_key() -> N
 
     with (
         patch(
-            "app.services.persona_config_service.PersonaConfigService.get_active",
+            "app.services.llm_generation.guidance.persona_config_service.PersonaConfigService.get_active",
             return_value=mock_persona,
         ),
         patch(

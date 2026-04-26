@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.datetime_provider import datetime_provider
 from app.domain.llm.runtime.adapter import AIEngineAdapter, AIEngineAdapterError
-from app.services.current_context import build_current_prompt_context
+from app.services.llm_generation.guidance.current_context import build_current_prompt_context
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 from app.services.user_profile.natal_chart_service import UserNatalChartReadData
 

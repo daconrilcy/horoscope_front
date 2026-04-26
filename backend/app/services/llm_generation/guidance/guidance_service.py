@@ -19,7 +19,7 @@ from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.adapter_errors import AIEngineAdapterError, map_adapter_error_to_codes
 from app.infra.db.repositories.chat_repository import ChatRepository
 from app.infra.observability.metrics import increment_counter, observe_duration
-from app.services.current_context import build_current_prompt_context
+from app.services.llm_generation.guidance.current_context import build_current_prompt_context
 from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.llm_generation.anonymization_service import anonymize_text
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
@@ -32,7 +32,7 @@ from app.services.llm_generation.shared.natal_context import (
     build_user_natal_chart_summary_context,
     detect_degraded_natal_mode,
 )
-from app.services.persona_config_service import PersonaConfigService
+from app.services.llm_generation.guidance.persona_config_service import PersonaConfigService
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,

@@ -7,14 +7,8 @@ from pathlib import Path
 SERVICES_ROOT_ALLOWLIST = {
     "__init__.py",
     "auth_service.py",
-    "cross_tool_report.py",
-    "current_context.py",
-    "daily_prediction_service.py",
-    "disclaimer_registry.py",
-    "feature_flag_service.py",
     "feature_registry_consistency_validator.py",
     "geocoding_service.py",
-    "persona_config_service.py",
     "privacy_service.py",
     "reference_data_service.py",
 }
@@ -38,16 +32,22 @@ REMOVED_ROOT_SERVICE_FILES = {
     "consultation_fallback_service.py",
     "consultation_precheck_service.py",
     "consultation_third_party_service.py",
+    "cross_tool_report.py",
+    "current_context.py",
+    "daily_prediction_service.py",
     "daily_prediction_types.py",
+    "disclaimer_registry.py",
     "email_provider.py",
     "email_service.py",
     "enterprise_credentials_service.py",
     "enterprise_quota_usage_service.py",
+    "feature_flag_service.py",
     "incident_service.py",
     "natal_calculation_service.py",
     "natal_pdf_export_service.py",
     "natal_preparation_service.py",
     "ops_monitoring_service.py",
+    "persona_config_service.py",
     "prediction_compute_runner.py",
     "prediction_context_repair_service.py",
     "prediction_fallback_policy.py",
@@ -175,24 +175,6 @@ def test_nominal_services_do_not_keep_story_70_23_legacy_bypasses() -> None:
             assert snippet not in content, f"{snippet} found in {relative_path}"
 
 
-def test_daily_prediction_root_facade_stays_thin() -> None:
-    """La facade racine prediction ne doit plus reconstituer le sous-domaine localement."""
-    content = (_services_root() / "daily_prediction_service.py").read_text(encoding="utf-8")
-
-    assert (
-        "from app.services.prediction.service import DailyPredictionService, ServiceResult"
-        in content
-    )
-    assert "PredictionComputeRunner" not in content
-    assert "PredictionContextRepairService" not in content
-    assert "PredictionFallbackPolicy" not in content
-    assert "PredictionRequestResolver" not in content
-    assert "PredictionRunReusePolicy" not in content
-    assert "RelativeScoringService" not in content
-    assert "increment_counter" not in content
-    assert "from app.services.prediction.types import" in content
-
-
 def test_root_no_longer_hosts_flat_mono_domain_families() -> None:
     """La racine ne doit plus conserver de familles mono-domaine a plat."""
     services_root = _services_root()
@@ -205,3 +187,18 @@ def test_root_no_longer_hosts_flat_mono_domain_families() -> None:
     )
 
     assert offenders == []
+
+
+def test_root_no_longer_hosts_transitional_prediction_or_llm_helpers() -> None:
+    """Les helpers requalifies hors racine ne doivent plus reapparaitre a plat."""
+    services_root = _services_root()
+    forbidden_files = {
+        "cross_tool_report.py",
+        "current_context.py",
+        "daily_prediction_service.py",
+        "feature_flag_service.py",
+        "persona_config_service.py",
+    }
+
+    present = {path.name for path in services_root.iterdir() if path.is_file()}
+    assert forbidden_files.isdisjoint(present)
