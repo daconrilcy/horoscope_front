@@ -45,14 +45,24 @@ This story belongs to exactly one domain:
 - Explicit non-goals:
   - Do not change entitlement behavior.
 
-## 4. Current State Evidence
+## 4. Operation Contract
+
+- Operation type: converge
+- Primary archetype: namespace-convergence
+- Archetype reason: billing imports must converge on one canonical namespace.
+- Behavior change allowed: no
+- Deletion allowed: no
+- Replacement allowed: yes
+- User decision required if: repository evidence shows an external consumer of the old import path.
+
+## 5. Current State Evidence
 
 The current codebase or audit indicates:
 
 - Evidence 1: `backend/app/services/billing/quota_runtime.py` - canonical billing runtime exists.
 - Evidence 2: `backend/app/tests/unit/test_billing_imports.py` - guard coverage is expected.
 
-## 5. Target State
+## 6. Target State
 
 After implementation:
 
@@ -60,21 +70,21 @@ After implementation:
 - Old billing root imports are absent.
 - Architecture guard tests prove the namespace boundary.
 
-## 6. Acceptance Criteria
+## 7. Acceptance Criteria
 
 | AC | Requirement | Validation evidence required |
 |---|---|---|
 | AC1 | Consumers import billing services from `backend/app/services/billing` only. | `rg "app.services.quota_usage_service" backend/app backend/tests` returns no nominal import. |
 | AC2 | A guard test fails if the old root import returns. | `pytest -q backend/app/tests/unit/test_billing_imports.py` passes. |
 
-## 7. Implementation Tasks
+## 8. Implementation Tasks
 
 - [ ] Task 1 - Update import consumers (AC: AC1)
   - [ ] Subtask 1.1 - Inspect current billing imports.
 - [ ] Task 2 - Add architecture guard coverage (AC: AC2)
   - [ ] Subtask 2.1 - Add a negative import test.
 
-## 8. Mandatory Reuse / DRY Constraints
+## 9. Mandatory Reuse / DRY Constraints
 
 - Reuse:
   - `backend/app/services/billing/quota_runtime.py` for billing runtime behavior.
@@ -83,7 +93,7 @@ After implementation:
 - Shared abstraction allowed only if:
   - two concrete billing consumers need the same behavior.
 
-## 9. No Legacy / Forbidden Paths
+## 10. No Legacy / Forbidden Paths
 
 Forbidden unless explicitly approved:
 
@@ -99,14 +109,14 @@ Specific forbidden symbols / paths:
 
 - `backend/app/services/quota_usage_service.py`
 
-## 10. Files to Inspect First
+## 11. Files to Inspect First
 
 Codex must inspect before editing:
 
 - `backend/app/services/billing/quota_runtime.py`
 - `backend/app/tests/unit/test_billing_imports.py`
 
-## 11. Expected Files to Modify
+## 12. Expected Files to Modify
 
 Likely files:
 
@@ -120,12 +130,12 @@ Files not expected to change:
 
 - `frontend/src` - outside backend billing domain.
 
-## 12. Dependency Policy
+## 13. Dependency Policy
 
 - New dependencies: none
 - Dependency changes allowed only if explicitly listed here with justification.
 
-## 13. Validation Plan
+## 14. Validation Plan
 
 Run or justify why skipped:
 
@@ -135,12 +145,12 @@ ruff check .
 rg "app.services.quota_usage_service" backend/app backend/tests
 ```
 
-## 14. Regression Risks
+## 15. Regression Risks
 
 - Risk: import migration breaks runtime billing consumers.
   - Guardrail: targeted billing import tests must pass.
 
-## 15. Dev Agent Instructions
+## 16. Dev Agent Instructions
 
 - Implement only this story.
 - Do not broaden the domain.
@@ -148,11 +158,132 @@ rg "app.services.quota_usage_service" backend/app backend/tests
 - Do not mark a task complete without validation evidence.
 - If an AC cannot be satisfied, stop and record the blocker.
 - Do not preserve legacy behavior for convenience.
+- Do not bypass deletion through repointing, soft-disable, wrapper, alias, fallback, or re-export.
 
-## 16. References
+## 17. References
 
 - `backend/app/services/billing/quota_runtime.py` - canonical runtime target.
 """
+
+REMOVAL_SECTIONS = """
+## 11. Removal Classification Rules
+
+Classification must be deterministic:
+
+- `canonical-active`: item is referenced by first-party production code or is the canonical owner.
+- `external-active`: item is referenced by public docs, email templates, generated links, clients, or audit evidence.
+- `historical-facade`: item delegates to a canonical implementation only to preserve an old surface.
+- `dead`: item has zero references in production code, tests, docs, generated contracts, and known external surfaces.
+- `needs-user-decision`: ambiguity remains after required scans and must block deletion.
+
+## 12. Removal Audit Format
+
+Required audit table:
+
+| Item | Type | Classification | Consumers | Canonical replacement | Decision | Proof | Risk |
+|---|---|---|---|---|---|---|---|
+
+Allowed decisions:
+
+- `keep`
+- `delete`
+- `replace-consumer`
+- `needs-user-decision`
+
+Audit output path when applicable:
+
+- `_condamad/stories/remove-api-facade/route-consumption-audit.md`
+
+## 13. Canonical Ownership
+
+| Responsibility | Canonical owner | Non-canonical surfaces |
+|---|---|---|
+| Public AI generation | `/v1/chat/*` | `/v1/ai/*` |
+
+## 14. Delete-Only Rule
+
+Items classified as removable must be deleted, not repointed.
+
+Forbidden:
+
+- redirecting to the canonical endpoint
+- preserving a wrapper
+- adding a compatibility alias
+- keeping a deprecated route active
+- preserving the old path through re-export
+- replacing deletion with soft-disable behavior
+
+## 15. External Usage Blocker
+
+If an item is classified as `external-active`, it must not be deleted. The dev
+agent must stop or record an explicit user decision with external evidence and
+deletion risk.
+
+## 16. Reintroduction Guard
+
+The implementation must add or update an architecture guard that fails if the
+removed surface is reintroduced.
+
+The guard must check at least one deterministic source:
+
+- registered router prefixes
+- generated OpenAPI paths
+
+Required forbidden examples:
+
+- `/v1/ai`
+- `backend/app/api/v1/routers/public/ai.py`
+
+## 17. Generated Contract Check
+
+Required generated-contract evidence:
+
+- OpenAPI path absence
+- generated client/schema absence
+"""
+
+VALID_REMOVAL_STORY = (
+    VALID_STORY.replace(
+        "# Story test-story: Harden service imports",
+        "# Story remove-api-facade: Remove historical API facade",
+    )
+    .replace(
+        "Constrain service imports to the canonical billing namespace and prove that old imports are absent.",
+        "Remove the historical `/v1/ai/*` facade routes after deterministic classification and prove they cannot reappear.",
+    )
+    .replace("- Source type: audit", "- Source type: refactor")
+    .replace(
+        "- Reason for change: duplicate billing import paths create architecture drift.",
+        "- Reason for change: historical facade routes preserve a legacy API surface.",
+    )
+    .replace(
+        "- Domain: backend/app/services/billing",
+        "- Domain: backend/app/api/v1/routers/public",
+    )
+    .replace(
+        "- Operation type: converge",
+        "- Operation type: remove",
+    )
+    .replace(
+        "- Primary archetype: namespace-convergence",
+        "- Primary archetype: api-route-removal",
+    )
+    .replace(
+        "- Archetype reason: billing imports must converge on one canonical namespace.",
+        "- Archetype reason: the story removes historical public API route surfaces.",
+    )
+    .replace("- Deletion allowed: no", "- Deletion allowed: yes")
+    .replace(
+        "## 11. Files to Inspect First",
+        f"{REMOVAL_SECTIONS}\n## 18. Files to Inspect First",
+    )
+    .replace("## 12. Expected Files to Modify", "## 19. Expected Files to Modify")
+    .replace("## 13. Dependency Policy", "## 20. Dependency Policy")
+    .replace("## 14. Validation Plan", "## 21. Validation Plan")
+    .replace("## 15. Regression Risks", "## 22. Regression Risks")
+    .replace("## 16. Dev Agent Instructions", "## 23. Dev Agent Instructions")
+    .replace("## 17. References", "## 24. References")
+)
 
 
 class CondamadStoryValidateSelfTest(unittest.TestCase):
@@ -168,6 +299,10 @@ class CondamadStoryValidateSelfTest(unittest.TestCase):
     def test_valid_story_passes(self) -> None:
         """Une story complete passe le contrat."""
         self.assertEqual(validate_story(self.write_story(VALID_STORY)), [])
+
+    def test_valid_removal_story_passes(self) -> None:
+        """Une story de suppression complete applique le contrat Removal."""
+        self.assertEqual(validate_story(self.write_story(VALID_REMOVAL_STORY)), [])
 
     def test_ac_without_evidence_fails(self) -> None:
         """Un AC sans preuve de validation est refuse."""
@@ -204,6 +339,36 @@ class CondamadStoryValidateSelfTest(unittest.TestCase):
         self.assertTrue(
             any("AC2 has no concrete validation evidence" in error for error in errors)
         )
+
+    def test_evidence_profile_without_command_fails(self) -> None:
+        """Un profil de preuve seul ne suffit pas sans commande ou test concret."""
+        story = VALID_STORY.replace(
+            "`pytest -q backend/app/tests/unit/test_billing_imports.py` passes.",
+            "Evidence profile: `route_removed`",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any("AC2 has no concrete validation evidence" in error for error in errors)
+        )
+
+    def test_evidence_profile_with_command_passes(self) -> None:
+        """Un profil de preuve est accepte avec une commande concrete."""
+        story = VALID_STORY.replace(
+            "`pytest -q backend/app/tests/unit/test_billing_imports.py` passes.",
+            "Evidence profile: `route_removed`; `pytest -q backend/app/tests/unit/test_billing_imports.py` passes.",
+        )
+        self.assertEqual(validate_story(self.write_story(story)), [])
+
+    def test_legacy_guard_story_does_not_trigger_removal_contract(self) -> None:
+        """Une story guard mentionnant legacy sans cible de suppression reste non-removal."""
+        story = VALID_STORY.replace(
+            "Constrain service imports to the canonical billing namespace and prove that old imports are absent.",
+            "Add an architecture guard against legacy fallback reintroduction without changing runtime behavior.",
+        ).replace(
+            "- Primary archetype: namespace-convergence",
+            "- Primary archetype: test-guard-hardening",
+        )
+        self.assertEqual(validate_story(self.write_story(story)), [])
 
     def test_negative_cleanup_guardrail_is_allowed(self) -> None:
         """Un garde-fou negatif contenant cleanup ne declenche pas le scan vague."""
@@ -275,6 +440,120 @@ class CondamadStoryValidateSelfTest(unittest.TestCase):
             "- New dependencies: package-x\n- Justification: required because existing project dependencies cannot parse this format.",
         )
         self.assertEqual(validate_story(self.write_story(story)), [])
+
+    def test_removal_story_without_classification_rules_fails(self) -> None:
+        """Une suppression sans classification deterministe est refusee."""
+        story = VALID_REMOVAL_STORY.replace(
+            "## 11. Removal Classification Rules",
+            "## 11. Missing Removal Classification Rules",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "Removal story missing required section: Removal Classification Rules"
+                in error
+                for error in errors
+            )
+        )
+
+    def test_removal_story_without_audit_format_fails(self) -> None:
+        """Une suppression sans format d'audit strict est refusee."""
+        story = VALID_REMOVAL_STORY.replace(
+            "## 12. Removal Audit Format",
+            "## 12. Missing Removal Audit Format",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "Removal story missing required section: Removal Audit Format" in error
+                for error in errors
+            )
+        )
+
+    def test_removal_story_without_delete_only_rule_fails(self) -> None:
+        """Une suppression sans Delete-Only Rule est refusee."""
+        story = VALID_REMOVAL_STORY.replace(
+            "## 14. Delete-Only Rule",
+            "## 14. Missing Delete-Only Rule",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "Removal story missing required section: Delete-Only Rule" in error
+                for error in errors
+            )
+        )
+
+    def test_removal_story_without_canonical_ownership_fails(self) -> None:
+        """Une suppression sans proprietaire canonique est refusee."""
+        story = VALID_REMOVAL_STORY.replace(
+            "## 13. Canonical Ownership",
+            "## 13. Missing Canonical Ownership",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "Removal story missing required section: Canonical Ownership" in error
+                for error in errors
+            )
+        )
+
+    def test_removal_story_without_reintroduction_guard_fails(self) -> None:
+        """Une suppression No Legacy sans guard de reintroduction est refusee."""
+        story = VALID_REMOVAL_STORY.replace(
+            "## 16. Reintroduction Guard",
+            "## 16. Missing Reintroduction Guard",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "Removal story missing required section: Reintroduction Guard" in error
+                for error in errors
+            )
+        )
+
+    def test_non_generated_removal_can_skip_generated_contract_with_reason(
+        self,
+    ) -> None:
+        """Une suppression interne non exposee peut justifier generated contract N/A."""
+        story = (
+            VALID_REMOVAL_STORY.replace(
+                "- Primary archetype: api-route-removal",
+                "- Primary archetype: dead-code-removal",
+            )
+            .replace(
+                "- Archetype reason: the story removes historical public API route surfaces.",
+                "- Archetype reason: the story removes a dead internal helper module.",
+            )
+            .replace(
+                "Required generated-contract evidence:\n\n- OpenAPI path absence\n- generated client/schema absence",
+                "- Generated contract check: not applicable\n- Reason: no generated API, route manifest, schema, public contract, or generated client is affected.",
+            )
+        )
+        self.assertEqual(validate_story(self.write_story(story)), [])
+
+    def test_api_removal_cannot_skip_generated_contract_check(self) -> None:
+        """Une suppression API doit garder une preuve OpenAPI/generated active."""
+        story = VALID_REMOVAL_STORY.replace(
+            "Required generated-contract evidence:\n\n- OpenAPI path absence\n- generated client/schema absence",
+            "- Generated contract check: not applicable\n- Reason: no generated API, route manifest, schema, public contract, or generated client is affected.",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("cannot be not applicable" in error for error in errors))
+
+    def test_generated_contract_not_applicable_requires_reason(self) -> None:
+        """Un N/A generated contract hors API doit expliquer pourquoi."""
+        story = VALID_REMOVAL_STORY.replace(
+            "- Primary archetype: api-route-removal",
+            "- Primary archetype: dead-code-removal",
+        ).replace(
+            "Required generated-contract evidence:\n\n- OpenAPI path absence\n- generated client/schema absence",
+            "- Generated contract check: not applicable",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any("not applicable must include a reason" in error for error in errors)
+        )
 
     def test_extract_acceptance_criteria(self) -> None:
         """L'extracteur retourne les AC avec leur preuve."""

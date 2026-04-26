@@ -28,6 +28,21 @@ Select exactly one domain and make the boundary visible:
 - explicit non-goals;
 - forbidden adjacent domains.
 
+## Step 2b - Select Story Archetype
+
+Select exactly one primary archetype from
+`references/story-archetypes.md`.
+
+The archetype determines mandatory sections, AC patterns, validation evidence,
+and anti-drift rules.
+
+If the operation type is `remove`, or the story mentions route/module/field/API
+deletion, legacy facade removal, compatibility surface removal, or dead-code
+removal, load and apply `references/removal-story-contract.md`.
+
+Do not write the final story until the archetype-specific contract has been
+applied.
+
 ## Step 3 - Evidence Pass
 
 Collect enough evidence to avoid invented repo facts:
@@ -52,6 +67,7 @@ The draft must include:
 - objective;
 - trigger/source;
 - domain boundary;
+- operation contract;
 - current state evidence;
 - target state;
 - AC table with validation evidence;
@@ -61,6 +77,7 @@ The draft must include:
 - files to inspect first;
 - expected files to modify;
 - dependency policy;
+- removal contract when the operation or archetype requires it;
 - validation plan;
 - regression risks;
 - dev agent instructions.
@@ -87,6 +104,24 @@ python -B scripts/condamad_story_lint.py <story_path>
 
 Fix the story until both pass. A story must not be marked `ready-for-dev` while
 the validator fails.
+
+## Step 6b - Adversarial Story Review
+
+Before finalizing, review the generated story as if you were the dev agent
+trying to misinterpret it.
+
+Check:
+
+- Can an agent choose between two valid implementation paths?
+- Can an agent keep a legacy path and still claim success?
+- Can an agent skip a route, file, field, type, or import because the
+  classification is unclear?
+- Can an agent pass ACs with grep-only evidence while behavior remains?
+- Can an agent avoid deletion through repointing or soft-delete?
+- Can an agent create a new route, wrapper, alias, or fallback?
+- Can an agent mark `ready-for-dev` while user decision is needed?
+
+If yes, tighten the story before writing final output.
 
 ## Step 7 - Write Final Story
 

@@ -59,10 +59,16 @@ Read:
 - `workflow.md`
 - `references/story-authoring-principles.md`
 - `references/story-output-contract.md`
+- `references/story-archetypes.md`
 - `references/acceptance-criteria-contract.md`
 - `references/no-legacy-dry-contract.md`
 - `references/codex-story-optimization.md`
 - `references/evidence-and-validation-contract.md`
+- `references/evidence-profiles.md`
+
+When the selected archetype or operation is removal-related, also read:
+
+- `references/removal-story-contract.md`
 
 ## Output
 
@@ -83,11 +89,18 @@ Also use the input templates when helpful:
 
 ## Self-validation
 
-Run:
+From the skill directory:
 
 ```bash
 python -B scripts/condamad_story_validate.py <story_path>
 python -B scripts/condamad_story_lint.py <story_path>
+```
+
+From the repository root:
+
+```bash
+python -B .agents/skills/condamad-story-writer/scripts/condamad_story_validate.py <story_path>
+python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py <story_path>
 ```
 
 Fix the story until both commands pass.

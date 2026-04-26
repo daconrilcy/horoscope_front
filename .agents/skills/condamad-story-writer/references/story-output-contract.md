@@ -12,26 +12,39 @@ Status: ready-for-dev
 
 Only use `ready-for-dev` when the story passes `condamad_story_validate.py`.
 
-## Required Sections
+## Required Base Sections
 
-The story must include these sections:
+Every story must include these sections:
 
 1. Objective
 2. Trigger / Source
 3. Domain Boundary
-4. Current State Evidence
-5. Target State
-6. Acceptance Criteria
-7. Implementation Tasks
-8. Mandatory Reuse / DRY Constraints
-9. No Legacy / Forbidden Paths
-10. Files to Inspect First
-11. Expected Files to Modify
-12. Dependency Policy
-13. Validation Plan
-14. Regression Risks
-15. Dev Agent Instructions
-16. References
+4. Operation Contract
+5. Current State Evidence
+6. Target State
+7. Acceptance Criteria
+8. Implementation Tasks
+9. Mandatory Reuse / DRY Constraints
+10. No Legacy / Forbidden Paths
+11. Files to Inspect First
+12. Expected Files to Modify
+13. Dependency Policy
+14. Validation Plan
+15. Regression Risks
+16. Dev Agent Instructions
+17. References
+
+## Conditional Removal Sections
+
+Removal stories must also include:
+
+1. Removal Classification Rules
+2. Removal Audit Format
+3. Canonical Ownership
+4. Delete-Only Rule
+5. External Usage Blocker
+6. Reintroduction Guard
+7. Generated Contract Check
 
 Numbering is recommended. The validator accepts equivalent markdown headings
 with the same titles.
@@ -45,6 +58,7 @@ Contract headings and required markers must remain in English:
 - `Current State Evidence`
 - `Acceptance Criteria`
 - `Validation evidence required`
+- `Operation Contract`
 - `Dependency Policy`
 
 Business content may be written in French when useful, but the structural
@@ -58,6 +72,22 @@ The Domain Boundary section must include:
 - `In scope:`;
 - `Out of scope:`;
 - `Explicit non-goals:`.
+
+## Operation Contract
+
+The Operation Contract section must include:
+
+- `Operation type: create | update | move | remove | split | converge | guard | migrate`
+- `Primary archetype: <supported archetype>`
+- `Archetype reason: <why this archetype applies>`
+- `Behavior change allowed: yes | no`
+- `Deletion allowed: yes | no`
+- `Replacement allowed: yes | no`
+- `User decision required if: <condition>`
+
+The primary archetype must come from `references/story-archetypes.md` unless it
+is `custom`, in which case the story must explain why no supported archetype
+fits and add explicit validation rules.
 
 ## Expected File Fields
 

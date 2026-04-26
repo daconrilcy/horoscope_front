@@ -18,6 +18,7 @@ REQUIRED_SECTIONS = [
     "Objective",
     "Trigger / Source",
     "Domain Boundary",
+    "Operation Contract",
     "Current State Evidence",
     "Target State",
     "Acceptance Criteria",
@@ -32,6 +33,94 @@ REQUIRED_SECTIONS = [
     "Dev Agent Instructions",
     "References",
 ]
+
+REMOVAL_REQUIRED_SECTIONS = [
+    "Removal Classification Rules",
+    "Removal Audit Format",
+    "Canonical Ownership",
+    "Delete-Only Rule",
+    "External Usage Blocker",
+    "Reintroduction Guard",
+    "Generated Contract Check",
+]
+
+SUPPORTED_ARCHETYPES = {
+    "api-route-removal",
+    "legacy-facade-removal",
+    "field-contract-removal",
+    "namespace-convergence",
+    "module-move",
+    "large-file-split",
+    "dead-code-removal",
+    "frontend-route-removal",
+    "test-guard-hardening",
+    "service-boundary-refactor",
+    "custom",
+}
+
+REMOVAL_ARCHETYPES = {
+    "api-route-removal",
+    "legacy-facade-removal",
+    "field-contract-removal",
+    "dead-code-removal",
+    "frontend-route-removal",
+}
+
+REMOVAL_STRONG_TRIGGERS = [
+    "remove",
+    "delete",
+    "removal",
+    "deletion",
+    "supprimer",
+    "suppression",
+    "éliminer",
+    "eliminer",
+    "retirer",
+]
+
+REMOVAL_WEAK_TRIGGERS = [
+    "legacy",
+    "historical",
+    "façade",
+    "facade",
+    "compat",
+]
+
+REMOVAL_TARGET_RE = re.compile(
+    r"\b(route|endpoint|field|module|file|type|ui|screen|path|surface)s?\b",
+    re.I,
+)
+
+GENERATED_CONTRACT_ARCHETYPES = {
+    "api-route-removal",
+    "legacy-facade-removal",
+    "field-contract-removal",
+    "frontend-route-removal",
+}
+
+ALLOWED_CLASSIFICATIONS = {
+    "canonical-active",
+    "external-active",
+    "historical-facade",
+    "dead",
+    "needs-user-decision",
+}
+
+REQUIRED_REMOVAL_DECISIONS = {
+    "keep",
+    "delete",
+    "replace-consumer",
+    "needs-user-decision",
+}
+
+EVIDENCE_PROFILES = {
+    "route_removed",
+    "python_module_removed",
+    "frontend_route_removed",
+    "no_legacy_contract",
+    "field_removed",
+    "namespace_converged",
+}
 
 VAGUE_TERMS = [
     "improve",
@@ -57,6 +146,7 @@ VAGUE_NEGATIVE_CONTEXT_RE = re.compile(
 
 COMMAND_PATTERNS = [
     r"\bpytest\b",
+    r"\bpython\b",
     r"\bruff\b",
     r"\brg\b",
     r"\bnpm\b",
@@ -230,11 +320,17 @@ def has_concrete_ac_evidence(evidence: str) -> bool:
         return False
     if any(re.fullmatch(pattern, evidence, re.I) for pattern in WEAK_EVIDENCE_PATTERNS):
         return False
-    if any(re.search(pattern, evidence) for pattern in COMMAND_PATTERNS):
-        return True
-    if TEST_PATH_RE.search(evidence):
-        return True
-    return bool(MANUAL_CHECK_RE.search(evidence))
+    profile_match = re.search(r"Evidence profile:\s*`?([A-Za-z0-9_-]+)`?", evidence)
+    has_known_profile = bool(
+        profile_match and profile_match.group(1) in EVIDENCE_PROFILES
+    )
+    has_command = any(re.search(pattern, evidence) for pattern in COMMAND_PATTERNS)
+    has_test_path = bool(TEST_PATH_RE.search(evidence))
+    has_manual_check = bool(MANUAL_CHECK_RE.search(evidence))
+
+    if has_known_profile:
+        return has_command or has_test_path or has_manual_check
+    return has_command or has_test_path or has_manual_check
 
 
 def validate_acceptance_criteria(text: str) -> list[str]:
@@ -340,6 +436,295 @@ def validate_domain_boundary(text: str) -> list[str]:
     if not non_goals_match or "..." in non_goals_match.group("body"):
         errors.append("Domain Boundary must include concrete explicit non-goals")
     return errors
+
+
+def marker_value(section: str, marker: str) -> str:
+    """Retourne la valeur d'un marker de liste markdown."""
+    match = re.search(
+        rf"^\s*-\s*{re.escape(marker)}:\s*(?P<value>.+?)\s*$",
+        section,
+        re.I | re.M,
+    )
+    return match.group("value").strip() if match else ""
+
+
+def validate_operation_contract(text: str) -> list[str]:
+    """Valide le contrat operationnel et l'archetype primaire."""
+    errors: list[str] = []
+    section = get_section(text, "Operation Contract")
+    if not section:
+        return ["Operation Contract section is empty"]
+
+    required_markers = [
+        "Operation type",
+        "Primary archetype",
+        "Archetype reason",
+        "Behavior change allowed",
+        "Deletion allowed",
+        "Replacement allowed",
+        "User decision required if",
+    ]
+    for marker in required_markers:
+        value = marker_value(section, marker)
+        if not value or value in {"...", "<condition>", "<why this archetype applies>"}:
+            errors.append(f"Operation Contract missing concrete marker: {marker}")
+
+    operation_type = marker_value(section, "Operation type").casefold()
+    if operation_type and operation_type not in {
+        "create",
+        "update",
+        "move",
+        "remove",
+        "split",
+        "converge",
+        "guard",
+        "migrate",
+    }:
+        errors.append(f"Unsupported Operation type: {operation_type}")
+
+    archetype = marker_value(section, "Primary archetype").casefold()
+    if archetype and archetype not in SUPPORTED_ARCHETYPES:
+        errors.append(f"Unsupported Primary archetype: {archetype}")
+    if archetype == "custom" and "Additional validation rules:" not in section:
+        errors.append(
+            "Custom archetype must include 'Additional validation rules:' in Operation Contract"
+        )
+
+    for marker in [
+        "Behavior change allowed",
+        "Deletion allowed",
+        "Replacement allowed",
+    ]:
+        value = marker_value(section, marker).casefold()
+        if value and value not in {"yes", "no"}:
+            errors.append(f"Operation Contract marker must be yes or no: {marker}")
+
+    if is_removal_story(text):
+        deletion_allowed = marker_value(section, "Deletion allowed").casefold()
+        if deletion_allowed != "yes":
+            errors.append("Removal story must set 'Deletion allowed: yes'")
+        if archetype not in REMOVAL_ARCHETYPES:
+            errors.append(
+                "Removal story must use a removal Primary archetype from story-archetypes.md"
+            )
+
+    return errors
+
+
+def is_removal_story(text: str) -> bool:
+    """Detecte si une story doit appliquer le contrat Removal."""
+    operation = get_section(text, "Operation Contract")
+    operation_type = marker_value(operation, "Operation type").casefold()
+    archetype = marker_value(operation, "Primary archetype").casefold()
+    if operation_type == "remove" or archetype in REMOVAL_ARCHETYPES:
+        return True
+
+    first_heading = re.search(r"^#\s+(.+)$", text, re.M)
+    signal_parts = [
+        first_heading.group(1) if first_heading else "",
+        get_section(text, "Objective"),
+        get_section(text, "Trigger / Source"),
+        get_section(text, "Acceptance Criteria"),
+    ]
+    signal_text = "\n".join(signal_parts).casefold()
+    has_strong_removal = any(
+        contains_trigger(signal_text, trigger) for trigger in REMOVAL_STRONG_TRIGGERS
+    )
+    return has_strong_removal or has_weak_removal_signal(signal_text)
+
+
+def contains_trigger(text: str, trigger: str) -> bool:
+    """Detecte un trigger comme terme distinct, pas comme sous-chaine."""
+    return bool(re.search(rf"(?<![\w-]){re.escape(trigger)}(?![\w-])", text, re.I))
+
+
+def has_weak_removal_signal(text: str) -> bool:
+    """Detecte legacy/compat avec une cible removal dans le meme segment."""
+    segments = re.split(r"[\n.;:]+", text)
+    return any(
+        any(contains_trigger(segment, trigger) for trigger in REMOVAL_WEAK_TRIGGERS)
+        and bool(REMOVAL_TARGET_RE.search(segment))
+        for segment in segments
+    )
+
+
+def validate_removal_contract(text: str) -> list[str]:
+    """Valide les sections specialisees des stories de suppression."""
+    if not is_removal_story(text):
+        return []
+
+    errors: list[str] = []
+    for section in REMOVAL_REQUIRED_SECTIONS:
+        if not get_section(text, section):
+            errors.append(f"Removal story missing required section: {section}")
+
+    errors.extend(validate_removal_classification_rules(text))
+    errors.extend(validate_removal_audit_format(text))
+    errors.extend(validate_canonical_ownership(text))
+    errors.extend(validate_delete_only_rule(text))
+    errors.extend(validate_external_usage_blocker(text))
+    errors.extend(validate_reintroduction_guard(text))
+    errors.extend(validate_generated_contract_check(text))
+    return errors
+
+
+def validate_removal_classification_rules(text: str) -> list[str]:
+    """Controle les classifications deterministes obligatoires."""
+    section = get_section(text, "Removal Classification Rules")
+    if not section:
+        return []
+    errors: list[str] = []
+    for value in ALLOWED_CLASSIFICATIONS:
+        if f"`{value}`" not in section and value not in section:
+            errors.append(
+                f"Removal Classification Rules missing classification: {value}"
+            )
+    if "not applicable" in section.casefold():
+        errors.append(
+            "Removal story cannot mark Removal Classification Rules not applicable"
+        )
+    return errors
+
+
+def validate_removal_audit_format(text: str) -> list[str]:
+    """Controle le format d'audit removal impose par la story."""
+    section = get_section(text, "Removal Audit Format")
+    if not section:
+        return []
+    if "not applicable" in section.casefold():
+        return ["Removal story cannot mark Removal Audit Format not applicable"]
+    errors: list[str] = []
+    required_columns = [
+        "Item",
+        "Type",
+        "Classification",
+        "Consumers",
+        "Canonical replacement",
+        "Decision",
+        "Proof",
+        "Risk",
+    ]
+    table = find_table_with_columns(section, required_columns)
+    if table is None:
+        errors.append("Removal Audit Format must include the required audit table")
+    for decision in REQUIRED_REMOVAL_DECISIONS:
+        if f"`{decision}`" not in section and decision not in section:
+            errors.append(f"Removal Audit Format missing allowed decision: {decision}")
+    if (
+        "route-consumption-audit.md" not in section
+        and "audit" not in section.casefold()
+    ):
+        errors.append("Removal Audit Format must require a persisted audit artifact")
+    return errors
+
+
+def find_table_with_columns(
+    text: str, required_columns: list[str]
+) -> MarkdownTable | None:
+    """Retourne une table markdown contenant toutes les colonnes requises."""
+    required = {normalize(column) for column in required_columns}
+    for table in parse_tables(text):
+        headers = {normalize(header) for header in table.headers}
+        if required.issubset(headers):
+            return table
+    return None
+
+
+def validate_canonical_ownership(text: str) -> list[str]:
+    """Controle la table de proprietaires canoniques."""
+    section = get_section(text, "Canonical Ownership")
+    if not section:
+        return []
+    if "not applicable" in section.casefold():
+        return ["Removal story cannot mark Canonical Ownership not applicable"]
+    if (
+        find_table_with_columns(
+            section, ["Responsibility", "Canonical owner", "Non-canonical surfaces"]
+        )
+        is None
+    ):
+        return ["Canonical Ownership must include the required ownership table"]
+    return []
+
+
+def validate_delete_only_rule(text: str) -> list[str]:
+    """Controle que la suppression ne peut pas etre remplacee par un detour."""
+    section = get_section(text, "Delete-Only Rule")
+    if not section:
+        return []
+    lowered = section.casefold()
+    if "not applicable" in lowered:
+        return ["Removal story cannot mark Delete-Only Rule not applicable"]
+    required_fragments = ["deleted, not repointed", "wrapper", "alias", "re-export"]
+    return [
+        f"Delete-Only Rule missing forbidden route: {fragment}"
+        for fragment in required_fragments
+        if fragment not in lowered
+    ]
+
+
+def validate_external_usage_blocker(text: str) -> list[str]:
+    """Controle le blocker pour usage externe actif."""
+    section = get_section(text, "External Usage Blocker")
+    if not section:
+        return []
+    lowered = section.casefold()
+    if "not applicable" in lowered:
+        return ["Removal story cannot mark External Usage Blocker not applicable"]
+    required = ["external-active", "must not be deleted", "user decision"]
+    return [
+        f"External Usage Blocker missing requirement: {fragment}"
+        for fragment in required
+        if fragment not in lowered
+    ]
+
+
+def validate_reintroduction_guard(text: str) -> list[str]:
+    """Controle le garde-fou de reintroduction."""
+    section = get_section(text, "Reintroduction Guard")
+    if not section:
+        return []
+    lowered = section.casefold()
+    if "not applicable" in lowered:
+        return ["Removal story cannot mark Reintroduction Guard not applicable"]
+    if "architecture guard" not in lowered or "reintroduced" not in lowered:
+        return [
+            "Reintroduction Guard must require an architecture guard against reintroduction"
+        ]
+    deterministic_sources = [
+        "registered router prefixes",
+        "importable python modules",
+        "frontend route table",
+        "generated openapi paths",
+        "forbidden symbols",
+    ]
+    if not any(source in lowered for source in deterministic_sources):
+        return ["Reintroduction Guard must name at least one deterministic source"]
+    return []
+
+
+def validate_generated_contract_check(text: str) -> list[str]:
+    """Controle les preuves de contrats generes pour les surfaces API."""
+    section = get_section(text, "Generated Contract Check")
+    if not section:
+        return []
+    archetype = marker_value(
+        get_section(text, "Operation Contract"), "Primary archetype"
+    ).casefold()
+    lowered = section.casefold()
+    if "not applicable" in lowered:
+        if archetype in GENERATED_CONTRACT_ARCHETYPES:
+            return [
+                "Generated Contract Check cannot be not applicable for API/frontend/field removal stories"
+            ]
+        if "reason:" not in lowered and "justification:" not in lowered:
+            return ["Generated Contract Check not applicable must include a reason"]
+        return []
+    if "openapi" not in lowered and "generated" not in lowered:
+        return [
+            "Generated Contract Check must require OpenAPI or generated artifact absence"
+        ]
+    return []
 
 
 def validate_expected_files(text: str) -> list[str]:
@@ -506,8 +891,10 @@ def validate_story(path: Path) -> list[str]:
         errors.append(f"Missing required section: {missing}")
     errors.extend(validate_current_state_evidence(text))
     errors.extend(validate_domain_boundary(text))
+    errors.extend(validate_operation_contract(text))
     errors.extend(validate_acceptance_criteria(text))
     errors.extend(validate_tasks(text))
+    errors.extend(validate_removal_contract(text))
     errors.extend(validate_no_legacy(text))
     errors.extend(validate_dev_agent_instructions(text))
     errors.extend(validate_expected_files(text))
