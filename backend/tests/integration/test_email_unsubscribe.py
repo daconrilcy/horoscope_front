@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.main import app
-from app.services.email_service import EmailService
+from app.services.email.service import EmailService
 from tests.integration.app_db import open_app_db_session
 
 client = TestClient(app)
@@ -152,9 +152,9 @@ async def test_email_service_sends_welcome_even_if_unsubscribed(
         async def send(self, *args, **kwargs):
             return "msg-123"
 
-    monkeypatch.setattr("app.services.email_service.get_email_provider", lambda: MockProvider())
+    monkeypatch.setattr("app.services.email.service.get_email_provider", lambda: MockProvider())
     monkeypatch.setattr(
-        "app.services.email_service.EmailService._render_template", lambda *args, **kwargs: "html"
+        "app.services.email.service.EmailService._render_template", lambda *args, **kwargs: "html"
     )
     monkeypatch.setenv("ENABLE_EMAIL", "true")
 

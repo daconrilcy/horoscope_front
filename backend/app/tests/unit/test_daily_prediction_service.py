@@ -16,7 +16,7 @@ from app.services.daily_prediction_service import (
     DailyPredictionService,
     ServiceResult,
 )
-from app.services.daily_prediction_types import (
+from app.services.prediction.types import (
     ComputeMode,
     DailyPredictionServiceError,
 )
@@ -552,7 +552,9 @@ def test_relative_enrichment_preserves_absolute_snapshot_fields(service, db):
 def test_daily_prediction_still_returns_snapshot_when_baseline_is_missing(service, db):
     res_path = "app.services.prediction.request_resolver"
     reuse_path = "app.services.prediction.run_reuse_policy"
-    relative_repo_path = "app.services.relative_scoring_service.UserPredictionBaselineRepository"
+    relative_repo_path = (
+        "app.services.prediction.relative_scoring_service.UserPredictionBaselineRepository"
+    )
 
     with (
         patch(f"{res_path}.UserBirthProfileRepository") as mock_profile_repo,

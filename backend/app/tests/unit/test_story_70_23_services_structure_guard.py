@@ -7,24 +7,16 @@ from pathlib import Path
 SERVICES_ROOT_ALLOWLIST = {
     "__init__.py",
     "auth_service.py",
-    "chart_json_builder.py",
-    "chart_result_service.py",
     "cross_tool_report.py",
     "current_context.py",
     "daily_prediction_service.py",
-    "daily_prediction_types.py",
     "disclaimer_registry.py",
-    "email_provider.py",
-    "email_service.py",
     "feature_flag_service.py",
     "feature_registry_consistency_validator.py",
     "geocoding_service.py",
     "persona_config_service.py",
     "privacy_service.py",
-    "quota_usage_service.py",
-    "quota_window_resolver.py",
     "reference_data_service.py",
-    "relative_scoring_service.py",
 }
 
 REMOVED_ROOT_SERVICE_FILES = {
@@ -40,10 +32,15 @@ REMOVED_ROOT_SERVICE_FILES = {
     "b2b_entitlement_repair_service.py",
     "b2b_reconciliation_service.py",
     "billing_service.py",
+    "chart_json_builder.py",
+    "chart_result_service.py",
     "consultation_catalogue_service.py",
     "consultation_fallback_service.py",
     "consultation_precheck_service.py",
     "consultation_third_party_service.py",
+    "daily_prediction_types.py",
+    "email_provider.py",
+    "email_service.py",
     "enterprise_credentials_service.py",
     "enterprise_quota_usage_service.py",
     "incident_service.py",
@@ -57,6 +54,9 @@ REMOVED_ROOT_SERVICE_FILES = {
     "prediction_request_resolver.py",
     "prediction_run_reuse_policy.py",
     "pricing_experiment_service.py",
+    "quota_usage_service.py",
+    "quota_window_resolver.py",
+    "relative_scoring_service.py",
     "stripe_billing_profile_service.py",
     "stripe_checkout_service.py",
     "stripe_customer_portal_service.py",
@@ -173,3 +173,35 @@ def test_nominal_services_do_not_keep_story_70_23_legacy_bypasses() -> None:
         content = (_services_root() / relative_path).read_text(encoding="utf-8")
         for snippet in forbidden_snippets:
             assert snippet not in content, f"{snippet} found in {relative_path}"
+
+
+def test_daily_prediction_root_facade_stays_thin() -> None:
+    """La facade racine prediction ne doit plus reconstituer le sous-domaine localement."""
+    content = (_services_root() / "daily_prediction_service.py").read_text(encoding="utf-8")
+
+    assert (
+        "from app.services.prediction.service import DailyPredictionService, ServiceResult"
+        in content
+    )
+    assert "PredictionComputeRunner" not in content
+    assert "PredictionContextRepairService" not in content
+    assert "PredictionFallbackPolicy" not in content
+    assert "PredictionRequestResolver" not in content
+    assert "PredictionRunReusePolicy" not in content
+    assert "RelativeScoringService" not in content
+    assert "increment_counter" not in content
+    assert "from app.services.prediction.types import" in content
+
+
+def test_root_no_longer_hosts_flat_mono_domain_families() -> None:
+    """La racine ne doit plus conserver de familles mono-domaine a plat."""
+    services_root = _services_root()
+    forbidden_prefixes = ("email_", "quota_", "chart_")
+
+    offenders = sorted(
+        path.name
+        for path in services_root.iterdir()
+        if path.is_file() and path.name.startswith(forbidden_prefixes)
+    )
+
+    assert offenders == []

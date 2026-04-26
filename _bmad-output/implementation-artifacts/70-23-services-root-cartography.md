@@ -6,24 +6,16 @@
 | --- | --- | --- | --- | --- | --- |
 | `__init__.py` | Package racine neutre | Imports package `app.services` | conserver | `backend/app/services/__init__.py` | Aucun re-export; garde-fou `test_story_70_23_services_structure_guard.py`. |
 | `auth_service.py` | Authentification transverse | API auth, tests auth | conserver | racine | Service transverse hors sous-domaine metier unique. |
-| `chart_json_builder.py` | Transformation de charge utile astrologique | endpoints natal, tests chart | conserver | racine | Helper transverse consomme par natal et LLM. |
-| `chart_result_service.py` | Persistance / lecture de resultats de chart | endpoints natal, tests integration | conserver | racine | Service transverse sur resultat de chart, pas un sous-domaine complet. |
 | `cross_tool_report.py` | Rapport cross-tool dev | scripts/tests qualite | conserver | racine | Outil transverse non metier. |
 | `current_context.py` | Contexte courant reutilisable | natal LLM, chat, guidance | conserver | racine | Helper transverse partage multi-domaines. |
-| `daily_prediction_service.py` | Orchestration prediction quotidienne | API prediction, QA, jobs | conserver | racine | Facade applicative transverse qui delegue au sous-package `prediction/`. |
-| `daily_prediction_types.py` | DTO / erreurs prediction | `daily_prediction_service`, API/tests | conserver | racine | Contrat transverse du service prediction. |
+| `daily_prediction_service.py` | Entree publique stable prediction | API prediction, QA, jobs, helpers natals | conserver | racine | Facade mince ne retenant que le contrat public (`DailyPredictionService`, `ServiceResult`, `ComputeMode`) ; la logique prediction vit desormais dans `backend/app/services/prediction/service.py`. |
 | `disclaimer_registry.py` | Registre de disclaimers | LLM/natal/API | conserver | racine | Transverse multi-flux. |
-| `email_provider.py` | Abstraction provider email | `email_service`, auth | conserver | racine | Transverse infra applicative. |
-| `email_service.py` | Envoi email | auth, onboarding | conserver | racine | Service transverse. |
 | `feature_flag_service.py` | Feature flags | admin content, runtime | conserver | racine | Service transverse plateforme. |
 | `feature_registry_consistency_validator.py` | Validation transverse du registre features | CI, startup/tests | conserver | racine | Traverse entitlement + b2b; garde-fou structurel. |
 | `geocoding_service.py` | Geocoding transverse | user profile, natal | conserver | racine | Service reutilise par plusieurs sous-domaines. |
 | `persona_config_service.py` | Persona runtime | chat/guidance/admin | conserver | racine | Transverse LLM. |
 | `privacy_service.py` | Privacy / RGPD | endpoints privacy/support | conserver | racine | Transverse gouvernance. |
-| `quota_usage_service.py` | Consommation quotas canonique | entitlement, billing quota | conserver | racine | Noyau transverse multi-domaines. |
-| `quota_window_resolver.py` | Resolution fenetres de quotas | quota usage, tests | conserver | racine | Noyau transverse. |
 | `reference_data_service.py` | Seed / lecture reference data | prediction, admin reference | conserver | racine | Service transverse plateforme/reference. |
-| `relative_scoring_service.py` | Enrichissement relatif prediction | daily prediction/tests | conserver | racine | Service transverse prediction expose a la facade racine. |
 
 ## Fichiers deplaces vers un namespace canonique
 
@@ -49,6 +41,14 @@
 | `prediction_fallback_policy.py` | fallback prediction | `daily_prediction_service` | deplacer | `services/prediction/fallback_policy.py` | imports migres. |
 | `prediction_request_resolver.py` | resolution input prediction | `daily_prediction_service`, tests | deplacer | `services/prediction/request_resolver.py` | imports / patch targets migres. |
 | `prediction_run_reuse_policy.py` | reuse prediction | `daily_prediction_service`, tests | deplacer | `services/prediction/run_reuse_policy.py` | imports migres. |
+| `relative_scoring_service.py` | enrichissement relatif prediction | `daily_prediction_service`, tests integration prediction | deplacer | `services/prediction/relative_scoring_service.py` | imports et patch targets migres vers `app.services.prediction.relative_scoring_service`. |
+| `daily_prediction_types.py` | DTO / erreurs prediction | `daily_prediction_service`, API/tests, jobs | deplacer | `services/prediction/types.py` | imports migres vers `app.services.prediction.types` ; la facade racine `daily_prediction_service.py` reste contractuelle. |
+| `email_service.py` | Envoi email | auth, onboarding, tests email | deplacer | `services/email/service.py` | imports et patch targets migres vers `app.services.email.service`. |
+| `email_provider.py` | Selection du provider email | `services/email/service.py`, tests email | deplacer | `services/email/provider.py` | regroupement mono-domaine `email/`, sans facade racine legacy. |
+| `quota_usage_service.py` | Consommation quotas canonique | entitlement, billing quota, chat, admin users | deplacer | `services/quota/usage_service.py` | imports et patch targets migres vers `app.services.quota.usage_service`. |
+| `quota_window_resolver.py` | Resolution fenetres de quotas | quota usage, billing, B2B, tests quota | deplacer | `services/quota/window_resolver.py` | imports migres vers `app.services.quota.window_resolver`. |
+| `chart_result_service.py` | Persistance / lecture de resultats de chart | endpoints natal, LLM QA, tests chart | deplacer | `services/chart/result_service.py` | imports et patch targets migres vers `app.services.chart.result_service`. |
+| `chart_json_builder.py` | Transformation de charge utile astrologique | natal, LLM generation, tests chart | deplacer | `services/chart/json_builder.py` | imports migres vers `app.services.chart.json_builder`. |
 | `audit_service.py` | audit operationnel | admin/support/b2b/privacy/tests | deplacer | `services/ops/audit_service.py` | imports API/tests migres. |
 | `incident_service.py` | incidents support | support/help/tests | deplacer | `services/ops/incident_service.py` | imports migres. |
 | `ops_monitoring_service.py` | monitoring ops | ops monitoring/tests | deplacer | `services/ops/monitoring_service.py` | imports migres. |
@@ -79,7 +79,7 @@
 
 ## Denylist structurelle
 
-- anciens chemins plats supprimes : `billing_service.py`, `consultation_*`, `natal_*`, `prediction_*`, `b2b_*`, `enterprise_*`, `audit_service.py`, `incident_service.py`, `ops_monitoring_service.py`, `user_*`, `stripe_*`, `pricing_experiment_service.py`, `astro_context_builder.py`
+- anciens chemins plats supprimes : `billing_service.py`, `consultation_*`, `natal_*`, `prediction_*`, `daily_prediction_types.py`, `email_*`, `quota_*`, `chart_*`, `b2b_*`, `enterprise_*`, `audit_service.py`, `incident_service.py`, `ops_monitoring_service.py`, `user_*`, `stripe_*`, `pricing_experiment_service.py`, `astro_context_builder.py`
 - package interdit : `backend/app/services/tests/`
 - suffixes canoniques interdits dans `app.services` : `_legacy`, `_old`, `_tmp`, `_refacto`, `_new`, `_v2`
 - imports interdits depuis `app.services` : `scripts.*`, `scripts/`, reexports metier via `services/__init__.py`
@@ -87,6 +87,7 @@
 ## Recherches negatives executees
 
 - `rg -n "app\.services\.(astro_context_builder|audit_service|...|user_prediction_baseline_service)" backend`
+- `rg -n "app\.services\.(email_service|email_provider|quota_usage_service|quota_window_resolver|chart_result_service|chart_json_builder|daily_prediction_types)\b" backend`
 - `rg -n "app\.services\.tests|backend/app/services/tests|services/tests" backend`
 - `rg -n "scripts\.|scripts/" backend/app/services`
 

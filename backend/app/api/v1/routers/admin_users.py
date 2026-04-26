@@ -41,7 +41,7 @@ from app.integrations.stripe_client import get_stripe_client
 from app.services.billing.service import BillingService
 from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
-from app.services.quota_usage_service import QuotaUsageService
+from app.services.quota.usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
 

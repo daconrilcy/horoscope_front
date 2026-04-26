@@ -7,7 +7,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.entitlement.entitlement_types import QuotaDefinition
-from app.services.quota_usage_service import QuotaUsageService
+from app.services.quota.usage_service import QuotaUsageService
 from app.tests.integration.test_billing_api import _cleanup_tables, _register_and_get_access_token
 
 client = TestClient(app)

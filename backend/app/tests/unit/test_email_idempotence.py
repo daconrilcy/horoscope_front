@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.email_log import EmailLogModel
 from app.infra.db.models.user import UserModel
-from app.services.email_service import EmailService
+from app.services.email.service import EmailService
 
 
 @pytest.mark.asyncio

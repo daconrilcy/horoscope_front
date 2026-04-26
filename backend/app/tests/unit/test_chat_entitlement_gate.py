@@ -15,7 +15,7 @@ from app.services.entitlement.entitlement_types import (
     EffectiveFeatureAccess,
     UsageState,
 )
-from app.services.quota_usage_service import QuotaUsageService
+from app.services.quota.usage_service import QuotaUsageService
 
 
 def make_snapshot(**kwargs) -> EffectiveEntitlementsSnapshot:

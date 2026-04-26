@@ -154,7 +154,7 @@ def test_billing_inactive(mock_resolve, mock_hints):
     app.dependency_overrides.clear()
 
 
-@patch("app.services.quota_usage_service.QuotaUsageService.consume")
+@patch("app.services.quota.usage_service.QuotaUsageService.consume")
 @patch(
     "app.services.entitlement.effective_entitlement_resolver_service.EffectiveEntitlementResolverService.compute_upgrade_hints"
 )

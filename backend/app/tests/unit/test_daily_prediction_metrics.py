@@ -39,7 +39,7 @@ def _make_bundle(*, overall_tone: str | None = None, turning_points: list | None
     return bundle
 
 
-@patch("app.services.daily_prediction_service.increment_counter")
+@patch("app.services.prediction.service.increment_counter")
 def test_compute_counter_incremented(mock_increment, service, mock_deps, db_session):
     resolved_request = SimpleNamespace(
         user_id=1,
@@ -62,7 +62,7 @@ def test_compute_counter_incremented(mock_increment, service, mock_deps, db_sess
     mock_increment.assert_any_call("prediction.compute")
 
 
-@patch("app.services.daily_prediction_service.increment_counter")
+@patch("app.services.prediction.service.increment_counter")
 def test_reused_counter_incremented(mock_increment, service, db_session):
     resolved_request = SimpleNamespace(
         user_id=1,

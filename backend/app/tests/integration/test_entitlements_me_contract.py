@@ -19,7 +19,7 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.user import UserModel
 from app.main import app
 from app.services.billing.service import BillingService
-from app.services.quota_window_resolver import QuotaWindowResolver
+from app.services.quota.window_resolver import QuotaWindowResolver
 
 
 @pytest.fixture(autouse=True)

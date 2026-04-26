@@ -121,7 +121,7 @@ class PredictionRequestResolver:
         )
 
     def _resolve_profile(self, db: Session, user_id: int) -> UserBirthProfileModel:
-        from app.services.daily_prediction_types import DailyPredictionServiceError
+        from app.services.prediction.types import DailyPredictionServiceError
 
         profile = UserBirthProfileRepository(db).get_by_user_id(user_id)
         if profile is None:
@@ -129,7 +129,7 @@ class PredictionRequestResolver:
         return profile
 
     def _resolve_timezone(self, profile: UserBirthProfileModel, override: str | None) -> str:
-        from app.services.daily_prediction_types import DailyPredictionServiceError
+        from app.services.prediction.types import DailyPredictionServiceError
 
         tz_str = (
             self._coerce_timezone_value(override)
@@ -156,7 +156,7 @@ class PredictionRequestResolver:
         profile: UserBirthProfileModel,
         override: tuple[float, float] | None,
     ) -> tuple[float, float]:
-        from app.services.daily_prediction_types import DailyPredictionServiceError
+        from app.services.prediction.types import DailyPredictionServiceError
 
         if override:
             return override
@@ -174,7 +174,7 @@ class PredictionRequestResolver:
         return datetime_provider.today(ZoneInfo(tz_str))
 
     def _resolve_natal_chart(self, db: Session, user_id: int) -> dict[str, Any]:
-        from app.services.daily_prediction_types import DailyPredictionServiceError
+        from app.services.prediction.types import DailyPredictionServiceError
 
         chart = ChartResultRepository(db).get_latest_by_user_id(user_id)
         if chart is None:
@@ -205,7 +205,7 @@ class PredictionRequestResolver:
         return normalized
 
     def _resolve_reference_version_id(self, db: Session, version: str) -> int:
-        from app.services.daily_prediction_types import DailyPredictionServiceError
+        from app.services.prediction.types import DailyPredictionServiceError
 
         rv_id = db.scalar(
             select(ReferenceVersionModel.id).where(ReferenceVersionModel.version == version)
@@ -224,7 +224,7 @@ class PredictionRequestResolver:
     def _resolve_ruleset_id(
         self, db: Session, version: str, expected_reference_version_id: int | None = None
     ) -> int:
-        from app.services.daily_prediction_types import DailyPredictionServiceError
+        from app.services.prediction.types import DailyPredictionServiceError
 
         repo = PredictionRulesetRepository(db)
         ruleset = repo.get_ruleset(version)

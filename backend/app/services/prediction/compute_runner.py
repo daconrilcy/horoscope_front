@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from app.prediction.engine_orchestrator import EngineOrchestrator
-from app.services.daily_prediction_types import DailyPredictionServiceError
+from app.services.prediction.types import DailyPredictionServiceError
 
 if TYPE_CHECKING:
     from datetime import date

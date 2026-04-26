@@ -12,7 +12,7 @@ from app.services.entitlement.feature_scope_registry import (
     FeatureScope,
     require_feature_scope,
 )
-from app.services.quota_window_resolver import QuotaWindow, QuotaWindowResolver
+from app.services.quota.window_resolver import QuotaWindow, QuotaWindowResolver
 
 
 class QuotaExhaustedError(Exception):

@@ -22,7 +22,7 @@ from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
 from app.infra.observability.metrics import increment_counter
-from app.services.chart_result_service import ChartResultService, ChartResultServiceError
+from app.services.chart.result_service import ChartResultService, ChartResultServiceError
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 from app.services.user_profile.birth_profile_service import (

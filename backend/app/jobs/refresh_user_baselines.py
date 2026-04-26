@@ -48,7 +48,7 @@ def refresh_user_baseline(db: Session, user_id: int) -> None:
 
 def safe_refresh_user_baseline(db: Session, user_id: int) -> None:
     """Runs refresh on the provided session and never breaks the caller flow."""
-    from app.services.daily_prediction_types import DailyPredictionServiceError
+    from app.services.prediction.types import DailyPredictionServiceError
 
     try:
         refresh_user_baseline(db, user_id)

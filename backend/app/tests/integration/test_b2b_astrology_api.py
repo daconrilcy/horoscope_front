@@ -354,7 +354,7 @@ def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
         ReferenceDataService.seed_reference_version(db)
         from datetime import timezone
 
-        from app.services.quota_window_resolver import QuotaWindowResolver
+        from app.services.quota.window_resolver import QuotaWindowResolver
 
         authenticated = EnterpriseCredentialsService.authenticate_api_key(db, api_key=api_key)
         ref_dt = datetime.now(timezone.utc)

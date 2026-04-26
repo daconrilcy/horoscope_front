@@ -116,7 +116,7 @@ def test_check_and_consume_disabled(db_session):
 
 
 def test_check_and_consume_quota_exhausted(db_session):
-    from app.services.quota_usage_service import QuotaExhaustedError
+    from app.services.quota.usage_service import QuotaExhaustedError
 
     snapshot = make_snapshot()
 

@@ -40,7 +40,7 @@ from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
 from app.infra.observability.metrics import observe_duration
-from app.services.chart_json_builder import (
+from app.services.chart.json_builder import (
     build_chart_json,
     build_enriched_evidence_catalog,
 )

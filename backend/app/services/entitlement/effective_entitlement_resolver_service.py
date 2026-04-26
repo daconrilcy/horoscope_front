@@ -30,7 +30,7 @@ from app.services.entitlement.entitlement_types import (
     UsageState,
 )
 from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY, FeatureScope
-from app.services.quota_usage_service import QuotaUsageService
+from app.services.quota.usage_service import QuotaUsageService
 
 
 class EffectiveEntitlementResolverService:

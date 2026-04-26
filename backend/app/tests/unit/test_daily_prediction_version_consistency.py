@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.infra.db.repositories.prediction_ruleset_repository import RulesetData
 from app.services.daily_prediction_service import DailyPredictionService
-from app.services.daily_prediction_types import ComputeMode, DailyPredictionServiceError
+from app.services.prediction.types import ComputeMode, DailyPredictionServiceError
 
 
 @pytest.fixture

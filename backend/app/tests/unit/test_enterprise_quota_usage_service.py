@@ -23,7 +23,7 @@ from app.services.entitlement.feature_scope_registry import (
     InvalidQuotaScopeError,
     UnknownFeatureCodeError,
 )
-from app.services.quota_usage_service import QuotaExhaustedError
+from app.services.quota.usage_service import QuotaExhaustedError
 
 
 def _cleanup_tables() -> None:

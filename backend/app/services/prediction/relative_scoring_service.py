@@ -1,6 +1,7 @@
+"""Service canonique de scoring relatif des predictions quotidiennes."""
+
 from __future__ import annotations
 
-import logging
 from collections import defaultdict
 from dataclasses import replace
 from datetime import date, datetime
@@ -20,14 +21,8 @@ if TYPE_CHECKING:
     from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 
 
-logger = logging.getLogger(__name__)
-
-
 class RelativeScoringService:
-    """
-    Service layer for relative scoring orchestration.
-    AC4 Compliance: Decouples statistical logic from daily prediction service.
-    """
+    """Orchestre l enrichissement relatif d un snapshot de prediction."""
 
     def __init__(
         self,
@@ -40,16 +35,10 @@ class RelativeScoringService:
         db: Session,
         snapshot: PersistedPredictionSnapshot,
     ) -> PersistedPredictionSnapshot:
-        """
-        Enriches a prediction snapshot with V3 relative scores.
-        """
-        # Map of category_code -> {granularity_type: baseline}
+        """Enrichit un snapshot avec les scores relatifs V3 disponibles."""
         grouped_baselines = self._get_grouped_baselines(db, snapshot)
-
-        raw_scores = {s.category_code: s.raw_score for s in snapshot.category_scores}
-
+        raw_scores = {score.category_code: score.raw_score for score in snapshot.category_scores}
         relative_scores = self.calculator.compute_all(raw_scores, grouped_baselines)
-
         return replace(snapshot, relative_scores=relative_scores)
 
     def _get_grouped_baselines(
@@ -57,10 +46,10 @@ class RelativeScoringService:
         db: Session,
         snapshot: PersistedPredictionSnapshot,
     ) -> dict[str, dict[str, PersistedUserBaseline]]:
+        """Recupere les baselines compatibles par categorie et granularite."""
         repo = UserPredictionBaselineRepository(db)
         results: dict[str, dict[str, PersistedUserBaseline]] = defaultdict(dict)
 
-        # 1. DAY level
         day_baselines = repo.get_latest_baselines_for_user(
             user_id=snapshot.user_id,
             reference_version_id=snapshot.reference_version_id,
@@ -70,10 +59,9 @@ class RelativeScoringService:
             as_of_date=snapshot.local_date,
             granularity_type=V3Granularity.DAY,
         )
-        for b in day_baselines:
-            results[b.category_code][V3Granularity.DAY.value] = b
+        for baseline in day_baselines:
+            results[baseline.category_code][V3Granularity.DAY.value] = baseline
 
-        # 2. SEASON level
         season = self._get_season(snapshot.local_date)
         season_baselines = repo.get_latest_baselines_for_user(
             user_id=snapshot.user_id,
@@ -84,16 +72,11 @@ class RelativeScoringService:
             as_of_date=snapshot.local_date,
             granularity_type=V3Granularity.SEASON,
         )
-        for b in season_baselines:
-            if b.granularity_value == season:
-                results[b.category_code][V3Granularity.SEASON.value] = b
+        for baseline in season_baselines:
+            if baseline.granularity_value == season:
+                results[baseline.category_code][V3Granularity.SEASON.value] = baseline
 
-        # 3. SLOT level (We use current time to find the active slot)
-        now_local = (
-            datetime_provider.now()
-        )  # This is a bit weak, should ideally use request context
-        # But for snapshots, we might look for common slots
-        current_slot = self._get_time_slot(now_local)
+        current_slot = self._get_time_slot(datetime_provider.now())
         slot_baselines = repo.get_latest_baselines_for_user(
             user_id=snapshot.user_id,
             reference_version_id=snapshot.reference_version_id,
@@ -103,13 +86,14 @@ class RelativeScoringService:
             as_of_date=snapshot.local_date,
             granularity_type=V3Granularity.SLOT,
         )
-        for b in slot_baselines:
-            if b.granularity_value == current_slot:
-                results[b.category_code][V3Granularity.SLOT.value] = b
+        for baseline in slot_baselines:
+            if baseline.granularity_value == current_slot:
+                results[baseline.category_code][V3Granularity.SLOT.value] = baseline
 
         return results
 
     def _get_season(self, dt: date) -> str:
+        """Derive la saison metier a partir d une date locale."""
         month = dt.month
         if month in (12, 1, 2):
             return "winter"
@@ -120,6 +104,7 @@ class RelativeScoringService:
         return "autumn"
 
     def _get_time_slot(self, dt: datetime) -> str:
+        """Derive le slot horaire metier utilise par les baselines."""
         hour = dt.hour
         if 5 <= hour < 12:
             return "morning"

@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from app.services.quota_window_resolver import QuotaWindowResolver
+from app.services.quota.window_resolver import QuotaWindowResolver
 
 UTC = timezone.utc
 

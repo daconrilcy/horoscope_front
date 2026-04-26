@@ -15,7 +15,7 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.services.billing.models import CurrentQuotaData
 from app.services.entitlement.entitlement_types import QuotaDefinition
-from app.services.quota_usage_service import QuotaUsageService
+from app.services.quota.usage_service import QuotaUsageService
 
 
 def resolve_current_quota(

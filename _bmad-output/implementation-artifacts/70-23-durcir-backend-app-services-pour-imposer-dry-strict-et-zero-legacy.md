@@ -270,6 +270,130 @@ En revanche, il est interdit de conserver la situation actuelle "a plat + except
     - pas de coexistence entre deux noms pour la meme responsabilite.  
     Des noms comme `billing_service_v2.py`, `new_billing_service.py` ou `billing_refacto.py` sont interdits.
 
+19. **AC19 - Convergence complete du sous-domaine `prediction` hors racine**
+   La story ne peut pas etre consideree terminee tant que le sous-domaine `prediction` reste partage entre la racine `backend/app/services/` et `backend/app/services/prediction/` sans justification stricte.
+   En particulier :
+   - `daily_prediction_service.py` ne peut rester a la racine que comme facade applicative mince ;
+   - toute orchestration metier `prediction` (single-flight, logique de recompute, politique de fallback, contexte de repair, enrichissement, selection de composants internes, logging/metrics specifiques prediction) doit vivre dans `services/prediction/` ;
+   - tout helper ou service purement specifique a prediction doit etre deplace sous `services/prediction/` plutot que conserve a la racine.
+   Si un fichier racine conserve plus qu un role de facade, il doit etre deplace ou scinde.
+
+20. **AC20 - Justification opposable des survivants de la racine**
+   Pour chaque fichier conserve a la racine `backend/app/services/`, la story doit fournir une preuve explicite qu il est reellement transverse.
+   Cette preuve doit inclure au minimum :
+   - au moins deux consommateurs nominaux appartenant a des domaines distincts ;
+   - l absence de dependance dominante a un seul sous-package metier ;
+   - la raison pour laquelle un rattachement a un namespace existant (`prediction/`, `natal/`, `ops/`, etc.) serait moins coherent.
+   Une simple reutilisation par des tests ne constitue pas une justification de transversalite.
+
+21. **AC21 - Interdiction pour la racine de reconstituer un sous-domaine par imports internes**
+   Un fichier Python conserve a la racine `backend/app/services/` ne doit pas reconstituer a lui seul un sous-domaine en important plusieurs modules internes d un meme package metier.
+   Sont interdits :
+   - une facade racine qui importe plusieurs composants `app.services.prediction.*` puis conserve l orchestration complete du flux ;
+   - un helper racine qui ne sert qu un seul domaine et depend essentiellement de ses DTO, repositories ou calculateurs ;
+   - une conservation a la racine motivee uniquement par l inertie des patch targets historiques.
+   Une facade racine autorisee doit se limiter a un role d entree stable, de delegation et de contrat public minimal.
+
+22. **AC22 - Garde-fous specifiques sur la frontiere racine vs sous-packages**
+   Les tests structurels de la story doivent etre etendus pour echouer si :
+   - un fichier autorise a la racine importe plusieurs modules d un meme sous-package metier, hors cas explicitement documente ;
+   - un service racine marque comme facade contient encore des primitives d orchestration metier du sous-domaine ;
+   - un service conserve a la racine n a pas de justification de transversalite documentee dans la cartographie ;
+   - un module specifique a `prediction` est reintroduit a la racine alors qu un namespace `services/prediction/` existe deja.
+   Les garde-fous doivent couvrir au minimum `daily_prediction_service.py` et tout helper conserve a la racine au nom du sous-domaine prediction.
+
+23. **AC23 - Aucun binome ou micro-famille mono-domaine ne reste eclate a la racine**
+   La racine `backend/app/services/` ne doit plus conserver plusieurs fichiers appartenant clairement au meme sous-domaine metier ou technique.
+   Sont explicitement vises :
+   - `email_service.py` + `email_provider.py` ;
+   - `quota_usage_service.py` + `quota_window_resolver.py` ;
+   - `chart_result_service.py` + `chart_json_builder.py` ;
+   - `daily_prediction_service.py` + `daily_prediction_types.py`.
+   Chaque famille doit etre soit regroupee dans un sous-package canonique unique, soit justifiee comme facade publique minimale sans logique metier residuelle.
+
+24. **AC24 - Le sous-domaine `email` possede un namespace canonique unique**
+   Les composants email de production doivent etre regroupes sous un chemin canonique unique, par exemple `backend/app/services/email/`.
+   Au minimum, `email_service.py` et `email_provider.py` doivent etre deplaces ou restructures sous ce namespace.
+   Le runtime nominal ne doit plus exposer deux fichiers racine separes pour le meme sous-domaine email.
+
+25. **AC25 - Le sous-domaine `quota` possede un namespace canonique unique**
+   Les composants de calcul et de consommation des quotas doivent etre regroupes sous un chemin canonique unique, par exemple `backend/app/services/quota/` ou un sous-namespace existant strictement meilleur.
+   Au minimum, `quota_usage_service.py` et `quota_window_resolver.py` doivent etre rattaches au meme sous-package.
+   La logique de fenetre de quota ne doit plus rester a la racine si la consommation de quota possede deja un domaine canonique associe.
+
+26. **AC26 - Le sous-domaine `chart` ou son rattachement `natal` devient explicite et unique**
+   Les composants centres sur le cycle de vie du chart natal ne doivent plus etre conserves a la racine comme faux services transverses.
+   Au minimum, `chart_result_service.py` et `chart_json_builder.py` doivent etre :
+   - soit regroupes dans un namespace `services/chart/` ;
+   - soit rattaches explicitement a `services/natal/` si ce rattachement est plus coherent.
+   La story doit choisir une seule cible canonique et migrer tous les imports vers celle-ci.
+
+27. **AC27 - Le sous-domaine `daily_prediction` ne conserve plus un couple facade/types ambigu a la racine**
+   `daily_prediction_service.py` et `daily_prediction_types.py` doivent etre traites comme une meme famille canonique.
+   La cible attendue est :
+   - soit un regroupement complet sous `services/prediction/` ;
+   - soit une facade racine minimale conservee pour stabilite d entree publique, avec les types deplaces dans `services/prediction/`.
+   Il est interdit de conserver a la racine une logique ou le service et ses types metier vivent cote a cote sans justification architecturale explicite.
+
+28. **AC28 - Toute facade racine conservee doit etre strictement contractuelle**
+   Si un fichier racine est conserve comme facade publique apres regroupement mono-domaine, il ne peut contenir que :
+   - imports du chemin canonique ;
+   - `__all__` eventuel ;
+   - alias publics explicitement documentes.
+   Une facade racine ne doit pas contenir de logique metier, d orchestration, de selection de provider, de logique de quota, de serialisation de chart, ni de fallback legacy.
+
+29. **AC29 - Les nouveaux sous-packages mono-domaine respectent DRY strict**
+   Le regroupement en sous-packages ne doit pas deplacer la duplication au lieu de la supprimer.
+   Pour chaque famille refactorisee (`email`, `quota`, `chart`, `prediction`), la story doit demontrer :
+   - l absence de logique dupliquee entre facade racine et chemin canonique ;
+   - l absence de doublon actif entre ancien et nouveau chemin ;
+   - l absence de coexistence de deux services concurrents pour une meme responsabilite ;
+   - la centralisation coherente des types, helpers et erreurs du sous-domaine.
+
+30. **AC30 - No legacy strict sur les chemins deplaces**
+   Une fois le regroupement effectue, les anciens chemins racine ne doivent plus survivre comme :
+   - forwarders ;
+   - wrappers de compatibilite ;
+   - alias d import ;
+   - patch targets historiques maintenus "au cas ou" ;
+   - documentation presentant encore l ancien chemin comme nominal.
+   Toute migration doit corriger les consommateurs, pas preserver l ancien chemin.
+
+31. **AC31 - La cartographie racine est reecrite apres regroupement**
+   `_bmad-output/implementation-artifacts/70-23-services-root-cartography.md` doit etre mise a jour pour refleter la nouvelle realite du dossier `backend/app/services/`.
+   Pour chaque fichier retire de la racine, la cartographie doit indiquer :
+   - ancien chemin ;
+   - nouveau chemin canonique ;
+   - consommateurs principaux migres ;
+   - justification du regroupement mono-domaine ;
+   - suppression explicite de tout reliquat legacy associe.
+
+32. **AC32 - Les garde-fous interdisent le retour des familles eclatees**
+   Les tests structurels doivent echouer si l une des familles suivantes reapparait a plat a la racine :
+   - `email_*` ;
+   - `quota_*` ;
+   - `chart_*` ;
+   - `daily_prediction_*` au-dela d une facade publique explicitement autorisee.
+   Les garde-fous doivent verifier :
+   - l allowlist racine mise a jour ;
+   - l absence physique des anciens fichiers deplaces ;
+   - l absence de facade racine epaisse ;
+   - l absence de doubles chemins actifs pour un meme sous-domaine.
+
+33. **AC33 - Les imports, patch targets et tests sont alignes sur les chemins canoniques mono-domaine**
+   Tous les imports de production, tests, mocks, patch targets, dependency overrides et references string-based doivent pointer vers les nouveaux chemins canoniques.
+   Les tests ne doivent pas conserver artificiellement les anciens chemins racine pour preserver une compatibilite implicite.
+
+34. **AC34 - La story prouve explicitement l atteinte des objectifs `mono domaine`, `DRY`, `no legacy`**
+   Le Dev Agent Record doit lister, pour `email`, `quota`, `chart` et `daily_prediction` :
+   - le sous-package canonique retenu ;
+   - les fichiers sortis de la racine ;
+   - les duplications supprimees ;
+   - les anciens chemins retires ;
+   - les garde-fous ajoutes ;
+   - les validations executees.
+   Une simple mention "services regroupes" ne satisfait pas cet AC.
+
 ## Tasks / Subtasks
 
 - [x] **Task 1: Produire la cartographie opposable et les listes de controle**  
@@ -320,6 +444,24 @@ En revanche, il est interdit de conserver la situation actuelle "a plat + except
   - [x] Activer le venv avant toute commande Python.
   - [x] Executer `ruff format`, `ruff check` et les tests backend pertinents.
   - [x] Tracer precisement la validation, les limites et les follow-ups dans le Dev Agent Record.
+
+- [x] **Task 7: Finaliser la convergence de la racine `services/` apres audit complementaire**
+  AC: 19, 20, 21, 22
+  - [x] Reauditer chaque fichier encore autorise a la racine `backend/app/services/` contre le critere de transversalite reelle.
+  - [x] Extraire hors de la racine toute orchestration encore specifique au sous-domaine `prediction`.
+  - [x] Statuer explicitement sur `daily_prediction_service.py`, `relative_scoring_service.py` et `chart_result_service.py` : facade mince conservee, deplacement, ou scission.
+  - [x] Mettre a jour la cartographie opposable avec la justification detaillee de chaque survivant de la racine.
+  - [x] Etendre `test_story_70_23_services_structure_guard.py` pour proteger la frontiere racine vs sous-packages metiers.
+
+- [x] **Task 8: Regrouper les familles mono-domaine residuelles de la racine**
+  AC: 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34
+  - [x] Creer les namespaces canoniques retenus pour `email`, `quota` et `chart`, avec `__init__.py` minimaux.
+  - [x] Deplacer `email_service.py` et `email_provider.py` hors de la racine vers un sous-package unique.
+  - [x] Deplacer `quota_usage_service.py` et `quota_window_resolver.py` hors de la racine vers un sous-package unique.
+  - [x] Deplacer `chart_result_service.py` et `chart_json_builder.py` hors de la racine vers un sous-package unique ou vers `natal/` si retenu.
+  - [x] Rattacher `daily_prediction_types.py` au package `prediction/` et statuer sur la facade publique `daily_prediction_service.py`.
+  - [x] Migrer tous les imports, patch targets et tests vers les nouveaux chemins canoniques.
+  - [x] Mettre a jour la cartographie racine, l allowlist et les garde-fous pour interdire le retour des familles eclatees.
 
 ## Dev Notes
 
@@ -392,6 +534,10 @@ gpt-5
 - Validation Python executee apres activation du venv avec `.\.venv\Scripts\Activate.ps1`.
 - `pytest -q` complet lance deux fois depuis `backend/` puis interrompu pour timeout ; validation ciblee documentee ci-dessous.
 - Correctifs de revue appliques le 2026-04-26 : retrait des bypass legacy nominaux sur `horoscope_daily` et sur le catalogue de consultations, renforcement des garde-fous structurels, puis correctif du fallback SQLite `email_logs.id` dans `EmailService`.
+- Audit complementaire du 2026-04-26 : residu structurel identifie sur la frontiere racine `services/` vs sous-package `prediction/`, avec AC supplementaires rediges pour fermer explicitement ce perimetre.
+- Mise en oeuvre des AC complementaires le 2026-04-26 : deplacement de `relative_scoring_service.py` vers `app/services/prediction/`, migration de l orchestration `DailyPredictionService` vers `app/services/prediction/service.py`, facade racine amincie, cartographie mise a jour et tests du routeur prediction realignes sur la gate d entitlement.
+- Nouvelle passe d audit du 2026-04-26 : familles mono-domaine residuelles identifiees a la racine (`email`, `quota`, `chart`, `daily_prediction_types`) puis converges vers des namespaces canoniques uniques.
+- Correctif final du 2026-04-26 : isolation SQLite de `app/tests/integration/test_daily_prediction_api.py` pour supprimer le bruit de contraintes FK quand la suite partageait une meme base avec d autres modules.
 
 ### Completion Notes List
 
@@ -408,6 +554,15 @@ gpt-5
 - Le garde-fou `test_story_70_23_services_structure_guard.py` couvre desormais explicitement l interdiction de bypass legacy nominaux dans les services canoniques concernes par la revue.
 - Le blocage residuel de validation integration sur `email_logs.id` a ete corrige dans `app/services/email_service.py` en rendant l ecriture compatible avec la forme SQLite legacy encore presente dans certaines bases de test.
 - Validation complementaire executee dans le venv apres revue : `test_consultation_request_schema.py`, `test_horoscope_daily_entitlement_gate.py`, `test_consultation_fallback_service.py`, `test_consultation_precheck_service.py`, `test_story_70_23_services_structure_guard.py`, `test_consultations_router.py`, `test_horoscope_daily_entitlement.py` et `test_consultation_catalogue.py` avec `40 passed`.
+- Le sous-domaine `prediction` a ete convergé : `relative_scoring_service.py` n existe plus a la racine, `DailyPredictionService` delegue maintenant au module canonique `app/services/prediction/service.py`, et le garde-fou structurel interdit le retour d une facade racine epaisse.
+- Les familles mono-domaine residuelles ont ete sorties de la racine : `email_service.py` et `email_provider.py` vivent maintenant sous `app/services/email/`, `quota_usage_service.py` et `quota_window_resolver.py` sous `app/services/quota/`, `chart_result_service.py` et `chart_json_builder.py` sous `app/services/chart/`, et `daily_prediction_types.py` sous `app/services/prediction/types.py`.
+- Les nouveaux packages `app/services/email/__init__.py`, `app/services/quota/__init__.py` et `app/services/chart/__init__.py` bornent explicitement leurs exports publics sans recreer de facade legacy a la racine.
+- La facade racine `app/services/daily_prediction_service.py` reste contractuelle et importe maintenant ses types depuis `app.services.prediction.types`, ce qui supprime le dernier binome prediction ambigu a la racine.
+- Le garde-fou `test_story_70_23_services_structure_guard.py` interdit desormais le retour de familles plates `email_*`, `quota_*` et `chart_*` a la racine, en plus de l absence physique des anciens chemins.
+- Les tests routeur prediction ont ete realignes pour neutraliser explicitement la gate d entitlement quand l objectif du test est le contrat HTTP ou le mapping d erreur, ce qui permet de valider le perimetre cible sans faux 403 parasites.
+- Validation ciblee executee dans le venv pour cette passe : `ruff format` et `ruff check` sur les namespaces touches, smoke import de `app.main`/routeurs, `138 passed` sur la suite unitaire et email d integration, puis `25 passed` sur `app/tests/integration/test_daily_prediction_api.py`.
+- `app/tests/integration/test_daily_prediction_api.py` utilise maintenant une base SQLite isolee par test, sur le meme pattern que d autres suites d integration du repo ; la limite de nettoyage FK partage est donc fermee.
+- Validation consolidee executee dans le venv apres ce correctif : `ruff format app/tests/integration/test_daily_prediction_api.py`, `ruff check app/tests/integration/test_daily_prediction_api.py`, puis la suite groupee `test_story_70_23_services_structure_guard.py`, `test_quota_usage_service.py`, `test_quota_window_resolver.py`, `test_chart_result_service.py`, `test_chart_json_builder.py`, `test_daily_prediction_service.py`, `test_daily_prediction_version_consistency.py`, `test_chat_entitlement_gate.py`, `test_b2b_api_entitlement_gate.py`, `test_effective_entitlement_resolver_service.py`, `test_email_idempotence.py`, `test_user_natal_chart_service.py`, `tests/integration/test_email_unsubscribe.py` et `app/tests/integration/test_daily_prediction_api.py` avec `163 passed`.
 - Limite connue de validation : `pytest -q` complet n a pas termine dans la fenetre de temps allouee malgre deux tentatives ; aucun autre follow-up bloquant n a ete laisse dans le perimetre impose par la story.
 
 ### File List
@@ -420,6 +575,18 @@ gpt-5
 - backend/app/services/entitlement/natal_chart_long_entitlement_gate.py
 - backend/app/services/prediction/reference_seed_service.py
 - backend/app/services/prediction/context_repair_service.py
+- backend/app/services/prediction/service.py
+- backend/app/services/prediction/relative_scoring_service.py
+- backend/app/services/prediction/types.py
+- backend/app/services/chart/__init__.py
+- backend/app/services/chart/json_builder.py
+- backend/app/services/chart/result_service.py
+- backend/app/services/email/__init__.py
+- backend/app/services/email/provider.py
+- backend/app/services/email/service.py
+- backend/app/services/quota/__init__.py
+- backend/app/services/quota/usage_service.py
+- backend/app/services/quota/window_resolver.py
 - backend/scripts/seed_31_prediction_reference_v2.py
 - backend/app/services/billing/service.py
 - backend/app/services/billing/models.py
@@ -437,13 +604,18 @@ gpt-5
 - backend/app/services/consultation/fallback_service.py
 - backend/app/services/consultation/precheck_service.py
 - backend/app/services/entitlement/horoscope_daily_entitlement_gate.py
-- backend/app/services/email_service.py
 - backend/app/tests/unit/test_story_70_22_entitlement_structure_guard.py
 - backend/app/tests/unit/test_story_70_23_services_structure_guard.py
+- backend/app/tests/integration/test_daily_prediction_api.py
 - backend/app/tests/unit/test_consultation_request_schema.py
+- backend/app/tests/unit/test_daily_prediction_guardrails.py
 - backend/app/tests/unit/legacy_services/legacy_natal_interpretation_service.py
 
 ## Change Log
 
 - 2026-04-25 - Implementation de la convergence structurelle de `backend/app/services`, suppression des reliquats legacy nominaux, ajout des garde-fous de non-regression et validation ciblee dans le venv.
 - 2026-04-26 - Correctifs post-review : suppression des bypass legacy nominaux restants, durcissement des tests structurels et correction du fallback SQLite `email_logs.id`, avec validation integration complementaire.
+- 2026-04-26 - Ajout d AC complementaires post-audit pour finaliser la convergence de la racine `services/`, en particulier sur le sous-domaine `prediction` et sur les garde-fous de transversalite.
+- 2026-04-26 - Mise en oeuvre des AC complementaires : convergence finale du sous-domaine `prediction`, facade racine amincie, garde-fous renforces et realignement des tests du routeur prediction.
+- 2026-04-26 - Mise en oeuvre des AC 23 a 34 : convergence des familles `email`, `quota`, `chart` et `daily_prediction_types` vers des sous-packages canoniques, migration complete des imports et durcissement de l allowlist racine.
+- 2026-04-26 - Correctif de la limite restante de validation : isolation SQLite de `test_daily_prediction_api.py` et validation consolidee verte sur la suite ciblee partagee.

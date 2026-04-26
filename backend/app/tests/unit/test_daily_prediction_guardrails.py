@@ -17,6 +17,15 @@ from app.services.prediction.compute_runner import ComputeResult
 from app.services.prediction.run_reuse_policy import ReuseDecision
 
 
+@pytest.fixture(autouse=True)
+def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Neutralise la gate d entitlement pour les tests focalises sur le routeur."""
+    monkeypatch.setattr(
+        "app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
+        lambda db, user_id: SimpleNamespace(variant_code="full"),
+    )
+
+
 @pytest.fixture
 def mock_deps():
     return {

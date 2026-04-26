@@ -39,7 +39,7 @@ from app.services.llm_generation.natal.prompt_context import (
     build_chat_natal_hint,
 )
 from app.services.llm_generation.off_scope_policy import assess_off_scope
-from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
+from app.services.quota.usage_service import QuotaExhaustedError, QuotaUsageService
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
 )

@@ -29,7 +29,6 @@ from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.public_projection import PublicPredictionAssembler
 from app.services.daily_prediction_service import DailyPredictionService
-from app.services.daily_prediction_types import ComputeMode, DailyPredictionServiceError
 from app.services.entitlement.horoscope_daily_entitlement_gate import (
     HoroscopeDailyAccessDeniedError,
     HoroscopeDailyEntitlementGate,
@@ -48,6 +47,7 @@ from app.services.llm_generation.qa_seed_service import (
     LlmQaSeedResult,
     LlmQaSeedService,
 )
+from app.services.prediction.types import ComputeMode, DailyPredictionServiceError
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,

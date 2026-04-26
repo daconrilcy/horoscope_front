@@ -19,13 +19,13 @@ from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.public_projection import PublicPredictionAssembler
 from app.services.daily_prediction_service import DailyPredictionService
-from app.services.daily_prediction_types import (
-    ComputeMode,
-    DailyPredictionServiceError,
-)
 from app.services.entitlement.horoscope_daily_entitlement_gate import (
     HoroscopeDailyAccessDeniedError,
     HoroscopeDailyEntitlementGate,
+)
+from app.services.prediction.types import (
+    ComputeMode,
+    DailyPredictionServiceError,
 )
 
 logger = logging.getLogger(__name__)

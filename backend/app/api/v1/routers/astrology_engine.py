@@ -13,7 +13,7 @@ from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_calculation import NatalCalculationError
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
 from app.infra.db.session import get_db_session
-from app.services.chart_result_service import (
+from app.services.chart.result_service import (
     ChartResultAuditRecord,
     ChartResultService,
     ChartResultServiceError,

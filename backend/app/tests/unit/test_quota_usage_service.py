@@ -15,8 +15,8 @@ from app.services.entitlement.feature_scope_registry import (
     InvalidQuotaScopeError,
     UnknownFeatureCodeError,
 )
-from app.services.quota_usage_service import QuotaExhaustedError, QuotaUsageService
-from app.services.quota_window_resolver import QuotaWindow
+from app.services.quota.usage_service import QuotaExhaustedError, QuotaUsageService
+from app.services.quota.window_resolver import QuotaWindow
 
 UTC = timezone.utc
 

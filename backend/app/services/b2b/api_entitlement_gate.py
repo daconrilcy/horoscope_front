@@ -12,7 +12,7 @@ from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
 from app.services.entitlement.entitlement_types import QuotaDefinition, UsageState
-from app.services.quota_usage_service import QuotaExhaustedError
+from app.services.quota.usage_service import QuotaExhaustedError
 
 logger = logging.getLogger(__name__)
 

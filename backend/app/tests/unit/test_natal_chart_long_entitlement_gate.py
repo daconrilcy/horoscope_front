@@ -59,7 +59,7 @@ def test_canonical_quota_path_consumes(db_session):
             return_value=snapshot,
         ),
         patch(
-            "app.services.quota_usage_service.QuotaUsageService.consume", return_value=mock_state
+            "app.services.quota.usage_service.QuotaUsageService.consume", return_value=mock_state
         ) as mock_consume,
     ):
         result = NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=42)
@@ -78,7 +78,7 @@ def test_canonical_unlimited_path_no_consume(db_session):
             "resolve_b2c_user_snapshot",
             return_value=snapshot,
         ),
-        patch("app.services.quota_usage_service.QuotaUsageService.consume") as mock_consume,
+        patch("app.services.quota.usage_service.QuotaUsageService.consume") as mock_consume,
     ):
         result = NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=42)
 
@@ -105,7 +105,7 @@ def test_variant_code_single_astrologer(db_session):
             return_value=snapshot,
         ),
         patch(
-            "app.services.quota_usage_service.QuotaUsageService.consume", return_value=mock_state
+            "app.services.quota.usage_service.QuotaUsageService.consume", return_value=mock_state
         ),
     ):
         result = NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=42)
@@ -131,7 +131,7 @@ def test_variant_code_multi_astrologer(db_session):
             return_value=snapshot,
         ),
         patch(
-            "app.services.quota_usage_service.QuotaUsageService.consume", return_value=mock_state
+            "app.services.quota.usage_service.QuotaUsageService.consume", return_value=mock_state
         ),
     ):
         result = NatalChartLongEntitlementGate.check_and_consume(db_session, user_id=42)
@@ -167,7 +167,7 @@ def test_access_denied_disabled_by_plan(db_session):
 
 
 def test_quota_exceeded_raises_natal_error(db_session):
-    from app.services.quota_usage_service import QuotaExhaustedError
+    from app.services.quota.usage_service import QuotaExhaustedError
 
     mock_state = MagicMock(used=0, remaining=1, quota_limit=1, window_end=None)
     mock_state.quota_key = "interpretations"
@@ -183,7 +183,7 @@ def test_quota_exceeded_raises_natal_error(db_session):
             return_value=snapshot,
         ),
         patch(
-            "app.services.quota_usage_service.QuotaUsageService.consume",
+            "app.services.quota.usage_service.QuotaUsageService.consume",
             side_effect=QuotaExhaustedError(
                 quota_key="interpretations",
                 used=1,

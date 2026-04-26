@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from app.core.config import DailyEngineMode, settings
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.prediction.input_hash import compute_engine_input_hash
-from app.services.daily_prediction_types import ComputeMode
+from app.services.prediction.types import ComputeMode
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session

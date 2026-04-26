@@ -20,7 +20,7 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
-from app.services.chart_result_service import ChartResultService
+from app.services.chart.result_service import ChartResultService
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 from app.services.user_profile.birth_profile_service import UserBirthProfileService

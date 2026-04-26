@@ -330,7 +330,7 @@ def test_resolve_b2c_user_snapshot_quota_exhausted(db):
 
     # Add usage to exhaust quota
     from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
-    from app.services.quota_window_resolver import QuotaWindowResolver
+    from app.services.quota.window_resolver import QuotaWindowResolver
 
     now = datetime.now(timezone.utc)
     window = QuotaWindowResolver.compute_window("day", 1, "calendar", now)
@@ -462,7 +462,7 @@ def test_resolve_b2b_account_snapshot_quota_available(db):
     db.commit()
 
     # Mock B2B usage
-    from app.services.quota_window_resolver import QuotaWindowResolver
+    from app.services.quota.window_resolver import QuotaWindowResolver
 
     now = datetime.now(timezone.utc)
     window = QuotaWindowResolver.compute_window("month", 1, "calendar", now)

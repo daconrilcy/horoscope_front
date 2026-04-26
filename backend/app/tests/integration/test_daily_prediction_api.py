@@ -2,19 +2,22 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime, timezone
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import create_engine, delete
+from sqlalchemy.orm import sessionmaker
 
 from app.api.v1.routers.predictions import get_daily_prediction_service
 from app.core.config import settings
+from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.prediction.persisted_snapshot import (
     PersistedCategoryScore,
@@ -33,20 +36,45 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def cleanup_tables():
-    Base.metadata.create_all(bind=engine, checkfirst=True)
+def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Neutralise la gate d entitlement pour les tests du routeur prediction."""
+    monkeypatch.setattr(
+        "app.api.v1.routers.predictions.HoroscopeDailyEntitlementGate.check_and_get_variant",
+        lambda db, user_id: SimpleNamespace(variant_code="full"),
+    )
+
+
+@pytest.fixture(autouse=True)
+def _isolated_daily_prediction_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Isole la suite sur une base SQLite dediee pour eviter les FKs partagees."""
+    database_url = f"sqlite:///{(tmp_path / 'daily-prediction-api.db').as_posix()}"
+    test_engine = create_engine(
+        database_url,
+        connect_args={"check_same_thread": False},
+        future=True,
+    )
+    test_session_local = sessionmaker(
+        bind=test_engine,
+        autoflush=False,
+        autocommit=False,
+        future=True,
+    )
+    monkeypatch.setattr(db_session_module, "engine", test_engine)
+    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    Base.metadata.create_all(bind=test_engine, checkfirst=True)
     app.dependency_overrides.clear()
-    with SessionLocal() as db:
+    with db_session_module.SessionLocal() as db:
         db.execute(delete(UserRefreshTokenModel))
         db.execute(delete(UserModel))
         db.execute(delete(ReferenceVersionModel))
         db.commit()
     yield
     app.dependency_overrides.clear()
+    test_engine.dispose()
 
 
 def _register_and_get_access_token() -> str:
-    with SessionLocal() as db:
+    with db_session_module.SessionLocal() as db:
         auth = AuthService.register(
             db,
             email=f"daily-api-user-{uuid.uuid4()}@example.com",
@@ -58,7 +86,7 @@ def _register_and_get_access_token() -> str:
 
 
 def _register_admin_and_get_token() -> str:
-    with SessionLocal() as db:
+    with db_session_module.SessionLocal() as db:
         auth = AuthService.register(
             db,
             email=f"admin-{uuid.uuid4()}@example.com",
@@ -307,7 +335,7 @@ def test_daily_prediction_returns_500_on_malformed_json_payload():
 
 def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effective():
     token = _register_and_get_access_token()
-    with SessionLocal() as db:
+    with db_session_module.SessionLocal() as db:
         db.add(
             ReferenceVersionModel(
                 id=7,

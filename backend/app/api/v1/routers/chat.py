@@ -27,7 +27,7 @@ from app.services.llm_generation.chat.chat_guidance_service import (
     ChatGuidanceServiceError,
     ChatReplyData,
 )
-from app.services.quota_usage_service import QuotaUsageService
+from app.services.quota.usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
 

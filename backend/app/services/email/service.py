@@ -1,3 +1,5 @@
+"""Service canonique d'envoi et de journalisation des emails applicatifs."""
+
 import logging
 import os
 from datetime import timedelta
@@ -11,12 +13,14 @@ from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.email_log import EmailLogModel
 from app.infra.db.models.user import UserModel
-from app.services.email_provider import get_email_provider
+from app.services.email.provider import get_email_provider
 
 logger = logging.getLogger(__name__)
 
-# Basic Setup for Jinja2
-template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
+# Le dossier des templates reste porte par ``app/templates``.
+template_dir = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates"
+)
 jinja_env = Environment(
     loader=FileSystemLoader(template_dir), autoescape=select_autoescape(["html", "xml"])
 )

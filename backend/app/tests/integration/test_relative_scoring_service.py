@@ -8,7 +8,7 @@ from app.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
 )
-from app.services.relative_scoring_service import RelativeScoringService
+from app.services.prediction.relative_scoring_service import RelativeScoringService
 
 
 def test_relative_scoring_service_enrichment():
@@ -56,7 +56,7 @@ def test_relative_scoring_service_enrichment():
     )
 
     # 3. Mock Repository
-    patch_path = "app.services.relative_scoring_service.UserPredictionBaselineRepository"
+    patch_path = "app.services.prediction.relative_scoring_service.UserPredictionBaselineRepository"
     with patch(patch_path) as MockRepo:
         repo_instance = MockRepo.return_value
         repo_instance.get_latest_baselines_for_user.return_value = [mock_baseline]
@@ -99,7 +99,7 @@ def test_relative_scoring_service_uses_latest_compatible_baseline():
         ],
     )
 
-    patch_path = "app.services.relative_scoring_service.UserPredictionBaselineRepository"
+    patch_path = "app.services.prediction.relative_scoring_service.UserPredictionBaselineRepository"
     with patch(patch_path) as MockRepo:
         repo_instance = MockRepo.return_value
         repo_instance.get_latest_baselines_for_user.return_value = []

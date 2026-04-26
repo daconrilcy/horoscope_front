@@ -36,7 +36,7 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.session import SessionLocal
 from app.services.billing.service import BillingService
-from app.services.quota_window_resolver import QuotaWindow, QuotaWindowResolver
+from app.services.quota.window_resolver import QuotaWindow, QuotaWindowResolver
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -323,3 +323,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     migrate(days=args.days, dry_run=args.dry_run)
+

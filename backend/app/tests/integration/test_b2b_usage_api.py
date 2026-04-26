@@ -32,7 +32,7 @@ from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.ops.audit_service import AuditServiceError
-from app.services.quota_window_resolver import QuotaWindowResolver
+from app.services.quota.window_resolver import QuotaWindowResolver
 
 client = TestClient(app)
 

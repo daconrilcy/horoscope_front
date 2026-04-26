@@ -26,7 +26,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.main import app
 from app.services.billing.service import BillingPlanData, BillingService, SubscriptionStatusData
-from app.services.quota_window_resolver import QuotaWindowResolver
+from app.services.quota.window_resolver import QuotaWindowResolver
 
 CLIENT = TestClient(app)
 FEATURE_CODES = (

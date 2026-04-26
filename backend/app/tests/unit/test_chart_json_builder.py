@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.services.chart_json_builder import (
+from app.services.chart.json_builder import (
     EVIDENCE_ID_PATTERN,
     build_chart_json,
     build_evidence_catalog,
@@ -200,7 +200,7 @@ def test_evidence_catalog_pattern():
 
 
 def test_longitude_conversions():
-    from app.services.chart_json_builder import _longitude_in_sign, _longitude_to_sign
+    from app.services.chart.json_builder import _longitude_in_sign, _longitude_to_sign
 
     assert _longitude_to_sign(0) == "aries"
     assert _longitude_to_sign(35.4) == "taurus"

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.services.entitlement.entitlement_types import QuotaDefinition, UsageState
-from app.services.quota_usage_service import QuotaUsageService
+from app.services.quota.usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
 

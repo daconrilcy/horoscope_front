@@ -5,7 +5,7 @@ from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.session import SessionLocal, engine
-from app.services.chart_result_service import ChartResultService, ChartResultServiceError
+from app.services.chart.result_service import ChartResultService, ChartResultServiceError
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 
