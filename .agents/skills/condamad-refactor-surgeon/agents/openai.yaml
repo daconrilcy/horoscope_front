@@ -1,0 +1,9 @@
+interface:
+  display_name: "CONDAMAD Refactor Surgeon"
+  short_description: "Perform one bounded, behavior-preserving refactor with explicit invariants and validation evidence."
+  brand_color: "#0F766E"
+  default_prompt: "Use $condamad-refactor-surgeon for exactly one bounded, mono-domain, behavior-preserving refactor. Require a validated plan, DRY/No Legacy constraints, targeted tests, negative legacy scans, and diff evidence."
+
+policy:
+  allow_implicit_invocation: false
+
