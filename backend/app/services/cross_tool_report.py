@@ -1,3 +1,5 @@
+"""Utilitaires transverses pour agréger et résumer des métriques multi-outils."""
+
 from __future__ import annotations
 
 from collections import Counter

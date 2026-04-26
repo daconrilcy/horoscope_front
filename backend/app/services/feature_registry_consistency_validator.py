@@ -1,3 +1,5 @@
+"""Validateur transverse du registre de features et de ses gates canoniques."""
+
 from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
 from app.services.entitlement import feature_scope_registry
 from app.services.entitlement.chat_entitlement_gate import ChatEntitlementGate

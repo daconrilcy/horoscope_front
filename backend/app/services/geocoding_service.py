@@ -1,3 +1,5 @@
+"""Service transverse de géocodage et de normalisation des lieux utilisateurs."""
+
 from __future__ import annotations
 
 import hashlib

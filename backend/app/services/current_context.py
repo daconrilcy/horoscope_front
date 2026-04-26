@@ -1,3 +1,5 @@
+"""Primitives transverses pour décrire le contexte courant d'exécution utilisateur."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
