@@ -20,7 +20,7 @@ from app.api.v1.router_logic.ops.entitlement_mutation_audits import (
     _normalize_optional_rule_field,
     _row_to_queue_item,
     _to_item,
-    _to_item_with_diff,
+    build_mutation_audit_list_response,
 )
 from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import (
     AlertAttemptsApiResponse,
@@ -57,9 +57,6 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
 from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
-from app.infra.db.models.entitlement_mutation.audit.review import (
-    CanonicalEntitlementMutationAuditReviewModel,
-)
 from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
@@ -73,9 +70,6 @@ from app.services.canonical_entitlement.audit.audit_query import (
 from app.services.canonical_entitlement.audit.audit_review import (
     AuditNotFoundError,
     CanonicalEntitlementMutationAuditReviewService,
-)
-from app.services.canonical_entitlement.audit.diff_service import (
-    CanonicalEntitlementMutationDiffService,
 )
 from app.services.canonical_entitlement.audit.review_queue import (
     CanonicalEntitlementReviewQueueService,
@@ -144,133 +138,27 @@ def list_mutation_audits(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-
-    role_error = _ensure_ops_role(current_user, request_id)
-    if role_error is not None:
-        return role_error
-
-    limit_error = _enforce_limits(user=current_user, request_id=request_id, operation="list")
-    if limit_error is not None:
-        return limit_error
-
-    sql_filter_kwargs: dict[str, Any] = dict(
+    return build_mutation_audit_list_response(
+        db=db,
+        current_user=current_user,
+        request_id=request_id,
+        page=page,
+        page_size=page_size,
         plan_id=plan_id,
         plan_code=plan_code,
         feature_code=feature_code,
         actor_type=actor_type,
         actor_identifier=actor_identifier,
         source_origin=source_origin,
-        request_id=request_id_filter,
+        request_id_filter=request_id_filter,
         date_from=date_from,
         date_to=date_to,
+        risk_level_filter=risk_level_filter,
+        change_kind_filter=change_kind_filter,
+        changed_field_filter=changed_field_filter,
+        review_status_filter=review_status_filter,
+        include_payloads=include_payloads,
     )
-
-    has_diff_or_review_filter = any(
-        [risk_level_filter, change_kind_filter, changed_field_filter, review_status_filter]
-    )
-
-    # Chemin paginé normal : aucun filtre diff ni review
-    if not has_diff_or_review_filter:
-        items, total_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
-            db,
-            page=page,
-            page_size=page_size,
-            **sql_filter_kwargs,
-        )
-        audit_ids = [a.id for a in items]
-        reviews_by_id = _load_reviews_by_audit_ids(db, audit_ids)
-
-        return {
-            "data": {
-                "items": [
-                    _to_item(
-                        item,
-                        include_payloads=include_payloads,
-                        review_record=reviews_by_id.get(item.id),
-                    )
-                    for item in items
-                ],
-                "total_count": total_count,
-                "page": page,
-                "page_size": page_size,
-            },
-            "meta": {"request_id": request_id},
-        }
-
-    # Chemin avec filtre diff ou review : vérification du count SQL
-    _, sql_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
-        db,
-        page=1,
-        page_size=1,
-        **sql_filter_kwargs,
-    )
-
-    if sql_count > _DIFF_FILTER_MAX:
-        return _error_response(
-            status_code=400,
-            request_id=request_id,
-            code="diff_filter_result_set_too_large",
-            message=(
-                f"Too many results to apply diff filter ({sql_count} > {_DIFF_FILTER_MAX}). "
-                "Add SQL filters to narrow the result set."
-            ),
-            details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
-        )
-
-    all_items, _ = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
-        db,
-        page=1,
-        page_size=_DIFF_FILTER_MAX,
-        **sql_filter_kwargs,
-    )
-
-    # Chargement des revues en une seule requête IN sur tout le batch
-    all_audit_ids = [a.id for a in all_items]
-    reviews_by_id = _load_reviews_by_audit_ids(db, all_audit_ids)
-
-    filtered: list[tuple[Any, Any, CanonicalEntitlementMutationAuditReviewModel | None]] = []
-    for item in all_items:
-        diff = CanonicalEntitlementMutationDiffService.compute_diff(
-            item.before_payload or {}, item.after_payload or {}
-        )
-        if risk_level_filter and diff.risk_level != risk_level_filter:
-            continue
-        if change_kind_filter and diff.change_kind != change_kind_filter:
-            continue
-        if changed_field_filter and changed_field_filter not in diff.changed_fields:
-            continue
-        review_record = reviews_by_id.get(item.id)
-        if review_status_filter is not None:
-            effective_status = (
-                review_record.review_status
-                if review_record is not None
-                else ("pending_review" if diff.risk_level == "high" else None)
-            )
-            if effective_status != review_status_filter:
-                continue
-        filtered.append((item, diff, review_record))
-
-    total_count = len(filtered)
-    start = (page - 1) * page_size
-    page_items = filtered[start : start + page_size]
-
-    return {
-        "data": {
-            "items": [
-                _to_item_with_diff(
-                    item,
-                    diff=diff,
-                    include_payloads=include_payloads,
-                    review_record=review_record,
-                )
-                for item, diff, review_record in page_items
-            ],
-            "total_count": total_count,
-            "page": page,
-            "page_size": page_size,
-        },
-        "meta": {"request_id": request_id},
-    }
 
 
 # ── review-queue/summary ──────────────────────────────────────────────────────

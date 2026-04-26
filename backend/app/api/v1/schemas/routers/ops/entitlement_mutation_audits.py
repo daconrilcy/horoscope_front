@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
+from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
+
 from datetime import datetime
 from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -469,14 +471,3 @@ class AlertHandlingHistoryApiResponse(BaseModel):
 class AlertSummaryApiResponse(BaseModel):
     data: AlertSummaryData
     meta: ResponseMeta
-
-
-class ErrorPayload(BaseModel):
-    code: str
-    message: str
-    details: dict[str, Any]
-    request_id: str
-
-
-class ErrorEnvelope(BaseModel):
-    error: ErrorPayload

@@ -1,15 +1,16 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.api.v1.errors import api_error_response
 from app.infra.db.models.user import UserModel
 from app.infra.db.repositories.user_repository import UserRepository
 from app.services.llm_generation.chat.chat_guidance_service import (
@@ -31,8 +32,7 @@ from app.services.user_profile.natal_chart_service import (
 )
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/internal/llm/qa", tags=["internal-llm-qa"])
-from app.api.v1.schemas.routers.internal.llm.qa import *
+from app.api.v1.schemas.routers.internal.llm.qa import SeedUserResponse
 
 
 def _error_response(
@@ -43,16 +43,12 @@ def _error_response(
     message: str,
     details: dict[str, Any] | None = None,
 ) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details or {},
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )
 
 

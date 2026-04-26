@@ -13,7 +13,7 @@ from app.api.dependencies.auth import (
     require_admin_user,
     require_authenticated_user,
 )
-from app.api.v1.routers.admin.llm.prompts import ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER
+from app.api.v1.constants import ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER
 from app.domain.llm.runtime.contracts import (
     GatewayError,
     GatewayMeta,

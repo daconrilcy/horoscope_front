@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.schemas.admin_entitlements import (
+from app.api.v1.schemas.routers.admin.entitlements import (
     AdminEntitlementMatrixResponse,
     AdminEntitlementUpdate,
 )

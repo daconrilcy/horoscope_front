@@ -1,32 +1,12 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter
-
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/admin/pdf-templates", tags=["admin-pdf-templates"])
-PDF_TEMPLATE_CONFIG_DOC = (
-    "Optional runtime config for PDF export. "
-    "Supported keys: "
-    "'max_paragraph_chars' (int, 200..5000) and "
-    "'split_paragraphs_enabled' (bool), "
-    "'page_budget_lines' (int, 24..60), "
-    "'section_head_extra_lines' (int, 0..6), "
-    "'paragraph_spacing_lines' (int, 0..3), "
-    "'section_tail_spacing_lines' (int, 0..4), "
-    "'sections_start_new_page_min_remaining_lines' (int, 0..30), "
-    "'sections_start_new_page' (bool), "
-    "'pagination_debug' (bool). "
-    "Note: sections_start_new_page is best-effort and is applied only when "
-    "remaining lines after intro are below sections_start_new_page_min_remaining_lines. "
-    "Warning: when split_paragraphs_enabled=false, long text may be cut across pages more often."
-)
-from app.api.v1.schemas.routers.admin.pdf_templates import *
 
 
 def _normalize_pdf_template_config(config: dict[str, Any]) -> dict[str, Any]:

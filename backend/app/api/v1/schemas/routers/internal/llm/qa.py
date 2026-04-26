@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
+from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
+
 import logging
 from datetime import datetime
 from typing import Any, Literal
@@ -11,10 +13,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_ops_user
-from app.api.v1.routers.public.predictions import (
-    _extract_llm_narrative_payload,
-    _raise_daily_prediction_service_error,
-)
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.reference import ReferenceVersionModel
@@ -63,17 +61,6 @@ router = APIRouter(prefix="/v1/internal/llm/qa", tags=["internal-llm-qa"])
 class ResponseMeta(BaseModel):
     request_id: str
     target_user_email: str
-
-
-class ErrorPayload(BaseModel):
-    code: str
-    message: str
-    details: dict[str, Any]
-    request_id: str
-
-
-class ErrorEnvelope(BaseModel):
-    error: ErrorPayload
 
 
 class SeedUserResponse(BaseModel):

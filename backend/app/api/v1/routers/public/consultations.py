@@ -6,7 +6,7 @@ from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_u
 from app.api.v1.router_logic.public.consultations import (
     _build_consultation_quota_info,
 )
-from app.api.v1.schemas.consultation import (
+from app.api.v1.schemas.routers.public.consultation import (
     ConsultationCatalogueResponse,
     ConsultationGenerateRequest,
     ConsultationGenerateResponse,

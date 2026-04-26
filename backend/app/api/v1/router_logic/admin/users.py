@@ -1,11 +1,10 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter
 from sqlalchemy import asc, select
 from sqlalchemy.orm import Session
 
@@ -23,7 +22,6 @@ from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.quota.usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/admin/users", tags=["admin-users"])
 
 
 def _mask_id(raw_id: str | None) -> str | None:

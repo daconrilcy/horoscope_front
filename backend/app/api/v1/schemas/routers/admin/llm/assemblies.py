@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.domain.llm.configuration.admin_models import (
     DraftPublishResponse,
     PromptAssemblyConfig,

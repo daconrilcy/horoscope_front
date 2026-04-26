@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.v1.constants import VALID_ASTROLOGER_PROFILES
 from app.api.v1.router_logic.public.users import (
     _natal_inconsistent_metric_name,
     _should_log_inconsistent_result_event,
@@ -52,9 +53,6 @@ from app.services.user_profile.natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
 )
-
-VALID_ASTROLOGER_PROFILES = {"standard", "vedique", "humaniste", "karmique", "psychologique"}
-
 
 router = APIRouter(prefix="/v1/users", tags=["users"])
 logger = logging.getLogger(__name__)

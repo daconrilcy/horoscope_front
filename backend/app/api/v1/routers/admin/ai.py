@@ -17,7 +17,7 @@ from app.api.v1.router_logic.admin.ai import (
     _resolve_metric_category_or_raw,
     _resolve_start_date,
 )
-from app.api.v1.schemas.admin_ai import (
+from app.api.v1.schemas.routers.admin.ai import (
     AdminAiMetricsResponse,
     AdminAiUseCaseDetailResponse,
 )

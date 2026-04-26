@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.v1.constants import CHAT_TEMPORARY_UNAVAILABLE_MESSAGE
 from app.api.v1.router_logic.public.chat import (
     _build_post_turn_quota_info,
 )
@@ -33,11 +34,6 @@ from app.services.llm_generation.chat.chat_guidance_service import (
 )
 
 logger = logging.getLogger(__name__)
-
-CHAT_TEMPORARY_UNAVAILABLE_MESSAGE = (
-    "Je suis desole, je ne peux pas vous repondre pour l'instant. Revenez un peu plus tard."
-)
-
 
 router = APIRouter(prefix="/v1/chat", tags=["chat"])
 

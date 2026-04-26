@@ -12,7 +12,7 @@ from app.api.v1.router_logic.admin.users import (
     _build_user_quotas,
     _mask_id,
 )
-from app.api.v1.schemas.admin_users import (
+from app.api.v1.schemas.routers.admin.users import (
     AdminUserDetailResponse,
     AdminUserSearchResponse,
     RevealStripeIdResponse,

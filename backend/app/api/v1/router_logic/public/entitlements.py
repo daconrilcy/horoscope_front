@@ -1,14 +1,14 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
-from fastapi import APIRouter
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.api.v1.schemas.entitlements import (
+from app.api.v1.constants import FEATURES_TO_QUERY
+from app.api.v1.schemas.routers.public.entitlements import (
     FeatureEntitlementResponse,
     UsageStateResponse,
 )
@@ -17,14 +17,6 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.services.entitlement.entitlement_types import EffectiveFeatureAccess, UsageState
 
-router = APIRouter(prefix="/v1/entitlements", tags=["entitlements"])
-FEATURES_TO_QUERY: list[str] = [
-    "astrologer_chat",
-    "thematic_consultation",
-    "natal_chart_long",
-    "natal_chart_short",
-    "horoscope_daily",
-]
 _PLAN_PRIORITY: dict[str, str] = {
     "free": "low",
     "basic": "medium",

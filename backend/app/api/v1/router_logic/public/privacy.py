@@ -1,22 +1,20 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
+from app.api.v1.errors import api_error_response
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
-router = APIRouter(prefix="/v1/privacy", tags=["privacy"])
 logger = logging.getLogger(__name__)
-from app.api.v1.schemas.routers.public.privacy import *
 
 
 class AuditWriteError(Exception):
@@ -31,16 +29,12 @@ def _error_response(
     message: str,
     details: dict[str, Any],
 ) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details,
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )
 
 

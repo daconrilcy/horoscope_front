@@ -1,15 +1,15 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.api.v1.schemas.natal_interpretation import (
+from app.api.v1.errors import api_error_response
+from app.api.v1.schemas.routers.public.natal_interpretation import (
     NatalChartLongEntitlementInfo,
 )
 from app.services.entitlement.natal_chart_long_entitlement_gate import (
@@ -17,7 +17,6 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
 )
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/natal", tags=["natal-interpretation"])
 
 
 def _create_error_response(
@@ -27,16 +26,12 @@ def _create_error_response(
     request_id: str,
     details: dict[str, Any] | None = None,
 ) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "request_id": request_id,
-                "details": details or {},
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )
 
 

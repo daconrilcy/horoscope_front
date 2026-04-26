@@ -1,15 +1,13 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-router = APIRouter(prefix="/v1/astrologers", tags=["astrologers"])
-from app.api.v1.schemas.routers.public.astrologers import *
+from app.api.v1.errors import api_error_response
 
 
 def _build_user_alias(email: str) -> str:
@@ -28,14 +26,10 @@ def _error_response(
     message: str,
     details: dict[str, Any],
 ) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details,
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )

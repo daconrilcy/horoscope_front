@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.schemas.admin_support import (
+from app.api.v1.schemas.routers.admin.support import (
     AdminFlaggedContentResponse,
     AdminSupportTicketDetailResponse,
     AdminSupportTicketResponse,

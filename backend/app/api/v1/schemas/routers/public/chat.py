@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
+from app.api.v1.constants import CHAT_TEMPORARY_UNAVAILABLE_MESSAGE
+
+from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
+
 import logging
 import uuid
 from datetime import datetime
@@ -31,25 +35,11 @@ from app.services.llm_generation.chat.chat_guidance_service import (
 from app.services.quota.usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
-CHAT_TEMPORARY_UNAVAILABLE_MESSAGE = (
-    "Je suis desole, je ne peux pas vous repondre pour l'instant. Revenez un peu plus tard."
-)
 router = APIRouter(prefix="/v1/chat", tags=["chat"])
 
 
 class ResponseMeta(BaseModel):
     request_id: str
-
-
-class ErrorPayload(BaseModel):
-    code: str
-    message: str
-    details: dict[str, Any]
-    request_id: str
-
-
-class ErrorEnvelope(BaseModel):
-    error: ErrorPayload
 
 
 class ChatMessageRequest(BaseModel):

@@ -1,6 +1,6 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
@@ -8,17 +8,12 @@ import random
 from threading import Lock
 from time import monotonic
 
-from fastapi import APIRouter
-
-VALID_ASTROLOGER_PROFILES = {"standard", "vedique", "humaniste", "karmique", "psychologique"}
-router = APIRouter(prefix="/v1/users", tags=["users"])
 logger = logging.getLogger(__name__)
 _INCONSISTENT_LOG_WINDOW_SECONDS = 60.0
 _INCONSISTENT_LOG_ALWAYS_PER_WINDOW = 10
 _INCONSISTENT_LOG_SAMPLING_RATIO = 0.01
 _inconsistent_log_sampling_lock = Lock()
 _inconsistent_log_sampling_state = {"window_start": monotonic(), "count": 0}
-from app.api.v1.schemas.routers.public.users import *
 
 
 def _normalize_metric_label(value: str | None) -> str:

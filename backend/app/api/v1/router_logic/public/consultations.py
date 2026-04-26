@@ -1,18 +1,14 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
-from fastapi import APIRouter
-
-from app.api.v1.schemas.consultation import (
+from app.api.v1.schemas.routers.public.consultation import (
     ConsultationQuotaInfo,
 )
 from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ConsultationEntitlementResult,
 )
-
-router = APIRouter()
 
 
 def _build_consultation_quota_info(result: ConsultationEntitlementResult) -> ConsultationQuotaInfo:

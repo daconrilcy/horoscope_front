@@ -1,19 +1,17 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter
 from sqlalchemy import or_
 
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/admin/dashboard", tags=["admin-dashboard"])
 
 
 def _apply_user_plan_filter(stmt: Any, plan_filter: str | None) -> Any:

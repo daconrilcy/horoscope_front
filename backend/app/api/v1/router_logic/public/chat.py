@@ -1,11 +1,10 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter
 from sqlalchemy.orm import Session
 
 from app.services.entitlement.chat_entitlement_gate import (
@@ -16,11 +15,7 @@ from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.quota.usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
-CHAT_TEMPORARY_UNAVAILABLE_MESSAGE = (
-    "Je suis desole, je ne peux pas vous repondre pour l'instant. Revenez un peu plus tard."
-)
-router = APIRouter(prefix="/v1/chat", tags=["chat"])
-from app.api.v1.schemas.routers.public.chat import *
+from app.api.v1.schemas.routers.public.chat import QuotaInfo
 
 
 def _build_quota_info(result: ChatEntitlementResult) -> QuotaInfo:

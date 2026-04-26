@@ -1,6 +1,6 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import csv
@@ -8,7 +8,7 @@ import io
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -17,7 +17,6 @@ from app.core.request_id import resolve_request_id
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/admin/exports", tags=["admin-exports"])
 
 
 def _generate_csv_response(

@@ -1,16 +1,17 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
+from app.api.v1.errors import api_error_response
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.core.request_id import resolve_request_id
 from app.services.billing.pricing_experiment_service import (
@@ -22,9 +23,7 @@ from app.services.billing.stripe_customer_portal_service import (
 )
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
-router = APIRouter(prefix="/v1/billing", tags=["billing"])
 logger = logging.getLogger(__name__)
-from app.api.v1.schemas.routers.public.billing import *
 
 
 class AuditWriteError(Exception):
@@ -113,16 +112,12 @@ def _error_response(
     message: str,
     details: dict[str, Any],
 ) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details,
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )
 
 
@@ -170,7 +165,7 @@ def _record_audit_event(
 
 
 def _audit_unavailable_response(*, request_id: str) -> JSONResponse:
-    return _error_response(
+    return api_error_response(
         status_code=503,
         request_id=request_id,
         code="audit_unavailable",

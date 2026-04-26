@@ -1,21 +1,19 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.api.v1.errors import api_error_response
 from app.core.rbac import is_valid_role
 from app.core.security import SecurityError, decode_token
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
-router = APIRouter(prefix="/v1/auth", tags=["auth"])
 logger = logging.getLogger(__name__)
-from app.api.v1.schemas.routers.public.auth import *
 
 
 class AuditWriteError(Exception):
@@ -23,16 +21,12 @@ class AuditWriteError(Exception):
 
 
 def _audit_unavailable_response(request_id: str) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=503,
-        content={
-            "error": {
-                "code": "audit_unavailable",
-                "message": "audit persistence is unavailable",
-                "details": {},
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code="audit_unavailable",
+        message="audit persistence is unavailable",
+        details={},
     )
 
 

@@ -15,12 +15,19 @@ from app.api.dependencies.auth import (
     AuthenticatedUser,
     require_admin_user,
 )
+from app.api.v1.constants import (
+    ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
+    ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
+)
+from app.api.v1.router_logic.admin.llm.manual_execution import (
+    _build_admin_manual_execute_response_payload,
+    _record_admin_manual_execution_audit,
+    _record_audit_event,
+)
 from app.api.v1.router_logic.admin.llm.prompts import (
     _admin_catalog_runtime_preview_blocking_reasons,
-    _build_admin_manual_execute_response_payload,
     _build_admin_resolved_catalog_view,
     _build_canonical_admin_use_case_config,
-    _build_snapshot_timeline_events,
     _call_log_scope_filter,
     _catalog_sort_value,
     _collect_catalog_facets,
@@ -28,14 +35,15 @@ from app.api.v1.router_logic.admin.llm.prompts import (
     _error_response,
     _is_removed_legacy_use_case_key,
     _legacy_removed_call_log_filter,
-    _record_admin_manual_execution_audit,
-    _record_audit_event,
     _serialize_prompt_version,
-    _snapshot_diff_entries,
     _to_manifest_entry,
     _to_none_if_literal_none,
 )
-from app.api.v1.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.api.v1.router_logic.admin.llm.release_snapshots import (
+    _build_snapshot_timeline_events,
+    _snapshot_diff_entries,
+)
+from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.api.v1.schemas.routers.admin.llm.prompts import (
     AdminCatalogManualExecutePayload,
     AdminCatalogManualExecuteResponse,
@@ -129,21 +137,7 @@ from app.ops.llm.services import PromptLint, PromptRegistryV2, replay, run_eval
 logger = logging.getLogger(__name__)
 
 # Epic 69.3: marqueurs observabilité (logs, audit, en-tête HTTP).
-ADMIN_MANUAL_LLM_EXECUTE_SURFACE = "admin_catalog_manual_execute_sample"
-ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER = "X-Admin-Manual-Llm-Execute"
-ADMIN_MANUAL_EXECUTE_ROUTE_PATH = "/catalog/{manifest_entry_id}/execute-sample"
-
 router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])
-
-LEGACY_USE_CASE_KEYS_REMOVED: frozenset[str] = frozenset(
-    {
-        "daily_prediction",
-        "horoscope_daily_free",
-        "horoscope_daily_full",
-        "chat",
-        "chat_astrologer",
-    }
-)
 
 
 @router.get("/personas", response_model=LlmPersonaListResponse)

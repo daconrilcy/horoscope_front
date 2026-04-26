@@ -1,20 +1,18 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import HTTPException
 
 from app.services.prediction.types import (
     DailyPredictionServiceError,
 )
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/predictions", tags=["predictions"])
-from app.api.v1.schemas.routers.public.predictions import *
 
 
 def _raise_daily_prediction_service_error(

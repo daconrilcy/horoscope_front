@@ -1,13 +1,10 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter
-
-router = APIRouter(prefix="/email", tags=["email"])
 logger = logging.getLogger(__name__)
 
 

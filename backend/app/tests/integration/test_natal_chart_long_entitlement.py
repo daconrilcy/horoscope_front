@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 import app.infra.db.models  # noqa: F401
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.schemas.natal_interpretation import (
+from app.api.v1.schemas.routers.public.natal_interpretation import (
     InterpretationMeta,
     NatalInterpretationData,
     NatalInterpretationResponse,

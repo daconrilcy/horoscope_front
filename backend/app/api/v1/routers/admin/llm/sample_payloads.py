@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import uuid
 from typing import Any
 
@@ -28,7 +27,7 @@ from app.api.v1.router_logic.admin.llm.sample_payloads import (
     _validate_locale,
     _validate_payload_json,
 )
-from app.api.v1.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.api.v1.schemas.routers.admin.llm.sample_payloads import (
     AdminLlmSamplePayloadCreatePayload,
     AdminLlmSamplePayloadDeleteResponse,
@@ -38,18 +37,10 @@ from app.api.v1.schemas.routers.admin.llm.sample_payloads import (
     AdminLlmSamplePayloadUpdatePayload,
 )
 from app.core.request_id import resolve_request_id
-from app.core.sensitive_data import DataCategory
 from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.session import get_db_session
 
 router = APIRouter(prefix="/v1/admin/llm/sample-payloads", tags=["admin-llm"])
-
-LOCALE_PATTERN = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
-BLOCKED_CATEGORIES = {
-    DataCategory.SECRET_CREDENTIAL,
-    DataCategory.DIRECT_IDENTIFIER,
-    DataCategory.CORRELABLE_BUSINESS_IDENTIFIER,
-}
 
 
 @router.post("", response_model=AdminLlmSamplePayloadResponse)

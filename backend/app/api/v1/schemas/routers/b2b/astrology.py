@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
+from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
+
 import logging
 from datetime import datetime
 from typing import Any
@@ -43,17 +45,6 @@ class QuotaInfoPayload(BaseModel):
     limit: int | None = None
     remaining: int | None = None
     window_end: datetime | None = None
-
-
-class ErrorPayload(BaseModel):
-    code: str
-    message: str
-    details: dict[str, Any]
-    request_id: str
-
-
-class ErrorEnvelope(BaseModel):
-    error: ErrorPayload
 
 
 class WeeklyBySignApiResponse(BaseModel):

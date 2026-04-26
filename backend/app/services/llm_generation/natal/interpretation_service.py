@@ -13,11 +13,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.v1.schemas.natal_interpretation import (
+from app.api.v1.schemas.routers.public.natal_interpretation import (
     InterpretationMeta,
     NatalInterpretationResponse,
 )
-from app.api.v1.schemas.natal_interpretation import (
+from app.api.v1.schemas.routers.public.natal_interpretation import (
     NatalInterpretationData as NatalGatewayInterpretationData,
 )
 from app.core.config import settings

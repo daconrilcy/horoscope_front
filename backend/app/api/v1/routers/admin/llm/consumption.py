@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.api.v1.constants import DEFAULT_DRILLDOWN_LIMIT, MAX_PAGE_SIZE
 from app.api.v1.router_logic.admin.llm.consumption import (
     _apply_search,
     _build_rows,
@@ -39,9 +40,6 @@ router = APIRouter(prefix="/v1/admin/llm/consumption", tags=["admin-llm-consumpt
 
 
 ConsumptionView = str
-VALID_VIEWS = {"user", "subscription", "feature"}
-MAX_PAGE_SIZE = 100
-DEFAULT_DRILLDOWN_LIMIT = 50
 
 
 @router.get("/canonical", response_model=CanonicalConsumptionResponse)

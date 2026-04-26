@@ -12,14 +12,14 @@ from app.api.v1.router_logic.public.natal_interpretation import (
     _build_natal_entitlement_info,
     _create_error_response,
 )
-from app.api.v1.routers.public.users import ErrorEnvelope
-from app.api.v1.schemas.natal_interpretation import (
+from app.api.v1.schemas.routers.public.natal_interpretation import (
     NatalChartLongEntitlementInfo,
     NatalInterpretationListResponse,
     NatalInterpretationRequest,
     NatalInterpretationResponse,
     NatalPdfTemplateListResponse,
 )
+from app.api.v1.schemas.routers.public.users import ErrorEnvelope
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.domain.llm.runtime.adapter import AIEngineAdapterError
@@ -408,7 +408,7 @@ async def get_natal_interpretation(
             404, "interpretation_not_found", "Interpretation not found or access denied", request_id
         )
 
-    from app.api.v1.schemas.natal_interpretation import InterpretationMeta
+    from app.api.v1.schemas.routers.public.natal_interpretation import InterpretationMeta
     from app.infra.db.models.user_natal_interpretation import InterpretationLevel
 
     meta = InterpretationMeta(

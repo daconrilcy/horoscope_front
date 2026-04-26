@@ -1,22 +1,26 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Literal
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
+from app.api.v1.errors import api_error_response
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
 from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
+)
+from app.services.canonical_entitlement.audit.audit_query import (
+    CanonicalEntitlementMutationAuditQueryService,
 )
 from app.services.canonical_entitlement.audit.diff_service import (
     CanonicalEntitlementMutationDiffService,
@@ -28,14 +32,164 @@ from app.services.canonical_entitlement.suppression.application import (
     CanonicalEntitlementAlertSuppressionApplicationService,
 )
 
-router = APIRouter(prefix="/v1/ops/entitlements", tags=["ops-entitlement-audits"])
 WritableReviewStatusLiteral = Literal["acknowledged", "expected", "investigating", "closed"]
 ReviewStatusLiteral = Literal[
     "pending_review", "acknowledged", "expected", "investigating", "closed"
 ]
 PersistedReviewStatusLiteral = WritableReviewStatusLiteral
 _DIFF_FILTER_MAX = 10_000
-from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import *
+from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import (
+    AlertHandlingState,
+    ReviewState,
+)
+
+
+def build_mutation_audit_list_response(
+    *,
+    db: Session,
+    current_user: AuthenticatedUser,
+    request_id: str,
+    page: int,
+    page_size: int,
+    plan_id: int | None,
+    plan_code: str | None,
+    feature_code: str | None,
+    actor_type: str | None,
+    actor_identifier: str | None,
+    source_origin: str | None,
+    request_id_filter: str | None,
+    date_from: datetime | None,
+    date_to: datetime | None,
+    risk_level_filter: Literal["high", "medium", "low"] | None,
+    change_kind_filter: Literal["binding_created", "binding_updated"] | None,
+    changed_field_filter: str | None,
+    review_status_filter: ReviewStatusLiteral | None,
+    include_payloads: bool,
+) -> Any:
+    """Construit la réponse de liste des mutations en dehors du routeur HTTP."""
+    role_error = _ensure_ops_role(current_user, request_id)
+    if role_error is not None:
+        return role_error
+
+    limit_error = _enforce_limits(user=current_user, request_id=request_id, operation="list")
+    if limit_error is not None:
+        return limit_error
+
+    sql_filter_kwargs: dict[str, Any] = dict(
+        plan_id=plan_id,
+        plan_code=plan_code,
+        feature_code=feature_code,
+        actor_type=actor_type,
+        actor_identifier=actor_identifier,
+        source_origin=source_origin,
+        request_id=request_id_filter,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+    has_diff_or_review_filter = any(
+        [risk_level_filter, change_kind_filter, changed_field_filter, review_status_filter]
+    )
+
+    if not has_diff_or_review_filter:
+        items, total_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
+            db,
+            page=page,
+            page_size=page_size,
+            **sql_filter_kwargs,
+        )
+        audit_ids = [audit.id for audit in items]
+        reviews_by_id = _load_reviews_by_audit_ids(db, audit_ids)
+
+        return {
+            "data": {
+                "items": [
+                    _to_item(
+                        item,
+                        include_payloads=include_payloads,
+                        review_record=reviews_by_id.get(item.id),
+                    )
+                    for item in items
+                ],
+                "total_count": total_count,
+                "page": page,
+                "page_size": page_size,
+            },
+            "meta": {"request_id": request_id},
+        }
+
+    _, sql_count = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
+        db,
+        page=1,
+        page_size=1,
+        **sql_filter_kwargs,
+    )
+
+    if sql_count > _DIFF_FILTER_MAX:
+        return _error_response(
+            status_code=400,
+            request_id=request_id,
+            code="diff_filter_result_set_too_large",
+            message=(
+                f"Too many results to apply diff filter ({sql_count} > {_DIFF_FILTER_MAX}). "
+                "Add SQL filters to narrow the result set."
+            ),
+            details={"sql_count": sql_count, "max_allowed": _DIFF_FILTER_MAX},
+        )
+
+    all_items, _ = CanonicalEntitlementMutationAuditQueryService.list_mutation_audits(
+        db,
+        page=1,
+        page_size=_DIFF_FILTER_MAX,
+        **sql_filter_kwargs,
+    )
+
+    all_audit_ids = [audit.id for audit in all_items]
+    reviews_by_id = _load_reviews_by_audit_ids(db, all_audit_ids)
+
+    filtered: list[tuple[Any, Any, CanonicalEntitlementMutationAuditReviewModel | None]] = []
+    for item in all_items:
+        diff = CanonicalEntitlementMutationDiffService.compute_diff(
+            item.before_payload or {}, item.after_payload or {}
+        )
+        if risk_level_filter and diff.risk_level != risk_level_filter:
+            continue
+        if change_kind_filter and diff.change_kind != change_kind_filter:
+            continue
+        if changed_field_filter and changed_field_filter not in diff.changed_fields:
+            continue
+        review_record = reviews_by_id.get(item.id)
+        if review_status_filter is not None:
+            effective_status = (
+                review_record.review_status
+                if review_record is not None
+                else ("pending_review" if diff.risk_level == "high" else None)
+            )
+            if effective_status != review_status_filter:
+                continue
+        filtered.append((item, diff, review_record))
+
+    total_count = len(filtered)
+    start = (page - 1) * page_size
+    page_items = filtered[start : start + page_size]
+
+    return {
+        "data": {
+            "items": [
+                _to_item_with_diff(
+                    item,
+                    diff=diff,
+                    include_payloads=include_payloads,
+                    review_record=review_record,
+                )
+                for item, diff, review_record in page_items
+            ],
+            "total_count": total_count,
+            "page": page,
+            "page_size": page_size,
+        },
+        "meta": {"request_id": request_id},
+    }
 
 
 def _error_response(
@@ -46,16 +200,12 @@ def _error_response(
     message: str,
     details: dict[str, Any],
 ) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details,
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )
 
 

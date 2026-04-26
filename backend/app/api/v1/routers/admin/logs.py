@@ -11,7 +11,7 @@ from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.router_logic.admin.logs import (
     _mask_email,
 )
-from app.api.v1.schemas.admin_logs import (
+from app.api.v1.schemas.routers.admin.logs import (
     AdminAppErrorsResponse,
     AdminQuotaAlertsResponse,
     AdminStripeEventsResponse,

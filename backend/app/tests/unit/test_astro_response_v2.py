@@ -150,7 +150,10 @@ def test_v2_deserialization_failure_falls_back_to_v1():
 
 def test_natal_interpretation_data_accepts_both():
     """NatalInterpretationData accepte v1 et v2 sans erreur."""
-    from app.api.v1.schemas.natal_interpretation import InterpretationMeta, NatalInterpretationData
+    from app.api.v1.schemas.routers.public.natal_interpretation import (
+        InterpretationMeta,
+        NatalInterpretationData,
+    )
 
     meta = InterpretationMeta(
         level="complete",

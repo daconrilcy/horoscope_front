@@ -19,7 +19,7 @@ from app.api.v1.router_logic.internal.llm.qa import (
     _resolve_target_user,
     _seed_result_to_response,
 )
-from app.api.v1.routers.public.predictions import (
+from app.api.v1.router_logic.public.predictions import (
     _extract_llm_narrative_payload,
     _raise_daily_prediction_service_error,
 )

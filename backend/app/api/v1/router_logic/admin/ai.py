@@ -1,20 +1,18 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter
 from sqlalchemy import and_
 
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/admin/ai", tags=["admin-ai"])
 _AI_METRIC_CATEGORY_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {
         "key": "natal_theme_short_free",

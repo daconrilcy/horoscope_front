@@ -9,13 +9,13 @@ from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.router_logic.admin.llm.assemblies import (
     _error_response,
 )
-from app.api.v1.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.api.v1.schemas.routers.admin.llm.assemblies import (
     AssemblyConfigListResponse,
     AssemblyConfigResponse,
     AssemblyPreviewResponse,
     AssemblyPublishApiResponse,
 )
+from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.domain.llm.configuration.admin_models import (
     DraftPublishResponse,
     PromptAssemblyConfig,

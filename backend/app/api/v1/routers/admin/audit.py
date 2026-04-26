@@ -18,7 +18,7 @@ from app.api.v1.router_logic.admin.audit import (
     _mask_email,
     _mask_target_id,
 )
-from app.api.v1.schemas.admin_audit import (
+from app.api.v1.schemas.routers.admin.audit import (
     AdminAuditExportRequest,
     AdminAuditLogResponse,
 )

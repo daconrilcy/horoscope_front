@@ -1,21 +1,22 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
-import re
 import uuid
 from collections.abc import Iterator
 from typing import Any
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
-from app.api.v1.routers.admin.llm.error_codes import AdminLlmErrorCode
-from app.core.sensitive_data import DataCategory, classify_field
+from app.api.v1.constants import BLOCKED_CATEGORIES, LOCALE_PATTERN
+from app.api.v1.errors import api_error_response
+from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.api.v1.schemas.routers.admin.llm.sample_payloads import AdminLlmSamplePayload
+from app.core.sensitive_data import classify_field
 from app.domain.llm.governance.feature_taxonomy import (
     is_supported_feature,
     normalize_feature,
@@ -25,15 +26,6 @@ from app.domain.llm.governance.feature_taxonomy import (
 from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
-
-router = APIRouter(prefix="/v1/admin/llm/sample-payloads", tags=["admin-llm"])
-LOCALE_PATTERN = re.compile(r"^[a-z]{2}-[A-Z]{2}$")
-BLOCKED_CATEGORIES = {
-    DataCategory.SECRET_CREDENTIAL,
-    DataCategory.DIRECT_IDENTIFIER,
-    DataCategory.CORRELABLE_BUSINESS_IDENTIFIER,
-}
-from app.api.v1.schemas.routers.admin.llm.sample_payloads import *
 
 
 def _iter_payload_keys(payload: Any, prefix: str = "") -> Iterator[str]:
@@ -110,16 +102,12 @@ def _normalize_scope_dimensions(
 def _error_response(
     *, request_id: str, status_code: int, code: str, message: str, details: dict[str, Any]
 ) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details,
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )
 
 

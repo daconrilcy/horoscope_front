@@ -1,6 +1,6 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import csv
@@ -9,9 +9,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from fastapi import APIRouter
 from sqlalchemy.orm import Session
 
+from app.api.v1.constants import VALID_VIEWS
 from app.services.llm_observability.consumption_service import (
     CanonicalConsumptionAggregate,
     CanonicalConsumptionFilters,
@@ -19,12 +19,8 @@ from app.services.llm_observability.consumption_service import (
     LlmCanonicalConsumptionService,
 )
 
-router = APIRouter(prefix="/v1/admin/llm/consumption", tags=["admin-llm-consumption"])
 ConsumptionView = str
-VALID_VIEWS = {"user", "subscription", "feature"}
-MAX_PAGE_SIZE = 100
-DEFAULT_DRILLDOWN_LIMIT = 50
-from app.api.v1.schemas.routers.admin.llm.consumption import *
+from app.api.v1.schemas.routers.admin.llm.consumption import CanonicalConsumptionViewRow
 
 
 def _normalize_view(view: str) -> ConsumptionView:

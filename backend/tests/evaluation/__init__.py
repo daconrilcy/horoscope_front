@@ -12,6 +12,10 @@ from starlette.responses import Response
 from app.api.dependencies.auth import UserAuthenticationError
 from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.health import router as health_router
+from app.api.v1.constants import (
+    ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
+    ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
+)
 from app.api.v1.routers.admin.ai import router as admin_ai_router
 from app.api.v1.routers.admin.audit import router as admin_audit_router
 from app.api.v1.routers.admin.content import router as admin_content_router
@@ -20,10 +24,6 @@ from app.api.v1.routers.admin.entitlements import router as admin_entitlements_r
 from app.api.v1.routers.admin.exports import router as admin_exports_router
 from app.api.v1.routers.admin.llm.assemblies import router as admin_llm_assembly_router
 from app.api.v1.routers.admin.llm.consumption import router as admin_llm_consumption_router
-from app.api.v1.routers.admin.llm.prompts import (
-    ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
-    ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
-)
 from app.api.v1.routers.admin.llm.prompts import (
     router as admin_llm_router,
 )
@@ -37,11 +37,16 @@ from app.api.v1.routers.admin.support import router as admin_support_router
 from app.api.v1.routers.admin.users import router as admin_users_router
 from app.api.v1.routers.b2b.astrology import router as b2b_astrology_router
 from app.api.v1.routers.b2b.billing import router as b2b_billing_router
+from app.api.v1.routers.b2b.credentials import router as enterprise_credentials_router
 from app.api.v1.routers.b2b.editorial import router as b2b_editorial_router
-from app.api.v1.routers.b2b.entitlement_repair import router as b2b_entitlement_repair_router
-from app.api.v1.routers.b2b.entitlements_audit import router as b2b_entitlements_audit_router
-from app.api.v1.routers.b2b.reconciliation import router as b2b_reconciliation_router
 from app.api.v1.routers.b2b.usage import router as b2b_usage_router
+from app.api.v1.routers.ops.b2b.entitlement_repair import (
+    router as b2b_entitlement_repair_router,
+)
+from app.api.v1.routers.ops.b2b.entitlements_audit import (
+    router as b2b_entitlements_audit_router,
+)
+from app.api.v1.routers.ops.b2b.reconciliation import router as b2b_reconciliation_router
 from app.api.v1.routers.ops.entitlement_mutation_audits import (
     router as ops_entitlement_mutation_audits_router,
 )
@@ -57,7 +62,6 @@ from app.api.v1.routers.public.billing import router as billing_router
 from app.api.v1.routers.public.chat import router as chat_router
 from app.api.v1.routers.public.consultations import router as consultations_router
 from app.api.v1.routers.public.email import router as email_router
-from app.api.v1.routers.public.enterprise_credentials import router as enterprise_credentials_router
 from app.api.v1.routers.public.entitlements import router as entitlements_router
 from app.api.v1.routers.public.ephemeris import router as ephemeris_router
 from app.api.v1.routers.public.geocoding import router as geocoding_router

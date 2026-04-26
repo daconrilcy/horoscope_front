@@ -3,6 +3,13 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
+from app.api.v1.constants import (
+    LEGACY_USE_CASE_KEYS_REMOVED,
+    ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
+    ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
+    ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
+)
+
 import json
 import logging
 import uuid
@@ -18,7 +25,7 @@ from app.api.dependencies.auth import (
     AuthenticatedUser,
     require_admin_user,
 )
-from app.api.v1.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
@@ -109,19 +116,7 @@ from app.services.llm_generation.anonymization_service import (
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
-ADMIN_MANUAL_LLM_EXECUTE_SURFACE = "admin_catalog_manual_execute_sample"
-ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER = "X-Admin-Manual-Llm-Execute"
-ADMIN_MANUAL_EXECUTE_ROUTE_PATH = "/catalog/{manifest_entry_id}/execute-sample"
 router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])
-LEGACY_USE_CASE_KEYS_REMOVED: frozenset[str] = frozenset(
-    {
-        "daily_prediction",
-        "horoscope_daily_free",
-        "horoscope_daily_full",
-        "chat",
-        "chat_astrologer",
-    }
-)
 AdminInspectionMode = Literal["assembly_preview", "runtime_preview", "live_execution"]
 AdminSelectedComponentType = Literal[
     "domain_instructions",

@@ -2,7 +2,7 @@ from typing import Final
 
 from sqlalchemy.orm import Session
 
-from app.api.v1.schemas.consultation import (
+from app.api.v1.schemas.routers.public.consultation import (
     ConsultationPrecheckData,
     ConsultationPrecheckRequest,
     ConsultationStatus,

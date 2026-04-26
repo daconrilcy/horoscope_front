@@ -1,1 +1,1 @@
-"""Package genere pour les artefacts API v1."""
+"""Schemas des routeurs ops API v1."""

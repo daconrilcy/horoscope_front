@@ -13,7 +13,7 @@ from app.api.v1.router_logic.public.entitlements import (
     _missing_feature_response,
     _to_feature_response,
 )
-from app.api.v1.schemas.entitlements import (
+from app.api.v1.schemas.routers.public.entitlements import (
     EntitlementsMeResponse,
     PlanCatalogData,
     PlanFeatureData,
@@ -37,13 +37,6 @@ from app.services.entitlement.effective_entitlement_resolver_service import (
 router = APIRouter(prefix="/v1/entitlements", tags=["entitlements"])
 
 # Liste fixe des features — toujours retournées, quel que soit l'état du binding
-FEATURES_TO_QUERY: list[str] = [
-    "astrologer_chat",
-    "thematic_consultation",
-    "natal_chart_long",
-    "natal_chart_short",
-    "horoscope_daily",
-]
 
 _PLAN_PRIORITY: dict[str, str] = {
     "free": "low",

@@ -1,18 +1,15 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.api.dependencies.auth import AuthenticatedUser
+from app.api.v1.errors import api_error_response
 from app.core.rate_limit import RateLimitError, check_rate_limit
-
-router = APIRouter(prefix="/v1/audit", tags=["audit"])
-from app.api.v1.schemas.routers.public.audit import *
 
 
 def _error_response(
@@ -23,16 +20,12 @@ def _error_response(
     message: str,
     details: dict[str, Any],
 ) -> JSONResponse:
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details,
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )
 
 

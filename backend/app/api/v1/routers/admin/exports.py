@@ -16,7 +16,7 @@ from app.api.v1.router_logic.admin.exports import (
     _generate_csv_response,
     _record_export_audit,
 )
-from app.api.v1.schemas.admin_exports import (
+from app.api.v1.schemas.routers.admin.exports import (
     AdminExportRequest,
     AdminGenerationExportRequest,
 )

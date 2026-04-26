@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
+from app.api.v1.constants import DEFAULT_DRILLDOWN_LIMIT, MAX_PAGE_SIZE, VALID_VIEWS
+
 import csv
 import io
 from datetime import datetime
@@ -28,9 +30,6 @@ from app.services.llm_observability.consumption_service import (
 
 router = APIRouter(prefix="/v1/admin/llm/consumption", tags=["admin-llm-consumption"])
 ConsumptionView = str
-VALID_VIEWS = {"user", "subscription", "feature"}
-MAX_PAGE_SIZE = 100
-DEFAULT_DRILLDOWN_LIMIT = 50
 
 
 class CanonicalConsumptionViewRow(BaseModel):

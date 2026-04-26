@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 # ruff: noqa: F401, F811, I001, UP035
+from app.api.v1.constants import VALID_ASTROLOGER_PROFILES
+
+from app.api.v1.schemas.common import ErrorEnvelope, ErrorPayload
+
 import asyncio
 import logging
 import random
@@ -43,7 +47,6 @@ from app.services.user_profile.natal_chart_service import (
     UserNatalChartServiceError,
 )
 
-VALID_ASTROLOGER_PROFILES = {"standard", "vedique", "humaniste", "karmique", "psychologique"}
 router = APIRouter(prefix="/v1/users", tags=["users"])
 logger = logging.getLogger(__name__)
 _INCONSISTENT_LOG_WINDOW_SECONDS = 60.0
@@ -55,17 +58,6 @@ _inconsistent_log_sampling_state = {"window_start": monotonic(), "count": 0}
 
 class ResponseMeta(BaseModel):
     request_id: str
-
-
-class ErrorPayload(BaseModel):
-    code: str
-    message: str
-    details: dict[str, Any]
-    request_id: str
-
-
-class ErrorEnvelope(BaseModel):
-    error: ErrorPayload
 
 
 class UserBirthProfileApiResponse(BaseModel):

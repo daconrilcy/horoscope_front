@@ -1,22 +1,22 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
-import json
-import logging
 import uuid
 from typing import Any, Literal
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.dependencies.auth import (
-    AuthenticatedUser,
+from app.api.v1.constants import LEGACY_USE_CASE_KEYS_REMOVED
+from app.api.v1.errors import api_error_response
+from app.api.v1.router_logic.admin.llm.manual_execution import (
+    _build_admin_developer_message_bundle,
+    _json_pretty_admin,
 )
-from app.api.v1.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
 from app.domain.llm.configuration.admin_models import (
     AdminUseCaseAudit,
@@ -42,7 +42,6 @@ from app.domain.llm.prompting.personas import compose_persona_block
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.domain.llm.runtime.composition import ContextQualityInjector, ProviderParameterMapper
 from app.domain.llm.runtime.contracts import (
-    GatewayResult,
     PromptRenderError,
 )
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
@@ -56,7 +55,6 @@ from app.infra.db.models.llm.llm_prompt import (
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 from app.infra.db.repositories.llm.prompting_repository import (
     get_active_prompt_version as repo_get_active_prompt_version,
 )
@@ -65,26 +63,7 @@ from app.infra.db.repositories.llm.prompting_repository import (
     get_sample_payload,
 )
 from app.ops.llm.services import PromptRegistryV2
-from app.services.llm_generation.anonymization_service import (
-    LLMAnonymizationError,
-    anonymize_text,
-)
-from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
-logger = logging.getLogger(__name__)
-ADMIN_MANUAL_LLM_EXECUTE_SURFACE = "admin_catalog_manual_execute_sample"
-ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER = "X-Admin-Manual-Llm-Execute"
-ADMIN_MANUAL_EXECUTE_ROUTE_PATH = "/catalog/{manifest_entry_id}/execute-sample"
-router = APIRouter(prefix="/v1/admin/llm", tags=["admin-llm"])
-LEGACY_USE_CASE_KEYS_REMOVED: frozenset[str] = frozenset(
-    {
-        "daily_prediction",
-        "horoscope_daily_free",
-        "horoscope_daily_full",
-        "chat",
-        "chat_astrologer",
-    }
-)
 AdminInspectionMode = Literal["assembly_preview", "runtime_preview", "live_execution"]
 AdminSelectedComponentType = Literal[
     "domain_instructions",
@@ -103,7 +82,17 @@ AdminRuntimeArtifactType = Literal[
     "system_prompt",
     "final_provider_payload",
 ]
-from app.api.v1.schemas.routers.admin.llm.prompts import *
+from app.api.v1.schemas.routers.admin.llm.prompts import (
+    AdminLlmCatalogEntry,
+    AdminResolvedActivationView,
+    AdminResolvedAssemblyView,
+    AdminRuntimeArtifactView,
+    AdminSelectedComponentView,
+    ResolvedCompositionSources,
+    ResolvedPlaceholderView,
+    ResolvedResultView,
+    ResolvedTransformationPipeline,
+)
 
 
 def _to_none_if_literal_none(value: Any) -> str | None:
@@ -264,290 +253,6 @@ def _serialize_prompt_version(db: Session, version: LlmPromptVersionModel) -> Ll
     return LlmPromptVersion.model_validate(version)
 
 
-def _normalize_event_type(status: str | None) -> str:
-    status_text = str(status or "").strip().lower()
-    mapping = {
-        "candidate": "created",
-        "qualified": "validated",
-        "activated": "activated",
-        "monitoring": "monitoring",
-        "degraded": "degraded",
-        "rollback_recommended": "rollback_recommended",
-        "rolled_back": "rolled_back",
-    }
-    return mapping.get(status_text, "backend_unmapped")
-
-
-def _extract_proof_summaries(snapshot: LlmReleaseSnapshotModel) -> list[ProofSummary]:
-    manifest = snapshot.manifest or {}
-    targets = manifest.get("targets") or {}
-    release_health = manifest.get("release_health") or {}
-    history = release_health.get("history") or []
-    known_manifest_entry_ids = set(str(entry_id) for entry_id in targets.keys())
-
-    qualification_signal: dict[str, Any] | None = None
-    golden_signal: dict[str, Any] | None = None
-    smoke_signal: dict[str, Any] | None = None
-
-    for event in history:
-        if not isinstance(event, dict):
-            continue
-        signals = event.get("signals") or {}
-        if not isinstance(signals, dict):
-            continue
-        if signals.get("qualification_verdict") is not None:
-            qualification_signal = event
-        if signals.get("golden_verdict") is not None:
-            golden_signal = event
-        if signals.get("active_snapshot_id") is not None:
-            smoke_signal = event
-
-    qualification_signals = (qualification_signal or {}).get("signals", {})
-    golden_signals = (golden_signal or {}).get("signals", {})
-    qualification_verdict = (
-        str(qualification_signals.get("qualification_verdict")) if qualification_signal else None
-    )
-    golden_verdict = str(golden_signals.get("golden_verdict")) if golden_signal else None
-    qualification_snapshot_id = (
-        str(qualification_signals.get("active_snapshot_id"))
-        if qualification_signals.get("active_snapshot_id")
-        else None
-    )
-    golden_snapshot_id = (
-        str(golden_signals.get("active_snapshot_id"))
-        if golden_signals.get("active_snapshot_id")
-        else None
-    )
-    qualification_manifest_entry_id = (
-        str(qualification_signals.get("qualification_manifest_entry_id"))
-        if qualification_signals.get("qualification_manifest_entry_id")
-        else None
-    )
-    golden_manifest_entry_id = (
-        str(golden_signals.get("golden_manifest_entry_id"))
-        if golden_signals.get("golden_manifest_entry_id")
-        else None
-    )
-    smoke_status = (
-        str((smoke_signal or {}).get("signals", {}).get("status")) if smoke_signal else None
-    )
-    smoke_manifest_entry_id = (
-        str((smoke_signal or {}).get("signals", {}).get("manifest_entry_id"))
-        if smoke_signal and (smoke_signal.get("signals") or {}).get("manifest_entry_id")
-        else None
-    )
-    qualification_correlated = (
-        qualification_verdict is not None
-        and qualification_snapshot_id == str(snapshot.id)
-        and (
-            qualification_manifest_entry_id is None
-            or qualification_manifest_entry_id in known_manifest_entry_ids
-        )
-    )
-    golden_correlated = (
-        golden_verdict is not None
-        and golden_snapshot_id == str(snapshot.id)
-        and (
-            golden_manifest_entry_id is None or golden_manifest_entry_id in known_manifest_entry_ids
-        )
-    )
-
-    qualification = ProofSummary(
-        proof_type="qualification",
-        status="present" if qualification_verdict else "missing",
-        verdict=qualification_verdict,
-        generated_at=str((qualification_signal or {}).get("timestamp"))
-        if qualification_signal
-        else None,
-        manifest_entry_id=qualification_manifest_entry_id,
-        correlated=qualification_correlated,
-    )
-    golden = ProofSummary(
-        proof_type="golden",
-        status="present" if golden_verdict else "missing",
-        verdict=golden_verdict,
-        generated_at=str((golden_signal or {}).get("timestamp")) if golden_signal else None,
-        manifest_entry_id=golden_manifest_entry_id,
-        correlated=golden_correlated,
-    )
-    smoke_correlated = (
-        smoke_manifest_entry_id is not None and smoke_manifest_entry_id in known_manifest_entry_ids
-    )
-    smoke = ProofSummary(
-        proof_type="smoke",
-        status=("present" if smoke_status else "missing"),
-        verdict=smoke_status,
-        generated_at=str((smoke_signal or {}).get("timestamp")) if smoke_signal else None,
-        manifest_entry_id=smoke_manifest_entry_id,
-        correlated=smoke_correlated,
-    )
-    readiness_status = "missing"
-    readiness_verdict: str | None = None
-    if (
-        qualification.status == "present"
-        and golden.status == "present"
-        and smoke.status == "present"
-    ):
-        if qualification.verdict in {"go", "go-with-constraints"} and golden.verdict == "pass":
-            if qualification_correlated and golden_correlated and smoke_correlated:
-                readiness_verdict = "valid"
-            else:
-                readiness_verdict = "uncorrelated"
-            readiness_status = "present"
-        else:
-            readiness_verdict = "invalid"
-            readiness_status = "present"
-    readiness = ProofSummary(
-        proof_type="readiness",
-        status=readiness_status,
-        verdict=readiness_verdict,
-        generated_at=smoke.generated_at or golden.generated_at or qualification.generated_at,
-        manifest_entry_id=smoke.manifest_entry_id,
-        correlated=qualification_correlated and golden_correlated and smoke_correlated,
-    )
-
-    return [qualification, golden, smoke, readiness]
-
-
-def _build_snapshot_timeline_events(
-    snapshot: LlmReleaseSnapshotModel,
-) -> list[SnapshotTimelineItem]:
-    manifest = snapshot.manifest or {}
-    release_health = manifest.get("release_health") or {}
-    history = release_health.get("history") or []
-    proof_summaries = _extract_proof_summaries(snapshot)
-    manifest_entry_count = len((manifest.get("targets") or {}).keys())
-    current_status = str(snapshot.status)
-    release_health_status = str(release_health.get("status") or snapshot.status)
-    history_events = [event for event in history if isinstance(event, dict)]
-
-    timeline_events: list[SnapshotTimelineItem] = []
-    timeline_events.append(
-        SnapshotTimelineItem(
-            event_type="created",
-            snapshot_id=str(snapshot.id),
-            snapshot_version=snapshot.version,
-            occurred_at=snapshot.created_at.isoformat(),
-            current_status=current_status,
-            release_health_status=release_health_status,
-            status_history=history_events,
-            reason="Snapshot created.",
-            from_snapshot_id=None,
-            to_snapshot_id=str(snapshot.id),
-            manifest_entry_count=manifest_entry_count,
-            proof_summaries=proof_summaries,
-        )
-    )
-    if snapshot.validated_at:
-        timeline_events.append(
-            SnapshotTimelineItem(
-                event_type="validated",
-                snapshot_id=str(snapshot.id),
-                snapshot_version=snapshot.version,
-                occurred_at=snapshot.validated_at.isoformat(),
-                current_status=current_status,
-                release_health_status=release_health_status,
-                status_history=history_events,
-                reason="Snapshot validated.",
-                from_snapshot_id=None,
-                to_snapshot_id=str(snapshot.id),
-                manifest_entry_count=manifest_entry_count,
-                proof_summaries=proof_summaries,
-            )
-        )
-
-    for history_event in history_events:
-        status = str(history_event.get("status") or "")
-        event_type = _normalize_event_type(status)
-        signals = history_event.get("signals") or {}
-        if not isinstance(signals, dict):
-            signals = {}
-        from_snapshot_id: str | None = None
-        to_snapshot_id: str | None = str(snapshot.id)
-        if event_type == "rolled_back":
-            from_snapshot_id = str(snapshot.id)
-            to_snapshot_id = (
-                str(signals.get("restored_snapshot_id"))
-                if signals.get("restored_snapshot_id")
-                else str(snapshot.id)
-            )
-        timeline_events.append(
-            SnapshotTimelineItem(
-                event_type=event_type,  # type: ignore[arg-type]
-                snapshot_id=str(snapshot.id),
-                snapshot_version=snapshot.version,
-                occurred_at=str(history_event.get("timestamp") or snapshot.created_at.isoformat()),
-                current_status=current_status,
-                release_health_status=release_health_status,
-                status_history=history_events,
-                reason=(
-                    str(history_event.get("reason"))
-                    if history_event.get("reason") is not None
-                    else None
-                ),
-                from_snapshot_id=from_snapshot_id,
-                to_snapshot_id=to_snapshot_id,
-                manifest_entry_count=manifest_entry_count,
-                proof_summaries=proof_summaries,
-            )
-        )
-
-    return timeline_events
-
-
-def _snapshot_diff_entries(
-    *,
-    from_snapshot: LlmReleaseSnapshotModel,
-    to_snapshot: LlmReleaseSnapshotModel,
-) -> list[SnapshotDiffEntry]:
-    from_targets = (from_snapshot.manifest or {}).get("targets") or {}
-    to_targets = (to_snapshot.manifest or {}).get("targets") or {}
-    all_manifest_entry_ids = sorted(set(from_targets.keys()) | set(to_targets.keys()))
-    entries: list[SnapshotDiffEntry] = []
-
-    for manifest_entry_id in all_manifest_entry_ids:
-        from_bundle = from_targets.get(manifest_entry_id) or {}
-        to_bundle = to_targets.get(manifest_entry_id) or {}
-
-        from_assembly = from_bundle.get("assembly") or {}
-        to_assembly = to_bundle.get("assembly") or {}
-        from_profile = from_bundle.get("profile") or {}
-        to_profile = to_bundle.get("profile") or {}
-
-        from_output_contract = (
-            from_assembly.get("output_schema_id") if isinstance(from_assembly, dict) else None
-        )
-        to_output_contract = (
-            to_assembly.get("output_schema_id") if isinstance(to_assembly, dict) else None
-        )
-        assembly_changed = from_assembly != to_assembly
-        execution_profile_changed = from_profile != to_profile
-        output_contract_changed = from_output_contract != to_output_contract
-
-        if manifest_entry_id not in from_targets:
-            category: Literal["added", "removed", "changed", "unchanged"] = "added"
-        elif manifest_entry_id not in to_targets:
-            category = "removed"
-        elif assembly_changed or execution_profile_changed or output_contract_changed:
-            category = "changed"
-        else:
-            category = "unchanged"
-
-        entries.append(
-            SnapshotDiffEntry(
-                manifest_entry_id=str(manifest_entry_id),
-                category=category,
-                assembly_changed=assembly_changed,
-                execution_profile_changed=execution_profile_changed,
-                output_contract_changed=output_contract_changed,
-                from_snapshot_id=str(from_snapshot.id),
-                to_snapshot_id=str(to_snapshot.id),
-            )
-        )
-
-    return entries
-
-
 def _error_response(
     *,
     status_code: int,
@@ -557,17 +262,12 @@ def _error_response(
     details: dict[str, Any],
 ) -> JSONResponse:
     # AC13: Sanitize error details
-    sanitized_details = sanitize_payload(details, Sink.ADMIN_API)
-    return JSONResponse(
+    return api_error_response(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": sanitized_details,
-                "request_id": request_id,
-            }
-        },
+        request_id=request_id,
+        code=code,
+        message=message,
+        details=details,
     )
 
 
@@ -629,157 +329,6 @@ def _get_active_prompt_version_for_use_case(
     if not use_case_key:
         return None
     return repo_get_active_prompt_version(db, use_case_key)
-
-
-def _json_pretty_admin(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, indent=2, default=str)
-
-
-def _build_admin_developer_message_bundle(
-    *,
-    main_prompt: str,
-    persona_block: str | None,
-    include_persona: bool,
-) -> str:
-    messages: list[str] = [f"[DEVELOPER MESSAGE 1 / main]\n{main_prompt}"]
-    if include_persona and persona_block:
-        messages.append(f"[DEVELOPER MESSAGE 2 / persona overlay]\n{persona_block}")
-    return "\n\n".join(messages)
-
-
-def _anonymize_for_admin_manual_execute(text: str, *, field: str) -> str:
-    """Ne pas faire échouer la réponse opérateur si l'anonymisation est indisponible."""
-    try:
-        return anonymize_text(text)
-    except LLMAnonymizationError as exc:
-        logger.warning("admin manual execute: anonymization skipped for %s: %s", field, exc)
-        return "[anonymization_unavailable]"
-
-
-def _build_admin_manual_execute_response_payload(
-    *,
-    built: AdminResolvedAssemblyView,
-    result: GatewayResult,
-    manifest_entry_id: str,
-    sample_payload_id: uuid.UUID,
-    request_id: str,
-    trace_id: str,
-    use_case_key: str,
-) -> AdminCatalogManualExecuteResponseData:
-    """Construit le payload opérateur (prompt, params runtime, sorties, redaction)."""
-    rendered = built.transformation_pipeline.rendered_prompt
-    prompt_sent = _anonymize_for_admin_manual_execute(
-        rendered if rendered else "", field="prompt_sent"
-    )
-
-    structured = result.structured_output
-    structured_sanitized: dict[str, Any] | None = None
-    if isinstance(structured, dict):
-        structured_sanitized = sanitize_payload(structured, Sink.ADMIN_API)
-    parseable = structured_sanitized is not None
-
-    meta = result.meta
-    runtime_params = sanitize_payload(
-        {
-            "translated_provider_params": meta.translated_provider_params or {},
-            "reasoning_profile": meta.reasoning_profile,
-            "verbosity_profile": meta.verbosity_profile,
-            "output_mode": meta.output_mode,
-            "tool_mode": meta.tool_mode,
-            "max_output_tokens_source": meta.max_output_tokens_source,
-            "model_override_active": meta.model_override_active,
-            "prompt_version_id": meta.prompt_version_id,
-            "output_schema_id": meta.output_schema_id,
-            "schema_version": meta.schema_version,
-        },
-        Sink.ADMIN_API,
-    )
-
-    raw_out = _anonymize_for_admin_manual_execute(result.raw_output or "", field="raw_output")
-    val_errors: list[str] | None = None
-    if meta.validation_errors:
-        val_errors = [
-            _anonymize_for_admin_manual_execute(line, field="meta_validation_error")
-            for line in meta.validation_errors
-        ]
-
-    return AdminCatalogManualExecuteResponseData(
-        manifest_entry_id=manifest_entry_id,
-        sample_payload_id=str(sample_payload_id),
-        use_case_key=use_case_key,
-        provider=meta.provider or "openai",
-        model=meta.model,
-        request_id=request_id,
-        trace_id=trace_id,
-        gateway_request_id=result.request_id,
-        prompt_sent=prompt_sent,
-        resolved_runtime_parameters=runtime_params,
-        raw_output=raw_out,
-        structured_output=structured_sanitized,
-        structured_output_parseable=parseable,
-        validation_status=meta.validation_status,
-        execution_path=meta.execution_path,
-        meta_validation_errors=val_errors,
-        latency_ms=meta.latency_ms,
-        admin_manual_execution=True,
-        usage_input_tokens=result.usage.input_tokens,
-        usage_output_tokens=result.usage.output_tokens,
-    )
-
-
-def _record_audit_event(
-    db: Session,
-    *,
-    request_id: str,
-    actor: AuthenticatedUser,
-    action: str,
-    target_type: str,
-    target_id: str | None,
-    status: str,
-    details: Any,
-) -> None:
-    from app.domain.audit.safe_details import to_safe_details
-
-    AuditService.record_event(
-        db,
-        payload=AuditEventCreatePayload(
-            request_id=request_id,
-            actor_user_id=actor.id,
-            actor_role=actor.role,
-            action=action,
-            target_type=target_type,
-            target_id=target_id,
-            status=status,
-            details=to_safe_details(details),
-        ),
-    )
-
-
-def _record_admin_manual_execution_audit(
-    db: Session,
-    *,
-    request_id: str,
-    actor: AuthenticatedUser,
-    manifest_entry_id: str,
-    sample_payload_id: uuid.UUID,
-    status: Literal["success", "failed"],
-    details: dict[str, Any],
-) -> None:
-    _record_audit_event(
-        db,
-        request_id=request_id,
-        actor=actor,
-        action="llm_catalog_execute_sample",
-        target_type="llm_manifest_entry",
-        target_id=manifest_entry_id,
-        status=status,
-        details={
-            "execution_surface": ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
-            "manifest_entry_id": manifest_entry_id,
-            "sample_payload_id": str(sample_payload_id),
-            **details,
-        },
-    )
 
 
 def _build_admin_resolved_catalog_view(

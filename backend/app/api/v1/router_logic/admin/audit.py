@@ -1,13 +1,12 @@
 """Logique non HTTP extraite du routeur API v1 correspondant."""
 
-# ruff: noqa: E402, F403, F405
+# ruff: noqa: E402
 from __future__ import annotations
 
 import logging
 from datetime import timedelta
 from typing import Literal
 
-from fastapi import APIRouter
 from sqlalchemy import or_, select
 
 from app.core.datetime_provider import datetime_provider
@@ -15,7 +14,6 @@ from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/v1/admin/audit", tags=["admin-audit"])
 AuditPeriod = Literal["7d", "30d", "all"]
 
 

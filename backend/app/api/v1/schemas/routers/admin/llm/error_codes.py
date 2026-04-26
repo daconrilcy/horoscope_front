@@ -1,0 +1,39 @@
+"""Codes d'erreur Pydantic partagés par les surfaces admin LLM."""
+
+from __future__ import annotations
+
+from enum import StrEnum
+
+
+class AdminLlmErrorCode(StrEnum):
+    """Codes d'erreur partagés des routes admin LLM."""
+
+    PERSONA_NOT_FOUND = "persona_not_found"
+    SCHEMA_NOT_FOUND = "schema_not_found"
+    SNAPSHOT_NOT_FOUND = "snapshot_not_found"
+    SNAPSHOT_BUNDLE_UNUSABLE = "snapshot_bundle_unusable"
+    INVALID_MANIFEST_ENTRY_ID = "invalid_manifest_entry_id"
+    MANIFEST_ENTRY_NOT_FOUND = "manifest_entry_not_found"
+    USE_CASE_NOT_FOUND = "use_case_not_found"
+    FORBIDDEN_FEATURE = "forbidden_feature"
+    INVALID_PERSONA_ID = "invalid_persona_id"
+    INVALID_SAFETY_PROFILE = "invalid_safety_profile"
+    LINT_FAILED = "lint_failed"
+    EVAL_FAILED = "eval_failed"
+    GOLDEN_REGRESSION_FAILED = "golden_regression_failed"
+    VALIDATION_ERROR = "validation_error"
+    PUBLISH_FAILED = "publish_failed"
+    ROLLBACK_FAILED = "rollback_failed"
+    REPLAY_FAILED = "replay_failed"
+    COHERENCE_VALIDATION_FAILED = "coherence_validation_failed"
+    INVALID_SAMPLE_PAYLOAD = "invalid_sample_payload"
+    INVALID_QUERY = "invalid_query"
+    SAMPLE_PAYLOAD_NOT_FOUND = "sample_payload_not_found"
+    SAMPLE_PAYLOAD_INACTIVE = "sample_payload_inactive"
+    SAMPLE_PAYLOAD_TARGET_MISMATCH = "sample_payload_target_mismatch"
+    SAMPLE_PAYLOAD_RUNTIME_PREVIEW_ONLY = "sample_payload_runtime_preview_only"
+    SAMPLE_PAYLOAD_NAME_CONFLICT = "sample_payload_name_conflict"
+    SAMPLE_PAYLOAD_DEFAULT_CONFLICT = "sample_payload_default_conflict"
+    SAMPLE_PAYLOAD_CONFLICT = "sample_payload_conflict"
+    RUNTIME_PREVIEW_INCOMPLETE_FOR_EXECUTION = "runtime_preview_incomplete_for_execution"
+    ADMIN_MANUAL_EXECUTION_FAILED = "admin_manual_execution_failed"
