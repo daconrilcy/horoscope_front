@@ -12,6 +12,7 @@ ROUTERS_ROOT = Path(__file__).resolve().parents[2] / "api" / "v1" / "routers"
 CANONICAL_DOMAINS = {"admin", "b2b", "internal", "ops", "public"}
 FORBIDDEN_FLAT_PREFIXES = ("admin_", "b2b_", "ops_")
 FORBIDDEN_LEGACY_MODULES = (
+    ".".join(("app", "api", "v1", "routers", "public", "ai")),
     "app.api.v1.routers.admin_llm",
     "app.api.v1.routers.admin_llm_assembly",
     "app.api.v1.routers.admin_llm_consumption",
@@ -20,6 +21,14 @@ FORBIDDEN_LEGACY_MODULES = (
     "app.api.v1.routers.admin_ai",
     "app.api.v1.routers.b2b_astrology",
     "app.api.v1.routers.ops_monitoring",
+)
+FORBIDDEN_ROUTER_PREFIXES = ("/v1/" + "ai",)
+FORBIDDEN_LEGACY_STRINGS = (
+    "ai_engine" + "_router",
+    "use_case" + "_compat",
+    "legacy" + "_maintenance",
+    "legacy" + "_alias",
+    "legacy_registry" + "_only",
 )
 ALLOWED_ROUTER_CLASS_DEFINITIONS = {Path("admin") / "llm" / "error_codes.py": {"AdminLlmErrorCode"}}
 
@@ -105,5 +114,38 @@ def test_router_modules_do_not_define_private_helpers() -> None:
                 "_"
             ):
                 offenders.append(f"{relative_path}:{node.lineno} defines {node.name}")
+
+    assert offenders == []
+
+
+def test_removed_historical_facade_prefix_is_not_registered() -> None:
+    """Le prefixe public LLM historique ne doit plus etre expose par FastAPI."""
+    from app.main import app
+
+    paths = {getattr(route, "path", "") for route in app.routes}
+    offenders = [
+        path
+        for path in paths
+        if any(
+            path == prefix or path.startswith(f"{prefix}/") for prefix in FORBIDDEN_ROUTER_PREFIXES
+        )
+    ]
+
+    assert offenders == []
+
+
+def test_removed_historical_facade_strings_do_not_return_in_backend_app() -> None:
+    """Bloque le retour des champs, etats et aliases de facades historiques."""
+    backend_app = Path(__file__).resolve().parents[2]
+    offenders: list[str] = []
+    for path in backend_app.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        if path == Path(__file__):
+            continue
+        content = path.read_text(encoding="utf-8")
+        for token in FORBIDDEN_LEGACY_STRINGS:
+            if token in content:
+                offenders.append(f"{path.relative_to(backend_app)} contains {token}")
 
     assert offenders == []

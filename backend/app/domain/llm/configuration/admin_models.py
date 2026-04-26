@@ -11,7 +11,6 @@ from app.domain.llm.governance.feature_taxonomy import (
     normalize_feature,
     normalize_subfeature,
 )
-from app.domain.llm.prompting.catalog import DEPRECATED_USE_CASE_MAPPING
 from app.domain.llm.runtime.contracts import is_reasoning_model
 from app.domain.llm.runtime.execution_profiles_types import (
     OutputMode,
@@ -92,8 +91,8 @@ class LlmPersonaUpdate(BaseModel):
 
 
 class AdminUseCaseAudit(BaseModel):
-    maintenance_surface: Literal["canonical_runtime", "legacy_maintenance"]
-    status: Literal["canonical_runtime", "legacy_alias", "legacy_registry_only"]
+    maintenance_surface: Literal["canonical_runtime"]
+    status: Literal["canonical_runtime"]
     canonical_feature: Optional[str] = None
     canonical_subfeature: Optional[str] = None
     canonical_plan: Optional[str] = None
@@ -102,25 +101,13 @@ class AdminUseCaseAudit(BaseModel):
 def build_admin_use_case_audit(
     use_case_key: str | None,
     *,
-    maintenance_surface: Literal["canonical_runtime", "legacy_maintenance"] = (
-        "legacy_maintenance"
-    ),
+    maintenance_surface: Literal["canonical_runtime"] = "canonical_runtime",
     canonical_feature: str | None = None,
     canonical_subfeature: str | None = None,
     canonical_plan: str | None = None,
 ) -> AdminUseCaseAudit | None:
     if not use_case_key:
         return None
-
-    deprecated_mapping = DEPRECATED_USE_CASE_MAPPING.get(use_case_key)
-    if deprecated_mapping is not None:
-        return AdminUseCaseAudit(
-            maintenance_surface="legacy_maintenance",
-            status="legacy_alias",
-            canonical_feature=deprecated_mapping.get("feature"),
-            canonical_subfeature=deprecated_mapping.get("subfeature"),
-            canonical_plan=deprecated_mapping.get("plan"),
-        )
 
     if canonical_feature is not None:
         return AdminUseCaseAudit(
@@ -131,10 +118,7 @@ def build_admin_use_case_audit(
             canonical_plan=canonical_plan,
         )
 
-    return AdminUseCaseAudit(
-        maintenance_surface=maintenance_surface,
-        status="legacy_registry_only",
-    )
+    return None
 
 
 class LlmPromptVersion(BaseModel):

@@ -30,12 +30,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/admin/exports", tags=["admin-exports"])
 
-GEN_EXPORT_COMPAT_DEPRECATION_WARNING = (
-    '299 - "Deprecated field: use_case_compat is compatibility-only and will be removed after '
-    '2026-09-30. Use feature/subfeature/subscription_plan instead."'
-)
-GEN_EXPORT_COMPAT_DEPRECATION_SUNSET = "Tue, 30 Sep 2026 23:59:59 GMT"
-
 
 @router.post("/users")
 def export_users(
@@ -122,19 +116,11 @@ def export_generations(
     )
 
     # 2. Return File
-    deprecation_headers = {
-        "Warning": GEN_EXPORT_COMPAT_DEPRECATION_WARNING,
-        "Sunset": GEN_EXPORT_COMPAT_DEPRECATION_SUNSET,
-        "X-Deprecated-Fields": "use_case_compat",
-    }
     if payload.format == "json":
         return StreamingResponse(
             iter([json.dumps(rows, indent=2)]),
             media_type="application/json",
-            headers={
-                "Content-Disposition": "attachment; filename=generations_export.json",
-                **deprecation_headers,
-            },
+            headers={"Content-Disposition": "attachment; filename=generations_export.json"},
         )
 
     fieldnames = [
@@ -146,7 +132,6 @@ def export_generations(
         "executed_provider",
         "active_snapshot_version",
         "taxonomy_scope",
-        "use_case_compat",
         "model",
         "status",
         "tokens_prompt",
@@ -158,7 +143,6 @@ def export_generations(
         rows,
         fieldnames,
         "generations_export.csv",
-        extra_headers=deprecation_headers,
     )
 
 

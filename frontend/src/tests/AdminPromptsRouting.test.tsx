@@ -145,7 +145,7 @@ describe("resolvePromptsTabFromPath", () => {
   it("mappe les segments URL vers l’univers prompts", () => {
     expect(resolvePromptsTabFromPath("/admin/prompts")).toBe("catalog")
     expect(resolvePromptsTabFromPath("/admin/prompts/catalog")).toBe("catalog")
-    expect(resolvePromptsTabFromPath("/admin/prompts/legacy")).toBe("legacy")
+    expect(resolvePromptsTabFromPath("/admin/prompts/unknown")).toBe("catalog")
     expect(resolvePromptsTabFromPath("/admin/prompts/sample-payloads")).toBe("samplePayloads")
   })
 })
@@ -182,14 +182,17 @@ describe("Admin prompts — routage dédié (story 70.1)", () => {
     })
   })
 
-  it("affiche un titre de page distinct sur /admin/prompts/legacy", async () => {
+  it("redirige un segment prompts inconnu vers le catalogue", async () => {
     vi.stubGlobal("fetch", makeAdminPromptsFetchMock())
     setupToken()
 
-    renderApp(["/admin/prompts/legacy"])
+    const { router } = renderApp(["/admin/prompts/unknown"])
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Historique LLM hors catalogue" })).toBeInTheDocument()
+      expect(router.state.location.pathname).toBe("/admin/prompts/catalog")
+    })
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Catalogue prompts LLM" })).toBeInTheDocument()
     })
   })
 })

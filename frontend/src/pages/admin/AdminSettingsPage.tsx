@@ -12,21 +12,6 @@ interface ExportModalProps {
 }
 
 interface ExportResult {
-  deprecatedFields?: string
-  warning?: string
-  sunset?: string
-}
-
-/** Date calendaire du header HTTP Sunset en UTC (évite le décalage d’un jour avec toLocaleDateString). */
-function formatSunsetHttpDateUtc(sunsetHeader: string): string {
-  const parsed = new Date(sunsetHeader)
-  if (Number.isNaN(parsed.getTime())) {
-    return sunsetHeader
-  }
-  const dd = String(parsed.getUTCDate()).padStart(2, "0")
-  const mm = String(parsed.getUTCMonth() + 1).padStart(2, "0")
-  const yyyy = String(parsed.getUTCFullYear())
-  return `${dd}/${mm}/${yyyy} (UTC)`
 }
 
 function ExportModal({ type, onClose, onExportCompleted }: ExportModalProps) {
@@ -53,11 +38,7 @@ function ExportModal({ type, onClose, onExportCompleted }: ExportModalProps) {
       })
       if (!response.ok) throw new Error("Export failed")
 
-      const exportResult: ExportResult = {
-        deprecatedFields: response.headers.get("X-Deprecated-Fields") ?? undefined,
-        warning: response.headers.get("Warning") ?? undefined,
-        sunset: response.headers.get("Sunset") ?? undefined,
-      }
+      const exportResult: ExportResult = {}
       
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
@@ -141,27 +122,10 @@ function ExportModal({ type, onClose, onExportCompleted }: ExportModalProps) {
 export function AdminSettingsPage() {
   const { canExport } = useAdminPermissions()
   const [activeExport, setActiveExport] = useState<ExportModalProps["type"] | null>(null)
-  const [generationsDeprecationNotice, setGenerationsDeprecationNotice] = useState<string | null>(null)
-  const [isGenerationsNoticeDismissed, setIsGenerationsNoticeDismissed] = useState(false)
 
   const handleExportCompleted = (type: ExportModalProps["type"], result: ExportResult) => {
-    if (type !== "generations") {
-      return
-    }
-    if (!result.deprecatedFields?.includes("use_case_compat")) {
-      return
-    }
-    const sunsetLabel = result.sunset
-      ? formatSunsetHttpDateUtc(result.sunset)
-      : "date non communiquée"
-    setGenerationsDeprecationNotice(
-      `Deprecation active: use_case_compat est en compatibilite uniquement et sera retire apres le ${sunsetLabel}.`,
-    )
-    setIsGenerationsNoticeDismissed(false)
-  }
-
-  const dismissGenerationsNotice = () => {
-    setIsGenerationsNoticeDismissed(true)
+    void type
+    void result
   }
 
   return (
@@ -173,27 +137,7 @@ export function AdminSettingsPage() {
       <section className="settings-section">
         <h3>Exports de données</h3>
         <p className="section-description">Téléchargez les données brutes pour reporting ou backup.</p>
-        {generationsDeprecationNotice && !isGenerationsNoticeDismissed && (
-          <div
-            className="alert-box alert-box--info alert-box--dismissible"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="alert-box__header">
-              <strong>Info export generations</strong>
-              <button
-                type="button"
-                className="alert-box__dismiss text-button"
-                onClick={dismissGenerationsNotice}
-                aria-label="Fermer cette information"
-              >
-                Fermer
-              </button>
-            </div>
-            <p>{generationsDeprecationNotice}</p>
-          </div>
-        )}
-        
+
         <div className="export-list">
           <div className="export-card">
             <div className="export-info">

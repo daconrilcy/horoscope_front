@@ -122,7 +122,6 @@ class CanonicalConsumptionExportRow(BaseModel):
     executed_provider: str | None
     active_snapshot_version: str | None
     taxonomy_scope: str
-    use_case_compat: str | None
     model: str | None
     status: str | None
     tokens_prompt: int | None
@@ -469,7 +468,7 @@ class LlmCanonicalConsumptionService:
             select(
                 LlmCallLogModel.id,
                 LlmCallLogModel.timestamp.label("created_at"),
-                LlmCallLogModel.use_case.label("use_case_compat"),
+                LlmCallLogModel.use_case.label("historical_use_case"),
                 LlmCallLogModel.feature,
                 LlmCallLogModel.subfeature,
                 LlmCallLogModel.plan.label("subscription_plan"),
@@ -511,7 +510,7 @@ class LlmCanonicalConsumptionService:
                 func.count(func.distinct(UserTokenUsageLogModel.user_id)).label("user_id_count"),
                 LlmCallLogModel.plan.label("subscription_plan"),
                 LlmCallLogModel.feature.label("feature"),
-                LlmCallLogModel.use_case.label("use_case_compat"),
+                LlmCallLogModel.use_case.label("historical_use_case"),
                 LlmCallLogModel.subfeature.label("subfeature"),
                 LlmCallLogOperationalMetadataModel.manifest_entry_id.label("manifest_entry_id"),
                 LlmCallLogOperationalMetadataModel.executed_provider.label("executed_provider"),
@@ -563,7 +562,7 @@ class LlmCanonicalConsumptionService:
                 LlmCanonicalConsumptionService._normalize_taxonomy(
                     feature=row.feature,
                     subfeature=row.subfeature,
-                    use_case_compat=row.use_case_compat,
+                    historical_use_case=row.historical_use_case,
                 )
             )
             if filters.scope == "nominal" and is_legacy_residual:
@@ -605,7 +604,7 @@ class LlmCanonicalConsumptionService:
             LlmCanonicalConsumptionService._normalize_taxonomy(
                 feature=original_feature,
                 subfeature=row.subfeature,
-                use_case_compat=row.use_case_compat,
+                historical_use_case=row.historical_use_case,
             )
         )
         return CanonicalConsumptionExportRow(
@@ -617,11 +616,6 @@ class LlmCanonicalConsumptionService:
             executed_provider=row.executed_provider,
             active_snapshot_version=row.active_snapshot_version,
             taxonomy_scope="legacy_residual" if is_legacy_residual else "nominal",
-            use_case_compat=(
-                None
-                if original_feature is not None and not is_legacy_residual
-                else row.use_case_compat
-            ),
             model=row.model,
             status=str(row.status) if row.status is not None else None,
             tokens_prompt=int(row.tokens_prompt) if row.tokens_prompt is not None else None,
@@ -664,17 +658,17 @@ class LlmCanonicalConsumptionService:
         feature: str | None,
         subfeature: str | None,
         *,
-        use_case_compat: str | None = None,
+        historical_use_case: str | None = None,
     ) -> tuple[str, str | None, bool]:
         """
         Map legacy / nullable feature columns to canonical nominal taxonomy.
 
-        When `feature` is missing, `use_case_compat` (historical `use_case`) is used so
-        older rows that only populated the legacy column still reclassify (Story 66-50).
+        Quand `feature` manque, l'ancien `use_case` de journalisation sert seulement a
+        reclasser les lignes locales deja stockees (Story 66-50).
         """
         raw_source = LlmCanonicalConsumptionService._first_non_empty_str(
             feature,
-            use_case_compat,
+            historical_use_case,
         )
         if raw_source is None:
             return ("unknown", subfeature, True)

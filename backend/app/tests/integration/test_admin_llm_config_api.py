@@ -73,7 +73,7 @@ def test_admin_use_case_update_config_is_frozen():
     assert resp.json()["error"]["code"] == "forbidden_feature"
 
 
-def test_admin_use_case_list_exposes_legacy_alias_audit():
+def test_admin_use_case_list_omits_historical_audit_states():
     _cleanup_tables()
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
@@ -84,13 +84,7 @@ def test_admin_use_case_list_exposes_legacy_alias_audit():
     data = {item["key"]: item for item in resp.json()["data"]}
 
     assert "chat" not in data
-    assert data["natal_psy_profile"]["use_case_audit"] == {
-        "maintenance_surface": "legacy_maintenance",
-        "status": "legacy_registry_only",
-        "canonical_feature": None,
-        "canonical_subfeature": None,
-        "canonical_plan": None,
-    }
+    assert data["natal_psy_profile"]["use_case_audit"] is None
 
 
 def test_admin_assembly_publish_returns_structured_coherence_error():

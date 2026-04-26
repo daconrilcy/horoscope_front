@@ -85,7 +85,6 @@ export function resolvePromptsTabFromPath(pathname: string): PromptPageTab {
     return "catalog"
   }
   const map: Record<string, PromptPageTab> = {
-    legacy: "legacy",
     release: "release",
     consumption: "consumption",
     personas: "personas",
@@ -1026,13 +1025,6 @@ export function AdminPromptsPage() {
             end
           >
             {sub.catalog}
-          </NavLink>
-          <NavLink
-            to={`${ADMIN_PROMPTS_BASE}/legacy`}
-            className={({ isActive }) => `tab-button ${isActive ? "tab-button--active" : ""}`}
-            end
-          >
-            {sub.legacy}
           </NavLink>
           <NavLink
             to={`${ADMIN_PROMPTS_BASE}/release`}

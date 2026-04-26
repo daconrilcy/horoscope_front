@@ -89,7 +89,7 @@ def test_governed_feature_alias_is_nominal_when_subfeature_maps(db_session) -> N
     assert nominal[0].is_legacy_residual is False
 
 
-def test_null_feature_reclassifies_from_use_case_compat(db_session) -> None:
+def test_null_feature_reclassifies_from_historical_use_case(db_session) -> None:
     _seed_user_id(db_session, "consumption-null-feature@example.com")
     ts = datetime(2026, 4, 15, 10, 12, tzinfo=timezone.utc)
     db_session.add(

@@ -135,9 +135,9 @@ def test_export_generations_json(admin_token: str) -> None:
     )
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
-    assert "Deprecated field: use_case_compat" in response.headers["warning"]
-    assert response.headers["sunset"] == "Tue, 30 Sep 2026 23:59:59 GMT"
-    assert response.headers["x-deprecated-fields"] == "use_case_compat"
+    assert "warning" not in response.headers
+    assert "sunset" not in response.headers
+    assert "x-deprecated-fields" not in response.headers
     assert isinstance(response.json(), list)
 
 
@@ -169,14 +169,11 @@ def test_export_generations_csv(admin_token: str) -> None:
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/csv; charset=utf-8"
-    assert "Deprecated field: use_case_compat" in response.headers["warning"]
-    assert response.headers["sunset"] == "Tue, 30 Sep 2026 23:59:59 GMT"
-    assert response.headers["x-deprecated-fields"] == "use_case_compat"
     assert "id,created_at,feature,subfeature,subscription_plan" in response.text
-    assert "use_case_compat" in response.text
+    assert "taxonomy_scope,model,status" in response.text
 
 
-def test_export_generations_hides_use_case_compat_for_nominal_rows_with_canonical_feature(
+def test_export_generations_uses_canonical_dimensions_for_nominal_rows(
     admin_token: str,
 ) -> None:
     with db_session_module.SessionLocal() as db:
@@ -212,10 +209,25 @@ def test_export_generations_hides_use_case_compat_for_nominal_rows_with_canonica
     target_row = next(row for row in rows if row["request_id"] == "req-export-canonical-feature")
     assert target_row["feature"] == "chat"
     assert target_row["taxonomy_scope"] == "nominal"
-    assert target_row["use_case_compat"] is None
+    assert set(target_row) == {
+        "id",
+        "created_at",
+        "feature",
+        "subfeature",
+        "subscription_plan",
+        "executed_provider",
+        "active_snapshot_version",
+        "taxonomy_scope",
+        "model",
+        "status",
+        "tokens_prompt",
+        "tokens_completion",
+        "latency_ms",
+        "request_id",
+    }
 
 
-def test_export_generations_csv_reclassifies_when_feature_null_but_use_case_compat_set(
+def test_export_generations_csv_reclassifies_when_feature_null_but_historical_use_case_set(
     admin_token: str,
 ) -> None:
     with db_session_module.SessionLocal() as db:
@@ -249,7 +261,7 @@ def test_export_generations_csv_reclassifies_when_feature_null_but_use_case_comp
     assert response.status_code == 200
     assert "natal,full,premium" in response.text
     assert "nominal" in response.text
-    assert "natal_interpretation" in response.text
+    assert "natal_interpretation" not in response.text
 
 
 def test_export_generations_csv_reclassifies_legacy_use_case_to_canonical_feature(
@@ -286,7 +298,7 @@ def test_export_generations_csv_reclassifies_legacy_use_case_to_canonical_featur
     assert response.status_code == 200
     assert "natal,legacy_unknown,free" in response.text
     assert "legacy_residual" in response.text
-    assert "natal_interpretation" in response.text
+    assert "natal_interpretation" not in response.text
 
 
 def test_export_billing_csv(admin_token: str) -> None:

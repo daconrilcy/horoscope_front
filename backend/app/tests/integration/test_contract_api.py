@@ -55,13 +55,7 @@ def test_get_use_case_contract():
     assert "title" in data["output_schema"]["properties"]
     assert data["persona_strategy"] == "optional"
     assert "chart_json" in data["required_prompt_placeholders"]
-    assert data["use_case_audit"] == {
-        "maintenance_surface": "legacy_maintenance",
-        "status": "legacy_registry_only",
-        "canonical_feature": None,
-        "canonical_subfeature": None,
-        "canonical_plan": None,
-    }
+    assert data["use_case_audit"] is None
 
 
 def test_get_use_case_contract_hides_removed_legacy_use_case():

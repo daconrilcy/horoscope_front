@@ -245,12 +245,11 @@ export const routes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="catalog" replace /> },
               { path: "catalog", element: <AdminPromptsRouteSlot /> },
-              { path: "legacy", element: <AdminPromptsRouteSlot /> },
               { path: "release", element: <AdminPromptsRouteSlot /> },
               { path: "consumption", element: <AdminPromptsRouteSlot /> },
               { path: "personas", element: <AdminPromptsRouteSlot /> },
               { path: "sample-payloads", element: <AdminPromptsRouteSlot /> },
-              { path: "*", element: <Navigate to="catalog" replace /> },
+              { path: "*", element: <Navigate to="/admin/prompts/catalog" replace /> },
             ],
           },
           {

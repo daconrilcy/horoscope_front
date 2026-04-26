@@ -36,7 +36,7 @@ def test_canonical_perimeter_lists_authorized_tables_and_helpers() -> None:
     assert {"execution_profile_ref", "output_schema_id"}.issubset(AUTHORITATIVE_EXECUTION_FIELDS)
 
 
-def test_assembly_uses_fk_output_schema_and_keeps_legacy_alias_outside_columns() -> None:
+def test_assembly_uses_fk_output_schema_and_keeps_historical_alias_outside_columns() -> None:
     """Verifie la FK canonique de schema et l isolement de l alias textuel legacy."""
     columns = PromptAssemblyConfigModel.__table__.columns.keys()
     relationships = set(PromptAssemblyConfigModel.__mapper__.relationships.keys())

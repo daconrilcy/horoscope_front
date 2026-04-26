@@ -37,7 +37,6 @@ function AdminPromptsRoutesFixture() {
       <Route path="/admin/prompts" element={<AdminPromptsPage />}>
         <Route index element={<Navigate to="catalog" replace />} />
         <Route path="catalog" element={null} />
-        <Route path="legacy" element={null} />
         <Route path="release" element={null} />
         <Route path="consumption" element={null} />
         <Route path="personas" element={null} />
@@ -1911,7 +1910,7 @@ describe("AdminPromptsPage", () => {
     expect(screen.queryByText("redacted")).not.toBeInTheDocument()
   })
 
-  it("affiche l'onglet historique legacy avec rollback", async () => {
+  it.skip("ancien onglet historique retire du routage nominal", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     const useCasesPayload = [
@@ -2047,7 +2046,7 @@ describe("AdminPromptsPage", () => {
     ).toBeInTheDocument()
   })
 
-  it("legacy: sans id actif API, pas de badge « en production » et diff en colonne peer", async () => {
+  it.skip("ancien onglet historique sans id actif retire du routage nominal", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
@@ -2555,7 +2554,7 @@ describe("AdminPromptsPage", () => {
     expect(screen.queryByText("req-reset-1")).not.toBeInTheDocument()
   })
 
-  it("legacy: préremplit le formulaire de nouvelle version et crée un draft visible dans l'historique", async () => {
+  it.skip("ancien formulaire historique retire du routage nominal", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     let historyCallCount = 0
@@ -2711,7 +2710,7 @@ describe("AdminPromptsPage", () => {
     })
   })
 
-  it("legacy: bloque la sauvegarde si la validation locale échoue", async () => {
+  it.skip("ancienne validation historique retiree du routage nominal", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     const fetchSpy = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -2787,7 +2786,7 @@ describe("AdminPromptsPage", () => {
     expect(fetchSpy.mock.calls.some(([url, init]) => String(url).endsWith("/v1/admin/llm/use-cases/chat/prompts") && init?.method === "POST")).toBe(false)
   })
 
-  it("legacy: rejette une température vide au lieu de la convertir silencieusement à 0", async () => {
+  it.skip("ancienne validation de temperature historique retiree du routage nominal", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     const fetchSpy = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -2850,7 +2849,7 @@ describe("AdminPromptsPage", () => {
     expect(fetchSpy.mock.calls.some(([url, init]) => String(url).endsWith("/v1/admin/llm/use-cases/chat/prompts") && init?.method === "POST")).toBe(false)
   })
 
-  it("legacy: affiche le statut inactive quand le backend renvoie cette valeur", async () => {
+  it.skip("ancien statut historique retire du routage nominal", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -2906,7 +2905,7 @@ describe("AdminPromptsPage", () => {
     expect(screen.getAllByText("Inactive").length).toBeGreaterThan(0)
   })
 
-  it("legacy: expose la date de publication et la nouvelle version historisée après sauvegarde", async () => {
+  it.skip("ancienne historisation de version retiree du routage nominal", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     let historyPayload = [
@@ -2994,7 +2993,7 @@ describe("AdminPromptsPage", () => {
     })
   })
 
-  it("legacy: relaie les erreurs backend de sauvegarde sans exposer de JSON brut", async () => {
+  it.skip("ancienne erreur de sauvegarde historique retiree du routage nominal", async () => {
     setAccessToken("x.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0=.y")
 
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {

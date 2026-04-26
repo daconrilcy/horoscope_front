@@ -78,8 +78,8 @@ export type AdminLlmUseCase = {
 }
 
 export type AdminUseCaseAudit = {
-  maintenance_surface: "canonical_runtime" | "legacy_maintenance"
-  status: "canonical_runtime" | "legacy_alias" | "legacy_registry_only"
+  maintenance_surface: "canonical_runtime"
+  status: "canonical_runtime"
   canonical_feature: string | null
   canonical_subfeature: string | null
   canonical_plan: string | null

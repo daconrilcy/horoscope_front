@@ -2,7 +2,7 @@ import type { AstrologyLang } from "./astrology"
 import type { AppLocale } from "./types"
 import type { AdminPromptVersion } from "../api/adminPrompts"
 
-/** Textes de la route /admin/prompts/legacy (alignés FR / EN / ES). */
+/** Textes historiques de l'ancien onglet prompts hors catalogue (alignes FR / EN / ES). */
 export type AdminPromptsLegacyStrings = {
   regionAriaLabel: string
   loadingHistory: string

@@ -49,7 +49,6 @@ from app.api.v1.routers.ops.feature_flags import router as ops_feature_flags_rou
 from app.api.v1.routers.ops.monitoring import router as ops_monitoring_router
 from app.api.v1.routers.ops.monitoring_llm import router as ops_monitoring_llm_router
 from app.api.v1.routers.ops.persona import router as ops_persona_router
-from app.api.v1.routers.public.ai import router as ai_engine_router
 from app.api.v1.routers.public.astrologers import router as astrologers_router
 from app.api.v1.routers.public.astrology_engine import router as astrology_engine_router
 from app.api.v1.routers.public.audit import router as audit_router
@@ -722,7 +721,6 @@ app.include_router(privacy_router)
 app.include_router(reference_data_router)
 app.include_router(users_router)
 app.include_router(support_router)
-app.include_router(ai_engine_router)
 app.include_router(help_router)
 app.include_router(email_router, prefix="/api", tags=["email"])
 _include_internal_llm_qa_router(app)

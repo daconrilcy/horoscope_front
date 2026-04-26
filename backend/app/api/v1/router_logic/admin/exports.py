@@ -18,11 +18,6 @@ from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/admin/exports", tags=["admin-exports"])
-GEN_EXPORT_COMPAT_DEPRECATION_WARNING = (
-    '299 - "Deprecated field: use_case_compat is compatibility-only and will be removed after '
-    '2026-09-30. Use feature/subfeature/subscription_plan instead."'
-)
-GEN_EXPORT_COMPAT_DEPRECATION_SUNSET = "Tue, 30 Sep 2026 23:59:59 GMT"
 
 
 def _generate_csv_response(
