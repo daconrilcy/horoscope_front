@@ -1,3 +1,5 @@
+"""Routeur HTTP admin pour les contenus, deleguant les mutations metier aux services."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -43,6 +45,7 @@ from app.services.ops.admin_content import (
     _to_config_text_data,
     _to_editorial_version_data,
     _to_feature_flag_data,
+    update_config_text_value,
 )
 from app.services.ops.feature_flag_service import (
     FeatureFlagService,
@@ -79,33 +82,14 @@ def update_content_text(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    _ensure_config_texts_seeded(db)
-    row = db.scalar(select(ConfigTextModel).where(ConfigTextModel.key == key).limit(1))
-    if row is None:
-        return _raise_error(
-            status_code=404,
-            request_id=request_id,
-            code="content_text_not_found",
-            message="content text was not found",
-            details={"key": key},
-        )
-    before_value = row.value
-    row.value = payload.value
-    row.updated_by_user_id = current_user.id
-    db.flush()
-    _record_audit_event(
+    data = update_config_text_value(
         db,
-        request_id=request_id,
+        key=key,
+        value=payload.value,
         actor=current_user,
-        action="content_text_updated",
-        target_type="config_text",
-        target_id=key,
-        status="success",
-        details={"content_key": key, "before": before_value, "after": payload.value},
+        request_id=request_id,
     )
-    db.commit()
-    db.refresh(row)
-    return {"data": _to_config_text_data(row), "meta": {"request_id": request_id}}
+    return {"data": data, "meta": {"request_id": request_id}}
 
 
 @router.get("/feature-flags", response_model=AdminFeatureFlagListResponse)

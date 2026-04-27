@@ -123,6 +123,43 @@ def _to_config_text_data(model: ConfigTextModel) -> ConfigTextData:
     )
 
 
+def update_config_text_value(
+    db: Session,
+    *,
+    key: str,
+    value: str,
+    actor: AuthenticatedUser,
+    request_id: str,
+) -> ConfigTextData:
+    """Met a jour un texte de configuration et journalise l'audit applicatif."""
+    _ensure_config_texts_seeded(db)
+    row = db.scalar(select(ConfigTextModel).where(ConfigTextModel.key == key).limit(1))
+    if row is None:
+        _raise_error(
+            request_id=request_id,
+            code="content_text_not_found",
+            message="content text was not found",
+            details={"key": key},
+        )
+    before_value = row.value
+    row.value = value
+    row.updated_by_user_id = actor.id
+    db.flush()
+    _record_audit_event(
+        db,
+        request_id=request_id,
+        actor=actor,
+        action="content_text_updated",
+        target_type="config_text",
+        target_id=key,
+        status="success",
+        details={"content_key": key, "before": before_value, "after": value},
+    )
+    db.commit()
+    db.refresh(row)
+    return _to_config_text_data(row)
+
+
 def _to_feature_flag_data(model: FeatureFlagData) -> AdminFeatureFlagData:
     scope = "Tous plans" if not model.target_roles and not model.target_user_ids else "Cible"
     return AdminFeatureFlagData(

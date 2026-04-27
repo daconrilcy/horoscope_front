@@ -12,8 +12,15 @@ from fastapi.routing import APIRoute
 
 ROUTERS_ROOT = Path(__file__).resolve().parents[2] / "api" / "v1" / "routers"
 API_V1_ROOT = ROUTERS_ROOT.parent
+API_DEPENDENCIES_ROOT = API_V1_ROOT.parent / "dependencies"
 SCHEMAS_ROOT = API_V1_ROOT / "schemas"
 SERVICE_CONTRACTS_ROOT = API_V1_ROOT.parents[1] / "services" / "api_contracts"
+STORY_EVIDENCE_ROOT = (
+    Path(__file__).resolve().parents[4]
+    / "_condamad"
+    / "stories"
+    / "harden-api-adapter-boundary-guards"
+)
 CANONICAL_DOMAINS = {"admin", "b2b", "internal", "ops", "public"}
 CANONICAL_SCHEMA_ROOTS = {"common.py", "routers"}
 FORBIDDEN_FLAT_PREFIXES = ("admin_", "b2b_", "ops_")
@@ -117,19 +124,35 @@ EXPECTED_ROUTER_ROOTS = (
     ),
 )
 
-NON_V1_ROUTE_EXCEPTIONS = {
-    "/health": {
-        "file": "backend/app/api/health.py",
-        "reason": "Route de santé applicative hors API v1.",
-        "expiry": "Exception permanente de bootstrap.",
-    },
-    "/api/email/unsubscribe": {
-        "file": "backend/app/api/v1/routers/public/email.py",
-        "reason": "URL publique historique active de désabonnement email.",
-        "expiry": "Supprimer seulement via story de migration d'URL dédiée.",
-    },
-}
 ALLOWED_ROUTER_IMPORTS: dict[Path, dict[str, object]] = {}
+FORBIDDEN_SQL_IMPORT_ROOTS = (
+    "sqlalchemy",
+    "app.infra.db.models",
+    "app.infra.db.session",
+)
+FORBIDDEN_SESSION_METHODS = {
+    "add",
+    "commit",
+    "delete",
+    "execute",
+    "flush",
+    "get",
+    "query",
+    "refresh",
+    "rollback",
+    "scalar",
+    "scalars",
+}
+
+
+class SqlBoundaryEntry(NamedTuple):
+    """Identifie exactement une dette SQL encore toleree dans la couche API."""
+
+    file: str
+    line: int
+    kind: str
+    symbol: str
+    function: str
 
 
 def _python_files() -> list[Path]:
@@ -140,6 +163,18 @@ def _python_files() -> list[Path]:
 def _api_v1_python_files() -> list[Path]:
     """Retourne les fichiers Python applicatifs du package API v1."""
     return sorted(path for path in API_V1_ROOT.rglob("*.py") if "__pycache__" not in path.parts)
+
+
+def _api_sql_boundary_python_files() -> list[Path]:
+    """Retourne les fichiers de frontière API soumis a la garde SQL."""
+    roots = [ROUTERS_ROOT, API_DEPENDENCIES_ROOT]
+    return sorted(
+        path
+        for root in roots
+        if root.exists()
+        for path in root.rglob("*.py")
+        if "__pycache__" not in path.parts
+    )
 
 
 def _schemas_python_files() -> list[Path]:
@@ -157,6 +192,126 @@ def _service_contract_python_files() -> list[Path]:
 def _source_tree(path: Path) -> ast.Module:
     """Parse un fichier routeur pour inspecter ses imports sans l'executer."""
     return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+
+
+def _parent_map(tree: ast.Module) -> dict[ast.AST, ast.AST]:
+    """Construit les liens parents pour retrouver la fonction proprietaire."""
+    return {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+
+
+def _containing_function(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> str:
+    """Retourne la fonction englobante d'un noeud AST ou le module."""
+    parent = parents.get(node)
+    while parent is not None:
+        if isinstance(parent, ast.FunctionDef | ast.AsyncFunctionDef):
+            return parent.name
+        parent = parents.get(parent)
+    return "<module>"
+
+
+def _is_get_db_session_dependency(node: ast.Call) -> bool:
+    """Indique si un appel FastAPI `Depends` cible explicitement la session DB."""
+    dependency = node.args[0] if node.args else None
+    keyword_dependency = next(
+        (keyword.value for keyword in node.keywords if keyword.arg == "dependency"),
+        None,
+    )
+    return any(
+        isinstance(candidate, ast.Name) and candidate.id == "get_db_session"
+        for candidate in (dependency, keyword_dependency)
+    )
+
+
+def _collect_sql_boundary_entries() -> set[SqlBoundaryEntry]:
+    """Detecte les imports et appels SQL interdits sauf allowlist exacte."""
+    entries: set[SqlBoundaryEntry] = set()
+    for path in _api_sql_boundary_python_files():
+        tree = _source_tree(path)
+        parents = _parent_map(tree)
+        relative_file = path.relative_to(API_V1_ROOT.parents[2]).as_posix()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name.startswith(FORBIDDEN_SQL_IMPORT_ROOTS):
+                        entries.add(
+                            SqlBoundaryEntry(
+                                relative_file,
+                                node.lineno,
+                                "import",
+                                alias.name,
+                                _containing_function(node, parents),
+                            )
+                        )
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                if node.module.startswith(FORBIDDEN_SQL_IMPORT_ROOTS):
+                    imported_names = ",".join(alias.name for alias in node.names)
+                    entries.add(
+                        SqlBoundaryEntry(
+                            relative_file,
+                            node.lineno,
+                            "import_from",
+                            f"{node.module}:{imported_names}",
+                            _containing_function(node, parents),
+                        )
+                    )
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                receiver = node.func.value
+                receiver_name = receiver.id if isinstance(receiver, ast.Name) else ""
+                if (
+                    receiver_name in {"db", "session"}
+                    and node.func.attr in FORBIDDEN_SESSION_METHODS
+                ):
+                    entries.add(
+                        SqlBoundaryEntry(
+                            relative_file,
+                            node.lineno,
+                            "session_call",
+                            f"{receiver_name}.{node.func.attr}",
+                            _containing_function(node, parents),
+                        )
+                    )
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                if node.func.id != "Depends":
+                    continue
+                if _is_get_db_session_dependency(node):
+                    entries.add(
+                        SqlBoundaryEntry(
+                            relative_file,
+                            node.lineno,
+                            "dependency",
+                            "Depends(get_db_session)",
+                            _containing_function(node, parents),
+                        )
+                    )
+    return entries
+
+
+def _load_sql_allowlist() -> dict[SqlBoundaryEntry, tuple[str, str]]:
+    """Charge l'allowlist SQL persistante et valide ses metadonnees obligatoires."""
+    allowlist_path = STORY_EVIDENCE_ROOT / "router-sql-allowlist.md"
+    rows = [
+        line
+        for line in allowlist_path.read_text(encoding="utf-8").splitlines()
+        if line.startswith("| `")
+    ]
+    allowlist: dict[SqlBoundaryEntry, tuple[str, str]] = {}
+    for row in rows:
+        cells = [cell.strip() for cell in row.strip("|").split("|")]
+        if len(cells) != 7:
+            raise AssertionError(f"invalid SQL allowlist row shape: {row}")
+        file_cell, line_cell, kind_cell, symbol_cell, function_cell, reason, decision = cells
+        file_value = file_cell.strip("`")
+        if "*" in file_value or file_value.endswith("/"):
+            raise AssertionError(f"wildcard SQL allowlist row forbidden: {row}")
+        entry = SqlBoundaryEntry(
+            file=file_value,
+            line=int(line_cell),
+            kind=kind_cell.strip("`"),
+            symbol=symbol_cell.strip("`"),
+            function=function_cell.strip("`"),
+        )
+        allowlist[entry] = (reason, decision)
+    return allowlist
 
 
 def _router_decorator_path(node: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple[str, str] | None:
@@ -517,15 +672,13 @@ def test_api_v1_router_registry_is_main_registration_source() -> None:
     main_path = API_V1_ROOT.parents[1] / "main.py"
     tree = _source_tree(main_path)
     router_import_offenders: list[str] = []
-    include_router_calls = 0
     registry_call_found = False
+    exception_call_found = False
 
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module:
             allowed_main_router_modules = {
-                "app.api.v1.routers.public.email",
                 "app.api.v1.routers.registry",
-                "app.api.v1.routers.internal.llm.qa",
             }
             if (
                 node.module.startswith("app.api.v1.routers.")
@@ -534,14 +687,101 @@ def test_api_v1_router_registry_is_main_registration_source() -> None:
                 router_import_offenders.append(f"{node.lineno} imports {node.module}")
         if isinstance(node, ast.Call):
             function = node.func
-            if isinstance(function, ast.Attribute) and function.attr == "include_router":
-                include_router_calls += 1
             if isinstance(function, ast.Name) and function.id == "include_api_v1_routers":
                 registry_call_found = True
+            if (
+                isinstance(function, ast.Name)
+                and function.id == "include_registered_route_exceptions"
+            ):
+                exception_call_found = True
 
     assert router_import_offenders == []
     assert registry_call_found
-    assert include_router_calls <= 3
+    assert exception_call_found
+
+
+def test_route_mount_exceptions_are_structured_and_exact() -> None:
+    """Les montages hors registre doivent etre portes par le registre structure."""
+    from app.api.route_exceptions import API_ROUTE_MOUNT_EXCEPTIONS
+
+    by_key = {exception.key: exception for exception in API_ROUTE_MOUNT_EXCEPTIONS}
+    assert set(by_key) == {
+        "health",
+        "public_email_unsubscribe",
+        "internal_llm_qa_seed_user",
+        "internal_llm_qa_guidance",
+        "internal_llm_qa_chat",
+        "internal_llm_qa_natal",
+        "internal_llm_qa_horoscope_daily",
+    }
+
+    for exception in API_ROUTE_MOUNT_EXCEPTIONS:
+        assert exception.route_path.startswith("/")
+        assert exception.methods
+        assert exception.router_module
+        assert exception.endpoint_module
+        assert exception.reason
+        assert exception.decision
+        assert exception.condition
+
+
+def test_runtime_routes_match_structured_exception_register() -> None:
+    """La table runtime ne doit contenir que des exceptions exactes hors registre."""
+    from app.api.route_exceptions import API_ROUTE_MOUNT_EXCEPTIONS
+    from app.main import app
+
+    exceptions_by_route = {
+        (exception.route_path, method): exception
+        for exception in API_ROUTE_MOUNT_EXCEPTIONS
+        for method in exception.methods
+    }
+    offenders: list[str] = []
+
+    for route in app.routes:
+        if not isinstance(route, APIRoute):
+            continue
+        path = route.path
+        endpoint_module = getattr(route.endpoint, "__module__", "")
+        should_match_exception = (
+            endpoint_module.startswith("app.api.v1.")
+            and not path.startswith("/v1/")
+            or endpoint_module == "app.api.v1.routers.internal.llm.qa"
+        )
+        if should_match_exception:
+            for method in route.methods or set():
+                if method in {"HEAD", "OPTIONS"}:
+                    continue
+                exception = exceptions_by_route.get((path, method))
+                if exception is None:
+                    offenders.append(f"{method} {path} from {endpoint_module} is not registered")
+                elif endpoint_module != exception.endpoint_module:
+                    offenders.append(
+                        f"{method} {path} owner {endpoint_module} != {exception.endpoint_module}"
+                    )
+
+    assert offenders == []
+
+
+def test_registered_qa_route_exceptions_match_router_routes() -> None:
+    """Le routeur QA conditionnel doit avoir une exception par route concrete."""
+    from app.api.route_exceptions import API_ROUTE_MOUNT_EXCEPTIONS
+    from app.api.v1.routers.internal.llm.qa import router as qa_router
+
+    qa_exceptions = {
+        (exception.route_path, method)
+        for exception in API_ROUTE_MOUNT_EXCEPTIONS
+        if exception.endpoint_module == "app.api.v1.routers.internal.llm.qa"
+        for method in exception.methods
+    }
+    qa_routes = {
+        (route.path, method)
+        for route in qa_router.routes
+        if isinstance(route, APIRoute)
+        for method in route.methods or set()
+        if method not in {"HEAD", "OPTIONS"}
+    }
+
+    assert qa_exceptions == qa_routes
 
 
 def test_api_contracts_do_not_import_fastapi_or_api_layer() -> None:
@@ -616,8 +856,12 @@ def test_legacy_http_error_surfaces_are_removed() -> None:
 
 def test_non_v1_routes_under_api_v1_are_explicit_exceptions() -> None:
     """Toute route hors /v1 sous api/v1 doit être une exception exacte et justifiée."""
+    from app.api.route_exceptions import API_ROUTE_MOUNT_EXCEPTIONS
     from app.main import app
 
+    exceptions_by_path = {
+        exception.route_path: exception for exception in API_ROUTE_MOUNT_EXCEPTIONS
+    }
     offenders: list[str] = []
     for route in app.routes:
         path = getattr(route, "path", "")
@@ -626,11 +870,56 @@ def test_non_v1_routes_under_api_v1_are_explicit_exceptions() -> None:
             continue
         if path.startswith("/v1/"):
             continue
-        exception = NON_V1_ROUTE_EXCEPTIONS.get(path)
+        exception = exceptions_by_path.get(path)
         if exception is None:
             offenders.append(f"{path} from {endpoint_module} is not allowlisted")
+        elif exception.endpoint_module != endpoint_module:
+            offenders.append(
+                f"{path} from {endpoint_module} mismatches {exception.endpoint_module}"
+            )
 
     assert offenders == []
+
+
+def test_api_sql_boundary_debt_matches_exact_allowlist() -> None:
+    """Toute dette SQL API restante doit etre inventoriee avec metadonnees exactes."""
+    detected = _collect_sql_boundary_entries()
+    allowlist = _load_sql_allowlist()
+    missing = sorted(detected - set(allowlist), key=lambda item: tuple(item))
+    stale = sorted(set(allowlist) - detected, key=lambda item: tuple(item))
+    incomplete_metadata = [
+        entry for entry, (reason, decision) in allowlist.items() if not reason or not decision
+    ]
+
+    assert missing == []
+    assert stale == []
+    assert incomplete_metadata == []
+
+
+def test_admin_content_text_update_flow_delegates_persistence_to_service() -> None:
+    """Le flux extrait ne doit plus porter d'operations SQL dans le routeur."""
+    tree = _source_tree(ROUTERS_ROOT / "admin" / "content.py")
+    function = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "update_content_text"
+    )
+    calls = {
+        child.func.attr
+        for child in ast.walk(function)
+        if isinstance(child, ast.Call)
+        and isinstance(child.func, ast.Attribute)
+        and isinstance(child.func.value, ast.Name)
+        and child.func.value.id == "db"
+    }
+    service_calls = {
+        child.func.id
+        for child in ast.walk(function)
+        if isinstance(child, ast.Call) and isinstance(child.func, ast.Name)
+    }
+
+    assert calls == set()
+    assert "update_config_text_value" in service_calls
 
 
 def test_api_error_contract_is_centralized() -> None:

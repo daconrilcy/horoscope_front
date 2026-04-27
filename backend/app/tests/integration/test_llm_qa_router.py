@@ -70,25 +70,26 @@ def _create_user(session_factory, *, email: str, role: str) -> UserModel:
 
 
 def test_internal_llm_qa_router_mount_policy(monkeypatch: pytest.MonkeyPatch):
-    from app import main as main_module
+    from app.api.route_exceptions import include_registered_route_exceptions
+    from app.core.config import settings
 
     disabled_app = FastAPI()
-    monkeypatch.setattr(main_module.settings, "llm_qa_routes_enabled", False)
-    main_module._include_internal_llm_qa_router(disabled_app)
+    monkeypatch.setattr(settings, "llm_qa_routes_enabled", False)
+    include_registered_route_exceptions(disabled_app)
     assert not any(route.path.startswith("/v1/internal/llm/qa") for route in disabled_app.routes)
 
     blocked_prod_app = FastAPI()
-    monkeypatch.setattr(main_module.settings, "llm_qa_routes_enabled", True)
-    monkeypatch.setattr(main_module.settings, "app_env", "production")
-    monkeypatch.setattr(main_module.settings, "llm_qa_routes_allow_production", False)
-    main_module._include_internal_llm_qa_router(blocked_prod_app)
+    monkeypatch.setattr(settings, "llm_qa_routes_enabled", True)
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "llm_qa_routes_allow_production", False)
+    include_registered_route_exceptions(blocked_prod_app)
     assert not any(
         route.path.startswith("/v1/internal/llm/qa") for route in blocked_prod_app.routes
     )
 
     enabled_app = FastAPI()
-    monkeypatch.setattr(main_module.settings, "app_env", "dev")
-    main_module._include_internal_llm_qa_router(enabled_app)
+    monkeypatch.setattr(settings, "app_env", "dev")
+    include_registered_route_exceptions(enabled_app)
     assert any(route.path == "/v1/internal/llm/qa/guidance" for route in enabled_app.routes)
 
 

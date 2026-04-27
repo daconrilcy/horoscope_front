@@ -1,3 +1,5 @@
+"""Point d'entree FastAPI et assemblage runtime de l'application backend."""
+
 import logging
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -12,12 +14,11 @@ from starlette.responses import Response
 from app.api.dependencies.auth import UserAuthenticationError
 from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.errors.handlers import application_error_handler, build_error_response
-from app.api.health import router as health_router
+from app.api.route_exceptions import include_registered_route_exceptions
 from app.api.v1.constants import (
     ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
     ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
 )
-from app.api.v1.routers.public.email import router as email_router
 from app.api.v1.routers.registry import ADMIN_LLM_ROUTER_PREFIX, include_api_v1_routers
 from app.core import ephemeris as _eph
 from app.core.config import settings
@@ -39,19 +40,6 @@ from app.startup.llm_coherence_validation import run_llm_coherence_startup_valid
 from app.startup.stripe_portal_validation import run_stripe_portal_startup_validation
 
 logger = logging.getLogger(__name__)
-
-
-def _include_internal_llm_qa_router(application: FastAPI) -> None:
-    if not settings.llm_qa_routes_enabled:
-        logger.info("internal_llm_qa_router_disabled")
-        return
-    if settings.app_env in {"production", "prod"} and not settings.llm_qa_routes_allow_production:
-        logger.warning("internal_llm_qa_router_blocked_in_production")
-        return
-
-    from app.api.v1.routers.internal.llm.qa import router as internal_llm_qa_router
-
-    application.include_router(internal_llm_qa_router)
 
 
 def _ensure_llm_registry_seeded() -> None:
@@ -589,7 +577,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(health_router)
 include_api_v1_routers(app)
-app.include_router(email_router, prefix="/api", tags=["email"])
-_include_internal_llm_qa_router(app)
+include_registered_route_exceptions(app)

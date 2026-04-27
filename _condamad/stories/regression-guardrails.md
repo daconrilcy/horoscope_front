@@ -48,6 +48,7 @@ Avant de passer une story a `ready-for-dev`, verifier:
 | RG-005 | `remove-api-v1-router-logic` | Frontiere API / services | La couche API ne doit pas redevenir proprietaire de logique metier ou de persistance. | Tests d'architecture + scan des imports infra/service et revue des handlers touches. |
 | RG-006 | `api-adapter-boundary-convergence` | Frontiere adaptateur API | `backend/app/api` reste un adaptateur HTTP strict; les schemas restent des contrats purs et les couches non-API n'importent pas `app.api`. | Guards AST sur imports interdits + scans cibles `backend/app/services`, `backend/app/domain`, `backend/app/infra`, `backend/app/core`. |
 | RG-007 | `converge-admin-llm-observability-router` | Endpoints admin LLM observability | `backend/app/api/v1/routers/admin/llm/observability.py` reste l'unique proprietaire runtime des endpoints observability, avec chemins et schemas preserves. | Inventaire runtime des proprietaires de routes + diff OpenAPI filtre + scan anti-retour des handlers dans `prompts.py`. |
+| RG-008 | `harden-api-adapter-boundary-guards` | Exceptions de montage API et dette SQL routeurs | Les routes hors registre API v1 et les usages SQL directs restants dans les routeurs doivent rester exacts, justifies et bloques contre toute croissance silencieuse. | Inventaire runtime des routes + allowlist SQL exacte + garde AST anti-nouveaux imports/appels DB dans `backend/app/api/v1/routers` et `backend/app/api/dependencies`. |
 
 ## Format d'enrichissement
 
