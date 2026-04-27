@@ -2,7 +2,7 @@
 
 ## Story status
 
-- Validation outcome: PASS_WITH_LIMITATIONS
+- Validation outcome: PASS
 - Ready for review: yes
 - Story key: centralize-api-http-errors
 - Source story: `_condamad/stories/centralize-api-http-errors/00-story.md`
@@ -33,13 +33,13 @@
 |---|---|---|---|---|
 | AC1 | Added `backend/app/core/exceptions.py`; auth dependency errors now inherit `ApplicationError`. | `pytest -q app/tests/unit/test_api_error_contracts.py ...` passed. | PASS | No FastAPI dependency in core exception. |
 | AC2 | Added `backend/app/api/errors/catalog.py` and contract tests. | `test_http_error_catalog_is_unique_and_valid` passed. | PASS | Codes unique, statuses valid, messages non-empty. |
-| AC3 | Added architecture guard with explicit HTTPException allowlist. | `test_api_http_exception_usage_is_allowlisted` passed. | PASS_WITH_LIMITATIONS | Some route files still use `HTTPException` and are documented in allowlist. |
+| AC3 | Added architecture guard that forbids business `HTTPException` under API. | `test_api_http_exception_usage_is_removed` passed; `rg -n "HTTPException" backend/app/api` no hit. | PASS | No route-level business `HTTPException` remains. |
 | AC4 | Removed route/local service `_error_response` and `_create_error_response` names; helpers now `_raise_error`. | Negative `rg` scan returned no hits. | PASS | No local envelope builders remain. |
 | AC5 | Migrated services from `api_error_response`/HTTP responses to raising `ApplicationError`. | Negative service scan returned no `JSONResponse`, `HTTPException`, `api_error_response`, `_error_response`. | PASS | Services still import some API schemas/dependency types outside this error construction scope. |
 | AC6 | `ApplicationError` fallback handled centrally in `app.api.errors.handlers`. | Unit and integration fallback tests passed. | PASS | No unmapped stacktrace leak for `ApplicationError`. |
 | AC7 | `build_error_response` preserves `error.code/message/details/request_id`. | Unit and integration response tests passed. | PASS | Request id resolved from request. |
-| AC8 | OpenAPI smoke verifies representative existing paths after package migration. | `test_openapi_paths_are_still_available_after_error_package_migration` passed. | PASS_WITH_LIMITATIONS | Representative path guard, not full pre/post snapshot. |
-| AC9 | Lint, targeted tests, scans run in activated venv. | `ruff check .` passed; targeted pytest passed; full pytest timed out. | PASS_WITH_LIMITATIONS | Full regression did not finish within 10 minutes. |
+| AC8 | OpenAPI smoke verifies active path/method coverage, declared error statuses, `ErrorEnvelope` refs and no duplicate canonical schemas. | `pytest -q app/tests/integration/test_api_error_responses.py` passed, `4 passed`. | PASS | Generated-contract checks cover all registered routes and declared error statuses. |
+| AC9 | Lint, targeted tests, scans run in activated venv. | `ruff check .` passed; targeted pytest passed; full pytest reported green by user. | PASS | No remaining AC limitation recorded. |
 
 ## Files changed
 
@@ -115,14 +115,14 @@ Recorded with `git status --short`: expected story changes plus pre-existing `M 
 
 ## Remaining risks
 
-- Full `pytest -q` timed out after 10 minutes.
-- Some route files still use `HTTPException`; these are explicit allowlist entries in `test_api_error_architecture.py` and should be reviewer focus for follow-up migration.
+- Full `pytest -q` initially timed out during implementation, then was reported green by the user after regression fixes.
+- No route files use `HTTPException` after the closure pass; the architecture guard now forbids reintroduction.
 - Some service modules still import API schemas/dependency DTOs unrelated to HTTP response construction; this story removed HTTP response construction, not all historical schema coupling.
 
 ## Suggested reviewer focus
 
 - Confirm the `_raise_error` service helper pattern is acceptable as the intermediate service-boundary shape.
-- Review the `HTTPException` allowlist and decide whether to schedule a follow-up for full route migration.
+- Review the generated OpenAPI error response declarations if new routers are added later; AC8 now has a regression test for declared error statuses.
 - Review the deleted `app.api.v1.errors` path and confirm no external first-party consumer needs migration.
 
 ## Post-review correction addendum
@@ -237,3 +237,18 @@ Recorded with `git status --short`: expected story changes plus pre-existing `M 
   - `rg -n -F '"error": {' backend/app/api/v1/routers backend/app/api backend/app/core backend/app/services` -> PASS, no hit.
   - `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff check app/api/v1/routers/public/ephemeris.py app/tests/unit/test_api_error_architecture.py` -> PASS.
 - User reported the full repository test suite passes after these final cleanups.
+
+## AC8 OpenAPI Closure Addendum
+
+- Strengthened `backend/app/tests/integration/test_api_error_responses.py` with `test_openapi_declares_targeted_error_statuses_after_error_migration`.
+- The OpenAPI integration coverage now verifies:
+  - every active FastAPI route path/method is present in the generated OpenAPI document;
+  - every explicit route-level error status declared through `responses={...}` is present in the OpenAPI operation;
+  - every declared `ErrorEnvelope` error response points to `#/components/schemas/ErrorEnvelope`;
+  - the central package does not add duplicate public `ApiErrorBody` or `ApiErrorEnvelope` schemas.
+- Re-validation:
+  - `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff format app/tests/integration/test_api_error_responses.py` -> PASS.
+  - `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff check app/tests/integration/test_api_error_responses.py` -> PASS.
+  - `.\\.venv\\Scripts\\Activate.ps1; cd backend; pytest -q app/tests/integration/test_api_error_responses.py` -> PASS, `4 passed`.
+- Conclusion:
+  - AC8 is now covered without limitation by generated-contract checks for paths, methods, declared error statuses and schema duplication.
