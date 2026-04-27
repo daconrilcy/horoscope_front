@@ -31,6 +31,10 @@ The output story must be executable by `condamad-dev-story` and reviewable by
 - The story must include DRY and No Legacy constraints.
 - The story must include files to inspect before edit.
 - The story must include likely files to modify and likely tests.
+- The story must consult `_condamad/stories/regression-guardrails.md`,
+  create it from the `condamad-regression-guardrails` template if missing, and
+  include a `Regression Guardrails` section mapping applicable invariants to
+  evidence.
 - Do not invent repo facts. Mark assumptions explicitly.
 - Do not create compatibility shims, aliases, fallbacks, or legacy paths as acceptable implementation routes.
 - Do not mark a story `ready-for-dev` unless it passes the story validation contract.
@@ -73,6 +77,7 @@ Read:
 - `references/batch-migration-contract.md`
 - `references/reintroduction-guard-contract.md`
 - `references/persistent-evidence-contract.md`
+- `../condamad-regression-guardrails/SKILL.md`
 
 When the selected archetype or operation is removal-related, also read:
 
@@ -84,6 +89,15 @@ Write one story markdown file using `templates/story-template.md`.
 For conditional transverse sections, choose exactly one active or
 not-applicable snippet from `templates/snippets/` and inline its content into
 the final story.
+
+Before writing the story, apply `condamad-regression-guardrails`:
+
+- ensure `_condamad/stories/regression-guardrails.md` exists;
+- read it and classify applicable invariants;
+- add the required `Regression Guardrails` section;
+- add current-state evidence proving the registry was consulted;
+- add or update registry rows when the new story establishes a durable
+  invariant.
 
 Contract headings and required markers must remain in English. Business content,
 evidence descriptions, and implementation notes may be written in French when

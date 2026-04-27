@@ -26,12 +26,16 @@ This skill does not fix code. It does not refactor. It does not generate final i
 - Stay read-only by default.
 - Do not modify application code.
 - Do not format, migrate, delete, or rewrite files.
-- Only write audit artifacts under `_condamad/audits/**`.
+- Only write audit artifacts under `_condamad/audits/**`, except creating or
+  updating `_condamad/stories/regression-guardrails.md` through
+  `condamad-regression-guardrails`.
 - Every finding must include evidence.
 - Every High or Critical finding must include a recommended action or `needs-user-decision`.
 - Every story candidate must map to at least one finding.
 - DRY, No Legacy, mono-domain, and dependency direction are mandatory audit dimensions.
 - Static scans are supporting evidence; runtime or structural evidence must be used when available.
+- Ensure `_condamad/stories/regression-guardrails.md` exists, read it before
+  producing findings, and map relevant existing invariants to story candidates.
 
 ## Required references
 
@@ -44,6 +48,7 @@ Read the relevant references depending on the audit target:
 - `references/report-output-contract.md`
 - `references/story-candidate-contract.md`
 - plus the domain-specific contract matching the selected archetype.
+- `../condamad-regression-guardrails/SKILL.md`
 - `workflow.md` for the full operational workflow.
 
 ## Output
@@ -60,6 +65,11 @@ with:
 - `03-story-candidates.md`
 - `04-risk-matrix.md`
 - `05-executive-summary.md`
+
+When the audit discovers a durable invariant already enforced by the current
+implementation, update `_condamad/stories/regression-guardrails.md` only if it
+is directly evidenced and useful for future stories. Otherwise, reference the
+candidate invariant in `03-story-candidates.md` for later story-writer handling.
 
 ## Workflow
 

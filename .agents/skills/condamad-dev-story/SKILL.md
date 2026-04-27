@@ -39,6 +39,7 @@ Before implementing a story, read these references from this skill:
 - `references/story-capsule-contract.md`
 - `references/validation-contract.md`
 - `references/no-legacy-contract.md`
+- `../condamad-regression-guardrails/SKILL.md`
 
 These references are normative for CONDAMAD execution. If they conflict with this `SKILL.md`, apply this rule:
 
@@ -46,6 +47,8 @@ These references are normative for CONDAMAD execution. If they conflict with thi
 - `story-capsule-contract.md` wins for capsule structure.
 - `validation-contract.md` wins for validation and evidence classification.
 - `no-legacy-contract.md` wins for No Legacy interpretation.
+- `condamad-regression-guardrails` wins for the shared inter-story invariant
+  registry workflow.
 - Explicit user instruction in the current task wins unless it conflicts with repository safety, destructive changes, or higher-priority instructions.
 
 ## 3. Expected inputs
@@ -117,6 +120,10 @@ Never ignore repository-local `AGENTS.md` instructions. Read every applicable `A
 
 - Locate the repository root before editing.
 - Run `git status --short` before editing.
+- Ensure `_condamad/stories/regression-guardrails.md` exists before editing;
+  create it from the `condamad-regression-guardrails` template if missing.
+- Read `_condamad/stories/regression-guardrails.md` and record applicable
+  invariants in the capsule validation / No Legacy evidence.
 - Record dirty files in `generated/09-dev-log.md` or `generated/10-final-evidence.md`.
 - Do not overwrite unrelated user changes.
 - Do not run destructive git commands unless the user explicitly requests them.
@@ -219,8 +226,10 @@ It must include:
 2. Run `git status --short`.
 3. Record dirty files.
 4. Read applicable `AGENTS.md` files.
-5. Identify the story capsule path or story file path.
-6. If no story can be found, stop with a precise blocker.
+5. Apply `condamad-regression-guardrails`: create the registry if missing, read
+   it, and classify applicable invariants for the story surface.
+6. Identify the story capsule path or story file path.
+7. If no story can be found, stop with a precise blocker.
 
 ### Step 1 — Generate or validate the capsule
 
@@ -250,7 +259,8 @@ Read, in order:
 4. `generated/04-target-files.md`;
 5. `generated/06-validation-plan.md`;
 6. `generated/07-no-legacy-dry-guardrails.md`;
-7. optional generated context files if present.
+7. `_condamad/stories/regression-guardrails.md`;
+8. optional generated context files if present.
 
 Extract:
 
@@ -261,6 +271,7 @@ Extract:
 - changed-area constraints;
 - validation expectations;
 - forbidden legacy patterns.
+- applicable regression guardrail IDs and evidence requirements.
 
 ### Step 3 — Inspect repository before editing
 
@@ -315,6 +326,9 @@ Run the validation plan in this order when possible:
 4. broader regression suite;
 5. project quality gate.
 
+Also run or record the guard commands required by applicable rows in
+`_condamad/stories/regression-guardrails.md`.
+
 Typical Python backend commands:
 
 ```bash
@@ -356,6 +370,8 @@ Update:
 - `generated/03-acceptance-traceability.md`;
 - `generated/09-dev-log.md` when present or useful;
 - `generated/10-final-evidence.md`.
+- `_condamad/stories/regression-guardrails.md` when this implementation creates
+  a new durable invariant or changes an existing guard.
 
 Record:
 

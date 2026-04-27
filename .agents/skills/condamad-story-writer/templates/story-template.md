@@ -117,6 +117,8 @@ The current codebase or audit indicates:
 
 - Evidence 1: `<relative/path.py>` - <what exists today>
 - Evidence 2: `<relative/path.py>` - <what must change>
+- Evidence N: `_condamad/stories/regression-guardrails.md` - shared regression
+  invariants consulted before story scope was finalized.
 
 If repository evidence was not available, state:
 
@@ -130,6 +132,18 @@ After implementation:
 - ...
 - ...
 - ...
+
+## 6a. Regression Guardrails
+
+- Guardrail source: `_condamad/stories/regression-guardrails.md`
+- Applicable invariants:
+  - `RG-XXX` - <why this invariant applies>
+- Non-applicable invariants:
+  - `RG-YYY` - <why this story does not touch the protected surface>
+- Required regression evidence:
+  - <test, scan, snapshot, diff, audit, or runtime inventory>
+- Allowed differences:
+  - <explicit allowed differences, or "none">
 
 ## 7. Acceptance Criteria
 

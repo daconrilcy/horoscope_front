@@ -42,6 +42,9 @@ This skill complements:
 - Do not run broad cleanup or unrelated formatting.
 - Do not mutate application files outside the approved refactor plan.
 - Do not claim completion without validation evidence, negative legacy scans, and diff review.
+- Ensure `_condamad/stories/regression-guardrails.md` exists before planning,
+  read applicable invariants, and include them as behavior invariants or
+  explicit non-applicable guardrails in the refactor plan.
 
 ## Required references
 
@@ -54,6 +57,7 @@ Read:
 - `references/no-legacy-dry-contract.md`
 - `references/validation-contract.md`
 - `references/diff-review-contract.md`
+- `../condamad-regression-guardrails/SKILL.md`
 
 ## Required artifacts
 
@@ -82,4 +86,6 @@ the repository `AGENTS.md`.
 
 Produce or update one `refactor-plan.md` before edits and one
 `refactor-evidence.md` before completion. Evidence must include exact commands,
-results, negative legacy scans, and diff review.
+results, negative legacy scans, applicable regression guardrail checks, and
+diff review. Update `_condamad/stories/regression-guardrails.md` if the refactor
+creates a new durable invariant.

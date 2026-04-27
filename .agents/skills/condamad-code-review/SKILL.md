@@ -28,6 +28,7 @@ Before reviewing, load:
 - `references/review-doctrine.md`
 - `references/finding-taxonomy.md`
 - `references/codex-modern-review-guidance.md`
+- `../condamad-regression-guardrails/SKILL.md`
 
 ## Non-Negotiable Behavior
 
@@ -40,3 +41,5 @@ Before reviewing, load:
 - Do not return `CLEAN` when required validation evidence is missing.
 - Do not treat skipped commands as passed.
 - Do not hide findings because the user asked for a "quick" review.
+- Ensure `_condamad/stories/regression-guardrails.md` exists, read it, and
+  treat missing applicable guardrail evidence as a review finding.

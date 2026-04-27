@@ -1,0 +1,8 @@
+interface:
+  display_name: "CONDAMAD Regression Guardrails"
+  short_description: "Maintain the shared inter-story regression guardrail registry and enforce invariant checks across CONDAMAD workflows."
+  brand_color: "#0F766E"
+  default_prompt: "$condamad-regression-guardrails Ensure the CONDAMAD regression guardrail registry exists, classify applicable invariants for the current story or review, and update the registry when new durable invariants are created."
+
+policy:
+  allow_implicit_invocation: false
