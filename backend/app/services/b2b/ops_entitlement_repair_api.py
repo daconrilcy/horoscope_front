@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.api.dependencies.auth import AuthenticatedUser
+from app.core.auth_context import AuthenticatedUser
 from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 

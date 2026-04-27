@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import Depends, Header, Request
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.errors.raising import ApiHttpError
+from app.core.auth_context import AuthenticatedEnterpriseClient
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
@@ -15,12 +15,6 @@ from app.services.b2b.enterprise_credentials_service import (
     EnterpriseCredentialsServiceError,
 )
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
-
-
-class AuthenticatedEnterpriseClient(BaseModel):
-    account_id: int
-    credential_id: int
-    key_prefix: str
 
 
 class EnterpriseApiKeyAuthenticationError(ApiHttpError):

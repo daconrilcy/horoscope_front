@@ -7,7 +7,6 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import delete
 
-from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import ReviewEventItem
 from app.core.rate_limit import RateLimitError
 from app.core.security import create_access_token
 from app.infra.db.base import Base
@@ -20,6 +19,7 @@ from app.infra.db.models.entitlement_mutation.audit.review import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine
 from app.main import app
+from app.services.api_contracts.ops.entitlement_mutation_audits import ReviewEventItem
 from app.services.auth_service import AuthService
 
 client = TestClient(app)

@@ -8,11 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.errors import raise_http_error
-from app.api.v1.schemas.routers.admin.entitlements import (
-    AdminEntitlementMatrixResponse,
-    AdminEntitlementUpdate,
-)
+from app.api.errors import raise_api_error
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.product_entitlements import (
     AccessMode,
@@ -21,6 +17,10 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureBindingModel,
 )
 from app.infra.db.session import get_db_session
+from app.services.api_contracts.admin.entitlements import (
+    AdminEntitlementMatrixResponse,
+    AdminEntitlementUpdate,
+)
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ def update_entitlement(
         .options(joinedload(PlanFeatureBindingModel.quotas))
     )
     if not binding:
-        raise_http_error(status_code=404, detail="Binding not found")
+        raise_api_error(status_code=404, message="Binding not found")
 
     before = {
         "access_mode": binding.access_mode.value,
@@ -116,7 +116,7 @@ def update_entitlement(
         binding.is_enabled = payload.is_enabled
     if payload.quota_limit is not None:
         if not binding.quotas:
-            raise_http_error(status_code=400, detail="No quota record found to update")
+            raise_api_error(status_code=400, message="No quota record found to update")
         binding.quotas[0].quota_limit = payload.quota_limit
 
     # Audit log

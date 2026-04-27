@@ -8,7 +8,7 @@ from app.api.errors.catalog import (
 )
 from app.api.errors.contracts import ApiErrorBody, ApiErrorEnvelope
 from app.api.errors.handlers import application_error_handler, build_error_response
-from app.api.errors.raising import raise_api_error, raise_http_error
+from app.api.errors.raising import raise_api_error
 
 __all__ = [
     "ApiErrorBody",
@@ -19,6 +19,5 @@ __all__ = [
     "application_error_handler",
     "build_error_response",
     "raise_api_error",
-    "raise_http_error",
     "resolve_application_error_status",
 ]

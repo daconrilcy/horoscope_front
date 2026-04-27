@@ -22,7 +22,6 @@ def build_error_response(
     message: str,
     details: Any = None,
     headers: dict[str, str] | None = None,
-    legacy_detail: Any = None,
 ) -> JSONResponse:
     """Construit l'enveloppe HTTP canonique d'une erreur API."""
     envelope = ApiErrorEnvelope(
@@ -34,8 +33,6 @@ def build_error_response(
         )
     )
     content = jsonable_encoder(envelope.model_dump(mode="json"))
-    if legacy_detail is not None:
-        content["detail"] = legacy_detail
     return JSONResponse(
         status_code=status_code,
         headers=headers,
@@ -53,5 +50,4 @@ def application_error_handler(request: Request, error: ApplicationError) -> JSON
         message=error.message,
         details=error.details,
         headers=error.headers,
-        legacy_detail=getattr(error, "legacy_detail", None),
     )

@@ -1,6 +1,6 @@
 """Valide les helpers partages de texte entre guidance et consultation."""
 
-from app.api.v1.schemas.routers.public.consultation import ConsultationBlockKind
+from app.services.api_contracts.public.consultation import ConsultationBlockKind
 from app.services.llm_generation.consultation_generation_service import (
     ConsultationGenerationService,
 )

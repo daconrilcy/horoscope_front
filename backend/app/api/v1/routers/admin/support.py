@@ -8,14 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.errors import raise_http_error
-from app.api.v1.schemas.routers.admin.support import (
-    AdminFlaggedContentResponse,
-    AdminSupportTicketDetailResponse,
-    AdminSupportTicketResponse,
-    FlaggedContentReviewUpdate,
-    TicketStatusUpdate,
-)
+from app.api.errors import raise_api_error
 from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
@@ -23,6 +16,13 @@ from app.infra.db.models.flagged_content import FlaggedContentModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
+from app.services.api_contracts.admin.support import (
+    AdminFlaggedContentResponse,
+    AdminSupportTicketDetailResponse,
+    AdminSupportTicketResponse,
+    FlaggedContentReviewUpdate,
+    TicketStatusUpdate,
+)
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ def get_ticket_detail(
     )
     result = db.execute(stmt).first()
     if not result:
-        raise_http_error(status_code=404, detail="Ticket not found")
+        raise_api_error(status_code=404, message="Ticket not found")
 
     audit_events = db.scalars(
         select(AuditEventModel)
@@ -132,7 +132,7 @@ def update_ticket_status(
 ) -> Any:
     ticket = db.get(SupportIncidentModel, ticket_id)
     if not ticket:
-        raise_http_error(status_code=404, detail="Ticket not found")
+        raise_api_error(status_code=404, message="Ticket not found")
 
     before = ticket.status
     ticket.status = payload.status
@@ -201,7 +201,7 @@ def review_flagged_content(
 ) -> Any:
     content = db.get(FlaggedContentModel, content_id)
     if not content:
-        raise_http_error(status_code=404, detail="Content not found")
+        raise_api_error(status_code=404, message="Content not found")
 
     content.status = payload.status
     content.reviewed_at = datetime_provider.utcnow()

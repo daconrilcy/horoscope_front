@@ -67,7 +67,7 @@ def test_unsubscribe_invalid_email_type(db: Session, test_user: UserModel):
     response = client.get(f"/api/email/unsubscribe?token={token}")
 
     assert response.status_code == 400
-    assert "Lien de désabonnement non valide" in response.json()["detail"]
+    assert "Lien de désabonnement non valide" in response.json()["error"]["message"]
 
 
 def test_unsubscribe_expired_token(db: Session, test_user: UserModel):
@@ -88,7 +88,7 @@ def test_unsubscribe_expired_token(db: Session, test_user: UserModel):
     response = client.get(f"/api/email/unsubscribe?token={expired_token}")
 
     assert response.status_code == 400
-    assert "Le lien de désabonnement a expiré" in response.json()["detail"]
+    assert "Le lien de désabonnement a expiré" in response.json()["error"]["message"]
 
 
 def test_unsubscribe_user_not_found(db: Session):
@@ -98,7 +98,7 @@ def test_unsubscribe_user_not_found(db: Session):
     response = client.get(f"/api/email/unsubscribe?token={token}")
 
     assert response.status_code == 400
-    assert "Utilisateur non trouvé" in response.json()["detail"]
+    assert "Utilisateur non trouvé" in response.json()["error"]["message"]
 
 
 @pytest.mark.asyncio

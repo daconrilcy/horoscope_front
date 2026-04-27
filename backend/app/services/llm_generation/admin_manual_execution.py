@@ -9,14 +9,14 @@ from typing import Any, Literal
 
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser
-from app.api.v1.constants import ADMIN_MANUAL_LLM_EXECUTE_SURFACE
-from app.api.v1.schemas.routers.admin.llm.prompts import (
+from app.core.api_constants import ADMIN_MANUAL_LLM_EXECUTE_SURFACE
+from app.core.auth_context import AuthenticatedUser
+from app.core.sensitive_data import Sink, sanitize_payload
+from app.domain.llm.runtime.contracts import GatewayResult
+from app.services.api_contracts.admin.llm.prompts import (
     AdminCatalogManualExecuteResponseData,
     AdminResolvedAssemblyView,
 )
-from app.core.sensitive_data import Sink, sanitize_payload
-from app.domain.llm.runtime.contracts import GatewayResult
 from app.services.llm_generation.anonymization_service import (
     LLMAnonymizationError,
     anonymize_text,

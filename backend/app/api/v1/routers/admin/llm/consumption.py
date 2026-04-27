@@ -12,15 +12,15 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.constants import DEFAULT_DRILLDOWN_LIMIT, MAX_PAGE_SIZE
-from app.api.v1.schemas.routers.admin.llm.consumption import (
-    CanonicalConsumptionDrilldownResponse,
-    CanonicalConsumptionDrilldownRow,
-    CanonicalConsumptionResponse,
-)
 from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
+from app.services.api_contracts.admin.llm.consumption import (
+    CanonicalConsumptionDrilldownResponse,
+    CanonicalConsumptionDrilldownRow,
+    CanonicalConsumptionResponse,
+)
 from app.services.llm_observability.admin_consumption import (
     _apply_search,
     _build_rows,

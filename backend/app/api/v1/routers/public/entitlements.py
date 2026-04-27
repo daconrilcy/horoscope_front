@@ -8,13 +8,6 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.errors import build_error_response
-from app.api.v1.schemas.routers.public.entitlements import (
-    EntitlementsMeResponse,
-    PlanCatalogData,
-    PlanFeatureData,
-    PlanFeatureQuotaData,
-    PlansCatalogResponse,
-)
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel
 from app.infra.db.models.product_entitlements import (
@@ -24,6 +17,13 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureBindingModel,
 )
 from app.infra.db.session import get_db_session
+from app.services.api_contracts.public.entitlements import (
+    EntitlementsMeResponse,
+    PlanCatalogData,
+    PlanFeatureData,
+    PlanFeatureQuotaData,
+    PlansCatalogResponse,
+)
 from app.services.billing.service import BillingService
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,

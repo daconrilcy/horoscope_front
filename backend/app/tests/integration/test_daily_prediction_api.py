@@ -193,7 +193,7 @@ def test_daily_prediction_404_no_natal():
     response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 404
-    assert response.json()["detail"]["code"] == "natal_missing"
+    assert response.json()["error"]["code"] == "natal_missing"
 
 
 def test_daily_prediction_categories_sorted_by_rank():
@@ -330,7 +330,7 @@ def test_daily_prediction_returns_500_on_malformed_json_payload():
         response = client.get("/v1/predictions/daily", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 500
-    assert response.json()["detail"]["code"] == "prediction_payload_invalid"
+    assert response.json()["error"]["code"] == "prediction_payload_invalid"
 
 
 def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effective():

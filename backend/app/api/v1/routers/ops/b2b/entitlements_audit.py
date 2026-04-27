@@ -9,13 +9,13 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.v1.constants import VALID_RESOLUTION_SOURCES
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.ops.b2b.entitlements_audit import (
+from app.core.request_id import resolve_request_id
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.ops.b2b.entitlements_audit import (
     B2BAuditEntryPayload,
     B2BAuditListApiResponse,
 )
-from app.core.request_id import resolve_request_id
-from app.infra.db.session import get_db_session
 from app.services.b2b.audit_service import B2BAuditService
 from app.services.b2b.ops_entitlements_audit_api import (
     _enforce_limits,

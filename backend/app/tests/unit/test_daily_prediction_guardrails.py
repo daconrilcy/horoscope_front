@@ -207,7 +207,7 @@ def test_503_on_service_timeout():
     try:
         response = client.get("/v1/predictions/daily")
         assert response.status_code == 503
-        assert response.json()["detail"]["code"] == "timeout"
+        assert response.json()["error"]["code"] == "timeout"
     finally:
         app.dependency_overrides = {}
 
@@ -226,6 +226,6 @@ def test_503_on_compute_failed():
     try:
         response = client.get("/v1/predictions/daily")
         assert response.status_code == 503
-        assert response.json()["detail"]["code"] == "compute_failed"
+        assert response.json()["error"]["code"] == "compute_failed"
     finally:
         app.dependency_overrides = {}

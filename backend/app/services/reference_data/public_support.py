@@ -7,7 +7,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser
+from app.core.auth_context import AuthenticatedUser
 from app.core.config import settings
 from app.core.exceptions import ApplicationError
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService

@@ -19,38 +19,6 @@ from app.api.v1.constants import (
     ADMIN_MANUAL_EXECUTE_ROUTE_PATH,
     ADMIN_MANUAL_LLM_EXECUTE_SURFACE,
 )
-from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
-from app.api.v1.schemas.routers.admin.llm.prompts import (
-    AdminCatalogManualExecutePayload,
-    AdminCatalogManualExecuteResponse,
-    AdminInspectionMode,
-    AdminLlmCatalogEntry,
-    AdminLlmCatalogResponse,
-    AdminResolvedAssemblyResponse,
-    LlmCallLog,
-    LlmCallLogListResponse,
-    LlmDashboardMetrics,
-    LlmDashboardResponse,
-    LlmOutputSchemaApiResponse,
-    LlmOutputSchemaListResponse,
-    LlmPersonaApiResponse,
-    LlmPersonaDetailResponse,
-    LlmPersonaListResponse,
-    LlmPromptApiResponse,
-    LlmPromptHistoryResponse,
-    LlmPromptPublishResponse,
-    LlmUseCaseContract,
-    LlmUseCaseContractResponse,
-    LlmUseCaseListResponse,
-    PersonaAssociationPayload,
-    ReplayPayload,
-    ResponseMeta,
-    RollbackPromptPayload,
-    SnapshotDiffResponse,
-    SnapshotTimelineItem,
-    SnapshotTimelineResponse,
-    UseCaseUpdatePayload,
-)
 from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.domain.llm.configuration.admin_models import (
@@ -109,6 +77,38 @@ from app.infra.db.repositories.llm.prompting_repository import (
 )
 from app.infra.db.session import get_db_session
 from app.ops.llm.services import PromptLint, PromptRegistryV2, replay, run_eval
+from app.services.api_contracts.admin.llm.error_codes import AdminLlmErrorCode
+from app.services.api_contracts.admin.llm.prompts import (
+    AdminCatalogManualExecutePayload,
+    AdminCatalogManualExecuteResponse,
+    AdminInspectionMode,
+    AdminLlmCatalogEntry,
+    AdminLlmCatalogResponse,
+    AdminResolvedAssemblyResponse,
+    LlmCallLog,
+    LlmCallLogListResponse,
+    LlmDashboardMetrics,
+    LlmDashboardResponse,
+    LlmOutputSchemaApiResponse,
+    LlmOutputSchemaListResponse,
+    LlmPersonaApiResponse,
+    LlmPersonaDetailResponse,
+    LlmPersonaListResponse,
+    LlmPromptApiResponse,
+    LlmPromptHistoryResponse,
+    LlmPromptPublishResponse,
+    LlmUseCaseContract,
+    LlmUseCaseContractResponse,
+    LlmUseCaseListResponse,
+    PersonaAssociationPayload,
+    ReplayPayload,
+    ResponseMeta,
+    RollbackPromptPayload,
+    SnapshotDiffResponse,
+    SnapshotTimelineItem,
+    SnapshotTimelineResponse,
+    UseCaseUpdatePayload,
+)
 from app.services.llm_generation.admin_manual_execution import (
     _build_admin_manual_execute_response_payload,
     _record_admin_manual_execution_audit,

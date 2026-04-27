@@ -9,16 +9,16 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.ops.b2b.entitlement_repair import (
+from app.core.request_id import resolve_request_id
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.ops.b2b.entitlement_repair import (
     ClassifyZeroUnitsRequest,
     ClassifyZeroUnitsResponse,
     RepairRunResponse,
     SetAdminUserRequest,
     SetAdminUserResponse,
 )
-from app.core.request_id import resolve_request_id
-from app.infra.db.session import get_db_session
 from app.services.b2b.entitlement_repair_service import (
     B2BEntitlementRepairService,
     RepairValidationError,

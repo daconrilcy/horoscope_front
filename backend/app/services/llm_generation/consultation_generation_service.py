@@ -5,7 +5,12 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.api.v1.schemas.routers.public.consultation import (
+from app.domain.astrology.natal_calculation import NatalCalculationError
+from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
+from app.infra.db.repositories.consultation_third_party_repository import (
+    ConsultationThirdPartyRepository,
+)
+from app.services.api_contracts.public.consultation import (
     ConsultationBlock,
     ConsultationBlockKind,
     ConsultationGenerateData,
@@ -14,11 +19,6 @@ from app.api.v1.schemas.routers.public.consultation import (
     ConsultationStatus,
     ConsultationThirdPartyProfileCreate,
     FallbackMode,
-)
-from app.domain.astrology.natal_calculation import NatalCalculationError
-from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
-from app.infra.db.repositories.consultation_third_party_repository import (
-    ConsultationThirdPartyRepository,
 )
 from app.services.consultation.catalogue_service import ConsultationCatalogueService
 from app.services.consultation.fallback_service import ConsultationFallbackService

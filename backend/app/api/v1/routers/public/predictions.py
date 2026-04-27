@@ -7,16 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.errors import raise_http_error, resolve_application_error_status
-from app.api.v1.schemas.routers.public.predictions import (
-    DailyHistoryItem,
-    DailyHistoryResponse,
-    DailyPredictionDebugCategory,
-    DailyPredictionDebugResponse,
-    DailyPredictionDebugTurningPoint,
-    DailyPredictionMeta,
-    DailyPredictionResponse,
-)
+from app.api.errors import raise_api_error, resolve_application_error_status
 from app.core.config import settings
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
@@ -26,6 +17,15 @@ from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.public_projection import PublicPredictionAssembler
+from app.services.api_contracts.public.predictions import (
+    DailyHistoryItem,
+    DailyHistoryResponse,
+    DailyPredictionDebugCategory,
+    DailyPredictionDebugResponse,
+    DailyPredictionDebugTurningPoint,
+    DailyPredictionMeta,
+    DailyPredictionResponse,
+)
 from app.services.entitlement.horoscope_daily_entitlement_gate import (
     HoroscopeDailyAccessDeniedError,
     HoroscopeDailyEntitlementGate,
@@ -62,9 +62,9 @@ def debug_daily_prediction(
     service: DailyPredictionService = Depends(get_daily_prediction_service),
 ) -> DailyPredictionDebugResponse:
     if current_user.role != "admin":
-        raise_http_error(
+        raise_api_error(
             status_code=403,
-            detail={"code": "forbidden", "message": "Admin only"},
+            message={"code": "forbidden", "message": "Admin only"},
         )
 
     parsed_date = None
@@ -72,9 +72,9 @@ def debug_daily_prediction(
         try:
             parsed_date = datetime.strptime(date, "%Y-%m-%d").date()
         except ValueError:
-            raise_http_error(
+            raise_api_error(
                 status_code=422,
-                detail="Invalid date format. Use YYYY-MM-DD.",
+                message="Invalid date format. Use YYYY-MM-DD.",
             )
 
     try:
@@ -90,22 +90,22 @@ def debug_daily_prediction(
             error,
             not_found_codes={"natal_missing", "profile_missing"},
         )
-        raise_http_error(
+        raise_api_error(
             status_code=resolve_application_error_status(detail["code"]),
-            detail=detail,
+            message=detail,
         )
 
     if result is None:
-        raise_http_error(
+        raise_api_error(
             status_code=404,
-            detail={"code": "not_found", "message": "Aucun run trouvé pour ce jour"},
+            message={"code": "not_found", "message": "Aucun run trouvé pour ce jour"},
         )
 
     repo = DailyPredictionRepository(db)
     # AC1 Compliance: get_full_run now returns PersistedPredictionSnapshot
     snapshot = repo.get_full_run(result.run.run_id)
     if not snapshot:
-        raise_http_error(status_code=500, detail="Failed to load full prediction run snapshot")
+        raise_api_error(status_code=500, message="Failed to load full prediction run snapshot")
 
     # Mappings
     ref_repo = PredictionReferenceRepository(db)
@@ -183,9 +183,9 @@ def get_daily_history(
     db: Session = Depends(get_db_session),
 ) -> DailyHistoryResponse:
     if from_date > to_date:
-        raise_http_error(
+        raise_api_error(
             status_code=400,
-            detail={
+            message={
                 "code": "invalid_date_range",
                 "message": "from_date must be before or equal to to_date",
             },
@@ -193,9 +193,9 @@ def get_daily_history(
 
     delta = (to_date - from_date).days
     if delta > 90:
-        raise_http_error(
+        raise_api_error(
             status_code=400,
-            detail={
+            message={
                 "code": "range_too_large",
                 "message": f"Requested range ({delta} days) exceeds the maximum of 90 days",
             },
@@ -251,9 +251,9 @@ async def get_daily_prediction(
         try:
             parsed_date = datetime.strptime(target_date, "%Y-%m-%d").date()
         except ValueError:
-            raise_http_error(
+            raise_api_error(
                 status_code=422,
-                detail="Invalid date value. Use a real calendar date in YYYY-MM-DD.",
+                message="Invalid date value. Use a real calendar date in YYYY-MM-DD.",
             )
 
     # 1. Obtenir les prédictions
@@ -265,9 +265,9 @@ async def get_daily_prediction(
             )
             variant_code = entitlement.variant_code
         except HoroscopeDailyAccessDeniedError as exc:
-            raise_http_error(
+            raise_api_error(
                 status_code=403,
-                detail={"code": exc.reason_code, "message": str(exc)},
+                message={"code": exc.reason_code, "message": str(exc)},
             )
 
         result = service.get_or_compute(
@@ -279,13 +279,13 @@ async def get_daily_prediction(
         )
     except DailyPredictionServiceError as error:
         detail = _resolve_daily_prediction_service_error(error, not_found_codes={"natal_missing"})
-        raise_http_error(
+        raise_api_error(
             status_code=resolve_application_error_status(detail["code"]),
-            detail=detail,
+            message=detail,
         )
 
     if result is None:
-        raise_http_error(status_code=404, detail="Prediction not found")
+        raise_api_error(status_code=404, message="Prediction not found")
 
     # Commit the prediction to DB before the async LLM call so concurrent requests
     # hit the cache instead of recomputing. Without this, the `async def` handler's
@@ -298,7 +298,7 @@ async def get_daily_prediction(
     if not isinstance(snapshot, PersistedPredictionSnapshot):
         reloaded_snapshot = DailyPredictionRepository(db).get_full_run(result.run.run_id)
         if reloaded_snapshot is None:
-            raise_http_error(status_code=404, detail="Prediction not found")
+            raise_api_error(status_code=404, message="Prediction not found")
         snapshot = reloaded_snapshot
 
     # Mappings
@@ -350,9 +350,9 @@ async def get_daily_prediction(
             variant_code=variant_code,
         )
     except ValueError as exc:
-        raise_http_error(
+        raise_api_error(
             status_code=500,
-            detail={
+            message={
                 "code": "prediction_payload_invalid",
                 "message": str(exc),
             },

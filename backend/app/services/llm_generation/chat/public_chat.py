@@ -15,7 +15,7 @@ from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.quota.usage_service import QuotaUsageService
 
 logger = logging.getLogger(__name__)
-from app.api.v1.schemas.routers.public.chat import QuotaInfo
+from app.services.api_contracts.public.chat import QuotaInfo
 
 
 def _build_quota_info(result: ChatEntitlementResult) -> QuotaInfo:

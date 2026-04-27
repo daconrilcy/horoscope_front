@@ -8,13 +8,13 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.b2b.credentials import (
+from app.core.request_id import resolve_request_id
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.b2b.credentials import (
     EnterpriseCredentialSecretApiResponse,
     EnterpriseCredentialsListApiResponse,
 )
-from app.core.request_id import resolve_request_id
-from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
 from app.services.b2b.api_credentials import (
     _enforce_limits,
     _ensure_enterprise_admin_role,

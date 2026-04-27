@@ -8,9 +8,7 @@ from typing import Any
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.b2b_auth import (
-    AuthenticatedEnterpriseClient,
-)
+from app.core.auth_context import AuthenticatedEnterpriseClient
 from app.core.exceptions import ApplicationError
 from app.core.rate_limit import check_rate_limit
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService

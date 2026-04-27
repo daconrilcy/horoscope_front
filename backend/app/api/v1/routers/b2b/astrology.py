@@ -10,11 +10,11 @@ from app.api.dependencies.b2b_auth import (
     AuthenticatedEnterpriseClient,
     require_authenticated_b2b_client,
 )
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.b2b.astrology import WeeklyBySignApiResponse
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
+from app.services.api_contracts.b2b.astrology import WeeklyBySignApiResponse
+from app.services.api_contracts.common import ErrorEnvelope
 from app.services.b2b.api_astrology import (
     _enforce_limits,
     _raise_error,

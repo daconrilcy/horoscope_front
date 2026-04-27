@@ -7,13 +7,13 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.api.v1.constants import FEATURES_TO_QUERY
-from app.api.v1.schemas.routers.public.entitlements import (
-    FeatureEntitlementResponse,
-    UsageStateResponse,
-)
+from app.core.api_constants import FEATURES_TO_QUERY
 from app.infra.db.models.product_entitlements import (
     FeatureCatalogModel,
+)
+from app.services.api_contracts.public.entitlements import (
+    FeatureEntitlementResponse,
+    UsageStateResponse,
 )
 from app.services.entitlement.entitlement_types import EffectiveFeatureAccess, UsageState
 

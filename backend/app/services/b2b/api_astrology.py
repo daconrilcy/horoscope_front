@@ -6,9 +6,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.api.dependencies.b2b_auth import (
-    AuthenticatedEnterpriseClient,
-)
+from app.core.auth_context import AuthenticatedEnterpriseClient
 from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 

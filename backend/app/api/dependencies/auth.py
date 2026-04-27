@@ -1,25 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from fastapi import Depends, Header
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.errors.raising import ApiHttpError
+from app.core.auth_context import AuthenticatedUser
 from app.core.rbac import is_valid_role
 from app.core.security import SecurityError, decode_token
 from app.infra.db.repositories.user_repository import UserRepository
 from app.infra.db.session import get_db_session
-
-
-class AuthenticatedUser(BaseModel):
-    id: int
-    role: str
-    email: str
-    created_at: datetime
-    permissions: list[str] = []
 
 
 class UserAuthenticationError(ApiHttpError):

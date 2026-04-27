@@ -1,6 +1,6 @@
 from typing import Literal
 
-from app.api.v1.schemas.routers.public.consultation import (
+from app.services.api_contracts.public.consultation import (
     ConsultationPrecheckData,
     ConsultationStatus,
     FallbackMode,

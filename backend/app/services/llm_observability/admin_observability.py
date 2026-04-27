@@ -10,17 +10,17 @@ import sqlalchemy as sa
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser
-from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
-from app.api.v1.schemas.routers.admin.llm.prompts import (
-    LlmCallLog,
-    LlmDashboardMetrics,
-    ReplayPayload,
-)
+from app.core.auth_context import AuthenticatedUser
 from app.core.datetime_provider import datetime_provider
 from app.domain.llm.runtime.observability import purge_expired_logs
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 from app.ops.llm.services import replay
+from app.services.api_contracts.admin.llm.error_codes import AdminLlmErrorCode
+from app.services.api_contracts.admin.llm.prompts import (
+    LlmCallLog,
+    LlmDashboardMetrics,
+    ReplayPayload,
+)
 from app.services.llm_generation.admin_manual_execution import _record_audit_event
 from app.services.llm_generation.admin_prompts import (
     _call_log_scope_filter,

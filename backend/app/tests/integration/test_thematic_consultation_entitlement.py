@@ -9,12 +9,6 @@ from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 import app.infra.db.models  # noqa: F401
-from app.api.v1.schemas.routers.public.consultation import (
-    ConsultationGenerateData,
-    ConsultationSection,
-    ConsultationStatus,
-    PrecisionLevel,
-)
 from app.infra.db.base import Base
 from app.infra.db.models.product_entitlements import (
     AccessMode,
@@ -32,6 +26,12 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal, engine, get_db_session
 from app.main import app
+from app.services.api_contracts.public.consultation import (
+    ConsultationGenerateData,
+    ConsultationSection,
+    ConsultationStatus,
+    PrecisionLevel,
+)
 from app.services.billing.service import BillingService
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,

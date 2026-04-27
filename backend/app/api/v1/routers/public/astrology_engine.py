@@ -7,8 +7,14 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.errors import resolve_application_error_status
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.public.astrology_engine import (
+from app.core import ephemeris
+from app.core.config import settings
+from app.core.request_id import resolve_request_id
+from app.domain.astrology.natal_calculation import NatalCalculationError
+from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.public.astrology_engine import (
     BirthPrepareResponse,
     ChartResultAuditResponse,
     NatalCalculateRequest,
@@ -17,12 +23,6 @@ from app.api.v1.schemas.routers.public.astrology_engine import (
     NatalCompareResponse,
     NatalPrepareRequest,
 )
-from app.core import ephemeris
-from app.core.config import settings
-from app.core.request_id import resolve_request_id
-from app.domain.astrology.natal_calculation import NatalCalculationError
-from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
-from app.infra.db.session import get_db_session
 from app.services.chart.public_astrology_engine import (
     _build_engine_diff,
     _raise_error,

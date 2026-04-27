@@ -14,8 +14,13 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.errors import build_error_response
 from app.api.v1.constants import VALID_ASTROLOGER_PROFILES
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.public.users import (
+from app.core.request_id import resolve_request_id
+from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
+from app.infra.db.models.user import UserModel
+from app.infra.db.session import get_db_session
+from app.infra.observability.metrics import increment_counter
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.public.users import (
     NatalChartGenerateRequest,
     NatalInterpretationApiResponse,
     UserBirthProfileApiResponse,
@@ -27,11 +32,6 @@ from app.api.v1.schemas.routers.public.users import (
     UserSettingsApiResponse,
     UserSettingsPatchRequest,
 )
-from app.core.request_id import resolve_request_id
-from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
-from app.infra.db.models.user import UserModel
-from app.infra.db.session import get_db_session
-from app.infra.observability.metrics import increment_counter
 from app.services.llm_generation.natal.interpretation_service import (
     NatalInterpretationService,
     NatalInterpretationServiceError,

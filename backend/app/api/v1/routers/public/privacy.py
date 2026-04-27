@@ -8,14 +8,14 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.public.privacy import (
+from app.core.request_id import resolve_request_id
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.public.privacy import (
     DeleteRequestPayload,
     PrivacyApiResponse,
     PrivacyEvidenceApiResponse,
 )
-from app.core.request_id import resolve_request_id
-from app.infra.db.session import get_db_session
 from app.services.billing.service import BillingService
 from app.services.privacy.public_support import (
     AuditWriteError,

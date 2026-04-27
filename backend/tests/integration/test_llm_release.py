@@ -9,7 +9,6 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session
 
-from app.api.v1.schemas.routers.admin.llm.releases import ActivationQualificationEvidence
 from app.core.config import settings
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.configuration.config_coherence_validator import (
@@ -36,6 +35,7 @@ from app.infra.db.models.llm.llm_release import (
 from app.infra.db.session import SessionLocal, get_db_session
 from app.main import app
 from app.ops.llm.release_service import ReleaseService
+from app.services.api_contracts.admin.llm.releases import ActivationQualificationEvidence
 
 
 def _ensure_published_assembly_for_release_snapshots(db: Session) -> None:

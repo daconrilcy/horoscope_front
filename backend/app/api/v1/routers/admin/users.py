@@ -8,12 +8,7 @@ from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.errors import raise_http_error
-from app.api.v1.schemas.routers.admin.users import (
-    AdminUserDetailResponse,
-    AdminUserSearchResponse,
-    RevealStripeIdResponse,
-)
+from app.api.errors import raise_api_error
 from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
@@ -33,6 +28,11 @@ from app.infra.db.models.user_natal_interpretation import (
 )
 from app.infra.db.session import get_db_session
 from app.integrations.stripe_client import get_stripe_client
+from app.services.api_contracts.admin.users import (
+    AdminUserDetailResponse,
+    AdminUserSearchResponse,
+    RevealStripeIdResponse,
+)
 from app.services.billing.service import BillingService
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 from app.services.user_profile.admin_users import (
@@ -114,7 +114,7 @@ def get_user_detail(
     """
     user = db.get(UserModel, user_id)
     if not user:
-        raise_http_error(status_code=404, detail="User not found")
+        raise_api_error(status_code=404, message="User not found")
 
     profile = db.scalar(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
@@ -242,7 +242,7 @@ def reveal_stripe_id(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
     )
     if not profile or not profile.stripe_customer_id:
-        raise_http_error(status_code=404, detail="Stripe profile not found")
+        raise_api_error(status_code=404, message="Stripe profile not found")
 
     AuditService.record_event(
         db,
@@ -270,7 +270,7 @@ def suspend_user(
 ) -> Any:
     user = db.get(UserModel, user_id)
     if not user:
-        raise_http_error(status_code=404, detail="User not found")
+        raise_api_error(status_code=404, message="User not found")
 
     before = {"is_suspended": user.is_suspended}
     user.is_suspended = True
@@ -301,7 +301,7 @@ def unsuspend_user(
 ) -> Any:
     user = db.get(UserModel, user_id)
     if not user:
-        raise_http_error(status_code=404, detail="User not found")
+        raise_api_error(status_code=404, message="User not found")
 
     before = {"is_suspended": user.is_suspended}
     user.is_suspended = False
@@ -332,7 +332,7 @@ def unlock_user(
 ) -> Any:
     user = db.get(UserModel, user_id)
     if not user:
-        raise_http_error(status_code=404, detail="User not found")
+        raise_api_error(status_code=404, message="User not found")
 
     before = {"is_locked": user.is_locked}
     user.is_locked = False
@@ -405,8 +405,8 @@ def refresh_subscription(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
     )
     if not profile or not profile.stripe_subscription_id:
-        raise_http_error(
-            status_code=400, detail="No active Stripe subscription found for this user"
+        raise_api_error(
+            status_code=400, message="No active Stripe subscription found for this user"
         )
 
     from app.services.billing.stripe_billing_profile_service import StripeBillingProfileService
@@ -414,7 +414,7 @@ def refresh_subscription(
     stripe_client = get_stripe_client()
     if not stripe_client:
         # Fallback for testing if monkeypatching failed or if it's actually not configured
-        raise_http_error(status_code=503, detail="Stripe client not configured")
+        raise_api_error(status_code=503, message="Stripe client not configured")
 
     try:
         subscription = stripe_client.subscriptions.retrieve(profile.stripe_subscription_id)
@@ -452,7 +452,7 @@ def refresh_subscription(
         return {"status": "success"}
     except Exception as e:
         logger.error("admin_refresh_subscription_failed user_id=%s error=%s", user_id, e)
-        raise_http_error(status_code=500, detail=str(e))
+        raise_api_error(status_code=500, message=str(e))
 
 
 @router.post("/{user_id}/assign-plan")
@@ -468,7 +468,7 @@ def assign_plan(
     Manually assign a plan without Stripe side-effects.
     """
     if len(reason) < 5:
-        raise_http_error(status_code=400, detail="A reason of at least 5 characters is required")
+        raise_api_error(status_code=400, message="A reason of at least 5 characters is required")
 
     profile = db.scalar(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
@@ -522,8 +522,8 @@ def record_commercial_gesture(
         .limit(1)
     )
     if not sub:
-        raise_http_error(
-            status_code=400, detail="No local subscription record found to attach gesture"
+        raise_api_error(
+            status_code=400, message="No local subscription record found to attach gesture"
         )
 
     existing_gestures = list(sub.commercial_gestures or [])

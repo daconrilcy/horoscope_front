@@ -11,7 +11,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.api.v1.constants import VALID_VIEWS
+from app.core.api_constants import VALID_VIEWS
 from app.services.llm_observability.consumption_service import (
     CanonicalConsumptionAggregate,
     CanonicalConsumptionFilters,
@@ -20,7 +20,7 @@ from app.services.llm_observability.consumption_service import (
 )
 
 ConsumptionView = str
-from app.api.v1.schemas.routers.admin.llm.consumption import CanonicalConsumptionViewRow
+from app.services.api_contracts.admin.llm.consumption import CanonicalConsumptionViewRow
 
 
 def _normalize_view(view: str) -> ConsumptionView:

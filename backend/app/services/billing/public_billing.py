@@ -8,7 +8,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser
+from app.core.auth_context import AuthenticatedUser
 from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.services.billing.pricing_experiment_service import (

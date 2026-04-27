@@ -12,14 +12,14 @@ from app.api.dependencies.auth import (
     require_admin_user,
 )
 from app.api.errors import build_error_response
-from app.api.v1.schemas.routers.admin.pdf_templates import (
+from app.core.request_id import resolve_request_id
+from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.admin.pdf_templates import (
     PdfTemplateCreate,
     PdfTemplateResponse,
     PdfTemplateUpdate,
 )
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
-from app.infra.db.session import get_db_session
 from app.services.natal.admin_pdf_templates import (
     _normalize_pdf_template_config,
 )

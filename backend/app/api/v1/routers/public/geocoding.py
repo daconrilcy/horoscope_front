@@ -14,17 +14,17 @@ from app.api.dependencies.auth import (
     get_optional_authenticated_user,
     require_authenticated_user,
 )
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.public.geocoding import (
-    GeocodingResolveRequest,
-    ReverseGeocodingRequest,
-)
 from app.core.request_id import resolve_request_id
 from app.infra.db.repositories.geo_place_resolved_repository import (
     GeoPlaceResolvedCreateData,
     GeoPlaceResolvedRepository,
 )
 from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.public.geocoding import (
+    GeocodingResolveRequest,
+    ReverseGeocodingRequest,
+)
 from app.services.geocoding.public_support import (
     _normalize_query,
     _raise_error,

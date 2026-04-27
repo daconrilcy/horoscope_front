@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from app.api.errors import raise_http_error
+from app.api.errors import raise_api_error
 from app.core.config import settings
 from app.core.exceptions import ApplicationError
 from app.infra.db.models.user import UserModel
@@ -40,7 +40,7 @@ def unsubscribe(token: str = Query(...), db: Session = Depends(get_db_session)) 
         }
 
         if not user_id or email_type not in marketing_types:
-            raise_http_error(status_code=400, detail="Lien de désabonnement non valide")
+            raise_api_error(status_code=400, message="Lien de désabonnement non valide")
         # AC2: Check if user exists and update
         result = db.execute(
             update(UserModel).where(UserModel.id == user_id).values(email_unsubscribed=True)
@@ -50,17 +50,17 @@ def unsubscribe(token: str = Query(...), db: Session = Depends(get_db_session)) 
         if result.rowcount == 0:
             # If the user doesn't exist, we don't want to leak that info too much,
             # but for a link like this, a 400 is fine.
-            raise_http_error(status_code=400, detail="Utilisateur non trouvé")
+            raise_api_error(status_code=400, message="Utilisateur non trouvé")
         return _get_confirmation_html(
             success=True, message="Vous avez bien été désabonné de nos emails marketing."
         )
 
     except jwt.ExpiredSignatureError:
-        raise_http_error(status_code=400, detail="Le lien de désabonnement a expiré")
+        raise_api_error(status_code=400, message="Le lien de désabonnement a expiré")
     except jwt.InvalidTokenError:
-        raise_http_error(status_code=400, detail="Lien de désabonnement invalide")
+        raise_api_error(status_code=400, message="Lien de désabonnement invalide")
     except ApplicationError:
         raise
     except Exception as e:
         logger.error(f"Unsubscribe error: {str(e)}")
-        raise_http_error(status_code=400, detail="Une erreur est survenue lors du désabonnement")
+        raise_api_error(status_code=400, message="Une erreur est survenue lors du désabonnement")

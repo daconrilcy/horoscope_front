@@ -11,8 +11,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
-from app.api.v1.schemas.routers.admin.llm.sample_payloads import (
+from app.core.request_id import resolve_request_id
+from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.admin.llm.error_codes import AdminLlmErrorCode
+from app.services.api_contracts.admin.llm.sample_payloads import (
     AdminLlmSamplePayloadCreatePayload,
     AdminLlmSamplePayloadDeleteResponse,
     AdminLlmSamplePayloadListResponse,
@@ -20,9 +23,6 @@ from app.api.v1.schemas.routers.admin.llm.sample_payloads import (
     AdminLlmSamplePayloadSummary,
     AdminLlmSamplePayloadUpdatePayload,
 )
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
-from app.infra.db.session import get_db_session
 from app.services.llm_generation.admin_sample_payloads import (
     _find_default_conflict,
     _find_name_conflict,

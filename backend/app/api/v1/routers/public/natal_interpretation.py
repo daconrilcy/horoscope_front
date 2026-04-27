@@ -8,15 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.public.natal_interpretation import (
-    InterpretationMeta,
-    NatalChartLongEntitlementInfo,
-    NatalInterpretationListResponse,
-    NatalInterpretationRequest,
-    NatalInterpretationResponse,
-    NatalPdfTemplateListResponse,
-)
 from app.core.config import settings
 from app.core.exceptions import ApplicationError
 from app.core.request_id import resolve_request_id
@@ -34,6 +25,15 @@ from app.domain.llm.runtime.errors import (
 )
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.public.natal_interpretation import (
+    InterpretationMeta,
+    NatalChartLongEntitlementInfo,
+    NatalInterpretationListResponse,
+    NatalInterpretationRequest,
+    NatalInterpretationResponse,
+    NatalPdfTemplateListResponse,
+)
 from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
     NatalChartLongEntitlementGate,

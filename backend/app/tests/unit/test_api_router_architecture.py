@@ -12,6 +12,7 @@ import pytest
 ROUTERS_ROOT = Path(__file__).resolve().parents[2] / "api" / "v1" / "routers"
 API_V1_ROOT = ROUTERS_ROOT.parent
 SCHEMAS_ROOT = API_V1_ROOT / "schemas"
+SERVICE_CONTRACTS_ROOT = API_V1_ROOT.parents[1] / "services" / "api_contracts"
 CANONICAL_DOMAINS = {"admin", "b2b", "internal", "ops", "public"}
 CANONICAL_SCHEMA_ROOTS = {"common.py", "routers"}
 FORBIDDEN_FLAT_PREFIXES = ("admin_", "b2b_", "ops_")
@@ -35,7 +36,9 @@ FORBIDDEN_LEGACY_STRINGS = (
     "legacy" + "_alias",
     "legacy_registry" + "_only",
 )
-ALLOWED_ROUTER_CLASS_DEFINITIONS: dict[Path, set[str]] = {}
+ALLOWED_ROUTER_CLASS_DEFINITIONS: dict[Path, set[str]] = {
+    Path("registry.py"): {"RouterRegistration"}
+}
 SHARED_CONSTANT_NAMES = {
     "ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER",
     "ADMIN_MANUAL_EXECUTE_ROUTE_PATH",
@@ -122,6 +125,13 @@ def _api_v1_python_files() -> list[Path]:
 def _schemas_python_files() -> list[Path]:
     """Retourne les fichiers Python des contrats Pydantic API v1."""
     return sorted(path for path in SCHEMAS_ROOT.rglob("*.py") if "__pycache__" not in path.parts)
+
+
+def _service_contract_python_files() -> list[Path]:
+    """Retourne les fichiers Python des contrats partagés hors API."""
+    return sorted(
+        path for path in SERVICE_CONTRACTS_ROOT.rglob("*.py") if "__pycache__" not in path.parts
+    )
 
 
 def _source_tree(path: Path) -> ast.Module:
@@ -385,6 +395,7 @@ def test_api_v1_non_registry_modules_do_not_import_routers() -> None:
     allowed_files = {
         Path("__init__.py"),
         Path("routers") / "__init__.py",
+        Path("routers") / "registry.py",
     }
     offenders: list[str] = []
     for path in _api_v1_python_files():
@@ -400,6 +411,108 @@ def test_api_v1_non_registry_modules_do_not_import_routers() -> None:
                 if node.module in allowed_modules:
                     continue
                 offenders.append(f"{relative_path}:{node.lineno} imports {node.module}")
+
+    assert offenders == []
+
+
+def test_api_v1_router_registry_is_main_registration_source() -> None:
+    """Le montage API v1 doit passer par le registre canonique."""
+    main_path = API_V1_ROOT.parents[1] / "main.py"
+    tree = _source_tree(main_path)
+    router_import_offenders: list[str] = []
+    include_router_calls = 0
+    registry_call_found = False
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            allowed_main_router_modules = {
+                "app.api.v1.routers.public.email",
+                "app.api.v1.routers.registry",
+                "app.api.v1.routers.internal.llm.qa",
+            }
+            if (
+                node.module.startswith("app.api.v1.routers.")
+                and node.module not in allowed_main_router_modules
+            ):
+                router_import_offenders.append(f"{node.lineno} imports {node.module}")
+        if isinstance(node, ast.Call):
+            function = node.func
+            if isinstance(function, ast.Attribute) and function.attr == "include_router":
+                include_router_calls += 1
+            if isinstance(function, ast.Name) and function.id == "include_api_v1_routers":
+                registry_call_found = True
+
+    assert router_import_offenders == []
+    assert registry_call_found
+    assert include_router_calls <= 3
+
+
+def test_api_contracts_do_not_import_fastapi_or_api_layer() -> None:
+    """Les contrats partagés ne doivent pas dépendre de FastAPI ni de `app.api`."""
+    offenders: list[str] = []
+    for path in _service_contract_python_files():
+        relative_path = path.relative_to(SERVICE_CONTRACTS_ROOT)
+        tree = _source_tree(path)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name == "fastapi" or alias.name.startswith("fastapi."):
+                        offenders.append(f"{relative_path}:{node.lineno} imports {alias.name}")
+                    if alias.name == "app.api" or alias.name.startswith("app.api."):
+                        offenders.append(f"{relative_path}:{node.lineno} imports {alias.name}")
+            if isinstance(node, ast.ImportFrom) and node.module:
+                if node.module == "fastapi" or node.module.startswith("fastapi."):
+                    offenders.append(f"{relative_path}:{node.lineno} imports {node.module}")
+                if node.module == "app.api" or node.module.startswith("app.api."):
+                    offenders.append(f"{relative_path}:{node.lineno} imports {node.module}")
+            if isinstance(node, ast.Assign):
+                assigns_router = any(
+                    isinstance(target, ast.Name) and target.id == "router"
+                    for target in node.targets
+                )
+                if assigns_router:
+                    offenders.append(f"{relative_path}:{node.lineno} defines router")
+
+    assert offenders == []
+
+
+def test_non_api_layers_do_not_import_api_package() -> None:
+    """Les couches non-API ne doivent plus dépendre de l'adaptateur HTTP."""
+    backend_app = API_V1_ROOT.parents[1]
+    roots = ["services", "domain", "infra", "core"]
+    offenders: list[str] = []
+    for root_name in roots:
+        for path in sorted((backend_app / root_name).rglob("*.py")):
+            if "__pycache__" in path.parts:
+                continue
+            relative_path = path.relative_to(backend_app)
+            tree = _source_tree(path)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name == "app.api" or alias.name.startswith("app.api."):
+                            offenders.append(f"{relative_path}:{node.lineno} imports {alias.name}")
+                if isinstance(node, ast.ImportFrom) and node.module:
+                    if node.module == "app.api" or node.module.startswith("app.api."):
+                        offenders.append(f"{relative_path}:{node.lineno} imports {node.module}")
+
+    assert offenders == []
+
+
+def test_legacy_http_error_surfaces_are_removed() -> None:
+    """Les helpers d'erreur HTTP legacy ne doivent plus être actifs."""
+    backend_app = API_V1_ROOT.parents[1]
+    forbidden_tokens = ("raise_http_error", "legacy_detail", 'content["detail"]')
+    offenders: list[str] = []
+    for path in sorted((backend_app / "api").rglob("*.py")) + sorted(
+        (backend_app / "tests").rglob("*.py")
+    ):
+        if "__pycache__" in path.parts or path == Path(__file__):
+            continue
+        content = path.read_text(encoding="utf-8")
+        for token in forbidden_tokens:
+            if token in content:
+                offenders.append(f"{path.relative_to(backend_app)} contains {token}")
 
     assert offenders == []
 

@@ -6,10 +6,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.api.v1.schemas.routers.public.natal_interpretation import (
+from app.core.exceptions import ApplicationError
+from app.services.api_contracts.public.natal_interpretation import (
     NatalChartLongEntitlementInfo,
 )
-from app.core.exceptions import ApplicationError
 from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementResult,
 )

@@ -6,7 +6,7 @@ import logging
 
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser
+from app.core.auth_context import AuthenticatedUser
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)

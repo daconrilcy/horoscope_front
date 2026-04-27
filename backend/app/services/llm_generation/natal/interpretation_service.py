@@ -13,13 +13,6 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.v1.schemas.routers.public.natal_interpretation import (
-    InterpretationMeta,
-    NatalInterpretationResponse,
-)
-from app.api.v1.schemas.routers.public.natal_interpretation import (
-    NatalInterpretationData as NatalGatewayInterpretationData,
-)
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.domain.astrology.natal_calculation import NatalResult
@@ -40,6 +33,13 @@ from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
 from app.infra.observability.metrics import observe_duration
+from app.services.api_contracts.public.natal_interpretation import (
+    InterpretationMeta,
+    NatalInterpretationResponse,
+)
+from app.services.api_contracts.public.natal_interpretation import (
+    NatalInterpretationData as NatalGatewayInterpretationData,
+)
 from app.services.chart.json_builder import (
     build_chart_json,
     build_enriched_evidence_catalog,

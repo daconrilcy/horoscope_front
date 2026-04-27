@@ -3,7 +3,7 @@
 # ruff: noqa: E402
 from __future__ import annotations
 
-from app.api.v1.schemas.routers.public.consultation import (
+from app.services.api_contracts.public.consultation import (
     ConsultationQuotaInfo,
 )
 from app.services.entitlement.thematic_consultation_entitlement_gate import (

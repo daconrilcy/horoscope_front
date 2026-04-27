@@ -12,13 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_ops_user
 from app.api.errors import resolve_application_error_status
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.internal.llm.qa import (
-    ChatQaRequest,
-    DailyQaRequest,
-    GuidanceQaRequest,
-    NatalQaRequest,
-)
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.reference import ReferenceVersionModel
@@ -29,6 +22,13 @@ from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.public_projection import PublicPredictionAssembler
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.internal.llm.qa import (
+    ChatQaRequest,
+    DailyQaRequest,
+    GuidanceQaRequest,
+    NatalQaRequest,
+)
 from app.services.entitlement.horoscope_daily_entitlement_gate import (
     HoroscopeDailyAccessDeniedError,
     HoroscopeDailyEntitlementGate,

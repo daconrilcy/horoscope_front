@@ -10,10 +10,8 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser
-from app.api.v1.constants import BLOCKED_CATEGORIES, LOCALE_PATTERN
-from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
-from app.api.v1.schemas.routers.admin.llm.sample_payloads import AdminLlmSamplePayload
+from app.core.api_constants import BLOCKED_CATEGORIES, LOCALE_PATTERN
+from app.core.auth_context import AuthenticatedUser
 from app.core.exceptions import ApplicationError
 from app.core.sensitive_data import classify_field
 from app.domain.llm.governance.feature_taxonomy import (
@@ -24,6 +22,8 @@ from app.domain.llm.governance.feature_taxonomy import (
 )
 from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.models.user import UserModel
+from app.services.api_contracts.admin.llm.error_codes import AdminLlmErrorCode
+from app.services.api_contracts.admin.llm.sample_payloads import AdminLlmSamplePayload
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 

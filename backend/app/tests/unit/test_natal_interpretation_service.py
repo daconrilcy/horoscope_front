@@ -7,13 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.api.v1.schemas.routers.public.natal_interpretation import (
-    InterpretationMeta,
-    NatalInterpretationResponse,
-)
-from app.api.v1.schemas.routers.public.natal_interpretation import (
-    NatalInterpretationData as NatalGatewayInterpretationData,
-)
 from app.domain.astrology.natal_calculation import (
     AspectResult,
     HouseResult,
@@ -23,6 +16,13 @@ from app.domain.astrology.natal_calculation import (
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.domain.llm.prompting.schemas import AstroResponseV1
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.services.api_contracts.public.natal_interpretation import (
+    InterpretationMeta,
+    NatalInterpretationResponse,
+)
+from app.services.api_contracts.public.natal_interpretation import (
+    NatalInterpretationData as NatalGatewayInterpretationData,
+)
 from app.services.llm_generation.natal.interpretation_service import (
     NatalInterpretationService,
     NatalInterpretationServiceError,

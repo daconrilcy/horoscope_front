@@ -8,7 +8,16 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import get_optional_authenticated_user as get_current_user_optional
-from app.api.v1.schemas.routers.public.astrologers import (
+from app.core.request_id import resolve_request_id
+from app.infra.db.models import (
+    AstrologerProfileModel,
+    AstrologerReviewModel,
+    ChatConversationModel,
+    UserNatalInterpretationModel,
+)
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.public.astrologers import (
     Astrologer,
     AstrologerActionState,
     AstrologerApiResponse,
@@ -19,15 +28,6 @@ from app.api.v1.schemas.routers.public.astrologers import (
     ReviewUpdate,
     SpecialtyDetail,
 )
-from app.core.request_id import resolve_request_id
-from app.infra.db.models import (
-    AstrologerProfileModel,
-    AstrologerReviewModel,
-    ChatConversationModel,
-    UserNatalInterpretationModel,
-)
-from app.infra.db.models.llm.llm_persona import LlmPersonaModel
-from app.infra.db.session import get_db_session
 from app.services.user_profile.public_astrologers import (
     _build_user_alias,
     _raise_error,

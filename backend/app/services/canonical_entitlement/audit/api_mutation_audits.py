@@ -9,7 +9,7 @@ from typing import Any, Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser
+from app.core.auth_context import AuthenticatedUser
 from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.infra.db.models.entitlement_mutation.alert.handling import (
@@ -37,7 +37,7 @@ ReviewStatusLiteral = Literal[
 ]
 PersistedReviewStatusLiteral = WritableReviewStatusLiteral
 _DIFF_FILTER_MAX = 10_000
-from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import (
+from app.services.api_contracts.ops.entitlement_mutation_audits import (
     AlertHandlingState,
     ReviewState,
 )

@@ -9,8 +9,20 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import (
+from app.core.datetime_provider import datetime_provider
+from app.core.request_id import resolve_request_id
+from app.infra.db.models.entitlement_mutation.alert.alert_event import (
+    CanonicalEntitlementMutationAlertEventModel,
+)
+from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
+    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
+)
+from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
+    CanonicalEntitlementMutationAlertSuppressionRuleModel,
+)
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.ops.entitlement_mutation_audits import (
     AlertAttemptsApiResponse,
     AlertEventListApiResponse,
     AlertHandlingHistoryApiResponse,
@@ -36,18 +48,6 @@ from app.api.v1.schemas.routers.ops.entitlement_mutation_audits import (
     ReviewRequestBody,
     UpdateAlertSuppressionRuleRequestBody,
 )
-from app.core.datetime_provider import datetime_provider
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.entitlement_mutation.alert.alert_event import (
-    CanonicalEntitlementMutationAlertEventModel,
-)
-from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
-    CanonicalEntitlementMutationAlertDeliveryAttemptModel,
-)
-from app.infra.db.models.entitlement_mutation.suppression.suppression_rule import (
-    CanonicalEntitlementMutationAlertSuppressionRuleModel,
-)
-from app.infra.db.session import get_db_session
 from app.services.canonical_entitlement.alert.handling import (
     AlertEventNotFoundError,
     CanonicalEntitlementAlertHandlingService,

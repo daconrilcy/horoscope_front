@@ -10,7 +10,14 @@ from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.constants import (
     CALIBRATION_RULE_DESCRIPTIONS,
 )
-from app.api.v1.schemas.routers.admin.content import (
+from app.core.datetime_provider import datetime_provider
+from app.core.request_id import resolve_request_id
+from app.infra.db.models.config_text import ConfigTextModel
+from app.infra.db.models.editorial_template import EditorialTemplateVersionModel
+from app.infra.db.models.feature_flag import FeatureFlagModel
+from app.infra.db.models.prediction_ruleset import RulesetParameterModel
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.admin.content import (
     AdminFeatureFlagListResponse,
     AdminFeatureFlagResponse,
     CalibrationRuleData,
@@ -26,13 +33,6 @@ from app.api.v1.schemas.routers.admin.content import (
     EditorialTemplateSummary,
     EditorialTemplateVersionCreatePayload,
 )
-from app.core.datetime_provider import datetime_provider
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.config_text import ConfigTextModel
-from app.infra.db.models.editorial_template import EditorialTemplateVersionModel
-from app.infra.db.models.feature_flag import FeatureFlagModel
-from app.infra.db.models.prediction_ruleset import RulesetParameterModel
-from app.infra.db.session import get_db_session
 from app.services.ops.admin_content import (
     _ensure_config_texts_seeded,
     _ensure_editorial_templates_seeded,

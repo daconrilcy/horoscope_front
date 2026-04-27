@@ -1,6 +1,6 @@
 """Vérifie la normalisation canonique des types de consultation à l'entrée API."""
 
-from app.api.v1.schemas.routers.public.consultation import (
+from app.services.api_contracts.public.consultation import (
     ConsultationGenerateRequest,
     ConsultationPrecheckRequest,
 )

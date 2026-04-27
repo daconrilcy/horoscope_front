@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.v1.schemas.routers.public.chat import QuotaInfo
 from app.main import app
+from app.services.api_contracts.public.chat import QuotaInfo
 from app.services.entitlement.chat_entitlement_gate import ChatEntitlementResult
 from app.services.entitlement.entitlement_types import UsageState
 

@@ -8,11 +8,6 @@ from sqlalchemy.orm import Session
 
 import app.infra.db.models  # noqa: F401
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.api.v1.schemas.routers.public.natal_interpretation import (
-    InterpretationMeta,
-    NatalInterpretationData,
-    NatalInterpretationResponse,
-)
 from app.domain.llm.prompting.schemas import AstroResponseV3
 from app.infra.db.base import Base
 from app.infra.db.models.product_entitlements import (
@@ -30,6 +25,11 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import SessionLocal, engine, get_db_session
 from app.main import app
+from app.services.api_contracts.public.natal_interpretation import (
+    InterpretationMeta,
+    NatalInterpretationData,
+    NatalInterpretationResponse,
+)
 from app.services.billing.service import BillingPlanData, BillingService, SubscriptionStatusData
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,

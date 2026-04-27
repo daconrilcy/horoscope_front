@@ -9,14 +9,14 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import AuthenticatedUser
+from app.core.auth_context import AuthenticatedUser
 from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.infra.db.models.audit_event import AuditEventModel
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
-from app.api.v1.schemas.routers.public.support import SupportAuditEventSummary
+from app.services.api_contracts.public.support import SupportAuditEventSummary
 
 
 def _raise_error(

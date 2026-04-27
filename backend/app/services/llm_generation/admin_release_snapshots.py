@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from app.api.v1.schemas.routers.admin.llm.prompts import (
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
+from app.services.api_contracts.admin.llm.prompts import (
     ProofSummary,
     SnapshotDiffEntry,
     SnapshotTimelineItem,
 )
-from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 
 
 def _normalize_event_type(status: str | None) -> str:

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from app.api.v1.schemas.routers.public.consultation import (
+from app.services.api_contracts.public.consultation import (
     ConsultationPrecheckRequest,
     ConsultationStatus,
     SafeguardIssue,

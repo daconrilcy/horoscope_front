@@ -9,8 +9,7 @@ from typing import Any, Literal
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.v1.constants import LEGACY_USE_CASE_KEYS_REMOVED
-from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.core.api_constants import LEGACY_USE_CASE_KEYS_REMOVED
 from app.core.exceptions import ApplicationError
 from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
 from app.domain.llm.configuration.admin_models import (
@@ -58,6 +57,7 @@ from app.infra.db.repositories.llm.prompting_repository import (
     get_sample_payload,
 )
 from app.ops.llm.services import PromptRegistryV2
+from app.services.api_contracts.admin.llm.error_codes import AdminLlmErrorCode
 from app.services.llm_generation.admin_manual_execution import (
     _build_admin_developer_message_bundle,
     _json_pretty_admin,
@@ -81,7 +81,7 @@ AdminRuntimeArtifactType = Literal[
     "system_prompt",
     "final_provider_payload",
 ]
-from app.api.v1.schemas.routers.admin.llm.prompts import (
+from app.services.api_contracts.admin.llm.prompts import (
     AdminLlmCatalogEntry,
     AdminResolvedActivationView,
     AdminResolvedAssemblyView,

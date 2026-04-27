@@ -9,7 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.errors import build_error_response
-from app.api.v1.schemas.routers.public.help import (
+from app.core.rate_limit import RateLimitError, check_rate_limit
+from app.core.request_id import resolve_request_id
+from app.infra.db.models.support_incident import SupportIncidentModel
+from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.public.help import (
     CreateTicketRequest,
     HelpCategoriesApiResponse,
     HelpCategoryData,
@@ -17,11 +22,6 @@ from app.api.v1.schemas.routers.public.help import (
     TicketResponseData,
     TicketsListApiResponse,
 )
-from app.core.rate_limit import RateLimitError, check_rate_limit
-from app.core.request_id import resolve_request_id
-from app.infra.db.models.support_incident import SupportIncidentModel
-from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
-from app.infra.db.session import get_db_session
 from app.services.ops.incident_service import (
     IncidentService,
     SupportIncidentCreatePayload,

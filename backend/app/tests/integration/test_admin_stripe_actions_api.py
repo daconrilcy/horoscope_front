@@ -168,7 +168,7 @@ def test_assign_plan_rejects_short_reason(admin_token):
     )
 
     assert response.status_code == 400
-    assert "at least 5 characters" in response.json()["detail"]
+    assert "at least 5 characters" in response.json()["error"]["message"]
 
 
 def test_record_commercial_gesture_audits_before_after(admin_token):

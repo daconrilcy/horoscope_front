@@ -10,14 +10,14 @@ from app.api.dependencies.auth import (
     AuthenticatedUser,
     require_ops_user,
 )
-from app.api.v1.schemas.common import ErrorEnvelope
-from app.api.v1.schemas.routers.ops.persona import (
+from app.core.request_id import resolve_request_id
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.common import ErrorEnvelope
+from app.services.api_contracts.ops.persona import (
     PersonaConfigApiResponse,
     PersonaProfileListApiResponse,
     PersonaRollbackApiResponse,
 )
-from app.core.request_id import resolve_request_id
-from app.infra.db.session import get_db_session
 from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigService,
     PersonaConfigServiceError,

@@ -7,9 +7,7 @@ from typing import Any, Callable
 
 from sqlalchemy.orm import Session
 
-from app.api.dependencies.auth import (
-    AuthenticatedUser,
-)
+from app.core.auth_context import AuthenticatedUser
 from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.services.llm_generation.guidance.persona_config_service import (

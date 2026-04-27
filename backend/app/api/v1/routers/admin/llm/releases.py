@@ -8,8 +8,11 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from app.api.errors import raise_http_error
-from app.api.v1.schemas.routers.admin.llm.releases import (
+from app.api.errors import raise_api_error
+from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
+from app.infra.db.session import get_db_session
+from app.ops.llm.services import ReleaseService
+from app.services.api_contracts.admin.llm.releases import (
     ActivateReleasePayload,
     ReleaseHealthRead,
     ReleaseHealthSignalsPayload,
@@ -17,9 +20,6 @@ from app.api.v1.schemas.routers.admin.llm.releases import (
     ReleaseSnapshotRead,
     ValidationReport,
 )
-from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
-from app.infra.db.session import get_db_session
-from app.ops.llm.services import ReleaseService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ async def create_release(
         return snapshot
     except Exception as e:
         logger.error("admin_release_create_failed error=%s", e)
-        raise_http_error(status_code=500, detail=str(e))
+        raise_api_error(status_code=500, message=str(e))
 
 
 @router.get("/", response_model=List[ReleaseSnapshotRead])
@@ -57,7 +57,7 @@ async def get_release(snapshot_id: uuid.UUID, db: Session = Depends(get_db_sessi
     """Get details of a specific release snapshot."""
     snapshot = db.get(LlmReleaseSnapshotModel, snapshot_id)
     if not snapshot:
-        raise_http_error(status_code=404, detail="Snapshot not found")
+        raise_api_error(status_code=404, message="Snapshot not found")
     return snapshot
 
 
@@ -75,7 +75,7 @@ async def validate_release(snapshot_id: uuid.UUID, db: Session = Depends(get_db_
             ],
         }
     except ValueError as e:
-        raise_http_error(status_code=404, detail=str(e))
+        raise_api_error(status_code=404, message=str(e))
 
 
 @router.post("/{snapshot_id}/activate", response_model=ReleaseSnapshotRead)
@@ -100,7 +100,7 @@ async def activate_release(
         )
         return snapshot
     except ValueError as e:
-        raise_http_error(status_code=400, detail=str(e))
+        raise_api_error(status_code=400, message=str(e))
 
 
 @router.post("/rollback", response_model=ReleaseSnapshotRead)
@@ -114,7 +114,7 @@ async def rollback_release(
         snapshot = await service.rollback(activated_by=current_user)
         return snapshot
     except ValueError as e:
-        raise_http_error(status_code=400, detail=str(e))
+        raise_api_error(status_code=400, message=str(e))
 
 
 @router.post("/{snapshot_id}/release-health", response_model=ReleaseHealthRead)
@@ -139,4 +139,4 @@ async def evaluate_release_health(
         )
         return decision
     except ValueError as e:
-        raise_http_error(status_code=400, detail=str(e))
+        raise_api_error(status_code=400, message=str(e))

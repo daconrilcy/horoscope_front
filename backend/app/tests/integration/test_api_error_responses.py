@@ -5,9 +5,9 @@ from __future__ import annotations
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
-from app.api.v1.schemas.common import ErrorEnvelope
 from app.core.exceptions import ApplicationError
 from app.main import app
+from app.services.api_contracts.common import ErrorEnvelope
 
 
 def test_application_error_response_uses_canonical_envelope() -> None:

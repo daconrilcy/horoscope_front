@@ -13,15 +13,15 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.api.v1.response_exports import generate_csv_response
-from app.api.v1.schemas.routers.admin.exports import (
-    AdminExportRequest,
-    AdminGenerationExportRequest,
-)
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
+from app.services.api_contracts.admin.exports import (
+    AdminExportRequest,
+    AdminGenerationExportRequest,
+)
 from app.services.llm_observability.consumption_service import LlmCanonicalConsumptionService
 from app.services.ops.admin_exports import _record_export_audit
 

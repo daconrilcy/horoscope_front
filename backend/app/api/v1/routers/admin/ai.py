@@ -8,13 +8,13 @@ from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.errors import raise_http_error
-from app.api.v1.schemas.routers.admin.ai import (
+from app.api.errors import raise_api_error
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
+from app.infra.db.session import get_db_session
+from app.services.api_contracts.admin.ai import (
     AdminAiMetricsResponse,
     AdminAiUseCaseDetailResponse,
 )
-from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
-from app.infra.db.session import get_db_session
 from app.services.llm_observability.admin_ai import (
     _build_target_filters,
     _derive_failed_call_error_code,
@@ -166,7 +166,7 @@ def get_use_case_detail(
         summary_stmt = summary_stmt.where(LlmCallLogModel.feature == use_case)
     s = db.execute(summary_stmt).first()
     if not s or s.call_count == 0:
-        raise_http_error(status_code=404, detail="No data for this use case")
+        raise_api_error(status_code=404, message="No data for this use case")
 
     error_rate = (s.error_count / s.call_count) if s.call_count > 0 else 0
     metrics = {

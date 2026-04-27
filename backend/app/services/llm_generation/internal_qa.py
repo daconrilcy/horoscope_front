@@ -30,7 +30,7 @@ from app.services.user_profile.natal_chart_service import (
 )
 
 logger = logging.getLogger(__name__)
-from app.api.v1.schemas.routers.internal.llm.qa import SeedUserResponse
+from app.services.api_contracts.internal.llm.qa import SeedUserResponse
 
 
 class QATargetUserNotFoundError(Exception):
