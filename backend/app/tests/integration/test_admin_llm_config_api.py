@@ -18,6 +18,21 @@ from app.services.auth_service import AuthService
 client = TestClient(app)
 
 
+def test_admin_llm_observability_openapi_contract_exposes_all_routes():
+    """Les quatre endpoints observability restent exposés dans le contrat OpenAPI."""
+    app.openapi_schema = None
+    paths = app.openapi()["paths"]
+    expected = {
+        "/v1/admin/llm/call-logs": "get",
+        "/v1/admin/llm/dashboard": "get",
+        "/v1/admin/llm/replay": "post",
+        "/v1/admin/llm/call-logs/purge": "post",
+    }
+
+    for path, method in expected.items():
+        assert method in paths[path]
+
+
 def _cleanup_tables() -> None:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)

@@ -25,7 +25,7 @@ def test_nominal_modules_do_not_import_legacy_directly() -> None:
     root = Path(__file__).resolve().parents[2]
     critical_nominal_files = [
         root / "app" / "domain" / "llm" / "runtime" / "gateway.py",
-        root / "app" / "api" / "v1" / "routers" / "admin_llm.py",
+        root / "app" / "api" / "v1" / "routers" / "admin" / "llm" / "prompts.py",
         root / "app" / "prediction" / "llm_narrator.py",
         root / "app" / "domain" / "llm" / "prompting" / "context.py",
         root / "app" / "domain" / "llm" / "configuration" / "admin_models.py",

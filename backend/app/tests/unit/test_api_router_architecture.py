@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+from fastapi.routing import APIRoute
 
 ROUTERS_ROOT = Path(__file__).resolve().parents[2] / "api" / "v1" / "routers"
 API_V1_ROOT = ROUTERS_ROOT.parent
@@ -64,6 +65,25 @@ TARGET_RESPONSIBILITY_LIMITS = {
     Path("routers") / "ops" / "entitlement_mutation_audits.py": 50_000,
 }
 REMOVED_ROUTE_SUPPORT_PACKAGE = "router" + "_logic"
+ADMIN_LLM_OBSERVABILITY_ROUTE_OWNER = "app.api.v1.routers.admin.llm.observability"
+ADMIN_LLM_OBSERVABILITY_ROUTE_KEYS = {
+    ("/v1/admin/llm/call-logs", "GET"),
+    ("/v1/admin/llm/dashboard", "GET"),
+    ("/v1/admin/llm/replay", "POST"),
+    ("/v1/admin/llm/call-logs/purge", "POST"),
+}
+ADMIN_LLM_OBSERVABILITY_FORBIDDEN_PROMPTS_DECORATORS = {
+    ("get", "/call-logs"),
+    ("get", "/dashboard"),
+    ("post", "/replay"),
+    ("post", "/call-logs/purge"),
+}
+ADMIN_LLM_OBSERVABILITY_FORBIDDEN_TOKENS = (
+    "select(",
+    "db.query",
+    "Session",
+    "LlmCallLogModel",
+)
 
 
 class ExpectedRouterRoot(NamedTuple):
@@ -139,6 +159,26 @@ def _source_tree(path: Path) -> ast.Module:
     return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
+def _router_decorator_path(node: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple[str, str] | None:
+    """Retourne la méthode et le chemin d'un décorateur `router` simple."""
+    for decorator in node.decorator_list:
+        if not isinstance(decorator, ast.Call):
+            continue
+        function = decorator.func
+        if not (
+            isinstance(function, ast.Attribute)
+            and function.attr in {"get", "post", "patch", "delete", "put"}
+            and isinstance(function.value, ast.Name)
+            and function.value.id == "router"
+        ):
+            continue
+        if not decorator.args or not isinstance(decorator.args[0], ast.Constant):
+            continue
+        if isinstance(decorator.args[0].value, str):
+            return function.attr, decorator.args[0].value
+    return None
+
+
 def test_router_modules_are_classified_under_domain_packages() -> None:
     """Les routeurs actifs ne doivent plus vivre comme modules plats par prefixe."""
     flat_modules = [
@@ -183,6 +223,63 @@ def test_backend_code_uses_canonical_router_imports() -> None:
                 offenders.append(f"{path.relative_to(ROUTERS_ROOT)} imports {module}")
 
     assert offenders == []
+
+
+def test_admin_llm_observability_routes_are_registered_once_from_canonical_router() -> None:
+    """Les endpoints observability doivent être servis par le routeur canonique unique."""
+    from app.main import app
+
+    matches: list[tuple[str, str, str]] = []
+    for route in app.routes:
+        if not isinstance(route, APIRoute):
+            continue
+        for method in route.methods or set():
+            if (route.path, method) in ADMIN_LLM_OBSERVABILITY_ROUTE_KEYS:
+                matches.append((route.path, method, route.endpoint.__module__))
+
+    assert sorted((path, method) for path, method, _owner in matches) == sorted(
+        ADMIN_LLM_OBSERVABILITY_ROUTE_KEYS
+    )
+    assert {owner for _path, _method, owner in matches} == {ADMIN_LLM_OBSERVABILITY_ROUTE_OWNER}
+
+
+def test_admin_llm_prompts_does_not_redefine_observability_routes() -> None:
+    """La façade prompts ne doit pas redevenir propriétaire des routes observability."""
+    tree = _source_tree(ROUTERS_ROOT / "admin" / "llm" / "prompts.py")
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        decorator = _router_decorator_path(node)
+        if decorator in ADMIN_LLM_OBSERVABILITY_FORBIDDEN_PROMPTS_DECORATORS:
+            method, path = decorator
+            offenders.append(f"{node.name} defines @{method}({path})")
+
+    assert offenders == []
+
+
+def test_admin_llm_observability_router_stays_service_delegating_adapter() -> None:
+    """Le routeur observability ne doit pas réintroduire SQL ni importer prompts.py."""
+    path = ROUTERS_ROOT / "admin" / "llm" / "observability.py"
+    content = path.read_text(encoding="utf-8")
+    forbidden_content = [
+        token for token in ADMIN_LLM_OBSERVABILITY_FORBIDDEN_TOKENS if token in content
+    ]
+    tree = _source_tree(path)
+    forbidden_imports: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            if node.module == "app.api.v1.routers.admin.llm.prompts":
+                forbidden_imports.append(f"{node.lineno} imports {node.module}")
+            if node.module.startswith("sqlalchemy"):
+                forbidden_imports.append(f"{node.lineno} imports {node.module}")
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.startswith("sqlalchemy"):
+                    forbidden_imports.append(f"{node.lineno} imports {alias.name}")
+
+    assert forbidden_content == []
+    assert forbidden_imports == []
 
 
 def test_router_modules_do_not_define_local_schemas() -> None:

@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
 from app.core.request_id import resolve_request_id
@@ -44,7 +43,7 @@ def list_call_logs(
     page: int = 1,
     page_size: int = 20,
     current_user: AuthenticatedUser = Depends(require_admin_user),
-    db: Session = Depends(get_db_session),
+    db: Any = Depends(get_db_session),
 ) -> Any:
     """Expose les journaux d'appels LLM filtrés pour l'administration."""
     return list_call_logs_data(
@@ -66,7 +65,7 @@ def get_dashboard(
     request: Request,
     period_hours: int = 24,
     current_user: AuthenticatedUser = Depends(require_admin_user),
-    db: Session = Depends(get_db_session),
+    db: Any = Depends(get_db_session),
 ) -> Any:
     """Expose les métriques d'observabilité LLM pour le tableau de bord admin."""
     return get_dashboard_data(
@@ -82,7 +81,7 @@ async def replay_request(
     request: Request,
     payload: ReplayPayload,
     current_user: AuthenticatedUser = Depends(require_admin_user),
-    db: Session = Depends(get_db_session),
+    db: Any = Depends(get_db_session),
 ) -> Any:
     """Expose la relance d'une requête LLM observée."""
     return await replay_request_data(
@@ -97,7 +96,7 @@ async def replay_request(
 async def purge_logs(
     request: Request,
     current_user: AuthenticatedUser = Depends(require_admin_user),
-    db: Session = Depends(get_db_session),
+    db: Any = Depends(get_db_session),
 ) -> Any:
     """Expose la purge des journaux LLM expirés."""
     return await purge_logs_data(

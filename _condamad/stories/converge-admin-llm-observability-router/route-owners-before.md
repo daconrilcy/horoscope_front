@@ -1,0 +1,8 @@
+# Route Owners Before
+
+| Method | Path | Endpoint | Owner module |
+|---|---|---|---|
+| `GET` | `/v1/admin/llm/call-logs` | `list_call_logs` | `app.api.v1.routers.admin.llm.prompts` |
+| `GET` | `/v1/admin/llm/dashboard` | `get_dashboard` | `app.api.v1.routers.admin.llm.prompts` |
+| `POST` | `/v1/admin/llm/replay` | `replay_request` | `app.api.v1.routers.admin.llm.prompts` |
+| `POST` | `/v1/admin/llm/call-logs/purge` | `purge_logs` | `app.api.v1.routers.admin.llm.prompts` |

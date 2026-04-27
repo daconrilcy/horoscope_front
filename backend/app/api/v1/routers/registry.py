@@ -15,6 +15,9 @@ from app.api.v1.routers.admin.entitlements import router as admin_entitlements_r
 from app.api.v1.routers.admin.exports import router as admin_exports_router
 from app.api.v1.routers.admin.llm.assemblies import router as admin_llm_assembly_router
 from app.api.v1.routers.admin.llm.consumption import router as admin_llm_consumption_router
+from app.api.v1.routers.admin.llm.observability import (
+    router as admin_llm_observability_router,
+)
 from app.api.v1.routers.admin.llm.prompts import router as admin_llm_router
 from app.api.v1.routers.admin.llm.releases import router as admin_llm_release_router
 from app.api.v1.routers.admin.llm.sample_payloads import (
@@ -81,6 +84,7 @@ API_V1_ROUTER_REGISTRY: tuple[RouterRegistration, ...] = (
     RouterRegistration(admin_logs_router),
     RouterRegistration(admin_exports_router),
     RouterRegistration(admin_llm_router),
+    RouterRegistration(admin_llm_observability_router),
     RouterRegistration(admin_llm_sample_payloads_router),
     RouterRegistration(admin_llm_consumption_router),
     RouterRegistration(admin_llm_assembly_router),

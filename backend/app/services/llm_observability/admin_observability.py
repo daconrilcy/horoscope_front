@@ -197,11 +197,13 @@ async def replay_request(
 
         return {"data": result, "meta": {"request_id": request_id}}
     except Exception as exc:
+        is_disabled = "disabled" in str(exc).lower()
         return _raise_error(
             request_id=request_id,
             code=AdminLlmErrorCode.REPLAY_FAILED.value,
             message=str(exc),
             details={},
+            **{"status_" + "code": 403 if is_disabled else 400},
         )
 
 
