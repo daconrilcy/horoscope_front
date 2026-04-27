@@ -17,7 +17,7 @@ from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
 from app.services.b2b.api_astrology import (
     _enforce_limits,
-    _error_response,
+    _raise_error,
 )
 from app.services.b2b.api_entitlement_gate import (
     B2BApiAccessDeniedError,
@@ -105,7 +105,7 @@ def get_weekly_by_sign(
     except B2BEditorialServiceError as error:
         db.rollback()
         status_code = 404 if error.code == "enterprise_account_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -126,7 +126,7 @@ def get_weekly_by_sign(
             if "reason_code" not in details:
                 details["reason_code"] = "quota_exhausted"
 
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -136,7 +136,7 @@ def get_weekly_by_sign(
     except B2BAstrologyServiceError as error:
         db.rollback()
         status_code = 404 if error.code == "reference_data_unavailable" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,

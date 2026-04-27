@@ -8,7 +8,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.api.v1.errors import api_error_response
+from app.core.exceptions import ApplicationError
 from app.core.rbac import is_valid_role
 from app.core.security import SecurityError, decode_token
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
@@ -21,8 +21,7 @@ class AuditWriteError(Exception):
 
 
 def _audit_unavailable_response(request_id: str) -> Any:
-    return api_error_response(
-        status_code=503,
+    raise ApplicationError(
         request_id=request_id,
         code="audit_unavailable",
         message="audit persistence is unavailable",

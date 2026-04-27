@@ -22,7 +22,7 @@ from app.services.privacy.public_support import (
     _enforce_privacy_limits,
     _ensure_support_or_ops_role,
     _ensure_user_role,
-    _error_response,
+    _raise_error,
     _record_audit_event,
     _record_failed_audit_or_503,
 )
@@ -95,7 +95,7 @@ def request_export(
         if audit_error is not None:
             return audit_error
         status_code = 409 if error.code == "privacy_request_conflict" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -104,7 +104,7 @@ def request_export(
         )
     except AuditWriteError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -147,7 +147,7 @@ def get_export_status(
         return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except PrivacyServiceError as error:
         status_code = 404 if error.code == "privacy_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -203,7 +203,7 @@ def request_delete(
             )
             if audit_error is not None:
                 return audit_error
-            return _error_response(
+            return _raise_error(
                 status_code=422,
                 request_id=request_id,
                 code="privacy_request_invalid",
@@ -237,7 +237,7 @@ def request_delete(
         )
         if audit_error is not None:
             return audit_error
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="privacy_request_invalid",
@@ -259,7 +259,7 @@ def request_delete(
         if audit_error is not None:
             return audit_error
         status_code = 409 if error.code == "privacy_request_conflict" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -268,7 +268,7 @@ def request_delete(
         )
     except AuditWriteError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -311,7 +311,7 @@ def get_delete_status(
         return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except PrivacyServiceError as error:
         status_code = 404 if error.code == "privacy_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -377,7 +377,7 @@ def get_privacy_evidence(
         )
         if audit_error is not None:
             return audit_error
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -386,7 +386,7 @@ def get_privacy_evidence(
         )
     except AuditWriteError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",

@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import resolve_application_error_status
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.astrology_engine import (
     BirthPrepareResponse,
@@ -24,8 +25,7 @@ from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationE
 from app.infra.db.session import get_db_session
 from app.services.chart.public_astrology_engine import (
     _build_engine_diff,
-    _error_response,
-    _status_code_for_natal_error,
+    _raise_error,
 )
 from app.services.chart.result_service import (
     ChartResultService,
@@ -96,7 +96,7 @@ def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
             },
         }
     except ValidationError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_birth_input",
@@ -104,7 +104,7 @@ def prepare_natal(request: Request, payload: dict[str, Any]) -> Any:
             details={"errors": error.errors()},
         )
     except BirthPreparationError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -186,7 +186,7 @@ def calculate_natal(
         }
     except ValidationError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_birth_input",
@@ -195,7 +195,7 @@ def calculate_natal(
         )
     except BirthPreparationError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -204,8 +204,8 @@ def calculate_natal(
         )
     except NatalCalculationError as error:
         db.rollback()
-        return _error_response(
-            status_code=_status_code_for_natal_error(error.code),
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -213,7 +213,7 @@ def calculate_natal(
         )
     except ChartResultServiceError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -241,7 +241,7 @@ def compare_natal_engines(
     request_id = resolve_request_id(request)
 
     if current_user.role not in {"support", "ops", "admin"}:
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_403_FORBIDDEN,
             request_id=request_id,
             code="insufficient_role",
@@ -250,7 +250,7 @@ def compare_natal_engines(
         )
 
     if settings.app_env == "production" or not settings.natal_engine_compare_enabled:
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_404_NOT_FOUND,
             request_id=request_id,
             code="endpoint_not_available",
@@ -323,7 +323,7 @@ def compare_natal_engines(
             "meta": {"request_id": request_id},
         }
     except ValidationError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_birth_input",
@@ -331,8 +331,8 @@ def compare_natal_engines(
             details={"errors": error.errors()},
         )
     except NatalCalculationError as error:
-        return _error_response(
-            status_code=_status_code_for_natal_error(error.code),
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -353,7 +353,7 @@ def get_chart_result(
 ) -> Any:
     request_id = resolve_request_id(request)
     if current_user.role not in {"support", "ops", "admin"}:
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_403_FORBIDDEN,
             request_id=request_id,
             code="insufficient_role",
@@ -364,7 +364,7 @@ def get_chart_result(
         audit_record = ChartResultService.get_audit_record(db, chart_id=chart_id)
         return {"data": audit_record.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ChartResultServiceError as error:
-        return _error_response(
+        return _raise_error(
             status_code=404 if error.code == "chart_result_not_found" else 422,
             request_id=request_id,
             code=error.code,

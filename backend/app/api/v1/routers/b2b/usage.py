@@ -9,6 +9,7 @@ from app.api.dependencies.b2b_auth import (
     AuthenticatedEnterpriseClient,
     require_authenticated_b2b_client,
 )
+from app.api.errors import resolve_application_error_status
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.b2b.usage import (
     B2BUsageSummaryApiResponse,
@@ -19,7 +20,7 @@ from app.infra.db.session import get_db_session
 from app.services.b2b.api_entitlement_gate import B2BApiAccessDeniedError
 from app.services.b2b.api_usage import (
     _enforce_limits,
-    _error_response,
+    _raise_error,
     _record_usage_audit,
 )
 from app.services.b2b.canonical_usage_service import (
@@ -69,8 +70,8 @@ def get_b2b_usage_summary(
         return {"data": summary.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -91,14 +92,14 @@ def get_b2b_usage_summary(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
                 message="audit service is unavailable",
                 details={},
             )
-        return _error_response(
+        return _raise_error(
             status_code=403,
             request_id=request_id,
             code=error.code,
@@ -107,7 +108,7 @@ def get_b2b_usage_summary(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",

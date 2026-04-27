@@ -4,7 +4,6 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -12,6 +11,7 @@ from app.api.dependencies.auth import (
     AuthenticatedUser,
     require_admin_user,
 )
+from app.api.errors import build_error_response
 from app.api.v1.schemas.routers.admin.pdf_templates import (
     PdfTemplateCreate,
     PdfTemplateResponse,
@@ -52,31 +52,23 @@ def create_template(
     try:
         normalized_config = _normalize_pdf_template_config(body.config_json)
     except ValueError as exc:
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": "invalid_template_config",
-                    "message": str(exc),
-                    "request_id": request_id,
-                    "details": {},
-                }
-            },
+            request_id=request_id,
+            code="invalid_template_config",
+            message=str(exc),
+            details={},
         )
 
     # Check if key already exists
     stmt = select(PdfTemplateModel).where(PdfTemplateModel.key == body.key)
     if db.execute(stmt).scalar_one_or_none():
-        return JSONResponse(
+        return build_error_response(
             status_code=400,
-            content={
-                "error": {
-                    "code": "template_already_exists",
-                    "message": f"Template with key {body.key} already exists",
-                    "request_id": request_id,
-                    "details": {},
-                }
-            },
+            request_id=request_id,
+            code="template_already_exists",
+            message=f"Template with key {body.key} already exists",
+            details={},
         )
 
     if body.is_default:
@@ -113,16 +105,12 @@ def update_template(
 
     item = db.get(PdfTemplateModel, template_id)
     if not item:
-        return JSONResponse(
+        return build_error_response(
             status_code=404,
-            content={
-                "error": {
-                    "code": "template_not_found",
-                    "message": "Template not found",
-                    "request_id": request_id,
-                    "details": {},
-                }
-            },
+            request_id=request_id,
+            code="template_not_found",
+            message="Template not found",
+            details={},
         )
 
     if body.name is not None:
@@ -135,16 +123,12 @@ def update_template(
         try:
             item.config_json = _normalize_pdf_template_config(body.config_json)
         except ValueError as exc:
-            return JSONResponse(
+            return build_error_response(
                 status_code=422,
-                content={
-                    "error": {
-                        "code": "invalid_template_config",
-                        "message": str(exc),
-                        "request_id": request_id,
-                        "details": {},
-                    }
-                },
+                request_id=request_id,
+                code="invalid_template_config",
+                message=str(exc),
+                details={},
             )
     if body.is_default is not None:
         if body.is_default:
@@ -169,16 +153,12 @@ def activate_template(
 
     item = db.get(PdfTemplateModel, template_id)
     if not item:
-        return JSONResponse(
+        return build_error_response(
             status_code=404,
-            content={
-                "error": {
-                    "code": "template_not_found",
-                    "message": "Template not found",
-                    "request_id": request_id,
-                    "details": {},
-                }
-            },
+            request_id=request_id,
+            code="template_not_found",
+            message="Template not found",
+            details={},
         )
 
     item.status = PdfTemplateStatus.ACTIVE

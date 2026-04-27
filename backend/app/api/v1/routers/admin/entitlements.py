@@ -3,11 +3,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.api.errors import raise_http_error
 from app.api.v1.schemas.routers.admin.entitlements import (
     AdminEntitlementMatrixResponse,
     AdminEntitlementUpdate,
@@ -100,7 +101,7 @@ def update_entitlement(
         .options(joinedload(PlanFeatureBindingModel.quotas))
     )
     if not binding:
-        raise HTTPException(status_code=404, detail="Binding not found")
+        raise_http_error(status_code=404, detail="Binding not found")
 
     before = {
         "access_mode": binding.access_mode.value,
@@ -115,7 +116,7 @@ def update_entitlement(
         binding.is_enabled = payload.is_enabled
     if payload.quota_limit is not None:
         if not binding.quotas:
-            raise HTTPException(status_code=400, detail="No quota record found to update")
+            raise_http_error(status_code=400, detail="No quota record found to update")
         binding.quotas[0].quota_limit = payload.quota_limit
 
     # Audit log

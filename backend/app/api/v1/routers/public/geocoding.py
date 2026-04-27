@@ -26,8 +26,8 @@ from app.infra.db.repositories.geo_place_resolved_repository import (
 )
 from app.infra.db.session import get_db_session
 from app.services.geocoding.public_support import (
-    _error_response,
     _normalize_query,
+    _raise_error,
     _resolved_place_to_dict,
     _result_to_dict,
     _validate_nocache_access,
@@ -82,7 +82,7 @@ def search_places(
         current_user=current_user,
     )
     if not allowed:
-        return _error_response(
+        return _raise_error(
             status_code=(
                 status.HTTP_403_FORBIDDEN
                 if code == "insufficient_role"
@@ -96,7 +96,7 @@ def search_places(
 
     normalized = _normalize_query(q)
     if len(normalized) < 2:
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             request_id=request_id,
             code="invalid_geocoding_query",
@@ -119,14 +119,14 @@ def search_places(
         )
     except GeocodingServiceError as err:
         if err.code == "geocoding_rate_limited":
-            return _error_response(
+            return _raise_error(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 request_id=request_id,
                 code=err.code,
                 message=err.message,
                 details=err.details,
             )
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             request_id=request_id,
             code=err.code,
@@ -159,7 +159,7 @@ def get_resolved_place(
     request_id = resolve_request_id(request)
     place = GeoPlaceResolvedRepository(db).find_by_id(place_resolved_id)
     if place is None:
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_404_NOT_FOUND,
             request_id=request_id,
             code="resolved_place_not_found",
@@ -197,7 +197,7 @@ def resolve_place(
                 provider_place_id=payload.provider_place_id,
             )
         except GeocodingServiceError as err:
-            return _error_response(
+            return _raise_error(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 request_id=request_id,
                 code=err.code,
@@ -211,7 +211,7 @@ def resolve_place(
         try:
             snapshot = GeocodingSearchResult.model_validate(snapshot)
         except ValidationError as err:
-            return _error_response(
+            return _raise_error(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 request_id=request_id,
                 code="geocoding_provider_unavailable",
@@ -224,7 +224,7 @@ def resolve_place(
             raise ValueError("snapshot provider_place_id must match request provider_place_id")
         _validate_resolve_snapshot(snapshot)
     except ValueError as err:
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             request_id=request_id,
             code="invalid_geocoding_resolve_payload",
@@ -259,7 +259,7 @@ def resolve_place(
         db.commit()
     except SQLAlchemyError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             request_id=request_id,
             code="geocoding_resolve_persistence_error",
@@ -297,14 +297,14 @@ def reverse_geocode(
         )
     except GeocodingServiceError as err:
         if err.code == "geocoding_rate_limited":
-            return _error_response(
+            return _raise_error(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 request_id=request_id,
                 code=err.code,
                 message=err.message,
                 details=err.details,
             )
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             request_id=request_id,
             code=err.code,

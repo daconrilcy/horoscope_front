@@ -6,11 +6,12 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_ops_user
+from app.api.errors import resolve_application_error_status
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.internal.llm.qa import (
     ChatQaRequest,
@@ -42,10 +43,10 @@ from app.services.llm_generation.guidance.guidance_service import (
 )
 from app.services.llm_generation.internal_qa import (
     QATargetUserNotFoundError,
-    _error_response,
     _map_chat_error,
     _map_guidance_error,
     _map_natal_error,
+    _raise_error,
     _resolve_target_user,
     _seed_result_to_response,
 )
@@ -87,7 +88,7 @@ def seed_canonical_user(
     except Exception as error:
         db.rollback()
         if hasattr(error, "code") and hasattr(error, "message"):
-            return _error_response(
+            return _raise_error(
                 status_code=403 if getattr(error, "code", "") == "llm_qa_seed_not_allowed" else 422,
                 request_id=request_id,
                 code=error.code,
@@ -95,7 +96,7 @@ def seed_canonical_user(
                 details=getattr(error, "details", {}),
             )
         logger.exception("llm_qa_seed_unexpected_error")
-        return _error_response(
+        return _raise_error(
             status_code=500,
             request_id=request_id,
             code="internal_error",
@@ -131,7 +132,7 @@ async def run_guidance_generation(
         )
     except GuidanceServiceError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=_map_guidance_error(error),
             request_id=request_id,
             code=error.code,
@@ -140,24 +141,13 @@ async def run_guidance_generation(
         )
     except QATargetUserNotFoundError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="qa_target_user_not_found",
             message="target user was not found",
             details={"target_email": error.target_email},
         )
-    except HTTPException as error:
-        db.rollback()
-        detail = error.detail if isinstance(error.detail, dict) else {"message": str(error.detail)}
-        return _error_response(
-            status_code=error.status_code,
-            request_id=request_id,
-            code=detail.get("code", "qa_target_user_not_found"),
-            message=detail.get("message", "target user was not found"),
-            details=detail.get("details", {}),
-        )
-
     return {
         "data": response.model_dump(mode="json"),
         "meta": {"request_id": request_id, "target_user_email": target_user.email},
@@ -191,7 +181,7 @@ async def run_chat_generation(
         db.commit()
     except ChatGuidanceServiceError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=_map_chat_error(error),
             request_id=request_id,
             code=error.code,
@@ -200,24 +190,13 @@ async def run_chat_generation(
         )
     except QATargetUserNotFoundError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="qa_target_user_not_found",
             message="target user was not found",
             details={"target_email": error.target_email},
         )
-    except HTTPException as error:
-        db.rollback()
-        detail = error.detail if isinstance(error.detail, dict) else {"message": str(error.detail)}
-        return _error_response(
-            status_code=error.status_code,
-            request_id=request_id,
-            code=detail.get("code", "qa_target_user_not_found"),
-            message=detail.get("message", "target user was not found"),
-            details=detail.get("details", {}),
-        )
-
     return {
         "data": response.model_dump(mode="json"),
         "meta": {"request_id": request_id, "target_user_email": target_user.email},
@@ -259,22 +238,12 @@ async def run_natal_generation(
         db.commit()
     except QATargetUserNotFoundError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="qa_target_user_not_found",
             message="target user was not found",
             details={"target_email": error.target_email},
-        )
-    except HTTPException as error:
-        db.rollback()
-        detail = error.detail if isinstance(error.detail, dict) else {"message": str(error.detail)}
-        return _error_response(
-            status_code=error.status_code,
-            request_id=request_id,
-            code=detail.get("code", "qa_target_user_not_found"),
-            message=detail.get("message", "target user was not found"),
-            details=detail.get("details", {}),
         )
     except Exception as error:
         db.rollback()
@@ -309,7 +278,7 @@ async def run_horoscope_daily_generation(
                 db, user_id=target_user.id
             ).variant_code
         except HoroscopeDailyAccessDeniedError as error:
-            return _error_response(
+            return _raise_error(
                 status_code=403,
                 request_id=request_id,
                 code=error.reason_code,
@@ -332,7 +301,7 @@ async def run_horoscope_daily_generation(
             ruleset_version=settings.ruleset_version,
         )
         if result is None:
-            return _error_response(
+            return _raise_error(
                 status_code=404,
                 request_id=request_id,
                 code="prediction_not_found",
@@ -345,7 +314,7 @@ async def run_horoscope_daily_generation(
         if not isinstance(snapshot, PersistedPredictionSnapshot):
             reloaded_snapshot = DailyPredictionRepository(db).get_full_run(result.run.run_id)
             if reloaded_snapshot is None:
-                return _error_response(
+                return _raise_error(
                     status_code=404,
                     request_id=request_id,
                     code="prediction_not_found",
@@ -401,11 +370,9 @@ async def run_horoscope_daily_generation(
                     logger.warning("llm_qa_daily_llm_payload_persist_failed", exc_info=True)
     except DailyPredictionServiceError as error:
         db.rollback()
-        status_code, detail = _resolve_daily_prediction_service_error(
-            error, not_found_codes={"natal_missing"}
-        )
-        return _error_response(
-            status_code=status_code,
+        detail = _resolve_daily_prediction_service_error(error, not_found_codes={"natal_missing"})
+        return _raise_error(
+            status_code=resolve_application_error_status(detail.get("code", error.code)),
             request_id=request_id,
             code=detail.get("code", error.code),
             message=detail.get("message", error.message),
@@ -413,26 +380,16 @@ async def run_horoscope_daily_generation(
         )
     except QATargetUserNotFoundError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="qa_target_user_not_found",
             message="target user was not found",
             details={"target_email": error.target_email},
         )
-    except HTTPException as error:
-        db.rollback()
-        detail = error.detail if isinstance(error.detail, dict) else {"message": str(error.detail)}
-        return _error_response(
-            status_code=error.status_code,
-            request_id=request_id,
-            code=detail.get("code", "qa_target_user_not_found"),
-            message=detail.get("message", "target user was not found"),
-            details=detail.get("details", {}),
-        )
     except ValueError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_date",

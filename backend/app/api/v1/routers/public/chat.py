@@ -5,11 +5,11 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, Request
-from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import build_error_response
 from app.api.v1.constants import CHAT_TEMPORARY_UNAVAILABLE_MESSAGE
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.chat import (
@@ -58,16 +58,12 @@ def send_chat_message(
     request_id = resolve_request_id(request)
     logger.info("TOP OF send_chat_message request_id=%s user_id=%s", request_id, current_user.id)
     if current_user.role not in {"user", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role is not allowed",
-                    "details": {"required_roles": "user, admin"},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role is not allowed",
+            details={"required_roles": "user, admin"},
         )
 
     try:
@@ -115,51 +111,39 @@ def send_chat_message(
         logger.error("Chat API validation error: %s", error.json())
         logger.error("Failed payload: %s", str(payload))
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": "invalid_chat_request",
-                    "message": "chat request validation failed",
-                    "details": {"errors": error.errors()},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="invalid_chat_request",
+            message="chat request validation failed",
+            details={"errors": error.errors()},
         )
     except ChatQuotaExceededError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=429,
-            content={
-                "error": {
-                    "code": "chat_quota_exceeded",
-                    "message": "quota de messages chat épuisé",
-                    "details": {
-                        "quota_key": error.quota_key,
-                        "used": error.used,
-                        "limit": error.limit,
-                        "reason_code": "quota_exhausted",
-                        "window_end": error.window_end.isoformat() if error.window_end else None,
-                    },
-                    "request_id": request_id,
-                }
+            request_id=request_id,
+            code="chat_quota_exceeded",
+            message="quota de messages chat épuisé",
+            details={
+                "quota_key": error.quota_key,
+                "used": error.used,
+                "limit": error.limit,
+                "reason_code": "quota_exhausted",
+                "window_end": error.window_end.isoformat() if error.window_end else None,
             },
         )
     except ChatAccessDeniedError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "chat_access_denied",
-                    "message": "accès au chat refusé",
-                    "details": {
-                        "reason": error.reason,
-                        "reason_code": error.reason_code,
-                        "billing_status": error.billing_status,
-                    },
-                    "request_id": request_id,
-                }
+            request_id=request_id,
+            code="chat_access_denied",
+            message="accès au chat refusé",
+            details={
+                "reason": error.reason,
+                "reason_code": error.reason_code,
+                "billing_status": error.billing_status,
             },
         )
     except ChatGuidanceServiceError as error:
@@ -176,29 +160,21 @@ def send_chat_message(
         else:
             status_code = 422
             message = error.message
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=message,
+            details=error.details,
         )
     except Exception as error:
         logger.exception("Unexpected error in send_chat_message: %s", str(error))
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=500,
-            content={
-                "error": {
-                    "code": "internal_error",
-                    "message": str(error),
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="internal_error",
+            message=str(error),
         )
 
 
@@ -220,16 +196,12 @@ def list_chat_conversations(
 ) -> Any:
     request_id = resolve_request_id(request)
     if current_user.role not in {"user", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role is not allowed",
-                    "details": {"required_roles": "user, admin"},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role is not allowed",
+            details={"required_roles": "user, admin"},
         )
 
     try:
@@ -242,16 +214,12 @@ def list_chat_conversations(
         return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ChatGuidanceServiceError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
 
@@ -272,16 +240,12 @@ def get_chat_conversation_history(
 ) -> Any:
     request_id = resolve_request_id(request)
     if current_user.role not in {"user", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role is not allowed",
-                    "details": {"required_roles": "user, admin"},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role is not allowed",
+            details={"required_roles": "user, admin"},
         )
 
     try:
@@ -294,16 +258,12 @@ def get_chat_conversation_history(
     except ChatGuidanceServiceError as error:
         db.rollback()
         status_code = 404 if error.code == "conversation_not_found" else 403
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
 
@@ -324,16 +284,12 @@ def get_or_create_conversation_by_persona(
 ) -> Any:
     request_id = resolve_request_id(request)
     if current_user.role not in {"user", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role is not allowed",
-                    "details": {"required_roles": "user, admin"},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role is not allowed",
+            details={"required_roles": "user, admin"},
         )
 
     try:
@@ -349,14 +305,10 @@ def get_or_create_conversation_by_persona(
         }
     except ChatGuidanceServiceError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )

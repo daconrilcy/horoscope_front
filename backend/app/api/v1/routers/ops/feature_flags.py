@@ -17,7 +17,7 @@ from app.infra.db.session import get_db_session
 from app.services.ops.api_feature_flags import (
     _enforce_limits,
     _ensure_ops_role,
-    _error_response,
+    _raise_error,
     _record_audit_event,
 )
 from app.services.ops.audit_service import AuditServiceError
@@ -100,7 +100,7 @@ def update_feature_flag(
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_feature_flag_request",
@@ -122,14 +122,14 @@ def update_feature_flag(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
                 message="audit service is unavailable",
                 details={},
             )
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -138,7 +138,7 @@ def update_feature_flag(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",

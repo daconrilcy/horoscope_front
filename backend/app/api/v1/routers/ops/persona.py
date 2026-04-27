@@ -27,8 +27,8 @@ from app.services.llm_generation.guidance.persona_config_service import (
 from app.services.ops.api_persona import (
     _audit_failure_or_503,
     _enforce_limits,
-    _error_response,
     _persona_profile_mutation,
+    _raise_error,
     _record_audit_event,
 )
 from app.services.ops.audit_service import AuditServiceError
@@ -126,7 +126,7 @@ def create_persona_profile(
         return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_persona_profile_request",
@@ -144,7 +144,7 @@ def create_persona_profile(
         )
         if audit_error is not None:
             return audit_error
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -153,7 +153,7 @@ def create_persona_profile(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -206,7 +206,7 @@ def update_active_persona_config(
         return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_persona_config_request",
@@ -224,7 +224,7 @@ def update_active_persona_config(
         )
         if audit_error is not None:
             return audit_error
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -233,7 +233,7 @@ def update_active_persona_config(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -380,7 +380,7 @@ def rollback_persona_config(
         )
         if audit_error is not None:
             return audit_error
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -389,7 +389,7 @@ def rollback_persona_config(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",

@@ -9,7 +9,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
-from app.api.v1.errors import api_error_response
+from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.services.billing.pricing_experiment_service import (
     PricingExperimentService,
@@ -101,16 +101,15 @@ def _record_pricing_event_safely(
         )
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, Any],
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,
@@ -120,8 +119,7 @@ def _error_response(
 
 def _ensure_user_role(current_user: AuthenticatedUser, request_id: str) -> Any | None:
     if current_user.role not in {"user", "admin"}:
-        return _error_response(
-            status_code=403,
+        return _raise_error(
             request_id=request_id,
             code="insufficient_role",
             message="role is not allowed for billing subscription",
@@ -162,35 +160,12 @@ def _record_audit_event(
 
 
 def _audit_unavailable_response(*, request_id: str) -> Any:
-    return api_error_response(
-        status_code=503,
+    raise ApplicationError(
         request_id=request_id,
         code="audit_unavailable",
         message="audit persistence is unavailable",
         details={},
     )
-
-
-def _resolve_portal_service_status_code(error_code: str) -> int:
-    return {
-        "stripe_billing_profile_not_found": 404,
-        "stripe_subscription_not_found": 404,
-        "stripe_unavailable": 503,
-        "stripe_portal_configuration_missing": 503,
-        "stripe_portal_subscription_update_not_allowed_for_trial": 422,
-        "stripe_portal_subscription_update_disabled": 422,
-        "stripe_portal_subscription_update_no_change_options": 422,
-        "stripe_portal_subscription_cancel_disabled": 422,
-        "stripe_portal_subscription_cancel_already_scheduled": 422,
-        "stripe_subscription_reactivation_not_needed": 422,
-        "stripe_subscription_upgrade_not_allowed": 422,
-        "stripe_subscription_upgrade_invalid_proration_preview": 502,
-        "stripe_subscription_upgrade_payment_not_completed": 422,
-        "stripe_subscription_upgrade_checkout_metadata_missing": 502,
-        "stripe_subscription_upgrade_checkout_customer_mismatch": 502,
-        "plan_price_not_configured": 503,
-        "stripe_api_error": 502,
-    }.get(error_code, 500)
 
 
 def _create_stripe_subscription_flow_session_response(
@@ -249,8 +224,7 @@ def _create_stripe_subscription_flow_session_response(
             db.rollback()
             return _audit_unavailable_response(request_id=request_id)
         db.commit()
-        return _error_response(
-            status_code=_resolve_portal_service_status_code(error.code),
+        return _raise_error(
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -278,8 +252,7 @@ def _enforce_billing_limits(
                 window_seconds=60,
             )
     except RateLimitError as error:
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
             request_id=request_id,
             code=error.code,
             message=error.message,

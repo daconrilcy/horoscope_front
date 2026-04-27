@@ -3,9 +3,10 @@ from __future__ import annotations
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.api.errors import raise_http_error
 from app.api.v1.schemas.routers.admin.llm.assemblies import (
     AssemblyConfigListResponse,
     AssemblyConfigResponse,
@@ -21,7 +22,7 @@ from app.domain.llm.configuration.assembly_admin_service import AssemblyAdminSer
 from app.domain.llm.configuration.coherence import CoherenceError
 from app.infra.db.session import get_db_session
 from app.services.llm_generation.admin_assemblies import (
-    _error_response,
+    _raise_error,
 )
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
@@ -89,7 +90,7 @@ async def get_assembly_config(
     service = AssemblyAdminService(db)
     config = await service.get_config(config_id)
     if not config:
-        raise HTTPException(status_code=404, detail="Configuration not found")
+        raise_http_error(status_code=404, detail="Configuration not found")
 
     return {
         "data": PromptAssemblyConfig.model_validate(config),
@@ -109,10 +110,10 @@ async def publish_assembly_config(
     try:
         config, archived_count = await service.publish_config(config_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise_http_error(status_code=404, detail=str(e))
     except Exception as e:
         if isinstance(e, CoherenceError):
-            return _error_response(
+            return _raise_error(
                 status_code=400,
                 request_id=request.state.request_id,
                 code=AdminLlmErrorCode.COHERENCE_VALIDATION_FAILED.value,
@@ -160,7 +161,7 @@ async def rollback_assembly_config(
         # We need to fetch the archived config first to get target params
         target_config = await service.get_config(config_id)
         if not target_config:
-            raise HTTPException(status_code=404, detail="Configuration not found")
+            raise_http_error(status_code=404, detail="Configuration not found")
 
         config = await service.rollback_config(
             feature=target_config.feature,
@@ -170,7 +171,7 @@ async def rollback_assembly_config(
             target_id=config_id,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise_http_error(status_code=400, detail=str(e))
 
     # Audit log
     audit_service = AuditService(db)
@@ -206,6 +207,6 @@ async def preview_assembly_config(
     try:
         preview = await service.get_assembly_preview(config_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise_http_error(status_code=404, detail=str(e))
 
     return {"data": preview, "meta": {"request_id": request.state.request_id}}

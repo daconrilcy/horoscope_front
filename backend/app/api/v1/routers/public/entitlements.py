@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import build_error_response
 from app.api.v1.schemas.routers.public.entitlements import (
     EntitlementsMeResponse,
     PlanCatalogData,
@@ -69,16 +69,12 @@ def get_my_entitlements(
     """
     request_id = resolve_request_id(request)
     if current_user.role not in {"user", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role not allowed for entitlements",
-                    "details": {"role": current_user.role},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role not allowed for entitlements",
+            details={"role": current_user.role},
         )
 
     # AC5 - Appel unique au resolver effectif (livré en story 61.47)
@@ -126,16 +122,12 @@ def get_plans_catalog(
     """
     request_id = resolve_request_id(request)
     if current_user.role not in {"user", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role not allowed for entitlements",
-                    "details": {"role": current_user.role},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role not allowed for entitlements",
+            details={"role": current_user.role},
         )
 
     BillingService.ensure_default_plans(db)

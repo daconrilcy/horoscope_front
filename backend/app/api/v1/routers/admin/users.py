@@ -3,11 +3,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, Query, Request
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.api.errors import raise_http_error
 from app.api.v1.schemas.routers.admin.users import (
     AdminUserDetailResponse,
     AdminUserSearchResponse,
@@ -113,7 +114,7 @@ def get_user_detail(
     """
     user = db.get(UserModel, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise_http_error(status_code=404, detail="User not found")
 
     profile = db.scalar(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
@@ -241,7 +242,7 @@ def reveal_stripe_id(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
     )
     if not profile or not profile.stripe_customer_id:
-        raise HTTPException(status_code=404, detail="Stripe profile not found")
+        raise_http_error(status_code=404, detail="Stripe profile not found")
 
     AuditService.record_event(
         db,
@@ -269,7 +270,7 @@ def suspend_user(
 ) -> Any:
     user = db.get(UserModel, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise_http_error(status_code=404, detail="User not found")
 
     before = {"is_suspended": user.is_suspended}
     user.is_suspended = True
@@ -300,7 +301,7 @@ def unsuspend_user(
 ) -> Any:
     user = db.get(UserModel, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise_http_error(status_code=404, detail="User not found")
 
     before = {"is_suspended": user.is_suspended}
     user.is_suspended = False
@@ -331,7 +332,7 @@ def unlock_user(
 ) -> Any:
     user = db.get(UserModel, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise_http_error(status_code=404, detail="User not found")
 
     before = {"is_locked": user.is_locked}
     user.is_locked = False
@@ -404,7 +405,7 @@ def refresh_subscription(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
     )
     if not profile or not profile.stripe_subscription_id:
-        raise HTTPException(
+        raise_http_error(
             status_code=400, detail="No active Stripe subscription found for this user"
         )
 
@@ -413,7 +414,7 @@ def refresh_subscription(
     stripe_client = get_stripe_client()
     if not stripe_client:
         # Fallback for testing if monkeypatching failed or if it's actually not configured
-        raise HTTPException(status_code=503, detail="Stripe client not configured")
+        raise_http_error(status_code=503, detail="Stripe client not configured")
 
     try:
         subscription = stripe_client.subscriptions.retrieve(profile.stripe_subscription_id)
@@ -451,7 +452,7 @@ def refresh_subscription(
         return {"status": "success"}
     except Exception as e:
         logger.error("admin_refresh_subscription_failed user_id=%s error=%s", user_id, e)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise_http_error(status_code=500, detail=str(e))
 
 
 @router.post("/{user_id}/assign-plan")
@@ -467,7 +468,7 @@ def assign_plan(
     Manually assign a plan without Stripe side-effects.
     """
     if len(reason) < 5:
-        raise HTTPException(status_code=400, detail="A reason of at least 5 characters is required")
+        raise_http_error(status_code=400, detail="A reason of at least 5 characters is required")
 
     profile = db.scalar(
         select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
@@ -521,7 +522,7 @@ def record_commercial_gesture(
         .limit(1)
     )
     if not sub:
-        raise HTTPException(
+        raise_http_error(
             status_code=400, detail="No local subscription record found to attach gesture"
         )
 

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import build_error_response
 from app.api.v1.schemas.routers.public.consultation import (
     ConsultationCatalogueResponse,
     ConsultationGenerateRequest,
@@ -96,38 +96,30 @@ async def generate_consultation(
         )
     except ConsultationQuotaExceededError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=429,
-            content={
-                "error": {
-                    "code": "consultation_quota_exceeded",
-                    "message": "quota de consultations thématiques épuisé",
-                    "details": {
-                        "quota_key": error.quota_key,
-                        "used": error.used,
-                        "limit": error.limit,
-                        "reason_code": "quota_exhausted",
-                        "window_end": error.window_end.isoformat() if error.window_end else None,
-                    },
-                    "request_id": request_id,
-                }
+            request_id=request_id,
+            code="consultation_quota_exceeded",
+            message="quota de consultations thématiques épuisé",
+            details={
+                "quota_key": error.quota_key,
+                "used": error.used,
+                "limit": error.limit,
+                "reason_code": "quota_exhausted",
+                "window_end": error.window_end.isoformat() if error.window_end else None,
             },
         )
     except ConsultationAccessDeniedError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "consultation_access_denied",
-                    "message": "accès aux consultations thématiques refusé",
-                    "details": {
-                        "reason": error.reason,
-                        "reason_code": error.reason_code,
-                        "billing_status": error.billing_status,
-                    },
-                    "request_id": request_id,
-                }
+            request_id=request_id,
+            code="consultation_access_denied",
+            message="accès aux consultations thématiques refusé",
+            details={
+                "reason": error.reason,
+                "reason_code": error.reason_code,
+                "billing_status": error.billing_status,
             },
         )
 

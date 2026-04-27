@@ -122,9 +122,9 @@ from app.services.llm_generation.admin_prompts import (
     _catalog_sort_value,
     _collect_catalog_facets,
     _ensure_admin_use_case_shadow_row,
-    _error_response,
     _is_removed_legacy_use_case_key,
     _legacy_removed_call_log_filter,
+    _raise_error,
     _serialize_prompt_version,
     _to_manifest_entry,
     _to_none_if_literal_none,
@@ -230,7 +230,7 @@ def get_persona_detail(
     request_id = resolve_request_id(request)
     persona = db.get(LlmPersonaModel, id)
     if not persona:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
@@ -272,7 +272,7 @@ def update_persona(
 
     persona = db.get(LlmPersonaModel, id)
     if not persona:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
@@ -329,7 +329,7 @@ def disable_persona(
 
     persona = db.get(LlmPersonaModel, id)
     if not persona:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.PERSONA_NOT_FOUND.value,
@@ -384,7 +384,7 @@ def get_output_schema(
 
     schema = db.get(LlmOutputSchemaModel, id)
     if not schema:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.SCHEMA_NOT_FOUND.value,
@@ -446,7 +446,7 @@ def get_release_snapshot_diff(
     from_snapshot = get_release_snapshot(db, from_snapshot_id)
     to_snapshot = get_release_snapshot(db, to_snapshot_id)
     if from_snapshot is None or to_snapshot is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.SNAPSHOT_NOT_FOUND.value,
@@ -804,7 +804,7 @@ async def execute_admin_catalog_sample_payload(
             details={"blocking_reasons": blocking, "failure_kind": "runtime_preview_incomplete"},
         )
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.RUNTIME_PREVIEW_INCOMPLETE_FOR_EXECUTION.value,
@@ -818,7 +818,7 @@ async def execute_admin_catalog_sample_payload(
         )
     sample_row = get_sample_payload(db, payload.sample_payload_id)
     if sample_row is None or not isinstance(sample_row.payload_json, dict):
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NOT_FOUND.value,
@@ -879,7 +879,7 @@ async def execute_admin_catalog_sample_payload(
             },
         )
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
@@ -911,7 +911,7 @@ async def execute_admin_catalog_sample_payload(
             },
         )
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
@@ -943,7 +943,7 @@ async def execute_admin_catalog_sample_payload(
             },
         )
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
@@ -976,7 +976,7 @@ async def execute_admin_catalog_sample_payload(
             },
         )
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
@@ -1008,7 +1008,7 @@ async def execute_admin_catalog_sample_payload(
             },
         )
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
@@ -1041,7 +1041,7 @@ async def execute_admin_catalog_sample_payload(
             },
         )
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=502,
             request_id=request_id,
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
@@ -1068,7 +1068,7 @@ async def execute_admin_catalog_sample_payload(
             details={"failure_kind": "unexpected", "error_message": str(exc)},
         )
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=502,
             request_id=request_id,
             code=AdminLlmErrorCode.ADMIN_MANUAL_EXECUTION_FAILED.value,
@@ -1134,14 +1134,14 @@ def update_use_case_config(
     request_id = resolve_request_id(request)
     del payload, current_user
     if _build_canonical_admin_use_case_config(db, key) is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
             message=f"use case {key} not found",
             details={},
         )
-    return _error_response(
+    return _raise_error(
         status_code=409,
         request_id=request_id,
         code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
@@ -1167,14 +1167,14 @@ def associate_persona(
     request_id = resolve_request_id(request)
     del payload, current_user
     if _build_canonical_admin_use_case_config(db, key) is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
             message=f"use case {key} not found",
             details={},
         )
-    return _error_response(
+    return _raise_error(
         status_code=409,
         request_id=request_id,
         code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
@@ -1196,7 +1196,7 @@ def get_use_case_contract(
     request_id = resolve_request_id(request)
 
     if _is_removed_legacy_use_case_key(key):
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
@@ -1208,7 +1208,7 @@ def get_use_case_contract(
     if canonical_config is None:
         uc = get_use_case_config(db, key)
         if not uc:
-            return _error_response(
+            return _raise_error(
                 status_code=404,
                 request_id=request_id,
                 code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
@@ -1287,7 +1287,7 @@ def create_prompt_draft(
     request_id = resolve_request_id(request)
 
     if _is_removed_legacy_use_case_key(key):
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
@@ -1298,7 +1298,7 @@ def create_prompt_draft(
     canonical_uc = _build_canonical_admin_use_case_config(db, key)
     uc = canonical_uc or get_use_case_config(db, key)
     if not uc:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
@@ -1310,7 +1310,7 @@ def create_prompt_draft(
     from app.domain.llm.governance.feature_taxonomy import is_nominal_feature_allowed
 
     if not is_nominal_feature_allowed(key):
-        return _error_response(
+        return _raise_error(
             status_code=403,
             request_id=request_id,
             code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
@@ -1327,7 +1327,7 @@ def create_prompt_draft(
         payload.developer_prompt, use_case_required_placeholders=uc.required_prompt_placeholders
     )
     if not lint_result.passed:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.LINT_FAILED.value,
@@ -1377,7 +1377,7 @@ async def publish_prompt(
 ) -> Any:
     request_id = resolve_request_id(request)
     if _is_removed_legacy_use_case_key(key):
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
@@ -1389,7 +1389,7 @@ async def publish_prompt(
     canonical_uc = _build_canonical_admin_use_case_config(db, key)
     uc = canonical_uc or get_use_case_config(db, key)
     if not uc:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
@@ -1408,7 +1408,7 @@ async def publish_prompt(
 
         if eval_report.failure_rate > uc.eval_failure_threshold:
             eval_report.blocked_publication = True
-            return _error_response(
+            return _raise_error(
                 status_code=409,
                 request_id=request_id,
                 code=AdminLlmErrorCode.EVAL_FAILED.value,
@@ -1428,7 +1428,7 @@ async def publish_prompt(
         )
         # AC21: Block on 'fail' or 'invalid' (High fix)
         if golden_report.verdict in ("fail", "invalid"):
-            return _error_response(
+            return _raise_error(
                 status_code=409,
                 request_id=request_id,
                 code=AdminLlmErrorCode.GOLDEN_REGRESSION_FAILED.value,
@@ -1481,14 +1481,14 @@ async def publish_prompt(
         from app.domain.llm.governance.feature_taxonomy import is_nominal_feature_allowed
 
         if not is_nominal_feature_allowed(key):
-            return _error_response(
+            return _raise_error(
                 status_code=403,
                 request_id=request_id,
                 code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
                 message=str(err),
                 details={},
             )
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.VALIDATION_ERROR.value,
@@ -1497,7 +1497,7 @@ async def publish_prompt(
         )
     except Exception as err:
         logger.exception("admin_llm_publish_failed")
-        return _error_response(
+        return _raise_error(
             status_code=500,
             request_id=request_id,
             code=AdminLlmErrorCode.PUBLISH_FAILED.value,
@@ -1517,7 +1517,7 @@ def rollback_prompt(
     request_id = resolve_request_id(request)
 
     if _is_removed_legacy_use_case_key(key):
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code=AdminLlmErrorCode.USE_CASE_NOT_FOUND.value,
@@ -1558,14 +1558,14 @@ def rollback_prompt(
         from app.domain.llm.governance.feature_taxonomy import is_nominal_feature_allowed
 
         if not is_nominal_feature_allowed(key):
-            return _error_response(
+            return _raise_error(
                 status_code=403,
                 request_id=request_id,
                 code=AdminLlmErrorCode.FORBIDDEN_FEATURE.value,
                 message=str(err),
                 details={},
             )
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=AdminLlmErrorCode.ROLLBACK_FAILED.value,
@@ -1744,7 +1744,7 @@ async def replay_request(
 
         return {"data": result, "meta": {"request_id": request_id}}
     except Exception as e:
-        return _error_response(
+        return _raise_error(
             status_code=403 if "disabled" in str(e) else 400,
             request_id=request_id,
             code=AdminLlmErrorCode.REPLAY_FAILED.value,

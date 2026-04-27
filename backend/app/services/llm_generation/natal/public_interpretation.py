@@ -6,10 +6,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.api.v1.errors import api_error_response
 from app.api.v1.schemas.routers.public.natal_interpretation import (
     NatalChartLongEntitlementInfo,
 )
+from app.core.exceptions import ApplicationError
 from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementResult,
 )
@@ -17,15 +17,15 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
 logger = logging.getLogger(__name__)
 
 
-def _create_error_response(
-    status_code: int,
-    code: str,
-    message: str,
-    request_id: str,
-    details: dict[str, Any] | None = None,
-) -> Any:
-    return api_error_response(
-        status_code=status_code,
+def _raise_error(*args: Any, details: dict[str, Any] | None = None, **_: Any) -> Any:
+    """Lève une erreur applicative en acceptant l'ancien appel routeur avec statut."""
+    values = list(args)
+    if values and isinstance(values[0], int):
+        values.pop(0)
+    code = values[0] if len(values) > 0 else _["code"]
+    message = values[1] if len(values) > 1 else _["message"]
+    request_id = values[2] if len(values) > 2 else _["request_id"]
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,

@@ -7,6 +7,7 @@ from app.api.dependencies.auth import (
     UserAuthenticationError,
     require_admin_user,
 )
+from app.api.errors import resolve_application_error_status
 
 # We use a small app fixture-like helper to test the dependency in isolation.
 admin_dependency_app = FastAPI()
@@ -17,7 +18,7 @@ def handle_user_authentication_error(
     request: Request, error: UserAuthenticationError
 ) -> JSONResponse:
     return JSONResponse(
-        status_code=error.status_code,
+        status_code=resolve_application_error_status(error.code),
         content={
             "error": {
                 "code": error.code,

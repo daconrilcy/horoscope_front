@@ -14,13 +14,13 @@ from app.api.v1.constants import (
     DEFAULT_CONFIG_TEXTS,
     DEFAULT_EDITORIAL_TEMPLATES,
 )
-from app.api.v1.errors import api_error_response
 from app.api.v1.schemas.routers.admin.content import (
     AdminFeatureFlagData,
     ConfigTextData,
     EditorialTemplateVersionData,
 )
 from app.core.datetime_provider import datetime_provider
+from app.core.exceptions import ApplicationError
 from app.infra.db.models.config_text import ConfigTextModel
 from app.infra.db.models.editorial_template import EditorialTemplateVersionModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
@@ -30,16 +30,15 @@ from app.services.ops.feature_flag_service import (
 )
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, object],
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,

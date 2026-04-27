@@ -23,7 +23,7 @@ from app.infra.db.session import get_db_session
 from app.ops.llm.performance_qualification import PerformanceQualificationService
 from app.services.ops.api_monitoring import (
     _enforce_limits,
-    _error_response,
+    _raise_error,
 )
 from app.services.ops.monitoring_service import (
     OpsMonitoringService,
@@ -58,7 +58,7 @@ def get_conversation_kpis(
         data = OpsMonitoringService.get_conversation_kpis(window=window)
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except OpsMonitoringServiceError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -92,7 +92,7 @@ def get_operational_summary(
         data = OpsMonitoringService.get_operational_summary(window=window)
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except OpsMonitoringServiceError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -126,7 +126,7 @@ def get_persona_kpis(
         data = OpsMonitoringService.get_persona_kpis(window=window)
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except OpsMonitoringServiceError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -161,7 +161,7 @@ def get_pricing_experiment_kpis(
         data = OpsMonitoringService.get_pricing_experiment_kpis(window=window, db=db)
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except OpsMonitoringServiceError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -213,7 +213,7 @@ async def evaluate_performance_qualification(
         )
         return {"data": report.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValueError as err:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_qualification_context",

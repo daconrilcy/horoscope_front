@@ -14,7 +14,7 @@ from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.services.ops.audit_service import AuditServiceError
 from app.services.reference_data.public_support import (
-    _error_response,
+    _raise_error,
     _record_reference_audit,
     _validate_seed_access,
 )
@@ -43,7 +43,7 @@ def seed_reference_data(
     request_id = resolve_request_id(request)
     auth_error = _validate_seed_access(x_admin_token, current_user)
     if auth_error is not None:
-        return _error_response(
+        return _raise_error(
             status_code=(
                 status.HTTP_403_FORBIDDEN
                 if auth_error.code == "insufficient_role"
@@ -82,7 +82,7 @@ def seed_reference_data(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -94,7 +94,7 @@ def seed_reference_data(
             if error.code == "unauthorized_seed_access"
             else status.HTTP_422_UNPROCESSABLE_CONTENT
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -103,7 +103,7 @@ def seed_reference_data(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             request_id=request_id,
             code="audit_unavailable",
@@ -129,7 +129,7 @@ def get_active_reference_data(
     request_id = resolve_request_id(request)
     data = ReferenceDataService.get_active_reference_data(db, version=version)
     if not data:
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_404_NOT_FOUND,
             request_id=request_id,
             code="reference_version_not_found",
@@ -164,7 +164,7 @@ def clone_reference_version(
     request_id = resolve_request_id(request)
     auth_error = _validate_seed_access(x_admin_token, current_user)
     if auth_error is not None:
-        return _error_response(
+        return _raise_error(
             status_code=(
                 status.HTTP_403_FORBIDDEN
                 if auth_error.code == "insufficient_role"
@@ -215,7 +215,7 @@ def clone_reference_version(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -227,7 +227,7 @@ def clone_reference_version(
             if error.code == "unauthorized_seed_access"
             else status.HTTP_422_UNPROCESSABLE_CONTENT
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -236,7 +236,7 @@ def clone_reference_version(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             request_id=request_id,
             code="audit_unavailable",

@@ -8,21 +8,20 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
-from app.api.v1.errors import api_error_response
+from app.core.exceptions import ApplicationError
 from app.core.rate_limit import check_rate_limit
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, Any],
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,
@@ -32,8 +31,7 @@ def _error_response(
 
 def _ensure_ops_role(*, user: AuthenticatedUser, request_id: str) -> Any | None:
     if user.role not in ["ops", "admin"]:
-        return _error_response(
-            status_code=403,
+        return _raise_error(
             request_id=request_id,
             code="insufficient_role",
             message="role is not allowed",

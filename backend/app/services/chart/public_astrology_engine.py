@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.api.v1.errors import api_error_response
+from app.core.exceptions import ApplicationError
 
 logger = logging.getLogger(__name__)
 _NATAL_TECHNICAL_ERROR_CODES = frozenset(
@@ -17,29 +17,20 @@ _NATAL_TECHNICAL_ERROR_CODES = frozenset(
 )
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, Any],
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,
         details=details,
     )
-
-
-def _status_code_for_natal_error(error_code: str) -> int:
-    if error_code == "reference_version_not_found":
-        return 404
-    if error_code in _NATAL_TECHNICAL_ERROR_CODES:
-        return 503
-    return 422
 
 
 def _build_engine_diff(

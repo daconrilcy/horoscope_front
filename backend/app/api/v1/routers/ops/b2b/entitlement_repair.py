@@ -26,7 +26,7 @@ from app.services.b2b.entitlement_repair_service import (
 from app.services.b2b.ops_entitlement_repair_api import (
     _enforce_limits,
     _ensure_ops_role,
-    _error_response,
+    _raise_error,
 )
 
 logger = logging.getLogger(__name__)
@@ -128,7 +128,7 @@ def set_admin_user(
         )
         return result
     except RepairValidationError as e:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=e.code,
@@ -176,7 +176,7 @@ def classify_zero_units(
         )
         return result
     except RepairValidationError as e:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=e.code,

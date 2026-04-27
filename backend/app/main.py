@@ -11,6 +11,7 @@ from starlette.responses import Response
 
 from app.api.dependencies.auth import UserAuthenticationError
 from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
+from app.api.errors.handlers import application_error_handler, build_error_response
 from app.api.health import router as health_router
 from app.api.v1.constants import (
     ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER,
@@ -76,6 +77,7 @@ from app.api.v1.routers.public.users import router as users_router
 from app.core import ephemeris as _eph
 from app.core.config import settings
 from app.core.ephemeris import EphemerisDataMissingError, SwissEphInitError
+from app.core.exceptions import ApplicationError
 from app.core.request_id import resolve_request_id
 from app.domain.astrology.ephemeris_provider import EphemerisCalcError
 from app.domain.astrology.houses_provider import HousesCalcError, UnsupportedHouseSystemError
@@ -388,6 +390,7 @@ async def _app_lifespan(_: FastAPI):
 
 
 app = FastAPI(title="horoscope-backend", version="0.1.0", lifespan=_app_lifespan)
+app.add_exception_handler(ApplicationError, application_error_handler)
 
 
 @app.middleware("http")
@@ -513,16 +516,12 @@ def handle_request_validation_error(
             }
         sanitized_errors.append(sanitized_entry)
 
-    return JSONResponse(
+    return build_error_response(
         status_code=422,
-        content={
-            "error": {
-                "code": "invalid_request_payload",
-                "message": "request payload validation failed",
-                "details": {"errors": sanitized_errors},
-                "request_id": resolve_request_id(request),
-            }
-        },
+        request_id=resolve_request_id(request),
+        code="invalid_request_payload",
+        message="request payload validation failed",
+        details={"errors": sanitized_errors},
     )
 
 
@@ -530,16 +529,12 @@ def handle_request_validation_error(
 def handle_user_authentication_error(
     request: Request, error: UserAuthenticationError
 ) -> JSONResponse:
-    return JSONResponse(
-        status_code=error.status_code,
-        content={
-            "error": {
-                "code": error.code,
-                "message": error.message,
-                "details": error.details,
-                "request_id": resolve_request_id(request),
-            }
-        },
+    return build_error_response(
+        status_code=error.http_status_code,
+        request_id=resolve_request_id(request),
+        code=error.code,
+        message=error.message,
+        details=error.details,
     )
 
 
@@ -547,16 +542,12 @@ def handle_user_authentication_error(
 def handle_enterprise_api_key_authentication_error(
     request: Request, error: EnterpriseApiKeyAuthenticationError
 ) -> JSONResponse:
-    return JSONResponse(
-        status_code=error.status_code,
-        content={
-            "error": {
-                "code": error.code,
-                "message": error.message,
-                "details": error.details,
-                "request_id": resolve_request_id(request),
-            }
-        },
+    return build_error_response(
+        status_code=error.http_status_code,
+        request_id=resolve_request_id(request),
+        code=error.code,
+        message=error.message,
+        details=error.details,
     )
 
 
@@ -573,16 +564,12 @@ def handle_ephemeris_data_missing_error(
         details.get("missing_file", ""),
         resolve_request_id(request),
     )
-    return JSONResponse(
+    return build_error_response(
         status_code=503,
-        content={
-            "error": {
-                "code": error.code,
-                "message": error.message,
-                "details": details,
-                "request_id": resolve_request_id(request),
-            }
-        },
+        request_id=resolve_request_id(request),
+        code=error.code,
+        message=error.message,
+        details=details,
     )
 
 
@@ -593,61 +580,45 @@ def handle_swisseph_init_error(request: Request, error: SwissEphInitError) -> JS
         error.code,
         resolve_request_id(request),
     )
-    return JSONResponse(
+    return build_error_response(
         status_code=503,
-        content={
-            "error": {
-                "code": error.code,
-                "message": error.message,
-                "details": {},
-                "request_id": resolve_request_id(request),
-            }
-        },
+        request_id=resolve_request_id(request),
+        code=error.code,
+        message=error.message,
+        details={},
     )
 
 
 @app.exception_handler(EphemerisCalcError)
 def handle_ephemeris_calc_error(request: Request, error: EphemerisCalcError) -> JSONResponse:
-    return JSONResponse(
+    return build_error_response(
         status_code=503,
-        content={
-            "error": {
-                "code": error.code,
-                "message": error.message,
-                "details": {},
-                "request_id": resolve_request_id(request),
-            }
-        },
+        request_id=resolve_request_id(request),
+        code=error.code,
+        message=error.message,
+        details={},
     )
 
 
 @app.exception_handler(HousesCalcError)
 def handle_houses_calc_error(request: Request, error: HousesCalcError) -> JSONResponse:
-    return JSONResponse(
+    return build_error_response(
         status_code=503,
-        content={
-            "error": {
-                "code": error.code,
-                "message": error.message,
-                "details": {},
-                "request_id": resolve_request_id(request),
-            }
-        },
+        request_id=resolve_request_id(request),
+        code=error.code,
+        message=error.message,
+        details={},
     )
 
 
 @app.exception_handler(InputValidationError)
 def handle_input_validation_error(request: Request, error: InputValidationError) -> JSONResponse:
-    return JSONResponse(
+    return build_error_response(
         status_code=400,
-        content={
-            "error": {
-                "code": "input_validation_failed",
-                "message": error.message,
-                "details": error.details,
-                "request_id": resolve_request_id(request),
-            }
-        },
+        request_id=resolve_request_id(request),
+        code="input_validation_failed",
+        message=error.message,
+        details=error.details,
     )
 
 
@@ -655,16 +626,12 @@ def handle_input_validation_error(request: Request, error: InputValidationError)
 def handle_unsupported_house_system_error(
     request: Request, error: UnsupportedHouseSystemError
 ) -> JSONResponse:
-    return JSONResponse(
+    return build_error_response(
         status_code=422,
-        content={
-            "error": {
-                "code": error.code,
-                "message": error.message,
-                "details": {},
-                "request_id": resolve_request_id(request),
-            }
-        },
+        request_id=resolve_request_id(request),
+        code=error.code,
+        message=error.message,
+        details={},
     )
 
 

@@ -3,11 +3,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.api.errors import raise_http_error
 from app.api.v1.schemas.routers.admin.support import (
     AdminFlaggedContentResponse,
     AdminSupportTicketDetailResponse,
@@ -93,7 +94,7 @@ def get_ticket_detail(
     )
     result = db.execute(stmt).first()
     if not result:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+        raise_http_error(status_code=404, detail="Ticket not found")
 
     audit_events = db.scalars(
         select(AuditEventModel)
@@ -131,7 +132,7 @@ def update_ticket_status(
 ) -> Any:
     ticket = db.get(SupportIncidentModel, ticket_id)
     if not ticket:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+        raise_http_error(status_code=404, detail="Ticket not found")
 
     before = ticket.status
     ticket.status = payload.status
@@ -200,7 +201,7 @@ def review_flagged_content(
 ) -> Any:
     content = db.get(FlaggedContentModel, content_id)
     if not content:
-        raise HTTPException(status_code=404, detail="Content not found")
+        raise_http_error(status_code=404, detail="Content not found")
 
     content.status = payload.status
     content.reviewed_at = datetime_provider.utcnow()

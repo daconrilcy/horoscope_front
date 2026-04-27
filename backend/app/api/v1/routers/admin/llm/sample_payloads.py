@@ -24,12 +24,12 @@ from app.core.request_id import resolve_request_id
 from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.session import get_db_session
 from app.services.llm_generation.admin_sample_payloads import (
-    _error_response,
     _find_default_conflict,
     _find_name_conflict,
     _normalize_name,
     _normalize_scope_dimensions,
     _normalize_scope_value,
+    _raise_error,
     _record_audit_event,
     _sample_payload_default_conflict_response,
     _sample_payload_generic_conflict_response,
@@ -61,7 +61,7 @@ def create_sample_payload(
         locale = _validate_locale(payload.locale)
         _validate_payload_json(feature, payload.payload_json)
     except ValueError as exc:
-        return _error_response(
+        return _raise_error(
             request_id=request_id,
             status_code=422,
             code=AdminLlmErrorCode.INVALID_SAMPLE_PAYLOAD.value,
@@ -171,7 +171,7 @@ def list_sample_payloads(
         )
         normalized_locale = _validate_locale(locale)
     except ValueError as exc:
-        return _error_response(
+        return _raise_error(
             request_id=request_id,
             status_code=422,
             code=AdminLlmErrorCode.INVALID_QUERY.value,
@@ -213,7 +213,7 @@ def get_sample_payload(
 
     model = db.get(LlmSamplePayloadModel, sample_payload_id)
     if model is None:
-        return _error_response(
+        return _raise_error(
             request_id=request_id,
             status_code=404,
             code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NOT_FOUND.value,
@@ -235,7 +235,7 @@ def update_sample_payload(
     request_id = resolve_request_id(request)
     model = db.get(LlmSamplePayloadModel, sample_payload_id)
     if model is None:
-        return _error_response(
+        return _raise_error(
             request_id=request_id,
             status_code=404,
             code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NOT_FOUND.value,
@@ -271,7 +271,7 @@ def update_sample_payload(
         next_locale = _validate_locale(next_locale)
         _validate_payload_json(next_feature, next_payload_json)
     except ValueError as exc:
-        return _error_response(
+        return _raise_error(
             request_id=request_id,
             status_code=422,
             code=AdminLlmErrorCode.INVALID_SAMPLE_PAYLOAD.value,
@@ -390,7 +390,7 @@ def delete_sample_payload(
     request_id = resolve_request_id(request)
     model = db.get(LlmSamplePayloadModel, sample_payload_id)
     if model is None:
-        return _error_response(
+        return _raise_error(
             request_id=request_id,
             status_code=404,
             code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NOT_FOUND.value,

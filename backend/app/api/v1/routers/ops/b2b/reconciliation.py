@@ -9,6 +9,7 @@ from fastapi import APIRouter, Body, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import resolve_application_error_status
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.ops.b2b.reconciliation import (
     ReconciliationActionApiResponse,
@@ -21,7 +22,7 @@ from app.infra.db.session import get_db_session
 from app.services.b2b.ops_reconciliation_api import (
     _enforce_limits,
     _ensure_ops_role,
-    _error_response,
+    _raise_error,
     _record_reconciliation_audit,
 )
 from app.services.b2b.reconciliation_service import (
@@ -93,8 +94,8 @@ def list_reconciliation_issues(
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -102,7 +103,7 @@ def list_reconciliation_issues(
         )
     except B2BReconciliationServiceError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -111,7 +112,7 @@ def list_reconciliation_issues(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -158,8 +159,8 @@ def get_reconciliation_issue_detail(
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -168,7 +169,7 @@ def get_reconciliation_issue_detail(
     except B2BReconciliationServiceError as error:
         db.rollback()
         status_code = 404 if error.code == "reconciliation_issue_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -177,7 +178,7 @@ def get_reconciliation_issue_detail(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -229,8 +230,8 @@ def execute_reconciliation_action(
         return {"data": result.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -239,7 +240,7 @@ def execute_reconciliation_action(
     except B2BReconciliationServiceError as error:
         db.rollback()
         status_code = 404 if error.code == "reconciliation_issue_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -248,7 +249,7 @@ def execute_reconciliation_action(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",

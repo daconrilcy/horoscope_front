@@ -8,7 +8,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.api.v1.errors import api_error_response
+from app.core.exceptions import ApplicationError
 from app.infra.db.models.user import UserModel
 from app.infra.db.repositories.user_repository import UserRepository
 from app.services.llm_generation.chat.chat_guidance_service import (
@@ -41,16 +41,15 @@ class QATargetUserNotFoundError(Exception):
         self.target_email = target_email
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, Any] | None = None,
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,
@@ -103,24 +102,21 @@ def _map_chat_error(error: ChatGuidanceServiceError) -> int:
 
 def _map_natal_error(request_id: str, error: Exception) -> Any:
     if isinstance(error, UserNatalChartServiceError):
-        return _error_response(
-            status_code=404 if error.code == "natal_chart_not_found" else 422,
+        return _raise_error(
             request_id=request_id,
             code=error.code,
             message=error.message,
             details=error.details,
         )
     if isinstance(error, UserBirthProfileServiceError):
-        return _error_response(
-            status_code=404 if error.code == "birth_profile_not_found" else 422,
+        return _raise_error(
             request_id=request_id,
             code=error.code,
             message=error.message,
             details=error.details,
         )
     logger.exception("llm_qa_natal_unexpected_error")
-    return _error_response(
-        status_code=500,
+    return _raise_error(
         request_id=request_id,
         code="internal_error",
         message="unexpected natal qa error",

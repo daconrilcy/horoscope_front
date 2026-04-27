@@ -8,22 +8,21 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
-from app.api.v1.errors import api_error_response
 from app.core.config import settings
+from app.core.exceptions import ApplicationError
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 from app.services.reference_data_service import ReferenceDataServiceError
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, Any],
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,

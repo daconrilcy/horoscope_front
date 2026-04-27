@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, Request
-from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import build_error_response
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.guidance import (
     ContextualGuidanceApiResponse,
@@ -44,16 +44,12 @@ def request_guidance(
 ) -> Any:
     request_id = resolve_request_id(request)
     if current_user.role not in {"user", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role is not allowed",
-                    "details": {"required_roles": "user, admin"},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role is not allowed",
+            details={"required_roles": "user, admin"},
         )
     try:
         parsed_payload = GuidanceRequest.model_validate(payload)
@@ -67,16 +63,12 @@ def request_guidance(
         return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": "invalid_guidance_request",
-                    "message": "guidance request validation failed",
-                    "details": {"errors": error.errors()},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="invalid_guidance_request",
+            message="guidance request validation failed",
+            details={"errors": error.errors()},
         )
     except GuidanceServiceError as error:
         db.rollback()
@@ -90,16 +82,12 @@ def request_guidance(
             status_code = 404
         else:
             status_code = 422
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
 
@@ -122,16 +110,12 @@ def request_contextual_guidance(
 ) -> Any:
     request_id = resolve_request_id(request)
     if current_user.role not in {"user", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role is not allowed",
-                    "details": {"required_roles": "user, admin"},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role is not allowed",
+            details={"required_roles": "user, admin"},
         )
     try:
         parsed_payload = ContextualGuidanceRequest.model_validate(payload)
@@ -147,16 +131,12 @@ def request_contextual_guidance(
         return {"data": response.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": "invalid_contextual_guidance_request",
-                    "message": "contextual guidance request validation failed",
-                    "details": {"errors": error.errors()},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="invalid_contextual_guidance_request",
+            message="contextual guidance request validation failed",
+            details={"errors": error.errors()},
         )
     except GuidanceServiceError as error:
         db.rollback()
@@ -168,14 +148,10 @@ def request_contextual_guidance(
             status_code = 403
         else:
             status_code = 422
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )

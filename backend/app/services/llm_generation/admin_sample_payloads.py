@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser
 from app.api.v1.constants import BLOCKED_CATEGORIES, LOCALE_PATTERN
-from app.api.v1.errors import api_error_response
 from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
 from app.api.v1.schemas.routers.admin.llm.sample_payloads import AdminLlmSamplePayload
+from app.core.exceptions import ApplicationError
 from app.core.sensitive_data import classify_field
 from app.domain.llm.governance.feature_taxonomy import (
     is_supported_feature,
@@ -98,11 +98,15 @@ def _normalize_scope_dimensions(
     return normalized_subfeature or "", normalized_plan
 
 
-def _error_response(
-    *, request_id: str, status_code: int, code: str, message: str, details: dict[str, Any]
+def _raise_error(
+    *,
+    request_id: str,
+    code: str,
+    message: str,
+    details: dict[str, Any],
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,
@@ -148,9 +152,8 @@ def _to_api_payload(model: LlmSamplePayloadModel) -> AdminLlmSamplePayload:
 def _sample_payload_name_conflict_response(
     *, request_id: str, feature: str, subfeature: str, plan: str, locale: str
 ) -> Any:
-    return _error_response(
+    return _raise_error(
         request_id=request_id,
-        status_code=409,
         code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NAME_CONFLICT.value,
         message="a sample payload with this name already exists for this canonical scope",
         details={"feature": feature, "subfeature": subfeature, "plan": plan, "locale": locale},
@@ -160,9 +163,8 @@ def _sample_payload_name_conflict_response(
 def _sample_payload_default_conflict_response(
     *, request_id: str, feature: str, subfeature: str, plan: str, locale: str
 ) -> Any:
-    return _error_response(
+    return _raise_error(
         request_id=request_id,
-        status_code=409,
         code=AdminLlmErrorCode.SAMPLE_PAYLOAD_DEFAULT_CONFLICT.value,
         message="another default sample payload already exists for this canonical scope",
         details={"feature": feature, "subfeature": subfeature, "plan": plan, "locale": locale},
@@ -172,9 +174,8 @@ def _sample_payload_default_conflict_response(
 def _sample_payload_generic_conflict_response(
     *, request_id: str, feature: str, subfeature: str, plan: str, locale: str
 ) -> Any:
-    return _error_response(
+    return _raise_error(
         request_id=request_id,
-        status_code=409,
         code=AdminLlmErrorCode.SAMPLE_PAYLOAD_CONFLICT.value,
         message="sample payload update conflicts with existing data",
         details={"feature": feature, "subfeature": subfeature, "plan": plan, "locale": locale},

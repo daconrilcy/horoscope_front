@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import (
     AuthenticatedUser,
 )
-from app.api.v1.errors import api_error_response
+from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigData,
@@ -19,16 +19,15 @@ from app.services.llm_generation.guidance.persona_config_service import (
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService, AuditServiceError
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, Any],
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,
@@ -44,8 +43,7 @@ def _enforce_limits(*, user: AuthenticatedUser, request_id: str, operation: str)
         )
         check_rate_limit(key=f"ops_persona:user:{user.id}:{operation}", limit=30, window_seconds=60)
     except RateLimitError as error:
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -102,8 +100,7 @@ def _audit_failure_or_503(
         db.commit()
     except Exception:
         db.rollback()
-        return _error_response(
-            status_code=503,
+        return _raise_error(
             request_id=request_id,
             code="audit_unavailable",
             message="audit service is unavailable",
@@ -150,8 +147,7 @@ def _persona_profile_mutation(
         )
         if audit_error is not None:
             return audit_error
-        return _error_response(
-            status_code=422,
+        return _raise_error(
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -159,8 +155,7 @@ def _persona_profile_mutation(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
-            status_code=503,
+        return _raise_error(
             request_id=request_id,
             code="audit_unavailable",
             message="audit service is unavailable",

@@ -438,8 +438,8 @@ def test_api_error_contract_is_centralized() -> None:
     assert offenders == []
 
 
-def test_router_error_helpers_delegate_to_central_factory() -> None:
-    """Les helpers d'erreur locaux doivent utiliser la fabrique documentée."""
+def test_router_error_helpers_do_not_recreate_response_envelopes() -> None:
+    """Les helpers d'erreur locaux ne doivent plus recréer l'enveloppe HTTP."""
     helper_names = {"_audit_unavailable_response", "_create_error_response", "_error_response"}
     offenders: list[str] = []
     for path in _api_v1_python_files():
@@ -448,12 +448,7 @@ def test_router_error_helpers_delegate_to_central_factory() -> None:
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef) or node.name not in helper_names:
                 continue
-            uses_factory = any(
-                isinstance(child, ast.Name) and child.id == "api_error_response"
-                for child in ast.walk(node)
-            )
-            if not uses_factory:
-                offenders.append(f"{relative_path}:{node.lineno} {node.name}")
+            offenders.append(f"{relative_path}:{node.lineno} {node.name}")
 
     assert offenders == []
 
@@ -498,27 +493,10 @@ def test_api_v1_schema_files_are_under_canonical_roots() -> None:
     assert offenders == []
 
 
-def test_api_v1_error_model_uses_base_class_inheritance() -> None:
-    """La centralisation des erreurs HTTP doit exposer une classe parente spécialisée."""
-    from app.api.v1.errors import (
-        ApiV1BadRequestError,
-        ApiV1ConflictError,
-        ApiV1ForbiddenError,
-        ApiV1HttpError,
-        ApiV1NotFoundError,
-        ApiV1RateLimitError,
-        ApiV1UnauthorizedError,
-    )
-
-    subclasses = {
-        ApiV1BadRequestError,
-        ApiV1ConflictError,
-        ApiV1ForbiddenError,
-        ApiV1NotFoundError,
-        ApiV1RateLimitError,
-        ApiV1UnauthorizedError,
-    }
-    assert all(issubclass(error_class, ApiV1HttpError) for error_class in subclasses)
+def test_legacy_api_v1_errors_module_is_not_importable() -> None:
+    """L'ancien module d'erreurs API v1 ne doit pas rester comme facade."""
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("app.api.v1.errors")
 
 
 def test_target_api_files_stay_below_responsibility_limits() -> None:

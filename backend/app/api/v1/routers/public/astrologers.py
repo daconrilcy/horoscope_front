@@ -30,7 +30,7 @@ from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.session import get_db_session
 from app.services.user_profile.public_astrologers import (
     _build_user_alias,
-    _error_response,
+    _raise_error,
 )
 
 router = APIRouter(prefix="/v1/astrologers", tags=["astrologers"])
@@ -82,7 +82,7 @@ def get_astrologer(
     try:
         persona_uuid = uuid.UUID(id)
     except (ValueError, TypeError):
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="astrologer_not_found",
@@ -101,7 +101,7 @@ def get_astrologer(
     )
     profile = db.execute(stmt).scalar_one_or_none()
     if not profile:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="astrologer_not_found",
@@ -242,7 +242,7 @@ def update_astrologer_review(
     request_id = resolve_request_id(request)
 
     if not current_user:
-        return _error_response(
+        return _raise_error(
             status_code=401,
             request_id=request_id,
             code="unauthorized",
@@ -253,7 +253,7 @@ def update_astrologer_review(
     try:
         persona_uuid = uuid.UUID(id)
     except (ValueError, TypeError):
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="astrologer_not_found",
@@ -264,7 +264,7 @@ def update_astrologer_review(
     # Check persona exists
     persona = db.get(LlmPersonaModel, persona_uuid)
     if not persona:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="astrologer_not_found",

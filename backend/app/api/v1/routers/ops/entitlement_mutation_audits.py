@@ -56,11 +56,11 @@ from app.services.canonical_entitlement.audit.api_mutation_audits import (
     _alert_event_to_item,
     _enforce_limits,
     _ensure_ops_role,
-    _error_response,
     _load_active_rule_applications_by_event_ids,
     _load_handlings_by_event_ids,
     _load_reviews_by_audit_ids,
     _normalize_optional_rule_field,
+    _raise_error,
     _row_to_queue_item,
     _to_item,
     build_mutation_audit_list_response,
@@ -216,7 +216,7 @@ def get_review_queue_summary(
         date_to=date_to,
     )
     if sql_count > _DIFF_FILTER_MAX:
-        return _error_response(
+        return _raise_error(
             status_code=400,
             request_id=request_id,
             code="diff_filter_result_set_too_large",
@@ -314,7 +314,7 @@ def get_review_queue(
         date_to=date_to,
     )
     if sql_count > _DIFF_FILTER_MAX:
-        return _error_response(
+        return _raise_error(
             status_code=400,
             request_id=request_id,
             code="diff_filter_result_set_too_large",
@@ -624,7 +624,7 @@ def create_alert_suppression_rule(
                 },
             )
 
-        return _error_response(
+        return _raise_error(
             status_code=409,
             request_id=request_id,
             code="suppression_rule_conflict",
@@ -693,7 +693,7 @@ def update_alert_suppression_rule(
 
     rule = db.get(CanonicalEntitlementMutationAlertSuppressionRuleModel, rule_id)
     if not rule:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="rule_not_found",
@@ -910,7 +910,7 @@ def handle_alert_event(
         )
         db.commit()
     except AlertEventNotFoundError:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="alert_event_not_found",
@@ -969,7 +969,7 @@ def get_alert_handling_history(
 
     alert_event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
     if alert_event is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="alert_event_not_found",
@@ -1055,7 +1055,7 @@ def get_alert_attempts(
 
     event = db.get(CanonicalEntitlementMutationAlertEventModel, alert_event_id)
     if event is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="alert_event_not_found",
@@ -1141,7 +1141,7 @@ def retry_alert(
             alert_event_id=alert_event_id,
         )
     except AlertEventNotFoundError:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="alert_event_not_found",
@@ -1149,7 +1149,7 @@ def retry_alert(
             details={"alert_event_id": alert_event_id},
         )
     except AlertEventNotRetryableError as exc:
-        return _error_response(
+        return _raise_error(
             status_code=409,
             request_id=request_id,
             code="alert_event_not_retryable",
@@ -1213,7 +1213,7 @@ def get_mutation_audit(
 
     audit = CanonicalEntitlementMutationAuditQueryService.get_mutation_audit_by_id(db, audit_id)
     if audit is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="audit_not_found",
@@ -1269,7 +1269,7 @@ def post_mutation_audit_review(
         )
         db.commit()
     except AuditNotFoundError:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="audit_not_found",
@@ -1329,7 +1329,7 @@ def get_review_history(
 
     audit = db.get(CanonicalEntitlementMutationAuditModel, audit_id)
     if audit is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="audit_not_found",

@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import resolve_application_error_status
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.billing import (
     BillingPlansApiResponse,
@@ -31,10 +32,9 @@ from app.services.billing.public_billing import (
     _create_stripe_subscription_flow_session_response,
     _enforce_billing_limits,
     _ensure_user_role,
-    _error_response,
+    _raise_error,
     _record_audit_event,
     _record_pricing_event_safely,
-    _resolve_portal_service_status_code,
 )
 from app.services.billing.service import (
     BillingService,
@@ -244,7 +244,7 @@ def create_stripe_checkout_session(
             db.rollback()
             return _audit_unavailable_response(request_id=request_id)
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_checkout_request",
@@ -278,7 +278,7 @@ def create_stripe_checkout_session(
             return _audit_unavailable_response(request_id=request_id)
 
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -346,7 +346,7 @@ def create_stripe_customer_portal_session(
 
     except StripeCustomerPortalServiceError as error:
         db.rollback()
-        status_code = _resolve_portal_service_status_code(error.code)
+        status_code = resolve_application_error_status(error.code)
 
         try:
             _record_audit_event(
@@ -365,7 +365,7 @@ def create_stripe_customer_portal_session(
             return _audit_unavailable_response(request_id=request_id)
 
         db.commit()
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -510,8 +510,8 @@ def reactivate_stripe_subscription(
             db.rollback()
             return _audit_unavailable_response(request_id=request_id)
         db.commit()
-        return _error_response(
-            status_code=_resolve_portal_service_status_code(error.code),
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -603,8 +603,8 @@ def create_stripe_subscription_upgrade_payment(
             db.rollback()
             return _audit_unavailable_response(request_id=request_id)
         db.commit()
-        return _error_response(
-            status_code=_resolve_portal_service_status_code(error.code),
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -636,7 +636,7 @@ async def stripe_webhook(
 
     if not settings.stripe_webhook_secret:
         logger.error("stripe_webhook: STRIPE_WEBHOOK_SECRET is not configured")
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="webhook_secret_not_configured",
@@ -680,7 +680,7 @@ async def stripe_webhook(
     except StripeWebhookServiceError as error:
         db.rollback()
         if error.code == "invalid_signature":
-            return _error_response(
+            return _raise_error(
                 status_code=400,
                 request_id=request_id,
                 code="invalid_signature",

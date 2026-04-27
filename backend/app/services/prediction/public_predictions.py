@@ -17,21 +17,17 @@ def _resolve_daily_prediction_service_error(
     error: DailyPredictionServiceError,
     *,
     not_found_codes: set[str] | None = None,
-) -> tuple[int, dict[str, str]]:
-    """Convertit une erreur de prédiction en statut et détail API."""
+) -> dict[str, str]:
+    """Convertit une erreur de prédiction en détail applicatif stable."""
     if error.code in ("compute_failed", "timeout"):
-        return (
-            503,
-            {
-                "code": error.code,
-                "message": (
-                    "Service temporairement indisponible. Veuillez réessayer dans quelques minutes."
-                ),
-            },
-        )
+        return {
+            "code": error.code,
+            "message": (
+                "Service temporairement indisponible. Veuillez réessayer dans quelques minutes."
+            ),
+        }
 
-    status_code = 404 if error.code in (not_found_codes or set()) else 422
-    return status_code, {"code": error.code, "message": error.message}
+    return {"code": error.code, "message": error.message}
 
 
 def _extract_llm_narrative_payload(assembled: dict[str, Any]) -> dict[str, Any] | None:

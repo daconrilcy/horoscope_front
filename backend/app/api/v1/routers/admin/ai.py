@@ -3,11 +3,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
+from app.api.errors import raise_http_error
 from app.api.v1.schemas.routers.admin.ai import (
     AdminAiMetricsResponse,
     AdminAiUseCaseDetailResponse,
@@ -165,7 +166,7 @@ def get_use_case_detail(
         summary_stmt = summary_stmt.where(LlmCallLogModel.feature == use_case)
     s = db.execute(summary_stmt).first()
     if not s or s.call_count == 0:
-        raise HTTPException(status_code=404, detail="No data for this use case")
+        raise_http_error(status_code=404, detail="No data for this use case")
 
     error_rate = (s.error_count / s.call_count) if s.call_count > 0 else 0
     metrics = {

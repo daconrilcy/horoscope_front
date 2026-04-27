@@ -6,6 +6,7 @@ from fastapi import Depends, Header, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.api.errors.raising import ApiHttpError
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
@@ -22,7 +23,9 @@ class AuthenticatedEnterpriseClient(BaseModel):
     key_prefix: str
 
 
-class EnterpriseApiKeyAuthenticationError(Exception):
+class EnterpriseApiKeyAuthenticationError(ApiHttpError):
+    """Erreur applicative d'authentification B2B."""
+
     def __init__(
         self,
         code: str,
@@ -30,11 +33,12 @@ class EnterpriseApiKeyAuthenticationError(Exception):
         status_code: int,
         details: dict[str, Any] | None = None,
     ) -> None:
-        self.code = code
-        self.message = message
-        self.status_code = status_code
-        self.details = details or {}
-        super().__init__(message)
+        super().__init__(
+            code=code,
+            message=message,
+            status_code=status_code,
+            details=details or {},
+        )
 
 
 def _record_auth_failure_audit(

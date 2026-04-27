@@ -36,8 +36,8 @@ from app.infra.db.session import get_db_session
 from app.services.ops.admin_content import (
     _ensure_config_texts_seeded,
     _ensure_editorial_templates_seeded,
-    _error_response,
     _get_latest_ruleset,
+    _raise_error,
     _record_audit_event,
     _serialize_calibration_value,
     _to_config_text_data,
@@ -82,7 +82,7 @@ def update_content_text(
     _ensure_config_texts_seeded(db)
     row = db.scalar(select(ConfigTextModel).where(ConfigTextModel.key == key).limit(1))
     if row is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="content_text_not_found",
@@ -143,7 +143,7 @@ def update_admin_feature_flag(
         )
     except FeatureFlagServiceError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -224,7 +224,7 @@ def get_editorial_template_detail(
         .order_by(EditorialTemplateVersionModel.version_number.desc())
     ).all()
     if not versions:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="editorial_template_not_found",
@@ -332,7 +332,7 @@ def rollback_editorial_template(
         .order_by(EditorialTemplateVersionModel.version_number.desc())
     ).all()
     if not versions:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="editorial_template_not_found",
@@ -342,7 +342,7 @@ def rollback_editorial_template(
     current_active = next((version for version in versions if version.status == "published"), None)
     target = next((version for version in versions if version.id == payload.version_id), None)
     if target is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="editorial_template_version_not_found",
@@ -436,7 +436,7 @@ def update_calibration_rule(
     request_id = resolve_request_id(request)
     ruleset = _get_latest_ruleset(db)
     if ruleset is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="ruleset_not_found",
@@ -452,7 +452,7 @@ def update_calibration_rule(
         .limit(1)
     )
     if row is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="calibration_rule_not_found",
@@ -463,7 +463,7 @@ def update_calibration_rule(
     try:
         row.param_value = _serialize_calibration_value(payload.value, row.data_type)
     except ValueError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_calibration_rule_value",

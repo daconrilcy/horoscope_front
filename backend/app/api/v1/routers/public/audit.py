@@ -21,7 +21,7 @@ from app.services.ops.audit_service import (
 from app.services.ops.public_audit import (
     _enforce_audit_limits,
     _ensure_allowed_role,
-    _error_response,
+    _raise_error,
 )
 
 router = APIRouter(prefix="/v1/audit", tags=["audit"])
@@ -74,7 +74,7 @@ def list_audit_events(
         result = AuditService.list_events(db, filters=filters)
         return {"data": result.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except AuditServiceError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,

@@ -4,11 +4,11 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
-from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import build_error_response
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.auth import (
     AuthApiResponse,
@@ -116,16 +116,12 @@ def register(
             details={"error_code": "email_already_registered"},
         )
         db.commit()
-        return JSONResponse(
+        return build_error_response(
             status_code=409,
-            content={
-                "error": {
-                    "code": "email_already_registered",
-                    "message": "email is already registered",
-                    "details": {"field": "email"},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="email_already_registered",
+            message="email is already registered",
+            details={"field": "email"},
         )
     except AuthServiceError as error:
         db.rollback()
@@ -142,16 +138,12 @@ def register(
         )
         db.commit()
         status_code = 409 if error.code == "email_already_registered" else 400
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
     except AuditWriteError:
         db.rollback()
@@ -194,16 +186,12 @@ def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db_
         )
         db.commit()
         status_code = 401 if error.code == "invalid_credentials" else 400
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
     except AuditWriteError:
         db.rollback()
@@ -248,16 +236,12 @@ def refresh(
             details={"error_code": error.code},
         )
         db.commit()
-        return JSONResponse(
+        return build_error_response(
             status_code=401,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
     except AuditWriteError:
         db.rollback()

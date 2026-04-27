@@ -7,6 +7,7 @@ from fastapi import Depends, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.api.errors.raising import ApiHttpError
 from app.core.rbac import is_valid_role
 from app.core.security import SecurityError, decode_token
 from app.infra.db.repositories.user_repository import UserRepository
@@ -21,7 +22,9 @@ class AuthenticatedUser(BaseModel):
     permissions: list[str] = []
 
 
-class UserAuthenticationError(Exception):
+class UserAuthenticationError(ApiHttpError):
+    """Erreur applicative d'authentification utilisateur."""
+
     def __init__(
         self,
         code: str,
@@ -29,11 +32,12 @@ class UserAuthenticationError(Exception):
         status_code: int,
         details: dict[str, Any] | None = None,
     ) -> None:
-        self.code = code
-        self.message = message
-        self.status_code = status_code
-        self.details = details or {}
-        super().__init__(message)
+        super().__init__(
+            code=code,
+            message=message,
+            status_code=status_code,
+            details=details or {},
+        )
 
 
 def require_authenticated_user(

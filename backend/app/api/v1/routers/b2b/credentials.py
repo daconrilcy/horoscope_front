@@ -18,7 +18,7 @@ from app.infra.db.session import get_db_session
 from app.services.b2b.api_credentials import (
     _enforce_limits,
     _ensure_enterprise_admin_role,
-    _error_response,
+    _raise_error,
     _record_audit_event,
 )
 from app.services.b2b.enterprise_credentials_service import (
@@ -61,7 +61,7 @@ def list_enterprise_credentials(
         status_code = (
             404 if error.code in {"enterprise_account_not_found", "credential_not_found"} else 422
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -125,7 +125,7 @@ def generate_enterprise_credential(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -135,7 +135,7 @@ def generate_enterprise_credential(
         status_code = (
             404 if error.code in {"enterprise_account_not_found", "credential_not_found"} else 422
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -144,7 +144,7 @@ def generate_enterprise_credential(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -208,7 +208,7 @@ def rotate_enterprise_credential(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -218,7 +218,7 @@ def rotate_enterprise_credential(
         status_code = (
             404 if error.code in {"enterprise_account_not_found", "credential_not_found"} else 422
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -227,7 +227,7 @@ def rotate_enterprise_credential(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",

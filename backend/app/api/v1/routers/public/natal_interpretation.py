@@ -18,6 +18,7 @@ from app.api.v1.schemas.routers.public.natal_interpretation import (
     NatalPdfTemplateListResponse,
 )
 from app.core.config import settings
+from app.core.exceptions import ApplicationError
 from app.core.request_id import resolve_request_id
 from app.domain.llm.runtime.adapter import AIEngineAdapterError
 from app.domain.llm.runtime.contracts import (
@@ -41,7 +42,7 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 from app.services.llm_generation.natal.public_interpretation import (
     _build_natal_entitlement_info,
-    _create_error_response,
+    _raise_error,
 )
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
 from app.services.user_profile.birth_profile_service import (
@@ -97,7 +98,7 @@ async def interpret_natal_chart(
             variant_code = entitlement_result.variant_code
         except NatalChartLongQuotaExceededError as error:
             db.rollback()
-            return _create_error_response(
+            return _raise_error(
                 status_code=429,
                 code="natal_chart_long_quota_exceeded",
                 message="quota d'interprétations complètes du thème natal épuisé",
@@ -112,7 +113,7 @@ async def interpret_natal_chart(
             )
         except NatalChartLongAccessDeniedError as error:
             db.rollback()
-            return _create_error_response(
+            return _raise_error(
                 status_code=403,
                 code="natal_chart_long_access_denied",
                 message="accès à l'interprétation complète du thème natal refusé",
@@ -133,7 +134,7 @@ async def interpret_natal_chart(
         except (UserNatalChartServiceError, UserBirthProfileServiceError) as e:
             db.rollback()
             if e.code == "natal_chart_not_found" or e.code == "birth_profile_not_found":
-                return _create_error_response(
+                return _raise_error(
                     status_code=404,
                     code="natal_chart_not_found",
                     message="No natal chart found for this user. Please generate one first.",
@@ -188,48 +189,47 @@ async def interpret_natal_chart(
             status_code = 500
             code = "gateway_config_error"
 
-        return _create_error_response(status_code, code, str(e), request_id)
+        return _raise_error(status_code, code, str(e), request_id)
     except UnknownUseCaseError as e:
         db.rollback()
         logger.error(f"Unknown use case error: {e}")
-        return _create_error_response(404, "unknown_use_case", str(e), request_id)
+        return _raise_error(404, "unknown_use_case", str(e), request_id)
     except GatewayConfigError as e:
         db.rollback()
         logger.error(f"Gateway configuration error: {e}")
         code = "gateway_config_error"
         if e.error_code:
             code = e.error_code
-        return _create_error_response(500, code, str(e), request_id)
+        return _raise_error(500, code, str(e), request_id)
     except InputValidationError as e:
         db.rollback()
         # Note: Local catch here to ensure 422 response for natal interpretation,
         # overriding the global 400 handler in main.py.
-        return _create_error_response(422, "natal_input_invalid", str(e), request_id)
+        return _raise_error(422, "natal_input_invalid", str(e), request_id)
     except OutputValidationError:
         db.rollback()
-        return _create_error_response(
+        return _raise_error(
             502, "interpretation_failed", "Failed to generate a valid interpretation.", request_id
         )
     except RuntimeError as e:
         db.rollback()
         if "no structured output" in str(e) or "empty complete interpretation" in str(e):
-            return _create_error_response(502, "interpretation_failed", str(e), request_id)
+            return _raise_error(502, "interpretation_failed", str(e), request_id)
         raise
     except UpstreamRateLimitError:
         db.rollback()
-        return _create_error_response(
-            429, "llm_rate_limit", "Upstream rate limit reached.", request_id
-        )
+        return _raise_error(429, "llm_rate_limit", "Upstream rate limit reached.", request_id)
     except UpstreamTimeoutError:
         db.rollback()
-        return _create_error_response(
-            504, "llm_upstream_timeout", "Upstream request timed out.", request_id
-        )
+        return _raise_error(504, "llm_upstream_timeout", "Upstream request timed out.", request_id)
     except UpstreamError:
         db.rollback()
-        return _create_error_response(
+        return _raise_error(
             503, "llm_upstream_error", "LLM provider is currently unavailable.", request_id
         )
+    except ApplicationError:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         logger.exception(
@@ -247,7 +247,7 @@ async def interpret_natal_chart(
                 "exception_type": type(e).__name__,
                 "exception_message": str(e),
             }
-        return _create_error_response(
+        return _raise_error(
             500, "internal_error", "An unexpected error occurred.", request_id, details=details
         )
 
@@ -292,9 +292,7 @@ async def list_natal_pdf_templates(
         }
     except Exception as e:
         logger.exception("Error listing natal PDF templates request_id=%s error=%s", request_id, e)
-        return _create_error_response(
-            500, "internal_error", "Failed to list PDF templates", request_id
-        )
+        return _raise_error(500, "internal_error", "Failed to list PDF templates", request_id)
 
 
 @router.get(
@@ -372,9 +370,7 @@ async def list_natal_interpretations(
         }
     except Exception as e:
         logger.exception(f"Error listing interpretations: {e}")
-        return _create_error_response(
-            500, "internal_error", "Failed to list interpretations", request_id
-        )
+        return _raise_error(500, "internal_error", "Failed to list interpretations", request_id)
 
 
 @router.get(
@@ -405,7 +401,7 @@ async def get_natal_interpretation(
         interpretation_id=interpretation_id,
     )
     if not item:
-        return _create_error_response(
+        return _raise_error(
             404, "interpretation_not_found", "Interpretation not found or access denied", request_id
         )
 
@@ -468,7 +464,7 @@ async def delete_natal_interpretation(
             current_user.id,
             interpretation_id,
         )
-        return _create_error_response(
+        return _raise_error(
             404, "interpretation_not_found", "Interpretation not found or access denied", request_id
         )
 
@@ -514,7 +510,7 @@ async def download_natal_interpretation_pdf(
         interpretation_id=interpretation_id,
     )
     if not item:
-        return _create_error_response(
+        return _raise_error(
             404, "interpretation_not_found", "Interpretation not found or access denied", request_id
         )
 
@@ -547,6 +543,4 @@ async def download_natal_interpretation_pdf(
         )
     except Exception as e:
         logger.exception(f"Error generating PDF: {e}")
-        return _create_error_response(
-            500, "pdf_generation_failed", "Failed to generate PDF", request_id
-        )
+        return _raise_error(500, "pdf_generation_failed", "Failed to generate PDF", request_id)

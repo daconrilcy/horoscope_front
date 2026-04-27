@@ -24,8 +24,8 @@ from app.ops.llm.services import replay
 from app.services.llm_generation.admin_manual_execution import _record_audit_event
 from app.services.llm_generation.admin_prompts import (
     _call_log_scope_filter,
-    _error_response,
     _legacy_removed_call_log_filter,
+    _raise_error,
 )
 
 
@@ -197,8 +197,7 @@ async def replay_request(
 
         return {"data": result, "meta": {"request_id": request_id}}
     except Exception as exc:
-        return _error_response(
-            status_code=403 if "disabled" in str(exc) else 400,
+        return _raise_error(
             request_id=request_id,
             code=AdminLlmErrorCode.REPLAY_FAILED.value,
             message=str(exc),

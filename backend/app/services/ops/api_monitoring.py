@@ -8,20 +8,19 @@ from typing import Any
 from app.api.dependencies.auth import (
     AuthenticatedUser,
 )
-from app.api.v1.errors import api_error_response
+from app.core.exceptions import ApplicationError
 from app.core.rate_limit import RateLimitError, check_rate_limit
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, Any],
+    **_: Any,
 ) -> Any:
-    return api_error_response(
-        status_code=status_code,
+    raise ApplicationError(
         request_id=request_id,
         code=code,
         message=message,
@@ -39,8 +38,7 @@ def _enforce_limits(*, user: AuthenticatedUser, request_id: str, operation: str)
             key=f"ops_monitoring:user:{user.id}:{operation}", limit=30, window_seconds=60
         )
     except RateLimitError as error:
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
             request_id=request_id,
             code=error.code,
             message=error.message,

@@ -7,12 +7,12 @@ from time import monotonic
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import build_error_response
 from app.api.v1.constants import VALID_ASTROLOGER_PROFILES
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.public.users import (
@@ -83,16 +83,12 @@ def get_me_birth_data(
         profile = UserBirthProfileService.get_for_user(db, user_id=current_user.id)
     except UserBirthProfileServiceError as error:
         status_code = 404 if error.code == "birth_profile_not_found" else 422
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
     astro_profile: UserAstroProfileData | None = None
@@ -108,16 +104,12 @@ def get_me_birth_data(
             "unexpected astro profile failure",
             extra={"user_id": current_user.id, "request_id": request_id},
         )
-        return JSONResponse(
+        return build_error_response(
             status_code=500,
-            content={
-                "error": {
-                    "code": "astro_profile_computation_error",
-                    "message": "astro profile could not be computed",
-                    "details": {},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="astro_profile_computation_error",
+            message="astro profile could not be computed",
+            details={},
         )
 
     data = UserBirthProfileWithAstroData(
@@ -170,16 +162,12 @@ async def get_me_latest_natal_chart(
         status_code = (
             404 if error.code in {"natal_chart_not_found", "birth_profile_not_found"} else 422
         )
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
     response_data = latest.model_dump(mode="json")
@@ -219,16 +207,12 @@ async def get_me_latest_natal_chart(
             "unexpected astro profile failure",
             extra={"user_id": current_user.id, "request_id": request_id},
         )
-        return JSONResponse(
+        return build_error_response(
             status_code=500,
-            content={
-                "error": {
-                    "code": "astro_profile_computation_error",
-                    "message": "astro profile could not be computed",
-                    "details": {},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="astro_profile_computation_error",
+            message="astro profile could not be computed",
+            details={},
         )
 
     return {"data": response_data, "meta": {"request_id": request_id}}
@@ -260,31 +244,23 @@ async def get_me_natal_chart_interpretation(
         status_code = (
             404 if error.code in {"natal_chart_not_found", "birth_profile_not_found"} else 422
         )
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
     try:
         profile = UserBirthProfileService.get_for_user(db, user_id=current_user.id)
     except UserBirthProfileServiceError as error:
-        return JSONResponse(
+        return build_error_response(
             status_code=404,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
     try:
@@ -308,16 +284,12 @@ async def get_me_natal_chart_interpretation(
             status_code = 429
         else:
             status_code = 503
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
 
@@ -339,16 +311,12 @@ def get_natal_chart_consistency(
 ) -> Any:
     request_id = resolve_request_id(request)
     if current_user.role not in {"support", "ops", "admin"}:
-        return JSONResponse(
+        return build_error_response(
             status_code=403,
-            content={
-                "error": {
-                    "code": "insufficient_role",
-                    "message": "role is not allowed",
-                    "details": {"required_roles": "support,ops,admin"},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="insufficient_role",
+            message="role is not allowed",
+            details={"required_roles": "support,ops,admin"},
         )
 
     try:
@@ -374,16 +342,12 @@ def get_natal_chart_consistency(
         status_code = (
             404 if error.code in {"no_comparable_charts", "birth_profile_not_found"} else 422
         )
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
 
@@ -417,43 +381,31 @@ def upsert_me_birth_data(
         return {"data": profile.model_dump(), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": "invalid_birth_input",
-                    "message": "birth input validation failed",
-                    "details": {"errors": error.errors()},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="invalid_birth_input",
+            message="birth input validation failed",
+            details={"errors": error.errors()},
         )
     except BirthPreparationError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
     except UserBirthProfileServiceError as error:
         db.rollback()
         status_code = 404 if error.code == "user_not_found" else 422
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
     except SQLAlchemyError:
         db.rollback()
@@ -461,16 +413,12 @@ def upsert_me_birth_data(
             "birth profile persistence failed",
             extra={"user_id": current_user.id, "request_id": request_id},
         )
-        return JSONResponse(
+        return build_error_response(
             status_code=500,
-            content={
-                "error": {
-                    "code": "birth_profile_persistence_error",
-                    "message": "birth profile could not be persisted",
-                    "details": {},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="birth_profile_persistence_error",
+            message="birth profile could not be persisted",
+            details={},
         )
 
 
@@ -510,16 +458,12 @@ def generate_me_natal_chart(
         return {"data": generated.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": "invalid_natal_chart_request",
-                    "message": "natal chart request validation failed",
-                    "details": {"errors": error.errors()},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="invalid_natal_chart_request",
+            message="natal chart request validation failed",
+            details={"errors": error.errors()},
         )
     except UserNatalChartServiceError as error:
         db.rollback()
@@ -558,16 +502,12 @@ def generate_me_natal_chart(
             status_code = 503
         else:
             status_code = 422
-        return JSONResponse(
+        return build_error_response(
             status_code=status_code,
-            content={
-                "error": {
-                    "code": error.code,
-                    "message": error.message,
-                    "details": error.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
 
@@ -588,16 +528,12 @@ def get_me_settings(
     request_id = resolve_request_id(request)
     user = db.get(UserModel, current_user.id)
     if not user:
-        return JSONResponse(
+        return build_error_response(
             status_code=404,
-            content={
-                "error": {
-                    "code": "user_not_found",
-                    "message": "user not found",
-                    "details": {},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="user_not_found",
+            message="user not found",
+            details={},
         )
 
     profile = getattr(user, "astrologer_profile", "standard")
@@ -633,30 +569,22 @@ def patch_me_settings(
         payload.astrologer_profile is not None
         and payload.astrologer_profile not in VALID_ASTROLOGER_PROFILES
     ):
-        return JSONResponse(
+        return build_error_response(
             status_code=422,
-            content={
-                "error": {
-                    "code": "invalid_astrologer_profile",
-                    "message": f"profile must be one of {VALID_ASTROLOGER_PROFILES}",
-                    "details": {"allowed_values": list(VALID_ASTROLOGER_PROFILES)},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="invalid_astrologer_profile",
+            message=f"profile must be one of {VALID_ASTROLOGER_PROFILES}",
+            details={"allowed_values": list(VALID_ASTROLOGER_PROFILES)},
         )
 
     user = db.get(UserModel, current_user.id)
     if not user:
-        return JSONResponse(
+        return build_error_response(
             status_code=404,
-            content={
-                "error": {
-                    "code": "user_not_found",
-                    "message": "user not found",
-                    "details": {},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="user_not_found",
+            message="user not found",
+            details={},
         )
 
     # Partial update logic

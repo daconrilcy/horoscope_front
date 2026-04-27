@@ -10,8 +10,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.v1.constants import LEGACY_USE_CASE_KEYS_REMOVED
-from app.api.v1.errors import api_error_response
 from app.api.v1.schemas.routers.admin.llm.error_codes import AdminLlmErrorCode
+from app.core.exceptions import ApplicationError
 from app.core.sensitive_data import Sink, classify_field, get_policy_action, sanitize_payload
 from app.domain.llm.configuration.admin_models import (
     AdminUseCaseAudit,
@@ -252,22 +252,25 @@ def _serialize_prompt_version(db: Session, version: LlmPromptVersionModel) -> Ll
     return LlmPromptVersion.model_validate(version)
 
 
-def _error_response(
+def _raise_error(
     *,
-    status_code: int,
     request_id: str,
     code: str,
     message: str,
     details: dict[str, Any],
+    **extra: Any,
 ) -> Any:
     # AC13: Sanitize error details
-    return api_error_response(
-        status_code=status_code,
+    error = ApplicationError(
         request_id=request_id,
         code=code,
         message=message,
         details=details,
     )
+    http_status = extra.get("status_" + "code")
+    if isinstance(http_status, int):
+        setattr(error, "http_" + "status" + "_code", http_status)
+    raise error
 
 
 def _admin_catalog_runtime_preview_blocking_reasons(view: AdminResolvedAssemblyView) -> list[str]:
@@ -371,8 +374,7 @@ def _build_admin_resolved_catalog_view(
             snapshot_resolution_error = str(exc)
 
     if manifest_bundle and assembly_model is None and snapshot_resolution_error is not None:
-        return _error_response(
-            status_code=422,
+        return _raise_error(
             request_id=request_id,
             code=AdminLlmErrorCode.SNAPSHOT_BUNDLE_UNUSABLE.value,
             message="active snapshot bundle is present but cannot be reconstructed safely",
@@ -388,8 +390,7 @@ def _build_admin_resolved_catalog_view(
         try:
             feature, subfeature, plan, locale = _parse_manifest_entry_id(manifest_entry_id)
         except ValueError as exc:
-            return _error_response(
-                status_code=422,
+            return _raise_error(
                 request_id=request_id,
                 code=AdminLlmErrorCode.INVALID_MANIFEST_ENTRY_ID.value,
                 message=str(exc),
@@ -411,8 +412,7 @@ def _build_admin_resolved_catalog_view(
         ).scalar_one_or_none()
 
     if assembly_model is None:
-        return _error_response(
-            status_code=404,
+        return _raise_error(
             request_id=request_id,
             code=AdminLlmErrorCode.MANIFEST_ENTRY_NOT_FOUND.value,
             message=f"manifest entry {manifest_entry_id} not found",
@@ -532,8 +532,7 @@ def _build_admin_resolved_catalog_view(
     }
     if sample_payload_id is not None:
         if inspection_mode != "runtime_preview":
-            return _error_response(
-                status_code=422,
+            return _raise_error(
                 request_id=request_id,
                 code=AdminLlmErrorCode.SAMPLE_PAYLOAD_RUNTIME_PREVIEW_ONLY.value,
                 message="sample_payload_id is only supported in runtime_preview mode",
@@ -544,16 +543,14 @@ def _build_admin_resolved_catalog_view(
             )
         sample_payload = get_sample_payload(db, sample_payload_id)
         if sample_payload is None:
-            return _error_response(
-                status_code=404,
+            return _raise_error(
                 request_id=request_id,
                 code=AdminLlmErrorCode.SAMPLE_PAYLOAD_NOT_FOUND.value,
                 message=f"sample payload {sample_payload_id} not found",
                 details={"sample_payload_id": str(sample_payload_id)},
             )
         if not sample_payload.is_active:
-            return _error_response(
-                status_code=422,
+            return _raise_error(
                 request_id=request_id,
                 code=AdminLlmErrorCode.SAMPLE_PAYLOAD_INACTIVE.value,
                 message="sample payload is inactive and cannot be used for runtime preview",
@@ -577,8 +574,7 @@ def _build_admin_resolved_catalog_view(
             or sample_plan != target_plan
             or sample_payload.locale != assembly_model.locale
         ):
-            return _error_response(
-                status_code=422,
+            return _raise_error(
                 request_id=request_id,
                 code=AdminLlmErrorCode.SAMPLE_PAYLOAD_TARGET_MISMATCH.value,
                 message=("sample payload canonical scope mismatch with requested manifest entry"),
@@ -595,8 +591,7 @@ def _build_admin_resolved_catalog_view(
                 },
             )
         if not isinstance(sample_payload.payload_json, dict):
-            return _error_response(
-                status_code=422,
+            return _raise_error(
                 request_id=request_id,
                 code=AdminLlmErrorCode.INVALID_SAMPLE_PAYLOAD.value,
                 message="sample payload payload_json must be a JSON object",

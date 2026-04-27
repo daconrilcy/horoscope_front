@@ -10,6 +10,7 @@ from app.api.dependencies.b2b_auth import (
     AuthenticatedEnterpriseClient,
     require_authenticated_b2b_client,
 )
+from app.api.errors import resolve_application_error_status
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.b2b.editorial import (
     B2BEditorialConfigApiResponse,
@@ -20,7 +21,7 @@ from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
 from app.services.b2b.api_editorial import (
     _enforce_limits,
-    _error_response,
+    _raise_error,
     _record_editorial_audit,
     _sanitize_validation_errors,
 )
@@ -56,8 +57,8 @@ def get_editorial_config(
         config = B2BEditorialService.get_active_config(db, account_id=client.account_id)
         return {"data": config.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except RateLimitError as error:
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -65,7 +66,7 @@ def get_editorial_config(
         )
     except B2BEditorialServiceError as error:
         status_code = 404 if error.code == "enterprise_account_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -97,8 +98,8 @@ def update_editorial_config(
         _enforce_limits(client=client, operation="update_config")
         parsed = B2BEditorialConfigUpdatePayload.model_validate(payload)
     except RateLimitError as error:
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -119,7 +120,7 @@ def update_editorial_config(
             db.commit()
         except AuditServiceError:
             db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_editorial_config",
@@ -159,7 +160,7 @@ def update_editorial_config(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -167,7 +168,7 @@ def update_editorial_config(
                 details={},
             )
         status_code = 404 if error.code == "enterprise_account_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -176,7 +177,7 @@ def update_editorial_config(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",

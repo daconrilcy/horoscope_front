@@ -10,6 +10,7 @@ from app.api.dependencies.b2b_auth import (
     AuthenticatedEnterpriseClient,
     require_authenticated_b2b_client,
 )
+from app.api.errors import resolve_application_error_status
 from app.api.v1.schemas.common import ErrorEnvelope
 from app.api.v1.schemas.routers.b2b.billing import (
     B2BBillingCycleApiResponse,
@@ -22,7 +23,7 @@ from app.services.b2b.api_billing import (
     _enforce_enterprise_limits,
     _enforce_ops_limits,
     _ensure_ops_role,
-    _error_response,
+    _raise_error,
     _record_billing_audit,
 )
 from app.services.b2b.billing_service import (
@@ -72,8 +73,8 @@ def get_latest_b2b_billing_cycle(
         }
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -95,7 +96,7 @@ def get_latest_b2b_billing_cycle(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -107,7 +108,7 @@ def get_latest_b2b_billing_cycle(
             if error.code in {"enterprise_account_not_found", "b2b_billing_plan_not_found"}
             else 422
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -116,7 +117,7 @@ def get_latest_b2b_billing_cycle(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -171,8 +172,8 @@ def list_b2b_billing_cycles(
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -199,7 +200,7 @@ def list_b2b_billing_cycles(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -207,7 +208,7 @@ def list_b2b_billing_cycles(
                 details={},
             )
         status_code = 404 if error.code == "enterprise_account_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -216,7 +217,7 @@ def list_b2b_billing_cycles(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -275,8 +276,8 @@ def close_b2b_billing_cycle(
         return {"data": closed.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -303,7 +304,7 @@ def close_b2b_billing_cycle(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -315,7 +316,7 @@ def close_b2b_billing_cycle(
             if error.code in {"enterprise_account_not_found", "b2b_billing_plan_not_found"}
             else 422
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -324,7 +325,7 @@ def close_b2b_billing_cycle(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -375,8 +376,8 @@ def get_latest_b2b_billing_cycle_ops(
         }
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -398,7 +399,7 @@ def get_latest_b2b_billing_cycle_ops(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -410,7 +411,7 @@ def get_latest_b2b_billing_cycle_ops(
             if error.code in {"enterprise_account_not_found", "b2b_billing_plan_not_found"}
             else 422
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -419,7 +420,7 @@ def get_latest_b2b_billing_cycle_ops(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",
@@ -479,8 +480,8 @@ def list_b2b_billing_cycles_ops(
         return {"data": data.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except RateLimitError as error:
         db.rollback()
-        return _error_response(
-            status_code=error.status_code,
+        return _raise_error(
+            status_code=resolve_application_error_status(error.code),
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -507,7 +508,7 @@ def list_b2b_billing_cycles_ops(
             db.commit()
         except AuditServiceError:
             db.rollback()
-            return _error_response(
+            return _raise_error(
                 status_code=503,
                 request_id=request_id,
                 code="audit_unavailable",
@@ -515,7 +516,7 @@ def list_b2b_billing_cycles_ops(
                 details={},
             )
         status_code = 404 if error.code == "enterprise_account_not_found" else 422
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -524,7 +525,7 @@ def list_b2b_billing_cycles_ops(
         )
     except AuditServiceError:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=503,
             request_id=request_id,
             code="audit_unavailable",

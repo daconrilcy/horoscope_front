@@ -20,7 +20,7 @@ from app.services.b2b.audit_service import B2BAuditService
 from app.services.b2b.ops_entitlements_audit_api import (
     _enforce_limits,
     _ensure_ops_role,
-    _error_response,
+    _raise_error,
 )
 
 router = APIRouter(prefix="/v1/ops/b2b/entitlements", tags=["ops-b2b-entitlements"])
@@ -58,7 +58,7 @@ def get_b2b_entitlements_audit(
         return limit_error
 
     if resolution_source is not None and resolution_source not in VALID_RESOLUTION_SOURCES:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="invalid_resolution_source",

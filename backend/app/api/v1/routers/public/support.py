@@ -35,7 +35,7 @@ from app.services.ops.incident_service import (
 from app.services.ops.public_support import (
     _enforce_support_limits,
     _ensure_support_role,
-    _error_response,
+    _raise_error,
     _recent_audit_events_for_user,
     _record_audit_event,
 )
@@ -83,7 +83,7 @@ def get_support_context_by_query(
         user = db.scalars(select(UserModel).where(UserModel.email == email)).first()
 
     if user is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="support_context_not_found",
@@ -158,7 +158,7 @@ def get_user_support_context(
 
     user = db.get(UserModel, user_id)
     if user is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="support_context_not_found",
@@ -245,7 +245,7 @@ def list_support_incidents(
         result = IncidentService.list_incidents(db, filters=filters)
         return {"data": result.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except IncidentServiceError as error:
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code=error.code,
@@ -284,7 +284,7 @@ def get_support_incident(
         return rate_error
     incident = db.get(SupportIncidentModel, incident_id)
     if incident is None:
-        return _error_response(
+        return _raise_error(
             status_code=404,
             request_id=request_id,
             code="incident_not_found",
@@ -361,7 +361,7 @@ def create_support_incident(
         return {"data": incident.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="incident_validation_error",
@@ -384,7 +384,7 @@ def create_support_incident(
             status="failed",
             details={"error_code": error.code},
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,
@@ -451,7 +451,7 @@ def update_support_incident(
         return {"data": incident.model_dump(mode="json"), "meta": {"request_id": request_id}}
     except ValidationError as error:
         db.rollback()
-        return _error_response(
+        return _raise_error(
             status_code=422,
             request_id=request_id,
             code="incident_validation_error",
@@ -472,7 +472,7 @@ def update_support_incident(
             status="failed",
             details={"error_code": error.code},
         )
-        return _error_response(
+        return _raise_error(
             status_code=status_code,
             request_id=request_id,
             code=error.code,

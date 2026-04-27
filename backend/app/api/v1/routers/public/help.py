@@ -4,11 +4,11 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, Query, Request, status
-from fastapi.responses import JSONResponse
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.api.errors import build_error_response
 from app.api.v1.schemas.routers.public.help import (
     CreateTicketRequest,
     HelpCategoriesApiResponse,
@@ -43,16 +43,12 @@ async def get_help_categories(
     try:
         check_rate_limit(key=f"help_categories:{user.id}", limit=60, window_seconds=60)
     except RateLimitError as e:
-        return JSONResponse(
+        return build_error_response(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            content={
-                "error": {
-                    "code": "rate_limit_exceeded",
-                    "message": "Rate limit exceeded",
-                    "details": e.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="rate_limit_exceeded",
+            message="Rate limit exceeded",
+            details=e.details,
         )
 
     stmt = (
@@ -102,16 +98,12 @@ async def create_help_ticket(
     try:
         check_rate_limit(key=f"help_create_ticket:{user.id}", limit=5, window_seconds=3600)
     except RateLimitError as e:
-        return JSONResponse(
+        return build_error_response(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            content={
-                "error": {
-                    "code": "rate_limit_exceeded",
-                    "message": "Rate limit exceeded (max 5 tickets per hour)",
-                    "details": e.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="rate_limit_exceeded",
+            message="Rate limit exceeded (max 5 tickets per hour)",
+            details=e.details,
         )
 
     # Validate category
@@ -121,42 +113,30 @@ async def create_help_ticket(
     )
     category = db.scalar(cat_stmt)
     if not category:
-        return JSONResponse(
+        return build_error_response(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content={
-                "error": {
-                    "code": "ticket_invalid_category",
-                    "message": "invalid or inactive category",
-                    "details": {"category_code": payload.category_code},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="ticket_invalid_category",
+            message="invalid or inactive category",
+            details={"category_code": payload.category_code},
         )
 
     if not payload.subject.strip():
-        return JSONResponse(
+        return build_error_response(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content={
-                "error": {
-                    "code": "ticket_invalid_subject",
-                    "message": "subject is required",
-                    "details": {},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="ticket_invalid_subject",
+            message="subject is required",
+            details={},
         )
 
     if not payload.description.strip():
-        return JSONResponse(
+        return build_error_response(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            content={
-                "error": {
-                    "code": "ticket_invalid_description",
-                    "message": "description is required",
-                    "details": {},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="ticket_invalid_description",
+            message="description is required",
+            details={},
         )
 
     incident_payload = SupportIncidentCreatePayload(
@@ -193,16 +173,12 @@ async def create_help_ticket(
         }
     except Exception as e:
         logger.exception("failed to create help ticket request_id=%s", request_id)
-        return JSONResponse(
+        return build_error_response(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "error": {
-                    "code": "internal_error",
-                    "message": "failed to create ticket",
-                    "details": {"error": str(e)},
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="internal_error",
+            message="failed to create ticket",
+            details={"error": str(e)},
         )
 
 
@@ -218,16 +194,12 @@ async def list_help_tickets(
     try:
         check_rate_limit(key=f"help_list_tickets:{user.id}", limit=30, window_seconds=60)
     except RateLimitError as e:
-        return JSONResponse(
+        return build_error_response(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            content={
-                "error": {
-                    "code": "rate_limit_exceeded",
-                    "message": "Rate limit exceeded",
-                    "details": e.details,
-                    "request_id": request_id,
-                }
-            },
+            request_id=request_id,
+            code="rate_limit_exceeded",
+            message="Rate limit exceeded",
+            details=e.details,
         )
 
     stmt = (
