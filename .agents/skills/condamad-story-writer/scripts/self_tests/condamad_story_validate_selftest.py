@@ -55,6 +55,63 @@ This story belongs to exactly one domain:
 - Replacement allowed: yes
 - User decision required if: repository evidence shows an external consumer of the old import path.
 
+## 4a. Required Contracts
+
+| Contract | Required | Reason |
+|---|---:|---|
+| Runtime Source of Truth | no | No runtime route, config, generated contract, persistence, or architecture rule is affected. |
+| Baseline Snapshot | yes | Import convergence must preserve behavior and compare before/after import inventory. |
+| Ownership Routing | yes | Billing application use cases must stay in the canonical services namespace. |
+| Allowlist Exception | no | No exception is allowed for old root imports. |
+| Contract Shape | no | No API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected. |
+| Batch Migration | yes | Consumers must migrate by bounded import batches. |
+| Reintroduction Guard | yes | The old root import must fail if reintroduced. |
+| Persistent Evidence | yes | Baseline and after import inventories must be persisted. |
+
+## 4a. Runtime Source of Truth
+
+- Runtime source of truth: not applicable
+- Reason: no runtime route, config, generated contract, persistence, or architecture rule is affected.
+
+## 4b. Baseline / Before-After Rule
+
+- Baseline artifact before implementation:
+  - `_condamad/stories/test-story/billing-imports-before.txt`
+- Comparison after implementation:
+  - `_condamad/stories/test-story/billing-imports-after.txt`
+- Expected invariant:
+  - Runtime billing behavior remains unchanged while imports converge.
+
+## 4c. Ownership Routing Rule
+
+| Responsibility type | Canonical owner | Forbidden destination |
+|---|---|---|
+| Application use case | `services/**` | `api/**` |
+
+## 4d. Allowlist / Exception Register
+
+- Allowlist / exception register: not applicable
+- Reason: no exception is allowed by this story.
+
+## 4d. Batch Migration Plan
+
+| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |
+|---|---|---|---|---|---|---|
+| Billing imports | `backend/app/services/quota_usage_service.py` | `backend/app/services/billing/quota_runtime.py` | Backend service consumers | `backend/app/tests/unit/test_billing_imports.py` | `rg "app.services.quota_usage_service" backend/app backend/tests` returns no nominal import. | External consumer evidence appears. |
+
+## 4f. Contract Shape
+
+- Contract shape: not applicable
+- Reason: no API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected.
+
+## 4e. Persistent Evidence Artifacts
+
+The implementation must persist these evidence artifacts:
+
+| Artifact | Path | Purpose |
+|---|---|---|
+| Import baseline | `_condamad/stories/test-story/billing-imports-before.txt` | Proves the migration baseline before convergence. |
+
 ## 5. Current State Evidence
 
 The current codebase or audit indicates:
@@ -108,6 +165,23 @@ Forbidden unless explicitly approved:
 Specific forbidden symbols / paths:
 
 - `backend/app/services/quota_usage_service.py`
+
+## 10a. Reintroduction Guard
+
+The implementation must add or update an architecture guard that fails if the
+removed surface is reintroduced.
+
+The guard must check at least one deterministic source:
+
+- forbidden symbols
+
+Required forbidden examples:
+
+- `backend/app/services/quota_usage_service.py`
+
+Guard evidence:
+
+- Evidence profile: `reintroduction_guard`; `pytest -q backend/app/tests/unit/test_billing_imports.py` checks `backend/app/services/quota_usage_service.py`.
 
 ## 11. Files to Inspect First
 
@@ -234,6 +308,10 @@ Required forbidden examples:
 - `/v1/ai`
 - `backend/app/api/v1/routers/public/ai.py`
 
+Guard evidence:
+
+- Evidence profile: `reintroduction_guard`; `pytest -q backend/app/tests/unit/test_api_router_architecture.py` checks `/v1/ai`.
+
 ## 17. Generated Contract Check
 
 Required generated-contract evidence:
@@ -273,6 +351,67 @@ VALID_REMOVAL_STORY = (
         "- Archetype reason: the story removes historical public API route surfaces.",
     )
     .replace("- Deletion allowed: no", "- Deletion allowed: yes")
+    .replace("- Replacement allowed: yes", "- Replacement allowed: no")
+    .replace(
+        "- Runtime source of truth: not applicable\n- Reason: no runtime route, config, generated contract, persistence, or architecture rule is affected.",
+        "- Primary source of truth:\n  - `app.openapi()` runtime schema and `app.routes` route table.\n- Secondary evidence:\n  - Targeted `rg` scans for removed route symbols.\n- Static scans alone are not sufficient for this story because:\n  - Router registration and OpenAPI exposure are runtime outcomes.",
+    )
+    .replace(
+        "| Runtime Source of Truth | no | No runtime route, config, generated contract, persistence, or architecture rule is affected. |\n"
+        "| Baseline Snapshot | yes | Import convergence must preserve behavior and compare before/after import inventory. |\n"
+        "| Ownership Routing | yes | Billing application use cases must stay in the canonical services namespace. |\n"
+        "| Allowlist Exception | no | No exception is allowed for old root imports. |\n"
+        "| Contract Shape | no | No API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected. |\n"
+        "| Batch Migration | yes | Consumers must migrate by bounded import batches. |\n"
+        "| Reintroduction Guard | yes | The old root import must fail if reintroduced. |\n"
+        "| Persistent Evidence | yes | Baseline and after import inventories must be persisted. |",
+        "| Runtime Source of Truth | yes | API route exposure is runtime-visible. |\n"
+        "| Baseline Snapshot | yes | Route contract must be compared before and after removal. |\n"
+        "| Ownership Routing | no | No responsibility move is required for the route deletion. |\n"
+        "| Allowlist Exception | no | No exception is allowed for historical facade routes. |\n"
+        "| Contract Shape | yes | OpenAPI route and response exposure must be explicit. |\n"
+        "| Batch Migration | no | No multi-batch consumer migration is required. |\n"
+        "| Reintroduction Guard | yes | Removed route prefixes must fail if reintroduced. |\n"
+        "| Persistent Evidence | yes | Route audit and OpenAPI snapshots must be persisted. |",
+    )
+    .replace(
+        "## 4c. Ownership Routing Rule\n\n"
+        "| Responsibility type | Canonical owner | Forbidden destination |\n"
+        "|---|---|---|\n"
+        "| Application use case | `services/**` | `api/**` |",
+        "## 4c. Ownership Routing Rule\n\n"
+        "- Ownership routing: not applicable\n"
+        "- Reason: no responsibility moves or boundary rules are affected.",
+    )
+    .replace(
+        "## 4d. Batch Migration Plan\n\n"
+        "| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |\n"
+        "|---|---|---|---|---|---|---|\n"
+        '| Billing imports | `backend/app/services/quota_usage_service.py` | `backend/app/services/billing/quota_runtime.py` | Backend service consumers | `backend/app/tests/unit/test_billing_imports.py` | `rg "app.services.quota_usage_service" backend/app backend/tests` returns no nominal import. | External consumer evidence appears. |\n\n'
+        "## 4f. Contract Shape\n\n"
+        "- Contract shape: not applicable\n"
+        "- Reason: no API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected.",
+        "## 4d. Batch Migration Plan\n\n"
+        "- Batch migration plan: not applicable\n"
+        "- Reason: no multi-surface or multi-consumer migration is required.\n\n"
+        "## 4f. Contract Shape\n\n"
+        "- Contract type:\n"
+        "  - OpenAPI route exposure\n"
+        "- Fields:\n"
+        "  - Route path and method entries for `/v1/ai/*` are removed.\n"
+        "- Required fields:\n"
+        "  - Remaining canonical route fields stay unchanged.\n"
+        "- Optional fields:\n"
+        "  - No optional legacy route fields remain.\n"
+        "- Status codes:\n"
+        "  - Removed routes produce no OpenAPI operation.\n"
+        "- Serialization names:\n"
+        "  - No legacy serialization names remain.\n"
+        "- Frontend type impact:\n"
+        "  - First-party frontend consumers use canonical generated types only.\n"
+        "- Generated contract impact:\n"
+        "  - `app.openapi()` no longer exposes `/v1/ai/*` paths.",
+    )
     .replace(
         "## 11. Files to Inspect First",
         f"{REMOVAL_SECTIONS}\n## 18. Files to Inspect First",
@@ -359,14 +498,316 @@ class CondamadStoryValidateSelfTest(unittest.TestCase):
         )
         self.assertEqual(validate_story(self.write_story(story)), [])
 
+    def test_runtime_ac_with_rg_only_fails(self) -> None:
+        """Une preuve rg seule ne suffit pas pour un contrat runtime."""
+        story = VALID_STORY.replace(
+            "Consumers import billing services from `backend/app/services/billing` only.",
+            "Runtime API route `/v1/billing` is absent from OpenAPI.",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("touches a runtime contract" in error for error in errors))
+
+    def test_baseline_required_for_convergence(self) -> None:
+        """Une convergence doit definir un baseline before/after."""
+        story = VALID_STORY.replace(
+            "## 4b. Baseline / Before-After Rule",
+            "## 4b. Missing Baseline Rule",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("Baseline-triggering story" in error for error in errors))
+
+    def test_allowlist_wildcard_fails(self) -> None:
+        """Une allowlist ne peut pas accepter de wildcard."""
+        story = VALID_STORY.replace(
+            "Consumers import billing services from `backend/app/services/billing` only.",
+            "One allowlist exception is documented for old billing root imports.",
+        ).replace(
+            "## 4e. Persistent Evidence Artifacts",
+            "## 4d. Allowlist / Exception Register\n\n"
+            "| File | Symbol / Route / Import | Reason | Expiry or permanence decision |\n"
+            "|---|---|---|---|\n"
+            "| `backend/app/**` | `*` | broad migration escape hatch | temporary |\n\n"
+            "## 4e. Persistent Evidence Artifacts",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("must not use wildcards" in error for error in errors))
+
+    def test_delete_only_replacement_contradiction_fails(self) -> None:
+        """Delete-only et replacement autorise ne peuvent pas coexister."""
+        story = VALID_REMOVAL_STORY.replace(
+            "- Replacement allowed: no", "- Replacement allowed: yes"
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("Replacement allowed is yes" in error for error in errors))
+
+    def test_persistent_evidence_required_for_baseline(self) -> None:
+        """Un baseline actif doit produire un artefact persistant."""
+        story = VALID_STORY.replace(
+            "## 4e. Persistent Evidence Artifacts",
+            "## 4e. Missing Persistent Evidence Artifacts",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("Persistent evidence story" in error for error in errors))
+
+    def test_api_contract_story_without_contract_shape_fails(self) -> None:
+        """Une story de contrat API doit materialiser Contract Shape."""
+        story = (
+            VALID_STORY.replace(
+                "- Primary archetype: namespace-convergence",
+                "- Primary archetype: api-contract-change",
+            )
+            .replace(
+                "| Runtime Source of Truth | no | No runtime route, config, generated contract, persistence, or architecture rule is affected. |",
+                "| Runtime Source of Truth | yes | OpenAPI exposure is runtime-visible. |",
+            )
+            .replace(
+                "| Contract Shape | no | No API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected. |",
+                "| Contract Shape | yes | API payload shape must be explicit. |",
+            )
+            .replace(
+                "- Runtime source of truth: not applicable\n- Reason: no runtime route, config, generated contract, persistence, or architecture rule is affected.",
+                "- Primary source of truth:\n  - `app.openapi()` runtime schema.\n- Secondary evidence:\n  - Targeted `rg` scans.\n- Static scans alone are not sufficient for this story because:\n  - OpenAPI exposure is runtime-visible.",
+            )
+            .replace("## 4f. Contract Shape", "## 4f. Missing Contract Shape")
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any("Contract Shape story missing" in error for error in errors)
+        )
+
+    def test_batch_migration_without_batch_plan_fails(self) -> None:
+        """Une migration par lots doit materialiser Batch Migration Plan."""
+        story = VALID_STORY.replace(
+            "## 4d. Batch Migration Plan", "## 4d. Missing Batch Migration Plan"
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any("Batch migration story missing" in error for error in errors)
+        )
+
+    def test_required_contracts_missing_fails(self) -> None:
+        """Les contrats requis doivent etre persistés dans la story."""
+        story = VALID_STORY.replace(
+            "## 4a. Required Contracts", "## 4a. Missing Contracts"
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "Missing required section: Required Contracts" in error
+                for error in errors
+            )
+        )
+
+    def test_required_contract_yes_with_not_applicable_section_fails(self) -> None:
+        """Un contrat yes ne peut pas pointer vers une section N/A."""
+        story = VALID_STORY.replace(
+            "| Runtime Source of Truth | no | No runtime route, config, generated contract, persistence, or architecture rule is affected. |",
+            "| Runtime Source of Truth | yes | Runtime truth is required. |",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any("marked yes but section is not applicable" in error for error in errors)
+        )
+
+    def test_required_contract_no_with_active_section_fails(self) -> None:
+        """Un contrat no doit avoir une section N/A avec Reason."""
+        story = VALID_STORY.replace(
+            "| Baseline Snapshot | yes | Import convergence must preserve behavior and compare before/after import inventory. |",
+            "| Baseline Snapshot | no | Baseline is disabled. |",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any("marked no but section is active" in error for error in errors)
+        )
+
+    def test_allowlist_required_by_archetype_requires_active_register(self) -> None:
+        """Un contrat allowlist requis ne peut pas rester N/A."""
+        story = (
+            VALID_STORY.replace(
+                "- Primary archetype: namespace-convergence",
+                "- Primary archetype: api-error-contract-centralization",
+            )
+            .replace(
+                "| Runtime Source of Truth | no | No runtime route, config, generated contract, persistence, or architecture rule is affected. |",
+                "| Runtime Source of Truth | yes | Runtime API error behavior is observable. |",
+            )
+            .replace(
+                "| Allowlist Exception | no | No exception is allowed for old root imports. |",
+                "| Allowlist Exception | yes | API error centralization requires narrow exceptions. |",
+            )
+            .replace(
+                "| Contract Shape | no | No API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected. |",
+                "| Contract Shape | yes | HTTP error shape must be explicit. |",
+            )
+            .replace(
+                "| Batch Migration | yes | Consumers must migrate by bounded import batches. |",
+                "| Batch Migration | no | No multi-batch migration is required. |",
+            )
+            .replace(
+                "| Persistent Evidence | yes | Baseline and after import inventories must be persisted. |",
+                "| Persistent Evidence | no | No persisted evidence is required. |",
+            )
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "Allowlist Exception" in error and "not applicable" in error
+                for error in errors
+            )
+        )
+
+    def test_reintroduction_guard_required_by_archetype_requires_active_guard(
+        self,
+    ) -> None:
+        """Un contrat reintroduction yes exige un guard actif executable."""
+        story = VALID_STORY.replace(
+            "## 10a. Reintroduction Guard",
+            "## 10a. Missing Reintroduction Guard",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "Reintroduction Guard" in error and "missing" in error
+                for error in errors
+            )
+        )
+
+    def test_required_contracts_must_list_every_known_contract(self) -> None:
+        """La table Required Contracts doit etre exhaustive."""
+        story = VALID_STORY.replace(
+            "| Contract Shape | no | No API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected. |\n",
+            "",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any(
+                "must list every known contract: Contract Shape" in error
+                for error in errors
+            )
+        )
+
+    def test_required_contracts_unknown_contract_fails(self) -> None:
+        """La table Required Contracts refuse les noms inconnus."""
+        story = VALID_STORY.replace(
+            "| Contract Shape | no | No API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected. |",
+            "| Unknown Contract | no | Unknown contract should fail. |",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("unknown contract" in error for error in errors))
+
+    def test_required_contracts_duplicate_contract_fails(self) -> None:
+        """La table Required Contracts refuse les doublons."""
+        story = VALID_STORY.replace(
+            "| Persistent Evidence | yes | Baseline and after import inventories must be persisted. |",
+            "| Persistent Evidence | yes | Baseline and after import inventories must be persisted. |\n"
+            "| Persistent Evidence | yes | Duplicate row. |",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("duplicate contract row" in error for error in errors))
+
+    def test_runtime_profile_with_rg_only_fails(self) -> None:
+        """Un profil runtime avec seulement rg reste insuffisant."""
+        story = VALID_STORY.replace(
+            'Consumers import billing services from `backend/app/services/billing` only. | `rg "app.services.quota_usage_service" backend/app backend/tests` returns no nominal import.',
+            'Runtime API route `/v1/billing` is absent from OpenAPI. | Evidence profile: `runtime_openapi_contract`; `rg "/v1/billing" backend/app` returns no nominal route.',
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("touches a runtime contract" in error for error in errors))
+
+    def test_allowlist_not_applicable_reason_does_not_trigger_allowlist(self) -> None:
+        """Une phrase negative sur exception register ne declenche pas l'allowlist."""
+        story = VALID_STORY.replace(
+            "Proves the migration baseline before convergence.",
+            "Proves the migration baseline before convergence; no allowlist or exception register is required.",
+        )
+        self.assertFalse(
+            any(
+                "Allowlist / Exception Register" in error
+                for error in validate_story(self.write_story(story))
+            )
+        )
+
+    def test_reintroduction_guard_without_command_or_test_fails(self) -> None:
+        """Un guard purement declaratif ne suffit pas."""
+        story = VALID_REMOVAL_STORY.replace(
+            "\nGuard evidence:\n\n"
+            "- Evidence profile: `reintroduction_guard`; `pytest -q backend/app/tests/unit/test_api_router_architecture.py` checks `/v1/ai`.\n",
+            "",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(
+            any("Reintroduction Guard must include" in error for error in errors)
+        )
+
+    def test_behavior_change_constrained_requires_constraints(self) -> None:
+        """Behavior change constrained doit borner le changement autorise."""
+        story = VALID_STORY.replace(
+            "- Behavior change allowed: no",
+            "- Behavior change allowed: constrained",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("Behavior change constraints" in error for error in errors))
+
     def test_legacy_guard_story_does_not_trigger_removal_contract(self) -> None:
         """Une story guard mentionnant legacy sans cible de suppression reste non-removal."""
-        story = VALID_STORY.replace(
-            "Constrain service imports to the canonical billing namespace and prove that old imports are absent.",
-            "Add an architecture guard against legacy fallback reintroduction without changing runtime behavior.",
-        ).replace(
-            "- Primary archetype: namespace-convergence",
-            "- Primary archetype: test-guard-hardening",
+        story = (
+            VALID_STORY.replace(
+                "Constrain service imports to the canonical billing namespace and prove that old imports are absent.",
+                "Add an architecture guard against legacy fallback reintroduction without changing runtime behavior.",
+            )
+            .replace(
+                "- Primary archetype: namespace-convergence",
+                "- Primary archetype: test-guard-hardening",
+            )
+            .replace(
+                "| Runtime Source of Truth | no | No runtime route, config, generated contract, persistence, or architecture rule is affected. |\n"
+                "| Baseline Snapshot | yes | Import convergence must preserve behavior and compare before/after import inventory. |\n"
+                "| Ownership Routing | yes | Billing application use cases must stay in the canonical services namespace. |\n"
+                "| Allowlist Exception | no | No exception is allowed for old root imports. |\n"
+                "| Contract Shape | no | No API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected. |\n"
+                "| Batch Migration | yes | Consumers must migrate by bounded import batches. |\n"
+                "| Reintroduction Guard | yes | The old root import must fail if reintroduced. |\n"
+                "| Persistent Evidence | yes | Baseline and after import inventories must be persisted. |",
+                "| Runtime Source of Truth | yes | AST architecture guard is the runtime-equivalent source for import boundaries. |\n"
+                "| Baseline Snapshot | yes | Guard hardening must preserve import behavior. |\n"
+                "| Ownership Routing | no | No responsibility move is required. |\n"
+                "| Allowlist Exception | yes | The guard must document whether exceptions are allowed. |\n"
+                "| Contract Shape | no | No API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected. |\n"
+                "| Batch Migration | no | No multi-batch migration is required. |\n"
+                "| Reintroduction Guard | yes | Legacy fallback reintroduction must fail. |\n"
+                "| Persistent Evidence | yes | Guard baseline evidence must be persisted.",
+            )
+            .replace(
+                "- Runtime source of truth: not applicable\n- Reason: no runtime route, config, generated contract, persistence, or architecture rule is affected.",
+                "- Primary source of truth:\n  - AST guard over billing imports.\n- Secondary evidence:\n  - Targeted `rg` scans for legacy fallback symbols.\n- Static scans alone are not sufficient for this story because:\n  - Import boundary validity is enforced by an architecture guard.",
+            )
+            .replace(
+                "## 4d. Allowlist / Exception Register\n\n"
+                "- Allowlist / exception register: not applicable\n"
+                "- Reason: no exception is allowed by this story.",
+                "## 4d. Allowlist / Exception Register\n\n"
+                "| File | Symbol / Route / Import | Reason | Expiry or permanence decision |\n"
+                "|---|---|---|---|\n"
+                "| `backend/app/tests/unit/test_billing_imports.py` | `backend/app/services/quota_usage_service.py` | Test guard fixture references the forbidden import string. | Permanent test fixture decision. |",
+            )
+            .replace(
+                "## 4c. Ownership Routing Rule\n\n"
+                "| Responsibility type | Canonical owner | Forbidden destination |\n"
+                "|---|---|---|\n"
+                "| Application use case | `services/**` | `api/**` |",
+                "## 4c. Ownership Routing Rule\n\n"
+                "- Ownership routing: not applicable\n"
+                "- Reason: no responsibility moves or boundary rules are affected.",
+            )
+            .replace(
+                "## 4d. Batch Migration Plan\n\n"
+                "| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |\n"
+                "|---|---|---|---|---|---|---|\n"
+                '| Billing imports | `backend/app/services/quota_usage_service.py` | `backend/app/services/billing/quota_runtime.py` | Backend service consumers | `backend/app/tests/unit/test_billing_imports.py` | `rg "app.services.quota_usage_service" backend/app backend/tests` returns no nominal import. | External consumer evidence appears. |',
+                "## 4d. Batch Migration Plan\n\n"
+                "- Batch migration plan: not applicable\n"
+                "- Reason: no multi-surface or multi-consumer migration is required.",
+            )
         )
         self.assertEqual(validate_story(self.write_story(story)), [])
 
@@ -503,6 +944,9 @@ class CondamadStoryValidateSelfTest(unittest.TestCase):
         story = VALID_REMOVAL_STORY.replace(
             "## 16. Reintroduction Guard",
             "## 16. Missing Reintroduction Guard",
+        ).replace(
+            "## 10a. Reintroduction Guard",
+            "## 10a. Missing Reintroduction Guard",
         )
         errors = validate_story(self.write_story(story))
         self.assertTrue(
@@ -560,6 +1004,16 @@ class CondamadStoryValidateSelfTest(unittest.TestCase):
         acs = extract_acceptance_criteria(VALID_STORY)
         self.assertEqual([item["ac"] for item in acs], ["AC1", "AC2"])
         self.assertIn("pytest", acs[1]["evidence"])
+
+    def test_skill_package_has_no_python_cache_artifacts(self) -> None:
+        """Le skill ne doit pas contenir d'artefacts Python generes."""
+        skill_dir = SCRIPT_DIR.parent
+        forbidden = [
+            path
+            for path in skill_dir.rglob("*")
+            if path.name == "__pycache__" or path.suffix in {".pyc", ".pyo"}
+        ]
+        self.assertEqual(forbidden, [])
 
 
 if __name__ == "__main__":

@@ -65,6 +65,14 @@ Read:
 - `references/codex-story-optimization.md`
 - `references/evidence-and-validation-contract.md`
 - `references/evidence-profiles.md`
+- `references/runtime-source-of-truth-contract.md`
+- `references/baseline-snapshot-contract.md`
+- `references/ownership-routing-contract.md`
+- `references/allowlist-exception-contract.md`
+- `references/contract-shape-contract.md`
+- `references/batch-migration-contract.md`
+- `references/reintroduction-guard-contract.md`
+- `references/persistent-evidence-contract.md`
 
 When the selected archetype or operation is removal-related, also read:
 
@@ -73,6 +81,9 @@ When the selected archetype or operation is removal-related, also read:
 ## Output
 
 Write one story markdown file using `templates/story-template.md`.
+For conditional transverse sections, choose exactly one active or
+not-applicable snippet from `templates/snippets/` and inline its content into
+the final story.
 
 Contract headings and required markers must remain in English. Business content,
 evidence descriptions, and implementation notes may be written in French when
@@ -93,18 +104,34 @@ From the skill directory:
 
 ```bash
 python -B scripts/condamad_story_validate.py <story_path>
+python -B scripts/condamad_story_validate.py --explain-contracts <story_path>
 python -B scripts/condamad_story_lint.py <story_path>
+python -B scripts/condamad_story_lint.py --strict <story_path>
 ```
 
 From the repository root:
 
 ```bash
 python -B .agents/skills/condamad-story-writer/scripts/condamad_story_validate.py <story_path>
+python -B .agents/skills/condamad-story-writer/scripts/condamad_story_validate.py --explain-contracts <story_path>
 python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py <story_path>
+python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py --strict <story_path>
 ```
 
-Fix the story until both commands pass.
+Fix the story until all validation commands pass.
+
+## Skill self-test
+
+Run the skill self-tests without loading site packages and without writing
+Python bytecode:
+
+```bash
+python -S -B -m unittest discover -s .agents/skills/condamad-story-writer/scripts/self_tests -p "*selftest.py" -v
+```
 
 If repository commands are required by the project, run them according to the
 local `AGENTS.md`. For Python commands in this repository, activate the venv
 first.
+
+Before packaging or zipping this skill, remove generated Python artifacts. The
+skill package must not contain `__pycache__`, `.pyc`, or `.pyo` files.

@@ -19,6 +19,7 @@ REQUIRED_SECTIONS = [
     "Trigger / Source",
     "Domain Boundary",
     "Operation Contract",
+    "Required Contracts",
     "Current State Evidence",
     "Target State",
     "Acceptance Criteria",
@@ -46,16 +47,178 @@ REMOVAL_REQUIRED_SECTIONS = [
 
 SUPPORTED_ARCHETYPES = {
     "api-route-removal",
+    "api-contract-change",
+    "api-error-contract-centralization",
+    "route-architecture-convergence",
+    "api-adapter-boundary-convergence",
     "legacy-facade-removal",
     "field-contract-removal",
     "namespace-convergence",
+    "ownership-routing-refactor",
     "module-move",
     "large-file-split",
     "dead-code-removal",
     "frontend-route-removal",
+    "runtime-contract-preservation",
+    "batch-migration",
+    "architecture-guard-hardening",
+    "registry-catalog-refactor",
     "test-guard-hardening",
     "service-boundary-refactor",
     "custom",
+}
+
+KNOWN_CONTRACTS = (
+    "Runtime Source of Truth",
+    "Baseline Snapshot",
+    "Ownership Routing",
+    "Allowlist Exception",
+    "Contract Shape",
+    "Batch Migration",
+    "Reintroduction Guard",
+    "Persistent Evidence",
+)
+
+ARCHETYPE_REQUIRED_CONTRACTS = {
+    "api-route-removal": {
+        "Runtime Source of Truth",
+        "Baseline Snapshot",
+        "Contract Shape",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "api-contract-change": {
+        "Runtime Source of Truth",
+        "Baseline Snapshot",
+        "Contract Shape",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "api-error-contract-centralization": {
+        "Runtime Source of Truth",
+        "Ownership Routing",
+        "Allowlist Exception",
+        "Contract Shape",
+        "Reintroduction Guard",
+    },
+    "route-architecture-convergence": {
+        "Runtime Source of Truth",
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Allowlist Exception",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "api-adapter-boundary-convergence": {
+        "Runtime Source of Truth",
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Allowlist Exception",
+        "Reintroduction Guard",
+    },
+    "legacy-facade-removal": {
+        "Runtime Source of Truth",
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "field-contract-removal": {
+        "Baseline Snapshot",
+        "Contract Shape",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "namespace-convergence": {
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Batch Migration",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "ownership-routing-refactor": {
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Allowlist Exception",
+        "Reintroduction Guard",
+    },
+    "module-move": {
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Reintroduction Guard",
+    },
+    "large-file-split": {
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Reintroduction Guard",
+    },
+    "dead-code-removal": {
+        "Baseline Snapshot",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "frontend-route-removal": {
+        "Baseline Snapshot",
+        "Contract Shape",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "runtime-contract-preservation": {
+        "Runtime Source of Truth",
+        "Baseline Snapshot",
+        "Contract Shape",
+        "Persistent Evidence",
+    },
+    "batch-migration": {
+        "Baseline Snapshot",
+        "Batch Migration",
+        "Reintroduction Guard",
+        "Persistent Evidence",
+    },
+    "architecture-guard-hardening": {
+        "Runtime Source of Truth",
+        "Allowlist Exception",
+        "Reintroduction Guard",
+    },
+    "registry-catalog-refactor": {
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Batch Migration",
+        "Persistent Evidence",
+    },
+    "test-guard-hardening": {
+        "Runtime Source of Truth",
+        "Allowlist Exception",
+        "Reintroduction Guard",
+    },
+    "service-boundary-refactor": {
+        "Baseline Snapshot",
+        "Ownership Routing",
+        "Reintroduction Guard",
+    },
+}
+
+CONTRACT_SHAPE_ARCHETYPES = {
+    archetype
+    for archetype, contracts in ARCHETYPE_REQUIRED_CONTRACTS.items()
+    if "Contract Shape" in contracts
+}
+
+BATCH_MIGRATION_ARCHETYPES = {
+    archetype
+    for archetype, contracts in ARCHETYPE_REQUIRED_CONTRACTS.items()
+    if "Batch Migration" in contracts
+}
+
+CONTRACT_SECTION_TITLES = {
+    "Runtime Source of Truth": "Runtime Source of Truth",
+    "Baseline Snapshot": "Baseline / Before-After Rule",
+    "Ownership Routing": "Ownership Routing Rule",
+    "Allowlist Exception": "Allowlist / Exception Register",
+    "Contract Shape": "Contract Shape",
+    "Batch Migration": "Batch Migration Plan",
+    "Reintroduction Guard": "Reintroduction Guard",
+    "Persistent Evidence": "Persistent Evidence Artifacts",
 }
 
 REMOVAL_ARCHETYPES = {
@@ -120,7 +283,74 @@ EVIDENCE_PROFILES = {
     "no_legacy_contract",
     "field_removed",
     "namespace_converged",
+    "runtime_openapi_contract",
+    "openapi_before_after_snapshot",
+    "route_absence_runtime",
+    "python_import_absence",
+    "ast_architecture_guard",
+    "repo_wide_negative_scan",
+    "targeted_forbidden_symbol_scan",
+    "allowlist_register_validated",
+    "json_contract_shape",
+    "api_error_shape_contract",
+    "frontend_typecheck_no_orphan",
+    "baseline_before_after_diff",
+    "batch_migration_mapping",
+    "reintroduction_guard",
+    "external_usage_blocker",
 }
+
+RUNTIME_EVIDENCE_PROFILES = {
+    "runtime_openapi_contract",
+    "openapi_before_after_snapshot",
+    "route_absence_runtime",
+    "ast_architecture_guard",
+    "json_contract_shape",
+    "api_error_shape_contract",
+}
+
+RUNTIME_CONTRACT_TERMS_RE = re.compile(
+    r"\b(route|routes|router|openapi|http|api|endpoint|config|settings|db|database|"
+    r"schema|generated contract|generated client|manifest|runtime)\b",
+    re.I,
+)
+
+RUNTIME_COMMAND_RE = re.compile(
+    r"app\.openapi\(|app\.routes|from\s+backend\.app\.main\s+import\s+app|"
+    r"TestClient|route table|loaded config|settings\.|inspect\(|MetaData|alembic|"
+    r"generated manifest|AST guard",
+    re.I,
+)
+
+BASELINE_OPERATION_TYPES = {"move", "split", "converge", "migrate"}
+
+OWNERSHIP_ARCHETYPE_TERMS = (
+    "boundary",
+    "namespace",
+    "service",
+    "api",
+    "adapter",
+    "core",
+    "domain",
+    "infra",
+    "ownership",
+)
+
+ALLOWLIST_TRIGGER_RE = re.compile(
+    r"\b(allowlist|exception|allowed exception|except|sauf)\b", re.I
+)
+
+CONTRACT_SHAPE_CHANGE_RE = re.compile(
+    r"\b(remove field|field removal|change response|response shape change|"
+    r"drop detail|contract shape change|payload shape change)\b",
+    re.I,
+)
+
+PERSISTENT_EVIDENCE_TRIGGER_RE = re.compile(
+    r"\b(audit|snapshot|baseline|openapi diff|diff snapshot|migration mapping|"
+    r"allowlist register|exception register)\b",
+    re.I,
+)
 
 VAGUE_TERMS = [
     "improve",
@@ -210,7 +440,7 @@ def read_text(path: Path) -> str:
 
 def normalize(value: str) -> str:
     """Normalise une chaine pour les comparaisons de titres."""
-    value = re.sub(r"^\d+\.\s*", "", value.strip())
+    value = re.sub(r"^\d+[a-z]?\.\s*", "", value.strip(), flags=re.I)
     value = re.sub(r"\s+", " ", value)
     return value.casefold()
 
@@ -333,6 +563,23 @@ def has_concrete_ac_evidence(evidence: str) -> bool:
     return has_command or has_test_path or has_manual_check
 
 
+def evidence_profile_names(evidence: str) -> set[str]:
+    """Extrait les profils de preuve cites dans une cellule d'evidence."""
+    return {
+        match.group(1)
+        for match in re.finditer(r"Evidence profile:\s*`?([A-Za-z0-9_-]+)`?", evidence)
+    }
+
+
+def has_runtime_evidence(evidence: str) -> bool:
+    """Indique si une preuve interroge une source runtime deterministe."""
+    has_runtime_command = bool(RUNTIME_COMMAND_RE.search(evidence))
+    has_runtime_test = bool(TEST_PATH_RE.search(evidence)) and bool(
+        re.search(r"\b(pytest|npm|pnpm|vitest|tsc)\b", evidence, re.I)
+    )
+    return has_runtime_command or has_runtime_test
+
+
 def validate_acceptance_criteria(text: str) -> list[str]:
     """Valide les AC et leurs preuves."""
     errors: list[str] = []
@@ -365,6 +612,12 @@ def validate_acceptance_criteria(text: str) -> list[str]:
             errors.append(f"{ac_id} has empty requirement")
         if not has_concrete_ac_evidence(evidence):
             errors.append(f"{ac_id} has no concrete validation evidence")
+        if RUNTIME_CONTRACT_TERMS_RE.search(requirement) and not has_runtime_evidence(
+            evidence
+        ):
+            errors.append(
+                f"{ac_id} touches a runtime contract and must include runtime evidence"
+            )
         seen.append(ac_id)
         expected_number += 1
 
@@ -490,14 +743,32 @@ def validate_operation_contract(text: str) -> list[str]:
             "Custom archetype must include 'Additional validation rules:' in Operation Contract"
         )
 
-    for marker in [
-        "Behavior change allowed",
-        "Deletion allowed",
-        "Replacement allowed",
-    ]:
+    for marker in ["Deletion allowed", "Replacement allowed"]:
         value = marker_value(section, marker).casefold()
         if value and value not in {"yes", "no"}:
             errors.append(f"Operation Contract marker must be yes or no: {marker}")
+
+    behavior_change = marker_value(section, "Behavior change allowed").casefold()
+    if behavior_change and behavior_change not in {"no", "constrained", "yes"}:
+        errors.append(
+            "Operation Contract marker must be no, constrained, or yes: Behavior change allowed"
+        )
+    if behavior_change in {"constrained", "yes"}:
+        constraints = block_after_marker(
+            section,
+            "Behavior change constraints:",
+            [
+                "Deletion allowed:",
+                "Replacement allowed:",
+                "User decision required if:",
+            ],
+        )
+        if not re.search(r"^\s*-\s+\S", constraints, re.M):
+            errors.append(
+                "Operation Contract must include concrete Behavior change constraints when behavior change is constrained or yes"
+            )
+
+    errors.extend(validate_operation_contract_contradictions(text))
 
     if is_removal_story(text):
         deletion_allowed = marker_value(section, "Deletion allowed").casefold()
@@ -509,6 +780,150 @@ def validate_operation_contract(text: str) -> list[str]:
             )
 
     return errors
+
+
+def validate_operation_contract_contradictions(text: str) -> list[str]:
+    """Detecte les contradictions entre operation, suppression et contrat."""
+    errors: list[str] = []
+    section = get_section(text, "Operation Contract")
+    operation_type = marker_value(section, "Operation type").casefold()
+    behavior_change = marker_value(section, "Behavior change allowed").casefold()
+    deletion_allowed = marker_value(section, "Deletion allowed").casefold()
+    replacement_allowed = marker_value(section, "Replacement allowed").casefold()
+    lowered_text = text.casefold()
+
+    if operation_type == "remove" and deletion_allowed == "no":
+        errors.append("Operation Contract contradiction: remove requires deletion")
+    if behavior_change == "no" and CONTRACT_SHAPE_CHANGE_RE.search(lowered_text):
+        errors.append(
+            "Operation Contract contradiction: behavior change is forbidden but contract shape removal/change is described"
+        )
+    if (
+        replacement_allowed == "yes"
+        and "items classified as removable must be deleted, not repointed"
+        in lowered_text
+    ):
+        errors.append(
+            "Operation Contract contradiction: Replacement allowed is yes while Delete-Only Rule requires deletion"
+        )
+    return errors
+
+
+def required_contracts_from_story(text: str) -> dict[str, str]:
+    """Retourne les contrats declares dans la story avec leur statut yes/no."""
+    section = get_section(text, "Required Contracts")
+    table = find_table_with_columns(section, ["Contract", "Required", "Reason"])
+    if table is None:
+        return {}
+    headers = [normalize(header) for header in table.headers]
+    contract_index = headers.index("contract")
+    required_index = headers.index("required")
+    return {
+        row[contract_index].strip(): row[required_index].strip().casefold()
+        for row in table.rows
+        if len(row) > max(contract_index, required_index)
+    }
+
+
+def validate_required_contracts(text: str) -> list[str]:
+    """Verifie que les contrats requis par l'archetype sont persistés."""
+    section = get_section(text, "Required Contracts")
+    if not section:
+        return ["Required Contracts section is empty"]
+    table = find_table_with_columns(section, ["Contract", "Required", "Reason"])
+    if table is None:
+        return ["Required Contracts must include Contract, Required, and Reason table"]
+
+    errors: list[str] = []
+    headers = [normalize(header) for header in table.headers]
+    contract_index = headers.index("contract")
+    required_index = headers.index("required")
+    reason_index = headers.index("reason")
+    declared: dict[str, str] = {}
+    seen_contracts: set[str] = set()
+    for row in table.rows:
+        if len(row) <= max(contract_index, required_index, reason_index):
+            errors.append("Required Contracts table has an incomplete row")
+            continue
+        contract = row[contract_index].strip()
+        required = row[required_index].strip().casefold()
+        reason = row[reason_index].strip()
+        if contract in seen_contracts:
+            errors.append(f"Required Contracts duplicate contract row: {contract}")
+        seen_contracts.add(contract)
+        if contract not in KNOWN_CONTRACTS:
+            errors.append(f"Required Contracts unknown contract: {contract}")
+        declared[contract] = required
+        if required not in {"yes", "no"}:
+            errors.append(f"Required Contracts marker must be yes or no: {contract}")
+        if not reason or reason in {"...", "<...>"}:
+            errors.append(f"Required Contracts row missing concrete reason: {contract}")
+
+    for contract in KNOWN_CONTRACTS:
+        if contract not in declared:
+            errors.append(
+                f"Required Contracts must list every known contract: {contract}"
+            )
+
+    archetype = marker_value(
+        get_section(text, "Operation Contract"), "Primary archetype"
+    ).casefold()
+    if archetype == "custom":
+        return errors
+    for contract in sorted(ARCHETYPE_REQUIRED_CONTRACTS.get(archetype, set())):
+        if declared.get(contract) != "yes":
+            errors.append(
+                f"Required Contracts must mark archetype contract as yes: {contract}"
+            )
+    errors.extend(validate_required_contract_section_alignment(text, declared))
+    return errors
+
+
+def validate_required_contract_section_alignment(
+    text: str, declared: dict[str, str]
+) -> list[str]:
+    """Controle l'alignement yes/no des contrats avec leurs sections."""
+    errors: list[str] = []
+    for contract in KNOWN_CONTRACTS:
+        required = declared.get(contract, "")
+        section_title = CONTRACT_SECTION_TITLES[contract]
+        section = get_section(text, section_title)
+        if required == "yes":
+            if not section:
+                errors.append(
+                    f"Required contract marked yes but section is missing: {contract}"
+                )
+                continue
+            if is_not_applicable_section(section):
+                errors.append(
+                    f"Required contract marked yes but section is not applicable: {contract}"
+                )
+            if contract == "Reintroduction Guard" and not has_executable_guard_evidence(
+                section
+            ):
+                errors.append(
+                    "Required contract marked yes but Reintroduction Guard lacks executable evidence"
+                )
+        elif required == "no":
+            if not section:
+                errors.append(
+                    f"Required contract marked no must include not applicable section: {contract}"
+                )
+                continue
+            if not is_not_applicable_section(section):
+                errors.append(
+                    f"Required contract marked no but section is active: {contract}"
+                )
+            if not re.search(r"^\s*-\s*Reason:\s*\S.+$", section, re.I | re.M):
+                errors.append(
+                    f"Required contract marked no must include not applicable Reason: {contract}"
+                )
+    return errors
+
+
+def is_not_applicable_section(section: str) -> bool:
+    """Indique si une section est explicitement non applicable."""
+    return bool(re.search(r"\bnot applicable\b", section, re.I))
 
 
 def is_removal_story(text: str) -> bool:
@@ -700,7 +1115,26 @@ def validate_reintroduction_guard(text: str) -> list[str]:
     ]
     if not any(source in lowered for source in deterministic_sources):
         return ["Reintroduction Guard must name at least one deterministic source"]
+    if not has_executable_guard_evidence(section):
+        return [
+            "Reintroduction Guard must include a concrete command, test path, or reintroduction_guard evidence profile with command/test"
+        ]
     return []
+
+
+def has_executable_guard_evidence(section: str) -> bool:
+    """Indique si un guard est prouve par une commande, un test ou un profil executable."""
+    has_command = any(re.search(pattern, section) for pattern in COMMAND_PATTERNS)
+    has_test_path = bool(TEST_PATH_RE.search(section))
+    has_guard_profile = "Evidence profile: `reintroduction_guard`" in section or (
+        "Evidence profile: reintroduction_guard" in section
+    )
+    has_forbidden_symbol = bool(BACKTICK_VALUE_RE.search(section))
+    if has_guard_profile:
+        return (has_command or has_test_path) and has_forbidden_symbol
+    return (
+        has_command or has_test_path or has_runtime_evidence(section)
+    ) and has_forbidden_symbol
 
 
 def validate_generated_contract_check(text: str) -> list[str]:
@@ -723,6 +1157,365 @@ def validate_generated_contract_check(text: str) -> list[str]:
     if "openapi" not in lowered and "generated" not in lowered:
         return [
             "Generated Contract Check must require OpenAPI or generated artifact absence"
+        ]
+    return []
+
+
+def validate_runtime_source_of_truth(text: str) -> list[str]:
+    """Exige une source runtime quand la story touche un contrat runtime."""
+    section = get_section(text, "Runtime Source of Truth")
+    required_contracts = required_contracts_from_story(text)
+    story_requires_runtime = (
+        bool(
+            RUNTIME_CONTRACT_TERMS_RE.search(
+                "\n".join(
+                    [
+                        get_section(text, "Operation Contract"),
+                        get_section(text, "Target State"),
+                        get_section(text, "Acceptance Criteria"),
+                        get_section(text, "Validation Plan"),
+                    ]
+                )
+            )
+        )
+        or required_contracts.get("Runtime Source of Truth") == "yes"
+    )
+    if not story_requires_runtime:
+        return []
+    if not section:
+        return ["Runtime contract story missing section: Runtime Source of Truth"]
+    lowered = section.casefold()
+    if "not applicable" in lowered:
+        return ["Runtime Source of Truth cannot be not applicable for runtime stories"]
+    errors: list[str] = []
+    for marker in [
+        "Primary source of truth:",
+        "Secondary evidence:",
+        "Static scans alone are not sufficient",
+    ]:
+        if marker.casefold() not in lowered:
+            errors.append(f"Runtime Source of Truth missing marker: {marker}")
+    if not RUNTIME_COMMAND_RE.search(section):
+        errors.append(
+            "Runtime Source of Truth must name a runtime artifact such as app.openapi(), app.routes, AST guard, loaded config, DB schema, or generated manifest"
+        )
+    return errors
+
+
+def validate_baseline_rule(text: str) -> list[str]:
+    """Exige un baseline before/after pour les operations a risque."""
+    operation = get_section(text, "Operation Contract")
+    operation_type = marker_value(operation, "Operation type").casefold()
+    behavior_change = marker_value(operation, "Behavior change allowed").casefold()
+    required_contracts = required_contracts_from_story(text)
+    if (
+        operation_type not in BASELINE_OPERATION_TYPES
+        and behavior_change != "no"
+        and required_contracts.get("Baseline Snapshot") != "yes"
+    ):
+        return []
+    section = get_section(text, "Baseline / Before-After Rule")
+    if not section:
+        return [
+            "Baseline-triggering story missing section: Baseline / Before-After Rule"
+        ]
+    lowered = section.casefold()
+    if "not applicable" in lowered:
+        return ["Baseline / Before-After Rule cannot be not applicable for this story"]
+    errors: list[str] = []
+    for marker in [
+        "Baseline artifact before implementation:",
+        "Comparison after implementation:",
+        "Expected invariant:",
+    ]:
+        if marker.casefold() not in lowered:
+            errors.append(f"Baseline / Before-After Rule missing marker: {marker}")
+    if not (
+        any(is_concrete_path(value) for value in BACKTICK_VALUE_RE.findall(section))
+        or any(re.search(pattern, section) for pattern in COMMAND_PATTERNS)
+    ):
+        errors.append(
+            "Baseline / Before-After Rule must include a concrete artifact path or command"
+        )
+    return errors
+
+
+def validate_ownership_routing_rule(text: str) -> list[str]:
+    """Exige la table d'ownership pour boundary/refactor/convergence."""
+    operation = get_section(text, "Operation Contract")
+    archetype = marker_value(operation, "Primary archetype").casefold()
+    required_contracts = required_contracts_from_story(text)
+    if required_contracts:
+        requires_ownership = required_contracts.get("Ownership Routing") == "yes"
+    else:
+        requires_ownership = any(
+            term in archetype for term in OWNERSHIP_ARCHETYPE_TERMS
+        )
+    if not requires_ownership:
+        return []
+    section = get_section(text, "Ownership Routing Rule")
+    if not section:
+        return ["Ownership story missing section: Ownership Routing Rule"]
+    if "not applicable" in section.casefold():
+        return ["Ownership Routing Rule cannot be not applicable for this archetype"]
+    if (
+        find_table_with_columns(
+            section,
+            ["Responsibility type", "Canonical owner", "Forbidden destination"],
+        )
+        is None
+    ):
+        return ["Ownership Routing Rule must include the responsibility routing table"]
+    return []
+
+
+def validate_contract_shape(text: str) -> list[str]:
+    """Exige la forme exacte des contrats API/DTO/types quand active."""
+    archetype = marker_value(
+        get_section(text, "Operation Contract"), "Primary archetype"
+    ).casefold()
+    required_contracts = required_contracts_from_story(text)
+    requires_shape = (
+        archetype in CONTRACT_SHAPE_ARCHETYPES
+        or required_contracts.get("Contract Shape") == "yes"
+    )
+    if not requires_shape:
+        return []
+
+    section = get_section(text, "Contract Shape")
+    if not section:
+        return ["Contract Shape story missing section: Contract Shape"]
+    if "not applicable" in section.casefold():
+        return ["Contract Shape cannot be not applicable for this archetype"]
+
+    errors: list[str] = []
+    for marker in [
+        "Contract type:",
+        "Fields:",
+        "Required fields:",
+        "Optional fields:",
+        "Status codes:",
+        "Serialization names:",
+        "Frontend type impact:",
+        "Generated contract impact:",
+    ]:
+        value = block_after_marker(
+            section,
+            marker,
+            [
+                "Contract type:",
+                "Fields:",
+                "Required fields:",
+                "Optional fields:",
+                "Status codes:",
+                "Serialization names:",
+                "Frontend type impact:",
+                "Generated contract impact:",
+            ],
+        )
+        if marker.casefold() not in section.casefold() or not re.search(
+            r"^\s*-\s+\S", value, re.M
+        ):
+            errors.append(f"Contract Shape missing concrete marker: {marker}")
+    return errors
+
+
+def validate_batch_migration_plan(text: str) -> list[str]:
+    """Exige un plan de migration par lots quand le contrat est active."""
+    archetype = marker_value(
+        get_section(text, "Operation Contract"), "Primary archetype"
+    ).casefold()
+    required_contracts = required_contracts_from_story(text)
+    requires_batch = (
+        archetype in BATCH_MIGRATION_ARCHETYPES
+        or required_contracts.get("Batch Migration") == "yes"
+    )
+    if not requires_batch:
+        return []
+
+    section = get_section(text, "Batch Migration Plan")
+    if not section:
+        return ["Batch migration story missing section: Batch Migration Plan"]
+    if "not applicable" in section.casefold():
+        return ["Batch Migration Plan cannot be not applicable for this archetype"]
+
+    table = find_table_with_columns(
+        section,
+        [
+            "Batch",
+            "Old surface",
+            "Canonical surface",
+            "Consumers changed",
+            "Tests adapted",
+            "No-shim proof",
+            "Blocker condition",
+        ],
+    )
+    if table is None:
+        return [
+            "Batch Migration Plan must include Batch, Old surface, Canonical surface, Consumers changed, Tests adapted, No-shim proof, and Blocker condition"
+        ]
+    if not table.rows:
+        return ["Batch Migration Plan must include at least one batch row"]
+    return []
+
+
+def validate_allowlist_exception_register(text: str) -> list[str]:
+    """Valide les exceptions explicites et refuse les allowlists larges."""
+    required_contracts = required_contracts_from_story(text)
+    trigger_text = "\n".join(
+        [
+            get_section(text, "Objective"),
+            get_section(text, "Trigger / Source"),
+            get_section(text, "Operation Contract"),
+            get_section(text, "Acceptance Criteria"),
+            get_section(text, "Validation Plan"),
+            get_section(text, "No Legacy / Forbidden Paths"),
+        ]
+    )
+    trigger_text = re.sub(
+        r"\b(?:no|not applicable|none|without)\s+[\w\s/-]{0,40}?(?:allowlist|exception|exception register)\b",
+        "",
+        trigger_text,
+        flags=re.I,
+    )
+    if (
+        not ALLOWLIST_TRIGGER_RE.search(trigger_text)
+        and required_contracts.get("Allowlist Exception") != "yes"
+    ):
+        return []
+    section = get_section(text, "Allowlist / Exception Register")
+    if not section:
+        return ["Allowlist story missing section: Allowlist / Exception Register"]
+    if "not applicable" in section.casefold():
+        return [
+            "Allowlist / Exception Register cannot be not applicable when exceptions are mentioned"
+        ]
+
+    table = find_table_with_columns(
+        section,
+        ["File", "Symbol / Route / Import", "Reason", "Expiry or permanence decision"],
+    )
+    if table is None:
+        return [
+            "Allowlist / Exception Register must include File, Symbol / Route / Import, Reason, and Expiry or permanence decision"
+        ]
+
+    errors: list[str] = []
+    headers = [normalize(header) for header in table.headers]
+    file_index = headers.index(normalize("File"))
+    symbol_index = headers.index(normalize("Symbol / Route / Import"))
+    expiry_index = headers.index(normalize("Expiry or permanence decision"))
+    for row in table.rows:
+        if len(row) <= max(file_index, symbol_index, expiry_index):
+            errors.append("Allowlist / Exception Register has an incomplete row")
+            continue
+        file_value = row[file_index].strip()
+        symbol_value = row[symbol_index].strip()
+        expiry_value = row[expiry_index].strip()
+        combined = f"{file_value} {symbol_value} {expiry_value}"
+        if "*" in combined:
+            errors.append("Allowlist / Exception Register must not use wildcards")
+        if re.search(r"[/\\]\*\*|\*\*|folder|directory|dossier", combined, re.I):
+            errors.append(
+                "Allowlist / Exception Register must not use folder-wide exceptions"
+            )
+        if not expiry_value or expiry_value in {"-", "n/a", "none"}:
+            errors.append(
+                "Allowlist / Exception Register row has empty expiry/permanence decision"
+            )
+        if re.search(
+            r"\btemporary\b|\btemporaire\b", expiry_value, re.I
+        ) and not re.search(
+            r"\d{4}-\d{2}-\d{2}|until|when|condition|issue|ticket|permanent",
+            expiry_value,
+            re.I,
+        ):
+            errors.append(
+                "Allowlist / Exception Register temporary exception needs date or exit condition"
+            )
+    return errors
+
+
+def validate_no_legacy_reintroduction_guard(text: str) -> list[str]:
+    """Exige un garde-fou quand des symboles No Legacy precis sont interdits."""
+    section = get_section(text, "No Legacy / Forbidden Paths")
+    if not section:
+        return []
+    backticked_values = [
+        value for value in BACKTICK_VALUE_RE.findall(section) if value.strip()
+    ]
+    if not backticked_values:
+        return []
+    guard_section = get_section(text, "Reintroduction Guard")
+    combined = "\n".join(
+        [
+            guard_section,
+            get_section(text, "Acceptance Criteria"),
+            get_section(text, "Validation Plan"),
+        ]
+    )
+    if has_executable_guard_evidence(combined):
+        return []
+    if "not applicable" in guard_section.casefold() and re.search(
+        r"reason:|justification:", guard_section, re.I
+    ):
+        return []
+    return [
+        "No Legacy / Forbidden Paths lists specific symbols and must activate or justify a Reintroduction Guard"
+    ]
+
+
+def validate_persistent_evidence_artifacts(text: str) -> list[str]:
+    """Exige un artefact persistant pour audits, snapshots et baselines."""
+    required_contracts = required_contracts_from_story(text)
+    baseline_section = get_section(text, "Baseline / Before-After Rule")
+    removal_audit_section = get_section(text, "Removal Audit Format")
+    explicit_persistent_trigger = bool(
+        baseline_section and "not applicable" not in baseline_section.casefold()
+    ) or bool(
+        removal_audit_section
+        and "not applicable" not in removal_audit_section.casefold()
+    )
+    trigger_text = text.replace(get_section(text, "Persistent Evidence Artifacts"), "")
+    explicit_persistent_trigger = explicit_persistent_trigger or bool(
+        re.search(
+            r"\b(openapi diff|diff snapshot|migration mapping|allowlist register|exception register)\b",
+            trigger_text,
+            re.I,
+        )
+    )
+    if (
+        not explicit_persistent_trigger
+        and required_contracts.get("Persistent Evidence") != "yes"
+    ):
+        return []
+    section = get_section(text, "Persistent Evidence Artifacts")
+    if not section:
+        return [
+            "Persistent evidence story missing section: Persistent Evidence Artifacts"
+        ]
+    if "not applicable" in section.casefold():
+        return [
+            "Persistent Evidence Artifacts cannot be not applicable when audit/snapshot/baseline/diff evidence is mentioned"
+        ]
+    table = find_table_with_columns(section, ["Artifact", "Path", "Purpose"])
+    if table is None:
+        return [
+            "Persistent Evidence Artifacts must include Artifact, Path, and Purpose table"
+        ]
+    path_index = [normalize(header) for header in table.headers].index("path")
+    has_concrete_artifact = any(
+        len(row) > path_index
+        and any(
+            is_concrete_path(value)
+            for value in BACKTICK_VALUE_RE.findall(row[path_index])
+        )
+        for row in table.rows
+    )
+    if not has_concrete_artifact:
+        return [
+            "Persistent Evidence Artifacts must include at least one concrete artifact path"
         ]
     return []
 
@@ -892,10 +1685,19 @@ def validate_story(path: Path) -> list[str]:
     errors.extend(validate_current_state_evidence(text))
     errors.extend(validate_domain_boundary(text))
     errors.extend(validate_operation_contract(text))
+    errors.extend(validate_required_contracts(text))
+    errors.extend(validate_runtime_source_of_truth(text))
+    errors.extend(validate_baseline_rule(text))
+    errors.extend(validate_ownership_routing_rule(text))
+    errors.extend(validate_contract_shape(text))
+    errors.extend(validate_batch_migration_plan(text))
+    errors.extend(validate_allowlist_exception_register(text))
     errors.extend(validate_acceptance_criteria(text))
     errors.extend(validate_tasks(text))
     errors.extend(validate_removal_contract(text))
     errors.extend(validate_no_legacy(text))
+    errors.extend(validate_no_legacy_reintroduction_guard(text))
+    errors.extend(validate_persistent_evidence_artifacts(text))
     errors.extend(validate_dev_agent_instructions(text))
     errors.extend(validate_expected_files(text))
     errors.extend(validate_dependency_policy_section(text))
@@ -905,15 +1707,69 @@ def validate_story(path: Path) -> list[str]:
     return errors
 
 
+def explain_contracts(path: Path) -> int:
+    """Affiche le diagnostic des contrats requis et declares."""
+    if not path.is_file():
+        print(f"Story not found: {path}")
+        return 1
+    text = read_text(path)
+    operation = get_section(text, "Operation Contract")
+    archetype = marker_value(operation, "Primary archetype").casefold() or "<missing>"
+    required = sorted(ARCHETYPE_REQUIRED_CONTRACTS.get(archetype, set()))
+    declared = required_contracts_from_story(text)
+    present_yes = sorted(
+        contract for contract, value in declared.items() if value == "yes"
+    )
+    present_no = sorted(
+        contract for contract, value in declared.items() if value == "no"
+    )
+    missing = sorted(
+        contract for contract in required if declared.get(contract) != "yes"
+    )
+
+    print("CONDAMAD story contract explanation")
+    print(f"- Primary archetype: {archetype}")
+    print("- Archetype required contracts:")
+    for contract in required:
+        print(f"  - {contract}")
+    if not required:
+        print("  - <none or custom>")
+    print("- Story contracts marked yes:")
+    for contract in present_yes:
+        print(f"  - {contract}")
+    if not present_yes:
+        print("  - <none>")
+    print("- Story contracts marked no:")
+    for contract in present_no:
+        print(f"  - {contract}")
+    if not present_no:
+        print("  - <none>")
+    print("- Missing required contracts:")
+    for contract in missing:
+        print(f"  - {contract}")
+    if not missing:
+        print("  - <none>")
+    return 1 if missing else 0
+
+
 def main() -> int:
     """Execute la validation depuis la ligne de commande."""
     parser = argparse.ArgumentParser(description="Validate a CONDAMAD story file.")
+    parser.add_argument(
+        "--explain-contracts",
+        action="store_true",
+        help="Print archetype contract requirements and story contract coverage.",
+    )
     parser.add_argument(
         "story", type=Path, help="Path to a CONDAMAD story markdown file."
     )
     args = parser.parse_args()
 
-    errors = validate_story(args.story.expanduser().resolve())
+    story_path = args.story.expanduser().resolve()
+    if args.explain_contracts:
+        return explain_contracts(story_path)
+
+    errors = validate_story(story_path)
     if errors:
         print("CONDAMAD story validation: FAIL")
         for error in errors:

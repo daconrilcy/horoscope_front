@@ -43,6 +43,21 @@ removal, load and apply `references/removal-story-contract.md`.
 Do not write the final story until the archetype-specific contract has been
 applied.
 
+## Step 2c - Select Required Contracts
+
+After selecting the primary archetype, select all required contracts:
+
+- Runtime Source of Truth Contract
+- Baseline Snapshot Contract
+- Ownership Routing Contract
+- Allowlist Exception Contract
+- Contract Shape Contract
+- Batch Migration Contract
+- Reintroduction Guard Contract
+- Persistent Evidence Contract
+
+Do not draft the story until required contracts are selected.
+
 ## Step 3 - Evidence Pass
 
 Collect enough evidence to avoid invented repo facts:
@@ -61,6 +76,8 @@ assumption risk.
 ## Step 4 - Draft Implementation Contract
 
 Use `templates/story-template.md`.
+For conditional transverse sections, choose exactly one matching active or
+not-applicable snippet from `templates/snippets/` and inline it into the story.
 
 The draft must include:
 
@@ -68,6 +85,8 @@ The draft must include:
 - trigger/source;
 - domain boundary;
 - operation contract;
+- required contracts table;
+- selected transverse contract snippets;
 - current state evidence;
 - target state;
 - AC table with validation evidence;
@@ -95,15 +114,30 @@ Before writing the final story, check:
 
 ## Step 6 - Story Lint
 
-Run:
+From the skill directory:
 
 ```bash
 python -B scripts/condamad_story_validate.py <story_path>
+python -B scripts/condamad_story_validate.py --explain-contracts <story_path>
 python -B scripts/condamad_story_lint.py <story_path>
 ```
 
-Fix the story until both pass. A story must not be marked `ready-for-dev` while
-the validator fails.
+From the repository root:
+
+```bash
+python -B .agents/skills/condamad-story-writer/scripts/condamad_story_validate.py <story_path>
+python -B .agents/skills/condamad-story-writer/scripts/condamad_story_validate.py --explain-contracts <story_path>
+python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py <story_path>
+```
+
+For release-grade checks, run lint in strict mode:
+
+```bash
+python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py --strict <story_path>
+```
+
+Fix the story until all required validation commands pass. A story must not be
+marked `ready-for-dev` while the validator or strict lint fails.
 
 ## Step 6b - Adversarial Story Review
 
@@ -120,6 +154,14 @@ Check:
 - Can an agent avoid deletion through repointing or soft-delete?
 - Can an agent create a new route, wrapper, alias, or fallback?
 - Can an agent mark `ready-for-dev` while user decision is needed?
+- Can the story pass with `rg` only while runtime behavior is wrong?
+- Can the story change a contract while `Behavior change allowed: no`?
+- Can the agent keep an exception without expiry?
+- Can a broad allowlist hide a future regression?
+- Can the agent skip baseline capture?
+- Can the agent skip persistent evidence?
+- Can one AC be partially implemented and still look complete?
+- Can an internal test import be mistaken for external usage?
 
 If yes, tighten the story before writing final output.
 
@@ -132,3 +174,11 @@ _condamad/stories/<story-key>/00-story.md
 ```
 
 Report the story path and validation commands run.
+
+Before packaging the skill, remove generated Python artifacts and verify none
+remain under `condamad-story-writer`:
+
+```bash
+find .agents/skills/condamad-story-writer -type d -name "__pycache__" -prune -exec rm -rf {} +
+find .agents/skills/condamad-story-writer -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
+```

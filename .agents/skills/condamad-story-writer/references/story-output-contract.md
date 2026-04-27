@@ -20,6 +20,7 @@ Every story must include these sections:
 2. Trigger / Source
 3. Domain Boundary
 4. Operation Contract
+4a. Required Contracts
 5. Current State Evidence
 6. Target State
 7. Acceptance Criteria
@@ -34,6 +35,30 @@ Every story must include these sections:
 16. Dev Agent Instructions
 17. References
 
+## Conditional Transverse Sections
+
+Stories must include the section when the selected archetype or story scope
+activates the matching contract:
+
+- Runtime Source of Truth
+- Baseline / Before-After Rule
+- Ownership Routing Rule
+- Allowlist / Exception Register
+- Contract Shape
+- Batch Migration Plan
+- Reintroduction Guard
+- Persistent Evidence Artifacts
+
+When a conditional section is not active, the story may mark it `not applicable`
+with a concrete reason.
+
+The template keeps conditional sections as headings. The final story must inline
+exactly one matching active or not-applicable snippet from `templates/snippets/`
+for each conditional transverse section.
+
+`Reintroduction Guard` is a transverse contract. It is required for removal
+stories when the selected archetype activates it, but it is not removal-only.
+
 ## Conditional Removal Sections
 
 Removal stories must also include:
@@ -43,8 +68,7 @@ Removal stories must also include:
 3. Canonical Ownership
 4. Delete-Only Rule
 5. External Usage Blocker
-6. Reintroduction Guard
-7. Generated Contract Check
+6. Generated Contract Check
 
 Numbering is recommended. The validator accepts equivalent markdown headings
 with the same titles.
@@ -80,7 +104,8 @@ The Operation Contract section must include:
 - `Operation type: create | update | move | remove | split | converge | guard | migrate`
 - `Primary archetype: <supported archetype>`
 - `Archetype reason: <why this archetype applies>`
-- `Behavior change allowed: yes | no`
+- `Behavior change allowed: no | constrained | yes`
+- `Behavior change constraints:` when behavior change is `constrained` or `yes`
 - `Deletion allowed: yes | no`
 - `Replacement allowed: yes | no`
 - `User decision required if: <condition>`
@@ -88,6 +113,54 @@ The Operation Contract section must include:
 The primary archetype must come from `references/story-archetypes.md` unless it
 is `custom`, in which case the story must explain why no supported archetype
 fits and add explicit validation rules.
+
+## Required Contracts
+
+The Required Contracts section must include this table:
+
+| Contract | Required | Reason |
+|---|---:|---|
+
+`Required` must be `yes` or `no`. Contracts required by
+`references/story-archetypes.md` must be listed as `yes` unless the archetype is
+`custom`, in which case the story must explain its selected contracts.
+
+The table must list every known contract exactly once:
+
+- Runtime Source of Truth
+- Baseline Snapshot
+- Ownership Routing
+- Allowlist Exception
+- Contract Shape
+- Batch Migration
+- Reintroduction Guard
+- Persistent Evidence
+
+Unknown contract names and duplicate rows are invalid.
+
+When a contract is marked `yes`, the matching section must be active. When a
+contract is marked `no`, the matching section must be `not applicable` and must
+include a `Reason`.
+
+## Contract Shape
+
+When active, the Contract Shape section must include:
+
+- `Contract type:`
+- `Fields:`
+- `Required fields:`
+- `Optional fields:`
+- `Status codes:`
+- `Serialization names:`
+- `Frontend type impact:`
+- `Generated contract impact:`
+
+## Batch Migration Plan
+
+When active, the Batch Migration Plan section must include:
+
+| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |
+|---|---|---|---|---|---|---|
 
 ## Expected File Fields
 

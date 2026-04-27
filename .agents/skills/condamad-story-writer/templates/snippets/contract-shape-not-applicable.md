@@ -1,0 +1,2 @@
+- Contract shape: not applicable
+- Reason: no API, error, payload, export, DTO, OpenAPI contract, generated client, or frontend type is affected.

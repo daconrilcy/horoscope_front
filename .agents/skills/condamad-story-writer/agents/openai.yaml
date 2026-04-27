@@ -2,8 +2,7 @@ interface:
   display_name: "CONDAMAD Story Writer"
   short_description: "Generate a precise, mono-domain, Codex-ready implementation story from a brief, audit, review, or existing BMAD story."
   brand_color: "#2563EB"
-  default_prompt: "$condamad-story-writer Generate a Codex-ready CONDAMAD story from the provided brief or audit. Enforce DRY, No Legacy, mono-domain scope, validation evidence, and anti-drift guardrails."
+  default_prompt: "$condamad-story-writer Generate an archetype-aware, contract-aware CONDAMAD story from the provided brief or audit. Select the primary archetype, required contracts, DRY / No Legacy guardrails, validation evidence, runtime/baseline requirements, and anti-drift checks."
 
 policy:
   allow_implicit_invocation: false
-

@@ -29,12 +29,87 @@ This story belongs to exactly one domain:
 ## 4. Operation Contract
 
 - Operation type: create | update | move | remove | split | converge | guard | migrate
-- Primary archetype: api-route-removal | legacy-facade-removal | field-contract-removal | namespace-convergence | module-move | large-file-split | dead-code-removal | frontend-route-removal | test-guard-hardening | service-boundary-refactor | custom
+- Primary archetype: api-route-removal | api-contract-change | api-error-contract-centralization | route-architecture-convergence | api-adapter-boundary-convergence | legacy-facade-removal | field-contract-removal | namespace-convergence | ownership-routing-refactor | module-move | large-file-split | dead-code-removal | frontend-route-removal | runtime-contract-preservation | batch-migration | architecture-guard-hardening | registry-catalog-refactor | test-guard-hardening | service-boundary-refactor | custom
 - Archetype reason: <why this archetype applies>
-- Behavior change allowed: yes | no
+- Behavior change allowed: no | constrained | yes
+- Behavior change constraints:
+  - <what may change>
+  - <what must not change>
 - Deletion allowed: yes | no
 - Replacement allowed: yes | no
 - User decision required if: <condition>
+
+## 4a. Required Contracts
+
+Every story must persist the contracts selected from the archetype and story
+scope.
+
+| Contract | Required | Reason |
+|---|---:|---|
+| Runtime Source of Truth | yes | <why runtime truth is required, or no with reason> |
+| Baseline Snapshot | yes | <why before/after comparison is required, or no with reason> |
+| Ownership Routing | yes | <why ownership classification is required, or no with reason> |
+| Allowlist Exception | no | <why exceptions are required, or why none are allowed> |
+| Contract Shape | yes | <why exact API/DTO/error shape is required, or no with reason> |
+| Batch Migration | no | <why batch migration is required, or no with reason> |
+| Reintroduction Guard | yes | <why anti-regression guard is required, or no with reason> |
+| Persistent Evidence | yes | <why persisted audit/snapshot evidence is required, or no with reason> |
+
+## 4b. Runtime Source of Truth
+
+Choose exactly one snippet:
+
+- `templates/snippets/runtime-source-of-truth-active.md`
+- `templates/snippets/runtime-source-of-truth-not-applicable.md`
+
+## 4c. Baseline / Before-After Rule
+
+Choose exactly one snippet:
+
+- `templates/snippets/baseline-before-after-active.md`
+- `templates/snippets/baseline-before-after-not-applicable.md`
+
+## 4d. Ownership Routing Rule
+
+Choose exactly one snippet:
+
+- `templates/snippets/ownership-routing-active.md`
+- `templates/snippets/ownership-routing-not-applicable.md`
+
+## 4e. Allowlist / Exception Register
+
+Choose exactly one snippet:
+
+- `templates/snippets/allowlist-exception-active.md`
+- `templates/snippets/allowlist-exception-not-applicable.md`
+
+## 4f. Contract Shape
+
+Choose exactly one snippet:
+
+- `templates/snippets/contract-shape-active.md`
+- `templates/snippets/contract-shape-not-applicable.md`
+
+## 4g. Batch Migration Plan
+
+Choose exactly one snippet:
+
+- `templates/snippets/batch-migration-active.md`
+- `templates/snippets/batch-migration-not-applicable.md`
+
+## 4h. Persistent Evidence Artifacts
+
+Choose exactly one snippet:
+
+- `templates/snippets/persistent-evidence-active.md`
+- `templates/snippets/persistent-evidence-not-applicable.md`
+
+## 4i. Reintroduction Guard
+
+Choose exactly one snippet:
+
+- `templates/snippets/reintroduction-guard-active.md`
+- `templates/snippets/reintroduction-guard-not-applicable.md`
 
 ## 5. Current State Evidence
 
@@ -176,30 +251,6 @@ Use this section only when deletion is allowed. Otherwise write:
 If an item is classified as `external-active`, it must not be deleted. The dev
 agent must stop or record an explicit user decision with external evidence and
 deletion risk.
-
-## 16. Reintroduction Guard
-
-Use this section for No Legacy removal stories. Otherwise write:
-
-- Reintroduction guard: not applicable
-
-The implementation must add or update an architecture guard that fails if the
-removed surface is reintroduced.
-
-The guard must check at least one deterministic source:
-
-- registered router prefixes
-- importable Python modules
-- frontend route table
-- generated OpenAPI paths
-- forbidden symbols or states
-
-Required forbidden examples:
-
-- `<removed route prefix>`
-- `<removed import path>`
-- `<removed frontend route>`
-- `<removed legacy field>`
 
 ## 17. Generated Contract Check
 

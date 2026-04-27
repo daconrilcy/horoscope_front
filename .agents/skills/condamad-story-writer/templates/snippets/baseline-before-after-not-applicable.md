@@ -1,0 +1,2 @@
+- Baseline rule: not applicable
+- Reason: no behavior-preserving refactor, migration, route restructuring, or API contract change is involved.

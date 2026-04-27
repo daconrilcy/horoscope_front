@@ -5,13 +5,22 @@
 ## Supported Archetypes
 
 - `api-route-removal`
+- `api-contract-change`
+- `api-error-contract-centralization`
+- `route-architecture-convergence`
+- `api-adapter-boundary-convergence`
 - `legacy-facade-removal`
 - `field-contract-removal`
 - `namespace-convergence`
+- `ownership-routing-refactor`
 - `module-move`
 - `large-file-split`
 - `dead-code-removal`
 - `frontend-route-removal`
+- `runtime-contract-preservation`
+- `batch-migration`
+- `architecture-guard-hardening`
+- `registry-catalog-refactor`
 - `test-guard-hardening`
 - `service-boundary-refactor`
 - `custom`
@@ -33,6 +42,31 @@ If no archetype fits, use:
 The archetype determines mandatory sections, AC patterns, validation evidence,
 and anti-drift rules. Do not write the final story until the archetype-specific
 contract has been applied.
+
+## Contract Selection Matrix
+
+| Archetype | Required contracts |
+|---|---|
+| `api-route-removal` | Runtime Source of Truth, Baseline Snapshot, Contract Shape, Reintroduction Guard, Persistent Evidence |
+| `api-contract-change` | Runtime Source of Truth, Baseline Snapshot, Contract Shape, Reintroduction Guard, Persistent Evidence |
+| `api-error-contract-centralization` | Runtime Source of Truth, Ownership Routing, Allowlist Exception, Contract Shape, Reintroduction Guard |
+| `route-architecture-convergence` | Runtime Source of Truth, Baseline Snapshot, Ownership Routing, Allowlist Exception, Reintroduction Guard, Persistent Evidence |
+| `api-adapter-boundary-convergence` | Runtime Source of Truth, Baseline Snapshot, Ownership Routing, Allowlist Exception, Reintroduction Guard |
+| `legacy-facade-removal` | Runtime Source of Truth, Baseline Snapshot, Ownership Routing, Reintroduction Guard, Persistent Evidence |
+| `field-contract-removal` | Baseline Snapshot, Contract Shape, Reintroduction Guard, Persistent Evidence |
+| `namespace-convergence` | Baseline Snapshot, Ownership Routing, Batch Migration, Reintroduction Guard, Persistent Evidence |
+| `ownership-routing-refactor` | Baseline Snapshot, Ownership Routing, Allowlist Exception, Reintroduction Guard |
+| `module-move` | Baseline Snapshot, Ownership Routing, Reintroduction Guard |
+| `large-file-split` | Baseline Snapshot, Ownership Routing, Reintroduction Guard |
+| `dead-code-removal` | Baseline Snapshot, Reintroduction Guard, Persistent Evidence |
+| `frontend-route-removal` | Baseline Snapshot, Contract Shape, Reintroduction Guard, Persistent Evidence |
+| `runtime-contract-preservation` | Runtime Source of Truth, Baseline Snapshot, Contract Shape, Persistent Evidence |
+| `batch-migration` | Baseline Snapshot, Batch Migration, Reintroduction Guard, Persistent Evidence |
+| `architecture-guard-hardening` | Runtime Source of Truth, Allowlist Exception, Reintroduction Guard |
+| `registry-catalog-refactor` | Baseline Snapshot, Ownership Routing, Batch Migration, Persistent Evidence |
+| `test-guard-hardening` | Runtime Source of Truth, Allowlist Exception, Reintroduction Guard |
+| `service-boundary-refactor` | Baseline Snapshot, Ownership Routing, Reintroduction Guard |
+| `custom` | Select every contract activated by the story scope. |
 
 ## Removal Archetypes
 
@@ -111,3 +145,39 @@ Required AC themes:
 4. UI components dedicated only to the route are removed.
 5. API clients used only by the route are removed or reclassified.
 6. Tests prove canonical routing and absence of removed path.
+
+## Archetype: `route-architecture-convergence`
+
+Required contracts:
+
+- Runtime Source of Truth Contract
+- Baseline Snapshot Contract
+- Ownership Routing Contract
+- Allowlist Exception Contract
+- Reintroduction Guard Contract
+
+Required AC themes:
+
+1. Runtime route inventory is captured from `app.openapi()`.
+2. Before/after route contract is compared.
+3. Python router ownership maps to effective HTTP roots.
+4. Allowlist entries are exact and justified.
+5. Architecture guard fails if route placement drifts again.
+
+## Archetype: `api-error-contract-centralization`
+
+Required contracts:
+
+- Contract Shape Contract
+- Ownership Routing Contract
+- Allowlist Exception Contract
+- Runtime Source of Truth Contract
+- Reintroduction Guard Contract
+
+Required AC themes:
+
+1. HTTP error JSON shape is explicit.
+2. Application errors live outside `app.api`.
+3. API handlers translate but do not decide business logic.
+4. Unmapped errors produce controlled generic responses.
+5. Forbidden local `HTTPException` / `JSONResponse` patterns are guarded with narrow allowlist.
