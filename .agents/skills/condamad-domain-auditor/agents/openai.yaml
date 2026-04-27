@@ -1,0 +1,8 @@
+interface:
+  display_name: "CONDAMAD Domain Auditor"
+  short_description: "Audit one bounded application domain and generate evidence-backed findings, risks, and story candidates."
+  brand_color: "#0F766E"
+  default_prompt: "$condamad-domain-auditor Audit the specified application domain. Produce a versioned evidence-backed audit report, finding register, risk matrix, and story candidates. Stay read-only and enforce DRY, No Legacy, mono-domain boundaries, dependency direction, and validation evidence."
+
+policy:
+  allow_implicit_invocation: false
