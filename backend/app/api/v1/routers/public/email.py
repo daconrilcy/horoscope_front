@@ -1,9 +1,11 @@
+"""Route publique de désabonnement email à token signé."""
+
 from __future__ import annotations
 
 import logging
 
 import jwt
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy import update
 from sqlalchemy.orm import Session
@@ -20,12 +22,17 @@ from app.services.email.public_email import (
 router = APIRouter(prefix="/email", tags=["email"])
 logger = logging.getLogger(__name__)
 
+NO_STORE_HEADERS = {"Cache-Control": "no-store"}
+
 
 @router.get("/unsubscribe", response_class=HTMLResponse)
-def unsubscribe(token: str = Query(...), db: Session = Depends(get_db_session)) -> str:
-    """
-    AC2: Endpoint to unsubscribe a user via a token.
-    """
+def unsubscribe(
+    response: Response,
+    token: str = Query(...),
+    db: Session = Depends(get_db_session),
+) -> str:
+    """Désabonne un utilisateur marketing depuis un lien email signé et non authentifié."""
+    response.headers.update(NO_STORE_HEADERS)
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
         user_id = payload.get("user_id")
@@ -40,27 +47,45 @@ def unsubscribe(token: str = Query(...), db: Session = Depends(get_db_session)) 
         }
 
         if not user_id or email_type not in marketing_types:
-            raise_api_error(status_code=400, message="Lien de désabonnement non valide")
-        # AC2: Check if user exists and update
+            raise_api_error(
+                status_code=400,
+                message="Lien de désabonnement non valide",
+                headers=NO_STORE_HEADERS,
+            )
+
         result = db.execute(
             update(UserModel).where(UserModel.id == user_id).values(email_unsubscribed=True)
         )
         db.commit()
 
         if result.rowcount == 0:
-            # If the user doesn't exist, we don't want to leak that info too much,
-            # but for a link like this, a 400 is fine.
-            raise_api_error(status_code=400, message="Utilisateur non trouvé")
+            raise_api_error(
+                status_code=400,
+                message="Utilisateur non trouvé",
+                headers=NO_STORE_HEADERS,
+            )
         return _get_confirmation_html(
             success=True, message="Vous avez bien été désabonné de nos emails marketing."
         )
 
     except jwt.ExpiredSignatureError:
-        raise_api_error(status_code=400, message="Le lien de désabonnement a expiré")
+        raise_api_error(
+            status_code=400,
+            message="Le lien de désabonnement a expiré",
+            headers=NO_STORE_HEADERS,
+        )
     except jwt.InvalidTokenError:
-        raise_api_error(status_code=400, message="Lien de désabonnement invalide")
+        raise_api_error(
+            status_code=400,
+            message="Lien de désabonnement invalide",
+            headers=NO_STORE_HEADERS,
+        )
     except ApplicationError:
         raise
-    except Exception as e:
-        logger.error(f"Unsubscribe error: {str(e)}")
-        raise_api_error(status_code=400, message="Une erreur est survenue lors du désabonnement")
+    except Exception:
+        logger.exception("unsubscribe_failed")
+        raise_api_error(
+            status_code=400,
+            message="Une erreur est survenue lors du désabonnement",
+            headers=NO_STORE_HEADERS,
+        )

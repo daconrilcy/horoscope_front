@@ -1,3 +1,5 @@
+"""Tests d'intégration du désabonnement email public."""
+
 import uuid
 
 import pytest
@@ -12,6 +14,11 @@ from app.services.email.service import EmailService
 from tests.integration.app_db import open_app_db_session
 
 client = TestClient(app)
+
+
+def _assert_no_store(response) -> None:
+    """Vérifie que les réponses unsubscribe ne peuvent pas être mises en cache."""
+    assert response.headers["cache-control"] == "no-store"
 
 
 @pytest.fixture
@@ -53,6 +60,7 @@ def test_unsubscribe_success(db: Session, test_user: UserModel):
     response = client.get(f"/api/email/unsubscribe?token={token}")
 
     assert response.status_code == 200
+    _assert_no_store(response)
     assert "Désabonnement réussi" in response.text
 
     # Check DB
@@ -67,6 +75,7 @@ def test_unsubscribe_invalid_email_type(db: Session, test_user: UserModel):
     response = client.get(f"/api/email/unsubscribe?token={token}")
 
     assert response.status_code == 400
+    _assert_no_store(response)
     assert "Lien de désabonnement non valide" in response.json()["error"]["message"]
 
 
@@ -88,16 +97,18 @@ def test_unsubscribe_expired_token(db: Session, test_user: UserModel):
     response = client.get(f"/api/email/unsubscribe?token={expired_token}")
 
     assert response.status_code == 400
+    _assert_no_store(response)
     assert "Le lien de désabonnement a expiré" in response.json()["error"]["message"]
 
 
-def test_unsubscribe_user_not_found(db: Session):
-    # Generate token for non-existent user
+def test_unsubscribe_user_not_found_preserves_existing_status(db: Session):
+    """Un token signé pour un utilisateur absent conserve le contrat HTTP existant."""
     token = EmailService.generate_unsubscribe_token(9999, email_type="marketing")
 
     response = client.get(f"/api/email/unsubscribe?token={token}")
 
     assert response.status_code == 400
+    _assert_no_store(response)
     assert "Utilisateur non trouvé" in response.json()["error"]["message"]
 
 

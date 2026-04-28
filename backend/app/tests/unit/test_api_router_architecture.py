@@ -724,6 +724,15 @@ def test_route_mount_exceptions_are_structured_and_exact() -> None:
         assert exception.decision
         assert exception.condition
 
+    unsubscribe_exception = by_key["public_email_unsubscribe"]
+    assert unsubscribe_exception.route_path == "/api/email/unsubscribe"
+    assert unsubscribe_exception.methods == ("GET",)
+    assert unsubscribe_exception.include_prefix == "/api"
+    assert unsubscribe_exception.condition == "always"
+    assert unsubscribe_exception.decision.startswith("Decision needs-user-decision:")
+    assert "external-active" in unsubscribe_exception.decision
+    assert "decision explicite" in unsubscribe_exception.decision
+
 
 def test_runtime_routes_match_structured_exception_register() -> None:
     """La table runtime ne doit contenir que des exceptions exactes hors registre."""

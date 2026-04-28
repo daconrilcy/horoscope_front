@@ -46,7 +46,10 @@ API_ROUTE_MOUNT_EXCEPTIONS: tuple[RouteMountException, ...] = (
         router_module="app.api.v1.routers.public.email",
         endpoint_module="app.api.v1.routers.public.email",
         reason="URL publique historique active de desabonnement email hors prefixe /v1.",
-        decision="Suppression uniquement via une story dediee de migration d URL.",
+        decision=(
+            "Decision needs-user-decision: route external-active conservee sans changement "
+            "runtime en attente d une decision explicite de permanence, migration ou retrait."
+        ),
         condition="always",
         include_prefix="/api",
         tags=("email",),
