@@ -68,6 +68,24 @@ def test_unsubscribe_success(db: Session, test_user: UserModel):
     assert test_user.email_unsubscribed is True
 
 
+def test_unsubscribe_delegates_persistence_to_email_service(monkeypatch):
+    """Vérifie que le routeur public appelle le service applicatif de désabonnement."""
+    calls: list[int] = []
+    token = EmailService.generate_unsubscribe_token(12345, email_type="marketing")
+
+    def mark_user_unsubscribed(user_id: int) -> bool:
+        calls.append(user_id)
+        return True
+
+    monkeypatch.setattr(EmailService, "mark_user_unsubscribed", mark_user_unsubscribed)
+
+    response = client.get(f"/api/email/unsubscribe?token={token}")
+
+    assert response.status_code == 200
+    _assert_no_store(response)
+    assert calls == [12345]
+
+
 def test_unsubscribe_invalid_email_type(db: Session, test_user: UserModel):
     # Generate token with wrong email_type
     token = EmailService.generate_unsubscribe_token(test_user.id, email_type="transactional")

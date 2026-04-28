@@ -6,13 +6,14 @@ from datetime import timedelta
 
 import jwt
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.email_log import EmailLogModel
 from app.infra.db.models.user import UserModel
+from app.infra.db.session import SessionLocal
 from app.services.email.provider import get_email_provider
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,16 @@ class EmailService:
         """
         token = EmailService.generate_unsubscribe_token(user_id)
         return f"{settings.backend_url}/api/email/unsubscribe?token={token}"
+
+    @staticmethod
+    def mark_user_unsubscribed(user_id: int) -> bool:
+        """Marque un utilisateur comme désabonné des emails marketing."""
+        with SessionLocal() as db:
+            result = db.execute(
+                update(UserModel).where(UserModel.id == user_id).values(email_unsubscribed=True)
+            )
+            db.commit()
+            return result.rowcount > 0
 
     @staticmethod
     async def send_welcome_email(

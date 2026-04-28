@@ -5,19 +5,16 @@ from __future__ import annotations
 import logging
 
 import jwt
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Query, Response
 from fastapi.responses import HTMLResponse
-from sqlalchemy import update
-from sqlalchemy.orm import Session
 
 from app.api.errors import raise_api_error
 from app.core.config import settings
 from app.core.exceptions import ApplicationError
-from app.infra.db.models.user import UserModel
-from app.infra.db.session import get_db_session
 from app.services.email.public_email import (
     _get_confirmation_html,
 )
+from app.services.email.service import EmailService
 
 router = APIRouter(prefix="/email", tags=["email"])
 logger = logging.getLogger(__name__)
@@ -29,7 +26,6 @@ NO_STORE_HEADERS = {"Cache-Control": "no-store"}
 def unsubscribe(
     response: Response,
     token: str = Query(...),
-    db: Session = Depends(get_db_session),
 ) -> str:
     """Désabonne un utilisateur marketing depuis un lien email signé et non authentifié."""
     response.headers.update(NO_STORE_HEADERS)
@@ -53,12 +49,7 @@ def unsubscribe(
                 headers=NO_STORE_HEADERS,
             )
 
-        result = db.execute(
-            update(UserModel).where(UserModel.id == user_id).values(email_unsubscribed=True)
-        )
-        db.commit()
-
-        if result.rowcount == 0:
+        if not EmailService.mark_user_unsubscribed(user_id):
             raise_api_error(
                 status_code=400,
                 message="Utilisateur non trouvé",

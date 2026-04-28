@@ -905,6 +905,35 @@ def test_api_sql_boundary_debt_matches_exact_allowlist() -> None:
     assert incomplete_metadata == []
 
 
+def test_public_email_unsubscribe_router_has_no_sql_boundary_debt() -> None:
+    """Le désabonnement public délègue la persistance hors du routeur HTTP."""
+    path = ROUTERS_ROOT / "public" / "email.py"
+    tree = _source_tree(path)
+    forbidden_imports: list[str] = []
+    forbidden_calls: list[str] = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.startswith(FORBIDDEN_SQL_IMPORT_ROOTS):
+                    forbidden_imports.append(f"{node.lineno} imports {alias.name}")
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            if node.module.startswith(FORBIDDEN_SQL_IMPORT_ROOTS):
+                imported = ",".join(alias.name for alias in node.names)
+                forbidden_imports.append(f"{node.lineno} imports {node.module}:{imported}")
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            receiver = node.func.value
+            receiver_name = receiver.id if isinstance(receiver, ast.Name) else ""
+            if receiver_name in {"db", "session"} and node.func.attr in FORBIDDEN_SESSION_METHODS:
+                forbidden_calls.append(f"{node.lineno} calls {receiver_name}.{node.func.attr}")
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            if node.func.id == "Depends" and _is_get_db_session_dependency(node):
+                forbidden_calls.append(f"{node.lineno} depends on get_db_session")
+
+    assert forbidden_imports == []
+    assert forbidden_calls == []
+
+
 def test_admin_content_text_update_flow_delegates_persistence_to_service() -> None:
     """Le flux extrait ne doit plus porter d'operations SQL dans le routeur."""
     tree = _source_tree(ROUTERS_ROOT / "admin" / "content.py")
