@@ -179,6 +179,8 @@ def _api_sql_boundary_python_files() -> list[Path]:
 
 def _schemas_python_files() -> list[Path]:
     """Retourne les fichiers Python des contrats Pydantic API v1."""
+    if not SCHEMAS_ROOT.exists():
+        return []
     return sorted(path for path in SCHEMAS_ROOT.rglob("*.py") if "__pycache__" not in path.parts)
 
 
@@ -843,6 +845,11 @@ def test_non_api_layers_do_not_import_api_package() -> None:
                         offenders.append(f"{relative_path}:{node.lineno} imports {node.module}")
 
     assert offenders == []
+
+
+def test_api_v1_schemas_package_is_removed() -> None:
+    """L'ancien package de schemas API v1 ne doit plus servir de facade vide."""
+    assert not SCHEMAS_ROOT.exists()
 
 
 def test_legacy_http_error_surfaces_are_removed() -> None:

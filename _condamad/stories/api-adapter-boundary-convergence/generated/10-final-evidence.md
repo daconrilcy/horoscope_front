@@ -51,6 +51,7 @@
 | `backend/app/core/api_constants.py` | added | Canonical shared constants outside API. | AC2, AC3 |
 | `backend/app/services/api_contracts/**` | added/moved | Canonical Pydantic contracts consumed by API and services. | AC1, AC2, AC3 |
 | `backend/app/api/v1/schemas/routers/**`, `backend/app/api/v1/schemas/common.py` | deleted | Remove API-owned contract tree consumed by services. | AC1, AC3 |
+| `backend/app/api/v1/schemas/__init__.py` | deleted | Remove residual empty legacy schema package after contract migration. | AC1, AC3, AC8 |
 | `backend/app/api/v1/routers/registry.py` | added | Single API v1 router registry. | AC4 |
 | `backend/app/main.py` | modified | Consume router registry. | AC4, AC9 |
 | `backend/app/api/errors/*` | modified | Remove legacy HTTP error surfaces. | AC5 |
@@ -63,6 +64,7 @@
 
 - `backend/app/api/v1/schemas/common.py`
 - `backend/app/api/v1/schemas/routers/**`
+- `backend/app/api/v1/schemas/__init__.py`
 
 ## Tests added or updated
 
@@ -99,6 +101,7 @@
 ## DRY / No Legacy evidence
 
 - No active `app.api.v1.schemas` imports remain in backend app/tests.
+- The residual `backend/app/api/v1/schemas` package is deleted and guarded by `test_api_v1_schemas_package_is_removed`.
 - Non-API layers have no direct `app.api` imports by scan and AST guard.
 - Legacy error helper symbols are removed from active API code.
 - Router registration is centralized in `app.api.v1.routers.registry`.

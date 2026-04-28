@@ -1,6 +1,6 @@
 # Story api-adapter-boundary-convergence: Converge API Adapter Boundaries And Remove Legacy HTTP Surfaces
 
-Status: ready-for-dev
+Status: completed
 
 ## 1. Objective
 
@@ -94,8 +94,9 @@ The current codebase or audit indicates:
 
 After implementation:
 
-- `backend/app/api/v1/schemas` ne contient que des contrats Pydantic, types,
-  validations et constantes locales de contrat.
+- `backend/app/api/v1/schemas` ne reste pas comme namespace actif. Les contrats
+  partagés vivent sous `backend/app/services/api_contracts` et l'ancien package
+  `app.api.v1.schemas` est supprimé pour éviter wrapper, facade vide ou re-export.
 - `backend/app/services`, `backend/app/domain`, `backend/app/infra` et
   `backend/app/core` n'importent plus `app.api.*`.
 - `backend/app/main.py` consomme un registre unique de routeurs API v1 au lieu de maintenir une longue liste d'import/inclusion.
@@ -411,15 +412,16 @@ pytest -q app/tests/unit/test_api_router_architecture.py app/tests/unit/test_api
 pytest -q app/tests/integration/test_api_error_responses.py
 python -c "from app.main import app; schema = app.openapi(); assert schema['paths']"
 python -c "from app.main import app; import json; print(json.dumps(sorted(app.openapi()['paths'].keys()), indent=2))"
-rg -n "from fastapi|import fastapi|APIRouter|JSONResponse|Depends|Request|Query|Body" app/api/v1/schemas
+Test-Path app/api/v1/schemas
 rg -n "from app\\.api\\.v1\\.schemas|import app\\.api\\.v1\\.schemas" app/services app/domain app/infra app/core
 rg -n "from app\\.api\\.dependencies|from app\\.api\\.errors|import app\\.api" app/services app/domain app/infra app/core
 rg -n "raise_http_error|legacy_detail|content\\[\"detail\"\\]" app/api app/tests
 ```
 
-The `rg` commands are indicative evidence. Deterministic completion requires AST
-guards in `app/tests/unit/test_api_router_architecture.py` for forbidden imports
-and symbols.
+The `rg` commands are indicative evidence. `Test-Path app/api/v1/schemas` must
+return `False` after the follow-up deletion. Deterministic completion requires
+AST/file guards in `app/tests/unit/test_api_router_architecture.py` for forbidden
+imports, symbols and legacy package reintroduction.
 
 If the full backend suite is feasible, also run:
 
@@ -462,3 +464,10 @@ If skipped, record exact reason and risk in the final implementation evidence.
 - `backend/app/api/errors/handlers.py` - current legacy `detail` response compatibility.
 - `backend/app/tests/unit/test_api_router_architecture.py` - existing architecture guard location to extend.
 - User-provided `AGENTS.md` instructions - Python venv, DRY, No Legacy, tests and lint requirements.
+
+## 25. Completion Update
+
+- The residual tracked file `backend/app/api/v1/schemas/__init__.py` was deleted after confirming that `app.api.v1.schemas` has no active imports.
+- Canonical shared contracts remain under `backend/app/services/api_contracts`.
+- Regression guardrail `RG-009` now blocks recreating `backend/app/api/v1/schemas` as a facade, wrapper, alias or re-export path.
+- Architecture evidence: `test_api_v1_schemas_package_is_removed` fails if the old package returns.
