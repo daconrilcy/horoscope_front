@@ -1,5 +1,12 @@
+"""Valide les diagnostics V3 sans rendre la suite standard sensible au wall-clock."""
+
+from __future__ import annotations
+
+import ast
+import os
 import time
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from types import SimpleNamespace
 
 from app.prediction.aggregator import V3ThemeAggregator
@@ -12,6 +19,13 @@ from app.prediction.schemas import (
     V3ThemeSignal,
 )
 from app.prediction.transit_signal_builder import TransitSignalBuilder
+
+RUN_PERF_BENCHMARKS_ENV = "RUN_PERF_BENCHMARKS"
+
+
+def _run_perf_benchmarks() -> bool:
+    """Indique si les assertions wall-clock strictes sont explicitement demandees."""
+    return os.environ.get(RUN_PERF_BENCHMARKS_ENV) == "1"
 
 
 def test_v3_layers_performance_benchmark():
@@ -108,20 +122,72 @@ def test_v3_layers_performance_benchmark():
         aggregator.aggregate_theme(ts)
     dur_agg = (time.perf_counter() - start_agg) * 1000
 
-    print("\nBenchmark V3 Layers (96 steps):")
-    print(f"  T(c,t) Transit: {dur_t:.2f}ms (Budget < 100ms)")
-    print(f"  A(c,t) Activation: {dur_a:.2f}ms (Budget < 50ms)")
-    print(f"  Aggregation (10 themes): {dur_agg:.2f}ms")
-
-    assert dur_t < TransitSignalBuilder.TARGET_BUDGET_MS
+    assert dur_agg >= 0.0
     assert (
         transit_result.diagnostics["performance"]["budget_target_ms"]
         == TransitSignalBuilder.TARGET_BUDGET_MS
     )
     assert transit_result.diagnostics["performance"]["sample_count"] == 96
-    assert dur_a < IntradayActivationBuilder.TARGET_BUDGET_MS
     assert (
         activation_result.diagnostics["performance"]["budget_target_ms"]
         == IntradayActivationBuilder.TARGET_BUDGET_MS
     )
     assert activation_result.diagnostics["performance"]["sample_count"] == 96
+
+    if _run_perf_benchmarks():
+        assert dur_t < TransitSignalBuilder.TARGET_BUDGET_MS
+        assert dur_a < IntradayActivationBuilder.TARGET_BUDGET_MS
+
+
+def test_v3_performance_wall_clock_budget_assertions_are_opt_in() -> None:
+    """Bloque les assertions budget wall-clock hors du mode benchmark explicite."""
+    source_path = Path(__file__)
+    tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+    parent_by_child: dict[ast.AST, ast.AST] = {}
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            parent_by_child[child] = parent
+
+    offenders: list[int] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assert):
+            continue
+        if not _is_budget_less_than_assertion(node.test):
+            continue
+        if not _is_inside_run_perf_benchmarks_guard(node, parent_by_child):
+            offenders.append(node.lineno)
+
+    assert offenders == []
+
+
+def _is_inside_run_perf_benchmarks_guard(
+    node: ast.AST,
+    parent_by_child: dict[ast.AST, ast.AST],
+) -> bool:
+    """Verifie qu'un noeud AST est protege par `if _run_perf_benchmarks()`."""
+    current = node
+    while current in parent_by_child:
+        current = parent_by_child[current]
+        if isinstance(current, ast.If) and _is_run_perf_benchmarks_call(current.test):
+            return True
+    return False
+
+
+def _is_budget_less_than_assertion(node: ast.AST) -> bool:
+    """Detecte une comparaison stricte contre un budget wall-clock declare."""
+    return (
+        isinstance(node, ast.Compare)
+        and any(isinstance(operator, ast.Lt) for operator in node.ops)
+        and "TARGET_BUDGET_MS" in ast.unparse(node)
+    )
+
+
+def _is_run_perf_benchmarks_call(node: ast.AST) -> bool:
+    """Reconnait l'appel canonique au mode benchmark volontaire."""
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "_run_perf_benchmarks"
+        and not node.args
+        and not node.keywords
+    )
