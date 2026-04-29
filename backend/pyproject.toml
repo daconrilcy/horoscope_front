@@ -55,7 +55,13 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["app/tests", "app/ai_engine/tests", "tests/evaluation", "tests/integration"]
+testpaths = [
+  "app/tests",
+  "tests/evaluation",
+  "tests/integration",
+  "tests/llm_orchestration",
+  "tests/unit",
+]
 asyncio_mode = "auto"
 addopts = "-p no:cacheprovider"
 filterwarnings = [

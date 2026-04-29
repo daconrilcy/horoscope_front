@@ -6,6 +6,7 @@ from app.domain.llm.configuration.assembly_resolver import build_assembly_previe
 from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 
@@ -16,10 +17,19 @@ def setup_budget_assembly(db):
         use_case_key="chat",
         developer_prompt="BASE PROMPT",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
     db.add(fv)
+    profile = LlmExecutionProfileModel(
+        id=uuid.uuid4(),
+        name="Budget Profile",
+        feature="test_budget",
+        model="gpt-4o",
+        max_output_tokens=2000,
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    db.add(profile)
 
     budget = {
         "target_response_length": "concise",
@@ -36,8 +46,8 @@ def setup_budget_assembly(db):
         plan="free",
         locale="fr-FR",
         feature_template_ref=fv.id,
+        execution_profile_ref=profile.id,
         length_budget=budget,
-        execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )

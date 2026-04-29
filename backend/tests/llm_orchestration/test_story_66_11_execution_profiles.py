@@ -87,13 +87,10 @@ async def test_execution_profile_assembly_ref(db):
         use_case_key="feat_uc",
         developer_prompt="PROMPT",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
     db.add(fv)
-    uc = LlmUseCaseConfigModel(
-        key="feat_uc", display_name="UC", description="test", safety_profile="astrology"
-    )
+    uc = LlmUseCaseConfigModel(key="feat_uc", display_name="UC", description="test")
     db.add(uc)
 
     assembly = PromptAssemblyConfigModel(
@@ -102,7 +99,6 @@ async def test_execution_profile_assembly_ref(db):
         locale="fr-FR",
         feature_template_ref=fv.id,
         execution_profile_ref=profile.id,  # Explicit ref
-        execution_config={"model": "gpt-4o-ignored", "max_output_tokens": 1000},
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )

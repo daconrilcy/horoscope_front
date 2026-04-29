@@ -24,7 +24,6 @@ async def test_deprecated_use_case_redirection(db):
         use_case_key="horoscope_daily",
         developer_prompt="DAILY HOROSCOPE FEATURE",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
     db.add(fv)
@@ -34,13 +33,13 @@ async def test_deprecated_use_case_redirection(db):
         key="horoscope_daily",
         display_name="Horoscope Daily",
         description="test description",
-        safety_profile="astrology",
     )
     db.add(uc_config)
 
     from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
     prof = LlmExecutionProfileModel(
+        id=uuid.uuid4(),
         name="test",
         feature="horoscope_daily",
         model="gpt-4o",
@@ -58,8 +57,6 @@ async def test_deprecated_use_case_redirection(db):
         feature_template_ref=fv.id,
         execution_profile_ref=prof.id,
         plan_rules_ref="plan_free_concise",
-        plan_rules_enabled=True,
-        execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )
@@ -121,7 +118,6 @@ async def test_naming_validation_on_publish(db, caplog):
         # but marked deprecated
         developer_prompt="PROMPT",
         status=PromptStatus.DRAFT,
-        model="gpt-4o",
         created_by="test",
     )
     db.add(version)
@@ -144,7 +140,6 @@ async def test_deprecated_full_redirection(db):
         use_case_key="horoscope_daily",
         developer_prompt="FULL HOROSCOPE",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
     db.add(fv)
@@ -152,7 +147,6 @@ async def test_deprecated_full_redirection(db):
         key="horoscope_daily",
         display_name="Horoscope Full",
         description="test description",
-        safety_profile="astrology",
     )
     # Check if uc already exists
     existing_uc = db.query(LlmUseCaseConfigModel).filter_by(key="horoscope_daily").first()
@@ -162,6 +156,7 @@ async def test_deprecated_full_redirection(db):
     from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 
     prof = LlmExecutionProfileModel(
+        id=uuid.uuid4(),
         name="test full",
         feature="horoscope_daily",
         model="gpt-4o-premium",
@@ -179,8 +174,6 @@ async def test_deprecated_full_redirection(db):
         feature_template_ref=fv.id,
         execution_profile_ref=prof.id,
         plan_rules_ref="plan_premium_full",
-        plan_rules_enabled=True,
-        execution_config={"model": "gpt-4o-premium"},
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )

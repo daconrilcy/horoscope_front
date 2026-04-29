@@ -1348,7 +1348,7 @@ def create_prompt_draft(
             "use_case_key": key,
             "from_version": str(previous_version.id) if previous_version else None,
             "to_version": str(version.id),
-            "result_status": version.status.value,
+            "result_status": str(getattr(version.status, "value", version.status)),
         },
     )
     db.commit()
@@ -1450,7 +1450,7 @@ async def publish_prompt(
                 "use_case_key": key,
                 "from_version": str(previous_published.id) if previous_published else None,
                 "to_version": str(version.id),
-                "result_status": version.status.value,
+                "result_status": str(getattr(version.status, "value", version.status)),
                 "eval_run": eval_report is not None,
                 "golden_campaign": golden_report is not None,
                 "golden_verdict": golden_report.verdict if golden_report else None,
@@ -1536,7 +1536,7 @@ def rollback_prompt(
                 "use_case_key": key,
                 "from_version": str(previous_version.id) if previous_version else None,
                 "to_version": str(version.id),
-                "result_status": version.status.value,
+                "result_status": str(getattr(version.status, "value", version.status)),
             },
         )
         db.commit()

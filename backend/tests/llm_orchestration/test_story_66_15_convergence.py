@@ -1,8 +1,9 @@
 import uuid
+from unittest.mock import AsyncMock
 
 import pytest
 
-from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest
+from app.domain.llm.runtime.contracts import ExecutionUserInput, LLMExecutionRequest, UseCaseConfig
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
@@ -40,8 +41,6 @@ def setup_convergence_data(db):
             key=uc_key,
             display_name=uc_key,
             description="test",
-            safety_profile="astrology",
-            output_schema_id=str(schema.id) if uc_key == "natal_interpretation" else None,
         )
         db.add(uc)
 
@@ -49,7 +48,6 @@ def setup_convergence_data(db):
             id=uuid.uuid4(),
             use_case_key=uc_key,
             developer_prompt=f"PROMPT FOR {uc_key}",
-            model="gpt-4o",
             status=PromptStatus.PUBLISHED,
             created_by="test",
         )
@@ -77,8 +75,7 @@ def setup_convergence_data(db):
             locale="fr-FR",
             feature_template_ref=v.id,
             execution_profile_ref=prof.id,
-            execution_config={"model": "gpt-4o", "max_output_tokens": 1000},
-            output_contract_ref=str(schema.id) if uc_key == "natal_interpretation" else None,
+            output_schema_id=schema.id if uc_key == "natal_interpretation" else None,
             status=PromptStatus.PUBLISHED,
             created_by="test",
         )
@@ -165,7 +162,7 @@ async def test_assembly_fallback_to_use_case(db, caplog):
     # Combination that DOES NOT exist in seeded assemblies
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
-            use_case="chat_astrologer", feature="non_existent_feature", plan="free"
+            use_case="account_support", feature="non_existent_feature", plan="free"
         ),
         request_id="req-fallback",
         trace_id="tr-fallback",
@@ -174,6 +171,12 @@ async def test_assembly_fallback_to_use_case(db, caplog):
     import logging
 
     with caplog.at_level(logging.INFO, logger="app.domain.llm.runtime.gateway"):
+        gateway._resolve_fallback_use_case_config = AsyncMock(
+            return_value=UseCaseConfig(
+                model="gpt-4o",
+                developer_prompt="Fallback prompt",
+            )
+        )
         plan, _ = await gateway._resolve_plan(request, db)
 
     # Assertions

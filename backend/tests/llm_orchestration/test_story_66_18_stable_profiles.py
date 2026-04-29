@@ -102,7 +102,6 @@ async def test_max_tokens_priority(db):
         use_case_key="chat",
         developer_prompt="P",
         status=PromptStatus.PUBLISHED,
-        model="gpt-4o",
         created_by="test",
     )
     db.add(fv)
@@ -112,8 +111,8 @@ async def test_max_tokens_priority(db):
         plan="premium",
         locale="fr-FR",
         feature_template_ref=fv.id,
+        execution_profile_ref=profile.id,
         length_budget={"global_max_tokens": 500},
-        execution_config={"model": "gpt-4o", "max_output_tokens": 2000},
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )
@@ -139,15 +138,12 @@ async def test_max_tokens_priority(db):
 @pytest.mark.asyncio
 async def test_structured_output_mode_populates_plan_response_format(db):
     """Execution profiles with structured_json output_mode should populate the resolved plan."""
-    uc = LlmUseCaseConfigModel(
-        key="json_uc", display_name="json_uc", description="test", safety_profile="astrology"
-    )
+    uc = LlmUseCaseConfigModel(key="chat", display_name="chat", description="test")
     db.add(uc)
     prompt = LlmPromptVersionModel(
         id=uuid.uuid4(),
-        use_case_key="json_uc",
+        use_case_key="chat",
         developer_prompt="Return a compact structured response.",
-        model="gpt-4o",
         status=PromptStatus.PUBLISHED,
         created_by="test",
     )
@@ -169,7 +165,7 @@ async def test_structured_output_mode_populates_plan_response_format(db):
 
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="json_uc", feature="json_feature"),
+        user_input=ExecutionUserInput(use_case="chat", feature="json_feature"),
         request_id="req-json",
         trace_id="tr-json",
     )
@@ -177,15 +173,13 @@ async def test_structured_output_mode_populates_plan_response_format(db):
     plan, _ = await gateway._resolve_plan(request, db)
 
     assert plan.response_format is not None
-    assert plan.response_format.type == "json_object"
+    assert plan.response_format.type == "json_schema"
 
 
 @pytest.mark.asyncio
 async def test_unsupported_profile_provider_falls_back_to_openai(db):
     """Unsupported providers should degrade to the stable OpenAI fallback path."""
-    uc = LlmUseCaseConfigModel(
-        key="chat", display_name="chat", description="test", safety_profile="astrology"
-    )
+    uc = LlmUseCaseConfigModel(key="chat", display_name="chat", description="test")
     db.add(uc)
     profile = LlmExecutionProfileModel(
         id=uuid.uuid4(),

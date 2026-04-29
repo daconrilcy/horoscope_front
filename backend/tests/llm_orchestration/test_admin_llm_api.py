@@ -94,8 +94,6 @@ def test_admin_llm_crud_flow():
         headers=headers,
         json={
             "developer_prompt": "Prompt for {{locale}} and {{use_case}}",
-            "model": "gpt-4o-mini",
-            "temperature": 0.5,
         },
     )
     assert draft_resp.status_code == 200
@@ -145,7 +143,6 @@ def test_admin_llm_crud_flow():
         headers=headers,
         json={
             "developer_prompt": "Prompt V2 for {{locale}} and {{use_case}}",
-            "model": "gpt-4o-mini",
         },
     )
     v2_id = draft2_resp.json()["data"]["id"]
@@ -187,7 +184,6 @@ def test_admin_llm_targeted_rollback():
         headers=headers,
         json={
             "developer_prompt": "Prompt V1 {{locale}} {{use_case}}",
-            "model": "gpt-4o-mini",
         },
     )
     v1_id = draft_one.json()["data"]["id"]
@@ -198,7 +194,6 @@ def test_admin_llm_targeted_rollback():
         headers=headers,
         json={
             "developer_prompt": "Prompt V2 {{locale}} {{use_case}}",
-            "model": "gpt-4o-mini",
         },
     )
     v2_id = draft_two.json()["data"]["id"]
@@ -209,7 +204,6 @@ def test_admin_llm_targeted_rollback():
         headers=headers,
         json={
             "developer_prompt": "Prompt V3 {{locale}} {{use_case}}",
-            "model": "gpt-4o-mini",
         },
     )
     v3_id = draft_three.json()["data"]["id"]
@@ -239,7 +233,7 @@ def test_admin_llm_targeted_rollback():
     assert event.details["to_version"] == v1_id
 
 
-def test_admin_llm_list_personas_supports_legacy_tone_values():
+def test_admin_llm_list_personas_returns_supported_tone_values():
     _cleanup_tables()
     admin_token = _register_user("admin-personas@example.com", "admin")
     headers = {"Authorization": f"Bearer {admin_token}"}
@@ -247,8 +241,8 @@ def test_admin_llm_list_personas_supports_legacy_tone_values():
     with SessionLocal() as db:
         db.add(
             LlmPersonaModel(
-                name="Legacy Persona",
-                tone="calm",
+                name="Warm Persona",
+                tone="warm",
                 verbosity="medium",
                 style_markers=["simple"],
                 boundaries=["none"],
@@ -264,5 +258,5 @@ def test_admin_llm_list_personas_supports_legacy_tone_values():
     assert response.status_code == 200
     data = response.json()["data"]
     assert len(data) == 1
-    assert data[0]["name"] == "Legacy Persona"
+    assert data[0]["name"] == "Warm Persona"
     assert data[0]["tone"] == "warm"

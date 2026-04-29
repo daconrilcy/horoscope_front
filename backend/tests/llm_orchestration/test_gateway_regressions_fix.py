@@ -101,7 +101,6 @@ async def test_observability_success_persists_to_db():
         prompt = LlmPromptVersionModel(
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
-            model="m",
             developer_prompt="hello",
             created_by="test",
         )
@@ -121,6 +120,13 @@ async def test_observability_success_persists_to_db():
         mock_client.execute = AsyncMock(return_value=(provider_res, {}))
 
         gateway = LLMGateway(responses_client=mock_client)
+        gateway._resolve_fallback_use_case_config = AsyncMock(
+            return_value=UseCaseConfig(
+                model="m",
+                developer_prompt="hello",
+                prompt_version_id=str(prompt.id),
+            )
+        )
 
         request = LLMExecutionRequest(
             user_input=ExecutionUserInput(use_case=use_case_key, locale="fr"),

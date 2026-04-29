@@ -24,7 +24,11 @@ async def test_daily_path_is_nominal_canonical(db: Session):
     # Need at least one persona for the assembly to seed correctly
     if not db.query(LlmPersonaModel).first():
         p = LlmPersonaModel(
-            name="Luna", description="...", tone="...", verbosity="...", enabled=True
+            name="Luna",
+            description="...",
+            tone="warm",
+            verbosity="medium",
+            enabled=True,
         )
         db.add(p)
         db.commit()

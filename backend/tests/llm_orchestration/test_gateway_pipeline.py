@@ -11,6 +11,7 @@ from app.domain.llm.runtime.contracts import (
     RecoveryResult,
     ResolvedExecutionPlan,
     UsageInfo,
+    UseCaseConfig,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.domain.llm.runtime.output_validator import ValidationResult
@@ -36,12 +37,10 @@ async def test_pipeline_nominal_flow(db):
         use_case_key=use_case,
         developer_prompt="Hello",
         status="published",
-        model="m",
         created_by="t",
     )
     uc_config = LlmUseCaseConfigModel(
         key=use_case,
-        persona_strategy="optional",
         display_name="Test UC",
         description="Test description",
     )
@@ -63,6 +62,13 @@ async def test_pipeline_nominal_flow(db):
         gateway.runtime_manager, "execute_with_resilience", new_callable=AsyncMock
     ) as mock_exec:
         mock_exec.return_value = mock_provider_res
+        gateway._resolve_fallback_use_case_config = AsyncMock(
+            return_value=UseCaseConfig(
+                model="m",
+                developer_prompt="Hello",
+                prompt_version_id=str(prompt.id),
+            )
+        )
 
         # Execute pipeline
         result = await gateway.execute_request(request, db=db)
@@ -96,15 +102,12 @@ async def test_pipeline_repair_flow(db):
         use_case_key=use_case,
         developer_prompt="Hello",
         status="published",
-        model="m",
         created_by="t",
     )
     uc_config = LlmUseCaseConfigModel(
         key=use_case,
-        persona_strategy="optional",
         display_name="Test UC Repair",
         description="Test description",
-        output_schema_id=str(schema_id),
     )
     db.add(prompt)
     db.add(uc_config)
@@ -136,6 +139,14 @@ async def test_pipeline_repair_flow(db):
     # let's mock _call_provider and validate_output instead.
     with patch.object(gateway, "_call_provider", new_callable=AsyncMock) as mock_call:
         mock_call.side_effect = [mock_res_bad, mock_res_good]
+        gateway._resolve_fallback_use_case_config = AsyncMock(
+            return_value=UseCaseConfig(
+                model="m",
+                developer_prompt="Hello",
+                prompt_version_id=str(prompt.id),
+                output_schema_id=str(schema_id),
+            )
+        )
 
         with patch("app.domain.llm.runtime.gateway.validate_output") as mock_val:
             mock_val.side_effect = [
