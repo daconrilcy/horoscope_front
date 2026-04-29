@@ -9,7 +9,7 @@ Les fichiers listés ici peuvent encore référencer `SessionLocal`, `engine` ou
 | `backend/app/tests/conftest.py` | `db_session_module.SessionLocal` | Monkeypatch global existant explicitement hors suppression complète dans cette story. | Migrer les dépendants restants vers helpers canoniques. |
 | `backend/tests/evaluation/__init__.py` | `SessionLocal` | Suite évaluation historique hors lot représentatif. | Migrer vers helper ou fixture dédiée d'évaluation. |
 | `backend/tests/unit/test_incident_service_user_statuses.py` | `SessionLocal, engine` | Test unitaire DB hors lot représentatif. | Migrer vers helper/fixture explicite. |
-| `backend/app/tests/test_story_61_58_full.py` | `SessionLocal` | Test legacy hors lot représentatif. | Migrer vers helper `app/tests/helpers/db_session.py`. |
+| `backend/app/tests/test_full_reconciliation_chain.py` | `SessionLocal` | Test legacy hors lot représentatif renomme en guard durable. | Migrer vers helper `app/tests/helpers/db_session.py`. |
 | `backend/app/tests/integration/conftest.py` | `engine` | Harness d'alignement app/tests existant, borné à la SQLite secondaire. | Supprimer quand le monkeypatch global est retiré. |
 | `backend/app/tests/integration/test_admin_actions_api.py` | `db_session_module.SessionLocal` | Import indirect existant hors lot représentatif. | Migrer vers helper `app/tests/helpers/db_session.py`. |
 | `backend/app/tests/integration/test_admin_ai_api.py` | `db_session_module.SessionLocal` | Import indirect existant hors lot représentatif. | Migrer vers helper `app/tests/helpers/db_session.py`. |

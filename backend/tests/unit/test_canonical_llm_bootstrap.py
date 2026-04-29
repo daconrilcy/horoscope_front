@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from app import main
 
 
-def test_story_70_13_legacy_llm_seed_disabled_by_default(monkeypatch) -> None:
+def test_legacy_llm_seed_is_disabled_by_default(monkeypatch) -> None:
     """Story 70.13: legacy LLM reseed must not run without explicit opt-in."""
 
     monkeypatch.setattr(main.settings, "app_env", "development")

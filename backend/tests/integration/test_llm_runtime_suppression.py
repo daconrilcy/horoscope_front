@@ -19,7 +19,7 @@ def gateway():
     return LLMGateway()
 
 
-def test_story_66_30_runtime_rejection_emits_dedicated_counter():
+def test_runtime_rejection_emits_dedicated_counter():
     """
     Story 66.30: runtime_rejected MUST increment both the unified governance
     counter and the dedicated rejection counter with a discriminant reason.
@@ -70,7 +70,7 @@ def test_story_66_30_runtime_rejection_emits_dedicated_counter():
 
 
 @pytest.mark.asyncio
-async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
+async def test_missing_profile_on_supported_perimeter_fails(gateway):
     """
     Story 66.30: A supported feature (e.g., 'chat') without an
     ExecutionProfile MUST fail instead of falling back to resolve_model().
@@ -150,7 +150,7 @@ async def test_story_66_30_missing_profile_on_supported_perimeter(gateway):
 
 
 @pytest.mark.asyncio
-async def test_story_70_13_supported_perimeter_bypasses_stage_0_5_legacy_config(gateway):
+async def test_supported_perimeter_bypasses_stage_0_5_legacy_config(gateway):
     """
     Story 70.13: supported canonical paths must not use the legacy compat resolver during
         Stage 0.5 pre-validation before assembly/profile resolution.
@@ -188,7 +188,7 @@ async def test_story_70_13_supported_perimeter_bypasses_stage_0_5_legacy_config(
 
 
 @pytest.mark.asyncio
-async def test_story_66_30_removed_legacy_use_case_key_is_rejected(gateway):
+async def test_removed_legacy_use_case_key_is_rejected(gateway):
     """
     Story 70.13 AC11 durci: les anciennes clés use_case ne doivent plus
     être acceptées à l'entrée runtime.
@@ -211,7 +211,7 @@ async def test_story_66_30_removed_legacy_use_case_key_is_rejected(gateway):
 
 
 @pytest.mark.asyncio
-async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
+async def test_unsupported_provider_on_supported_perimeter_fails(gateway):
     """
     Story 66.30: A supported feature with an ExecutionProfile
     demanding an unsupported provider MUST fail instead of falling back.
@@ -296,7 +296,7 @@ async def test_story_66_30_unsupported_provider_on_supported_perimeter(gateway):
 
 
 @pytest.mark.asyncio
-async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gateway):
+async def test_missing_provider_mapping_on_supported_perimeter_fails(gateway):
     """
     Story 66.30: A supported feature where ProviderParameterMapper.map
     fails MUST fail instead of falling back.
@@ -391,7 +391,7 @@ async def test_story_66_30_mapping_not_implemented_on_supported_perimeter(gatewa
 
 
 @pytest.mark.asyncio
-async def test_story_66_30_fallback_tolerated_on_unsupported_perimeter(gateway):
+async def test_fallback_is_tolerated_on_unsupported_perimeter(gateway):
     """
     Story 66.30: Features OUTSIDE supported perimeter (e.g., 'experimental')
     STILL tolerate resolve_model() fallback IF NOT NOMINAL.

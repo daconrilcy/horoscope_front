@@ -158,7 +158,7 @@ def test_no_legacy_entitlement_import_path_is_reintroduced() -> None:
         for file_path in root.rglob("*.py"):
             if "__pycache__" in file_path.parts:
                 continue
-            if file_path.name == "test_story_70_22_entitlement_structure_guard.py":
+            if file_path.name == Path(__file__).name:
                 continue
             content = file_path.read_text(encoding="utf-8")
             for forbidden in FORBIDDEN_IMPORT_SNIPPETS:

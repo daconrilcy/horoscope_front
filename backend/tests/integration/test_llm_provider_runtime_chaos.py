@@ -221,7 +221,7 @@ def _deterministic_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_story_66_43_chaos_matrix_minimum_coverage(
+async def test_provider_runtime_chaos_matrix_has_minimum_coverage(
     _deterministic_runtime: None,
 ) -> None:
     outcomes: list[ChaosOutcome] = []
@@ -332,7 +332,7 @@ async def test_story_66_43_chaos_matrix_minimum_coverage(
 
 
 @pytest.mark.asyncio
-async def test_story_66_43_partial_failure_then_recovery_keeps_consistent_metadata(
+async def test_partial_failure_then_recovery_keeps_consistent_metadata(
     _deterministic_runtime: None,
 ) -> None:
     snapshot_id = uuid.UUID("f8ab2498-7f2c-48e9-90d2-4da65f4f1f88")
@@ -379,7 +379,7 @@ async def test_story_66_43_partial_failure_then_recovery_keeps_consistent_metada
 
 
 @pytest.mark.asyncio
-async def test_story_66_43_configuration_error_is_not_reclassified_as_provider_incident(
+async def test_configuration_error_is_not_reclassified_as_provider_incident(
     _deterministic_runtime: None,
 ) -> None:
     manager = ProviderRuntimeManager()
@@ -406,7 +406,7 @@ async def test_story_66_43_configuration_error_is_not_reclassified_as_provider_i
 
 
 @pytest.mark.asyncio
-async def test_story_66_43_retry_idempotence_and_nominal_closure(
+async def test_retry_idempotence_and_nominal_closure(
     _deterministic_runtime: None,
 ) -> None:
     manager = ProviderRuntimeManager()

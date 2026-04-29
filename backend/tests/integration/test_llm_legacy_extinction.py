@@ -21,7 +21,7 @@ def gateway():
 
 
 @pytest.mark.asyncio
-async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
+async def test_legacy_use_case_entry_is_rejected_before_stage_05(gateway):
     """
     Issue 1: Pure legacy use_case entries (e.g., 'chat_astrologer') MUST bypass
     Stage 0.5 pre-validation because they map to supported families.
@@ -58,7 +58,7 @@ async def test_story_66_29_legacy_use_case_entry_bypasses_stage_05(gateway):
 
 
 @pytest.mark.asyncio
-async def test_story_66_29_input_schema_propagation_and_validation(gateway):
+async def test_input_schema_is_propagated_and_validated(gateway):
     """
     Issue 2: Assembly input_schema MUST be propagated and used for Stage 1.5 validation.
     """
@@ -104,7 +104,7 @@ async def test_story_66_29_input_schema_propagation_and_validation(gateway):
 
 
 @pytest.mark.asyncio
-async def test_story_66_29_recovery_blocks_legacy_fallback_for_supported(gateway):
+async def test_recovery_blocks_legacy_fallback_for_supported_feature(gateway):
     """
     Ensure _handle_repair_or_fallback strictly forbids legacy fallback for supported features.
     """
@@ -145,7 +145,7 @@ async def test_story_66_29_recovery_blocks_legacy_fallback_for_supported(gateway
 
 
 @pytest.mark.asyncio
-async def test_story_66_29_other_features_still_allow_prevalidation_and_fallback(gateway):
+async def test_unsupported_features_still_allow_prevalidation_and_fallback(gateway):
     """
     AC8: Features NOT in supported perimeter still allow use_case-first pre-validation and fallback.
     """

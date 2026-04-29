@@ -15,7 +15,7 @@ def test_source_of_truth_uniqueness() -> None:
     # Files to ignore (the manifest itself and this test)
     ignored_files = {
         "backend/app/ops/llm/doc_conformity_manifest.py",
-        "backend/tests/integration/test_story_66_39_doc_conformity_hardening.py",
+        "backend/tests/integration/test_llm_doc_conformity_hardening.py",
     }
 
     patterns = {
