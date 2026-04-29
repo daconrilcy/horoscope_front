@@ -1,3 +1,5 @@
+"""Tests d'administration de contenu utilisant le helper DB canonique."""
+
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
@@ -10,17 +12,18 @@ from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel, RulesetParameterModel
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
+    engine = app_test_engine()
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.execute(delete(AuditEventModel))
         db.execute(delete(EditorialTemplateVersionModel))
         db.execute(delete(ConfigTextModel))
@@ -33,7 +36,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_admin_and_token() -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db, email="content-admin@test.com", password="admin-pass-123", role="admin"
         )
@@ -71,7 +74,7 @@ def test_admin_content_texts_and_feature_flags() -> None:
     assert toggle_resp.status_code == 200
     assert toggle_resp.json()["data"]["enabled"] is True
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         content_event = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.action == "content_text_updated")
@@ -96,7 +99,7 @@ def test_admin_content_editorial_templates_and_calibration_rules() -> None:
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}", "X-Request-Id": "rid-admin-content-2"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         reference_version = ReferenceVersionModel(
             version="2026.04-ref",
             description="Reference version de test",
@@ -168,7 +171,7 @@ def test_admin_content_editorial_templates_and_calibration_rules() -> None:
     assert update_rule_resp.status_code == 200
     assert update_rule_resp.json()["data"]["value"] == "0.55"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         template_event = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.action == "editorial_template_updated")
@@ -193,7 +196,7 @@ def test_admin_content_rejects_invalid_calibration_value_and_noop_rollback() -> 
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}", "X-Request-Id": "rid-admin-content-3"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         reference_version = ReferenceVersionModel(
             version="2026.04-ref",
             description="Reference version de test",

@@ -1,3 +1,5 @@
+"""Tests release LLM utilisant le helper DB canonique d'intégration."""
+
 import uuid
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
@@ -32,10 +34,11 @@ from app.infra.db.models.llm.llm_release import (
     LlmReleaseSnapshotModel,
     ReleaseStatus,
 )
-from app.infra.db.session import SessionLocal, get_db_session
+from app.infra.db.session import get_db_session
 from app.main import app
 from app.ops.llm.release_service import ReleaseService
 from app.services.api_contracts.admin.llm.releases import ActivationQualificationEvidence
+from tests.integration.app_db import open_app_db_session
 
 
 def _ensure_published_assembly_for_release_snapshots(db: Session) -> None:
@@ -174,7 +177,7 @@ async def test_llm_release_lifecycle():
     Test Story 66.32: Full lifecycle of an LLM configuration release.
     Build -> Validate -> Activate -> Resolve -> Rollback.
     """
-    db = SessionLocal()
+    db = open_app_db_session()
     try:
         # 0. Cleanup
         db.execute(delete(LlmActiveReleaseModel))
@@ -350,7 +353,7 @@ async def test_snapshot_validation_independence():
     """
     Test Finding 5: Snapshot validation should be independent of live tables.
     """
-    db = SessionLocal()
+    db = open_app_db_session()
     try:
         _ensure_published_assembly_for_release_snapshots(db)
 
@@ -405,7 +408,7 @@ async def test_async_activation_keeps_single_active_pointer():
     engine = create_async_engine(async_db_url, future=True)
     session_factory = async_sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)
 
-    sync_db = SessionLocal()
+    sync_db = open_app_db_session()
     try:
         _ensure_published_assembly_for_release_snapshots(sync_db)
     finally:
@@ -463,7 +466,7 @@ async def test_startup_validation_uses_snapshot():
     """
     Test Finding 6: Startup validation should prioritize the active snapshot.
     """
-    db = SessionLocal()
+    db = open_app_db_session()
     try:
         _ensure_published_assembly_for_release_snapshots(db)
 
@@ -498,7 +501,7 @@ async def test_startup_validation_uses_snapshot():
 @pytest.mark.asyncio
 async def test_non_fr_locale_resolution():
     """Test Finding 4: Profile resolution should respect locale in snapshots."""
-    db = SessionLocal()
+    db = open_app_db_session()
     try:
         _ensure_published_assembly_for_release_snapshots(db)
 
@@ -553,7 +556,7 @@ async def test_non_fr_locale_resolution():
 
 @pytest.mark.asyncio
 async def test_activation_is_blocked_without_correlated_evidence():
-    db = SessionLocal()
+    db = open_app_db_session()
     try:
         _ensure_published_assembly_for_release_snapshots(db)
 
@@ -610,7 +613,7 @@ async def test_activation_is_blocked_without_correlated_evidence():
 
 @pytest.mark.asyncio
 async def test_release_health_recommends_rollback_on_threshold_breach():
-    db = SessionLocal()
+    db = open_app_db_session()
     try:
         _ensure_published_assembly_for_release_snapshots(db)
 
@@ -651,7 +654,7 @@ async def test_release_health_recommends_rollback_on_threshold_breach():
 
 @pytest.mark.asyncio
 async def test_rollback_marks_faulty_snapshot_as_rolled_back():
-    db = SessionLocal()
+    db = open_app_db_session()
     try:
         _ensure_published_assembly_for_release_snapshots(db)
 
@@ -700,7 +703,7 @@ async def test_rollback_marks_faulty_snapshot_as_rolled_back():
 
 @pytest.mark.asyncio
 async def test_activation_with_naive_timestamp_is_rejected_without_500():
-    db = SessionLocal()
+    db = open_app_db_session()
     try:
         _ensure_published_assembly_for_release_snapshots(db)
 
