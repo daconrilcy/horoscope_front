@@ -1,3 +1,5 @@
+"""Vérifie le contexte qualifié LLM depuis la racine de tests orchestration."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,27 +11,18 @@ from app.domain.llm.prompting.context import (
 )
 
 
-def test_qualified_context_quality_rules():
-    # Full
+def test_qualified_context_quality_rules() -> None:
+    """Verifie les transitions full, partial et minimal du contexte qualifie."""
     assert QualifiedContext.compute_quality([]) == "full"
-
-    # Partial (secondary field missing)
     assert QualifiedContext.compute_quality(["period_covered"]) == "partial"
-
-    # Partial (one natal missing)
     assert QualifiedContext.compute_quality(["natal_interpretation"]) == "partial"
-
-    # Partial (persona missing)
     assert QualifiedContext.compute_quality(["astrologer_profile"]) == "partial"
-
-    # Minimal (two natal missing)
     assert QualifiedContext.compute_quality(["natal_interpretation", "natal_data"]) == "minimal"
-
-    # Minimal (persona AND one natal missing)
     assert QualifiedContext.compute_quality(["astrologer_profile", "natal_data"]) == "minimal"
 
 
-def test_is_degraded():
+def test_is_degraded() -> None:
+    """Verifie le predicat de degradation expose par le contexte qualifie."""
     ctx = QualifiedContext(
         payload=PromptCommonContext(
             precision_level="p",
@@ -49,17 +42,19 @@ def test_is_degraded():
 
 
 @pytest.mark.asyncio
-async def test_build_full_context(db):
-    # Mock dependencies to avoid DB lookup issues in this test
+async def test_build_full_context(db) -> None:
+    """Construit un contexte complet puis degrade sans changer les assertions metier."""
     with (
         patch(
             "app.services.user_profile.birth_profile_service.UserBirthProfileService.get_for_user"
         ) as mock_profile,
         patch(
-            "app.services.llm_generation.guidance.persona_config_service.PersonaConfigService.get_active"
+            "app.services.llm_generation.guidance.persona_config_service."
+            "PersonaConfigService.get_active"
         ) as mock_persona,
         patch(
-            "app.services.user_profile.natal_chart_service.UserNatalChartService.get_latest_for_user"
+            "app.services.user_profile.natal_chart_service."
+            "UserNatalChartService.get_latest_for_user"
         ) as mock_chart,
     ):
         mock_profile.return_value = MagicMock(birth_time="12:00", birth_place="Paris")
@@ -70,23 +65,18 @@ async def test_build_full_context(db):
             prudence_level="L",
             to_prompt_line=lambda: "desc",
         )
-
-        # Ensure model_dump returns a real dict
         mock_chart.return_value.result.model_dump.return_value = {"planets": []}
 
-        # Test 1: Full
         res = CommonContextBuilder.build(
             user_id=1, use_case_key="natal_interpretation", period="daily", db=db
         )
         assert res.context_quality == "full"
         assert res.source == "db"
 
-        # Test 2: Partial (natal_interpretation missing for non-natal use case)
         res = CommonContextBuilder.build(user_id=1, use_case_key="chat", period="daily", db=db)
         assert res.context_quality == "partial"
         assert "natal_interpretation" in res.missing_fields
 
-        # Test 3: Minimal (natal data fetch fails)
         mock_chart.side_effect = Exception("No chart")
         res = CommonContextBuilder.build(user_id=1, use_case_key="chat", period="daily", db=db)
         assert res.context_quality == "minimal"

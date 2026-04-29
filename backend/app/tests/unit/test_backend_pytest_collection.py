@@ -14,13 +14,7 @@ IGNORED_TEST_PARTS = {
     ".pytest_cache",
     "__pycache__",
 }
-OPT_IN_TEST_FILES = {
-    "app/domain/llm/prompting/tests/test_qualified_context.py": (
-        "Suite embarquee hors topologie standard: son package `tests` charge un registre JSON "
-        "absent de ce dossier pendant la collecte. Elle reste opt-in jusqu'a convergence de "
-        "topologie dediee."
-    )
-}
+OPT_IN_TEST_FILES: dict[str, str] = {}
 
 
 def _configured_testpaths() -> list[Path]:
