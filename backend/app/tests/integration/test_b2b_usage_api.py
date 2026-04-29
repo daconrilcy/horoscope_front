@@ -27,20 +27,20 @@ from app.infra.db.models.product_entitlements import (
     SourceOrigin,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.ops.audit_service import AuditServiceError
 from app.services.quota.window_resolver import QuotaWindowResolver
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             EnterpriseApiCredentialModel,
@@ -63,7 +63,7 @@ def _create_b2b_account_with_canonical_plan(
     access_mode: AccessMode = AccessMode.UNLIMITED,
     quota_limit: int = 100,
 ) -> tuple[str, int, int]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db, email=email, password="strong-pass-123", role="enterprise_admin"
         )
@@ -165,7 +165,7 @@ def test_b2b_usage_summary_quota_mode() -> None:
         "b2b-usage-quota@example.com", access_mode=AccessMode.QUOTA, quota_limit=100
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ref_dt = datetime.now(timezone.utc)
         window = QuotaWindowResolver.compute_window(PeriodUnit.MONTH, 1, ResetMode.CALENDAR, ref_dt)
         db.add(
@@ -200,7 +200,7 @@ def test_b2b_usage_summary_quota_mode() -> None:
 def test_b2b_usage_summary_returns_403_when_no_canonical_plan() -> None:
     _cleanup_tables()
     # On crée juste un compte et une clé sans plan canonique
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db, email="no-plan@example.com", password="strong-pass-123", role="enterprise_admin"
         )
@@ -255,7 +255,7 @@ def test_b2b_usage_summary_writes_success_audit_event() -> None:
     )
     assert response.status_code == 200
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-b2b-usage-audit")

@@ -5,11 +5,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.user import UserModel
 from app.main import app
+from app.tests.helpers.db_session import (
+    open_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -28,18 +32,18 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
     try:
         yield
     finally:
+        reset_app_test_db_session_factory()
         test_engine.dispose()
 
 
 @pytest.fixture
 def admin_token():
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.core.security import hash_password
 
         admin = UserModel(
@@ -58,7 +62,7 @@ def admin_token():
 
 
 def test_get_ai_metrics_success(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 LlmCallLogModel(
@@ -139,7 +143,7 @@ def test_get_ai_metrics_success(admin_token):
 
 
 def test_get_use_case_detail_success(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 LlmCallLogModel(
@@ -193,7 +197,7 @@ def test_get_use_case_detail_success(admin_token):
 
 
 def test_get_use_case_detail_uses_canonical_feature_axis_for_derived_categories(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 LlmCallLogModel(
@@ -246,7 +250,7 @@ def test_get_use_case_detail_uses_canonical_feature_axis_for_derived_categories(
 
 
 def test_get_use_case_detail_legacy_removed_is_explicitly_bounded(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 LlmCallLogModel(

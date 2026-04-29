@@ -17,20 +17,21 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
-from scripts.seed_product_entitlements import seed
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
+from scripts import seed_product_entitlements
 
 
 @pytest.fixture(autouse=True)
-def run_around_tests():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+def run_around_tests(monkeypatch: pytest.MonkeyPatch):
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    monkeypatch.setattr(seed_product_entitlements, "SessionLocal", open_app_test_db_session)
     yield
 
 
 def test_seeded_data_presence():
-    seed()
-    with SessionLocal() as db:
+    seed_product_entitlements.seed()
+    with open_app_test_db_session() as db:
         plans = db.execute(select(PlanCatalogModel)).scalars().all()
         assert len(plans) == 4
         assert {p.plan_code for p in plans} == {"free", "trial", "basic", "premium"}
@@ -47,9 +48,9 @@ def test_seeded_data_presence():
 
 
 def test_seed_idempotence():
-    seed()
-    seed()
-    with SessionLocal() as db:
+    seed_product_entitlements.seed()
+    seed_product_entitlements.seed()
+    with open_app_test_db_session() as db:
         assert db.execute(select(PlanCatalogModel)).scalars().all()
         assert len(db.execute(select(PlanCatalogModel)).scalars().all()) == 4
         assert len(db.execute(select(FeatureCatalogModel)).scalars().all()) == 5
@@ -60,7 +61,7 @@ def test_seed_idempotence():
 
 
 def test_plan_code_uniqueness():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(PlanCatalogModel(plan_code="unique", plan_name="Unique", audience=Audience.B2C))
         db.commit()
 
@@ -71,7 +72,7 @@ def test_plan_code_uniqueness():
 
 
 def test_feature_code_uniqueness():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(FeatureCatalogModel(feature_code="feat", feature_name="Feat"))
         db.commit()
 
@@ -82,7 +83,7 @@ def test_feature_code_uniqueness():
 
 
 def test_plan_feature_binding_uniqueness():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         p = PlanCatalogModel(plan_code="p1", plan_name="P1", audience=Audience.B2C)
         f = FeatureCatalogModel(feature_code="f1", feature_name="F1")
         db.add_all([p, f])
@@ -100,7 +101,7 @@ def test_plan_feature_binding_uniqueness():
 
 
 def test_quota_constraints_and_composite_uniqueness():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         p = PlanCatalogModel(plan_code="p1", plan_name="P1", audience=Audience.B2C)
         f = FeatureCatalogModel(feature_code="f1", feature_name="F1")
         db.add_all([p, f])
@@ -175,7 +176,7 @@ def test_quota_constraints_and_composite_uniqueness():
 
 
 def test_usage_counter_constraints_and_uniqueness():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         u = UserModel(email="test2@example.com", password_hash="hash", role="user")
         db.add(u)
         db.commit()
@@ -267,8 +268,8 @@ def test_usage_counter_constraints_and_uniqueness():
 
 
 def test_variant_code_seeding():
-    seed()
-    with SessionLocal() as db:
+    seed_product_entitlements.seed()
+    with open_app_test_db_session() as db:
 
         def get_variant(plan_code, feature_code):
             return db.execute(
@@ -290,8 +291,8 @@ def test_variant_code_seeding():
 
 
 def test_seeded_quota_shapes():
-    seed()
-    with SessionLocal() as db:
+    seed_product_entitlements.seed()
+    with open_app_test_db_session() as db:
         rows = db.execute(
             select(
                 PlanCatalogModel.plan_code,

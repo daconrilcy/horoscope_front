@@ -30,19 +30,19 @@ from app.infra.db.models.reference import (
     SignModel,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             EnterpriseEditorialConfigModel,
@@ -67,7 +67,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_enterprise_api_key(email: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -91,7 +91,7 @@ def _create_enterprise_api_key_with_canonical_plan(
     access_mode: AccessMode = AccessMode.UNLIMITED,
     quota_limit: int = 100,
 ) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -208,7 +208,7 @@ def test_b2b_editorial_update_persists_config_and_audit() -> None:
     assert payload["version_number"] == 1
     assert payload["output_format"] == "bullet"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-b2b-editorial-update")
@@ -237,7 +237,7 @@ def test_b2b_editorial_invalid_payload_returns_422_and_audit_failed() -> None:
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "invalid_editorial_config"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-b2b-editorial-invalid")
@@ -251,7 +251,7 @@ def test_b2b_editorial_invalid_payload_returns_422_and_audit_failed() -> None:
 def test_b2b_editorial_config_influences_weekly_by_sign_output() -> None:
     _cleanup_tables()
     api_key = _create_enterprise_api_key_with_canonical_plan("b2b-editorial-weekly@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
 
     update = client.put(

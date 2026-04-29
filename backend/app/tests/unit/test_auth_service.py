@@ -14,14 +14,14 @@ from app.core.security import (
 )
 from app.infra.db.base import Base
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService, AuthServiceError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_users() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserModel))
         db.commit()
 
@@ -73,7 +73,7 @@ def test_decode_token_accepts_previous_rotation_key(monkeypatch: object) -> None
 
 def test_register_and_login_flow() -> None:
     _cleanup_users()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         register_result = AuthService.register(
             db,
             email="user@example.com",
@@ -92,7 +92,7 @@ def test_register_and_login_flow() -> None:
 
 def test_refresh_token_rotation_rejects_replay() -> None:
     _cleanup_users()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         register_result = AuthService.register(
             db,
             email="rotate@example.com",
@@ -113,7 +113,7 @@ def test_refresh_token_rotation_rejects_replay() -> None:
 
 def test_login_invalid_credentials() -> None:
     _cleanup_users()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         AuthService.register(db, email="user@example.com", password="strong-pass-123")
         db.commit()
         try:

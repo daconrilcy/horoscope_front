@@ -23,7 +23,6 @@ from app.infra.db.models.reference import (
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.reference_data_service import ReferenceDataService
 from app.services.user_profile.birth_profile_service import UserBirthProfileService
@@ -31,6 +30,7 @@ from app.services.user_profile.natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 @pytest.fixture
@@ -81,9 +81,9 @@ def mock_swisseph(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _cleanup() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             ChartResultModel,
             GeoPlaceResolvedModel,
@@ -112,7 +112,7 @@ def _create_user_with_profile(
         birth_place="Paris",
         birth_timezone=birth_timezone,
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123")
         UserBirthProfileService.upsert_for_user(db, user_id=auth.user.id, payload=payload)
         db.commit()
@@ -125,7 +125,7 @@ def _create_user_with_resolved_place(
     email: str = "user_resolved@example.com",
 ) -> int:
     """Cree un utilisateur avec profil natal ET birth_place_resolved_id."""
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123")
         resolved = GeoPlaceResolvedModel(
             provider="nominatim",
@@ -156,7 +156,7 @@ def test_accurate_mode_missing_birth_time_returns_error(mock_swisseph: None) -> 
     _cleanup()
     user_id = _create_user_with_resolved_place(birth_time=None)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(UserNatalChartServiceError) as exc_info:
             UserNatalChartService.generate_for_user(db=db, user_id=user_id, accurate=True)
@@ -169,7 +169,7 @@ def test_accurate_mode_missing_birth_place_resolved_returns_error(mock_swisseph:
     _cleanup()
     user_id = _create_user_with_profile(birth_time="10:30")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(UserNatalChartServiceError) as exc_info:
             UserNatalChartService.generate_for_user(db=db, user_id=user_id, accurate=True)
@@ -182,7 +182,7 @@ def test_non_accurate_mode_still_works() -> None:
     _cleanup()
     user_id = _create_user_with_profile(birth_time="10:30", email="user_simplified@example.com")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = UserNatalChartService.generate_for_user(db=db, user_id=user_id, accurate=False)
 
@@ -201,7 +201,7 @@ def test_accurate_mode_swisseph_disabled_raises_error(
 
     monkeypatch.setattr(natal_calculation_service.settings, "swisseph_enabled", False)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         birth_input = BirthInput(
             birth_date="1990-06-15",
@@ -235,7 +235,7 @@ def test_metadata_always_present_in_generated_chart() -> None:
         email="user_meta@example.com",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         data = UserNatalChartService.generate_for_user(db=db, user_id=user_id, accurate=False)
 
@@ -257,7 +257,7 @@ def test_metadata_defaults_simplified_engine() -> None:
         email="user_defaults@example.com",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         data = UserNatalChartService.generate_for_user(db=db, user_id=user_id, accurate=False)
 
@@ -277,13 +277,13 @@ def test_get_latest_for_user_reconstructs_metadata_from_result() -> None:
         email="user_read_meta@example.com",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         # Générer d'abord
         UserNatalChartService.generate_for_user(db=db, user_id=user_id, accurate=False)
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # Récupérer et vérifier metadata reconstruite
         read_data = UserNatalChartService.get_latest_for_user(db=db, user_id=user_id)
 
@@ -305,7 +305,7 @@ def test_metadata_sidereal_mode_reconstructed(mock_swisseph: None) -> None:
         email="user_sidereal@example.com",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         UserNatalChartService.generate_for_user(
             db=db,
@@ -316,7 +316,7 @@ def test_metadata_sidereal_mode_reconstructed(mock_swisseph: None) -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         read_data = UserNatalChartService.get_latest_for_user(db=db, user_id=user_id)
 
     meta = read_data.metadata
@@ -333,7 +333,7 @@ def test_metadata_topocentric_mode_reconstructed(mock_swisseph: None) -> None:
         email="user_topocentric@example.com",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         UserNatalChartService.generate_for_user(
             db=db,
@@ -344,7 +344,7 @@ def test_metadata_topocentric_mode_reconstructed(mock_swisseph: None) -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         read_data = UserNatalChartService.get_latest_for_user(db=db, user_id=user_id)
 
     meta = read_data.metadata

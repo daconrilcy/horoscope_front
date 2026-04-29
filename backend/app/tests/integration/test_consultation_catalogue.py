@@ -5,11 +5,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.infra.db.models.consultation_template import ConsultationTemplateModel
-from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ConsultationEntitlementResult,
 )
+from app.tests.helpers.db_session import open_app_test_db_session
 
 client = TestClient(app)
 
@@ -26,7 +26,7 @@ def mock_consultation_gate():
 
 
 def _cleanup_catalogue():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.query(ConsultationTemplateModel).delete()
         db.commit()
 
@@ -61,7 +61,7 @@ def test_get_catalogue_empty():
 
 def test_get_catalogue_with_items():
     _cleanup_catalogue()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             ConsultationTemplateModel(
                 id=uuid.uuid4(),

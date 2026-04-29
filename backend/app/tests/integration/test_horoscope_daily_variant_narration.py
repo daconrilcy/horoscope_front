@@ -19,19 +19,19 @@ from app.infra.db.models.product_entitlements import (
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import engine
 from app.main import app
 from app.prediction.llm_narrator import NarratorResult
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.services.billing.service import BillingService
 from app.services.prediction import ServiceResult
+from app.tests.helpers.db_session import app_test_engine
 
 
 @pytest.fixture
 def setup_catalog(db_session: Session):
     # Clear and reset
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
     BillingService.reset_subscription_status_cache()
 
     # Feature

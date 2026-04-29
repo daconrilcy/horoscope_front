@@ -15,16 +15,16 @@ from app.infra.db.base import Base
 from app.infra.db.models.reference import (
     HouseModel,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_reference_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def _seed_reference_data() -> None:
@@ -36,7 +36,7 @@ def _seed_reference_data() -> None:
 
 
 def _create_support_access_token(email: str = "support-audit@example.com") -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role="support")
         db.commit()
         return auth.tokens.access_token
@@ -145,7 +145,7 @@ def test_get_chart_result_requires_admin_token() -> None:
 
 def test_get_chart_result_forbidden_for_user_role() -> None:
     _cleanup_reference_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email="regular-user-audit@example.com",
@@ -171,7 +171,7 @@ def test_get_chart_result_forbidden_for_user_role() -> None:
 def test_calculate_natal_fails_when_reference_is_incomplete() -> None:
     _cleanup_reference_tables()
     _seed_reference_data()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.execute(delete(HouseModel))
         db.commit()
 

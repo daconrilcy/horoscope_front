@@ -5,17 +5,17 @@ from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(AuditEventModel))
         db.execute(delete(PersonaConfigModel))
         db.execute(delete(UserModel))
@@ -23,7 +23,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -138,7 +138,7 @@ def test_ops_persona_put_config_is_idempotent_for_identical_payload() -> None:
     assert second_data["id"] == first_data["id"]
     assert second_data["version"] == first_data["version"]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         rows = list(db.scalars(select(PersonaConfigModel)))
         assert len(rows) == 1
 
@@ -179,7 +179,7 @@ def test_ops_persona_rollback_records_audit_with_request_id() -> None:
     )
     assert rollback.status_code == 200
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-persona-rollback")

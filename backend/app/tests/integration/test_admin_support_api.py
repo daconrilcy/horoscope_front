@@ -5,13 +5,17 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.flagged_content import FlaggedContentModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.main import app
+from app.tests.helpers.db_session import (
+    open_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -30,18 +34,18 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
     try:
         yield
     finally:
+        reset_app_test_db_session_factory()
         test_engine.dispose()
 
 
 @pytest.fixture
 def admin_token():
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.core.security import hash_password
 
         admin = UserModel(
@@ -60,7 +64,7 @@ def admin_token():
 
 
 def test_list_tickets_and_flagged_content(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = UserModel(email="user-support@test.com", password_hash="x", role="user")
         db.add(user)
         db.flush()
@@ -124,7 +128,7 @@ def test_list_tickets_and_flagged_content(admin_token):
     )
     assert response.status_code == 200
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # Check audit logs
         audit_ticket = db.scalar(
             select(AuditEventModel).where(AuditEventModel.action == "support_ticket_action")

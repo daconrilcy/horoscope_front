@@ -36,22 +36,22 @@ from app.infra.db.models.reference import (
     SignModel,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.ops.audit_service import AuditServiceError
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    engine.dispose()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    engine.dispose()
-    with SessionLocal() as db:
+    app_test_engine().dispose()
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    app_test_engine().dispose()
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             EnterpriseEditorialConfigModel,
@@ -69,11 +69,11 @@ def _cleanup_tables() -> None:
         ):
             db.execute(delete(model))
         db.commit()
-    engine.dispose()
+    app_test_engine().dispose()
 
 
 def _create_enterprise_api_key(email: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -97,7 +97,7 @@ def _create_enterprise_api_key_with_canonical_plan(
     access_mode: AccessMode = AccessMode.UNLIMITED,
     quota_limit: int = 100,
 ) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -180,7 +180,7 @@ def _create_enterprise_api_key_with_canonical_plan(
 
 
 def _create_enterprise_api_key_with_canonical_quota_plan(email: str, *, quota_limit: int) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -282,7 +282,7 @@ def test_b2b_astrology_rejects_invalid_api_key() -> None:
 
 def test_b2b_astrology_rejects_revoked_api_key() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email="b2b-revoked@example.com",
@@ -317,7 +317,7 @@ def test_b2b_astrology_returns_weekly_by_sign_with_valid_api_key() -> None:
     api_key = _create_enterprise_api_key_with_canonical_plan(
         "b2b-success@example.com", access_mode=AccessMode.QUOTA, quota_limit=10
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
 
     response = client.get(
@@ -336,7 +336,7 @@ def test_b2b_astrology_returns_weekly_by_sign_with_valid_api_key() -> None:
     assert "window_end" in qi
 
     # Assert no B2B usage in B2C table
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         b2c_count = db.scalar(select(func.count(FeatureUsageCounterModel.id)))
         assert b2c_count == 0, "B2B call should not write to B2C feature_usage_counters"
         b2b_count = db.scalar(select(func.count(EnterpriseFeatureUsageCounterModel.id)))
@@ -350,7 +350,7 @@ def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
     api_key = _create_enterprise_api_key_with_canonical_plan(
         "b2b-usage-summary@example.com", access_mode=AccessMode.QUOTA, quota_limit=100
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         from datetime import timezone
 
@@ -391,7 +391,7 @@ def test_b2b_usage_summary_returns_metrics_for_credential() -> None:
 def test_b2b_astrology_returns_429_when_rate_limited(monkeypatch: object) -> None:
     _cleanup_tables()
     api_key = _create_enterprise_api_key_with_canonical_plan("b2b-429@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
 
     def _always_rate_limited(*args: object, **kwargs: object) -> None:
@@ -421,7 +421,7 @@ def test_b2b_astrology_returns_429_when_b2b_quota_exceeded() -> None:
         "b2b-quota-exceeded@example.com",
         quota_limit=1,
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
 
     first = client.get(
@@ -445,7 +445,7 @@ def test_b2b_astrology_returns_429_when_b2b_quota_exceeded() -> None:
 
 def test_b2b_astrology_rejects_api_key_for_inactive_enterprise_account() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email="b2b-inactive-account@example.com",

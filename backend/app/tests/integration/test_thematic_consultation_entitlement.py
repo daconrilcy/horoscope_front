@@ -24,7 +24,7 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine, get_db_session
+from app.infra.db.session import get_db_session
 from app.main import app
 from app.services.api_contracts.public.consultation import (
     ConsultationGenerateData,
@@ -41,6 +41,7 @@ from app.services.entitlement.entitlement_types import (
     EffectiveFeatureAccess,
     UsageState,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 UTC = timezone.utc
 FEATURE_CODE = "thematic_consultation"
@@ -101,7 +102,7 @@ def _mock_resolver_snapshot(
 
 
 def _get_user_id(email: str) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email=email).one()
         return user.id
 
@@ -162,9 +163,9 @@ def _dynamic_snapshot(db: Session, *, app_user_id: int) -> EffectiveEntitlements
 
 def _reset_database() -> None:
     BillingService.reset_subscription_status_cache()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserBirthProfileModel))
         db.execute(delete(UserModel))
         db.commit()
@@ -190,7 +191,7 @@ def _seed_thematic_binding(
     period_value: int = 1,
     reset_mode: ResetMode | None = None,
 ) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         plan = PlanCatalogModel(
             plan_code=plan_code,
             plan_name=plan_code.title(),
@@ -357,7 +358,7 @@ def test_generate_quota_exhausted_rejected() -> None:
         reset_mode=ResetMode.CALENDAR,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email="quota-exhausted@example.com").one()
         db.add(
             FeatureUsageCounterModel(
@@ -413,7 +414,7 @@ def test_generate_disabled_binding_returns_disabled_by_plan() -> None:
 def test_generate_access_denied_rolls_back() -> None:
     _reset_database()
     headers = _auth_headers("rollback-403@example.com")
-    db_session = SessionLocal()
+    db_session = open_app_test_db_session()
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     with (

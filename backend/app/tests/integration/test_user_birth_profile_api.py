@@ -7,17 +7,17 @@ from app.infra.db.base import Base
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.user_profile.astro_profile_service import UserAstroProfileServiceError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(GeoPlaceResolvedModel))
         db.execute(delete(UserBirthProfileModel))
         db.execute(delete(UserModel))
@@ -178,7 +178,7 @@ def test_put_birth_data_rejects_unknown_fields() -> None:
 def test_put_birth_data_accepts_place_resolved_id_field() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         place = GeoPlaceResolvedModel(
             provider="nominatim",
             provider_place_id=12345,
@@ -209,7 +209,7 @@ def test_put_birth_data_accepts_place_resolved_id_field() -> None:
 def test_get_birth_data_returns_birth_place_text_and_resolved_place() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         place = GeoPlaceResolvedModel(
             provider="nominatim",
             provider_place_id=12345,
@@ -281,7 +281,7 @@ def test_get_birth_data_legacy_profile_returns_null_resolved_place() -> None:
 def test_put_birth_data_replaces_place_resolved_reference_on_edit() -> None:
     _cleanup_tables()
     access_token = _register_and_get_access_token()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first_place = GeoPlaceResolvedModel(
             provider="nominatim",
             provider_place_id=12345,

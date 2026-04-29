@@ -19,9 +19,9 @@ from app.core.config import settings
 from app.infra.db.base import Base
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.geocoding_service import GeocodingServiceError, _build_query_key
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -32,17 +32,17 @@ client = TestClient(app)
 
 def _setup_db() -> None:
     """Crée toutes les tables (dont geocoding_query_cache) pour les tests."""
-    Base.metadata.create_all(bind=engine, checkfirst=True)
+    Base.metadata.create_all(bind=app_test_engine(), checkfirst=True)
 
 
 def _clear_geocoding_cache() -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.execute(delete(GeocodingQueryCacheModel))
         db.commit()
 
 
 def _clear_geo_place_resolved() -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.execute(delete(GeoPlaceResolvedModel))
         db.commit()
 
@@ -392,7 +392,7 @@ def test_cache_miss_after_ttl_expiration_calls_nominatim():
     # Injecter directement une entrée expirée dans le cache
     query = "Paris TTL expiry test"
     query_key = _build_query_key(query, 5)
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             GeocodingQueryCacheModel(
                 query_key=query_key,
@@ -450,7 +450,7 @@ def test_cache_written_after_miss():
     with patch("urllib.request.urlopen", return_value=mock_resp):
         client.get("/v1/geocoding/search", params={"q": "Paris cache write test"})
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from sqlalchemy import select
 
         entries = db.execute(select(GeocodingQueryCacheModel)).scalars().all()
@@ -485,7 +485,7 @@ def test_cache_separation_from_geo_place_resolved():
     assert response.status_code == 200
 
     # Vérifie que seule geocoding_query_cache a été peuplée
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from sqlalchemy import select
 
         cache_entries = db.execute(select(GeocodingQueryCacheModel)).scalars().all()
@@ -502,7 +502,7 @@ def test_get_resolved_place_returns_404_when_missing():
 
 
 def test_get_resolved_place_returns_expected_fields():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         place = GeoPlaceResolvedModel(
             provider="nominatim",
             provider_place_id=4242,
@@ -557,7 +557,7 @@ def test_resolve_with_snapshot_persists_and_returns_place():
     assert data["latitude"] == pytest.approx(48.8566)
     assert data["longitude"] == pytest.approx(2.3522)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from sqlalchemy import select
 
         rows = db.execute(select(GeoPlaceResolvedModel)).scalars().all()
@@ -638,7 +638,7 @@ def test_resolve_concurrent_requests_return_same_place_id():
 
     assert ids[0] == ids[1]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from sqlalchemy import select
 
         rows = db.execute(select(GeoPlaceResolvedModel)).scalars().all()

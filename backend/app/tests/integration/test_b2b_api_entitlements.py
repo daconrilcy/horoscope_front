@@ -28,7 +28,6 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
@@ -43,6 +42,7 @@ from app.services.entitlement.entitlement_types import (
     UsageState,
 )
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -183,9 +183,9 @@ def patch_b2b_resolver():
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             EnterpriseEditorialConfigModel,
@@ -304,7 +304,7 @@ def _setup_b2b_canonical(
 
 def test_b2b_astrology_canonical_quota_success():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         api_key, _ = _setup_b2b_canonical(db, "success@b2b.com", AccessMode.QUOTA)
 
@@ -321,7 +321,7 @@ def test_b2b_astrology_canonical_quota_success():
 
 def test_b2b_astrology_canonical_quota_exhausted():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         api_key, _ = _setup_b2b_canonical(db, "exhausted@b2b.com", AccessMode.QUOTA)
 
@@ -343,7 +343,7 @@ def test_b2b_astrology_canonical_quota_exhausted():
 
 def test_b2b_astrology_canonical_disabled():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         api_key, _ = _setup_b2b_canonical(db, "disabled@b2b.com", AccessMode.DISABLED)
 
@@ -359,7 +359,7 @@ def test_b2b_astrology_canonical_disabled():
 
 def test_b2b_astrology_disabled_binding_not_enabled_skips_settings_fallback():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         api_key, account_id = _setup_b2b_canonical(
             db,
@@ -381,7 +381,7 @@ def test_b2b_astrology_disabled_binding_not_enabled_skips_settings_fallback():
 
 def test_b2b_astrology_fallback_settings():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         # On setup un compte SANS plan canonique
         auth = AuthService.register(
@@ -410,7 +410,7 @@ def test_b2b_astrology_fallback_settings():
 
 def test_b2b_astrology_canonical_quota_decrements_and_exposes_month_window():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         api_key, _ = _setup_b2b_canonical(db, "decrement@b2b.com", AccessMode.QUOTA)
 
@@ -432,7 +432,7 @@ def test_b2b_astrology_canonical_quota_decrements_and_exposes_month_window():
 
 def test_b2b_astrology_rolls_back_canonical_usage_when_downstream_fails(monkeypatch):
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         api_key, account_id = _setup_b2b_canonical(db, "rollback@b2b.com", AccessMode.QUOTA)
         account = db.get(EnterpriseAccountModel, account_id)
@@ -458,7 +458,7 @@ def test_b2b_astrology_rolls_back_canonical_usage_when_downstream_fails(monkeypa
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "weekly_generation_failed"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         counters = db.scalars(
             select(FeatureUsageCounterModel).where(
                 FeatureUsageCounterModel.user_id == admin_user_id,
@@ -470,7 +470,7 @@ def test_b2b_astrology_rolls_back_canonical_usage_when_downstream_fails(monkeypa
 
 def test_b2b_astrology_canonical_unlimited():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         api_key, _ = _setup_b2b_canonical(db, "unlimited@b2b.com", AccessMode.UNLIMITED)
 

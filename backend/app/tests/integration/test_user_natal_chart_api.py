@@ -22,13 +22,13 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
 from app.services.user_profile.astro_profile_service import UserAstroProfileServiceError
 from app.services.user_profile.natal_chart_service import UserNatalChartServiceError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 @pytest.fixture(autouse=True)
@@ -63,9 +63,9 @@ def _sign_from_longitude(longitude: float) -> str:
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             ChartResultModel,
             GeoPlaceResolvedModel,
@@ -92,7 +92,7 @@ def _register_and_get_access_token() -> str:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> tuple[int, str]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.user.id, auth.tokens.access_token
@@ -106,7 +106,7 @@ def _create_chart_result(
     reference_version: str = "1.0.0",
     ruleset_version: str = "1.0.0",
 ) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChartResultRepository(db).create(
             user_id=user_id,
             chart_id=chart_id,
@@ -143,7 +143,7 @@ def _seed_reference_data() -> None:
 
 
 def _seed_resolved_place() -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         place = GeoPlaceResolvedModel(
             provider="nominatim",
             provider_place_id=12345,
@@ -757,7 +757,7 @@ def test_generate_natal_chart_sidereal_with_simplified_override_fails(monkeypatc
     )
     monkeypatch.setattr("app.services.natal.calculation_service.settings.app_env", "test")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         birth_input = BirthInput(
             birth_date="1990-06-15",
             birth_time="10:30",
@@ -800,7 +800,7 @@ def test_get_natal_chart_consistency_support_role_returns_consistent() -> None:
     _cleanup_tables()
     target_user_id, _ = _register_user_with_role_and_token("target@example.com", "user")
     _, support_token = _register_user_with_role_and_token("support@example.com", "support")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         valid_payload = _build_valid_natal_result_payload(db)
         db.commit()
     _create_chart_result(
@@ -832,7 +832,7 @@ def test_get_natal_chart_consistency_support_role_returns_mismatch_trace() -> No
     _cleanup_tables()
     target_user_id, _ = _register_user_with_role_and_token("target2@example.com", "user")
     _, support_token = _register_user_with_role_and_token("support2@example.com", "support")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         valid_payload = _build_valid_natal_result_payload(db)
         db.commit()
     mismatched_payload = deepcopy(valid_payload)
@@ -869,7 +869,7 @@ def test_get_natal_chart_consistency_support_role_returns_version_mismatch_trace
     _cleanup_tables()
     target_user_id, _ = _register_user_with_role_and_token("targetv@example.com", "user")
     _, support_token = _register_user_with_role_and_token("supportv@example.com", "support")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         valid_payload = _build_valid_natal_result_payload(db)
         db.commit()
     _create_chart_result(
@@ -904,7 +904,7 @@ def test_get_natal_chart_consistency_support_role_returns_hash_mismatch_trace() 
     _cleanup_tables()
     target_user_id, _ = _register_user_with_role_and_token("targeth@example.com", "user")
     _, support_token = _register_user_with_role_and_token("supporth@example.com", "support")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         valid_payload = _build_valid_natal_result_payload(db)
         db.commit()
     _create_chart_result(

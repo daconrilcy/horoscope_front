@@ -7,18 +7,18 @@ from app.infra.db.models.billing import (
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.billing.service import (
     BillingService,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
     BillingService.reset_subscription_status_cache()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserSubscriptionModel))
         db.execute(delete(BillingPlanModel))
         db.execute(delete(StripeBillingProfileModel))
@@ -27,7 +27,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_user_id() -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email="billing-user@example.com",
@@ -41,7 +41,7 @@ def _create_user_id() -> int:
 def test_get_subscription_status_exposes_stripe_subscription_status() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         BillingService.ensure_default_plans(db)
         db.add(
             StripeBillingProfileModel(
@@ -63,7 +63,7 @@ def test_get_subscription_status_exposes_stripe_subscription_status() -> None:
 def test_get_subscription_status_fallback_to_legacy_when_no_stripe_profile() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         plans = BillingService.ensure_default_plans(db)
         plan = plans["basic"]
         db.add(
@@ -88,7 +88,7 @@ def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscript
 ):
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         plans = BillingService.ensure_default_plans(db)
         plan = plans["basic"]
         db.add(
@@ -123,7 +123,7 @@ def test_get_subscription_status_defaults_to_free_in_local_runtime(monkeypatch) 
     monkeypatch.setattr("app.services.billing.service.settings.app_env", "development")
     monkeypatch.setattr("app.services.billing.subscription_status.is_pytest_runtime", lambda: False)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         status = BillingService.get_subscription_status(db, user_id=user_id)
 
     assert status.status == "active"

@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.product_entitlements import (
@@ -24,6 +23,11 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
 from app.infra.db.models.user import UserModel
 from app.main import app
+from app.tests.helpers.db_session import (
+    open_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -42,18 +46,18 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
     try:
         yield
     finally:
+        reset_app_test_db_session_factory()
         test_engine.dispose()
 
 
 @pytest.fixture
 def admin_token():
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.core.security import hash_password
 
         admin = UserModel(
@@ -72,7 +76,7 @@ def admin_token():
 
 
 def test_get_app_errors(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         err = AuditEventModel(
             request_id="req_err",
             action="test_action",
@@ -94,7 +98,7 @@ def test_get_app_errors(admin_token):
 
 
 def test_get_stripe_events(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         evt = StripeWebhookEventModel(
             stripe_event_id="evt_123", event_type="charge.succeeded", status="processed"
         )
@@ -110,7 +114,7 @@ def test_get_stripe_events(admin_token):
 
 
 def test_get_quota_alerts(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = UserModel(email="high-usage@test.com", password_hash="x", role="user")
         db.add(user)
         db.flush()
@@ -182,7 +186,7 @@ def test_get_quota_alerts(admin_token):
 
 
 def test_get_audit_log_with_filters_and_masking(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         admin = db.query(UserModel).filter(UserModel.email == "admin-logs@example.com").one()
         db.add_all(
             [
@@ -233,7 +237,7 @@ def test_get_audit_log_rejects_invalid_period(admin_token):
 
 
 def test_export_audit_log_generates_csv_and_audits_export(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         admin = db.query(UserModel).filter(UserModel.email == "admin-logs@example.com").one()
         db.add(
             AuditEventModel(
@@ -261,7 +265,7 @@ def test_export_audit_log_generates_csv_and_audits_export(admin_token):
     assert "user_note_updated" in response.text
     assert "**" in response.text
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         export_event = (
             db.query(AuditEventModel)
             .filter(AuditEventModel.action == "audit_log_exported")

@@ -21,18 +21,18 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             EnterpriseAccountBillingPlanModel,
@@ -49,7 +49,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_enterprise_api_key(email: str) -> tuple[str, int]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -69,7 +69,7 @@ def _create_enterprise_api_key(email: str) -> tuple[str, int]:
 
 
 def _seed_usage_from_api_key(api_key: str, *, usage_date: date, used_count: int) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         authenticated = EnterpriseCredentialsService.authenticate_api_key(db, api_key=api_key)
 
         # Fenêtre mensuelle UTC
@@ -96,7 +96,7 @@ def _seed_usage_from_api_key(api_key: str, *, usage_date: date, used_count: int)
 
 
 def _create_ops_access_token(email: str = "ops-b2b-billing@example.com") -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role="ops")
         db.commit()
         return auth.tokens.access_token
@@ -166,7 +166,7 @@ def test_b2b_billing_close_cycle_is_idempotent() -> None:
 
 def test_b2b_billing_close_cycle_forbidden_for_non_ops() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = AuthService.register(
             db,
             email="support-b2b-billing@example.com",
@@ -280,7 +280,7 @@ def test_b2b_billing_read_endpoints_write_audit_events() -> None:
     assert latest.status_code == 200
     assert listing.status_code == 200
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         latest_audit = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-b2b-billing-audit-latest")

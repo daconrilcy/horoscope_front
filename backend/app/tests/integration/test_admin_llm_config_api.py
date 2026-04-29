@@ -11,9 +11,9 @@ from app.infra.db.models.llm.llm_prompt import (
     LlmUseCaseConfigModel,
     PromptStatus,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -34,9 +34,9 @@ def test_admin_llm_observability_openapi_contract_exposes_all_routes():
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(LlmUseCaseConfigModel))
         db.execute(delete(LlmOutputSchemaModel))
         db.execute(delete(UserModel))
@@ -44,7 +44,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_admin_and_token() -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db, email="admin@test.com", password="admin-pass-123", role="admin"
         )  # noqa: E501
@@ -57,7 +57,7 @@ def test_admin_output_schema_list():
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         s = LlmOutputSchemaModel(name="test_schema", json_schema={"type": "object"})
         db.add(s)
         db.commit()
@@ -107,7 +107,7 @@ def test_admin_assembly_publish_returns_structured_coherence_error():
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         uc = LlmUseCaseConfigModel(key="chat", display_name="Chat", description="Test")
         db.add(uc)
         db.commit()
@@ -164,7 +164,7 @@ def test_admin_call_logs_filter_uses_canonical_feature_axis():
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 LlmCallLogModel(
@@ -216,7 +216,7 @@ def test_admin_dashboard_groups_by_canonical_feature_with_bounded_legacy_bucket(
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 LlmCallLogModel(

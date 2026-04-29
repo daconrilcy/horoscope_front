@@ -15,9 +15,9 @@ from app.infra.db.models.reference import (
     ReferenceVersionModel,
     SignModel,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 PLANET_TOLERANCE_DEG = 0.01
 ANGLE_TOLERANCE_DEG = 0.05
@@ -40,9 +40,9 @@ requires_swisseph = pytest.mark.skipif(
 
 def _cleanup_reference_tables() -> None:
     ReferenceDataService._clear_cache_for_tests()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AstroCharacteristicModel,
             AspectModel,
@@ -83,7 +83,7 @@ def test_natal_swisseph_golden_paris_1973_includes_planets_and_angles(
         birth_lon=2.320041,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = NatalCalculationService.calculate(
             db=db,

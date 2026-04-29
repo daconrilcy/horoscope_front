@@ -1,7 +1,11 @@
+"""Seed local de l'administrateur de développement."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
+
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import hash_password
@@ -10,13 +14,16 @@ from app.infra.db.models.user import UserModel
 logger = logging.getLogger(__name__)
 
 
-def _seed_dev_admin_sync() -> None:
-    """
-    Seed a default admin user if in development environment and no admin exists.
-    """
+def _open_dev_seed_session() -> Session:
+    """Ouvre la session ORM utilisée par le seed admin de développement."""
     from app.infra.db.session import SessionLocal
 
-    # Guard strict: check APP_ENV or SEED_ADMIN
+    return SessionLocal()
+
+
+def _seed_dev_admin_sync() -> None:
+    """Crée l'administrateur local par défaut quand l'environnement l'autorise."""
+    # Garde stricte: APP_ENV local ou opt-in explicite SEED_ADMIN.
     is_allowed_env = settings.app_env in {"development", "dev", "local", "test", "testing"}
     if not is_allowed_env and not settings.seed_admin:
         return
@@ -26,13 +33,13 @@ def _seed_dev_admin_sync() -> None:
     admin_role = "admin"
 
     try:
-        with SessionLocal() as db:
-            # Check for existing user with role 'admin'
+        with _open_dev_seed_session() as db:
+            # Un seul administrateur local suffit pour garder le seed idempotent.
             existing_admin = db.query(UserModel).filter(UserModel.role == admin_role).first()
             if existing_admin:
                 return
 
-            # Also check if the specific email is already taken
+            # Evite de promouvoir silencieusement un compte existant avec cet email.
             existing_user = db.query(UserModel).filter(UserModel.email == admin_email).first()
             if existing_user:
                 logger.warning(
@@ -58,4 +65,5 @@ def _seed_dev_admin_sync() -> None:
 
 
 async def seed_dev_admin() -> None:
+    """Lance le seed admin sans bloquer la boucle asynchrone FastAPI."""
     await asyncio.to_thread(_seed_dev_admin_sync)

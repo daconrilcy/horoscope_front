@@ -15,17 +15,17 @@ from app.infra.db.models.product_entitlements import (
     PlanCatalogModel,
     SourceOrigin,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
     # Use drop/create to ensure fresh state and avoid foreign key issues
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def _register_user(db, *, email: str, role: str):
@@ -116,7 +116,7 @@ def _setup_repair_data(db) -> tuple[str, int, int]:
 
 def test_repair_run_dry_run_success() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_token, _, _ = _setup_repair_data(db)
 
     response = client.post(
@@ -132,13 +132,13 @@ def test_repair_run_dry_run_success() -> None:
     assert data["remaining_blockers"][0]["recommended_action"] == "classify_zero_units"
 
     # Verify NO data in DB
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         assert db.scalar(select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "p1")) is None
 
 
 def test_repair_run_and_classify_zero_units_e2e() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_token, acc3_id, cat3_id = _setup_repair_data(db)
 
     # 1. Run repair
@@ -180,7 +180,7 @@ def test_repair_run_and_classify_zero_units_e2e() -> None:
 
 def test_set_admin_user_success() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_token, _, _ = _setup_repair_data(db)
 
         # Create account without admin
@@ -202,14 +202,14 @@ def test_set_admin_user_success() -> None:
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         acc = db.get(EnterpriseAccountModel, acc_id)
         assert acc.admin_user_id == user_id
 
 
 def test_repair_run_works_even_if_admin_user_id_is_null() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_auth = _register_user(db, email="ops@example.com", role="ops")
         ops_token = ops_auth.tokens.access_token
 

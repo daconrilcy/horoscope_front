@@ -5,27 +5,27 @@ from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def _register_user_with_role(email: str, role: str) -> tuple[int, str]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.user.id, auth.tokens.access_token
 
 
 def _attach_enterprise_account(admin_user_id: int, status: str = "active") -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             EnterpriseAccountModel(
                 admin_user_id=admin_user_id,
@@ -86,7 +86,7 @@ def test_generate_and_rotate_enterprise_credentials_with_audit() -> None:
     assert payload["has_active_credential"] is True
     assert len(payload["credentials"]) == 2
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         create_audit = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-b2b-create")
@@ -178,6 +178,6 @@ def test_generate_returns_503_when_audit_unavailable(monkeypatch: object) -> Non
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "audit_unavailable"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         credentials = db.scalars(select(EnterpriseApiCredentialModel)).all()
         assert credentials == []

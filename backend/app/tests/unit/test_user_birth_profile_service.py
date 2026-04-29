@@ -7,25 +7,25 @@ from app.infra.db.base import Base
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserBirthProfileModel))
         db.execute(delete(UserModel))
         db.commit()
 
 
 def _create_user() -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email="user@example.com", password="strong-pass-123")
         db.commit()
         return auth.user.id
@@ -41,7 +41,7 @@ def test_upsert_and_get_user_birth_profile() -> None:
         birth_timezone="Europe/Paris",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         upserted = UserBirthProfileService.upsert_for_user(db, user_id=user_id, payload=payload)
         db.commit()
         fetched = UserBirthProfileService.get_for_user(db, user_id=user_id)
@@ -54,7 +54,7 @@ def test_upsert_and_get_user_birth_profile() -> None:
 def test_get_birth_profile_not_found() -> None:
     _cleanup_tables()
     user_id = _create_user()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserBirthProfileServiceError) as error:
             UserBirthProfileService.get_for_user(db, user_id=user_id)
     assert error.value.code == "birth_profile_not_found"
@@ -70,7 +70,7 @@ def test_upsert_rejects_invalid_timezone() -> None:
         birth_timezone="Mars/Olympus",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(BirthPreparationError) as error:
             UserBirthProfileService.upsert_for_user(db, user_id=user_id, payload=payload)
     assert error.value.code == "invalid_timezone"
@@ -90,7 +90,7 @@ def test_upsert_birth_profile_with_place_resolved_id() -> None:
     _cleanup_tables()
     user_id = _create_user()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         place = GeoPlaceResolvedModel(
             provider="nominatim",
             provider_place_id=12345,
@@ -123,7 +123,7 @@ def test_resolve_coordinates_prioritizes_place_resolved_over_legacy_coords() -> 
     _cleanup_tables()
     user_id = _create_user()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         place = GeoPlaceResolvedModel(
             provider="nominatim",
             provider_place_id=54321,
@@ -170,7 +170,7 @@ def test_resolve_coordinates_falls_back_to_legacy_without_place_resolved_id() ->
         birth_lon=-74.0060,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         UserBirthProfileService.upsert_for_user(db, user_id=user_id, payload=payload)
         db.commit()
         profile = UserBirthProfileService.get_for_user(db, user_id=user_id)

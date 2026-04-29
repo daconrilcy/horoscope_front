@@ -32,11 +32,11 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing.service import BillingService
 from app.services.llm_generation.guidance.guidance_service import GuidanceServiceError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_guidance_generator
 
 client = TestClient(app)
@@ -44,12 +44,12 @@ client = TestClient(app)
 
 def _cleanup_tables() -> None:
     reset_test_generators()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
     from scripts.seed_66_20_convergence import seed_66_20_convergence
 
     seed_66_20_convergence()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         for model in (
             ChatMessageModel,
             ChatConversationModel,
@@ -116,7 +116,7 @@ def _register_and_get_access_token() -> str:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -139,7 +139,7 @@ def _seed_birth_profile(access_token: str) -> None:
 def _set_active_subscription(access_token: str, plan_code: str) -> None:
     # Resolve user_id from token
     # (In this test environment, we can just get the user from DB)
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # 0. Ensure plans exist
         BillingService.ensure_default_plans(db)
 

@@ -23,7 +23,7 @@ from app.infra.db.models.product_entitlements import (
     SourceOrigin,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine, get_db_session
+from app.infra.db.session import get_db_session
 from app.main import app
 from app.services.api_contracts.public.natal_interpretation import (
     InterpretationMeta,
@@ -44,6 +44,7 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementResult,
     NatalChartLongQuotaExceededError,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -219,9 +220,9 @@ def _make_valid_interpretation_response(level="complete"):
 
 def _reset_database() -> None:
     BillingService.reset_subscription_status_cache()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserModel))
         db.commit()
 
@@ -264,7 +265,7 @@ def _seed_natal_chart_long_binding(
     variant_code: str,
     quota_limit: int | None = None,
 ) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         plan = PlanCatalogModel(
             plan_code=plan_code,
             plan_name=plan_code.title(),
@@ -308,14 +309,14 @@ def _seed_natal_chart_long_binding(
 
 
 def _get_user_id(email: str) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == email))
         assert user is not None
         return user.id
 
 
 def _get_counter(user_id: int) -> FeatureUsageCounterModel | None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         return db.scalar(
             select(FeatureUsageCounterModel).where(
                 FeatureUsageCounterModel.user_id == user_id,

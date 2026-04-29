@@ -8,16 +8,16 @@ from app.infra.db.models import (
     AstrologerPromptProfileModel,
 )
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 from scripts.seed_astrologers_6_profiles import ASTROLOGERS, seed_astrologers
 
 client = TestClient(app)
 
 
 def _reset_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def test_list_astrologers_returns_v2_fields() -> None:
@@ -25,7 +25,7 @@ def test_list_astrologers_returns_v2_fields() -> None:
     # Use a unique name to avoid conflicts if tables aren't cleared
     unique_name = f"Orion Analyste {uuid.uuid4()}"
     persona_id = uuid.uuid4()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         persona = LlmPersonaModel(
             id=persona_id,
             name=unique_name,
@@ -80,7 +80,7 @@ def test_get_astrologer_returns_v2_profile() -> None:
     _reset_tables()
     unique_name = f"Selene Mystique {uuid.uuid4()}"
     persona_id = uuid.uuid4()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         persona = LlmPersonaModel(
             id=persona_id,
             name=unique_name,
@@ -126,7 +126,7 @@ def test_get_astrologer_returns_v2_profile() -> None:
 
 def test_seed_astrologers_creates_active_prompt_profiles() -> None:
     _reset_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         seed_astrologers(db)
         canonical_ids = {uuid.UUID(item["id"]) for item in ASTROLOGERS}
         prompt_profiles = (
@@ -148,7 +148,7 @@ def test_seed_astrologers_populates_structured_profile_fields() -> None:
         uuid.UUID(item["id"]) for item in ASTROLOGERS if item["display_name"] == "Sélène Ardent"
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         seed_astrologers(db)
         selene_profile = (
             db.query(AstrologerProfileModel)
@@ -168,7 +168,7 @@ def test_seed_astrologers_hides_stale_non_canonical_profiles_without_photo() -> 
     _reset_tables()
     stale_persona_id = uuid.uuid4()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             LlmPersonaModel(
                 id=stale_persona_id,

@@ -21,18 +21,18 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             EnterpriseAccountBillingPlanModel,
@@ -49,7 +49,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_enterprise_context(email: str) -> tuple[int, int]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -69,14 +69,14 @@ def _create_enterprise_context(email: str) -> tuple[int, int]:
 
 
 def _create_ops_token(email: str = "ops-reconciliation@example.com") -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role="ops")
         db.commit()
         return auth.tokens.access_token
 
 
 def _seed_usage(account_id: int, usage_date: date, used_count: int) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # Fenêtre mensuelle UTC
         window_start = datetime(usage_date.year, usage_date.month, 1, tzinfo=timezone.utc)
         if usage_date.month == 12:
@@ -109,7 +109,7 @@ def test_reconciliation_requires_token() -> None:
 
 def test_reconciliation_forbidden_for_non_ops_role() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email="support-reconciliation@example.com",
@@ -167,7 +167,7 @@ def test_reconciliation_list_detail_and_action_flow() -> None:
     assert action_response.status_code == 200
     assert action_response.json()["data"]["action"] == "mark_investigated"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         action_audit = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-reconciliation-action")

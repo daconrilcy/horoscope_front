@@ -6,13 +6,17 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.user import UserModel
 from app.main import app
+from app.tests.helpers.db_session import (
+    open_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -31,12 +35,12 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
     try:
         yield
     finally:
+        reset_app_test_db_session_factory()
         test_engine.dispose()
 
 
@@ -50,7 +54,7 @@ def _login(email: str, password: str) -> str:
 
 @pytest.fixture
 def admin_token() -> str:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.core.security import hash_password
 
         admin = UserModel(
@@ -67,7 +71,7 @@ def admin_token() -> str:
 
 @pytest.fixture
 def user_token() -> str:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.core.security import hash_password
 
         user = UserModel(
@@ -92,7 +96,7 @@ def test_export_users_csv(admin_token: str) -> None:
     assert response.headers["content-type"] == "text/csv; charset=utf-8"
     assert "id,email,role" in response.text
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = db.scalar(
             select(AuditEventModel).where(AuditEventModel.action == "sensitive_data_exported")
         )
@@ -115,7 +119,7 @@ def test_export_users_with_period_serializes_datetime_filters(admin_token: str) 
 
     assert response.status_code == 200
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = (
             db.query(AuditEventModel)
             .filter(AuditEventModel.action == "sensitive_data_exported")
@@ -142,7 +146,7 @@ def test_export_generations_json(admin_token: str) -> None:
 
 
 def test_export_generations_csv(admin_token: str) -> None:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             LlmCallLogModel(
                 use_case="daily_overview",
@@ -176,7 +180,7 @@ def test_export_generations_csv(admin_token: str) -> None:
 def test_export_generations_uses_canonical_dimensions_for_nominal_rows(
     admin_token: str,
 ) -> None:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             LlmCallLogModel(
                 use_case="legacy_chat_alias",
@@ -230,7 +234,7 @@ def test_export_generations_uses_canonical_dimensions_for_nominal_rows(
 def test_export_generations_csv_reclassifies_when_feature_null_but_historical_use_case_set(
     admin_token: str,
 ) -> None:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             LlmCallLogModel(
                 use_case="natal_interpretation",
@@ -267,7 +271,7 @@ def test_export_generations_csv_reclassifies_when_feature_null_but_historical_us
 def test_export_generations_csv_reclassifies_legacy_use_case_to_canonical_feature(
     admin_token: str,
 ) -> None:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             LlmCallLogModel(
                 use_case="natal_interpretation",
@@ -302,7 +306,7 @@ def test_export_generations_csv_reclassifies_legacy_use_case_to_canonical_featur
 
 
 def test_export_billing_csv(admin_token: str) -> None:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = UserModel(email="billing-export@example.com", password_hash="x", role="user")
         db.add(user)
         db.flush()
@@ -339,7 +343,7 @@ def test_export_billing_csv(admin_token: str) -> None:
     assert "user_id,email,plan_code,subscription_status" in response.text
     assert "premium" in response.text
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = (
             db.query(AuditEventModel)
             .filter(AuditEventModel.action == "sensitive_data_exported")

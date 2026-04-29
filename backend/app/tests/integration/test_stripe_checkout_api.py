@@ -7,26 +7,26 @@ from sqlalchemy import delete
 from app.infra.db.base import Base
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing.service import BillingService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables():
     BillingService.reset_subscription_status_cache()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(StripeBillingProfileModel))
         db.execute(delete(UserModel))
         db.commit()
 
 
 def _register_user_with_role(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -105,7 +105,7 @@ def test_stripe_checkout_nominal_200(clean_db):
     assert "request_id" in response.json()["meta"]
 
     # Verify client_reference_id and metadata.app_user_id are correctly set in Stripe params
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email="user@example.com").first()
         user_id = str(user.id)
     call_kwargs = mock_client.checkout.sessions.create.call_args

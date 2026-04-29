@@ -8,11 +8,11 @@ import app.infra.db.models  # noqa: F401
 from app.infra.db.base import Base
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ConsultationEntitlementResult,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -29,9 +29,9 @@ def mock_entitlement_gate():
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserBirthProfileModel))
         db.execute(delete(UserModel))
         db.commit()

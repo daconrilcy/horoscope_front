@@ -20,7 +20,6 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.b2b.billing_service import B2BBillingService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
@@ -31,12 +30,13 @@ from app.services.b2b.reconciliation_service import (
     ReconciliationSeverity,
     ReconciliationStatus,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             EnterpriseAccountBillingPlanModel,
@@ -53,7 +53,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_enterprise_context(email: str) -> tuple[int, int]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -73,7 +73,7 @@ def _create_enterprise_context(email: str) -> tuple[int, int]:
 
 
 def _seed_usage(account_id: int, usage_date: date, used_count: int) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # Fenêtre mensuelle UTC
         window_start = datetime(usage_date.year, usage_date.month, 1, tzinfo=timezone.utc)
         if usage_date.month == 12:
@@ -102,7 +102,7 @@ def test_reconciliation_detects_missing_billing_cycle_as_major() -> None:
     account_id, credential_id = _create_enterprise_context("reco-service-major@example.com")
     _seed_usage(account_id, date(2026, 2, 5), used_count=12)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
 
     assert listed.total == 1
@@ -118,7 +118,7 @@ def test_reconciliation_is_resolved_when_usage_and_billing_match() -> None:
     account_id, credential_id = _create_enterprise_context("reco-service-resolved@example.com")
     _seed_usage(account_id, date(2026, 3, 5), used_count=4)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         B2BBillingService.close_cycle(
             db,
             account_id=account_id,
@@ -128,7 +128,7 @@ def test_reconciliation_is_resolved_when_usage_and_billing_match() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
 
     assert listed.total == 1
@@ -143,7 +143,7 @@ def test_reconciliation_action_recalculate_returns_action_state() -> None:
     account_id, credential_id = _create_enterprise_context("reco-service-action@example.com")
     _seed_usage(account_id, date(2026, 4, 15), used_count=7)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
         assert listed.total == 1
         issue_id = listed.items[0].issue_id
@@ -167,7 +167,7 @@ def test_reconciliation_normalizes_period_filters_to_month_bounds() -> None:
     account_id, credential_id = _create_enterprise_context("reco-service-period@example.com")
     _seed_usage(account_id, date(2026, 5, 2), used_count=3)
     # On ajoute au même compteur pour le même mois
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         counter = db.scalar(
             select(EnterpriseFeatureUsageCounterModel).where(
                 EnterpriseFeatureUsageCounterModel.enterprise_account_id == account_id,
@@ -177,7 +177,7 @@ def test_reconciliation_normalizes_period_filters_to_month_bounds() -> None:
         counter.used_count += 4
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         listed = B2BReconciliationService.list_issues(
             db,
             account_id=account_id,
@@ -199,7 +199,7 @@ def test_reconciliation_ignores_non_monthly_counters() -> None:
     account_id, _ = _create_enterprise_context("reco-service-ignore-yearly@example.com")
     _seed_usage(account_id, date(2026, 6, 5), used_count=4)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             EnterpriseFeatureUsageCounterModel(
                 enterprise_account_id=account_id,
@@ -215,7 +215,7 @@ def test_reconciliation_ignores_non_monthly_counters() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
 
     assert listed.total == 1
@@ -227,7 +227,7 @@ def test_reconciliation_ignores_non_calendar_monthly_counters() -> None:
     account_id, _ = _create_enterprise_context("reco-service-ignore-rolling@example.com")
     _seed_usage(account_id, date(2026, 6, 5), used_count=4)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             EnterpriseFeatureUsageCounterModel(
                 enterprise_account_id=account_id,
@@ -243,7 +243,7 @@ def test_reconciliation_ignores_non_calendar_monthly_counters() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         listed = B2BReconciliationService.list_issues(db, account_id=account_id, limit=20, offset=0)
 
     assert listed.total == 1

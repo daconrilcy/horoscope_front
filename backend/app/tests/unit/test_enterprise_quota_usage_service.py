@@ -15,7 +15,6 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_quota_usage_service import EnterpriseQuotaUsageService
 from app.services.entitlement.entitlement_types import QuotaDefinition
@@ -24,12 +23,13 @@ from app.services.entitlement.feature_scope_registry import (
     UnknownFeatureCodeError,
 )
 from app.services.quota.usage_service import QuotaExhaustedError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             EnterpriseFeatureUsageCounterModel,
             FeatureUsageCounterModel,
@@ -41,7 +41,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_enterprise_account(email: str) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -69,7 +69,7 @@ def test_enterprise_quota_usage_service_rejects_b2c_feature_on_get_usage() -> No
         period_value=1,
         reset_mode=ResetMode.CALENDAR,
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(InvalidQuotaScopeError) as exc_info:
             EnterpriseQuotaUsageService.get_usage(
                 db,
@@ -92,7 +92,7 @@ def test_enterprise_quota_usage_service_rejects_b2c_feature_on_consume() -> None
         period_value=1,
         reset_mode=ResetMode.CALENDAR,
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(InvalidQuotaScopeError) as exc_info:
             EnterpriseQuotaUsageService.consume(
                 db,
@@ -157,7 +157,7 @@ def test_enterprise_quota_usage_service_rejects_unknown_feature_code() -> None:
         period_value=1,
         reset_mode=ResetMode.CALENDAR,
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UnknownFeatureCodeError):
             EnterpriseQuotaUsageService.get_usage(
                 db,
@@ -178,7 +178,7 @@ def test_enterprise_quota_get_usage_empty() -> None:
         reset_mode=ResetMode.CALENDAR,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         state = EnterpriseQuotaUsageService.get_usage(
             db, account_id=account_id, feature_code="b2b_api_access", quota=quota
         )
@@ -199,7 +199,7 @@ def test_enterprise_quota_consume_initial_creates_counter() -> None:
         reset_mode=ResetMode.CALENDAR,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         state = EnterpriseQuotaUsageService.consume(
             db, account_id=account_id, feature_code="b2b_api_access", quota=quota, amount=2
         )
@@ -209,7 +209,7 @@ def test_enterprise_quota_consume_initial_creates_counter() -> None:
     assert state.remaining == 8
     assert state.exhausted is False
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from sqlalchemy import select
 
         counter = db.scalar(
@@ -232,7 +232,7 @@ def test_enterprise_quota_consume_until_exhausted() -> None:
         reset_mode=ResetMode.CALENDAR,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # First consume OK
         EnterpriseQuotaUsageService.consume(
             db, account_id=account_id, feature_code="b2b_api_access", quota=quota, amount=3
@@ -243,7 +243,7 @@ def test_enterprise_quota_consume_until_exhausted() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             EnterpriseQuotaUsageService.consume(
                 db, account_id=account_id, feature_code="b2b_api_access", quota=quota, amount=1
@@ -271,7 +271,7 @@ def test_enterprise_quota_window_isolation_by_month() -> None:
     # Usage in March
     dt_march = datetime(2026, 3, 5, tzinfo=timezone.utc)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         EnterpriseQuotaUsageService.consume(
             db,
             account_id=account_id,
@@ -290,7 +290,7 @@ def test_enterprise_quota_window_isolation_by_month() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         state_feb = EnterpriseQuotaUsageService.get_usage(
             db, account_id=account_id, feature_code="b2b_api_access", quota=quota, ref_dt=dt_feb
         )

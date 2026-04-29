@@ -11,8 +11,8 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
 from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
-from app.infra.db.session import SessionLocal
 from app.main import app
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.integration.ops_alert_helpers import (
     cleanup_ops_alert_tables,
     register_user_and_issue_token_with_role_claim,
@@ -28,7 +28,7 @@ client = TestClient(app)
 def test_get_attempts_empty_for_alert_without_attempts() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-alerts@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id)
         db.commit()
@@ -48,7 +48,7 @@ def test_get_attempts_empty_for_alert_without_attempts() -> None:
 def test_get_attempts_returns_attempt_history() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-attempts@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id)
         seed_ops_alert_attempt(
@@ -79,7 +79,7 @@ def test_get_attempts_returns_attempt_history() -> None:
 def test_post_retry_creates_new_attempt() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-retry@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id)
         db.commit()
@@ -107,7 +107,7 @@ def test_post_retry_creates_new_attempt() -> None:
     assert payload["attempt_number"] == 1
     assert payload["request_id"] == "rid-retry"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         attempts = (
             db.query(CanonicalEntitlementMutationAlertDeliveryAttemptModel)
             .filter(
@@ -126,7 +126,7 @@ def test_post_retry_creates_new_attempt() -> None:
 def test_post_retry_dry_run_creates_no_attempt() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-retry-dry@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id)
         db.commit()
@@ -144,7 +144,7 @@ def test_post_retry_dry_run_creates_no_attempt() -> None:
     assert payload["delivery_status"] == "failed"
     assert payload["attempt_number"] is None
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         assert (
             db.query(CanonicalEntitlementMutationAlertDeliveryAttemptModel)
             .filter(
@@ -163,7 +163,7 @@ def test_post_retry_requires_ops_role() -> None:
         "user",
         "user",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id)
         db.commit()
@@ -196,7 +196,7 @@ def test_post_retry_returns_404_for_unknown_alert() -> None:
 def test_post_retry_returns_409_for_non_failed_alert() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-409@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id, delivery_status="sent")
         db.commit()
@@ -228,7 +228,7 @@ def test_get_attempts_returns_404_for_unknown_alert() -> None:
 def test_get_attempts_returns_429_when_rate_limited(monkeypatch: object) -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-attempts-429@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id)
         db.commit()
@@ -264,7 +264,7 @@ def test_get_attempts_returns_429_when_rate_limited(monkeypatch: object) -> None
 def test_post_retry_returns_429_when_rate_limited(monkeypatch: object) -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-retry-429@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id)
         db.commit()

@@ -4,7 +4,6 @@ from sqlalchemy import delete, select
 from app.infra.db.base import Base
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigService,
@@ -12,19 +11,20 @@ from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigUpdatePayload,
     PersonaProfileCreatePayload,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(PersonaConfigModel))
         db.execute(delete(UserModel))
         db.commit()
 
 
 def _create_ops_user_id() -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email="persona-ops@example.com",
@@ -37,7 +37,7 @@ def _create_ops_user_id() -> int:
 
 def test_get_active_returns_default_config_when_none_exists() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         active = PersonaConfigService.get_active(db)
     assert active.is_default is True
     assert active.version == 0
@@ -49,7 +49,7 @@ def test_get_active_returns_default_config_when_none_exists() -> None:
 def test_update_active_creates_new_active_version() -> None:
     _cleanup_tables()
     user_id = _create_ops_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         updated = PersonaConfigService.update_active(
             db,
             user_id=user_id,
@@ -71,7 +71,7 @@ def test_update_active_creates_new_active_version() -> None:
 def test_update_active_is_idempotent_for_identical_payload() -> None:
     _cleanup_tables()
     user_id = _create_ops_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first = PersonaConfigService.update_active(
             db,
             user_id=user_id,
@@ -103,7 +103,7 @@ def test_update_active_is_idempotent_for_identical_payload() -> None:
 def test_update_active_rejects_invalid_payload() -> None:
     _cleanup_tables()
     user_id = _create_ops_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(PersonaConfigServiceError) as error:
             PersonaConfigService.update_active(
                 db,
@@ -121,7 +121,7 @@ def test_update_active_rejects_invalid_payload() -> None:
 def test_rollback_active_reactivates_previous_version() -> None:
     _cleanup_tables()
     user_id = _create_ops_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first = PersonaConfigService.update_active(
             db,
             user_id=user_id,
@@ -156,7 +156,7 @@ def test_rollback_active_reactivates_previous_version() -> None:
 def test_rollback_ignores_rolled_back_versions() -> None:
     _cleanup_tables()
     user_id = _create_ops_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         PersonaConfigService.update_active(
             db,
             user_id=user_id,
@@ -199,7 +199,7 @@ def test_rollback_ignores_rolled_back_versions() -> None:
 def test_create_profile_activate_archive_restore_and_list() -> None:
     _cleanup_tables()
     user_id = _create_ops_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         created = PersonaConfigService.create_profile(
             db,
             user_id=user_id,

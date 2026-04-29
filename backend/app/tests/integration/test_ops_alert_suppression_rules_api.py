@@ -8,9 +8,9 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_rule impor
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -18,16 +18,16 @@ RULES_PATH = "/v1/ops/entitlements/mutation-audits/alerts/suppression-rules"
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserModel))
         db.execute(delete(CanonicalEntitlementMutationAlertSuppressionRuleModel))
         db.commit()
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token

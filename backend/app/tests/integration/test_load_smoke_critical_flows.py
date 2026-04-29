@@ -45,23 +45,29 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
+from app.infra.db.session import get_db_session
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.billing.service import BillingService
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.helpers.db_session import (
+    app_test_engine,
+    open_app_test_db_session,
+    override_app_test_db_session,
+)
 
 
 def _cleanup_tables() -> None:
     app.dependency_overrides.clear()
+    app.dependency_overrides[get_db_session] = override_app_test_db_session
     BillingService.reset_subscription_status_cache()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
     from scripts.seed_66_20_convergence import seed_66_20_convergence
 
     seed_66_20_convergence()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         for model in (
             UserPrivacyRequestModel,
             ChatMessageModel,
@@ -138,7 +144,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_enterprise_api_key(email: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.infra.db.models.enterprise_billing import (
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingPlanModel,
@@ -232,7 +238,7 @@ def _create_enterprise_api_key(email: str) -> str:
 
 
 def _create_access_token(*, email: str, password: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         AuthService.register(db, email=email, password=password, role=role)
         auth = AuthService.login(db, email=email, password=password)
         db.commit()
@@ -300,7 +306,7 @@ def test_load_smoke_critical_flows() -> None:
     bearer_headers = {"Authorization": f"Bearer {access_token}"}
 
     # Inject active subscription directly
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         BillingService.ensure_default_plans(db)
 
         user = db.query(UserModel).filter_by(email="load-smoke-user@example.com").one()
@@ -334,7 +340,7 @@ def test_load_smoke_critical_flows() -> None:
     )
     assert first_message.status_code == 200
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
         db.commit()
 
@@ -354,9 +360,9 @@ def test_load_smoke_critical_flows() -> None:
 
     def _timed_get(path: str, headers: dict[str, str]) -> tuple[int, float]:
         start = time.perf_counter()
-        # Avoid sharing a single TestClient across worker threads.
-        with TestClient(app) as threaded_client:
-            response = threaded_client.get(path, headers=headers)
+        # Avoid sharing one TestClient across threads without rerunning lifespan startup.
+        threaded_client = TestClient(app)
+        response = threaded_client.get(path, headers=headers)
         duration_ms = (time.perf_counter() - start) * 1000
         return response.status_code, duration_ms
 
@@ -388,8 +394,8 @@ def test_load_smoke_critical_flows() -> None:
 
     def _timed_post_delete(path: str, headers: dict[str, str]) -> tuple[int, float]:
         start = time.perf_counter()
-        with TestClient(app) as threaded_client:
-            response = threaded_client.post(path, headers=headers, json={"confirmation": "DELETE"})
+        threaded_client = TestClient(app)
+        response = threaded_client.post(path, headers=headers, json={"confirmation": "DELETE"})
         duration_ms = (time.perf_counter() - start) * 1000
         return response.status_code, duration_ms
 

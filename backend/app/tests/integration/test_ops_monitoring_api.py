@@ -13,19 +13,19 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import increment_counter, observe_duration, reset_metrics
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
     reset_metrics()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.execute(delete(UserModel))
 
         # Seed canonical features
@@ -66,7 +66,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -77,7 +77,7 @@ def _set_active_subscription(access_token: str, plan_code: str) -> None:
     from app.infra.db.models.stripe_billing import StripeBillingProfileModel
     from app.services.billing.service import BillingService
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).order_by(UserModel.id.desc()).first()
         if not user:
             return
@@ -113,7 +113,7 @@ def _set_active_subscription(access_token: str, plan_code: str) -> None:
 def _record_manual_pricing_events(user_email: str) -> None:
     from app.api.v1.routers.public.billing import _record_pricing_event_safely
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email=user_email).one()
         request_id = "manual-test-event"
         # Exposure

@@ -21,7 +21,6 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.llm_generation.anonymization_service import LLMAnonymizationError
 from app.services.llm_generation.chat.chat_guidance_service import (
@@ -32,15 +31,16 @@ from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigService,
     PersonaConfigUpdatePayload,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator
 
 
 def _cleanup_tables() -> None:
     ChatGuidanceService.reset_quality_kpis()
     reset_test_generators()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             ChatMessageModel,
             ChatConversationModel,
@@ -76,14 +76,14 @@ def _create_user_id() -> int:
 
 
 def _create_user_id_with_email(email: str) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123")
         db.commit()
         return auth.user.id
 
 
 def _create_ops_user_id_with_email(email: str) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role="ops")
         db.commit()
         return auth.user.id
@@ -183,7 +183,7 @@ def test_send_message_success_creates_user_and_assistant_messages() -> None:
     generator = RecordingGenerator()
     set_test_chat_generator(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         reply = ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -239,7 +239,7 @@ def test_send_message_normalizes_structured_chat_json_before_persisting(
         lambda *args, **kwargs: None,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         reply = ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -248,7 +248,7 @@ def test_send_message_normalizes_structured_chat_json_before_persisting(
         db.commit()
 
     assert reply.assistant_message.content == "Réponse astrologue formatée"
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         stored_assistant = (
             db.query(ChatMessageModel)
             .filter(ChatMessageModel.role == "assistant")
@@ -265,7 +265,7 @@ def test_send_message_first_turn_uses_minimal_opening_context() -> None:
     generator = RecordingGenerator()
     set_test_chat_generator(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         profile_repo = UserBirthProfileModel(
             user_id=user_id,
             birth_date=date(1990, 3, 22),
@@ -276,7 +276,7 @@ def test_send_message_first_turn_uses_minimal_opening_context() -> None:
         db.add(profile_repo)
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -302,7 +302,7 @@ def test_send_message_follow_up_turn_restores_extended_context(
     generator = RecordingGenerator()
     set_test_chat_generator(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             UserBirthProfileModel(
                 user_id=user_id,
@@ -327,7 +327,7 @@ def test_send_message_follow_up_turn_restores_extended_context(
         lambda natal_result, degraded_mode: "Résumé natal synthétique",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -353,7 +353,7 @@ def test_send_message_anonymizes_personal_identifiers_before_llm_call() -> None:
     generator = RecordingGenerator()
     set_test_chat_generator(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -374,7 +374,7 @@ def test_send_message_uses_active_persona_policy_in_prompt() -> None:
     ops_user_id = _create_ops_user_id_with_email("persona-chat-ops@example.com")
     generator = RecordingGenerator()
     set_test_chat_generator(generator)
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         PersonaConfigService.update_active(
             db,
             user_id=ops_user_id,
@@ -399,7 +399,7 @@ def test_send_message_timeout_raises_retryable_error() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     set_test_chat_generator(TimeoutGenerator())
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as error:
             ChatGuidanceService.send_message(
                 db=db,
@@ -416,7 +416,7 @@ def test_send_message_unavailable_raises_retryable_error() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
     set_test_chat_generator(UnavailableGenerator())
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as error:
             ChatGuidanceService.send_message(
                 db=db,
@@ -431,7 +431,7 @@ def test_send_message_unavailable_raises_retryable_error() -> None:
 def test_send_message_rejects_empty_input() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as error:
             ChatGuidanceService.send_message(
                 db=db,
@@ -447,7 +447,7 @@ def test_send_message_applies_reformulation_recovery_on_off_scope() -> None:
     user_id = _create_user_id()
     set_test_chat_generator(OffScopeThenRecoveredGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         reply = ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -467,7 +467,7 @@ def test_send_message_applies_safe_fallback_when_recovery_fails() -> None:
     user_id = _create_user_id()
     set_test_chat_generator(AlwaysOffScopeGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         reply = ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -487,7 +487,7 @@ def test_send_message_applies_retry_once_recovery_after_failed_reformulation() -
     user_id = _create_user_id()
     set_test_chat_generator(OffScopeThenRetryOnceRecoveredGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         reply = ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -508,7 +508,7 @@ def test_send_message_updates_quality_kpis_for_off_scope_recovery() -> None:
     user_id = _create_user_id()
     set_test_chat_generator(OffScopeThenRecoveredGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -536,7 +536,7 @@ def test_send_message_second_turn_uses_previous_context_in_chronological_order()
     generator = RecordingGenerator()
     set_test_chat_generator(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first = ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -568,7 +568,7 @@ def test_send_message_applies_context_window_limit(monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(settings, "chat_context_window_messages", 2)
     monkeypatch.setattr(settings, "chat_context_max_characters", 4000)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -603,7 +603,7 @@ def test_send_message_invalid_context_config_raises_stable_error(
     set_test_chat_generator(RecordingGenerator())
     monkeypatch.setattr(settings, "chat_context_window_messages", 0)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as error:
             ChatGuidanceService.send_message(
                 db=db,
@@ -629,7 +629,7 @@ def test_send_message_raises_llm_anonymization_failed_when_anonymizer_fails(
         _raise_anonymization_error,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as error:
             ChatGuidanceService.send_message(
                 db=db,
@@ -650,7 +650,7 @@ def test_send_message_context_selection_stays_contiguous_when_budget_is_exceeded
     monkeypatch.setattr(settings, "chat_context_window_messages", 10)
     monkeypatch.setattr(settings, "chat_context_max_characters", 30)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -685,7 +685,7 @@ def test_create_message_updates_conversation_updated_at_for_latest_selection() -
     _cleanup_tables()
     user_id = _create_user_id()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         persona = LlmPersonaModel(
             name="Test Persona",
             enabled=True,
@@ -741,7 +741,7 @@ def test_list_conversations_returns_user_scoped_history() -> None:
     user_id = _create_user_id()
     other_user_id = _create_user_id_with_email("chat-other-user@example.com")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         persona = LlmPersonaModel(
             name="Test Persona",
             enabled=True,
@@ -771,7 +771,7 @@ def test_list_conversations_returns_user_scoped_history() -> None:
             content="Historique autre user",
         )
         db.commit()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = ChatGuidanceService.list_conversations(
             db=db,
             user_id=user_id,
@@ -791,7 +791,7 @@ def test_get_conversation_history_rejects_forbidden_and_missing_conversation() -
 
     set_test_chat_generator(RecordingGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         response = ChatGuidanceService.send_message(
             db=db,
             user_id=owner_user_id,
@@ -800,7 +800,7 @@ def test_get_conversation_history_rejects_forbidden_and_missing_conversation() -
         db.commit()
         conversation_id = response.conversation_id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as forbidden_error:
             ChatGuidanceService.get_conversation_history(
                 db=db,
@@ -809,7 +809,7 @@ def test_get_conversation_history_rejects_forbidden_and_missing_conversation() -
             )
     assert forbidden_error.value.code == "conversation_forbidden"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as missing_error:
             ChatGuidanceService.get_conversation_history(
                 db=db,
@@ -823,7 +823,7 @@ def test_list_conversations_rejects_invalid_pagination() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as error:
             ChatGuidanceService.list_conversations(
                 db=db,
@@ -840,7 +840,7 @@ def test_send_message_rejects_unknown_and_forbidden_conversation_id() -> None:
     other_user_id = _create_user_id_with_email("chat-other-user@example.com")
     set_test_chat_generator(RecordingGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         owner_reply = ChatGuidanceService.send_message(
             db=db,
             user_id=owner_user_id,
@@ -849,7 +849,7 @@ def test_send_message_rejects_unknown_and_forbidden_conversation_id() -> None:
         db.commit()
         owner_conversation_id = owner_reply.conversation_id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as missing_error:
             ChatGuidanceService.send_message(
                 db=db,
@@ -859,7 +859,7 @@ def test_send_message_rejects_unknown_and_forbidden_conversation_id() -> None:
             )
     assert missing_error.value.code == "conversation_not_found"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(ChatGuidanceServiceError) as forbidden_error:
             ChatGuidanceService.send_message(
                 db=db,

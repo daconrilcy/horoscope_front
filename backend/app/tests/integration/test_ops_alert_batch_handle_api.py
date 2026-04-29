@@ -12,8 +12,8 @@ from app.infra.db.models.entitlement_mutation.alert.handling import (
 from app.infra.db.models.entitlement_mutation.alert.handling_event import (
     CanonicalEntitlementMutationAlertHandlingEventModel,
 )
-from app.infra.db.session import SessionLocal
 from app.main import app
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.integration.ops_alert_helpers import (
     cleanup_ops_alert_tables,
     register_user_and_issue_token_with_role_claim,
@@ -31,7 +31,7 @@ def _create_event(
     alert_kind: str = "sla_overdue",
     feature_code: str = "test_feature",
 ) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(
             db,
@@ -57,7 +57,7 @@ def _insert_handling(
     ops_comment: str | None = None,
     suppression_key: str | None = None,
 ) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             CanonicalEntitlementMutationAlertHandlingModel(
                 alert_event_id=alert_event_id,
@@ -72,14 +72,14 @@ def _insert_handling(
 
 
 def _count_handlings() -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         return len(
             db.execute(select(CanonicalEntitlementMutationAlertHandlingModel)).scalars().all()
         )
 
 
 def _count_handling_events(*, alert_event_id: int | None = None) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         query = select(CanonicalEntitlementMutationAlertHandlingEventModel)
         if alert_event_id is not None:
             query = query.where(
@@ -107,7 +107,7 @@ def test_batch_handle_suppresses_failed_alerts() -> None:
     assert data["skipped_count"] == 0
     assert data["alert_event_ids"] == [first_id, second_id]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         rows = db.execute(select(CanonicalEntitlementMutationAlertHandlingModel)).scalars().all()
         assert [row.handling_status for row in rows] == ["suppressed", "suppressed"]
 
@@ -126,7 +126,7 @@ def test_batch_handle_resolves_failed_alerts() -> None:
     assert response.status_code == 200
     assert response.json()["data"]["handled_count"] == 1
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         row = db.execute(
             select(CanonicalEntitlementMutationAlertHandlingModel).where(
                 CanonicalEntitlementMutationAlertHandlingModel.alert_event_id == alert_event_id
@@ -197,7 +197,7 @@ def test_batch_handle_rehandles_when_state_changes() -> None:
     assert response.json()["data"]["handled_count"] == 1
     assert _count_handling_events(alert_event_id=alert_event_id) == 1
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         row = db.execute(
             select(CanonicalEntitlementMutationAlertHandlingModel).where(
                 CanonicalEntitlementMutationAlertHandlingModel.alert_event_id == alert_event_id
@@ -412,7 +412,7 @@ def test_batch_handle_returns_422_for_invalid_handling_status() -> None:
 def test_batch_retry_still_excludes_suppressed_after_61_45() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-retry-regression@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         excluded_audit = seed_ops_alert_audit(db)
         included_audit = seed_ops_alert_audit(db)
         excluded_id = seed_ops_alert_event(

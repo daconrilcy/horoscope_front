@@ -8,11 +8,11 @@ from app.infra.db.base import Base
 from app.infra.db.repositories.consultation_third_party_repository import (
     ConsultationThirdPartyRepository,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ConsultationEntitlementResult,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -29,8 +29,8 @@ def mock_consultation_gate():
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def _get_auth_headers(email="user_tp@example.com"):
@@ -108,7 +108,7 @@ def test_usage_recorded_and_returned():
     assert create_resp.status_code == 200
     external_id = create_resp.json()["external_id"]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ConsultationThirdPartyRepository(db)
         profile = repo.get_by_external_id(external_id)
         assert profile is not None
@@ -149,7 +149,7 @@ def test_updated_at_refreshed_on_usage():
     assert create_resp.status_code == 200
     external_id = create_resp.json()["external_id"]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ConsultationThirdPartyRepository(db)
         profile = repo.get_by_external_id(external_id)
         assert profile is not None

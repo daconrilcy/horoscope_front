@@ -11,10 +11,10 @@ from fastapi.testclient import TestClient
 
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
-from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing.service import BillingService
+from app.tests.helpers.db_session import open_app_test_db_session
 
 client = TestClient(app)
 
@@ -253,7 +253,7 @@ async def test_webhook_business_failure_persists_failed_and_retry_is_accepted():
                     assert first_response.status_code == 200
                     assert first_response.json() == {"status": "failed_internal"}
 
-                    with SessionLocal() as db:
+                    with open_app_test_db_session() as db:
                         failed_record = (
                             db.query(StripeWebhookEventModel)
                             .filter_by(stripe_event_id=event_id)
@@ -271,7 +271,7 @@ async def test_webhook_business_failure_persists_failed_and_retry_is_accepted():
                     assert second_response.json() == {"status": "processed"}
                     assert mock_update.call_count == 2
 
-                    with SessionLocal() as db:
+                    with open_app_test_db_session() as db:
                         processed_record = (
                             db.query(StripeWebhookEventModel)
                             .filter_by(stripe_event_id=event_id)
@@ -364,7 +364,7 @@ async def test_webhook_subscription_resumed():
 @pytest.mark.asyncio
 async def test_webhook_invalidates_billing_cache_for_next_read():
     BillingService.reset_subscription_status_cache()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=f"webhook-cache-{uuid.uuid4().hex[:8]}@example.com",
@@ -431,7 +431,7 @@ async def test_webhook_invalidates_billing_cache_for_next_read():
     assert response.status_code == 200
     assert response.json() == {"status": "processed"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         after = BillingService.get_subscription_status_readonly(db, user_id=user_id)
 
     assert after.status == "active"

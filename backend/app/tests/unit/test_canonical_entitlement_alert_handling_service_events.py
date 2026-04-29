@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
@@ -12,10 +13,10 @@ from app.infra.db.models.entitlement_mutation.alert.handling import (
 from app.infra.db.models.entitlement_mutation.alert.handling_event import (
     CanonicalEntitlementMutationAlertHandlingEventModel,
 )
-from app.infra.db.session import SessionLocal
 from app.services.canonical_entitlement.alert.handling import (
     CanonicalEntitlementAlertHandlingService,
 )
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.unit.canonical_entitlement_alert_helpers import (
     seed_entitlement_alert_event,
     setup_entitlement_alert_schema,
@@ -23,7 +24,7 @@ from app.tests.unit.canonical_entitlement_alert_helpers import (
 
 
 def _list_events(
-    db: SessionLocal,
+    db: Session,
 ) -> list[CanonicalEntitlementMutationAlertHandlingEventModel]:
     return (
         db.execute(
@@ -46,7 +47,7 @@ def _as_utc_naive(value: object) -> object:
 
 def test_append_handling_event_inserts_record() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         alert_event = seed_entitlement_alert_event(db)
 
         CanonicalEntitlementAlertHandlingService.append_handling_event(
@@ -74,7 +75,7 @@ def test_append_handling_event_inserts_record() -> None:
 
 def test_upsert_handling_creates_event_on_insert() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         alert_event = seed_entitlement_alert_event(db)
 
         CanonicalEntitlementAlertHandlingService.upsert_handling(
@@ -95,7 +96,7 @@ def test_upsert_handling_creates_event_on_insert() -> None:
 
 def test_upsert_handling_creates_event_on_status_change() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         alert_event = seed_entitlement_alert_event(db)
         CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
@@ -123,7 +124,7 @@ def test_upsert_handling_creates_event_on_status_change() -> None:
 
 def test_upsert_handling_no_event_when_no_change() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         alert_event = seed_entitlement_alert_event(db)
         first = CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
@@ -159,7 +160,7 @@ def test_upsert_handling_no_event_when_no_change() -> None:
 
 def test_upsert_handling_creates_event_when_ops_comment_changes() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         alert_event = seed_entitlement_alert_event(db)
         CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
@@ -186,7 +187,7 @@ def test_upsert_handling_creates_event_when_ops_comment_changes() -> None:
 
 def test_upsert_handling_creates_event_when_suppression_key_changes() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         alert_event = seed_entitlement_alert_event(db)
         CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
@@ -213,7 +214,7 @@ def test_upsert_handling_creates_event_when_suppression_key_changes() -> None:
 
 def test_upsert_handling_stores_request_id_in_event() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         alert_event = seed_entitlement_alert_event(db)
 
         CanonicalEntitlementAlertHandlingService.upsert_handling(

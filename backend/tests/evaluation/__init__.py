@@ -132,7 +132,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
     from app.infra.db.models.llm.llm_persona import LlmPersonaModel
     from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
-    from app.infra.db.session import SessionLocal
     from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
     from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
     from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
@@ -143,9 +142,10 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     )
     from app.ops.llm.bootstrap.use_cases_seed import seed_bootstrap_contracts
     from scripts.seed_astrologers_6_profiles import seed_astrologers
+    from tests.integration.app_db import open_app_db_session
 
     def collect_state() -> tuple[int, int, int, int, int, int, bool]:
-        with SessionLocal() as db:
+        with open_app_db_session() as db:
             return (
                 db.query(LlmOutputSchemaModel).count(),
                 db.query(LlmPromptVersionModel).count(),
@@ -216,7 +216,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
 
     try:
         if needs_registry_seed:
-            with SessionLocal() as db:
+            with open_app_db_session() as db:
                 seed_astrologers(db)
                 seed_bootstrap_contracts(db)
             seed_prompts()
@@ -224,7 +224,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             seed_chat_prompt_v2()
             seed_guidance_prompts()
 
-        with SessionLocal() as db:
+        with open_app_db_session() as db:
             seed_horoscope_narrator_assembly(db)
             seed_66_20_taxonomy(db)
     except IntegrityError:
@@ -236,10 +236,10 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
 def _ensure_consultation_templates_seeded() -> None:
     """Auto-seed consultation templates when the table is empty (idempotent)."""
     from app.infra.db.models.consultation_template import ConsultationTemplateModel
-    from app.infra.db.session import SessionLocal
+    from tests.integration.app_db import open_app_db_session
 
     try:
-        with SessionLocal() as db:
+        with open_app_db_session() as db:
             count = db.query(ConsultationTemplateModel).count()
             if count > 0:
                 return
@@ -257,11 +257,11 @@ def _ensure_support_categories_seeded() -> None:
         return
 
     from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
-    from app.infra.db.session import SessionLocal
     from scripts.seed_support_categories import seed_support_categories
+    from tests.integration.app_db import open_app_db_session
 
     try:
-        with SessionLocal() as db:
+        with open_app_db_session() as db:
             count = db.query(SupportTicketCategoryModel).count()
             if count > 0:
                 return
@@ -279,12 +279,12 @@ def _ensure_canonical_entitlements_seeded() -> None:
     from sqlalchemy.exc import OperationalError
 
     from app.infra.db.models.product_entitlements import FeatureCatalogModel
-    from app.infra.db.session import SessionLocal
     from app.services.entitlement.feature_scope_registry import FEATURE_SCOPE_REGISTRY
     from scripts.seed_product_entitlements import seed as seed_product_entitlements
+    from tests.integration.app_db import open_app_db_session
 
     def _missing_feature_codes() -> set[str]:
-        with SessionLocal() as db:
+        with open_app_db_session() as db:
             existing = {row.feature_code for row in db.query(FeatureCatalogModel).all()}
         return set(FEATURE_SCOPE_REGISTRY) - existing
 
@@ -307,7 +307,7 @@ def _ensure_canonical_entitlements_seeded() -> None:
     )
     seed_product_entitlements()
 
-    with SessionLocal() as db:
+    with open_app_db_session() as db:
         for feature_code in sorted(missing_codes):
             if feature_code != "b2b_api_access":
                 continue
@@ -376,9 +376,9 @@ async def _app_lifespan(_: FastAPI):
     # Story 61.64: Safeguard for Stripe Customer Portal
     run_stripe_portal_startup_validation(settings)
 
-    from app.infra.db.session import SessionLocal
+    from tests.integration.app_db import open_app_db_session
 
-    with SessionLocal() as db:
+    with open_app_db_session() as db:
         run_canonical_db_startup_validation(settings.canonical_db_validation_mode, db)
         # Story 66.31: Validate LLM configuration coherence at startup
         await run_llm_coherence_startup_validation(settings.llm_coherence_validation_mode, db)

@@ -7,12 +7,17 @@ from sqlalchemy import create_engine, delete, select
 from sqlalchemy.orm import sessionmaker
 
 from app.core.security import create_token
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 from app.main import app
+from app.tests.helpers.db_session import (
+    app_test_engine,
+    open_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -31,18 +36,18 @@ def _isolated_auth_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
     try:
         yield
     finally:
+        reset_app_test_db_session_factory()
         test_engine.dispose()
 
 
 def _cleanup_users() -> None:
-    Base.metadata.create_all(bind=db_session_module.engine)
-    with db_session_module.SessionLocal() as db:
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(AuditEventModel))
         db.execute(delete(UserRefreshTokenModel))
         db.execute(delete(UserModel))
@@ -240,7 +245,7 @@ def test_refresh_success_records_actor_identity_in_audit_event() -> None:
     refreshed = client.post("/v1/auth/refresh", json={"refresh_token": refresh_token})
     assert refreshed.status_code == 200
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.action == "auth_refresh", AuditEventModel.status == "success")

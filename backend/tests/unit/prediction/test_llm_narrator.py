@@ -1,3 +1,5 @@
+"""Tests de compatibilite du narrateur LLM historique de prediction."""
+
 import asyncio
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -8,6 +10,12 @@ from app.core.config import settings
 from app.domain.llm.prompting.catalog import get_max_tokens
 from app.domain.llm.prompting.context import PromptCommonContext
 from app.prediction.llm_narrator import LLMNarrator
+
+
+def _make_deprecated_narrator() -> LLMNarrator:
+    """Instancie le narrateur legacy en validant l'avertissement attendu."""
+    with pytest.warns(DeprecationWarning, match="LLMNarrator is deprecated"):
+        return LLMNarrator()
 
 
 def _make_common_context() -> PromptCommonContext:
@@ -32,7 +40,7 @@ def _mock_legacy_governance():
 
 @pytest.mark.asyncio
 async def test_narrate_success():
-    narrator = LLMNarrator()
+    narrator = _make_deprecated_narrator()
 
     content = {
         "daily_synthesis": "Synth",
@@ -71,7 +79,7 @@ async def test_narrate_success():
 
 @pytest.mark.asyncio
 async def test_narrate_failure_returns_none():
-    narrator = LLMNarrator()
+    narrator = _make_deprecated_narrator()
 
     with patch("openai.AsyncOpenAI") as mock_openai:
         mock_client = mock_openai.return_value
@@ -84,7 +92,7 @@ async def test_narrate_failure_returns_none():
 
 @pytest.mark.asyncio
 async def test_narrate_timeout_returns_none():
-    narrator = LLMNarrator()
+    narrator = _make_deprecated_narrator()
 
     with patch("openai.AsyncOpenAI") as mock_openai:
         mock_client = mock_openai.return_value
@@ -97,7 +105,7 @@ async def test_narrate_timeout_returns_none():
 
 @pytest.mark.asyncio
 async def test_narrate_ignores_invalid_daily_advice_shape():
-    narrator = LLMNarrator()
+    narrator = _make_deprecated_narrator()
 
     content = {
         "daily_synthesis": "Synth",
@@ -122,7 +130,7 @@ async def test_narrate_ignores_invalid_daily_advice_shape():
 
 @pytest.mark.asyncio
 async def test_narrate_returns_none_on_truncated_json(caplog: pytest.LogCaptureFixture):
-    narrator = LLMNarrator()
+    narrator = _make_deprecated_narrator()
 
     mock_response = MagicMock()
     mock_response.choices = [
@@ -186,7 +194,7 @@ async def test_narrate_disabled_when_flag_off():
 
 @pytest.mark.asyncio
 async def test_narrate_retries_when_daily_synthesis_is_too_short():
-    narrator = LLMNarrator()
+    narrator = _make_deprecated_narrator()
 
     short_content = {
         "daily_synthesis": "Première phrase. Deuxième phrase. Troisième phrase.",
@@ -232,7 +240,7 @@ async def test_narrate_retries_when_daily_synthesis_is_too_short():
 
 @pytest.mark.asyncio
 async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
-    narrator = LLMNarrator()
+    narrator = _make_deprecated_narrator()
 
     short_free_content = {
         "daily_synthesis": ("Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6."),

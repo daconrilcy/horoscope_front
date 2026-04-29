@@ -14,15 +14,15 @@ from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.privacy_service import PrivacyService, PrivacyServiceError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             UserPrivacyRequestModel,
             ChatMessageModel,
@@ -41,7 +41,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_user_id() -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email="privacy-user@example.com",
@@ -55,7 +55,7 @@ def _create_user_id() -> int:
 def test_request_export_returns_completed_request_with_counts() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = PrivacyService.request_export(db, user_id=user_id, request_id="privacy-export-1")
         db.commit()
 
@@ -68,7 +68,7 @@ def test_request_export_returns_completed_request_with_counts() -> None:
 def test_get_latest_export_status_raises_when_absent() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             PrivacyService.get_latest_export_status(db, user_id=user_id)
         except PrivacyServiceError as error:
@@ -80,7 +80,7 @@ def test_get_latest_export_status_raises_when_absent() -> None:
 def test_request_delete_anonymizes_account() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = PrivacyService.request_delete(db, user_id=user_id, request_id="privacy-delete-1")
         db.commit()
         user = db.get(UserModel, user_id)
@@ -100,7 +100,7 @@ def test_request_delete_anonymizes_account() -> None:
 def test_request_export_is_idempotent_after_completion() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first = PrivacyService.request_export(db, user_id=user_id, request_id="privacy-export-1")
         second = PrivacyService.request_export(db, user_id=user_id, request_id="privacy-export-2")
         db.commit()
@@ -117,7 +117,7 @@ def test_request_export_is_idempotent_after_completion() -> None:
 def test_request_delete_is_idempotent_after_completion() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first = PrivacyService.request_delete(db, user_id=user_id, request_id="privacy-delete-1")
         second = PrivacyService.request_delete(db, user_id=user_id, request_id="privacy-delete-2")
         db.commit()
@@ -137,7 +137,7 @@ def test_request_export_marks_request_failed_on_processing_error(
     _cleanup_tables()
     user_id = _create_user_id()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         original_get = db.get
 
         def _failing_get(model: object, identity: object) -> object:

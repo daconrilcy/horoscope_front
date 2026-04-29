@@ -11,16 +11,16 @@ from app.infra.db.models import (
     UserModel,
 )
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _reset_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(AstrologerProfileModel))
         db.execute(delete(LlmPersonaModel))
         db.commit()
@@ -31,7 +31,7 @@ def test_list_astrologers_returns_only_public_enabled_profiles() -> None:
     visible_id = uuid.uuid4()
     hidden_id = uuid.uuid4()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 LlmPersonaModel(id=visible_id, name="Visible", enabled=True),
@@ -93,7 +93,7 @@ def test_get_astrologer_returns_404_for_disabled_persona_even_if_profile_is_publ
     _reset_tables()
     persona_id = uuid.uuid4()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(LlmPersonaModel(id=persona_id, name="Disabled", enabled=False))
         db.add(
             AstrologerProfileModel(
@@ -125,7 +125,7 @@ def test_get_astrologer_returns_structured_profile_fields() -> None:
     _reset_tables()
     persona_id = uuid.uuid4()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(LlmPersonaModel(id=persona_id, name="Sélène", enabled=True))
         db.add(
             AstrologerProfileModel(
@@ -163,7 +163,7 @@ def test_review_rating_and_comment_are_persisted_with_user_alias() -> None:
     _reset_tables()
     persona_id = uuid.uuid4()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(LlmPersonaModel(id=persona_id, name="Orion", enabled=True))
         db.add(
             AstrologerProfileModel(
@@ -202,7 +202,7 @@ def test_review_rating_and_comment_are_persisted_with_user_alias() -> None:
     )
     assert rate_response.status_code == 200
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         stored_review = (
             db.query(AstrologerReviewModel).filter_by(persona_id=persona_id, user_id=user_id).one()
         )

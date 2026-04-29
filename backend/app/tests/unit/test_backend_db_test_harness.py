@@ -14,6 +14,10 @@ CANONICAL_HELPERS = {
     Path("app/tests/helpers/db_session.py"),
     Path("tests/integration/app_db.py"),
 }
+FORBIDDEN_PRODUCTION_DB_SESSION_STRING_TARGETS = {
+    ".".join(("app", "infra", "db", "session", "SessionLocal")),
+    ".".join(("app", "infra", "db", "session", "engine")),
+}
 APPROVED_CREATE_ALL_PATHS = {
     Path("app/tests/integration/billing_helpers.py"),
     Path("app/tests/integration/conftest.py"),
@@ -146,6 +150,7 @@ APPROVED_CREATE_ALL_PATHS = {
 }
 APPROVED_SQLITE_FACTORY_PATHS = {
     Path("app/tests/conftest.py"),
+    Path("app/tests/helpers/db_session.py"),
     Path("app/tests/integration/conftest.py"),
     Path("app/tests/integration/test_admin_actions_api.py"),
     Path("app/tests/integration/test_admin_ai_api.py"),
@@ -246,14 +251,24 @@ def _has_forbidden_direct_import(tree: ast.AST) -> bool:
     return False
 
 
-def _has_forbidden_module_sessionlocal_access(tree: ast.AST) -> bool:
-    """Détecte l'accès indirect `db_session_module.SessionLocal` hors helper canonique."""
+def _has_forbidden_db_session_module_access(tree: ast.AST) -> bool:
+    """Détecte l'accès indirect à la session ou au moteur DB de production."""
     for node in ast.walk(tree):
         if not isinstance(node, ast.Attribute):
             continue
-        if node.attr != "SessionLocal":
+        if node.attr not in {"SessionLocal", "engine"}:
             continue
         if isinstance(node.value, ast.Name) and node.value.id == "db_session_module":
+            return True
+    return False
+
+
+def _has_forbidden_production_db_session_string_target(tree: ast.AST) -> bool:
+    """Détecte les patchs par chaîne vers la session ou le moteur DB de production."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            continue
+        if node.value in FORBIDDEN_PRODUCTION_DB_SESSION_STRING_TARGETS:
             return True
     return False
 
@@ -324,7 +339,11 @@ def test_no_new_direct_production_db_session_imports_in_backend_tests() -> None:
         if relative_path in CANONICAL_HELPERS:
             continue
         tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
-        if _has_forbidden_direct_import(tree) or _has_forbidden_module_sessionlocal_access(tree):
+        if (
+            _has_forbidden_direct_import(tree)
+            or _has_forbidden_db_session_module_access(tree)
+            or _has_forbidden_production_db_session_string_target(tree)
+        ):
             if relative_path not in allowed_paths:
                 violations.append(relative_path.as_posix())
 
@@ -341,7 +360,8 @@ def test_migrated_representative_tests_stay_off_production_session_imports() -> 
     for file_path in migrated_paths:
         tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
         assert not _has_forbidden_direct_import(tree), file_path
-        assert not _has_forbidden_module_sessionlocal_access(tree), file_path
+        assert not _has_forbidden_db_session_module_access(tree), file_path
+        assert not _has_forbidden_production_db_session_string_target(tree), file_path
 
 
 def test_create_all_usage_stays_classified_outside_primary_horoscope_db() -> None:

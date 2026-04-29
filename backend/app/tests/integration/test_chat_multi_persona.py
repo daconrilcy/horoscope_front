@@ -4,13 +4,13 @@ from sqlalchemy.exc import IntegrityError
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
 from app.infra.db.repositories.chat_repository import ChatRepository
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def _create_user(db, email):
@@ -37,7 +37,7 @@ def _create_persona(db, name):
 
 def test_chat_multi_persona_isolation():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user_id = _create_user(db, "user1@example.com")
         persona_a_id = _create_persona(db, "Persona A")
         persona_b_id = _create_persona(db, "Persona B")
@@ -54,7 +54,7 @@ def test_chat_multi_persona_isolation():
 
 def test_chat_anti_doublon_invariant():
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user_id = _create_user(db, "user2@example.com")
         persona_id = _create_persona(db, "Persona A")
 
@@ -80,14 +80,14 @@ def test_get_or_create_active_conversation_concurrency():
 
     import concurrent.futures
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user_id = _create_user(db, "concurrent@example.com")
         persona_id = _create_persona(db, "Persona Concurrent")
         db.commit()
 
     def _get_or_create():
         # Each thread needs its own session
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             repo = ChatRepository(db)
             conv = repo.get_or_create_active_conversation(user_id=user_id, persona_id=persona_id)
             db.commit()
@@ -102,7 +102,7 @@ def test_get_or_create_active_conversation_concurrency():
     assert len(set(results)) == 1
 
     # Verify in DB that only one exists
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from sqlalchemy import func, select
 
         from app.infra.db.models.chat_conversation import ChatConversationModel

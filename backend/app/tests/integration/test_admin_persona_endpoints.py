@@ -7,17 +7,17 @@ from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import LlmUseCaseConfigModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(LlmPersonaModel))
         db.execute(delete(LlmUseCaseConfigModel))
         db.execute(delete(UserModel))
@@ -25,7 +25,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_admin_and_token() -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db, email="admin@test.com", password="admin-pass-123", role="admin"
         )
@@ -73,7 +73,7 @@ def test_admin_persona_crud_lifecycle() -> None:
 
     # 4. Legacy association endpoint is frozen
     # Create use case first to verify canonical governance refusal on an existing key.
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         uc = LlmUseCaseConfigModel(
             key="guidance_daily",
             display_name="Guidance",
@@ -99,7 +99,7 @@ def test_admin_persona_crud_lifecycle() -> None:
 def test_admin_persona_rbac() -> None:
     _cleanup_tables()
     # Register regular user
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db, email="user@test.com", password="user-pass-123", role="user"
         )
@@ -133,7 +133,7 @@ def test_admin_persona_detail_and_deactivation_audit() -> None:
     )
     persona_id = create_resp.json()["data"]["id"]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             BillingPlanModel(
                 code="premium",
@@ -174,7 +174,7 @@ def test_admin_persona_detail_and_deactivation_audit() -> None:
     assert deactivate_resp.status_code == 200
     assert deactivate_resp.json()["data"]["enabled"] is False
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-persona-detail-1")

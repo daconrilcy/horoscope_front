@@ -11,26 +11,22 @@ from app.core.rate_limit import reset_rate_limits
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.infra.db.base import Base
-from app.infra.db.bootstrap import ensure_configured_sqlite_file_matches_alembic_head
-from app.infra.db.session import engine
+from app.infra.db.bootstrap import (
+    APP_TEST_SQLITE_ALLOWED_ORM_ONLY_TABLES,
+    ensure_configured_sqlite_file_matches_alembic_head,
+)
+from app.infra.db.session import get_db_session
 from app.infra.providers.llm.circuit_breaker import reset_circuit_breakers
 from app.main import app
+from app.tests.helpers.db_session import app_test_engine, override_app_test_db_session
 
 # Keep reference-data seed integration flows deterministic without manual shell exports.
 os.environ.setdefault("REFERENCE_SEED_ADMIN_TOKEN", "test-seed-token")
 os.environ.setdefault("ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", "1")
 
-_APP_TESTS_ALLOWED_ORM_ONLY_TABLES = frozenset(
-    {
-        "chat_conversations",
-        "chat_messages",
-        "llm_canonical_consumption_aggregates",
-        "user_natal_interpretations",
-    }
-)
 # Contrat strictement borne au harness `backend/app/tests`.
 # Cette allowlist n est pas une regle generale du bootstrap applicatif ni du garde SQLite:
-# elle autorise seulement, pour cette SQLite secondaire de tests, quelques tables ORM-only
+# elle autorise seulement, pour la SQLite temporaire de tests, quelques tables ORM-only
 # creees juste apres l alignement Alembic via `Base.metadata.create_all(bind=engine)`.
 # Toute extension de cette liste doit etre traitee comme un changement de harness de test,
 # pas comme une relaxation generique de la gouvernance DB.
@@ -41,10 +37,10 @@ def _ensure_db_schema() -> None:
     # Alignement Alembic (tables / révisions) sur SQLite fichier — même logique que
     # `backend/tests/conftest.py`, car sous pytest l'auto-migration runtime est désactivée.
     ensure_configured_sqlite_file_matches_alembic_head(
-        allowed_secondary_missing_tables_at_head=_APP_TESTS_ALLOWED_ORM_ONLY_TABLES
+        allowed_secondary_missing_tables_at_head=APP_TEST_SQLITE_ALLOWED_ORM_ONLY_TABLES
     )
     # Tables déclarées en ORM non encore couvertes par une migration (rare) :
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 @pytest.fixture(autouse=True)
@@ -64,6 +60,7 @@ def _reset_global_logging_disable() -> None:
 def _reset_dependency_overrides() -> None:
     # Integration tests share a single FastAPI app instance.
     app.dependency_overrides.clear()
+    app.dependency_overrides[get_db_session] = override_app_test_db_session
     try:
         yield
     finally:

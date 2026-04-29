@@ -10,16 +10,16 @@ from fastapi.testclient import TestClient
 import app.infra.db.models  # noqa: F401
 from app.infra.db.base import Base
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.reference_data_service import ReferenceDataService
+from tests.integration.app_db import app_engine, open_app_db_session
 
 
 def _phase_1() -> int:
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.create_all(bind=app_engine())
+    with open_app_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
 
         # Seed canonical features
@@ -106,7 +106,7 @@ def _phase_1() -> int:
         raise SystemExit(f"phase1 register failed: {register.status_code} {register.text}")
     tokens = register.json()["data"]["tokens"]
 
-    with SessionLocal() as db:
+    with open_app_db_session() as db:
         auth = AuthService.register(
             db,
             email=b2b_admin_email,

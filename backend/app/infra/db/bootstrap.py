@@ -19,6 +19,15 @@ from app.infra.db.session import engine
 
 logger = logging.getLogger(__name__)
 
+APP_TEST_SQLITE_ALLOWED_ORM_ONLY_TABLES = frozenset(
+    {
+        "chat_conversations",
+        "chat_messages",
+        "llm_canonical_consumption_aggregates",
+        "user_natal_interpretations",
+    }
+)
+
 
 @dataclass(frozen=True)
 class SqliteAlignmentStatus:
@@ -127,6 +136,13 @@ def _sqlite_file_path_from_url(database_url: str) -> Path | None:
     if raw_path == ":memory:":
         return None
     return Path(raw_path)
+
+
+def _is_pytest_temporary_sqlite_file(file_path: Path | None) -> bool:
+    """Identifie une SQLite temporaire du harnais pytest, jamais la DB locale primaire."""
+    if file_path is None:
+        return False
+    return ".tmp-pytest" in file_path.parts
 
 
 def sqlite_alignment_status(database_url: str) -> SqliteAlignmentStatus:
@@ -607,19 +623,32 @@ def ensure_configured_sqlite_file_matches_alembic_head(
     repaired_secondary_urls: set[str] = set()
     intermediate_statuses = configured_sqlite_alignment_statuses()
     for status in intermediate_statuses:
-        if status.database_url == settings_url:
-            continue
         if not status.exists:
             continue
         if status.current_revision != status.head_revision:
             continue
         if not status.missing_tables:
             continue
+        missing_tables = set(status.missing_tables)
+        is_secondary_url = status.database_url != settings_url
+        is_pytest_temp_file = _is_pytest_temporary_sqlite_file(status.file_path)
+
+        if is_secondary_url and not allowed_secondary_missing_tables_at_head:
+            repairable_missing_tables = missing_tables
+        elif (
+            (is_secondary_url or is_pytest_temp_file)
+            and allowed_secondary_missing_tables_at_head
+            and missing_tables.issubset(allowed_secondary_missing_tables_at_head)
+        ):
+            repairable_missing_tables = missing_tables
+        else:
+            continue
+
         if status.database_url in repaired_secondary_urls:
             continue
         _repair_missing_tables_for_database_url(
             status.database_url,
-            missing_tables=set(status.missing_tables),
+            missing_tables=repairable_missing_tables,
         )
         repaired_secondary_urls.add(status.database_url)
 

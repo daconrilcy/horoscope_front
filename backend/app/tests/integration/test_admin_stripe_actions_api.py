@@ -7,13 +7,17 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.main import app
+from app.tests.helpers.db_session import (
+    open_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -32,18 +36,18 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
     try:
         yield
     finally:
+        reset_app_test_db_session_factory()
         test_engine.dispose()
 
 
 @pytest.fixture
 def admin_token():
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.core.security import hash_password
 
         admin = UserModel(
@@ -63,7 +67,7 @@ def admin_token():
 
 def test_refresh_subscription_success(admin_token, monkeypatch):
     # Setup user with Stripe profile
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = UserModel(email="user-refresh@test.com", password_hash="x", role="user")
         db.add(user)
         db.flush()
@@ -116,7 +120,7 @@ def test_refresh_subscription_success(admin_token, monkeypatch):
     )
     assert response.status_code == 200
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         profile = db.scalar(
             select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
         )
@@ -129,7 +133,7 @@ def test_refresh_subscription_success(admin_token, monkeypatch):
 
 
 def test_assign_plan_success(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = UserModel(email="user-assign@test.com", password_hash="x", role="user")
         db.add(user)
         db.commit()
@@ -142,7 +146,7 @@ def test_assign_plan_success(admin_token):
     )
     assert response.status_code == 200
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         profile = db.scalar(
             select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
         )
@@ -155,7 +159,7 @@ def test_assign_plan_success(admin_token):
 
 
 def test_assign_plan_rejects_short_reason(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = UserModel(email="user-short-reason@test.com", password_hash="x", role="user")
         db.add(user)
         db.commit()
@@ -172,7 +176,7 @@ def test_assign_plan_rejects_short_reason(admin_token):
 
 
 def test_record_commercial_gesture_audits_before_after(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = UserModel(email="user-gesture@test.com", password_hash="x", role="user")
         db.add(user)
         db.flush()
@@ -205,7 +209,7 @@ def test_record_commercial_gesture_audits_before_after(admin_token):
 
     assert response.status_code == 200
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = db.scalar(
             select(AuditEventModel).where(AuditEventModel.action == "commercial_gesture_recorded")
         )

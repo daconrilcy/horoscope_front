@@ -3,8 +3,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import (
@@ -42,6 +43,33 @@ from app.infra.db.session import get_db_session
 from app.infra.db.utils import serialize_orm
 from app.main import app
 from tests.integration.app_db import open_app_db_session
+
+
+@pytest.fixture(autouse=True)
+def _isolate_published_execution_profiles() -> None:
+    """Isole les profils publiés pour éviter les collisions d'index entre tests."""
+    db = open_app_db_session()
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(
+            update(PromptAssemblyConfigModel)
+            .where(PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED)
+            .where(PromptAssemblyConfigModel.feature == "natal")
+            .where(PromptAssemblyConfigModel.subfeature == "interpretation")
+            .where(PromptAssemblyConfigModel.plan.in_(("free", "premium")))
+            .values(status=PromptStatus.ARCHIVED)
+        )
+        db.execute(
+            update(LlmExecutionProfileModel)
+            .where(LlmExecutionProfileModel.status == PromptStatus.PUBLISHED)
+            .where(LlmExecutionProfileModel.feature == "natal")
+            .where(LlmExecutionProfileModel.subfeature == "interpretation")
+            .where(LlmExecutionProfileModel.plan.in_(("free", "premium")))
+            .values(status=PromptStatus.ARCHIVED)
+        )
+        db.commit()
+    finally:
+        db.close()
 
 
 def _seed_admin_execute_sample_catalog(db: Session) -> dict[str, Any]:

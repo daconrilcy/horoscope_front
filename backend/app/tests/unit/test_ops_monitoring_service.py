@@ -3,10 +3,10 @@ from sqlalchemy import delete
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import increment_counter, observe_duration, reset_metrics
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 from app.services.ops.monitoring_service import OpsMonitoringService, OpsMonitoringServiceError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def test_get_conversation_kpis_returns_zeroes_when_no_metrics() -> None:
@@ -226,8 +226,8 @@ def test_get_pricing_experiment_kpis_rounds_metric_values_before_aggregation() -
 
 def test_get_pricing_experiment_kpis_uses_database_persistent_events() -> None:
     reset_metrics()
-    Base.metadata.create_all(bind=engine, checkfirst=True)
-    with SessionLocal() as db:
+    Base.metadata.create_all(bind=app_test_engine(), checkfirst=True)
+    with open_app_test_db_session() as db:
         db.execute(
             delete(AuditEventModel).where(AuditEventModel.action == "pricing_experiment_event")
         )
@@ -295,8 +295,8 @@ def test_get_pricing_experiment_kpis_falls_back_when_db_has_no_events() -> None:
         "pricing_experiment_exposure_total|plan_code=basic|user_segment=user|variant_id=control",
         3,
     )
-    Base.metadata.create_all(bind=engine, checkfirst=True)
-    with SessionLocal() as db:
+    Base.metadata.create_all(bind=app_test_engine(), checkfirst=True)
+    with open_app_test_db_session() as db:
         db.execute(
             delete(AuditEventModel).where(AuditEventModel.action == "pricing_experiment_event")
         )

@@ -153,8 +153,6 @@ class EmailService:
 
     @staticmethod
     async def send_education_email_task(user_id: int, email: str, firstname: str | None):
-        from app.infra.db.session import SessionLocal
-
         with SessionLocal() as db:
             await EmailService._send_email(
                 db=db,

@@ -5,26 +5,26 @@ from sqlalchemy import delete
 from app.infra.db.base import Base
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.ops.incident_service import (
     ALLOWED_STATUS_TRANSITIONS,
     IncidentService,
     SupportIncidentUpdatePayload,
 )
+from tests.integration.app_db import app_engine, open_app_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_engine())
+    Base.metadata.create_all(bind=app_engine())
+    with open_app_db_session() as db:
         db.execute(delete(SupportIncidentModel))
         db.execute(delete(UserModel))
         db.commit()
 
 
 def _create_user(email: str, role: str = "user") -> int:
-    with SessionLocal() as db:
+    with open_app_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.user.id
@@ -47,7 +47,7 @@ def test_resolved_at_logic_user() -> None:
     _cleanup_tables()
     user_id = _create_user("test-user-status@example.com")
 
-    with SessionLocal() as db:
+    with open_app_db_session() as db:
         # Create incident with status pending
         incident_model = SupportIncidentModel(
             user_id=user_id,

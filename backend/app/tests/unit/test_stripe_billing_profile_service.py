@@ -4,7 +4,6 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.billing import stripe_billing_profile_service as svc
 from app.services.billing.stripe_billing_profile_service import (
@@ -12,13 +11,14 @@ from app.services.billing.stripe_billing_profile_service import (
     StripeBillingProfileService,
     derive_entitlement_plan,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 @pytest.fixture(scope="function")
 def db():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as session:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as session:
         yield session
         session.rollback()
 

@@ -11,17 +11,17 @@ from app.infra.db.models.reference import (
     ReferenceVersionModel,
     SignModel,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_reference_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             AstroCharacteristicModel,
@@ -36,7 +36,7 @@ def _cleanup_reference_tables() -> None:
 
 
 def _register_user(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -124,7 +124,7 @@ def test_reference_clone_creates_new_version_and_writes_audit() -> None:
     assert clone_payload["data"]["cloned_version"] == "1.1.0"
     assert clone_payload["meta"]["request_id"] == "rid-reference-clone"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = db.scalar(
             select(AuditEventModel)
             .where(AuditEventModel.request_id == "rid-reference-clone")

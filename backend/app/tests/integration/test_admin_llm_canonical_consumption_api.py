@@ -6,9 +6,9 @@ from fastapi.testclient import TestClient
 
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
-from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import open_app_test_db_session
 
 client = TestClient(app)
 
@@ -54,7 +54,7 @@ def _build_call_log(
 
 
 def _admin_token(email: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="admin123", role="admin")
         db.commit()
         return auth.tokens.access_token
@@ -62,7 +62,7 @@ def _admin_token(email: str) -> str:
 
 def test_admin_consumption_endpoint_returns_canonical_aggregates() -> None:
     token = _admin_token("admin-consumption@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             _build_call_log(
                 feature="natal",
@@ -96,7 +96,7 @@ def test_admin_consumption_endpoint_returns_canonical_aggregates() -> None:
 
 def test_admin_consumption_endpoint_supports_view_pagination_and_csv_export() -> None:
     token = _admin_token("admin-consumption-pagination@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first_log = _build_call_log(
             feature="chat",
             subfeature="chat_default",
@@ -154,7 +154,7 @@ def test_admin_consumption_endpoint_supports_view_pagination_and_csv_export() ->
 def test_admin_consumption_drilldown_is_limited_to_50_and_safe_fields_only() -> None:
     token = _admin_token("admin-consumption-drilldown@example.com")
     base_ts = datetime(2026, 4, 17, 8, 0, tzinfo=timezone.utc)
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         for index in range(60):
             db.add(
                 _build_call_log(
@@ -199,7 +199,7 @@ def test_admin_consumption_drilldown_is_limited_to_50_and_safe_fields_only() -> 
 
 def test_admin_consumption_user_sort_handles_rows_without_user_id() -> None:
     token = _admin_token("admin-consumption-sort@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user_auth = AuthService.register(
             db, email="consumption-sort-user@example.com", password="admin123", role="user"
         )
@@ -258,7 +258,7 @@ def test_admin_consumption_user_sort_handles_rows_without_user_id() -> None:
 
 def test_admin_consumption_user_drilldown_deduplicates_same_call_log() -> None:
     token = _admin_token("admin-consumption-dedup@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user_auth = AuthService.register(
             db, email="consumption-dedup-user@example.com", password="admin123", role="user"
         )
@@ -319,7 +319,7 @@ def test_admin_consumption_user_drilldown_deduplicates_same_call_log() -> None:
 
 def test_admin_consumption_user_drilldown_none_user_only_returns_ambiguous_calls() -> None:
     token = _admin_token("admin-consumption-ambiguous@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user_a = AuthService.register(
             db, email="ambiguous-a@example.com", password="admin123", role="user"
         )
@@ -400,7 +400,7 @@ def test_admin_consumption_user_drilldown_none_user_only_returns_ambiguous_calls
 
 def test_admin_consumption_avg_latency_respects_locale_provider_and_snapshot_filters() -> None:
     token = _admin_token("admin-consumption-filtered-latency@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         target = _build_call_log(
             feature="natal",
             subfeature="full",
@@ -463,7 +463,7 @@ def test_admin_consumption_avg_latency_respects_locale_provider_and_snapshot_fil
 
 def test_admin_consumption_feature_drilldown_with_null_subfeature_stays_scoped() -> None:
     token = _admin_token("admin-consumption-feature-null-subfeature@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         null_subfeature_call = _build_call_log(
             feature="chat",
             subfeature=None,

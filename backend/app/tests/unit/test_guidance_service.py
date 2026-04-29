@@ -9,7 +9,6 @@ from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.entitlement.entitlement_types import UsageState
 from app.services.llm_generation.guidance.guidance_service import (
@@ -21,6 +20,7 @@ from app.services.llm_generation.guidance.persona_config_service import (
     PersonaConfigService,
     PersonaConfigUpdatePayload,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 from app.tests.helpers.llm_adapter_stub import (
     reset_test_generators,
     set_test_chat_generator,
@@ -29,27 +29,27 @@ from app.tests.helpers.llm_adapter_stub import (
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
     reset_test_generators()
 
 
 def _create_user_id(email: str = "guidance-user@example.com") -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123")
         db.commit()
         return auth.user.id
 
 
 def _create_ops_user_id(email: str = "ops-user@example.com") -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role="ops")
         db.commit()
         return auth.user.id
 
 
 def _seed_birth_profile(user_id: int) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         profile = UserBirthProfileModel(
             user_id=user_id,
             birth_date=date(1990, 1, 1),
@@ -177,7 +177,7 @@ def set_test_generators(generator: object) -> None:
 
 
 def _get_default_persona_id() -> uuid.UUID:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # Create persona if not exists
         persona = db.scalar(select(LlmPersonaModel).limit(1))
         if not persona:
@@ -205,7 +205,7 @@ def test_request_guidance_daily_success() -> None:
     set_test_generators(generator)
     persona_id = _get_default_persona_id()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ChatRepository(db)
         conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
         repo.create_message(
@@ -241,7 +241,7 @@ def test_request_guidance_weekly_success() -> None:
     set_test_generators(generator)
 
     persona_id = _get_default_persona_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ChatRepository(db)
         conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
         repo.create_message(
@@ -276,7 +276,7 @@ def test_request_guidance_uses_active_persona_policy_in_prompt() -> None:
     generator = RecordingGenerator()
     set_test_generators(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         PersonaConfigService.update_active(
             db,
             user_id=ops_user_id,
@@ -307,7 +307,7 @@ def test_request_guidance_invalid_period() -> None:
     user_id = _create_user_id()
     _seed_birth_profile(user_id)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as error:
             GuidanceService.request_guidance(db=db, user_id=user_id, period="monthly")
     assert error.value.code == "invalid_guidance_period"
@@ -316,7 +316,7 @@ def test_request_guidance_invalid_period() -> None:
 def test_request_guidance_missing_birth_profile() -> None:
     _cleanup_tables()
     user_id = _create_user_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as error:
             GuidanceService.request_guidance(db=db, user_id=user_id, period="daily")
     assert error.value.code == "missing_birth_profile"
@@ -328,7 +328,7 @@ def test_request_guidance_timeout_and_unavailable_are_retryable() -> None:
     _seed_birth_profile(user_id)
 
     set_test_generators(TimeoutGenerator())
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as timeout_error:
             GuidanceService.request_guidance(
                 db=db,
@@ -339,7 +339,7 @@ def test_request_guidance_timeout_and_unavailable_are_retryable() -> None:
     assert timeout_error.value.details["retryable"] == "true"
 
     set_test_generators(UnavailableGenerator())
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as unavailable_error:
             GuidanceService.request_guidance(
                 db=db,
@@ -365,7 +365,7 @@ def test_request_guidance_delegates_network_retries(
 
     monkeypatch.setattr("asyncio.sleep", fake_sleep)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as timeout_error:
             GuidanceService.request_guidance(
                 db=db,
@@ -384,7 +384,7 @@ def test_request_guidance_never_leaks_internal_prompt_in_summary() -> None:
     set_test_generators(EchoPromptGenerator())
 
     persona_id = _get_default_persona_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ChatRepository(db)
         conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
         repo.create_message(conversation.id, "user", "Question sensible")
@@ -404,7 +404,7 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
     owner_user_id = _create_user_id()
     _seed_birth_profile(owner_user_id)
     set_test_generators(RecordingGenerator())
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         foreign_user = AuthService.register(
             db,
             email="guidance-foreign-user@example.com",
@@ -415,14 +415,14 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
     _seed_birth_profile(foreign_user_id)
 
     persona_id = _get_default_persona_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ChatRepository(db)
         owner_conversation = repo.create_conversation(user_id=owner_user_id, persona_id=persona_id)
         repo.create_message(owner_conversation.id, "user", "Thread owner")
         owner_conversation_id = owner_conversation.id
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as missing_error:
             GuidanceService.request_guidance(
                 db=db,
@@ -432,7 +432,7 @@ def test_request_guidance_rejects_unknown_or_foreign_conversation_id() -> None:
             )
     assert missing_error.value.code == "conversation_not_found"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as forbidden_error:
             GuidanceService.request_guidance(
                 db=db,
@@ -451,7 +451,7 @@ def test_request_contextual_guidance_success() -> None:
     set_test_generators(generator)
 
     persona_id = _get_default_persona_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ChatRepository(db)
         conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
         repo.create_message(conversation.id, "user", "Contexte personnel")
@@ -497,7 +497,7 @@ def test_request_contextual_guidance_injects_latest_natal_summary(
         lambda **kwargs: "SOLEIL: Belier\nLUNE: Cancer",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         response = GuidanceService.request_contextual_guidance(
             db=db,
             user_id=user_id,
@@ -518,7 +518,7 @@ def test_request_guidance_applies_recovery_when_off_scope_detected() -> None:
     _seed_birth_profile(user_id)
     set_test_generators(OffScopeThenRecoveredGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         response = GuidanceService.request_guidance(
             db=db,
             user_id=user_id,
@@ -538,7 +538,7 @@ def test_request_contextual_guidance_uses_safe_fallback_when_recovery_fails() ->
     _seed_birth_profile(user_id)
     set_test_generators(AlwaysOffScopeGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         response = GuidanceService.request_contextual_guidance(
             db=db,
             user_id=user_id,
@@ -559,7 +559,7 @@ def test_request_contextual_guidance_normalizes_blank_time_horizon_to_none() -> 
     _seed_birth_profile(user_id)
     set_test_generators(RecordingGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         response = GuidanceService.request_contextual_guidance(
             db=db,
             user_id=user_id,
@@ -579,7 +579,7 @@ def test_request_contextual_guidance_never_leaks_internal_prompt_in_summary() ->
     set_test_generators(EchoPromptGenerator())
 
     persona_id = _get_default_persona_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ChatRepository(db)
         conversation = repo.create_conversation(user_id=user_id, persona_id=persona_id)
         repo.create_message(conversation.id, "user", "Question sensible contextual")
@@ -613,7 +613,7 @@ def test_request_contextual_guidance_summary_uses_first_clean_paragraph() -> Non
 
     set_test_generators(StructuredContextualGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         response = GuidanceService.request_contextual_guidance(
             db=db,
             user_id=user_id,
@@ -674,7 +674,7 @@ def test_request_guidance_accepts_string_in_structured_lists(
         fake_recovery,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         response = GuidanceService.request_guidance(
             db=db,
             user_id=user_id,
@@ -729,7 +729,7 @@ def test_request_contextual_guidance_accepts_string_in_structured_lists(
         fake_recovery,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         response = GuidanceService.request_contextual_guidance(
             db=db,
             user_id=user_id,
@@ -747,7 +747,7 @@ def test_request_contextual_guidance_invalid_context_rejected() -> None:
     _seed_birth_profile(user_id)
     set_test_generators(RecordingGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as error:
             GuidanceService.request_contextual_guidance(
                 db=db,
@@ -763,7 +763,7 @@ def test_request_contextual_guidance_missing_birth_profile() -> None:
     user_id = _create_user_id()
     set_test_generators(RecordingGenerator())
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as error:
             GuidanceService.request_contextual_guidance(
                 db=db,
@@ -779,7 +779,7 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
     owner_user_id = _create_user_id()
     _seed_birth_profile(owner_user_id)
     set_test_generators(RecordingGenerator())
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         foreign_user = AuthService.register(
             db,
             email="guidance-context-foreign-user@example.com",
@@ -790,14 +790,14 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
     _seed_birth_profile(foreign_user_id)
 
     persona_id = _get_default_persona_id()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         repo = ChatRepository(db)
         owner_conversation = repo.create_conversation(user_id=owner_user_id, persona_id=persona_id)
         repo.create_message(owner_conversation.id, "user", "Thread owner contextual")
         owner_conversation_id = owner_conversation.id
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as missing_error:
             GuidanceService.request_contextual_guidance(
                 db=db,
@@ -808,7 +808,7 @@ def test_request_contextual_guidance_rejects_unknown_or_foreign_conversation_id(
             )
     assert missing_error.value.code == "conversation_not_found"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(GuidanceServiceError) as forbidden_error:
             GuidanceService.request_contextual_guidance(
                 db=db,
@@ -872,7 +872,7 @@ async def test_guidance_recovery_records_tokens_for_each_recovery_attempt(monkey
         fake_record_usage,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         (
             recovered_text,
             fallback_used,

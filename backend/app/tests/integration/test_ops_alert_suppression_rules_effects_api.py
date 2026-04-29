@@ -22,9 +22,9 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_rule impor
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -33,9 +33,9 @@ RULES_PATH = f"{ALERTS_PATH}/suppression-rules"
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserModel))
         db.execute(delete(CanonicalEntitlementMutationAuditModel))
         db.execute(delete(CanonicalEntitlementMutationAlertHandlingModel))
@@ -45,7 +45,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -110,7 +110,7 @@ def test_list_alerts_marks_matching_future_alert_as_rule_suppressed() -> None:
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         _seed_alert(db, audit.id, dedupe_suffix="match", feature_code="feature-a")
         db.commit()
@@ -132,7 +132,7 @@ def test_list_alerts_marks_matching_future_alert_as_rule_suppressed() -> None:
     assert item["handling"]["suppression_rule_id"] == rule_id
     assert item["retryable"] is False
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         application = db.execute(
             select(CanonicalEntitlementMutationAlertSuppressionApplicationModel)
         ).scalar_one()
@@ -146,7 +146,7 @@ def test_create_rule_materializes_suppression_application_for_existing_alert() -
     ops_token = _register_user_with_role_and_token("ops-applications@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}", "X-Request-Id": "rid-rule-apply"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         event = _seed_alert(db, audit.id, dedupe_suffix="existing", feature_code="feature-a")
         event_id = event.id
@@ -160,7 +160,7 @@ def test_create_rule_materializes_suppression_application_for_existing_alert() -
         suppression_key="noise",
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         application = db.execute(
             select(CanonicalEntitlementMutationAlertSuppressionApplicationModel).where(
                 CanonicalEntitlementMutationAlertSuppressionApplicationModel.alert_event_id
@@ -177,7 +177,7 @@ def test_list_alerts_manual_resolved_wins_over_rule() -> None:
     ops_token = _register_user_with_role_and_token("ops-resolved@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         event = _seed_alert(db, audit.id, dedupe_suffix="resolved", feature_code="feature-a")
         db.add(
@@ -206,7 +206,7 @@ def test_summary_includes_rule_suppressed_count() -> None:
     ops_token = _register_user_with_role_and_token("ops-summary@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         _seed_alert(db, audit.id, dedupe_suffix="suppressed", feature_code="feature-a")
         _seed_alert(db, audit.id, dedupe_suffix="retryable", feature_code="feature-b")
@@ -227,7 +227,7 @@ def test_retry_batch_excludes_matching_rule_suppressed_alert() -> None:
     ops_token = _register_user_with_role_and_token("ops-batch@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         matching = _seed_alert(db, audit.id, dedupe_suffix="suppressed", feature_code="feature-a")
         retryable = _seed_alert(db, audit.id, dedupe_suffix="retryable", feature_code="feature-b")
@@ -252,7 +252,7 @@ def test_retry_unitary_returns_409_when_rule_matches() -> None:
     ops_token = _register_user_with_role_and_token("ops-retry@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         event = _seed_alert(db, audit.id, dedupe_suffix="suppressed", feature_code="feature-a")
         event_id = event.id
@@ -275,7 +275,7 @@ def test_handling_status_filter_suppressed_includes_rule_matches() -> None:
     ops_token = _register_user_with_role_and_token("ops-filter1@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         matching = _seed_alert(db, audit.id, dedupe_suffix="suppressed", feature_code="feature-a")
         matching_id = matching.id
@@ -298,7 +298,7 @@ def test_handling_status_filter_pending_retry_excludes_rule_matches() -> None:
     ops_token = _register_user_with_role_and_token("ops-filter2@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         _seed_alert(db, audit.id, dedupe_suffix="suppressed", feature_code="feature-a")
         retryable = _seed_alert(db, audit.id, dedupe_suffix="pending", feature_code="feature-b")
@@ -321,7 +321,7 @@ def test_disabling_rule_restores_retryability_and_visibility() -> None:
     ops_token = _register_user_with_role_and_token("ops-disable@example.com", "ops")
     headers = {"Authorization": f"Bearer {ops_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         event = _seed_alert(db, audit.id, dedupe_suffix="suppressed", feature_code="feature-a")
         event_id = event.id

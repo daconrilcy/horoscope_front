@@ -13,8 +13,8 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
 from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
     CanonicalEntitlementMutationAlertDeliveryAttemptModel,
 )
-from app.infra.db.session import SessionLocal
 from app.main import app
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.integration.ops_alert_helpers import (
     cleanup_ops_alert_tables,
     register_user_and_issue_token_with_role_claim,
@@ -29,7 +29,7 @@ client = TestClient(app)
 def test_post_retry_batch_dry_run_no_persistence() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-dry@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first_audit = seed_ops_alert_audit(db)
         second_audit = seed_ops_alert_audit(db)
         first = seed_ops_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
@@ -54,14 +54,14 @@ def test_post_retry_batch_dry_run_no_persistence() -> None:
     assert payload["dry_run"] is True
     assert payload["alert_event_ids"] == [first_id, second_id]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         assert db.query(CanonicalEntitlementMutationAlertDeliveryAttemptModel).count() == 0
 
 
 def test_post_retry_batch_real_retries_multiple_failed() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-real@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first_audit = seed_ops_alert_audit(db)
         second_audit = seed_ops_alert_audit(db)
         first = seed_ops_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
@@ -94,7 +94,7 @@ def test_post_retry_batch_real_retries_multiple_failed() -> None:
     assert payload["dry_run"] is False
     assert payload["alert_event_ids"] == [first_id, second_id]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         attempts = (
             db.execute(
                 select(CanonicalEntitlementMutationAlertDeliveryAttemptModel).order_by(
@@ -123,7 +123,7 @@ def test_post_retry_batch_real_retries_multiple_failed() -> None:
 def test_post_retry_batch_with_filter_by_feature_code() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-feature@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         matching_audit = seed_ops_alert_audit(db)
         other_audit = seed_ops_alert_audit(db)
         matching = seed_ops_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
@@ -148,7 +148,7 @@ def test_post_retry_batch_with_filter_by_feature_code() -> None:
 def test_post_retry_batch_with_filter_by_alert_kind() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-kind@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         matching_audit = seed_ops_alert_audit(db)
         other_audit = seed_ops_alert_audit(db)
         matching = seed_ops_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
@@ -173,7 +173,7 @@ def test_post_retry_batch_with_filter_by_alert_kind() -> None:
 def test_post_retry_batch_with_filter_by_request_id_alias() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-request-id@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         matching_audit = seed_ops_alert_audit(db)
         other_audit = seed_ops_alert_audit(db)
         matching = seed_ops_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
@@ -198,7 +198,7 @@ def test_post_retry_batch_with_filter_by_request_id_alias() -> None:
 def test_post_retry_batch_respects_limit() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-limit@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first_audit = seed_ops_alert_audit(db)
         second_audit = seed_ops_alert_audit(db)
         third_audit = seed_ops_alert_audit(db)
@@ -303,7 +303,7 @@ def test_post_retry_batch_returns_422_when_limit_exceeds_100() -> None:
 def test_post_retry_batch_empty_when_no_failed() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-empty@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         seed_ops_alert_event(db, audit_id=audit.id, delivery_status="sent")
         db.commit()
@@ -329,7 +329,7 @@ def test_post_retry_batch_empty_when_no_failed() -> None:
 def test_post_retry_batch_does_not_affect_sent_events() -> None:
     cleanup_ops_alert_tables()
     ops_token = register_user_with_role_and_token("ops-batch-sent@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         failed = seed_ops_alert_event(db, audit_id=audit.id, delivery_status="failed")
         sent = seed_ops_alert_event(db, audit_id=audit.id, delivery_status="sent")
@@ -351,7 +351,7 @@ def test_post_retry_batch_does_not_affect_sent_events() -> None:
     assert response.status_code == 200
     assert response.json()["data"]["alert_event_ids"] == [failed_id]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         refreshed_failed = db.get(CanonicalEntitlementMutationAlertEventModel, failed_id)
         refreshed_sent = db.get(CanonicalEntitlementMutationAlertEventModel, sent_id)
         attempts = (

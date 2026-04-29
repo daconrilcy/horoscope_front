@@ -15,10 +15,10 @@ from app.infra.db.models.reference import (
     ReferenceVersionModel,
     SignModel,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.infra.observability.metrics import get_counter_sum_in_window
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 SIGNS = [
     "aries",
@@ -38,9 +38,9 @@ SIGNS = [
 
 def _cleanup_reference_tables() -> None:
     ReferenceDataService._clear_cache_for_tests()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             ChartResultModel,
             AstroCharacteristicModel,
@@ -62,7 +62,7 @@ def test_calculate_natal_is_deterministic() -> None:
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         first = NatalCalculationService.calculate(
             db, payload, reference_version="1.0.0", house_system="equal"
@@ -85,7 +85,7 @@ def test_calculate_natal_returns_major_aspects_with_extended_reference_planets()
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = NatalCalculationService.calculate(
             db, payload, reference_version="1.0.0", house_system="equal"
@@ -106,7 +106,7 @@ def test_calculate_natal_fails_with_unknown_reference_version() -> None:
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             NatalCalculationService.calculate(db, payload, reference_version="9.9.9")
         except NatalCalculationError as error:
@@ -123,7 +123,7 @@ def test_calculate_natal_none_reference_version_resolves_to_active_version_in_er
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(NatalCalculationError) as error:
             NatalCalculationService.calculate(db, payload, reference_version=None)
 
@@ -139,7 +139,7 @@ def test_calculate_natal_keeps_sign_and_house_consistent_with_geometry() -> None
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = NatalCalculationService.calculate(
             db, payload, reference_version="1.0.0", house_system="equal"
@@ -189,7 +189,7 @@ def test_calculate_natal_hard_fails_on_sign_longitude_inconsistency(
         _bad_positions,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as error:
             NatalCalculationService.calculate(
@@ -261,7 +261,7 @@ def test_calculate_natal_fails_when_houses_have_duplicate_cusps(
         _bad_houses,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as error:
             NatalCalculationService.calculate(
@@ -283,7 +283,7 @@ def test_calculate_natal_calls_timeout_check_around_reference_loading() -> None:
     )
     checkpoints: list[str] = []
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
 
         def _timeout_check() -> None:
@@ -325,7 +325,7 @@ def test_calculate_natal_uses_reference_cache_for_same_version(
         _spy_get_reference_data,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         NatalCalculationService.calculate(
             db, payload, reference_version="1.0.0", house_system="equal"
@@ -345,7 +345,7 @@ def test_calculate_natal_fails_with_incomplete_reference_data() -> None:
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         db.execute(delete(HouseModel))
         db.commit()
@@ -418,7 +418,7 @@ def test_calculate_natal_sidereal_requested_without_ayanamsa_fails_ac2() -> None
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as exc:
             NatalCalculationService.calculate(
@@ -442,7 +442,7 @@ def test_calculate_natal_invalid_zodiac_increments_metric() -> None:
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as exc:
             NatalCalculationService.calculate(db, payload, zodiac="invalid")
@@ -517,7 +517,7 @@ def test_calculate_natal_topocentric_without_coordinates_fails_422(
         birth_lat=None,  # Missing
         birth_lon=None,
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as exc:
             NatalCalculationService.calculate(db, payload, frame="topocentric", accurate=True)
@@ -585,7 +585,7 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
         birth_lat=48.85,
         birth_lon=2.35,
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         geo = NatalCalculationService.calculate(db, payload, frame="geocentric", accurate=True)
         topo = NatalCalculationService.calculate(db, payload, frame="topocentric", accurate=True)
@@ -626,7 +626,7 @@ def test_calculate_natal_simplified_engine_rejects_non_equal_house_system(
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         # accurate=False -> tries simplified by default (if not overridden)
         # but if we ask for Placidus, it should require accurate=True

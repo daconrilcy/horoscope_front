@@ -27,18 +27,18 @@ from app.infra.db.models.entitlement_mutation.audit.review import (
 from app.infra.db.models.entitlement_mutation.suppression.suppression_application import (
     CanonicalEntitlementMutationAlertSuppressionApplicationModel,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.services.canonical_entitlement.alert.handling import (
     CanonicalEntitlementAlertHandlingService,
 )
 from app.services.canonical_entitlement.audit.audit_review import (
     CanonicalEntitlementMutationAuditReviewService,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _setup() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def _seed_audit(db) -> CanonicalEntitlementMutationAuditModel:
@@ -127,7 +127,7 @@ def test_canonical_package_exposes_expected_models() -> None:
 
 def test_audit_review_is_versioned_and_event_is_typed() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
 
         review = CanonicalEntitlementMutationAuditReviewService.upsert_review(
@@ -168,7 +168,7 @@ def test_audit_review_is_versioned_and_event_is_typed() -> None:
 
 def test_handling_creates_suppression_application_and_updates_alert_state() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         event = _seed_alert_event(db, audit_id=audit.id)
 

@@ -42,12 +42,12 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chat_repository import ChatRepository
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing.service import BillingService
 from app.services.llm_generation.chat.chat_guidance_service import ChatGuidanceServiceError
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator
 
 client = TestClient(app)
@@ -59,12 +59,12 @@ def _cleanup_tables() -> None:
 
     BillingService.reset_subscription_status_cache()
     reset_test_generators()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
     from scripts.seed_66_20_convergence import seed_66_20_convergence
 
     seed_66_20_convergence()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         for model in (
             ChatMessageModel,
             ChatConversationModel,
@@ -212,7 +212,7 @@ def _register_and_get_access_token() -> str:
 
 
 def _set_active_subscription(user_id: int, plan_code: str) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         period_start = datetime(2026, 4, 17, 10, 0, tzinfo=timezone.utc)
         period_end = datetime(2026, 5, 17, 10, 0, tzinfo=timezone.utc)
 
@@ -281,7 +281,7 @@ def _activate_free_plan() -> None:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -308,7 +308,7 @@ def _enable_module_for_user(
 
 
 def _get_chat_api_user_id() -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
         return user.id
@@ -321,7 +321,7 @@ def _seed_canonical_chat_binding(
     is_enabled: bool = True,
     quotas: list[tuple[str, int] | tuple[str, int, PeriodUnit]] | None = None,
 ) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         plan = db.scalar(select(PlanCatalogModel).where(PlanCatalogModel.plan_code == plan_code))
         if plan is None:
             plan = PlanCatalogModel(plan_code=plan_code, plan_name=plan_code, audience=Audience.B2C)
@@ -438,7 +438,7 @@ def test_send_chat_message_returns_429_when_token_quota_is_reached() -> None:
     assert response.status_code == 200
 
     # Exhaust remaining quota
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user_id = _get_chat_api_user_id()
         counter = db.scalar(
             select(FeatureUsageCounterModel).where(
@@ -754,7 +754,7 @@ def test_list_chat_conversations_returns_user_history_sorted() -> None:
     assert first.status_code == 200
     first_id = first.json()["data"]["conversation_id"]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
         # Deactivate previous active conversation created by API
@@ -796,7 +796,7 @@ def test_list_chat_conversations_paginates_with_limit_and_offset() -> None:
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-list-pagination-1")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
         persona_id = db.scalar(select(LlmPersonaModel.id))
@@ -834,7 +834,7 @@ def test_list_chat_conversations_uses_id_tiebreak_when_updated_at_is_equal() -> 
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-list-tiebreak-1")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
         persona_id = db.scalar(select(LlmPersonaModel.id))
@@ -876,7 +876,7 @@ def test_list_chat_conversations_pagination_pages_do_not_overlap() -> None:
     access_token = _register_and_get_access_token()
     _activate_entry_plan(access_token, "chat-checkout-list-pages-1")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
         persona_id = db.scalar(select(LlmPersonaModel.id))
@@ -1009,7 +1009,7 @@ def test_send_chat_message_with_conversation_id_targets_selected_thread() -> Non
     assert first.status_code == 200
     conversation_a = first.json()["data"]["conversation_id"]
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == "chat-api-user@example.com"))
         assert user is not None
         # We need a different persona or just deactivate the previous conversation (Thread A)
@@ -1172,7 +1172,7 @@ def test_send_chat_message_rolls_back_partial_canonical_consumption() -> None:
         monkeypatch.undo()
 
     # Verify that the message was NOT saved due to transaction rollback
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         msg = db.scalar(
             select(ChatMessageModel).where(ChatMessageModel.content == "Question rollback")
         )

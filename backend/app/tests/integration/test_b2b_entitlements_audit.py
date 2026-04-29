@@ -24,20 +24,20 @@ from app.infra.db.models.product_entitlements import (
     ResetMode,
     SourceOrigin,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    engine.dispose()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    engine.dispose()
-    with SessionLocal() as db:
+    app_test_engine().dispose()
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    app_test_engine().dispose()
+    with open_app_test_db_session() as db:
         from app.infra.db.models.user import UserModel
 
         for model in (
@@ -54,7 +54,7 @@ def _cleanup_tables() -> None:
         ):
             db.execute(delete(model))
         db.commit()
-    engine.dispose()
+    app_test_engine().dispose()
 
 
 def _register_user(db, *, email: str, role: str):
@@ -178,7 +178,7 @@ def _setup_audit_data(db) -> tuple[str, str]:
 
 def test_get_b2b_entitlements_audit_success() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_token, _ = _setup_audit_data(db)
 
     response = client.get(
@@ -204,7 +204,7 @@ def test_get_b2b_entitlements_audit_success() -> None:
 
 def test_get_b2b_entitlements_audit_filters() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_token, _ = _setup_audit_data(db)
 
     response = client.get(
@@ -219,7 +219,7 @@ def test_get_b2b_entitlements_audit_filters() -> None:
 
 def test_get_b2b_entitlements_audit_blocker_only_excludes_canonical_disabled() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_token, _ = _setup_audit_data(db)
         feature = db.scalar(
             select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "b2b_api_access")
@@ -282,7 +282,7 @@ def test_get_b2b_entitlements_audit_blocker_only_excludes_canonical_disabled() -
 
 def test_get_b2b_entitlements_audit_forbidden() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _, user_token = _setup_audit_data(db)
 
     response = client.get(
@@ -295,7 +295,7 @@ def test_get_b2b_entitlements_audit_forbidden() -> None:
 
 def test_get_b2b_entitlements_audit_invalid_filter() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_token, _ = _setup_audit_data(db)
 
     response = client.get(
@@ -308,10 +308,10 @@ def test_get_b2b_entitlements_audit_invalid_filter() -> None:
 
 def test_get_b2b_entitlements_audit_no_side_effects() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_token, _ = _setup_audit_data(db)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from sqlalchemy import func
 
         count_before = db.scalar(select(func.count(EnterpriseFeatureUsageCounterModel.id)))
@@ -322,7 +322,7 @@ def test_get_b2b_entitlements_audit_no_side_effects() -> None:
     )
     assert response.status_code == 200
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         count_after = db.scalar(select(func.count(EnterpriseFeatureUsageCounterModel.id)))
 
     assert count_before == count_after
@@ -330,7 +330,7 @@ def test_get_b2b_entitlements_audit_no_side_effects() -> None:
 
 def test_audit_works_even_if_admin_user_id_is_null() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ops_auth = _register_user(db, email="ops@example.com", role="ops")
         feature = FeatureCatalogModel(
             feature_code=B2BApiEntitlementGate.FEATURE_CODE,

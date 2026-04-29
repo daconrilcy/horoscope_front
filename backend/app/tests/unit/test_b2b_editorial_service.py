@@ -5,19 +5,19 @@ from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.enterprise_editorial_config import EnterpriseEditorialConfigModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.b2b.editorial_service import (
     B2BEditorialConfigUpdatePayload,
     B2BEditorialService,
 )
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(EnterpriseEditorialConfigModel))
         db.execute(delete(EnterpriseApiCredentialModel))
         db.execute(delete(EnterpriseAccountModel))
@@ -26,7 +26,7 @@ def _cleanup_tables() -> None:
 
 
 def _create_enterprise_context() -> tuple[int, int]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email="b2b-editorial-service@example.com",
@@ -49,7 +49,7 @@ def test_editorial_default_config_is_returned_when_missing() -> None:
     _cleanup_tables()
     account_id, _ = _create_enterprise_context()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         config = B2BEditorialService.get_active_config(db, account_id=account_id)
     assert config.version_number == 0
     assert config.output_format == "paragraph"
@@ -60,7 +60,7 @@ def test_editorial_upsert_creates_new_version() -> None:
     _cleanup_tables()
     account_id, credential_id = _create_enterprise_context()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first = B2BEditorialService.upsert_config(
             db,
             account_id=account_id,

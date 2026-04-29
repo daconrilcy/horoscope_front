@@ -42,7 +42,6 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
-from app.infra.db.session import SessionLocal
 from app.main import app
 from app.prediction.schemas import CoreEngineOutput, EffectiveContext, PersistablePredictionBundle
 from app.services.auth_service import AuthService
@@ -56,6 +55,7 @@ from app.tests.fixtures.intraday_qa_fixtures import (
     get_intense_neutral_day,
     get_transition_day,
 )
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.helpers.intraday_qa_report import (
     assert_fixture_expectations,
     assert_within_budget,
@@ -195,7 +195,7 @@ def _ensure_prediction_reference_seed(db) -> None:
 def setup_db(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(settings, "active_reference_version", ACTIVE_REFERENCE_VERSION)
     monkeypatch.setattr(settings, "ruleset_version", ACTIVE_RULESET_VERSION)
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.execute(delete(DailyPredictionRunModel))
         db.execute(delete(UserPredictionBaselineModel))
         db.execute(delete(UserBirthProfileModel))
@@ -328,10 +328,10 @@ def _setup_qa_user_and_natal(db, *, fixture_data: dict | None = None):
 
 def _fetch_prediction_for_fixture(fixture_name: str) -> dict:
     fixture_data = FIXTURE_BUILDERS[fixture_name]()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         token = _setup_qa_user_and_natal(db, fixture_data=fixture_data)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.execute(delete(DailyPredictionRunModel))
         db.commit()
 
@@ -361,7 +361,7 @@ def _fetch_prediction_for_fixture(fixture_name: str) -> dict:
 
 
 def test_categories_all_present():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         token = _setup_qa_user_and_natal(db)
 
     response = client.get(
@@ -396,7 +396,7 @@ def test_legacy_ruleset_1_0_0_still_supported(
 ):
     monkeypatch.setattr(settings, "ruleset_version", LEGACY_RULESET_VERSION)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         token = _setup_qa_user_and_natal(db)
 
     response = client.get(
@@ -413,7 +413,7 @@ def test_legacy_ruleset_1_0_0_still_supported(
 
 
 def test_notes_in_valid_range():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         token = _setup_qa_user_and_natal(db)
 
     response = client.get(
@@ -430,7 +430,7 @@ def test_notes_in_valid_range():
 
 
 def test_timeline_no_overlap():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         token = _setup_qa_user_and_natal(db)
 
     response = client.get(
@@ -450,7 +450,7 @@ def test_timeline_no_overlap():
 
 
 def test_caution_flags_consistent():
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         token = _setup_qa_user_and_natal(db)
 
     response = client.get(
@@ -636,7 +636,7 @@ def test_v2_v3_dual_comparison_qa():
     # Use calm_day for Sobriety check
     fixture_data = get_calm_day()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _setup_qa_user_and_natal(db, fixture_data=fixture_data)
         resolver = PredictionRequestResolver()
         resolved = resolver.resolve(
@@ -707,7 +707,7 @@ def test_v3_inter_run_stability():
     from app.services.prediction.compute_runner import PredictionComputeRunner
     from app.services.prediction.request_resolver import PredictionRequestResolver
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _setup_qa_user_and_natal(db)
         resolver = PredictionRequestResolver()
         resolved = resolver.resolve(
@@ -744,7 +744,7 @@ def test_v3_runtime_slo():
     from app.services.prediction.compute_runner import PredictionComputeRunner
     from app.services.prediction.request_resolver import PredictionRequestResolver
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _setup_qa_user_and_natal(db)
         resolver = PredictionRequestResolver()
         resolved = resolver.resolve(

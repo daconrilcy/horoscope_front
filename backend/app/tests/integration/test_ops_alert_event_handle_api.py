@@ -9,8 +9,8 @@ from app.core.rate_limit import RateLimitError
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
-from app.infra.db.session import SessionLocal
 from app.main import app
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.integration.ops_alert_helpers import (
     cleanup_ops_alert_tables,
     register_user_and_issue_token_with_role_claim,
@@ -23,7 +23,7 @@ client = TestClient(app)
 
 
 def _create_event(*, delivery_status: str = "failed") -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = seed_ops_alert_audit(db)
         event = seed_ops_alert_event(db, audit_id=audit.id, delivery_status=delivery_status)
         db.commit()
@@ -38,7 +38,7 @@ def _insert_handling(
     ops_comment: str | None = None,
     suppression_key: str | None = None,
 ) -> None:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             CanonicalEntitlementMutationAlertHandlingModel(
                 alert_event_id=alert_event_id,
@@ -102,7 +102,7 @@ def test_post_handle_updates_existing_handling() -> None:
     assert response.json()["data"]["handling_status"] == "resolved"
     assert response.json()["data"]["ops_comment"] == "Solved"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         rows = db.execute(select(CanonicalEntitlementMutationAlertHandlingModel)).scalars().all()
         assert len(rows) == 1
         assert rows[0].handling_status == "resolved"

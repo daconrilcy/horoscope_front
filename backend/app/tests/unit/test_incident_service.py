@@ -4,7 +4,6 @@ from sqlalchemy import delete
 from app.infra.db.base import Base
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.ops.incident_service import (
     IncidentService,
@@ -12,19 +11,20 @@ from app.services.ops.incident_service import (
     SupportIncidentCreatePayload,
     SupportIncidentUpdatePayload,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(SupportIncidentModel))
         db.execute(delete(UserModel))
         db.commit()
 
 
 def _create_user(email: str, role: str = "user") -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.user.id
@@ -35,7 +35,7 @@ def test_create_and_update_incident_to_closed() -> None:
     customer_user_id = _create_user("incident-customer@example.com", role="user")
     support_user_id = _create_user("incident-support@example.com", role="support")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         incident = IncidentService.create_incident(
             db,
             payload=SupportIncidentCreatePayload(
@@ -75,7 +75,7 @@ def test_update_incident_rejects_invalid_transition() -> None:
     customer_user_id = _create_user("incident-customer-2@example.com", role="user")
     support_user_id = _create_user("incident-support-2@example.com", role="support")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         incident = IncidentService.create_incident(
             db,
             payload=SupportIncidentCreatePayload(

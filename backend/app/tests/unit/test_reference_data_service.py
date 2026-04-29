@@ -12,14 +12,14 @@ from app.infra.db.models.reference import (
     ReferenceVersionModel,
     SignModel,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_reference_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AstroCharacteristicModel,
             AspectModel,
@@ -34,9 +34,9 @@ def _cleanup_reference_tables() -> None:
 
 def test_seed_reference_version_is_idempotent() -> None:
     _cleanup_reference_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         version_1 = ReferenceDataService.seed_reference_version(db, version="1.0.0")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         version_2 = ReferenceDataService.seed_reference_version(db, version="1.0.0")
         payload = ReferenceDataService.get_active_reference_data(db, version="1.0.0")
 
@@ -84,7 +84,7 @@ def test_seed_reference_version_is_idempotent() -> None:
 
 def test_seed_reference_version_repairs_partial_existing_version() -> None:
     _cleanup_reference_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         partial = ReferenceVersionModel(version="2.0.0", description="partial", is_locked=True)
         db.add(partial)
         db.flush()
@@ -99,7 +99,7 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         version = ReferenceDataService.seed_reference_version(db, version="2.0.0")
         payload = ReferenceDataService.get_active_reference_data(db, version="2.0.0")
 
@@ -114,7 +114,7 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
 
 def test_reference_data_exposes_persisted_aspect_orb_traits() -> None:
     _cleanup_reference_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         version_model = db.scalar(
             select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
@@ -149,7 +149,7 @@ def test_reference_data_exposes_persisted_aspect_orb_traits() -> None:
 
 def test_clone_reference_version_preserves_previous_version() -> None:
     _cleanup_reference_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         source_version = db.scalar(
             select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
@@ -181,7 +181,7 @@ def test_clone_reference_version_preserves_previous_version() -> None:
 
 def test_locked_reference_version_rejects_in_place_mutation() -> None:
     _cleanup_reference_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         planet = db.scalar(select(PlanetModel).where(PlanetModel.code == "sun"))
         assert planet is not None

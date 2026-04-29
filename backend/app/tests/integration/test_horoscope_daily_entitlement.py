@@ -11,19 +11,19 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureBindingModel,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import engine
 from app.services.billing.service import BillingService
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
 from app.services.entitlement.horoscope_daily_entitlement_gate import HoroscopeDailyEntitlementGate
+from app.tests.helpers.db_session import app_test_engine
 
 
 @pytest.fixture
 def seeded_catalog(db_session: Session):
     # Clear DB to avoid pollution from seed() in other tests
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
     BillingService.reset_subscription_status_cache()
 
     # 1. Feature

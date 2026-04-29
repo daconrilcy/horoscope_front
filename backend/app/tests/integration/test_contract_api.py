@@ -5,17 +5,17 @@ from app.infra.db.base import Base
 from app.infra.db.models import UserModel
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_prompt import LlmUseCaseConfigModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(LlmUseCaseConfigModel))
         db.execute(delete(LlmOutputSchemaModel))
         db.execute(delete(UserModel))
@@ -23,7 +23,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_admin_and_token() -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db, email="admin@test.com", password="admin-pass-123", role="admin"
         )
@@ -36,7 +36,7 @@ def test_get_use_case_contract():
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         s = LlmOutputSchemaModel(
             name="AstroResponse_v1", json_schema={"type": "object", "title": "Astro"}
         )

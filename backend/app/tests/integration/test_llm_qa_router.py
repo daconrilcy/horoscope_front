@@ -12,9 +12,12 @@ from sqlalchemy.orm import sessionmaker
 
 from app.api.dependencies.auth import UserAuthenticationError
 from app.core.security import create_access_token, hash_password
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.user import UserModel
+from app.tests.helpers.db_session import (
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 
 @pytest.fixture
@@ -31,11 +34,13 @@ def test_db(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
-    yield test_session_local
-    test_engine.dispose()
+    try:
+        yield test_session_local
+    finally:
+        reset_app_test_db_session_factory()
+        test_engine.dispose()
 
 
 def _build_test_app(test_db):

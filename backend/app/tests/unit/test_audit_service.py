@@ -6,7 +6,6 @@ from sqlalchemy import delete
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.ops.audit_service import (
     AuditEventCreatePayload,
@@ -14,19 +13,20 @@ from app.services.ops.audit_service import (
     AuditService,
     AuditServiceError,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(AuditEventModel))
         db.execute(delete(UserModel))
         db.commit()
 
 
 def _create_user_id(email: str) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123")
         db.commit()
         return auth.user.id
@@ -37,7 +37,7 @@ def test_record_and_list_audit_events_with_filters() -> None:
     user_id = _create_user_id("audit-user@example.com")
     now = datetime.now(timezone.utc)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         AuditService.record_event(
             db,
             payload=AuditEventCreatePayload(
@@ -64,7 +64,7 @@ def test_record_and_list_audit_events_with_filters() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = AuditService.list_events(
             db,
             filters=AuditEventListFilters(
@@ -86,7 +86,7 @@ def test_record_and_list_audit_events_with_filters() -> None:
 
 def test_list_events_rejects_invalid_limit() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(AuditServiceError) as error:
             AuditService.list_events(
                 db,

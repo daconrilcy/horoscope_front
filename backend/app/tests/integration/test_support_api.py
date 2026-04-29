@@ -19,20 +19,20 @@ from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing.service import BillingService
 from app.services.privacy_service import PrivacyService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
     BillingService.reset_subscription_status_cache()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             SupportIncidentModel,
             AuditEventModel,
@@ -53,7 +53,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> tuple[int, str]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.user.id, auth.tokens.access_token
@@ -82,7 +82,7 @@ def test_support_context_includes_subscription_privacy_and_incidents() -> None:
     customer_id, _ = _register_user_with_role_and_token("support-customer@example.com", "user")
     _, support_token = _register_user_with_role_and_token("support-agent@example.com", "support")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         BillingService.ensure_default_plans(db)
         Basic = BillingService.get_subscription_status(db, user_id=customer_id)
         assert Basic.status == "inactive"
@@ -186,7 +186,7 @@ def test_support_incident_lifecycle_and_audit() -> None:
     assert detail_response.status_code == 200
     assert detail_response.json()["data"]["incident_id"] == incident_id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit_events = db.scalars(
             select(AuditEventModel)
             .where(AuditEventModel.target_type == "incident")

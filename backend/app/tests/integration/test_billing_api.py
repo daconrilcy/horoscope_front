@@ -8,9 +8,9 @@ from app.infra.db.models.billing import (
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.billing.service import BillingService
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.integration.billing_helpers import (
     cleanup_billing_tables,
     register_and_get_billing_access_token,
@@ -48,7 +48,7 @@ def test_billing_plans_are_available_for_authenticated_user() -> None:
     access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         BillingService.ensure_default_plans(db)
         db.commit()
 
@@ -65,7 +65,7 @@ def test_billing_plans_normalize_zero_prices_for_canonical_plans() -> None:
     access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 BillingPlanModel(
@@ -104,7 +104,7 @@ def test_billing_plans_hide_user_invisible_trial_plan() -> None:
     access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add_all(
             [
                 BillingPlanModel(
@@ -145,7 +145,7 @@ def test_billing_subscription_status_with_stripe_profile() -> None:
     access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
         db.add(
             StripeBillingProfileModel(
@@ -168,7 +168,7 @@ def test_billing_subscription_status_with_legacy_fallback() -> None:
     access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
         plans = BillingService.ensure_default_plans(db)
         plan = plans["basic"]
@@ -206,7 +206,7 @@ def test_billing_subscription_matrix(
     access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
         db.add(
             StripeBillingProfileModel(
@@ -232,7 +232,7 @@ def test_billing_token_usage_returns_aggregated_usage() -> None:
     access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
         db.add_all(
             [

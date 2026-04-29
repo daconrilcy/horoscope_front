@@ -16,16 +16,16 @@ from app.infra.db.models.entitlement_mutation.audit.review import (
 from app.infra.db.models.entitlement_mutation.audit.review_event import (
     CanonicalEntitlementMutationAuditReviewEventModel,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.services.canonical_entitlement.audit.audit_review import (
     AuditNotFoundError,
     CanonicalEntitlementMutationAuditReviewService,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _setup() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def _seed_audit(db) -> CanonicalEntitlementMutationAuditModel:
@@ -48,7 +48,7 @@ def _seed_audit(db) -> CanonicalEntitlementMutationAuditModel:
 
 def test_upsert_creates_review_when_none_exists() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.flush()
 
@@ -72,7 +72,7 @@ def test_upsert_creates_review_when_none_exists() -> None:
 
 def test_upsert_updates_review_when_already_exists() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
 
         # Première revue
@@ -103,7 +103,7 @@ def test_upsert_updates_review_when_already_exists() -> None:
         assert review.incident_key == "INC-002"
 
     # Vérifier qu'il n'y a qu'une seule ligne en DB
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = db.execute(select(CanonicalEntitlementMutationAuditReviewModel))
         rows = result.scalars().all()
         assert len(rows) == 1
@@ -112,7 +112,7 @@ def test_upsert_updates_review_when_already_exists() -> None:
 
 def test_upsert_updates_reviewed_at_on_update() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
 
         r1 = CanonicalEntitlementMutationAuditReviewService.upsert_review(
@@ -146,7 +146,7 @@ def test_upsert_updates_reviewed_at_on_update() -> None:
 
 def test_upsert_raises_404_when_audit_not_found() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             CanonicalEntitlementMutationAuditReviewService.upsert_review(
                 db,
@@ -163,12 +163,12 @@ def test_upsert_raises_404_when_audit_not_found() -> None:
 
 def test_upsert_recovers_from_concurrent_insert_race() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.commit()
         audit_id = audit.id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         original_execute = db.execute
         injected_competing_review = False
 
@@ -181,7 +181,7 @@ def test_upsert_recovers_from_concurrent_insert_race() -> None:
                 and "canonical_entitlement_mutation_audit_reviews" in statement_text
             )
             if should_inject_race:
-                with SessionLocal() as competing_db:
+                with open_app_test_db_session() as competing_db:
                     competing_db.add(
                         CanonicalEntitlementMutationAuditReviewModel(
                             audit_id=audit_id,
@@ -213,7 +213,7 @@ def test_upsert_recovers_from_concurrent_insert_race() -> None:
         assert review.review_comment == "Resolved after race"
         assert review.incident_key == "INC-RESOLVED"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         rows = db.execute(select(CanonicalEntitlementMutationAuditReviewModel)).scalars().all()
         assert len(rows) == 1
         assert rows[0].review_status == "closed"
@@ -222,12 +222,12 @@ def test_upsert_recovers_from_concurrent_insert_race() -> None:
 
 def test_upsert_concurrent_first_review_noop_creates_no_event() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.commit()
         audit_id = audit.id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         original_execute = db.execute
         injected_competing_review = False
 
@@ -240,7 +240,7 @@ def test_upsert_concurrent_first_review_noop_creates_no_event() -> None:
                 and "canonical_entitlement_mutation_audit_reviews" in statement_text
             )
             if should_inject_race:
-                with SessionLocal() as competing_db:
+                with open_app_test_db_session() as competing_db:
                     competing_db.add(
                         CanonicalEntitlementMutationAuditReviewModel(
                             audit_id=audit_id,
@@ -271,7 +271,7 @@ def test_upsert_concurrent_first_review_noop_creates_no_event() -> None:
         assert review.review_comment == "Same values"
         assert review.incident_key == "INC-SAME"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         reviews = db.execute(select(CanonicalEntitlementMutationAuditReviewModel)).scalars().all()
         events = (
             db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalars().all()
@@ -282,7 +282,7 @@ def test_upsert_concurrent_first_review_noop_creates_no_event() -> None:
 
 def test_upsert_creates_event_on_first_review() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.flush()
         audit_id = audit.id
@@ -298,7 +298,7 @@ def test_upsert_creates_event_on_first_review() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         events = (
             db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalars().all()
         )
@@ -314,7 +314,7 @@ def test_upsert_creates_event_on_first_review() -> None:
 
 def test_upsert_creates_event_on_status_change() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.flush()
         audit_id = audit.id
@@ -341,7 +341,7 @@ def test_upsert_creates_event_on_status_change() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         events = (
             db.execute(
                 select(CanonicalEntitlementMutationAuditReviewEventModel).order_by(
@@ -363,7 +363,7 @@ def test_upsert_creates_event_on_status_change() -> None:
 
 def test_upsert_no_event_on_noop() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.flush()
         audit_id = audit.id
@@ -393,7 +393,7 @@ def test_upsert_no_event_on_noop() -> None:
 
         assert r2.reviewed_at == first_reviewed_at
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         events = (
             db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalars().all()
         )
@@ -402,7 +402,7 @@ def test_upsert_no_event_on_noop() -> None:
 
 def test_upsert_event_carries_request_id() -> None:
     _setup()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.flush()
         audit_id = audit.id
@@ -418,7 +418,7 @@ def test_upsert_event_carries_request_id() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = db.execute(select(CanonicalEntitlementMutationAuditReviewEventModel)).scalar_one()
         assert event.event_type == "created"
         assert event.request_id == "trace-abc-123"

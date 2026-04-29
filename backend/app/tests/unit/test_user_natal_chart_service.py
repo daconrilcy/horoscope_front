@@ -18,7 +18,6 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.chart.result_service import ChartResultService
 from app.services.natal.calculation_service import NatalCalculationService
@@ -28,12 +27,13 @@ from app.services.user_profile.natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             ChartResultModel,
             UserBirthProfileModel,
@@ -56,7 +56,7 @@ def _create_user_and_profile() -> int:
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email="user@example.com", password="strong-pass-123")
         UserBirthProfileService.upsert_for_user(db, user_id=auth.user.id, payload=payload)
         db.commit()
@@ -98,7 +98,7 @@ def _build_valid_natal_result_payload(db: Session) -> dict[str, object]:
 def test_generate_for_user_success_includes_versions_and_chart_id() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         generated = UserNatalChartService.generate_for_user(
             db=db,
@@ -118,7 +118,7 @@ def test_generate_for_user_auto_seeds_reference_when_missing() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         generated = UserNatalChartService.generate_for_user(
             db=db,
             user_id=user_id,
@@ -133,7 +133,7 @@ def test_generate_for_user_auto_seeds_reference_when_missing() -> None:
 def test_get_latest_for_user_returns_most_recent_chart() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         first = UserNatalChartService.generate_for_user(
             db=db,
@@ -147,7 +147,7 @@ def test_get_latest_for_user_returns_most_recent_chart() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         latest = UserNatalChartService.get_latest_for_user(db=db, user_id=user_id)
 
     assert latest.chart_id == second.chart_id
@@ -158,7 +158,7 @@ def test_get_latest_for_user_returns_most_recent_chart() -> None:
 
 def test_generate_for_user_fails_when_birth_profile_missing() -> None:
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email="user@example.com", password="strong-pass-123")
         db.commit()
         with pytest.raises(UserNatalChartServiceError) as error:
@@ -169,7 +169,7 @@ def test_generate_for_user_fails_when_birth_profile_missing() -> None:
 def test_get_latest_for_user_not_found() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserNatalChartServiceError) as error:
             UserNatalChartService.get_latest_for_user(db=db, user_id=user_id)
     assert error.value.code == "natal_chart_not_found"
@@ -178,7 +178,7 @@ def test_get_latest_for_user_not_found() -> None:
 def test_get_latest_for_user_claims_legacy_chart_without_user_id() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         payload = BirthInput(
             birth_date="1990-06-15",
             birth_time="10:30",
@@ -195,7 +195,7 @@ def test_get_latest_for_user_claims_legacy_chart_without_user_id() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         latest = UserNatalChartService.get_latest_for_user(db=db, user_id=user_id)
         db.commit()
 
@@ -205,7 +205,7 @@ def test_get_latest_for_user_claims_legacy_chart_without_user_id() -> None:
 def test_get_latest_for_user_invalid_payload_returns_stable_error() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 
         ChartResultRepository(db).create(
@@ -218,7 +218,7 @@ def test_get_latest_for_user_invalid_payload_returns_stable_error() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserNatalChartServiceError) as error:
             UserNatalChartService.get_latest_for_user(db=db, user_id=user_id)
 
@@ -237,7 +237,7 @@ def test_generate_for_user_maps_timeout_error(monkeypatch: pytest.MonkeyPatch) -
         _raise_timeout,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserNatalChartServiceError) as error:
             UserNatalChartService.generate_for_user(db=db, user_id=user_id)
 
@@ -248,7 +248,7 @@ def test_generate_for_user_maps_timeout_error(monkeypatch: pytest.MonkeyPatch) -
 def test_generate_for_user_enforces_timeout_budget(monkeypatch: pytest.MonkeyPatch) -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         db.commit()
 
@@ -264,7 +264,7 @@ def test_generate_for_user_enforces_timeout_budget(monkeypatch: pytest.MonkeyPat
         "app.services.user_profile.natal_chart_service.perf_counter", _fake_perf_counter
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserNatalChartServiceError) as error:
             UserNatalChartService.generate_for_user(
                 db=db,
@@ -279,7 +279,7 @@ def test_generate_for_user_enforces_timeout_budget(monkeypatch: pytest.MonkeyPat
 def test_verify_consistency_for_user_returns_consistent_for_identical_payloads() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         valid_payload = _build_valid_natal_result_payload(db)
         _create_chart_result(
             db,
@@ -297,7 +297,7 @@ def test_verify_consistency_for_user_returns_consistent_for_identical_payloads()
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         report = UserNatalChartService.verify_consistency_for_user(db=db, user_id=user_id)
 
     assert report.consistent is True
@@ -309,7 +309,7 @@ def test_verify_consistency_for_user_returns_consistent_for_identical_payloads()
 def test_verify_consistency_for_user_raises_on_payload_mismatch() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         valid_payload = _build_valid_natal_result_payload(db)
         mismatched_payload = deepcopy(valid_payload)
         mismatched_payload["planet_positions"][0]["longitude"] = (
@@ -331,7 +331,7 @@ def test_verify_consistency_for_user_raises_on_payload_mismatch() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserNatalChartServiceError) as error:
             UserNatalChartService.verify_consistency_for_user(db=db, user_id=user_id)
 
@@ -344,7 +344,7 @@ def test_verify_consistency_for_user_raises_on_payload_mismatch() -> None:
 def test_verify_consistency_for_user_raises_on_version_mismatch() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _create_chart_result(
             db,
             user_id=user_id,
@@ -365,7 +365,7 @@ def test_verify_consistency_for_user_raises_on_version_mismatch() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserNatalChartServiceError) as error:
             UserNatalChartService.verify_consistency_for_user(db=db, user_id=user_id)
 
@@ -376,7 +376,7 @@ def test_verify_consistency_for_user_raises_on_version_mismatch() -> None:
 def test_verify_consistency_for_user_raises_on_hash_mismatch() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         valid_payload = _build_valid_natal_result_payload(db)
         _create_chart_result(
             db,
@@ -398,7 +398,7 @@ def test_verify_consistency_for_user_raises_on_hash_mismatch() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserNatalChartServiceError) as error:
             UserNatalChartService.verify_consistency_for_user(db=db, user_id=user_id)
 
@@ -409,7 +409,7 @@ def test_verify_consistency_for_user_raises_on_hash_mismatch() -> None:
 def test_verify_consistency_for_user_raises_when_payload_is_invalid() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _create_chart_result(
             db,
             user_id=user_id,
@@ -426,7 +426,7 @@ def test_verify_consistency_for_user_raises_when_payload_is_invalid() -> None:
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserNatalChartServiceError) as error:
             UserNatalChartService.verify_consistency_for_user(db=db, user_id=user_id)
 
@@ -436,7 +436,7 @@ def test_verify_consistency_for_user_raises_when_payload_is_invalid() -> None:
 def test_verify_consistency_for_user_finds_comparable_beyond_recent_window() -> None:
     _cleanup_tables()
     user_id = _create_user_and_profile()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         valid_payload = _build_valid_natal_result_payload(db)
         _create_chart_result(
             db,
@@ -463,7 +463,7 @@ def test_verify_consistency_for_user_finds_comparable_beyond_recent_window() -> 
         )
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         report = UserNatalChartService.verify_consistency_for_user(db=db, user_id=user_id)
 
     assert report.consistent is True

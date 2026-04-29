@@ -4,18 +4,18 @@ from app.infra.db.base import Base
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import (
     EnterpriseCredentialsService,
     EnterpriseCredentialsServiceError,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(EnterpriseApiCredentialModel))
         db.execute(delete(EnterpriseAccountModel))
         db.execute(delete(UserModel))
@@ -23,7 +23,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_enterprise_admin_with_account(email: str) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -44,7 +44,7 @@ def test_create_credential_persists_hashed_secret_only() -> None:
     _cleanup_tables()
     admin_user_id = _register_enterprise_admin_with_account("b2b-admin-create@example.com")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         created = EnterpriseCredentialsService.create_credential(db, admin_user_id=admin_user_id)
         db.commit()
         credential = db.scalar(
@@ -62,11 +62,11 @@ def test_rotate_credential_revokes_previous_and_activates_new() -> None:
     _cleanup_tables()
     admin_user_id = _register_enterprise_admin_with_account("b2b-admin-rotate@example.com")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         first = EnterpriseCredentialsService.create_credential(db, admin_user_id=admin_user_id)
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         rotated = EnterpriseCredentialsService.rotate_credential(db, admin_user_id=admin_user_id)
         db.commit()
         credentials = db.scalars(
@@ -85,11 +85,11 @@ def test_rotate_credential_revokes_previous_and_activates_new() -> None:
 def test_create_credential_fails_when_active_exists() -> None:
     _cleanup_tables()
     admin_user_id = _register_enterprise_admin_with_account("b2b-admin-existing@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         EnterpriseCredentialsService.create_credential(db, admin_user_id=admin_user_id)
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             EnterpriseCredentialsService.create_credential(db, admin_user_id=admin_user_id)
         except EnterpriseCredentialsServiceError as error:
@@ -101,7 +101,7 @@ def test_create_credential_fails_when_active_exists() -> None:
 def test_rotate_credential_fails_without_active_credential() -> None:
     _cleanup_tables()
     admin_user_id = _register_enterprise_admin_with_account("b2b-admin-missing@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             EnterpriseCredentialsService.rotate_credential(db, admin_user_id=admin_user_id)
         except EnterpriseCredentialsServiceError as error:
@@ -114,7 +114,7 @@ def test_authenticate_api_key_accepts_previous_rotation_secret(monkeypatch: obje
     _cleanup_tables()
     admin_user_id = _register_enterprise_admin_with_account("b2b-admin-rotation-auth@example.com")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         created = EnterpriseCredentialsService.create_credential(db, admin_user_id=admin_user_id)
         db.commit()
 
@@ -128,6 +128,6 @@ def test_authenticate_api_key_accepts_previous_rotation_secret(monkeypatch: obje
         [old_secret],
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth_data = EnterpriseCredentialsService.authenticate_api_key(db, api_key=created.api_key)
         assert auth_data.credential_status == "active"

@@ -17,15 +17,15 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
 )
-from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import EnterpriseCredentialsService
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.helpers.db_session import open_app_test_db_session
 
 
 def _create_enterprise_api_key(email: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.infra.db.models.enterprise_billing import (
             EnterpriseAccountBillingPlanModel,
             EnterpriseBillingPlanModel,
@@ -137,7 +137,7 @@ def _seed_reference_data() -> None:
     from app.services.billing.service import BillingService
 
     BillingService.reset_subscription_status_cache()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db)
 
         # Seed canonical features
@@ -237,7 +237,7 @@ def _run_pre_rotation_journey(client: TestClient, run_id: str) -> tuple[dict[str
     user_headers = {"Authorization": f"Bearer {access_before}"}
 
     # Inject active subscription directly
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
         from app.infra.db.models.stripe_billing import StripeBillingProfileModel
         from app.infra.db.models.user import UserModel

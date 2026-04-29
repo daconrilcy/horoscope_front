@@ -15,8 +15,8 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
 )
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
@@ -34,8 +34,8 @@ def _override_auth(user_id=42, role="user"):
 
 
 def _cleanup_db():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def test_get_plans_catalog_unauthenticated():
@@ -48,7 +48,7 @@ def test_get_plans_catalog_success():
     _cleanup_db()
 
     # 1. Setup Data
-    with SessionLocal() as db_session:
+    with open_app_test_db_session() as db_session:
         # Features
         f1 = FeatureCatalogModel(feature_code="natal_chart_short", feature_name="Short Chart")
         f2 = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
@@ -195,7 +195,7 @@ def test_get_plans_catalog_forbidden_for_non_user_roles():
 def test_get_plans_catalog_keeps_paid_plans_visible_without_billing_rows():
     _cleanup_db()
 
-    with SessionLocal() as db_session:
+    with open_app_test_db_session() as db_session:
         for code, name in (
             ("natal_chart_short", "Short Chart"),
             ("natal_chart_long", "Long Chart"),

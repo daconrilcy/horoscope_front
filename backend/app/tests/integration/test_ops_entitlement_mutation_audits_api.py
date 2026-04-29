@@ -17,32 +17,32 @@ from app.infra.db.models.entitlement_mutation.audit.review import (
     CanonicalEntitlementMutationAuditReviewModel,
 )
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.api_contracts.ops.entitlement_mutation_audits import ReviewEventItem
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(UserModel))
         db.execute(delete(CanonicalEntitlementMutationAuditModel))
         db.commit()
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
 
 
 def _register_user_and_issue_token_with_role_claim(email: str, role: str, claim_role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return create_access_token(subject=str(auth.user.id), role=claim_role)
@@ -99,7 +99,7 @@ def test_list_returns_empty_when_no_audits() -> None:
 def test_list_returns_audits_sorted_desc() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, occurred_at=datetime(2026, 1, 1, tzinfo=timezone.utc), feature_code="f1")
         _seed_audit(db, occurred_at=datetime(2026, 1, 3, tzinfo=timezone.utc), feature_code="f3")
         _seed_audit(db, occurred_at=datetime(2026, 1, 2, tzinfo=timezone.utc), feature_code="f2")
@@ -120,7 +120,7 @@ def test_list_returns_audits_sorted_desc() -> None:
 def test_list_filter_by_feature_code() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, feature_code="chat")
         _seed_audit(db, feature_code="daily")
         db.commit()
@@ -139,7 +139,7 @@ def test_list_filter_by_feature_code() -> None:
 def test_list_filter_by_actor_type() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, actor_type="script")
         _seed_audit(db, actor_type="admin")
         db.commit()
@@ -158,7 +158,7 @@ def test_list_filter_by_actor_type() -> None:
 def test_list_filter_by_plan_code() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, plan_code="basic")
         _seed_audit(db, plan_code="premium")
         db.commit()
@@ -177,7 +177,7 @@ def test_list_filter_by_plan_code() -> None:
 def test_list_filter_by_request_id() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, request_id="rid-1")
         _seed_audit(db, request_id="rid-2")
         db.commit()
@@ -196,7 +196,7 @@ def test_list_filter_by_request_id() -> None:
 def test_list_filter_by_actor_identifier() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, actor_identifier="seed_product_entitlements.py")
         _seed_audit(db, actor_identifier="backfill_plan_catalog_from_legacy.py")
         db.commit()
@@ -215,7 +215,7 @@ def test_list_filter_by_actor_identifier() -> None:
 def test_list_filter_by_source_origin() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, source_origin="manual")
         _seed_audit(db, source_origin="repair")
         db.commit()
@@ -234,7 +234,7 @@ def test_list_filter_by_source_origin() -> None:
 def test_list_filter_by_date_range() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, occurred_at=datetime(2026, 1, 1, tzinfo=timezone.utc), feature_code="f1")
         _seed_audit(db, occurred_at=datetime(2026, 1, 10, tzinfo=timezone.utc), feature_code="f10")
         _seed_audit(db, occurred_at=datetime(2026, 1, 20, tzinfo=timezone.utc), feature_code="f20")
@@ -257,7 +257,7 @@ def test_list_filter_by_date_range() -> None:
 def test_list_filter_by_date_range_is_inclusive() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, occurred_at=datetime(2026, 1, 5, tzinfo=timezone.utc), feature_code="f5")
         _seed_audit(db, occurred_at=datetime(2026, 1, 10, tzinfo=timezone.utc), feature_code="f10")
         _seed_audit(db, occurred_at=datetime(2026, 1, 15, tzinfo=timezone.utc), feature_code="f15")
@@ -279,7 +279,7 @@ def test_list_filter_by_date_range_is_inclusive() -> None:
 def test_list_pagination() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         for i in range(1, 6):
             _seed_audit(
                 db,
@@ -308,7 +308,7 @@ def test_list_pagination() -> None:
 def test_list_include_payloads_false() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, before_payload={"old": 1}, after_payload={"new": 2})
         db.commit()
 
@@ -326,7 +326,7 @@ def test_list_include_payloads_false() -> None:
 def test_list_include_payloads_true() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, before_payload={"old": 1}, after_payload={"new": 2})
         db.commit()
 
@@ -344,7 +344,7 @@ def test_list_include_payloads_true() -> None:
 def test_detail_returns_audit_with_payloads() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db, before_payload={"old": 1}, after_payload={"new": 2})
         db.commit()
         audit_id = audit.id
@@ -468,7 +468,7 @@ def test_list_returns_429_when_rate_limited(monkeypatch: object) -> None:
 def test_list_includes_diff_fields() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             before_payload={},
@@ -498,7 +498,7 @@ def test_list_includes_diff_fields() -> None:
 def test_filter_by_risk_level() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # High risk: is_enabled change
         _seed_audit(
             db,
@@ -553,7 +553,7 @@ def test_filter_by_risk_level() -> None:
 def test_filter_by_change_kind() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # Created
         _seed_audit(db, before_payload={}, feature_code="created")
         # Updated
@@ -579,7 +579,7 @@ def test_filter_by_change_kind() -> None:
 def test_filter_by_changed_field() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             before_payload={"is_enabled": True, "access_mode": "quota"},
@@ -608,7 +608,7 @@ def test_filter_by_changed_field() -> None:
 def test_diff_filters_paginate_after_application_level_filtering() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops-paginated@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         for index in range(1, 6):
             _seed_audit(
                 db,
@@ -647,7 +647,7 @@ def test_diff_filters_paginate_after_application_level_filtering() -> None:
 def test_detail_includes_diff_fields() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.commit()
         audit_id = audit.id
@@ -768,7 +768,7 @@ def _seed_review(
 def test_post_review_creates_review_returns_201() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
         db.commit()
         audit_id = audit.id
@@ -790,7 +790,7 @@ def test_post_review_creates_review_returns_201() -> None:
 def test_post_review_updates_existing_review() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
         db.commit()
         audit_id = audit.id
@@ -852,7 +852,7 @@ def test_post_review_requires_ops_or_admin_role() -> None:
 def test_list_review_virtual_pending_for_high_risk_no_review() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
         db.commit()
 
@@ -872,7 +872,7 @@ def test_list_review_virtual_pending_for_high_risk_no_review() -> None:
 def test_list_review_populated_when_review_exists() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
         db.flush()
         _seed_review(db, audit_id=audit.id, review_status="acknowledged")
@@ -891,7 +891,7 @@ def test_list_review_populated_when_review_exists() -> None:
 def test_list_review_null_for_low_risk_no_review() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, before_payload=_LOW_RISK_BEFORE, after_payload=_LOW_RISK_AFTER)
         db.commit()
 
@@ -908,7 +908,7 @@ def test_list_review_null_for_low_risk_no_review() -> None:
 def test_filter_by_review_status_pending_review() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # High risk sans revue → virtual pending_review
         _seed_audit(
             db,
@@ -939,7 +939,7 @@ def test_filter_by_review_status_pending_review() -> None:
 def test_filter_by_review_status_closed() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit_closed = _seed_audit(
             db,
             before_payload=_HIGH_RISK_BEFORE,
@@ -970,7 +970,7 @@ def test_filter_by_review_status_closed() -> None:
 def test_detail_includes_review_field() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
         db.flush()
         _seed_review(db, audit_id=audit.id, review_status="investigating")
@@ -995,7 +995,7 @@ def test_detail_includes_review_field() -> None:
 def test_get_review_history_empty_returns_200() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.commit()
         audit_id = audit.id
@@ -1013,7 +1013,7 @@ def test_get_review_history_empty_returns_200() -> None:
 def test_get_review_history_after_one_review() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.commit()
         audit_id = audit.id
@@ -1043,7 +1043,7 @@ def test_get_review_history_after_one_review() -> None:
 def test_get_review_history_chain_of_transitions() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.commit()
         audit_id = audit.id
@@ -1092,7 +1092,7 @@ def test_get_review_history_chain_of_transitions() -> None:
 def test_get_review_history_noop_no_event_created() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.commit()
         audit_id = audit.id
@@ -1149,7 +1149,7 @@ def test_get_review_history_requires_ops_role() -> None:
 def test_get_review_history_request_id_propagated() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(db)
         db.commit()
         audit_id = audit.id
@@ -1200,7 +1200,7 @@ def test_review_queue_empty_returns_200() -> None:
 def test_review_queue_summary_counts() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             feature_code="pending-1",
@@ -1246,7 +1246,7 @@ def test_review_queue_summary_counts() -> None:
 def test_review_queue_filter_by_feature_code() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             feature_code="f1",
@@ -1275,7 +1275,7 @@ def test_review_queue_filter_by_feature_code() -> None:
 def test_review_queue_pending_review_from_high_risk_audit() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(db, before_payload=_HIGH_RISK_BEFORE, after_payload=_HIGH_RISK_AFTER)
         db.commit()
 
@@ -1298,7 +1298,7 @@ def test_review_queue_pending_review_from_high_risk_audit() -> None:
 def test_review_queue_age_fields_populated() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             occurred_at=datetime.now(timezone.utc),
@@ -1321,7 +1321,7 @@ def test_review_queue_age_fields_populated() -> None:
 def test_review_queue_sort_priority_order() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         pending_audit = _seed_audit(
             db,
             occurred_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
@@ -1362,7 +1362,7 @@ def test_review_queue_sort_priority_order() -> None:
 def test_review_queue_filter_by_effective_review_status() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             feature_code="f-pending",
@@ -1394,7 +1394,7 @@ def test_review_queue_filter_by_effective_review_status() -> None:
 def test_review_queue_filter_by_incident_key() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         a1 = _seed_audit(db, feature_code="f1")
         db.flush()
         r1 = _seed_review(db, audit_id=a1.id)
@@ -1416,7 +1416,7 @@ def test_review_queue_filter_by_incident_key() -> None:
 def test_review_queue_pagination() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         for i in range(1, 4):
             _seed_audit(
                 db,
@@ -1523,7 +1523,7 @@ def test_review_queue_summary_returns_400_when_diff_scope_is_too_large(monkeypat
 def test_review_queue_sla_within_sla_high_pending() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             occurred_at=datetime.now(timezone.utc),
@@ -1547,7 +1547,7 @@ def test_review_queue_sla_within_sla_high_pending() -> None:
 def test_review_queue_sla_overdue_high_pending() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             occurred_at=datetime.now(timezone.utc) - timedelta(hours=5),
@@ -1569,7 +1569,7 @@ def test_review_queue_sla_overdue_high_pending() -> None:
 def test_review_queue_sla_due_soon_high_pending() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # SLA 4h = 14400s. Due soon < 20% restant = 2880s.
         # Restant ≈ 1440s (24min) if age = 3h36 = 12960s.
         _seed_audit(
@@ -1592,7 +1592,7 @@ def test_review_queue_sla_due_soon_high_pending() -> None:
 def test_review_queue_sla_null_for_low_risk() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             before_payload=_LOW_RISK_BEFORE,
@@ -1613,7 +1613,7 @@ def test_review_queue_sla_null_for_low_risk() -> None:
 def test_review_queue_sla_null_for_closed() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(
             db,
             before_payload=_HIGH_RISK_BEFORE,
@@ -1635,7 +1635,7 @@ def test_review_queue_sla_null_for_closed() -> None:
 def test_review_queue_filter_by_sla_status_overdue() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # Overdue
         _seed_audit(
             db,
@@ -1668,7 +1668,7 @@ def test_review_queue_filter_by_sla_status_overdue() -> None:
 def test_review_queue_summary_overdue_count() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # 1 Overdue
         _seed_audit(
             db,
@@ -1698,7 +1698,7 @@ def test_review_queue_summary_overdue_count() -> None:
 def test_review_queue_summary_filter_by_sla_status_restricts_all_counters() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             occurred_at=datetime.now(timezone.utc) - timedelta(hours=5),
@@ -1733,7 +1733,7 @@ def test_review_queue_summary_filter_by_sla_status_restricts_all_counters() -> N
 def test_review_queue_summary_oldest_pending_age_seconds() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         _seed_audit(
             db,
             occurred_at=datetime.now(timezone.utc) - timedelta(seconds=100),
@@ -1754,7 +1754,7 @@ def test_review_queue_summary_oldest_pending_age_seconds() -> None:
 def test_review_queue_summary_oldest_pending_ignores_investigating() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(
             db,
             occurred_at=datetime.now(timezone.utc) - timedelta(hours=8),
@@ -1779,7 +1779,7 @@ def test_review_queue_summary_oldest_pending_ignores_investigating() -> None:
 def test_review_queue_summary_oldest_pending_none_when_no_pending() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("ops@example.com", "ops")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         audit = _seed_audit(
             db,
             before_payload=_HIGH_RISK_BEFORE,

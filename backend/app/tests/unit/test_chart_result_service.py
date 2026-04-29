@@ -4,16 +4,16 @@ from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.chart.result_service import ChartResultService, ChartResultServiceError
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_chart_results() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(ChartResultModel))
         db.commit()
 
@@ -65,7 +65,7 @@ def test_persist_trace_requires_versions() -> None:
         houses=[],
         aspects=[],
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             ChartResultService.persist_trace(db, payload, invalid_result)
         except ChartResultServiceError as error:
@@ -82,13 +82,13 @@ def test_persist_and_get_audit_record() -> None:
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
         chart_id = ChartResultService.persist_trace(db, payload, result)
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         record = ChartResultService.get_audit_record(db, chart_id)
     assert record.chart_id == chart_id
     assert record.reference_version == "1.0.0"
@@ -102,7 +102,7 @@ def test_persist_trace_generates_unique_chart_ids_for_identical_inputs() -> None
         birth_place="Paris",
         birth_timezone="Europe/Paris",
     )
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
         first_chart_id = ChartResultService.persist_trace(

@@ -3,11 +3,11 @@ from sqlalchemy import select
 from app.infra.db.models.product_entitlements import Audience, PlanCatalogModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal
 from app.services.billing.service import BillingService
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
+from app.tests.helpers.db_session import open_app_test_db_session
 
 
 def test_full_reconciliation_chain():
@@ -15,7 +15,7 @@ def test_full_reconciliation_chain():
     Vérifie que la résolution des droits (entitlements) utilise bien
     le profil Stripe canonique en priorité.
     """
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # 0. S'assurer que les plans existent (BillingService et PlanCatalog)
         BillingService.ensure_default_plans(db)
 

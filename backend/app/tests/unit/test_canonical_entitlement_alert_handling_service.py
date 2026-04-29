@@ -9,11 +9,11 @@ from sqlalchemy import select
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
-from app.infra.db.session import SessionLocal
 from app.services.canonical_entitlement.alert.handling import (
     AlertEventNotFoundError,
     CanonicalEntitlementAlertHandlingService,
 )
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.unit.canonical_entitlement_alert_helpers import (
     seed_entitlement_alert_event,
     setup_entitlement_alert_schema,
@@ -22,7 +22,7 @@ from app.tests.unit.canonical_entitlement_alert_helpers import (
 
 def test_upsert_handling_creates_new_record_when_none_exists() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = seed_entitlement_alert_event(db)
 
         handling = CanonicalEntitlementAlertHandlingService.upsert_handling(
@@ -44,7 +44,7 @@ def test_upsert_handling_creates_new_record_when_none_exists() -> None:
 
 def test_upsert_handling_updates_existing_record() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = seed_entitlement_alert_event(db)
         CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
@@ -71,7 +71,7 @@ def test_upsert_handling_updates_existing_record() -> None:
         assert updated.ops_comment == "fixed"
         assert updated.suppression_key is None
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         rows = db.execute(select(CanonicalEntitlementMutationAlertHandlingModel)).scalars().all()
         assert len(rows) == 1
         assert rows[0].handling_status == "resolved"
@@ -79,7 +79,7 @@ def test_upsert_handling_updates_existing_record() -> None:
 
 def test_upsert_handling_raises_404_when_alert_event_not_found() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(AlertEventNotFoundError) as exc_info:
             CanonicalEntitlementAlertHandlingService.upsert_handling(
                 db,
@@ -129,7 +129,7 @@ def test_upsert_handling_flushes_session() -> None:
 
 def test_upsert_handling_suppressed_sets_correct_status() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = seed_entitlement_alert_event(db)
 
         handling = CanonicalEntitlementAlertHandlingService.upsert_handling(
@@ -146,7 +146,7 @@ def test_upsert_handling_suppressed_sets_correct_status() -> None:
 
 def test_upsert_handling_resolved_sets_correct_status() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = seed_entitlement_alert_event(db)
 
         handling = CanonicalEntitlementAlertHandlingService.upsert_handling(
@@ -163,7 +163,7 @@ def test_upsert_handling_resolved_sets_correct_status() -> None:
 
 def test_upsert_handling_stores_ops_comment_and_suppression_key() -> None:
     setup_entitlement_alert_schema()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         event = seed_entitlement_alert_event(db)
 
         handling = CanonicalEntitlementAlertHandlingService.upsert_handling(

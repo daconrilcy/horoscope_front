@@ -16,18 +16,18 @@ from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             UserPrivacyRequestModel,
@@ -47,7 +47,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -77,7 +77,7 @@ def test_audit_events_list_and_filter_for_support_role() -> None:
     target_token = _register_user_with_role_and_token("audit-target@example.com", "user")
     assert target_token
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         target_user = db.scalar(
             select(UserModel).where(UserModel.email == "audit-target@example.com").limit(1)
         )

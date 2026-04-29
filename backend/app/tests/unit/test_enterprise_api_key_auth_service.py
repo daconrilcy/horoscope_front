@@ -4,18 +4,18 @@ from app.infra.db.base import Base
 from app.infra.db.models.enterprise_account import EnterpriseAccountModel
 from app.infra.db.models.enterprise_api_credential import EnterpriseApiCredentialModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.b2b.enterprise_credentials_service import (
     EnterpriseCredentialsService,
     EnterpriseCredentialsServiceError,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(EnterpriseApiCredentialModel))
         db.execute(delete(EnterpriseAccountModel))
         db.execute(delete(UserModel))
@@ -25,7 +25,7 @@ def _cleanup_tables() -> None:
 def _register_enterprise_admin_with_account(
     email: str, *, status: str = "active"
 ) -> tuple[int, str]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=email,
@@ -45,11 +45,11 @@ def _register_enterprise_admin_with_account(
 def test_authenticate_api_key_accepts_active_key() -> None:
     _cleanup_tables()
     admin_user_id, _ = _register_enterprise_admin_with_account("b2b-auth-active@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         created = EnterpriseCredentialsService.create_credential(db, admin_user_id=admin_user_id)
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         authenticated = EnterpriseCredentialsService.authenticate_api_key(
             db, api_key=created.api_key
         )
@@ -61,13 +61,13 @@ def test_authenticate_api_key_accepts_active_key() -> None:
 def test_authenticate_api_key_rejects_revoked_key() -> None:
     _cleanup_tables()
     admin_user_id, _ = _register_enterprise_admin_with_account("b2b-auth-revoked@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         created = EnterpriseCredentialsService.create_credential(db, admin_user_id=admin_user_id)
         db.commit()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         EnterpriseCredentialsService.rotate_credential(db, admin_user_id=admin_user_id)
         db.commit()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             EnterpriseCredentialsService.authenticate_api_key(db, api_key=created.api_key)
         except EnterpriseCredentialsServiceError as error:
@@ -79,10 +79,10 @@ def test_authenticate_api_key_rejects_revoked_key() -> None:
 def test_authenticate_api_key_rejects_invalid_key() -> None:
     _cleanup_tables()
     admin_user_id, _ = _register_enterprise_admin_with_account("b2b-auth-invalid@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         EnterpriseCredentialsService.create_credential(db, admin_user_id=admin_user_id)
         db.commit()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         try:
             EnterpriseCredentialsService.authenticate_api_key(
                 db, api_key="b2b_invalid_unknown_secret"

@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import joinedload, sessionmaker
 
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.product_entitlements import (
@@ -20,6 +19,11 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.user import UserModel
 from app.main import app
+from app.tests.helpers.db_session import (
+    open_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -38,18 +42,18 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
     try:
         yield
     finally:
+        reset_app_test_db_session_factory()
         test_engine.dispose()
 
 
 @pytest.fixture
 def admin_token():
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.core.security import hash_password
 
         admin = UserModel(
@@ -68,7 +72,7 @@ def admin_token():
 
 
 def test_get_entitlement_matrix_success(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # 1. Setup Plan
         plan = PlanCatalogModel(plan_code="free", plan_name="Free Plan", audience=Audience.B2C)
         db.add(plan)
@@ -118,7 +122,7 @@ def test_get_entitlement_matrix_success(admin_token):
 
 
 def test_get_entitlement_matrix_incoherent(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         plan = PlanCatalogModel(plan_code="basic", plan_name="Basic", audience=Audience.B2C)
         db.add(plan)
         feat = FeatureCatalogModel(feature_code="natal", feature_name="Natal")
@@ -143,7 +147,7 @@ def test_get_entitlement_matrix_incoherent(admin_token):
 
 
 def test_update_entitlement_success(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         plan = PlanCatalogModel(plan_code="edit-plan", plan_name="Edit Plan", audience=Audience.B2C)
         db.add(plan)
         feat = FeatureCatalogModel(feature_code="edit-feat", feature_name="Edit Feat")
@@ -174,7 +178,7 @@ def test_update_entitlement_success(admin_token):
     )
     assert response.status_code == 200
 
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # Re-fetch binding
         b = db.scalar(
             select(PlanFeatureBindingModel)

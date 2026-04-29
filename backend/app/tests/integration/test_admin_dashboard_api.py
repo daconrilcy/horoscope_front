@@ -6,11 +6,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.user import UserModel
 from app.main import app
+from app.tests.helpers.db_session import (
+    open_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -29,18 +33,18 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
     try:
         yield
     finally:
+        reset_app_test_db_session_factory()
         test_engine.dispose()
 
 
 @pytest.fixture
 def admin_token():
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         from app.core.security import hash_password
 
         admin = UserModel(
@@ -59,7 +63,7 @@ def admin_token():
 
 
 def test_get_kpis_snapshot_success(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         premium_plan = BillingPlanModel(
             code="premium",
             display_name="Premium",
@@ -88,7 +92,7 @@ def test_get_kpis_snapshot_success(admin_token):
 
 
 def test_get_kpis_flux_success(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         # User from 60 days ago
         old_user = UserModel(
             email="old-user@test.com",
@@ -123,7 +127,7 @@ def test_get_kpis_flux_success(admin_token):
 
 
 def test_get_kpis_flux_free_plan_includes_users_without_stripe_profile(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         free_user = UserModel(
             email="free-user@test.com",
             password_hash="x",
@@ -168,7 +172,7 @@ def test_get_kpis_flux_free_plan_includes_users_without_stripe_profile(admin_tok
 
 
 def test_get_kpis_billing_success(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         premium_plan = BillingPlanModel(
             code="premium",
             display_name="Premium",
@@ -205,7 +209,7 @@ def test_get_kpis_billing_success(admin_token):
 
 
 def test_search_users_payment_failure(admin_token):
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         premium_plan = BillingPlanModel(
             code="premium",
             display_name="Premium",

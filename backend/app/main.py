@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 from starlette.responses import Response
 
 from app.api.dependencies.auth import UserAuthenticationError
@@ -47,6 +48,13 @@ def _ensure_llm_registry_seeded() -> None:
     logger.info("llm_registry_legacy_seed_disabled")
 
 
+def _open_startup_db_session() -> Session:
+    """Ouvre une session DB pour les routines de demarrage local."""
+    from app.infra.db.session import SessionLocal
+
+    return SessionLocal()
+
+
 def _ensure_canonical_llm_bootstrap_seeded() -> None:
     """
     Auto-heal the canonical LLM bootstrap locally when nominal tables are empty.
@@ -67,7 +75,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
     from app.infra.db.models.llm.llm_persona import LlmPersonaModel
     from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
-    from app.infra.db.session import SessionLocal
     from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
     from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
     from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
@@ -80,7 +87,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
     def collect_state() -> tuple[int, int, int, int, int, int, bool]:
-        with SessionLocal() as db:
+        with _open_startup_db_session() as db:
             return (
                 db.query(LlmOutputSchemaModel).count(),
                 db.query(LlmPromptVersionModel).count(),
@@ -151,7 +158,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
 
     try:
         if needs_registry_seed:
-            with SessionLocal() as db:
+            with _open_startup_db_session() as db:
                 seed_astrologers(db)
                 seed_bootstrap_contracts(db)
             seed_prompts()
@@ -159,7 +166,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             seed_chat_prompt_v2()
             seed_guidance_prompts()
 
-        with SessionLocal() as db:
+        with _open_startup_db_session() as db:
             seed_horoscope_narrator_assembly(db)
             seed_66_20_taxonomy(db)
     except IntegrityError:

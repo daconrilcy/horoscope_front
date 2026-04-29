@@ -31,6 +31,12 @@ from app.services.prediction import (
     DailyPredictionServiceError,
     ServiceResult,
 )
+from app.tests.helpers.db_session import (
+    open_app_test_db_session,
+    override_app_test_db_session,
+    reset_app_test_db_session_factory,
+    use_app_test_db_session_factory,
+)
 
 client = TestClient(app)
 
@@ -59,22 +65,25 @@ def _isolated_daily_prediction_database(monkeypatch: pytest.MonkeyPatch, tmp_pat
         autocommit=False,
         future=True,
     )
-    monkeypatch.setattr(db_session_module, "engine", test_engine)
-    monkeypatch.setattr(db_session_module, "SessionLocal", test_session_local)
+    use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine, checkfirst=True)
     app.dependency_overrides.clear()
-    with db_session_module.SessionLocal() as db:
+    app.dependency_overrides[db_session_module.get_db_session] = override_app_test_db_session
+    with open_app_test_db_session() as db:
         db.execute(delete(UserRefreshTokenModel))
         db.execute(delete(UserModel))
         db.execute(delete(ReferenceVersionModel))
         db.commit()
-    yield
-    app.dependency_overrides.clear()
-    test_engine.dispose()
+    try:
+        yield
+    finally:
+        app.dependency_overrides.clear()
+        reset_app_test_db_session_factory()
+        test_engine.dispose()
 
 
 def _register_and_get_access_token() -> str:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=f"daily-api-user-{uuid.uuid4()}@example.com",
@@ -86,7 +95,7 @@ def _register_and_get_access_token() -> str:
 
 
 def _register_admin_and_get_token() -> str:
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(
             db,
             email=f"admin-{uuid.uuid4()}@example.com",
@@ -335,7 +344,7 @@ def test_daily_prediction_returns_500_on_malformed_json_payload():
 
 def test_daily_prediction_meta_uses_run_reference_version_and_house_system_effective():
     token = _register_and_get_access_token()
-    with db_session_module.SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             ReferenceVersionModel(
                 id=7,

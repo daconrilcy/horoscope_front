@@ -8,31 +8,31 @@ from sqlalchemy import delete
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(LlmCallLogModel))
         db.execute(delete(LlmPersonaModel))
         db.commit()
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
 
 
 def _seed_persona(name: str = "Astrologue Standard") -> uuid.UUID:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         persona = LlmPersonaModel(id=uuid.uuid4(), name=name)
         db.add(persona)
         db.commit()
@@ -92,7 +92,7 @@ def test_llm_ops_dashboard_exposes_canonical_views_and_release_correlation() -> 
     persona_id = _seed_persona()
     snapshot_id = uuid.uuid4()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             _build_log(
                 persona_id=persona_id,
@@ -169,7 +169,7 @@ def test_llm_ops_repair_hike_uses_previous_window_baseline_and_canonical_persona
     persona_id = _seed_persona("Persona Repair")
     now = datetime.now(timezone.utc)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         for index in range(40):
             db.add(
                 _build_log(
@@ -210,7 +210,7 @@ def test_llm_ops_unknown_path_alert_and_payload_is_safe() -> None:
     _cleanup_tables()
     ops_token = _register_user_with_role_and_token("llm-ops-unknown@example.com", "ops")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.add(
             _build_log(
                 feature="natal",

@@ -16,17 +16,17 @@ from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
             UserPrivacyRequestModel,
@@ -46,7 +46,7 @@ def _cleanup_tables() -> None:
 
 
 def _register_user(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -70,7 +70,7 @@ def test_privacy_evidence_returns_export_delete_and_audit() -> None:
     support_token = _register_user("privacy-evidence-support@example.com", "support")
     user_headers = {"Authorization": f"Bearer {user_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == user_email).limit(1))
         assert user is not None
         target_user_id = user.id
@@ -108,7 +108,7 @@ def test_privacy_evidence_is_reproducible_without_data_changes() -> None:
     ops_token = _register_user("privacy-evidence-ops@example.com", "ops")
     user_headers = {"Authorization": f"Bearer {user_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == user_email).limit(1))
         assert user is not None
         target_user_id = user.id
@@ -132,7 +132,7 @@ def test_privacy_evidence_returns_422_when_artifacts_are_missing() -> None:
     support_token = _register_user("privacy-evidence-missing-support@example.com", "support")
     assert user_token
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(
             select(UserModel).where(UserModel.email == "privacy-evidence-missing-user@example.com")
         )
@@ -160,7 +160,7 @@ def test_privacy_evidence_returns_422_when_latest_request_not_completed() -> Non
     support_token = _register_user("privacy-evidence-not-completed-support@example.com", "support")
     user_headers = {"Authorization": f"Bearer {user_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == user_email).limit(1))
         assert user is not None
         target_user_id = user.id
@@ -170,7 +170,7 @@ def test_privacy_evidence_returns_422_when_latest_request_not_completed() -> Non
         client.post("/v1/privacy/delete", headers=user_headers, json={"confirmation": "DELETE"})
     ).status_code == 200
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         latest_delete = db.scalar(
             select(UserPrivacyRequestModel)
             .where(
@@ -201,7 +201,7 @@ def test_privacy_evidence_returns_422_when_correlated_audit_missing() -> None:
     ops_token = _register_user("privacy-evidence-audit-missing-ops@example.com", "ops")
     user_headers = {"Authorization": f"Bearer {user_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email == user_email).limit(1))
         assert user is not None
         target_user_id = user.id
@@ -211,7 +211,7 @@ def test_privacy_evidence_returns_422_when_correlated_audit_missing() -> None:
         client.post("/v1/privacy/delete", headers=user_headers, json={"confirmation": "DELETE"})
     ).status_code == 200
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         db.execute(
             delete(AuditEventModel).where(
                 AuditEventModel.target_type == "user",

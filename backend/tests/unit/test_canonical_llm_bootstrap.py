@@ -54,21 +54,24 @@ class _FakeSessionLocal:
         return None
 
 
+def _patch_startup_db_session(monkeypatch, counts: dict[str, int]) -> None:
+    """Branche le bootstrap LLM sur une session factice locale au test."""
+    monkeypatch.setattr(main, "_open_startup_db_session", _FakeSessionLocal(counts))
+
+
 def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
     monkeypatch.setattr(main.settings, "app_env", "development")
-    monkeypatch.setattr(
-        "app.infra.db.session.SessionLocal",
-        _FakeSessionLocal(
-            {
-                "LlmOutputSchemaModel": 0,
-                "LlmPromptVersionModel": 0,
-                "LlmPersonaModel": 0,
-                "LlmPersonaModel.filtered": 0,
-                "PromptAssemblyConfigModel": 0,
-                "PromptAssemblyConfigModel.filtered": 0,
-                "LlmExecutionProfileModel": 0,
-            }
-        ),
+    _patch_startup_db_session(
+        monkeypatch,
+        {
+            "LlmOutputSchemaModel": 0,
+            "LlmPromptVersionModel": 0,
+            "LlmPersonaModel": 0,
+            "LlmPersonaModel.filtered": 0,
+            "PromptAssemblyConfigModel": 0,
+            "PromptAssemblyConfigModel.filtered": 0,
+            "LlmExecutionProfileModel": 0,
+        },
     )
     monkeypatch.setattr(
         "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
@@ -125,19 +128,17 @@ def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
 
 def test_canonical_llm_bootstrap_only_seeds_canonical_use_case_registry(monkeypatch) -> None:
     monkeypatch.setattr(main.settings, "app_env", "development")
-    monkeypatch.setattr(
-        "app.infra.db.session.SessionLocal",
-        _FakeSessionLocal(
-            {
-                "LlmOutputSchemaModel": 0,
-                "LlmPromptVersionModel": 0,
-                "LlmPersonaModel": 0,
-                "LlmPersonaModel.filtered": 0,
-                "PromptAssemblyConfigModel": 0,
-                "PromptAssemblyConfigModel.filtered": 0,
-                "LlmExecutionProfileModel": 0,
-            }
-        ),
+    _patch_startup_db_session(
+        monkeypatch,
+        {
+            "LlmOutputSchemaModel": 0,
+            "LlmPromptVersionModel": 0,
+            "LlmPersonaModel": 0,
+            "LlmPersonaModel.filtered": 0,
+            "PromptAssemblyConfigModel": 0,
+            "PromptAssemblyConfigModel.filtered": 0,
+            "LlmExecutionProfileModel": 0,
+        },
     )
     monkeypatch.setattr(
         "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
@@ -192,19 +193,17 @@ def test_canonical_llm_bootstrap_only_seeds_canonical_use_case_registry(monkeypa
 
 def test_canonical_llm_bootstrap_skips_when_nominal_tables_exist(monkeypatch) -> None:
     monkeypatch.setattr(main.settings, "app_env", "development")
-    monkeypatch.setattr(
-        "app.infra.db.session.SessionLocal",
-        _FakeSessionLocal(
-            {
-                "LlmOutputSchemaModel": 3,
-                "LlmPromptVersionModel": 5,
-                "LlmPersonaModel": 1,
-                "LlmPersonaModel.filtered": 1,
-                "PromptAssemblyConfigModel": 4,
-                "PromptAssemblyConfigModel.filtered": 0,
-                "LlmExecutionProfileModel": 2,
-            }
-        ),
+    _patch_startup_db_session(
+        monkeypatch,
+        {
+            "LlmOutputSchemaModel": 3,
+            "LlmPromptVersionModel": 5,
+            "LlmPersonaModel": 1,
+            "LlmPersonaModel.filtered": 1,
+            "PromptAssemblyConfigModel": 4,
+            "PromptAssemblyConfigModel.filtered": 0,
+            "LlmExecutionProfileModel": 2,
+        },
     )
     monkeypatch.setattr(
         "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
@@ -227,19 +226,17 @@ def test_canonical_llm_bootstrap_skips_when_nominal_tables_exist(monkeypatch) ->
 
 def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(monkeypatch) -> None:
     monkeypatch.setattr(main.settings, "app_env", "development")
-    monkeypatch.setattr(
-        "app.infra.db.session.SessionLocal",
-        _FakeSessionLocal(
-            {
-                "LlmOutputSchemaModel": 3,
-                "LlmPromptVersionModel": 5,
-                "LlmPersonaModel": 1,
-                "LlmPersonaModel.filtered": 1,
-                "PromptAssemblyConfigModel": 4,
-                "PromptAssemblyConfigModel.filtered": 0,
-                "LlmExecutionProfileModel": 2,
-            }
-        ),
+    _patch_startup_db_session(
+        monkeypatch,
+        {
+            "LlmOutputSchemaModel": 3,
+            "LlmPromptVersionModel": 5,
+            "LlmPersonaModel": 1,
+            "LlmPersonaModel.filtered": 1,
+            "PromptAssemblyConfigModel": 4,
+            "PromptAssemblyConfigModel.filtered": 0,
+            "LlmExecutionProfileModel": 2,
+        },
     )
     monkeypatch.setattr(
         "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
@@ -298,19 +295,17 @@ def test_canonical_llm_bootstrap_reseeds_when_published_assembly_lacks_execution
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(main.settings, "app_env", "development")
-    monkeypatch.setattr(
-        "app.infra.db.session.SessionLocal",
-        _FakeSessionLocal(
-            {
-                "LlmOutputSchemaModel": 3,
-                "LlmPromptVersionModel": 5,
-                "LlmPersonaModel": 1,
-                "LlmPersonaModel.filtered": 1,
-                "PromptAssemblyConfigModel": 2,
-                "PromptAssemblyConfigModel.filtered": 2,
-                "LlmExecutionProfileModel": 2,
-            }
-        ),
+    _patch_startup_db_session(
+        monkeypatch,
+        {
+            "LlmOutputSchemaModel": 3,
+            "LlmPromptVersionModel": 5,
+            "LlmPersonaModel": 1,
+            "LlmPersonaModel.filtered": 1,
+            "PromptAssemblyConfigModel": 2,
+            "PromptAssemblyConfigModel.filtered": 2,
+            "LlmExecutionProfileModel": 2,
+        },
     )
     monkeypatch.setattr(
         "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",

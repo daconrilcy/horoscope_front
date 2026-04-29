@@ -18,21 +18,21 @@ import pytest
 
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel, PersonaTone, PersonaVerbosity
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.llm_generation.chat.chat_guidance_service import ChatGuidanceService
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator
 
 
 def _cleanup_tables() -> None:
     ChatGuidanceService.reset_quality_kpis()
     reset_test_generators()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
 
 
 def _create_user(email: str) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123")
         db.commit()
         return auth.user.id
@@ -45,7 +45,7 @@ def _create_persona(
     style_markers: list[str],
     boundaries: list[str],
 ) -> uuid.UUID:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         persona = LlmPersonaModel(
             name=name,
             enabled=True,
@@ -96,7 +96,7 @@ def test_persona_context_fields_injected_for_mystical_persona() -> None:
     generator = ContextCapturingGenerator()
     set_test_chat_generator(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -139,7 +139,7 @@ def test_persona_context_differs_between_contrasted_personas() -> None:
     generator = ContextCapturingGenerator()
     set_test_chat_generator(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id_a,
@@ -199,7 +199,7 @@ def test_persona_context_isolation_no_cross_contamination() -> None:
     generator = ContextCapturingGenerator()
     set_test_chat_generator(generator)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id,
@@ -210,7 +210,7 @@ def test_persona_context_isolation_no_cross_contamination() -> None:
 
     # Nouvelle session pour Persona B
     user_id_b = _create_user("isolation-b@example.com")
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ChatGuidanceService.send_message(
             db=db,
             user_id=user_id_b,
@@ -254,7 +254,7 @@ def test_persona_fallback_on_none_persona_id_returns_default(
     with caplog.at_level(
         "WARNING", logger="app.services.llm_generation.chat.chat_guidance_service"
     ):
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             persona = ChatGuidanceService._load_persona_sync(db, None)
 
     # Un warning doit avoir été loggé mentionnant le backfill
@@ -285,7 +285,7 @@ def test_persona_fallback_on_unknown_persona_id_returns_default(
     with caplog.at_level(
         "WARNING", logger="app.services.llm_generation.chat.chat_guidance_service"
     ):
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             persona = ChatGuidanceService._load_persona_sync(db, unknown_id)
 
     assert any("chat_persona_not_found" in record.message for record in caplog.records)

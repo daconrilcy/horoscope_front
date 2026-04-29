@@ -17,18 +17,18 @@ from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.privacy_service import PrivacyServiceError
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             UserPrivacyRequestModel,
             ChatMessageModel,
@@ -56,7 +56,7 @@ def _register_and_get_access_token() -> str:
 
 
 def _register_user_with_role_and_token(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
@@ -111,7 +111,7 @@ def test_privacy_delete_anonymizes_account_and_removes_profile() -> None:
     access_token = _register_and_get_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         owner = db.scalar(
             select(UserModel).where(UserModel.email == "privacy-api-user@example.com").limit(1)
         )
@@ -141,7 +141,7 @@ def test_privacy_delete_anonymizes_account_and_removes_profile() -> None:
     assert status_response.status_code == 200
     assert status_response.json()["data"]["request_kind"] == "delete"
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.scalar(select(UserModel).where(UserModel.email.like("deleted-user-%")).limit(1))
         assert user is not None
         assert user.email.startswith("deleted-user-")

@@ -23,7 +23,6 @@ from app.infra.db.models.reference import (
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.session import SessionLocal, engine
 from app.services.auth_service import AuthService
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
@@ -35,12 +34,13 @@ from app.services.user_profile.birth_profile_service import (
     UserBirthProfileData,
     UserBirthProfileService,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
 def _cleanup_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         for model in (
             UserBirthProfileModel,
             UserModel,
@@ -56,12 +56,12 @@ def _cleanup_tables() -> None:
 
 
 def _create_user_with_profile(birth_time: str | None) -> int:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email="user@test.com", password="pass1234!")
         db.commit()
         user_id = auth.user.id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         payload = BirthInput(
             birth_date="1990-06-15",
             birth_time=birth_time,
@@ -84,7 +84,7 @@ def test_astro_profile_null_birth_time_returns_null_ascendant_and_missing_flag()
     _cleanup_tables()
     user_id = _create_user_with_profile(birth_time=None)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = UserAstroProfileService.get_for_user(db, user_id=user_id)
 
@@ -102,7 +102,7 @@ def test_astro_profile_explicit_midnight_returns_calculated_ascendant() -> None:
     _cleanup_tables()
     user_id = _create_user_with_profile(birth_time="00:00")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = UserAstroProfileService.get_for_user(db, user_id=user_id)
 
@@ -120,7 +120,7 @@ def test_astro_profile_with_valid_birth_time_returns_ascendant() -> None:
     _cleanup_tables()
     user_id = _create_user_with_profile(birth_time="14:30")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = UserAstroProfileService.get_for_user(db, user_id=user_id)
 
@@ -138,7 +138,7 @@ def test_astro_profile_sun_sign_present_regardless_of_birth_time() -> None:
     _cleanup_tables()
     user_id = _create_user_with_profile(birth_time=None)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result = UserAstroProfileService.get_for_user(db, user_id=user_id)
 
@@ -150,7 +150,7 @@ def test_astro_profile_works_without_reference_seed_data() -> None:
     _cleanup_tables()
     user_id = _create_user_with_profile(birth_time="14:30")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = UserAstroProfileService.get_for_user(db, user_id=user_id)
 
     assert result.sun_sign_code in {
@@ -187,12 +187,12 @@ def test_astro_profile_works_without_reference_seed_data() -> None:
 def test_astro_profile_sun_sign_consistent_for_fixed_reference_dates() -> None:
     """AC1: signe solaire dérivé du moteur natal (Sun planet) pour date connue."""
     _cleanup_tables()
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email="sun-date@test.com", password="pass1234!")
         db.commit()
         user_id = auth.user.id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         payload = BirthInput(
             birth_date="1973-04-24",
             birth_time="11:00",
@@ -202,7 +202,7 @@ def test_astro_profile_sun_sign_consistent_for_fixed_reference_dates() -> None:
         UserBirthProfileService.upsert_for_user(db, user_id=user_id, payload=payload)
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = UserAstroProfileService.get_for_user(db, user_id=user_id)
 
     assert result.sun_sign_code == "taurus"
@@ -213,7 +213,7 @@ def test_astro_profile_sun_sign_boundaries() -> None:
     _cleanup_tables()
     user_id = _create_user_with_profile(birth_time="14:30")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = UserAstroProfileService.get_for_user(db, user_id=user_id)
 
     assert result.sun_sign_code in {
@@ -237,7 +237,7 @@ def test_compute_ascendant_deterministic_for_same_inputs() -> None:
     _cleanup_tables()
     user_id = _create_user_with_profile(birth_time="14:30")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result1 = UserAstroProfileService.get_for_user(db, user_id=user_id)
         result2 = UserAstroProfileService.get_for_user(db, user_id=user_id)
 
@@ -248,7 +248,7 @@ def test_astro_profile_ascendant_matches_house_1_cusp_sign() -> None:
     _cleanup_tables()
     user_id = _create_user_with_profile(birth_time="14:30")
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         profile = UserBirthProfileService.get_for_user(db, user_id)
         natal = NatalCalculationService.calculate(
@@ -296,12 +296,12 @@ def test_null_and_zero_birth_time_produce_different_missing_flag() -> None:
     user_null = _create_user_with_profile(birth_time=None)
 
     # Second user with "00:00"
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email="user2@test.com", password="pass1234!")
         db.commit()
         user_zero_id = auth.user.id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         payload = BirthInput(
             birth_date="1990-06-15",
             birth_time="00:00",
@@ -311,7 +311,7 @@ def test_null_and_zero_birth_time_produce_different_missing_flag() -> None:
         UserBirthProfileService.upsert_for_user(db, user_id=user_zero_id, payload=payload)
         db.commit()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         result_null = UserAstroProfileService.get_for_user(db, user_id=user_null)
         result_zero = UserAstroProfileService.get_for_user(db, user_id=user_zero_id)
@@ -331,12 +331,12 @@ def test_astro_profile_raises_when_birth_profile_missing() -> None:
     """Lève UserAstroProfileServiceError si le profil natal est absent."""
     _cleanup_tables()
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email="noprofile@test.com", password="pass1234!")
         db.commit()
         user_id = auth.user.id
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         with pytest.raises(UserAstroProfileServiceError) as exc_info:
             UserAstroProfileService.get_for_user(db, user_id=user_id)
 
@@ -395,7 +395,7 @@ def test_astro_profile_forwards_geo_fields_to_birth_input(monkeypatch: pytest.Mo
         _fake_calculate,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = UserAstroProfileService.get_for_user(db, user_id=1)
 
     assert result.sun_sign_code == "taurus"
@@ -474,7 +474,7 @@ def test_astro_profile_resolves_coordinates_from_place_id_when_missing_on_profil
         _fake_calculate,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = UserAstroProfileService.get_for_user(db, user_id=1)
 
     assert result.sun_sign_code == "taurus"
@@ -553,7 +553,7 @@ def test_astro_profile_prioritizes_resolved_coordinates_over_legacy(
         _fake_calculate,
     )
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         result = UserAstroProfileService.get_for_user(db, user_id=1)
 
     assert result.sun_sign_code == "taurus"

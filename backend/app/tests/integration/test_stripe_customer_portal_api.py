@@ -7,7 +7,6 @@ from sqlalchemy import delete
 from app.infra.db.base import Base
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
 from app.main import app
 from app.services.auth_service import AuthService
 from app.services.billing.service import BillingService
@@ -15,29 +14,30 @@ from app.services.billing.stripe_customer_portal_service import StripeCustomerPo
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
+from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 client = TestClient(app)
 
 
 def _cleanup_tables():
     BillingService.reset_subscription_status_cache()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+    with open_app_test_db_session() as db:
         db.execute(delete(StripeBillingProfileModel))
         db.execute(delete(UserModel))
         db.commit()
 
 
 def _register_user_with_role(email: str, role: str) -> str:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         auth = AuthService.register(db, email=email, password="strong-pass-123", role=role)
         db.commit()
         return auth.tokens.access_token
 
 
 def _get_profile_snapshot(email: str) -> dict[str, object]:
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email=email).first()
         assert user is not None
         profile = db.query(StripeBillingProfileModel).filter_by(user_id=user.id).first()
@@ -96,7 +96,7 @@ class TestStripeCustomerPortalApi:
 
     def test_portal_session_no_customer_id(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(user_id=user.id, stripe_customer_id=None)
             db.add(profile)
@@ -115,7 +115,7 @@ class TestStripeCustomerPortalApi:
 
     def test_portal_session_stripe_unavailable(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(user_id=user.id, stripe_customer_id="cus_123")
             db.add(profile)
@@ -134,7 +134,7 @@ class TestStripeCustomerPortalApi:
 
     def test_portal_session_nominal_200(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -187,7 +187,7 @@ class TestStripeCustomerPortalApi:
         import stripe
 
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -214,7 +214,7 @@ class TestStripeCustomerPortalApi:
 
     def test_update_session_nominal_200(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -255,7 +255,7 @@ class TestStripeCustomerPortalApi:
 
     def test_cancel_session_nominal_200(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -296,7 +296,7 @@ class TestStripeCustomerPortalApi:
 
     def test_update_session_no_subscription_404(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -343,7 +343,7 @@ class TestStripeCustomerPortalApi:
 
     def test_cancel_session_no_subscription_404(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -362,7 +362,7 @@ class TestStripeCustomerPortalApi:
 
     def test_update_session_stripe_unavailable(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -388,7 +388,7 @@ class TestStripeCustomerPortalApi:
         import stripe
 
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -419,7 +419,7 @@ class TestStripeCustomerPortalApi:
         import stripe
 
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -454,7 +454,7 @@ class TestStripeCustomerPortalApi:
         import stripe
 
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -490,7 +490,7 @@ class TestStripeCustomerPortalApi:
 
     def test_update_session_returns_422_for_trialing_subscription(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -523,7 +523,7 @@ class TestStripeCustomerPortalApi:
 
     def test_portal_session_missing_configuration_503(self, clean_db):
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,
@@ -548,7 +548,7 @@ class TestStripeCustomerPortalApi:
         import stripe
 
         token = _register_user_with_role("user@example.com", "user")
-        with SessionLocal() as db:
+        with open_app_test_db_session() as db:
             user = db.query(UserModel).filter_by(email="user@example.com").first()
             profile = StripeBillingProfileModel(
                 user_id=user.id,

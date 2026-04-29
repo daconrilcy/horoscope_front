@@ -4,8 +4,8 @@ from fastapi.testclient import TestClient
 
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal
 from app.main import app
+from app.tests.helpers.db_session import open_app_test_db_session
 from app.tests.integration.billing_helpers import (
     cleanup_billing_tables,
     register_and_get_billing_access_token,
@@ -21,7 +21,7 @@ def test_billing_subscription_enriched_fields() -> None:
 
     future_date = datetime.now(timezone.utc) + timedelta(days=30)
 
-    with SessionLocal() as db:
+    with open_app_test_db_session() as db:
         user = db.query(UserModel).filter_by(email="billing-api-user@example.com").one()
         db.add(
             StripeBillingProfileModel(
