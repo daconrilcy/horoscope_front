@@ -1,81 +1,29 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
 from sqlalchemy import select
 
-from app.infra.db.base import Base
-from app.infra.db.models.canonical_entitlement_mutation_audit import (
-    CanonicalEntitlementMutationAuditModel,
-)
-from app.infra.db.models.entitlement_mutation.alert.alert_event import (
-    CanonicalEntitlementMutationAlertEventModel,
-)
 from app.infra.db.models.entitlement_mutation.alert.handling import (
     CanonicalEntitlementMutationAlertHandlingModel,
 )
-from app.infra.db.session import SessionLocal, engine
+from app.infra.db.session import SessionLocal
 from app.services.canonical_entitlement.alert.handling import (
     AlertEventNotFoundError,
     CanonicalEntitlementAlertHandlingService,
 )
-
-
-def _setup() -> None:
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-
-
-def _seed_audit(db) -> CanonicalEntitlementMutationAuditModel:
-    audit = CanonicalEntitlementMutationAuditModel(
-        occurred_at=datetime.now(timezone.utc),
-        operation="upsert_plan_feature_configuration",
-        plan_id=1,
-        plan_code_snapshot="basic",
-        feature_code="astrologer_chat",
-        actor_type="script",
-        actor_identifier="test.py",
-        source_origin="manual",
-        before_payload={},
-        after_payload={"is_enabled": True, "access_mode": "quota", "quotas": []},
-    )
-    db.add(audit)
-    db.flush()
-    return audit
-
-
-def _seed_alert_event(db) -> CanonicalEntitlementMutationAlertEventModel:
-    audit = _seed_audit(db)
-    event = CanonicalEntitlementMutationAlertEventModel(
-        audit_id=audit.id,
-        dedupe_key=f"audit:{audit.id}:review:pending_review:sla:overdue:failed",
-        alert_kind="sla_overdue",
-        risk_level_snapshot="high",
-        effective_review_status_snapshot="pending_review",
-        feature_code_snapshot="astrologer_chat",
-        plan_id_snapshot=1,
-        plan_code_snapshot="basic",
-        actor_type_snapshot="script",
-        actor_identifier_snapshot="test.py",
-        age_seconds_snapshot=3600,
-        sla_target_seconds_snapshot=14400,
-        delivery_channel="webhook",
-        delivery_status="failed",
-        delivery_error="timeout",
-        payload={"audit_id": audit.id},
-    )
-    db.add(event)
-    db.flush()
-    return event
+from app.tests.unit.canonical_entitlement_alert_helpers import (
+    seed_entitlement_alert_event,
+    setup_entitlement_alert_schema,
+)
 
 
 def test_upsert_handling_creates_new_record_when_none_exists() -> None:
-    _setup()
+    setup_entitlement_alert_schema()
     with SessionLocal() as db:
-        event = _seed_alert_event(db)
+        event = seed_entitlement_alert_event(db)
 
         handling = CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
@@ -95,9 +43,9 @@ def test_upsert_handling_creates_new_record_when_none_exists() -> None:
 
 
 def test_upsert_handling_updates_existing_record() -> None:
-    _setup()
+    setup_entitlement_alert_schema()
     with SessionLocal() as db:
-        event = _seed_alert_event(db)
+        event = seed_entitlement_alert_event(db)
         CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
             alert_event_id=event.id,
@@ -130,7 +78,7 @@ def test_upsert_handling_updates_existing_record() -> None:
 
 
 def test_upsert_handling_raises_404_when_alert_event_not_found() -> None:
-    _setup()
+    setup_entitlement_alert_schema()
     with SessionLocal() as db:
         with pytest.raises(AlertEventNotFoundError) as exc_info:
             CanonicalEntitlementAlertHandlingService.upsert_handling(
@@ -180,9 +128,9 @@ def test_upsert_handling_flushes_session() -> None:
 
 
 def test_upsert_handling_suppressed_sets_correct_status() -> None:
-    _setup()
+    setup_entitlement_alert_schema()
     with SessionLocal() as db:
-        event = _seed_alert_event(db)
+        event = seed_entitlement_alert_event(db)
 
         handling = CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
@@ -197,9 +145,9 @@ def test_upsert_handling_suppressed_sets_correct_status() -> None:
 
 
 def test_upsert_handling_resolved_sets_correct_status() -> None:
-    _setup()
+    setup_entitlement_alert_schema()
     with SessionLocal() as db:
-        event = _seed_alert_event(db)
+        event = seed_entitlement_alert_event(db)
 
         handling = CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,
@@ -214,9 +162,9 @@ def test_upsert_handling_resolved_sets_correct_status() -> None:
 
 
 def test_upsert_handling_stores_ops_comment_and_suppression_key() -> None:
-    _setup()
+    setup_entitlement_alert_schema()
     with SessionLocal() as db:
-        event = _seed_alert_event(db)
+        event = seed_entitlement_alert_event(db)
 
         handling = CanonicalEntitlementAlertHandlingService.upsert_handling(
             db,

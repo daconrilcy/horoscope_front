@@ -10,21 +10,21 @@ from app.infra.db.models.entitlement_mutation.alert.alert_event import (
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
-from app.tests.integration.test_ops_review_queue_alerts_retry_api import (
-    _cleanup_tables,
-    _register_user_and_issue_token_with_role_claim,
-    _register_user_with_role_and_token,
-    _seed_alert_event,
-    _seed_attempt,
-    _seed_audit,
+from app.tests.integration.ops_alert_helpers import (
+    cleanup_ops_alert_tables,
+    register_user_and_issue_token_with_role_claim,
+    register_user_with_role_and_token,
+    seed_ops_alert_attempt,
+    seed_ops_alert_audit,
+    seed_ops_alert_event,
 )
 
 client = TestClient(app)
 
 
 def test_get_alerts_list_empty() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-list-empty@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-list-empty@example.com", "ops")
 
     response = client.get(
         "/v1/ops/entitlements/mutation-audits/alerts",
@@ -40,18 +40,24 @@ def test_get_alerts_list_empty() -> None:
 
 
 def test_get_alerts_list_returns_items_with_derived_fields() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-list-items@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-list-items@example.com", "ops")
     with SessionLocal() as db:
-        first_audit = _seed_audit(db)
-        second_audit = _seed_audit(db)
-        older = _seed_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
+        first_audit = seed_ops_alert_audit(db)
+        second_audit = seed_ops_alert_audit(db)
+        older = seed_ops_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
         older.created_at = datetime(2026, 3, 29, 8, 0, tzinfo=timezone.utc)
-        newer = _seed_alert_event(db, audit_id=second_audit.id, delivery_status="sent")
+        newer = seed_ops_alert_event(db, audit_id=second_audit.id, delivery_status="sent")
         newer.created_at = datetime(2026, 3, 29, 9, 0, tzinfo=timezone.utc)
-        _seed_attempt(db, alert_event_id=older.id, attempt_number=1, delivery_status="failed")
-        _seed_attempt(db, alert_event_id=older.id, attempt_number=3, delivery_status="sent")
-        _seed_attempt(db, alert_event_id=older.id, attempt_number=2, delivery_status="failed")
+        seed_ops_alert_attempt(
+            db, alert_event_id=older.id, attempt_number=1, delivery_status="failed"
+        )
+        seed_ops_alert_attempt(
+            db, alert_event_id=older.id, attempt_number=3, delivery_status="sent"
+        )
+        seed_ops_alert_attempt(
+            db, alert_event_id=older.id, attempt_number=2, delivery_status="failed"
+        )
         db.commit()
         newer_id = newer.id
         older_id = older.id
@@ -75,13 +81,13 @@ def test_get_alerts_list_returns_items_with_derived_fields() -> None:
 
 
 def test_get_alerts_list_filter_by_delivery_status_failed() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-list-filter-status@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-list-filter-status@example.com", "ops")
     with SessionLocal() as db:
-        audit_one = _seed_audit(db)
-        audit_two = _seed_audit(db)
-        failed_event = _seed_alert_event(db, audit_id=audit_one.id, delivery_status="failed")
-        _seed_alert_event(db, audit_id=audit_two.id, delivery_status="sent")
+        audit_one = seed_ops_alert_audit(db)
+        audit_two = seed_ops_alert_audit(db)
+        failed_event = seed_ops_alert_event(db, audit_id=audit_one.id, delivery_status="failed")
+        seed_ops_alert_event(db, audit_id=audit_two.id, delivery_status="sent")
         db.commit()
         failed_event_id = failed_event.id
 
@@ -97,13 +103,13 @@ def test_get_alerts_list_filter_by_delivery_status_failed() -> None:
 
 
 def test_get_alerts_list_filter_by_audit_id() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-list-filter-audit@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-list-filter-audit@example.com", "ops")
     with SessionLocal() as db:
-        matching_audit = _seed_audit(db)
-        other_audit = _seed_audit(db)
-        matching_event = _seed_alert_event(db, audit_id=matching_audit.id)
-        _seed_alert_event(db, audit_id=other_audit.id)
+        matching_audit = seed_ops_alert_audit(db)
+        other_audit = seed_ops_alert_audit(db)
+        matching_event = seed_ops_alert_event(db, audit_id=matching_audit.id)
+        seed_ops_alert_event(db, audit_id=other_audit.id)
         db.commit()
         matching_audit_id = matching_audit.id
         matching_event_id = matching_event.id
@@ -120,13 +126,13 @@ def test_get_alerts_list_filter_by_audit_id() -> None:
 
 
 def test_get_alerts_list_filter_by_feature_code() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-list-filter-feature@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-list-filter-feature@example.com", "ops")
     with SessionLocal() as db:
-        audit_one = _seed_audit(db)
-        audit_two = _seed_audit(db)
-        matching_event = _seed_alert_event(db, audit_id=audit_one.id)
-        other_event = _seed_alert_event(db, audit_id=audit_two.id)
+        audit_one = seed_ops_alert_audit(db)
+        audit_two = seed_ops_alert_audit(db)
+        matching_event = seed_ops_alert_event(db, audit_id=audit_one.id)
+        other_event = seed_ops_alert_event(db, audit_id=audit_two.id)
         matching_event.feature_code_snapshot = "feature-a"
         other_event.feature_code_snapshot = "feature-b"
         db.commit()
@@ -144,12 +150,12 @@ def test_get_alerts_list_filter_by_feature_code() -> None:
 
 
 def test_get_alerts_list_pagination() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-list-pagination@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-list-pagination@example.com", "ops")
     with SessionLocal() as db:
         for index in range(3):
-            audit = _seed_audit(db)
-            event = _seed_alert_event(db, audit_id=audit.id)
+            audit = seed_ops_alert_audit(db)
+            event = seed_ops_alert_event(db, audit_id=audit.id)
             event.created_at = datetime(2026, 3, 29, 10 + index, 0, tzinfo=timezone.utc)
         db.commit()
         expected_page_two_id = (
@@ -178,15 +184,15 @@ def test_get_alerts_list_pagination() -> None:
 
 
 def test_get_alerts_list_pagination_out_of_range_keeps_total_count() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token(
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token(
         "ops-list-pagination-oob@example.com",
         "ops",
     )
     with SessionLocal() as db:
         for _ in range(2):
-            audit = _seed_audit(db)
-            _seed_alert_event(db, audit_id=audit.id)
+            audit = seed_ops_alert_audit(db)
+            seed_ops_alert_event(db, audit_id=audit.id)
         db.commit()
 
     response = client.get(
@@ -203,8 +209,8 @@ def test_get_alerts_list_pagination_out_of_range_keeps_total_count() -> None:
 
 
 def test_get_alerts_list_requires_ops_role() -> None:
-    _cleanup_tables()
-    user_token = _register_user_and_issue_token_with_role_claim(
+    cleanup_ops_alert_tables()
+    user_token = register_user_and_issue_token_with_role_claim(
         "ops-list-forbidden@example.com",
         "user",
         "user",
@@ -220,8 +226,8 @@ def test_get_alerts_list_requires_ops_role() -> None:
 
 
 def test_get_alerts_list_returns_429_when_rate_limited(monkeypatch: object) -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-list-429@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-list-429@example.com", "ops")
 
     def _always_rate_limited(*args: object, **kwargs: object) -> None:
         raise RateLimitError(
@@ -251,8 +257,8 @@ def test_get_alerts_list_returns_429_when_rate_limited(monkeypatch: object) -> N
 
 
 def test_get_alerts_summary_empty() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-summary-empty@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-summary-empty@example.com", "ops")
 
     response = client.get(
         "/v1/ops/entitlements/mutation-audits/alerts/summary",
@@ -273,15 +279,15 @@ def test_get_alerts_summary_empty() -> None:
 
 
 def test_get_alerts_summary_counts_correctly() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-summary-counts@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-summary-counts@example.com", "ops")
     with SessionLocal() as db:
-        audit_one = _seed_audit(db)
-        audit_two = _seed_audit(db)
-        audit_three = _seed_audit(db)
-        failed_webhook = _seed_alert_event(db, audit_id=audit_one.id, delivery_status="failed")
-        sent_log = _seed_alert_event(db, audit_id=audit_two.id, delivery_status="sent")
-        sent_other = _seed_alert_event(db, audit_id=audit_three.id, delivery_status="sent")
+        audit_one = seed_ops_alert_audit(db)
+        audit_two = seed_ops_alert_audit(db)
+        audit_three = seed_ops_alert_audit(db)
+        failed_webhook = seed_ops_alert_event(db, audit_id=audit_one.id, delivery_status="failed")
+        sent_log = seed_ops_alert_event(db, audit_id=audit_two.id, delivery_status="sent")
+        sent_other = seed_ops_alert_event(db, audit_id=audit_three.id, delivery_status="sent")
         failed_webhook.feature_code_snapshot = "feature-a"
         sent_log.feature_code_snapshot = "feature-a"
         sent_other.feature_code_snapshot = "feature-b"
@@ -307,8 +313,8 @@ def test_get_alerts_summary_counts_correctly() -> None:
 
 
 def test_get_alerts_summary_requires_ops_role() -> None:
-    _cleanup_tables()
-    user_token = _register_user_and_issue_token_with_role_claim(
+    cleanup_ops_alert_tables()
+    user_token = register_user_and_issue_token_with_role_claim(
         "ops-summary-forbidden@example.com",
         "user",
         "user",

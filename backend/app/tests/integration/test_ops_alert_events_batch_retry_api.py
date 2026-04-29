@@ -15,25 +15,25 @@ from app.infra.db.models.entitlement_mutation.alert.delivery_attempt import (
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
-from app.tests.integration.test_ops_review_queue_alerts_retry_api import (
-    _cleanup_tables,
-    _register_user_and_issue_token_with_role_claim,
-    _register_user_with_role_and_token,
-    _seed_alert_event,
-    _seed_audit,
+from app.tests.integration.ops_alert_helpers import (
+    cleanup_ops_alert_tables,
+    register_user_and_issue_token_with_role_claim,
+    register_user_with_role_and_token,
+    seed_ops_alert_audit,
+    seed_ops_alert_event,
 )
 
 client = TestClient(app)
 
 
 def test_post_retry_batch_dry_run_no_persistence() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-dry@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-dry@example.com", "ops")
     with SessionLocal() as db:
-        first_audit = _seed_audit(db)
-        second_audit = _seed_audit(db)
-        first = _seed_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
-        second = _seed_alert_event(db, audit_id=second_audit.id, delivery_status="failed")
+        first_audit = seed_ops_alert_audit(db)
+        second_audit = seed_ops_alert_audit(db)
+        first = seed_ops_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
+        second = seed_ops_alert_event(db, audit_id=second_audit.id, delivery_status="failed")
         first_id = first.id
         second_id = second.id
         db.commit()
@@ -59,13 +59,13 @@ def test_post_retry_batch_dry_run_no_persistence() -> None:
 
 
 def test_post_retry_batch_real_retries_multiple_failed() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-real@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-real@example.com", "ops")
     with SessionLocal() as db:
-        first_audit = _seed_audit(db)
-        second_audit = _seed_audit(db)
-        first = _seed_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
-        second = _seed_alert_event(db, audit_id=second_audit.id, delivery_status="failed")
+        first_audit = seed_ops_alert_audit(db)
+        second_audit = seed_ops_alert_audit(db)
+        first = seed_ops_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
+        second = seed_ops_alert_event(db, audit_id=second_audit.id, delivery_status="failed")
         first_id = first.id
         second_id = second.id
         db.commit()
@@ -121,14 +121,14 @@ def test_post_retry_batch_real_retries_multiple_failed() -> None:
 
 
 def test_post_retry_batch_with_filter_by_feature_code() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-feature@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-feature@example.com", "ops")
     with SessionLocal() as db:
-        matching_audit = _seed_audit(db)
-        other_audit = _seed_audit(db)
-        matching = _seed_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
+        matching_audit = seed_ops_alert_audit(db)
+        other_audit = seed_ops_alert_audit(db)
+        matching = seed_ops_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
         matching.feature_code_snapshot = "feature-a"
-        other = _seed_alert_event(db, audit_id=other_audit.id, delivery_status="failed")
+        other = seed_ops_alert_event(db, audit_id=other_audit.id, delivery_status="failed")
         other.feature_code_snapshot = "feature-b"
         matching_id = matching.id
         db.commit()
@@ -146,14 +146,14 @@ def test_post_retry_batch_with_filter_by_feature_code() -> None:
 
 
 def test_post_retry_batch_with_filter_by_alert_kind() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-kind@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-kind@example.com", "ops")
     with SessionLocal() as db:
-        matching_audit = _seed_audit(db)
-        other_audit = _seed_audit(db)
-        matching = _seed_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
+        matching_audit = seed_ops_alert_audit(db)
+        other_audit = seed_ops_alert_audit(db)
+        matching = seed_ops_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
         matching.alert_kind = "sla_overdue"
-        other = _seed_alert_event(db, audit_id=other_audit.id, delivery_status="failed")
+        other = seed_ops_alert_event(db, audit_id=other_audit.id, delivery_status="failed")
         other.alert_kind = "sla_due_soon"
         matching_id = matching.id
         db.commit()
@@ -171,14 +171,14 @@ def test_post_retry_batch_with_filter_by_alert_kind() -> None:
 
 
 def test_post_retry_batch_with_filter_by_request_id_alias() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-request-id@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-request-id@example.com", "ops")
     with SessionLocal() as db:
-        matching_audit = _seed_audit(db)
-        other_audit = _seed_audit(db)
-        matching = _seed_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
+        matching_audit = seed_ops_alert_audit(db)
+        other_audit = seed_ops_alert_audit(db)
+        matching = seed_ops_alert_event(db, audit_id=matching_audit.id, delivery_status="failed")
         matching.request_id = "req-match"
-        other = _seed_alert_event(db, audit_id=other_audit.id, delivery_status="failed")
+        other = seed_ops_alert_event(db, audit_id=other_audit.id, delivery_status="failed")
         other.request_id = "req-other"
         matching_id = matching.id
         db.commit()
@@ -196,17 +196,17 @@ def test_post_retry_batch_with_filter_by_request_id_alias() -> None:
 
 
 def test_post_retry_batch_respects_limit() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-limit@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-limit@example.com", "ops")
     with SessionLocal() as db:
-        first_audit = _seed_audit(db)
-        second_audit = _seed_audit(db)
-        third_audit = _seed_audit(db)
-        first = _seed_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
+        first_audit = seed_ops_alert_audit(db)
+        second_audit = seed_ops_alert_audit(db)
+        third_audit = seed_ops_alert_audit(db)
+        first = seed_ops_alert_event(db, audit_id=first_audit.id, delivery_status="failed")
         first.created_at = datetime(2026, 3, 29, 8, 0, tzinfo=timezone.utc)
-        second = _seed_alert_event(db, audit_id=second_audit.id, delivery_status="failed")
+        second = seed_ops_alert_event(db, audit_id=second_audit.id, delivery_status="failed")
         second.created_at = datetime(2026, 3, 29, 9, 0, tzinfo=timezone.utc)
-        third = _seed_alert_event(db, audit_id=third_audit.id, delivery_status="failed")
+        third = seed_ops_alert_event(db, audit_id=third_audit.id, delivery_status="failed")
         third.created_at = datetime(2026, 3, 29, 10, 0, tzinfo=timezone.utc)
         first_id = first.id
         second_id = second.id
@@ -225,8 +225,8 @@ def test_post_retry_batch_respects_limit() -> None:
 
 
 def test_post_retry_batch_requires_ops_role() -> None:
-    _cleanup_tables()
-    user_token = _register_user_and_issue_token_with_role_claim(
+    cleanup_ops_alert_tables()
+    user_token = register_user_and_issue_token_with_role_claim(
         "ops-batch-forbidden@example.com",
         "user",
         "user",
@@ -243,8 +243,8 @@ def test_post_retry_batch_requires_ops_role() -> None:
 
 
 def test_post_retry_batch_returns_429_when_rate_limited(monkeypatch: object) -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-429@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-429@example.com", "ops")
 
     def _always_rate_limited(*args: object, **kwargs: object) -> None:
         raise RateLimitError(
@@ -275,8 +275,8 @@ def test_post_retry_batch_returns_429_when_rate_limited(monkeypatch: object) -> 
 
 
 def test_post_retry_batch_returns_422_when_limit_missing() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-422-missing@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-422-missing@example.com", "ops")
 
     response = client.post(
         "/v1/ops/entitlements/mutation-audits/alerts/retry-batch",
@@ -288,8 +288,8 @@ def test_post_retry_batch_returns_422_when_limit_missing() -> None:
 
 
 def test_post_retry_batch_returns_422_when_limit_exceeds_100() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-422-max@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-422-max@example.com", "ops")
 
     response = client.post(
         "/v1/ops/entitlements/mutation-audits/alerts/retry-batch",
@@ -301,11 +301,11 @@ def test_post_retry_batch_returns_422_when_limit_exceeds_100() -> None:
 
 
 def test_post_retry_batch_empty_when_no_failed() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-empty@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-empty@example.com", "ops")
     with SessionLocal() as db:
-        audit = _seed_audit(db)
-        _seed_alert_event(db, audit_id=audit.id, delivery_status="sent")
+        audit = seed_ops_alert_audit(db)
+        seed_ops_alert_event(db, audit_id=audit.id, delivery_status="sent")
         db.commit()
 
     response = client.post(
@@ -327,12 +327,12 @@ def test_post_retry_batch_empty_when_no_failed() -> None:
 
 
 def test_post_retry_batch_does_not_affect_sent_events() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-sent@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-sent@example.com", "ops")
     with SessionLocal() as db:
-        audit = _seed_audit(db)
-        failed = _seed_alert_event(db, audit_id=audit.id, delivery_status="failed")
-        sent = _seed_alert_event(db, audit_id=audit.id, delivery_status="sent")
+        audit = seed_ops_alert_audit(db)
+        failed = seed_ops_alert_event(db, audit_id=audit.id, delivery_status="failed")
+        sent = seed_ops_alert_event(db, audit_id=audit.id, delivery_status="sent")
         failed_id = failed.id
         sent_id = sent.id
         db.commit()

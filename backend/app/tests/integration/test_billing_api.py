@@ -1,145 +1,41 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
 
-from app.infra.db.base import Base
 from app.infra.db.models.billing import (
     BillingPlanModel,
-    UserDailyQuotaUsageModel,
     UserSubscriptionModel,
-)
-from app.infra.db.models.product_entitlements import (
-    AccessMode,
-    Audience,
-    FeatureCatalogModel,
-    PeriodUnit,
-    PlanCatalogModel,
-    PlanFeatureBindingModel,
-    PlanFeatureQuotaModel,
-    ResetMode,
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.session import SessionLocal, engine
-from app.infra.observability.metrics import reset_metrics
+from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.billing.service import BillingService
+from app.tests.integration.billing_helpers import (
+    cleanup_billing_tables,
+    register_and_get_billing_access_token,
+)
 
 client = TestClient(app)
 
 
-def _cleanup_tables() -> None:
-    BillingService.reset_subscription_status_cache()
-    reset_metrics()
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
-        for model in (
-            UserDailyQuotaUsageModel,
-            UserSubscriptionModel,
-            BillingPlanModel,
-            StripeBillingProfileModel,
-            UserModel,
-        ):
-            db.execute(delete(model))
-
-        # Seed canonical features
-        feature = FeatureCatalogModel(
-            feature_code="astrologer_chat",
-            feature_name="Astrologer chat",
-            is_metered=True,
-        )
-        db.add(feature)
-        db.flush()
-
-        # Seed basic plan
-        p_basic = PlanCatalogModel(
-            plan_code="basic",
-            plan_name="Basic",
-            audience=Audience.B2C,
-        )
-        db.add(p_basic)
-        db.flush()
-
-        b_basic = PlanFeatureBindingModel(
-            plan_id=p_basic.id,
-            feature_id=feature.id,
-            access_mode=AccessMode.QUOTA,
-            is_enabled=True,
-        )
-        db.add(b_basic)
-        db.flush()
-
-        db.add(
-            PlanFeatureQuotaModel(
-                plan_feature_binding_id=b_basic.id,
-                quota_key="tokens",
-                quota_limit=50_000,
-                period_unit=PeriodUnit.MONTH,
-                period_value=1,
-                reset_mode=ResetMode.CALENDAR,
-            )
-        )
-
-        # Seed premium plan
-        p_premium = PlanCatalogModel(
-            plan_code="premium",
-            plan_name="Premium",
-            audience=Audience.B2C,
-        )
-        db.add(p_premium)
-        db.flush()
-
-        b_premium = PlanFeatureBindingModel(
-            plan_id=p_premium.id,
-            feature_id=feature.id,
-            access_mode=AccessMode.QUOTA,
-            is_enabled=True,
-        )
-        db.add(b_premium)
-        db.flush()
-
-        db.add(
-            PlanFeatureQuotaModel(
-                plan_feature_binding_id=b_premium.id,
-                quota_key="tokens",
-                quota_limit=1_500_000,
-                period_unit=PeriodUnit.MONTH,
-                period_value=1,
-                reset_mode=ResetMode.CALENDAR,
-            )
-        )
-
-        db.commit()
-
-
-def _register_and_get_access_token() -> str:
-    register = client.post(
-        "/v1/auth/register",
-        json={"email": "billing-api-user@example.com", "password": "strong-pass-123"},
-    )
-    assert register.status_code == 200
-    return register.json()["data"]["tokens"]["access_token"]
-
-
 def test_billing_subscription_requires_token() -> None:
-    _cleanup_tables()
+    cleanup_billing_tables()
     response = client.get("/v1/billing/subscription")
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "missing_access_token"
 
 
 def test_billing_plans_requires_token() -> None:
-    _cleanup_tables()
+    cleanup_billing_tables()
     response = client.get("/v1/billing/plans")
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "missing_access_token"
 
 
 def test_decommissioned_endpoints_return_404() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     for path in ["/v1/billing/checkout", "/v1/billing/retry", "/v1/billing/plan-change"]:
@@ -148,8 +44,8 @@ def test_decommissioned_endpoints_return_404() -> None:
 
 
 def test_billing_plans_are_available_for_authenticated_user() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with SessionLocal() as db:
@@ -165,8 +61,8 @@ def test_billing_plans_are_available_for_authenticated_user() -> None:
 
 
 def test_billing_plans_normalize_zero_prices_for_canonical_plans() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with SessionLocal() as db:
@@ -204,8 +100,8 @@ def test_billing_plans_normalize_zero_prices_for_canonical_plans() -> None:
 
 
 def test_billing_plans_hide_user_invisible_trial_plan() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with SessionLocal() as db:
@@ -245,8 +141,8 @@ def test_billing_plans_hide_user_invisible_trial_plan() -> None:
 
 
 def test_billing_subscription_status_with_stripe_profile() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with SessionLocal() as db:
@@ -268,8 +164,8 @@ def test_billing_subscription_status_with_stripe_profile() -> None:
 
 
 def test_billing_subscription_status_with_legacy_fallback() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with SessionLocal() as db:
@@ -306,8 +202,8 @@ def test_billing_subscription_matrix(
     expected_status: str,
     expected_plan_code: str | None,
 ) -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with SessionLocal() as db:
@@ -332,8 +228,8 @@ def test_billing_subscription_matrix(
 
 
 def test_billing_token_usage_returns_aggregated_usage() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with SessionLocal() as db:

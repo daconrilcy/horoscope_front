@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from dataclasses import asdict, is_dataclass, replace
 from datetime import date, datetime
@@ -55,6 +56,25 @@ def serialize_output(engine_output: EngineOutput) -> dict[str, Any]:
         return obj
 
     return _to_dict(engine_output)
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    """Charge une fixture JSON de regression avec un encodage stable."""
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def build_engine_input(config: dict[str, Any]) -> EngineInput:
+    """Construit l'entree moteur canonique depuis une fixture de regression."""
+    return EngineInput(
+        natal_chart=config["natal_chart"],
+        local_date=date.fromisoformat(config["local_date"]),
+        timezone=config["timezone"],
+        latitude=config["latitude"],
+        longitude=config["longitude"],
+        reference_version=config["reference_version"],
+        ruleset_version=config["ruleset_version"],
+        debug_mode=config["debug_mode"],
+    )
 
 
 def create_session() -> Session:

@@ -1,4 +1,3 @@
-import json
 from datetime import date
 from pathlib import Path
 
@@ -8,10 +7,12 @@ from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import EngineInput
 from app.tests.regression.helpers import (
     assert_clamps,
+    build_engine_input,
     cleanup_session,
     compute_ns_bounds,
     create_orchestrator,
     create_session,
+    load_json,
     serialize_output,
 )
 
@@ -24,23 +25,6 @@ def get_fixtures():
 
 def get_snapshots():
     return sorted(FIXTURES_DIR.glob("snapshot_full_day_*.json"))
-
-
-def load_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def build_engine_input(config: dict) -> EngineInput:
-    return EngineInput(
-        natal_chart=config["natal_chart"],
-        local_date=date.fromisoformat(config["local_date"]),
-        timezone=config["timezone"],
-        latitude=config["latitude"],
-        longitude=config["longitude"],
-        reference_version=config["reference_version"],
-        ruleset_version=config["ruleset_version"],
-        debug_mode=config["debug_mode"],
-    )
 
 
 @pytest.fixture(scope="module")

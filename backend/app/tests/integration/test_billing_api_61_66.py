@@ -8,14 +8,17 @@ from app.infra.db.session import SessionLocal
 from app.main import app
 from app.services.entitlement.entitlement_types import QuotaDefinition
 from app.services.quota.usage_service import QuotaUsageService
-from app.tests.integration.test_billing_api import _cleanup_tables, _register_and_get_access_token
+from app.tests.integration.billing_helpers import (
+    cleanup_billing_tables,
+    register_and_get_billing_access_token,
+)
 
 client = TestClient(app)
 
 
 def test_billing_subscription_current_quota() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     with SessionLocal() as db:
@@ -60,8 +63,8 @@ def test_billing_subscription_current_quota() -> None:
 
 
 def test_downgrade_non_regression_quota() -> None:
-    _cleanup_tables()
-    access_token = _register_and_get_access_token()
+    cleanup_billing_tables()
+    access_token = register_and_get_billing_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
 
     future_date = datetime.now(timezone.utc) + timedelta(days=30)

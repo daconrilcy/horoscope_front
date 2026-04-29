@@ -14,12 +14,12 @@ from app.infra.db.models.entitlement_mutation.alert.handling_event import (
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
-from app.tests.integration.test_ops_review_queue_alerts_retry_api import (
-    _cleanup_tables,
-    _register_user_and_issue_token_with_role_claim,
-    _register_user_with_role_and_token,
-    _seed_alert_event,
-    _seed_audit,
+from app.tests.integration.ops_alert_helpers import (
+    cleanup_ops_alert_tables,
+    register_user_and_issue_token_with_role_claim,
+    register_user_with_role_and_token,
+    seed_ops_alert_audit,
+    seed_ops_alert_event,
 )
 
 client = TestClient(app)
@@ -32,8 +32,8 @@ def _create_event(
     feature_code: str = "test_feature",
 ) -> int:
     with SessionLocal() as db:
-        audit = _seed_audit(db)
-        event = _seed_alert_event(
+        audit = seed_ops_alert_audit(db)
+        event = seed_ops_alert_event(
             db,
             audit_id=audit.id,
             delivery_status=delivery_status,
@@ -89,8 +89,8 @@ def _count_handling_events(*, alert_event_id: int | None = None) -> int:
 
 
 def test_batch_handle_suppresses_failed_alerts() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-supp@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-supp@example.com", "ops")
     first_id = _create_event(delivery_status="failed")
     second_id = _create_event(delivery_status="failed")
 
@@ -113,8 +113,8 @@ def test_batch_handle_suppresses_failed_alerts() -> None:
 
 
 def test_batch_handle_resolves_failed_alerts() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-res@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-res@example.com", "ops")
     alert_event_id = _create_event(delivery_status="failed")
 
     response = client.post(
@@ -137,8 +137,8 @@ def test_batch_handle_resolves_failed_alerts() -> None:
 
 
 def test_batch_handle_dry_run_does_not_persist() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-dry@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-dry@example.com", "ops")
     _create_event(delivery_status="failed")
 
     response = client.post(
@@ -154,8 +154,8 @@ def test_batch_handle_dry_run_does_not_persist() -> None:
 
 
 def test_batch_handle_skips_already_handled_same_state() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-skip@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-skip@example.com", "ops")
     alert_event_id = _create_event(delivery_status="failed")
     _insert_handling(
         alert_event_id=alert_event_id,
@@ -182,8 +182,8 @@ def test_batch_handle_skips_already_handled_same_state() -> None:
 
 
 def test_batch_handle_rehandles_when_state_changes() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-rehandle@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-rehandle@example.com", "ops")
     alert_event_id = _create_event(delivery_status="failed")
     _insert_handling(alert_event_id=alert_event_id, handling_status="suppressed")
 
@@ -208,8 +208,8 @@ def test_batch_handle_rehandles_when_state_changes() -> None:
 
 
 def test_batch_handle_limit_is_respected() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-limit@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-limit@example.com", "ops")
     first_id = _create_event(delivery_status="failed")
     second_id = _create_event(delivery_status="failed")
     _create_event(delivery_status="failed")
@@ -226,8 +226,8 @@ def test_batch_handle_limit_is_respected() -> None:
 
 
 def test_batch_handle_appends_history_events_for_each_handled() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-history@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-history@example.com", "ops")
     _create_event(delivery_status="failed")
     _create_event(delivery_status="sent")
 
@@ -242,8 +242,8 @@ def test_batch_handle_appends_history_events_for_each_handled() -> None:
 
 
 def test_batch_handle_no_history_event_on_skip() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-no-history@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-no-history@example.com", "ops")
     alert_event_id = _create_event(delivery_status="failed")
     _insert_handling(
         alert_event_id=alert_event_id,
@@ -264,8 +264,8 @@ def test_batch_handle_no_history_event_on_skip() -> None:
 
 
 def test_batch_handle_requires_ops_role() -> None:
-    _cleanup_tables()
-    user_token = _register_user_and_issue_token_with_role_claim(
+    cleanup_ops_alert_tables()
+    user_token = register_user_and_issue_token_with_role_claim(
         "ops-batch-handle-forbidden@example.com",
         "user",
         "user",
@@ -283,7 +283,7 @@ def test_batch_handle_requires_ops_role() -> None:
 
 
 def test_batch_handle_unauthenticated_returns_401() -> None:
-    _cleanup_tables()
+    cleanup_ops_alert_tables()
     _create_event(delivery_status="failed")
 
     response = client.post(
@@ -295,8 +295,8 @@ def test_batch_handle_unauthenticated_returns_401() -> None:
 
 
 def test_batch_handle_returns_429_when_rate_limited(monkeypatch: object) -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-429@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-429@example.com", "ops")
     _create_event(delivery_status="failed")
 
     def _always_rate_limited(*args: object, **kwargs: object) -> None:
@@ -323,8 +323,8 @@ def test_batch_handle_returns_429_when_rate_limited(monkeypatch: object) -> None
 
 
 def test_batch_handle_filter_by_alert_kind() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-kind@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-kind@example.com", "ops")
     matching_id = _create_event(alert_kind="sla_overdue")
     _create_event(alert_kind="sla_due_soon")
 
@@ -339,8 +339,8 @@ def test_batch_handle_filter_by_alert_kind() -> None:
 
 
 def test_batch_handle_filter_by_feature_code() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-feature@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-feature@example.com", "ops")
     matching_id = _create_event(feature_code="feature-a")
     _create_event(feature_code="feature-b")
 
@@ -355,8 +355,8 @@ def test_batch_handle_filter_by_feature_code() -> None:
 
 
 def test_batch_handle_response_schema() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-handle-schema@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-handle-schema@example.com", "ops")
     _create_event(delivery_status="failed")
 
     response = client.post(
@@ -378,8 +378,8 @@ def test_batch_handle_response_schema() -> None:
 
 
 def test_batch_handle_returns_422_when_limit_missing() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token(
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token(
         "ops-batch-handle-missing-limit@example.com", "ops"
     )
     _create_event(delivery_status="failed")
@@ -394,8 +394,8 @@ def test_batch_handle_returns_422_when_limit_missing() -> None:
 
 
 def test_batch_handle_returns_422_for_invalid_handling_status() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token(
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token(
         "ops-batch-handle-invalid-status@example.com", "ops"
     )
     _create_event(delivery_status="failed")
@@ -410,13 +410,17 @@ def test_batch_handle_returns_422_for_invalid_handling_status() -> None:
 
 
 def test_batch_retry_still_excludes_suppressed_after_61_45() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-retry-regression@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-retry-regression@example.com", "ops")
     with SessionLocal() as db:
-        excluded_audit = _seed_audit(db)
-        included_audit = _seed_audit(db)
-        excluded_id = _seed_alert_event(db, audit_id=excluded_audit.id, delivery_status="failed").id
-        included_id = _seed_alert_event(db, audit_id=included_audit.id, delivery_status="failed").id
+        excluded_audit = seed_ops_alert_audit(db)
+        included_audit = seed_ops_alert_audit(db)
+        excluded_id = seed_ops_alert_event(
+            db, audit_id=excluded_audit.id, delivery_status="failed"
+        ).id
+        included_id = seed_ops_alert_event(
+            db, audit_id=included_audit.id, delivery_status="failed"
+        ).id
         db.add(
             CanonicalEntitlementMutationAlertHandlingModel(
                 alert_event_id=excluded_id,

@@ -11,12 +11,12 @@ from app.infra.db.models.entitlement_mutation.alert.handling import (
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
-from app.tests.integration.test_ops_review_queue_alerts_retry_api import (
-    _cleanup_tables,
-    _register_user_and_issue_token_with_role_claim,
-    _register_user_with_role_and_token,
-    _seed_alert_event,
-    _seed_audit,
+from app.tests.integration.ops_alert_helpers import (
+    cleanup_ops_alert_tables,
+    register_user_and_issue_token_with_role_claim,
+    register_user_with_role_and_token,
+    seed_ops_alert_audit,
+    seed_ops_alert_event,
 )
 
 client = TestClient(app)
@@ -24,8 +24,8 @@ client = TestClient(app)
 
 def _create_event(*, delivery_status: str = "failed") -> int:
     with SessionLocal() as db:
-        audit = _seed_audit(db)
-        event = _seed_alert_event(db, audit_id=audit.id, delivery_status=delivery_status)
+        audit = seed_ops_alert_audit(db)
+        event = seed_ops_alert_event(db, audit_id=audit.id, delivery_status=delivery_status)
         db.commit()
         return event.id
 
@@ -53,8 +53,8 @@ def _insert_handling(
 
 
 def test_post_handle_creates_suppressed_handling() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-handle-supp@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-handle-supp@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.post(
@@ -72,8 +72,8 @@ def test_post_handle_creates_suppressed_handling() -> None:
 
 
 def test_post_handle_creates_resolved_handling() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-handle-res@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-handle-res@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.post(
@@ -87,8 +87,8 @@ def test_post_handle_creates_resolved_handling() -> None:
 
 
 def test_post_handle_updates_existing_handling() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-handle-update@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-handle-update@example.com", "ops")
     alert_event_id = _create_event()
     _insert_handling(alert_event_id=alert_event_id, handling_status="suppressed")
 
@@ -109,8 +109,8 @@ def test_post_handle_updates_existing_handling() -> None:
 
 
 def test_post_handle_stores_ops_comment_and_suppression_key() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-handle-comment@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-handle-comment@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.post(
@@ -130,8 +130,8 @@ def test_post_handle_stores_ops_comment_and_suppression_key() -> None:
 
 
 def test_post_handle_returns_404_when_alert_event_not_found() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-handle-404@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-handle-404@example.com", "ops")
 
     response = client.post(
         "/v1/ops/entitlements/mutation-audits/alerts/9999/handle",
@@ -144,8 +144,8 @@ def test_post_handle_returns_404_when_alert_event_not_found() -> None:
 
 
 def test_post_handle_requires_ops_role() -> None:
-    _cleanup_tables()
-    user_token = _register_user_and_issue_token_with_role_claim(
+    cleanup_ops_alert_tables()
+    user_token = register_user_and_issue_token_with_role_claim(
         "ops-handle-forbidden@example.com",
         "user",
         "user",
@@ -163,8 +163,8 @@ def test_post_handle_requires_ops_role() -> None:
 
 
 def test_post_handle_returns_422_for_invalid_status() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-handle-422@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-handle-422@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.post(
@@ -177,8 +177,8 @@ def test_post_handle_returns_422_for_invalid_status() -> None:
 
 
 def test_post_handle_returns_429_when_rate_limited(monkeypatch: object) -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-handle-429@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-handle-429@example.com", "ops")
     alert_event_id = _create_event()
 
     def _always_rate_limited(*args: object, **kwargs: object) -> None:
@@ -205,8 +205,8 @@ def test_post_handle_returns_429_when_rate_limited(monkeypatch: object) -> None:
 
 
 def test_list_alert_events_includes_handling_state() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-list-handling@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-list-handling@example.com", "ops")
     alert_event_id = _create_event()
     _insert_handling(
         alert_event_id=alert_event_id,
@@ -228,8 +228,8 @@ def test_list_alert_events_includes_handling_state() -> None:
 
 
 def test_list_alert_events_filter_by_handling_status_suppressed() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-filter-supp@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-filter-supp@example.com", "ops")
     suppressed_id = _create_event()
     other_id = _create_event()
     _insert_handling(alert_event_id=suppressed_id, handling_status="suppressed")
@@ -245,8 +245,8 @@ def test_list_alert_events_filter_by_handling_status_suppressed() -> None:
 
 
 def test_list_alert_events_filter_by_handling_status_resolved() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-filter-res@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-filter-res@example.com", "ops")
     resolved_id = _create_event()
     other_id = _create_event()
     _insert_handling(alert_event_id=resolved_id, handling_status="resolved")
@@ -262,8 +262,8 @@ def test_list_alert_events_filter_by_handling_status_resolved() -> None:
 
 
 def test_list_alert_events_filter_by_handling_status_pending_retry() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-filter-pending@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-filter-pending@example.com", "ops")
     pending_id = _create_event(delivery_status="failed")
     handled_id = _create_event(delivery_status="failed")
     sent_id = _create_event(delivery_status="sent")
@@ -280,8 +280,8 @@ def test_list_alert_events_filter_by_handling_status_pending_retry() -> None:
 
 
 def test_list_alert_events_pending_retry_virtual_for_failed_without_handling() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-pending-virtual@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-pending-virtual@example.com", "ops")
     alert_event_id = _create_event(delivery_status="failed")
 
     response = client.get(
@@ -296,8 +296,8 @@ def test_list_alert_events_pending_retry_virtual_for_failed_without_handling() -
 
 
 def test_summary_includes_suppressed_and_resolved_counts() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-summary-handling@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-summary-handling@example.com", "ops")
     suppressed_id = _create_event()
     resolved_id = _create_event()
     _insert_handling(alert_event_id=suppressed_id, handling_status="suppressed")
@@ -315,8 +315,8 @@ def test_summary_includes_suppressed_and_resolved_counts() -> None:
 
 
 def test_batch_retry_excludes_suppressed_alerts() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-excl-supp@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-excl-supp@example.com", "ops")
     excluded_id = _create_event()
     included_id = _create_event()
     _insert_handling(alert_event_id=excluded_id, handling_status="suppressed")
@@ -332,8 +332,8 @@ def test_batch_retry_excludes_suppressed_alerts() -> None:
 
 
 def test_batch_retry_excludes_resolved_alerts() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-excl-res@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-excl-res@example.com", "ops")
     excluded_id = _create_event()
     included_id = _create_event()
     _insert_handling(alert_event_id=excluded_id, handling_status="resolved")
@@ -349,8 +349,8 @@ def test_batch_retry_excludes_resolved_alerts() -> None:
 
 
 def test_batch_retry_includes_pending_retry_alerts() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-batch-pending@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-batch-pending@example.com", "ops")
     pending_id = _create_event()
 
     response = client.post(
@@ -364,8 +364,8 @@ def test_batch_retry_includes_pending_retry_alerts() -> None:
 
 
 def test_retryable_false_when_suppressed() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-retryable-supp@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-retryable-supp@example.com", "ops")
     alert_event_id = _create_event()
     _insert_handling(alert_event_id=alert_event_id, handling_status="suppressed")
 
@@ -379,8 +379,8 @@ def test_retryable_false_when_suppressed() -> None:
 
 
 def test_retryable_false_when_resolved() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-retryable-res@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-retryable-res@example.com", "ops")
     alert_event_id = _create_event()
     _insert_handling(alert_event_id=alert_event_id, handling_status="resolved")
 
@@ -394,8 +394,8 @@ def test_retryable_false_when_resolved() -> None:
 
 
 def test_retryable_true_when_pending_retry() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-retryable-pending@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-retryable-pending@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.get(

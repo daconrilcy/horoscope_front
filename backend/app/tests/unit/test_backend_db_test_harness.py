@@ -15,7 +15,9 @@ CANONICAL_HELPERS = {
     Path("tests/integration/app_db.py"),
 }
 APPROVED_CREATE_ALL_PATHS = {
+    Path("app/tests/integration/billing_helpers.py"),
     Path("app/tests/integration/conftest.py"),
+    Path("app/tests/integration/ops_alert_helpers.py"),
     Path("app/tests/integration/test_admin_actions_api.py"),
     Path("app/tests/integration/test_admin_ai_api.py"),
     Path("app/tests/integration/test_admin_content_api.py"),
@@ -88,6 +90,7 @@ APPROVED_CREATE_ALL_PATHS = {
     Path("app/tests/integration/_subprocess/secret_rotation_restart_runner.py"),
     Path("app/tests/regression/helpers.py"),
     Path("app/tests/unit/conftest.py"),
+    Path("app/tests/unit/canonical_entitlement_alert_helpers.py"),
     Path("app/tests/unit/legacy_services/conftest.py"),
     Path("app/tests/unit/test_audit_service.py"),
     Path("app/tests/unit/test_auth_service.py"),

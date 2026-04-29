@@ -10,12 +10,12 @@ from app.infra.db.models.entitlement_mutation.alert.handling_event import (
 )
 from app.infra.db.session import SessionLocal
 from app.main import app
-from app.tests.integration.test_ops_review_queue_alerts_retry_api import (
-    _cleanup_tables,
-    _register_user_and_issue_token_with_role_claim,
-    _register_user_with_role_and_token,
-    _seed_alert_event,
-    _seed_audit,
+from app.tests.integration.ops_alert_helpers import (
+    cleanup_ops_alert_tables,
+    register_user_and_issue_token_with_role_claim,
+    register_user_with_role_and_token,
+    seed_ops_alert_audit,
+    seed_ops_alert_event,
 )
 
 client = TestClient(app)
@@ -23,8 +23,8 @@ client = TestClient(app)
 
 def _create_event(*, delivery_status: str = "failed") -> int:
     with SessionLocal() as db:
-        audit = _seed_audit(db)
-        event = _seed_alert_event(db, audit_id=audit.id, delivery_status=delivery_status)
+        audit = seed_ops_alert_audit(db)
+        event = seed_ops_alert_event(db, audit_id=audit.id, delivery_status=delivery_status)
         db.commit()
         return event.id
 
@@ -60,8 +60,8 @@ def _history_url(alert_event_id: int, query: str = "") -> str:
 
 
 def test_get_handling_history_empty_when_no_handlings() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-empty@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-empty@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.get(
@@ -75,8 +75,8 @@ def test_get_handling_history_empty_when_no_handlings() -> None:
 
 
 def test_get_handling_history_returns_single_event_after_first_handle() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-single@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-single@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.post(
@@ -100,8 +100,8 @@ def test_get_handling_history_returns_single_event_after_first_handle() -> None:
 
 
 def test_get_handling_history_returns_multiple_events_on_status_change() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-multi@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-multi@example.com", "ops")
     alert_event_id = _create_event()
 
     first = client.post(
@@ -129,8 +129,8 @@ def test_get_handling_history_returns_multiple_events_on_status_change() -> None
 
 
 def test_get_handling_history_no_duplicate_on_identical_re_post() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-noop@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-noop@example.com", "ops")
     alert_event_id = _create_event()
 
     for request_id in ["rid-noop-1", "rid-noop-2"]:
@@ -155,8 +155,8 @@ def test_get_handling_history_no_duplicate_on_identical_re_post() -> None:
 
 
 def test_get_handling_history_stores_request_id() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-rid@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-rid@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.post(
@@ -175,8 +175,8 @@ def test_get_handling_history_stores_request_id() -> None:
 
 
 def test_get_handling_history_ordered_by_handled_at_desc() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-order@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-order@example.com", "ops")
     alert_event_id = _create_event()
     _insert_history_event(
         alert_event_id=alert_event_id,
@@ -201,8 +201,8 @@ def test_get_handling_history_ordered_by_handled_at_desc() -> None:
 
 
 def test_get_handling_history_pagination() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-page@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-page@example.com", "ops")
     alert_event_id = _create_event()
     _insert_history_event(
         alert_event_id=alert_event_id,
@@ -232,8 +232,8 @@ def test_get_handling_history_pagination() -> None:
 
 
 def test_get_handling_history_returns_404_when_alert_event_not_found() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-404@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-404@example.com", "ops")
 
     response = client.get(
         _history_url(9999),
@@ -246,8 +246,8 @@ def test_get_handling_history_returns_404_when_alert_event_not_found() -> None:
 
 
 def test_get_handling_history_requires_ops_role() -> None:
-    _cleanup_tables()
-    user_token = _register_user_and_issue_token_with_role_claim(
+    cleanup_ops_alert_tables()
+    user_token = register_user_and_issue_token_with_role_claim(
         "ops-history-forbidden@example.com",
         "user",
         "user",
@@ -264,7 +264,7 @@ def test_get_handling_history_requires_ops_role() -> None:
 
 
 def test_get_handling_history_unauthenticated_returns_401() -> None:
-    _cleanup_tables()
+    cleanup_ops_alert_tables()
     alert_event_id = _create_event()
 
     response = client.get(_history_url(alert_event_id))
@@ -273,8 +273,8 @@ def test_get_handling_history_unauthenticated_returns_401() -> None:
 
 
 def test_get_handling_history_returns_429_when_rate_limited(monkeypatch: object) -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-429@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-429@example.com", "ops")
     alert_event_id = _create_event()
 
     def _always_rate_limited(*args: object, **kwargs: object) -> None:
@@ -300,8 +300,8 @@ def test_get_handling_history_returns_429_when_rate_limited(monkeypatch: object)
 
 
 def test_handle_alert_still_returns_201_after_61_44_changes() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-handle-201@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-handle-201@example.com", "ops")
     alert_event_id = _create_event()
 
     response = client.post(
@@ -315,8 +315,8 @@ def test_handle_alert_still_returns_201_after_61_44_changes() -> None:
 
 
 def test_batch_retry_still_excludes_suppressed_after_61_44_changes() -> None:
-    _cleanup_tables()
-    ops_token = _register_user_with_role_and_token("ops-history-batch@example.com", "ops")
+    cleanup_ops_alert_tables()
+    ops_token = register_user_with_role_and_token("ops-history-batch@example.com", "ops")
     excluded_id = _create_event()
     included_id = _create_event()
 
