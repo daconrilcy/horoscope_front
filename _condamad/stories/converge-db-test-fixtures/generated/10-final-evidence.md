@@ -81,6 +81,7 @@ None.
 | `rg -n "from app\.infra\.db\.session import .*\b(SessionLocal\|engine)\b\|db_session_module\.SessionLocal" app/tests tests -g "*.py"` | `backend/` | PASS | 0 | Remaining hits are canonical helper/guard or allowlisted exceptions. |
 | `rg -n "Base\.metadata\.create_all" app/tests tests -g "*.py"` | `backend/` | PASS | 0 | Existing test DB setup hits classified; no new `horoscope.db` create_all introduced. |
 | `pytest --collect-only -q --ignore=.tmp-pytest` | `backend/` | PASS | 0 | 3479 tests collected. |
+| `pytest -q` | `backend/` | PASS, user-provided manual evidence | 0 | 3467 passed, 12 skipped, 7 warnings in 783.97s (0:13:03). Warnings are `LLMNarrator` deprecation warnings in `tests/unit/prediction/test_llm_narrator.py`. |
 | `python -B .agents/skills/condamad-story-writer/scripts/condamad_story_validate.py _condamad/stories/converge-db-test-fixtures/00-story.md` | repo root | PASS | 0 | Story validation PASS. |
 | `python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py --strict _condamad/stories/converge-db-test-fixtures/00-story.md` | repo root | PASS | 0 | Story lint PASS. |
 | `git diff --check` | repo root | PASS | 0 | No whitespace errors; CRLF warnings only. |
@@ -90,7 +91,7 @@ None.
 
 | Command | Required | Reason | Risk | Compensating evidence |
 |---|---:|---|---|---|
-| `pytest -q` | yes | Timed out after 10 minutes. | Full backend regression remains unproven in this run. | Targeted tests, collection, lint, guard, SQLite alignment, and selected release subset passed. |
+| None | no | Full backend regression was completed manually by the user after the review pass. | Residual risk limited to warnings. | `pytest -q`: 3467 passed, 12 skipped, 7 warnings in 783.97s. |
 
 ## DRY / No Legacy evidence
 
@@ -128,9 +129,10 @@ The untracked story folders other than `converge-db-test-fixtures` existed at pr
 
 ## Remaining risks
 
-- `tests/integration/test_llm_release.py` has existing non-migration failures when run as a full file, but the required migrated DB subset passes.
-- `pytest -q` timed out, so full suite pass is not proven.
+- Full backend regression now has user-provided manual evidence: `pytest -q` passed with 3467 passed, 12 skipped, 7 warnings.
+- The 7 warnings are known `LLMNarrator` deprecation warnings in `tests/unit/prediction/test_llm_narrator.py`.
 - Many existing direct DB session imports remain allowlisted and should be migrated in later batches.
+- Untracked folders `reclassify-story-regression-guards`, `remove-cross-test-module-imports`, and `replace-seed-validation-facade-test` are upcoming stories, not residual risk for this story.
 
 ## Suggested reviewer focus
 
