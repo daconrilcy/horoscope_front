@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -10,6 +12,7 @@ from app.domain.llm.configuration.canonical_use_case_registry import (
     CANONICAL_OUTPUT_SCHEMAS,
     CANONICAL_USE_CASE_CONTRACTS,
     CHAT_RESPONSE_V1,
+    CanonicalUseCaseContract,
 )
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
@@ -21,17 +24,41 @@ from app.infra.db.session import SessionLocal
 __all__ = [
     "ASTRO_RESPONSE_V3_JSON_SCHEMA",
     "CHAT_RESPONSE_V1",
+    "SeedValidationError",
     "seed_bootstrap_contracts",
     "seed_canonical_contracts",
     "seed_output_schemas",
     "seed_use_cases",
+    "validate_use_case_seed_contracts",
 ]
 
 
 class SeedValidationError(Exception):
-    """Raised when seed configuration is invalid."""
+    """Signale une configuration de seed incompatible avec le contrat canonique."""
 
-    pass
+
+def validate_use_case_seed_contracts(
+    contracts: Iterable[CanonicalUseCaseContract],
+) -> None:
+    """Valide les invariants metier des contrats de use cases avant le seed."""
+    for contract in contracts:
+        required_placeholders = [
+            placeholder.strip()
+            for placeholder in contract.required_prompt_placeholders
+            if placeholder.strip()
+        ]
+        if not contract.key.strip():
+            raise SeedValidationError("Un contrat de use case seed doit avoir une cle.")
+        if contract.persona_strategy not in {"optional", "required", "forbidden"}:
+            raise SeedValidationError(
+                f"Use case '{contract.key}' declare une strategie persona invalide: "
+                f"{contract.persona_strategy!r}."
+            )
+        if contract.persona_strategy == "required" and not required_placeholders:
+            raise SeedValidationError(
+                f"Use case '{contract.key}' exige une persona mais ne declare aucun "
+                "placeholder requis non vide pour porter ce contrat."
+            )
 
 
 def seed_output_schemas(db: Session) -> dict[str, LlmOutputSchemaModel]:
@@ -55,6 +82,8 @@ def seed_output_schemas(db: Session) -> dict[str, LlmOutputSchemaModel]:
 
 
 def seed_use_cases(db: Session) -> None:
+    validate_use_case_seed_contracts(CANONICAL_USE_CASE_CONTRACTS)
+
     stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.name == "Astrologue Standard")
     default_persona = db.execute(stmt_persona).scalars().first()
 

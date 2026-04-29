@@ -1,3 +1,8 @@
+# Tests unitaires des evenements et metriques d'experimentation tarifaire.
+"""Verifie les invariants de variant, metriques et payloads de pricing experiment."""
+
+import pytest
+
 from app.infra.observability.metrics import get_metrics_snapshot, reset_metrics
 from app.services.billing.pricing_experiment_service import (
     EVENT_VERSION,
@@ -64,7 +69,7 @@ def test_record_events_emit_metrics() -> None:
 
 
 def test_event_schema_rejects_invalid_revenue_payload() -> None:
-    try:
+    with pytest.raises(ValueError, match="revenue_cents"):
         PricingExperimentEvent(
             event_name="offer_revenue",
             event_version=EVENT_VERSION,
@@ -72,7 +77,3 @@ def test_event_schema_rejects_invalid_revenue_payload() -> None:
             user_segment="user",
             revenue_cents=0,
         )
-    except Exception:
-        assert True
-    else:
-        raise AssertionError("expected invalid revenue payload to fail validation")
