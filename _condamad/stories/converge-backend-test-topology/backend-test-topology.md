@@ -1,16 +1,24 @@
 # Backend Test Topology
 
-Ce registre documente les racines de tests backend autorisees. Il doit rester aligne avec `backend/pyproject.toml`.
+Ce document est l'evidence historique de la story
+`converge-backend-test-topology`. Il n'est plus le registre canonique actif.
+
+Le registre canonique actif est:
+`_condamad/stories/guard-backend-pytest-test-roots/backend-test-topology.md`.
+
+Toute modification de topologie doit etre portee dans ce registre canonique,
+dans `backend/pyproject.toml`, puis validee par
+`backend/app/tests/unit/test_backend_test_topology.py`.
 
 ## Racines pytest standard
 
 | Racine | Responsabilite | Statut |
 |---|---|---|
-| `app/tests` | Tests applicatifs backend collectes par defaut, incluant les sous-racines unit, integration et regression. | Canonique |
-| `tests/evaluation` | Suite d'evaluation des prompts et sorties LLM. | Support documente |
-| `tests/integration` | Suite d'integration backend transverse hors package applicatif. | Support documente |
-| `tests/llm_orchestration` | Suite LLM orchestration et guards historiques associes. | Support documente |
-| `tests/unit` | Suite unitaire backend transverse hors package applicatif. | Support documente |
+| `app/tests` | Tests applicatifs backend collectes par defaut, incluant les sous-racines unit, integration et regression. | Historique - voir registre canonique actif |
+| `tests/evaluation` | Suite d'evaluation des prompts et sorties LLM. | Historique - voir registre canonique actif |
+| `tests/integration` | Suite d'integration backend transverse hors package applicatif. | Historique - voir registre canonique actif |
+| `tests/llm_orchestration` | Suite LLM orchestration et guards historiques associes. | Historique - voir registre canonique actif |
+| `tests/unit` | Suite unitaire backend transverse hors package applicatif. | Historique - voir registre canonique actif |
 
 ## Regles
 

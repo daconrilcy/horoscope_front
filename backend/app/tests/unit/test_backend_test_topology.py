@@ -13,12 +13,12 @@ TOPOLOGY_DOC_PATH = (
     REPO_ROOT
     / "_condamad"
     / "stories"
-    / "converge-backend-test-topology"
+    / "guard-backend-pytest-test-roots"
     / ("backend-test-topology.md")
 )
 IGNORED_TEST_PARTS = {".tmp-pytest", ".pytest_cache", "__pycache__"}
 APP_TESTS_ROOT = (BACKEND_ROOT / "app" / "tests").resolve()
-DOCUMENTED_NON_TEST_PACKAGE_TEST_DIRS = {
+EXPECTED_NON_TEST_PACKAGE_TEST_DIRS = {
     (BACKEND_ROOT / "app" / "domain" / "llm" / "prompting" / "tests").resolve()
 }
 
@@ -31,19 +31,32 @@ def _configured_testpaths() -> set[str]:
 
 def _documented_standard_roots() -> set[str]:
     """Extrait les racines standard documentees dans le registre de topologie."""
+    return _documented_paths_from_section("## Racines pytest standard")
+
+
+def _documented_exception_dirs() -> set[Path]:
+    """Extrait les exceptions exactes de dossiers `tests` non racines pytest."""
+    return {
+        (BACKEND_ROOT / path).resolve()
+        for path in _documented_paths_from_section("## Exceptions exactes")
+    }
+
+
+def _documented_paths_from_section(section_title: str) -> set[str]:
+    """Lit les chemins de la premiere colonne d'une table Markdown ciblee."""
     content = TOPOLOGY_DOC_PATH.read_text(encoding="utf-8")
-    roots: set[str] = set()
+    paths: set[str] = set()
     in_section = False
     for line in content.splitlines():
         if line.startswith("## "):
-            in_section = line == "## Racines pytest standard"
+            in_section = line == section_title
             continue
         if not in_section:
             continue
         match = re.match(r"\| `([^`]+)` \|", line)
         if match:
-            roots.add(match.group(1))
-    return roots
+            paths.add(match.group(1))
+    return paths
 
 
 def _backend_test_files() -> set[Path]:
@@ -81,11 +94,28 @@ def test_backend_test_files_are_under_documented_roots() -> None:
 
 def test_domain_packages_do_not_embed_test_files() -> None:
     """Les packages domaine ne doivent pas redevenir proprietaires de dossiers tests."""
-    allowed_roots = {APP_TESTS_ROOT, *DOCUMENTED_NON_TEST_PACKAGE_TEST_DIRS}
+    allowed_roots = {APP_TESTS_ROOT, *_documented_exception_dirs()}
     offenders = sorted(
         path.relative_to(BACKEND_ROOT).as_posix()
         for path in (BACKEND_ROOT / "app").rglob("tests")
         if path.is_dir() and path.resolve() not in allowed_roots
+    )
+
+    assert offenders == []
+
+
+def test_non_standard_test_directories_are_exactly_documented() -> None:
+    """Les exceptions de dossiers `tests` doivent rester explicites et exactes."""
+    assert _documented_exception_dirs() == EXPECTED_NON_TEST_PACKAGE_TEST_DIRS
+
+
+def test_documented_exceptions_do_not_contain_test_files() -> None:
+    """Une exception de package ne doit pas redevenir une racine de tests active."""
+    offenders = sorted(
+        path.relative_to(BACKEND_ROOT).as_posix()
+        for exception_dir in _documented_exception_dirs()
+        for pattern in ("test_*.py", "*_test.py")
+        for path in exception_dir.rglob(pattern)
     )
 
     assert offenders == []
