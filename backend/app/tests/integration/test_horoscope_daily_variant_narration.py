@@ -238,7 +238,6 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
                     patch(
                         "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration"
                     ) as mock_adapter,
-                    patch("app.prediction.llm_narrator.LLMNarrator.narrate") as mock_narrate,
                 ):
                     mock_adapter.return_value = NarratorResult(
                         daily_synthesis="Synthèse du jour canonique.",
@@ -246,7 +245,6 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
                         time_window_narratives={},
                         turning_point_narratives=[],
                     )
-                    mock_narrate.return_value = None
 
                     response = client.get("/v1/predictions/daily")
                     assert response.status_code == 200

@@ -23,15 +23,18 @@ This story belongs to exactly one domain:
   - Inventorier les tests qui instancient `LLMNarrator`.
   - Migrer la couverture vers `AIEngineAdapter.generate_horoscope_narration` quand le comportement est canonique.
   - Borner toute compatibilite temporaire par un registre et une garde warning.
+  - Distinguer les usages acceptables de types/configuration (`NarratorResult`, `llm_narrator_enabled`) des usages nominaux de la classe legacy.
   - Faire passer les tests prediction sous `-W error::DeprecationWarning`.
 - Out of scope:
   - Reconcevoir le moteur LLM.
   - Changer les prompts produit.
   - Modifier les routes API.
+  - Migrer les DTOs `NarratorResult` / `NarratorAdvice` hors de leur module actuel.
 - Explicit non-goals:
   - Ne pas masquer les warnings par filtre global.
   - Ne pas maintenir `LLMNarrator` comme facade nominale sans decision.
   - Ne pas affaiblir les gardes de frontiere API/service.
+  - Ne pas transformer cette story en suppression du module `app.prediction.llm_narrator`.
 
 ## 4. Operation Contract
 
@@ -64,7 +67,7 @@ This story belongs to exactly one domain:
 - Primary source of truth:
   - AST guard plus `pytest -q -W error::DeprecationWarning tests/unit/prediction`.
 - Secondary evidence:
-  - Scan des imports `LLMNarrator` dans `backend/tests` et `backend/app/tests`.
+  - Scan des imports et instanciations `LLMNarrator` dans `backend/tests` et `backend/app/tests`.
 - Static scans alone are not sufficient for this story because:
   - l'objectif est de supprimer les warnings emis au runtime pytest.
 
@@ -86,6 +89,7 @@ This story belongs to exactly one domain:
 | Horoscope narration generation | `AIEngineAdapter.generate_horoscope_narration` | `LLMNarrator` facade nominale |
 | Prediction narration tests | `backend/tests/unit/prediction` | Warnings ignores globaux |
 | Temporary compatibility decision | `_condamad/stories/replace-deprecated-llm-narrator-tests/llm-narrator-deprecation-decision.md` | Memoire reviewer |
+| Shared narration result DTOs | Existing `NarratorResult` / `NarratorAdvice` definitions | New duplicate DTOs for this story |
 
 ## 4e. Allowlist / Exception Register
 
@@ -132,6 +136,7 @@ Required forbidden examples:
 
 - `from app.prediction.llm_narrator import LLMNarrator`
 - `LLMNarrator()`
+- `patch("app.prediction.llm_narrator.LLMNarrator.narrate")` in nominal prediction coverage
 - global ignore of `DeprecationWarning` for prediction tests
 
 Guard evidence:
@@ -144,6 +149,8 @@ Guard evidence:
 - Evidence 2: `backend/tests/unit/prediction/test_llm_narrator.py` - le fichier importe et instancie `LLMNarrator`.
 - Evidence 3: `backend/tests/integration/test_llm_governance_registry.py` - le fichier importe `LLMNarrator` avec filtre de warning local.
 - Evidence 4: `_condamad/stories/regression-guardrails.md` - invariants consultes avant cadrage.
+- Evidence 5: `backend/app/tests/integration/test_horoscope_daily_variant_narration.py` - le fichier patche encore `LLMNarrator.narrate` dans un test d'integration.
+- Evidence 6: `backend/tests/llm_orchestration/test_narrator_migration.py` - la couverture existante cible deja `AIEngineAdapter.generate_horoscope_narration`.
 
 ## 6. Target State
 
@@ -173,15 +180,15 @@ Guard evidence:
 | AC1 | LLMNarrator warning baseline is persisted. | Evidence profile: `baseline_before_after_diff`; `pytest -q tests/unit/prediction/test_llm_narrator.py`. |
 | AC2 | Canonical narration adapter has equivalent coverage. | Evidence profile: `ast_architecture_guard`; `pytest -q tests/unit/prediction/test_llm_narrator.py`. |
 | AC3 | Prediction tests reject unclassified deprecations. | Evidence profile: `runtime_openapi_contract`; `pytest -q -W error::DeprecationWarning tests/unit/prediction`. |
-| AC4 | LLMNarrator nominal usage is guarded. | Evidence profile: `targeted_forbidden_symbol_scan`; `rg -n "LLMNarrator|llm_narrator" tests app/tests -g "test_*.py"`. |
-| AC5 | Compatibility decision is persisted. | Evidence profile: `allowlist_register_validated`; `rg -n "LLMNarrator|llm_narrator" tests app/tests -g "test_*.py"`. |
+| AC4 | `LLMNarrator` class usage is guarded. | Evidence profile: `targeted_forbidden_symbol_scan`; `rg -n "LLMNarrator" tests app/tests` plus AST guard. |
+| AC5 | Compatibility decision is persisted. | Evidence profile: `allowlist_register_validated`; `rg -n "LLMNarrator|decision|expiry" llm-narrator-deprecation-decision.md`. |
 
 ## 8. Implementation Tasks
 
 - [ ] Task 1 - Capture current warning baseline (AC: AC1)
 - [ ] Task 2 - Decide migrate or temporary compatibility (AC: AC5)
 - [ ] Task 3 - Move nominal coverage to canonical adapter (AC: AC2)
-- [ ] Task 4 - Add warning and forbidden usage guard (AC: AC3, AC4)
+- [ ] Task 4 - Add warning and exact forbidden class usage guard (AC: AC3, AC4)
 - [ ] Task 5 - Persist after evidence (AC: AC1, AC3)
 
 ## 9. Mandatory Reuse / DRY Constraints
@@ -211,6 +218,7 @@ Specific forbidden symbols / paths:
 
 - `from app.prediction.llm_narrator import LLMNarrator`
 - `LLMNarrator()`
+- `app.prediction.llm_narrator.LLMNarrator.narrate` as a nominal test patch
 - `warnings.simplefilter("ignore", DeprecationWarning)` in nominal prediction tests
 - global pytest warning ignore for `LLMNarrator`
 
@@ -229,6 +237,7 @@ Specific forbidden symbols / paths:
 | Horoscope narration generation | `AIEngineAdapter.generate_horoscope_narration` | `LLMNarrator` test facade |
 | Deprecation decision | `_condamad/stories/replace-deprecated-llm-narrator-tests/llm-narrator-deprecation-decision.md` | Inline warning suppression |
 | Prediction warning guard | `backend/tests/unit/prediction` command with `-W error::DeprecationWarning` | Global ignore |
+| Narration result shape reused by prediction projection | Existing `NarratorResult` / `NarratorAdvice` definitions | Duplicate result DTOs created only for migrated tests |
 
 ## 14. Delete-Only Rule
 
@@ -251,6 +260,8 @@ The consumer, exit condition and warning classification must be persisted before
 - `_condamad/stories/regression-guardrails.md`
 - `backend/tests/unit/prediction/test_llm_narrator.py`
 - `backend/tests/integration/test_llm_governance_registry.py`
+- `backend/app/tests/integration/test_horoscope_daily_variant_narration.py`
+- `backend/tests/llm_orchestration/test_narrator_migration.py`
 - `backend/app/domain/llm/runtime/adapter.py`
 
 ## 19. Expected Files to Modify
@@ -259,6 +270,7 @@ Likely files:
 
 - `backend/tests/unit/prediction/test_llm_narrator.py` - migrate nominal tests or rename target to canonical adapter coverage.
 - `backend/tests/integration/test_llm_governance_registry.py` - classify any remaining compatibility use.
+- `backend/app/tests/integration/test_horoscope_daily_variant_narration.py` - replace nominal `LLMNarrator.narrate` patch if it duplicates canonical adapter behavior.
 - `_condamad/stories/replace-deprecated-llm-narrator-tests/llm-narrator-deprecation-decision.md` - decision artifact.
 
 Likely tests:
@@ -286,7 +298,7 @@ ruff format .
 ruff check .
 pytest -q tests/unit/prediction/test_llm_narrator.py
 pytest -q -W error::DeprecationWarning tests/unit/prediction
-rg -n "LLMNarrator|llm_narrator" tests app/tests -g "test_*.py"
+rg -n "from app\.prediction\.llm_narrator import LLMNarrator|LLMNarrator\(|LLMNarrator\.narrate" tests app/tests -g "test_*.py"
 ```
 
 ## 22. Regression Risks

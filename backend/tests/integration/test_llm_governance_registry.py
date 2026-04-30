@@ -1,4 +1,3 @@
-import warnings
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -39,18 +38,14 @@ async def test_governance_blocks_use_case_first_on_closed_family(gateway):
 @pytest.mark.asyncio
 async def test_governance_blocks_narrator_legacy_for_horoscope_daily():
     """
-    AC8: Le narrator legacy est interdit pour horoscope_daily.
+    AC8: Le fallback narrator legacy est interdit pour horoscope_daily.
     """
-    from app.prediction.llm_narrator import LLMNarrator
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        narrator = LLMNarrator()
-
     with pytest.raises(GatewayError) as exc:
-        await narrator.narrate(
-            time_windows=[],
-            common_context=MagicMock(),
+        FallbackGovernanceRegistry.track_fallback(
+            FallbackType.NARRATOR_LEGACY,
+            call_site="narrator_legacy_guard",
+            feature="horoscope_daily",
+            is_nominal=True,
         )
 
     # Message exact : "Usage du fallback 'narrator_legacy' interdit

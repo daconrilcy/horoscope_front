@@ -1,24 +1,27 @@
-"""Tests de compatibilite du narrateur LLM historique de prediction."""
+"""Couvre la narration LLM de prediction via l'adaptateur canonique."""
 
-import asyncio
-import json
+from __future__ import annotations
+
+import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.core.config import settings
-from app.domain.llm.prompting.catalog import get_max_tokens
 from app.domain.llm.prompting.context import PromptCommonContext
-from app.prediction.llm_narrator import LLMNarrator
-
-
-def _make_deprecated_narrator() -> LLMNarrator:
-    """Instancie le narrateur legacy en validant l'avertissement attendu."""
-    with pytest.warns(DeprecationWarning, match="LLMNarrator is deprecated"):
-        return LLMNarrator()
+from app.domain.llm.runtime.adapter import AIEngineAdapter
+from app.domain.llm.runtime.adapter_errors import AIEngineAdapterError
+from app.domain.llm.runtime.contracts import (
+    GatewayError,
+    GatewayMeta,
+    GatewayResult,
+    OutputValidationError,
+    UsageInfo,
+)
 
 
 def _make_common_context() -> PromptCommonContext:
+    """Construit un contexte minimal reutilisable pour la narration horoscope."""
     return PromptCommonContext(
         precision_level="précision complète",
         astrologer_profile={"tonality": "bienveillant"},
@@ -30,18 +33,29 @@ def _make_common_context() -> PromptCommonContext:
     )
 
 
-@pytest.fixture(autouse=True)
-def _mock_legacy_governance():
-    with patch(
-        "app.domain.llm.runtime.fallback_governance.FallbackGovernanceRegistry.track_fallback"
-    ):
-        yield
+def _gateway_result(payload: dict) -> GatewayResult:
+    """Fabrique une reponse gateway structuree pour les tests d'adaptateur."""
+    return GatewayResult(
+        use_case="horoscope_daily",
+        request_id="req-narration",
+        trace_id="trace-narration",
+        raw_output="{}",
+        structured_output=payload,
+        usage=UsageInfo(input_tokens=10, output_tokens=10, total_tokens=20),
+        meta=GatewayMeta(latency_ms=1, model="test-model"),
+    )
+
+
+def _count_sentences(text: str) -> int:
+    """Compte les phrases comme la couche de narration canonique."""
+    if not text:
+        return 0
+    return len([part for part in re.split(r"(?<=[.!?])\s+", text.strip()) if part.strip()])
 
 
 @pytest.mark.asyncio
-async def test_narrate_success():
-    narrator = _make_deprecated_narrator()
-
+async def test_generate_horoscope_narration_success_maps_gateway_result():
+    """La narration nominale passe par le gateway et mappe les champs attendus."""
     content = {
         "daily_synthesis": "Synth",
         "astro_events_intro": "Intro",
@@ -54,14 +68,20 @@ async def test_narrate_success():
         },
     }
 
-    mock_response = MagicMock()
-    mock_response.choices = [MagicMock(message=MagicMock(content=json.dumps(content)))]
+    with patch(
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_execute:
+        mock_execute.return_value = _gateway_result(content)
 
-    with patch("openai.AsyncOpenAI") as mock_openai:
-        mock_client = mock_openai.return_value
-        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
-
-        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
+        res = await AIEngineAdapter.generate_horoscope_narration(
+            variant_code=None,
+            time_windows=[],
+            common_context=_make_common_context(),
+            user_id=1,
+            request_id="req-narration",
+            trace_id="trace-narration",
+            db=MagicMock(),
+        )
 
         assert res is not None
         assert res.daily_synthesis == "Synth"
@@ -69,44 +89,57 @@ async def test_narrate_success():
         assert res.main_turning_point_narrative == "Le pivot devient lisible."
         assert res.daily_advice is not None
         assert res.daily_advice.emphasis == "Le bon mot au bon moment."
-        assert mock_client.chat.completions.create.await_args.kwargs["response_format"] == {
-            "type": "json_object"
-        }
-        assert mock_client.chat.completions.create.await_args.kwargs[
-            "max_completion_tokens"
-        ] == get_max_tokens("horoscope_daily")
+        request = mock_execute.await_args.kwargs["request"]
+        assert request.user_input.feature == "horoscope_daily"
+        assert request.user_input.subfeature == "narration"
+        assert request.user_input.plan == "free"
 
 
 @pytest.mark.asyncio
-async def test_narrate_failure_returns_none():
-    narrator = _make_deprecated_narrator()
+async def test_generate_horoscope_narration_gateway_failure_raises_stable_error():
+    """Une erreur gateway ne retombe pas sur une facade legacy silencieuse."""
+    with patch(
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_execute:
+        mock_execute.side_effect = GatewayError("OpenAI error")
 
-    with patch("openai.AsyncOpenAI") as mock_openai:
-        mock_client = mock_openai.return_value
-        mock_client.chat.completions.create = AsyncMock(side_effect=Exception("OpenAI error"))
-
-        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
-
-        assert res is None
-
-
-@pytest.mark.asyncio
-async def test_narrate_timeout_returns_none():
-    narrator = _make_deprecated_narrator()
-
-    with patch("openai.AsyncOpenAI") as mock_openai:
-        mock_client = mock_openai.return_value
-        mock_client.chat.completions.create = AsyncMock(side_effect=asyncio.TimeoutError())
-
-        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
-
-        assert res is None
+        with pytest.raises(ConnectionError, match="llm provider unavailable"):
+            await AIEngineAdapter.generate_horoscope_narration(
+                variant_code=None,
+                time_windows=[],
+                common_context=_make_common_context(),
+                user_id=1,
+                request_id="req-failure",
+                trace_id="trace-failure",
+                db=MagicMock(),
+            )
 
 
 @pytest.mark.asyncio
-async def test_narrate_ignores_invalid_daily_advice_shape():
-    narrator = _make_deprecated_narrator()
+async def test_generate_horoscope_narration_timeout_maps_to_adapter_error():
+    """Le timeout gateway est expose par l'erreur stable de l'adaptateur."""
+    with patch(
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_execute:
+        mock_execute.side_effect = GatewayError("timeout", details={"kind": "timeout"})
 
+        with pytest.raises(AIEngineAdapterError) as exc:
+            await AIEngineAdapter.generate_horoscope_narration(
+                variant_code=None,
+                time_windows=[],
+                common_context=_make_common_context(),
+                user_id=1,
+                request_id="req-timeout",
+                trace_id="trace-timeout",
+                db=MagicMock(),
+            )
+
+        assert exc.value.code == "upstream_timeout"
+
+
+@pytest.mark.asyncio
+async def test_generate_horoscope_narration_ignores_invalid_daily_advice_shape():
+    """Un conseil quotidien invalide ne casse pas le mapping narratif."""
     content = {
         "daily_synthesis": "Synth",
         "astro_events_intro": "Intro",
@@ -115,48 +148,50 @@ async def test_narrate_ignores_invalid_daily_advice_shape():
         "daily_advice": "not-an-object",
     }
 
-    mock_response = MagicMock()
-    mock_response.choices = [MagicMock(message=MagicMock(content=json.dumps(content)))]
+    with patch(
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_execute:
+        mock_execute.return_value = _gateway_result(content)
 
-    with patch("openai.AsyncOpenAI") as mock_openai:
-        mock_client = mock_openai.return_value
-        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
-
-        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
+        res = await AIEngineAdapter.generate_horoscope_narration(
+            variant_code=None,
+            time_windows=[],
+            common_context=_make_common_context(),
+            user_id=1,
+            request_id="req-advice",
+            trace_id="trace-advice",
+            db=MagicMock(),
+        )
 
         assert res is not None
         assert res.daily_advice is None
 
 
 @pytest.mark.asyncio
-async def test_narrate_returns_none_on_truncated_json(caplog: pytest.LogCaptureFixture):
-    narrator = _make_deprecated_narrator()
+async def test_generate_horoscope_narration_invalid_output_raises_adapter_error():
+    """Une sortie invalide reste une erreur gateway classifiee."""
+    with patch(
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_execute:
+        mock_execute.side_effect = OutputValidationError("Schema mismatch", details={})
 
-    mock_response = MagicMock()
-    mock_response.choices = [
-        MagicMock(
-            finish_reason="length",
-            message=MagicMock(content='{"daily_synthesis":"Texte tronque'),
-        )
-    ]
+        with pytest.raises(AIEngineAdapterError) as exc:
+            await AIEngineAdapter.generate_horoscope_narration(
+                variant_code=None,
+                time_windows=[],
+                common_context=_make_common_context(),
+                user_id=1,
+                request_id="req-invalid-json",
+                trace_id="trace-invalid-json",
+                db=MagicMock(),
+            )
 
-    with (
-        patch("openai.AsyncOpenAI") as mock_openai,
-        patch("app.prediction.llm_narrator.logger.warning") as mock_warning,
-    ):
-        mock_client = mock_openai.return_value
-        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
-
-        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
-
-        assert res is None
-        warning_message = mock_warning.call_args[0][0]
-        assert "llm_narrator.invalid_json" in warning_message
+        assert exc.value.code == "invalid_horoscope_daily_output"
 
 
 @pytest.mark.asyncio
-async def test_narrate_disabled_when_flag_off():
-    """has_llm_narrative must be False when llm_narrator_enabled=False (assembler level)."""
+async def test_narration_disabled_when_flag_off():
+    """Le flag coupe toujours la narration au niveau assembleur."""
     from datetime import UTC, date, datetime
 
     from app.prediction.public_projection import PublicPredictionAssembler
@@ -193,9 +228,8 @@ async def test_narrate_disabled_when_flag_off():
 
 
 @pytest.mark.asyncio
-async def test_narrate_retries_when_daily_synthesis_is_too_short():
-    narrator = _make_deprecated_narrator()
-
+async def test_generate_horoscope_narration_retries_when_synthesis_is_too_short():
+    """Une synthese trop courte declenche une seconde requete canonique."""
     short_content = {
         "daily_synthesis": "Première phrase. Deuxième phrase. Troisième phrase.",
         "astro_events_intro": "Intro",
@@ -216,34 +250,33 @@ async def test_narrate_retries_when_daily_synthesis_is_too_short():
         "daily_advice": {"advice": "Conseil", "emphasis": "Emphase"},
     }
 
-    first_response = MagicMock()
-    first_response.choices = [
-        MagicMock(message=MagicMock(content=json.dumps(short_content)), finish_reason="stop")
-    ]
-    second_response = MagicMock()
-    second_response.choices = [
-        MagicMock(message=MagicMock(content=json.dumps(long_content)), finish_reason="stop")
-    ]
+    with patch(
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_execute:
+        mock_execute.side_effect = [_gateway_result(short_content), _gateway_result(long_content)]
 
-    with patch("openai.AsyncOpenAI") as mock_openai:
-        mock_client = mock_openai.return_value
-        mock_client.chat.completions.create = AsyncMock(
-            side_effect=[first_response, second_response]
+        res = await AIEngineAdapter.generate_horoscope_narration(
+            variant_code="full",
+            time_windows=[],
+            common_context=_make_common_context(),
+            user_id=1,
+            request_id="req-retry",
+            trace_id="trace-retry",
+            db=MagicMock(),
         )
 
-        res = await narrator.narrate(time_windows=[], common_context=_make_common_context())
-
         assert res is not None
-        assert narrator._count_sentences(res.daily_synthesis) == 10
-        assert mock_client.chat.completions.create.await_count == 2
+        assert _count_sentences(res.daily_synthesis) == 10
+        assert mock_execute.await_count == 2
+        second_question = mock_execute.await_args_list[1].kwargs["request"].user_input.question
+        assert "au moins 10 phrases" in second_question
 
 
 @pytest.mark.asyncio
-async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
-    narrator = _make_deprecated_narrator()
-
+async def test_generate_horoscope_narration_summary_only_uses_free_plan_and_shorter_target():
+    """La variante courte utilise le plan free et le seuil de sept phrases."""
     short_free_content = {
-        "daily_synthesis": ("Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6."),
+        "daily_synthesis": "Phrase 1. Phrase 2. Phrase 3. Phrase 4. Phrase 5. Phrase 6.",
         "astro_events_intro": "Intro",
         "time_window_narratives": {"matin": "Matin text"},
         "turning_point_narratives": ["TP1"],
@@ -261,34 +294,28 @@ async def test_narrate_summary_only_uses_shorter_target_and_free_token_budget():
         "daily_advice": {"advice": "Conseil", "emphasis": "Emphase"},
     }
 
-    first_response = MagicMock()
-    first_response.choices = [
-        MagicMock(message=MagicMock(content=json.dumps(short_free_content)), finish_reason="stop")
-    ]
-    second_response = MagicMock()
-    second_response.choices = [
-        MagicMock(message=MagicMock(content=json.dumps(valid_free_content)), finish_reason="stop")
-    ]
+    with patch(
+        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+    ) as mock_execute:
+        mock_execute.side_effect = [
+            _gateway_result(short_free_content),
+            _gateway_result(valid_free_content),
+        ]
 
-    with patch("openai.AsyncOpenAI") as mock_openai:
-        mock_client = mock_openai.return_value
-        mock_client.chat.completions.create = AsyncMock(
-            side_effect=[first_response, second_response]
-        )
-
-        res = await narrator.narrate(
+        res = await AIEngineAdapter.generate_horoscope_narration(
+            variant_code="summary_only",
             time_windows=[],
             common_context=_make_common_context(),
-            variant_code="summary_only",
+            user_id=1,
+            request_id="req-summary",
+            trace_id="trace-summary",
+            db=MagicMock(),
         )
 
         assert res is not None
-        assert narrator._count_sentences(res.daily_synthesis) == 7
-        assert mock_client.chat.completions.create.await_count == 2
-        second_messages = mock_client.chat.completions.create.await_args_list[1].kwargs["messages"]
-        second_prompt = second_messages[1]["content"]
-        assert "7 à 8 phrases" in second_prompt
-        assert (
-            mock_client.chat.completions.create.await_args_list[0].kwargs["max_completion_tokens"]
-            == 3000
-        )
+        assert _count_sentences(res.daily_synthesis) == 7
+        assert mock_execute.await_count == 2
+        first_request = mock_execute.await_args_list[0].kwargs["request"]
+        second_question = mock_execute.await_args_list[1].kwargs["request"].user_input.question
+        assert first_request.user_input.plan == "free"
+        assert "au moins 7 phrases" in second_question
