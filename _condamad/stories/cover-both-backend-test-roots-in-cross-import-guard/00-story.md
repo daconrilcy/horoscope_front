@@ -1,6 +1,6 @@
 # Story cover-both-backend-test-roots-in-cross-import-guard: Make cross-test import guard cover both backend test roots
 
-Status: ready-for-dev
+Status: ready-for-review
 
 ## 1. Objective
 
@@ -170,10 +170,10 @@ Guard evidence:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Capture the guard coverage baseline (AC: AC4)
-- [ ] Task 2 - Correct backend root and test root assertions (AC: AC1, AC2)
-- [ ] Task 3 - Run the guard and targeted negative scan (AC: AC3)
-- [ ] Task 4 - Persist the after evidence (AC: AC4)
+- [x] Task 1 - Capture the guard coverage baseline (AC: AC4)
+- [x] Task 2 - Correct backend root and test root assertions (AC: AC1, AC2)
+- [x] Task 3 - Run the guard and targeted negative scan (AC: AC3)
+- [x] Task 4 - Persist the after evidence (AC: AC4)
 
 ## 9. Mandatory Reuse / DRY Constraints
 

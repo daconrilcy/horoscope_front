@@ -6,7 +6,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-BACKEND_ROOT = Path(__file__).resolve().parents[2]
+BACKEND_ROOT = Path(__file__).resolve().parents[3]
 TEST_ROOTS = (BACKEND_ROOT / "app" / "tests", BACKEND_ROOT / "tests")
 
 FORBIDDEN_PREFIXES = (
@@ -43,6 +43,21 @@ def _imported_modules(tree: ast.AST) -> list[str]:
         elif isinstance(node, ast.Import):
             modules.extend(alias.name for alias in node.names)
     return modules
+
+
+def test_backend_root_resolves_backend_directory() -> None:
+    """Verifie que la garde raisonne depuis la racine backend reelle."""
+    assert BACKEND_ROOT.name == "backend"
+    assert (BACKEND_ROOT / "pyproject.toml").is_file()
+
+
+def test_backend_test_roots_cover_app_and_backend_tests() -> None:
+    """Verifie que la garde scanne les deux racines de tests backend."""
+    assert tuple(root.relative_to(BACKEND_ROOT).as_posix() for root in TEST_ROOTS) == (
+        "app/tests",
+        "tests",
+    )
+    assert all(root.is_dir() for root in TEST_ROOTS)
 
 
 def test_backend_tests_do_not_import_executable_test_modules() -> None:
