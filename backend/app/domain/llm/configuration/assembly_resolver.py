@@ -1,3 +1,5 @@
+"""Résout les couches gouvernées qui composent un prompt LLM."""
+
 from __future__ import annotations
 
 import logging
@@ -55,6 +57,37 @@ PLAN_RULES_REGISTRY: dict[str, PlanRule] = {
         instruction=(
             "CONSIGNE ABONNEMENT PREMIUM : Fournis une analyse riche, "
             "détaillée et nuancée (au moins 10 à 12 phrases pour la synthèse)."
+        ),
+        max_output_tokens_override=None,
+    ),
+    "horoscope_daily_free_narration": PlanRule(
+        instruction=(
+            "Plan free horoscope daily : daily_synthesis doit compter strictement 7 à 8 "
+            "phrases complètes, avec une longueur globale comprise entre 50% et 67% de la "
+            "version complète. Le rendu doit rester proche du niveau Basic en qualité, densité "
+            "et ancrage astrologique, pas en version simpliste. Vise un résumé éditorial dense, "
+            "précis et incarné, sans remplissage. La synthèse doit généralement se situer autour "
+            "de 450 à 700 caractères, sauf si le contexte astrologique fourni est "
+            "exceptionnellement pauvre. Elle doit dire ce qui domine la journée, où se situe la "
+            "principale tension ou opportunité, et l'attitude la plus juste. Si des domaines "
+            "activés sont fournis, ils doivent être explicitement reflétés comme axes dominants. "
+            "N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans le "
+            "contexte. Quand c'est pertinent, mentionne le meilleur créneau et la bascule "
+            "principale, mais reste nettement plus concise que la variante complète."
+        ),
+        max_output_tokens_override=1300,
+    ),
+    "horoscope_daily_premium_narration": PlanRule(
+        instruction=(
+            "Plan premium horoscope daily : daily_synthesis doit compter strictement 10 à 12 "
+            "phrases complètes, dense, incarné et agréable à lire. Vise une vraie histoire de "
+            "la journée, pas un simple résumé. Elle doit dire ce qui domine la journée, comment "
+            "l'ambiance évolue du matin au soir, où se situent les frottements, ce qu'il faut "
+            "anticiper, et pourquoi astrologiquement. Si des domaines activés sont fournis, ils "
+            "doivent être explicitement reflétés comme axes dominants. N'en mets pas d'autres au "
+            "même niveau d'importance sans ancrage clair dans le contexte. Ne t'arrête pas à 5, "
+            "6, 7 ou 8 phrases. Quand c'est pertinent, mentionne le meilleur créneau et la "
+            "bascule principale."
         ),
         max_output_tokens_override=None,
     ),

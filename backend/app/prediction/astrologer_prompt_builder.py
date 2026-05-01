@@ -1,3 +1,5 @@
+"""Construit le contexte quotidien transmis au prompt gouverné d'horoscope."""
+
 from __future__ import annotations
 
 import logging
@@ -8,29 +10,6 @@ from app.domain.llm.prompting.context import PromptCommonContext, QualifiedConte
 from app.prediction.public_astro_vocabulary import get_planet_name_fr, get_sign_name_fr
 
 logger = logging.getLogger(__name__)
-
-STYLE_INSTRUCTIONS = {
-    "standard": (
-        "Astrologie occidentale classique, claire et incarnée. "
-        "Explique les effets concrets du ciel sans jargon inutile."
-    ),
-    "vedique": (
-        "Références védiques sobres et utiles : nakshatra, dharma, karma, maisons védiques. "
-        "Toujours relier ces notions à du vécu quotidien."
-    ),
-    "humaniste": (
-        "Approche humaniste : archétypes, croissance personnelle, mise en sens. "
-        "Rester concret sur ce qui se joue dans la journée."
-    ),
-    "karmique": (
-        "Mettre en avant les leçons de vie, les répétitions, les nœuds et les cycles. "
-        "Garder un ton utile et non fataliste."
-    ),
-    "psychologique": (
-        "Vocabulaire psychologique moderne : schémas, intégration, réactions, besoins. "
-        "Toujours ancré dans les faits astrologiques du jour."
-    ),
-}
 
 PLANET_CODE_LABELS = {
     "SO": "Soleil",
@@ -73,10 +52,7 @@ SIGN_LABELS_FR = {
 
 
 class AstrologerPromptBuilder:
-    """
-    Builds the detailed prompt for the LLM narrator (Story 60.16).
-    Integrates natal data, daily events, and user style preferences.
-    """
+    """Assemble uniquement les faits astrologiques quotidiens pour la narration."""
 
     def build(
         self,
@@ -102,42 +78,8 @@ class AstrologerPromptBuilder:
             domain_ranking=domain_ranking,
         )
         windows_str = self._format_windows(time_windows, domain_ranking=domain_ranking)
-        style_instr = STYLE_INSTRUCTIONS.get(astrologer_profile_key, STYLE_INSTRUCTIONS["standard"])
-        if lang != "fr":
-            if astrologer_profile_key == "vedique":
-                style_instr = (
-                    "Use grounded Vedic references: nakshatra, dharma, karma, Vedic houses. "
-                    "Always connect them to concrete daily experience."
-                )
-            elif astrologer_profile_key == "humaniste":
-                style_instr = (
-                    "Adopt a humanistic approach: archetypes, symbolism, personal growth, "
-                    "while staying concrete about the lived day."
-                )
-            elif astrologer_profile_key == "karmique":
-                style_instr = (
-                    "Emphasize life lessons, repetitions, lunar nodes and karmic cycles, "
-                    "without sounding fatalistic."
-                )
-            elif astrologer_profile_key == "psychologique":
-                style_instr = (
-                    "Use modern psychological vocabulary: patterns, reactions, integration, "
-                    "while grounding each point in today's astrology."
-                )
-            else:
-                style_instr = (
-                    "Use classic western astrology vocabulary with an accessible, concrete tone."
-                )
-
-        daily_synthesis_instruction = self._build_daily_synthesis_instruction(variant_code)
-
         prompt = f"""
 CONTEXTE ASTROLOGIQUE DU JOUR ({date_str})
-
-OBJECTIF :
-Tu transformes des données astrologiques en lecture réellement utile pour la journée.
-Le lecteur doit comprendre ce qu'il va probablement ressentir,
-pourquoi cela arrive astrologiquement, et comment s'ajuster avec intelligence.
 
 PROFIL NATAL DE L'UTILISATEUR :
 {natal_section}
@@ -151,40 +93,12 @@ PROFIL DE LA JOURNÉE :
 DÉROULÉ DE LA JOURNÉE (CRÉNEAUX HORAIRES) :
 {windows_str}
 
-CONSIGNES DE RÉDACTION :
-- Style : {style_instr}
-        - Ton : {payload.astrologer_profile.get("tonality", "bienveillant")}
-- Langue : {"Français" if lang == "fr" else "English"}
-- Format attendu : JSON strict.
-- Ne fais jamais de banalités recyclables d'un jour à l'autre.
-- Chaque interprétation doit s'appuyer sur au moins un fait du contexte fourni.
-- Quand le ciel est contrasté, explique la tension au lieu de lisser artificiellement.
-- Écris comme un astrologue pédagogue : tu expliques, tu relies, tu rends concret.
-- Mets l'accent sur le vécu probable : concentration, échanges, rythme, fatigue, élan, sensibilité,
-  besoin d'isolement, envie d'agir, clarté ou dispersion.
-- Ne recopie pas simplement les listes techniques : interprète-les.
-{daily_synthesis_instruction}
-- astro_events_intro : 2 à 4 phrases.
-  Explique les 2 ou 3 faits astrologiques les plus structurants du jour et leur effet concret.
-- time_window_narratives : Un objet avec les clés "nuit", "matin", "apres_midi", "soiree".
-  Chaque valeur contient 3 ou 4 phrases qui décrivent :
-  1) ce qu'on peut ressentir ou vivre dans ce créneau,
-  2) pourquoi d'après les indices astro du créneau,
-  3) la meilleure manière d'utiliser ou de gérer cette période.
-  Entre dans le détail du vécu probable au lieu de rester générique.
-- turning_point_narratives : Une liste de textes alignés sur les turning points détectés.
-  Chaque texte doit expliquer la bascule, sa cause probable et l'attitude juste.
-- main_turning_point_narrative : 2 ou 3 phrases pour la carte du moment clé principal.
-- daily_advice : objet avec
-  - advice : 2 ou 3 phrases de conseil très concret, spécifique à cette journée.
-  - emphasis : courte phrase de 4 à 10 mots, mémorable, spécifique et non générique.
-
-IMPORTANT :
-- Si une donnée manque, n'en parle pas ; travaille avec ce qui est disponible.
-- Interdiction de produire des phrases creuses du type "faites-vous confiance", "restez centré",
-  "écoutez votre intuition" sans ancrage astrologique explicite.
-- Le conseil du jour doit reprendre au moins un créneau, une vigilance ou un fait astrologique.
-        """
+PARAMÈTRES UTILISATEUR :
+- Profil astrologue demandé : {astrologer_profile_key}
+- Ton demandé : {payload.astrologer_profile.get("tonality", "bienveillant")}
+- Langue demandée : {"Français" if lang == "fr" else "English"}
+- Variante de narration : {variant_code or "standard"}
+"""
         return prompt.strip()
 
     def _resolve_payload(
@@ -193,42 +107,6 @@ IMPORTANT :
         if isinstance(common_context, QualifiedContext):
             return common_context.payload
         return common_context
-
-    def _build_daily_synthesis_instruction(self, variant_code: str | None) -> str:
-        if variant_code == "summary_only":
-            return (
-                "- daily_synthesis : strictement 7 à 8 phrases complètes, avec une longueur "
-                "globale comprise entre 50% et 67% de la version complète.\n"
-                "  Le rendu doit rester proche du niveau Basic en qualité, densité et "
-                "ancrage astrologique, pas en version simpliste.\n"
-                "  Vise un résumé éditorial dense, précis et incarné, sans remplissage.\n"
-                "  La synthèse doit généralement se situer autour de 450 à 700 caractères,\n"
-                "  sauf si le contexte astrologique fourni est exceptionnellement pauvre.\n"
-                "  Doit dire ce qui domine la journée, où se situe la principale tension ou "
-                "opportunité, et l'attitude la plus juste.\n"
-                '  Si des "Domaines les plus activés" sont fournis dans le profil de la '
-                "journée, ils doivent être explicitement reflétés dans la synthèse comme axes "
-                "dominants.\n"
-                "  N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans "
-                "le contexte.\n"
-                "  Quand c'est pertinent, mentionne le meilleur créneau et la bascule "
-                "principale, mais reste nettement plus concise que la variante complète."
-            )
-
-        return (
-            "- daily_synthesis : strictement 10 à 12 phrases complètes, dense, incarné et "
-            "agréable à lire.\n"
-            "  Vise une vraie histoire de la journée, pas un simple résumé.\n"
-            "  Doit dire ce qui domine la journée, comment l'ambiance évolue du matin au soir,\n"
-            "  où se situent les frottements, ce qu'il faut anticiper,\n"
-            "  et pourquoi astrologiquement.\n"
-            '  Si des "Domaines les plus activés" sont fournis dans le profil de la journée,\n'
-            "  ils doivent être explicitement reflétés dans la synthèse comme axes dominants.\n"
-            "  N'en mets pas d'autres au même niveau d'importance sans ancrage clair dans le "
-            "contexte.\n"
-            "  Ne t'arrête pas à 5, 6, 7 ou 8 phrases.\n"
-            "  Quand c'est pertinent, mentionne le meilleur créneau et la bascule principale."
-        )
 
     def _build_natal_section(self, ctx: PromptCommonContext) -> str:
         if ctx.natal_interpretation:

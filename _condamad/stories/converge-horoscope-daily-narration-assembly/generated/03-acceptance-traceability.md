@@ -1,0 +1,8 @@
+# Acceptance Traceability
+
+| AC | Requirement | Expected code impact | Required validation evidence | Status |
+|---|---|---|---|---|
+| AC1 | Builder payload only. | Remove durable format/style/length/forbidden phrase instructions from `backend/app/prediction/astrologer_prompt_builder.py`; keep factual daily payload and user context parameters. | `pytest -q tests/unit/prediction/test_astrologer_prompt_builder.py`; `rg -n "Format attendu\|Interdiction\|daily_synthesis : strictement" backend/app/prediction/astrologer_prompt_builder.py`; before/after artifacts. | PASS |
+| AC2 | Assembly owns instructions. | Add durable narration prompt to `seed_horoscope_narrator_assembly.py`; add plan-specific daily synthesis rules in `PLAN_RULES_REGISTRY`; wire free/premium assemblies to those rules. | `pytest -q app/tests/unit/test_seed_horoscope_narrator_assembly.py`; positive `rg` on assembly-owned instruction text. | PASS |
+| AC3 | Admin layers expose migrated text. | Add integration coverage proving admin resolved detail exposes migrated prompt and plan-rule text in selected components, composition sources, and runtime artifacts. | `pytest -q tests/integration/test_admin_llm_catalog.py::test_admin_llm_catalog_resolved_detail_exposes_horoscope_daily_narration_assembly`. | PASS |
+| AC4 | Narration behavior preserved. | Keep `narration_service.py` unchanged for gateway routing and retry validation; add adapter guard against durable instructions. | `pytest -q tests/llm_orchestration/test_narrator_migration.py`; `pytest -q tests/unit/prediction/test_llm_narrator_deprecation_guard.py`; provider/direct OpenAI negative scan. | PASS |

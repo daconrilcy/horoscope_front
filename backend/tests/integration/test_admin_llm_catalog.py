@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import (
@@ -24,7 +24,10 @@ from app.domain.llm.runtime.contracts import (
     UnknownUseCaseError,
     UsageInfo,
 )
-from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_assembly import (
+    AssemblyComponentResolutionState,
+    PromptAssemblyConfigModel,
+)
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmValidationStatus
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
@@ -42,6 +45,10 @@ from app.infra.db.models.llm.llm_sample_payload import LlmSamplePayloadModel
 from app.infra.db.session import get_db_session
 from app.infra.db.utils import serialize_orm
 from app.main import app
+from app.ops.llm.bootstrap.seed_horoscope_narrator_assembly import (
+    HOROSCOPE_DAILY_NARRATION_PROMPT,
+    HOROSCOPE_DAILY_PLAN_RULES,
+)
 from tests.integration.app_db import open_app_db_session
 
 
@@ -936,6 +943,154 @@ def test_admin_llm_catalog_resolved_detail_exposes_persona_overlay_and_runtime_d
         db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
         db.execute(delete(LlmPersonaModel).where(LlmPersonaModel.id == persona_id))
         db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_resolved_detail_exposes_horoscope_daily_narration_assembly():
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    template_id = uuid.uuid4()
+    assembly_id = uuid.uuid4()
+    profile_id = uuid.uuid4()
+    manifest_entry_id = "horoscope_daily:narration:free:fr-FR"
+    use_case_key = f"horoscope_daily_test_{uuid.uuid4().hex[:8]}"
+    original_assembly_ids = list(
+        db.execute(
+            select(PromptAssemblyConfigModel.id)
+            .where(PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED)
+            .where(PromptAssemblyConfigModel.feature == "horoscope_daily")
+            .where(PromptAssemblyConfigModel.subfeature == "narration")
+            .where(PromptAssemblyConfigModel.plan == "free")
+        ).scalars()
+    )
+    original_profile_ids = list(
+        db.execute(
+            select(LlmExecutionProfileModel.id)
+            .where(LlmExecutionProfileModel.status == PromptStatus.PUBLISHED)
+            .where(LlmExecutionProfileModel.feature == "horoscope_daily")
+            .where(LlmExecutionProfileModel.subfeature == "narration")
+            .where(LlmExecutionProfileModel.plan == "free")
+        ).scalars()
+    )
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        db.execute(
+            update(PromptAssemblyConfigModel)
+            .where(PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED)
+            .where(PromptAssemblyConfigModel.feature == "horoscope_daily")
+            .where(PromptAssemblyConfigModel.subfeature == "narration")
+            .where(PromptAssemblyConfigModel.plan == "free")
+            .values(status=PromptStatus.ARCHIVED)
+        )
+        db.execute(
+            update(LlmExecutionProfileModel)
+            .where(LlmExecutionProfileModel.status == PromptStatus.PUBLISHED)
+            .where(LlmExecutionProfileModel.feature == "horoscope_daily")
+            .where(LlmExecutionProfileModel.subfeature == "narration")
+            .where(LlmExecutionProfileModel.plan == "free")
+            .values(status=PromptStatus.ARCHIVED)
+        )
+        db.add(
+            LlmUseCaseConfigModel(
+                key=use_case_key,
+                display_name="Horoscope quotidien",
+                description="Narration horoscope quotidienne",
+            )
+        )
+        db.flush()
+        template_model = LlmPromptVersionModel(
+            id=template_id,
+            use_case_key=use_case_key,
+            status=PromptStatus.PUBLISHED,
+            developer_prompt=HOROSCOPE_DAILY_NARRATION_PROMPT,
+            created_by="test-admin",
+        )
+        db.add(template_model)
+        db.add(
+            LlmExecutionProfileModel(
+                id=profile_id,
+                name="horoscope-daily-test-profile",
+                provider="openai",
+                model="gpt-5",
+                reasoning_profile="off",
+                verbosity_profile="balanced",
+                output_mode="structured_json",
+                tool_mode="none",
+                max_output_tokens=1300,
+                timeout_seconds=99,
+                feature="horoscope_daily",
+                subfeature="narration",
+                plan="free",
+                status=PromptStatus.PUBLISHED,
+                created_by="test-admin",
+            )
+        )
+        assembly_model = PromptAssemblyConfigModel(
+            id=assembly_id,
+            feature="horoscope_daily",
+            subfeature="narration",
+            plan="free",
+            locale="fr-FR",
+            feature_template_ref=template_id,
+            execution_profile_ref=profile_id,
+            plan_rules_ref=HOROSCOPE_DAILY_PLAN_RULES["free"],
+            plan_rules_state=AssemblyComponentResolutionState.ENABLED.value,
+            status=PromptStatus.PUBLISHED,
+            created_by="test-admin",
+        )
+        db.add(assembly_model)
+        db.commit()
+
+        response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
+
+        assert response.status_code == 200
+        payload = response.json()["data"]
+        selected_components = {item["key"]: item for item in payload["selected_components"]}
+        runtime_artifacts = {item["key"]: item for item in payload["runtime_artifacts"]}
+        assert (
+            "Ne produis pas de phrases creuses"
+            in selected_components["domain_instructions"]["content"]
+        )
+        assert (
+            "strictement 7 à 8 phrases complètes" in selected_components["plan_overlay"]["content"]
+        )
+        assert (
+            "strictement 7 à 8 phrases complètes"
+            in runtime_artifacts["developer_prompt_assembled"]["content"]
+        )
+        assert (
+            "Ne produis pas de phrases creuses"
+            in payload["composition_sources"]["feature_template"]["content"]
+        )
+    finally:
+        client.close()
+        app.dependency_overrides.clear()
+        db.rollback()
+        db.execute(
+            delete(PromptAssemblyConfigModel).where(PromptAssemblyConfigModel.id == assembly_id)
+        )
+        db.execute(
+            delete(LlmExecutionProfileModel).where(LlmExecutionProfileModel.id == profile_id)
+        )
+        db.execute(delete(LlmPromptVersionModel).where(LlmPromptVersionModel.id == template_id))
+        db.execute(delete(LlmUseCaseConfigModel).where(LlmUseCaseConfigModel.key == use_case_key))
+        if original_assembly_ids:
+            db.execute(
+                update(PromptAssemblyConfigModel)
+                .where(PromptAssemblyConfigModel.id.in_(original_assembly_ids))
+                .values(status=PromptStatus.PUBLISHED)
+            )
+        if original_profile_ids:
+            db.execute(
+                update(LlmExecutionProfileModel)
+                .where(LlmExecutionProfileModel.id.in_(original_profile_ids))
+                .values(status=PromptStatus.PUBLISHED)
+            )
         db.commit()
         db.close()
 
