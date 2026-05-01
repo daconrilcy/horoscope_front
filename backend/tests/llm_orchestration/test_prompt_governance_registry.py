@@ -18,7 +18,7 @@ from app.domain.llm.governance.prompt_governance_registry import (
     PromptGovernanceRegistry,
     PromptGovernanceRegistryData,
 )
-from app.domain.llm.prompting.catalog import DEPRECATED_USE_CASE_MAPPING
+from app.domain.llm.prompting.catalog import DEPRECATED_USE_CASE_MAPPING, PROMPT_FALLBACK_CONFIGS
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.ops.llm.semantic_invariants_registry import (
     GOVERNED_LEGACY_FEATURE_ALIASES_TO_CANONICAL,
@@ -33,6 +33,27 @@ _CANONICAL_PROMPT_GOV_REGISTRY_JSON = (
     / "governance"
     / "data"
     / "prompt_governance_registry.json"
+)
+_ALLOWED_PROMPT_FALLBACK_CONFIG_KEYS = frozenset(
+    {
+        "astrologer_selection_help",
+        "event_guidance",
+        "guidance_daily",
+        "guidance_weekly",
+        "natal_interpretation_short",
+        "natal_long_free",
+        "test_guidance",
+        "test_natal",
+    }
+)
+_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS = frozenset(
+    {
+        "chat",
+        "chat_astrologer",
+        "guidance_contextual",
+        "natal_interpretation",
+        "horoscope_daily",
+    }
 )
 
 
@@ -81,6 +102,14 @@ def test_semantic_invariants_aligned_with_registry() -> None:
     reg = PromptGovernanceRegistry.load()
     assert GOVERNED_NOMINAL_FAMILIES == frozenset(reg.canonical_families)
     assert GOVERNED_LEGACY_FEATURE_ALIASES_TO_CANONICAL == reg.legacy_nominal_feature_aliases_map()
+
+
+def test_prompt_fallback_config_exceptions_are_exact() -> None:
+    """Verifie que les exceptions fallback restent explicites et auditees."""
+
+    fallback_keys = frozenset(PROMPT_FALLBACK_CONFIGS)
+    assert fallback_keys == _ALLOWED_PROMPT_FALLBACK_CONFIG_KEYS
+    assert fallback_keys.isdisjoint(_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS)
 
 
 def test_placeholder_allowlist_is_registry_derived() -> None:

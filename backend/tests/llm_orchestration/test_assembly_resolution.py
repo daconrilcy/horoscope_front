@@ -10,10 +10,13 @@ from app.domain.llm.configuration.assembly_resolver import (
     resolve_assembly,
     validate_placeholders,
 )
+from app.domain.llm.prompting.catalog import PROMPT_FALLBACK_CONFIGS
+from app.domain.llm.runtime import gateway as gateway_module
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionMessage,
     ExecutionUserInput,
+    GatewayConfigError,
     InputValidationError,
     LLMExecutionRequest,
 )
@@ -55,6 +58,95 @@ def _create_execution_profile(
     db.add(profile)
     db.flush()
     return profile
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("feature", "subfeature", "plan", "use_case", "payload"),
+    [
+        ("chat", "astrologer", "free", "chat_astrologer", {"message": "Bonjour"}),
+        ("guidance", "contextual", "free", "guidance_contextual", {"message": "Que faire ?"}),
+        ("natal", "interpretation", "premium", "natal_interpretation", {"chart_json": {}}),
+        ("horoscope_daily", None, "free", "horoscope_daily", {"question": "Ma journee ?"}),
+    ],
+)
+async def test_production_rejects_missing_assembly_for_supported_families(
+    db,
+    monkeypatch: pytest.MonkeyPatch,
+    feature: str,
+    subfeature: str | None,
+    plan: str,
+    use_case: str,
+    payload: dict,
+) -> None:
+    """La production refuse toute famille supportee sans assembly canonique."""
+
+    monkeypatch.setattr(gateway_module.settings, "app_env", "production")
+    gateway = LLMGateway()
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case=use_case,
+            feature=feature,
+            subfeature=subfeature,
+            plan=plan,
+            locale="fr-FR",
+            **payload,
+        ),
+        context=ExecutionContext(),
+        request_id=f"req-missing-{feature}",
+        trace_id=f"trace-missing-{feature}",
+    )
+
+    with pytest.raises(GatewayConfigError) as exc:
+        await gateway._resolve_plan(request, db=db)
+
+    assert exc.value.error_code == "missing_assembly"
+    assert exc.value.details["feature"] == feature
+
+
+@pytest.mark.asyncio
+async def test_db_prompt_resolution_does_not_require_supported_fallback_prompt(
+    db,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Un prompt DB publie reste resoluble sans prompt fallback supporte."""
+
+    monkeypatch.setattr(gateway_module.settings, "app_env", "development")
+    assert "guidance_contextual" not in PROMPT_FALLBACK_CONFIGS
+
+    prompt = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key="guidance_contextual",
+        developer_prompt="DB guidance prompt {{situation}}",
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    use_case = LlmUseCaseConfigModel(
+        key="guidance_contextual",
+        display_name="Guidance Contextual",
+        description="test",
+    )
+    db.add_all([prompt, use_case])
+    db.commit()
+
+    gateway = LLMGateway()
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="guidance_contextual",
+            feature="guidance",
+            subfeature="contextual",
+            plan="free",
+            message="Que faire ?",
+        ),
+        context=ExecutionContext(),
+        request_id="req-db-guidance",
+        trace_id="trace-db-guidance",
+    )
+
+    plan, _ = await gateway._resolve_plan(request, db=db)
+
+    assert plan.rendered_developer_prompt.startswith("DB guidance prompt")
+    assert plan.prompt_version_id == str(prompt.id)
 
 
 @pytest.mark.asyncio

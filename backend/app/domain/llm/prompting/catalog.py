@@ -1,4 +1,4 @@
-"""Canonical prompt catalog and bounded fallback registry."""
+"""Catalogue canonique des prompts et registre de fallback borne."""
 
 from __future__ import annotations
 
@@ -204,42 +204,15 @@ PROMPT_FALLBACK_CONFIGS: dict[str, dict[str, Any]] = {
         "interaction_mode": "structured",
         "user_question_policy": "none",
     },
-    "natal_interpretation": {
-        "developer_prompt": (
-            "Analyse le theme natal pour un utilisateur ne le {{birth_date}}. "
-            "Donnees: {{chart_json}}."
-        ),
-        "required_prompt_placeholders": ["birth_date", "chart_json"],
-        "interaction_mode": "structured",
-        "user_question_policy": "none",
-    },
     "natal_interpretation_short": {
         "developer_prompt": "Analyse rapide du theme natal.",
         "required_prompt_placeholders": [],
         "interaction_mode": "structured",
         "user_question_policy": "optional",
     },
-    "chat_astrologer": {
-        "developer_prompt": "Reponds a la conversation suivante: {{last_user_msg}}.",
-        "required_prompt_placeholders": ["last_user_msg"],
-        "interaction_mode": "chat",
-        "user_question_policy": "required",
-    },
-    "chat": {
-        "developer_prompt": "Reponds a la conversation suivante: {{last_user_msg}}.",
-        "required_prompt_placeholders": ["last_user_msg"],
-        "interaction_mode": "chat",
-        "user_question_policy": "required",
-    },
     "guidance_daily": {
         "developer_prompt": "Genere une guidance quotidienne basee sur le contexte: {{situation}}.",
         "required_prompt_placeholders": ["situation"],
-        "interaction_mode": "structured",
-        "user_question_policy": "none",
-    },
-    "horoscope_daily": {
-        "developer_prompt": "Genere un horoscope quotidien. Question: {{question}}",
-        "required_prompt_placeholders": ["question"],
         "interaction_mode": "structured",
         "user_question_policy": "none",
     },
@@ -248,12 +221,6 @@ PROMPT_FALLBACK_CONFIGS: dict[str, dict[str, Any]] = {
         "required_prompt_placeholders": [],
         "interaction_mode": "chat",
         "user_question_policy": "none",
-    },
-    "guidance_contextual": {
-        "developer_prompt": "Genere une guidance contextuelle pour: {{situation}}.",
-        "required_prompt_placeholders": ["situation"],
-        "interaction_mode": "chat",
-        "user_question_policy": "required",
     },
     "event_guidance": {
         "developer_prompt": "Guidance pour un evenement: {{event_description}}.",

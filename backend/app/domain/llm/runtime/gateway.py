@@ -233,8 +233,55 @@ class LLMGateway:
         messages.append({"role": "user", "content": user_payload})
         return messages
 
+    def _build_runtime_metadata_config(
+        self,
+        use_case: str,
+        *,
+        developer_prompt: str,
+        prompt_version_id: str = "hardcoded-v1",
+        required_prompt_placeholders: list[str] | None = None,
+    ) -> UseCaseConfig | None:
+        """Construit une config technique sans redevenir proprietaire du prompt."""
+
+        runtime_entry = get_prompt_runtime_entry(use_case)
+        if runtime_entry is None:
+            return None
+
+        canonical_contract = get_canonical_use_case_contract(use_case)
+        default_model = getattr(settings, "openai_model_default", "gpt-4o-mini")
+        if not isinstance(default_model, str):
+            default_model = "gpt-4o-mini"
+        return UseCaseConfig(
+            model=default_model,
+            temperature=float(runtime_entry.get("temperature", 0.7)),
+            max_output_tokens=int(runtime_entry.get("max_tokens", 1000)),
+            system_core_key="default_v1",
+            developer_prompt=developer_prompt,
+            prompt_version_id=prompt_version_id,
+            required_prompt_placeholders=list(required_prompt_placeholders or []),
+            persona_strategy=(
+                canonical_contract.persona_strategy if canonical_contract else "optional"
+            ),
+            safety_profile=canonical_contract.safety_profile if canonical_contract else "astrology",
+            input_schema=canonical_contract.input_schema if canonical_contract else None,
+            interaction_mode=(
+                canonical_contract.interaction_mode if canonical_contract else "structured"
+            ),
+            user_question_policy=(
+                canonical_contract.user_question_policy if canonical_contract else "none"
+            ),
+            fallback_target_use_case=(
+                canonical_contract.fallback_target_key if canonical_contract else None
+            ),
+        )
+
     async def _resolve_fallback_use_case_config(
-        self, db: Optional[Session], use_case: str, context: Dict[str, Any]
+        self,
+        db: Optional[Session],
+        use_case: str,
+        context: Dict[str, Any],
+        feature: str | None = None,
+        allow_runtime_metadata_without_prompt: bool = False,
     ) -> UseCaseConfig:
         """Resolve config for bounded fallback paths outside the nominal assembly flow."""
         config = None
@@ -292,47 +339,16 @@ class LLMGateway:
                         )
                         required = [p for p in set(placeholders) if p in authorized_vars]
 
-                    registry_config = build_fallback_use_case_config(use_case)
-                    if registry_config is None:
-                        raise UnknownUseCaseError(f"Use case '{use_case}' not found in registry.")
-
-                    config = UseCaseConfig(
-                        model=registry_config.model,
-                        temperature=registry_config.temperature,
-                        max_output_tokens=registry_config.max_output_tokens,
-                        timeout_seconds=registry_config.timeout_seconds,
-                        system_core_key="default_v1",
+                    config = self._build_runtime_metadata_config(
+                        use_case,
                         developer_prompt=db_prompt.developer_prompt,
                         prompt_version_id=(
                             str(db_prompt.id) if hasattr(db_prompt, "id") else "hardcoded-v1"
                         ),
                         required_prompt_placeholders=required,
-                        fallback_target_use_case=registry_config.fallback_target_use_case,
-                        persona_strategy=(
-                            canonical_contract.persona_strategy
-                            if canonical_contract
-                            else "optional"
-                        ),
-                        safety_profile=(
-                            canonical_contract.safety_profile if canonical_contract else "astrology"
-                        ),
-                        output_schema_id=registry_config.output_schema_id,
-                        input_schema=(
-                            canonical_contract.input_schema if canonical_contract else None
-                        ),
-                        reasoning_effort=registry_config.reasoning_effort,
-                        verbosity=registry_config.verbosity,
-                        interaction_mode=(
-                            canonical_contract.interaction_mode
-                            if canonical_contract
-                            else registry_config.interaction_mode
-                        ),
-                        user_question_policy=(
-                            canonical_contract.user_question_policy
-                            if canonical_contract
-                            else registry_config.user_question_policy
-                        ),
                     )
+                    if config is None:
+                        raise UnknownUseCaseError(f"Use case '{use_case}' not found in registry.")
             except Exception as e:
                 logger.error(
                     "gateway_db_prompt_resolve_failed use_case=%s error=%s", use_case, str(e)
@@ -340,6 +356,10 @@ class LLMGateway:
 
         if not config:
             config = build_fallback_use_case_config(use_case)
+            if config is None and (
+                not is_supported_feature(feature) or allow_runtime_metadata_without_prompt
+            ):
+                config = self._build_runtime_metadata_config(use_case, developer_prompt="")
             if canonical_contract and config:
                 config = config.model_copy(
                     update={
@@ -935,8 +955,13 @@ class LLMGateway:
 
                 if db:
                     try:
+                        allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
                         config = await self._resolve_fallback_use_case_config(
-                            db, use_case, context_dict
+                            db,
+                            use_case,
+                            context_dict,
+                            feature=request.user_input.feature,
+                            allow_runtime_metadata_without_prompt=allow_bootstrap_fallback,
                         )
                         if config.prompt_version_id == "hardcoded-v1":
                             source_base = "stub"
@@ -944,8 +969,13 @@ class LLMGateway:
                         source_base = "stub"
 
                 if not config:
+                    allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
                     config = await self._resolve_fallback_use_case_config(
-                        db, use_case, context_dict
+                        db,
+                        use_case,
+                        context_dict,
+                        feature=request.user_input.feature,
+                        allow_runtime_metadata_without_prompt=allow_bootstrap_fallback,
                     )
                     source_base = "stub"
 
@@ -1589,7 +1619,12 @@ class LLMGateway:
             context_dict = request.context.model_dump()
             extra = context_dict.pop("extra_context", {})
             context_dict.update(extra)
-            config = await self._resolve_fallback_use_case_config(db, use_case, context_dict)
+            config = await self._resolve_fallback_use_case_config(
+                db,
+                use_case,
+                context_dict,
+                feature=request.user_input.feature,
+            )
 
             if config.fallback_target_use_case:
                 logger.warning(
@@ -1987,7 +2022,12 @@ class LLMGateway:
             # Supported canonical families must be validated from the resolved plan instead of a
             # legacy use-case config resolved before assembly/profile lookup.
             if not is_supported_feature(request.user_input.feature):
-                config = await self._resolve_fallback_use_case_config(db, use_case, context_dict)
+                config = await self._resolve_fallback_use_case_config(
+                    db,
+                    use_case,
+                    context_dict,
+                    feature=request.user_input.feature,
+                )
                 self._validate_input(config, user_input_dict, request.context)
 
             # Stage 1: Resolve Plan (Now includes QualifiedContext)
