@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.domain.llm.prompting.chat_opening import build_opening_chat_user_data_block
 from app.domain.llm.prompting.context_compactor import estimate_tokens
+from app.domain.llm.prompting.narrator_contract import NarratorResult
 from app.domain.llm.runtime.adapter_errors import (
     AIEngineAdapterError,
     handle_gateway_error,
@@ -23,7 +24,6 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.domain.llm.runtime.errors import AIEngineError
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.prediction.llm_narrator import NarratorResult
 from app.services.llm_generation.horoscope_daily.narration_service import (
     generate_horoscope_narration_via_gateway,
 )

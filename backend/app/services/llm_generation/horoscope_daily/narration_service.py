@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.domain.llm.prompting.context_compactor import estimate_tokens
+from app.domain.llm.prompting.narrator_contract import NarratorAdvice, NarratorResult
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionUserInput,
@@ -16,7 +17,6 @@ from app.domain.llm.runtime.contracts import (
     LLMExecutionRequest,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.prediction.llm_narrator import NarratorAdvice, NarratorResult
 
 logger = logging.getLogger(__name__)
 

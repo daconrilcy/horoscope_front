@@ -1,4 +1,29 @@
-"""Schéma JSON de sortie narrateur horoscope quotidien (seed / contrats)."""
+"""Contrats narratifs canoniques pour la narration horoscope quotidienne."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass
+class NarratorAdvice:
+    """Représente le conseil actionnable retourné par la narration quotidienne."""
+
+    advice: str
+    emphasis: str
+
+
+@dataclass
+class NarratorResult:
+    """Porte la sortie narrative structurée consommée par la projection publique."""
+
+    daily_synthesis: str
+    astro_events_intro: str
+    time_window_narratives: dict[str, str]
+    turning_point_narratives: list[str]
+    daily_advice: NarratorAdvice | None = None
+    main_turning_point_narrative: str | None = None
+
 
 NARRATOR_OUTPUT_SCHEMA = {
     "type": "object",

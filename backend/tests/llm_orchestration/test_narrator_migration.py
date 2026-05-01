@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
+from app.domain.llm.prompting.narrator_contract import NarratorResult
 from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.contracts import (
     GatewayMeta,
@@ -10,7 +11,6 @@ from app.domain.llm.runtime.contracts import (
     OutputValidationError,
     UsageInfo,
 )
-from app.prediction.llm_narrator import NarratorResult
 from app.services.llm_generation.horoscope_daily.narration_service import (
     map_gateway_result_to_narrator_result,
 )
@@ -198,7 +198,7 @@ async def test_generate_horoscope_narration_accepts_qualified_context(db):
 
 @pytest.mark.asyncio
 async def test_generate_horoscope_narration_no_direct_openai(db):
-    """Test AC5: proves absence of direct openai.AsyncOpenAI calls."""
+    """Test AC5: prouve l'absence d'appel provider direct."""
     # We patch the gateway but NOT openai.
     # If AIEngineAdapter tried to call openai directly, it would fail in test env
     # without API key, or we can patch openai to raise error if called.

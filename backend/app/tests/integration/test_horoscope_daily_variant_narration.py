@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+from app.domain.llm.prompting.narrator_contract import NarratorResult
 from app.infra.db.base import Base
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.product_entitlements import (
@@ -20,7 +21,6 @@ from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.main import app
-from app.prediction.llm_narrator import NarratorResult
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.services.billing.service import BillingService
 from app.services.prediction import ServiceResult

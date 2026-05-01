@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.prediction.llm_narrator import NarratorResult
+from app.domain.llm.prompting.narrator_contract import NarratorResult
 from app.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
