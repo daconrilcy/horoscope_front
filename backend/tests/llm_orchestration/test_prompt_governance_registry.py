@@ -18,7 +18,11 @@ from app.domain.llm.governance.prompt_governance_registry import (
     PromptGovernanceRegistry,
     PromptGovernanceRegistryData,
 )
-from app.domain.llm.prompting.catalog import DEPRECATED_USE_CASE_MAPPING, PROMPT_FALLBACK_CONFIGS
+from app.domain.llm.prompting.catalog import (
+    DEPRECATED_USE_CASE_MAPPING,
+    PROMPT_FALLBACK_CONFIGS,
+    build_fallback_use_case_config,
+)
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.ops.llm.semantic_invariants_registry import (
     GOVERNED_LEGACY_FEATURE_ALIASES_TO_CANONICAL,
@@ -34,7 +38,35 @@ _CANONICAL_PROMPT_GOV_REGISTRY_JSON = (
     / "data"
     / "prompt_governance_registry.json"
 )
+_FALLBACK_CLASSIFICATION_AUDIT = (
+    Path(__file__).resolve().parents[3]
+    / "_condamad"
+    / "stories"
+    / "classify-converge-remaining-prompt-fallbacks"
+    / "fallback-classification.md"
+)
 _ALLOWED_PROMPT_FALLBACK_CONFIG_KEYS = frozenset(
+    {
+        "test_guidance",
+        "test_natal",
+    }
+)
+_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS = frozenset(
+    {
+        "chat",
+        "chat_astrologer",
+        "event_guidance",
+        "guidance_daily",
+        "guidance_weekly",
+        "guidance_contextual",
+        "natal_interpretation",
+        "natal_interpretation_short",
+        "natal_long_free",
+        "horoscope_daily",
+        "astrologer_selection_help",
+    }
+)
+_CLASSIFIED_FALLBACK_KEYS = frozenset(
     {
         "astrologer_selection_help",
         "event_guidance",
@@ -44,15 +76,6 @@ _ALLOWED_PROMPT_FALLBACK_CONFIG_KEYS = frozenset(
         "natal_long_free",
         "test_guidance",
         "test_natal",
-    }
-)
-_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS = frozenset(
-    {
-        "chat",
-        "chat_astrologer",
-        "guidance_contextual",
-        "natal_interpretation",
-        "horoscope_daily",
     }
 )
 
@@ -110,6 +133,26 @@ def test_prompt_fallback_config_exceptions_are_exact() -> None:
     fallback_keys = frozenset(PROMPT_FALLBACK_CONFIGS)
     assert fallback_keys == _ALLOWED_PROMPT_FALLBACK_CONFIG_KEYS
     assert fallback_keys.isdisjoint(_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS)
+
+
+@pytest.mark.parametrize("use_case_key", sorted(_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS))
+def test_converged_prompt_fallback_keys_do_not_build_config(use_case_key: str) -> None:
+    """Bloque le retour executable des prompts fallback converges."""
+
+    assert build_fallback_use_case_config(use_case_key) is None
+
+
+def test_fallback_classification_audit_covers_every_reviewed_key() -> None:
+    """Verifie que l'audit persistant liste chaque decision de fallback."""
+
+    audit = _FALLBACK_CLASSIFICATION_AUDIT.read_text(encoding="utf-8")
+
+    for key in _CLASSIFIED_FALLBACK_KEYS:
+        assert f"| `{key}` |" in audit
+
+    for key in PROMPT_FALLBACK_CONFIGS:
+        assert f"| `{key}` |" in audit
+        assert "| fixture |" in audit
 
 
 def test_consultation_specifics_remain_guidance_subcase() -> None:

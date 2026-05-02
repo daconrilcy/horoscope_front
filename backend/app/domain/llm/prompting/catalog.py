@@ -194,46 +194,6 @@ PROMPT_RUNTIME_DATA: dict[str, dict[str, Any]] = {
 }
 
 PROMPT_FALLBACK_CONFIGS: dict[str, dict[str, Any]] = {
-    "natal_long_free": {
-        "developer_prompt": (
-            "Langue de reponse : francais ({{locale}}). Contexte : use_case={{use_case}}.\n\n"
-            "Interpretez le theme natal fourni de facon claire, chaleureuse et non fataliste, "
-            "strictement a partir des donnees techniques suivantes :\n{{chart_json}}"
-        ),
-        "required_prompt_placeholders": ["chart_json", "locale", "use_case"],
-        "interaction_mode": "structured",
-        "user_question_policy": "none",
-    },
-    "natal_interpretation_short": {
-        "developer_prompt": "Analyse rapide du theme natal.",
-        "required_prompt_placeholders": [],
-        "interaction_mode": "structured",
-        "user_question_policy": "optional",
-    },
-    "guidance_daily": {
-        "developer_prompt": "Genere une guidance quotidienne basee sur le contexte: {{situation}}.",
-        "required_prompt_placeholders": ["situation"],
-        "interaction_mode": "structured",
-        "user_question_policy": "none",
-    },
-    "guidance_weekly": {
-        "developer_prompt": "Genere une guidance hebdomadaire.",
-        "required_prompt_placeholders": [],
-        "interaction_mode": "chat",
-        "user_question_policy": "none",
-    },
-    "event_guidance": {
-        "developer_prompt": "Guidance pour un evenement: {{event_description}}.",
-        "required_prompt_placeholders": ["event_description"],
-        "interaction_mode": "chat",
-        "user_question_policy": "required",
-    },
-    "astrologer_selection_help": {
-        "developer_prompt": "Aide l'utilisateur a choisir un astrologue.",
-        "required_prompt_placeholders": [],
-        "interaction_mode": "chat",
-        "user_question_policy": "optional",
-    },
     "test_natal": {
         "developer_prompt": "Synthetic test natal (locale {{locale}}).",
         "required_prompt_placeholders": [],

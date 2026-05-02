@@ -208,21 +208,21 @@ Guard evidence:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Produire l'audit de classification cle par cle (AC: AC1)
-  - [ ] Subtask 1.1 - Inspecter `catalog.py`, `gateway.py`, `canonical_use_case_registry.py` et les seeds bootstrap.
-  - [ ] Subtask 1.2 - Ecrire `fallback-classification.md` avec les decisions autorisees.
+- [x] Task 1 - Produire l'audit de classification cle par cle (AC: AC1)
+  - [x] Subtask 1.1 - Inspecter `catalog.py`, `gateway.py`, `canonical_use_case_registry.py` et les seeds bootstrap.
+  - [x] Subtask 1.2 - Ecrire `fallback-classification.md` avec les decisions autorisees.
 
-- [ ] Task 2 - Converger les cles canoniques hors fallback (AC: AC2, AC5)
-  - [ ] Subtask 2.1 - Migrer vers assembly/prompt gouverne ou supprimer les entrees classees.
-  - [ ] Subtask 2.2 - Verifier que `build_fallback_use_case_config` ne produit plus de config pour ces cles.
+- [x] Task 2 - Converger les cles canoniques hors fallback (AC: AC2, AC5)
+  - [x] Subtask 2.1 - Migrer vers assembly/prompt gouverne ou supprimer les entrees classees.
+  - [x] Subtask 2.2 - Verifier que `build_fallback_use_case_config` ne produit plus de config pour ces cles.
 
-- [ ] Task 3 - Borne les exceptions conservees (AC: AC3, AC4)
-  - [ ] Subtask 3.1 - Encoder la liste exacte autorisee dans un test ou registre chargeable.
-  - [ ] Subtask 3.2 - Faire echouer les ajouts de cle canonique sans decision.
+- [x] Task 3 - Borne les exceptions conservees (AC: AC3, AC4)
+  - [x] Subtask 3.1 - Encoder la liste exacte autorisee dans un test ou registre chargeable.
+  - [x] Subtask 3.2 - Faire echouer les ajouts de cle canonique sans decision.
 
-- [ ] Task 4 - Executer et consigner la validation (AC: AC1, AC2, AC3, AC4, AC5)
-  - [ ] Subtask 4.1 - Executer les tests cibles dans le venv.
-  - [ ] Subtask 4.2 - Ecrire `generated/10-final-evidence.md`.
+- [x] Task 4 - Executer et consigner la validation (AC: AC1, AC2, AC3, AC4, AC5)
+  - [x] Subtask 4.1 - Executer les tests cibles dans le venv.
+  - [x] Subtask 4.2 - Ecrire `generated/10-final-evidence.md`.
 
 ## 9. Mandatory Reuse / DRY Constraints
 

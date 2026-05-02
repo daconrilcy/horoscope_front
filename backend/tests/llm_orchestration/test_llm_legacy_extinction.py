@@ -11,10 +11,16 @@ from app.domain.llm.prompting.catalog import (
 
 SUPPORTED_FALLBACK_USE_CASE_KEYS = frozenset(
     {
+        "astrologer_selection_help",
         "chat",
         "chat_astrologer",
+        "event_guidance",
+        "guidance_daily",
+        "guidance_weekly",
         "guidance_contextual",
         "natal_interpretation",
+        "natal_interpretation_short",
+        "natal_long_free",
         "horoscope_daily",
     }
 )
