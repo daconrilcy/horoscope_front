@@ -135,7 +135,7 @@ The implementation must add or update deterministic guards that fail if:
 
 Required architecture guard against reintroduction:
 - Deterministic source: forbidden symbols.
-- Evidence profile: `reintroduction_guard`; `pytest -q tests/unit/test_guidance_service.py` checks `consultation_contextual`.
+- Evidence profile: `reintroduction_guard`; `pytest -q app/tests/unit/test_guidance_service.py` checks `consultation_contextual`.
 - The guard must fail when a consultation LLM family is reintroduced.
 
 ## 5. Current State Evidence
@@ -174,8 +174,8 @@ Required architecture guard against reintroduction:
 | AC | Requirement | Validation evidence required |
 |---|---|---|
 | AC1 | Consultation ownership documented. | Evidence profile: `targeted_forbidden_symbol_scan`; `rg -n "guidance_contextual" docs/llm-prompt-generation-by-feature.md`. |
-| AC2 | Placeholder contract tested. | Evidence profile: `json_contract_shape`; `pytest -q tests/unit/test_guidance_service.py`. |
-| AC3 | Precheck refusal stops LLM. | Evidence profile: `ast_architecture_guard`; `pytest -q tests/unit/test_consultation_generation_service.py`. |
+| AC2 | Placeholder contract tested. | Evidence profile: `json_contract_shape`; `pytest -q app/tests/unit/test_guidance_service.py`. |
+| AC3 | Precheck refusal stops LLM. | Evidence profile: `ast_architecture_guard`; `pytest -q app/tests/unit/test_consultation_generation_service.py`. |
 | AC4 | No consultation family drift. | Evidence profile: `reintroduction_guard`; `pytest -q tests/llm_orchestration/test_prompt_governance_registry.py`. |
 
 ## 8. Implementation Tasks
@@ -269,8 +269,8 @@ Likely files:
 
 Likely tests:
 
-- `backend/tests/unit/test_guidance_service.py` - verifier le contrat placeholders.
-- `backend/tests/unit/test_consultation_generation_service.py` - verifier refus precheck.
+- `backend/app/tests/unit/test_guidance_service.py` - verifier le contrat placeholders.
+- `backend/app/tests/unit/test_consultation_generation_service.py` - verifier refus precheck.
 - `backend/tests/llm_orchestration/test_prompt_governance_registry.py` - bloquer la derive de taxonomie.
 
 Files not expected to change:
@@ -292,8 +292,8 @@ Run or justify why skipped:
 cd backend
 python -B ..\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ..\_condamad\stories\formalize-consultation-guidance-prompt-ownership\00-story.md
 python -B ..\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ..\_condamad\stories\formalize-consultation-guidance-prompt-ownership\00-story.md
-pytest -q tests/unit/test_guidance_service.py
-pytest -q tests/unit/test_consultation_generation_service.py
+pytest -q app/tests/unit/test_guidance_service.py
+pytest -q app/tests/unit/test_consultation_generation_service.py
 pytest -q tests/llm_orchestration/test_prompt_governance_registry.py
 rg -n "\"consultation\"|consultation_contextual|developer_prompt.*prompt_content|PROMPT_FALLBACK_CONFIGS" app/domain app/services tests
 ruff check .

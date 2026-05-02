@@ -172,7 +172,7 @@ Required architecture guard against reintroduction:
 | AC | Requirement | Validation evidence required |
 |---|---|---|
 | AC1 | Builder payload only. | Evidence profile: `targeted_forbidden_symbol_scan`; `pytest -q tests/unit/prediction/test_astrologer_prompt_builder.py`. |
-| AC2 | Assembly owns instructions. | Evidence profile: `json_contract_shape`; `pytest -q tests/llm_orchestration/test_seed_horoscope_narrator_assembly.py`. |
+| AC2 | Assembly owns instructions. | Evidence profile: `json_contract_shape`; `pytest -q app/tests/unit/test_seed_horoscope_narrator_assembly.py`. |
 | AC3 | Admin layers expose migrated text. | Evidence profile: `ast_architecture_guard`; `pytest -q tests/llm_orchestration/test_prompt_admin_catalog_detail.py`. |
 | AC4 | Narration behavior preserved. | Evidence profile: `reintroduction_guard`; `pytest -q tests/llm_orchestration/test_narrator_migration.py`. |
 
@@ -268,7 +268,7 @@ Likely files:
 Likely tests:
 
 - `backend/tests/unit/prediction/test_astrologer_prompt_builder.py` - verifier payload only.
-- `backend/tests/llm_orchestration/test_seed_horoscope_narrator_assembly.py` - verifier assembly.
+- `backend/app/tests/unit/test_seed_horoscope_narrator_assembly.py` - verifier assembly.
 - `backend/tests/llm_orchestration/test_narrator_migration.py` - verifier runtime.
 
 Files not expected to change:
@@ -291,7 +291,7 @@ cd backend
 python -B ..\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ..\_condamad\stories\converge-horoscope-daily-narration-assembly\00-story.md
 python -B ..\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ..\_condamad\stories\converge-horoscope-daily-narration-assembly\00-story.md
 pytest -q tests/unit/prediction/test_astrologer_prompt_builder.py
-pytest -q tests/llm_orchestration/test_seed_horoscope_narrator_assembly.py
+pytest -q app/tests/unit/test_seed_horoscope_narrator_assembly.py
 pytest -q tests/llm_orchestration/test_narrator_migration.py
 rg -n "Format attendu|Interdiction|daily_synthesis : strictement" app/prediction/astrologer_prompt_builder.py
 ruff check .

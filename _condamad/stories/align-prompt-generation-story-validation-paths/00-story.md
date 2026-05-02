@@ -1,6 +1,6 @@
 # Story align-prompt-generation-story-validation-paths: Align prompt-generation story validation paths with collected tests
 
-Status: ready-for-dev
+Status: ready-for-review
 
 ## 1. Objective
 
@@ -198,21 +198,21 @@ Guard evidence:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Auditer les chemins de validation obsoletes (AC: AC1, AC3)
-  - [ ] Subtask 1.1 - Scanner `_condamad/stories` pour les trois chemins obsoletes.
-  - [ ] Subtask 1.2 - Ecrire `validation-path-audit.md` avec ancien chemin, chemin reel, fichier touche et statut historique/actif.
+- [x] Task 1 - Auditer les chemins de validation obsoletes (AC: AC1, AC3)
+  - [x] Subtask 1.1 - Scanner `_condamad/stories` pour les trois chemins obsoletes.
+  - [x] Subtask 1.2 - Ecrire `validation-path-audit.md` avec ancien chemin, chemin reel, fichier touche et statut historique/actif.
 
-- [ ] Task 2 - Corriger les plans actifs (AC: AC1)
-  - [ ] Subtask 2.1 - Mettre a jour les `00-story.md` concernes.
-  - [ ] Subtask 2.2 - Mettre a jour les `generated/06-validation-plan.md` si un plan actif contient encore un ancien chemin.
+- [x] Task 2 - Corriger les plans actifs (AC: AC1)
+  - [x] Subtask 2.1 - Mettre a jour les `00-story.md` concernes.
+  - [x] Subtask 2.2 - Mettre a jour les `generated/06-validation-plan.md` si un plan actif contient encore un ancien chemin.
 
-- [ ] Task 3 - Ajouter ou documenter la garde anti-retour (AC: AC4)
-  - [ ] Subtask 3.1 - Preferer un test documentaire existant si disponible; sinon ajouter un test cible sous la racine de tests collectee.
-  - [ ] Subtask 3.2 - Verifier que les preuves historiques restent explicitement marquees comme anciennes limitations.
+- [x] Task 3 - Ajouter ou documenter la garde anti-retour (AC: AC4)
+  - [x] Subtask 3.1 - Preferer un test documentaire existant si disponible; sinon ajouter un test cible sous la racine de tests collectee.
+  - [x] Subtask 3.2 - Verifier que les preuves historiques restent explicitement marquees comme anciennes limitations.
 
-- [ ] Task 4 - Executer et consigner la validation (AC: AC2, AC3, AC4)
-  - [ ] Subtask 4.1 - Executer pytest et scans dans le venv.
-  - [ ] Subtask 4.2 - Ecrire `generated/10-final-evidence.md`.
+- [x] Task 4 - Executer et consigner la validation (AC: AC2, AC3, AC4)
+  - [x] Subtask 4.1 - Executer pytest et scans dans le venv.
+  - [x] Subtask 4.2 - Ecrire `generated/10-final-evidence.md`.
 
 ## 9. Mandatory Reuse / DRY Constraints
 
