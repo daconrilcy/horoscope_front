@@ -4,7 +4,7 @@
 |---|---|---|---|---|
 | AC1 | L'inventaire de suppression est complet et deterministe. | Ajouter `route-consumption-audit.md` avec classification des routes, champs et UI routes. | Audit valide et route scan classifie. | PASS |
 | AC2 | Les facades supprimables sont supprimees, jamais repointees. | Retirer le routeur `/v1/ai` et supprimer ses modules dedies. | `pytest -q app/tests/unit/test_api_router_architecture.py` passe. | PASS |
-| AC3 | Aucun item externe n'a `Decision=delete`. | Ajouter `scripts/validate_route_removal_audit.py`. | `python scripts/validate_route_removal_audit.py ...` passe. | PASS |
+| AC3 | Aucun item externe n'a `Decision=delete`. | Preuve historique conservee dans `generated/10-final-evidence.md`; le validateur ponctuel racine a ete retire apres livraison. | Validation historique PASS dans `generated/10-final-evidence.md`. | PASS |
 | AC4 | `/v1/ai/*` est absent de l'application et d'OpenAPI. | Retirer imports/montages et ajouter test OpenAPI. | `pytest -q app/tests/integration/test_api_openapi_contract.py` passe. | PASS |
 | AC5 | Les modules Python supprimes ne sont plus importables. | Supprimer `routers/public/ai.py`, `router_logic/public/ai.py`, `schemas/ai.py`. | Import check et garde architecture passent. | PASS |
 | AC6 | Les consommateurs LLM first-party ciblent les proprietaires canoniques. | Conserver `chat.ts` et `guidance.ts`; retirer references `/v1/ai`. | Scan negatif sans resultat. | PASS |

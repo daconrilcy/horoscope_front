@@ -26,6 +26,7 @@ Canonical ownership decision for backend docs, scripts, secrets, security, and o
 |---|---|---|---|---|---|---|
 | `backend/app/tests/unit/test_natal_pro_docs.py` | docs | Backend quality suite registry | `pytest -q app/tests/unit/test_natal_pro_docs.py` | none | none | standard_backend_pytest |
 | `backend/app/tests/unit/test_b2b_usage_migration_scripts.py` | scripts | Backend quality suite registry | `pytest -q app/tests/unit/test_b2b_usage_migration_scripts.py` | none | none | standard_backend_pytest |
+| `backend/app/tests/unit/test_scripts_ownership.py` | scripts | Backend quality suite registry | `pytest -q app/tests/unit/test_scripts_ownership.py` | none | none | standard_backend_pytest |
 | `backend/app/tests/integration/test_pipeline_scripts.py` | scripts | Backend quality suite registry | `pytest -q app/tests/integration/test_pipeline_scripts.py` | Windows/PowerShell compatible | script subprocess | standard_backend_pytest |
 | `backend/app/tests/integration/test_backup_restore_scripts.py` | scripts | Backend quality suite registry | `pytest -q app/tests/integration/test_backup_restore_scripts.py` | Windows/PowerShell compatible | script subprocess | standard_backend_pytest |
 | `backend/app/tests/integration/test_ops_review_queue_alerts_script.py` | scripts | Backend quality suite registry | `pytest -q app/tests/integration/test_ops_review_queue_alerts_script.py` | Windows/PowerShell compatible | script subprocess | standard_backend_pytest |

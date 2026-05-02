@@ -35,7 +35,7 @@
 |---|---|---|---|---|
 | AC1 | Added `route-consumption-audit.md` and audit validator. | Validator PASS; route scan classified in audit. | PASS | Historical docs kept as external-active. |
 | AC2 | Removed `/v1/ai` app/evaluation registration and deleted dedicated modules. | Router architecture tests PASS. | PASS | No repointing. |
-| AC3 | Added `scripts/validate_route_removal_audit.py`. | Audit validator PASS. | PASS | No external-active delete. |
+| AC3 | Historical audit validation evidence retained in this file. | Audit validator PASS at delivery time. | PASS | The one-off root validator was later removed by `remove-root-route-removal-audit-validator`. |
 | AC4 | Added OpenAPI absence test. | OpenAPI test PASS. | PASS | Canonical chat/guidance paths remain. |
 | AC5 | Deleted removed Python modules. | Import check PASS; architecture tests PASS. | PASS | Removed module is not importable. |
 | AC6 | First-party clients remain on `/v1/chat/*` and `/v1/guidance/*`. | Removed-route scan returned no hits. | PASS | No first-party `/v1/ai` consumer. |
@@ -51,7 +51,7 @@
 |---|---|---|---|
 | `_condamad/stories/remove-historical-facade-routes/route-consumption-audit.md` | added | Deletion audit. | AC1, AC3 |
 | `_condamad/stories/remove-historical-facade-routes/generated/*` | added/modified | Execution and evidence capsule. | AC1-AC11 |
-| `scripts/validate_route_removal_audit.py` | added | Audit validation. | AC3 |
+| `generated/10-final-evidence.md` | modified | Preserve audit validation as historical evidence after root validator removal. | AC3 |
 | `backend/app/main.py` | modified | Remove historical router registration. | AC2, AC4 |
 | `backend/tests/evaluation/__init__.py` | modified | Align evaluation route table. | AC2 |
 | `backend/app/api/v1/routers/admin/exports.py` | modified | Remove export compat field and deprecation headers. | AC7 |
@@ -82,7 +82,7 @@
 
 | Command | Working directory | Result | Exit status | Evidence summary |
 |---|---|---|---:|---|
-| `python scripts\validate_route_removal_audit.py _condamad\stories\remove-historical-facade-routes\route-consumption-audit.md` | repo root after venv activation | PASS | 0 | Audit OK. |
+| Historical one-off audit validator command | repo root after venv activation | PASS | 0 | Historical delivery evidence: Audit OK. The root script path was later removed by `remove-root-route-removal-audit-validator`. |
 | `ruff format .` | `backend/` after venv activation | PASS | 0 | 9 files reformatted. |
 | `ruff check .` | `backend/` after venv activation | PASS | 0 | All checks passed. |
 | `pytest -q app/tests/unit/test_api_router_architecture.py app/tests/integration/test_api_openapi_contract.py app/tests/integration/test_admin_exports_api.py app/tests/integration/test_admin_llm_config_api.py app/tests/integration/test_contract_api.py` | `backend/` after venv activation | PASS | 0 | 36 passed. |
@@ -120,7 +120,7 @@
 
 ## Final worktree status
 
-Final `git status --short` includes story changes, untracked capsule files, untracked `scripts/validate_route_removal_audit.py`, added `backend/app/tests/integration/test_api_openapi_contract.py`, and pre-existing `M backend/horoscope.db`. The status command also reports permission warnings for existing pytest artifact directories.
+Final `git status --short` at delivery time included story changes, untracked capsule files, untracked one-off audit validator, added `backend/app/tests/integration/test_api_openapi_contract.py`, and pre-existing `M backend/horoscope.db`. The status command also reported permission warnings for existing pytest artifact directories. The one-off root validator was later removed by `remove-root-route-removal-audit-validator`.
 
 ## Remaining risks
 

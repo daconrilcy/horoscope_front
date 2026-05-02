@@ -91,7 +91,7 @@ After implementation:
 |---|---|---|
 | AC1 | L'inventaire de suppression est complet et déterministe. | Evidence profile: `route_removed`; audit markdown plus `rg -n "include_router\|APIRouter" backend/app`. |
 | AC2 | Les façades supprimables sont supprimées, jamais repointées. | `pytest -q backend/app/tests/unit/test_api_router_architecture.py`. |
-| AC3 | Aucun item externe n'a `Decision=delete`. | `python scripts/validate_route_removal_audit.py _condamad/stories/remove-historical-facade-routes/route-consumption-audit.md`. |
+| AC3 | Aucun item externe n'a `Decision=delete`. | Preuve historique conservee dans `generated/10-final-evidence.md`; le validateur ponctuel racine a ete retire apres livraison. |
 | AC4 | `/v1/ai/*` est absent de l'application et d'OpenAPI. | Evidence profile: `route_removed`; `pytest -q backend/app/tests/integration/test_api_openapi_contract.py`. |
 | AC5 | Les modules Python supprimés ne sont plus importables. | `pytest -q backend/app/tests/unit/test_api_router_architecture.py`. |
 | AC6 | Les consommateurs LLM first-party ciblent les propriétaires canoniques. | `rg -n "/v1/ai\|ai_engine_router\|app\.api\.v1\.routers\.public\.ai" frontend/src backend/app`. |
@@ -311,7 +311,7 @@ Codex must inspect before editing:
 Likely files:
 
 - `_condamad/stories/remove-historical-facade-routes/route-consumption-audit.md` - audit structuré.
-- `scripts/validate_route_removal_audit.py` - validation stricte de la table d'audit.
+- `generated/10-final-evidence.md` - preuve historique de validation stricte de la table d'audit.
 - `backend/app/main.py` - retirer les routeurs façade supprimés.
 - `backend/tests/evaluation/__init__.py` - aligner le montage de test.
 - `backend/app/api/v1/routers/public/ai.py` - delete if `historical-facade` or `dead`; otherwise blocker.

@@ -9,7 +9,7 @@
 
 | Purpose | Command | Working directory | Required | Expected result |
 |---|---|---|---:|---|
-| Audit table validator | `python scripts/validate_route_removal_audit.py _condamad/stories/remove-historical-facade-routes/route-consumption-audit.md` | repo root after venv activation | yes | no invalid classifications |
+| Historical audit validator evidence | `generated/10-final-evidence.md` | story capsule | yes | historical validation evidence remains recorded after one-off root validator removal |
 | Router architecture guards | `pytest -q backend/app/tests/unit/test_api_router_architecture.py` | `backend/` after venv activation | yes | all tests pass |
 | OpenAPI absence guard | `pytest -q backend/app/tests/integration/test_api_openapi_contract.py` | `backend/` after venv activation | yes | all tests pass |
 | Chat canonical regression | `pytest -q backend/app/tests/integration/test_chat_api.py` | `backend/` after venv activation | yes | all tests pass |
