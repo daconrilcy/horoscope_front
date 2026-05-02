@@ -112,6 +112,26 @@ def test_prompt_fallback_config_exceptions_are_exact() -> None:
     assert fallback_keys.isdisjoint(_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS)
 
 
+def test_consultation_specifics_remain_guidance_subcase() -> None:
+    """Bloque une nouvelle famille LLM consultation sans decision produit."""
+    reg = PromptGovernanceRegistry.load()
+
+    assert "consultation" not in reg.canonical_families
+    assert reg.resolve_placeholder_family("guidance_contextual") == "guidance"
+    invalid, violations = reg.validate_placeholders_in_template(
+        "Question {{situation}}", "consultation_contextual", source="test"
+    )
+    assert invalid == ["situation"]
+    assert {violation.rule_id for violation in violations} == {"GOV_PH_FAMILY_UNKNOWN"}
+    contract_contextual = {
+        item["name"]
+        for item in json.loads(_CANONICAL_PROMPT_GOV_REGISTRY_JSON.read_text(encoding="utf-8"))[
+            "placeholders_by_family"
+        ]["guidance"]
+    }
+    assert {"situation", "objective", "natal_chart_summary"}.issubset(contract_contextual)
+
+
 def test_placeholder_allowlist_is_registry_derived() -> None:
     reg = PromptGovernanceRegistry.load()
     for fam, defs in PLACEHOLDER_ALLOWLIST.items():

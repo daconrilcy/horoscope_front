@@ -512,6 +512,38 @@ def test_request_contextual_guidance_injects_latest_natal_summary(
     assert generator.contexts[0]["natal_chart_summary"] == "SOLEIL: Belier\nLUNE: Cancer"
 
 
+def test_request_contextual_guidance_uses_consultation_placeholder_contract() -> None:
+    _cleanup_tables()
+    user_id = _create_user_id("guidance-consultation-contract@example.com")
+    _seed_birth_profile(user_id)
+    generator = RecordingGenerator()
+    set_test_generators(generator)
+
+    with open_app_test_db_session() as db:
+        response = GuidanceService.request_contextual_guidance(
+            db=db,
+            user_id=user_id,
+            situation="Question de consultation relationnelle.",
+            objective="Comprendre la dynamique relationnelle sans fatalisme.",
+            time_horizon="trois mois",
+            natal_chart_summary_override=(
+                "THEME NATAL UTILISATEUR:\nSoleil en Balance\n\n"
+                "THEME NATAL AUTRE PERSONNE:\nLune en Cancer"
+            ),
+        )
+        db.commit()
+
+    assert response.guidance_type == "contextual"
+    assert generator.use_cases == ["guidance_contextual"]
+    assert generator.contexts[0]["situation"] == "Question de consultation relationnelle."
+    assert (
+        generator.contexts[0]["objective"]
+        == "Comprendre la dynamique relationnelle sans fatalisme."
+    )
+    assert generator.contexts[0]["time_horizon"] == "trois mois"
+    assert "THEME NATAL AUTRE PERSONNE" in (generator.contexts[0]["natal_chart_summary"] or "")
+
+
 def test_request_guidance_applies_recovery_when_off_scope_detected() -> None:
     _cleanup_tables()
     user_id = _create_user_id()

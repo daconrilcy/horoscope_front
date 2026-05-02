@@ -95,6 +95,10 @@ Référence des étapes nommées côté `LLMGateway` (alignement contrôles 66.2
 | `natal` | `AIEngineAdapter.generate_natal_interpretation()` | `feature="natal"`, `subfeature` normalisée | `nominal_canonical` |
 | `horoscope_daily` | `AIEngineAdapter.generate_horoscope_narration()` | `feature="horoscope_daily"`, `subfeature="narration"` | `nominal_canonical` |
 
+Les consultations spécifiques ne constituent pas une famille LLM distincte. Elles sont un sous-cas produit de `guidance_contextual` : `ConsultationGenerationService` prépare le contexte métier, puis délègue l'exécution LLM à `GuidanceService.request_contextual_guidance_async()`, qui appelle `AIEngineAdapter.generate_guidance()` avec `use_case="guidance_contextual"`, `feature="guidance"` et `subfeature="contextual"`. Les champs `situation`, `objective` et `natal_chart_summary` restent donc les placeholders canoniques du prompt ; le contexte tiers relationnel est injecté comme résumé natal de guidance quand il existe.
+
+Le champ catalogue `consultation_template.prompt_content` n'est pas un prompt provider durable. Il sert uniquement d'objectif court produit lorsque la requête ne fournit pas d'`objective` explicite. Il ne doit pas être copié vers `developer_prompt`, ni justifier une famille `consultation` ou un `use_case` `consultation_contextual`.
+
 Compatibilités legacy encore gérées :
 
 - `natal_interpretation` comme feature legacy est mappé vers `natal`
@@ -106,6 +110,7 @@ Compatibilités legacy encore gérées :
 Les flux produit et QA doivent rester alignés sur les mêmes briques canoniques :
 
 - `guidance` : `GuidanceService` construit le contexte métier, puis appelle `AIEngineAdapter.generate_guidance()`, qui délègue à `LLMGateway`.
+- `consultation spécifique` : `ConsultationGenerationService` effectue le precheck produit, construit l'objectif et le contexte tiers éventuel, puis réutilise le chemin `guidance_contextual`. Un refus precheck retourne une réponse métier sans appel à `GuidanceService` ni au provider LLM.
 - `chat` : `ChatGuidanceService` assemble messages/contexte, puis appelle `AIEngineAdapter.generate_chat_reply()`, qui délègue à `LLMGateway`.
 - `natal` : `NatalInterpretationServiceV2` prépare `NatalExecutionInput`, puis appelle `AIEngineAdapter.generate_natal_interpretation()`, qui délègue à `LLMGateway`.
 - `horoscope_daily` : `DailyPredictionService` calcule ou recharge le run astro, puis `PublicPredictionAssembler` appelle `AIEngineAdapter.generate_horoscope_narration()` pour la narration LLM quand elle est activée.
@@ -371,6 +376,7 @@ flowchart LR
 Règles centrales :
 
 - `SUPPORTED_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}`
+- aucune famille `consultation` n'est canonique ; les consultations thématiques restent routées par `guidance_contextual`
 - `natal_interpretation` en tant que feature est un alias normalisé vers `natal`
 - `normalize_subfeature("natal", "natal_interpretation")` retourne `interpretation`
 - `_normalize_plan_for_assembly()` convertit `premium`, `pro`, `ultra`, `full` en `premium`

@@ -65,6 +65,11 @@ def app_test_engine() -> Engine:
     return _TEST_ENGINE
 
 
+def build_sqlite_test_engine(database_url: str) -> Engine:
+    """Construit un moteur SQLite temporaire explicitement possede par un test."""
+    return create_engine(database_url, future=True)
+
+
 def open_app_test_db_session() -> Session:
     """Ouvre une session ORM sur la base de test effective du harnais `app/tests`."""
     return _ACTIVE_SESSION_FACTORY()
