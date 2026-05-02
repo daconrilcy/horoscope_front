@@ -1,0 +1,23 @@
+Source: scripts/load-test-critical.ps1 before scenario grouping convergence
+Captured from: rg -n "Story 66\.35|Legacy critical scenarios|privacy_delete_request|Invoke-ScenarioByProfile -Name" scripts/load-test-critical.ps1
+
+Active default scenario calls before implementation:
+- billing_quota
+- privacy_export_status
+- privacy_delete_request
+- chat_conversations
+- llm_chat
+- llm_guidance
+- llm_natal
+- llm_horoscope_daily
+- llm_stress_rate_limit (stress profile only)
+- llm_stress_timeout (stress profile only)
+- llm_recovery (stress profile only)
+- b2b_weekly_by_sign (when B2B API key is available)
+
+Forbidden markers present before implementation:
+- Story 66.35
+- Legacy critical scenarios
+
+Default destructive scenario before implementation:
+- privacy_delete_request

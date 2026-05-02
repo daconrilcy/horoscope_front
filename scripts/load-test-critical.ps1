@@ -7,6 +7,7 @@ param(
   [string]$B2BApiKey = "",
   [switch]$RequireB2B,
   [string]$OpsAccessToken = "",
+  [ValidateSet("smoke", "llm", "b2b", "destructive-privacy", "stress-incidents")][string[]]$ScenarioGroups = @("smoke", "llm", "b2b"),
   [string]$OpsWindow = "24h"
 )
 
@@ -351,6 +352,139 @@ function New-Recommendations {
   return $recommendations
 }
 
+function Get-CriticalLoadScenarioManifest {
+  return [ordered]@{
+    smoke = @(
+      @{
+        name = "billing_quota"
+        method = "GET"
+        path = "/v1/billing/quota"
+        headers = "auth"
+      },
+      @{
+        name = "privacy_export_status"
+        method = "GET"
+        path = "/v1/privacy/export"
+        headers = "auth"
+      },
+      @{
+        name = "chat_conversations"
+        method = "GET"
+        path = "/v1/chat/conversations?limit=20&offset=0"
+        headers = "auth"
+      }
+    )
+    llm = @(
+      @{
+        name = "llm_chat"
+        method = "POST"
+        path = "/v1/chat/messages"
+        headers = "auth"
+        body = @{ message = "Bonjour, peux-tu m'aider ?" }
+      },
+      @{
+        name = "llm_guidance"
+        method = "POST"
+        path = "/v1/guidance"
+        headers = "auth"
+        body = @{ period = "today" }
+      },
+      @{
+        name = "llm_natal"
+        method = "POST"
+        path = "/v1/natal/interpretation"
+        headers = "auth"
+        body = @{ use_case_level = "short"; locale = "fr-FR" }
+      },
+      @{
+        name = "llm_horoscope_daily"
+        method = "GET"
+        path = "/v1/predictions/daily"
+        headers = "auth"
+      }
+    )
+    b2b = @(
+      @{
+        name = "b2b_weekly_by_sign"
+        method = "GET"
+        path = "/v1/b2b/astrology/weekly-by-sign"
+        headers = "b2b"
+      }
+    )
+    "destructive-privacy" = @(
+      @{
+        name = "privacy_delete_request"
+        method = "POST"
+        path = "/v1/privacy/delete"
+        headers = "auth"
+        body = @{ confirmation = "DELETE" }
+        allowed_status_codes = @(200, 409)
+      }
+    )
+    "stress-incidents" = @(
+      @{
+        name = "llm_stress_rate_limit"
+        method = "POST"
+        path = "/v1/chat/messages"
+        headers = "auth"
+        header_overrides = @{ "X-LLM-Simulate-Error" = "rate_limit" }
+        body = @{ message = "Testing rate limit" }
+        allowed_status_codes = @(200, 429)
+      },
+      @{
+        name = "llm_stress_timeout"
+        method = "POST"
+        path = "/v1/chat/messages"
+        headers = "auth"
+        header_overrides = @{ "X-LLM-Simulate-Error" = "timeout" }
+        body = @{ message = "Testing timeout" }
+        allowed_status_codes = @(200, 504, 503)
+      },
+      @{
+        name = "llm_recovery"
+        method = "POST"
+        path = "/v1/chat/messages"
+        headers = "auth"
+        body = @{ message = "Testing recovery" }
+      }
+    )
+  }
+}
+
+function Resolve-ScenarioHeaders {
+  param(
+    [Parameter(Mandatory = $true)][string]$HeaderSet,
+    [Parameter(Mandatory = $true)][hashtable]$AuthHeaders,
+    [hashtable]$B2BHeaders = @{},
+    [hashtable]$HeaderOverrides = @{}
+  )
+
+  if ($null -eq $HeaderOverrides) {
+    $HeaderOverrides = @{}
+  }
+  $headers = if ($HeaderSet -eq "b2b") { $B2BHeaders.Clone() } else { $AuthHeaders.Clone() }
+  foreach ($key in $HeaderOverrides.Keys) {
+    $headers[$key] = $HeaderOverrides[$key]
+  }
+  return $headers
+}
+
+function Invoke-CriticalLoadScenario {
+  param(
+    [Parameter(Mandatory = $true)][hashtable]$Scenario,
+    [Parameter(Mandatory = $true)][string]$BaseUrl,
+    [Parameter(Mandatory = $true)][hashtable]$AuthHeaders,
+    [hashtable]$B2BHeaders = @{},
+    [Parameter(Mandatory = $true)][array]$PhaseDefinitions
+  )
+
+  $headers = Resolve-ScenarioHeaders -HeaderSet $Scenario.headers -AuthHeaders $AuthHeaders -B2BHeaders $B2BHeaders -HeaderOverrides $Scenario.header_overrides
+  $allowedStatusCodes = if ($Scenario.ContainsKey("allowed_status_codes")) { $Scenario.allowed_status_codes } else { @() }
+  $body = if ($Scenario.ContainsKey("body")) { $Scenario.body } else { $null }
+
+  return Invoke-ScenarioByProfile -Name $Scenario.name -Method $Scenario.method -Url "$BaseUrl$($Scenario.path)" -Headers $headers -Body $body -PhaseDefinitions $PhaseDefinitions -AllowedStatusCodes $allowedStatusCodes
+}
+
 if ($Iterations -le 0 -or $Concurrency -le 0) {
   switch ($Profile) {
     "smoke" {
@@ -414,7 +548,7 @@ if (-not $subscription.ok -or $subscription.status_code -ne 200) {
   Write-Warning "User for load test might not have an active subscription (status=$($subscription.status_code))"
 }
 
-# --- Story 66.35: Initialize LLM User Context ---
+# LLM user context initialization.
 function Initialize-LlmLoadUser {
   param([hashtable]$Headers)
   
@@ -443,57 +577,45 @@ $null = Invoke-ApiCall -Method POST -Url "$BaseUrl/v1/privacy/export" -Headers $
 
 $scenarioResults = @()
 $phaseDefinitions = Get-ProfilePhases -ProfileName $Profile -BaseIterations $Iterations -BaseConcurrency $Concurrency
-
-# Legacy critical scenarios
-$scenarioResults += Invoke-ScenarioByProfile -Name "billing_quota" -Method GET -Url "$BaseUrl/v1/billing/quota" -Headers $authHeaders -PhaseDefinitions $phaseDefinitions
-$scenarioResults += Invoke-ScenarioByProfile -Name "privacy_export_status" -Method GET -Url "$BaseUrl/v1/privacy/export" -Headers $authHeaders -PhaseDefinitions $phaseDefinitions
-$scenarioResults += Invoke-ScenarioByProfile -Name "privacy_delete_request" -Method POST -Url "$BaseUrl/v1/privacy/delete" -Headers $authHeaders -Body @{ confirmation = "DELETE" } -PhaseDefinitions $phaseDefinitions -AllowedStatusCodes @(200, 409)
-$scenarioResults += Invoke-ScenarioByProfile -Name "chat_conversations" -Method GET -Url "$BaseUrl/v1/chat/conversations?limit=20&offset=0" -Headers $authHeaders -PhaseDefinitions $phaseDefinitions
-
-# --- Story 66.35: LLM Gateway Scenarios ---
-$scenarioResults += Invoke-ScenarioByProfile -Name "llm_chat" -Method POST -Url "$BaseUrl/v1/chat/messages" -Headers $authHeaders -Body @{ message = "Bonjour, peux-tu m'aider ?" } -PhaseDefinitions $phaseDefinitions
-$scenarioResults += Invoke-ScenarioByProfile -Name "llm_guidance" -Method POST -Url "$BaseUrl/v1/guidance" -Headers $authHeaders -Body @{ period = "today" } -PhaseDefinitions $phaseDefinitions
-$scenarioResults += Invoke-ScenarioByProfile -Name "llm_natal" -Method POST -Url "$BaseUrl/v1/natal/interpretation" -Headers $authHeaders -Body @{ use_case_level = "short"; locale = "fr-FR" } -PhaseDefinitions $phaseDefinitions
-$scenarioResults += Invoke-ScenarioByProfile -Name "llm_horoscope_daily" -Method GET -Url "$BaseUrl/v1/predictions/daily" -Headers $authHeaders -PhaseDefinitions $phaseDefinitions
-
-# --- Story 66.35: Incident & Recovery Scenarios (Stress Only) ---
-if ($Profile -eq "stress") {
-    Write-Host "`nInjecting LLM provider incidents (Fault Injection)..." -ForegroundColor Cyan
-    
-    $incidentHeaders = $authHeaders.Clone()
-    $incidentHeaders["X-LLM-Simulate-Error"] = "rate_limit"
-    # Testing how system handles provider rate limits (should be classified as protection)
-    $scenarioResults += Invoke-ScenarioByProfile -Name "llm_stress_rate_limit" -Method POST -Url "$BaseUrl/v1/chat/messages" -Headers $incidentHeaders -Body @{ message = "Testing rate limit" } -PhaseDefinitions $phaseDefinitions -AllowedStatusCodes @(200, 429)
-    
-    $timeoutHeaders = $authHeaders.Clone()
-    $timeoutHeaders["X-LLM-Simulate-Error"] = "timeout"
-    # Testing how system handles provider timeouts (circuit breaker should eventually open)
-    $scenarioResults += Invoke-ScenarioByProfile -Name "llm_stress_timeout" -Method POST -Url "$BaseUrl/v1/chat/messages" -Headers $timeoutHeaders -Body @{ message = "Testing timeout" } -PhaseDefinitions $phaseDefinitions -AllowedStatusCodes @(200, 504, 503)
-
-    Write-Host "Waiting for circuit breaker recovery window (10s - might need longer depending on settings)..." -ForegroundColor Gray
-    Start-Sleep -Seconds 10
-    
-    # This call should succeed if breaker moved to half-open/closed
-    $scenarioResults += Invoke-ScenarioByProfile -Name "llm_recovery" -Method POST -Url "$BaseUrl/v1/chat/messages" -Headers $authHeaders -Body @{ message = "Testing recovery" } -PhaseDefinitions $phaseDefinitions
-}
+$scenarioManifest = Get-CriticalLoadScenarioManifest
+$selectedScenarioGroups = @($ScenarioGroups | Select-Object -Unique)
+$skippedScenarios = @()
 
 $effectiveB2BKey = if ($B2BApiKey) { $B2BApiKey } else { $env:B2B_API_KEY }
-$skippedScenarios = @()
-if ($effectiveB2BKey) {
-  $b2bHeaders = @{ "X-API-Key" = $effectiveB2BKey }
-  $scenarioResults += Invoke-ScenarioByProfile -Name "b2b_weekly_by_sign" -Method GET -Url "$BaseUrl/v1/b2b/astrology/weekly-by-sign" -Headers $b2bHeaders -PhaseDefinitions $phaseDefinitions
-} else {
-  $skippedScenarios += "b2b_weekly_by_sign"
-  if ($RequireB2B) {
-    throw "B2B scenario required but no B2BApiKey parameter and no B2B_API_KEY env var."
+$b2bHeaders = if ($effectiveB2BKey) { @{ "X-API-Key" = $effectiveB2BKey } } else { @{} }
+
+foreach ($groupName in $selectedScenarioGroups) {
+  if ($groupName -eq "b2b" -and -not $effectiveB2BKey) {
+    $skippedScenarios += @($scenarioManifest.b2b | ForEach-Object { $_.name })
+    if ($RequireB2B) {
+      throw "B2B scenario group required but no B2BApiKey parameter and no B2B_API_KEY env var."
+    }
+    Write-Host "Skipping b2b scenario group: no B2BApiKey parameter and no B2B_API_KEY env var." -ForegroundColor Yellow
+    continue
   }
-  Write-Host "Skipping b2b scenario: no B2BApiKey parameter and no B2B_API_KEY env var." -ForegroundColor Yellow
+  if ($groupName -eq "stress-incidents" -and $Profile -ne "stress") {
+    $skippedScenarios += @($scenarioManifest["stress-incidents"] | ForEach-Object { $_.name })
+    Write-Host "Skipping stress incident scenario group: Profile must be stress." -ForegroundColor Yellow
+    continue
+  }
+  if ($groupName -eq "stress-incidents") {
+    Write-Host "`nInjecting LLM provider incidents (Fault Injection)..." -ForegroundColor Cyan
+  }
+
+  foreach ($scenario in $scenarioManifest[$groupName]) {
+    $scenarioResults += Invoke-CriticalLoadScenario -Scenario $scenario -BaseUrl $BaseUrl -AuthHeaders $authHeaders -B2BHeaders $b2bHeaders -PhaseDefinitions $phaseDefinitions
+    if ($groupName -eq "stress-incidents" -and $scenario.name -eq "llm_stress_timeout") {
+      Write-Host "Waiting for circuit breaker recovery window (10s - might need longer depending on settings)..." -ForegroundColor Gray
+      Start-Sleep -Seconds 10
+    }
+  }
 }
+
 if ($opsToken) {
   $opsMonitoring.post_run = Invoke-ApiCall -Method GET -Url "$BaseUrl/v1/ops/monitoring/operational-summary?window=$OpsWindow" -Headers $opsHeaders
 }
 
-# --- Story 66.35: Performance Qualification Evaluation ---
+# Performance qualification evaluation.
 $qualificationReports = @()
 if ($opsToken) {
     Write-Host "`nRunning performance qualification evaluation..." -ForegroundColor Cyan
@@ -559,7 +681,7 @@ if ($outputDir -and !(Test-Path $outputDir)) {
 ($report | ConvertTo-Json -Depth 8) | Set-Content -Path $OutputPath -Encoding UTF8
 Write-Output ("load_test_ok report={0}" -f (Resolve-Path $OutputPath).Path)
 
-# --- Story 66.35: Automatically generate Markdown report ---
+# Generate the Markdown performance report next to the JSON report.
 if (Test-Path (Join-Path $PSScriptRoot "generate-performance-report.ps1")) {
     $mdReportPath = $OutputPath -replace "\.json$", ".md"
     & (Join-Path $PSScriptRoot "generate-performance-report.ps1") -InputPath $OutputPath -OutputPath $mdReportPath

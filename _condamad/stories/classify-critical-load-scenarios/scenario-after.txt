@@ -1,0 +1,37 @@
+Source: scripts/load-test-critical.ps1 after scenario grouping convergence
+Captured from: manifest and targeted scans after implementation
+
+Default selected groups:
+- smoke
+- llm
+- b2b
+
+Explicit groups available:
+- smoke
+- llm
+- b2b
+- destructive-privacy
+- stress-incidents
+
+Default non-destructive scenario inventory:
+- billing_quota
+- privacy_export_status
+- chat_conversations
+- llm_chat
+- llm_guidance
+- llm_natal
+- llm_horoscope_daily
+- b2b_weekly_by_sign (when B2B API key is available)
+
+Explicit non-default scenario inventory:
+- privacy_delete_request (group: destructive-privacy)
+- llm_stress_rate_limit (group: stress-incidents, stress profile only)
+- llm_stress_timeout (group: stress-incidents, stress profile only)
+- llm_recovery (group: stress-incidents, stress profile only)
+
+Forbidden marker scan:
+- rg -n "Story 66\\.35|Legacy critical scenarios" scripts/load-test-critical.ps1 -> zero hits
+
+Destructive scenario routing:
+- privacy_delete_request remains available only in group destructive-privacy.
+- default ScenarioGroups = smoke, llm, b2b.
