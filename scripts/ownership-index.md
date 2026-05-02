@@ -25,7 +25,7 @@ Ce registre est la source canonique d'ownership des fichiers racine sous
 | `scripts/backup-validate.ps1` | db | Database operations | Valide les sauvegardes avant restauration. | `pytest -q app/tests/integration/test_backup_restore_scripts.py` | supported | keep |
 | `scripts/generate-performance-report.ps1` | perf | Performance operations | Produit un rapport de performance local. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported | keep |
 | `scripts/generate-rgpd-evidence.ps1` | story-tools | Compliance evidence operations | Genere une preuve RGPD operationnelle. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported | keep |
-| `scripts/llm-release-readiness.ps1` | llm | LLM release operations | Verifie la preparation d'une release LLM. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported-with-follow-up | keep-portability-follow-up |
+| `scripts/llm-release-readiness.ps1` | llm | LLM release operations | Verifie la preparation d'une release LLM. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported | keep |
 | `scripts/load-test-critical-matrix.ps1` | perf | Performance operations | Orchestre la matrice de charge critique. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported | keep |
 | `scripts/load-test-critical.ps1` | perf | Performance operations | Execute les scenarios de charge critiques. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported-with-follow-up | keep-scope-refactor-follow-up |
 | `scripts/natal-cross-tool-report-dev.py` | dev | Local development diagnostics | Genere un rapport croise natal pour diagnostic dev. | `pytest -q app/tests/unit/test_scripts_ownership.py` | dev-only | keep-dev-only |

@@ -18,19 +18,8 @@
 - `alias.subfeature.natal_interpretation` | subfeature `natal_interpretation` -> `interpretation` | deprecated
 
 ## Use cases d�pr�ci�s (bindings)
-- `chat` -> `uc.chat` | deprecated
-- `chat_astrologer` -> `uc.chat_astrologer` | deprecated
-- `daily_prediction` -> `uc.daily_prediction` | deprecated
-- `event_guidance` -> `uc.event_guidance` | deprecated
-- `guidance_contextual` -> `uc.guidance_contextual` | deprecated
-- `guidance_daily` -> `uc.guidance_daily` | deprecated
-- `guidance_weekly` -> `uc.guidance_weekly` | deprecated
-- `horoscope_daily_free` -> `uc.horoscope_daily_free` | deprecated
-- `horoscope_daily_full` -> `uc.horoscope_daily_full` | deprecated
-- `natal-long-free` -> `uc.natal_long_free_hyphen` | deprecated
-- `natal_interpretation` -> `uc.natal_interpretation` | deprecated
-- `natal_interpretation_short` -> `uc.natal_interpretation_short` | deprecated
-- `natal_long_free` -> `uc.natal_long_free` | deprecated
+- `horoscope_daily_free` -> `deprecated.use_case.horoscope_daily_free` | deprecated
+- `horoscope_daily_full` -> `deprecated.use_case.horoscope_daily_full` | deprecated
 
 ## Blocage progressif effectif
 - ids: fb.resolve_model, fb.use_case_first

@@ -195,6 +195,8 @@ class ReleaseService:
                 selectinload(PromptAssemblyConfigModel.feature_template),
                 selectinload(PromptAssemblyConfigModel.subfeature_template),
                 selectinload(PromptAssemblyConfigModel.persona),
+                selectinload(PromptAssemblyConfigModel.execution_profile),
+                selectinload(PromptAssemblyConfigModel.output_schema),
             )
         )
         res = await self._execute(stmt)

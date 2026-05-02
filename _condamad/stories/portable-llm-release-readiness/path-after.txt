@@ -1,0 +1,9 @@
+6:  [string]$PytestCachePath = "",
+15:$resolvedPytestCachePath = Join-Path $root ".pytest_cache_runtime"
+17:if (-not [string]::IsNullOrWhiteSpace($PytestCachePath)) {
+18:  if ([System.IO.Path]::IsPathRooted($PytestCachePath)) {
+19:    $resolvedPytestCachePath = $PytestCachePath
+21:    $resolvedPytestCachePath = Join-Path $root $PytestCachePath
+98:    pytest -q tests\integration\test_llm_release.py -o "cache_dir=$resolvedPytestCachePath"
+102:    pytest -q tests\integration\test_llm_golden_regression.py tests\unit\test_sensitive_data_non_leakage.py -o "cache_dir=$resolvedPytestCachePath"
+107:    pytest -q tests\integration\test_llm_provider_runtime_chaos.py -o "cache_dir=$resolvedPytestCachePath"

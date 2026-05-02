@@ -121,6 +121,11 @@ def _sqlite_async_database_url() -> str | None:
     return db_url.replace("sqlite:///", "sqlite+aiosqlite:///")
 
 
+def _release_version(label: str) -> str:
+    """Retourne une version de release unique pour eviter les collisions SQLite."""
+    return f"{label}-{uuid.uuid4().hex[:8]}"
+
+
 def test_activation_evidence_requires_timezone_aware_datetime():
     with pytest.raises(ValidationError, match="timezone"):
         ActivationQualificationEvidence(
@@ -471,7 +476,9 @@ async def test_startup_validation_uses_snapshot():
         _ensure_published_assembly_for_release_snapshots(db)
 
         service = ReleaseService(db)
-        snapshot = await service.build_snapshot(version="startup-test", created_by="test_admin")
+        snapshot = await service.build_snapshot(
+            version=_release_version("startup-test"), created_by="test_admin"
+        )
         await service.activate_snapshot(
             snapshot.id,
             activated_by="test_admin",
@@ -529,7 +536,9 @@ async def test_non_fr_locale_resolution():
             db.commit()
 
         service = ReleaseService(db)
-        snapshot = await service.build_snapshot(version="locale-test", created_by="test_admin")
+        snapshot = await service.build_snapshot(
+            version=_release_version("locale-test"), created_by="test_admin"
+        )
         await service.activate_snapshot(
             snapshot.id,
             activated_by="test_admin",
@@ -561,7 +570,9 @@ async def test_activation_is_blocked_without_correlated_evidence():
         _ensure_published_assembly_for_release_snapshots(db)
 
         service = ReleaseService(db)
-        snapshot = await service.build_snapshot(version="gate-block-test", created_by="test_admin")
+        snapshot = await service.build_snapshot(
+            version=_release_version("gate-block-test"), created_by="test_admin"
+        )
         await service.validate_snapshot(snapshot.id)
 
         wrong_qualification = type(
@@ -618,7 +629,9 @@ async def test_release_health_recommends_rollback_on_threshold_breach():
         _ensure_published_assembly_for_release_snapshots(db)
 
         service = ReleaseService(db)
-        snapshot = await service.build_snapshot(version="health-test", created_by="test_admin")
+        snapshot = await service.build_snapshot(
+            version=_release_version("health-test"), created_by="test_admin"
+        )
         db.execute(
             update(LlmReleaseSnapshotModel)
             .where(LlmReleaseSnapshotModel.id == snapshot.id)
@@ -659,8 +672,12 @@ async def test_rollback_marks_faulty_snapshot_as_rolled_back():
         _ensure_published_assembly_for_release_snapshots(db)
 
         service = ReleaseService(db)
-        snapshot_a = await service.build_snapshot(version="rollback-a", created_by="test_admin")
-        snapshot_b = await service.build_snapshot(version="rollback-b", created_by="test_admin")
+        snapshot_a = await service.build_snapshot(
+            version=_release_version("rollback-a"), created_by="test_admin"
+        )
+        snapshot_b = await service.build_snapshot(
+            version=_release_version("rollback-b"), created_by="test_admin"
+        )
         await service.validate_snapshot(snapshot_a.id)
         await service.validate_snapshot(snapshot_b.id)
 
@@ -708,7 +725,9 @@ async def test_activation_with_naive_timestamp_is_rejected_without_500():
         _ensure_published_assembly_for_release_snapshots(db)
 
         service = ReleaseService(db)
-        snapshot = await service.build_snapshot(version="naive-ts", created_by="test_admin")
+        snapshot = await service.build_snapshot(
+            version=_release_version("naive-ts"), created_by="test_admin"
+        )
         await service.validate_snapshot(snapshot.id)
         manifest_entry_id = _default_manifest_entry_id(snapshot)
 

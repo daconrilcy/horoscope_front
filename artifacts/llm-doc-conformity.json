@@ -3,19 +3,18 @@
   "git_context": {
     "mode": "merge_base",
     "base_ref": "origin/main",
-    "base_commit": "6c236a3456444fe46f5c2f6f09c94a4ca4a63c36",
+    "base_commit": "d4282792042ab8182add442f2706a4e61f5d5ac1",
     "changed_files": [
-      ".env.example",
-      "artifacts/chaos/story-66-43-chaos-report.json",
+      "_condamad/stories/classify-backend-ops-quality-tests/ops-quality-test-ownership.md",
+      "app/tests/unit/test_llm_release_readiness_script.py",
       "artifacts/llm-doc-conformity.json",
       "artifacts/llm-legacy-residual-report.md",
       "artifacts/llm-release-candidate.json",
       "artifacts/llm-release-readiness.json",
-      "backend/horoscope.db",
-      "backend/scripts/build_llm_release_candidate.py",
-      "backend/scripts/build_llm_release_readiness_report.py",
-      "docs/llm-release-runbook.md",
-      "scripts/llm-release-readiness.ps1"
+      "backend/app/ops/llm/release_service.py",
+      "backend/tests/integration/test_llm_release.py",
+      "scripts/llm-release-readiness.ps1",
+      "scripts/ownership-index.md"
     ],
     "structural_files_detected": [],
     "is_degraded": false,
