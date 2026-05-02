@@ -26,6 +26,7 @@ Canonical ownership decision for backend docs, scripts, secrets, security, and o
 |---|---|---|---|---|---|---|
 | `backend/app/tests/unit/test_natal_pro_docs.py` | docs | Backend quality suite registry | `pytest -q app/tests/unit/test_natal_pro_docs.py` | none | none | standard_backend_pytest |
 | `backend/app/tests/unit/test_b2b_usage_migration_scripts.py` | scripts | Backend quality suite registry | `pytest -q app/tests/unit/test_b2b_usage_migration_scripts.py` | none | none | standard_backend_pytest |
+| `backend/app/tests/unit/test_start_dev_stack_script.py` | scripts | Backend quality suite registry | `pytest -q app/tests/unit/test_start_dev_stack_script.py` | none | none | standard_backend_pytest |
 | `backend/app/tests/unit/test_scripts_ownership.py` | scripts | Backend quality suite registry | `pytest -q app/tests/unit/test_scripts_ownership.py` | none | none | standard_backend_pytest |
 | `backend/app/tests/integration/test_pipeline_scripts.py` | scripts | Backend quality suite registry | `pytest -q app/tests/integration/test_pipeline_scripts.py` | Windows/PowerShell compatible | script subprocess | standard_backend_pytest |
 | `backend/app/tests/integration/test_backup_restore_scripts.py` | scripts | Backend quality suite registry | `pytest -q app/tests/integration/test_backup_restore_scripts.py` | Windows/PowerShell compatible | script subprocess | standard_backend_pytest |
@@ -56,7 +57,7 @@ For targeted quality ownership verification:
 ```powershell
 .\.venv\Scripts\Activate.ps1
 cd backend
-pytest -q app/tests/unit/test_natal_pro_docs.py app/tests/unit/test_b2b_usage_migration_scripts.py app/tests/integration/test_pipeline_scripts.py app/tests/integration/test_backup_restore_scripts.py app/tests/integration/test_ops_review_queue_alerts_script.py app/tests/integration/test_secrets_scan_script.py app/tests/integration/test_secret_rotation_process_restart.py app/tests/integration/test_secret_rotation_critical_flows.py app/tests/integration/test_security_verification_script.py
+pytest -q app/tests/unit/test_natal_pro_docs.py app/tests/unit/test_b2b_usage_migration_scripts.py app/tests/unit/test_start_dev_stack_script.py app/tests/integration/test_pipeline_scripts.py app/tests/integration/test_backup_restore_scripts.py app/tests/integration/test_ops_review_queue_alerts_script.py app/tests/integration/test_secrets_scan_script.py app/tests/integration/test_secret_rotation_process_restart.py app/tests/integration/test_secret_rotation_critical_flows.py app/tests/integration/test_security_verification_script.py
 ```
 
 ## Ops Suite Command

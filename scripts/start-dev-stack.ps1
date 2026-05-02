@@ -1,15 +1,36 @@
 #!/usr/bin/env pwsh
-# Lance la pile de developpement locale dans Windows Terminal avec un onglet par service.
+<#
+.SYNOPSIS
+Lance la pile de developpement locale dans Windows Terminal.
+
+.DESCRIPTION
+Demarre backend et frontend par defaut. Le listener Stripe local est lance
+uniquement lorsque le parametre -WithStripe est fourni.
+
+.PARAMETER WithStripe
+Ajoute un onglet Stripe qui execute scripts/stripe-listen-webhook.ps1. La CLI
+Stripe doit etre installee et disponible dans le PATH lorsque ce mode est demande.
+
+.PARAMETER Help
+Affiche l'aide du script sans lancer la stack locale.
+#>
 
 [CmdletBinding()]
 param(
   [string] $BackendHost = "127.0.0.1",
   [int] $BackendPort = 8001,
   [string] $FrontendHost = "127.0.0.1",
-  [int] $FrontendPort = 5173
+  [int] $FrontendPort = 5173,
+  [switch] $WithStripe,
+  [switch] $Help
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($Help) {
+  Get-Help -Detailed $PSCommandPath
+  return
+}
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $backendPath = Join-Path $repoRoot "backend"
@@ -61,9 +82,12 @@ function Assert-CommandExists {
 
 Assert-PathExists -Path $backendPath -Label "Dossier backend"
 Assert-PathExists -Path $frontendPath -Label "Dossier frontend"
-Assert-PathExists -Path $stripeScriptPath -Label "Script Stripe"
 Assert-CommandExists -Name "npm" -InstallHint "Installez Node.js ou ajoutez npm au PATH."
-Assert-CommandExists -Name "stripe" -InstallHint "Installez Stripe CLI ou ajoutez stripe au PATH."
+
+if ($WithStripe) {
+  Assert-PathExists -Path $stripeScriptPath -Label "Script Stripe"
+  Assert-CommandExists -Name "stripe" -InstallHint "Installez Stripe CLI ou relancez sans -WithStripe."
+}
 
 if (-not (Test-Path -LiteralPath $venvActivatePath)) {
   Assert-CommandExists -Name "py" -InstallHint "Installez Python 3.13 avec le lanceur py.exe."
@@ -106,9 +130,14 @@ Set-Location -LiteralPath '$repoRoot'
 $wtArguments = @(
   "new-tab", "--title", "Backend", $shellCommand, "-NoExit", "-Command", $backendCommand,
   ";",
-  "new-tab", "--title", "Frontend", $shellCommand, "-NoExit", "-Command", $frontendCommand,
-  ";",
-  "new-tab", "--title", "Stripe", $shellCommand, "-NoExit", "-Command", $stripeCommand
+  "new-tab", "--title", "Frontend", $shellCommand, "-NoExit", "-Command", $frontendCommand
 )
+
+if ($WithStripe) {
+  $wtArguments += @(
+    ";",
+    "new-tab", "--title", "Stripe", $shellCommand, "-NoExit", "-Command", $stripeCommand
+  )
+}
 
 & $wtCommand.Source @wtArguments

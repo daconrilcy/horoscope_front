@@ -15,7 +15,7 @@ OWNERSHIP_REGISTRY_PATH = (
     / "classify-backend-ops-quality-tests"
     / "ops-quality-test-ownership.md"
 )
-CONCERNED_PATTERN = re.compile(r"(docs|scripts|ops|secret|security)")
+CONCERNED_PATTERN = re.compile(r"(docs|scripts?|ops|secret|security)")
 ALLOWED_GROUPS = {"docs", "scripts", "secrets", "security", "ops"}
 ALLOWED_OWNERS = {
     "Backend quality suite registry",

@@ -41,3 +41,4 @@ alembic upgrade head
 - `scripts/security-verification.ps1`
 - `scripts/backup-db.ps1` / `scripts/restore-db.ps1`
 - `scripts/load-test-critical.ps1`
+- `scripts/start-dev-stack.ps1` (voir `docs/local-dev-stack.md`; Stripe via `-WithStripe`)
