@@ -19,9 +19,9 @@ from condamad_story_extract_ac import extract_acceptance_criteria  # noqa: E402
 from condamad_story_validate import validate_story  # noqa: E402
 
 
-VALID_STORY = """# Story test-story: Harden service imports
+VALID_STORY = """# Story CS-001 test-story: Harden service imports
 
-Status: ready-for-dev
+Status: ready-to-dev
 
 ## 1. Objective
 
@@ -439,17 +439,31 @@ class CondamadStoryValidateSelfTest(unittest.TestCase):
         """Une story complete passe le contrat."""
         self.assertEqual(validate_story(self.write_story(VALID_STORY)), [])
 
-    def test_ready_for_review_story_passes(self) -> None:
+    def test_story_without_number_fails(self) -> None:
+        """Une story sans numero stable est refusee."""
+        story = VALID_STORY.replace(
+            "# Story CS-001 test-story: Harden service imports",
+            "# Story test-story: Harden service imports",
+        )
+        errors = validate_story(self.write_story(story))
+        self.assertTrue(any("sequential number" in error for error in errors))
+
+    def test_ready_to_review_story_passes(self) -> None:
         """Une story livree pour revue reste valide structurellement."""
         story = VALID_STORY.replace(
-            "Status: ready-for-dev",
-            "Status: ready-for-review",
+            "Status: ready-to-dev",
+            "Status: ready-to-review",
         )
+        self.assertEqual(validate_story(self.write_story(story)), [])
+
+    def test_done_story_passes(self) -> None:
+        """Une story terminee reste valide structurellement."""
+        story = VALID_STORY.replace("Status: ready-to-dev", "Status: done")
         self.assertEqual(validate_story(self.write_story(story)), [])
 
     def test_unknown_status_fails(self) -> None:
         """Un statut hors cycle CONDAMAD connu est refuse."""
-        story = VALID_STORY.replace("Status: ready-for-dev", "Status: completed")
+        story = VALID_STORY.replace("Status: ready-to-dev", "Status: completed")
         errors = validate_story(self.write_story(story))
         self.assertTrue(any("Story status must be one of" in error for error in errors))
 

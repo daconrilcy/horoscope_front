@@ -79,6 +79,16 @@ Use `templates/story-template.md`.
 For conditional transverse sections, choose exactly one matching active or
 not-applicable snippet from `templates/snippets/` and inline it into the story.
 
+Before drafting, assign story numbering:
+
+- read `_condamad/stories/story-status.md` when it exists;
+- allocate the next unused `CS-###` number;
+- if the tracker is missing, create it and seed known existing stories when
+  practical;
+- use output path `_condamad/stories/<CS-###>-<story-key>/00-story.md` unless
+  the user provided an explicit path;
+- record the number in the story title and in the tracker.
+
 The draft must include:
 
 - objective;
@@ -137,7 +147,7 @@ python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py --
 ```
 
 Fix the story until all required validation commands pass. A story must not be
-marked `ready-for-dev` while the validator or strict lint fails.
+marked `ready-to-dev` while the validator or strict lint fails.
 
 ## Step 6b - Adversarial Story Review
 
@@ -153,7 +163,7 @@ Check:
 - Can an agent pass ACs with grep-only evidence while behavior remains?
 - Can an agent avoid deletion through repointing or soft-delete?
 - Can an agent create a new route, wrapper, alias, or fallback?
-- Can an agent mark `ready-for-dev` while user decision is needed?
+- Can an agent mark `ready-to-dev` while user decision is needed?
 - Can the story pass with `rg` only while runtime behavior is wrong?
 - Can the story change a contract while `Behavior change allowed: no`?
 - Can the agent keep an exception without expiry?
@@ -170,10 +180,18 @@ If yes, tighten the story before writing final output.
 Persist the final story at the requested path or at:
 
 ```text
-_condamad/stories/<story-key>/00-story.md
+_condamad/stories/<CS-###>-<story-key>/00-story.md
 ```
 
-Report the story path and validation commands run.
+Update `_condamad/stories/story-status.md` in the same turn:
+
+- add a row for new stories with status `ready-to-dev`;
+- update the existing row when moving to `ready-to-review` or `done`;
+- preserve historical rows and never renumber them;
+- use ISO date format `YYYY-MM-DD` for the last update.
+
+Report the story path, tracker path, assigned story number, and validation
+commands run.
 
 Before packaging the skill, remove generated Python artifacts and verify none
 remain under `condamad-story-writer`:

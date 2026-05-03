@@ -2,15 +2,51 @@
 
 <!-- Contrat de structure obligatoire pour une story CONDAMAD. -->
 
+## Required Story Number
+
+Each story must have a stable sequential story number:
+
+```text
+# Story CS-### <story-key>: <title>
+```
+
+The number comes from `_condamad/stories/story-status.md`. New numbers are
+allocated by incrementing the highest existing `CS-###` row. Existing numbers
+must never be reused or changed.
+
 ## Required Status
 
 Use:
 
 ```text
-Status: ready-for-dev
+Status: ready-to-dev
 ```
 
-Only use `ready-for-dev` when the story passes `condamad_story_validate.py`.
+Allowed statuses are:
+
+- `ready-to-dev`
+- `ready-to-review`
+- `done`
+
+Only use `ready-to-dev` when the story passes `condamad_story_validate.py`.
+Only use `ready-to-review` when implementation evidence exists. Only use
+`done` when review evidence exists.
+
+## Required Tracking Document
+
+Every story creation or status transition must update:
+
+```text
+_condamad/stories/story-status.md
+```
+
+Required table columns:
+
+| Story ID | Story key | Title | Status | Path | Source | Last update |
+|---|---|---|---|---|---|---|
+
+`Status` must be one of `ready-to-dev`, `ready-to-review`, or `done`.
+`Last update` must use ISO date format `YYYY-MM-DD`.
 
 ## Required Base Sections
 

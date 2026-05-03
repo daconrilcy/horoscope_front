@@ -1,6 +1,6 @@
-# Story <story-key>: <title>
+# Story CS-### <story-key>: <title>
 
-Status: ready-for-dev
+Status: ready-to-dev
 
 <!-- Keep contract headings and markers in English. Story content may be written in French. -->
 

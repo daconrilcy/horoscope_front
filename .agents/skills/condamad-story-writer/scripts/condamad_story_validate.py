@@ -69,9 +69,12 @@ SUPPORTED_ARCHETYPES = {
 }
 
 ALLOWED_STORY_STATUSES = {
-    "ready-for-dev",
-    "ready-for-review",
+    "ready-to-dev",
+    "ready-to-review",
+    "done",
 }
+
+STORY_TITLE_RE = re.compile(r"^# Story\s+CS-\d{3}\s+\S+:\s+\S", re.M)
 
 KNOWN_CONTRACTS = (
     "Runtime Source of Truth",
@@ -1683,13 +1686,19 @@ def validate_story(path: Path) -> list[str]:
     if not path.is_file():
         return [f"Story not found: {path}"]
     text = read_text(path)
+    if STORY_TITLE_RE.search(text) is None:
+        errors.append(
+            "Story title must include a sequential number: # Story CS-### <story-key>: <title>"
+        )
     status_match = re.search(r"^Status:\s*(?P<status>\S+)\s*$", text, re.I | re.M)
     if status_match is None:
         errors.append(
-            "Story must contain a valid Status line: ready-for-dev or ready-for-review"
+            "Story must contain a valid Status line: ready-to-dev, ready-to-review, or done"
         )
     elif status_match.group("status").casefold() not in ALLOWED_STORY_STATUSES:
-        errors.append("Story status must be one of: ready-for-dev, ready-for-review")
+        errors.append(
+            "Story status must be one of: ready-to-dev, ready-to-review, done"
+        )
     for missing in has_required_sections(text):
         errors.append(f"Missing required section: {missing}")
     errors.extend(validate_current_state_evidence(text))
