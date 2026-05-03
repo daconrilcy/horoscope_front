@@ -1,7 +1,10 @@
+"""Tests de validation startup du Stripe Customer Portal."""
+
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+import stripe
 
 from app.startup.stripe_portal_validation import run_stripe_portal_startup_validation
 
@@ -154,3 +157,51 @@ def test_startup_validation_warn_mode_does_not_block_runtime(
         run_stripe_portal_startup_validation(settings)
 
     assert "stripe_portal_startup_validation_advisory" in caplog.text
+
+
+def test_startup_validation_timeout_is_fail_open_in_warn_mode(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Documente la décision fail-open en mode warn sur erreur Stripe transitoire."""
+    settings = SimpleNamespace(
+        stripe_secret_key="sk_test_123",
+        stripe_portal_configuration_id="bpc_123",
+        stripe_portal_endpoints_enabled=True,
+        app_env="development",
+        stripe_price_basic="price_basic",
+        stripe_price_premium="price_premium",
+        stripe_portal_validation_mode="warn",
+    )
+    mock_client = MagicMock()
+    mock_client.billing_portal.configurations.retrieve.side_effect = stripe.APIConnectionError(
+        message="Request timed out"
+    )
+
+    with (
+        caplog.at_level("INFO", logger="app.startup.stripe_portal_validation"),
+        patch("app.startup.stripe_portal_validation.get_stripe_client", return_value=mock_client),
+    ):
+        run_stripe_portal_startup_validation(settings)
+
+    assert "stripe_portal_startup_validation_advisory" in caplog.text
+
+
+def test_startup_validation_timeout_is_fail_closed_in_strict_mode() -> None:
+    """Documente la décision fail-closed en mode strict sur erreur Stripe transitoire."""
+    settings = SimpleNamespace(
+        stripe_secret_key="sk_test_123",
+        stripe_portal_configuration_id="bpc_123",
+        stripe_portal_endpoints_enabled=True,
+        app_env="development",
+        stripe_price_basic="price_basic",
+        stripe_price_premium="price_premium",
+        stripe_portal_validation_mode="strict",
+    )
+    mock_client = MagicMock()
+    mock_client.billing_portal.configurations.retrieve.side_effect = stripe.APIConnectionError(
+        message="Request timed out"
+    )
+
+    with patch("app.startup.stripe_portal_validation.get_stripe_client", return_value=mock_client):
+        with pytest.raises(RuntimeError, match="Unable to retrieve Stripe Customer Portal"):
+            run_stripe_portal_startup_validation(settings)

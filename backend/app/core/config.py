@@ -1,3 +1,5 @@
+"""Configuration applicative centralisee chargee depuis l'environnement."""
+
 from __future__ import annotations
 
 import logging
@@ -119,6 +121,25 @@ class Settings:
         raise ValueError(
             f"STRIPE_PAYMENT_METHOD_COLLECTION must be 'always' or 'if_required', got '{value}'"
         )
+
+    @staticmethod
+    def _parse_stripe_network_policy_int(
+        env_name: str,
+        *,
+        default: int,
+        minimum: int,
+    ) -> int:
+        """Charge un entier de politique Stripe sans fallback silencieux invalide."""
+        raw = os.getenv(env_name)
+        if raw is None or not raw.strip():
+            return default
+        try:
+            parsed = int(raw.strip())
+        except ValueError as error:
+            raise RuntimeError(f"{env_name} must be an integer") from error
+        if parsed < minimum:
+            raise RuntimeError(f"{env_name} must be greater than or equal to {minimum}")
+        return parsed
 
     @staticmethod
     def _parse_stripe_trial_missing_payment_method_behavior() -> str | None:
@@ -380,6 +401,12 @@ class Settings:
         self.stripe_price_basic = os.getenv("STRIPE_PRICE_BASIC", "").strip() or None
         self.stripe_price_premium = os.getenv("STRIPE_PRICE_PREMIUM", "").strip() or None
         self.stripe_api_version = os.getenv("STRIPE_API_VERSION", "2026-04-22.dahlia").strip()
+        self.stripe_timeout_seconds = self._parse_stripe_network_policy_int(
+            "STRIPE_TIMEOUT_SECONDS", default=10, minimum=1
+        )
+        self.stripe_max_network_retries = self._parse_stripe_network_policy_int(
+            "STRIPE_MAX_NETWORK_RETRIES", default=2, minimum=0
+        )
         self.stripe_checkout_success_url = os.getenv(
             "STRIPE_CHECKOUT_SUCCESS_URL",
             "http://localhost:5173/billing/success?session_id={CHECKOUT_SESSION_ID}",

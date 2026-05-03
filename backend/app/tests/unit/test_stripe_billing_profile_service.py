@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import stripe
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -420,3 +421,38 @@ def test_force_admin_subscription_refresh_rejects_missing_stripe_client(
     assert exc_info.value.code == "stripe_client_not_configured"
     assert exc_info.value.message == "Stripe client not configured"
     mock_get_client.assert_called_once_with()
+
+
+@patch("app.services.billing.stripe_billing_profile_service.get_stripe_client")
+def test_force_admin_subscription_refresh_timeout_keeps_admin_error_mapping(
+    mock_get_client, db: Session, user_id: int
+):
+    """Vérifie le mapping admin refresh en cas d'erreur Stripe transitoire."""
+    db.add(
+        StripeBillingProfileModel(
+            user_id=user_id,
+            stripe_customer_id="cus_timeout",
+            stripe_subscription_id="sub_timeout",
+            entitlement_plan="free",
+            subscription_status="active",
+        )
+    )
+    db.commit()
+
+    mock_client = MagicMock()
+    mock_client.subscriptions.retrieve.side_effect = stripe.APIConnectionError(
+        message="Request timed out"
+    )
+    mock_get_client.return_value = mock_client
+
+    with pytest.raises(StripeBillingAdminRefreshError) as exc_info:
+        StripeBillingProfileService.force_admin_subscription_refresh(
+            db,
+            user_id=user_id,
+            request_id="req_timeout",
+            actor_user_id=42,
+            actor_role="admin",
+        )
+
+    assert exc_info.value.code == "stripe_api_error"
+    assert "Request timed out" in exc_info.value.details["error_message"]

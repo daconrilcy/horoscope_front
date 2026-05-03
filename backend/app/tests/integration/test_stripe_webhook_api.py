@@ -9,6 +9,7 @@ import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
+import stripe
 from fastapi.testclient import TestClient
 
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
@@ -312,6 +313,55 @@ async def test_webhook_business_failure_persists_failed_and_retry_is_accepted():
                         assert processed_record.status == "processed"
                         assert processed_record.processing_attempts == 2
                         assert processed_record.last_error is None
+
+
+@pytest.mark.asyncio
+async def test_webhook_transient_hydration_failure_is_retryable():
+    """Documente la décision fail-closed du webhook sur hydratation Stripe transitoire."""
+    event_id = _unique_id("evt_timeout")
+    payload = f'{{"id": "{event_id}", "type": "checkout.session.completed"}}'.encode()
+    secret = "whsec_test"
+    headers = {"stripe-signature": _sign_payload(payload, secret)}
+
+    with patch("app.core.config.settings.stripe_webhook_secret", secret):
+        mock_event = MagicMock()
+        mock_event.id = event_id
+        mock_event.type = "checkout.session.completed"
+        mock_event.livemode = False
+        mock_event.data.object = {
+            "id": "cs_timeout_123",
+            "payment_status": "paid",
+            "customer": "cus_timeout_123",
+            "metadata": {
+                "app_user_id": "123",
+                "billing_operation": "subscription_upgrade",
+                "stripe_subscription_id": "sub_timeout_123",
+                "stripe_subscription_item_id": "si_timeout_123",
+                "target_price_id": "price_premium",
+                "target_plan": "premium",
+                "quantity": "1",
+            },
+        }
+
+        with patch(
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            with patch(
+                "app.services.billing.stripe_customer_portal_service.get_stripe_client"
+            ) as mock_get_client:
+                mock_client = MagicMock()
+                mock_client.subscriptions.update.side_effect = stripe.APIConnectionError(
+                    message="Request timed out"
+                )
+                mock_get_client.return_value = mock_client
+
+                response = client.post(
+                    "/v1/billing/stripe-webhook", content=payload, headers=headers
+                )
+
+    assert response.status_code == 500
+    assert response.json()["error"]["code"] == "stripe_webhook_processing_failed"
 
 
 @pytest.mark.asyncio

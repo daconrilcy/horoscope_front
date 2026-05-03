@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
+import stripe
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -35,9 +36,10 @@ STRIPE_PRICE_ENTITLEMENT_MAP: dict[str, str] = _build_price_entitlement_map()
 class StripeBillingAdminRefreshError(Exception):
     """Erreur applicative du refresh Stripe force depuis l'administration."""
 
-    def __init__(self, code: str, message: str) -> None:
+    def __init__(self, code: str, message: str, details: dict[str, str] | None = None) -> None:
         self.code = code
         self.message = message
+        self.details = details or {}
         super().__init__(message)
 
 
@@ -103,7 +105,15 @@ class StripeBillingProfileService:
                 message="Stripe client not configured",
             )
 
-        subscription = client.subscriptions.retrieve(profile.stripe_subscription_id)
+        try:
+            subscription = client.subscriptions.retrieve(profile.stripe_subscription_id)
+        except stripe.StripeError as error:
+            logger.exception("Stripe API error during admin subscription refresh")
+            raise StripeBillingAdminRefreshError(
+                code="stripe_api_error",
+                message="Stripe API error",
+                details={"error_message": str(error)},
+            ) from error
         before = {
             "subscription_status": profile.subscription_status,
             "entitlement_plan": profile.entitlement_plan,

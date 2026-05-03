@@ -1,6 +1,9 @@
+"""Tests du service de creation de sessions Stripe Checkout."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
+import stripe
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
@@ -144,8 +147,6 @@ def test_create_checkout_session_no_email_no_customer(
 def test_create_checkout_session_stripe_error(
     db, mock_stripe_client, mock_profile_service, mock_price_map
 ):
-    import stripe
-
     mock_profile_service.get_or_create_profile.return_value = StripeBillingProfileModel(
         user_id=1, stripe_customer_id="cus_1"
     )
@@ -156,6 +157,26 @@ def test_create_checkout_session_stripe_error(
             db, user_id=1, user_email="t@e.c", plan="basic", success_url="h", cancel_url="c"
         )
     assert excinfo.value.code == "stripe_api_error"
+
+
+def test_create_checkout_session_timeout_keeps_stripe_api_error_mapping(
+    db, mock_stripe_client, mock_profile_service, mock_price_map
+):
+    """Vérifie que les timeouts Stripe conservent le contrat d'erreur checkout."""
+    mock_profile_service.get_or_create_profile.return_value = StripeBillingProfileModel(
+        user_id=1, stripe_customer_id="cus_1"
+    )
+    mock_stripe_client.checkout.sessions.create.side_effect = stripe.APIConnectionError(
+        message="Request timed out"
+    )
+
+    with pytest.raises(StripeCheckoutServiceError) as excinfo:
+        StripeCheckoutService.create_checkout_session(
+            db, user_id=1, user_email="t@e.c", plan="basic", success_url="h", cancel_url="c"
+        )
+
+    assert excinfo.value.code == "stripe_api_error"
+    assert "Request timed out" in excinfo.value.details["error_message"]
 
 
 def test_create_checkout_session_with_automatic_tax(
