@@ -16,7 +16,26 @@ Le mécanisme repose sur une table dédiée `stripe_webhook_events` qui fait off
 
 2. **Succès (`processed`)** : Une fois la logique métier terminée avec succès, l'événement est marqué comme `processed`. Toute livraison ultérieure du même `event.id` sera ignorée avec un code 200 (pour acquitter Stripe).
 
-3. **Échec (`failed`)** : En cas d'exception durant le traitement métier, l'événement est marqué comme `failed` et l'erreur est stockée. Cela permet à Stripe de retenter la livraison ultérieurement, déclenchant un nouveau cycle de claim.
+3. **Échec (`failed`)** : En cas d'exception durant le traitement métier, l'événement est marqué comme `failed` et l'erreur est stockée. Après commit de cette ligne, l'endpoint retourne un HTTP non-2xx retryable afin que Stripe retente automatiquement la livraison et déclenche un nouveau cycle de claim.
+
+### Contrat de retry Stripe
+
+Les statuts `processed`, `event_ignored`, `user_not_resolved` et `duplicate_ignored` sont acquittés en HTTP 200. Une erreur de signature reste rejetée en HTTP 400. Une erreur interne après signature valide et tentative de traitement retourne une enveloppe d'erreur HTTP 500 avec le code `stripe_webhook_processing_failed`.
+
+Ce code 500 est volontaire: il indique à Stripe que la livraison ne doit pas être considérée comme terminée. La ligne `stripe_webhook_events` conserve l'état `failed`, puis une livraison ultérieure du même `event.id` repasse cette ligne en `processing`, vide `last_error` et incrémente `processing_attempts`.
+
+### Chemin opérateur pour une ligne `failed`
+
+Pour identifier les événements à réconcilier:
+
+```sql
+SELECT stripe_event_id, event_type, processing_attempts, last_error
+FROM stripe_webhook_events
+WHERE status = 'failed'
+ORDER BY received_at DESC;
+```
+
+Si Stripe n'a pas encore rejoué l'événement automatiquement, l'opérateur peut relancer la livraison depuis Stripe CLI ou le Dashboard Stripe avec l'`event.id` concerné. Le backend ne requiert pas de mutation manuelle de la ligne: le reclaim d'une ligne `failed` est pris en charge par `StripeWebhookIdempotencyService.claim_event`.
 
 ## Schéma de données
 

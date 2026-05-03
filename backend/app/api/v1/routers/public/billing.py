@@ -1,3 +1,5 @@
+"""Routeur public de facturation exposant les contrats HTTP billing."""
+
 from __future__ import annotations
 
 import logging
@@ -11,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.errors import resolve_application_error_status
 from app.core.config import settings
+from app.core.exceptions import ApplicationError
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.billing import BillingPlanModel
 from app.infra.db.session import get_db_session
@@ -619,6 +622,7 @@ def create_stripe_subscription_upgrade_payment(
     "/stripe-webhook",
     responses={
         400: {"model": ErrorEnvelope},
+        500: {"model": ErrorEnvelope},
         503: {"model": ErrorEnvelope},
     },
 )
@@ -652,6 +656,20 @@ async def stripe_webhook(
         # 1. Traitement métier (prioritaire)
         status = StripeWebhookService.handle_event(db, event)
         db.commit()
+        if status == "failed_internal":
+            logger.warning(
+                "stripe_webhook: signed processing failed event_id=%s type=%s outcome=%s",
+                event.id,
+                event.type,
+                status,
+            )
+            return _raise_error(
+                status_code=500,
+                request_id=request_id,
+                code="stripe_webhook_processing_failed",
+                message="Stripe webhook processing failed; delivery should be retried",
+                details={"event_id": event.id, "event_type": event.type},
+            )
 
         # 2. Audit (best-effort, ne doit pas bloquer le retour 200 à Stripe)
         try:
@@ -677,6 +695,9 @@ async def stripe_webhook(
 
         return {"status": status}
 
+    except ApplicationError:
+        raise
+
     except StripeWebhookServiceError as error:
         db.rollback()
         if error.code == "invalid_signature":
@@ -694,6 +715,10 @@ async def stripe_webhook(
     except Exception:
         db.rollback()
         logger.exception("stripe_webhook: unexpected internal error")
-        # On retourne 200 même ici selon AC3 pour éviter les retries Stripe
-        # sur des erreurs applicatives après signature valide.
-        return {"status": "failed_internal"}
+        return _raise_error(
+            status_code=500,
+            request_id=request_id,
+            code="stripe_webhook_processing_failed",
+            message="Stripe webhook processing failed; delivery should be retried",
+            details={},
+        )

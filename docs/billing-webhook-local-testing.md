@@ -105,9 +105,10 @@ Statuts de retour attendus côté endpoint :
 | `processed` | L'événement signé a été traité avec succès. |
 | `event_ignored` | L'événement est valide mais non pris en charge. |
 | `user_not_resolved` | Le `customer_id` Stripe n'est pas relié à un utilisateur local. |
-| `failed_internal` | La signature est valide mais une erreur applicative interne est survenue. |
 
 Avec le bon secret CLI en place, l'événement doit être accepté par l'API et retourner un statut métier HTTP 200.
+
+Si la signature est valide mais que le traitement métier échoue, l'endpoint retourne une enveloppe d'erreur HTTP 500 avec le code `stripe_webhook_processing_failed`. Ce statut est volontairement non-2xx pour laisser Stripe rejouer la livraison automatiquement. La ligne `stripe_webhook_events` reste en `failed` jusqu'à une livraison ultérieure réussie.
 
 ## 5. Scénario de signature invalide
 

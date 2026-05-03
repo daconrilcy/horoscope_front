@@ -1,3 +1,5 @@
+"""Tests d'integration du contrat HTTP public du webhook Stripe."""
+
 from __future__ import annotations
 
 import hashlib
@@ -96,8 +98,8 @@ async def test_webhook_success_flow():
 
 
 @pytest.mark.asyncio
-async def test_webhook_app_error_returns_200():
-    """AC3: Erreur applicative interne après signature valide -> 200"""
+async def test_webhook_app_error_returns_retryable_error():
+    """Une erreur signee inattendue doit rester retryable pour Stripe."""
     event_id = _unique_id("evt_error")
     payload = f'{{"id": "{event_id}", "type": "checkout.session.completed"}}'.encode()
     secret = "whsec_test"
@@ -124,8 +126,8 @@ async def test_webhook_app_error_returns_200():
                     "/v1/billing/stripe-webhook", content=payload, headers=headers
                 )
 
-                assert response.status_code == 200
-                assert response.json() == {"status": "failed_internal"}
+                assert response.status_code == 500
+                assert response.json()["error"]["code"] == "stripe_webhook_processing_failed"
 
 
 @pytest.mark.asyncio
@@ -250,8 +252,10 @@ async def test_webhook_business_failure_persists_failed_and_retry_is_accepted():
                     first_response = client.post(
                         "/v1/billing/stripe-webhook", content=payload, headers=headers
                     )
-                    assert first_response.status_code == 200
-                    assert first_response.json() == {"status": "failed_internal"}
+                    assert first_response.status_code == 500
+                    assert (
+                        first_response.json()["error"]["code"] == "stripe_webhook_processing_failed"
+                    )
 
                     with open_app_test_db_session() as db:
                         failed_record = (

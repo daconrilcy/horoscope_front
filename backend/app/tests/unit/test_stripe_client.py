@@ -3,6 +3,8 @@
 import importlib.util
 from unittest.mock import patch
 
+import pytest
+
 from app.infra.stripe import client as sc
 
 
@@ -27,4 +29,5 @@ def test_get_stripe_client_returns_client_when_secret_present():
 def test_legacy_integrations_stripe_client_module_is_absent():
     """Empêche le retour d'une façade legacy hors de la couche infra."""
     legacy_module = ".".join(["app", "integrations", "stripe_client"])
-    assert importlib.util.find_spec(legacy_module) is None
+    with pytest.raises(ModuleNotFoundError):
+        importlib.util.find_spec(legacy_module)

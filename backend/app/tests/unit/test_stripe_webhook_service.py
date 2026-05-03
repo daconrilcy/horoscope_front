@@ -1,3 +1,5 @@
+"""Tests unitaires du service de traitement des webhooks Stripe."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -242,6 +244,30 @@ class TestStripeWebhookService:
             result = StripeWebhookService.handle_event(db, mock_event)
 
             assert result == "user_not_resolved"
+
+    def test_handle_signed_processing_failure_returns_retryable_outcome(self, db):
+        """L'echec metier signe reste visible pour le mapping HTTP retryable."""
+        mock_event = MagicMock()
+        mock_event.id = "evt_retryable_failure"
+        mock_event.type = "invoice.paid"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+        mock_event.to_dict.return_value = {"id": "evt_retryable_failure"}
+
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+            mock_profile = MagicMock()
+            mock_profile.user_id = 42
+            mock_get_profile.return_value = mock_profile
+
+            with patch(UPDATE_EVENT_PAYLOAD_PATH, side_effect=RuntimeError("boom")):
+                with patch(
+                    "app.services.billing.stripe_webhook_service."
+                    "StripeWebhookIdempotencyService.mark_failed"
+                ) as mock_mark_failed:
+                    result = StripeWebhookService.handle_event(db, mock_event)
+
+        assert result == "failed_internal"
+        mock_mark_failed.assert_called_once_with(db, "evt_retryable_failure", "boom")
 
     def test_invoice_payment_succeeded_is_now_ignored(self, db):
         mock_event = MagicMock()

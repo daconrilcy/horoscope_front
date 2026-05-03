@@ -1,3 +1,5 @@
+"""Service billing responsable de verifier et traiter les webhooks Stripe."""
+
 from __future__ import annotations
 
 import logging
@@ -169,8 +171,7 @@ class StripeWebhookService:
                 str(exc),
             )
             StripeWebhookIdempotencyService.mark_failed(db, event_id, str(exc))
-            # On retourne "failed_internal" pour que le router billing.py
-            # puisse committer la marque de failure sans rollback global.
+            # Le routeur transforme cet outcome en non-2xx apres commit de la ligne failed.
             return "failed_internal"
 
     @staticmethod
