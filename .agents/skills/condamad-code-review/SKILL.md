@@ -43,3 +43,6 @@ Before reviewing, load:
 - Do not hide findings because the user asked for a "quick" review.
 - Ensure `_condamad/stories/regression-guardrails.md` exists, read it, and
   treat missing applicable guardrail evidence as a review finding.
+- When reviewing a tracked CONDAMAD story, update
+  `_condamad/stories/story-status.md` after the verdict using the same registry
+  contract as `condamad-story-writer`.

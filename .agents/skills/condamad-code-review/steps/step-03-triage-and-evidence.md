@@ -56,4 +56,10 @@ If a CONDAMAD capsule exists, write or update
 Replace the full file on each review run. Do not append multiple contradictory
 reviews to the same artifact.
 
+If the reviewed story is tracked in `_condamad/stories/story-status.md`, update
+the matching registry row after writing the review artifact:
+
+- `done` for an accepted review verdict with required evidence complete;
+- `ready-to-review` for `BLOCKING` or `CHANGES_REQUESTED`.
+
 Do not modify implementation files in this step.

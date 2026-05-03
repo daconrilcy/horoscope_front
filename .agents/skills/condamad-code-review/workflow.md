@@ -96,6 +96,10 @@ a governance artifact when the registry is missing or a completed story
 establishes a new durable invariant. Do not edit application code during review
 unless the user explicitly asks for fixes.
 
+When the review target is a tracked CONDAMAD story, updating
+`_condamad/stories/story-status.md` is also allowed as a governance artifact.
+Use the registry format defined by `condamad-story-writer`.
+
 Recommended review artifact structure:
 
 ```md
@@ -219,3 +223,25 @@ Use exactly one:
   full-regression validation could not be run and the residual risk is
   documented.
 - `CLEAN`: no actionable findings and validation evidence is adequate.
+
+## Story Status Synchronization
+
+After determining the final verdict for a tracked CONDAMAD story, synchronize
+`_condamad/stories/story-status.md` before the final response:
+
+- locate the row matching the reviewed story by `Story ID`, story key, or
+  capsule `00-story.md` path;
+- set `Status` to `done` only when the verdict is `CLEAN`, or when the verdict
+  is `ACCEPTABLE_WITH_LIMITATIONS` and all required validation evidence is
+  complete with only documented residual risk remaining;
+- keep or set `Status` to `ready-to-review` when the verdict is `BLOCKING` or
+  `CHANGES_REQUESTED`;
+- never set `done` when required validation evidence is missing, an AC fails, a
+  blocking regression guardrail is unresolved, or a required patch remains;
+- preserve the existing `Story ID`, story key, title, path, and source;
+- update `Last update` to the current local date in `YYYY-MM-DD` format;
+- if the tracking document is missing but a capsule exists, create it using the
+  `condamad-story-writer` registry format and seed the reviewed story row.
+
+Do not report a story as accepted or done in chat or in
+`generated/11-code-review.md` without also updating the matching registry row.

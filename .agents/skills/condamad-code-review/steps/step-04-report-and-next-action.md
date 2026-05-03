@@ -68,6 +68,7 @@ Include:
 - verdict;
 - number of findings by severity;
 - persisted review path, if written;
+- story status registry update, if a tracked CONDAMAD story was reviewed;
 - commands run or not run;
 - remaining risks or "None identified";
 - suggested reviewer focus when verdict is not `CLEAN`.
