@@ -7,7 +7,7 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
-from app.prediction.context_loader import LoadedPredictionContext
+from app.prediction.context import LoadedPredictionContext
 from app.prediction.schemas import (
     AstroEvent,
     EngineInput,

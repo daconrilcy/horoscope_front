@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+"""Charge le contexte prediction depuis la base via les repositories infra."""
+
 from datetime import date
 from types import MappingProxyType
-from typing import Mapping
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -25,26 +25,15 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
+from app.prediction.context import LoadedPredictionContext
 from app.prediction.exceptions import PredictionContextError
 
 _PROVISIONAL_CALIBRATION_LABEL = "provisional"
 _MIXED_CALIBRATION_LABEL = "mixed"
 
 
-@dataclass(frozen=True)
-class LoadedPredictionContext:
-    """Complete and validated prediction context loaded from DB."""
-
-    prediction_context: PredictionContext
-    ruleset_context: RulesetContext
-    calibrations: Mapping[str, CalibrationData | None]
-    is_provisional_calibration: bool
-    calibration_label: str
-    language: str = "fr"
-
-
 class PredictionContextLoader:
-    """Service to load and validate the complete prediction reference context."""
+    """Charge et valide le contexte de reference complet pour la prediction."""
 
     def load(
         self,
@@ -53,21 +42,20 @@ class PredictionContextLoader:
         ruleset_version: str,
         reference_date: date | None = None,
     ) -> LoadedPredictionContext:
-        """
-        Loads the complete prediction context for a given reference and ruleset version.
+        """Charge le contexte complet pour une version reference et ruleset donnee.
 
         Args:
-            db: SQLAlchemy session.
-            reference_version: Name of the reference version (e.g., 'V1').
-            ruleset_version: Name of the ruleset version (e.g., 'V1').
-            reference_date: Date for calibration lookup. Defaults to today.
+            db: session SQLAlchemy active.
+            reference_version: nom de la version de reference, par exemple `V1`.
+            ruleset_version: nom de la version de ruleset, par exemple `V1`.
+            reference_date: date de recherche des calibrations, aujourd'hui par defaut.
 
         Returns:
-            LoadedPredictionContext: The fully loaded and validated context.
+            Contexte complet, valide et fige pour le moteur de prediction.
 
         Raises:
-            PredictionContextError: If a version is missing, if there's a mismatch,
-                                   or if required components are empty.
+            PredictionContextError: si une version manque, si les versions sont
+                incoherentes ou si des composants obligatoires sont vides.
         """
         if reference_date is None:
             reference_date = datetime_provider.today()
@@ -164,7 +152,7 @@ class PredictionContextLoader:
         return (is_provisional, stable_label)
 
     def _validate_context(self, pred_ctx: PredictionContext, ruleset_ctx: RulesetContext) -> None:
-        """Validates that mandatory components are present."""
+        """Verifie que les composants obligatoires du contexte sont presents."""
         if not pred_ctx.categories:
             raise PredictionContextError("Prediction context has no enabled categories")
 

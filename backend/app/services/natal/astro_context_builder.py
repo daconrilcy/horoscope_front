@@ -120,9 +120,9 @@ class AstroContextBuilder:
 
             # 2. Get predictions (reusing DailyPredictionService)
             # We need to initialize the service with its dependencies
-            from app.prediction.context_loader import PredictionContextLoader
-            from app.prediction.persistence_service import PredictionPersistenceService
+            from app.services.prediction.context_loader import PredictionContextLoader
             from app.services.prediction.engine_orchestrator import EngineOrchestrator
+            from app.services.prediction.persistence_service import PredictionPersistenceService
 
             loader = PredictionContextLoader()
             persistence = PredictionPersistenceService()

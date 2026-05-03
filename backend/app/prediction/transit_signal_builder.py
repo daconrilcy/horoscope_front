@@ -12,7 +12,7 @@ from app.prediction.event_detector import EventDetector
 from app.prediction.schemas import AstroEvent
 
 if TYPE_CHECKING:
-    from app.prediction.context_loader import LoadedPredictionContext
+    from app.prediction.context import LoadedPredictionContext
     from app.prediction.schemas import NatalChart, StepAstroState
 
 logger = logging.getLogger(__name__)

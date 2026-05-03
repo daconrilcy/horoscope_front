@@ -11,7 +11,7 @@ from app.prediction.domain_router import DomainRouter
 from app.prediction.temporal_kernel import spread_event_weights
 
 if TYPE_CHECKING:
-    from app.prediction.context_loader import LoadedPredictionContext
+    from app.prediction.context import LoadedPredictionContext
     from app.prediction.schemas import AstroEvent, SamplePoint
 
 logger = logging.getLogger(__name__)

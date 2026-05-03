@@ -13,8 +13,8 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
-from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.exceptions import PredictionContextError
+from app.services.prediction.context_loader import PredictionContextLoader
 
 
 @pytest.fixture
@@ -120,8 +120,12 @@ def test_load_complete_ok(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo = mock_ref_repo_cls.return_value
         mock_ref_repo.load_prediction_context.return_value = valid_pred_ctx
@@ -147,8 +151,12 @@ def test_loaded_context_is_functionally_immutable(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo = mock_ref_repo_cls.return_value
         mock_ref_repo.load_prediction_context.return_value = valid_pred_ctx
@@ -181,8 +189,12 @@ def test_missing_categories_raises(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = invalid_pred_ctx
         mock_ref_repo_cls.return_value.get_categories.return_value = ()
@@ -202,8 +214,12 @@ def test_missing_planet_profiles_raises(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = invalid_pred_ctx
         mock_ref_repo_cls.return_value.get_categories.return_value = invalid_pred_ctx.categories
@@ -223,8 +239,12 @@ def test_missing_house_profiles_raises(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = invalid_pred_ctx
         mock_ref_repo_cls.return_value.get_categories.return_value = invalid_pred_ctx.categories
@@ -243,8 +263,12 @@ def test_missing_ruleset_raises(mock_db, mock_rv_model):
     valid_pred_ctx = build_prediction_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
         mock_ruleset_repo_cls.return_value.get_active_ruleset_context.return_value = None
@@ -259,8 +283,12 @@ def test_missing_params_raises(mock_db, mock_rv_model):
     invalid_ruleset_ctx = build_ruleset_context(parameters={})
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
         mock_ref_repo_cls.return_value.get_categories.return_value = valid_pred_ctx.categories
@@ -278,8 +306,12 @@ def test_version_mismatch_raises(mock_db, mock_rv_model):
     invalid_ruleset_ctx = build_ruleset_context(reference_version_id=2)
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
         mock_ruleset_repo_cls.return_value.get_active_ruleset_context.return_value = (
@@ -317,8 +349,12 @@ def test_categories_belong_to_correct_version(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo = mock_ref_repo_cls.return_value
         mock_ref_repo.load_prediction_context.return_value = loaded_pred_ctx
@@ -340,8 +376,12 @@ def test_missing_calibration_provisional(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
         mock_ref_repo_cls.return_value.get_categories.return_value = valid_pred_ctx.categories
@@ -363,8 +403,12 @@ def test_provisional_label_keeps_provisional_flag(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
         mock_ref_repo_cls.return_value.get_categories.return_value = valid_pred_ctx.categories
@@ -406,8 +450,12 @@ def test_mixed_stable_labels_are_reported_explicitly(mock_db, mock_rv_model):
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
         mock_ref_repo_cls.return_value.get_categories.return_value = valid_pred_ctx.categories
@@ -430,8 +478,12 @@ def test_repository_value_error_is_normalized(mock_db, mock_rv_model):
     valid_pred_ctx = build_prediction_context()
 
     with (
-        patch("app.prediction.context_loader.PredictionReferenceRepository") as mock_ref_repo_cls,
-        patch("app.prediction.context_loader.PredictionRulesetRepository") as mock_ruleset_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
     ):
         mock_ref_repo_cls.return_value.load_prediction_context.return_value = valid_pred_ctx
         mock_ruleset_repo_cls.return_value.get_active_ruleset_context.side_effect = ValueError(

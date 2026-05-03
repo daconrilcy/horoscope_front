@@ -19,7 +19,7 @@ from app.prediction.astro_calculator import AstroCalculator
 from app.prediction.block_generator import BlockGenerator
 from app.prediction.calibrator import PercentileCalibrator
 from app.prediction.category_codes import normalize_category_codes
-from app.prediction.context_loader import LoadedPredictionContext
+from app.prediction.context import LoadedPredictionContext
 from app.prediction.contribution_calculator import ContributionCalculator
 from app.prediction.daily_prediction_evidence_builder import DailyPredictionEvidenceBuilder
 from app.prediction.decision_window_builder import DecisionWindowBuilder

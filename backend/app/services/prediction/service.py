@@ -24,11 +24,11 @@ from app.services.prediction.types import ComputeMode, DailyPredictionServiceErr
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from app.prediction.context_loader import PredictionContextLoader
     from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
-    from app.prediction.persistence_service import PredictionPersistenceService
     from app.prediction.schemas import PersistablePredictionBundle
+    from app.services.prediction.context_loader import PredictionContextLoader
     from app.services.prediction.engine_orchestrator import EngineOrchestrator
+    from app.services.prediction.persistence_service import PredictionPersistenceService
     from app.services.prediction.request_resolver import ResolvedPredictionRequest
 
 

@@ -21,8 +21,8 @@ from app.services.prediction.request_resolver import PredictionRequestResolver
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from app.prediction.context_loader import PredictionContextLoader
     from app.prediction.persisted_baseline import PersistedUserBaseline
+    from app.services.prediction.context_loader import PredictionContextLoader
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import swisseph as swe
 
-from app.prediction.context_loader import LoadedPredictionContext
+from app.prediction.context import LoadedPredictionContext
 from app.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 from app.prediction.temporal_sampler import DayGrid
 

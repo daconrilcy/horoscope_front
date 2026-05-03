@@ -1,8 +1,10 @@
+"""Calibre les scores bruts de prediction sans dependance infra."""
+
 from collections.abc import Iterable
 from typing import Mapping
 
-from app.infra.db.repositories.prediction_schemas import CalibrationData
 from app.prediction.aggregator import DayAggregation
+from app.prediction.context import CalibrationData
 from app.prediction.schemas import V3DailyMetrics
 
 DEFAULT_CALIBRATION = CalibrationData(

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
-from app.prediction.persistence_service import PredictionPersistenceService
+from app.services.prediction.persistence_service import PredictionPersistenceService
 from app.tests.regression.helpers import (
     build_engine_input,
     cleanup_session,

@@ -32,7 +32,7 @@ _APPROVED_PREDICTION_PYTHON_FILES = {
     "block_generator.py",
     "calibrator.py",
     "category_codes.py",
-    "context_loader.py",
+    "context.py",
     "contribution_calculator.py",
     "daily_prediction_evidence_builder.py",
     "decision_window_builder.py",
@@ -51,7 +51,6 @@ _APPROVED_PREDICTION_PYTHON_FILES = {
     "persisted_baseline.py",
     "persisted_relative_score.py",
     "persisted_snapshot.py",
-    "persistence_service.py",
     "public_astro_daily_events.py",
     "public_astro_vocabulary.py",
     "public_domain_taxonomy.py",
@@ -69,6 +68,13 @@ _APPROVED_PREDICTION_PYTHON_FILES = {
 _FORBIDDEN_PREDICTION_IMPORT_MODULES = {
     "app.prediction." + "engine_orchestrator",
     "app.prediction." + "llm_narrator",
+}
+_FORBIDDEN_INFRA_BOUNDARY_NAMES = {
+    "sqlalchemy",
+    "sqlalchemy.orm",
+    "app.infra.db.repositories.daily_prediction_repository",
+    "app.infra.db.repositories.prediction_reference_repository",
+    "app.infra.db.repositories.prediction_ruleset_repository",
 }
 
 
@@ -116,6 +122,33 @@ def test_prediction_legacy_orchestrator_import_path_is_removed() -> None:
                         violations.append(f"{relative}: imports {alias.name}")
 
     assert not violations, "Forbidden legacy prediction imports detected.\n- " + "\n- ".join(
+        violations
+    )
+
+
+def test_prediction_pure_namespace_has_no_db_loader_or_persistence_imports() -> None:
+    """Bloque le retour de SQLAlchemy/repositories dans le domaine prediction pur."""
+    violations: list[str] = []
+    for file_path in sorted(_PREDICTION_ROOT.rglob("*.py")):
+        if "__pycache__" in file_path.parts:
+            continue
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+        relative = file_path.relative_to(_APP_ROOT).as_posix()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if module in _FORBIDDEN_INFRA_BOUNDARY_NAMES:
+                    violations.append(f"{relative}: imports {module}")
+                for forbidden in _FORBIDDEN_INFRA_BOUNDARY_NAMES:
+                    if module.startswith(f"{forbidden}."):
+                        violations.append(f"{relative}: imports {module}")
+                        break
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name in _FORBIDDEN_INFRA_BOUNDARY_NAMES:
+                        violations.append(f"{relative}: imports {alias.name}")
+
+    assert not violations, "Forbidden prediction infra imports detected.\n- " + "\n- ".join(
         violations
     )
 

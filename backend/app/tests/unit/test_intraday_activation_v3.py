@@ -13,7 +13,7 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
-from app.prediction.context_loader import LoadedPredictionContext
+from app.prediction.context import LoadedPredictionContext
 from app.prediction.intraday_activation_builder import IntradayActivationBuilder
 from app.prediction.schemas import AstroEvent, NatalChart, PlanetState, StepAstroState
 from app.prediction.temporal_sampler import DayGrid

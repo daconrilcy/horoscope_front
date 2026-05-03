@@ -18,9 +18,9 @@ from app.prediction.explainability import (
     ContributorEntry,
     ExplainabilityReport,
 )
-from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.schemas import AstroEvent, EffectiveContext, EngineOutput
 from app.prediction.turning_point_detector import TurningPoint
+from app.services.prediction.persistence_service import PredictionPersistenceService
 
 
 @pytest.fixture

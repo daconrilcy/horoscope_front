@@ -1,3 +1,5 @@
+"""Persiste les bundles de prediction via les repositories DB canoniques."""
+
 from __future__ import annotations
 
 import json
@@ -17,8 +19,7 @@ from app.infra.db.models.daily_prediction import (
 )
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
-
-from .schemas import (
+from app.prediction.schemas import (
     CoreEngineOutput,
     EditorialOutputBundle,
     EngineOutput,
@@ -32,14 +33,14 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class SaveResult:
-    """Result of a persistence operation."""
+    """Resultat d'une operation de persistance."""
 
     run: PersistedPredictionSnapshot
     was_reused: bool
 
 
 class PredictionPersistenceService:
-    """Service to persist engine outputs to the database."""
+    """Persiste les sorties du moteur de prediction en base de donnees."""
 
     def save(
         self,
@@ -51,10 +52,7 @@ class PredictionPersistenceService:
         db: Session | None = None,
         **legacy_kwargs: object,
     ) -> SaveResult:
-        """
-        Persists a prediction bundle to the database.
-        Uses a single transaction (session flush).
-        """
+        """Persiste un bundle de prediction avec une transaction de session unique."""
         if bundle is None:
             bundle = legacy_kwargs.pop("engine_output", None)
         if legacy_kwargs:
@@ -193,7 +191,7 @@ class PredictionPersistenceService:
         db: Session,
         explainability: ExplainabilityReport | None = None,
     ) -> None:
-        """Saves category scores with computed ranks and top contributors."""
+        """Sauvegarde les scores de categorie avec rangs et contributeurs principaux."""
         ref_repo = PredictionReferenceRepository(db)
         categories = {cat.code: cat for cat in ref_repo.get_categories(reference_version_id)}
         core, editorial = self._coerce_bundle_parts(bundle)
@@ -265,7 +263,7 @@ class PredictionPersistenceService:
         bundle: PersistablePredictionBundle | EngineOutput,
         db: Session,
     ) -> None:
-        """Saves turning points with serialized drivers."""
+        """Sauvegarde les points de bascule avec leurs declencheurs serialises."""
         core, editorial = self._coerce_bundle_parts(bundle)
         editorial_text = self._get_editorial_text(bundle, editorial)
 
@@ -322,7 +320,7 @@ class PredictionPersistenceService:
         bundle: PersistablePredictionBundle | EngineOutput,
         db: Session,
     ) -> None:
-        """Saves time blocks with serialized dominant categories."""
+        """Sauvegarde les blocs horaires avec les categories dominantes serialisees."""
         core, editorial = self._coerce_bundle_parts(bundle)
         editorial_text = self._get_editorial_text(bundle, editorial)
 
@@ -403,7 +401,7 @@ class PredictionPersistenceService:
         return json.dumps(self._json_ready(value))
 
     def _build_v3_metrics_json(self, v3_core: object | None, core: object | None) -> str | None:
-        """Build v3_metrics JSON, including detected_events for LLM narrator cache."""
+        """Construit le JSON V3 en conservant les evenements pour le cache LLM."""
         if v3_core is None:
             return None
         v3_dict = self._json_ready(v3_core)

@@ -19,7 +19,7 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
-from app.prediction.context_loader import LoadedPredictionContext
+from app.prediction.context import LoadedPredictionContext
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import (

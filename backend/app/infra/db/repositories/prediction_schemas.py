@@ -1,5 +1,25 @@
+"""Expose les DTO utilises par les repositories de reference prediction."""
+
 from dataclasses import dataclass
 from typing import Any, Mapping
+
+from app.prediction.context import CalibrationData
+
+__all__ = [
+    "AspectProfileData",
+    "AstroPointData",
+    "CalibrationData",
+    "CategoryData",
+    "EventTypeData",
+    "HouseCategoryWeightData",
+    "HouseProfileData",
+    "PlanetCategoryWeightData",
+    "PlanetProfileData",
+    "PointCategoryWeightData",
+    "PredictionContext",
+    "RulesetContext",
+    "RulesetData",
+]
 
 
 @dataclass(frozen=True)
@@ -106,17 +126,6 @@ class EventTypeData:
     event_group: str | None
     priority: int
     base_weight: float
-
-
-@dataclass(frozen=True)
-class CalibrationData:
-    p05: float | None
-    p25: float | None
-    p50: float | None
-    p75: float | None
-    p95: float | None
-    sample_size: int | None
-    calibration_label: str | None = "provisional"
 
 
 @dataclass(frozen=True)

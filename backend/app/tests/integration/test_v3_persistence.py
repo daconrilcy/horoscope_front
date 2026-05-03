@@ -8,7 +8,6 @@ from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
-from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.schemas import (
     CoreEngineOutput,
     EffectiveContext,
@@ -19,6 +18,7 @@ from app.prediction.schemas import (
     V3SignalLayer,
     V3ThemeSignal,
 )
+from app.services.prediction.persistence_service import PredictionPersistenceService
 
 
 @pytest.fixture

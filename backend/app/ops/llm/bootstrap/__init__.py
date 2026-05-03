@@ -8,7 +8,7 @@ from app.infra.db.repositories.user_prediction_baseline_repository import (
     UserPredictionBaselineRepository,
 )
 from app.infra.db.session import SessionLocal
-from app.prediction.context_loader import PredictionContextLoader
+from app.services.prediction.context_loader import PredictionContextLoader
 from app.services.user_profile.prediction_baseline_service import UserPredictionBaselineService
 
 if TYPE_CHECKING:

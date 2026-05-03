@@ -1,3 +1,5 @@
+"""Assemble la projection publique des predictions sans dependance DB directe."""
+
 from __future__ import annotations
 
 import logging
@@ -6,8 +8,6 @@ import uuid
 from datetime import datetime, time
 from numbers import Real
 from typing import TYPE_CHECKING, Any
-
-from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
@@ -75,7 +75,7 @@ class PublicPredictionAssembler:
         snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
         *,
-        db: Session | None = None,
+        db: Any | None = None,
         engine_output: Any | None = None,
         was_reused: bool = False,
         reference_version: str,

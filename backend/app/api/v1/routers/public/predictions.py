@@ -13,9 +13,7 @@ from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.db.session import get_db_session
-from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
-from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.public_projection import PublicPredictionAssembler
 from app.services.api_contracts.public.predictions import (
     DailyHistoryItem,
@@ -31,6 +29,8 @@ from app.services.entitlement.horoscope_daily_entitlement_gate import (
     HoroscopeDailyEntitlementGate,
 )
 from app.services.prediction import DailyPredictionService
+from app.services.prediction.context_loader import PredictionContextLoader
+from app.services.prediction.persistence_service import PredictionPersistenceService
 from app.services.prediction.public_predictions import (
     _extract_llm_narrative_payload,
     _resolve_daily_prediction_service_error,

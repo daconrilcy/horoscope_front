@@ -6,10 +6,10 @@ from sqlalchemy import select
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_ruleset import CategoryCalibrationModel
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
-from app.prediction.context_loader import PredictionContextLoader
-from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.schemas import EffectiveContext, EngineInput, EngineOutput
+from app.services.prediction.context_loader import PredictionContextLoader
 from app.services.prediction.engine_orchestrator import EngineOrchestrator
+from app.services.prediction.persistence_service import PredictionPersistenceService
 from app.tests.regression.helpers import cleanup_session, create_session
 
 

@@ -14,8 +14,8 @@ from app.jobs.calibration.natal_profiles import (
     CALIBRATION_VERSIONS,
 )
 from app.jobs.calibration.runtime import resolve_calibration_runtime
-from app.prediction.context_loader import PredictionContextLoader
 from app.prediction.schemas import EngineInput
+from app.services.prediction.context_loader import PredictionContextLoader
 from app.services.prediction.engine_orchestrator import EngineOrchestrator
 
 # Configuration du logging

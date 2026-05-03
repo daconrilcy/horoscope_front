@@ -15,8 +15,8 @@ from app.infra.db.models.daily_prediction import (
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
-from app.prediction.persistence_service import PredictionPersistenceService
 from app.prediction.schemas import EffectiveContext, EngineOutput
+from app.services.prediction.persistence_service import PredictionPersistenceService
 
 
 def make_effective_context(input_hash: str) -> EffectiveContext:
@@ -405,7 +405,7 @@ def test_reuses_existing_run_when_create_run_hits_unique_constraint(db_session: 
     )
 
     with patch(
-        "app.prediction.persistence_service.DailyPredictionRepository.create_run",
+        "app.services.prediction.persistence_service.DailyPredictionRepository.create_run",
         side_effect=IntegrityError("insert", {}, Exception("unique_violation")),
     ):
         reused = save_output(service, colliding_output, user_id, local_date, seed_data, db_session)

@@ -629,8 +629,8 @@ def test_v2_v3_dual_comparison_qa():
     AC1/AC3 Story 42.17: Compare V2 and V3 in DUAL mode.
     Implements all Gates from v3-migration-gates.md.
     """
-    from app.prediction.context_loader import PredictionContextLoader
     from app.services.prediction.compute_runner import PredictionComputeRunner
+    from app.services.prediction.context_loader import PredictionContextLoader
     from app.services.prediction.request_resolver import PredictionRequestResolver
 
     # Use calm_day for Sobriety check
@@ -703,8 +703,8 @@ def test_v3_inter_run_stability():
     """
     Task 4 Story 42.17: Vérifier la stabilité inter-runs (idempotence).
     """
-    from app.prediction.context_loader import PredictionContextLoader
     from app.services.prediction.compute_runner import PredictionComputeRunner
+    from app.services.prediction.context_loader import PredictionContextLoader
     from app.services.prediction.request_resolver import PredictionRequestResolver
 
     with open_app_test_db_session() as db:
@@ -740,8 +740,8 @@ def test_v3_runtime_slo():
     - Ici on verrouille un budget d'intégration plus stable en suite complète Windows/CI.
       Le seuil doit absorber le coût DB/seed/orchestration réel de l'end-to-end.
     """
-    from app.prediction.context_loader import PredictionContextLoader
     from app.services.prediction.compute_runner import PredictionComputeRunner
+    from app.services.prediction.context_loader import PredictionContextLoader
     from app.services.prediction.request_resolver import PredictionRequestResolver
 
     with open_app_test_db_session() as db:
