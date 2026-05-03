@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
-from app.integrations.stripe_client import get_stripe_client
+from app.infra.stripe.client import get_stripe_client
 
 logger = logging.getLogger(__name__)
 

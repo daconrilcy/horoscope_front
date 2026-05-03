@@ -27,7 +27,7 @@ from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
 from app.infra.db.session import get_db_session
-from app.integrations.stripe_client import get_stripe_client
+from app.infra.stripe.client import get_stripe_client
 from app.services.api_contracts.admin.users import (
     AdminUserDetailResponse,
     AdminUserSearchResponse,

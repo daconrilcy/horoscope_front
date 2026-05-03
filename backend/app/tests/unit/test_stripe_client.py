@@ -1,6 +1,9 @@
+"""Tests du client Stripe infra et garde anti-retour du chemin legacy."""
+
+import importlib.util
 from unittest.mock import patch
 
-from app.integrations import stripe_client as sc
+from app.infra.stripe import client as sc
 
 
 def test_get_stripe_client_returns_none_when_secret_missing():
@@ -19,3 +22,9 @@ def test_get_stripe_client_returns_client_when_secret_present():
         mock_settings.stripe_api_version = "2024-12-18.acacia"
         client = sc.get_stripe_client()
     assert client is not None
+
+
+def test_legacy_integrations_stripe_client_module_is_absent():
+    """Empêche le retour d'une façade legacy hors de la couche infra."""
+    legacy_module = ".".join(["app", "integrations", "stripe_client"])
+    assert importlib.util.find_spec(legacy_module) is None

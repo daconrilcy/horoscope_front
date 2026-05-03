@@ -3,7 +3,7 @@ import logging
 import stripe
 
 from app.core.config import Settings
-from app.integrations.stripe_client import get_stripe_client
+from app.infra.stripe.client import get_stripe_client
 
 logger = logging.getLogger(__name__)
 

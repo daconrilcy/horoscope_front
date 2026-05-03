@@ -5,7 +5,7 @@ import logging
 import stripe
 from sqlalchemy.orm import Session
 
-from app.integrations.stripe_client import get_stripe_client
+from app.infra.stripe.client import get_stripe_client
 from app.services.billing.stripe_billing_profile_service import (
     STRIPE_PRICE_ENTITLEMENT_MAP,
     StripeBillingProfileService,
