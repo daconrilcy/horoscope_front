@@ -16,6 +16,8 @@ from app.services.llm_generation.horoscope_daily.narration_service import (
     map_gateway_result_to_narrator_result,
 )
 
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+
 
 def _make_dummy_context():
     return PromptCommonContext(
@@ -397,7 +399,9 @@ async def test_non_regression_66_9_to_66_18_suites():
 
 
 def test_ai_engine_adapter_does_not_own_daily_narration_instructions() -> None:
-    adapter_source = Path("app/domain/llm/runtime/adapter.py").read_text(encoding="utf-8")
+    adapter_source = (BACKEND_ROOT / "app/domain/llm/runtime/adapter.py").read_text(
+        encoding="utf-8"
+    )
 
     forbidden = (
         "Format attendu",

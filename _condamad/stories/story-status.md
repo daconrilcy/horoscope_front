@@ -5,3 +5,4 @@
 | Story ID | Story key | Title | Status | Path | Source | Last update |
 |---|---|---|---|---|---|---|
 | CS-001 | harden-stripe-webhook-failure-retry-semantics | Harden Stripe webhook failure retry semantics | ready-to-dev | `_condamad/stories/CS-001-harden-stripe-webhook-failure-retry-semantics/00-story.md` | `_condamad/audits/stripe-implementation/2026-05-03-1003/03-story-candidates.md#SC-001` | 2026-05-03 |
+| CS-002 | upgrade-stripe-api-version-with-webhook-contract-validation | Upgrade Stripe API version with webhook contract validation | ready-for-review | `_condamad/stories/CS-002-upgrade-stripe-api-version-with-webhook-contract-validation/00-story.md` | `_condamad/audits/stripe-implementation/2026-05-03-1003/03-story-candidates.md#SC-002` | 2026-05-03 |

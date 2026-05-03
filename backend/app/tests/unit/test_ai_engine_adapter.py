@@ -1,5 +1,7 @@
 import pytest
 
+import app.domain.llm.runtime.adapter as adapter_module
+from app.core.llm_settings import ai_engine_settings
 from app.domain.llm.runtime.adapter import AIEngineAdapter, AIEngineAdapterError
 from app.domain.llm.runtime.contracts import (
     GatewayMeta,
@@ -25,7 +27,7 @@ async def test_generate_chat_reply_v2_omits_none_conversation_id(
                 meta=GatewayMeta(latency_ms=100, model="test-model"),
             )
 
-    monkeypatch.setattr("app.domain.llm.runtime.adapter.LLMGateway", FakeGateway)
+    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
 
     result = await AIEngineAdapter.generate_chat_reply(
         messages=[{"role": "user", "content": "bonjour"}],
@@ -53,7 +55,7 @@ async def test_generate_chat_reply_v2_converts_conversation_id_to_string(
                 meta=GatewayMeta(latency_ms=100, model="test-model"),
             )
 
-    monkeypatch.setattr("app.domain.llm.runtime.adapter.LLMGateway", FakeGateway)
+    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
 
     result = await AIEngineAdapter.generate_chat_reply(
         messages=[{"role": "user", "content": "bonjour"}],
@@ -81,7 +83,7 @@ async def test_generate_chat_reply_opening_turn_builds_minimal_user_data_block(
                 meta=GatewayMeta(latency_ms=100, model="test-model"),
             )
 
-    monkeypatch.setattr("app.domain.llm.runtime.adapter.LLMGateway", FakeGateway)
+    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
 
     result = await AIEngineAdapter.generate_chat_reply(
         messages=[{"role": "user", "content": "Je me sens perdu aujourd'hui."}],
@@ -109,7 +111,8 @@ async def test_generate_chat_reply_maps_circuit_open_to_structured_adapter_error
         async def execute_request(self, request, db=None):
             raise UpstreamCircuitOpenError(provider="openai", family="chat")
 
-    monkeypatch.setattr("app.domain.llm.runtime.adapter.LLMGateway", FakeGateway)
+    monkeypatch.setattr(ai_engine_settings, "openai_api_key", "sk_test")
+    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
 
     with pytest.raises(AIEngineAdapterError) as exc_info:
         await AIEngineAdapter.generate_chat_reply(
@@ -133,7 +136,7 @@ async def test_generate_chat_reply_maps_retry_budget_exhausted_to_structured_ada
         async def execute_request(self, request, db=None):
             raise RetryBudgetExhaustedError(attempts=3, last_error="UPSTREAM_TIMEOUT")
 
-    monkeypatch.setattr("app.domain.llm.runtime.adapter.LLMGateway", FakeGateway)
+    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
 
     with pytest.raises(AIEngineAdapterError) as exc_info:
         await AIEngineAdapter.generate_chat_reply(
@@ -168,7 +171,7 @@ async def test_generate_natal_interpretation_maps_free_legacy_use_case_to_canoni
                 meta=GatewayMeta(latency_ms=100, model="test-model"),
             )
 
-    monkeypatch.setattr("app.domain.llm.runtime.adapter.LLMGateway", FakeGateway)
+    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
 
     result = await AIEngineAdapter.generate_natal_interpretation(
         NatalExecutionInput(

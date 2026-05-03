@@ -3,6 +3,8 @@ from pathlib import Path
 from app.domain.llm.prompting.context import PromptCommonContext
 from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
 
+BACKEND_ROOT = Path(__file__).resolve().parents[3]
+
 
 def _make_common_context() -> PromptCommonContext:
     return PromptCommonContext(
@@ -47,7 +49,9 @@ def test_build_keeps_full_variant_as_context_without_length_instruction() -> Non
 
 
 def test_builder_source_does_not_reintroduce_durable_narration_instructions() -> None:
-    source = Path("app/prediction/astrologer_prompt_builder.py").read_text(encoding="utf-8")
+    source = (BACKEND_ROOT / "app/prediction/astrologer_prompt_builder.py").read_text(
+        encoding="utf-8"
+    )
 
     for forbidden in FORBIDDEN_DURABLE_INSTRUCTIONS:
         assert forbidden not in source

@@ -7,6 +7,7 @@ Ce document est le runbook canonique local pour la validation du webhook Stripe 
 1. Stripe CLI installée.
 2. Backend local démarré sur `http://localhost:8001`.
 3. Compte Stripe en mode test.
+4. Endpoint Stripe Dashboard aligné sur la version API `2026-04-22.dahlia`.
 
 Installation Windows :
 
@@ -89,6 +90,17 @@ STRIPE_WEBHOOK_SECRET=whsec_XXXX
 3. Redémarrer le backend si nécessaire.
 
 Le secret de développement local vient explicitement de `stripe listen`. Il ne faut pas utiliser le secret du Dashboard Stripe pour ce test local, y compris lorsque `--load-from-webhooks-api` est utilisé.
+
+## Version API Stripe
+
+Le backend initialise le SDK Stripe avec `STRIPE_API_VERSION=2026-04-22.dahlia`. Les endpoints webhook configurés dans le Dashboard Stripe doivent utiliser cette même version pour éviter une dérive de forme entre les payloads livrés par Stripe et les contrats validés par les tests backend.
+
+Rollback opérationnel si le Dashboard production ne peut pas être aligné immédiatement :
+
+1. Fixer explicitement `STRIPE_API_VERSION=2024-12-18.acacia` dans l'environnement concerné.
+2. Redémarrer le backend pour reconstruire le client SDK Stripe.
+3. Rejouer les tests checkout, portail client, invoice preview, subscription upgrade et webhook avant déploiement.
+4. Planifier l'alignement Dashboard puis retirer l'override d'environnement.
 
 ## 4. Scénario nominal
 
