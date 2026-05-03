@@ -54,7 +54,7 @@ def test_calibration_label_persisted_in_run(db_session):
 
     # Save the run
     persistence.save(
-        engine_output=engine_output,
+        bundle=engine_output,
         user_id=1,
         local_date=date(2024, 1, 1),
         reference_version_id=1,
@@ -114,7 +114,7 @@ def test_calibration_label_survives_reuse(db_session):
 
     # Attempt to save
     result = persistence.save(
-        engine_output=engine_output,
+        bundle=engine_output,
         user_id=1,
         local_date=date(2024, 1, 1),
         reference_version_id=1,
@@ -167,7 +167,7 @@ def test_historical_runs_unchanged_after_calibration_change(db_session):
     )
 
     persistence.save(
-        engine_output=engine_output2,
+        bundle=engine_output2,
         user_id=1,
         local_date=date(2024, 1, 2),
         reference_version_id=1,

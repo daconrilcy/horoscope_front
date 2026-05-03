@@ -12,8 +12,8 @@ from app.prediction.schemas import (
     CoreEngineOutput,
     EffectiveContext,
     PersistablePredictionBundle,
-    TimeBlock,
     V3EngineOutput,
+    V3TimeBlock,
 )
 from app.services.user_profile.prediction_baseline_service import UserPredictionBaselineService
 from app.tests.helpers.db_utils import (
@@ -65,12 +65,14 @@ def test_generate_baseline_granularities(db_session: Session, mock_context_loade
         ),
         v3_core=V3EngineOutput(
             time_blocks=[
-                TimeBlock(
+                V3TimeBlock(
+                    block_index=0,
                     start_local=datetime(2026, 3, 11, 10, 0),
                     end_local=datetime(2026, 3, 11, 12, 0),
                     intensity=0.8,
+                    orientation="rising",
+                    confidence=1.0,
                     dominant_themes=["work"],
-                    sub_themes=[],
                 )
             ]
         ),

@@ -1,3 +1,5 @@
+"""Définit les contrats internes canoniques du moteur de prediction."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -170,21 +172,6 @@ class V3TimeBlock:
         if self.orientation == "volatile":
             return "mixed"
         return "neutral"
-
-    @property
-    def dominant_categories(self) -> list[str]:
-        return list(self.dominant_themes)
-
-
-@dataclass(frozen=True)
-class TimeBlock:
-    """Backward-compatible alias retained for older tests and fixtures."""
-
-    start_local: datetime
-    end_local: datetime
-    intensity: float = 0.0
-    dominant_themes: list[str] = field(default_factory=list)
-    sub_themes: list[str] = field(default_factory=list)
 
     @property
     def dominant_categories(self) -> list[str]:

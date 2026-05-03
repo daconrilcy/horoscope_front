@@ -153,6 +153,36 @@ def test_prediction_pure_namespace_has_no_db_loader_or_persistence_imports() -> 
     )
 
 
+def test_prediction_removed_legacy_compatibility_surfaces_stay_removed() -> None:
+    """Bloque le retour des compatibilites prediction supprimees par CS-008."""
+    violations: list[str] = []
+    schemas_path = _PREDICTION_ROOT / "schemas.py"
+    schemas_tree = ast.parse(schemas_path.read_text(encoding="utf-8"), filename=str(schemas_path))
+    for node in ast.walk(schemas_tree):
+        if isinstance(node, ast.ClassDef) and node.name == "TimeBlock":
+            violations.append("app/prediction/schemas.py: class TimeBlock is present")
+
+    for file_path in _python_sources():
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+        relative = file_path.relative_to(_APP_ROOT.parent).as_posix()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            function = node.func
+            is_save_call = (
+                isinstance(function, ast.Attribute)
+                and function.attr == "save"
+                or isinstance(function, ast.Name)
+                and function.id == "save"
+            )
+            if is_save_call and any(keyword.arg == "engine_output" for keyword in node.keywords):
+                violations.append(f"{relative}:{node.lineno} calls save(engine_output=...)")
+
+    assert not violations, "Removed prediction compatibility surfaces detected.\n- " + "\n- ".join(
+        violations
+    )
+
+
 @pytest.fixture(autouse=True)
 def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
     """Neutralise la gate d entitlement pour les tests focalises sur le routeur."""

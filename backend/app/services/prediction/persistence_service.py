@@ -44,22 +44,14 @@ class PredictionPersistenceService:
 
     def save(
         self,
-        bundle: PersistablePredictionBundle | EngineOutput | None = None,
+        bundle: PersistablePredictionBundle | EngineOutput,
         user_id: int | None = None,
         local_date: date | None = None,
         reference_version_id: int | None = None,
         ruleset_id: int | None = None,
         db: Session | None = None,
-        **legacy_kwargs: object,
     ) -> SaveResult:
         """Persiste un bundle de prediction avec une transaction de session unique."""
-        if bundle is None:
-            bundle = legacy_kwargs.pop("engine_output", None)
-        if legacy_kwargs:
-            unexpected = ", ".join(sorted(legacy_kwargs))
-            raise TypeError(f"Unexpected keyword argument(s): {unexpected}")
-        if bundle is None:
-            raise TypeError("save() missing required argument: 'bundle'")
         missing_required_arg = (
             user_id is None
             or local_date is None

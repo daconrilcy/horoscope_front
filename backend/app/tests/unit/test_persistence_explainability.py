@@ -100,7 +100,7 @@ def test_save_with_explainability(db_session, seed_data):
     )
 
     result = service.save(
-        engine_output=engine_output,
+        bundle=engine_output,
         user_id=user_id,
         local_date=local_date,
         reference_version_id=seed_data["version_id"],
@@ -166,7 +166,7 @@ def test_save_turning_point_drivers_format(db_session, seed_data):
     )
 
     result = service.save(
-        engine_output=engine_output,
+        bundle=engine_output,
         user_id=user_id,
         local_date=local_date,
         reference_version_id=seed_data["version_id"],
@@ -217,7 +217,7 @@ def test_save_persists_editorial_text_into_run_and_category_summaries(db_session
     )
 
     result = service.save(
-        engine_output=engine_output,
+        bundle=engine_output,
         user_id=1,
         local_date=local_date,
         reference_version_id=seed_data["version_id"],
@@ -288,7 +288,7 @@ def test_save_persists_time_block_summaries_without_turning_points(db_session, s
     )
 
     result = service.save(
-        engine_output=engine_output,
+        bundle=engine_output,
         user_id=1,
         local_date=local_date,
         reference_version_id=seed_data["version_id"],
