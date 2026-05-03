@@ -8,7 +8,6 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetData,
 )
 from app.prediction.context_loader import LoadedPredictionContext
-from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.schemas import (
     AstroEvent,
     EngineInput,
@@ -17,6 +16,7 @@ from app.prediction.schemas import (
     StepAstroState,
 )
 from app.prediction.temporal_sampler import DayGrid, TemporalSampler
+from app.services.prediction.engine_orchestrator import EngineOrchestrator
 
 BASE_UTC = datetime(2026, 3, 7, 0, 0, tzinfo=UTC)
 

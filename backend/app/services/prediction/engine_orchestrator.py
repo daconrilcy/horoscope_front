@@ -1,3 +1,7 @@
+"""Orchestre le moteur de prediction quotidienne depuis le namespace service."""
+
+from __future__ import annotations
+
 import dataclasses
 import inspect
 from collections.abc import Callable
@@ -10,29 +14,28 @@ import swisseph as swe
 
 from app.core.config import DailyEngineMode, settings
 from app.infra.db.repositories.prediction_schemas import RulesetContext
-
-from .aggregator import TemporalAggregator, V3ThemeAggregator
-from .astro_calculator import AstroCalculator
-from .block_generator import BlockGenerator
-from .calibrator import PercentileCalibrator
-from .category_codes import normalize_category_codes
-from .context_loader import LoadedPredictionContext
-from .contribution_calculator import ContributionCalculator
-from .daily_prediction_evidence_builder import DailyPredictionEvidenceBuilder
-from .decision_window_builder import DecisionWindowBuilder
-from .domain_router import DomainRouter
-from .editorial_builder import EditorialOutputBuilder
-from .editorial_service import PredictionEditorialService
-from .enriched_astro_events_builder import EnrichedAstroEventsBuilder
-from .event_detector import EventDetector
-from .exceptions import PredictionContextError
-from .explainability import ExplainabilityBuilder
-from .impulse_signal_builder import ImpulseSignalBuilder
-from .input_hash import compute_engine_input_hash
-from .intraday_activation_builder import IntradayActivationBuilder
-from .natal_sensitivity import NatalSensitivityCalculator
-from .regime_segmenter import RegimeSegmenter
-from .schemas import (
+from app.prediction.aggregator import TemporalAggregator, V3ThemeAggregator
+from app.prediction.astro_calculator import AstroCalculator
+from app.prediction.block_generator import BlockGenerator
+from app.prediction.calibrator import PercentileCalibrator
+from app.prediction.category_codes import normalize_category_codes
+from app.prediction.context_loader import LoadedPredictionContext
+from app.prediction.contribution_calculator import ContributionCalculator
+from app.prediction.daily_prediction_evidence_builder import DailyPredictionEvidenceBuilder
+from app.prediction.decision_window_builder import DecisionWindowBuilder
+from app.prediction.domain_router import DomainRouter
+from app.prediction.editorial_builder import EditorialOutputBuilder
+from app.prediction.editorial_service import PredictionEditorialService
+from app.prediction.enriched_astro_events_builder import EnrichedAstroEventsBuilder
+from app.prediction.event_detector import EventDetector
+from app.prediction.exceptions import PredictionContextError
+from app.prediction.explainability import ExplainabilityBuilder
+from app.prediction.impulse_signal_builder import ImpulseSignalBuilder
+from app.prediction.input_hash import compute_engine_input_hash
+from app.prediction.intraday_activation_builder import IntradayActivationBuilder
+from app.prediction.natal_sensitivity import NatalSensitivityCalculator
+from app.prediction.regime_segmenter import RegimeSegmenter
+from app.prediction.schemas import (
     AstroEvent,
     CoreEngineOutput,
     EffectiveContext,
@@ -45,10 +48,10 @@ from .schemas import (
     V3SignalLayer,
     V3ThemeSignal,
 )
-from .temporal_kernel import spread_event_weights
-from .temporal_sampler import DayGrid, TemporalSampler
-from .transit_signal_builder import TransitSignalBuilder
-from .turning_point_detector import TurningPoint, TurningPointDetector
+from app.prediction.temporal_kernel import spread_event_weights
+from app.prediction.temporal_sampler import DayGrid, TemporalSampler
+from app.prediction.transit_signal_builder import TransitSignalBuilder
+from app.prediction.turning_point_detector import TurningPoint, TurningPointDetector
 
 _ZODIAC_SIGNS = (
     "aries",
@@ -80,7 +83,7 @@ _PLANET_NAME_MAP = {
 
 
 class EngineOrchestrator:
-    """Orchestrates the prediction engine run."""
+    """Pilote l'execution applicative du moteur de prediction quotidienne."""
 
     def __init__(
         self,
@@ -147,7 +150,7 @@ class EngineOrchestrator:
         self,
         prediction_context_loader: "Callable[[str, str, date], LoadedPredictionContext | None]",
     ) -> "EngineOrchestrator":
-        """Return a new orchestrator with a fresh context loader."""
+        """Retourne un orchestrateur equivalent avec un chargeur de contexte remplace."""
         return EngineOrchestrator(
             prediction_context_loader=prediction_context_loader,
             temporal_sampler=self._temporal_sampler,
@@ -181,9 +184,7 @@ class EngineOrchestrator:
         editorial_text_lang: str = "fr",
         engine_mode: DailyEngineMode = DailyEngineMode.V2,
     ) -> PersistablePredictionBundle:
-        """
-        Executes the prediction engine for a given input and returns a complete bundle.
-        """
+        """Execute le moteur de prediction pour une entree et retourne le bundle complet."""
         mode = DailyEngineMode(engine_mode)
         v3_versions = self._resolve_v3_versions(mode)
 

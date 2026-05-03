@@ -15,9 +15,9 @@ from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal
 from app.jobs.calibration.natal_profiles import CALIBRATION_PROFILES
 from app.prediction.context_loader import PredictionContextLoader
-from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.persistence_service import PredictionPersistenceService
 from app.services.prediction import ComputeMode, DailyPredictionService
+from app.services.prediction.engine_orchestrator import EngineOrchestrator
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")

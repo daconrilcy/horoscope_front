@@ -4,7 +4,7 @@ from datetime import datetime
 import pytest
 import swisseph as swe
 
-from app.prediction import astro_calculator
+import app.prediction.astro_calculator as astro_calculator
 from app.prediction.astro_calculator import V1_PLANETS, AstroCalculator
 from app.prediction.exceptions import PredictionEngineError
 from app.prediction.schemas import PlanetState, StepAstroState

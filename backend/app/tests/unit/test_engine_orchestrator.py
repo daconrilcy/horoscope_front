@@ -20,7 +20,6 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetData,
 )
 from app.prediction.context_loader import LoadedPredictionContext
-from app.prediction.engine_orchestrator import DailyEngineMode, EngineOrchestrator
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.input_hash import compute_engine_input_hash
 from app.prediction.schemas import (
@@ -31,6 +30,7 @@ from app.prediction.schemas import (
     SamplePoint,
 )
 from app.prediction.temporal_sampler import DayGrid
+from app.services.prediction.engine_orchestrator import DailyEngineMode, EngineOrchestrator
 
 
 def _build_loaded_context() -> LoadedPredictionContext:

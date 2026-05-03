@@ -14,8 +14,8 @@ from app.infra.db.repositories.prediction_reference_repository import (
 from app.infra.db.repositories.user_prediction_baseline_repository import (
     UserPredictionBaselineRepository,
 )
-from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.persisted_baseline import V3Granularity
+from app.services.prediction.engine_orchestrator import EngineOrchestrator
 from app.services.prediction.request_resolver import PredictionRequestResolver
 
 if TYPE_CHECKING:

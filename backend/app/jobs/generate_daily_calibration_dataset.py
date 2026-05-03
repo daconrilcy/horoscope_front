@@ -15,8 +15,8 @@ from app.jobs.calibration.natal_profiles import (
 )
 from app.jobs.calibration.runtime import resolve_calibration_runtime
 from app.prediction.context_loader import PredictionContextLoader
-from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.schemas import EngineInput
+from app.services.prediction.engine_orchestrator import EngineOrchestrator
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")

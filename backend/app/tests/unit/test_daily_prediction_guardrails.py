@@ -1,4 +1,10 @@
+"""Garde les invariants runtime et architecture de la prediction quotidienne."""
+
+from __future__ import annotations
+
+import ast
 from datetime import date
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -15,6 +21,103 @@ from app.services.prediction import (
 )
 from app.services.prediction.compute_runner import ComputeResult
 from app.services.prediction.run_reuse_policy import ReuseDecision
+
+_APP_ROOT = Path(__file__).resolve().parents[2]
+_PREDICTION_ROOT = _APP_ROOT / "prediction"
+_APPROVED_PREDICTION_PYTHON_FILES = {
+    "__init__.py",
+    "aggregator.py",
+    "astro_calculator.py",
+    "astrologer_prompt_builder.py",
+    "block_generator.py",
+    "calibrator.py",
+    "category_codes.py",
+    "context_loader.py",
+    "contribution_calculator.py",
+    "daily_prediction_evidence_builder.py",
+    "decision_window_builder.py",
+    "domain_router.py",
+    "editorial_builder.py",
+    "editorial_service.py",
+    "editorial_template_engine.py",
+    "enriched_astro_events_builder.py",
+    "event_detector.py",
+    "exceptions.py",
+    "explainability.py",
+    "impulse_signal_builder.py",
+    "input_hash.py",
+    "intraday_activation_builder.py",
+    "natal_sensitivity.py",
+    "persisted_baseline.py",
+    "persisted_relative_score.py",
+    "persisted_snapshot.py",
+    "persistence_service.py",
+    "public_astro_daily_events.py",
+    "public_astro_vocabulary.py",
+    "public_domain_taxonomy.py",
+    "public_label_catalog.py",
+    "public_projection.py",
+    "public_score_mapper.py",
+    "regime_segmenter.py",
+    "relative_scoring_calculator.py",
+    "schemas.py",
+    "temporal_kernel.py",
+    "temporal_sampler.py",
+    "transit_signal_builder.py",
+    "turning_point_detector.py",
+}
+_FORBIDDEN_PREDICTION_IMPORT_MODULES = {
+    "app.prediction." + "engine_orchestrator",
+    "app.prediction." + "llm_narrator",
+}
+
+
+def _python_sources() -> list[Path]:
+    """Retourne les sources applicatives collectees par la garde AST."""
+    roots = [_APP_ROOT, _APP_ROOT.parent / "tests"]
+    files: list[Path] = []
+    for root in roots:
+        files.extend(
+            sorted(
+                path
+                for path in root.rglob("*.py")
+                if "__pycache__" not in path.parts and ".venv" not in path.parts
+            )
+        )
+    return files
+
+
+def test_prediction_namespace_python_inventory_does_not_grow() -> None:
+    """Bloque les nouveaux fichiers Python non cartographies sous `app.prediction`."""
+    current_files = {
+        path.relative_to(_PREDICTION_ROOT).as_posix()
+        for path in _PREDICTION_ROOT.rglob("*.py")
+        if "__pycache__" not in path.parts
+    }
+
+    assert current_files == _APPROVED_PREDICTION_PYTHON_FILES
+
+
+def test_prediction_legacy_orchestrator_import_path_is_removed() -> None:
+    """Interdit le retour du chemin d'import legacy de l'orchestrateur."""
+    violations: list[str] = []
+    for file_path in _python_sources():
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+        relative = file_path.relative_to(_APP_ROOT.parent)
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module in _FORBIDDEN_PREDICTION_IMPORT_MODULES
+            ):
+                violations.append(f"{relative}: imports {node.module}")
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name in _FORBIDDEN_PREDICTION_IMPORT_MODULES:
+                        violations.append(f"{relative}: imports {alias.name}")
+
+    assert not violations, "Forbidden legacy prediction imports detected.\n- " + "\n- ".join(
+        violations
+    )
 
 
 @pytest.fixture(autouse=True)

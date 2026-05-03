@@ -14,9 +14,9 @@ from sqlalchemy.orm import Session
 from app.infra.db.base import Base
 from app.prediction.aggregator import RAW_DAY_MAX, RAW_STEP_MAX, DayAggregation
 from app.prediction.context_loader import PredictionContextLoader
-from app.prediction.engine_orchestrator import EngineOrchestrator
 from app.prediction.natal_sensitivity import NatalSensitivityCalculator
 from app.prediction.schemas import EngineInput, EngineOutput
+from app.services.prediction.engine_orchestrator import EngineOrchestrator
 from app.services.reference_data_service import ReferenceDataService
 from scripts.seed_31_prediction_reference_v2 import run_seed
 

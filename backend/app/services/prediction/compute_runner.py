@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from app.prediction.engine_orchestrator import EngineOrchestrator
+from app.services.prediction.engine_orchestrator import EngineOrchestrator
 from app.services.prediction.types import DailyPredictionServiceError
 
 if TYPE_CHECKING:

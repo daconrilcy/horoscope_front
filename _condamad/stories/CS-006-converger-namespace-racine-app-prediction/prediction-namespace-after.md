@@ -1,0 +1,67 @@
+# Prediction Namespace After - CS-006
+
+Baseline captured after migrating the first batch.
+
+## Files under `backend/app/prediction`
+
+- `backend/app/prediction/__init__.py`
+- `backend/app/prediction/aggregator.py`
+- `backend/app/prediction/astro_calculator.py`
+- `backend/app/prediction/astrologer_prompt_builder.py`
+- `backend/app/prediction/block_generator.py`
+- `backend/app/prediction/calibrator.py`
+- `backend/app/prediction/category_codes.py`
+- `backend/app/prediction/context_loader.py`
+- `backend/app/prediction/contribution_calculator.py`
+- `backend/app/prediction/daily_prediction_evidence_builder.py`
+- `backend/app/prediction/decision_window_builder.py`
+- `backend/app/prediction/domain_router.py`
+- `backend/app/prediction/editorial_builder.py`
+- `backend/app/prediction/editorial_service.py`
+- `backend/app/prediction/editorial_template_engine.py`
+- `backend/app/prediction/editorial_templates/en/intro_du_jour.txt`
+- `backend/app/prediction/editorial_templates/en/meilleure_fenetre.txt`
+- `backend/app/prediction/editorial_templates/en/phrase_pivot.txt`
+- `backend/app/prediction/editorial_templates/en/prudence_argent.txt`
+- `backend/app/prediction/editorial_templates/en/prudence_sante.txt`
+- `backend/app/prediction/editorial_templates/en/resume_bloc_horaire.txt`
+- `backend/app/prediction/editorial_templates/en/resume_categorie.txt`
+- `backend/app/prediction/editorial_templates/en/resume_turning_point.txt`
+- `backend/app/prediction/editorial_templates/fr/intro_du_jour.txt`
+- `backend/app/prediction/editorial_templates/fr/meilleure_fenetre.txt`
+- `backend/app/prediction/editorial_templates/fr/phrase_pivot.txt`
+- `backend/app/prediction/editorial_templates/fr/prudence_argent.txt`
+- `backend/app/prediction/editorial_templates/fr/prudence_sante.txt`
+- `backend/app/prediction/editorial_templates/fr/resume_bloc_horaire.txt`
+- `backend/app/prediction/editorial_templates/fr/resume_categorie.txt`
+- `backend/app/prediction/editorial_templates/fr/resume_turning_point.txt`
+- `backend/app/prediction/enriched_astro_events_builder.py`
+- `backend/app/prediction/event_detector.py`
+- `backend/app/prediction/exceptions.py`
+- `backend/app/prediction/explainability.py`
+- `backend/app/prediction/impulse_signal_builder.py`
+- `backend/app/prediction/input_hash.py`
+- `backend/app/prediction/intraday_activation_builder.py`
+- `backend/app/prediction/natal_sensitivity.py`
+- `backend/app/prediction/persisted_baseline.py`
+- `backend/app/prediction/persisted_relative_score.py`
+- `backend/app/prediction/persisted_snapshot.py`
+- `backend/app/prediction/persistence_service.py`
+- `backend/app/prediction/public_astro_daily_events.py`
+- `backend/app/prediction/public_astro_vocabulary.py`
+- `backend/app/prediction/public_domain_taxonomy.py`
+- `backend/app/prediction/public_label_catalog.py`
+- `backend/app/prediction/public_projection.py`
+- `backend/app/prediction/public_score_mapper.py`
+- `backend/app/prediction/regime_segmenter.py`
+- `backend/app/prediction/relative_scoring_calculator.py`
+- `backend/app/prediction/schemas.py`
+- `backend/app/prediction/temporal_kernel.py`
+- `backend/app/prediction/temporal_sampler.py`
+- `backend/app/prediction/transit_signal_builder.py`
+- `backend/app/prediction/turning_point_detector.py`
+
+## Difference from before
+
+- Removed from `app.prediction`: `backend/app/prediction/engine_orchestrator.py`.
+- Added canonical service owner: `backend/app/services/prediction/engine_orchestrator.py`.
