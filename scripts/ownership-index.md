@@ -40,7 +40,6 @@ Ce registre est la source canonique d'ownership des fichiers racine sous
 | `scripts/start-dev-stack.ps1` | dev | Local development stack | Demarre la stack locale de developpement. | `pytest -q app/tests/unit/test_start_dev_stack_script.py` | supported | keep |
 | `scripts/startup-smoke.ps1` | quality | Quality pipeline | Verifie le demarrage local apres lancement. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported | keep |
 | `scripts/stripe-listen-webhook.ps1` | dev | Local Stripe webhook development | Lance l'ecoute Stripe locale sous PowerShell. | `pytest -q app/tests/unit/test_stripe_webhook_local_dev_assets.py` | supported | keep |
-| `scripts/stripe-listen-webhook.sh` | dev | Local Stripe webhook development | Variante shell du listener Stripe local. | `pytest -q app/tests/unit/test_stripe_webhook_local_dev_assets.py` | needs-user-decision | blocked-support-decision |
 
 ## Support decisions
 
@@ -51,4 +50,3 @@ Ce registre est la source canonique d'ownership des fichiers racine sous
 | keep-portability-follow-up | Chemin conserve avec story de portabilite separee. |
 | keep-scope-refactor-follow-up | Chemin conserve avec story de refactor de perimetre separee. |
 | keep-hardening-follow-up | Chemin conserve avec story de durcissement separee. |
-| blocked-support-decision | Chemin conserve sans trancher le support durable; decision utilisateur requise. |

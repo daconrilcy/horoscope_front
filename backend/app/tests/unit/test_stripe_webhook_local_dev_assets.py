@@ -1,3 +1,8 @@
+# Garde des assets locaux de validation du webhook Stripe.
+"""Verifie que le listener Stripe local reste PowerShell-only et dev-only."""
+
+from __future__ import annotations
+
 import re
 from pathlib import Path
 
@@ -6,7 +11,6 @@ RUNBOOK_PATH = REPO_ROOT / "docs" / "billing-webhook-local-testing.md"
 LEGACY_DOC_PATH = REPO_ROOT / "docs" / "stripe-webhook-dev.md"
 SERVICE_PATH = REPO_ROOT / "backend" / "app" / "services" / "billing" / "stripe_webhook_service.py"
 POWERSHELL_SCRIPT_PATH = REPO_ROOT / "scripts" / "stripe-listen-webhook.ps1"
-BASH_SCRIPT_PATH = REPO_ROOT / "scripts" / "stripe-listen-webhook.sh"
 
 STANDARDIZED_EVENT_LIST = [
     "checkout.session.completed",
@@ -73,15 +77,39 @@ def test_runbook_covers_required_local_webhook_validation_steps() -> None:
         assert snippet in runbook
 
 
-def test_listener_scripts_use_same_standardized_event_list_and_shell_script_has_no_bom() -> None:
-    bash_bytes = BASH_SCRIPT_PATH.read_bytes()
-    assert not bash_bytes.startswith(b"\xef\xbb\xbf")
-
-    bash_events = _extract_events(bash_bytes.decode("utf-8"))
+def test_powershell_listener_uses_standardized_event_list_and_target() -> None:
+    """Le script PowerShell reste l'unique listener local canonique."""
+    powershell_content = POWERSHELL_SCRIPT_PATH.read_text(encoding="utf-8")
     powershell_events = _extract_events(POWERSHELL_SCRIPT_PATH.read_text(encoding="utf-8"))
 
-    assert bash_events == powershell_events
-    assert bash_events == STANDARDIZED_EVENT_LIST
+    assert "--forward-to http://localhost:8001/v1/billing/stripe-webhook" in powershell_content
+    assert powershell_events == STANDARDIZED_EVENT_LIST
+
+
+def test_bash_listener_is_not_supported_as_local_dev_asset() -> None:
+    """Bloque la reintroduction du listener Bash Stripe local."""
+    bash_script_path = REPO_ROOT / "scripts" / ("stripe-listen-webhook" + ".sh")
+
+    assert not bash_script_path.exists()
+
+
+def test_runbook_does_not_expose_bash_or_wsl_listener_support() -> None:
+    """La documentation active doit rester limitee a Windows / PowerShell."""
+    runbook = RUNBOOK_PATH.read_text(encoding="utf-8")
+
+    forbidden_snippets = [
+        "stripe-listen-webhook" + ".sh",
+        "Git " + "Bash",
+        "W" + "SL",
+        "```bash",
+    ]
+
+    for snippet in forbidden_snippets:
+        assert snippet not in runbook
+
+    assert "Windows / PowerShell" in runbook
+    assert "outil de développement local" in runbook
+    assert "surface CI, production ou déploiement" in runbook
 
 
 def test_docs_are_aligned_with_supported_backend_webhook_perimeter() -> None:

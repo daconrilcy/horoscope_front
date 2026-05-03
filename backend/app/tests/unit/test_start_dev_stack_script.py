@@ -62,6 +62,8 @@ def test_with_stripe_branch_requires_cli_and_reuses_listener_script() -> None:
     content = _script_content()
     validation_branch = _conditional_stripe_branch(content)
 
+    assert "stripe-listen-webhook.ps1" in content
+    assert "stripe-listen-webhook" + ".sh" not in content
     assert 'Assert-CommandExists -Name "stripe"' in validation_branch
     assert "relancez sans -WithStripe" in validation_branch
     assert 'Assert-PathExists -Path $stripeScriptPath -Label "Script Stripe"' in validation_branch

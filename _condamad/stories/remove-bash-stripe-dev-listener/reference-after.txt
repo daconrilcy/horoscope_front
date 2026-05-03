@@ -1,0 +1,38 @@
+# After scan after removing Bash Stripe listener
+
+Command: `rg -n "stripe-listen-webhook\\.sh|Git Bash|WSL|#!/usr/bin/env bash" scripts docs backend/app/tests`
+
+```text
+<no hits>
+```
+
+Command: `rg --files scripts`
+
+```text
+scripts\stripe-listen-webhook.ps1
+scripts\startup-smoke.ps1
+scripts\start-dev-stack.ps1
+scripts\security-verification.ps1
+scripts\security-findings-allowlist.txt
+scripts\secrets-scan-allowlist.txt
+scripts\scan-secrets.ps1
+scripts\restore-db.ps1
+scripts\quality-gate.ps1
+scripts\predeploy-check.ps1
+scripts\ownership-index.md
+scripts\natal-cross-tool-report-dev.py
+scripts\load-test-critical.ps1
+scripts\load-test-critical-matrix.ps1
+scripts\llm-release-readiness.ps1
+scripts\generate-rgpd-evidence.ps1
+scripts\generate-performance-report.ps1
+scripts\backup-validate.ps1
+scripts\backup-db.ps1
+scripts\activate-llm-release.ps1
+```
+
+Command: `rg --files scripts | rg "stripe-listen-webhook\\.sh"`
+
+```text
+<no hits>
+```

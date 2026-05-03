@@ -38,7 +38,6 @@ ALLOWED_SUPPORT_STATUSES = {
     "supported",
     "supported-with-follow-up",
     "dev-only",
-    "needs-user-decision",
 }
 
 
@@ -143,9 +142,10 @@ def test_scripts_inventory_snapshots_prove_no_path_was_moved() -> None:
     assert after_scripts == baseline_scripts | {"scripts/ownership-index.md"}
 
 
-def test_stripe_shell_listener_keeps_blocked_support_decision() -> None:
-    """Le listener shell Stripe reste bloque en attente de decision utilisateur."""
-    stripe_shell = _ownership_rows()["scripts/stripe-listen-webhook.sh"]
+def test_removed_stripe_shell_listener_has_no_ownership_row() -> None:
+    """Le listener Stripe supprime ne doit pas rester route par le registre."""
+    registry_rows = _ownership_rows()
+    removed_script = "scripts/stripe-listen-webhook" + ".sh"
 
-    assert stripe_shell["support_status"] == "needs-user-decision"
-    assert stripe_shell["decision"] == "blocked-support-decision"
+    assert removed_script not in registry_rows
+    assert all(row["decision"] != "blocked-support-decision" for row in registry_rows.values())

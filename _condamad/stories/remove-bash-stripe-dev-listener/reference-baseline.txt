@@ -1,0 +1,39 @@
+# Baseline scan before removing Bash Stripe listener
+
+Command: `rg -n "stripe-listen-webhook\\.sh|Git Bash|WSL|#!/usr/bin/env bash" scripts docs backend/app/tests`
+
+```text
+scripts\stripe-listen-webhook.sh:1:#!/usr/bin/env bash
+scripts\stripe-listen-webhook.sh:2:# Usage: ./scripts/stripe-listen-webhook.sh
+scripts\ownership-index.md:43:| `scripts/stripe-listen-webhook.sh` | dev | Local Stripe webhook development | Variante shell du listener Stripe local. | `pytest -q app/tests/unit/test_stripe_webhook_local_dev_assets.py` | needs-user-decision | blocked-support-decision |
+docs\billing-webhook-local-testing.md:3:Ce document est le runbook canonique local pour la validation du webhook Stripe avec la Stripe CLI sur un environnement de développement Windows/PowerShell. Le script Bash reste disponible pour Git Bash ou WSL, mais la commande PowerShell est la variante de référence pour ce dépôt.
+docs\billing-webhook-local-testing.md:50:./scripts/stripe-listen-webhook.sh
+backend/app/tests\unit\test_scripts_ownership.py:148:    stripe_shell = _ownership_rows()["scripts/stripe-listen-webhook.sh"]
+backend/app/tests\unit\test_stripe_webhook_local_dev_assets.py:9:BASH_SCRIPT_PATH = REPO_ROOT / "scripts" / "stripe-listen-webhook.sh"
+```
+
+Command: `rg --files scripts`
+
+```text
+scripts\stripe-listen-webhook.sh
+scripts\stripe-listen-webhook.ps1
+scripts\startup-smoke.ps1
+scripts\start-dev-stack.ps1
+scripts\security-verification.ps1
+scripts\security-findings-allowlist.txt
+scripts\secrets-scan-allowlist.txt
+scripts\scan-secrets.ps1
+scripts\restore-db.ps1
+scripts\quality-gate.ps1
+scripts\predeploy-check.ps1
+scripts\ownership-index.md
+scripts\natal-cross-tool-report-dev.py
+scripts\load-test-critical.ps1
+scripts\load-test-critical-matrix.ps1
+scripts\llm-release-readiness.ps1
+scripts\generate-rgpd-evidence.ps1
+scripts\generate-performance-report.ps1
+scripts\backup-validate.ps1
+scripts\backup-db.ps1
+scripts\activate-llm-release.ps1
+```

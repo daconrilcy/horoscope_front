@@ -1,6 +1,6 @@
-# Story remove-bash-stripe-dev-listener: Retirer le listener Stripe Bash et figer le support dev PowerShell
+# Story CS-001 remove-bash-stripe-dev-listener: Retirer le listener Stripe Bash et figer le support dev PowerShell
 
-Status: ready-for-dev
+Status: ready-to-review
 
 ## 1. Objective
 
