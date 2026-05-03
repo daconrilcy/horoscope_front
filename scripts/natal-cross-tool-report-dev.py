@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Outil dev local pour comparer le calcul natal aux fixtures golden pro."""
+
 from __future__ import annotations
 
 import argparse
@@ -70,6 +72,7 @@ def _build_case_payload(case: object) -> dict[str, object]:
 
 
 def main() -> int:
+    """Execute le rapport dev-only apres verification du contexte local."""
     parser = argparse.ArgumentParser(
         description="Generate a dev-only cross-tool drift report from golden-pro dataset."
     )

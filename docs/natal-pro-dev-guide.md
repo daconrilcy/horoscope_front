@@ -166,7 +166,24 @@ Si ecart:
 2. Verifier que les options de calcul de la requete sont figees.
 3. Regenerer un run propre puis comparer au dataset golden.
 
-## 6. Smoke manuel "from scratch"
+## 6. Rapport local cross-tool dev-only
+
+`scripts/natal-cross-tool-report-dev.py` est un outil de diagnostic backend local. Il
+compare les calculs natals aux fixtures golden pro et n'est pas une surface runtime,
+API, production ou CI.
+
+Commande depuis la racine du repo, apres activation du venv backend:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python .\scripts\natal-cross-tool-report-dev.py --format both --output-dir .\artifacts\cross-tool
+```
+
+Le script refuse les environnements CI (`CI=true`, `GITHUB_ACTIONS=true`,
+`GITLAB_CI=true`, etc.) et son import de `app.tests.golden` reste limite a ce
+contexte dev/test.
+
+## 7. Smoke manuel "from scratch"
 
 1. Demarrer backend avec SwissEph actif.
 2. Verifier `GET /v1/ephemeris/status` en `status=ok`.

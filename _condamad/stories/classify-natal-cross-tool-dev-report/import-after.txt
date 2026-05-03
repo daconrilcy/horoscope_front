@@ -1,0 +1,20 @@
+Command:
+rg -n "natal-cross-tool-report-dev|app\.tests\.golden|scripts\.cross_tool_report|CI" scripts backend docs _condamad
+
+Relevant after-scan hits:
+scripts/ownership-index.md:31: `scripts/natal-cross-tool-report-dev.py` remains registered as `dev-only`.
+scripts/natal-cross-tool-report-dev.py:22: imports `app.tests.golden.pro_fixtures`; allowed only by `dev-only-contract.md`.
+scripts/natal-cross-tool-report-dev.py:23: imports `scripts.cross_tool_report`; reuses the backend helper.
+docs/natal-pro-dev-guide.md:171-184: documents the dev-only classification, venv activation, CI refusal, and fixture boundary.
+backend/README.md:245-264: still documents the local command and CI refusal.
+backend/scripts/cross_tool_report.py:17-22: `ensure_dev_only_runtime` blocks CI-like environments.
+backend/app/tests/unit/test_natal_cross_tool_report_dev_script.py:45-61: subprocess guard proves `CI=true` returns 2 with `dev-only` and `forbidden in CI`.
+backend/app/tests/unit/test_natal_cross_tool_report_dev_script.py:64-75: AST guard proves `app.tests.golden` is absent from runtime backend code and present only in the dev script/test surfaces.
+backend/app/tests/unit/test_natal_cross_tool_report_dev_script.py:78-87: guard proves no root `scripts/cross_tool_report*.py` helper exists and the dev script imports `scripts.cross_tool_report`.
+_condamad/stories/classify-natal-cross-tool-dev-report/dev-only-contract.md: records the persisted classification.
+
+Classification:
+- Generic `CI` hits in other docs, prior stories, runtime config and tests are out of scope; they do not consume `natal-cross-tool-report-dev.py`, `app.tests.golden`, or `scripts.cross_tool_report`.
+- `app.tests.golden` hits inside `backend/app/tests/**` are expected test/golden fixtures.
+- The only non-test import of `app.tests.golden` remains `scripts/natal-cross-tool-report-dev.py`, explicitly classified as dev-only.
+- No root duplicate helper `scripts/cross_tool_report.py` exists.

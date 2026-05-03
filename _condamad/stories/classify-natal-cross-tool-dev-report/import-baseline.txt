@@ -1,0 +1,18 @@
+Command:
+rg -n "natal-cross-tool-report-dev|app\.tests\.golden|scripts\.cross_tool_report|CI" scripts backend docs _condamad
+
+Relevant baseline hits:
+scripts/ownership-index.md:31: `scripts/natal-cross-tool-report-dev.py` is registered as `dev-only`.
+scripts/natal-cross-tool-report-dev.py:20: imports `app.tests.golden.pro_fixtures`.
+scripts/natal-cross-tool-report-dev.py:21: imports `scripts.cross_tool_report`.
+backend/README.md:245-264: documents the dev-only report command and CI refusal.
+backend/scripts/cross_tool_report.py:17-22: `ensure_dev_only_runtime` blocks CI-like environments.
+backend/app/tests/unit/test_cross_tool_report.py:5: imports `scripts.cross_tool_report` for helper tests.
+backend/app/tests/unit/test_cross_tool_report.py:90: verifies `CI=true` rejection in the helper.
+_condamad/audits/scripts-ops/2026-05-02-1847/01-evidence-log.md:16: audit finding E-012 identifies the ambiguous imports.
+_condamad/audits/scripts-ops/2026-05-02-1847/02-finding-register.md:108-109: finding F-007 recommends dev-only classification.
+_condamad/stories/classify-natal-cross-tool-dev-report/00-story.md: contains ACs and required evidence for this story.
+
+Notes:
+- The full command also returns many unrelated generic `CI` hits in docs, prior stories, and runtime config. Those are out of scope for this story because they do not reference `natal-cross-tool-report-dev.py`, `app.tests.golden`, or `scripts.cross_tool_report`.
+- Before implementation there is no dedicated `backend/app/tests/unit/test_natal_cross_tool_report_dev_script.py`.
