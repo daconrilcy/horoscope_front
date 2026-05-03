@@ -10,6 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.services.billing.stripe_billing_profile_service import StripeBillingProfileService
 from app.services.billing.stripe_customer_portal_service import StripeCustomerPortalService
+from app.services.billing.stripe_webhook_events import (
+    CHECKOUT_CLIENT_REFERENCE_EVENT_TYPES,
+    CHECKOUT_UPGRADE_EVENT_TYPES,
+    CUSTOMER_LOOKUP_EVENT_TYPES,
+    CUSTOMER_OBJECT_ID_LOOKUP_EVENT_TYPES,
+    is_supported_webhook_event,
+)
 from app.services.billing.stripe_webhook_idempotency_service import (
     StripeWebhookIdempotencyService,
 )
@@ -85,30 +92,12 @@ class StripeWebhookService:
                 data_obj = event.data.object
                 user_id = StripeWebhookService._resolve_user_id(db, event)
 
-                # Dispatching vers la couche service si l'événement est supporté
-                if event_type in (
-                    "checkout.session.completed",
-                    "checkout.session.async_payment_succeeded",
-                    "customer.subscription.created",
-                    "customer.subscription.updated",
-                    "customer.subscription.deleted",
-                    "customer.subscription.paused",
-                    "customer.subscription.resumed",
-                    "customer.subscription.trial_will_end",
-                    "subscription_schedule.created",
-                    "subscription_schedule.updated",
-                    "subscription_schedule.canceled",
-                    "subscription_schedule.completed",
-                    "customer.updated",
-                    "invoice.paid",
-                    "invoice.payment_failed",
-                    "invoice.payment_action_required",
-                ):
-                    if event_type in {
-                        "checkout.session.completed",
-                        "checkout.session.async_payment_succeeded",
-                    } and StripeCustomerPortalService.is_subscription_upgrade_checkout_session(
-                        data_obj
+                # Dispatching vers la couche service si l'événement est supporté.
+                if is_supported_webhook_event(event_type):
+                    if event_type in CHECKOUT_UPGRADE_EVENT_TYPES and (
+                        StripeCustomerPortalService.is_subscription_upgrade_checkout_session(
+                            data_obj
+                        )
                     ):
                         StripeCustomerPortalService.apply_paid_subscription_upgrade_checkout_session(
                             db,
@@ -181,12 +170,12 @@ class StripeWebhookService:
         """
         data_obj = event.data.object
         if isinstance(data_obj, dict):
-            if event.type == "customer.updated":
+            if event.type in CUSTOMER_OBJECT_ID_LOOKUP_EVENT_TYPES:
                 customer_id = data_obj.get("id")
                 return customer_id if isinstance(customer_id, str) else None
             customer_id = data_obj.get("customer")
             return customer_id if isinstance(customer_id, str) else None
-        if event.type == "customer.updated":
+        if event.type in CUSTOMER_OBJECT_ID_LOOKUP_EVENT_TYPES:
             return getattr(data_obj, "id", None)
         return getattr(data_obj, "customer", None)
 
@@ -198,7 +187,7 @@ class StripeWebhookService:
         event_type = event.type
         data_obj = event.data.object
 
-        if event_type == "checkout.session.completed":
+        if event_type in CHECKOUT_CLIENT_REFERENCE_EVENT_TYPES:
             client_ref = (
                 data_obj.get("client_reference_id")
                 if isinstance(data_obj, dict)
@@ -212,22 +201,7 @@ class StripeWebhookService:
                     return None
             return None
 
-        if event_type in (
-            "customer.subscription.created",
-            "customer.subscription.updated",
-            "customer.subscription.deleted",
-            "customer.subscription.paused",
-            "customer.subscription.resumed",
-            "customer.subscription.trial_will_end",
-            "subscription_schedule.created",
-            "subscription_schedule.updated",
-            "subscription_schedule.canceled",
-            "subscription_schedule.completed",
-            "invoice.paid",
-            "invoice.payment_failed",
-            "invoice.payment_action_required",
-            "checkout.session.async_payment_succeeded",
-        ):
+        if event_type in CUSTOMER_LOOKUP_EVENT_TYPES:
             customer_id = (
                 data_obj.get("customer")
                 if isinstance(data_obj, dict)
@@ -239,7 +213,7 @@ class StripeWebhookService:
                     return profile.user_id
             return None
 
-        if event_type == "customer.updated":
+        if event_type in CUSTOMER_OBJECT_ID_LOOKUP_EVENT_TYPES:
             customer_id = getattr(data_obj, "id", None)
             if customer_id:
                 profile = StripeBillingProfileService.get_by_stripe_customer_id(db, customer_id)

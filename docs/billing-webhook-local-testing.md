@@ -31,13 +31,13 @@ Utile pour observer toute la chaîne d'événements réellement émise par Strip
 stripe listen --forward-to http://localhost:8001/v1/billing/stripe-webhook
 ```
 
-### Variante filtrée standardisée
+### Variante filtrée canonique
 
-Cette variante réduit le bruit et couvre le socle billing standardisé par cette story :
+Cette variante réduit le bruit et couvre le périmètre canonique supporté par le registre backend `app.services.billing.stripe_webhook_events` :
 
 ```powershell
 stripe listen `
-  --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_failed,invoice.payment_action_required `
+  --events checkout.session.completed,checkout.session.async_payment_succeeded,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,customer.subscription.paused,customer.subscription.resumed,customer.subscription.trial_will_end,subscription_schedule.created,subscription_schedule.updated,subscription_schedule.canceled,subscription_schedule.completed,customer.updated,invoice.paid,invoice.payment_failed,invoice.payment_action_required `
   --forward-to http://localhost:8001/v1/billing/stripe-webhook
 ```
 
@@ -47,22 +47,26 @@ Scripts fournis :
 .\scripts\stripe-listen-webhook.ps1
 ```
 
-### Événements supplémentaires déjà gérés par le backend
+### Événements supportés par le backend
 
-Le service backend accepte aussi actuellement :
+Le registre canonique backend accepte actuellement :
 
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
 - `customer.updated`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
 - `customer.subscription.paused`
 - `customer.subscription.resumed`
 - `customer.subscription.trial_will_end`
-
-Si vous voulez reproduire exactement ce périmètre élargi, démarrez le listener avec la liste complète :
-
-```powershell
-stripe listen `
-  --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,customer.subscription.paused,customer.subscription.resumed,customer.subscription.trial_will_end,customer.updated,invoice.paid,invoice.payment_failed,invoice.payment_action_required `
-  --forward-to http://localhost:8001/v1/billing/stripe-webhook
-```
+- `subscription_schedule.created`
+- `subscription_schedule.updated`
+- `subscription_schedule.canceled`
+- `subscription_schedule.completed`
+- `invoice.paid`
+- `invoice.payment_failed`
+- `invoice.payment_action_required`
 
 ### Utilisation de `--load-from-webhooks-api`
 
@@ -177,14 +181,12 @@ Résultat attendu après un replay exact réussi : `status=processed` et `proces
 | `stripe trigger customer.subscription.created` | Valider la création d'abonnement. |
 | `stripe trigger customer.subscription.updated` | Valider une mise à jour d'abonnement. |
 | `stripe trigger customer.subscription.deleted` | Valider une résiliation. |
+| `stripe trigger customer.subscription.paused` | Valider une pause d'abonnement. |
+| `stripe trigger customer.subscription.resumed` | Valider une reprise d'abonnement. |
+| `stripe trigger customer.subscription.trial_will_end` | Valider la fin prochaine d'essai. |
 | `stripe trigger invoice.paid` | Valider un paiement confirmé. |
 | `stripe trigger invoice.payment_failed` | Valider un échec de paiement. |
 | `stripe trigger invoice.payment_action_required` | Valider un cas SCA/3DS. |
-
-Pour les événements supplémentaires déjà gérés par le backend :
-
-| Commande | Utilité |
-|----------|---------|
 | `stripe trigger customer.updated` | Valider la synchronisation des données client Stripe. |
 
 `stripe trigger` génère des objets synthétiques. En local, un `user_not_resolved` peut donc être normal tant qu'aucun `customer_id` correspondant n'existe en base.

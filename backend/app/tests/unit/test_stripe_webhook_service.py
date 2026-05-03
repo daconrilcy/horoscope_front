@@ -99,6 +99,34 @@ class TestStripeWebhookService:
         assert result == "processed"
         mock_apply.assert_called_once_with(db, session=mock_event.data.object)
 
+    def test_handle_async_checkout_session_succeeded_for_subscription_upgrade(self, db):
+        """L'événement checkout asynchrone utilise le groupe checkout du registre."""
+        mock_event = MagicMock()
+        mock_event.id = "evt_async_upgrade_123"
+        mock_event.type = "checkout.session.async_payment_succeeded"
+        mock_event.data.object = {
+            "customer": "cus_123",
+            "payment_status": "paid",
+            "metadata": {
+                "billing_operation": "subscription_upgrade",
+                "app_user_id": "42",
+                "stripe_subscription_id": "sub_123",
+                "stripe_subscription_item_id": "si_123",
+                "target_price_id": "price_premium",
+                "target_plan": "premium",
+                "quantity": "1",
+            },
+        }
+
+        with patch(
+            "app.services.billing.stripe_webhook_service.StripeCustomerPortalService."
+            "apply_paid_subscription_upgrade_checkout_session"
+        ) as mock_apply:
+            result = StripeWebhookService.handle_event(db, mock_event)
+
+        assert result == "processed"
+        mock_apply.assert_called_once_with(db, session=mock_event.data.object)
+
     def test_handle_subscription_updated(self, db):
         mock_event = MagicMock()
         mock_event.id = "evt_456"
@@ -354,6 +382,26 @@ class TestStripeWebhookService:
         mock_event.data.object = MagicMock()
         mock_event.data.object.customer = "cus_123"
         mock_event.to_dict.return_value = {"id": "evt_sub_trial_will_end"}
+
+        with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
+            mock_profile = MagicMock()
+            mock_profile.user_id = 42
+            mock_get_profile.return_value = mock_profile
+
+            with patch(UPDATE_EVENT_PAYLOAD_PATH) as mock_update:
+                result = StripeWebhookService.handle_event(db, mock_event)
+
+                assert result == "processed"
+                mock_update.assert_called_once_with(db, 42, mock_event.to_dict())
+
+    def test_handle_subscription_schedule_updated(self, db):
+        """Les schedules Stripe sont explicitement classés dans le registre supporté."""
+        mock_event = MagicMock()
+        mock_event.id = "evt_schedule_updated"
+        mock_event.type = "subscription_schedule.updated"
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.customer = "cus_123"
+        mock_event.to_dict.return_value = {"id": "evt_schedule_updated"}
 
         with patch(GET_BY_CUSTOMER_ID_PATH) as mock_get_profile:
             mock_profile = MagicMock()

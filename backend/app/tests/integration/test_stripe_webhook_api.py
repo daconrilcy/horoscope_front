@@ -218,6 +218,33 @@ async def test_webhook_duplicate_ignored():
 
 
 @pytest.mark.asyncio
+async def test_webhook_invoice_payment_succeeded_remains_ignored():
+    """L'ancien événement invoice success ne redevient pas supporté."""
+    event_id = _unique_id("evt_ignored")
+    payload = f'{{"id": "{event_id}", "type": "invoice.payment_succeeded"}}'.encode()
+    secret = "whsec_test"
+    headers = {"stripe-signature": _sign_payload(payload, secret)}
+
+    with patch("app.core.config.settings.stripe_webhook_secret", secret):
+        mock_event = MagicMock()
+        mock_event.id = event_id
+        mock_event.type = "invoice.payment_succeeded"
+        mock_event.livemode = False
+        mock_event.data.object = MagicMock()
+        mock_event.data.object.id = "in_ignored_123"
+        mock_event.data.object.customer = "cus_ignored_123"
+
+        with patch(
+            "app.services.billing.stripe_webhook_service.StripeWebhookService.verify_and_parse",
+            return_value=mock_event,
+        ):
+            response = client.post("/v1/billing/stripe-webhook", content=payload, headers=headers)
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "event_ignored"}
+
+
+@pytest.mark.asyncio
 async def test_webhook_business_failure_persists_failed_and_retry_is_accepted():
     event_id = _unique_id("evt_retry")
     payload = f'{{"id": "{event_id}", "type": "invoice.paid"}}'.encode()

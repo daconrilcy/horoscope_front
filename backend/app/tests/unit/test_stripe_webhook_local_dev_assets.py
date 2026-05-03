@@ -3,33 +3,23 @@
 
 from __future__ import annotations
 
+import inspect
 import re
 from pathlib import Path
+
+from app.services.billing.stripe_webhook_events import (
+    LOCAL_LISTENER_EVENT_TYPES,
+    SUPPORTED_WEBHOOK_EVENT_TYPES,
+)
+from app.services.billing.stripe_webhook_service import StripeWebhookService
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 RUNBOOK_PATH = REPO_ROOT / "docs" / "billing-webhook-local-testing.md"
 LEGACY_DOC_PATH = REPO_ROOT / "docs" / "stripe-webhook-dev.md"
-SERVICE_PATH = REPO_ROOT / "backend" / "app" / "services" / "billing" / "stripe_webhook_service.py"
 POWERSHELL_SCRIPT_PATH = REPO_ROOT / "scripts" / "stripe-listen-webhook.ps1"
 
-STANDARDIZED_EVENT_LIST = [
-    "checkout.session.completed",
-    "customer.subscription.created",
-    "customer.subscription.updated",
-    "customer.subscription.deleted",
-    "invoice.paid",
-    "invoice.payment_failed",
-    "invoice.payment_action_required",
-]
-STANDARDIZED_EVENTS = set(STANDARDIZED_EVENT_LIST)
-
-EXTENDED_EVENT_LIST = [
-    "customer.updated",
-    "customer.subscription.paused",
-    "customer.subscription.resumed",
-    "customer.subscription.trial_will_end",
-]
-EXTENDED_EVENTS = set(EXTENDED_EVENT_LIST)
+SUPPORTED_EVENTS = set(SUPPORTED_WEBHOOK_EVENT_TYPES)
+UNSUPPORTED_DOCUMENTED_EVENT_TYPES = {"invoice.payment_succeeded"}
 
 
 def _extract_events(script_content: str) -> list[str]:
@@ -42,19 +32,27 @@ def _extract_events(script_content: str) -> list[str]:
 def _extract_markdown_events(content: str) -> set[str]:
     return set(
         re.findall(
-            r"(checkout\.session\.completed|customer(?:\.subscription)?\.[a-z_]+|invoice\.[a-z_]+)",
+            r"("
+            r"checkout\.session\.[a-z_]+"
+            r"|customer(?:\.subscription)?\.[a-z_]+"
+            r"|subscription_schedule\.[a-z_]+"
+            r"|invoice\.[a-z_]+"
+            r")",
             content,
         )
     )
 
 
-def _extract_service_events(content: str) -> set[str]:
-    return set(
-        re.findall(
-            r'"((?:checkout\.session\.completed|customer(?:\.subscription)?\.[a-z_]+|invoice\.[a-z_]+))"',
+def _extract_markdown_event_statuses(content: str) -> dict[str, str]:
+    """Extrait le statut de traitement annonce dans les tableaux Markdown."""
+    return {
+        event_type: status.strip()
+        for event_type, status in re.findall(
+            r"^\|\s+`([^`]+)`\s+\|\s+([^|]+?)\s+\|",
             content,
+            flags=re.MULTILINE,
         )
-    )
+    }
 
 
 def test_runbook_covers_required_local_webhook_validation_steps() -> None:
@@ -83,7 +81,7 @@ def test_powershell_listener_uses_standardized_event_list_and_target() -> None:
     powershell_events = _extract_events(POWERSHELL_SCRIPT_PATH.read_text(encoding="utf-8"))
 
     assert "--forward-to http://localhost:8001/v1/billing/stripe-webhook" in powershell_content
-    assert powershell_events == STANDARDIZED_EVENT_LIST
+    assert powershell_events == list(LOCAL_LISTENER_EVENT_TYPES)
 
 
 def test_bash_listener_is_not_supported_as_local_dev_asset() -> None:
@@ -115,25 +113,50 @@ def test_runbook_does_not_expose_bash_or_wsl_listener_support() -> None:
 def test_docs_are_aligned_with_supported_backend_webhook_perimeter() -> None:
     runbook = RUNBOOK_PATH.read_text(encoding="utf-8")
     legacy_doc = LEGACY_DOC_PATH.read_text(encoding="utf-8")
-    service_content = SERVICE_PATH.read_text(encoding="utf-8")
 
-    service_events = _extract_service_events(service_content)
     runbook_events = _extract_markdown_events(runbook)
     legacy_events = _extract_markdown_events(legacy_doc)
+    legacy_statuses = _extract_markdown_event_statuses(legacy_doc)
 
-    assert STANDARDIZED_EVENTS.issubset(service_events)
-    assert EXTENDED_EVENTS.issubset(service_events)
-
-    assert STANDARDIZED_EVENTS.issubset(runbook_events)
-    assert EXTENDED_EVENTS.issubset(runbook_events)
+    assert SUPPORTED_EVENTS.issubset(runbook_events)
+    assert SUPPORTED_EVENTS.issubset(legacy_events)
+    assert SUPPORTED_EVENTS.issubset(legacy_statuses)
 
     assert "runbook canonique" in runbook
     assert "rationale historique" in legacy_doc
     assert "runbook canonique" in legacy_doc
     assert "sous-ensemble standardisé" in legacy_doc
     assert "périmètre backend élargi" in legacy_doc
-    assert EXTENDED_EVENTS.issubset(legacy_events)
 
     assert "| `customer.subscription.trial_will_end` | ❌ Non traité |" not in legacy_doc, (
         "Legacy documentation must not mark a handled event as non traité"
     )
+    for event_type in SUPPORTED_EVENTS:
+        assert legacy_statuses[event_type].startswith("✅"), (
+            f"{event_type} must be documented as supported"
+        )
+    for event_type in UNSUPPORTED_DOCUMENTED_EVENT_TYPES:
+        assert event_type not in runbook_events
+        assert not legacy_statuses[event_type].startswith("✅")
+    assert "`invoice.payment_succeeded` | ❌ Remplacé" in legacy_doc
+    assert "Désormais traité comme `event_ignored`" in legacy_doc
+
+
+def test_runtime_dispatch_and_resolver_use_canonical_registry() -> None:
+    """Bloque le retour de listes locales concurrentes dans le service runtime."""
+    handle_source = inspect.getsource(StripeWebhookService.handle_event)
+    resolver_source = inspect.getsource(StripeWebhookService._resolve_user_id)
+
+    assert "is_supported_webhook_event(event_type)" in handle_source
+    assert "CHECKOUT_UPGRADE_EVENT_TYPES" in handle_source
+    assert "CHECKOUT_CLIENT_REFERENCE_EVENT_TYPES" in resolver_source
+    assert "CUSTOMER_LOOKUP_EVENT_TYPES" in resolver_source
+    assert "CUSTOMER_OBJECT_ID_LOOKUP_EVENT_TYPES" in resolver_source
+
+    forbidden_events = [
+        "checkout.session.async_payment_succeeded",
+        "subscription_schedule.created",
+    ]
+    for event_type in forbidden_events:
+        assert event_type not in handle_source
+        assert event_type not in resolver_source
