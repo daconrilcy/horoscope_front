@@ -644,6 +644,39 @@ def test_service_modules_do_not_import_fastapi_or_wildcards() -> None:
     assert offenders == []
 
 
+def test_api_routers_do_not_call_stripe_sdk_directly() -> None:
+    """Les routeurs API ne doivent pas redevenir proprietaires du client Stripe."""
+    offenders: list[str] = []
+    for path in _python_files():
+        relative_path = path.relative_to(API_V1_ROOT.parents[1])
+        tree = _source_tree(path)
+        imported_stripe_client_aliases: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module == "app.infra.stripe.client":
+                for alias in node.names:
+                    if alias.name == "get_stripe_client":
+                        imported_stripe_client_aliases.add(alias.asname or alias.name)
+                        offenders.append(
+                            f"{relative_path}:{node.lineno} imports app.infra.stripe.client"
+                        )
+            elif isinstance(node, ast.Call):
+                function = node.func
+                if isinstance(function, ast.Name) and function.id in imported_stripe_client_aliases:
+                    offenders.append(f"{relative_path}:{node.lineno} calls get_stripe_client")
+                if isinstance(function, ast.Attribute) and function.attr == "retrieve":
+                    owner = function.value
+                    if (
+                        isinstance(owner, ast.Attribute)
+                        and owner.attr == "subscriptions"
+                        and isinstance(owner.value, ast.Name)
+                    ):
+                        offenders.append(
+                            f"{relative_path}:{node.lineno} calls {owner.value.id}.subscriptions"
+                        )
+
+    assert offenders == []
+
+
 def test_api_v1_non_registry_modules_do_not_import_routers() -> None:
     """Les schémas, helpers et routeurs ne doivent pas dépendre d'autres routeurs."""
     allowed_files = {

@@ -1,3 +1,5 @@
+"""Routeur HTTP des actions administrateur sur les utilisateurs."""
+
 from __future__ import annotations
 
 import logging
@@ -27,13 +29,16 @@ from app.infra.db.models.user_natal_interpretation import (
     UserNatalInterpretationModel,
 )
 from app.infra.db.session import get_db_session
-from app.infra.stripe.client import get_stripe_client
 from app.services.api_contracts.admin.users import (
     AdminUserDetailResponse,
     AdminUserSearchResponse,
     RevealStripeIdResponse,
 )
 from app.services.billing.service import BillingService
+from app.services.billing.stripe_billing_profile_service import (
+    StripeBillingAdminRefreshError,
+    StripeBillingProfileService,
+)
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 from app.services.user_profile.admin_users import (
     _build_user_quotas,
@@ -401,55 +406,23 @@ def refresh_subscription(
     """
     Force a sync from Stripe for status and plan.
     """
-    profile = db.scalar(
-        select(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
-    )
-    if not profile or not profile.stripe_subscription_id:
-        raise_api_error(
-            status_code=400, message="No active Stripe subscription found for this user"
-        )
-
-    from app.services.billing.stripe_billing_profile_service import StripeBillingProfileService
-
-    stripe_client = get_stripe_client()
-    if not stripe_client:
-        # Fallback for testing if monkeypatching failed or if it's actually not configured
-        raise_api_error(status_code=503, message="Stripe client not configured")
-
+    request_id = resolve_request_id(request)
     try:
-        subscription = stripe_client.subscriptions.retrieve(profile.stripe_subscription_id)
-        before = {
-            "subscription_status": profile.subscription_status,
-            "entitlement_plan": profile.entitlement_plan,
-        }
-        event_data = {
-            "id": f"forced_refresh_{resolve_request_id(request)}",
-            "type": "admin.forced_refresh",
-            "created": int(datetime_provider.utcnow().timestamp()),
-            "data": {"object": subscription.to_dict()},
-        }
-        StripeBillingProfileService.update_from_event_payload(db, user_id, event_data)
-        AuditService.record_event(
+        StripeBillingProfileService.force_admin_subscription_refresh(
             db,
-            payload=AuditEventCreatePayload(
-                request_id=resolve_request_id(request),
-                actor_user_id=current_user.id,
-                actor_role=current_user.role,
-                action="subscription_refresh_forced",
-                target_type="user",
-                target_id=str(user_id),
-                status="success",
-                details={
-                    "before": before,
-                    "after": {
-                        "subscription_status": profile.subscription_status,
-                        "entitlement_plan": profile.entitlement_plan,
-                    },
-                },
-            ),
+            user_id=user_id,
+            request_id=request_id,
+            actor_user_id=current_user.id,
+            actor_role=current_user.role,
         )
         db.commit()
         return {"status": "success"}
+    except StripeBillingAdminRefreshError as error:
+        if error.code == "stripe_subscription_missing":
+            raise_api_error(status_code=400, message=error.message)
+        if error.code == "stripe_client_not_configured":
+            raise_api_error(status_code=503, message=error.message)
+        raise_api_error(status_code=500, message=error.message)
     except Exception as e:
         logger.error("admin_refresh_subscription_failed user_id=%s error=%s", user_id, e)
         raise_api_error(status_code=500, message=str(e))

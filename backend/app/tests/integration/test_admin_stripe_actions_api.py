@@ -1,3 +1,5 @@
+"""Tests d'intégration des actions administrateur liées à Stripe."""
+
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -111,8 +113,10 @@ def test_refresh_subscription_success(admin_token, monkeypatch):
         stripe_billing_profile_service._build_price_entitlement_map(),
     )
 
-    # Critical: monkeypatch the router's imported name
-    monkeypatch.setattr("app.api.v1.routers.admin.users.get_stripe_client", lambda: mock_stripe)
+    monkeypatch.setattr(
+        "app.services.billing.stripe_billing_profile_service.get_stripe_client",
+        lambda: mock_stripe,
+    )
 
     response = client.post(
         f"/v1/admin/users/{user_id}/refresh-subscription",
@@ -130,6 +134,57 @@ def test_refresh_subscription_success(admin_token, monkeypatch):
             select(AuditEventModel).where(AuditEventModel.action == "subscription_refresh_forced")
         )
         assert audit is not None
+
+
+def test_refresh_subscription_rejects_user_without_subscription(admin_token):
+    with open_app_test_db_session() as db:
+        user = UserModel(email="user-no-subscription@test.com", password_hash="x", role="user")
+        db.add(user)
+        db.commit()
+        user_id = user.id
+
+    response = client.post(
+        f"/v1/admin/users/{user_id}/refresh-subscription",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.json()["error"]["message"] == "No active Stripe subscription found for this user"
+    )
+
+
+def test_refresh_subscription_rejects_missing_stripe_client(admin_token, monkeypatch):
+    with open_app_test_db_session() as db:
+        user = UserModel(
+            email="user-stripe-client-missing@test.com", password_hash="x", role="user"
+        )
+        db.add(user)
+        db.flush()
+        db.add(
+            StripeBillingProfileModel(
+                user_id=user.id,
+                stripe_customer_id="cus_missing_client",
+                stripe_subscription_id="sub_missing_client",
+                entitlement_plan="free",
+                subscription_status="active",
+            )
+        )
+        db.commit()
+        user_id = user.id
+
+    monkeypatch.setattr(
+        "app.services.billing.stripe_billing_profile_service.get_stripe_client",
+        lambda: None,
+    )
+
+    response = client.post(
+        f"/v1/admin/users/{user_id}/refresh-subscription",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["error"]["message"] == "Stripe client not configured"
 
 
 def test_assign_plan_success(admin_token):

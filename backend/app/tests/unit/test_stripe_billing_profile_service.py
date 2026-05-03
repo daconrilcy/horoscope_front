@@ -1,13 +1,19 @@
+"""Tests unitaires du service de profil de facturation Stripe."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
+from app.infra.db.models.audit_event import AuditEventModel
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.services.auth_service import AuthService
 from app.services.billing import stripe_billing_profile_service as svc
 from app.services.billing.stripe_billing_profile_service import (
     STRIPE_PRICE_ENTITLEMENT_MAP,
+    StripeBillingAdminRefreshError,
     StripeBillingProfileService,
     derive_entitlement_plan,
 )
@@ -310,3 +316,107 @@ def test_price_entitlement_map_empty_when_no_prices():
         mock_settings.stripe_price_premium = None
         result = svc._build_price_entitlement_map()
     assert result == {}
+
+
+@patch("app.services.billing.stripe_billing_profile_service.get_stripe_client")
+def test_force_admin_subscription_refresh_updates_profile_and_audit(
+    mock_get_client, db: Session, user_id: int
+):
+    """Vérifie l'orchestration admin sans passer par le routeur HTTP."""
+    profile = StripeBillingProfileModel(
+        user_id=user_id,
+        stripe_customer_id="cus_admin_refresh",
+        stripe_subscription_id="sub_admin_refresh",
+        entitlement_plan="free",
+        subscription_status="active",
+    )
+    db.add(profile)
+    db.commit()
+
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
+    mock_subscription = MagicMock()
+    mock_subscription.to_dict.return_value = {
+        "object": "subscription",
+        "id": "sub_admin_refresh",
+        "status": "active",
+        "customer": "cus_admin_refresh",
+        "items": {"data": [{"price": {"id": "price_premium"}}]},
+    }
+    mock_client.subscriptions.retrieve.return_value = mock_subscription
+
+    with patch.dict(STRIPE_PRICE_ENTITLEMENT_MAP, {"price_premium": "premium"}):
+        StripeBillingProfileService.force_admin_subscription_refresh(
+            db,
+            user_id=user_id,
+            request_id="req_admin_refresh",
+            actor_user_id=user_id,
+            actor_role="admin",
+        )
+        db.commit()
+
+    db.refresh(profile)
+    audit = db.scalar(
+        select(AuditEventModel).where(AuditEventModel.action == "subscription_refresh_forced")
+    )
+    assert profile.entitlement_plan == "premium"
+    assert audit is not None
+    assert audit.request_id == "req_admin_refresh"
+    assert audit.actor_user_id == user_id
+    assert audit.target_id == str(user_id)
+    mock_client.subscriptions.retrieve.assert_called_once_with("sub_admin_refresh")
+
+
+def test_force_admin_subscription_refresh_rejects_missing_subscription(db: Session, user_id: int):
+    """Vérifie l'erreur applicative pour un profil sans subscription Stripe."""
+    db.add(
+        StripeBillingProfileModel(
+            user_id=user_id,
+            stripe_customer_id="cus_without_sub",
+            entitlement_plan="free",
+            subscription_status="active",
+        )
+    )
+    db.commit()
+
+    with pytest.raises(StripeBillingAdminRefreshError) as exc_info:
+        StripeBillingProfileService.force_admin_subscription_refresh(
+            db,
+            user_id=user_id,
+            request_id="req_without_sub",
+            actor_user_id=42,
+            actor_role="admin",
+        )
+
+    assert exc_info.value.code == "stripe_subscription_missing"
+    assert exc_info.value.message == "No active Stripe subscription found for this user"
+
+
+@patch("app.services.billing.stripe_billing_profile_service.get_stripe_client", return_value=None)
+def test_force_admin_subscription_refresh_rejects_missing_stripe_client(
+    mock_get_client, db: Session, user_id: int
+):
+    """Vérifie l'erreur applicative quand le client Stripe n'est pas configure."""
+    db.add(
+        StripeBillingProfileModel(
+            user_id=user_id,
+            stripe_customer_id="cus_no_client",
+            stripe_subscription_id="sub_no_client",
+            entitlement_plan="free",
+            subscription_status="active",
+        )
+    )
+    db.commit()
+
+    with pytest.raises(StripeBillingAdminRefreshError) as exc_info:
+        StripeBillingProfileService.force_admin_subscription_refresh(
+            db,
+            user_id=user_id,
+            request_id="req_no_client",
+            actor_user_id=42,
+            actor_role="admin",
+        )
+
+    assert exc_info.value.code == "stripe_client_not_configured"
+    assert exc_info.value.message == "Stripe client not configured"
+    mock_get_client.assert_called_once_with()

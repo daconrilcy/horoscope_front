@@ -1,3 +1,5 @@
+"""Services de synchronisation entre Stripe et les profils de facturation."""
+
 from __future__ import annotations
 
 import logging
@@ -11,6 +13,7 @@ from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.stripe.client import get_stripe_client
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,15 @@ def _build_price_entitlement_map() -> dict[str, str]:
 
 # Mapping centralisé des Price IDs Stripe vers les plans applicatifs.
 STRIPE_PRICE_ENTITLEMENT_MAP: dict[str, str] = _build_price_entitlement_map()
+
+
+class StripeBillingAdminRefreshError(Exception):
+    """Erreur applicative du refresh Stripe force depuis l'administration."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+        super().__init__(message)
 
 
 def derive_entitlement_plan(
@@ -61,6 +73,67 @@ class StripeBillingProfileService:
     """
     Service gérant le mapping entre les utilisateurs SaaS et leurs profils Stripe.
     """
+
+    @staticmethod
+    def force_admin_subscription_refresh(
+        db: Session,
+        *,
+        user_id: int,
+        request_id: str,
+        actor_user_id: int | None,
+        actor_role: str,
+    ) -> None:
+        """
+        Orchestre le refresh Stripe force par un administrateur.
+
+        Le service reste hors FastAPI: il expose des erreurs applicatives que
+        l'adaptateur HTTP traduit ensuite en statuts et enveloppes API.
+        """
+        profile = StripeBillingProfileService.get_by_user_id(db, user_id)
+        if profile is None or not profile.stripe_subscription_id:
+            raise StripeBillingAdminRefreshError(
+                code="stripe_subscription_missing",
+                message="No active Stripe subscription found for this user",
+            )
+
+        client = get_stripe_client()
+        if client is None:
+            raise StripeBillingAdminRefreshError(
+                code="stripe_client_not_configured",
+                message="Stripe client not configured",
+            )
+
+        subscription = client.subscriptions.retrieve(profile.stripe_subscription_id)
+        before = {
+            "subscription_status": profile.subscription_status,
+            "entitlement_plan": profile.entitlement_plan,
+        }
+        event_data = {
+            "id": f"forced_refresh_{request_id}",
+            "type": "admin.forced_refresh",
+            "created": int(datetime_provider.utcnow().timestamp()),
+            "data": {"object": subscription.to_dict()},
+        }
+        StripeBillingProfileService.update_from_event_payload(db, user_id, event_data)
+        AuditService.record_event(
+            db,
+            payload=AuditEventCreatePayload(
+                request_id=request_id,
+                actor_user_id=actor_user_id,
+                actor_role=actor_role,
+                action="subscription_refresh_forced",
+                target_type="user",
+                target_id=str(user_id),
+                status="success",
+                details={
+                    "before": before,
+                    "after": {
+                        "subscription_status": profile.subscription_status,
+                        "entitlement_plan": profile.entitlement_plan,
+                    },
+                },
+            ),
+        )
 
     @staticmethod
     def get_by_user_id(db: Session, user_id: int) -> StripeBillingProfileModel | None:
