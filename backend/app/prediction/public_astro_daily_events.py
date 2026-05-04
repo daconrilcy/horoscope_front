@@ -1,6 +1,9 @@
+"""Expose les evenements astrologiques publics depuis les sources canoniques."""
+
 from __future__ import annotations
 
 from datetime import datetime
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from app.prediction.public_astro_vocabulary import (
@@ -14,12 +17,45 @@ if TYPE_CHECKING:
     from .persisted_snapshot import PersistedPredictionSnapshot
     from .schemas import V3EvidencePack
 
+PUBLIC_ASTRO_ASPECT_EVENT_TYPES = frozenset(
+    {
+        "aspect",
+        "aspect_exact_to_angle",
+        "aspect_exact_to_luminary",
+        "aspect_exact_to_personal",
+    }
+)
+
+
+def resolve_public_astro_events(
+    evidence: V3EvidencePack | None,
+    engine_output: Any | None,
+    snapshot: Any | None = None,
+) -> list[Any]:
+    """Retourne les evenements astro publics depuis les sources auditees."""
+    events: list[Any] = []
+    if evidence and hasattr(evidence, "metadata") and "astro_events" in evidence.metadata:
+        events = evidence.metadata["astro_events"]
+    elif engine_output is not None:
+        core = getattr(engine_output, "core", engine_output)
+        if core is not None:
+            events = getattr(core, "events", None) or getattr(core, "detected_events", None) or []
+
+    if not events and snapshot is not None:
+        v3_metrics = getattr(snapshot, "v3_metrics", None)
+        if isinstance(v3_metrics, dict):
+            raw_events = v3_metrics.get("detected_events", [])
+            if raw_events:
+                events = [
+                    SimpleNamespace(**event) if isinstance(event, dict) else event
+                    for event in raw_events
+                ]
+
+    return events
+
 
 class PublicAstroDailyEventsPolicy:
-    """
-    Builds the factual astro daily events module (Story 60.13).
-    Extracts ingresses, aspects and planet positions without interpretation.
-    """
+    """Construit le module factuel des evenements astrologiques quotidiens."""
 
     def build(
         self,
@@ -29,7 +65,7 @@ class PublicAstroDailyEventsPolicy:
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any] | None:
         # 1. Resolve Astro Events
-        events = self._resolve_astro_events(evidence, engine_output, snapshot)
+        events = resolve_public_astro_events(evidence, engine_output, snapshot)
 
         # 2. Extract Ingresses
         ingresses = []
@@ -48,18 +84,10 @@ class PublicAstroDailyEventsPolicy:
 
         # 3. Extract Aspects (max 4)
         aspects = []
-        # AC1: "aspects exacts du jour" (max 4)
-        # Using same event types as PUBLIC_PIVOT_EVENT_TYPES in public_projection.py
-        aspect_event_types = {
-            "aspect",
-            "aspect_exact_to_angle",
-            "aspect_exact_to_luminary",
-            "aspect_exact_to_personal",
-        }
         aspect_events = [
             e
             for e in events
-            if getattr(e, "event_type", None) in aspect_event_types
+            if getattr(e, "event_type", None) in PUBLIC_ASTRO_ASPECT_EVENT_TYPES
             and getattr(e, "target", None)
             and getattr(e, "body", None) != getattr(e, "target", None)  # exclude self-aspects
         ]
@@ -182,30 +210,7 @@ class PublicAstroDailyEventsPolicy:
         engine_output: Any | None,
         snapshot: Any | None = None,
     ) -> list[Any]:
-        events = []
-        if evidence and hasattr(evidence, "metadata") and "astro_events" in evidence.metadata:
-            events = evidence.metadata["astro_events"]
-        elif engine_output is not None:
-            # Resolve events from engine output (avoid circular imports)
-            core = getattr(engine_output, "core", engine_output)
-            if hasattr(core, "events"):
-                events = core.events
-            elif hasattr(core, "detected_events"):
-                events = core.detected_events
-
-        # Fallback for cached predictions: load from persisted v3_metrics
-        if not events and snapshot is not None:
-            v3_metrics = getattr(snapshot, "v3_metrics", None)
-            if isinstance(v3_metrics, dict):
-                raw_events = v3_metrics.get("detected_events", [])
-                if raw_events:
-                    from types import SimpleNamespace
-
-                    events = [
-                        SimpleNamespace(**e) if isinstance(e, dict) else e for e in raw_events
-                    ]
-
-        return events
+        return resolve_public_astro_events(evidence, engine_output, snapshot)
 
     def _extract_planet_positions(
         self,

@@ -11,7 +11,11 @@ from typing import TYPE_CHECKING, Any
 from app.core.datetime_provider import datetime_provider
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
-from app.prediction.public_astro_daily_events import PublicAstroDailyEventsPolicy
+from app.prediction.public_astro_daily_events import (
+    PUBLIC_ASTRO_ASPECT_EVENT_TYPES,
+    PublicAstroDailyEventsPolicy,
+    resolve_public_astro_events,
+)
 from app.prediction.public_astro_vocabulary import (
     HOUSE_SIGNIFICATIONS,
     get_aspect_label,
@@ -365,15 +369,7 @@ class PublicAstroFoundationPolicy:
         engine_output: Any | None = None,
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any] | None:
-        # 1. Resolve Astro Events
-        events = []
-        if evidence and hasattr(evidence, "metadata") and "astro_events" in evidence.metadata:
-            events = evidence.metadata["astro_events"]
-        elif engine_output is not None:
-            # Fallback to engine_output
-            core = _resolve_core_engine_output(engine_output)
-            if hasattr(core, "events"):
-                events = core.events
+        events = resolve_public_astro_events(evidence, engine_output, snapshot)
 
         if not events:
             return None
@@ -424,7 +420,13 @@ class PublicAstroFoundationPolicy:
 
         # 4. Dominant Aspects (max 4)
         dominant_aspects = []
-        aspect_events = [e for e in events if e.event_type == "aspect"]
+        aspect_events = [
+            e
+            for e in events
+            if getattr(e, "event_type", None) in PUBLIC_ASTRO_ASPECT_EVENT_TYPES
+            and getattr(e, "target", None)
+            and getattr(e, "body", None) != getattr(e, "target", None)
+        ]
         aspect_events.sort(key=lambda e: getattr(e, "orb_deg", 10.0))
 
         for e in aspect_events[:4]:
