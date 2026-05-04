@@ -1,3 +1,5 @@
+"""Runner de calcul prediction avec isolation thread/session DB."""
+
 from __future__ import annotations
 
 import concurrent.futures
@@ -19,19 +21,24 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger()
 
+_COMPUTE_TIMEOUT_SECONDS = 30
+
 
 @dataclass(frozen=True)
 class ComputeResult:
+    """Resultat de calcul expose au service de prediction."""
+
     bundle: PersistablePredictionBundle
 
     @property
     def engine_output(self):
+        """Retourne la projection moteur legacy du bundle persistant."""
         return self.bundle.to_engine_output()
 
 
 class PredictionComputeRunner:
     """
-    Handles the execution of the prediction engine with timeout management.
+    Execute le moteur de prediction avec timeout sans partager la session DB.
     """
 
     def __init__(
@@ -50,14 +57,33 @@ class PredictionComputeRunner:
         engine_mode: DailyEngineMode | None = None,
     ) -> ComputeResult:
         """
-        Executes the engine with a 30s timeout.
+        Execute le moteur avec timeout apres prechargement du contexte DB.
 
-        ⚠️ GIL Limitation: The compute thread continues in background after timeout.
-        The session remains non thread-safe for ~30s after timeout.
+        Le contexte prediction est charge avec la session appelante avant la
+        creation du worker. Le thread de calcul recoit ensuite un loader pur
+        qui retourne ce contexte precharge; il ne capture donc pas la session
+        SQLAlchemy appelante si le timeout laisse le worker survivre.
         """
+        loaded_context = self.context_loader.load(
+            db,
+            engine_input.reference_version,
+            engine_input.ruleset_version,
+            engine_input.local_date,
+        )
 
         def ctx_loader(ref: str, rule: str, dt: date) -> object:
-            return self.context_loader.load(db, ref, rule, dt)
+            expected = (
+                engine_input.reference_version,
+                engine_input.ruleset_version,
+                engine_input.local_date,
+            )
+            requested = (ref, rule, dt)
+            if requested != expected:
+                raise DailyPredictionServiceError(
+                    "context_mismatch",
+                    "Contexte prediction precharge incompatible avec la demande moteur",
+                )
+            return loaded_context
 
         if self._orchestrator_proto is not None:
             orchestrator = self._orchestrator_proto.with_context_loader(ctx_loader)
@@ -71,16 +97,15 @@ class PredictionComputeRunner:
         if engine_mode is not None:
             kwargs["engine_mode"] = engine_mode
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(orchestrator.run, **kwargs)
-            try:
-                bundle = future.result(timeout=30)
-                return ComputeResult(bundle=bundle)
-            except concurrent.futures.TimeoutError:
-                try:
-                    db.expire_all()
-                except Exception:
-                    pass
-                raise DailyPredictionServiceError(
-                    "timeout", "Calcul trop long — service temporairement dégradé"
-                ) from None
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(orchestrator.run, **kwargs)
+        try:
+            bundle = future.result(timeout=_COMPUTE_TIMEOUT_SECONDS)
+            return ComputeResult(bundle=bundle)
+        except concurrent.futures.TimeoutError:
+            future.cancel()
+            raise DailyPredictionServiceError(
+                "timeout", "Calcul trop long — service temporairement dégradé"
+            ) from None
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
