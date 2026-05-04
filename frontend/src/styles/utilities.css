@@ -7,6 +7,68 @@
 .text-headline { color: var(--color-text-headline); }
 .text-adaptive { color: var(--color-text-adaptive); }
 
+.type-page-title {
+  font-size: var(--type-page-title-size);
+  font-weight: var(--type-page-title-weight);
+  line-height: var(--type-page-title-line-height);
+}
+
+.type-section-title {
+  font-size: var(--type-section-title-size);
+  font-weight: var(--type-section-title-weight);
+  line-height: var(--type-section-title-line-height);
+}
+
+.type-card-title {
+  font-size: var(--type-card-title-size);
+  font-weight: var(--type-card-title-weight);
+  line-height: var(--type-card-title-line-height);
+}
+
+.type-body {
+  font-size: var(--type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--type-body-line-height);
+}
+
+.type-body-muted {
+  font-size: var(--type-body-muted-size);
+  font-weight: var(--type-body-muted-weight);
+  line-height: var(--type-body-muted-line-height);
+}
+
+.type-metadata {
+  font-size: var(--type-metadata-size);
+  font-weight: var(--type-metadata-weight);
+  line-height: var(--type-metadata-line-height);
+}
+
+.type-label {
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  line-height: var(--type-label-line-height);
+}
+
+.type-eyebrow {
+  font-size: var(--type-eyebrow-size);
+  font-weight: var(--type-eyebrow-weight);
+  letter-spacing: var(--type-eyebrow-letter-spacing);
+  line-height: var(--type-eyebrow-line-height);
+  text-transform: uppercase;
+}
+
+.type-cta {
+  font-size: var(--type-cta-size);
+  font-weight: var(--type-cta-weight);
+  line-height: var(--type-cta-line-height);
+}
+
+.type-numeric {
+  font-size: var(--type-numeric-size);
+  font-weight: var(--type-numeric-weight);
+  line-height: var(--type-numeric-line-height);
+}
+
 /* === SURFACES === */
 .surface-glass {
   background: var(--color-glass-bg);

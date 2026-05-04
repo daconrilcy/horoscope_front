@@ -5,6 +5,7 @@ import { useRequestDelete } from "../../api/privacy"
 import { detectLang } from "../../i18n/astrology"
 import { settingsTranslations } from "../../i18n/settings"
 import { Modal, Button, Field } from "../ui"
+import "./DeleteAccountModal.css"
 
 interface DeleteAccountModalProps {
   onClose: () => void
@@ -102,9 +103,9 @@ export function DeleteAccountModal({ onClose }: DeleteAccountModalProps) {
       )}
 
       {step === "confirm" && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div className="delete-account-modal__confirm-stack">
           <p>{t.confirmMessage}</p>
-          <p style={{ fontWeight: 'bold', textAlign: 'center', fontSize: 'var(--font-size-lg)' }}>
+          <p className="delete-account-modal__confirm-word">
             {t.confirmWord}
           </p>
           <Field
@@ -119,7 +120,7 @@ export function DeleteAccountModal({ onClose }: DeleteAccountModalProps) {
       )}
 
       {step === "processing" && (
-        <div style={{ textAlign: 'center', padding: 'var(--space-4)' }}>
+        <div className="delete-account-modal__processing">
           <p>{t.processing}</p>
         </div>
       )}

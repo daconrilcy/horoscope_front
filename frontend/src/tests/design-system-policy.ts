@@ -1,0 +1,78 @@
+// Helpers de tests statiques pour garder la discipline design-system frontend.
+import fs from "fs"
+import path from "path"
+
+export const frontendRoot = path.resolve(__dirname, "..")
+
+export function readFrontendFile(relativePath: string): string {
+  return fs.readFileSync(path.join(frontendRoot, relativePath), "utf-8")
+}
+
+export function listFiles(dir: string, extension: string): string[] {
+  const base = path.join(frontendRoot, dir)
+  const results: string[] = []
+
+  for (const entry of fs.readdirSync(base, { withFileTypes: true })) {
+    const fullPath = path.join(base, entry.name)
+    const relativePath = path.relative(frontendRoot, fullPath).replace(/\\/g, "/")
+    if (entry.isDirectory()) {
+      results.push(...listFiles(relativePath, extension))
+    } else if (entry.isFile() && entry.name.endsWith(extension)) {
+      results.push(relativePath)
+    }
+  }
+
+  return results
+}
+
+export function extractCssVariableDeclarations(css: string): string[] {
+  return [...css.matchAll(/(?:^|[;{]\s*)(--[a-zA-Z0-9_-]+)\s*:/gm)].map((match) => match[1])
+}
+
+export function extractLegacySelectors(css: string): string[] {
+  return [...css.matchAll(/\.([a-zA-Z0-9_-]*legacy[a-zA-Z0-9_-]*)/g)].map((match) => `.${match[1]}`)
+}
+
+export function extractCssFallbacks(css: string): Array<{ token: string; literal: string }> {
+  return [...css.matchAll(/var\(\s*(--[a-zA-Z0-9_-]+)\s*,\s*([^)]+)\)/g)].map((match) => ({
+    token: match[1],
+    literal: match[2].trim(),
+  }))
+}
+
+export function collectCssFallbacks(): Array<{ file: string; token: string; literal: string }> {
+  return listFiles("", ".css").flatMap((file) =>
+    extractCssFallbacks(readFrontendFile(file)).map((fallback) => ({ file, ...fallback })),
+  )
+}
+
+export function parseRegistryPatterns(markdown: string): string[] {
+  return [...markdown.matchAll(/\|\s*`([^`]+)`\s*\|/g)].map((match) => match[1])
+}
+
+export function patternMatches(pattern: string, value: string): boolean {
+  if (pattern.endsWith("*")) {
+    return value.startsWith(pattern.slice(0, -1))
+  }
+  return value === pattern
+}
+
+export function hasRegistryMatch(patterns: string[], value: string): boolean {
+  return patterns.some((pattern) => patternMatches(pattern, value))
+}
+
+export function extractStyleAttributes(tsx: string): string[] {
+  return [...tsx.matchAll(/style=\{([^}\n]*(?:\{[^]*?\})?[^}]*)\}/g)].map((match) =>
+    match[0].replace(/\s+/g, " ").trim(),
+  )
+}
+
+export function collectInlineStyles(): Array<{ file: string; style: string }> {
+  return listFiles("", ".tsx").flatMap((file) =>
+    extractStyleAttributes(readFrontendFile(file)).map((style) => ({ file, style })),
+  )
+}
+
+export function toStableJson(value: unknown): string {
+  return JSON.stringify(value)
+}

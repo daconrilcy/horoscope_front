@@ -105,7 +105,7 @@
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .settings-section-title--usage {
@@ -127,7 +127,7 @@
   width: 46px;
   /* = profile-section-title--underlined */
   height: 3px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: linear-gradient(90deg, var(--settings-purple) 0%, rgba(134, 108, 208, 0.4) 100%);
   /* La barre est violette (settings) au lieu de dorée (profil astrologue) */
 }
@@ -174,7 +174,14 @@
 .subscription-overview__copy {
   min-width: 0;
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
+}
+
+.settings-section-title--page {
+  margin-bottom: 32px;
+  font-size: var(--type-page-title-size);
+  font-weight: var(--type-page-title-weight);
+  line-height: var(--type-page-title-line-height);
 }
 
 .subscription-overview__eyebrow,
@@ -182,7 +189,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0.42rem 0.82rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(134, 108, 208, 0.1);
   border: 1px solid rgba(134, 108, 208, 0.18);
   color: var(--settings-purple);
@@ -313,7 +320,7 @@
 
 .subscription-plan-stage__header {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .subscription-plan-stage__lead {
@@ -335,7 +342,7 @@
   align-items: center;
   min-height: 42px;
   padding: 0 20px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   /* = profile-back-btn */
   border: 1px solid rgba(197, 211, 233, 0.86);
   /* = profile-back-btn */
@@ -386,7 +393,7 @@
 .default-astrologer-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  gap: var(--space-3);
   margin-top: 16px;
 }
 
@@ -468,7 +475,7 @@
   align-items: center;
   gap: 4px;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--settings-purple);
   color: #fff;
   font-size: 11px;
@@ -482,7 +489,7 @@
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.84);
   border: 1px solid var(--settings-purple-border);
   color: var(--settings-purple);
@@ -496,9 +503,9 @@
 .profile-default-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 8px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.84);
   border: 1px solid var(--settings-purple-border, rgba(134, 108, 208, 0.28));
   color: var(--settings-purple, #866cd0);
@@ -620,12 +627,12 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .subscription-plan-card__copy {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -727,7 +734,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: linear-gradient(180deg, #f6d28a 0%, #ebb25a 100%);
   box-shadow: 0 8px 22px rgba(214, 154, 57, 0.18);
   color: #79521a;
@@ -754,14 +761,14 @@
 
 .subscription-feedback-stack {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   margin-top: 8px;
 }
 
 .subscription-feedback-banner {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 14px 16px;
   border-radius: 18px;
   border: 1px solid rgba(205, 217, 240, 0.72);
@@ -806,7 +813,7 @@
 
 .subscription-actions-panel__copy {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .subscription-actions-panel__summary {
@@ -825,7 +832,7 @@
 .subscription-actions-panel__buttons {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   flex-wrap: wrap;
   justify-content: flex-end;
 }
@@ -847,7 +854,7 @@
 .subscription-management-button {
   min-width: 220px;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .subscription-upgrade-modal {
@@ -976,7 +983,7 @@
   display: inline-flex;
   margin-bottom: 12px;
   padding: 0.34rem 0.76rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.68);
   border: 1px solid rgba(255, 255, 255, 0.74);
   color: var(--settings-purple);
@@ -994,7 +1001,7 @@
 /* Barre de progression — même variable custom property que l'existant, meilleur style */
 .usage-progress-bar {
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(195, 206, 225, 0.5);
   overflow: hidden;
   position: relative;
@@ -1003,7 +1010,7 @@
 .usage-progress-fill {
   height: 100%;
   width: calc(var(--usage-progress, 0) * 1%);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: linear-gradient(90deg, var(--settings-purple) 0%, rgba(134, 108, 208, 0.7) 100%);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1032,7 +1039,7 @@
 .usage-waterline-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .usage-waterline-row + .usage-waterline-row {
@@ -1043,7 +1050,7 @@
 .usage-waterline-row__header {
   align-items: baseline;
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: space-between;
 }
 
@@ -1074,23 +1081,23 @@
   width: 100%;
   height: 12px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   overflow: hidden;
   background: rgba(195, 206, 225, 0.45);
 }
 
 .usage-waterline-row__meter::-webkit-progress-bar {
   background: rgba(195, 206, 225, 0.45);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 }
 
 .usage-waterline-row__meter::-webkit-progress-value {
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: linear-gradient(90deg, rgba(134, 108, 208, 0.92) 0%, rgba(213, 154, 57, 0.72) 100%);
 }
 
 .usage-waterline-row__meter::-moz-progress-bar {
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: linear-gradient(90deg, rgba(134, 108, 208, 0.92) 0%, rgba(213, 154, 57, 0.72) 100%);
 }
 
@@ -1185,7 +1192,7 @@
   }
 
   .settings-tabs {
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .settings-tab {

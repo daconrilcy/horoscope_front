@@ -1,1 +1,18 @@
-/* Styles migrated to ui/Modal/Modal.css */
+/* Styles de confirmation locale pour la modale de suppression de compte. */
+
+.delete-account-modal__confirm-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.delete-account-modal__confirm-word {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+
+.delete-account-modal__processing {
+  padding: var(--space-4);
+  text-align: center;
+}

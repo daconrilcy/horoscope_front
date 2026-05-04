@@ -81,7 +81,7 @@ export function AstrologerCard({ astrologer, featured = false, isDefault, onClic
       <div className="astrologer-card-orbit astrologer-card-orbit--two" aria-hidden="true" />
       <div className="astrologer-card-topline">
         <span className="astrologer-card-icon" aria-hidden="true">{icon}</span>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'flex-end', flex: 1 }}>
+        <div className="astrologer-card-badge-stack">
           {isDefault && (
             <span className="astrologer-default-badge">
               {t("your_default", lang)}

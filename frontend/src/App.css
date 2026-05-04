@@ -1423,7 +1423,7 @@ textarea:focus-visible {
 
 .astrologer-card-orbit {
   position: absolute;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   opacity: 0.3;
   pointer-events: none;
   transition: transform 0.32s ease, opacity 0.32s ease;
@@ -1456,13 +1456,21 @@ textarea:focus-visible {
   z-index: 1;
 }
 
+.astrologer-card-badge-stack {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  justify-content: flex-end;
+}
+
 .astrologer-card-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.85rem;
   height: 1.85rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   color: #fff8ff;
   background: color-mix(in srgb, var(--astro-accent) 48%, rgba(255, 255, 255, 0.35) 52%);
   box-shadow: 0 0 18px color-mix(in srgb, var(--astro-glow) 72%, transparent 28%);
@@ -1474,7 +1482,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.38rem;
   padding: 0.42rem 0.8rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.62);
   border: 1px solid color-mix(in srgb, var(--astro-accent) 26%, rgba(255, 255, 255, 0.34) 74%);
   color: color-mix(in srgb, var(--astro-accent) 72%, #3a2d5a 28%);
@@ -1489,7 +1497,7 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   padding: 0.34rem 0.66rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid rgba(255, 255, 255, 0.52);
   background: rgba(255, 255, 255, 0.46);
   color: #4a4f7a;
@@ -1621,7 +1629,7 @@ textarea:focus-visible {
 
 .astrologer-card-tag {
   padding: 0.36rem 0.72rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.24)),
     rgba(255, 255, 255, 0.24);
@@ -2114,7 +2122,7 @@ textarea:focus-visible {
   padding: 0.25rem 0.75rem;
   background: rgba(160, 132, 255, 0.08);
   border: 1px solid rgba(160, 132, 255, 0.2);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-size: 0.8rem;
   font-weight: 600;
   color: #5c438f;
@@ -2124,7 +2132,7 @@ textarea:focus-visible {
   padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, #866cd0 0%, #a190ed 100%);
   color: white;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-weight: 600;
   box-shadow: 0 8px 16px rgba(134, 108, 208, 0.3);
   transition: all 0.2s ease;
@@ -3879,7 +3887,7 @@ textarea.validation-context-input {
 .default_card_pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   padding: 10px 18px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.28) 100%);
   border-radius: var(--premium-radius-pill);
@@ -3981,7 +3989,7 @@ textarea.validation-context-input {
   align-items: center;
   gap: 0.55rem;
   padding: 13px 20px 13px 19px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid rgba(255, 255, 255, 0.72);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.62) 100%);
   color: color-mix(in srgb, var(--premium-accent-purple-strong) 84%, var(--premium-text-strong) 16%);
@@ -4017,7 +4025,7 @@ textarea.validation-context-input {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 100%;
   text-align: center;
 }
@@ -4028,7 +4036,7 @@ textarea.validation-context-input {
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.46);
   border: 1px solid var(--premium-glass-border);
   color: var(--premium-accent-purple-strong);
@@ -4091,7 +4099,7 @@ textarea.validation-context-input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   color: var(--text-2);
 }
 
@@ -4127,7 +4135,7 @@ textarea.validation-context-input {
 .mini-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: var(--space-3);
   margin-top: 12px;
 }
 
@@ -4233,7 +4241,7 @@ textarea.validation-context-input {
 .shortcuts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: var(--space-3);
   margin-top: 12px;
 }
 

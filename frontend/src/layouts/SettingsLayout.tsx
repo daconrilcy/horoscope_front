@@ -16,7 +16,7 @@ export function SettingsLayout({ title, children, className }: SettingsLayoutPro
       <div className="settings-noise" />
       
       <div className="settings-container">
-        <h1 className="settings-section-title" style={{ fontSize: '2.4rem', marginBottom: '32px' }}>
+        <h1 className="settings-section-title settings-section-title--page">
           {title}
         </h1>
         
