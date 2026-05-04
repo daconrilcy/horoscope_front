@@ -9,12 +9,16 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.core.config import DailyEngineMode, settings
+from app.domain.llm.prompting.narrator_contract import NarratorResult
 from app.prediction.exceptions import PredictionContextError
 from app.prediction.persisted_relative_score import PersistedRelativeScore
 from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
 from app.services.prediction import (
     DailyPredictionService,
     ServiceResult,
+)
+from app.services.prediction.public_predictions import (
+    enrich_public_prediction_with_horoscope_narration,
 )
 from app.services.prediction.types import (
     ComputeMode,
@@ -634,6 +638,52 @@ def test_execute_and_persist_passes_runtime_engine_mode(
         request.engine_input,
         engine_mode=DailyEngineMode.DUAL,
     )
+
+
+@pytest.mark.asyncio
+async def test_horoscope_narration_receives_caller_correlation_ids(
+    db, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verifie que la narration recoit les IDs transmis par le chemin appelant."""
+    captured: dict[str, str] = {}
+
+    async def fake_generate_horoscope_narration_via_gateway(**kwargs: object) -> NarratorResult:
+        captured["request_id"] = str(kwargs["request_id"])
+        captured["trace_id"] = str(kwargs["trace_id"])
+        return NarratorResult(
+            daily_synthesis="Une phrase complete. Une autre phrase complete.",
+            astro_events_intro="Intro",
+            time_window_narratives={},
+            turning_point_narratives=[],
+            daily_advice=None,
+            main_turning_point_narrative=None,
+        )
+
+    monkeypatch.setattr(settings, "llm_narrator_enabled", True)
+    monkeypatch.setattr(
+        "app.services.prediction.public_predictions.generate_horoscope_narration_via_gateway",
+        fake_generate_horoscope_narration_via_gateway,
+    )
+    assembled = {
+        "has_llm_narrative": False,
+        "time_windows": [],
+        "turning_points": [],
+    }
+
+    await enrich_public_prediction_with_horoscope_narration(
+        assembled,
+        snapshot=_build_mock_snapshot(user_id=42),
+        db=db,
+        prompt_context=object(),
+        request_id="req-api-canonique",
+        trace_id="trace-api-canonique",
+        variant_code="full",
+    )
+
+    assert captured == {
+        "request_id": "req-api-canonique",
+        "trace_id": "trace-api-canonique",
+    }
 
 
 def test_concurrent_compute_waits_and_reuses_existing_run(service):

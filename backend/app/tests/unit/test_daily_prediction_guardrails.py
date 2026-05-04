@@ -275,6 +275,23 @@ def test_public_projection_does_not_own_llm_runtime_or_correlation_ids() -> None
     )
 
 
+def test_public_projection_does_not_generate_local_correlation_ids() -> None:
+    """Interdit explicitement toute generation locale d IDs de correlation."""
+    projection_path = _PREDICTION_ROOT / "public_projection.py"
+    source = projection_path.read_text(encoding="utf-8")
+    forbidden_patterns = [
+        "uuid.uuid4(",
+        "request_id = str(",
+        "trace_id = str(",
+    ]
+
+    violations = [pattern for pattern in forbidden_patterns if pattern in source]
+
+    assert not violations, "Forbidden local correlation ID generation detected: " + ", ".join(
+        violations
+    )
+
+
 @pytest.fixture(autouse=True)
 def allow_daily_prediction_entitlement(monkeypatch: pytest.MonkeyPatch) -> None:
     """Neutralise la gate d entitlement pour les tests focalises sur le routeur."""
