@@ -20,9 +20,5 @@ documentaires backend aient un owner explicite et une garde determinee.
 | File | Owner | Artifact type | Canonical status | Expected guard |
 |---|---|---|---|---|
 | `backend/docs/ownership-index.md` | Backend docs governance | governance-doc | canonical-guarded | `pytest -q app/tests/unit/test_backend_docs_ownership.py` |
-| `backend/docs/llm-runtime-source-of-truth.md` | LLM docs governance | historical-note | non-canonical-human-note | `pytest -q app/tests/unit/test_llm_docs_governance.py` |
 | `backend/docs/llm-model-structure.md` | LLM model structure generator | generated-doc | canonical-guarded | `pytest -q tests/unit/test_llm_canonical_perimeter.py` |
-| `backend/docs/llm-db-governance.md` | LLM DB governance | human-runbook | non-canonical-human-note | `pytest -q app/tests/unit/test_llm_docs_governance.py` |
 | `backend/docs/llm-db-cleanup-registry.json` | LLM DB cleanup validator | executable-registry | canonical-guarded | `pytest -q tests/integration/test_llm_db_cleanup_registry.py` |
-| `backend/docs/llm-canonical-consumption-rebuild.md` | LLM docs governance | historical-note | non-canonical-human-note | `pytest -q app/tests/unit/test_llm_docs_governance.py` |
-| `backend/docs/entitlements-canonical-platform.md` | Entitlement runtime documentation | historical-note | historical-note | `pytest -q app/tests/unit/test_entitlement_docs_runtime_parity.py` |

@@ -8,6 +8,7 @@ from pathlib import Path
 BACKEND_ROOT = Path(__file__).resolve().parents[3]
 REPO_ROOT = BACKEND_ROOT.parent
 DOCS_ROOT = BACKEND_ROOT / "docs"
+ROOT_LLM_DOCS = REPO_ROOT / "docs" / "llm"
 GOVERNANCE_PATH = (
     REPO_ROOT
     / "_condamad"
@@ -18,12 +19,26 @@ GOVERNANCE_PATH = (
 NORMATIVE_TERMS = ("source-of-truth", "source de verite", "canonical", "canonique")
 GUARDED_STATUSES = {"generated-guarded", "executable-registry"}
 ALLOWED_STATUSES = GUARDED_STATUSES | {"non-canonical-human-note"}
+MOVED_HUMAN_LLM_DOCS = {
+    "docs/llm/llm-db-governance.md",
+    "docs/llm/llm-runtime-source-of-truth.md",
+    "docs/llm/llm-canonical-consumption-rebuild.md",
+}
+FORBIDDEN_BACKEND_LLM_NOTES = {
+    "backend/docs/llm-db-governance.md",
+    "backend/docs/llm-runtime-source-of-truth.md",
+    "backend/docs/llm-canonical-consumption-rebuild.md",
+}
 
 
 def _llm_docs_inventory() -> set[str]:
-    """Liste les documents LLM suivis sous backend/docs."""
+    """Liste les documents LLM gardes par le registre de gouvernance."""
     return {
         path.relative_to(REPO_ROOT).as_posix() for path in DOCS_ROOT.glob("llm-*") if path.is_file()
+    } | {
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in ROOT_LLM_DOCS.glob("llm-*")
+        if path.is_file()
     }
 
 
@@ -31,7 +46,7 @@ def _governance_rows() -> dict[str, dict[str, str]]:
     """Parse les lignes de gouvernance LLM en imposant les colonnes attendues."""
     rows: dict[str, dict[str, str]] = {}
     for line in GOVERNANCE_PATH.read_text(encoding="utf-8").splitlines():
-        if not line.startswith("| `backend/docs/llm-"):
+        if not (line.startswith("| `backend/docs/llm-") or line.startswith("| `docs/llm/llm-")):
             continue
         file_path, status, runtime_source, guard = [
             cell.strip() for cell in line.strip("|").split("|")
@@ -51,6 +66,16 @@ def test_llm_docs_governance_covers_all_llm_docs() -> None:
 
     assert sorted(inventory - set(rows)) == []
     assert sorted(set(rows) - inventory) == []
+
+
+def test_non_canonical_llm_notes_are_outside_backend_docs() -> None:
+    """Les notes LLM humaines deplacees doivent rester hors backend/docs."""
+    rows = _governance_rows()
+
+    assert MOVED_HUMAN_LLM_DOCS <= set(rows)
+    assert FORBIDDEN_BACKEND_LLM_NOTES.isdisjoint(_llm_docs_inventory())
+    for file_path in MOVED_HUMAN_LLM_DOCS:
+        assert (REPO_ROOT / file_path).exists()
 
 
 def test_llm_docs_governance_rows_are_guarded_or_non_canonical() -> None:

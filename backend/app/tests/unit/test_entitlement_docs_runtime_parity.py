@@ -19,7 +19,9 @@ from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
 from app.main import app
 
 BACKEND_ROOT = Path(__file__).resolve().parents[3]
-DOC_PATH = BACKEND_ROOT / "docs" / "entitlements-canonical-platform.md"
+REPO_ROOT = BACKEND_ROOT.parent
+DOC_PATH = REPO_ROOT / "docs" / "architecture" / "entitlements-canonical-platform.md"
+LEGACY_DOC_PATH = BACKEND_ROOT / "docs" / "entitlements-canonical-platform.md"
 OWNERSHIP_INDEX = BACKEND_ROOT / "docs" / "ownership-index.md"
 
 EXPECTED_OPENAPI_PATHS = {
@@ -39,14 +41,14 @@ EXPECTED_TABLES = {
 
 
 def test_entitlement_doc_has_explicit_historical_status() -> None:
-    """Le document doit annoncer qu'il n'est pas la source runtime active."""
+    """Le document conserve doit annoncer qu'il n'est pas la source runtime active."""
     content = DOC_PATH.read_text(encoding="utf-8")
     ownership = OWNERSHIP_INDEX.read_text(encoding="utf-8")
 
     assert "Document status: historical-note." in content
     assert "Do not treat this prose as the source of truth" in content
-    assert "`backend/docs/entitlements-canonical-platform.md`" in ownership
-    assert "Entitlement runtime documentation | historical-note | historical-note" in ownership
+    assert not LEGACY_DOC_PATH.exists()
+    assert "`backend/docs/entitlements-canonical-platform.md`" not in ownership
 
 
 def test_entitlement_documented_routes_exist_in_openapi() -> None:

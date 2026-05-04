@@ -1,7 +1,7 @@
 {
   "version": "1.2.2",
   "generated_for_story": "70-17-db-cleanup-llm-canonique",
-  "governance_doc": "backend/docs/llm-db-governance.md",
+  "governance_doc": "docs/llm/llm-db-governance.md",
   "reviewed_migrations": [
     "0be022f23e03_create_llm_prompt_registry_tables.py",
     "12216bc815ed_extend_use_case_config_contract.py",
@@ -268,7 +268,7 @@
       "target_role": "Frozen compatibility bridge until runtime fallback is converged elsewhere.",
       "known_readers": [
         "backend/app/api/v1/routers/admin_llm.py",
-        "backend/docs/llm-db-governance.md"
+        "docs/llm/llm-db-governance.md"
       ],
       "known_writers": [],
       "usage_status": "unused",
