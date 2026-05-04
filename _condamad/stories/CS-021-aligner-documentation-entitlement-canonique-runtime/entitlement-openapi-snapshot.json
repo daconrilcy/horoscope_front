@@ -1,0 +1,12 @@
+{
+  "status": "historical-note",
+  "checked_paths": [
+    "GET /v1/entitlements/me",
+    "GET /v1/entitlements/plans",
+    "GET /v1/admin/entitlements/matrix",
+    "GET /v1/ops/entitlements/mutation-audits",
+    "GET /v1/ops/entitlements/mutation-audits/alerts",
+    "GET /v1/ops/entitlements/mutation-audits/alerts/summary"
+  ],
+  "guard": "pytest -q app/tests/unit/test_entitlement_docs_runtime_parity.py"
+}

@@ -25,6 +25,9 @@ Canonical ownership decision for backend docs, scripts, secrets, security, and o
 | File | Group | Owner | Canonical command | OS dependency | Subprocess dependency | Collection decision |
 |---|---|---|---|---|---|---|
 | `backend/app/tests/unit/test_natal_pro_docs.py` | docs | Backend quality suite registry | `pytest -q app/tests/unit/test_natal_pro_docs.py` | none | none | standard_backend_pytest |
+| `backend/app/tests/unit/test_backend_docs_ownership.py` | docs | Backend quality suite registry | `pytest -q app/tests/unit/test_backend_docs_ownership.py` | none | none | standard_backend_pytest |
+| `backend/app/tests/unit/test_entitlement_docs_runtime_parity.py` | docs | Backend quality suite registry | `pytest -q app/tests/unit/test_entitlement_docs_runtime_parity.py` | none | none | standard_backend_pytest |
+| `backend/app/tests/unit/test_llm_docs_governance.py` | docs | Backend quality suite registry | `pytest -q app/tests/unit/test_llm_docs_governance.py` | none | none | standard_backend_pytest |
 | `backend/app/tests/unit/test_b2b_usage_migration_scripts.py` | scripts | Backend quality suite registry | `pytest -q app/tests/unit/test_b2b_usage_migration_scripts.py` | none | none | standard_backend_pytest |
 | `backend/app/tests/unit/test_start_dev_stack_script.py` | scripts | Backend quality suite registry | `pytest -q app/tests/unit/test_start_dev_stack_script.py` | none | none | standard_backend_pytest |
 | `backend/app/tests/unit/test_llm_release_readiness_script.py` | scripts | Backend quality suite registry | `pytest -q app/tests/unit/test_llm_release_readiness_script.py` | none | none | standard_backend_pytest |

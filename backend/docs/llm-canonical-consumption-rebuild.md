@@ -1,5 +1,10 @@
 # Strategie de recalcul des agregats LLM canoniques
 
+> Document status: non-canonical-human-note.
+> This file describes a rebuild strategy and is not an executable source of
+> truth. Runtime behavior must be validated through the services, migrations and
+> tests referenced by the LLM docs governance registry.
+
 Ce document fixe la frontiere entre les journaux bruts LLM et le read model
 `llm_canonical_consumption_aggregates`. Il sert de garde-fou pour les evolutions
 de la story 70-18, notamment AC19.

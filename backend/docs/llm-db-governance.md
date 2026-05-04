@@ -1,5 +1,10 @@
 # Gouvernance DB LLM post-cleanup
 
+> Document status: non-canonical-human-note.
+> This document is retained as human guidance. The executable LLM DB cleanup
+> source is `backend/docs/llm-db-cleanup-registry.json` validated by
+> `app.ops.llm.db_cleanup_validator.LlmDbCleanupValidator`.
+
 ## Source de verite canonique
 
 Les decisions runtime nominales doivent venir des familles d objets suivantes :

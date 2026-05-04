@@ -19,10 +19,11 @@ from app.infra.db.models.daily_prediction import (
 )
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.session import SessionLocal
+from app.services.calibration.artifact_paths import CALIBRATION_ARTIFACTS_DIR
 
 logger = logging.getLogger(__name__)
 
-DOCS_DIR = Path("docs/calibration")
+DOCS_DIR = CALIBRATION_ARTIFACTS_DIR
 REVIEW_HEADERS = (
     ("date", "Date"),
     ("category", "Categorie"),

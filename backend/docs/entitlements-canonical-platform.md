@@ -1,5 +1,13 @@
 # Architecture des Entitlements : Plateforme Canonique
 
+> Document status: historical-note.
+> This file is retained as a historical architecture note. Active entitlement
+> contracts are the FastAPI OpenAPI schema, SQLAlchemy models, service tests and
+> integration tests guarded by `app/tests/unit/test_entitlement_docs_runtime_parity.py`.
+> Review, alert and security claims in this prose are historical unless guarded
+> by those runtime sources. Do not treat this prose as the source of truth for
+> new runtime behavior.
+
 Ce document définit la source de vérité pour les droits d'accès (entitlements) aux fonctionnalités B2C de la plateforme.
 
 ## Source de Vérité Canonique

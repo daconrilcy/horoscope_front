@@ -1,5 +1,10 @@
 # Source de verite runtime LLM
 
+> Document status: non-canonical-human-note.
+> This prose is retained as human guidance for historical LLM runtime decisions.
+> Active runtime truth must be taken from code, migrations, executable registries
+> and tests listed in `_condamad/stories/CS-022-uniformiser-gouvernance-docs-llm-source-truth/llm-doc-governance.md`.
+
 Ce document fixe la responsabilite de chaque objet DB LLM dans le runtime
 canonique. Il evite que les anciens champs de compatibilite redeviennent des
 sources nominales apres le regroupement sous `app.infra.db.models.llm`.

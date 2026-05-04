@@ -2,13 +2,13 @@
 
 import logging
 from datetime import date
-from pathlib import Path
 
 from app.infra.db.repositories.calibration_repository import CalibrationRepository
 from app.infra.db.session import SessionLocal
+from app.services.calibration.artifact_paths import resolve_percentile_report_path
 from app.services.calibration.natal_profiles import CALIBRATION_VERSIONS
 from app.services.calibration.percentile_calculator import PercentileCalculatorService
-from app.services.calibration.runtime import resolve_calibration_runtime, resolve_project_root
+from app.services.calibration.runtime import resolve_calibration_runtime
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -47,7 +47,7 @@ def run() -> None:
             logger.warning("Aucun résultat généré.")
             return
 
-        report_path = resolve_project_root() / Path("docs/calibration/percentile_report.json")
+        report_path = resolve_percentile_report_path()
         metadata = {
             "reference_version": ref_version,
             "ruleset_version": ruleset_version,
