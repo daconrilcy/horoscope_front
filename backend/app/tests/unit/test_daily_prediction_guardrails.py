@@ -26,10 +26,17 @@ from app.services.prediction.run_reuse_policy import ReuseDecision
 _APP_ROOT = Path(__file__).resolve().parents[2]
 _LEGACY_PREDICTION_ROOT = _APP_ROOT / "prediction"
 _PREDICTION_ROOT = _APP_ROOT / "domain" / "prediction"
+_PREDICTION_REPOSITORIES_ROOT = _APP_ROOT / "infra" / "db" / "repositories"
 _REPO_ROOT = _APP_ROOT.parents[1]
 _FORBIDDEN_PREDICTION_IMPORT_MODULES = {
     "app.prediction." + "engine_orchestrator",
     "app.prediction." + "llm_narrator",
+}
+_FORBIDDEN_PERSISTED_DTO_IMPORT_MODULES = {
+    "app.prediction.context",
+    "app.prediction.persisted_baseline",
+    "app.prediction.persisted_relative_score",
+    "app.prediction.persisted_snapshot",
 }
 _FORBIDDEN_PREDICTION_BOUNDARY_MODULES = {
     "app.api",
@@ -102,6 +109,27 @@ def test_prediction_legacy_import_paths_are_removed() -> None:
     assert not violations, "Forbidden legacy prediction imports detected.\n- " + "\n- ".join(
         violations
     )
+
+
+def test_prediction_repositories_do_not_import_legacy_persisted_dtos() -> None:
+    """Bloque les imports DTO persisted legacy depuis les repositories DB."""
+    violations: list[str] = []
+    for file_path in sorted(_PREDICTION_REPOSITORIES_ROOT.rglob("*.py")):
+        if "__pycache__" in file_path.parts:
+            continue
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+        relative = file_path.relative_to(_APP_ROOT).as_posix()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if module in _FORBIDDEN_PERSISTED_DTO_IMPORT_MODULES:
+                    violations.append(f"{relative}: imports {module}")
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name in _FORBIDDEN_PERSISTED_DTO_IMPORT_MODULES:
+                        violations.append(f"{relative}: imports {alias.name}")
+
+    assert not violations, "Forbidden persisted DTO imports detected.\n- " + "\n- ".join(violations)
 
 
 def test_prediction_pure_namespace_has_no_db_loader_or_persistence_imports() -> None:
