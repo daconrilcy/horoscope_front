@@ -49,6 +49,11 @@ Do not weaken acceptance criteria or review findings to make the loop pass.
    `00-story.md`, `generated/10-final-evidence.md` when present,
    `generated/11-code-review.md` when present, and other generated files only
    when needed.
+7. Resolve the implementation surface produced by the communicated story from
+   capsule evidence, target-file lists, final evidence, review evidence,
+   relevant git diff/history, and repository searches. The review target is the
+   code implemented for that story, not the whole repository and not only the
+   currently unstaged diff.
 
 Never overwrite unrelated user changes. If unrelated dirty files exist, leave
 them untouched and commit only files that belong to this story closure.
@@ -61,8 +66,11 @@ Repeat this loop until the review verdict is clean.
 
 Run a full `condamad-code-review` pass on the target story.
 
-The review must inspect repository evidence and the current diff, not only the
-story text. It must produce or update review evidence, typically:
+The review must use `../condamad-code-review/SKILL.md` to inspect the code
+implemented for the communicated story, including repository evidence, story
+capsule evidence, changed files, tests, guardrails, and the current diff when
+present. Do not review only the story text. It must produce or update review
+evidence, typically:
 
 ```text
 _condamad/stories/story-key/generated/11-code-review.md
