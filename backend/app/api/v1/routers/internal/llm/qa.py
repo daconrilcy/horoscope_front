@@ -58,6 +58,7 @@ from app.services.prediction.persistence_service import PredictionPersistenceSer
 from app.services.prediction.public_predictions import (
     _extract_llm_narrative_payload,
     _resolve_daily_prediction_service_error,
+    enrich_public_prediction_with_horoscope_narration,
 )
 from app.services.prediction.types import ComputeMode, DailyPredictionServiceError
 from app.services.user_profile.birth_profile_service import (
@@ -348,15 +349,22 @@ async def run_horoscope_daily_generation(
         assembled = await PublicPredictionAssembler().assemble(
             snapshot=snapshot,
             cat_id_to_code=cat_id_to_code,
-            db=db,
             engine_output=result.bundle,
             was_reused=result.was_reused,
             reference_version=reference_version,
             ruleset_version=settings.ruleset_version,
+            variant_code=variant_code,
+        )
+        assembled = await enrich_public_prediction_with_horoscope_narration(
+            assembled,
+            snapshot=snapshot,
+            db=db,
+            prompt_context=prompt_context,
+            request_id=request_id,
+            trace_id=request_id,
+            variant_code=variant_code,
             astrologer_profile_key=target_user.astrologer_profile or "standard",
             lang="fr",
-            prompt_context=prompt_context,
-            variant_code=variant_code,
         )
 
         if settings.llm_narrator_enabled and not getattr(snapshot, "llm_narrative", None):

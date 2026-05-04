@@ -1,14 +1,20 @@
+"""Vérifie la normalisation des identifiants de corrélation HTTP."""
+
 from __future__ import annotations
 
 from starlette.requests import Request
 
-from app.core.request_id import resolve_request_id
+from app.core.request_id import resolve_request_id, resolve_trace_id
 
 
-def _build_request(*, header_request_id: str | None = None) -> Request:
+def _build_request(
+    *, header_request_id: str | None = None, header_trace_id: str | None = None
+) -> Request:
     headers: list[tuple[bytes, bytes]] = []
     if header_request_id is not None:
         headers.append((b"x-request-id", header_request_id.encode("utf-8")))
+    if header_trace_id is not None:
+        headers.append((b"x-trace-id", header_trace_id.encode("utf-8")))
     scope = {
         "type": "http",
         "http_version": "1.1",
@@ -49,3 +55,27 @@ def test_resolve_request_id_generates_when_header_is_only_control_chars() -> Non
 
     assert len(resolved) == 32
     assert resolved.isalnum()
+
+
+def test_resolve_trace_id_strips_control_characters_from_header() -> None:
+    request = _build_request(header_trace_id="trace-good\r\ninjected")
+
+    resolved = resolve_trace_id(request, fallback="safe-request")
+
+    assert resolved == "trace-goodinjected"
+
+
+def test_resolve_trace_id_falls_back_when_header_is_empty_after_sanitization() -> None:
+    request = _build_request(header_trace_id="\r\n\t")
+
+    resolved = resolve_trace_id(request, fallback="safe-request")
+
+    assert resolved == "safe-request"
+
+
+def test_resolve_trace_id_bounds_external_header_length() -> None:
+    request = _build_request(header_trace_id="t" * 140)
+
+    resolved = resolve_trace_id(request, fallback="safe-request")
+
+    assert resolved == "t" * 128

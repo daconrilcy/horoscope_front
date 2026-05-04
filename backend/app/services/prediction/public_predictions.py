@@ -6,6 +6,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+from app.services.llm_generation.horoscope_daily.narration_service import (
+    generate_horoscope_narration_via_gateway,
+)
 from app.services.prediction.types import (
     DailyPredictionServiceError,
 )
@@ -83,3 +90,69 @@ def _extract_llm_narrative_payload(assembled: dict[str, Any]) -> dict[str, Any] 
             }
 
     return payload or None
+
+
+async def enrich_public_prediction_with_horoscope_narration(
+    assembled: dict[str, Any],
+    *,
+    snapshot: PersistedPredictionSnapshot,
+    db: Session,
+    prompt_context: Any | None,
+    request_id: str,
+    trace_id: str,
+    variant_code: str | None,
+    astrologer_profile_key: str = "standard",
+    lang: str = "fr",
+) -> dict[str, Any]:
+    """Ajoute la narration horoscope via le service canonique sans modifier la projection."""
+    if assembled.get("has_llm_narrative") or not settings.llm_narrator_enabled:
+        return assembled
+    if prompt_context is None:
+        return assembled
+
+    narrator_res = await generate_horoscope_narration_via_gateway(
+        variant_code=variant_code,
+        time_windows=assembled.get("time_windows") or [],
+        common_context=prompt_context,
+        user_id=snapshot.user_id,
+        request_id=request_id,
+        trace_id=trace_id,
+        db=db,
+        astrologer_profile_key=astrologer_profile_key,
+        lang=lang,
+        day_climate=assembled.get("day_climate"),
+        best_window=assembled.get("best_window"),
+        turning_point=assembled.get("turning_point"),
+        domain_ranking=assembled.get("domain_ranking"),
+        astro_daily_events=assembled.get("astro_daily_events"),
+    )
+    if narrator_res is None:
+        return assembled
+
+    assembled["has_llm_narrative"] = True
+    assembled["daily_synthesis"] = narrator_res.daily_synthesis
+    assembled["astro_events_intro"] = narrator_res.astro_events_intro
+    if narrator_res.daily_advice:
+        assembled["daily_advice"] = {
+            "advice": narrator_res.daily_advice.advice,
+            "emphasis": narrator_res.daily_advice.emphasis,
+        }
+
+    for window in assembled.get("time_windows") or []:
+        if not isinstance(window, dict):
+            continue
+        period_key = window.get("period_key")
+        if period_key in narrator_res.time_window_narratives:
+            window["narrative"] = narrator_res.time_window_narratives[period_key]
+
+    for index, turning_point in enumerate(assembled.get("turning_points") or []):
+        if not isinstance(turning_point, dict):
+            continue
+        if index < len(narrator_res.turning_point_narratives):
+            turning_point["narrative"] = narrator_res.turning_point_narratives[index]
+
+    main_turning_point = assembled.get("turning_point")
+    if isinstance(main_turning_point, dict) and narrator_res.main_turning_point_narrative:
+        main_turning_point["narrative"] = narrator_res.main_turning_point_narrative
+
+    return assembled

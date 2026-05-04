@@ -122,12 +122,12 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
     # Mock settings to enable LLM narration
     with (
         patch("app.api.v1.routers.public.predictions.settings") as mock_settings_router,
-        patch("app.prediction.public_projection.settings") as mock_settings_proj,
+        patch("app.services.prediction.public_predictions.settings") as mock_settings_service,
     ):
         mock_settings_router.llm_narrator_enabled = True
         mock_settings_router.ruleset_version = "2.0.0"
         mock_settings_router.active_reference_version = "2.0.0"
-        mock_settings_proj.llm_narrator_enabled = True
+        mock_settings_service.llm_narrator_enabled = True
 
         # Mock CommonContextBuilder.build
         with patch("app.domain.llm.prompting.context.CommonContextBuilder.build") as mock_ctx_build:
@@ -167,7 +167,7 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
                 # AC9: Ensure canonical path is used
                 with patch(
-                    "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration"
+                    "app.services.prediction.public_predictions.generate_horoscope_narration_via_gateway"
                 ) as mock_adapter:
                     mock_adapter.return_value = NarratorResult(
                         daily_synthesis="Synthèse du jour canonique.",
@@ -214,12 +214,12 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
     with (
         patch("app.api.v1.routers.public.predictions.settings") as mock_settings_router,
-        patch("app.prediction.public_projection.settings") as mock_settings_proj,
+        patch("app.services.prediction.public_predictions.settings") as mock_settings_service,
     ):
         mock_settings_router.llm_narrator_enabled = True
         mock_settings_router.ruleset_version = "2.0.0"
         mock_settings_router.active_reference_version = "2.0.0"
-        mock_settings_proj.llm_narrator_enabled = True
+        mock_settings_service.llm_narrator_enabled = True
 
         with patch("app.domain.llm.prompting.context.CommonContextBuilder.build") as mock_ctx_build:
             mock_ctx = MagicMock()
@@ -236,7 +236,7 @@ def test_get_daily_prediction_passes_correct_variant_to_narrator(
 
                 with (
                     patch(
-                        "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration"
+                        "app.services.prediction.public_predictions.generate_horoscope_narration_via_gateway"
                     ) as mock_adapter,
                 ):
                     mock_adapter.return_value = NarratorResult(
@@ -317,17 +317,17 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
 
     with (
         patch("app.api.v1.routers.public.predictions.settings") as mock_settings_router,
-        patch("app.prediction.public_projection.settings") as mock_settings_proj,
+        patch("app.services.prediction.public_predictions.settings") as mock_settings_service,
         patch("app.domain.llm.prompting.context.CommonContextBuilder.build") as mock_ctx_build,
         patch("app.api.v1.routers.public.predictions.DailyPredictionService") as mock_service_cls,
         patch(
-            "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration"
+            "app.services.prediction.public_predictions.generate_horoscope_narration_via_gateway"
         ) as mock_adapter,
     ):
         mock_settings_router.llm_narrator_enabled = True
         mock_settings_router.ruleset_version = "2.0.0"
         mock_settings_router.active_reference_version = "2.0.0"
-        mock_settings_proj.llm_narrator_enabled = True
+        mock_settings_service.llm_narrator_enabled = True
 
         mock_ctx = MagicMock()
         mock_ctx.context_quality = "nominal"

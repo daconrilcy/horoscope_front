@@ -17,6 +17,9 @@ from app.prediction.schemas import (
     V3EvidenceTurningPoint,
     V3EvidenceWindow,
 )
+from app.services.prediction.public_predictions import (
+    enrich_public_prediction_with_horoscope_narration,
+)
 
 
 def _json_ready(value):
@@ -233,21 +236,13 @@ async def test_assemble_reuses_persisted_llm_narrative_without_regeneration():
         time_blocks=[],
     )
 
-    prompt_context = MagicMock()
+    result = await PublicPredictionAssembler().assemble(
+        snapshot,
+        {1: "work"},
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+    )
 
-    with patch(
-        "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration",
-        new_callable=AsyncMock,
-    ) as mock_gen:
-        result = await PublicPredictionAssembler().assemble(
-            snapshot,
-            {1: "work"},
-            reference_version="2.0.0",
-            ruleset_version="2.0.0",
-            prompt_context=prompt_context,
-        )
-
-    mock_gen.assert_not_awaited()
     assert result["has_llm_narrative"] is True
     assert result["daily_synthesis"] == "Synthèse persistée"
     assert result["astro_events_intro"] == "Intro persistée"
@@ -301,23 +296,34 @@ async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short()
 
     with (
         patch(
-            "app.domain.llm.runtime.adapter.AIEngineAdapter.generate_horoscope_narration",
+            "app.services.prediction.public_predictions.generate_horoscope_narration_via_gateway",
             new_callable=AsyncMock,
             return_value=regenerated,
         ) as mock_gen,
-        patch("app.prediction.public_projection.settings") as mock_settings,
+        patch("app.services.prediction.public_predictions.settings") as mock_settings,
     ):
         mock_settings.llm_narrator_enabled = True
-        result = await PublicPredictionAssembler().assemble(
+        assembled = await PublicPredictionAssembler().assemble(
             snapshot,
             {1: "work"},
             reference_version="2.0.0",
             ruleset_version="2.0.0",
+            variant_code="summary_only",
+        )
+        result = await enrich_public_prediction_with_horoscope_narration(
+            assembled,
+            snapshot=snapshot,
+            db=MagicMock(),
             prompt_context=prompt_context,
+            request_id="req-cs-009",
+            trace_id="trace-cs-009",
             variant_code="summary_only",
         )
 
     mock_gen.assert_awaited_once()
+    _, kwargs = mock_gen.call_args
+    assert kwargs["request_id"] == "req-cs-009"
+    assert kwargs["trace_id"] == "trace-cs-009"
     assert result["has_llm_narrative"] is True
     assert result["daily_synthesis"] == regenerated.daily_synthesis
     assert result["astro_events_intro"] == "Nouvelle intro"

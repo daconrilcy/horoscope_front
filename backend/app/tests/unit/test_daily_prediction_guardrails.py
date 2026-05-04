@@ -76,6 +76,11 @@ _FORBIDDEN_INFRA_BOUNDARY_NAMES = {
     "app.infra.db.repositories.prediction_reference_repository",
     "app.infra.db.repositories.prediction_ruleset_repository",
 }
+_FORBIDDEN_PUBLIC_PROJECTION_NAMES = {
+    "AIEngineAdapter",
+    "settings",
+    "Session",
+}
 
 
 def _python_sources() -> list[Path]:
@@ -180,6 +185,39 @@ def test_prediction_removed_legacy_compatibility_surfaces_stay_removed() -> None
 
     assert not violations, "Removed prediction compatibility surfaces detected.\n- " + "\n- ".join(
         violations
+    )
+
+
+def test_public_projection_does_not_own_llm_runtime_or_correlation_ids() -> None:
+    """Verrouille la projection publique comme assemblage deterministe sans runtime LLM."""
+    projection_path = _PREDICTION_ROOT / "public_projection.py"
+    source = projection_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(projection_path))
+    violations: list[str] = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if "llm.runtime.adapter" in module or module == "app.core.config":
+                violations.append(f"line {node.lineno}: imports {module}")
+            for alias in node.names:
+                if alias.name in _FORBIDDEN_PUBLIC_PROJECTION_NAMES:
+                    violations.append(f"line {node.lineno}: imports {alias.name}")
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == "uuid":
+                    violations.append(f"line {node.lineno}: imports uuid")
+        elif isinstance(node, ast.Name) and node.id in _FORBIDDEN_PUBLIC_PROJECTION_NAMES:
+            violations.append(f"line {node.lineno}: references {node.id}")
+        elif (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "uuid4"
+        ):
+            violations.append(f"line {node.lineno}: calls uuid4")
+
+    assert not violations, "Forbidden public projection runtime dependencies detected.\n- " + (
+        "\n- ".join(violations)
     )
 
 

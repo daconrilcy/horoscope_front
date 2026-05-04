@@ -3,12 +3,13 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.api.errors import raise_api_error, resolve_application_error_status
 from app.core.config import settings
+from app.core.request_id import resolve_request_id, resolve_trace_id
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
@@ -34,6 +35,7 @@ from app.services.prediction.persistence_service import PredictionPersistenceSer
 from app.services.prediction.public_predictions import (
     _extract_llm_narrative_payload,
     _resolve_daily_prediction_service_error,
+    enrich_public_prediction_with_horoscope_narration,
 )
 from app.services.prediction.types import (
     ComputeMode,
@@ -241,6 +243,7 @@ def get_daily_history(
 
 @router.get("/daily", response_model=DailyPredictionResponse)
 async def get_daily_prediction(
+    request: Request,
     target_date: str | None = Query(None, alias="date", pattern=r"^\d{4}-\d{2}-\d{2}$"),
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
@@ -339,15 +342,24 @@ async def get_daily_prediction(
         assembled = await assembler.assemble(
             snapshot=snapshot,
             cat_id_to_code=cat_id_to_code,
-            db=db,
             engine_output=result.bundle,
             was_reused=result.was_reused,
             reference_version=reference_version,
             ruleset_version=settings.ruleset_version,
+            variant_code=variant_code,
+        )
+        request_id = resolve_request_id(request)
+        trace_id = resolve_trace_id(request, fallback=request_id)
+        assembled = await enrich_public_prediction_with_horoscope_narration(
+            assembled,
+            snapshot=snapshot,
+            db=db,
+            prompt_context=prompt_context,
+            request_id=request_id,
+            trace_id=trace_id,
+            variant_code=variant_code,
             astrologer_profile_key=astrologer_profile_key,
             lang=current_user.lang if hasattr(current_user, "lang") else "fr",
-            prompt_context=prompt_context,
-            variant_code=variant_code,
         )
     except ValueError as exc:
         raise_api_error(

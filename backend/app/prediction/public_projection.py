@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import logging
 import re
-import uuid
 from datetime import datetime, time
 from numbers import Real
 from typing import TYPE_CHECKING, Any
 
-from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.prediction.decision_window_builder import DecisionWindowBuilder
 from app.prediction.editorial_template_engine import EditorialTemplateEngine
@@ -75,14 +73,10 @@ class PublicPredictionAssembler:
         snapshot: PersistedPredictionSnapshot,
         cat_id_to_code: dict[int, str],
         *,
-        db: Any | None = None,
         engine_output: Any | None = None,
         was_reused: bool = False,
         reference_version: str,
         ruleset_version: str,
-        astrologer_profile_key: str = "standard",
-        lang: str = "fr",
-        prompt_context: Any | None = None,
         variant_code: str | None = None,
     ) -> dict[str, Any]:
         # AC1 Story 42.16: Resolve evidence pack
@@ -215,51 +209,6 @@ class PublicPredictionAssembler:
                     emphasis = self._safe_text(advice_payload.get("emphasis"))
                     if advice or emphasis:
                         daily_advice = {"advice": advice, "emphasis": emphasis}
-
-        if not has_llm_narrative and settings.llm_narrator_enabled and prompt_context:
-            from app.domain.llm.runtime.adapter import AIEngineAdapter
-
-            # AC9: Utilisation de AIEngineAdapter (pipeline canonique)
-            narrator_res = await AIEngineAdapter.generate_horoscope_narration(
-                variant_code=variant_code,
-                time_windows=time_windows,
-                common_context=prompt_context,
-                user_id=snapshot.user_id,
-                request_id=str(uuid.uuid4()),  # fallback safe (T6)
-                trace_id=str(uuid.uuid4()),  # fallback safe (T6)
-                db=db,
-                astrologer_profile_key=astrologer_profile_key,
-                lang=lang,
-                day_climate=day_climate,
-                best_window=best_window,
-                turning_point=main_turning_point,
-                domain_ranking=public_domains,
-                astro_daily_events=astro_daily_events,
-            )
-
-            if narrator_res:
-                has_llm_narrative = True
-                daily_synthesis = narrator_res.daily_synthesis
-                astro_events_intro = narrator_res.astro_events_intro
-                if narrator_res.daily_advice:
-                    daily_advice = {
-                        "advice": narrator_res.daily_advice.advice,
-                        "emphasis": narrator_res.daily_advice.emphasis,
-                    }
-
-                # Inject into time windows
-                for w in time_windows:
-                    pk = w["period_key"]
-                    if pk in narrator_res.time_window_narratives:
-                        w["narrative"] = narrator_res.time_window_narratives[pk]
-
-                # Inject into turning points
-                for i, tp in enumerate(turning_points):
-                    if i < len(narrator_res.turning_point_narratives):
-                        tp["narrative"] = narrator_res.turning_point_narratives[i]
-
-                if main_turning_point and narrator_res.main_turning_point_narrative:
-                    main_turning_point["narrative"] = narrator_res.main_turning_point_narrative
 
         # 9. Meta
         house_system_effective = snapshot.house_system_effective
