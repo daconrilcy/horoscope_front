@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.domain.llm.prompting.narrator_contract import NarratorResult
+from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.infra.db.base import Base
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.product_entitlements import (
@@ -21,7 +22,6 @@ from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.main import app
-from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.services.billing.service import BillingService
 from app.services.prediction import ServiceResult
 from app.tests.helpers.db_session import app_test_engine
@@ -260,9 +260,9 @@ def test_daily_prediction_llm_does_not_consume_astrologer_chat_quota(
     from datetime import UTC, date, datetime
 
     from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
+    from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
     from app.infra.db.models.user_birth_profile import UserBirthProfileModel
     from app.infra.db.session import get_db_session
-    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
     from app.services.prediction import ServiceResult
 
     app.dependency_overrides[get_db_session] = lambda: db_session

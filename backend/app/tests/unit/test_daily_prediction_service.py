@@ -10,9 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.core.config import DailyEngineMode, settings
 from app.domain.llm.prompting.narrator_contract import NarratorResult
-from app.prediction.exceptions import PredictionContextError
-from app.prediction.persisted_relative_score import PersistedRelativeScore
-from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
+from app.domain.prediction.exceptions import PredictionContextError
+from app.domain.prediction.persisted_relative_score import PersistedRelativeScore
+from app.domain.prediction.persisted_snapshot import (
+    PersistedCategoryScore,
+    PersistedPredictionSnapshot,
+)
 from app.services.prediction import (
     DailyPredictionService,
     ServiceResult,

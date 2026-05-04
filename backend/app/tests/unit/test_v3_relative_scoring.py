@@ -2,8 +2,8 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from app.prediction.persisted_baseline import PersistedUserBaseline
-from app.prediction.relative_scoring_calculator import RelativeScoringCalculator
+from app.domain.prediction.persisted_baseline import PersistedUserBaseline
+from app.domain.prediction.relative_scoring_calculator import RelativeScoringCalculator
 
 
 def create_mock_baseline(cat_code, mean, std, p10, p50, p90, g_type="day", g_val="all"):

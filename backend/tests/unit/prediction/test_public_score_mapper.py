@@ -1,4 +1,4 @@
-from app.prediction.public_score_mapper import (
+from app.domain.prediction.public_score_mapper import (
     PublicDomainScore,
     rank_domains,
     to_level,

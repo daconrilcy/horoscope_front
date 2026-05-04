@@ -2,6 +2,9 @@ from datetime import UTC, datetime
 
 import pytest
 
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.impulse_signal_builder import ImpulseSignalBuilder
+from app.domain.prediction.schemas import AstroEvent, SamplePoint
 from app.infra.db.repositories.prediction_schemas import (
     AspectProfileData,
     CategoryData,
@@ -13,9 +16,6 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.impulse_signal_builder import ImpulseSignalBuilder
-from app.prediction.schemas import AstroEvent, SamplePoint
 
 
 def _loaded_context() -> LoadedPredictionContext:

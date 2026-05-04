@@ -10,6 +10,11 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.prediction.schemas import (
+    CoreEngineOutput,
+    EffectiveContext,
+    PersistablePredictionBundle,
+)
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
@@ -17,11 +22,6 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.repositories.user_prediction_baseline_repository import (
     UserPredictionBaselineRepository,
-)
-from app.prediction.schemas import (
-    CoreEngineOutput,
-    EffectiveContext,
-    PersistablePredictionBundle,
 )
 from app.services.user_profile.prediction_baseline_service import UserPredictionBaselineService
 

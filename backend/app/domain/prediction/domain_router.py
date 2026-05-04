@@ -1,5 +1,5 @@
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.schemas import AstroEvent
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.schemas import AstroEvent
 
 
 class DomainRouter:

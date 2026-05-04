@@ -1,6 +1,6 @@
 import pytest
 
-from app.prediction.aggregator import RAW_DAY_MAX, RAW_STEP_MAX, TemporalAggregator
+from app.domain.prediction.aggregator import RAW_DAY_MAX, RAW_STEP_MAX, TemporalAggregator
 
 
 @pytest.fixture

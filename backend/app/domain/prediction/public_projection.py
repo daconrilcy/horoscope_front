@@ -9,14 +9,14 @@ from numbers import Real
 from typing import TYPE_CHECKING, Any
 
 from app.core.datetime_provider import datetime_provider
-from app.prediction.decision_window_builder import DecisionWindowBuilder
-from app.prediction.editorial_template_engine import EditorialTemplateEngine
-from app.prediction.public_astro_daily_events import (
+from app.domain.prediction.decision_window_builder import DecisionWindowBuilder
+from app.domain.prediction.editorial_template_engine import EditorialTemplateEngine
+from app.domain.prediction.public_astro_daily_events import (
     PUBLIC_ASTRO_ASPECT_EVENT_TYPES,
     PublicAstroDailyEventsPolicy,
     resolve_public_astro_events,
 )
-from app.prediction.public_astro_vocabulary import (
+from app.domain.prediction.public_astro_vocabulary import (
     HOUSE_SIGNIFICATIONS,
     get_aspect_label,
     get_aspect_tonality,
@@ -25,13 +25,13 @@ from app.prediction.public_astro_vocabulary import (
     get_planet_name_fr,
     get_sign_name_fr,
 )
-from app.prediction.public_domain_taxonomy import (
+from app.domain.prediction.public_domain_taxonomy import (
     DISPLAY_ORDER,
     PUBLIC_DOMAINS,
     aggregate_public_domain_score,
     map_internal_to_public,
 )
-from app.prediction.public_label_catalog import (
+from app.domain.prediction.public_label_catalog import (
     get_action_hint,
     get_best_window_why,
     get_climate_label,
@@ -40,7 +40,7 @@ from app.prediction.public_label_catalog import (
     get_regime_label,
     get_turning_point_title,
 )
-from app.prediction.public_score_mapper import (
+from app.domain.prediction.public_score_mapper import (
     PublicDomainScore,
     rank_domains,
     to_level,
@@ -619,7 +619,7 @@ class PublicMainTurningPointPolicy:
 
     def _build_what_changes(self, tp: Any, primary_domain: str | None) -> str:
         change_type = getattr(tp, "change_type", "recomposition")
-        from app.prediction.public_domain_taxonomy import PUBLIC_DOMAINS
+        from app.domain.prediction.public_domain_taxonomy import PUBLIC_DOMAINS
 
         domain_label = (
             PUBLIC_DOMAINS[primary_domain].label_fr.lower()
@@ -1022,7 +1022,7 @@ class PublicDayClimatePolicy:
             return f"{label}."
 
         # Map keys to readable names (FR)
-        from app.prediction.public_domain_taxonomy import PUBLIC_DOMAINS
+        from app.domain.prediction.public_domain_taxonomy import PUBLIC_DOMAINS
 
         names = [PUBLIC_DOMAINS[k].label_fr.lower() for k in top_domains if k in PUBLIC_DOMAINS]
         joined_names = self._join_domain_names(names)

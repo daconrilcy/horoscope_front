@@ -14,12 +14,12 @@ from app.api.dependencies.auth import AuthenticatedUser, require_ops_user
 from app.api.errors import resolve_application_error_status
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
+from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
+from app.domain.prediction.public_projection import PublicPredictionAssembler
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.db.session import get_db_session
-from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
-from app.prediction.public_projection import PublicPredictionAssembler
 from app.services.api_contracts.common import ErrorEnvelope
 from app.services.api_contracts.internal.llm.qa import (
     ChatQaRequest,

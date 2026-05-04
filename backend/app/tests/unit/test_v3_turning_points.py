@@ -2,8 +2,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.prediction.schemas import AstroEvent, V3TimeBlock
-from app.prediction.turning_point_detector import TurningPointDetector
+from app.domain.prediction.schemas import AstroEvent, V3TimeBlock
+from app.domain.prediction.turning_point_detector import TurningPointDetector
 
 
 def test_detect_v3_valid_regime_change():

@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.prediction.natal_sensitivity import NatalSensitivityCalculator
-from app.prediction.schemas import AstroEvent, NatalChart
+from app.domain.prediction.natal_sensitivity import NatalSensitivityCalculator
+from app.domain.prediction.schemas import AstroEvent, NatalChart
 
 
 @pytest.fixture

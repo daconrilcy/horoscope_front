@@ -9,7 +9,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
 from app.services.llm_generation.horoscope_daily.narration_service import (
     generate_horoscope_narration_via_gateway,
 )

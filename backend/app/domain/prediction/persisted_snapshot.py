@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from app.prediction.persisted_relative_score import PersistedRelativeScore
+    from app.domain.prediction.persisted_relative_score import PersistedRelativeScore
 
 
 @dataclass(frozen=True)

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from app.prediction.schemas import AstroEvent, V3TimeBlock, V3TurningPoint
+from app.domain.prediction.schemas import AstroEvent, V3TimeBlock, V3TurningPoint
 
 
 @dataclass
@@ -246,7 +246,7 @@ class TurningPointDetector:
     def _calculate_movement(
         self, prev: V3TimeBlock, curr: V3TimeBlock, theme_signals: dict[str, Any]
     ) -> Any | None:
-        from app.prediction.schemas import V3Movement
+        from app.domain.prediction.schemas import V3Movement
 
         def get_total_composite(t: datetime) -> float:
             total = 0.0
@@ -283,7 +283,7 @@ class TurningPointDetector:
     def _calculate_category_deltas(
         self, prev: V3TimeBlock, curr: V3TimeBlock, theme_signals: dict[str, Any]
     ) -> list[Any]:
-        from app.prediction.schemas import V3CategoryDelta
+        from app.domain.prediction.schemas import V3CategoryDelta
 
         deltas = []
         t_prev = prev.start_local + (prev.end_local - prev.start_local) / 2
@@ -393,7 +393,7 @@ class TurningPointDetector:
         return self._to_primary_driver(drivers[0])
 
     def _to_primary_driver(self, event: AstroEvent) -> Any:
-        from app.prediction.schemas import V3PrimaryDriver
+        from app.domain.prediction.schemas import V3PrimaryDriver
 
         # Keep only stable, user-meaningful calculation details.
         metadata = {}

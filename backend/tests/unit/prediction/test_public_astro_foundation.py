@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from app.prediction.public_projection import PublicAstroFoundationPolicy
+from app.domain.prediction.public_projection import PublicAstroFoundationPolicy
 
 
 def test_astro_foundation_key_movements_limit():

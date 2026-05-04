@@ -6,7 +6,7 @@ import ast
 from pathlib import Path
 
 _LEGACY_CLASS = "LLM" + "Narrator"
-_LEGACY_MODULE = "app.prediction.llm_narrator"
+_LEGACY_MODULE = "app.domain.prediction.llm_narrator"
 _LEGACY_PATCH_TARGET = _LEGACY_MODULE + "." + _LEGACY_CLASS + ".narrate"
 _DIRECT_PROVIDER_TYPE = "openai" + "." + "AsyncOpenAI"
 _DIRECT_CHAT_CALL = "chat" + "." + "completions" + "." + "create"

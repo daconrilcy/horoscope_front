@@ -2,8 +2,8 @@ from datetime import date, datetime
 
 import pytest
 
-from app.prediction.enriched_astro_events_builder import EnrichedAstroEventsBuilder
-from app.prediction.schemas import NatalChart, PlanetState, StepAstroState
+from app.domain.prediction.enriched_astro_events_builder import EnrichedAstroEventsBuilder
+from app.domain.prediction.schemas import NatalChart, PlanetState, StepAstroState
 
 
 @pytest.fixture

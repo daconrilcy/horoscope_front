@@ -2,8 +2,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.prediction.decision_window_builder import DecisionWindowBuilder
-from app.prediction.schemas import V3TimeBlock, V3TurningPoint
+from app.domain.prediction.decision_window_builder import DecisionWindowBuilder
+from app.domain.prediction.schemas import V3TimeBlock, V3TurningPoint
 
 
 def test_build_v3_favorable_window():
@@ -75,7 +75,7 @@ def test_build_v3_pivot_window():
 
 
 def test_build_v3_score_blending():
-    from app.prediction.schemas import V3DailyMetrics
+    from app.domain.prediction.schemas import V3DailyMetrics
 
     builder = DecisionWindowBuilder()
     start = datetime(2026, 3, 11, 12, 0, tzinfo=UTC)

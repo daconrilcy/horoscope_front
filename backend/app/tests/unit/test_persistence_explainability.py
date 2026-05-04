@@ -4,6 +4,14 @@ from datetime import date, datetime, timezone
 import pytest
 from sqlalchemy import select
 
+from app.domain.prediction.editorial_template_engine import EditorialTextOutput
+from app.domain.prediction.explainability import (
+    CategoryExplainability,
+    ContributorEntry,
+    ExplainabilityReport,
+)
+from app.domain.prediction.schemas import AstroEvent, EffectiveContext, EngineOutput
+from app.domain.prediction.turning_point_detector import TurningPoint
 from app.infra.db.models.daily_prediction import (
     DailyPredictionCategoryScoreModel,
     DailyPredictionTimeBlockModel,
@@ -12,14 +20,6 @@ from app.infra.db.models.daily_prediction import (
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
-from app.prediction.editorial_template_engine import EditorialTextOutput
-from app.prediction.explainability import (
-    CategoryExplainability,
-    ContributorEntry,
-    ExplainabilityReport,
-)
-from app.prediction.schemas import AstroEvent, EffectiveContext, EngineOutput
-from app.prediction.turning_point_detector import TurningPoint
 from app.services.prediction.persistence_service import PredictionPersistenceService
 
 

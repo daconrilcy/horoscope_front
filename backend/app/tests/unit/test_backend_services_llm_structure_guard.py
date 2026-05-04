@@ -50,7 +50,7 @@ def test_no_legacy_llm_service_import_path_is_reintroduced() -> None:
         "app.services.llm_generation.natal_interpretation_service_v2",
         "app.services.llm_generation.chat_guidance_service",
         "app.services.llm_generation.guidance_service",
-        "app.prediction.llm_gateway_narrator",
+        "app.domain.prediction.llm_gateway_narrator",
     ]
 
     for file_path in files_to_guard:

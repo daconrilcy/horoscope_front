@@ -1,8 +1,8 @@
 import pytest
 
+from app.domain.prediction.calibrator import PercentileCalibrator
+from app.domain.prediction.schemas import V3DailyMetrics
 from app.infra.db.repositories.prediction_schemas import CalibrationData
-from app.prediction.calibrator import PercentileCalibrator
-from app.prediction.schemas import V3DailyMetrics
 
 
 @pytest.fixture

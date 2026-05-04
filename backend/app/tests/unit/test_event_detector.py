@@ -3,10 +3,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.prediction.event_detector import EventDetector
-from app.prediction.schemas import NatalChart, PlanetState, StepAstroState
-from app.prediction.temporal_sampler import DayGrid
-from app.prediction.turning_point_detector import TurningPointDetector
+from app.domain.prediction.event_detector import EventDetector
+from app.domain.prediction.schemas import NatalChart, PlanetState, StepAstroState
+from app.domain.prediction.temporal_sampler import DayGrid
+from app.domain.prediction.turning_point_detector import TurningPointDetector
 
 
 def _make_event_type_mock(priority: int, base_weight: float) -> MagicMock:

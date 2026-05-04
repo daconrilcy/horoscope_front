@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from app.prediction.public_projection import PublicBestWindowPolicy
+from app.domain.prediction.public_projection import PublicBestWindowPolicy
 
 
 def test_best_window_select_highest_score():

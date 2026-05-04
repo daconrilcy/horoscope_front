@@ -12,6 +12,11 @@ from sqlalchemy import delete
 
 from app.core.config import DailyEngineMode, settings
 from app.core.versions import ACTIVE_REFERENCE_VERSION, ACTIVE_RULESET_VERSION
+from app.domain.prediction.schemas import (
+    CoreEngineOutput,
+    EffectiveContext,
+    PersistablePredictionBundle,
+)
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_reference import (
@@ -43,7 +48,6 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
 from app.main import app
-from app.prediction.schemas import CoreEngineOutput, EffectiveContext, PersistablePredictionBundle
 from app.services.auth_service import AuthService
 from app.services.reference_data_service import ReferenceDataService
 from app.tests.fixtures.intraday_qa_fixtures import (

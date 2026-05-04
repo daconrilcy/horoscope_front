@@ -1,8 +1,8 @@
 # backend/app/tests/unit/test_block_generator.py
 from datetime import timedelta
 
-from app.prediction.block_generator import BlockGenerator
-from app.prediction.turning_point_detector import TurningPoint
+from app.domain.prediction.block_generator import BlockGenerator
+from app.domain.prediction.turning_point_detector import TurningPoint
 from app.tests.fixtures.intraday_qa_fixtures import get_active_day
 
 

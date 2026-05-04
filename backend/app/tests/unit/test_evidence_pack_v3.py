@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
-from app.prediction.daily_prediction_evidence_builder import DailyPredictionEvidenceBuilder
-from app.prediction.schemas import (
+from app.domain.prediction.daily_prediction_evidence_builder import DailyPredictionEvidenceBuilder
+from app.domain.prediction.schemas import (
     AstroEvent,
     DecisionWindow,
     V3DailyMetrics,

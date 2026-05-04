@@ -1,4 +1,4 @@
-from app.prediction.public_domain_taxonomy import (
+from app.domain.prediction.public_domain_taxonomy import (
     PUBLIC_DOMAINS,
     aggregate_public_domain_score,
     map_internal_to_public,

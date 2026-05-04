@@ -10,9 +10,9 @@ from threading import Condition, Lock
 from typing import TYPE_CHECKING, Any
 
 from app.core.config import settings
+from app.domain.prediction.exceptions import PredictionContextError
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.observability.metrics import increment_counter
-from app.prediction.exceptions import PredictionContextError
 from app.services.prediction.compute_runner import PredictionComputeRunner
 from app.services.prediction.context_repair_service import PredictionContextRepairService
 from app.services.prediction.fallback_policy import PredictionFallbackPolicy
@@ -24,8 +24,8 @@ from app.services.prediction.types import ComputeMode, DailyPredictionServiceErr
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
-    from app.prediction.schemas import PersistablePredictionBundle
+    from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
+    from app.domain.prediction.schemas import PersistablePredictionBundle
     from app.services.prediction.context_loader import PredictionContextLoader
     from app.services.prediction.engine_orchestrator import EngineOrchestrator
     from app.services.prediction.persistence_service import PredictionPersistenceService

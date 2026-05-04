@@ -8,20 +8,20 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+from app.domain.prediction.persisted_baseline import V3Granularity
 from app.infra.db.repositories.prediction_reference_repository import (
     PredictionReferenceRepository,
 )
 from app.infra.db.repositories.user_prediction_baseline_repository import (
     UserPredictionBaselineRepository,
 )
-from app.prediction.persisted_baseline import V3Granularity
 from app.services.prediction.engine_orchestrator import EngineOrchestrator
 from app.services.prediction.request_resolver import PredictionRequestResolver
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from app.prediction.persisted_baseline import PersistedUserBaseline
+    from app.domain.prediction.persisted_baseline import PersistedUserBaseline
     from app.services.prediction.context_loader import PredictionContextLoader
 
 logger = logging.getLogger(__name__)

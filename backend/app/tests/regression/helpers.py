@@ -11,10 +11,10 @@ from uuid import uuid4
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from app.domain.prediction.aggregator import RAW_DAY_MAX, RAW_STEP_MAX, DayAggregation
+from app.domain.prediction.natal_sensitivity import NatalSensitivityCalculator
+from app.domain.prediction.schemas import EngineInput, EngineOutput
 from app.infra.db.base import Base
-from app.prediction.aggregator import RAW_DAY_MAX, RAW_STEP_MAX, DayAggregation
-from app.prediction.natal_sensitivity import NatalSensitivityCalculator
-from app.prediction.schemas import EngineInput, EngineOutput
 from app.services.prediction.context_loader import PredictionContextLoader
 from app.services.prediction.engine_orchestrator import EngineOrchestrator
 from app.services.reference_data_service import ReferenceDataService

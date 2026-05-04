@@ -1,7 +1,7 @@
 import logging
 
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.schemas import AstroEvent
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.schemas import AstroEvent
 
 logger = logging.getLogger(__name__)
 

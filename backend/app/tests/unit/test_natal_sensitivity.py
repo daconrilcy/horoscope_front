@@ -2,8 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.prediction.natal_sensitivity import NatalSensitivityCalculator
-from app.prediction.schemas import NatalChart
+from app.domain.prediction.natal_sensitivity import NatalSensitivityCalculator
+from app.domain.prediction.schemas import NatalChart
 
 
 def _category(code: str, is_enabled: bool = True) -> SimpleNamespace:

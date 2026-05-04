@@ -1,7 +1,9 @@
+"""Verifie que le builder astrologique reste un fournisseur de contexte."""
+
 from pathlib import Path
 
 from app.domain.llm.prompting.context import PromptCommonContext
-from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
+from app.domain.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
 
 BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
@@ -49,7 +51,7 @@ def test_build_keeps_full_variant_as_context_without_length_instruction() -> Non
 
 
 def test_builder_source_does_not_reintroduce_durable_narration_instructions() -> None:
-    source = (BACKEND_ROOT / "app/prediction/astrologer_prompt_builder.py").read_text(
+    source = (BACKEND_ROOT / "app/domain/prediction/astrologer_prompt_builder.py").read_text(
         encoding="utf-8"
     )
 

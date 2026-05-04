@@ -4,10 +4,10 @@ from datetime import datetime
 import pytest
 import swisseph as swe
 
-import app.prediction.astro_calculator as astro_calculator
-from app.prediction.astro_calculator import V1_PLANETS, AstroCalculator
-from app.prediction.exceptions import PredictionEngineError
-from app.prediction.schemas import PlanetState, StepAstroState
+import app.domain.prediction.astro_calculator as astro_calculator
+from app.domain.prediction.astro_calculator import V1_PLANETS, AstroCalculator
+from app.domain.prediction.exceptions import PredictionEngineError
+from app.domain.prediction.schemas import PlanetState, StepAstroState
 
 # Natal cusps for testing (Placidus-like for some latitude)
 # House 1 starts at 0, House 2 at 30, ..., House 12 at 330

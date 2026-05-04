@@ -5,6 +5,7 @@ from datetime import date, timedelta
 
 from sqlalchemy.orm import Session
 
+from app.domain.prediction.schemas import EngineInput
 from app.infra.db.models.calibration import CalibrationRawDayModel
 from app.infra.db.repositories.calibration_repository import CalibrationRepository
 from app.infra.db.session import SessionLocal
@@ -14,7 +15,6 @@ from app.jobs.calibration.natal_profiles import (
     CALIBRATION_VERSIONS,
 )
 from app.jobs.calibration.runtime import resolve_calibration_runtime
-from app.prediction.schemas import EngineInput
 from app.services.prediction.context_loader import PredictionContextLoader
 from app.services.prediction.engine_orchestrator import EngineOrchestrator
 

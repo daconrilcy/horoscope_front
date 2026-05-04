@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
     from sqlalchemy.orm import Session
 
-    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+    from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
 
 logger = logging.getLogger()
 

@@ -8,17 +8,17 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from app.core.datetime_provider import datetime_provider
+from app.domain.prediction.persisted_baseline import V3Granularity
+from app.domain.prediction.relative_scoring_calculator import RelativeScoringCalculator
 from app.infra.db.repositories.user_prediction_baseline_repository import (
     UserPredictionBaselineRepository,
 )
-from app.prediction.persisted_baseline import V3Granularity
-from app.prediction.relative_scoring_calculator import RelativeScoringCalculator
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from app.prediction.persisted_baseline import PersistedUserBaseline
-    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+    from app.domain.prediction.persisted_baseline import PersistedUserBaseline
+    from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
 
 
 class RelativeScoringService:

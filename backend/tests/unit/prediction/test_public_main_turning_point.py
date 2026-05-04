@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from app.prediction.public_projection import PublicMainTurningPointPolicy
+from app.domain.prediction.public_projection import PublicMainTurningPointPolicy
 
 
 def test_main_turning_point_filter_severity():

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from app.prediction.schemas import AstroEvent
+    from app.domain.prediction.schemas import AstroEvent
 
 
 @dataclass(frozen=True)

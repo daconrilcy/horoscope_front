@@ -9,16 +9,16 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
-from app.prediction.aggregator import V3ThemeAggregator
-from app.prediction.intraday_activation_builder import IntradayActivationBuilder
-from app.prediction.schemas import (
+from app.domain.prediction.aggregator import V3ThemeAggregator
+from app.domain.prediction.intraday_activation_builder import IntradayActivationBuilder
+from app.domain.prediction.schemas import (
     NatalChart,
     PlanetState,
     StepAstroState,
     V3SignalLayer,
     V3ThemeSignal,
 )
-from app.prediction.transit_signal_builder import TransitSignalBuilder
+from app.domain.prediction.transit_signal_builder import TransitSignalBuilder
 
 RUN_PERF_BENCHMARKS_ENV = "RUN_PERF_BENCHMARKS"
 

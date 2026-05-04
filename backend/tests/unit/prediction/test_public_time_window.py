@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from app.prediction.public_projection import PublicTimeWindowPolicy
+from app.domain.prediction.public_projection import PublicTimeWindowPolicy
 
 
 def test_time_window_resolve_regime_progression():

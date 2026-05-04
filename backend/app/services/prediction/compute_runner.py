@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
     from app.core.config import DailyEngineMode
-    from app.prediction.schemas import EngineInput, PersistablePredictionBundle
+    from app.domain.prediction.schemas import EngineInput, PersistablePredictionBundle
     from app.services.prediction.context_loader import PredictionContextLoader
 
 logger = logging.getLogger()

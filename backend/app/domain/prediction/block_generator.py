@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.prediction.schemas import AstroEvent
-    from app.prediction.turning_point_detector import TurningPoint
+    from app.domain.prediction.schemas import AstroEvent
+    from app.domain.prediction.turning_point_detector import TurningPoint
 
 
 @dataclass

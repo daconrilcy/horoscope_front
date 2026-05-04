@@ -1,10 +1,10 @@
 import json
 from datetime import datetime, timezone
 
-from app.prediction.explainability import (
+from app.domain.prediction.explainability import (
     ExplainabilityBuilder,
 )
-from app.prediction.schemas import AstroEvent
+from app.domain.prediction.schemas import AstroEvent
 
 
 def make_event(

@@ -2,8 +2,11 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
-from app.prediction.public_projection import PublicPredictionAssembler
+from app.domain.prediction.persisted_snapshot import (
+    PersistedCategoryScore,
+    PersistedPredictionSnapshot,
+)
+from app.domain.prediction.public_projection import PublicPredictionAssembler
 
 
 def _build_base_snapshot():
@@ -106,7 +109,7 @@ async def test_scenario_turning_point():
 
     from unittest.mock import MagicMock
 
-    from app.prediction.schemas import V3EvidencePack, V3EvidenceTurningPoint
+    from app.domain.prediction.schemas import V3EvidencePack, V3EvidenceTurningPoint
 
     tp = V3EvidenceTurningPoint(
         local_time=datetime(2026, 3, 18, 10, 0),

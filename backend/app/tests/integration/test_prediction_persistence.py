@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.domain.prediction.schemas import EffectiveContext, EngineOutput
 from app.infra.db.models.daily_prediction import (
     DailyPredictionCategoryScoreModel,
     DailyPredictionRunModel,
@@ -15,7 +16,6 @@ from app.infra.db.models.daily_prediction import (
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
-from app.prediction.schemas import EffectiveContext, EngineOutput
 from app.services.prediction.persistence_service import PredictionPersistenceService
 
 

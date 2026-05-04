@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.prediction.schemas import NatalChart, PlanetState, StepAstroState
-from app.prediction.transit_signal_builder import TransitSignalBuilder
+from app.domain.prediction.schemas import NatalChart, PlanetState, StepAstroState
+from app.domain.prediction.transit_signal_builder import TransitSignalBuilder
 
 
 @pytest.fixture

@@ -2,8 +2,11 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from app.prediction.persisted_snapshot import PersistedCategoryScore, PersistedPredictionSnapshot
-from app.prediction.public_projection import PublicPredictionAssembler
+from app.domain.prediction.persisted_snapshot import (
+    PersistedCategoryScore,
+    PersistedPredictionSnapshot,
+)
+from app.domain.prediction.public_projection import PublicPredictionAssembler
 
 
 @pytest.mark.asyncio

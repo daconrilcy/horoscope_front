@@ -1,8 +1,8 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.schemas import NatalChart
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.schemas import NatalChart
 
 
 @dataclass(frozen=True)

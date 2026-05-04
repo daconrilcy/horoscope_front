@@ -1,21 +1,21 @@
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 
-from app.infra.db.repositories.prediction_schemas import (
-    CategoryData,
-    PredictionContext,
-    RulesetContext,
-    RulesetData,
-)
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.schemas import (
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.schemas import (
     AstroEvent,
     EngineInput,
     PlanetState,
     SamplePoint,
     StepAstroState,
 )
-from app.prediction.temporal_sampler import DayGrid, TemporalSampler
+from app.domain.prediction.temporal_sampler import DayGrid, TemporalSampler
+from app.infra.db.repositories.prediction_schemas import (
+    CategoryData,
+    PredictionContext,
+    RulesetContext,
+    RulesetData,
+)
 from app.services.prediction.engine_orchestrator import EngineOrchestrator
 
 BASE_UTC = datetime(2026, 3, 7, 0, 0, tzinfo=UTC)

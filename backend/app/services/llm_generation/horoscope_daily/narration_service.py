@@ -82,7 +82,7 @@ async def generate_horoscope_narration_via_gateway(
     astro_daily_events: dict[str, Any] | None = None,
 ) -> NarratorResult | None:
     """Génère la narration horoscope en réutilisant le pipeline canonique du gateway."""
-    from app.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
+    from app.domain.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
 
     gateway = LLMGateway()
     feature = "horoscope_daily"

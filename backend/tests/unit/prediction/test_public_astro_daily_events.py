@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 
-from app.prediction.public_astro_daily_events import PublicAstroDailyEventsPolicy
-from app.prediction.schemas import AstroEvent, V3EvidencePack
+from app.domain.prediction.public_astro_daily_events import PublicAstroDailyEventsPolicy
+from app.domain.prediction.schemas import AstroEvent, V3EvidencePack
 
 
 @pytest.fixture

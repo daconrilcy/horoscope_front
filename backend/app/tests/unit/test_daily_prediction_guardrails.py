@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import importlib.util
 from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
@@ -23,15 +24,9 @@ from app.services.prediction.compute_runner import ComputeResult
 from app.services.prediction.run_reuse_policy import ReuseDecision
 
 _APP_ROOT = Path(__file__).resolve().parents[2]
-_PREDICTION_ROOT = _APP_ROOT / "prediction"
+_LEGACY_PREDICTION_ROOT = _APP_ROOT / "prediction"
+_PREDICTION_ROOT = _APP_ROOT / "domain" / "prediction"
 _REPO_ROOT = _APP_ROOT.parents[1]
-_PREDICTION_ALLOWLIST_PATH = (
-    _REPO_ROOT
-    / "_condamad"
-    / "stories"
-    / "CS-012-ajouter-garde-anti-croissance-app-prediction"
-    / "prediction-namespace-allowlist.md"
-)
 _FORBIDDEN_PREDICTION_IMPORT_MODULES = {
     "app.prediction." + "engine_orchestrator",
     "app.prediction." + "llm_narrator",
@@ -72,69 +67,18 @@ def _python_sources() -> list[Path]:
     return files
 
 
-def _prediction_allowlist_files() -> set[str]:
-    """Lit l'allowlist persistante des fichiers Python prediction autorises."""
-    allowed_files: set[str] = set()
-    in_section = False
-    for line in _PREDICTION_ALLOWLIST_PATH.read_text(encoding="utf-8").splitlines():
-        if line == "## Fichiers Python autorises":
-            in_section = True
-            continue
-        if in_section and line.startswith("## "):
-            break
-        if in_section and line.startswith("- `backend/app/prediction/"):
-            allowed_files.add(line.removeprefix("- `backend/app/prediction/").removesuffix("`"))
-
-    return allowed_files
+def test_prediction_legacy_namespace_is_not_importable() -> None:
+    """Bloque la recreation importable du package racine legacy `app.prediction`."""
+    assert importlib.util.find_spec("app.prediction") is None
 
 
-def _prediction_import_exceptions() -> list[tuple[str, str, str]]:
-    """Extrait les exceptions d'import documentees avec leur condition de sortie."""
-    exceptions: list[tuple[str, str, str]] = []
-    in_section = False
-    for line in _PREDICTION_ALLOWLIST_PATH.read_text(encoding="utf-8").splitlines():
-        if line == "## Exceptions d'import autorisees":
-            in_section = True
-            continue
-        if in_section and line.startswith("## "):
-            break
-        if not in_section or not line.startswith("| `backend/app/prediction/"):
-            continue
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if len(cells) >= 4:
-            exceptions.append((cells[0].strip("`"), cells[1], cells[3]))
-
-    return exceptions
+def test_prediction_legacy_namespace_has_no_files() -> None:
+    """Bloque tout fichier residuel sous l'ancien dossier `backend/app/prediction`."""
+    assert not _LEGACY_PREDICTION_ROOT.exists()
 
 
-def test_prediction_namespace_python_inventory_does_not_grow() -> None:
-    """Bloque les nouveaux fichiers Python non cartographies sous `app.prediction`."""
-    current_files = {
-        path.relative_to(_PREDICTION_ROOT).as_posix()
-        for path in _PREDICTION_ROOT.rglob("*.py")
-        if "__pycache__" not in path.parts
-    }
-    approved_files = _prediction_allowlist_files()
-
-    assert approved_files
-    assert current_files == approved_files
-
-
-def test_prediction_import_exceptions_have_exit_conditions() -> None:
-    """Force chaque exception d'import prediction a porter une condition de sortie."""
-    violations = [
-        f"{file_path}: {symbol}"
-        for file_path, symbol, exit_condition in _prediction_import_exceptions()
-        if not exit_condition or exit_condition.lower() in {"n/a", "none", "permanent"}
-    ]
-
-    assert not violations, "Prediction import exceptions without exit condition.\n- " + (
-        "\n- ".join(violations)
-    )
-
-
-def test_prediction_legacy_orchestrator_import_path_is_removed() -> None:
-    """Interdit le retour du chemin d'import legacy de l'orchestrateur."""
+def test_prediction_legacy_import_paths_are_removed() -> None:
+    """Interdit le retour des imports actifs du namespace legacy."""
     violations: list[str] = []
     for file_path in _python_sources():
         tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
@@ -142,12 +86,17 @@ def test_prediction_legacy_orchestrator_import_path_is_removed() -> None:
         for node in ast.walk(tree):
             if (
                 isinstance(node, ast.ImportFrom)
-                and node.module in _FORBIDDEN_PREDICTION_IMPORT_MODULES
+                and node.module
+                and (
+                    node.module == "app.prediction"
+                    or node.module.startswith("app.prediction.")
+                    or node.module in _FORBIDDEN_PREDICTION_IMPORT_MODULES
+                )
             ):
                 violations.append(f"{relative}: imports {node.module}")
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    if alias.name in _FORBIDDEN_PREDICTION_IMPORT_MODULES:
+                    if alias.name == "app.prediction" or alias.name.startswith("app.prediction."):
                         violations.append(f"{relative}: imports {alias.name}")
 
     assert not violations, "Forbidden legacy prediction imports detected.\n- " + "\n- ".join(
@@ -183,7 +132,7 @@ def test_prediction_pure_namespace_has_no_db_loader_or_persistence_imports() -> 
 
 
 def test_prediction_namespace_does_not_import_api_settings_or_llm_runtime() -> None:
-    """Bloque les dependances API, settings et LLM runtime sous `app.prediction`."""
+    """Bloque les dependances API, settings et LLM runtime sous `app.domain.prediction`."""
     violations: list[str] = []
     for file_path in sorted(_PREDICTION_ROOT.rglob("*.py")):
         if "__pycache__" in file_path.parts:
@@ -219,7 +168,7 @@ def test_prediction_removed_legacy_compatibility_surfaces_stay_removed() -> None
     schemas_tree = ast.parse(schemas_path.read_text(encoding="utf-8"), filename=str(schemas_path))
     for node in ast.walk(schemas_tree):
         if isinstance(node, ast.ClassDef) and node.name == "TimeBlock":
-            violations.append("app/prediction/schemas.py: class TimeBlock is present")
+            violations.append("app/domain/prediction/schemas.py: class TimeBlock is present")
 
     for file_path in _python_sources():
         tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))

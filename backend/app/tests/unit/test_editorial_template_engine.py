@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.prediction.editorial_builder import BestWindow, CategorySummary, EditorialOutput
-from app.prediction.editorial_template_engine import EditorialTemplateEngine
+from app.domain.prediction.editorial_builder import BestWindow, CategorySummary, EditorialOutput
+from app.domain.prediction.editorial_template_engine import EditorialTemplateEngine
 
 
 @pytest.fixture

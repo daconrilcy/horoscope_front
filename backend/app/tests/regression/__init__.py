@@ -3,12 +3,7 @@ from datetime import UTC, date, datetime
 import pytest
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.daily_prediction import DailyPredictionRunModel
-from app.infra.db.models.prediction_reference import PredictionCategoryModel
-from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
-from app.infra.db.models.reference import ReferenceVersionModel
-from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
-from app.prediction.schemas import (
+from app.domain.prediction.schemas import (
     CoreEngineOutput,
     EffectiveContext,
     PersistablePredictionBundle,
@@ -18,6 +13,11 @@ from app.prediction.schemas import (
     V3SignalLayer,
     V3ThemeSignal,
 )
+from app.infra.db.models.daily_prediction import DailyPredictionRunModel
+from app.infra.db.models.prediction_reference import PredictionCategoryModel
+from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
+from app.infra.db.models.reference import ReferenceVersionModel
+from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.services.prediction.persistence_service import PredictionPersistenceService
 
 

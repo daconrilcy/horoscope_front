@@ -3,12 +3,12 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
-from app.prediction.schemas import DecisionWindow
+from app.domain.prediction.schemas import DecisionWindow
 
 if TYPE_CHECKING:
-    from app.prediction.block_generator import TimeBlock
-    from app.prediction.schemas import V3TimeBlock, V3TurningPoint
-    from app.prediction.turning_point_detector import TurningPoint
+    from app.domain.prediction.block_generator import TimeBlock
+    from app.domain.prediction.schemas import V3TimeBlock, V3TurningPoint
+    from app.domain.prediction.turning_point_detector import TurningPoint
 
 
 class DecisionWindowBuilder:

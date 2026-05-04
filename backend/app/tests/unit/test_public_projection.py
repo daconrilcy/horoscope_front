@@ -5,13 +5,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.prediction.persisted_snapshot import (
+from app.domain.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
     PersistedTimeBlock,
     PersistedTurningPoint,
 )
-from app.prediction.public_projection import (
+from app.domain.prediction.public_projection import (
     PublicCategoryPolicy,
     PublicDecisionWindowPolicy,
     PublicPredictionAssembler,
@@ -237,7 +237,7 @@ async def test_assembler_summary_uses_provisional_flag(cat_map, sample_snapshot)
 
 
 def test_category_policy_ignores_internal_relative_scores(cat_map):
-    from app.prediction.persisted_relative_score import PersistedRelativeScore
+    from app.domain.prediction.persisted_relative_score import PersistedRelativeScore
 
     snapshot = PersistedPredictionSnapshot(
         run_id=1,

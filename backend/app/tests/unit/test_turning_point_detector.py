@@ -1,8 +1,8 @@
 # backend/app/tests/unit/test_turning_point_detector.py
 from datetime import datetime, timedelta
 
-from app.prediction.schemas import AstroEvent
-from app.prediction.turning_point_detector import TurningPointDetector
+from app.domain.prediction.schemas import AstroEvent
+from app.domain.prediction.turning_point_detector import TurningPointDetector
 
 BASE_TIME = datetime(2026, 3, 9, 6, 0, 0)
 STEP = timedelta(minutes=15)

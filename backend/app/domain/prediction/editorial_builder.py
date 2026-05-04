@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from app.prediction.category_codes import normalize_category_code, normalize_category_codes
+from app.domain.prediction.category_codes import normalize_category_code, normalize_category_codes
 
 from .schemas import BestWindow, CategorySummary, EditorialOutput, EngineOutput
 

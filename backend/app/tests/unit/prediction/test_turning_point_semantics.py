@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
-from app.prediction.schemas import AstroEvent, V3TimeBlock
-from app.prediction.turning_point_detector import TurningPointDetector
+from app.domain.prediction.schemas import AstroEvent, V3TimeBlock
+from app.domain.prediction.turning_point_detector import TurningPointDetector
 
 
 def test_detect_v3_semantics_emergence():
@@ -189,7 +189,7 @@ def test_primary_driver_keeps_astrological_calculation_details():
 
 
 def test_detect_v3_movement_indicators():
-    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+    from app.domain.prediction.schemas import V3SignalLayer, V3ThemeSignal
 
     detector = TurningPointDetector()
     start = datetime(2026, 3, 12, 10, 0, tzinfo=UTC)
@@ -249,7 +249,7 @@ def test_detect_v3_movement_indicators():
 
 
 def test_detect_v3_movement_attenuation():
-    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+    from app.domain.prediction.schemas import V3SignalLayer, V3ThemeSignal
 
     detector = TurningPointDetector()
     start = datetime(2026, 3, 12, 10, 0, tzinfo=UTC)
@@ -287,7 +287,7 @@ def test_detect_v3_movement_attenuation():
 
 
 def test_detect_v3_movement_redistribution():
-    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+    from app.domain.prediction.schemas import V3SignalLayer, V3ThemeSignal
 
     detector = TurningPointDetector()
     start = datetime(2026, 3, 12, 10, 0, tzinfo=UTC)
@@ -337,7 +337,7 @@ def test_detect_v3_movement_redistribution():
 
 
 def test_detect_v3_movement_below_threshold():
-    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+    from app.domain.prediction.schemas import V3SignalLayer, V3ThemeSignal
 
     detector = TurningPointDetector()
     start = datetime(2026, 3, 12, 10, 0, tzinfo=UTC)
@@ -378,7 +378,7 @@ def test_detect_v3_movement_below_threshold():
 
 
 def test_detect_v3_detects_material_theme_rotation_on_stable_day():
-    from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+    from app.domain.prediction.schemas import V3SignalLayer, V3ThemeSignal
 
     detector = TurningPointDetector()
     start = datetime(2026, 3, 12, 8, 45, tzinfo=UTC)

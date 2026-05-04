@@ -1,18 +1,21 @@
-# backend/app/tests/unit/test_editorial_i18n.py
+"""Verifie la coherence des templates editoriaux prediction."""
+
 import re
 from datetime import date
 from pathlib import Path
 
 import pytest
 
-from app.prediction.editorial_builder import CategorySummary, EditorialOutput
-from app.prediction.editorial_template_engine import EditorialTemplateEngine
+from app.domain.prediction.editorial_builder import CategorySummary, EditorialOutput
+from app.domain.prediction.editorial_template_engine import EditorialTemplateEngine
 
-# Fix path to be relative to this file
-TEMPLATE_BASE = Path(__file__).parent.parent.parent / "prediction" / "editorial_templates"
+TEMPLATE_BASE = (
+    Path(__file__).parent.parent.parent / "domain" / "prediction" / "editorial_templates"
+)
 
 
 def extract_placeholders(text: str) -> set[str]:
+    """Extrait les placeholders utilises par un template editorial."""
     return set(re.findall(r"\{(\w+)\}", text))
 
 

@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from app.prediction.temporal_sampler import DayGrid, TemporalSampler
+from app.domain.prediction.temporal_sampler import DayGrid, TemporalSampler
 
 PARIS_COORDS = (48.8566, 2.3522)
 PARIS_TZ = "Europe/Paris"

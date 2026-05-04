@@ -7,8 +7,8 @@ from datetime import datetime
 import swisseph as swe
 
 from app.core.ephemeris import SWISSEPH_LOCK
-from app.prediction.exceptions import PredictionEngineError
-from app.prediction.schemas import PlanetState, StepAstroState
+from app.domain.prediction.exceptions import PredictionEngineError
+from app.domain.prediction.schemas import PlanetState, StepAstroState
 
 logger = logging.getLogger(__name__)
 

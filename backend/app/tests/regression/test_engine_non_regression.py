@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from app.prediction.input_hash import compute_engine_input_hash
-from app.prediction.schemas import EngineInput
+from app.domain.prediction.input_hash import compute_engine_input_hash
+from app.domain.prediction.schemas import EngineInput
 from app.tests.regression.helpers import (
     assert_clamps,
     build_engine_input,

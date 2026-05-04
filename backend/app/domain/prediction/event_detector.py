@@ -6,9 +6,9 @@ from zoneinfo import ZoneInfo
 
 import swisseph as swe
 
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.schemas import AstroEvent, NatalChart, StepAstroState
-from app.prediction.temporal_sampler import DayGrid
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.schemas import AstroEvent, NatalChart, StepAstroState
+from app.domain.prediction.temporal_sampler import DayGrid
 
 logger = logging.getLogger(__name__)
 

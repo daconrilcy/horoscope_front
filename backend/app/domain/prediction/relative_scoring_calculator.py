@@ -4,10 +4,10 @@ import logging
 import math
 from typing import TYPE_CHECKING
 
-from app.prediction.persisted_relative_score import PersistedRelativeScore
+from app.domain.prediction.persisted_relative_score import PersistedRelativeScore
 
 if TYPE_CHECKING:
-    from app.prediction.persisted_baseline import PersistedUserBaseline
+    from app.domain.prediction.persisted_baseline import PersistedUserBaseline
 
 logger = logging.getLogger(__name__)
 

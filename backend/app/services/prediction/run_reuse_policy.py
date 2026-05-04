@@ -5,14 +5,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from app.core.config import DailyEngineMode, settings
+from app.domain.prediction.input_hash import compute_engine_input_hash
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
-from app.prediction.input_hash import compute_engine_input_hash
 from app.services.prediction.types import ComputeMode
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
+    from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
     from app.services.prediction.request_resolver import ResolvedPredictionRequest
 
 logger = logging.getLogger()

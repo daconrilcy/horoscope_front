@@ -13,18 +13,18 @@ from sqlalchemy.orm import sessionmaker
 
 from app.api.v1.routers.public.predictions import get_daily_prediction_service
 from app.core.config import settings
+from app.domain.prediction.persisted_snapshot import (
+    PersistedCategoryScore,
+    PersistedPredictionSnapshot,
+    PersistedTimeBlock,
+    PersistedTurningPoint,
+)
 from app.infra.db import session as db_session_module
 from app.infra.db.base import Base
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 from app.main import app
-from app.prediction.persisted_snapshot import (
-    PersistedCategoryScore,
-    PersistedPredictionSnapshot,
-    PersistedTimeBlock,
-    PersistedTurningPoint,
-)
 from app.services.auth_service import AuthService
 from app.services.prediction import (
     ComputeMode,
@@ -581,7 +581,7 @@ def test_daily_prediction_is_provisional_per_category():
 
 
 def test_time_block_contains_turning_point_uses_half_open_intervals():
-    from app.prediction.public_projection import PublicTimelinePolicy
+    from app.domain.prediction.public_projection import PublicTimelinePolicy
 
     policy = PublicTimelinePolicy()
 
@@ -606,7 +606,7 @@ def test_time_block_contains_turning_point_uses_half_open_intervals():
 
 
 def test_time_block_contains_turning_point_accepts_mixed_offset_formats():
-    from app.prediction.public_projection import PublicTimelinePolicy
+    from app.domain.prediction.public_projection import PublicTimelinePolicy
 
     policy = PublicTimelinePolicy()
 
@@ -644,7 +644,9 @@ def test_daily_prediction_decision_windows():
             "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run",
             return_value=snapshot,
         ),
-        patch("app.prediction.public_projection.PublicDecisionWindowPolicy.build") as mock_build,
+        patch(
+            "app.domain.prediction.public_projection.PublicDecisionWindowPolicy.build"
+        ) as mock_build,
     ):
         mock_build.return_value = [
             {
@@ -678,7 +680,9 @@ def test_daily_prediction_summary_includes_best_window():
             "app.api.v1.routers.public.predictions.DailyPredictionRepository.get_full_run",
             return_value=snapshot,
         ),
-        patch("app.prediction.public_projection.PublicDecisionWindowPolicy.build") as mock_dw_build,
+        patch(
+            "app.domain.prediction.public_projection.PublicDecisionWindowPolicy.build"
+        ) as mock_dw_build,
     ):
         mock_dw_build.return_value = [
             {

@@ -8,17 +8,17 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.datetime_provider import datetime_provider
+from app.domain.prediction.persisted_snapshot import (
+    PersistedCategoryScore,
+    PersistedPredictionSnapshot,
+    PersistedTimeBlock,
+    PersistedTurningPoint,
+)
 from app.infra.db.models.daily_prediction import (
     DailyPredictionCategoryScoreModel,
     DailyPredictionRunModel,
     DailyPredictionTimeBlockModel,
     DailyPredictionTurningPointModel,
-)
-from app.prediction.persisted_snapshot import (
-    PersistedCategoryScore,
-    PersistedPredictionSnapshot,
-    PersistedTimeBlock,
-    PersistedTurningPoint,
 )
 
 

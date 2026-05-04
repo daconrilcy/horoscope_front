@@ -5,8 +5,8 @@ from math import isclose
 
 import pytest
 
-from app.prediction.schemas import AstroEvent, SamplePoint
-from app.prediction.temporal_kernel import (
+from app.domain.prediction.schemas import AstroEvent, SamplePoint
+from app.domain.prediction.temporal_kernel import (
     _DEFAULT_HALF_WIDTH,
     _FAMILY_HALF_WIDTH,
     spread_event_weights,

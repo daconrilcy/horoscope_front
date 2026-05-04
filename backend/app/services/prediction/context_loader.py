@@ -7,6 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.datetime_provider import datetime_provider
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.exceptions import PredictionContextError
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
@@ -25,8 +27,6 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.exceptions import PredictionContextError
 
 _PROVISIONAL_CALIBRATION_LABEL = "provisional"
 _MIXED_CALIBRATION_LABEL = "mixed"

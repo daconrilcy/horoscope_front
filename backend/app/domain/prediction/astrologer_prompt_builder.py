@@ -7,7 +7,7 @@ from typing import Any
 
 from app.domain.astrology.natal_calculation import sign_from_longitude
 from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
-from app.prediction.public_astro_vocabulary import get_planet_name_fr, get_sign_name_fr
+from app.domain.prediction.public_astro_vocabulary import get_planet_name_fr, get_sign_name_fr
 
 logger = logging.getLogger(__name__)
 

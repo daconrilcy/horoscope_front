@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from app.prediction.persisted_baseline import PersistedUserBaseline
-from app.prediction.relative_scoring_calculator import RelativeScoringCalculator
+from app.domain.prediction.persisted_baseline import PersistedUserBaseline
+from app.domain.prediction.relative_scoring_calculator import RelativeScoringCalculator
 
 
 def test_calculate_nominal_z_score():

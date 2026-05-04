@@ -2,8 +2,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.prediction.regime_segmenter import RegimeSegmenter
-from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+from app.domain.prediction.regime_segmenter import RegimeSegmenter
+from app.domain.prediction.schemas import V3SignalLayer, V3ThemeSignal
 
 
 def create_mock_signal(theme_code: str, values: list[float], start_time: datetime):

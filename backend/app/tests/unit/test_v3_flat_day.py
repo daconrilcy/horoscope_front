@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
-from app.prediction.persisted_snapshot import PersistedPredictionSnapshot
-from app.prediction.public_projection import _is_flat_day
+from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
+from app.domain.prediction.public_projection import _is_flat_day
 
 
 def create_mock_cat_dict(note_20, intensity_20, stability_day):

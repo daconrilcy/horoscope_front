@@ -6,13 +6,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import require_authenticated_user
-from app.infra.db.session import get_db_session
-from app.main import app
-from app.prediction.persisted_relative_score import PersistedRelativeScore
-from app.prediction.persisted_snapshot import (
+from app.domain.prediction.persisted_relative_score import PersistedRelativeScore
+from app.domain.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
 )
+from app.infra.db.session import get_db_session
+from app.main import app
 
 client = TestClient(app)
 

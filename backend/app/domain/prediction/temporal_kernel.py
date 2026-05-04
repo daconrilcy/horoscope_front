@@ -20,7 +20,7 @@ After normalisation these become:  0.5, 0.33, 0.17  (×2 for sides + center).
 
 from __future__ import annotations
 
-from app.prediction.schemas import AstroEvent, SamplePoint
+from app.domain.prediction.schemas import AstroEvent, SamplePoint
 
 # Taxonomy V2 event families → half-width in 15-min steps.
 # Wider windows = more spreading = smoother intraday signal.

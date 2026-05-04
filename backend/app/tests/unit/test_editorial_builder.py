@@ -4,15 +4,15 @@ import inspect
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
-from app.prediction.block_generator import TimeBlock
-from app.prediction.editorial_builder import EditorialOutputBuilder
-from app.prediction.explainability import (
+from app.domain.prediction.block_generator import TimeBlock
+from app.domain.prediction.editorial_builder import EditorialOutputBuilder
+from app.domain.prediction.explainability import (
     CategoryExplainability,
     ContributorEntry,
     ExplainabilityReport,
 )
-from app.prediction.schemas import EffectiveContext, EngineOutput
-from app.prediction.turning_point_detector import TurningPoint
+from app.domain.prediction.schemas import EffectiveContext, EngineOutput
+from app.domain.prediction.turning_point_detector import TurningPoint
 
 
 @dataclass(frozen=True)

@@ -11,11 +11,11 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.core.versions import LEGACY_RULESET_VERSION, get_active_ruleset_version
+from app.domain.prediction.schemas import EngineInput
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
-from app.prediction.schemas import EngineInput
 from app.services.user_profile.birth_profile_service import UserBirthProfileService
 
 if TYPE_CHECKING:

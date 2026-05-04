@@ -4,16 +4,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.infra.db.repositories.user_prediction_baseline_repository import (
-    UserPredictionBaselineRepository,
-)
-from app.prediction.persisted_baseline import V3Granularity
-from app.prediction.schemas import (
+from app.domain.prediction.persisted_baseline import V3Granularity
+from app.domain.prediction.schemas import (
     CoreEngineOutput,
     EffectiveContext,
     PersistablePredictionBundle,
     V3EngineOutput,
     V3TimeBlock,
+)
+from app.infra.db.repositories.user_prediction_baseline_repository import (
+    UserPredictionBaselineRepository,
 )
 from app.services.user_profile.prediction_baseline_service import UserPredictionBaselineService
 from app.tests.helpers.db_utils import (

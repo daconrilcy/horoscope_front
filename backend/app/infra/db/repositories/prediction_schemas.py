@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-from app.prediction.context import CalibrationData
+from app.domain.prediction.context import CalibrationData
 
 __all__ = [
     "AspectProfileData",

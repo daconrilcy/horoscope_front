@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.prediction.domain_router import DomainRouter
-from app.prediction.schemas import AstroEvent
+from app.domain.prediction.domain_router import DomainRouter
+from app.domain.prediction.schemas import AstroEvent
 
 EXACT_EVENT_TYPE = "aspect_exact_to_personal"
 

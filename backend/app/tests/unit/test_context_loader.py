@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.domain.prediction.exceptions import PredictionContextError
 from app.infra.db.repositories.prediction_schemas import (
     CalibrationData,
     CategoryData,
@@ -13,7 +14,6 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
-from app.prediction.exceptions import PredictionContextError
 from app.services.prediction.context_loader import PredictionContextLoader
 
 

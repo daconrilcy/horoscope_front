@@ -2,8 +2,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.prediction.aggregator import V3ThemeAggregator
-from app.prediction.schemas import V3SignalLayer, V3ThemeSignal
+from app.domain.prediction.aggregator import V3ThemeAggregator
+from app.domain.prediction.schemas import V3SignalLayer, V3ThemeSignal
 
 
 def _build_signal(

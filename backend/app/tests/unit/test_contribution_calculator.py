@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.prediction.contribution_calculator import ContributionCalculator
-from app.prediction.schemas import AstroEvent
+from app.domain.prediction.contribution_calculator import ContributionCalculator
+from app.domain.prediction.schemas import AstroEvent
 
 
 @pytest.fixture

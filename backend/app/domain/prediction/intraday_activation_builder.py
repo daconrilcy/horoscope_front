@@ -6,15 +6,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from app.prediction.contribution_calculator import ContributionCalculator
-from app.prediction.domain_router import DomainRouter
-from app.prediction.event_detector import EventDetector
-from app.prediction.schemas import AstroEvent
+from app.domain.prediction.contribution_calculator import ContributionCalculator
+from app.domain.prediction.domain_router import DomainRouter
+from app.domain.prediction.event_detector import EventDetector
+from app.domain.prediction.schemas import AstroEvent
 
 if TYPE_CHECKING:
-    from app.prediction.context import LoadedPredictionContext
-    from app.prediction.schemas import NatalChart, StepAstroState
-    from app.prediction.temporal_sampler import DayGrid
+    from app.domain.prediction.context import LoadedPredictionContext
+    from app.domain.prediction.schemas import NatalChart, StepAstroState
+    from app.domain.prediction.temporal_sampler import DayGrid
 
 logger = logging.getLogger(__name__)
 

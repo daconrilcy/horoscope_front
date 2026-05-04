@@ -11,6 +11,12 @@ from sqlalchemy import delete as sa_delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.domain.prediction.schemas import (
+    CoreEngineOutput,
+    EditorialOutputBundle,
+    EngineOutput,
+    PersistablePredictionBundle,
+)
 from app.infra.db.models.daily_prediction import (
     DailyPredictionCategoryScoreModel,
     DailyPredictionRunModel,
@@ -19,12 +25,6 @@ from app.infra.db.models.daily_prediction import (
 )
 from app.infra.db.repositories.daily_prediction_repository import DailyPredictionRepository
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
-from app.prediction.schemas import (
-    CoreEngineOutput,
-    EditorialOutputBundle,
-    EngineOutput,
-    PersistablePredictionBundle,
-)
 
 if TYPE_CHECKING:
     from .explainability import ExplainabilityReport

@@ -5,8 +5,8 @@ from datetime import date, datetime
 
 import swisseph as swe
 
-from app.prediction.public_astro_vocabulary import FIXED_STARS
-from app.prediction.schemas import AstroEvent, NatalChart, StepAstroState
+from app.domain.prediction.public_astro_vocabulary import FIXED_STARS
+from app.domain.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 
 logger = logging.getLogger(__name__)
 

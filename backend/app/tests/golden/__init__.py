@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from app.prediction.schemas import AstroEvent
+from app.domain.prediction.schemas import AstroEvent
 
 BASE_TIME = datetime(2026, 3, 9, 6, 0, 0)
 STEP = timedelta(minutes=15)

@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.domain.llm.prompting.narrator_contract import NarratorResult
-from app.prediction.persisted_snapshot import (
+from app.domain.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
     PersistedTimeBlock,
 )
-from app.prediction.public_projection import PublicPredictionAssembler
-from app.prediction.schemas import (
+from app.domain.prediction.public_projection import PublicPredictionAssembler
+from app.domain.prediction.schemas import (
     V3EvidencePack,
     V3EvidenceTheme,
     V3EvidenceTurningPoint,
@@ -331,7 +331,7 @@ async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short()
 
 @pytest.mark.asyncio
 async def test_assemble_includes_enriched_turning_points():
-    from app.prediction.schemas import V3PrimaryDriver
+    from app.domain.prediction.schemas import V3PrimaryDriver
 
     evidence_pack = V3EvidencePack(
         version="3.0.0",
@@ -399,7 +399,7 @@ async def test_assemble_includes_enriched_turning_points():
 
 @pytest.mark.asyncio
 async def test_assemble_includes_movement_indicators():
-    from app.prediction.schemas import V3CategoryDelta, V3Movement
+    from app.domain.prediction.schemas import V3CategoryDelta, V3Movement
 
     evidence_pack = V3EvidencePack(
         version="3.0.0",

@@ -5,6 +5,11 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.domain.prediction.schemas import (
+    CoreEngineOutput,
+    EffectiveContext,
+    PersistablePredictionBundle,
+)
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import ReferenceVersionModel
@@ -15,11 +20,6 @@ from app.infra.db.repositories.user_prediction_baseline_repository import (
     UserPredictionBaselineRepository,
 )
 from app.jobs.refresh_user_baselines import run_job
-from app.prediction.schemas import (
-    CoreEngineOutput,
-    EffectiveContext,
-    PersistablePredictionBundle,
-)
 
 
 def _add_reference_bundle(

@@ -2,7 +2,7 @@ import json
 from datetime import date
 from pathlib import Path
 
-from app.prediction.schemas import EngineInput
+from app.domain.prediction.schemas import EngineInput
 from app.tests.regression.helpers import (
     assert_clamps,
     create_orchestrator,

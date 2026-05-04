@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, call, patch
 
 from sqlalchemy.orm import Session
 
-from app.prediction.persisted_baseline import PersistedUserBaseline, V3Granularity
-from app.prediction.persisted_snapshot import (
+from app.domain.prediction.persisted_baseline import PersistedUserBaseline, V3Granularity
+from app.domain.prediction.persisted_snapshot import (
     PersistedCategoryScore,
     PersistedPredictionSnapshot,
 )

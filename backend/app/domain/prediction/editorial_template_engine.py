@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from app.prediction.category_codes import normalize_category_code
+from app.domain.prediction.category_codes import normalize_category_code
 
 from .schemas import EditorialOutput, EditorialTextOutput
 

@@ -2,6 +2,10 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.intraday_activation_builder import IntradayActivationBuilder
+from app.domain.prediction.schemas import AstroEvent, NatalChart, PlanetState, StepAstroState
+from app.domain.prediction.temporal_sampler import DayGrid
 from app.infra.db.repositories.prediction_schemas import (
     AspectProfileData,
     CategoryData,
@@ -13,10 +17,6 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.intraday_activation_builder import IntradayActivationBuilder
-from app.prediction.schemas import AstroEvent, NatalChart, PlanetState, StepAstroState
-from app.prediction.temporal_sampler import DayGrid
 
 
 def _loaded_context() -> LoadedPredictionContext:

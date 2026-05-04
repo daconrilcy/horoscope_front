@@ -2,9 +2,9 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.prediction.block_generator import BlockGenerator
-from app.prediction.schemas import AstroEvent
-from app.prediction.turning_point_detector import TurningPoint, TurningPointDetector
+from app.domain.prediction.block_generator import BlockGenerator
+from app.domain.prediction.schemas import AstroEvent
+from app.domain.prediction.turning_point_detector import TurningPoint, TurningPointDetector
 
 
 def create_event(priority: int, local_time: datetime, *, ut_time: float = 0.0) -> AstroEvent:

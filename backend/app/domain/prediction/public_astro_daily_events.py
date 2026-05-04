@@ -6,7 +6,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
-from app.prediction.public_astro_vocabulary import (
+from app.domain.prediction.public_astro_vocabulary import (
     get_aspect_label,
     get_fixed_star_name_fr,
     get_planet_name_fr,

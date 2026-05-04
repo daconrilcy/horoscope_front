@@ -1,8 +1,8 @@
 # backend/app/tests/unit/test_decision_window_builder.py
 from datetime import datetime, timedelta
 
-from app.prediction.block_generator import TimeBlock
-from app.prediction.decision_window_builder import DecisionWindowBuilder
+from app.domain.prediction.block_generator import TimeBlock
+from app.domain.prediction.decision_window_builder import DecisionWindowBuilder
 
 BASE_TIME = datetime(2026, 3, 9, 6, 0, 0)
 
@@ -73,7 +73,7 @@ def test_pivot_block_yields_pivot():
         dominant_categories=["energy"],
     )
     # Mocking turning point
-    from app.prediction.turning_point_detector import TurningPoint
+    from app.domain.prediction.turning_point_detector import TurningPoint
 
     pivots = [
         TurningPoint(
@@ -101,7 +101,7 @@ def test_positive_pivot_block_stays_favorable():
         tone_code="positive",
         dominant_categories=["energy"],
     )
-    from app.prediction.turning_point_detector import TurningPoint
+    from app.domain.prediction.turning_point_detector import TurningPoint
 
     pivots = [
         TurningPoint(
@@ -130,7 +130,7 @@ def test_neutral_pivot_window_is_clipped_to_readable_duration():
         tone_code="neutral",
         dominant_categories=["energy"],
     )
-    from app.prediction.turning_point_detector import TurningPoint
+    from app.domain.prediction.turning_point_detector import TurningPoint
 
     pivots = [
         TurningPoint(

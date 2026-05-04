@@ -13,29 +13,28 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import swisseph as swe
 
 from app.core.config import DailyEngineMode, settings
-from app.infra.db.repositories.prediction_schemas import RulesetContext
-from app.prediction.aggregator import TemporalAggregator, V3ThemeAggregator
-from app.prediction.astro_calculator import AstroCalculator
-from app.prediction.block_generator import BlockGenerator
-from app.prediction.calibrator import PercentileCalibrator
-from app.prediction.category_codes import normalize_category_codes
-from app.prediction.context import LoadedPredictionContext
-from app.prediction.contribution_calculator import ContributionCalculator
-from app.prediction.daily_prediction_evidence_builder import DailyPredictionEvidenceBuilder
-from app.prediction.decision_window_builder import DecisionWindowBuilder
-from app.prediction.domain_router import DomainRouter
-from app.prediction.editorial_builder import EditorialOutputBuilder
-from app.prediction.editorial_service import PredictionEditorialService
-from app.prediction.enriched_astro_events_builder import EnrichedAstroEventsBuilder
-from app.prediction.event_detector import EventDetector
-from app.prediction.exceptions import PredictionContextError
-from app.prediction.explainability import ExplainabilityBuilder
-from app.prediction.impulse_signal_builder import ImpulseSignalBuilder
-from app.prediction.input_hash import compute_engine_input_hash
-from app.prediction.intraday_activation_builder import IntradayActivationBuilder
-from app.prediction.natal_sensitivity import NatalSensitivityCalculator
-from app.prediction.regime_segmenter import RegimeSegmenter
-from app.prediction.schemas import (
+from app.domain.prediction.aggregator import TemporalAggregator, V3ThemeAggregator
+from app.domain.prediction.astro_calculator import AstroCalculator
+from app.domain.prediction.block_generator import BlockGenerator
+from app.domain.prediction.calibrator import PercentileCalibrator
+from app.domain.prediction.category_codes import normalize_category_codes
+from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.contribution_calculator import ContributionCalculator
+from app.domain.prediction.daily_prediction_evidence_builder import DailyPredictionEvidenceBuilder
+from app.domain.prediction.decision_window_builder import DecisionWindowBuilder
+from app.domain.prediction.domain_router import DomainRouter
+from app.domain.prediction.editorial_builder import EditorialOutputBuilder
+from app.domain.prediction.editorial_service import PredictionEditorialService
+from app.domain.prediction.enriched_astro_events_builder import EnrichedAstroEventsBuilder
+from app.domain.prediction.event_detector import EventDetector
+from app.domain.prediction.exceptions import PredictionContextError
+from app.domain.prediction.explainability import ExplainabilityBuilder
+from app.domain.prediction.impulse_signal_builder import ImpulseSignalBuilder
+from app.domain.prediction.input_hash import compute_engine_input_hash
+from app.domain.prediction.intraday_activation_builder import IntradayActivationBuilder
+from app.domain.prediction.natal_sensitivity import NatalSensitivityCalculator
+from app.domain.prediction.regime_segmenter import RegimeSegmenter
+from app.domain.prediction.schemas import (
     AstroEvent,
     CoreEngineOutput,
     EffectiveContext,
@@ -48,10 +47,11 @@ from app.prediction.schemas import (
     V3SignalLayer,
     V3ThemeSignal,
 )
-from app.prediction.temporal_kernel import spread_event_weights
-from app.prediction.temporal_sampler import DayGrid, TemporalSampler
-from app.prediction.transit_signal_builder import TransitSignalBuilder
-from app.prediction.turning_point_detector import TurningPoint, TurningPointDetector
+from app.domain.prediction.temporal_kernel import spread_event_weights
+from app.domain.prediction.temporal_sampler import DayGrid, TemporalSampler
+from app.domain.prediction.transit_signal_builder import TransitSignalBuilder
+from app.domain.prediction.turning_point_detector import TurningPoint, TurningPointDetector
+from app.infra.db.repositories.prediction_schemas import RulesetContext
 
 _ZODIAC_SIGNS = (
     "aries",

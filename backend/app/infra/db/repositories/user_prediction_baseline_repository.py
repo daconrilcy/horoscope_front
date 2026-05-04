@@ -7,11 +7,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.datetime_provider import datetime_provider
+from app.domain.prediction.persisted_baseline import PersistedUserBaseline
 from app.infra.db.models.user_prediction_baseline import (
     BaselineGranularity,
     UserPredictionBaselineModel,
 )
-from app.prediction.persisted_baseline import PersistedUserBaseline
 
 
 class UserPredictionBaselineRepository:

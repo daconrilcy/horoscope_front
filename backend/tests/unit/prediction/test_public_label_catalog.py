@@ -1,4 +1,4 @@
-from app.prediction.public_label_catalog import (
+from app.domain.prediction.public_label_catalog import (
     CLIMATE_LABELS,
     REGIME_ACTION_HINTS,
     REGIME_LABELS,

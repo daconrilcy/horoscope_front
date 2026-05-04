@@ -3,9 +3,9 @@
 from collections.abc import Iterable
 from typing import Mapping
 
-from app.prediction.aggregator import DayAggregation
-from app.prediction.context import CalibrationData
-from app.prediction.schemas import V3DailyMetrics
+from app.domain.prediction.aggregator import DayAggregation
+from app.domain.prediction.context import CalibrationData
+from app.domain.prediction.schemas import V3DailyMetrics
 
 DEFAULT_CALIBRATION = CalibrationData(
     p05=-1.5, p25=-0.5, p50=0.0, p75=0.5, p95=1.5, sample_size=0, calibration_label="default"

@@ -1,8 +1,8 @@
 from datetime import UTC, date, datetime
 from unittest.mock import MagicMock
 
-from app.prediction.editorial_service import PredictionEditorialService
-from app.prediction.schemas import (
+from app.domain.prediction.editorial_service import PredictionEditorialService
+from app.domain.prediction.schemas import (
     CoreEngineOutput,
     EffectiveContext,
     V3EvidencePack,

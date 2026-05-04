@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import swisseph as swe
 
-from app.prediction.schemas import SamplePoint
+from app.domain.prediction.schemas import SamplePoint
 
 
 @dataclass(frozen=True)
