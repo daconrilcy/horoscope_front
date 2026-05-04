@@ -2,7 +2,7 @@
 
 > Document status: non-canonical-human-note.
 > This document is retained as human guidance. The executable LLM DB cleanup
-> source is `backend/docs/llm-db-cleanup-registry.json` validated by
+> source is `backend/docs/guarded-artifacts/llm-db-cleanup-registry.json` validated by
 > `app.ops.llm.db_cleanup_validator.LlmDbCleanupValidator`.
 
 ## Source de verite canonique
@@ -26,7 +26,7 @@ Les decisions runtime nominales doivent venir des familles d objets suivantes :
 Le perimetre canonique ne doit plus reintroduire de lecture ou d ecriture legacy
 sur les objets LLM assainis. Les suppressions physiques sont portees par les
 migrations Alembic et les traces historiques restent documentees dans
-[llm-db-cleanup-registry.json](./llm-db-cleanup-registry.json).
+[llm-db-cleanup-registry.json](../../backend/docs/guarded-artifacts/llm-db-cleanup-registry.json).
 
 ## Regles de changement
 
@@ -43,7 +43,7 @@ Un `DROP` ne doit jamais preceder la convergence logique ni l archivage utile.
 
 Avant toute nouvelle migration ou tout nouvel acces a un objet LLM legacy :
 
-1. mettre a jour `backend/docs/llm-db-cleanup-registry.json` ;
+1. mettre a jour `backend/docs/guarded-artifacts/llm-db-cleanup-registry.json` ;
 2. documenter la justification et la decision (`keep`, `migrate`, `freeze`, `archive`, `drop`) ;
 3. mettre a jour les garde-fous si un nouveau chemin compat est temporairement autorise.
 

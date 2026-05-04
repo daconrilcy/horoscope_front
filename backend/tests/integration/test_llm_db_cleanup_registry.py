@@ -19,7 +19,7 @@ def _repo_root() -> Path:
 
 def _load_registry() -> dict:
     root = _repo_root()
-    registry_path = root / "backend" / "docs" / "llm-db-cleanup-registry.json"
+    registry_path = root / "backend" / "docs" / "guarded-artifacts" / "llm-db-cleanup-registry.json"
     return json.loads(registry_path.read_text(encoding="utf-8"))
 
 

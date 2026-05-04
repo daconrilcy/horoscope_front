@@ -20,7 +20,7 @@ from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 MODEL_ROOT = BACKEND_ROOT / "app" / "infra" / "db" / "models" / "llm"
-GENERATED_DOC = BACKEND_ROOT / "docs" / "llm-model-structure.md"
+GENERATED_DOC = BACKEND_ROOT / "docs" / "guarded-artifacts" / "llm-model-structure.md"
 
 
 def test_generated_llm_structure_doc_matches_code() -> None:

@@ -19,6 +19,11 @@ GOVERNANCE_PATH = (
 NORMATIVE_TERMS = ("source-of-truth", "source de verite", "canonical", "canonique")
 GUARDED_STATUSES = {"generated-guarded", "executable-registry"}
 ALLOWED_STATUSES = GUARDED_STATUSES | {"non-canonical-human-note"}
+GOVERNED_LLM_DOC_PREFIXES = (
+    "| `backend/docs/guarded-artifacts/llm-",
+    "| `backend/docs/llm-",
+    "| `docs/llm/llm-",
+)
 MOVED_HUMAN_LLM_DOCS = {
     "docs/llm/llm-db-governance.md",
     "docs/llm/llm-runtime-source-of-truth.md",
@@ -34,7 +39,9 @@ FORBIDDEN_BACKEND_LLM_NOTES = {
 def _llm_docs_inventory() -> set[str]:
     """Liste les documents LLM gardes par le registre de gouvernance."""
     return {
-        path.relative_to(REPO_ROOT).as_posix() for path in DOCS_ROOT.glob("llm-*") if path.is_file()
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in DOCS_ROOT.rglob("llm-*")
+        if path.is_file()
     } | {
         path.relative_to(REPO_ROOT).as_posix()
         for path in ROOT_LLM_DOCS.glob("llm-*")
@@ -46,7 +53,7 @@ def _governance_rows() -> dict[str, dict[str, str]]:
     """Parse les lignes de gouvernance LLM en imposant les colonnes attendues."""
     rows: dict[str, dict[str, str]] = {}
     for line in GOVERNANCE_PATH.read_text(encoding="utf-8").splitlines():
-        if not (line.startswith("| `backend/docs/llm-") or line.startswith("| `docs/llm/llm-")):
+        if not line.startswith(GOVERNED_LLM_DOC_PREFIXES):
             continue
         file_path, status, runtime_source, guard = [
             cell.strip() for cell in line.strip("|").split("|")
@@ -115,13 +122,13 @@ def test_existing_llm_executable_guards_remain_declared() -> None:
     """Les gardes existantes du rendu LLM et du registre cleanup doivent rester visibles."""
     rows = _governance_rows()
 
-    assert rows["backend/docs/llm-model-structure.md"]["status"] == "generated-guarded"
+    structure_doc = "backend/docs/guarded-artifacts/llm-model-structure.md"
+    cleanup_registry = "backend/docs/guarded-artifacts/llm-db-cleanup-registry.json"
+
+    assert rows[structure_doc]["status"] == "generated-guarded"
+    assert rows[structure_doc]["guard"] == "pytest -q tests/unit/test_llm_canonical_perimeter.py"
+    assert rows[cleanup_registry]["status"] == "executable-registry"
     assert (
-        rows["backend/docs/llm-model-structure.md"]["guard"]
-        == "pytest -q tests/unit/test_llm_canonical_perimeter.py"
-    )
-    assert rows["backend/docs/llm-db-cleanup-registry.json"]["status"] == "executable-registry"
-    assert (
-        rows["backend/docs/llm-db-cleanup-registry.json"]["guard"]
+        rows[cleanup_registry]["guard"]
         == "pytest -q tests/integration/test_llm_db_cleanup_registry.py"
     )

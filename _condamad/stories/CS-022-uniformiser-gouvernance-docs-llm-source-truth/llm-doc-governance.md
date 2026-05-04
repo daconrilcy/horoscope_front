@@ -16,8 +16,8 @@ interpretee comme source de verite runtime sans garde.
 
 | File | Status | Runtime source | Guard |
 |---|---|---|---|
-| `backend/docs/llm-model-structure.md` | generated-guarded | LLM canonical perimeter renderer | `pytest -q tests/unit/test_llm_canonical_perimeter.py` |
-| `backend/docs/llm-db-cleanup-registry.json` | executable-registry | `app.ops.llm.db_cleanup_validator.LlmDbCleanupValidator` | `pytest -q tests/integration/test_llm_db_cleanup_registry.py` |
+| `backend/docs/guarded-artifacts/llm-model-structure.md` | generated-guarded | LLM canonical perimeter renderer | `pytest -q tests/unit/test_llm_canonical_perimeter.py` |
+| `backend/docs/guarded-artifacts/llm-db-cleanup-registry.json` | executable-registry | `app.ops.llm.db_cleanup_validator.LlmDbCleanupValidator` | `pytest -q tests/integration/test_llm_db_cleanup_registry.py` |
 | `docs/llm/llm-db-governance.md` | non-canonical-human-note | LLM DB models, migrations and cleanup registry | `pytest -q app/tests/unit/test_llm_docs_governance.py` |
 | `docs/llm/llm-runtime-source-of-truth.md` | non-canonical-human-note | LLM runtime code, profiles, releases and assemblies | `pytest -q app/tests/unit/test_llm_docs_governance.py` |
 | `docs/llm/llm-canonical-consumption-rebuild.md` | non-canonical-human-note | `LlmCanonicalConsumptionService` and persisted DB models | `pytest -q app/tests/unit/test_llm_docs_governance.py` |

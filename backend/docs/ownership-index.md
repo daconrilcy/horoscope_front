@@ -19,6 +19,7 @@ documentaires backend aient un owner explicite et une garde determinee.
 
 | File | Owner | Artifact type | Canonical status | Expected guard |
 |---|---|---|---|---|
+| `backend/docs/README.md` | Backend docs governance | governance-doc | canonical-guarded | `pytest -q app/tests/unit/test_backend_docs_ownership.py` |
 | `backend/docs/ownership-index.md` | Backend docs governance | governance-doc | canonical-guarded | `pytest -q app/tests/unit/test_backend_docs_ownership.py` |
-| `backend/docs/llm-model-structure.md` | LLM model structure generator | generated-doc | canonical-guarded | `pytest -q tests/unit/test_llm_canonical_perimeter.py` |
-| `backend/docs/llm-db-cleanup-registry.json` | LLM DB cleanup validator | executable-registry | canonical-guarded | `pytest -q tests/integration/test_llm_db_cleanup_registry.py` |
+| `backend/docs/guarded-artifacts/llm-model-structure.md` | LLM model structure generator | generated-doc | canonical-guarded | `pytest -q tests/unit/test_llm_canonical_perimeter.py` |
+| `backend/docs/guarded-artifacts/llm-db-cleanup-registry.json` | LLM DB cleanup validator | executable-registry | canonical-guarded | `pytest -q tests/integration/test_llm_db_cleanup_registry.py` |

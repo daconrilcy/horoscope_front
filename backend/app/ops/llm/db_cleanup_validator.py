@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-REGISTRY_RELATIVE_PATH = Path("backend/docs/llm-db-cleanup-registry.json")
+REGISTRY_RELATIVE_PATH = Path("backend/docs/guarded-artifacts/llm-db-cleanup-registry.json")
 REQUIRED_OBJECT_IDS = frozenset(
     {
         "table:llm_use_case_configs",
