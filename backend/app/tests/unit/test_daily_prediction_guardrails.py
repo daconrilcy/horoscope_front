@@ -24,50 +24,23 @@ from app.services.prediction.run_reuse_policy import ReuseDecision
 
 _APP_ROOT = Path(__file__).resolve().parents[2]
 _PREDICTION_ROOT = _APP_ROOT / "prediction"
-_APPROVED_PREDICTION_PYTHON_FILES = {
-    "__init__.py",
-    "aggregator.py",
-    "astro_calculator.py",
-    "astrologer_prompt_builder.py",
-    "block_generator.py",
-    "calibrator.py",
-    "category_codes.py",
-    "context.py",
-    "contribution_calculator.py",
-    "daily_prediction_evidence_builder.py",
-    "decision_window_builder.py",
-    "domain_router.py",
-    "editorial_builder.py",
-    "editorial_service.py",
-    "editorial_template_engine.py",
-    "enriched_astro_events_builder.py",
-    "event_detector.py",
-    "exceptions.py",
-    "explainability.py",
-    "impulse_signal_builder.py",
-    "input_hash.py",
-    "intraday_activation_builder.py",
-    "natal_sensitivity.py",
-    "persisted_baseline.py",
-    "persisted_relative_score.py",
-    "persisted_snapshot.py",
-    "public_astro_daily_events.py",
-    "public_astro_vocabulary.py",
-    "public_domain_taxonomy.py",
-    "public_label_catalog.py",
-    "public_projection.py",
-    "public_score_mapper.py",
-    "regime_segmenter.py",
-    "relative_scoring_calculator.py",
-    "schemas.py",
-    "temporal_kernel.py",
-    "temporal_sampler.py",
-    "transit_signal_builder.py",
-    "turning_point_detector.py",
-}
+_REPO_ROOT = _APP_ROOT.parents[1]
+_PREDICTION_ALLOWLIST_PATH = (
+    _REPO_ROOT
+    / "_condamad"
+    / "stories"
+    / "CS-012-ajouter-garde-anti-croissance-app-prediction"
+    / "prediction-namespace-allowlist.md"
+)
 _FORBIDDEN_PREDICTION_IMPORT_MODULES = {
     "app.prediction." + "engine_orchestrator",
     "app.prediction." + "llm_narrator",
+}
+_FORBIDDEN_PREDICTION_BOUNDARY_MODULES = {
+    "app.api",
+    "app.core.config",
+    "app.infra",
+    "fastapi",
 }
 _FORBIDDEN_INFRA_BOUNDARY_NAMES = {
     "sqlalchemy",
@@ -78,6 +51,7 @@ _FORBIDDEN_INFRA_BOUNDARY_NAMES = {
 }
 _FORBIDDEN_PUBLIC_PROJECTION_NAMES = {
     "AIEngineAdapter",
+    "LLMRuntime",
     "settings",
     "Session",
 }
@@ -98,6 +72,41 @@ def _python_sources() -> list[Path]:
     return files
 
 
+def _prediction_allowlist_files() -> set[str]:
+    """Lit l'allowlist persistante des fichiers Python prediction autorises."""
+    allowed_files: set[str] = set()
+    in_section = False
+    for line in _PREDICTION_ALLOWLIST_PATH.read_text(encoding="utf-8").splitlines():
+        if line == "## Fichiers Python autorises":
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if in_section and line.startswith("- `backend/app/prediction/"):
+            allowed_files.add(line.removeprefix("- `backend/app/prediction/").removesuffix("`"))
+
+    return allowed_files
+
+
+def _prediction_import_exceptions() -> list[tuple[str, str, str]]:
+    """Extrait les exceptions d'import documentees avec leur condition de sortie."""
+    exceptions: list[tuple[str, str, str]] = []
+    in_section = False
+    for line in _PREDICTION_ALLOWLIST_PATH.read_text(encoding="utf-8").splitlines():
+        if line == "## Exceptions d'import autorisees":
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if not in_section or not line.startswith("| `backend/app/prediction/"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) >= 4:
+            exceptions.append((cells[0].strip("`"), cells[1], cells[3]))
+
+    return exceptions
+
+
 def test_prediction_namespace_python_inventory_does_not_grow() -> None:
     """Bloque les nouveaux fichiers Python non cartographies sous `app.prediction`."""
     current_files = {
@@ -105,8 +114,23 @@ def test_prediction_namespace_python_inventory_does_not_grow() -> None:
         for path in _PREDICTION_ROOT.rglob("*.py")
         if "__pycache__" not in path.parts
     }
+    approved_files = _prediction_allowlist_files()
 
-    assert current_files == _APPROVED_PREDICTION_PYTHON_FILES
+    assert approved_files
+    assert current_files == approved_files
+
+
+def test_prediction_import_exceptions_have_exit_conditions() -> None:
+    """Force chaque exception d'import prediction a porter une condition de sortie."""
+    violations = [
+        f"{file_path}: {symbol}"
+        for file_path, symbol, exit_condition in _prediction_import_exceptions()
+        if not exit_condition or exit_condition.lower() in {"n/a", "none", "permanent"}
+    ]
+
+    assert not violations, "Prediction import exceptions without exit condition.\n- " + (
+        "\n- ".join(violations)
+    )
 
 
 def test_prediction_legacy_orchestrator_import_path_is_removed() -> None:
@@ -155,6 +179,36 @@ def test_prediction_pure_namespace_has_no_db_loader_or_persistence_imports() -> 
 
     assert not violations, "Forbidden prediction infra imports detected.\n- " + "\n- ".join(
         violations
+    )
+
+
+def test_prediction_namespace_does_not_import_api_settings_or_llm_runtime() -> None:
+    """Bloque les dependances API, settings et LLM runtime sous `app.prediction`."""
+    violations: list[str] = []
+    for file_path in sorted(_PREDICTION_ROOT.rglob("*.py")):
+        if "__pycache__" in file_path.parts:
+            continue
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+        relative = file_path.relative_to(_APP_ROOT).as_posix()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                for forbidden in _FORBIDDEN_PREDICTION_BOUNDARY_MODULES:
+                    if module == forbidden or module.startswith(f"{forbidden}."):
+                        violations.append(f"{relative}: imports {module}")
+                for alias in node.names:
+                    if alias.name in _FORBIDDEN_PUBLIC_PROJECTION_NAMES:
+                        violations.append(f"{relative}: imports {alias.name}")
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    for forbidden in _FORBIDDEN_PREDICTION_BOUNDARY_MODULES:
+                        if alias.name == forbidden or alias.name.startswith(f"{forbidden}."):
+                            violations.append(f"{relative}: imports {alias.name}")
+            elif isinstance(node, ast.Name) and node.id in _FORBIDDEN_PUBLIC_PROJECTION_NAMES:
+                violations.append(f"{relative}: references {node.id}")
+
+    assert not violations, "Forbidden prediction boundary imports detected.\n- " + (
+        "\n- ".join(violations)
     )
 
 

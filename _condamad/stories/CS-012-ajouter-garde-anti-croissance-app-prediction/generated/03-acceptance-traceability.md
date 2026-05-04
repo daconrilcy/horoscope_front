@@ -1,0 +1,9 @@
+# Acceptance Traceability - CS-012
+
+| AC | Requirement | Expected code impact | Required validation evidence | Status |
+|---|---|---|---|---|
+| AC1 | L'allowlist couvre les fichiers actuels. | `prediction-namespace-allowlist.md` liste les 39 fichiers Python autorises; le test lit cet artefact et compare l'inventaire courant. | `pytest -q app/tests/unit/test_daily_prediction_guardrails.py tests/unit/prediction/test_llm_narrator_deprecation_guard.py` PASS; `rg --files app/prediction` inspecte l'inventaire. | PASS |
+| AC2 | La garde refuse les nouveaux fichiers. | `test_prediction_namespace_python_inventory_does_not_grow` compare exactement les fichiers Python courants a l'allowlist persistante. | `pytest -q app/tests/unit/test_daily_prediction_guardrails.py tests/unit/prediction/test_llm_narrator_deprecation_guard.py` PASS. | PASS |
+| AC3 | La garde refuse les imports interdits. | `test_prediction_namespace_does_not_import_api_settings_or_llm_runtime` et le guard infra bloquent AST `app.api`, `fastapi`, `app.core.config`, `app.infra`, `sqlalchemy`, `AIEngineAdapter`, `settings`, `LLMNarrator`. | `pytest -q app/tests/unit/test_daily_prediction_guardrails.py tests/unit/prediction/test_llm_narrator_deprecation_guard.py` PASS; scan cible zero-hit. | PASS |
+| AC4 | Les exceptions ont une condition de sortie. | `prediction-namespace-allowlist.md` contient le registre des exceptions; `test_prediction_import_exceptions_have_exit_conditions` valide les lignes actives. | `pytest -q app/tests/unit/test_daily_prediction_guardrails.py tests/unit/prediction/test_llm_narrator_deprecation_guard.py` PASS. | PASS |
+| AC5 | Les guards LLM restent passants. | Aucun changement runtime; guard LLM existant conserve la couverture anti-retour `LLMNarrator` et provider direct. | `pytest -q app/tests/unit/test_daily_prediction_guardrails.py tests/unit/prediction/test_llm_narrator_deprecation_guard.py` PASS. | PASS |
