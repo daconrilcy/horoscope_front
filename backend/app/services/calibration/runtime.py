@@ -1,3 +1,5 @@
+"""Resolution runtime canonique pour les traitements de calibration prediction."""
+
 from __future__ import annotations
 
 import logging
@@ -16,11 +18,14 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ResolvedCalibrationRuntime:
+    """Versions reference/ruleset alignees pour une execution de calibration."""
+
     reference_version: str
     ruleset_version: str
 
 
 def resolve_project_root() -> Path:
+    """Retourne la racine du depot depuis le module de calibration."""
     return Path(__file__).resolve().parents[4]
 
 
@@ -30,6 +35,7 @@ def resolve_calibration_runtime(
     requested_reference_version: str | None = None,
     requested_ruleset_version: str | None = None,
 ) -> ResolvedCalibrationRuntime:
+    """Valide et retourne les versions actives de calibration compatibles."""
     ruleset_version = requested_ruleset_version or settings.active_ruleset_version
     requested_reference = requested_reference_version or settings.active_reference_version
 

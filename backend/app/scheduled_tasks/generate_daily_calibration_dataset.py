@@ -1,3 +1,5 @@
+"""Job planifiable de generation du dataset quotidien de calibration."""
+
 import json
 import logging
 import time
@@ -9,12 +11,12 @@ from app.domain.prediction.schemas import EngineInput
 from app.infra.db.models.calibration import CalibrationRawDayModel
 from app.infra.db.repositories.calibration_repository import CalibrationRepository
 from app.infra.db.session import SessionLocal
-from app.jobs.calibration.natal_profiles import (
+from app.services.calibration.natal_profiles import (
     CALIBRATION_DATE_RANGE,
     CALIBRATION_PROFILES,
     CALIBRATION_VERSIONS,
 )
-from app.jobs.calibration.runtime import resolve_calibration_runtime
+from app.services.calibration.runtime import resolve_calibration_runtime
 from app.services.prediction.context_loader import PredictionContextLoader
 from app.services.prediction.engine_orchestrator import EngineOrchestrator
 
@@ -24,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_date_range(start_iso: str, end_iso: str) -> list[date]:
+    """Construit la plage inclusive de dates a calibrer."""
     start = date.fromisoformat(start_iso)
     end = date.fromisoformat(end_iso)
     delta = end - start
@@ -74,6 +77,7 @@ def _log_profile_result(
 
 
 def run_job() -> None:
+    """Execute la generation batch des jours bruts de calibration."""
     dates = get_date_range(CALIBRATION_DATE_RANGE["start"], CALIBRATION_DATE_RANGE["end"])
     if not dates:
         logger.info("Calibration job skipped: empty date range.")

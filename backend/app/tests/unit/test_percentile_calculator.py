@@ -11,7 +11,7 @@ from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import CategoryCalibrationModel, PredictionRulesetModel
 from app.infra.db.repositories.calibration_repository import CalibrationRepository
 from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
-from app.jobs.calibration.percentile_calculator import (
+from app.services.calibration.percentile_calculator import (
     PercentileCalculatorService,
     compute_percentile,
     compute_percentiles,
@@ -208,7 +208,7 @@ def test_run_rolls_back_all_calibrations_when_a_category_fails(
         return original_compute_percentiles(category_code, raw_scores)
 
     monkeypatch.setattr(
-        "app.jobs.calibration.percentile_calculator.compute_percentiles",
+        "app.services.calibration.percentile_calculator.compute_percentiles",
         failing_compute_percentiles,
     )
 

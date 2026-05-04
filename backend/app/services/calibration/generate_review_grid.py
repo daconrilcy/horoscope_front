@@ -1,3 +1,5 @@
+"""Generation de grilles de revue manuelle pour la calibration prediction."""
+
 import argparse
 import csv
 import io
@@ -35,6 +37,7 @@ REVIEW_HEADERS = (
 
 
 def note_to_band(note: int | None) -> str:
+    """Convertit une note UX sur 20 en bande lisible par les revues."""
     if note is None:
         return "N/A"
     if note <= 5:
@@ -205,6 +208,7 @@ def generate_grid(
     profile_label: str | None = None,
     fmt: str = "md",
 ) -> str:
+    """Genere une grille de revue Markdown ou CSV pour une periode donnee."""
     rows: list[dict[str, object]] = []
     db = SessionLocal()
 
@@ -248,6 +252,7 @@ def generate_grid(
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    """Parse les options CLI de generation de grille."""
     parser = argparse.ArgumentParser(description="Genere une grille de revue pour la calibration.")
     parser.add_argument("--start", required=True, help="Date de debut (YYYY-MM-DD)")
     parser.add_argument("--end", required=True, help="Date de fin (YYYY-MM-DD)")
@@ -262,6 +267,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Execute la generation de grille depuis un wrapper CLI."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     args = parse_args(argv)
 

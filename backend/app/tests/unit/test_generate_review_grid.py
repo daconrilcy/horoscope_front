@@ -5,7 +5,7 @@ from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
 
-from app.jobs.calibration import generate_review_grid as module
+from app.services.calibration import generate_review_grid as module
 
 
 class FakeResult:

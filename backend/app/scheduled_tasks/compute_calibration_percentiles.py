@@ -1,12 +1,14 @@
+"""Job planifiable de calcul des percentiles de calibration."""
+
 import logging
 from datetime import date
 from pathlib import Path
 
 from app.infra.db.repositories.calibration_repository import CalibrationRepository
 from app.infra.db.session import SessionLocal
-from app.jobs.calibration.natal_profiles import CALIBRATION_VERSIONS
-from app.jobs.calibration.percentile_calculator import PercentileCalculatorService
-from app.jobs.calibration.runtime import resolve_calibration_runtime, resolve_project_root
+from app.services.calibration.natal_profiles import CALIBRATION_VERSIONS
+from app.services.calibration.percentile_calculator import PercentileCalculatorService
+from app.services.calibration.runtime import resolve_calibration_runtime, resolve_project_root
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -14,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def run() -> None:
+    """Execute le calcul des percentiles avec la configuration active."""
     db = SessionLocal()
     calibration_repo = CalibrationRepository(db)
     service = PercentileCalculatorService(db, calibration_repo)

@@ -8,8 +8,8 @@ import pytest
 
 from app.infra.db.models.calibration import CalibrationRawDayModel
 from app.infra.db.repositories.calibration_repository import CalibrationRepository
-from app.jobs.calibration.runtime import ResolvedCalibrationRuntime
-from app.jobs.generate_daily_calibration_dataset import run_job
+from app.scheduled_tasks.generate_daily_calibration_dataset import run_job
+from app.services.calibration.runtime import ResolvedCalibrationRuntime
 from app.tests.regression.helpers import cleanup_session, create_session
 
 _MOCK_RUNTIME = ResolvedCalibrationRuntime(reference_version="2.0.0", ruleset_version="2.0.0")
@@ -37,14 +37,18 @@ def _mock_loaded_context(*category_codes: str) -> SimpleNamespace:
 
 def test_job_stores_raw_day(db_session):
     with (
-        patch("app.jobs.generate_daily_calibration_dataset.EngineOrchestrator") as mock_cls,
-        patch("app.jobs.generate_daily_calibration_dataset.PredictionContextLoader") as loader_cls,
         patch(
-            "app.jobs.generate_daily_calibration_dataset.resolve_calibration_runtime",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.EngineOrchestrator"
+        ) as mock_cls,
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.PredictionContextLoader"
+        ) as loader_cls,
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.resolve_calibration_runtime",
             return_value=_MOCK_RUNTIME,
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
             [
                 {
                     "label": "test_profile",
@@ -56,14 +60,17 @@ def test_job_stores_raw_day(db_session):
             ],
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_DATE_RANGE",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_DATE_RANGE",
             {"start": "2024-01-01", "end": "2024-01-01"},
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
             {"reference_version": "2.0.0", "ruleset_version": "2.0.0"},
         ),
-        patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.SessionLocal",
+            return_value=db_session,
+        ),
     ):
         loader_cls.return_value.load.return_value = _mock_loaded_context("amour", "travail")
         orchestrator = mock_cls.return_value
@@ -109,14 +116,18 @@ def test_job_skips_existing_entry(db_session):
     db_session.commit()
 
     with (
-        patch("app.jobs.generate_daily_calibration_dataset.EngineOrchestrator") as mock_cls,
-        patch("app.jobs.generate_daily_calibration_dataset.PredictionContextLoader") as loader_cls,
         patch(
-            "app.jobs.generate_daily_calibration_dataset.resolve_calibration_runtime",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.EngineOrchestrator"
+        ) as mock_cls,
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.PredictionContextLoader"
+        ) as loader_cls,
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.resolve_calibration_runtime",
             return_value=_MOCK_RUNTIME,
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
             [
                 {
                     "label": "test_profile",
@@ -128,14 +139,17 @@ def test_job_skips_existing_entry(db_session):
             ],
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_DATE_RANGE",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_DATE_RANGE",
             {"start": "2024-01-01", "end": "2024-01-01"},
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
             {"reference_version": "2.0.0", "ruleset_version": "2.0.0"},
         ),
-        patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.SessionLocal",
+            return_value=db_session,
+        ),
     ):
         loader_cls.return_value.load.return_value = _mock_loaded_context("amour", "travail")
 
@@ -161,14 +175,18 @@ def test_job_resume_after_interruption(db_session):
     db_session.commit()
 
     with (
-        patch("app.jobs.generate_daily_calibration_dataset.EngineOrchestrator") as mock_cls,
-        patch("app.jobs.generate_daily_calibration_dataset.PredictionContextLoader") as loader_cls,
         patch(
-            "app.jobs.generate_daily_calibration_dataset.resolve_calibration_runtime",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.EngineOrchestrator"
+        ) as mock_cls,
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.PredictionContextLoader"
+        ) as loader_cls,
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.resolve_calibration_runtime",
             return_value=_MOCK_RUNTIME,
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_PROFILES",
             [
                 {
                     "label": "test_profile",
@@ -180,14 +198,17 @@ def test_job_resume_after_interruption(db_session):
             ],
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_DATE_RANGE",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_DATE_RANGE",
             {"start": "2024-01-01", "end": "2024-01-01"},
         ),
         patch(
-            "app.jobs.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
+            "app.scheduled_tasks.generate_daily_calibration_dataset.CALIBRATION_VERSIONS",
             {"reference_version": "2.0.0", "ruleset_version": "2.0.0"},
         ),
-        patch("app.jobs.generate_daily_calibration_dataset.SessionLocal", return_value=db_session),
+        patch(
+            "app.scheduled_tasks.generate_daily_calibration_dataset.SessionLocal",
+            return_value=db_session,
+        ),
     ):
         loader_cls.return_value.load.return_value = _mock_loaded_context("amour", "travail")
         orchestrator = mock_cls.return_value

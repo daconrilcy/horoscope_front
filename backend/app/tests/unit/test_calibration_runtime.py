@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
-from app.jobs.calibration.runtime import resolve_calibration_runtime, resolve_project_root
+from app.services.calibration.runtime import resolve_calibration_runtime, resolve_project_root
 from app.tests.regression.helpers import cleanup_session, create_session, make_workspace_temp_dir
 
 

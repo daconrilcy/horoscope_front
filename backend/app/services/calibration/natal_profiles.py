@@ -1,3 +1,5 @@
+"""Profils et versions canoniques utilises par la calibration prediction."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
@@ -6,6 +8,8 @@ from app.core.config import settings
 
 
 class CalibrationVersions(Mapping[str, str]):
+    """Expose les versions actives de calibration sous forme de mapping dynamique."""
+
     _KEYS = ("reference_version", "ruleset_version")
 
     def __getitem__(self, key: str) -> str:

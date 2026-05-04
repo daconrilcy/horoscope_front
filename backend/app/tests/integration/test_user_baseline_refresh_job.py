@@ -19,7 +19,7 @@ from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineM
 from app.infra.db.repositories.user_prediction_baseline_repository import (
     UserPredictionBaselineRepository,
 )
-from app.jobs.refresh_user_baselines import run_job
+from app.scheduled_tasks.refresh_user_baselines import run_job
 
 
 def _add_reference_bundle(
@@ -164,7 +164,7 @@ def test_job_refreshes_missing_baseline(db_session, mock_orchestrator):
     with (
         patch.object(settings, "active_reference_version", "2.0.0"),
         patch.object(settings, "_ruleset_version", "2.0.0"),
-        patch("app.jobs.refresh_user_baselines.SessionLocal", return_value=db_session),
+        patch("app.scheduled_tasks.refresh_user_baselines.SessionLocal", return_value=db_session),
         patch(
             "app.services.user_profile.prediction_baseline_service.EngineOrchestrator",
             return_value=mock_orchestrator,
@@ -199,7 +199,7 @@ def test_job_idempotence(db_session, mock_orchestrator):
     with (
         patch.object(settings, "active_reference_version", "2.0.0"),
         patch.object(settings, "_ruleset_version", "2.0.0"),
-        patch("app.jobs.refresh_user_baselines.SessionLocal", return_value=db_session),
+        patch("app.scheduled_tasks.refresh_user_baselines.SessionLocal", return_value=db_session),
         patch(
             "app.services.user_profile.prediction_baseline_service.EngineOrchestrator",
             return_value=mock_orchestrator,
@@ -233,7 +233,7 @@ def test_job_refreshes_obsolete_baseline(db_session, mock_orchestrator):
     with (
         patch.object(settings, "active_reference_version", "2.0.0"),
         patch.object(settings, "_ruleset_version", "2.0.0"),
-        patch("app.jobs.refresh_user_baselines.SessionLocal", return_value=db_session),
+        patch("app.scheduled_tasks.refresh_user_baselines.SessionLocal", return_value=db_session),
         patch(
             "app.services.user_profile.prediction_baseline_service.EngineOrchestrator",
             return_value=mock_orchestrator,
@@ -333,7 +333,7 @@ def test_job_refreshes_baseline_when_house_system_changes(db_session):
     with (
         patch.object(settings, "active_reference_version", "2.0.0"),
         patch.object(settings, "_ruleset_version", "2.0.0"),
-        patch("app.jobs.refresh_user_baselines.SessionLocal", return_value=db_session),
+        patch("app.scheduled_tasks.refresh_user_baselines.SessionLocal", return_value=db_session),
         patch(
             "app.services.user_profile.prediction_baseline_service.EngineOrchestrator",
             return_value=whole_sign_orchestrator,
@@ -376,7 +376,7 @@ def test_job_refreshes_baseline_when_active_versions_change(db_session, mock_orc
     with (
         patch.object(settings, "active_reference_version", "3.0.0"),
         patch.object(settings, "_ruleset_version", "3.0.0"),
-        patch("app.jobs.refresh_user_baselines.SessionLocal", return_value=db_session),
+        patch("app.scheduled_tasks.refresh_user_baselines.SessionLocal", return_value=db_session),
         patch(
             "app.services.user_profile.prediction_baseline_service.EngineOrchestrator",
             return_value=mock_orchestrator,

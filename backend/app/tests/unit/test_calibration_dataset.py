@@ -1,7 +1,7 @@
 import pytest
 
 from app.core.config import Settings, settings
-from app.jobs.calibration import natal_profiles, validate_dataset
+from app.services.calibration import natal_profiles, validate_dataset
 
 
 def test_active_ruleset_version_tracks_ruleset_version() -> None:

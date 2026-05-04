@@ -1,4 +1,7 @@
-# backend/app/jobs/qa/generate_qa_cases.py
+"""Service de generation des cas QA de prediction quotidienne."""
+
+from __future__ import annotations
+
 import hashlib
 import json
 import logging
@@ -13,7 +16,7 @@ from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.session import SessionLocal
-from app.jobs.calibration.natal_profiles import CALIBRATION_PROFILES
+from app.services.calibration.natal_profiles import CALIBRATION_PROFILES
 from app.services.prediction import ComputeMode, DailyPredictionService
 from app.services.prediction.context_loader import PredictionContextLoader
 from app.services.prediction.engine_orchestrator import EngineOrchestrator
@@ -35,6 +38,7 @@ QA_DATES = [
 
 
 def get_or_create_qa_user(db, profile):
+    """Retourne l'utilisateur QA associe au profil, en le creant si besoin."""
     email = f"qa_{profile['label']}@horoscope.app"
     user = db.query(UserModel).filter(UserModel.email == email).first()
     if not user:
@@ -76,11 +80,7 @@ def get_or_create_qa_user(db, profile):
 
 
 def generate() -> int:
-    """
-    Generate QA cases for all calibration profiles.
-
-    Returns the number of cases successfully generated.
-    """
+    """Genere les cas QA pour tous les profils de calibration."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     db = SessionLocal()
     generated_count = 0

@@ -1,7 +1,9 @@
+"""Validation applicative du dataset de calibration prediction."""
+
 import sys
 from datetime import date
 
-from app.jobs.calibration.natal_profiles import (
+from app.services.calibration.natal_profiles import (
     CALIBRATION_DATE_RANGE,
     CALIBRATION_PROFILES,
     CALIBRATION_VERSIONS,
@@ -11,6 +13,7 @@ REQUIRED_KEYS = {"label", "natal_chart", "timezone", "latitude", "longitude"}
 
 
 def validate() -> bool:
+    """Controle la coherence minimale des profils et versions de calibration."""
     errors: list[str] = []
 
     if len(CALIBRATION_PROFILES) < 5:

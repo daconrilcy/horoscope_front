@@ -1,4 +1,5 @@
-# backend/app/jobs/calibration/percentile_calculator.py
+"""Calcul et persistance des percentiles de calibration prediction."""
+
 from __future__ import annotations
 
 import json
@@ -21,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PercentileResult:
+    """Resultat de percentile calcule pour une categorie de prediction."""
+
     category_code: str
     p05: float
     p25: float
@@ -50,6 +53,7 @@ def compute_percentile(data: list[float], p: float) -> float:
 
 
 def compute_percentiles(category_code: str, raw_scores: list[float]) -> PercentileResult:
+    """Calcule les percentiles et statistiques utiles d'une categorie."""
     if not raw_scores:
         raise ValueError(
             f"Dataset vide pour {category_code} — impossible de calculer les percentiles"
@@ -89,6 +93,8 @@ def compute_percentiles(category_code: str, raw_scores: list[float]) -> Percenti
 
 
 class PercentileCalculatorService:
+    """Service applicatif responsable du calcul des percentiles de calibration."""
+
     def __init__(self, db: Session, calibration_repo: CalibrationRepository) -> None:
         self.db = db
         self.calibration_repo = calibration_repo
@@ -100,6 +106,7 @@ class PercentileCalculatorService:
         valid_from: date,
         valid_to: date,
     ) -> list[PercentileResult]:
+        """Calcule et persiste les percentiles pour une version reference/ruleset."""
         # 1. Resolve ruleset_id and reference_version_id
         ruleset = self.db.scalar(
             select(PredictionRulesetModel).where(PredictionRulesetModel.version == ruleset_version)
@@ -195,6 +202,7 @@ class PercentileCalculatorService:
     def generate_report(
         self, results: list[PercentileResult], output_path: Path, metadata: dict
     ) -> None:
+        """Ecrit un rapport JSON de calibration pour revue ou audit."""
         report = {
             "generated_at": datetime_provider.now().isoformat(),
             **metadata,
