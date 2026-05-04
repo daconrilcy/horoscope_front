@@ -26,6 +26,7 @@ from app.services.prediction.run_reuse_policy import ReuseDecision
 _APP_ROOT = Path(__file__).resolve().parents[2]
 _LEGACY_PREDICTION_ROOT = _APP_ROOT / "prediction"
 _PREDICTION_ROOT = _APP_ROOT / "domain" / "prediction"
+_API_ROOT = _APP_ROOT / "api"
 _PREDICTION_REPOSITORIES_ROOT = _APP_ROOT / "infra" / "db" / "repositories"
 _REPO_ROOT = _APP_ROOT.parents[1]
 _FORBIDDEN_PREDICTION_IMPORT_MODULES = {
@@ -107,6 +108,29 @@ def test_prediction_legacy_import_paths_are_removed() -> None:
                         violations.append(f"{relative}: imports {alias.name}")
 
     assert not violations, "Forbidden legacy prediction imports detected.\n- " + "\n- ".join(
+        violations
+    )
+
+
+def test_api_prediction_routers_do_not_import_legacy_prediction_namespace() -> None:
+    """Interdit aux routeurs API prediction de redependre du namespace legacy."""
+    violations: list[str] = []
+    for file_path in sorted(_API_ROOT.rglob("*.py")):
+        if "__pycache__" in file_path.parts:
+            continue
+        tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
+        relative = file_path.relative_to(_APP_ROOT).as_posix()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if module == "app.prediction" or module.startswith("app.prediction."):
+                    violations.append(f"{relative}:{node.lineno} imports {module}")
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name == "app.prediction" or alias.name.startswith("app.prediction."):
+                        violations.append(f"{relative}:{node.lineno} imports {alias.name}")
+
+    assert not violations, "Forbidden API prediction imports detected.\n- " + "\n- ".join(
         violations
     )
 
