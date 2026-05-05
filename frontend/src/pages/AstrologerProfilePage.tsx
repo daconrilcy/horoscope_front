@@ -460,7 +460,7 @@ export function AstrologerProfilePage() {
           <div className="profile-hero-content">
             <div className="profile-badge-row">
               {isDefault && (
-                <div className="profile-default-badge" style={{ background: 'var(--settings-purple)', color: '#fff' }}>
+                <div className="profile-default-badge profile-default-badge--selected">
                   <Check size={14} />
                   {t("your_default", lang)}
                 </div>
@@ -479,7 +479,7 @@ export function AstrologerProfilePage() {
             <h1 className="profile-full-name">{fullName}</h1>
             <p className="profile-style-title">{subtitle}</p>
             
-            <div className="profile-metadata-row" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="profile-metadata-row">
               {profile.age && (
                 <div className="profile-meta-pill">
                   <Calendar size={16} />
@@ -500,15 +500,9 @@ export function AstrologerProfilePage() {
               )}
               
               <button 
-                className={`profile-meta-pill ${isDefault ? 'active' : ''}`}
+                className={`profile-meta-pill profile-meta-pill--default-action ${isDefault ? 'profile-meta-pill--default-active' : ''}`}
                 onClick={handleToggleDefault}
                 disabled={updateSettings.isPending}
-                style={{ 
-                  cursor: 'pointer',
-                  border: isDefault ? '1px solid var(--settings-purple)' : '1px solid var(--settings-card-border)',
-                  background: isDefault ? 'var(--settings-purple-soft)' : 'rgba(255,255,255,0.5)',
-                  color: isDefault ? 'var(--settings-purple)' : 'inherit'
-                }}
               >
                 <Star size={16} fill={isDefault ? "currentColor" : "none"} />
                 <span>{isDefault ? "Astrologue par défaut" : "Définir par défaut"}</span>

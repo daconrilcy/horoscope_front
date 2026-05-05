@@ -3,6 +3,7 @@ import React, { createContext, useContext } from 'react';
 import { useForm, type UseFormReturn, type FieldValues, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import './Form.css';
 
 /**
  * Pattern createFormSchema :
@@ -66,7 +67,7 @@ export function Form<TSchema extends z.ZodType<any, any, any>>({
         className={className}
         noValidate
       >
-        <fieldset disabled={loading} style={{ border: 'none', padding: 0, margin: 0 }}>
+        <fieldset disabled={loading} className="form-fieldset-reset">
           {children}
         </fieldset>
       </form>

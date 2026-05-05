@@ -9,14 +9,6 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
     "style": "style={{ width: `${Math.min(domain.score_10 * 10, 100)}"
   },
   {
-    "file": "components/NatalInterpretation.tsx",
-    "style": "style={{ color: 'var(--color-primary-strong)' }"
-  },
-  {
-    "file": "components/NatalInterpretation.tsx",
-    "style": "style={{ flexShrink: 0 }"
-  },
-  {
     "file": "components/prediction/CategoryGrid.tsx",
     "style": "style={{ color: band.colorVar }"
   },
@@ -35,10 +27,6 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
   {
     "file": "components/prediction/DayTimelineSectionV4.tsx",
     "style": "style={{ backgroundColor: accentColor }"
-  },
-  {
-    "file": "components/prediction/PeriodCard.tsx",
-    "style": "style={{ position: 'absolute', top: '1rem', right: '0.5rem', color: 'var(--primary)', opacity: 0.85 }"
   },
   {
     "file": "components/prediction/TimelineRail.tsx",
@@ -65,64 +53,20 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
     "style": "style={{ background: color }"
   },
   {
-    "file": "components/ui/Form/Form.tsx",
-    "style": "style={{ border: 'none', padding: 0, margin: 0 }"
-  },
-  {
     "file": "components/ui/Skeleton/Skeleton.tsx",
     "style": "style={style}"
   },
   {
     "file": "components/ui/Skeleton/Skeleton.tsx",
-    "style": "style={{ display: 'flex', flexDirection: 'column', gap }"
+    "style": "style={groupStyle}"
   },
   {
     "file": "features/chat/components/AstrologerPickerModal.tsx",
     "style": "style={{ display: astrologer.avatar_url ? \"none\" : \"flex\" }"
   },
   {
-    "file": "features/chat/components/ChatLayout.tsx",
-    "style": "style={{ \"--sidebar-width\": \"320px\" }"
-  },
-  {
     "file": "layouts/TwoColumnLayout.tsx",
     "style": "style={{ '--sidebar-width': sidebarWidth }"
-  },
-  {
-    "file": "pages/AstrologerProfilePage.tsx",
-    "style": "style={{ background: 'var(--settings-purple)', color: '#fff' }"
-  },
-  {
-    "file": "pages/AstrologerProfilePage.tsx",
-    "style": "style={{ alignItems: 'center', flexWrap: 'wrap' }"
-  },
-  {
-    "file": "pages/AstrologerProfilePage.tsx",
-    "style": "style={{ cursor: 'pointer', border: isDefault ? '1px solid var(--settings-purple)' : '1px solid var(--settings-card-border)', background: isDefault ? 'var(--settings-purple-soft)' : 'rgba(255,255,255,0.5)', color: isDefault ? 'var(--settings-purple)' : 'inherit' }"
-  },
-  {
-    "file": "pages/NotFoundPage.tsx",
-    "style": "style={{ textAlign: 'center' }"
-  },
-  {
-    "file": "pages/NotFoundPage.tsx",
-    "style": "style={{ marginTop: 'var(--space-4)' }"
-  },
-  {
-    "file": "pages/settings/AccountSettings.tsx",
-    "style": "style={{ marginTop: '24px' }"
-  },
-  {
-    "file": "pages/settings/AccountSettings.tsx",
-    "style": "style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }"
-  },
-  {
-    "file": "pages/settings/AccountSettings.tsx",
-    "style": "style={{ marginTop: '4px', textDecoration: 'none', height: 'auto', minHeight: '32px' }"
-  },
-  {
-    "file": "pages/settings/AccountSettings.tsx",
-    "style": "style={{ background: 'rgba(192, 57, 43, 0.1)', color: '#c0392b', borderColor: 'rgba(192, 57, 43, 0.2)' }"
   }
 ] as const
 
@@ -418,274 +362,9 @@ export const CSS_FALLBACK_EXCEPTIONS: CssFallbackException[] = [
     "literal": "#ff6b81"
   },
   {
-    "file": "components/ui/Badge/Badge.css",
-    "token": "--radius-md",
-    "literal": "14px"
-  },
-  {
-    "file": "components/ui/Badge/Badge.css",
-    "token": "--radius-md",
-    "literal": "14px"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--space-12",
-    "literal": "3rem"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--space-6",
-    "literal": "1.5rem"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--space-4",
-    "literal": "1rem"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--color-text-muted",
-    "literal": "rgba(30,27,46,0.55"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--space-2",
-    "literal": "0.5rem"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--font-size-lg",
-    "literal": "1.125rem"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--font-weight-bold",
-    "literal": "700"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--color-text-primary",
-    "literal": "#1E1B2E"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--font-size-md",
-    "literal": "1rem"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--color-text-secondary",
-    "literal": "rgba(30,27,46,0.72"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--line-height-normal",
-    "literal": "1.5"
-  },
-  {
-    "file": "components/ui/EmptyState/EmptyState.css",
-    "token": "--space-4",
-    "literal": "1rem"
-  },
-  {
-    "file": "components/ui/ErrorState/ErrorState.css",
-    "token": "--space-8",
-    "literal": "2rem"
-  },
-  {
-    "file": "components/ui/ErrorState/ErrorState.css",
-    "token": "--space-4",
-    "literal": "1rem"
-  },
-  {
-    "file": "components/ui/ErrorState/ErrorState.css",
-    "token": "--error",
-    "literal": "#ef4444"
-  },
-  {
-    "file": "components/ui/ErrorState/ErrorState.css",
-    "token": "--space-2",
-    "literal": "0.5rem"
-  },
-  {
-    "file": "components/ui/ErrorState/ErrorState.css",
-    "token": "--space-6",
-    "literal": "1.5rem"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--radius-md",
-    "literal": "14px"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--space-4",
-    "literal": "1rem"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--space-3",
-    "literal": "0.75rem"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--glass-2",
-    "literal": "rgba(255, 255, 255, 0.38"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--radius-full",
-    "literal": "999px"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--glass",
-    "literal": "rgba(255, 255, 255, 0.55"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--font-size-sm",
-    "literal": "0.875rem"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--font-weight-medium",
-    "literal": "500"
-  },
-  {
-    "file": "components/ui/LockedSection/LockedSection.css",
-    "token": "--space-2",
-    "literal": "0.5rem"
-  },
-  {
-    "file": "components/ui/Modal/Modal.css",
-    "token": "--z-index-modal",
-    "literal": "2000"
-  },
-  {
-    "file": "components/ui/Select/Select.css",
-    "token": "--z-index-dropdown",
-    "literal": "1000"
-  },
-  {
-    "file": "components/ui/UpgradeCTA/UpgradeCTA.css",
-    "token": "--font-weight-semibold",
-    "literal": "600"
-  },
-  {
-    "file": "components/ui/UpgradeCTA/UpgradeCTA.css",
-    "token": "--duration-fast",
-    "literal": "150ms"
-  },
-  {
-    "file": "components/ui/UpgradeCTA/UpgradeCTA.css",
-    "token": "--space-2",
-    "literal": "0.5rem"
-  },
-  {
-    "file": "components/ui/UpgradeCTA/UpgradeCTA.css",
-    "token": "--space-4",
-    "literal": "1rem"
-  },
-  {
-    "file": "components/ui/UpgradeCTA/UpgradeCTA.css",
-    "token": "--radius-md",
-    "literal": "14px"
-  },
-  {
-    "file": "components/ui/UpgradeCTA/UpgradeCTA.css",
-    "token": "--font-size-sm",
-    "literal": "0.875rem"
-  },
-  {
-    "file": "components/ui/UpgradeCTA/UpgradeCTA.css",
-    "token": "--font-size-sm",
-    "literal": "0.875rem"
-  },
-  {
-    "file": "components/ui/UpgradeCTA/UpgradeCTA.css",
-    "token": "--space-1",
-    "literal": "0.25rem"
-  },
-  {
-    "file": "features/chat/components/ChatQuotaBanner.css",
-    "token": "--space-3",
-    "literal": "0.75rem"
-  },
-  {
-    "file": "features/chat/components/ChatQuotaBanner.css",
-    "token": "--space-2",
-    "literal": "0.5rem"
-  },
-  {
-    "file": "features/chat/components/ChatQuotaBanner.css",
-    "token": "--space-4",
-    "literal": "1rem"
-  },
-  {
-    "file": "features/chat/components/ChatQuotaBanner.css",
-    "token": "--font-size-sm",
-    "literal": "0.875rem"
-  },
-  {
-    "file": "features/chat/components/ChatQuotaBanner.css",
-    "token": "--font-size-xs",
-    "literal": "0.75rem"
-  },
-  {
-    "file": "features/chat/components/ChatQuotaBanner.css",
-    "token": "--space-2",
-    "literal": "0.5rem"
-  },
-  {
-    "file": "features/chat/components/ChatQuotaBanner.css",
-    "token": "--space-3",
-    "literal": "0.75rem"
-  },
-  {
     "file": "features/chat/components/ChatWindow.css",
     "token": "--premium-radius-pill",
     "literal": "999px"
-  },
-  {
-    "file": "layouts/PageLayout.css",
-    "token": "--layout-page-max-width",
-    "literal": "900px"
-  },
-  {
-    "file": "layouts/PageLayout.css",
-    "token": "--layout-page-padding",
-    "literal": "var(--space-6"
-  },
-  {
-    "file": "layouts/TwoColumnLayout.css",
-    "token": "--sidebar-width",
-    "literal": "320px"
-  },
-  {
-    "file": "layouts/WizardLayout.css",
-    "token": "--radius-full",
-    "literal": "999px"
-  },
-  {
-    "file": "layouts/WizardLayout.css",
-    "token": "--font-size-sm",
-    "literal": "0.875rem"
-  },
-  {
-    "file": "layouts/WizardLayout.css",
-    "token": "--font-weight-semibold",
-    "literal": "600"
-  },
-  {
-    "file": "layouts/WizardLayout.css",
-    "token": "--duration-fast",
-    "literal": "150ms"
-  },
-  {
-    "file": "layouts/WizardLayout.css",
-    "token": "--easing-default",
-    "literal": "ease"
   },
   {
     "file": "pages/admin/AdminEntitlementsPage.css",

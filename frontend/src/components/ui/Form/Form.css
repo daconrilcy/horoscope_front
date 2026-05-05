@@ -1,0 +1,7 @@
+/* Styles generiques du formulaire afin d'eviter les resets inline dans le composant. */
+
+.form-fieldset-reset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}

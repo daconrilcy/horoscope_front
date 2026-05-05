@@ -53,10 +53,7 @@ export function ChatLayout({
   }
 
   return (
-    <div
-      className="two-col-layout chat-layout chat-layout--desktop"
-      style={{ "--sidebar-width": "320px" } as React.CSSProperties}
-    >
+    <div className="two-col-layout chat-layout chat-layout--desktop">
       {topBanner ? <div className="chat-layout__banner">{topBanner}</div> : null}
       <div className="chat-layout__body">
         <div className="two-col-layout__sidebar two-col-layout__sidebar--collapsible">

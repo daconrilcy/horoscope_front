@@ -1,0 +1,9 @@
+/* Styles locaux de la page 404 pour conserver le rendu sans attributs inline. */
+
+.not-found-panel {
+  text-align: center;
+}
+
+.not-found-panel__action {
+  margin-top: var(--space-4);
+}

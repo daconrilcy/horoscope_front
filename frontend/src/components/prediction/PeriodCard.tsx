@@ -46,7 +46,6 @@ export const PeriodCard: React.FC<PeriodCardProps> = ({ period, isSelected, onCl
           fill="currentColor"
           className="period-card__pivot-badge"
           aria-hidden="true"
-          style={{ position: 'absolute', top: '1rem', right: '0.5rem', color: 'var(--primary)', opacity: 0.85 }}
         />
       )}
       <div className="period-card__header">

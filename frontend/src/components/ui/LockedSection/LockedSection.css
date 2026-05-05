@@ -1,7 +1,7 @@
 .locked-section {
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-md, 14px);
+  border-radius: var(--radius-md);
 }
 
 .locked-section__content {
@@ -18,9 +18,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4, 1rem);
-  gap: var(--space-3, 0.75rem);
-  background: var(--glass-2, rgba(255, 255, 255, 0.38));
+  padding: var(--space-4);
+  gap: var(--space-3);
+  background: var(--glass-2));
   z-index: 10;
 }
 
@@ -30,8 +30,8 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-full, 999px);
-  background: var(--glass, rgba(255, 255, 255, 0.55));
+  border-radius: var(--radius-full);
+  background: var(--glass));
   border: 1px solid var(--glass-border);
   color: var(--text-1);
 }
@@ -42,14 +42,14 @@
 }
 
 .locked-section__label {
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: var(--font-weight-medium, 500);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--text-1);
   text-align: center;
 }
 
 .locked-section__cta-container {
-  margin-top: var(--space-2, 0.5rem);
+  margin-top: var(--space-2);
 }
 
 /* Story 64.6 UX refinement for mobile */

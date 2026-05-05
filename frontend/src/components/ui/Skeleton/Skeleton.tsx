@@ -45,11 +45,12 @@ export const SkeletonGroup: React.FC<SkeletonGroupProps> = ({
   gap = 'var(--space-2, 0.5rem)',
 }) => {
   const defaultWidths = ['80%', '60%', '75%', '50%', '70%'];
+  const groupStyle = { '--skeleton-gap': gap } as React.CSSProperties;
   
   return (
     <div 
       className={classNames('skeleton-group', className)}
-      style={{ display: 'flex', flexDirection: 'column', gap }}
+      style={groupStyle}
     >
       {Array.from({ length: count }, (_, i) => (
         <Skeleton

@@ -41,8 +41,8 @@
 /* Badge pivot — positionné en absolu, indépendant du mode couleur */
 .period-card__pivot-badge {
   position: absolute;
-  top: 1rem;
-  right: 0.5rem;
+  top: var(--space-4);
+  right: var(--space-2);
   color: var(--primary);
   opacity: 0.85;
 }

@@ -84,15 +84,15 @@
   gap: var(--space-2);
   background: var(--color-glass-bg);
   border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-full, 999px);
+  border-radius: var(--radius-full);
   color: var(--color-text-primary);
   cursor: pointer;
   padding: var(--space-2) var(--space-4);
   margin-bottom: var(--space-4);
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: var(--font-weight-semibold, 600);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   font-family: inherit;
-  transition: all var(--duration-fast, 150ms) var(--easing-default, ease);
+  transition: all var(--duration-fast) var(--easing-default);
 }
 
 .wizard-layout__back:hover {

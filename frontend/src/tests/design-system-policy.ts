@@ -46,6 +46,29 @@ export function collectCssFallbacks(): Array<{ file: string; token: string; lite
   )
 }
 
+export function parseCssFallbackRegistry(
+  markdown: string,
+): Array<{ file: string; token: string; literal: string; status: string; reason: string; exitCondition: string }> {
+  return markdown
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith("| `frontend/src/"))
+    .map((line) => {
+      const cells = line.split("|").slice(1, -1).map((cell) => cell.trim())
+      const [file, token, literal, status, reason, exitCondition] = cells.map((cell) =>
+        cell.replace(/^`|`$/g, ""),
+      )
+
+      return {
+        file: file.replace(/^frontend\/src\//, ""),
+        token,
+        literal,
+        status,
+        reason,
+        exitCondition,
+      }
+    })
+}
+
 export function parseRegistryPatterns(markdown: string): string[] {
   return [...markdown.matchAll(/\|\s*`([^`]+)`\s*\|/g)].map((match) => match[1])
 }

@@ -10,13 +10,13 @@
 .badge--sm {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md, 14px);
+  border-radius: var(--radius-md);
 }
 
 .badge--md {
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-md, 14px);
+  border-radius: var(--radius-md);
 }
 
 .badge--lg {

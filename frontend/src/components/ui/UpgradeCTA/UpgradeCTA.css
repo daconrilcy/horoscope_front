@@ -4,17 +4,17 @@
   justify-content: center;
   text-decoration: none;
   font-family: var(--font-family-base);
-  font-weight: var(--font-weight-semibold, 600);
-  transition: all var(--duration-fast, 150ms) var(--easing-default);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--duration-fast) var(--easing-default);
   cursor: pointer;
 }
 
 .upgrade-cta--button {
-  padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
+  padding: var(--space-2) var(--space-4);
   background: var(--color-primary);
   color: #ffffff;
-  border-radius: var(--radius-md, 14px);
-  font-size: var(--font-size-sm, 0.875rem);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
   box-shadow: var(--shadow-cta);
 }
 
@@ -31,8 +31,8 @@
 .upgrade-cta--link {
   background: transparent;
   color: var(--color-primary);
-  font-size: var(--font-size-sm, 0.875rem);
-  padding: var(--space-1, 0.25rem);
+  font-size: var(--font-size-sm);
+  padding: var(--space-1);
   border-bottom: 1px solid transparent;
 }
 

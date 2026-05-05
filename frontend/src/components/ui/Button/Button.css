@@ -68,7 +68,7 @@
 
 .btn--danger {
   background: var(--color-danger);
-  color: #ffffff;
+  color: var(--color-text-on-astro);
 }
 
 .btn--danger:not(:disabled):hover {

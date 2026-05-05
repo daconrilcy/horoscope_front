@@ -88,6 +88,29 @@
   padding: 22px 26px;
 }
 
+.account-settings__identity-card {
+  margin-top: var(--space-6);
+}
+
+.account-settings__identity-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.account-settings__birth-link {
+  height: auto;
+  margin-top: var(--space-1);
+  min-height: 32px;
+  text-decoration: none;
+}
+
+.account-settings__delete-action {
+  background: var(--color-admin-danger-surface);
+  border-color: var(--color-admin-danger-border);
+  color: var(--color-admin-danger-ink);
+}
+
 .settings-card--accent {
   background: linear-gradient(180deg, rgba(229, 224, 255, 0.86) 0%, rgba(218, 210, 255, 0.72) 100%);
   border: 1px solid var(--settings-purple-border);
@@ -514,6 +537,23 @@
   letter-spacing: 0.04em;
   box-shadow: 0 8px 20px rgba(134, 108, 208, 0.10);
   white-space: nowrap;
+}
+
+.profile-default-badge--selected {
+  background: var(--settings-purple);
+  color: var(--color-text-on-astro);
+}
+
+.profile-meta-pill--default-action {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: var(--settings-card-border);
+  cursor: pointer;
+}
+
+.profile-meta-pill--default-active {
+  background: var(--settings-purple-soft);
+  border-color: var(--settings-purple);
+  color: var(--settings-purple);
 }
 
 .subscription-plans-grid {
@@ -1113,13 +1153,11 @@
 }
 
 .settings-save-feedback--success {
-  color: #3a8f5e;
-  /* vert succès cohérent avec var(--success) */
+  color: var(--color-success);
 }
 
 .settings-save-feedback--error {
-  color: #c0392b;
-  /* rouge erreur cohérent avec var(--danger) */
+  color: var(--color-admin-danger-ink);
 }
 
 @media (max-width: 640px) {

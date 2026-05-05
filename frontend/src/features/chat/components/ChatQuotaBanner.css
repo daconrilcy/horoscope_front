@@ -1,10 +1,10 @@
 .chat-quota-banner {
   display: flex;
   align-items: center;
-  gap: var(--space-3, 0.75rem);
-  padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--glass-border);
-  font-size: var(--font-size-sm, 0.875rem);
+  font-size: var(--font-size-sm);
   flex-wrap: wrap;
 }
 
@@ -51,11 +51,11 @@
 
 .chat-quota-banner__reset {
   color: var(--text-2);
-  font-size: var(--font-size-xs, 0.75rem);
+  font-size: var(--font-size-xs);
 }
 
 @media (max-width: 768px) {
   .chat-quota-banner {
-    padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+    padding: var(--space-2) var(--space-3);
   }
 }

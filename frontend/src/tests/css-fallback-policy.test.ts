@@ -3,6 +3,7 @@ import {
   collectCssFallbacks,
   extractCssFallbacks,
   listFiles,
+  parseCssFallbackRegistry,
   readFrontendFile,
   toStableJson,
 } from "./design-system-policy"
@@ -12,10 +13,17 @@ import { CSS_FALLBACK_EXCEPTIONS } from "./design-system-allowlist"
 describe("css-fallback policy", () => {
   it("declare un registre exact des fallbacks autorises", () => {
     const registry = readFrontendFile("styles/css-fallback-allowlist.md")
+    const documented = parseCssFallbackRegistry(registry)
+    const documentedContract = documented.map(({ file, token, literal }) => ({ file, token, literal }))
 
     expect(registry).toContain("| File | Token | Literal | Status | Reason | Exit condition |")
-    expect(registry).toContain("`--sidebar-width`")
+    expect(registry).toContain("`--surface-glass-blur`")
     expect(registry).toContain("`--usage-progress`")
+    expect(documented.every((entry) => entry.status && entry.reason && entry.exitCondition)).toBe(true)
+    expect(documented.some((entry) => entry.file.includes("*"))).toBe(false)
+    expect(documentedContract.map(toStableJson).sort()).toEqual(
+      CSS_FALLBACK_EXCEPTIONS.map(toStableJson).sort(),
+    )
   })
 
   it("retire les fallbacks des valeurs migrees du lot CS-027", () => {

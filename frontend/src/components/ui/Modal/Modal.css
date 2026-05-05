@@ -5,7 +5,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  z-index: var(--z-index-modal, 2000);
+  z-index: var(--z-index-modal);
   display: flex;
   align-items: center;
   justify-content: center;

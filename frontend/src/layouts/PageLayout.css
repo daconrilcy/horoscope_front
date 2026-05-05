@@ -1,7 +1,7 @@
 .page-layout {
-  max-width: var(--layout-page-max-width, 900px);
+  max-width: var(--layout-page-max-width);
   margin: 0 auto;
-  padding: var(--layout-page-padding, var(--space-6));
+  padding: var(--layout-page-padding));
   width: 100%;
 }
 

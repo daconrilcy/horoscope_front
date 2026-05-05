@@ -192,6 +192,10 @@
   box-shadow: var(--ni-selector-trigger-shadow-hover);
 }
 
+.ni-version-btn__history-icon {
+  color: var(--color-primary-strong);
+}
+
 .ni-version-selector {
   position: relative;
 }
@@ -812,6 +816,10 @@
   box-shadow:
     0 10px 24px rgba(76, 52, 122, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.46);
+}
+
+.ni-degraded-notice__icon {
+  flex-shrink: 0;
 }
 
 .ni-disclaimer-title {

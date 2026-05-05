@@ -61,8 +61,8 @@ export function AccountSettings() {
         )}
         
         {authMe.data && (
-          <div className="settings-card--soft" style={{ marginTop: '24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div className="settings-card--soft account-settings__identity-card">
+            <div className="account-settings__identity-grid">
               <div>
                 <div className="usage-stat-label">{t.email}</div>
                 <div className="default-astrologer-option__name">{authMe.data.email}</div>
@@ -79,7 +79,7 @@ export function AccountSettings() {
               </div>
               <div>
                 <div className="usage-stat-label">{t.birthData}</div>
-                <Link to="/profile" className="settings-tab" style={{ marginTop: '4px', textDecoration: 'none', height: 'auto', minHeight: '32px' }}>
+                <Link to="/profile" className="settings-tab account-settings__birth-link">
                   {t.editBirthData}
                 </Link>
               </div>
@@ -161,8 +161,7 @@ export function AccountSettings() {
         
         <button
           type="button"
-          className="settings-tab"
-          style={{ background: 'rgba(192, 57, 43, 0.1)', color: '#c0392b', borderColor: 'rgba(192, 57, 43, 0.2)' }}
+          className="settings-tab account-settings__delete-action"
           onClick={() => setShowDeleteModal(true)}
         >
           {t.deleteAccount}

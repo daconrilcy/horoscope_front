@@ -615,7 +615,7 @@ function VersionSelector({
         onClick={() => setIsOpen(!isOpen)}
         className="ni-control-trigger ni-version-btn"
       >
-        <History size={16} style={{ color: 'var(--color-primary-strong)' }} />
+        <History size={16} className="ni-version-btn__history-icon" />
         <span>
           {selectedItem
             ? `${new Date(selectedItem.created_at).toLocaleDateString(lang)} - ${selectedItem.persona_name || t.standardVersionLabel}`
@@ -760,7 +760,7 @@ function InterpretationContent({
       <div className="ni-content">
       {degraded_mode && (
         <div className="ni-degraded-notice">
-          <AlertCircle size={16} style={{ flexShrink: 0 }} />
+          <AlertCircle size={16} className="ni-degraded-notice__icon" />
           {t.degradedNotice}
         </div>
       )}

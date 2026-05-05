@@ -33,3 +33,9 @@
 .skeleton--circle {
   border-radius: var(--radius-full);
 }
+
+.skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--skeleton-gap);
+}
