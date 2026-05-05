@@ -41,6 +41,9 @@ Before implementing a story, read these references from this skill:
 - `references/validation-contract.md`
 - `references/no-legacy-contract.md`
 - `../condamad-regression-guardrails/SKILL.md`
+- `../condamad-frontend-dev/SKILL.md` when the story touches `frontend/`,
+  frontend tests, frontend styles, frontend build tooling, or user-facing React
+  behavior.
 
 These references are normative for CONDAMAD execution. If they conflict with this `SKILL.md`, apply this rule:
 
@@ -50,6 +53,9 @@ These references are normative for CONDAMAD execution. If they conflict with thi
 - `no-legacy-contract.md` wins for No Legacy interpretation.
 - `condamad-regression-guardrails` wins for the shared inter-story invariant
   registry workflow.
+- `condamad-frontend-dev` wins for frontend implementation discipline,
+  frontend validation, frontend static guards, and frontend regression
+  guardrail handling.
 - Explicit user instruction in the current task wins unless it conflicts with repository safety, destructive changes, or higher-priority instructions.
 
 ## 3. Expected inputs
@@ -107,7 +113,7 @@ The helper script `scripts/condamad_prepare.py` may be used to generate the caps
 When instructions conflict, apply this order:
 
 1. Explicit user instruction in the current task.
-2. The story’s Acceptance Criteria and explicit non-goals.
+2. The story's Acceptance Criteria and explicit non-goals.
 3. CONDAMAD capsule files.
 4. Repository `AGENTS.md` files that apply to touched paths.
 5. Project context, architecture docs, and existing test conventions.
@@ -153,7 +159,7 @@ Forbidden unless explicitly required by the story:
 - silent fallback behavior;
 - root-level service files when a canonical namespace exists;
 - tests that preserve legacy paths as nominal behavior;
-- “temporary” shims without a removal mechanism and explicit approval.
+- "temporary" shims without a removal mechanism and explicit approval.
 
 Required when relevant:
 
@@ -162,6 +168,52 @@ Required when relevant:
 - tests or architecture guards that fail if the legacy path is reintroduced;
 - explicit error behavior instead of silent fallback for missing canonical config;
 - deletion of obsolete code when safe and in scope.
+
+### Frontend subagent delegation
+
+For any story that touches frontend code, frontend tests, frontend styles,
+frontend build configuration, React behavior, Tailwind/shadcn UI, TanStack
+Query, Zustand, forms, routing, or Playwright flows, the main CONDAMAD agent
+must use `condamad-frontend-dev` as the dedicated frontend development
+subagent.
+
+Frontend delegation rules:
+
+- The main CONDAMAD agent owns the story capsule, source-of-truth precedence,
+  global scope control, final evidence, story status, and final response.
+- The `condamad-frontend-dev` subagent owns frontend implementation work under
+  `frontend/**` and frontend evidence collection for its assigned slice.
+- Assign the subagent a concrete write scope, usually `frontend/**`, plus any
+  explicitly needed `_condamad/stories/<story-key>/generated/**` evidence files
+  only if the main agent chooses to let it draft evidence.
+- Tell the subagent it is not alone in the codebase, must not revert unrelated
+  changes, and must preserve user worktree changes.
+- Pass the story goal, relevant ACs, frontend target files, applicable
+  regression guardrail IDs, expected validation commands, and the instruction
+  to use `$condamad-frontend-dev`.
+- Require the subagent to report changed files, tests added or updated,
+  commands run, commands not run, applicable regression guardrails, static
+  guard results, risks, and any registry update needed.
+- The main agent must review and integrate the subagent result before marking
+  ACs complete.
+- If the frontend work is the immediate critical-path blocker and no parallel
+  local work remains, the main agent may wait for the subagent result, but must
+  still perform final CONDAMAD evidence integration itself.
+- Do not let another subagent edit the same frontend files concurrently unless
+  the user explicitly requests a parallel worktree strategy.
+
+Use this prompt shape for the frontend worker:
+
+```text
+Use $condamad-frontend-dev for the frontend slice of story <story-key>.
+You are not alone in the codebase; do not revert unrelated changes.
+Ownership: frontend/** [and only these explicit evidence files if needed].
+Goal: <frontend goal>.
+Acceptance criteria: <relevant ACs>.
+Regression guardrails: <RG-XXX list and expected evidence>.
+Validation expected: <commands from generated/06-validation-plan.md and frontend package scripts>.
+Implement the smallest coherent frontend change, add/update tests, run feasible checks, and report changed files, validation results, skipped checks with reasons, static guard results, registry updates needed, and remaining risks.
+```
 
 ## 7. Capsule file responsibilities
 
@@ -221,7 +273,7 @@ It must include:
 
 ## 8. Execution workflow
 
-### Step 0 — Preflight
+### Step 0 - Preflight
 
 1. Locate the repository root.
 2. Run `git status --short`.
@@ -232,7 +284,7 @@ It must include:
 6. Identify the story capsule path or story file path.
 7. If no story can be found, stop with a precise blocker.
 
-### Step 1 — Generate or validate the capsule
+### Step 1 - Generate or validate the capsule
 
 If the input is a story markdown file or prompt body:
 
@@ -250,7 +302,7 @@ If the input is already a capsule directory:
 
 Use `scripts/condamad_prepare.py` and `scripts/condamad_validate.py` when available and appropriate.
 
-### Step 2 — Load story context
+### Step 2 - Load story context
 
 Read, in order:
 
@@ -273,8 +325,10 @@ Extract:
 - validation expectations;
 - forbidden legacy patterns.
 - applicable regression guardrail IDs and evidence requirements.
+- whether the story has a frontend slice requiring `condamad-frontend-dev`
+  subagent delegation.
 
-### Step 3 — Inspect repository before editing
+### Step 3 - Inspect repository before editing
 
 Use `rg` and targeted file reads before implementing.
 
@@ -288,7 +342,7 @@ rg "from app\.services|import app\.services" backend tests
 
 Adapt searches to the story. Avoid broad, noisy commands when a narrower query exists.
 
-### Step 4 — Build or update the implementation plan
+### Step 4 - Build or update the implementation plan
 
 Before modifying code, create or update `generated/05-implementation-plan.md` when useful.
 
@@ -298,16 +352,20 @@ Include:
 - selected target approach;
 - files to modify;
 - tests to add or update;
+- frontend subagent assignment when the story touches `frontend/`;
 - deletion candidates;
 - explicit No Legacy stance;
 - rollback strategy.
 
 The plan is not a request for user approval unless a HALT condition is met.
 
-### Step 5 — Implement in small patches
+### Step 5 - Implement in small patches
 
 Implementation rules:
 
+- For frontend slices, spawn or assign the `condamad-frontend-dev` subagent
+  before editing frontend code, then integrate its result into the CONDAMAD
+  capsule and final evidence.
 - Make the smallest coherent patch that satisfies the next AC group.
 - Prefer focused edits.
 - Reuse existing abstractions before creating new ones.
@@ -317,7 +375,7 @@ Implementation rules:
 - Do not hide breakages behind fallbacks.
 - For each AC, add or update tests/guards before considering it complete.
 
-### Step 6 — Validate locally
+### Step 6 - Validate locally
 
 Run the validation plan in this order when possible:
 
@@ -329,6 +387,16 @@ Run the validation plan in this order when possible:
 
 Also run or record the guard commands required by applicable rows in
 `_condamad/stories/regression-guardrails.md`.
+
+For frontend slices, include `condamad-frontend-dev` validation evidence:
+
+- frontend package script discovery;
+- `pnpm lint`;
+- `pnpm typecheck`;
+- `pnpm test`;
+- `pnpm test:e2e` when required by the story or flow risk;
+- frontend static guard checks;
+- applicable frontend `RG-XXX` guard commands or documented skips.
 
 Typical Python backend commands:
 
@@ -346,7 +414,7 @@ Typical Windows quality gate, if present:
 
 If the repository defines different commands in `AGENTS.md`, package config, CI config, or `generated/06-validation-plan.md`, prefer those.
 
-### Step 7 — Review diff before completion
+### Step 7 - Review diff before completion
 
 Before marking the story complete, review:
 
@@ -364,7 +432,7 @@ Check:
 - tests prove the ACs;
 - formatting-only churn is justified.
 
-### Step 8 — Complete evidence
+### Step 8 - Complete evidence
 
 Update:
 
@@ -383,6 +451,7 @@ Record:
 - changed files;
 - deleted files;
 - AC-by-AC evidence;
+- frontend subagent result and evidence when a frontend slice existed;
 - remaining risks.
 
 Synchronize the canonical story registry:
@@ -403,9 +472,9 @@ Synchronize the canonical story registry:
 Do not mark a story ready for review in final evidence without also updating
 `_condamad/stories/story-status.md` to the matching `ready-to-review` status.
 
-### Step 9 — Final response
+### Step 9 - Final response
 
-Respond in the user’s language.
+Respond in the user's language.
 
 The final response must include:
 
@@ -514,8 +583,8 @@ Changed files:
 
 Validation:
 
-- `command` — PASS
-- `command` — NOT RUN: reason
+- `command` - PASS
+- `command` - NOT RUN: reason
 
 Legacy / DRY evidence:
 
