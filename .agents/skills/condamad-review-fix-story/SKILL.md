@@ -14,6 +14,12 @@ This skill composes `../condamad-code-review/SKILL.md`; it does not replace its
 review doctrine. Load and apply `condamad-code-review` at every review
 iteration.
 
+For frontend fixes, also load and apply `../condamad-frontend-dev/SKILL.md`.
+Any accepted review finding whose fix touches `frontend/**`, frontend tests,
+frontend styles, frontend build tooling, React behavior, Tailwind/shadcn UI,
+TanStack Query, Zustand, forms, routing, or Playwright flows must be fixed
+through the `condamad-frontend-dev` contract.
+
 ## Required inputs
 
 Accept one target:
@@ -34,7 +40,9 @@ Apply instructions in this order:
 2. Repository `AGENTS.md` files for touched paths.
 3. The target story `00-story.md` and generated capsule evidence.
 4. `../condamad-code-review/SKILL.md` and its required references.
-5. Existing implementation patterns.
+5. `../condamad-frontend-dev/SKILL.md` for frontend review fixes, frontend
+   validation, and frontend static/regression guards.
+6. Existing implementation patterns.
 
 Do not weaken acceptance criteria or review findings to make the loop pass.
 
@@ -103,6 +111,8 @@ Fix all issues found in the current iteration before starting the next review.
 
 Rules:
 
+- Route every accepted frontend finding through `condamad-frontend-dev` before
+  editing frontend files.
 - Apply the smallest coherent code or evidence patch that resolves the issue.
 - Add or update tests/guards for behavioral, architecture, or regression risk.
 - Update generated evidence files to record what was fixed and how it was
@@ -110,6 +120,26 @@ Rules:
 - Do not mark a finding resolved without code/evidence and validation.
 - Do not introduce compatibility shims, fallback behavior, aliases, or duplicate
   active paths unless the story explicitly requires them.
+
+Frontend review-fix rules:
+
+- A finding is a frontend finding when its fix touches `frontend/**`, frontend
+  tests, frontend styles, frontend build tooling, React behavior,
+  Tailwind/shadcn UI, TanStack Query, Zustand, forms, routing, or Playwright
+  flows.
+- Apply the full `condamad-frontend-dev` contract for every frontend fix:
+  repository inspection, pattern reuse, ownership boundaries, naming, TanStack
+  Query rules, error states, UI/logic separation, frontend regression
+  guardrails, static guard checks, and validation evidence.
+- When subagents are available and the current task permits implementation
+  delegation, use `condamad-frontend-dev` as the frontend implementation
+  subagent with ownership limited to `frontend/**` and explicit evidence files
+  when needed.
+- If no subagent is used, the main session must still apply every
+  `condamad-frontend-dev` rule and record that the frontend contract was
+  applied directly.
+- Do not mark a frontend review finding resolved without frontend validation
+  evidence or an explicit blocker.
 
 ### 4. Validate
 
@@ -119,6 +149,10 @@ Run the relevant validation after each fix batch:
 - required guardrail commands;
 - lint/static checks required by the repo or story;
 - broader test suites when the fix changes shared behavior.
+- for frontend fixes, the relevant `condamad-frontend-dev` checks: package
+  script discovery, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`
+  when required, frontend static guards, and applicable frontend `RG-XXX`
+  evidence.
 
 For Python commands in this repository, activate the venv first:
 
@@ -146,6 +180,7 @@ When a fresh review has no issues:
 1. Update story evidence:
    - `generated/10-final-evidence.md` with final validation and remaining risk.
    - `generated/11-code-review.md` with the final clean review evidence.
+   - frontend review-fix evidence when any frontend surface changed.
 2. Update `_condamad/stories/story-status.md`:
    - locate the row by story ID, story key, or `00-story.md` path;
    - set `Status` to `done`;

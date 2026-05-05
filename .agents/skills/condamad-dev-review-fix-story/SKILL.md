@@ -27,7 +27,9 @@ orchestration loop:
 3. Use `../condamad-code-review/SKILL.md` as the authoritative review doctrine.
 4. Use `../condamad-review-fix-story/SKILL.md` for the review/fix/re-review
    closure loop.
-5. Keep final triage, fixes, validation, and status synchronization in the main
+5. Use `../condamad-frontend-dev/SKILL.md` for every frontend implementation
+   and frontend review-fix slice.
+6. Keep final triage, fixes, validation, and status synchronization in the main
    Codex session.
 
 This skill composes existing CONDAMAD skills. Do not duplicate or weaken their
@@ -60,7 +62,9 @@ Apply instructions in this order:
 6. This wrapper's explicit no-auto-commit/no-auto-push rule.
 7. `condamad-dev-story`, `condamad-code-review`, and
    `condamad-review-fix-story`.
-8. Existing implementation patterns.
+8. `condamad-frontend-dev` for frontend implementation, frontend review fixes,
+   frontend validation, and frontend static/regression guards.
+9. Existing implementation patterns.
 
 Do not weaken acceptance criteria, validation requirements, or review findings
 to make the workflow pass.
@@ -94,6 +98,14 @@ Subagent rules:
 
 If subagents are unavailable or not authorized, run the same review layers
 sequentially in the main session and record that no subagent delegation was used.
+
+Frontend exception: `condamad-frontend-dev` is the required implementation
+subagent for frontend development and frontend review-fix slices through
+`condamad-dev-story` and this wrapper. This is implementation delegation, not a
+read-only review layer. It is mandatory when a fix touches `frontend/**`,
+frontend tests, frontend styles, frontend build tooling, React behavior,
+Tailwind/shadcn UI, TanStack Query, Zustand, forms, routing, or Playwright
+flows.
 
 ## Context isolation policy
 
@@ -194,11 +206,46 @@ For each candidate finding:
 
 - accept it only when it is evidence-backed and actionable;
 - reject false positives explicitly in the review evidence or dev log;
+- route every accepted frontend finding through `condamad-frontend-dev` before
+  editing frontend files;
 - fix accepted findings with the smallest coherent patch;
 - add or update tests/guards when the finding exposes behavior or regression
   risk;
 - update `generated/10-final-evidence.md` and `generated/11-code-review.md`
   when a capsule exists.
+
+Frontend review-fix rules:
+
+- A finding is a frontend finding when its fix touches `frontend/**`, frontend
+  tests, frontend styles, frontend build tooling, React behavior,
+  Tailwind/shadcn UI, TanStack Query, Zustand, forms, routing, or Playwright
+  flows.
+- For each frontend finding batch, use `condamad-frontend-dev` as the frontend
+  implementation subagent with ownership limited to `frontend/**` and explicit
+  evidence files when needed.
+- Pass the review finding text, story ACs, target files, applicable
+  `_condamad/stories/regression-guardrails.md` IDs, and expected validation
+  commands to the frontend subagent.
+- Require the frontend subagent to report changed files, tests, validation
+  commands, skipped checks, static guard results, applicable `RG-XXX` evidence,
+  and remaining risks.
+- The main session must verify the subagent output against the review finding,
+  update capsule evidence, and decide whether the finding is resolved.
+- Do not mark a frontend review finding resolved without code/evidence plus
+  `condamad-frontend-dev` validation evidence or an explicit blocker.
+
+Use this prompt shape for frontend review fixes:
+
+```text
+Use $condamad-frontend-dev to fix accepted frontend review findings for story <story-key>.
+You are not alone in the codebase; do not revert unrelated changes.
+Ownership: frontend/** [and only these explicit evidence files if needed].
+Accepted findings: <finding IDs/text>.
+Acceptance criteria: <relevant ACs>.
+Regression guardrails: <RG-XXX list and expected evidence>.
+Validation expected: <commands from story validation plan and frontend package scripts>.
+Fix the smallest coherent frontend slice, add/update tests, run feasible checks, and report changed files, validation results, skipped checks with reasons, static guard results, registry updates needed, and remaining risks.
+```
 
 ### 5. Re-review loop
 
@@ -225,13 +272,15 @@ failure with no safe fix, or a user stop request.
 Before final response:
 
 1. Run required final validation from the story and repository instructions.
-2. Run `git status --short`.
-3. Review `git diff --stat` and `git diff` for scope.
-4. Synchronize `_condamad/stories/story-status.md`:
+2. Confirm all frontend review fixes include `condamad-frontend-dev` evidence
+   when any frontend surface changed.
+3. Run `git status --short`.
+4. Review `git diff --stat` and `git diff` for scope.
+5. Synchronize `_condamad/stories/story-status.md`:
    - `done` only when the fresh review is clean or acceptable with complete
      required validation;
    - `ready-to-review` when findings remain or validation is incomplete.
-5. Commit and push only when explicitly requested by the user.
+6. Commit and push only when explicitly requested by the user.
 
 ## Final response
 
@@ -241,6 +290,7 @@ Respond in French. Include:
 - whether subagents were used;
 - number of review/fix iterations;
 - findings fixed or rejected by category;
+- frontend subagent usage and evidence when frontend fixes were involved;
 - files changed;
 - validations run and result;
 - commit and push result only when requested;
