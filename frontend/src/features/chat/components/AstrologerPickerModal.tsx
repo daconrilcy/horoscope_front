@@ -85,15 +85,15 @@ export function AstrologerPickerModal({
                     className="astrologer-picker-item-avatar-img"
                     onError={(e) => {
                       const target = e.currentTarget
-                      target.style.display = "none"
+                      target.hidden = true
                       const fallback = target.nextElementSibling as HTMLElement | null
-                      if (fallback) fallback.style.display = "flex"
+                      if (fallback) fallback.hidden = false
                     }}
                   />
                 ) : null}
                 <span
                   className="astrologer-picker-item-avatar-fallback"
-                  style={{ display: astrologer.avatar_url ? "none" : "flex" }}
+                  hidden={Boolean(astrologer.avatar_url)}
                 >
                   {fullName.charAt(0).toUpperCase()}
                 </span>

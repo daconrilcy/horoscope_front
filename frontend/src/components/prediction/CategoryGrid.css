@@ -15,27 +15,27 @@
 }
 
 .category-grid__icon {
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
 }
 
 .category-grid__label {
   font-size: 0.8rem;
   text-transform: uppercase;
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
 }
 
 .category-grid__score {
   font-size: 1.75rem;
-  font-weight: bold;
-  margin: var(--space-1, 0.25rem) 0;
+  font-weight: var(--type-numeric-weight);
+  margin: var(--space-1) 0;
 }
 
 .category-grid__band {
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .category-grid__summary {
   font-size: 0.8rem;
-  line-height: 1.4;
+  line-height: var(--type-metadata-line-height);
 }

@@ -14,7 +14,6 @@ export const INLINE_STYLE_DYNAMIC_ALLOWLIST = [
   "frontend/src/components/ui/Badge/Badge.tsx::background",
   "frontend/src/components/ui/Skeleton/Skeleton.tsx::style-prop",
   "frontend/src/components/ui/Skeleton/Skeleton.tsx::--skeleton-gap",
-  "frontend/src/features/chat/components/AstrologerPickerModal.tsx::display",
 ] as const
 
 export { INLINE_STYLE_EXCEPTIONS }

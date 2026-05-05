@@ -9,7 +9,6 @@ doivent pas croitre.
 | Surface | Type | Status | Owner | Canonical target | Exit condition |
 |---|---|---|---|---|---|
 | `.chat-layout-legacy*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ChatLayout.css` | migrate chat shell styles |
-| `.chat-layout-mobile-action-*` | selector-family | migration-only | `frontend/src/App.css` | chat mobile action component styles | migrate chat shell styles |
 | `.chat-layout-panel-legacy*` | selector-family | migration-only | `frontend/src/App.css` | chat panel components | migrate chat shell styles |
 | `.conversation-list-legacy*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ConversationList.css` | migrate conversation list styles |
 | `.conversation-list-*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ConversationList.css` | migrate conversation list styles |

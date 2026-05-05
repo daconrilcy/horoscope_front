@@ -1,18 +1,18 @@
 /* Styles components DayPredictionCard sans inlines */
 
 .day-prediction-card__body {
-  margin-top: var(--space-6, 1.5rem);
+  margin-top: var(--space-6);
   color: var(--color-text-primary);
 }
 
 .day-prediction-card__summary {
-  font-size: 1.125rem;
-  line-height: 1.6;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
 }
 
 .day-prediction-card__calibration {
-  margin-top: 0.75rem;
-  padding: 0.75rem 1rem;
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-radius: 0.75rem;
   font-size: 0.9rem;
   background-color: rgba(255, 184, 77, 0.12);
@@ -25,8 +25,8 @@
 }
 
 .day-prediction-card__best-window {
-  margin-top: var(--space-6, 1.5rem);
-  padding: var(--space-4, 1rem);
+  margin-top: var(--space-6);
+  padding: var(--space-4);
   border-radius: 0.75rem;
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -38,43 +38,43 @@
 }
 
 .day-prediction-card__best-window-title {
-  margin: 0 0 var(--space-2, 0.5rem) 0;
+  margin: 0 0 var(--space-2) 0;
   font-size: 0.9rem;
   color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
 .day-prediction-card__best-window-time {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
 }
 
 .day-prediction-card__best-window-desc {
-  margin: var(--space-1, 0.25rem) 0 0 0;
-  font-size: 0.875rem;
+  margin: var(--space-1) 0 0 0;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
 .day-prediction-card__date {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   color: var(--color-text-primary);
 }
 
 .day-prediction-card__tone {
   display: inline-block;
-  margin-top: 0.5rem;
-  padding: 0.5rem 1rem;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   border-radius: 1rem;
-  font-size: 0.875rem;
-  font-weight: bold;
-  color: var(--text-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .astro-context .day-prediction-card__tone {
-  background-color: rgb(var(--purple_base), 0.3) !important;
-  color: var(--text-1);
+  background-color: color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
+  color: var(--color-text-primary);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }

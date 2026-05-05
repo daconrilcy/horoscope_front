@@ -388,10 +388,6 @@ textarea:focus-visible {
   border-left: 1px solid var(--glass-border);
 }
 
-.chat-layout-mobile-action-legacy {
-  margin: 1rem;
-}
-
 /* Conversation List */
 .conversation-list-legacy {
   display: flex;
@@ -1201,6 +1197,11 @@ textarea:focus-visible {
   font-size: 1.1rem;
   font-weight: var(--font-weight-semibold);
   color: var(--primary);
+}
+
+.astrologer-picker-item-avatar-fallback[hidden],
+.astrologer-picker-item-avatar-img[hidden] {
+  display: none;
 }
 
 .astrologer-picker-item-info {

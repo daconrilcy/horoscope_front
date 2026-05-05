@@ -1111,7 +1111,7 @@
 }
 
 .admin-prompts-logic-graph__legend-chip--layer {
-  background: color-mix(in srgb, var(--color-accent, var(--color-primary)) 14%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
 }
 
 .admin-prompts-logic-graph__text-fallback-details {

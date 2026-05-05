@@ -61,10 +61,6 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
     "style": "style={groupStyle}"
   },
   {
-    "file": "features/chat/components/AstrologerPickerModal.tsx",
-    "style": "style={{ display: astrologer.avatar_url ? \"none\" : \"flex\" }"
-  },
-  {
     "file": "layouts/TwoColumnLayout.tsx",
     "style": "style={{ '--sidebar-width': sidebarWidth }"
   }
@@ -105,36 +101,6 @@ export const CSS_FALLBACK_EXCEPTIONS: CssFallbackException[] = [
     "file": "components/NatalInterpretation.css",
     "token": "--font-size-sm",
     "literal": "0.875rem"
-  },
-  {
-    "file": "components/prediction/CategoryGrid.css",
-    "token": "--space-1",
-    "literal": "0.25rem"
-  },
-  {
-    "file": "components/prediction/DayPredictionCard.css",
-    "token": "--space-6",
-    "literal": "1.5rem"
-  },
-  {
-    "file": "components/prediction/DayPredictionCard.css",
-    "token": "--space-6",
-    "literal": "1.5rem"
-  },
-  {
-    "file": "components/prediction/DayPredictionCard.css",
-    "token": "--space-4",
-    "literal": "1rem"
-  },
-  {
-    "file": "components/prediction/DayPredictionCard.css",
-    "token": "--space-2",
-    "literal": "0.5rem"
-  },
-  {
-    "file": "components/prediction/DayPredictionCard.css",
-    "token": "--space-1",
-    "literal": "0.25rem"
   },
   {
     "file": "components/prediction/KeyPointCard.css",
@@ -195,46 +161,6 @@ export const CSS_FALLBACK_EXCEPTIONS: CssFallbackException[] = [
     "file": "pages/admin/AdminEntitlementsPage.css",
     "token": "--glass-heavy",
     "literal": "#1a1a1a"
-  },
-  {
-    "file": "pages/admin/AdminPromptsPage.css",
-    "token": "--color-accent",
-    "literal": "var(--color-primary"
-  },
-  {
-    "file": "pages/BirthProfilePage.css",
-    "token": "--border-color",
-    "literal": "#eee"
-  },
-  {
-    "file": "pages/BirthProfilePage.css",
-    "token": "--text-secondary",
-    "literal": "#666"
-  },
-  {
-    "file": "pages/BirthProfilePage.css",
-    "token": "--bg-secondary",
-    "literal": "#f9f9f9"
-  },
-  {
-    "file": "pages/BirthProfilePage.css",
-    "token": "--bg-button-secondary",
-    "literal": "#eee"
-  },
-  {
-    "file": "pages/BirthProfilePage.css",
-    "token": "--text-button-secondary",
-    "literal": "#333"
-  },
-  {
-    "file": "pages/BirthProfilePage.css",
-    "token": "--border-color",
-    "literal": "#ccc"
-  },
-  {
-    "file": "pages/BirthProfilePage.css",
-    "token": "--bg-button-secondary-hover",
-    "literal": "#ddd"
   },
   {
     "file": "pages/landing/sections/TestimonialsSection.css",

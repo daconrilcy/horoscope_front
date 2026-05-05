@@ -23,17 +23,23 @@ afterEach(() => {
 
 
 let appCss: string
+let designTokensCss: string
 let themeCss: string
 let bgCss: string
 let heroCss: string
 
 beforeAll(() => {
   appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
-  const designTokensCss = readFileSync(resolve(__dirname, "../styles/design-tokens.css"), "utf-8")
+  designTokensCss = readFileSync(resolve(__dirname, "../styles/design-tokens.css"), "utf-8")
   themeCss = designTokensCss + "\n" + readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8")
   bgCss = readFileSync(resolve(__dirname, "../styles/backgrounds.css"), "utf-8")
   heroCss = readFileSync(resolve(__dirname, "../components/HeroHoroscopeCard.css"), "utf-8")
 })
+
+function expectDeclarationToUseDefinedToken(css: string, property: string, token: string) {
+  expect(css).toContain(`${property}: var(${token})`)
+  expect(designTokensCss).toMatch(new RegExp(`${token}:\\s*[^;]+;`))
+}
 
 // ─── AC#1 : Aucune opacité globale sur les wrappers principaux ───────────────
 
@@ -81,17 +87,17 @@ describe("AC#1 — Aucune opacity sur wrappers principaux (Dashboard)", () => {
     expect(content).toContain("color:")
   })
 
-  it(".message-bubble-time utilise color au lieu d'opacity", () => {
+  it(".section-header__title utilise le token typographique de titre compact", () => {
     const match = appCss.match(/\.section-header__title\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
-    expect(content).toContain("font-size: 18px")
+    expectDeclarationToUseDefinedToken(content, "font-size", "--font-size-lg")
   })
 
-  it(".bottom-nav__label a font-size: 12px et font-weight: 500", () => {
+  it(".bottom-nav__label utilise les tokens typographiques de navigation", () => {
     const match = appCss.match(/\.bottom-nav__label\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
-    expect(content).toContain("font-size: 12px")
-    expect(content).toContain("font-weight: 500")
+    expectDeclarationToUseDefinedToken(content, "font-size", "--font-size-xs")
+    expectDeclarationToUseDefinedToken(content, "font-weight", "--font-weight-medium")
   })
 })
 

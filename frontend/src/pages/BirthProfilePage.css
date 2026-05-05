@@ -26,13 +26,13 @@
 .section-header {
   margin-top: 1.5rem;
   margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color, #eee);
+  border-bottom: 1px solid var(--color-line);
   padding-bottom: 0.5rem;
 }
 
 .help-text {
   font-size: 0.875rem;
-  color: var(--text-secondary, #666);
+  color: var(--color-text-secondary);
   margin-bottom: 1rem;
 }
 
@@ -50,7 +50,7 @@
 .current-location-controls {
   margin-top: 1rem;
   padding: 1rem;
-  background-color: var(--bg-secondary, #f9f9f9);
+  background-color: var(--color-bg-2);
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -58,9 +58,9 @@
 }
 
 .secondary-button {
-  background-color: var(--bg-button-secondary, #eee);
-  color: var(--text-button-secondary, #333);
-  border: 1px solid var(--border-color, #ccc);
+  background-color: var(--color-glass-bg-2);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-line);
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   cursor: pointer;
@@ -68,7 +68,7 @@
 }
 
 .secondary-button:hover:not(:disabled) {
-  background-color: var(--bg-button-secondary-hover, #ddd);
+  background-color: var(--color-glass-bg);
 }
 
 .secondary-button:disabled {
