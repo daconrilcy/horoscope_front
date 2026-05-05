@@ -1,3 +1,5 @@
+/* Primitive skeleton connectee aux tokens globaux sans fallbacks locaux. */
+
 @keyframes skeleton-shimmer {
   0% {
     background-position: -200% center;
@@ -10,13 +12,13 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--color-glass-mini, rgba(255, 255, 255, 0.15)) 25%,
-    var(--color-glass-bg, rgba(255, 255, 255, 0.25)) 50%,
-    var(--color-glass-mini, rgba(255, 255, 255, 0.15)) 75%
+    var(--color-glass-mini) 25%,
+    var(--color-glass-bg) 50%,
+    var(--color-glass-mini) 75%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 2s ease-in-out infinite;
-  border-radius: var(--radius-sm, 8px);
+  border-radius: var(--radius-sm);
 }
 
 .skeleton--text {
@@ -25,9 +27,9 @@
 }
 
 .skeleton--rect {
-  border-radius: var(--radius-md, 14px);
+  border-radius: var(--radius-md);
 }
 
 .skeleton--circle {
-  border-radius: var(--radius-full, 999px);
+  border-radius: var(--radius-full);
 }

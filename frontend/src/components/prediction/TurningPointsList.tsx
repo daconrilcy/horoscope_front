@@ -1,3 +1,4 @@
+// Composant de liste des points de bascule avec styles statiques portes par CSS.
 import React from "react";
 
 import type { Lang } from "../../i18n/predictions";
@@ -16,6 +17,7 @@ import {
   quantifyCategoryDelta,
 } from "../../utils/predictionI18n";
 import { TURNING_POINT_LABELS, getLabel } from "../../i18n/predictions";
+import "./TurningPointsList.css";
 
 interface Props {
   moments: DailyPredictionTurningPoint[];
@@ -45,11 +47,11 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
   };
 
   return (
-    <div style={{ marginBottom: "2rem" }}>
-      <h3 style={{ marginBottom: "1rem", color: "var(--text-1)" }}>
+    <div className="turning-points-list">
+      <h3 className="turning-points-list__title">
         {getPredictionMessage("turning_points", lang)}
       </h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div className="turning-points-list__items">
         {moments.map((moment, index) => {
           const semantic = humanizeTurningPointSemantic(moment, lang);
           const primaryDriver = humanizePrimaryDriver(moment.primary_driver, lang);
@@ -71,56 +73,34 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
           return (
             <div
               key={`${moment.occurred_at_local}-${index}`}
-              className="panel"
+              className={`panel turning-points-list__card${
+                onTurningPointClick ? " turning-points-list__card--clickable" : ""
+              }`}
               onClick={() => onTurningPointClick?.(Number(moment.severity) || 0.5)}
-              style={{
-                padding: "1.25rem",
-                border: "1px solid var(--primary)",
-                position: "relative",
-                overflow: "hidden",
-                cursor: onTurningPointClick ? "pointer" : "default",
-                backgroundColor: "rgba(var(--primary-rgb), 0.03)"
-              }}
             >
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "4px",
-                  height: "100%",
-                  backgroundColor: "var(--primary)",
-                }}
-              />
+              <div className="turning-points-list__accent" />
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                  marginBottom: "1rem",
-                }}
-              >
-                <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--primary)" }}>
+              <div className="turning-points-list__card-header">
+                <span className="turning-points-list__time">
                   {getWindowLabel(moment.occurred_at_local)}
                 </span>
-                <span style={{ fontSize: "0.8rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "600" }}>
+                <span className="turning-points-list__tag">
                   {getPredictionMessage("aspect_shift_label", lang)}
                 </span>
               </div>
 
               {hasEnrichment ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div className="turning-points-list__enriched">
                   {/* Section 1: Pourquoi ? */}
                   <div>
-                    <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.2rem" }}>
+                    <span className="turning-points-list__eyebrow">
                       {getLabel(TURNING_POINT_LABELS, "why", lang)}
                     </span>
-                    <span style={{ fontSize: "1rem", color: "var(--text-1)", fontWeight: "500" }}>
+                    <span className="turning-points-list__primary-text">
                       {semantic.cause}
                     </span>
                     {primaryDriver?.details && (
-                      <p style={{ margin: "0.35rem 0 0 0", fontSize: "0.85rem", lineHeight: "1.4", color: "var(--text-2)" }}>
+                      <p className="turning-points-list__detail">
                         {primaryDriver.details}
                       </p>
                     )}
@@ -128,34 +108,34 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
 
                   {/* Section 2: Ce qui change */}
                   <div>
-                    <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.4rem" }}>
+                    <span className="turning-points-list__eyebrow turning-points-list__eyebrow--spaced">
                       {getLabel(TURNING_POINT_LABELS, "before_after", lang)}
                     </span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                      <div style={{ display: "flex", gap: "0.2rem" }}>
+                    <div className="turning-points-list__category-row">
+                      <div className="turning-points-list__icon-group">
                         {(moment.previous_categories || []).length > 0 ? (
                           moment.previous_categories?.slice(0, 3).map(c => (
                             <span key={c} title={getCategoryMeta(c, lang).label}>{getCategoryMeta(c, lang).icon}</span>
                           ))
                         ) : (
-                          <span style={{ fontSize: "0.8rem", color: "var(--text-2)" }}>{getLabel(TURNING_POINT_LABELS, "none", lang)}</span>
+                          <span className="turning-points-list__muted-inline">{getLabel(TURNING_POINT_LABELS, "none", lang)}</span>
                         )}
                       </div>
-                      <span style={{ fontSize: "0.8rem", color: "var(--text-3)" }}>→</span>
-                      <div style={{ display: "flex", gap: "0.2rem" }}>
+                      <span className="turning-points-list__arrow">→</span>
+                      <div className="turning-points-list__icon-group">
                         {(moment.next_categories || []).length > 0 ? (
                           moment.next_categories?.slice(0, 3).map(c => (
                             <span key={c} title={getCategoryMeta(c, lang).label}>{getCategoryMeta(c, lang).icon}</span>
                           ))
                         ) : (
-                          <span style={{ fontSize: "0.8rem", color: "var(--text-2)" }}>{getLabel(TURNING_POINT_LABELS, "none", lang)}</span>
+                          <span className="turning-points-list__muted-inline">{getLabel(TURNING_POINT_LABELS, "none", lang)}</span>
                         )}
                       </div>
-                      <span style={{ fontSize: "0.9rem", color: "var(--text-1)", marginLeft: "0.25rem" }}>
+                      <span className="turning-points-list__transition-title">
                         {semantic.title}
                       </span>
                     </div>
-                    <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.9rem", lineHeight: "1.4", color: "var(--text-2)" }}>
+                    <p className="turning-points-list__transition">
                       {semantic.transition}
                     </p>
                   </div>
@@ -163,24 +143,24 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                   {/* Section 3: Mouvement (Story 44.4) */}
                   {moment.movement && (
                     <div>
-                      <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.2rem" }}>
+                      <span className="turning-points-list__eyebrow">
                         {getLabel(TURNING_POINT_LABELS, "global_movement", lang)}
                       </span>
-                      <p style={{ margin: 0, fontSize: "0.95rem", color: "var(--text-1)", fontWeight: "500" }}>
+                      <p className="turning-points-list__movement">
                         {humanizeMovement(moment.movement, lang)}
                       </p>
-                      <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.85rem", color: "var(--text-2)" }}>
+                      <p className="turning-points-list__movement-detail">
                         {quantifyMovement(moment.movement, lang)}
                       </p>
                       
                       {moment.category_deltas && moment.category_deltas.length > 0 && (
-                        <div style={{ marginTop: "0.4rem", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                        <div className="turning-points-list__delta-list">
                           {moment.category_deltas.slice(0, 2).map((delta, i) => (
-                            <div key={`${delta.code}-${i}`} style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
-                              <span style={{ fontSize: "0.85rem", color: "var(--text-2)" }}>
+                            <div key={`${delta.code}-${i}`} className="turning-points-list__delta">
+                              <span className="turning-points-list__delta-label">
                                 {humanizeCategoryDelta(delta, lang)}
                               </span>
-                              <span style={{ fontSize: "0.8rem", color: "var(--text-3)" }}>
+                              <span className="turning-points-list__delta-value">
                                 {quantifyCategoryDelta(delta, lang)}
                               </span>
                             </div>
@@ -192,21 +172,21 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
 
                   {/* Section 4: Implication */}
                   <div>
-                    <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold", display: "block", marginBottom: "0.2rem" }}>
+                    <span className="turning-points-list__eyebrow">
                       {getLabel(TURNING_POINT_LABELS, "implication", lang)}
                     </span>
-                    <p style={{ margin: 0, fontSize: "0.95rem", lineHeight: "1.4", color: "var(--text-2)" }}>
+                    <p className="turning-points-list__implication">
                       {semantic.implication}.
                     </p>
                     {enrichedImpactedCategories.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center", marginTop: "0.6rem" }}>
-                        <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold" }}>
+                      <div className="turning-points-list__impact-row turning-points-list__impact-row--spaced">
+                        <span className="turning-points-list__impact-label">
                           {getPredictionMessage("impacts_label", lang)}
                         </span>
                         {enrichedImpactedCategories.map((category) => {
                           const meta = getCategoryMeta(category, lang);
                           return (
-                            <span key={category} style={{ fontSize: "0.8rem" }}>
+                            <span key={category} className="turning-points-list__category-pill">
                               {meta.icon} {meta.label}
                             </span>
                           );
@@ -218,25 +198,25 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
               ) : (
                 /* Fallback Legacy */
                 <>
-                  <p style={{ margin: "0 0 0.75rem 0", fontSize: "1rem", lineHeight: "1.5", color: "var(--text-1)" }}>
+                  <p className="turning-points-list__fallback-summary">
                     {humanizeTurningPointSummary(moment.summary, lang) || getPredictionMessage("aspect_shift_label", lang)}
                   </p>
 
                   {hasExplicitDriverLabel && (moment.drivers || []).length > 0 && (
-                    <div style={{ marginBottom: "0.5rem", fontSize: "0.85rem", color: "var(--text-2)" }}>
+                    <div className="turning-points-list__fallback-driver">
                       {humanizePredictionDriverLabel(moment.drivers[0], lang)}
                     </div>
                   )}
 
                   {legacyImpactedCategories.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.7rem", color: "var(--text-3)", textTransform: "uppercase", fontWeight: "bold" }}>
+                    <div className="turning-points-list__impact-row">
+                      <span className="turning-points-list__impact-label">
                         {getPredictionMessage("impacts_label", lang)}
                       </span>
                       {legacyImpactedCategories.map((category) => {
                         const meta = getCategoryMeta(category, lang);
                         return (
-                          <span key={category} title={meta.label} style={{ fontSize: "0.8rem" }}>
+                          <span key={category} title={meta.label} className="turning-points-list__category-pill">
                             {meta.icon} {meta.label}
                           </span>
                         );

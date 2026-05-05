@@ -1,12 +1,14 @@
+/* Primitive avatar utilisateur connectee aux tokens globaux sans fallbacks locaux. */
+
 .user-avatar {
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary, var(--color-primary, #7c3aed));
+  background: var(--primary);
   color: #fff;
-  font-weight: var(--font-weight-bold, 700);
+  font-weight: var(--font-weight-bold);
   flex-shrink: 0;
   cursor: default;
   border: none;
@@ -41,7 +43,7 @@ button.user-avatar:hover {
 }
 
 button.user-avatar:focus-visible {
-  outline: 2px solid var(--primary, var(--color-primary, #7c3aed));
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 

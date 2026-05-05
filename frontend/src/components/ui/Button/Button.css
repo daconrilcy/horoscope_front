@@ -1,15 +1,17 @@
+/* Primitive bouton connectee aux tokens globaux sans fallbacks locaux. */
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-full, 999px);
-  transition: all var(--duration-fast, 150ms) var(--easing-default, ease);
+  border-radius: var(--radius-full);
+  transition: all var(--duration-fast) var(--easing-default);
   cursor: pointer;
   border: none;
   font-family: inherit;
-  font-weight: var(--font-weight-semibold, 600);
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
-  gap: var(--space-2, 0.5rem);
+  gap: var(--space-2);
   position: relative;
   overflow: hidden;
 }
@@ -32,7 +34,7 @@
 .btn--primary {
   background: linear-gradient(135deg, var(--color-cta-left), var(--color-cta-right));
   color: var(--color-btn-text);
-  box-shadow: var(--shadow-cta, 0 14px 30px rgba(90, 120, 255, 0.25));
+  box-shadow: var(--shadow-cta);
 }
 
 .btn--primary:not(:disabled):hover {
@@ -76,17 +78,17 @@
 /* SIZES */
 .btn--sm {
   padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-sm, 0.875rem);
+  font-size: var(--font-size-sm);
 }
 
 .btn--md {
   padding: var(--space-3) var(--space-6);
-  font-size: var(--font-size-md, 1rem);
+  font-size: var(--font-size-md);
 }
 
 .btn--lg {
   padding: var(--space-4) var(--space-8);
-  font-size: var(--font-size-lg, 1.125rem);
+  font-size: var(--font-size-lg);
 }
 
 /* SPINNER & ICONS */
@@ -108,7 +110,7 @@
   border: 2px solid currentColor;
   border-top-color: transparent;
   border-radius: 50%;
-  animation: btn-spin var(--duration-normal, 250ms) linear infinite;
+  animation: btn-spin var(--duration-normal) linear infinite;
 }
 
 @keyframes btn-spin {

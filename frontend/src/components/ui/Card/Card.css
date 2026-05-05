@@ -1,24 +1,26 @@
+/* Primitive carte connectee aux tokens globaux sans fallbacks locaux. */
+
 @import "../../../styles/glass.css";
 
 .card {
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-lg, 24px);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  transition: transform var(--duration-fast, 150ms) var(--easing-default, ease),
-              box-shadow var(--duration-fast, 150ms) var(--easing-default, ease);
+  transition: transform var(--duration-fast) var(--easing-default),
+              box-shadow var(--duration-fast) var(--easing-default);
 }
 
 /* VARIANTS */
 .card--solid {
-  background: var(--color-bg-surface, #ffffff);
-  border: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-glass-border);
 }
 
 .card--elevated {
-  background: var(--color-bg-surface, #ffffff);
-  box-shadow: var(--shadow-card, 0 18px 40px rgba(0,0,0,0.45));
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
 }
 
 /* .card--glass styles come from .glass-card in glass.css */
@@ -30,7 +32,7 @@
 
 .card--clickable:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-hero, 0 20px 50px rgba(0,0,0,0.3));
+  box-shadow: var(--shadow-hero);
 }
 
 .card--clickable:active {
@@ -39,18 +41,18 @@
 
 /* PADDINGS */
 .card--padding-none { padding: 0; }
-.card--padding-sm { padding: var(--space-4, 1rem); }
-.card--padding-md { padding: var(--space-6, 1.5rem); }
-.card--padding-lg { padding: var(--space-8, 2rem); }
+.card--padding-sm { padding: var(--space-4); }
+.card--padding-md { padding: var(--space-6); }
+.card--padding-lg { padding: var(--space-8); }
 
 /* SLOTS */
 .card__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: var(--space-4, 1rem);
-  margin-bottom: var(--space-4, 1rem);
-  border-bottom: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 
 .card__body {
@@ -61,10 +63,10 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-top: var(--space-4, 1rem);
-  margin-top: var(--space-4, 1rem);
-  border-top: 1px solid var(--color-glass-border, rgba(255,255,255,0.65));
-  gap: var(--space-3, 0.75rem);
+  padding-top: var(--space-4);
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--color-glass-border);
+  gap: var(--space-3);
 }
 
 /* Fix for cases where Card has global padding but we want header/footer borders to touch edges */
