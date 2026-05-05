@@ -83,7 +83,7 @@
   top: 64px;
   right: 124px;
   color: rgba(230, 187, 116, 0.56);
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   text-shadow: 0 0 16px rgba(230, 187, 116, 0.38);
 }
 
@@ -91,13 +91,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
   margin-top: 48px;
   padding: 48px 32px;
   text-align: center;
   background: var(--profile-card-surface-strong);
   border: 1px solid var(--profile-card-border);
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--profile-card-shadow);
   backdrop-filter: blur(18px);
 }
@@ -106,7 +106,7 @@
   margin: 0;
   color: var(--profile-text-heading);
   font-size: 28px;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .profile-inline-error__message {
@@ -138,8 +138,8 @@
   background: rgba(255, 255, 255, 0.68);
   box-shadow: 0 10px 24px rgba(132, 150, 190, 0.1);
   color: var(--profile-text-heading);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition:
     color 0.18s ease,
@@ -254,7 +254,7 @@
   top: -30px;
   left: -14px;
   color: rgba(226, 181, 112, 0.44);
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   letter-spacing: 16px;
 }
 
@@ -274,7 +274,7 @@
   background: linear-gradient(180deg, #2f7dd0 0%, #2769b6 100%);
   color: #fff;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   box-shadow: 0 10px 22px rgba(49, 115, 193, 0.2);
@@ -299,7 +299,7 @@
   font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   font-size: clamp(3.4rem, 5.2vw, 4.8rem);
   line-height: 0.94;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.03em;
 }
 
@@ -307,7 +307,7 @@
   margin: 0;
   color: var(--profile-text-body);
   font-size: 21px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.01em;
 }
 
@@ -330,7 +330,7 @@
   box-shadow: 0 8px 22px rgba(138, 169, 208, 0.1);
   color: var(--profile-text-body);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .profile-meta-pill svg {
@@ -359,7 +359,7 @@
   font-size: clamp(2rem, 2.3vw, 2.35rem);
   line-height: 1.22;
   font-style: italic;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .profile-quote-signature {
@@ -389,7 +389,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-4);
   min-height: 112px;
   padding: 24px 28px;
 }
@@ -418,26 +418,26 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .metric-value {
   color: var(--profile-text-heading);
   font-size: 24px;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   line-height: 1;
 }
 
 .metric-title {
   color: var(--profile-text-body);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   line-height: 1.25;
 }
 
 .metric-helper {
   color: var(--profile-text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .profile-main-grid {
@@ -445,14 +445,14 @@
   z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 440px;
-  gap: 40px;
+  gap: var(--space-10);
   margin-bottom: 28px;
 }
 
 .profile-col-left {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: var(--space-7);
 }
 
 .profile-section-title {
@@ -461,7 +461,7 @@
   font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   font-size: clamp(2rem, 2.4vw, 2.45rem);
   line-height: 1.02;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -535,15 +535,15 @@
 .profile-mission-card__content h3 {
   margin: 0;
   color: var(--profile-text-heading);
-  font-size: 18px;
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
 }
 
 .profile-mission-text {
   margin: 0;
   color: var(--profile-text-body);
   font-size: 17px;
-  line-height: 1.6;
+  line-height: var(--line-height-relaxed);
 }
 
 .profile-method {
@@ -582,7 +582,7 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 22px rgba(214, 154, 57, 0.18);
   color: #79521a;
   font-size: 19px;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .step-content {
@@ -593,8 +593,8 @@
 
 .step-title {
   color: var(--profile-text-heading);
-  font-size: 16px;
-  font-weight: 700;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
   line-height: 1.2;
 }
 
@@ -618,7 +618,7 @@
   overflow: hidden;
   background: var(--profile-card-surface-strong);
   border: 1px solid var(--profile-card-border);
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--profile-card-shadow);
   backdrop-filter: blur(16px);
 }
@@ -634,7 +634,7 @@
 
 .specialty-item {
   display: flex;
-  gap: 16px;
+  gap: var(--space-4);
   align-items: flex-start;
   padding: 18px 26px;
 }
@@ -660,13 +660,13 @@
 .specialty-item-copy {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .specialty-item-title {
   color: var(--profile-text-heading);
   font-size: 17px;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .specialty-item-desc {
@@ -683,7 +683,7 @@
   margin-bottom: 38px;
   background: var(--profile-card-surface-strong);
   border: 1px solid var(--profile-card-border);
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--profile-card-shadow);
   backdrop-filter: blur(16px);
 }
@@ -710,19 +710,19 @@
 }
 
 .profile-reviews-summary__score {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
 }
 
 .profile-reviews-summary__count {
   color: var(--profile-text-body);
-  font-size: 16px;
+  font-size: var(--font-size-md);
 }
 
 .reviews-container {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 238px;
-  gap: 28px;
+  gap: var(--space-7);
   align-items: start;
 }
 
@@ -745,7 +745,7 @@
   font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   font-size: 52px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .review-comment {
@@ -761,7 +761,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-4);
   margin-top: 10px;
 }
 
@@ -774,8 +774,8 @@
 
 .review-user-name {
   color: var(--profile-text-heading);
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .review-tags {
@@ -794,12 +794,12 @@
   border: 1px solid rgba(166, 202, 241, 0.72);
   color: #55749e;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .review-rating {
   display: inline-flex;
-  gap: 4px;
+  gap: var(--space-1);
   color: #f0b754;
 }
 
@@ -810,7 +810,7 @@
 .review-item--empty .review-comment {
   font-size: 1.2rem;
   font-style: normal;
-  line-height: 1.6;
+  line-height: var(--line-height-relaxed);
 }
 
 .review-stats-card {
@@ -844,7 +844,7 @@
 .big-rating {
   color: var(--profile-text-heading);
   font-size: 2.4rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   line-height: 1;
 }
 
@@ -854,8 +854,8 @@
   justify-content: center;
   gap: var(--space-2);
   color: var(--profile-text-heading);
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .review-stats-card__recommendation svg {
@@ -874,7 +874,7 @@
   color: var(--profile-text-body);
   font-family: inherit;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .review-rating--interactive {
@@ -912,7 +912,7 @@
   padding: 12px 14px;
   resize: vertical;
   border: 1px solid rgba(181, 204, 232, 0.88);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.94);
   color: var(--profile-text-body);
   font: inherit;
@@ -934,8 +934,8 @@
 .review-composer-card__error {
   margin: -2px 0 0;
   color: #b54c4c;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .review-stats-card__write-review {
@@ -1001,7 +1001,7 @@
   display: block;
   font-size: 24px;
   line-height: 1;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   transform: translateY(-1px);
 }
 
@@ -1026,7 +1026,7 @@
     radial-gradient(circle at 85% 46%, rgba(151, 197, 248, 0.18) 0%, transparent 16%),
     linear-gradient(180deg, rgba(235, 246, 255, 0.92) 0%, rgba(219, 237, 255, 0.82) 100%);
   border: 1px solid rgba(167, 203, 241, 0.86);
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--profile-card-shadow);
 }
 
@@ -1065,7 +1065,7 @@
 .profile-final-cta__subtitle {
   margin: 0;
   color: var(--profile-text-body);
-  font-size: 18px;
+  font-size: var(--font-size-lg);
 }
 
 .profile-final-cta .btn.premium-cta--primary {
@@ -1166,7 +1166,7 @@
 
   .profile-hero {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: var(--space-7);
     text-align: center;
   }
 
@@ -1230,7 +1230,7 @@
   }
 
   .profile-style-title {
-    font-size: 18px;
+    font-size: var(--font-size-lg);
   }
 
   .profile-quote p {
@@ -1252,7 +1252,7 @@
 
   .profile-method-stepper {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .method-arrow {

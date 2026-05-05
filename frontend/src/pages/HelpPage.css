@@ -72,7 +72,7 @@
   content: "";
   position: absolute;
   inset: 14px;
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.28);
   pointer-events: none;
 }
@@ -104,7 +104,7 @@
 .section-card h2 {
   margin: 0;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: 1.02;
   color: #2f2345;
 }
@@ -209,7 +209,7 @@
   margin-top: 28px;
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr);
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .help-tickets-section {
@@ -219,7 +219,7 @@
 .main-column,
 .side-column {
   display: grid;
-  gap: 24px;
+  gap: var(--space-6);
   align-content: start;
 }
 
@@ -229,7 +229,7 @@
 }
 
 .section-card--compact {
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
 }
 
 .section-heading {
@@ -253,7 +253,7 @@
   margin-top: 22px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .help-shortcut-card,
@@ -292,7 +292,7 @@
 .help-shortcut-card__icon {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -318,7 +318,7 @@
   padding-top: 18px;
   display: inline-flex;
   color: #6d56bf;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .plans-layout {
@@ -329,7 +329,7 @@
 }
 
 .token-story {
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   padding: 24px;
   max-width: 100%;
   display: flex;
@@ -341,7 +341,7 @@
   border-radius: 18px;
   background: rgba(138, 114, 217, 0.1);
   color: #6d56bf;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .token-story p {
@@ -409,7 +409,7 @@
 }
 
 .category-card__label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: #2f2345;
   line-height: 1.4;
   overflow-wrap: anywhere;
@@ -434,7 +434,7 @@
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.38);
   color: #2f2345;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -451,7 +451,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .ticket-form-container {
@@ -490,7 +490,7 @@
   border-radius: var(--radius-full);
   color: #6d56bf;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   max-width: 100%;
   overflow-wrap: anywhere;
 }
@@ -510,32 +510,32 @@
 
 .form-error-message {
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: rgba(192, 57, 43, 0.08);
   border: 1px solid rgba(192, 57, 43, 0.18);
   color: var(--danger);
   font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: var(--line-height-normal);
 }
 
 .help-ticket-success {
   margin-top: 18px;
   padding: 20px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: rgba(58, 143, 94, 0.1);
   border: 1px solid rgba(58, 143, 94, 0.2);
   color: #2d6b47;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .ticket-list {
   margin-top: 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .ticket-item {
@@ -605,7 +605,7 @@
 .ticket-item__subject {
   display: block;
   color: #2f2345;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   margin-bottom: 8px;
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 1.45rem;
@@ -619,7 +619,7 @@
   padding: 9px 14px;
   border-radius: var(--radius-full);
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   background: rgba(255, 255, 255, 0.74);
   border: 1px solid rgba(138, 114, 217, 0.16);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
@@ -687,7 +687,7 @@
 .ticket-response__content {
   margin: 0;
   color: #2f2345;
-  line-height: 1.6;
+  line-height: var(--line-height-relaxed);
   overflow-wrap: anywhere;
 }
 
@@ -699,7 +699,7 @@
 .help-placeholder-card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .help-placeholder-card__text {
@@ -772,7 +772,7 @@
 .help-subscriptions-hero {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: var(--space-6);
   margin: 0 auto 48px;
   padding-top: 40px;
   align-items: stretch;
@@ -837,7 +837,7 @@
   border: 1px solid rgba(134, 108, 208, 0.18);
   color: var(--primary);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -853,16 +853,16 @@
 
 .help-subscriptions-hero p {
   font-size: 1.05rem;
-  color: var(--settings-text-body, var(--text-2));
+  color: var(--text-2);
   margin: 0 0 18px;
   line-height: 1.72;
   max-width: 64ch;
 }
 
 .help-subscriptions-hero-lead {
-  color: var(--settings-text-heading, var(--text-1));
+  color: var(--text-1);
   font-size: 1.12rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .help-subscriptions-hero-actions {
@@ -888,7 +888,7 @@
   background: rgba(255, 255, 255, 0.56);
   border: 1px solid var(--glass-border);
   color: var(--text-headline);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
   transition: transform 0.22s ease, background-color 0.22s ease, border-color 0.22s ease;
 }
@@ -968,9 +968,9 @@
   border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.62);
   border: 1px solid rgba(255, 255, 255, 0.6);
-  color: var(--settings-text-muted, var(--text-2));
+  color: var(--text-2);
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -988,7 +988,7 @@
   margin: 0 0 20px;
   color: var(--primary);
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .help-subscriptions-hero-panel-list {
@@ -1002,7 +1002,7 @@
 .help-subscriptions-hero-panel-list li {
   position: relative;
   padding-left: 18px;
-  color: var(--settings-text-body, var(--text-2));
+  color: var(--text-2);
 }
 
 .help-subscriptions-hero-panel-list li::before {
@@ -1020,7 +1020,7 @@
 .help-subscriptions-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: var(--space-6);
   margin-bottom: 48px;
   scroll-margin-top: 112px;
 }
@@ -1028,7 +1028,7 @@
 .help-subscriptions-editorial {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: var(--space-6);
   margin-bottom: 48px;
   align-items: stretch;
 }
@@ -1147,7 +1147,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.34);
   border: 1px solid rgba(255, 255, 255, 0.24);
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   z-index: 1;
@@ -1182,7 +1182,7 @@
   align-items: center;
   flex: 0 0 auto;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   padding: 0.38rem 0.78rem;
   border-radius: var(--radius-full);
   text-transform: uppercase;
@@ -1211,9 +1211,9 @@
 
 .help-subscriptions-plan-tagline {
   margin: 0;
-  color: var(--settings-text-muted, var(--text-2));
+  color: var(--text-2);
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
@@ -1223,12 +1223,12 @@
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .help-subscriptions-price-amount {
   font-size: clamp(2.8rem, 6vw, 3.55rem);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--text-headline);
   line-height: 1;
   text-shadow: 0 8px 26px rgba(255, 255, 255, 0.34);
@@ -1244,19 +1244,19 @@
 
 .help-subscriptions-price-period {
   font-size: 0.95rem;
-  color: var(--settings-text-muted, var(--text-2));
+  color: var(--text-2);
 }
 
 .help-subscriptions-plan-positioning {
   margin: 0 0 10px;
   color: var(--primary);
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .help-subscriptions-plan-promise {
   margin: 0 0 18px;
-  color: var(--settings-text-body, var(--text-2));
+  color: var(--text-2);
   line-height: 1.65;
   font-size: 1rem;
 }
@@ -1279,7 +1279,7 @@
   margin: 0 0 18px;
   color: var(--text-headline);
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .help-subscriptions-details {
@@ -1297,7 +1297,7 @@
   list-style: none;
   cursor: pointer;
   color: var(--text-headline);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1346,7 +1346,7 @@
   padding: 18px 8px 0;
   display: grid;
   gap: 22px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, rgba(247, 242, 255, 0.62) 100%),
     linear-gradient(145deg, rgba(134, 108, 208, 0.05) 0%, rgba(255, 244, 232, 0.14) 100%);
@@ -1373,20 +1373,20 @@
   margin: 0;
   color: var(--text-headline);
   font-size: 0.84rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .help-subscriptions-details-intro {
   margin: 0;
-  color: var(--settings-text-muted, var(--text-2));
-  line-height: 1.6;
+  color: var(--text-2);
+  line-height: var(--line-height-relaxed);
 }
 
 .help-subscriptions-plan-description {
   margin: 14px 0 0;
-  color: var(--settings-text-body, var(--text-2));
+  color: var(--text-2);
   line-height: 1.72;
 }
 
@@ -1447,12 +1447,12 @@
 }
 
 .help-subscriptions-feature-name {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .help-subscriptions-feature-quota {
   font-size: 0.84rem;
-  color: var(--settings-text-muted, var(--text-2));
+  color: var(--text-2);
 }
 
 .help-subscriptions-current-plan {
@@ -1463,7 +1463,7 @@
   border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.74);
   color: var(--text-headline);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-align: center;
 }
 
@@ -1472,7 +1472,7 @@
   flex-direction: column;
   height: 100%;
   padding: 28px;
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.54) 100%),
     linear-gradient(145deg, rgba(134, 108, 208, 0.03) 0%, rgba(255, 244, 232, 0.18) 100%);
@@ -1517,7 +1517,7 @@
   justify-content: center;
   width: 38px;
   height: 38px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.72);
   color: color-mix(in srgb, var(--primary) 82%, white 18%);
@@ -1542,7 +1542,7 @@
 
 .help-subscriptions-editorial-copy {
   margin: 0 0 14px;
-  color: var(--settings-text-body, var(--text-2));
+  color: var(--text-2);
   line-height: 1.72;
 }
 

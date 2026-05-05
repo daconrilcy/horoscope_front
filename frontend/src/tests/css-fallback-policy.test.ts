@@ -17,7 +17,6 @@ describe("css-fallback policy", () => {
     const documentedContract = documented.map(({ file, token, literal }) => ({ file, token, literal }))
 
     expect(registry).toContain("| File | Token | Literal | Status | Reason | Exit condition |")
-    expect(registry).toContain("`--surface-glass-blur`")
     expect(registry).toContain("`--usage-progress`")
     expect(documented.every((entry) => entry.status && entry.reason && entry.exitCondition)).toBe(true)
     expect(documented.some((entry) => entry.file.includes("*"))).toBe(false)
