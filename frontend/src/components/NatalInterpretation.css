@@ -1,4 +1,4 @@
-/* ── NatalInterpretation — Premium Refinement (Story 60.20) ── */
+/* Interpretation natale premium raccordee aux tokens partages. */
 
 .ni-section {
   margin-top: 48px;
@@ -93,7 +93,7 @@
   color: var(--premium-accent-purple-strong);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(242, 235, 255, 0.92) 100%);
   border: 1px solid var(--premium-glass-border-strong);
-  border-radius: var(--premium-radius-pill, 999px);
+  border-radius: var(--premium-radius-pill);
   box-shadow: var(--ni-selector-trigger-shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
@@ -136,7 +136,7 @@
   padding: 0 16px;
   font-size: 12px;
   font-weight: 700;
-  border-radius: var(--premium-radius-pill, 999px);
+  border-radius: var(--premium-radius-pill);
   border: 1px solid var(--premium-glass-border);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1029,7 +1029,7 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  padding: var(--space-3) var(--space-4);
   background: transparent;
   border: none;
   cursor: default;
@@ -1045,7 +1045,7 @@
   padding: 20px 22px;
   text-align: left;
   color: var(--text-2);
-  font-size: var(--font-size-sm, 0.875rem);
+  font-size: var(--font-size-sm);
   font-style: normal;
   line-height: 1.75;
 }

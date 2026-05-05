@@ -5,7 +5,9 @@ import path from "path"
 // Resolve path to theme.css
 const themePath = path.resolve(__dirname, "../styles/theme.css")
 const designTokensPath = path.resolve(__dirname, "../styles/design-tokens.css")
+const premiumThemePath = path.resolve(__dirname, "../styles/premium-theme.css")
 const themeContent = fs.readFileSync(designTokensPath, "utf-8") + "\n" + fs.readFileSync(themePath, "utf-8")
+const premiumThemeContent = fs.readFileSync(premiumThemePath, "utf-8")
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -67,6 +69,11 @@ const requiredTokens = [
 describe("theme.css validation (Static Analysis)", () => {
   it("exists at frontend/src/styles/theme.css", () => {
     expect(fs.existsSync(themePath)).toBe(true)
+  })
+
+  it("charge les tokens premium requis par les surfaces sans fallback", () => {
+    expect(fs.existsSync(premiumThemePath)).toBe(true)
+    expect(premiumThemeContent).toMatch(/--premium-radius-pill:\s*999px;/)
   })
 
   describe(":root (light) tokens", () => {

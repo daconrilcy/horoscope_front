@@ -5,7 +5,6 @@ import { getLocale } from "../../utils/locale";
 import {
   getCategoryLabel,
   getPredictionMessage,
-  getToneColor,
   getToneLabel,
 } from "../../utils/predictionI18n";
 
@@ -26,6 +25,21 @@ interface Props {
     dayScore: number;
     dateKey: string;
   };
+}
+
+const DAY_PREDICTION_TONE_CLASS_KEYS = new Set([
+  "positive",
+  "push",
+  "negative",
+  "careful",
+  "open",
+  "mixed",
+  "neutral",
+  "steady",
+]);
+
+export function getDayPredictionToneClassKey(tone: string | null | undefined): string {
+  return tone && DAY_PREDICTION_TONE_CLASS_KEYS.has(tone) ? tone : "neutral";
 }
 
 export const DayPredictionCard: React.FC<Props> = ({ 
@@ -67,7 +81,6 @@ export const DayPredictionCard: React.FC<Props> = ({
 
   const { summary, meta } = prediction;
   const toneLabel = getToneLabel(summary.overall_tone, lang);
-  const toneColor = getToneColor(summary.overall_tone);
   const calibrationMessage =
     summary.calibration_note || getPredictionMessage("provisional_calibration", lang);
 
@@ -78,6 +91,9 @@ export const DayPredictionCard: React.FC<Props> = ({
   });
 
   const isAstro = !!astroBackgroundProps;
+  const toneClassName = isAstro
+    ? "day-prediction-card__tone"
+    : `day-prediction-card__tone day-prediction-card__tone--${getDayPredictionToneClassKey(summary.overall_tone)}`;
 
   const bodyContent = (
     <div className="day-prediction-card__body">
@@ -113,10 +129,7 @@ export const DayPredictionCard: React.FC<Props> = ({
     <div className="day-prediction-card__header">
       <div>
         <h2 className="day-prediction-card__date">{formattedDate}</h2>
-        <span 
-          className="day-prediction-card__tone"
-          style={isAstro ? undefined : { backgroundColor: toneColor }}
-        >
+        <span className={toneClassName}>
           {toneLabel}
         </span>
       </div>

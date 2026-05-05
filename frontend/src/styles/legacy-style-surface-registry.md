@@ -8,18 +8,6 @@ doivent pas croitre.
 
 | Surface | Type | Status | Owner | Canonical target | Exit condition |
 |---|---|---|---|---|---|
-| `.chat-layout-legacy*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ChatLayout.css` | migrate chat shell styles |
-| `.chat-layout-panel-legacy*` | selector-family | migration-only | `frontend/src/App.css` | chat panel components | migrate chat shell styles |
-| `.conversation-list-legacy*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ConversationList.css` | migrate conversation list styles |
-| `.conversation-list-*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ConversationList.css` | migrate conversation list styles |
-| `.conversation-item-legacy*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ConversationItem.tsx` styles | migrate conversation item styles |
-| `.conversation-item-*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ConversationItem.tsx` styles | migrate conversation item styles |
-| `.chat-window-legacy*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ChatWindow.css` | migrate chat window styles |
-| `.chat-window-*` | selector-family | migration-only | `frontend/src/App.css` | `features/chat/components/ChatWindow.css` | migrate chat window styles |
-| `.chat-composer-legacy*` | selector-family | migration-only | `frontend/src/App.css` | chat composer component styles | migrate composer styles |
-| `.chat-composer-*` | selector-family | migration-only | `frontend/src/App.css` | chat composer component styles | migrate composer styles |
-| `.astrologer-chip-legacy*` | selector-family | migration-only | `frontend/src/App.css` | astrologer chip component styles | migrate chip styles |
-| `.astrologer-chip-*` | selector-family | migration-only | `frontend/src/App.css` | astrologer chip component styles | migrate chip styles |
 | `.admin-prompts-legacy*` | selector-family | external-active | `frontend/src/pages/admin/AdminPromptsPage.css` | admin prompts route components | deletion blocked while `AdminPromptsPage.tsx` consumes legacy markup; requires product/user decision before route-specific migration |
 | `.admin-prompts-modal--legacy-rollback` | selector | external-active | `frontend/src/pages/admin/AdminPromptsPage.css` | admin prompts route modal styles | deletion blocked while rollback modal markup remains active; requires product/user decision before migration |
 | `--text-*` | token-alias | compatibility | `frontend/src/styles/theme.css` | `--color-text-*` | retire after consumers migrate |

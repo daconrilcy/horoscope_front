@@ -72,6 +72,26 @@
   box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.day-prediction-card__tone--positive,
+.day-prediction-card__tone--push {
+  background-color: var(--primary);
+}
+
+.day-prediction-card__tone--negative,
+.day-prediction-card__tone--careful {
+  background-color: var(--warning);
+}
+
+.day-prediction-card__tone--open {
+  background-color: var(--success);
+}
+
+.day-prediction-card__tone--mixed,
+.day-prediction-card__tone--neutral,
+.day-prediction-card__tone--steady {
+  background-color: var(--text-2);
+}
+
 .astro-context .day-prediction-card__tone {
   background-color: color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
   color: var(--color-text-primary);

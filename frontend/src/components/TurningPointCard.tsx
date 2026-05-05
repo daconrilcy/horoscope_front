@@ -10,27 +10,27 @@ interface Props {
   lang: Lang;
 }
 
+function getBadgeToneClass(type: string): string {
+  switch (type) {
+    case 'emergence': return 'emergence';
+    case 'recomposition': return 'recomposition';
+    case 'attenuation': return 'attenuation';
+    default: return 'default';
+  }
+}
+
 export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
   if (!turningPoint) return null;
 
-  const getBadgeStyle = (type: string) => {
-    switch (type) {
-      case 'emergence': return { bg: 'rgba(76, 175, 80, 0.1)', color: 'var(--success)' };
-      case 'recomposition': return { bg: 'rgba(33, 150, 243, 0.1)', color: 'var(--primary)' };
-      case 'attenuation': return { bg: 'rgba(158, 158, 158, 0.1)', color: 'var(--text-2)' };
-      default: return { bg: 'var(--glass-2)', color: 'var(--text-2)' };
-    }
-  };
-
-  const badge = getBadgeStyle(turningPoint.change_type);
+  const badgeToneClass = getBadgeToneClass(turningPoint.change_type);
 
   return (
     <section className="turning-point-card">
-      <div className="turning-point-card__rail" style={{ background: badge.color }} />
+      <div className={`turning-point-card__rail turning-point-card__rail--${badgeToneClass}`} />
       <header className="turning-point-card__header">
         <div className="turning-point-card__meta">
           <span className="turning-point-card__time">{turningPoint.time}</span>
-          <span className="turning-point-card__type" style={{ color: badge.color, background: badge.bg }}>
+          <span className={`turning-point-card__type turning-point-card__type--${badgeToneClass}`}>
             {getChangeTypeLabel(turningPoint.change_type, lang)}
           </span>
         </div>

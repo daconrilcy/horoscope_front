@@ -35,6 +35,26 @@
   font-weight: var(--font-weight-medium);
 }
 
+.category-grid__tone--fragile {
+  color: var(--danger);
+}
+
+.category-grid__tone--tense {
+  color: var(--warning);
+}
+
+.category-grid__tone--neutral {
+  color: var(--text-2);
+}
+
+.category-grid__tone--favorable {
+  color: var(--success);
+}
+
+.category-grid__tone--very_favorable {
+  color: var(--primary);
+}
+
 .category-grid__summary {
   font-size: 0.8rem;
   line-height: var(--type-metadata-line-height);

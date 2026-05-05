@@ -33,16 +33,10 @@ export const CategoryGrid: React.FC<Props> = ({ categories, lang, onCategoryClic
             <span className="category-grid__label text-muted">
               {meta.label}
             </span>
-            <div 
-              className="category-grid__score"
-              style={{ color: band.colorVar }}
-            >
+            <div className={`category-grid__score category-grid__tone--${band.key}`}>
               {cat.note_20}
             </div>
-            <span 
-              className="category-grid__band"
-              style={{ color: band.colorVar }}
-            >
+            <span className={`category-grid__band category-grid__tone--${band.key}`}>
               {band.label}
             </span>
             {shouldShowSummary && (

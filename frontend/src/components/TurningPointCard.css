@@ -1,4 +1,4 @@
-/* ── TurningPointCard — Harmonized (Story 60.17) ── */
+/* Carte de bascule journaliere raccordee aux classes de tonalite. */
 
 .turning-point-card {
   position: relative;
@@ -8,6 +8,23 @@
 
 .turning-point-card__header {
   margin-bottom: 12px;
+}
+
+.turning-point-card__rail {
+  background: var(--text-2);
+}
+
+.turning-point-card__rail--emergence {
+  background: var(--success);
+}
+
+.turning-point-card__rail--recomposition {
+  background: var(--primary);
+}
+
+.turning-point-card__rail--attenuation,
+.turning-point-card__rail--default {
+  background: var(--text-2);
 }
 
 .turning-point-card__meta {
@@ -28,6 +45,26 @@
   background: var(--glass-surface-2);
   border: 1px solid var(--glass-border);
   color: var(--text-meta);
+}
+
+.turning-point-card__type--emergence {
+  color: var(--success);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.turning-point-card__type--recomposition {
+  color: var(--primary);
+  background: rgba(33, 150, 243, 0.1);
+}
+
+.turning-point-card__type--attenuation {
+  color: var(--text-2);
+  background: rgba(158, 158, 158, 0.1);
+}
+
+.turning-point-card__type--default {
+  color: var(--text-2);
+  background: var(--glass-2);
 }
 
 .turning-point-card__title {

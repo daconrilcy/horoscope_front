@@ -9,18 +9,6 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
     "style": "style={{ width: `${Math.min(domain.score_10 * 10, 100)}"
   },
   {
-    "file": "components/prediction/CategoryGrid.tsx",
-    "style": "style={{ color: band.colorVar }"
-  },
-  {
-    "file": "components/prediction/CategoryGrid.tsx",
-    "style": "style={{ color: band.colorVar }"
-  },
-  {
-    "file": "components/prediction/DayPredictionCard.tsx",
-    "style": "style={isAstro ? undefined : { backgroundColor: toneColor }"
-  },
-  {
     "file": "components/prediction/DayTimelineSectionV4.tsx",
     "style": "style={{ ['--period-accent' as string]: accentColor }"
   },
@@ -35,14 +23,6 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
   {
     "file": "components/prediction/TimelineRail.tsx",
     "style": "style={{ left: `${thumbPct}"
-  },
-  {
-    "file": "components/TurningPointCard.tsx",
-    "style": "style={{ background: badge.color }"
-  },
-  {
-    "file": "components/TurningPointCard.tsx",
-    "style": "style={{ color: badge.color, background: badge.bg }"
   },
   {
     "file": "components/ui/Badge/Badge.tsx",
@@ -72,76 +52,6 @@ export const CSS_FALLBACK_EXCEPTIONS: CssFallbackException[] = [
     "file": "components/NatalInterpretation.css",
     "token": "--premium-glass-border-soft",
     "literal": "rgba(255, 255, 255, 0.2"
-  },
-  {
-    "file": "components/NatalInterpretation.css",
-    "token": "--premium-radius-pill",
-    "literal": "999px"
-  },
-  {
-    "file": "components/NatalInterpretation.css",
-    "token": "--premium-radius-pill",
-    "literal": "999px"
-  },
-  {
-    "file": "components/NatalInterpretation.css",
-    "token": "--space-3",
-    "literal": "0.75rem"
-  },
-  {
-    "file": "components/NatalInterpretation.css",
-    "token": "--space-4",
-    "literal": "1rem"
-  },
-  {
-    "file": "components/NatalInterpretation.css",
-    "token": "--font-size-sm",
-    "literal": "0.875rem"
-  },
-  {
-    "file": "components/prediction/KeyPointCard.css",
-    "token": "--shadow-hero-card",
-    "literal": "0 4px 20px rgba(44, 28, 100, 0.15"
-  },
-  {
-    "file": "components/prediction/KeyPointCard.css",
-    "token": "--color-hero-ink",
-    "literal": "var(--color-text-primary"
-  },
-  {
-    "file": "components/prediction/KeyPointCard.css",
-    "token": "--color-hero-ink-accent",
-    "literal": "var(--color-primary"
-  },
-  {
-    "file": "components/prediction/PeriodCard.css",
-    "token": "--color-text-muted",
-    "literal": "rgba(30, 27, 46, 0.45"
-  },
-  {
-    "file": "components/prediction/PeriodCard.css",
-    "token": "--color-error",
-    "literal": "#ff6b81"
-  },
-  {
-    "file": "components/prediction/PeriodCard.css",
-    "token": "--color-text-muted",
-    "literal": "rgba(30, 27, 46, 0.55"
-  },
-  {
-    "file": "components/prediction/PeriodCard.css",
-    "token": "--color-text-secondary",
-    "literal": "rgba(30, 27, 46, 0.72"
-  },
-  {
-    "file": "components/prediction/PeriodCard.css",
-    "token": "--color-text-muted",
-    "literal": "rgba(30, 27, 46, 0.35"
-  },
-  {
-    "file": "components/prediction/PeriodCard.css",
-    "token": "--color-text-muted",
-    "literal": "rgba(30, 27, 46, 0.5"
   },
   {
     "file": "components/SignUpForm.css",
