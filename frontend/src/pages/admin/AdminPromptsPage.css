@@ -1,3 +1,4 @@
+/* Styles de la page admin des prompts, rattaches aux tokens design-system canoniques. */
 .admin-prompts-page {
   display: flex;
   flex-direction: column;
@@ -17,7 +18,7 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-4);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 
 .admin-prompts-page .tab-button {
@@ -61,9 +62,9 @@
   gap: var(--space-2);
   width: 100%;
   padding: var(--space-4);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 16px;
-  background: var(--glass);
+  background: var(--color-glass-bg);
   color: var(--color-text-primary);
   text-align: left;
   transition:
@@ -79,7 +80,7 @@
 }
 
 .admin-prompts-card--active {
-  background: var(--glass-2);
+  background: var(--color-glass-bg-2);
   border-color: var(--color-primary);
 }
 
@@ -160,7 +161,7 @@
   margin: 0;
   padding: var(--space-4);
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: rgba(0, 0, 0, 0.16);
   color: var(--color-text-primary);
   white-space: pre-wrap;
@@ -178,7 +179,7 @@
 .admin-prompts-compare select {
   min-width: 240px;
   background: rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   padding: var(--space-2) var(--space-3);
@@ -195,7 +196,7 @@
   gap: var(--space-4);
   align-items: center;
   padding: var(--space-4);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
 }
@@ -245,11 +246,11 @@
 }
 
 .admin-prompts-diff__line--added {
-  background: color-mix(in srgb, var(--success) 18%, transparent);
+  background: color-mix(in srgb, var(--color-success) 18%, transparent);
 }
 
 .admin-prompts-diff__line--removed {
-  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 18%, transparent);
 }
 
 .admin-prompts-modal {
@@ -267,7 +268,7 @@
 
 .admin-prompts-modal--manual-llm {
   max-width: 560px;
-  border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--glass-border));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 28%, var(--color-glass-border));
 }
 
 .admin-prompts-modal__meta {
@@ -316,7 +317,7 @@
   padding-bottom: var(--space-3);
   margin-bottom: 0;
   background: inherit;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 
 .admin-prompts-modal__body--catalog-node {
@@ -400,7 +401,7 @@
   gap: var(--space-3);
   padding: var(--space-4);
   border-radius: 16px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-soft);
 }
 
@@ -436,7 +437,7 @@
   gap: var(--space-2);
   margin-top: var(--space-3);
   padding-top: var(--space-3);
-  border-top: 1px solid var(--glass-border);
+  border-top: 1px solid var(--color-glass-border);
 }
 
 .admin-prompts-catalog__final-prompt h4 {
@@ -525,7 +526,7 @@
 .admin-prompts-catalog__filters-advanced-toggle {
   align-self: flex-start;
   background: transparent;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-sm);
   color: var(--color-admin-ink-strong);
   padding: var(--space-2) var(--space-3);
@@ -552,7 +553,7 @@
 .admin-prompts-catalog__filters input,
 .admin-prompts-catalog__filters select {
   background: var(--color-admin-surface-soft);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-sm);
   color: var(--color-admin-ink-strong);
   padding: var(--space-2) var(--space-3);
@@ -572,7 +573,7 @@
 .admin-prompts-catalog-detail-summary {
   padding: var(--space-4);
   border-radius: 16px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface);
   color: var(--color-admin-ink-strong);
 }
@@ -617,7 +618,7 @@
 .admin-prompts-catalog-layer-card {
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-elevated);
   color: var(--color-admin-ink-strong);
 }
@@ -668,7 +669,7 @@
 .admin-prompts-catalog__detail-empty {
   padding: var(--space-6);
   border-radius: 16px;
-  border: 1px dashed var(--glass-border);
+  border: 1px dashed var(--color-glass-border);
   text-align: center;
 }
 
@@ -715,7 +716,7 @@
 
 .admin-prompts-catalog__table th,
 .admin-prompts-catalog__table td {
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
   padding: var(--space-2) var(--space-3);
   text-align: left;
   vertical-align: top;
@@ -759,7 +760,7 @@
   margin: 0;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-soft);
   color: var(--color-admin-ink-soft);
 }
@@ -798,7 +799,7 @@
 }
 
 .admin-prompts-detail__disclosure {
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 10px;
   padding: 0 var(--space-2);
   background: var(--color-admin-surface-muted);
@@ -875,7 +876,7 @@
 
 .admin-prompts-resolved__surface-banner--live_execution {
   border-color: var(--color-admin-warning-border);
-  border-left: 4px solid var(--warning);
+  border-left: 4px solid var(--color-admin-warning-ink);
   background: var(--color-admin-warning-surface);
 }
 
@@ -907,7 +908,7 @@
 .admin-prompts-resolved__mode-select {
   min-width: 220px;
   background: var(--color-admin-surface-soft);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-sm);
   color: var(--color-admin-ink-strong);
   padding: var(--space-2) var(--space-3);
@@ -917,7 +918,7 @@
   margin: 0 0 var(--space-2);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-soft);
   color: var(--color-admin-ink-soft);
 }
@@ -929,7 +930,7 @@
   margin: 0 0 var(--space-3);
   padding: var(--space-3);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-soft);
 }
 
@@ -983,7 +984,7 @@
 }
 
 .admin-prompts-resolved__placeholder-status--blocking {
-  color: color-mix(in srgb, var(--danger) 85%, var(--color-text-primary));
+  color: color-mix(in srgb, var(--color-danger) 85%, var(--color-text-primary));
 }
 
 .admin-prompts-resolved__placeholder-status--expected-preview {
@@ -1004,7 +1005,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 12px;
   padding: var(--space-3);
   background: var(--color-admin-surface-soft);
@@ -1048,7 +1049,7 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-2);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-sm);
   background: var(--color-admin-surface-soft);
 }
@@ -1070,7 +1071,7 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 12px;
   background: var(--color-admin-surface-soft);
 }
@@ -1094,7 +1095,7 @@
 .admin-prompts-logic-graph__legend-chip {
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   font-size: var(--font-size-xs);
 }
 
@@ -1103,11 +1104,11 @@
 }
 
 .admin-prompts-logic-graph__legend-chip--fallback {
-  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  background: color-mix(in srgb, var(--color-admin-warning-ink) 16%, transparent);
 }
 
 .admin-prompts-logic-graph__legend-chip--sample {
-  background: color-mix(in srgb, var(--success) 16%, transparent);
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
 }
 
 .admin-prompts-logic-graph__legend-chip--layer {
@@ -1117,7 +1118,7 @@
 .admin-prompts-logic-graph__text-fallback-details {
   margin: 0;
   padding: 0;
-  border: 1px dashed var(--glass-border);
+  border: 1px dashed var(--color-glass-border);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
 }
@@ -1142,7 +1143,7 @@
   width: 100%;
   min-height: 22rem;
   height: min(32rem, 70vh);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.15);
 }
@@ -1153,7 +1154,7 @@
 }
 
 .admin-prompts-logic-graph__fallback--error {
-  border-color: color-mix(in srgb, var(--warning) 45%, var(--glass-border));
+  border-color: color-mix(in srgb, var(--color-admin-warning-ink) 45%, var(--color-glass-border));
 }
 
 .admin-prompts-logic-graph__nodes {
@@ -1167,7 +1168,7 @@
   flex-direction: column;
   gap: var(--space-1);
   position: relative;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 10px;
   padding: var(--space-2) var(--space-3);
   background: rgba(255, 255, 255, 0.02);
@@ -1209,19 +1210,19 @@
 }
 
 .admin-prompts-logic-graph__node--layer {
-  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--glass-border));
+  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-glass-border));
 }
 
 .admin-prompts-logic-graph__node--system {
-  border-color: color-mix(in srgb, var(--color-primary) 60%, var(--glass-border));
+  border-color: color-mix(in srgb, var(--color-primary) 60%, var(--color-glass-border));
 }
 
 .admin-prompts-logic-graph__node--fallback {
-  border-color: color-mix(in srgb, var(--warning) 60%, var(--glass-border));
+  border-color: color-mix(in srgb, var(--color-admin-warning-ink) 60%, var(--color-glass-border));
 }
 
 .admin-prompts-logic-graph__node--sample {
-  border-color: color-mix(in srgb, var(--success) 60%, var(--glass-border));
+  border-color: color-mix(in srgb, var(--color-success) 60%, var(--color-glass-border));
 }
 
 .admin-prompts-logic-graph__edges {
@@ -1234,7 +1235,7 @@
 }
 
 .admin-prompts-logic-graph__fallback {
-  border: 1px dashed var(--glass-border);
+  border: 1px dashed var(--color-glass-border);
   border-radius: 10px;
   padding: var(--space-2) var(--space-3);
 }
@@ -1247,7 +1248,7 @@
 .admin-prompts-logic-graph__dense-node-details {
   margin: 0;
   padding: 0;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
 }
@@ -1272,7 +1273,7 @@
   display: grid;
   grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.4fr) repeat(4, minmax(0, auto)) minmax(120px, 1fr);
   gap: var(--space-2);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 10px;
   padding: var(--space-2) var(--space-3);
   background: var(--color-admin-surface-soft);
@@ -1282,17 +1283,17 @@
   margin: 0;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-soft);
   color: var(--color-admin-ink-soft);
 }
 
 .admin-prompts-resolved__state--warning {
-  border-color: color-mix(in srgb, var(--warning) 60%, var(--glass-border));
+  border-color: color-mix(in srgb, var(--color-admin-warning-ink) 60%, var(--color-glass-border));
 }
 
 .admin-prompts-resolved__state--error {
-  border-color: color-mix(in srgb, var(--danger) 60%, var(--glass-border));
+  border-color: color-mix(in srgb, var(--color-danger) 60%, var(--color-glass-border));
 }
 
 .admin-prompts-release {
@@ -1365,7 +1366,7 @@
 }
 
 .admin-prompts-release__timeline-item {
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 12px;
   background: var(--color-admin-surface-soft);
   padding: var(--space-3);
@@ -1594,7 +1595,7 @@
   margin: 0;
   padding: var(--space-4);
   border-radius: 12px;
-  border: 1px dashed var(--glass-border);
+  border: 1px dashed var(--color-glass-border);
   max-width: 72ch;
   line-height: var(--line-height-normal);
 }
@@ -1633,7 +1634,7 @@
 .admin-prompts-consumption__table-wrap {
   overflow-x: auto;
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
 }
 
 .admin-prompts-consumption__table {
@@ -1645,7 +1646,7 @@
 .admin-prompts-consumption__table th,
 .admin-prompts-consumption__table td {
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
   text-align: left;
   vertical-align: top;
 }
@@ -1668,7 +1669,7 @@
   gap: var(--space-2);
   padding: var(--space-3);
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-soft);
 }
 
@@ -1765,7 +1766,7 @@
 .admin-prompts-consumption__drill-table-wrap {
   overflow-x: auto;
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-muted);
 }
 
@@ -1778,7 +1779,7 @@
 .admin-prompts-consumption__drill-table th,
 .admin-prompts-consumption__drill-table td {
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
   text-align: left;
   vertical-align: top;
 }
@@ -1911,7 +1912,7 @@
 .admin-prompts-editor__field textarea {
   width: 100%;
   background: var(--color-admin-surface-muted);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 10px;
   color: var(--color-admin-ink-strong);
   padding: var(--space-3);
@@ -1926,7 +1927,7 @@
 .admin-prompts-editor__field input[aria-invalid="true"],
 .admin-prompts-editor__field select[aria-invalid="true"],
 .admin-prompts-editor__field textarea[aria-invalid="true"] {
-  border-color: color-mix(in srgb, var(--danger) 65%, var(--glass-border));
+  border-color: color-mix(in srgb, var(--color-danger) 65%, var(--color-glass-border));
 }
 
 .admin-prompts-editor__summary {
@@ -1935,7 +1936,7 @@
   gap: var(--space-2);
   padding: var(--space-3);
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-muted);
 }
 
@@ -1974,7 +1975,7 @@
   margin: 0;
   padding: var(--space-4);
   border-radius: 12px;
-  border: 1px dashed var(--glass-border);
+  border: 1px dashed var(--color-glass-border);
 }
 
 .admin-prompts-legacy__section-head {
@@ -1999,7 +2000,7 @@
 }
 
 .admin-prompts-legacy__version-row {
-  border-color: color-mix(in srgb, var(--glass-border) 90%, var(--color-primary));
+  border-color: color-mix(in srgb, var(--color-glass-border) 90%, var(--color-primary));
 }
 
 .admin-prompts-legacy__pill {
@@ -2007,7 +2008,7 @@
   align-items: center;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   color: var(--color-admin-ink-soft);
@@ -2015,9 +2016,9 @@
 }
 
 .admin-prompts-legacy__pill--active {
-  border-color: color-mix(in srgb, var(--success) 45%, var(--glass-border));
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 45%, var(--color-glass-border));
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
 }
 
 .admin-prompts-legacy__version-actions {
@@ -2031,7 +2032,7 @@
 
 .admin-prompts-legacy__diff {
   margin-top: var(--space-2);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 16px;
   background: var(--color-admin-surface-muted);
 }
@@ -2077,7 +2078,7 @@
   margin: 0;
   padding: var(--space-3);
   border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: var(--color-admin-surface-soft);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

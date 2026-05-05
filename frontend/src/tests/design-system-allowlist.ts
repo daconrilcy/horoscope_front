@@ -25,10 +25,6 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
     "style": "style={{ ['--period-accent' as string]: accentColor }"
   },
   {
-    "file": "components/prediction/DayTimelineSectionV4.tsx",
-    "style": "style={{ backgroundColor: accentColor }"
-  },
-  {
     "file": "components/prediction/TimelineRail.tsx",
     "style": "style={{ width: thumbPct !== null ? `${thumbPct}"
   },
@@ -169,83 +165,8 @@ export const CSS_FALLBACK_EXCEPTIONS: CssFallbackException[] = [
   },
   {
     "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-meta",
-    "literal": "var(--text-faint"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-strong",
-    "literal": "var(--text-strong"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-main",
-    "literal": "var(--text-main"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-glass-border-strong",
-    "literal": "rgba(255, 255, 255, 0.58"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-accent-purple-strong",
-    "literal": "var(--primary-strong"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
     "token": "--premium-text-muted",
     "literal": "var(--text-muted"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-glass-surface-1",
-    "literal": "rgba(255, 255, 255, 0.45"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-glass-border",
-    "literal": "rgba(255, 255, 255, 0.5"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-radius-card",
-    "literal": "24px"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-shadow-card",
-    "literal": "0 10px 30px rgba(0,0,0,0.05"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-shadow-focus",
-    "literal": "0 15px 45px rgba(0,0,0,0.08"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-strong",
-    "literal": "var(--text-strong"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-meta",
-    "literal": "var(--text-faint"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-accent-purple-strong",
-    "literal": "var(--primary-strong"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-main",
-    "literal": "var(--text-main"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-main",
-    "literal": "var(--text-main"
   },
   {
     "file": "pages/NatalChartPage.css",
@@ -254,83 +175,8 @@ export const CSS_FALLBACK_EXCEPTIONS: CssFallbackException[] = [
   },
   {
     "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-strong",
-    "literal": "var(--text-strong"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-accent-purple-strong",
-    "literal": "var(--primary-strong"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-main",
-    "literal": "var(--text-main"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-main",
-    "literal": "var(--text-main"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-meta",
-    "literal": "var(--text-faint"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-main",
-    "literal": "var(--text-main"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-glass-surface-2",
-    "literal": "rgba(255, 255, 255, 0.35"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
     "token": "--premium-glass-border-soft",
     "literal": "rgba(255, 255, 255, 0.3"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-radius-card",
-    "literal": "24px"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-glass-surface-1",
-    "literal": "rgba(255, 255, 255, 0.45"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-shadow-focus",
-    "literal": "0 15px 45px rgba(0,0,0,0.08"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-accent-purple-strong",
-    "literal": "var(--primary-strong"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-strong",
-    "literal": "var(--text-strong"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-main",
-    "literal": "var(--text-main"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-meta",
-    "literal": "var(--text-faint"
-  },
-  {
-    "file": "pages/NatalChartPage.css",
-    "token": "--premium-text-strong",
-    "literal": "var(--text-strong"
   },
   {
     "file": "pages/settings/Settings.css",

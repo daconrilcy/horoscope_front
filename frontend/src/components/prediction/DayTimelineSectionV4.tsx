@@ -139,7 +139,7 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang, hideT
                 style={{ ['--period-accent' as string]: accentColor }}
               >
                 {/* Timeline Connector Dot */}
-                <div className="day-timeline-v4__dot" style={{ backgroundColor: accentColor }} />
+                <div className="day-timeline-v4__dot" />
 
                 {/* Line 1: Header */}
                 <div className="day-timeline-v4__row-1">

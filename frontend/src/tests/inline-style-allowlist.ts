@@ -7,7 +7,6 @@ export const INLINE_STYLE_DYNAMIC_ALLOWLIST = [
   "frontend/src/components/prediction/TimelineRail.tsx::width",
   "frontend/src/components/prediction/TimelineRail.tsx::left",
   "frontend/src/components/prediction/DayTimelineSectionV4.tsx::--period-accent",
-  "frontend/src/components/prediction/DayTimelineSectionV4.tsx::backgroundColor",
   "frontend/src/components/prediction/CategoryGrid.tsx::color",
   "frontend/src/components/prediction/DayPredictionCard.tsx::backgroundColor",
   "frontend/src/components/TurningPointCard.tsx::badge-color",

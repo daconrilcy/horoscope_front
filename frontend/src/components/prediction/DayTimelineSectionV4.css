@@ -62,6 +62,7 @@
   width: 13px;
   height: 13px;
   border-radius: 50%;
+  background-color: var(--period-accent);
   border: 2px solid var(--page-bg-start);
   box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.26), 0 0 12px rgba(156, 121, 255, 0.42);
   z-index: 2;
