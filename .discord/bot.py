@@ -2,16 +2,36 @@
 
 import os
 import subprocess
+from pathlib import Path
 
 import discord
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN", "").strip()
+ENV_PATH = Path(__file__).with_name(".env")
 CODEX_PATH = r"C:\Users\cyril\AppData\Roaming\npm\codex.cmd"
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 client = discord.Client(intents=intents)
+
+
+def get_env_value(key: str, env_path: Path) -> str:
+    """Lit une clef depuis l'environnement courant puis depuis le fichier .env local."""
+
+    value = os.getenv(key, "").strip()
+    if value or not env_path.exists():
+        return value
+
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        stripped_line = line.strip()
+        if not stripped_line or stripped_line.startswith("#"):
+            continue
+
+        candidate_key, separator, candidate_value = stripped_line.partition("=")
+        if separator and candidate_key.strip() == key:
+            return candidate_value.strip().strip('"').strip("'")
+
+    return ""
 
 
 def split_discord_message(text: str, limit: int = 1900) -> list[str]:
@@ -99,7 +119,9 @@ async def on_message(message):
         await message.channel.send(f"❌ Erreur Python : `{e}`")
 
 
-if not TOKEN:
+token = get_env_value("DISCORD_BOT_TOKEN", ENV_PATH)
+
+if not token:
     raise RuntimeError("La variable d'environnement DISCORD_BOT_TOKEN est requise.")
 
-client.run(TOKEN)
+client.run(token)
