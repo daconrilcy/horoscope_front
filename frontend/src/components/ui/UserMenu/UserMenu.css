@@ -1,17 +1,17 @@
 .user-menu {
   position: absolute;
-  top: calc(100% + var(--space-2, 0.5rem));
+  top: calc(100% + var(--space-2));
   right: 0;
   min-width: 220px;
   background: var(--glass);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg, 12px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   z-index: 300;
   overflow: hidden;
-  animation: user-menu-enter 0.15s ease-out;
+  animation: user-menu-enter var(--duration-fast) var(--easing-default);
 }
 
 @keyframes user-menu-enter {
@@ -29,28 +29,28 @@
 .user-menu__header {
   display: flex;
   align-items: center;
-  gap: var(--space-3, 0.75rem);
-  padding: var(--space-4, 1rem);
+  gap: var(--space-3);
+  padding: var(--space-4);
 }
 
 .user-menu__user-info {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1, 0.25rem);
+  gap: var(--space-1);
   overflow: hidden;
 }
 
 .user-menu__email {
-  font-size: var(--font-size-sm, 0.875rem);
+  font-size: var(--font-size-sm);
   color: var(--text-1);
-  font-weight: var(--font-weight-semibold, 600);
+  font-weight: var(--font-weight-semibold);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .user-menu__role {
-  font-size: var(--font-size-xs, 0.75rem);
+  font-size: var(--font-size-xs);
   color: var(--text-2);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -66,14 +66,14 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  padding: var(--space-3) var(--space-4);
   background: none;
   border: none;
   color: var(--text-1);
-  font-size: var(--font-size-sm, 0.875rem);
+  font-size: var(--font-size-sm);
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s ease;
+  transition: background var(--duration-fast) var(--easing-default);
   box-shadow: none;
 }
 
@@ -83,6 +83,6 @@
 }
 
 .user-menu__item:focus-visible {
-  outline: 2px solid var(--primary, var(--color-primary, #7c3aed));
+  outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }

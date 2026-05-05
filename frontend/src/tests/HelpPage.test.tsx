@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
 
-import { setAccessToken } from "../utils/authToken"
+import { clearAccessToken, setAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
 import { routes } from "../app/routes"
 
@@ -93,6 +93,7 @@ describe("HelpPage", () => {
     cleanup()
     vi.unstubAllGlobals()
     localStorage.clear()
+    clearAccessToken()
   })
 
   it("affiche le hero premium et les sections d'aide", async () => {
@@ -241,7 +242,7 @@ function setupToken(sub = "42") {
 
 function renderHelpPage() {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   })
 
   const router = createMemoryRouter(routes, {

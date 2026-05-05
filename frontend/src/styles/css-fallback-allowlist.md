@@ -15,5 +15,6 @@ deuxieme source de verite.
 | `frontend/src/styles/utilities.css` | `--surface-glass-blur` | `14px` | compatibility | utilitaire partage chargeable hors theme complet | retirer apres garantie d'import global |
 | `frontend/src/components/ui/Modal/Modal.css` | `--z-index-modal` | `2000` | semantic-extension | z-index applicatif non encore tokenise | migrer vers token layout |
 | `frontend/src/components/ui/Select/Select.css` | `--z-index-dropdown` | `1000` | semantic-extension | z-index applicatif non encore tokenise | migrer vers token layout |
+| `frontend/src/components/ui/Select/Select.css` | `--color-bg-surface` | `#ffffff` | compatibility | composant UI peut etre isole avant declaration globale du token surface | retirer apres ajout du token global |
 | `frontend/src/components/ui/Button/Button.css` | `--duration-fast` | `150ms` | compatibility | composant UI peut etre isole en tests | retirer apres import theme obligatoire |
 | `frontend/src/components/ui/Button/Button.css` | `--duration-normal` | `250ms` | compatibility | composant UI peut etre isole en tests | retirer apres import theme obligatoire |

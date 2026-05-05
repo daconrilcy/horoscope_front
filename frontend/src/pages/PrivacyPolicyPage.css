@@ -1,0 +1,46 @@
+/* Styles de la page de confidentialite extraits pour supprimer les styles inline statiques. */
+
+.privacy-policy-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-12) var(--space-6);
+  color: var(--premium-text-main);
+}
+
+.privacy-policy-page__back-link {
+  margin-bottom: var(--space-10);
+}
+
+.privacy-policy-page__title {
+  margin-bottom: var(--space-6);
+  color: var(--premium-text-strong);
+  font-family: var(--font-family-heading);
+  font-size: var(--type-page-title-size);
+  font-weight: var(--type-page-title-weight);
+  line-height: var(--type-page-title-line-height);
+}
+
+.privacy-policy-page__updated-at {
+  margin-bottom: var(--space-6);
+  color: var(--premium-text-meta);
+  font-size: var(--type-body-muted-size);
+  line-height: var(--type-body-muted-line-height);
+}
+
+.privacy-policy-page__section {
+  margin-bottom: var(--space-10);
+}
+
+.privacy-policy-page__section-title {
+  margin-bottom: var(--space-4);
+  color: var(--premium-text-strong);
+  font-size: var(--type-section-title-size);
+  font-weight: var(--type-section-title-weight);
+  line-height: var(--type-section-title-line-height);
+}
+
+.privacy-policy-page__paragraph {
+  margin-bottom: var(--space-4);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-muted-line-height);
+}
