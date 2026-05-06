@@ -20,40 +20,51 @@ const queryClient = new QueryClient({
 
 let appCss: string
 let themeCss: string
+let designTokensCss: string
 
 beforeAll(() => {
   appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
   themeCss = readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8")
+  designTokensCss = readFileSync(resolve(__dirname, "../styles/design-tokens.css"), "utf-8")
 })
+
+function extractCssBlock(selector: string): string {
+  const match = appCss.match(new RegExp(`${selector}\\s*\\{([^}]*)\\}`))
+  return match ? match[1] : ""
+}
 
 // ─── AC1 : Container bottom-nav conforme ─────────────────────────────────────
 
 describe("AC1 — Container .bottom-nav conforme (CSS)", () => {
-  it("a position: fixed et bottom/left/right à 16px", () => {
-    const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
+  it("a position: fixed et bottom/left/right via le token App à 16px", () => {
+    const rootContent = extractCssBlock("#root")
+    const content = extractCssBlock("\\.bottom-nav")
+
+    expect(rootContent).toContain("--app-mobile-nav-inset: var(--space-4)")
     expect(content).toContain("position: fixed")
-    expect(content).toContain("bottom: 16px")
-    expect(content).toContain("left: 16px")
-    expect(content).toContain("right: 16px")
+    expect(content).toContain("bottom: var(--app-mobile-nav-inset)")
+    expect(content).toContain("left: var(--app-mobile-nav-inset)")
+    expect(content).toContain("right: var(--app-mobile-nav-inset)")
+    expect(designTokensCss).toContain("--space-4: 1rem")
   })
 
-  it("a border-radius 24px et padding 10px", () => {
-    const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("border-radius: 24px")
-    expect(content).toContain("padding: 10px")
+  it("a border-radius 24px et padding 10px via tokens App", () => {
+    const rootContent = extractCssBlock("#root")
+    const content = extractCssBlock("\\.bottom-nav")
+
+    expect(rootContent).toContain("--app-mobile-nav-radius: 24px")
+    expect(rootContent).toContain("--app-mobile-nav-padding: 10px")
+    expect(content).toContain("border-radius: var(--app-mobile-nav-radius)")
+    expect(content).toContain("padding: var(--app-mobile-nav-padding)")
   })
 
   it("applique backdrop-filter (blur 14px via --glass-blur)", () => {
-    const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
+    const content = extractCssBlock("\\.bottom-nav")
     expect(content).toMatch(/backdrop-filter/)
   })
 
   it("utilise --nav-glass, --nav-border et --shadow-nav", () => {
-    const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
+    const content = extractCssBlock("\\.bottom-nav")
     expect(content).toContain("var(--color-nav-glass)")
     expect(content).toContain("var(--color-nav-border)")
     expect(content).toContain("var(--shadow-nav)")
@@ -63,15 +74,16 @@ describe("AC1 — Container .bottom-nav conforme (CSS)", () => {
 // ─── AC2 : Items et actif premium ────────────────────────────────────────────
 
 describe("AC2 — Items nav premium (CSS)", () => {
-  it(".bottom-nav__item a border-radius 18px (premium, non-tile)", () => {
-    const match = appCss.match(/\.bottom-nav__item\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).toContain("border-radius: 18px")
+  it(".bottom-nav__item a border-radius via le token App premium", () => {
+    const rootContent = extractCssBlock("#root")
+    const content = extractCssBlock("\\.bottom-nav__item")
+
+    expect(rootContent).toContain("--app-bottom-nav-item-radius: 18px")
+    expect(content).toContain("border-radius: var(--app-bottom-nav-item-radius)")
   })
 
   it(".bottom-nav__item--active utilise var(--color-nav-active-bg)", () => {
-    const match = appCss.match(/\.bottom-nav__item--active\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
+    const content = extractCssBlock("\\.bottom-nav__item--active")
     expect(content).toContain("var(--color-nav-active-bg)")
   })
 

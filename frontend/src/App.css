@@ -1,4 +1,47 @@
 #root {
+  --app-shell-main-padding: 22px 18px;
+  --app-shell-sidebar-offset: 48px;
+  --app-mobile-nav-inset: var(--space-4);
+  --app-mobile-nav-radius: 24px;
+  --app-mobile-nav-padding: 10px;
+  --app-bottom-nav-item-radius: 18px;
+  --app-button-radius: var(--radius-lg);
+  --app-button-shadow: 4px 4px 12px rgba(0, 0, 0, 0.12), inset -4px -4px 12px rgba(0, 0, 0, 0.12);
+  --app-button-hover-shadow: 0 8px 12px rgba(46, 200, 255, 0.3);
+  --app-button-border: rgba(var(--color-primary-rgb), 0.5);
+  --app-button-bg: linear-gradient(170deg, rgba(var(--color-primary-rgb), 0.1) 0%, rgba(var(--color-primary-rgb), 0.3) 100%);
+  --app-state-success-surface: rgba(0, 211, 167, 0.12);
+  --app-state-success-border: rgba(0, 211, 167, 0.45);
+  --app-state-loading-surface: rgba(102, 230, 255, 0.12);
+  --app-state-loading-border: rgba(102, 230, 255, 0.45);
+  --app-state-empty-surface: rgba(166, 178, 214, 0.12);
+  --app-state-empty-border: rgba(166, 178, 214, 0.55);
+  --app-danger-surface: rgba(255, 107, 129, 0.1);
+  --app-danger-border: rgba(255, 107, 129, 0.5);
+  --app-astro-catalog-page-bg: radial-gradient(circle at 50% 16%, rgba(118, 179, 255, 0.2), transparent 26%),
+    radial-gradient(circle at 18% 22%, rgba(160, 132, 255, 0.22), transparent 30%),
+    radial-gradient(circle at 82% 72%, rgba(255, 191, 215, 0.18), transparent 32%),
+    radial-gradient(circle at 50% 20%, rgba(120, 180, 255, 0.15), transparent 50%),
+    radial-gradient(circle at 56% 18%, rgba(255, 255, 255, 0.7), transparent 28%),
+    linear-gradient(180deg, #fffafc 0%, #f6efff 48%, #efe6ff 100%);
+  --app-astro-catalog-atmosphere: radial-gradient(circle at 50% 18%, rgba(117, 174, 255, 0.18), transparent 20%),
+    radial-gradient(circle at 30% 34%, rgba(181, 143, 255, 0.16), transparent 22%),
+    radial-gradient(circle at 72% 64%, rgba(255, 181, 205, 0.14), transparent 20%);
+  --app-astro-catalog-title-color: #2b1f44;
+  --app-astro-catalog-copy-color: rgba(69, 50, 103, 0.72);
+  --app-dashboard-summary-bg: radial-gradient(circle at 73% 56%, rgba(174, 147, 255, 0.32) 0%, transparent 30%),
+    radial-gradient(circle at 69% 58%, rgba(255, 255, 255, 0.22) 0%, transparent 18%),
+    radial-gradient(circle at 84% 34%, rgba(255, 255, 255, 0.26) 0%, transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.4) 100%);
+  --app-dashboard-summary-shadow: 0 22px 54px rgba(72, 52, 110, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  --app-dashboard-summary-pill-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.28) 100%);
+  --app-dashboard-summary-pill-shadow: 0 10px 24px rgba(88, 58, 130, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.58);
+  --app-dashboard-summary-glow: radial-gradient(circle, rgba(174, 147, 255, 0.44) 0%, rgba(174, 147, 255, 0.18) 34%, transparent 74%);
+  --app-dashboard-summary-line: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(214, 200, 255, 0.5) 32%, rgba(255, 255, 255, 0) 100%);
+  --app-dashboard-summary-action-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.62) 100%);
+  --app-dashboard-summary-action-border: rgba(255, 255, 255, 0.72);
+  --app-dashboard-summary-action-shadow: 0 19px 40px rgba(88, 58, 130, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+
   min-height: 100vh;
 }
 
@@ -17,23 +60,23 @@
 .app-shell-main {
   flex: 1;
   width: 100%;
-  padding: 22px 18px;
+  padding: var(--app-shell-main-padding);
   transition: margin-left 0.2s ease-out;
 }
 
 .app-shell-main--with-sidebar-offset {
-  margin-left: 48px;
+  margin-left: var(--app-shell-sidebar-offset);
 }
 
 /* === BottomNav === */
 .bottom-nav {
   display: none;
   position: fixed;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
-  border-radius: 24px;
-  padding: 10px;
+  bottom: var(--app-mobile-nav-inset);
+  left: var(--app-mobile-nav-inset);
+  right: var(--app-mobile-nav-inset);
+  border-radius: var(--app-mobile-nav-radius);
+  padding: var(--app-mobile-nav-padding);
   background: var(--color-nav-glass);
   border: 1px solid var(--color-nav-border);
   box-shadow: var(--shadow-nav);
@@ -50,7 +93,7 @@
   justify-content: center;
   gap: 3px;
   padding: 6px 4px;
-  border-radius: 18px;
+  border-radius: var(--app-bottom-nav-item-radius);
   text-decoration: none;
   color: var(--color-text-secondary);
   transition: background 0.15s ease;
@@ -138,11 +181,9 @@
 }
 
 button {
-  border: 1px solid rgba(var(--color-primary-rgb), 0.5);
-  border-radius: 18px;
-  background: linear-gradient(170deg,
-      rgba(var(--color-primary-rgb), 0.1) 0%,
-      rgba(var(--color-primary-rgb), 0.3) 100%);
+  border: 1px solid var(--app-button-border);
+  border-radius: var(--app-button-radius);
+  background: var(--app-button-bg);
   backdrop-filter: blur(var(--surface-glass-blur));
   -webkit-backdrop-filter: blur(var(--surface-glass-blur));
   color: var(--color-btn-text);
@@ -151,12 +192,12 @@ button {
   padding: 0.5rem 1rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.12), inset -4px -4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--app-button-shadow);
 }
 
 button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 12px rgba(46, 200, 255, 0.3);
+  box-shadow: var(--app-button-hover-shadow);
 }
 
 button:disabled {
@@ -223,9 +264,9 @@ textarea:focus-visible {
 }
 
 .chat-error {
-  border: 1px solid rgba(255, 107, 129, 0.5);
+  border: 1px solid var(--app-danger-border);
   border-radius: 10px;
-  background: rgba(255, 107, 129, 0.1);
+  background: var(--app-danger-surface);
   padding: 0.7rem 0.8rem;
   margin-top: 0.8rem;
   color: var(--error);
@@ -241,18 +282,18 @@ textarea:focus-visible {
 }
 
 .state-loading {
-  border-color: rgba(102, 230, 255, 0.45);
-  background: rgba(102, 230, 255, 0.12);
+  border-color: var(--app-state-loading-border);
+  background: var(--app-state-loading-surface);
 }
 
 .state-empty {
-  border-color: rgba(166, 178, 214, 0.55);
-  background: rgba(166, 178, 214, 0.12);
+  border-color: var(--app-state-empty-border);
+  background: var(--app-state-empty-surface);
 }
 
 .state-success {
-  border-color: rgba(0, 211, 167, 0.45);
-  background: rgba(0, 211, 167, 0.12);
+  border-color: var(--app-state-success-border);
+  background: var(--app-state-success-surface);
 }
 
 .action-row {
@@ -783,13 +824,7 @@ textarea:focus-visible {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background:
-    radial-gradient(circle at 50% 16%, rgba(118, 179, 255, 0.2), transparent 26%),
-    radial-gradient(circle at 18% 22%, rgba(160, 132, 255, 0.22), transparent 30%),
-    radial-gradient(circle at 82% 72%, rgba(255, 191, 215, 0.18), transparent 32%),
-    radial-gradient(circle at 50% 20%, rgba(120, 180, 255, 0.15), transparent 50%),
-    radial-gradient(circle at 56% 18%, rgba(255, 255, 255, 0.7), transparent 28%),
-    linear-gradient(180deg, #fffafc 0%, #f6efff 48%, #efe6ff 100%);
+  background: var(--app-astro-catalog-page-bg);
 }
 
 .astrologers-page::before,
@@ -801,10 +836,7 @@ textarea:focus-visible {
 }
 
 .astrologers-page::before {
-  background:
-    radial-gradient(circle at 50% 18%, rgba(117, 174, 255, 0.18), transparent 20%),
-    radial-gradient(circle at 30% 34%, rgba(181, 143, 255, 0.16), transparent 22%),
-    radial-gradient(circle at 72% 64%, rgba(255, 181, 205, 0.14), transparent 20%);
+  background: var(--app-astro-catalog-atmosphere);
   filter: blur(18px);
   opacity: 0.9;
 }
@@ -831,7 +863,7 @@ textarea:focus-visible {
   font-size: clamp(2.4rem, 4vw, 4rem);
   line-height: 0.96;
   letter-spacing: -0.04em;
-  color: #2b1f44;
+  color: var(--app-astro-catalog-title-color);
   text-shadow: 0 10px 25px rgba(164, 139, 255, 0.12);
 }
 
@@ -840,7 +872,7 @@ textarea:focus-visible {
   margin: 1rem 0 0;
   font-size: 1.02rem;
   line-height: 1.7;
-  color: rgba(69, 50, 103, 0.72);
+  color: var(--app-astro-catalog-copy-color);
 }
 
 .astrologer-grid {
@@ -3357,12 +3389,8 @@ textarea.validation-context-input {
   min-height: 258px;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(circle at 73% 56%, rgba(174, 147, 255, 0.32) 0%, transparent 30%),
-    radial-gradient(circle at 69% 58%, rgba(255, 255, 255, 0.22) 0%, transparent 18%),
-    radial-gradient(circle at 84% 34%, rgba(255, 255, 255, 0.26) 0%, transparent 18%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.4) 100%);
-  box-shadow: 0 22px 54px rgba(72, 52, 110, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  background: var(--app-dashboard-summary-bg);
+  box-shadow: var(--app-dashboard-summary-shadow);
 }
 
 @keyframes astrologer-orbit-drift {
@@ -3417,7 +3445,7 @@ textarea.validation-context-input {
   align-items: center;
   gap: var(--space-2);
   padding: 10px 18px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.28) 100%);
+  background: var(--app-dashboard-summary-pill-bg);
   border-radius: var(--premium-radius-pill);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -3426,7 +3454,7 @@ textarea.validation-context-input {
   color: var(--premium-text-strong);
   align-self: flex-start;
   border: 1px solid var(--premium-glass-border);
-  box-shadow: 0 10px 24px rgba(88, 58, 130, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.58);
+  box-shadow: var(--app-dashboard-summary-pill-shadow);
 }
 
 .default_card_pill-icon {
@@ -3494,7 +3522,7 @@ textarea.validation-context-input {
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(174, 147, 255, 0.44) 0%, rgba(174, 147, 255, 0.18) 34%, transparent 74%);
+  background: var(--app-dashboard-summary-glow);
   filter: blur(24px);
   pointer-events: none;
 }
@@ -3506,7 +3534,7 @@ textarea.validation-context-input {
   bottom: 44px;
   width: 126px;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(214, 200, 255, 0.5) 32%, rgba(255, 255, 255, 0) 100%);
+  background: var(--app-dashboard-summary-line);
   opacity: 0.72;
   pointer-events: none;
 }
@@ -3518,14 +3546,14 @@ textarea.validation-context-input {
   gap: 0.55rem;
   padding: 13px 20px 13px 19px;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.62) 100%);
+  border: 1px solid var(--app-dashboard-summary-action-border);
+  background: var(--app-dashboard-summary-action-bg);
   color: color-mix(in srgb, var(--premium-accent-purple-strong) 84%, var(--premium-text-strong) 16%);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  box-shadow: 0 19px 40px rgba(88, 58, 130, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  box-shadow: var(--app-dashboard-summary-action-shadow);
   position: relative;
   z-index: 1;
 }

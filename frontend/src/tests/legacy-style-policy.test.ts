@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  extractCssComments,
   extractLegacyOrAliasSelectors,
   hasRegistryMatch,
   listFiles,
@@ -43,5 +44,19 @@ describe("legacy-style policy", () => {
     expect(css).toContain(".admin-prompts-archive")
     expect(tsx).toContain("admin-prompts-modal--rollback")
     expect(css).toContain(".admin-prompts-modal--rollback")
+  })
+
+  it("bloque le vocabulaire No Legacy dans les commentaires CSS actifs", () => {
+    const forbiddenCommentVocabulary = new RegExp(
+      `\\b(?:${["legacy", ["compat", "ibility"].join(""), "alias", "shim", "fallback", "migration-only"].join("|")})\\b`,
+      "i",
+    )
+    const violations = listFiles("", ".css").flatMap((file) =>
+      extractCssComments(readFrontendFile(file))
+        .filter((comment) => forbiddenCommentVocabulary.test(comment))
+        .map((comment) => ({ file, comment: comment.replace(/\s+/g, " ").trim() })),
+    )
+
+    expect(violations).toEqual([])
   })
 })

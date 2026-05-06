@@ -28,6 +28,7 @@ sourcee dans ce registre.
 | `--settings-*` | semantic-extension | `frontend/src/pages/settings/Settings.css` | settings page visual roles | permanent page-scoped semantic layer |
 | `--profile-*` | semantic-extension | `frontend/src/pages/AstrologerProfilePage.css` | astrologer profile page visual roles | permanent page-scoped semantic layer |
 | `--astro-*` | semantic-extension | `frontend/src/App.css` | astrologer card local visual roles | permanent component-scoped semantic layer |
+| `--app-*` | semantic-extension | `frontend/src/App.css` | app shell, catalogue and dashboard summary visual roles | permanent app-scoped semantic layer |
 | `--usage-*` | dynamic | `frontend/src/pages/settings/Settings.css` | runtime progress value | permanent custom property bridge |
 | `--sidebar-width` | dynamic | layout components | runtime layout value | permanent custom property bridge |
 | `--period-accent` | dynamic | prediction timeline components | runtime accent value | permanent custom property bridge |

@@ -1789,7 +1789,7 @@
   background: var(--color-admin-surface-soft);
 }
 
-/* Route legacy : investigation hors catalogue */
+/* Route d'investigation hors catalogue */
 .admin-prompts-archive {
   display: flex;
   flex-direction: column;

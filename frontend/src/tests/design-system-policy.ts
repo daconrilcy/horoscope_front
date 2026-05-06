@@ -44,6 +44,10 @@ export function extractCssFallbacks(css: string): Array<{ token: string; literal
   }))
 }
 
+export function extractCssComments(css: string): string[] {
+  return [...css.matchAll(/\/\*[\s\S]*?\*\//g)].map((match) => match[0])
+}
+
 /** Extrait les variables CSS consommees via var() pour les gardes d'ownership. */
 export function extractCssVariableUsages(css: string): string[] {
   return [...css.matchAll(/var\(\s*(--[a-zA-Z0-9_-]+)/g)].map((match) => match[1])

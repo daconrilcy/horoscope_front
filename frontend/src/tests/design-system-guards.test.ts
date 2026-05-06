@@ -58,6 +58,29 @@ function extractMigratedChatValues(ownerBody: string): string[] {
   ]
 }
 
+function extractSelectedAppValues(ownerBody: string): string[] {
+  const guardedVariables = new Set([
+    "--app-button-shadow",
+    "--app-button-hover-shadow",
+    "--app-button-bg",
+    "--app-astro-catalog-page-bg",
+    "--app-astro-catalog-atmosphere",
+    "--app-dashboard-summary-bg",
+    "--app-dashboard-summary-shadow",
+    "--app-dashboard-summary-pill-bg",
+    "--app-dashboard-summary-pill-shadow",
+    "--app-dashboard-summary-glow",
+    "--app-dashboard-summary-line",
+    "--app-dashboard-summary-action-bg",
+    "--app-dashboard-summary-action-shadow",
+  ])
+  const declarations = [...ownerBody.matchAll(/(--app-[a-zA-Z0-9_-]+)\s*:\s*([\s\S]*?);/g)]
+    .filter((match) => guardedVariables.has(match[1]))
+    .map((match) => normalizeCssValue(match[2]))
+
+  return [...new Set(declarations)]
+}
+
 // Suite anti-drift qui raccorde les registres design-system aux fichiers reels.
 describe("design-system guards", () => {
   it("couvre les namespaces de tokens CSS par le registre CS-026", () => {
@@ -241,6 +264,41 @@ describe("design-system guards", () => {
         expect(normalizedSource).not.toContain(value)
       }
     }
+  })
+
+  it("bloque le retour des literals App migres par CS-082", () => {
+    const appCss = readFrontendFile("App.css")
+    const ownerBlock = findFlatCssBlock(appCss, "#root")
+    const guardedCss = removeCssRange(appCss, ownerBlock.start, ownerBlock.end)
+    const normalizedGuardedCss = normalizeCssValue(guardedCss)
+    const migratedValues = extractSelectedAppValues(ownerBlock.body)
+    const bottomNavBlock = findFlatCssBlock(appCss, ".bottom-nav")
+    const buttonBlock = findFlatCssBlock(appCss, "button")
+    const buttonHoverBlock = findFlatCssBlock(appCss, "button:hover:not(:disabled)")
+    const stateLoadingBlock = findFlatCssBlock(appCss, ".state-loading")
+    const stateEmptyBlock = findFlatCssBlock(appCss, ".state-empty")
+    const stateSuccessBlock = findFlatCssBlock(appCss, ".state-success")
+    const catalogueBlock = findFlatCssBlock(appCss, ".astrologers-page")
+    const summaryBlock = findFlatCssBlock(appCss, ".dashboard-summary-card-wrapper")
+
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--app-*` | semantic-extension |")
+    expect(migratedValues.length).toBeGreaterThan(0)
+    expect(guardedCss).toContain("var(--app-")
+    expect(guardedCss).not.toMatch(/var\(\s*--app-[a-zA-Z0-9_-]+\s*,/)
+    for (const value of migratedValues) {
+      expect(normalizedGuardedCss).not.toContain(value)
+    }
+
+    expect(bottomNavBlock.body).toContain("border-radius: var(--app-mobile-nav-radius)")
+    expect(buttonBlock.body).toContain("background: var(--app-button-bg)")
+    expect(buttonBlock.body).toContain("box-shadow: var(--app-button-shadow)")
+    expect(buttonHoverBlock.body).toContain("box-shadow: var(--app-button-hover-shadow)")
+    expect(stateLoadingBlock.body).toContain("var(--app-state-loading-")
+    expect(stateEmptyBlock.body).toContain("var(--app-state-empty-")
+    expect(stateSuccessBlock.body).toContain("var(--app-state-success-")
+    expect(catalogueBlock.body).toContain("background: var(--app-astro-catalog-page-bg)")
+    expect(summaryBlock.body).toContain("background: var(--app-dashboard-summary-bg)")
+    expect(summaryBlock.body).toContain("box-shadow: var(--app-dashboard-summary-shadow)")
   })
 
   it("bloque le retour des surfaces runtime E-009 fermees par CS-080", () => {
