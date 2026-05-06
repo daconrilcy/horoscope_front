@@ -167,7 +167,7 @@
 }
 
 .case-study-column--before .case-study-label { color: var(--premium-text-meta); }
-.case-study-column--after .case-study-label { color: var(--success, #2ecc71); }
+.case-study-column--after .case-study-label { color: var(--success); }
 .case-study-column--action .case-study-label { color: var(--premium-accent-purple); }
 
 .case-study-text {

@@ -71,7 +71,7 @@
 }
 
 .auth-error-inline {
-  color: var(--danger, #ff6b81);
+  color: var(--danger);
   font-size: 0.875rem;
   font-weight: 500;
   background: rgba(255, 107, 129, 0.1);

@@ -6,10 +6,10 @@
   min-width: 0;
   cursor: pointer;
   /* Glassmorphism léger */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(252, 250, 255, 0.58);
-  border: 2px solid rgba(200, 190, 240, 0.35);
+  backdrop-filter: blur(var(--space-1));
+  -webkit-backdrop-filter: blur(var(--space-1));
+  background: color-mix(in srgb, var(--color-bg-top) 58%, transparent);
+  border: 2px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
   border-radius: var(--radius-lg);
   padding: var(--space-4) var(--space-4) var(--space-4);
   /* Layout */
@@ -50,23 +50,23 @@
 @media (prefers-color-scheme: dark) {
   .period-card {
     background: var(--background-unselected-cell);
-    border-color: rgba(255, 255, 255, 0.82);
+    border-color: color-mix(in srgb, white 82%, transparent);
   }
 
   .dark .period-card {
-    background: rgba(40, 32, 72, 0.55);
-    border-color: rgba(134, 108, 208, 0.18);
+    background: color-mix(in srgb, var(--color-surface-astro) 55%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
   }
 
   /* ── État actif : accent top + glow, PAS de contour intégral violet ── */
   .period-card--selected {
     background: var(--background-selected-cell);
-    border-color: rgba(134, 108, 208, 0.3);
+    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
     box-shadow:
-      0 6px 28px rgba(134, 108, 208, 0.14),
-      0 1px 6px rgba(134, 108, 208, 0.08),
-      4px 4px 24px rgba(0, 0, 0, 0.1),
-      0px 0px 12px rgba(255, 255, 255, 0.4);
+      0 6px 28px color-mix(in srgb, var(--color-primary) 14%, transparent),
+      0 1px 6px color-mix(in srgb, var(--color-primary) 8%, transparent),
+      4px 4px 24px color-mix(in srgb, black 10%, transparent),
+      0 0 12px color-mix(in srgb, white 40%, transparent);
     transform: scale(1.15);
     z-index: 1;
 
@@ -81,7 +81,7 @@
     right: 0;
     height: var(--space-3);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    background: linear-gradient(90deg, var(--color-primary), rgba(161, 144, 237, 0.6));
+    background: linear-gradient(90deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 60%, transparent));
   }
 
   /* ── Header : icône + nom ── */
@@ -131,7 +131,7 @@
 
   /* ── Plage horaire ── */
   .period-card__time {
-    font-size: 0.7rem;
+    font-size: var(--type-metadata-size);
     font-weight: 400;
     color: var(--color-text-muted);
     padding-left: calc(18px + var(--space-2));
@@ -144,7 +144,7 @@
   .period-card__divider {
     width: 85%;
     border: none;
-    border-top: 1px solid rgba(134, 108, 208, 0.10);
+    border-top: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
     margin: var(--space-2) 0 var(--space-2);
   }
 
@@ -163,39 +163,39 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 8px;
-    height: 8px;
-    margin: 8px;
+    width: var(--space-2);
+    height: var(--space-2);
+    margin: var(--space-2);
     border-radius: 50%;
     flex-shrink: 0;
-    background: rgba(30, 27, 46, 0.28);
-    box-shadow: 0 0 4px rgba(30, 27, 46, 0.4);
+    background: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
+    box-shadow: 0 0 var(--space-1) color-mix(in srgb, var(--color-text-primary) 40%, transparent);
   }
 
   .period-card__tone-dot--pivot {
     width: 18px;
     height: 18px;
-    margin: 4px;
-    background: rgba(134, 108, 208, 0.15);
+    margin: var(--space-1);
+    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
     color: white;
-    box-shadow: 0 0 0 1px rgba(134, 108, 208, 0.3);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 30%, transparent);
   }
 
   .period-card--selected .period-card__tone-dot--pivot {
-    background: rgba(134, 108, 208, 0.25);
+    background: color-mix(in srgb, var(--color-primary) 25%, transparent);
     box-shadow: 0 0 0 3px rgb(206 187 255 / 78%);
   }
 
   .period-card__tone-dot[data-tone="positive"] {
-    background: #27ae60;
-    box-shadow: 0 0 4px rgba(39, 174, 96, 0.4);
+    background: var(--color-success);
+    box-shadow: 0 0 var(--space-1) color-mix(in srgb, var(--color-success) 40%, transparent);
   }
 
   .period-card__tone-dot[data-tone="push"],
   .period-card__tone-dot[data-tone="favorable"],
   .period-card__tone-dot[data-tone="porteur"] {
-    background: #d4921a;
-    box-shadow: 0 0 5px rgba(212, 146, 26, 0.45);
+    background: var(--color-admin-warning-ink);
+    box-shadow: 0 0 5px color-mix(in srgb, var(--color-admin-warning-ink) 45%, transparent);
   }
 
   .period-card__tone-dot[data-tone="negative"] {
@@ -204,11 +204,11 @@
 
   .period-card__tone-dot[data-tone="mixed"],
   .period-card__tone-dot[data-tone="careful"] {
-    background: #cc8822;
+    background: var(--color-admin-warning-ink);
   }
 
   .period-card__tone-dot[data-tone="open"] {
-    background: #2eaabb;
+    background: var(--color-primary-strong);
   }
 
   /* Le dot devient primary quand la carte est sélectionnée */
@@ -219,7 +219,7 @@
 
   .period-card__tone-label,
   period-card__pivot-label {
-    font-size: 0.9rem;
+    font-size: var(--type-label-size);
     font-weight: 600;
     color: var(--color-text-muted);
     white-space: nowrap;
@@ -257,13 +257,13 @@
 
   .period-card__sep {
     color: var(--color-text-muted);
-    font-size: 0.6rem;
+    font-size: var(--type-metadata-size);
     flex-shrink: 0;
     line-height: 1;
   }
 
   .period-card__cat-label {
-    font-size: 0.65rem;
+    font-size: var(--type-metadata-size);
     color: var(--color-text-muted);
     white-space: nowrap;
     overflow: hidden;

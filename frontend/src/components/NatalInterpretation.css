@@ -3,7 +3,7 @@
 .ni-section {
   margin-top: 48px;
   padding-top: 40px;
-  border-top: 1px solid var(--premium-glass-border-soft, rgba(255, 255, 255, 0.2));
+  border-top: 1px solid var(--premium-glass-border-soft);
   --ni-selector-trigger-shadow:
     0 10px 22px rgba(76, 52, 122, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.45);

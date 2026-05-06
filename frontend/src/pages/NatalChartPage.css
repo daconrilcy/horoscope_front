@@ -114,7 +114,7 @@
 .natal-page-header__info {
   margin-top: 12px;
   font-size: 13px;
-  color: var(--premium-text-muted, var(--text-muted));
+  color: var(--premium-text-muted);
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
@@ -258,7 +258,7 @@
   font-size: 14px;
   color: var(--premium-text-main);
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--premium-glass-border-soft, rgba(255, 255, 255, 0.2));
+  border-bottom: 1px solid var(--premium-glass-border-soft);
   line-height: 1.5;
 }
 
@@ -347,7 +347,7 @@
 /* Natal Chart Guide Premium Styling */
 .natal-chart-guide {
   background: var(--premium-glass-surface-2);
-  border: 1px solid var(--premium-glass-border-soft, rgba(255, 255, 255, 0.3));
+  border: 1px solid var(--premium-glass-border-soft);
   border-radius: var(--premium-radius-card);
   overflow: hidden;
   transition: all 0.3s ease;
