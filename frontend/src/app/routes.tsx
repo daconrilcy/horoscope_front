@@ -273,19 +273,6 @@ export const routes: RouteObject[] = [
             path: "settings",
             element: <AdminSettingsPage />,
           },
-          // Legacy redirects
-          {
-            path: "pricing",
-            element: <Navigate to="/admin/billing" replace />,
-          },
-          {
-            path: "monitoring",
-            element: <Navigate to="/admin/logs" replace />,
-          },
-          {
-            path: "personas",
-            element: <Navigate to="/admin/prompts/personas" replace />,
-          },
           {
             path: "reconciliation",
             element: <ReconciliationAdmin />,

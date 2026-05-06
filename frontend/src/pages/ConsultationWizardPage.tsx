@@ -14,7 +14,6 @@ import {
   VALID_CREATABLE_TYPES,
   AUTO_ASTROLOGER_ID,
   getObjectiveForType,
-  mapLegacyConsultationKey,
   type ConsultationType,
 } from "../types/consultation"
 import { useConsultationCatalogue } from "../api/consultations"
@@ -96,7 +95,7 @@ export function ConsultationWizardPage() {
     reset()
 
     if (typeParam && VALID_CREATABLE_TYPES.includes(typeParam as ConsultationType)) {
-      const canonicalType = mapLegacyConsultationKey(typeParam)
+      const canonicalType = typeParam as ConsultationType
       setType(canonicalType)
       const template = catalogue?.items.find((i) => i.key === canonicalType)
       setObjective(template?.title ?? t(getObjectiveForType(canonicalType), lang))

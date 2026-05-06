@@ -228,7 +228,7 @@
     0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
-/* Fallback si masking indisponible */
+/* Alternative si le masking CSS est indisponible. */
 @supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
 
   .pivot-corona-wrapper::before,

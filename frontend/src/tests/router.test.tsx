@@ -253,7 +253,7 @@ describe("AdminGuard", () => {
     vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_OPS))
     setupToken("1", "ops")
     
-    renderApp(["/admin/monitoring"])
+    renderApp(["/admin/logs"])
     
     await waitFor(() => {
       // In our test setup, "/" might redirect or show something specific.
@@ -278,7 +278,7 @@ describe("AdminGuard", () => {
     vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_ADMIN))
     setupToken("99", "admin")
     
-    renderApp(["/admin/monitoring"])
+    renderApp(["/admin/logs"])
     
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: new RegExp(tAdmin.page.fr.title, "i") })).toBeInTheDocument()

@@ -1,11 +1,10 @@
+// Contrats frontend canoniques pour le parcours de consultation.
 export type ConsultationType =
   | "period"
   | "career"
   | "orientation"
   | "relationship"
   | "timing"
-  | "work" // Legacy, mapped to career
-  | "relation" // Legacy, mapped to relationship
   | "dating"
   | "pro"
   | "event"
@@ -42,7 +41,6 @@ export type ConsultationTypeConfig = {
   labelKey: string
   uxPromiseKey: string
   objectiveKey: string
-  isLegacy?: boolean
 }
 
 export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
@@ -81,23 +79,6 @@ export const CONSULTATION_TYPES: ConsultationTypeConfig[] = [
     uxPromiseKey: "type_timing_promise",
     objectiveKey: "objective_timing",
   },
-  // Legacy mappings for breadcrumbs/history labels if needed
-  {
-    id: "work",
-    icon: "💼",
-    labelKey: "type_work_label",
-    uxPromiseKey: "type_work_promise",
-    objectiveKey: "objective_work",
-    isLegacy: true,
-  },
-  {
-    id: "relation",
-    icon: "🤝",
-    labelKey: "type_relation_label",
-    uxPromiseKey: "type_relation_promise",
-    objectiveKey: "objective_relation",
-    isLegacy: true,
-  },
 ]
 
 export const VALID_CREATABLE_TYPES: ConsultationType[] = [
@@ -106,8 +87,6 @@ export const VALID_CREATABLE_TYPES: ConsultationType[] = [
   "orientation",
   "relationship",
   "timing",
-  "work", // Allowed for redirect
-  "relation", // Allowed for redirect
 ]
 
 export const VALID_CONSULTATION_TYPES: ConsultationType[] = [
@@ -118,7 +97,7 @@ export const VALID_CONSULTATION_TYPES: ConsultationType[] = [
   "free",
 ]
 
-export const INTERACTION_ELIGIBLE_TYPES: ConsultationType[] = ["career", "work", "relationship", "relation"]
+export const INTERACTION_ELIGIBLE_TYPES: ConsultationType[] = ["career", "relationship"]
 
 export const AUTO_ASTROLOGER_ID = "auto"
 export const WIZARD_LAST_STEP_INDEX = 1
@@ -157,16 +136,4 @@ export function getObjectiveForType(type: ConsultationType): string {
       return "objective_free"
   }
   return `objective_${type}`
-}
-
-/**
- * Mappe les anciennes clés vers les nouvelles clés canoniques.
- * AC2: work -> career, relation -> relationship
- */
-export function mapLegacyConsultationKey(key: string): ConsultationType {
-  const mapping: Record<string, ConsultationType> = {
-    work: "career",
-    relation: "relationship",
-  }
-  return mapping[key] || (key as ConsultationType)
 }

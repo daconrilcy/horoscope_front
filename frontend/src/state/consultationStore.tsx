@@ -219,6 +219,8 @@ export function normalizeConsultationResult(item: unknown): ConsultationResult |
     !VALID_CONSULTATION_TYPES.includes(obj.type as ConsultationType) ||
     typeof obj.astrologerId !== "string" ||
     typeof obj.context !== "string" ||
+    typeof obj.objective !== "string" ||
+    typeof obj.summary !== "string" ||
     !isValidISODate(obj.createdAt)
   ) {
     return null
@@ -229,22 +231,12 @@ export function normalizeConsultationResult(item: unknown): ConsultationResult |
     type: obj.type as ConsultationType,
     astrologerId: obj.astrologerId as string,
     context: obj.context as string,
-    objective:
-      typeof obj.objective === "string" && obj.objective.trim().length > 0
-        ? obj.objective
-        : getObjectiveForType(obj.type as ConsultationType),
+    objective: obj.objective,
     timeHorizon:
       typeof obj.timeHorizon === "string"
         ? obj.timeHorizon
-        : typeof obj.time_horizon === "string"
-          ? obj.time_horizon
-          : null,
-    summary:
-      typeof obj.summary === "string"
-        ? obj.summary
-        : typeof obj.interpretation === "string"
-          ? obj.interpretation
-          : "",
+        : null,
+    summary: obj.summary,
     keyPoints: normalizeStringList(obj.keyPoints),
     actionableAdvice: normalizeStringList(obj.actionableAdvice),
     disclaimer: typeof obj.disclaimer === "string" ? obj.disclaimer : "",

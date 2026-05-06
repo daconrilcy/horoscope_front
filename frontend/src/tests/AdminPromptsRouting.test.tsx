@@ -166,11 +166,11 @@ describe("Admin prompts — routage dédié (story 70.1)", () => {
     })
   })
 
-  it("redirige /admin/personas vers la route personas du domaine prompts", async () => {
+  it("affiche la route personas canonique du domaine prompts", async () => {
     vi.stubGlobal("fetch", makeAdminPromptsFetchMock())
     setupToken()
 
-    const { router: personasRouter } = renderApp(["/admin/personas"])
+    const { router: personasRouter } = renderApp(["/admin/prompts/personas"])
 
     await waitFor(() => {
       expect(personasRouter.state.location.pathname).toBe("/admin/prompts/personas")

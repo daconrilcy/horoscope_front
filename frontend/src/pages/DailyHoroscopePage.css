@@ -3,8 +3,8 @@
 .daily-layout {
   --layout-max-width: var(--premium-layout-max-width);
   --layout-padding-inline: var(--premium-layout-padding-inline);
-  --prediction-timeline-card-shift: 34px;
-  --prediction-timeline-rail-center: 18px;
+  --prediction-timeline-card-shift: var(--space-9);
+  --prediction-timeline-rail-center: var(--space-4);
 
   --glass-surface-1: var(--premium-glass-surface-1);
   --glass-surface-2: var(--premium-glass-surface-2);
@@ -29,8 +29,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 26px;
-  padding: 0 var(--layout-padding-inline) 48px;
+  gap: var(--space-7);
+  padding: 0 var(--layout-padding-inline) var(--space-12);
   max-width: var(--layout-max-width);
   margin: 0 auto;
 }
@@ -76,7 +76,7 @@
 .daily-layout__section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .daily-layout :is(.astro-daily-events, .domain-ranking-card, .turning-point-card, .best-window-card, .daily-advice-card, .astro-foundation-section, .day-timeline-v4__card) {
@@ -98,21 +98,21 @@
 }
 
 .daily-layout__section-title {
-  font-size: 20px;
-  line-height: 1.2;
-  font-weight: 650;
+  font-size: var(--type-card-title-size);
+  line-height: var(--type-eyebrow-line-height);
+  font-weight: var(--type-card-title-weight);
   color: var(--text-strong);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .daily-layout__section-title::before {
   content: '';
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--premium-accent-purple);
 }
 
@@ -122,20 +122,36 @@
   margin: 0;
 }
 
-.daily-layout h1 { font-size: 40px; line-height: 1.05; font-weight: 700; }
-.daily-layout .text-meta { font-size: 13px; line-height: 1.3; font-weight: 500; color: var(--text-meta); }
-.daily-layout p { font-size: 15px; line-height: 1.7; font-weight: 400; color: var(--text-main); }
+.daily-layout h1 {
+  font-size: var(--type-page-title-size);
+  line-height: var(--type-page-title-line-height);
+  font-weight: var(--type-page-title-weight);
+}
+
+.daily-layout .text-meta {
+  font-size: var(--type-metadata-size);
+  line-height: var(--type-label-line-height);
+  font-weight: var(--type-body-muted-weight);
+  color: var(--text-meta);
+}
+
+.daily-layout p {
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+  font-weight: var(--type-body-weight);
+  color: var(--text-main);
+}
 
 .dark .daily-layout {
-  --glass-surface-1: rgba(255, 255, 255, 0.04);
-  --glass-surface-2: rgba(255, 255, 255, 0.07);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-strong: rgba(156, 121, 255, 0.2);
-  --shadow-card: 0 12px 34px rgba(0, 0, 0, 0.38);
-  --text-strong: #f4eefc;
-  --text-main: rgba(244, 238, 252, 0.84);
-  --text-meta: rgba(214, 205, 234, 0.72);
-  --text-faint: rgba(188, 176, 212, 0.62);
+  --glass-surface-1: var(--premium-glass-surface-1);
+  --glass-surface-2: var(--premium-glass-surface-2);
+  --glass-border: var(--premium-glass-border);
+  --glass-border-strong: var(--premium-glass-border-strong);
+  --shadow-card: var(--premium-shadow-card);
+  --text-strong: var(--premium-text-strong);
+  --text-main: var(--premium-text-main);
+  --text-meta: var(--premium-text-meta);
+  --text-faint: var(--premium-text-faint);
 }
 
 .dark .daily-layout::after {
@@ -153,11 +169,14 @@
   .daily-layout {
     --layout-padding-inline: 22px;
     --layout-max-width: 100%;
-    --prediction-timeline-card-shift: 28px;
-    --prediction-timeline-rail-center: 16px;
-    gap: 24px;
+    --prediction-timeline-card-shift: var(--space-7);
+    --prediction-timeline-rail-center: var(--space-4);
+    gap: var(--space-6);
   }
-  .daily-layout h1 { font-size: 32px; }
+
+  .daily-layout h1 {
+    font-size: var(--type-page-title-size);
+  }
 }
 
 /* ── Teaser Placeholder — Story 64.8 ── */
@@ -178,15 +197,15 @@
 }
 
 .teaser-placeholder__lead {
-  font-size: 15px;
-  line-height: 1.8;
-  font-weight: 600;
+  font-size: var(--type-body-size);
+  line-height: var(--line-height-relaxed);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-strong);
 }
 
 .teaser-placeholder__body {
-  font-size: 14px;
-  line-height: 1.85;
+  font-size: var(--type-body-muted-size);
+  line-height: var(--line-height-relaxed);
   color: var(--text-main);
   max-width: 76ch;
 }

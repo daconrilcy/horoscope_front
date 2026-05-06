@@ -45,11 +45,6 @@ const TONE_COLORS: Record<string, string> = {
   mixed: "var(--text-2)",
   neutral: "var(--text-2)",
   negative: "var(--warning)",
-  // Legacy
-  steady: "var(--text-2)",
-  push: "var(--primary)",
-  careful: "var(--warning)",
-  open: "var(--color-success)",
 };
 
 const MESSAGES: Record<string, Record<Lang, string>> = {
@@ -152,17 +147,9 @@ export function getNoteBand(note: number, lang: Lang) {
 
 export function getCategoryMeta(code: string, lang: Lang) {
   const normalized = code.toLowerCase().trim();
-  // Handle legacy FR codes
-  const legacyMap: Record<string, string> = {
-    amour: "love",
-    travail: "work",
-    sante: "health",
-    argent: "money",
-    vitalite: "energy",
-  };
-  const canonical = legacyMap[normalized] || normalized;
+  const canonical = normalized;
   const categoryLabel = getCategoryLabel(canonical, lang);
-  const fallbackLabel =
+  const displayLabel =
     categoryLabel === canonical
       ? canonical
           .split("_")
@@ -172,7 +159,7 @@ export function getCategoryMeta(code: string, lang: Lang) {
       : categoryLabel;
 
   return {
-    label: fallbackLabel,
+    label: displayLabel,
     icon: CATEGORY_ICONS[canonical] || "✨",
   };
 }
@@ -250,11 +237,6 @@ export function humanizePredictionDriverLabel(
   }
 
   const eventLabels: Record<string, Record<Lang, string>> = {
-    // Legacy codes
-    exact: { fr: "Aspect exact", en: "Exact aspect" },
-    ingress: { fr: "Changement de signe", en: "Sign ingress" },
-    station: { fr: "Station planétaire", en: "Planetary station" },
-    // Taxonomy V2 codes (event_detector.py)
     aspect_exact_to_angle: { fr: "Aspect exact (Asc/MC)", en: "Exact aspect (Asc/MC)" },
     aspect_exact_to_luminary: { fr: "Aspect exact (Soleil/Lune)", en: "Exact aspect (Sun/Moon)" },
     aspect_exact_to_personal: { fr: "Aspect exact", en: "Exact aspect" },
@@ -455,24 +437,6 @@ export function humanizeTurningPointSemantic(
     transition: transitionLabel,
     implication,
   };
-}
-
-export function buildTimelineFallbackSummary(
-  dominantCategories: string[],
-  toneCode: string,
-  lang: Lang,
-): string {
-  const labels = dominantCategories.slice(0, 3).map((code) => getCategoryLabel(code, lang));
-  const tone = getToneLabel(toneCode, lang).toLowerCase();
-  const joined = labels.join(", ");
-
-  if (!joined) {
-    return lang === "fr" ? `Climat ${tone}.` : `${tone} atmosphere.`;
-  }
-
-  return lang === "fr"
-    ? `Climat ${tone}, accent sur ${joined}.`
-    : `${tone} atmosphere, with focus on ${joined}.`;
 }
 
 export function humanizeMovement(

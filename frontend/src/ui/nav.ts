@@ -35,7 +35,7 @@ export const navItems: NavItem[] = [
   { key: 'support', label: 'Support', icon: MessageCircle, path: '/support', roles: ['support', 'ops'], showOnMobile: false },
   
   // Admin / Ops
-  { key: 'monitoring', label: 'Monitoring', icon: FileText, path: '/admin/monitoring', roles: ['ops', 'admin'], showOnMobile: false },
+  { key: 'monitoring', label: 'Monitoring', icon: FileText, path: '/admin/logs', roles: ['ops', 'admin'], showOnMobile: false },
   { key: 'reconciliation', label: 'Réconciliation', icon: FileText, path: '/admin/reconciliation', roles: ['ops'], showOnMobile: false },
   
   // Enterprise

@@ -4,11 +4,11 @@
   width: 100%;
   position: relative;
   overflow: hidden;
-  padding: 28px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(240, 231, 255, 0.44) 100%);
+  padding: var(--space-7);
+  background: linear-gradient(180deg, var(--glass-surface-3) 0%, var(--glass-surface-1) 100%);
   border: 1px solid var(--glass-border-strong);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.58);
+  box-shadow: var(--shadow-card), var(--premium-inner-light);
 }
 
 .daily-advice-card::after {
@@ -24,17 +24,17 @@
 .daily-advice-card__header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
 .daily-advice-card__icon-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: var(--radius-full);
   background: linear-gradient(180deg, rgba(156, 121, 255, 0.24) 0%, rgba(255, 255, 255, 0.26) 100%);
   color: var(--premium-accent-purple-strong);
   flex-shrink: 0;
@@ -51,38 +51,37 @@
 }
 
 .daily-advice-card__title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--type-card-title-size);
+  font-weight: var(--type-card-title-weight);
   color: var(--text-strong);
   margin: 0;
-  letter-spacing: -0.01em;
 }
 
 .daily-advice-card__content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .daily-advice-card__body {
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
   color: var(--text-main);
   margin: 0;
 }
 
 .daily-advice-card__emphasis {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-strong);
-  line-height: 1.5;
+  line-height: var(--line-height-normal);
   margin: 0;
-  padding-top: 10px;
+  padding-top: var(--space-3);
   max-width: 40ch;
 }
 
 @media (max-width: 640px) {
   .daily-advice-card {
-    padding: 20px;
+    padding: var(--space-5);
   }
 }

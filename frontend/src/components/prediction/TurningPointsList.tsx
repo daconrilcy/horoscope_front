@@ -7,10 +7,8 @@ import { getLocale } from "../../utils/locale";
 import { 
   getCategoryMeta, 
   getPredictionMessage, 
-  humanizePredictionDriverLabel,
   humanizePrimaryDriver,
   humanizeTurningPointSemantic,
-  humanizeTurningPointSummary,
   humanizeMovement,
   quantifyMovement,
   humanizeCategoryDelta,
@@ -26,7 +24,9 @@ interface Props {
 }
 
 export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPointClick }) => {
-  if (!moments || moments.length === 0) {
+  const canonicalMoments = moments.filter((moment) => !!moment.change_type);
+
+  if (canonicalMoments.length === 0) {
     return null;
   }
 
@@ -52,22 +52,14 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
         {getPredictionMessage("turning_points", lang)}
       </h3>
       <div className="turning-points-list__items">
-        {moments.map((moment, index) => {
+        {canonicalMoments.map((moment, index) => {
           const semantic = humanizeTurningPointSemantic(moment, lang);
           const primaryDriver = humanizePrimaryDriver(moment.primary_driver, lang);
-          const hasEnrichment = !!moment.change_type;
           const enrichedImpactedCategories =
             moment.impacted_categories?.length
               ? moment.impacted_categories
               : moment.next_categories?.length
                 ? moment.next_categories
-                : moment.previous_categories || [];
-          const hasExplicitDriverLabel = (moment.drivers || []).some((driver) => !!driver.label?.trim());
-          const legacyImpactedCategories =
-            moment.next_categories?.length
-              ? moment.next_categories
-              : moment.impacted_categories?.length
-                ? moment.impacted_categories
                 : moment.previous_categories || [];
           
           return (
@@ -89,8 +81,7 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                 </span>
               </div>
 
-              {hasEnrichment ? (
-                <div className="turning-points-list__enriched">
+              <div className="turning-points-list__enriched">
                   {/* Section 1: Pourquoi ? */}
                   <div>
                     <span className="turning-points-list__eyebrow">
@@ -194,37 +185,7 @@ export const TurningPointsList: React.FC<Props> = ({ moments, lang, onTurningPoi
                       </div>
                     )}
                   </div>
-                </div>
-              ) : (
-                /* Fallback Legacy */
-                <>
-                  <p className="turning-points-list__fallback-summary">
-                    {humanizeTurningPointSummary(moment.summary, lang) || getPredictionMessage("aspect_shift_label", lang)}
-                  </p>
-
-                  {hasExplicitDriverLabel && (moment.drivers || []).length > 0 && (
-                    <div className="turning-points-list__fallback-driver">
-                      {humanizePredictionDriverLabel(moment.drivers[0], lang)}
-                    </div>
-                  )}
-
-                  {legacyImpactedCategories.length > 0 && (
-                    <div className="turning-points-list__impact-row">
-                      <span className="turning-points-list__impact-label">
-                        {getPredictionMessage("impacts_label", lang)}
-                      </span>
-                      {legacyImpactedCategories.map((category) => {
-                        const meta = getCategoryMeta(category, lang);
-                        return (
-                          <span key={category} title={meta.label} className="turning-points-list__category-pill">
-                            {meta.icon} {meta.label}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
-              )}
+              </div>
             </div>
           );
         })}

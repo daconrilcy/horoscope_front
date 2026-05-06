@@ -3,8 +3,8 @@
 # Token Namespace Registry
 
 `frontend/src/styles/design-tokens.css` est la source de verite des tokens globaux.
-Les autres fichiers ne peuvent ajouter qu'une extension semantique, un alias de
-compatibility cible ou une dette migration-only documentee.
+Les autres fichiers ne peuvent ajouter qu'une extension semantique durable et
+sourcee dans ce registre.
 
 | Namespace | Status | Owner | Canonical target | Exit condition |
 |---|---|---|---|---|
@@ -25,13 +25,12 @@ compatibility cible ou une dette migration-only documentee.
 | `--work-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
 | `--energy-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
 | `--premium-*` | semantic-extension | `frontend/src/styles/premium-theme.css` | premium product layer | product decision before merge into globals |
-| `--settings-*` | migration-only | `frontend/src/pages/settings/Settings.css` | settings page tokens | migrate when shared settings/profile tokens exist |
-| `--profile-*` | migration-only | `frontend/src/pages/AstrologerProfilePage.css` | profile page tokens | migrate when shared profile tokens exist |
-| `--astro-*` | migration-only | `frontend/src/App.css` | astrologer card local theme | migrate after card design-system story |
+| `--settings-*` | semantic-extension | `frontend/src/pages/settings/Settings.css` | settings page visual roles | permanent page-scoped semantic layer |
+| `--profile-*` | semantic-extension | `frontend/src/pages/AstrologerProfilePage.css` | astrologer profile page visual roles | permanent page-scoped semantic layer |
+| `--astro-*` | semantic-extension | `frontend/src/App.css` | astrologer card local visual roles | permanent component-scoped semantic layer |
 | `--usage-*` | dynamic | `frontend/src/pages/settings/Settings.css` | runtime progress value | permanent custom property bridge |
 | `--sidebar-width` | dynamic | layout components | runtime layout value | permanent custom property bridge |
 | `--period-accent` | dynamic | prediction timeline components | runtime accent value | permanent custom property bridge |
-| `--default_dropshadow` | migration-only | legacy app CSS | `--shadow-card` | replace in component migration |
 | `--landing-*` | semantic-extension | landing layout and sections | premium landing layer | product decision before global merge |
 | `--help-*` | semantic-extension | `frontend/src/pages/HelpPage.css` | help page visual roles | permanent page-scoped semantic layer |
 | `--admin-settings-*` | semantic-extension | `frontend/src/pages/admin/AdminSettingsPage.css` | admin settings cluster local visual roles | permanent page-scoped semantic layer |

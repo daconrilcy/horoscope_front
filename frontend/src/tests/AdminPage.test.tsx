@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi, beforeEach } from "vitest"
 
 import { RouterProvider } from "react-router-dom"
 import { createTestMemoryRouter } from "../app/router"
+import { routes } from "../app/routes"
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
 import { adminTranslations } from "../i18n/admin"
@@ -42,6 +43,7 @@ afterEach(() => {
 const t = adminTranslations
 const fr = t.page.fr
 const frSec = t.sections.fr
+const removedAdminRouteSegments = ["pricing", "monitoring", "personas"] as const
 
 const AUTH_ME_USER = {
   ok: true,
@@ -134,6 +136,12 @@ function setupToken(sub = "1", role = "admin") {
   setAccessToken(`x.${payload}.y`)
 }
 
+function collectTopLevelAdminPaths() {
+  const protectedShell = routes.find((route) => route.children?.some((child) => child.path === "admin"))
+  const adminRoute = protectedShell?.children?.find((child) => child.path === "admin")
+  return adminRoute?.children?.flatMap((child) => (child.path ? [child.path] : [])) ?? []
+}
+
 describe("AdminPage - Story 65.4", () => {
   it("redirects non-admin user (user) from /admin to dashboard", async () => {
     vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_USER))
@@ -202,25 +210,48 @@ describe("AdminPage - Story 65.4", () => {
     })
   })
 
-  it("redirects legacy routes to new ones", async () => {
+  it("renders canonical admin routes without legacy redirects", async () => {
     vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_ADMIN))
     setupToken("99", "admin")
 
-    // Test /admin/monitoring -> should render Logs page content
-    const { unmount } = renderApp(["/admin/monitoring"])
+    const { unmount } = renderApp(["/admin/logs"])
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Observabilité Technique" })).toBeInTheDocument()
     })
     unmount()
 
-    // Test /admin/personas -> route dédiée personas (story 70.1)
-    const { router: personasRouter } = renderApp(["/admin/personas"])
+    const { router: personasRouter } = renderApp(["/admin/prompts/personas"])
     await waitFor(() => {
       expect(personasRouter.state.location.pathname).toBe("/admin/prompts/personas")
     })
     await waitFor(() => {
       expect(screen.getByTestId("personas-admin-title")).toHaveTextContent("Personas astrologues")
     })
+  })
+
+  it("ne declare aucun enfant admin top-level pour les anciens segments", async () => {
+    const adminPaths = collectTopLevelAdminPaths()
+
+    removedAdminRouteSegments.forEach((segment) => {
+      expect(adminPaths).not.toContain(segment)
+    })
+  })
+
+  it("ne redirige pas les anciens segments admin vers des routes canoniques", async () => {
+    vi.stubGlobal("fetch", makeFetchMock(AUTH_ME_ADMIN))
+    setupToken("99", "admin")
+
+    for (const segment of removedAdminRouteSegments) {
+      const removedEntry = ["/admin", segment].join("/")
+      const { router, unmount } = renderApp([removedEntry])
+
+      await waitFor(() => {
+        expect(router.state.navigation.state).toBe("idle")
+        expect(router.state.location.pathname).toBe(removedEntry)
+      })
+
+      unmount()
+    }
   })
 
   it("expose un shell admin elargi via des tokens dedies", () => {

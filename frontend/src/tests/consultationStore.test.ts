@@ -134,7 +134,7 @@ describe("consultationReducer", () => {
 })
 
 describe("normalizeConsultationResult", () => {
-  it("normalizes the epic 46 schema and preserves time horizon", () => {
+  it("accepts canonical stored results and preserves time horizon", () => {
     const normalized = normalizeConsultationResult(
       createMockResult({ timeHorizon: "dans 3 semaines" })
     )
@@ -146,9 +146,9 @@ describe("normalizeConsultationResult", () => {
     })
   })
 
-  it("normalizes legacy history entries without drawing semantics", () => {
+  it("rejects stored results that omit canonical objective and summary fields", () => {
     const normalized = normalizeConsultationResult({
-      id: "legacy-1",
+      id: "historical-1",
       type: "dating",
       astrologerId: "1",
       drawingOption: "tarot",
@@ -158,18 +158,10 @@ describe("normalizeConsultationResult", () => {
       createdAt: "2026-02-22T12:00:00.000Z",
     })
 
-    expect(normalized).toMatchObject({
-      id: "legacy-1",
-      type: "dating",
-      summary: "Une ancienne interprétation",
-      objective: "objective_dating",
-      keyPoints: [],
-      actionableAdvice: [],
-      timeHorizon: null,
-    })
+    expect(normalized).toBeNull()
   })
 
-  it("reads snake_case time_horizon from backend-shaped payloads", () => {
+  it("ignores non-canonical time horizon keys in stored results", () => {
     const normalized = normalizeConsultationResult({
       id: "api-1",
       type: "event",
@@ -184,7 +176,7 @@ describe("normalizeConsultationResult", () => {
       createdAt: "2026-03-01T09:15:00.000Z",
     })
 
-    expect(normalized?.timeHorizon).toBe("avant la fin du trimestre")
+    expect(normalized?.timeHorizon).toBeNull()
   })
 
   it("rejects invalid payloads", () => {
@@ -222,7 +214,7 @@ describe("type exports", () => {
       ...createInitialState(),
       draft: {
         ...INITIAL_DRAFT,
-        type: "work",
+        type: "career",
         isInteraction: true,
         otherPerson: {
           birthDate: "1990-01-01",

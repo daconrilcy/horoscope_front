@@ -251,12 +251,12 @@ describe("TurningPointsList Enriched", () => {
     expect(screen.getAllByTitle("Travail")).toHaveLength(2); // One in before, one in after
   });
 
-  it("reste compatible avec le format legacy (sans change_type)", () => {
-    const legacyMoments = [
+  it("ignore les moments sans type de changement canonique", () => {
+    const moments = [
       {
         occurred_at_local: "2026-03-12T14:00:00",
         severity: 0.5,
-        summary: "Bascule legacy",
+        summary: "Bascule historique",
         drivers: [{ label: "Aspect important" }],
         next_categories: ["health"]
       }
@@ -264,16 +264,11 @@ describe("TurningPointsList Enriched", () => {
 
     render(
       <ThemeProvider>
-        <TurningPointsList moments={legacyMoments as any} lang="fr" />
+        <TurningPointsList moments={moments as any} lang="fr" />
       </ThemeProvider>
     );
 
-    expect(screen.getByText("Bascule legacy")).toBeInTheDocument();
-    expect(screen.getByText("Aspect important")).toBeInTheDocument();
-    expect(screen.getByText(/Impacts :/i)).toBeInTheDocument();
-    expect(screen.getByTitle("Santé & Hygiène de vie")).toBeInTheDocument();
-    
-    // Should NOT show enriched headers
     expect(screen.queryByText(/Pourquoi \?/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("Bascule historique")).not.toBeInTheDocument();
   });
 });

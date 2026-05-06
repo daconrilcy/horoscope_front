@@ -17,6 +17,86 @@ const authMeOk = {
   },
 };
 
+const canonicalPredictionCards = {
+  day_climate: {
+    label: "Climat stable",
+    tone: "neutral",
+    intensity: 5,
+    stability: 5,
+    summary: "Journee favorable pour prendre contact et structurer vos priorites.",
+    top_domains: ["love", "career"],
+    watchout: "energy",
+    best_window_ref: "08:00",
+  },
+  domain_ranking: [
+    {
+      key: "love",
+      label: "love",
+      internal_codes: ["love"],
+      display_order: 1,
+      score_10: 6.8,
+      level: "stable",
+      rank: 1,
+      note_20_internal: 13.6,
+      signal_label: null,
+    },
+    {
+      key: "career",
+      label: "career",
+      internal_codes: ["career"],
+      display_order: 2,
+      score_10: 3.6,
+      level: "stable",
+      rank: 2,
+      note_20_internal: 7.2,
+      signal_label: null,
+    },
+  ],
+  turning_point: {
+    time: "11:15",
+    title: "Changement de dynamique",
+    change_type: "recomposition",
+    affected_domains: ["love", "career"],
+    what_changes: "Accalmie passagere avant un nouveau pic d'energie.",
+    do: "Observer et s'adapter",
+    avoid: "Forcer le destin",
+  },
+  best_window: {
+    time_range: "08:00–09:30",
+    label: "Votre meilleur créneau",
+    why: "Les conditions astrologiques convergent favorablement.",
+    recommended_actions: ["Suivez votre intuition", "Restez à l'écoute de votre rythme"],
+    is_pivot: false,
+  },
+};
+
+const canonicalPredictionCardsWithoutTurningPoint = {
+  ...canonicalPredictionCards,
+  turning_point: null,
+};
+
+function canonicalDayClimate(summary: string, topDomains = ["love", "career"]) {
+  return {
+    ...canonicalPredictionCards.day_climate,
+    summary,
+    top_domains: topDomains,
+  };
+}
+
+function canonicalDomainRanking(codes: string[]) {
+  return codes.map((code, index) => ({
+    key: code,
+    label: code,
+    internal_codes: [code],
+    display_order: index + 1,
+    score_10: 7 - index,
+    level: "stable",
+    rank: index + 1,
+    note_20_internal: 14 - index,
+    signal_label: null,
+  }));
+}
+
 const predictionOk = {
   meta: {
     date_local: "2026-03-08",
@@ -89,6 +169,8 @@ const predictionOk = {
       drivers: [{ label: "Mars carre Lune" }],
     },
   ],
+  ...canonicalPredictionCards,
+  day_climate: canonicalDayClimate("Journee favorable pour prendre contact et structurer vos priorites."),
   has_llm_narrative: false,
   time_windows: [
     {
@@ -195,6 +277,9 @@ const predictionWithDecisionWindows = {
       dominant_categories: ["love", "work"],
     },
   ],
+  ...canonicalPredictionCardsWithoutTurningPoint,
+  day_climate: canonicalDayClimate("Journée avec des créneaux décisionnels bien définis.", ["love", "work"]),
+  best_window: null,
   has_llm_narrative: false,
   time_windows: [
     {
@@ -345,6 +430,11 @@ const predictionTechnical = {
       ],
     },
   ],
+  ...canonicalPredictionCards,
+  day_climate: canonicalDayClimate(
+    "Votre journée du 2026-03-08 s'annonce équilibrée. Vos points forts : Énergie & Vitalité, Humeur & Climat intérieur, Santé & Hygiène de vie.",
+    ["energy", "mood", "health"],
+  ),
   has_llm_narrative: false,
   time_windows: [
     {
@@ -467,6 +557,12 @@ const predictionNeutralTimelineWithLateWindows = {
       dominant_categories: ["pleasure_creativity", "social_network"],
     },
   ],
+  ...canonicalPredictionCards,
+  day_climate: canonicalDayClimate("Votre journée du 2026-03-10 s'annonce très porteuse.", [
+    "social_network",
+    "pleasure_creativity",
+    "energy",
+  ]),
   has_llm_narrative: false,
   time_windows: [
     {
@@ -559,10 +655,13 @@ const predictionWithInferredEmergence = {
       ],
     },
   ],
+  ...canonicalPredictionCards,
+  day_climate: canonicalDayClimate("Journée équilibrée avec une transition tardive.", ["health", "money"]),
+  domain_ranking: canonicalDomainRanking(["health", "money", "work"]),
   has_llm_narrative: false,
 };
 
-const predictionWithoutApiTurningPointsButClearFallback = {
+const predictionWithoutApiTurningPointsButClearSignal = {
   meta: {
     date_local: "2026-03-12",
     timezone: "Europe/Paris",
@@ -614,6 +713,9 @@ const predictionWithoutApiTurningPointsButClearFallback = {
   ],
   turning_points: [],
   decision_windows: null,
+  ...canonicalPredictionCardsWithoutTurningPoint,
+  day_climate: canonicalDayClimate("Journée équilibrée avec des rééquilibrages progressifs.", ["health", "work"]),
+  domain_ranking: canonicalDomainRanking(["health", "money", "social_network", "work"]),
   has_llm_narrative: false,
 };
 
@@ -1081,10 +1183,18 @@ describe("DailyHoroscopePage", () => {
     expect(screen.queryByText("Entrée en orbe d'aspect")).not.toBeInTheDocument();
   });
 
-  it("n'expose pas de raison technique legacy dans le fallback du moment clé", async () => {
+  it("n'expose pas de raison technique dans le moment clé canonique", async () => {
     const payload = {
       ...predictionOk,
-      turning_point: null,
+      turning_point: {
+        time: "22:00",
+        title: "Changement de dynamique",
+        change_type: "recomposition",
+        affected_domains: ["love"],
+        what_changes: "La dynamique de la journée se réorganise et demande de vous adapter.",
+        do: "Observer et s'adapter",
+        avoid: "Forcer le destin",
+      },
       summary: {
         ...predictionOk.summary,
         main_turning_point: {
@@ -1132,9 +1242,9 @@ describe("DailyHoroscopePage", () => {
     expect(screen.getAllByText(/santé/i).length).toBeGreaterThan(0);
   });
 
-  it("rend le fallback des moments clés plus explicite quand l'API ne fournit aucun turning point", async () => {
+  it("n'affiche pas de moment clé quand l'API ne fournit aucun turning point canonique", async () => {
     installFetchMock({
-      prediction: jsonResponse(predictionWithoutApiTurningPointsButClearFallback),
+      prediction: jsonResponse(predictionWithoutApiTurningPointsButClearSignal),
     });
 
     renderDashboard();

@@ -9,9 +9,11 @@ type ConsultationTypeStepProps = {
   onSelect: (type: ConsultationType) => void
 }
 
-const FALLBACK_ITEMS = CONSULTATION_TYPES
-  .filter((c) => !c.isLegacy)
-  .map((c) => ({ key: c.id, icon_ref: c.icon, title: c.labelKey }))
+const FALLBACK_ITEMS = CONSULTATION_TYPES.map((c) => ({
+  key: c.id,
+  icon_ref: c.icon,
+  title: c.labelKey,
+}))
 
 export function ConsultationTypeStep({
   selectedType,

@@ -19,7 +19,7 @@ export function ConsultationFrameStep({
 }: ConsultationFrameStepProps) {
   const lang = detectLang()
   const isInteractionEligible = draft.type && INTERACTION_ELIGIBLE_TYPES.includes(draft.type)
-  const isRelationType = draft.type === "relation" || draft.type === "relationship"
+  const isRelationshipType = draft.type === "relationship"
 
   return (
     <div className="wizard-step">
@@ -68,7 +68,7 @@ export function ConsultationFrameStep({
         />
         <p className="validation-context-hint">{t("time_horizon_hint", lang)}</p>
 
-        {isInteractionEligible && !isRelationType && onInteractionToggle && (
+        {isInteractionEligible && !isRelationshipType && onInteractionToggle && (
           <div className="interaction-toggle-section">
             <div className="checkbox-label">
               <input

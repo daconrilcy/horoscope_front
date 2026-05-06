@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest"
 import {
   collectCssFallbacks,
+  extractCssVariableUsages,
   collectInlineStyles,
   extractCssVariableDeclarations,
   hasRegistryMatch,
   listFiles,
   parseRegistryPatterns,
+  parseTokenNamespaceRegistry,
+  patternMatches,
   readFrontendFile,
   toStableJson,
 } from "./design-system-policy"
@@ -55,6 +58,50 @@ describe("design-system guards", () => {
     expect(unclassified).toEqual([])
   })
 
+  it("bloque la consommation des namespaces page-scoped hors owner", () => {
+    const pageScopedNamespaces = parseTokenNamespaceRegistry(readFrontendFile("styles/token-namespace-registry.md"))
+      .filter(
+        (entry) =>
+          entry.owner.startsWith("frontend/src/pages/") &&
+          (entry.canonicalTarget.includes("page tokens") || entry.canonicalTarget.includes("page visual roles")),
+      )
+      .map((entry) => ({
+        namespace: entry.namespace,
+        owner: entry.owner.replace(/^frontend\/src\//, ""),
+      }))
+
+    const violations = listFiles("", ".css").flatMap((file) =>
+      extractCssVariableUsages(readFrontendFile(file))
+        .filter((usage) =>
+          pageScopedNamespaces.some((entry) => file !== entry.owner && patternMatches(entry.namespace, usage)),
+        )
+        .map((usage) => ({ file, usage })),
+    )
+
+    expect(violations).toEqual([])
+  })
+
+  it("bloque le retour des namespaces migration-only converges par CS-075", () => {
+    const registry = readFrontendFile("styles/token-namespace-registry.md")
+    const entries = parseTokenNamespaceRegistry(registry)
+    const targetedNamespaces = new Set(["--settings-*", "--profile-*", "--astro-*"])
+    const forbiddenClassifications = new Set(["migration-only", "compatibility"])
+    const staleDefaultShadowNamespace = "--default_" + "dropshadow"
+
+    const targetedViolations = entries
+      .filter((entry) => targetedNamespaces.has(entry.namespace))
+      .filter(
+        (entry) =>
+          forbiddenClassifications.has(entry.status) ||
+          /legacy|alias|shim|fallback|compatibility|migration-only/i.test(
+            `${entry.owner} ${entry.canonicalTarget} ${entry.exitCondition}`,
+          ),
+      )
+
+    expect(entries.map((entry) => entry.namespace)).not.toContain(staleDefaultShadowNamespace)
+    expect(targetedViolations).toEqual([])
+  })
+
   it("expose les roles typographiques requis par CS-028", () => {
     const registry = readFrontendFile("styles/typography-roles.md")
     const utilities = readFrontendFile("styles/utilities.css")
@@ -80,6 +127,32 @@ describe("design-system guards", () => {
       expect(css).not.toMatch(/border-radius:\s*999px;/)
       expect(css).not.toMatch(/gap:\s*8px;/)
       expect(css).not.toMatch(/gap:\s*12px;/)
+    }
+  })
+
+  it("bloque le retour des literals prediction premium migres par CS-078", () => {
+    const migratedFiles = [
+      "pages/DailyHoroscopePage.css",
+      "components/prediction/DailyAdviceCard.css",
+      "components/prediction/DailyPageHeader.css",
+      "components/prediction/DayStateBadge.css",
+    ]
+    const forbiddenLiterals = [
+      /border-radius:\s*50%;/,
+      /font-size:\s*(?:11|12|15|18|20|32|40)px;/,
+      /font-weight:\s*(?:600|650|700);/,
+      /letter-spacing:\s*-0\.0[12]em;/,
+      /letter-spacing:\s*0\.06em;/,
+      /box-shadow:\s*0\s+(?:8|10)px\s+(?:22|24)px\s+rgba\(76,\s*52,\s*122,\s*0\.08\)/,
+      /--(?:glass|text|shadow)-[a-z-]+:\s*(?:#[0-9A-Fa-f]{3,8}|rgba?\()/,
+    ]
+
+    for (const file of migratedFiles) {
+      const css = readFrontendFile(file)
+
+      for (const literal of forbiddenLiterals) {
+        expect(css).not.toMatch(literal)
+      }
     }
   })
 

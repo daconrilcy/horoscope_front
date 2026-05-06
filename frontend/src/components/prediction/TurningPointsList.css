@@ -92,7 +92,7 @@
 .turning-points-list__detail,
 .turning-points-list__movement-detail,
 .turning-points-list__delta-label,
-.turning-points-list__fallback-driver {
+.turning-points-list__driver-detail {
   font-size: 0.85rem;
   color: var(--text-2);
 }
@@ -183,13 +183,13 @@
   font-size: var(--font-size-xs);
 }
 
-.turning-points-list__fallback-summary {
+.turning-points-list__summary {
   margin: 0 0 var(--space-3);
   font-size: var(--font-size-md);
   line-height: var(--line-height-normal);
   color: var(--text-1);
 }
 
-.turning-points-list__fallback-driver {
+.turning-points-list__driver-detail {
   margin-bottom: var(--space-2);
 }

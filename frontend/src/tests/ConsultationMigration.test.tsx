@@ -40,7 +40,7 @@ const queryClient = new QueryClient({
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
 const consultationLabelsPath = resolve(process.cwd(), "src/i18n/consultations.ts")
 
-describe("Consultation Migration (Epic 47)", () => {
+describe("Consultation contract guards", () => {
   beforeEach(() => {
     localStorage.setItem("lang", "fr")
   })
@@ -52,22 +52,31 @@ describe("Consultation Migration (Epic 47)", () => {
     sessionStorage.clear()
   })
 
-  it("normalizes legacy 46.x history items on load", async () => {
-    const legacyHistory = [
+  it("renders canonical history items with structured sections", async () => {
+    const history = [
       {
-        id: "legacy-1",
+        id: "canonical-1",
         type: "dating",
         astrologerId: "1",
-        context: "Ma question legacy",
-        summary: "Une interprétation 46.x",
+        context: "Ma question",
+        objective: "relation/amour",
+        summary: "Une interprétation structurée",
+        sections: [
+          {
+            id: "overview",
+            title: "Vue d'ensemble",
+            content: "",
+            blocks: [{ kind: "paragraph", text: "Bloc canonique rendu." }],
+          },
+        ],
         createdAt: new Date().toISOString(),
       },
     ]
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(legacyHistory))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history))
 
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={["/consultations/result?id=legacy-1"]} future={routerFutureFlags}>
+        <MemoryRouter initialEntries={["/consultations/result?id=canonical-1"]} future={routerFutureFlags}>
           <ConsultationProvider>
             <ConsultationResultPage />
           </ConsultationProvider>
@@ -76,7 +85,8 @@ describe("Consultation Migration (Epic 47)", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText("Une interprétation 46.x")).toBeInTheDocument()
+      expect(screen.getByText("Une interprétation structurée")).toBeInTheDocument()
+      expect(screen.getByText("Bloc canonique rendu.")).toBeInTheDocument()
       expect(screen.getByText("relation/amour")).toBeInTheDocument()
     })
   })
@@ -123,7 +133,7 @@ describe("Consultation Migration (Epic 47)", () => {
     expect(stored[0].fallbackMode).toBe("user_no_birth_time")
   })
 
-  it("exposes canonical consultation labels without legacy vocabulary", () => {
+  it("exposes canonical consultation labels without retired vocabulary", () => {
     expect({
       fr: tConsultations("type_dating", "fr"),
       en: tConsultations("type_dating", "en"),
@@ -165,6 +175,6 @@ describe("Consultation Migration (Epic 47)", () => {
     })
 
     const consultationLabelsSource = readFileSync(consultationLabelsPath, "utf8")
-    expect(consultationLabelsSource).not.toMatch(/legacy/i)
+    expect(consultationLabelsSource).not.toMatch(/retired-api-vocabulary/i)
   })
 })

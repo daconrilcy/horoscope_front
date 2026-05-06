@@ -27,7 +27,7 @@ type ConsultationFormStepProps = {
   onSelectedExistingChange?: (externalId: string | null) => void
 }
 
-const FALLBACK_ITEMS = CONSULTATION_TYPES.filter((c) => !c.isLegacy).map((c) => ({
+const FALLBACK_ITEMS = CONSULTATION_TYPES.map((c) => ({
   key: c.id as ConsultationType,
   icon: c.icon,
   labelKey: c.labelKey,

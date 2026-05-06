@@ -3,7 +3,6 @@ import type { DailyPredictionTimeBlock } from "../../types/dailyPrediction";
 import type { Lang } from "../../i18n/predictions";
 import { getLocale } from "../../utils/locale";
 import {
-  buildTimelineFallbackSummary,
   getCategoryMeta,
   getPredictionMessage,
 } from "../../utils/predictionI18n";
@@ -37,7 +36,7 @@ export const DayTimeline: React.FC<Props> = ({ timeline, lang, onTimelineClick }
       <div className="day-timeline__list">
         {condensedTimeline.map((block, idx) => {
           const isPivot = block.turning_point;
-          const label = block.summary || buildTimelineFallbackSummary(block.dominant_categories, block.tone_code, lang);
+          const label = block.summary ?? getPredictionMessage("no_detail_available", lang);
           const timeLabel = `${formatTime(block.start_local)} - ${formatTime(block.end_local)}`;
           
           return (

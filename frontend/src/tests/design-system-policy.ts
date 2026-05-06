@@ -44,6 +44,11 @@ export function extractCssFallbacks(css: string): Array<{ token: string; literal
   }))
 }
 
+/** Extrait les variables CSS consommees via var() pour les gardes d'ownership. */
+export function extractCssVariableUsages(css: string): string[] {
+  return [...css.matchAll(/var\(\s*(--[a-zA-Z0-9_-]+)/g)].map((match) => match[1])
+}
+
 export function collectCssFallbacks(): Array<{ file: string; token: string; literal: string }> {
   return listFiles("", ".css").flatMap((file) =>
     extractCssFallbacks(readFrontendFile(file)).map((fallback) => ({ file, ...fallback })),
@@ -75,6 +80,36 @@ export function parseCssFallbackRegistry(
 
 export function parseRegistryPatterns(markdown: string): string[] {
   return [...markdown.matchAll(/\|\s*`([^`]+)`\s*\|/g)].map((match) => match[1])
+}
+
+/** Ligne normalisee du registre des namespaces de tokens CSS. */
+export type TokenNamespaceRegistryEntry = {
+  namespace: string
+  status: string
+  owner: string
+  canonicalTarget: string
+  exitCondition: string
+}
+
+/** Parse le registre markdown afin que les tests statiques suivent la source canonique. */
+export function parseTokenNamespaceRegistry(markdown: string): TokenNamespaceRegistryEntry[] {
+  return markdown
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith("| `--"))
+    .map((line) => {
+      const [namespace, status, owner, canonicalTarget, exitCondition] = line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim().replace(/^`|`$/g, ""))
+
+      return {
+        namespace,
+        status,
+        owner,
+        canonicalTarget,
+        exitCondition,
+      }
+    })
 }
 
 export function patternMatches(pattern: string, value: string): boolean {
