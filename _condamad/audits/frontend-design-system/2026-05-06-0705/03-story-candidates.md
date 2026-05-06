@@ -1,0 +1,249 @@
+# Story Candidates - frontend-design-system
+
+## SC-001
+
+- Candidate ID: SC-001
+- Source finding: F-002
+- Suggested story title: Retirer le dernier fallback CSS migration-only
+- Suggested archetype: css-fallback-debt-reduction
+- Primary domain: frontend-design-system
+- Required contracts: `RG-048`, `RG-050`, `frontend/src/styles/css-fallback-allowlist.md`, `frontend/src/tests/design-system-allowlist.ts`
+- Draft objective: remove the remaining migration-only CSS fallback while preserving the two dynamic `--usage-progress` bridges.
+- Must include:
+  - Remove `var(--glass-heavy, #1a1a1a)` only after confirming the canonical `--glass-heavy` or replacement token is always declared for the admin entitlement surface.
+  - Keep `--usage-progress` fallbacks classified as runtime dynamic bridges unless the runtime progress bridge changes.
+  - Update markdown and executable fallback allowlists in the same change.
+  - Do not introduce new local literal fallbacks.
+- Validation hints:
+  - `cd frontend && npm run test -- css-fallback design-system theme-tokens`
+  - `cd frontend && npm run lint`
+  - `rg -n "var\\(\\s*--[A-Za-z0-9_-]+\\s*," frontend/src -g "*.css"`
+- Blockers: none for the migration-only fallback if the canonical replacement is present; product decision only if `--glass-heavy` should be retired entirely.
+- Exhaustive files to modify:
+  - `frontend/src/pages/admin/AdminEntitlementsPage.css`
+  - `frontend/src/styles/css-fallback-allowlist.md`
+  - `frontend/src/tests/design-system-allowlist.ts`
+  - `frontend/src/tests/css-fallback-policy.test.ts`
+
+## SC-002
+
+- Candidate ID: SC-002
+- Source finding: F-003
+- Suggested story title: Reduire les exceptions de styles inline restantes
+- Suggested archetype: inline-style-debt-reduction
+- Primary domain: frontend-design-system
+- Required contracts: `RG-047`, `RG-050`, `frontend/src/tests/inline-style-allowlist.ts`, `frontend/src/tests/design-system-allowlist.ts`
+- Draft objective: convert inline style entries that can be represented by CSS custom properties, classes, or component variants without losing runtime behavior.
+- Must include:
+  - Classify every current inline style as runtime geometry, CSS custom-property bridge, color bridge, or style-prop pass-through.
+  - Preserve `Skeleton` style-prop pass-through unless the public component API changes.
+  - Prefer typed CSS variable bridges or variants for `Badge` color and score widths when feasible.
+  - Update allowlists only after code changes.
+- Validation hints:
+  - `cd frontend && npm run test -- inline-style design-system`
+  - `cd frontend && npm run lint`
+  - `rg -n "style=\\{" frontend/src -g "*.tsx"`
+- Blockers: `Skeleton` style-prop behavior may be an intentional component API contract.
+- Exhaustive files to modify:
+  - `frontend/src/layouts/TwoColumnLayout.tsx`
+  - `frontend/src/layouts/TwoColumnLayout.css`
+  - `frontend/src/components/DomainRankingCard.tsx`
+  - `frontend/src/components/DomainRankingCard.css`
+  - `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
+  - `frontend/src/components/prediction/DayTimelineSectionV4.css`
+  - `frontend/src/components/ui/Badge/Badge.tsx`
+  - `frontend/src/components/ui/Badge/Badge.css`
+  - `frontend/src/components/ui/Skeleton/Skeleton.tsx`
+  - `frontend/src/components/ui/Skeleton/Skeleton.css`
+  - `frontend/src/tests/inline-style-allowlist.ts`
+  - `frontend/src/tests/design-system-allowlist.ts`
+  - `frontend/src/tests/inline-style-policy.test.ts`
+
+## SC-003
+
+- Candidate ID: SC-003
+- Source finding: F-004
+- Suggested story title: Migrer un cluster coherent de valeurs visuelles hardcodees
+- Suggested archetype: hardcoded-design-value-reduction
+- Primary domain: frontend-design-system
+- Required contracts: `RG-044`, `RG-045`, `RG-046`, `RG-050`, `frontend/src/styles/token-namespace-registry.md`, `frontend/src/styles/typography-roles.md`
+- Draft objective: reduce one coherent product-surface batch from the 113-file hardcoded visual list without broad refactor.
+- Must include:
+  - Pick one bounded cluster: admin prompts, admin shell, prediction cards, shared UI primitives, chat shell, landing, natal, or app legacy shell.
+  - Use existing tokens, typography roles, and utility classes before creating new tokens.
+  - Record before/after counts for touched files.
+  - Update token namespace or typography registries only when a durable semantic token or role is introduced.
+- Validation hints:
+  - `cd frontend && npm run test -- design-system theme-tokens visual-smoke`
+  - `cd frontend && npm run lint`
+  - Targeted component/page tests for the chosen surface.
+- Blockers: product/design decision may be needed when near-equivalent literal values should converge to one semantic token.
+- Exhaustive files to modify:
+  - `frontend/src/App.css`
+  - `frontend/src/index.css`
+  - `frontend/src/styles/utilities.css`
+  - `frontend/src/styles/glass.css`
+  - `frontend/src/pages/admin/AdminDashboardPage.css`
+  - `frontend/src/layouts/AdminLayout.css`
+  - `frontend/src/styles/backgrounds.css`
+  - `frontend/src/tests/AdminPage.test.tsx`
+  - `frontend/src/layouts/AuthLayout.css`
+  - `frontend/src/layouts/LandingLayout.css`
+  - `frontend/src/layouts/PageLayout.css`
+  - `frontend/src/layouts/TwoColumnLayout.css`
+  - `frontend/src/layouts/TwoColumnLayout.tsx`
+  - `frontend/src/layouts/WizardLayout.css`
+  - `frontend/src/pages/admin/AdminContentPage.css`
+  - `frontend/src/pages/admin/AdminAiGenerationsPage.css`
+  - `frontend/src/pages/admin/PersonasAdmin.css`
+  - `frontend/src/components/ErrorBoundary/ErrorBoundary.css`
+  - `frontend/src/components/ui/UserMenu/UserMenu.css`
+  - `frontend/src/pages/admin/AdminUsersPage.css`
+  - `frontend/src/components/ui/UserAvatar/UserAvatar.css`
+  - `frontend/src/components/DomainRankingCard.css`
+  - `frontend/src/pages/support/SupportTicketList.tsx`
+  - `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.css`
+  - `frontend/src/pages/admin/AdminSupportPage.css`
+  - `frontend/src/tests/visual-smoke.test.tsx`
+  - `frontend/src/components/DayClimateHero.css`
+  - `frontend/src/pages/admin/AdminSamplePayloadsAdmin.css`
+  - `frontend/src/components/ui/Skeleton/Skeleton.tsx`
+  - `frontend/src/tests/AdminPromptsPage.test.tsx`
+  - `frontend/src/pages/admin/AdminLogsPage.css`
+  - `frontend/src/components/ui/Skeleton/Skeleton.test.tsx`
+  - `frontend/src/components/ui/Skeleton/Skeleton.css`
+  - `frontend/src/tests/MiniInsightCard.test.tsx`
+  - `frontend/src/pages/admin/AdminSettingsPage.css`
+  - `frontend/src/features/chat/components/ConversationList.css`
+  - `frontend/src/features/chat/components/ConversationItem.css`
+  - `frontend/src/pages/admin/AdminEntitlementsPage.css`
+  - `frontend/src/features/chat/components/ChatWindow.css`
+  - `frontend/src/pages/admin/AdminUserDetailPage.css`
+  - `frontend/src/pages/DashboardPage.css`
+  - `frontend/src/features/chat/components/ChatQuotaBanner.css`
+  - `frontend/src/components/ConstellationSVG.tsx`
+  - `frontend/src/features/chat/components/ChatPageHeader.css`
+  - `frontend/src/features/chat/components/ChatComposer.css`
+  - `frontend/src/pages/admin/AdminPromptsPage.css`
+  - `frontend/src/components/BestWindowCard.css`
+  - `frontend/src/tests/HeroHoroscopeCard.test.tsx`
+  - `frontend/src/components/ui/Select/Select.css`
+  - `frontend/src/components/ui/Modal/Modal.css`
+  - `frontend/src/pages/AstrologerProfilePage.css`
+  - `frontend/src/pages/DailyHoroscopePage.css`
+  - `frontend/src/components/AstroFoundationSection.css`
+  - `frontend/src/pages/billing/billing-return.css`
+  - `frontend/src/pages/BirthProfilePage.css`
+  - `frontend/src/components/ui/LockedSection/LockedSection.css`
+  - `frontend/src/components/AstroDailyEvents.css`
+  - `frontend/src/components/astro/AstroMoodBackground.tsx`
+  - `frontend/src/components/astro/AstroMoodBackground.css`
+  - `frontend/src/components/AdminGuard.css`
+  - `frontend/src/components/ShortcutCard.css`
+  - `frontend/src/components/ui/Field/Field.css`
+  - `frontend/src/pages/ChatPage.css`
+  - `frontend/src/pages/ConsultationResultPage.css`
+  - `frontend/src/components/ui/ErrorState/ErrorState.css`
+  - `frontend/src/components/settings/DeleteAccountModal.css`
+  - `frontend/src/pages/NatalChartPage.css`
+  - `frontend/src/components/ui/EmptyState/EmptyState.css`
+  - `frontend/src/pages/PrivacyPolicyPage.css`
+  - `frontend/src/pages/settings/Settings.css`
+  - `frontend/src/components/ui/Card/Card.css`
+  - `frontend/src/components/ui/Button/Button.css`
+  - `frontend/src/components/ui/Badge/Badge.css`
+  - `frontend/src/components/TurningPointCard.css`
+  - `frontend/src/components/prediction/TurningPointsList.css`
+  - `frontend/src/components/SignUpForm.tsx`
+  - `frontend/src/pages/landing/sections/TestimonialsSection.css`
+  - `frontend/src/components/SignUpForm.css`
+  - `frontend/src/pages/landing/sections/SolutionSection.css`
+  - `frontend/src/pages/landing/sections/SocialProofSection.css`
+  - `frontend/src/pages/landing/sections/FaqSection.css`
+  - `frontend/src/components/prediction/TimelineRail.css`
+  - `frontend/src/pages/landing/sections/ProblemSection.css`
+  - `frontend/src/tests/BottomNavPremium.test.tsx`
+  - `frontend/src/pages/landing/sections/PricingSection.css`
+  - `frontend/src/pages/landing/LandingPage.css`
+  - `frontend/src/components/prediction/SectionTitle.css`
+  - `frontend/src/components/prediction/PeriodCardsRow.css`
+  - `frontend/src/pages/HelpPage.css`
+  - `frontend/src/pages/landing/sections/LandingNavbar.css`
+  - `frontend/src/pages/landing/sections/LandingFooter.css`
+  - `frontend/src/components/prediction/PeriodCard.css`
+  - `frontend/src/components/prediction/KeyPointCard.css`
+  - `frontend/src/components/prediction/DecisionWindowsSection.tsx`
+  - `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
+  - `frontend/src/components/prediction/DayTimelineSectionV4.css`
+  - `frontend/src/components/prediction/DailyAdviceCard.css`
+  - `frontend/src/components/prediction/DayPredictionCard.tsx`
+  - `frontend/src/components/prediction/DayPredictionCard.css`
+  - `frontend/src/tests/ShortcutCard.test.tsx`
+  - `frontend/src/components/prediction/DayAgenda.css`
+  - `frontend/src/components/prediction/DailyPageHeader.css`
+  - `frontend/src/components/prediction/CategoryGrid.css`
+  - `frontend/src/components/prediction/DayTimelineSection.css`
+  - `frontend/src/components/prediction/DayTimeline.css`
+  - `frontend/src/components/prediction/DayStateBadge.css`
+  - `frontend/src/components/MiniInsightCard.css`
+  - `frontend/src/components/NatalInterpretation.css`
+  - `frontend/src/components/HeroHoroscopeCard.css`
+  - `frontend/src/components/layout/Header.css`
+  - `frontend/src/components/layout/Sidebar.css`
+  - `frontend/src/components/icons/DashboardIcons.tsx`
+  - `frontend/src/tests/chat/ChatComponents.test.tsx`
+  - `frontend/src/styles/token-namespace-registry.md` if new token ownership is introduced.
+  - `frontend/src/styles/typography-roles.md` if typography roles or exceptions change.
+  - `frontend/src/tests/design-system-allowlist.ts` if guard exceptions change.
+
+## SC-004
+
+- Candidate ID: SC-004
+- Source finding: F-005
+- Suggested story title: Retirer les selectors legacy admin prompts et aliases compatibility restants
+- Suggested archetype: legacy-style-surface-extinction
+- Primary domain: frontend-design-system
+- Required contracts: `RG-044`, `RG-049`, `RG-050`, `frontend/src/styles/legacy-style-surface-registry.md`, `frontend/src/styles/token-namespace-registry.md`
+- Draft objective: retire or narrow classified admin prompt legacy selectors and compatibility token aliases while keeping No Legacy governance exact.
+- Must include:
+  - Separate admin prompt route markup/style migration from global token alias retirement.
+  - Remove `.admin-prompts-legacy*` and `.admin-prompts-modal--legacy-rollback` only when canonical route-specific markup exists.
+  - Retire `--text-*`, `--glass*`, and `--primary*` aliases only after consumers use canonical `--color-*` tokens.
+  - Update both registries and keep legacy-style tests exact.
+- Validation hints:
+  - `cd frontend && npm run test -- legacy-style theme-tokens design-system AdminPromptsPage`
+  - `cd frontend && npm run lint`
+  - `rg -n "legacy|--text-|--glass|--primary" frontend/src/styles frontend/src/App.css frontend/src/pages/admin/AdminPromptsPage.css`
+- Blockers: `admin-prompts-legacy` is marked external-active and still consumed by `AdminPromptsPage.tsx`; user/product decision required before route-specific migration.
+- Exhaustive files to modify:
+  - `frontend/src/pages/admin/AdminPromptsPage.tsx`
+  - `frontend/src/pages/admin/AdminPromptsPage.css`
+  - `frontend/src/App.css`
+  - `frontend/src/styles/theme.css`
+  - `frontend/src/styles/token-namespace-registry.md`
+  - `frontend/src/styles/legacy-style-surface-registry.md`
+  - `frontend/src/tests/legacy-style-policy.test.ts`
+  - `frontend/src/tests/theme-tokens.test.ts`
+  - `frontend/src/tests/design-system-guards.test.ts`
+
+## Regression Guardrails
+
+- Guardrail source: `_condamad/stories/regression-guardrails.md`
+- Applicable invariants:
+  - `RG-044` - token namespaces must remain classified.
+  - `RG-045` - migrated hardcoded values must not return unclassified.
+  - `RG-046` - semantic typography roles are canonical for migrated surfaces.
+  - `RG-047` - static inline styles are forbidden except exact allowlisted dynamic cases.
+  - `RG-048` - CSS fallbacks must remain classified and exact.
+  - `RG-049` - legacy style surfaces must stay owned and classified.
+  - `RG-050` - anti-drift tests and allowlists must remain executable.
+- Non-applicable invariants:
+  - Backend-only guardrails are outside this frontend-design-system audit.
+- Required regression evidence:
+  - Targeted npm tests named in each candidate.
+  - Static scans listed in each candidate.
+  - Full `npm run test` after stories touching shared tests or registries.
+- Allowed differences:
+  - Fallback and inline allowlist counts may decrease.
+  - Legacy selector and compatibility alias registries may shrink.
+  - Hardcoded-value scan counts may decrease or move to canonical token sources.
