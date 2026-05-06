@@ -1,3 +1,5 @@
+/* Primitive de section verrouillee connectee aux tokens globaux sans valeurs locales. */
+
 .locked-section {
   position: relative;
   overflow: hidden;
@@ -20,7 +22,7 @@
   justify-content: center;
   padding: var(--space-4);
   gap: var(--space-3);
-  background: var(--glass-2));
+  background: var(--color-glass-bg-2);
   z-index: 10;
 }
 
@@ -31,9 +33,9 @@
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
-  background: var(--glass));
-  border: 1px solid var(--glass-border);
-  color: var(--text-1);
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-text-primary);
 }
 
 .locked-section__icon {
@@ -44,7 +46,7 @@
 .locked-section__label {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--text-1);
+  color: var(--color-text-primary);
   text-align: center;
 }
 

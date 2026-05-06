@@ -226,12 +226,6 @@ export function humanizePredictionDriverLabel(
   const target = typeof driver.target === "string" ? driver.target : null;
   const aspect = typeof driver.aspect === "string" ? driver.aspect : null;
 
-  if (eventType === "exact" && body && aspect && target) {
-    return lang === "fr"
-      ? `Aspect exact : ${body} ${aspect} ${target}`
-      : `Exact aspect: ${body} ${aspect} ${target}`;
-  }
-
   if (eventType === "planetary_hour_change") {
     return lang === "fr" ? "Changement d'heure planétaire" : "Planetary hour change";
   }
@@ -242,8 +236,6 @@ export function humanizePredictionDriverLabel(
     aspect_exact_to_personal: { fr: "Aspect exact", en: "Exact aspect" },
     aspect_enter_orb: { fr: "Entrée en orbe d'aspect", en: "Aspect orb opening" },
     aspect_exit_orb: { fr: "Sortie d'orbe d'aspect", en: "Aspect orb closing" },
-    enter_orb: { fr: "Entrée en orbe", en: "Orb opening" },
-    exit_orb: { fr: "Sortie d'orbe", en: "Orb closing" },
     moon_sign_ingress: { fr: "Changement de signe de la Lune", en: "Moon sign change" },
     asc_sign_change: { fr: "Changement de signe à l'Ascendant", en: "Ascendant sign change" },
   };

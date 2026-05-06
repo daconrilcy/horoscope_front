@@ -1,3 +1,5 @@
+/* Primitive d'etat vide connectee aux tokens globaux sans valeurs locales. */
+
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -12,7 +14,7 @@
 }
 
 .empty-state__icon {
-  color: var(--color-text-muted));
+  color: var(--color-text-muted);
   margin-bottom: var(--space-2);
 }
 
@@ -30,7 +32,7 @@
 
 .empty-state__description {
   font-size: var(--font-size-md);
-  color: var(--color-text-secondary));
+  color: var(--color-text-secondary);
   margin: 0;
   line-height: var(--line-height-normal);
 }

@@ -94,7 +94,7 @@ describe("theme.css validation (Static Analysis)", () => {
       expect(rootContent).toMatch(pattern)
     })
 
-    it("has exactly 21 premium tokens + extra compatibility tokens", () => {
+    it("has at least the premium token baseline plus tracked extras", () => {
       const tokensCount = (rootContent.match(/--[\w-]+:/g) || []).length
       expect(tokensCount).toBeGreaterThanOrEqual(21)
     })

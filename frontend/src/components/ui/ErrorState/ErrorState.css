@@ -1,3 +1,5 @@
+/* Primitive d'etat d'erreur connectee aux tokens globaux sans valeurs locales. */
+
 .error-state {
   display: flex;
   flex-direction: column;
@@ -14,30 +16,30 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-full);
+  background: var(--color-error-surface);
   margin-bottom: var(--space-4);
 }
 
 .error-state__icon {
-  color: var(--error);
+  color: var(--color-error);
   width: 24px;
   height: 24px;
 }
 
 .error-state__title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-headline);
   margin: 0 0 var(--space-2) 0;
 }
 
 .error-state__message {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin: 0 0 var(--space-6) 0;
   max-width: 320px;
-  line-height: 1.6;
+  line-height: var(--line-height-relaxed);
 }
 
 .error-state__button {

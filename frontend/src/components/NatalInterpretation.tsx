@@ -1,3 +1,4 @@
+// Composant React chargeant et affichant les interpretations de theme natal.
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { FeatureEntitlementResponse } from "../api/billing";
@@ -991,12 +992,6 @@ function formatEvidenceId(eid: string): string {
     return `Aspect ${label(a)} - ${label(b)} (${label(kind)})`;
   }
 
-  const aspectLegacy = eid.match(/^(CONJUNCTION|SEXTILE|SQUARE|TRINE|OPPOSITION)_([A-Z]+)_([A-Z]+)$/);
-  if (aspectLegacy) {
-    const [, kind, a, b] = aspectLegacy;
-    return `Aspect ${label(a)} - ${label(b)} (${label(kind)})`;
-  }
-
   const parts = eid.split("_");
   return parts
     .map((p) => {
@@ -1017,10 +1012,7 @@ type EvidenceCategoryKey =
   | "other"
 
 function _categorizeEvidence(eid: string): EvidenceCategoryKey {
-  if (
-    eid.startsWith("ASPECT_") ||
-    /^(CONJUNCTION|SEXTILE|SQUARE|TRINE|OPPOSITION)_/.test(eid)
-  ) {
+  if (eid.startsWith("ASPECT_")) {
     return "major_aspects";
   }
   if (/^(ASC|MC|DSC|IC)_/.test(eid) || /(ASC|MC|DSC|IC)/.test(eid)) {

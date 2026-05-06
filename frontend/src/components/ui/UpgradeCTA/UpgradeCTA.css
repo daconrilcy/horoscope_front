@@ -1,3 +1,5 @@
+/* Primitive de CTA d'upgrade connectee aux tokens globaux sans valeurs locales. */
+
 .upgrade-cta {
   display: inline-flex;
   align-items: center;
@@ -12,7 +14,7 @@
 .upgrade-cta--button {
   padding: var(--space-2) var(--space-4);
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-text-on-astro);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   box-shadow: var(--shadow-cta);
@@ -21,7 +23,7 @@
 .upgrade-cta--button:hover {
   background: var(--color-primary-strong);
   transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(134, 108, 208, 0.3);
+  box-shadow: var(--shadow-cta-hover);
 }
 
 .upgrade-cta--button:active {

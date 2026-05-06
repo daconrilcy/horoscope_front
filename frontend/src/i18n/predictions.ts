@@ -1,3 +1,4 @@
+// Libelles i18n canoniques pour les surfaces de prediction quotidienne.
 import type { DayPeriodKey } from "../types/dayTimeline";
 
 export type Lang = "fr" | "en";
@@ -28,19 +29,6 @@ export const CATEGORY_LABELS: Record<string, Record<Lang, string>> = {
   energie_bienetre: { fr: "Énergie & bien-être", en: "Energy & Well-being" },
   argent_ressources: { fr: "Argent & ressources", en: "Money & Resources" },
   vie_personnelle: { fr: "Vie personnelle", en: "Personal Life" },
-  // Legacy
-  amour: { fr: "Amour & Relations", en: "Love & Relationships" },
-  travail: { fr: "Travail", en: "Work" },
-  carriere: { fr: "Carrière", en: "Career" },
-  energie: { fr: "Énergie & Vitalité", en: "Energy & Vitality" },
-  vitalite: { fr: "Énergie & Vitalité", en: "Energy & Vitality" },
-  humeur: { fr: "Humeur & Climat intérieur", en: "Mood & Inner Climate" },
-  sante: { fr: "Santé & Hygiène de vie", en: "Health & Routine" },
-  argent: { fr: "Argent & Ressources", en: "Money & Resources" },
-  finances: { fr: "Argent & Ressources", en: "Money & Resources" },
-  sexe_intimite: { fr: "Sexe & Intimité", en: "Sex & Intimacy" },
-  famille_foyer: { fr: "Famille & Foyer", en: "Family & Home" },
-  social_reseau: { fr: "Vie sociale & Réseau", en: "Social Network" },
 };
 
 export const NOTE_BAND_LABELS: Record<string, Record<Lang, string>> = {
@@ -49,10 +37,6 @@ export const NOTE_BAND_LABELS: Record<string, Record<Lang, string>> = {
   neutral: { fr: "Neutre", en: "Neutral" },
   favorable: { fr: "Porteur", en: "Favorable" },
   very_favorable: { fr: "Très favorable", en: "Very favorable" },
-  tendu: { fr: "Tendu", en: "Tense" },
-  neutre: { fr: "Neutre", en: "Neutral" },
-  porteur: { fr: "Porteur", en: "Favorable" },
-  "très favorable": { fr: "Très favorable", en: "Very favorable" },
 };
 
 export const TONE_LABELS: Record<string, Record<Lang, string>> = {
@@ -139,13 +123,6 @@ export const DRIVER_TYPE_LABELS: Record<string, Record<Lang, string>> = {
   asc_sign_change: { fr: "Changement de signe à l'Ascendant", en: "Ascendant sign change" },
   planet_ingress: { fr: "Changement de signe planétaire", en: "Planetary sign change" },
   planetary_hour_change: { fr: "Changement d'heure planétaire", en: "Planetary hour change" },
-  // Legacy codes
-  exact: { fr: "Aspect exact", en: "Exact aspect" },
-  ingress: { fr: "Changement de signe", en: "Sign ingress" },
-  station: { fr: "Station planétaire", en: "Planetary station" },
-  enter_orb: { fr: "Entrée en orbe", en: "Orb opening" },
-  exit_orb: { fr: "Sortie d'orbe", en: "Orb closing" },
-  generic_event: { fr: "Configuration céleste notable", en: "Notable celestial configuration" },
 };
 
 export const MOVEMENT_DIRECTION_LABELS: Record<string, Record<Lang, string>> = {
@@ -229,9 +206,7 @@ export const PREDICTION_UI_MESSAGES: Record<
   daily_advice_emphasis_placeholder: { fr: 'Un apaisement profond vous attend.', en: 'A deep sense of calm awaits you.' },
 };
 
-/**
- * Helper to get a label with fallback.
- */
+/** Retourne le libelle i18n canonique d'un code, ou le code brut s'il est inconnu. */
 export function getLabel(
   dictionary: Record<string, Record<Lang, string>>,
   code: string,

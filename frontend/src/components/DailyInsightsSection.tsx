@@ -1,4 +1,4 @@
-import React from 'react'
+// Section React affichant les insights quotidiens sous forme de mini-cartes.
 import { MiniInsightCard } from './MiniInsightCard'
 import { useDailyInsights, type InsightItem } from '../hooks/useDailyInsights'
 
@@ -9,7 +9,7 @@ export interface DailyInsightsSectionProps {
 }
 
 /**
- * Presentational component for DailyInsightsSection.
+ * Rend la grille d'insights a partir de donnees deja resolues.
  */
 export function DailyInsightsSectionPresenter({ 
   ariaLabel, 
@@ -35,7 +35,7 @@ export function DailyInsightsSectionPresenter({
 }
 
 /**
- * Container component (default export) to maintain backward compatibility.
+ * Charge les insights quotidiens et applique les remplacements transmis par les props.
  */
 export function DailyInsightsSection(props: DailyInsightsSectionProps) {
   const { ariaLabel, items } = useDailyInsights()

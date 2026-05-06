@@ -42,7 +42,7 @@ export const SkeletonGroup: React.FC<SkeletonGroupProps> = ({
   widths,
   height = '1rem',
   className,
-  gap = 'var(--space-2, 0.5rem)',
+  gap = 'var(--space-2)',
 }) => {
   const defaultWidths = ['80%', '60%', '75%', '50%', '70%'];
   const groupStyle = { '--skeleton-gap': gap } as React.CSSProperties;

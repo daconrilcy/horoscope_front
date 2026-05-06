@@ -18,7 +18,6 @@ function makePrediction(overrides: Partial<DailyPredictionResponse> = {}): Daily
     },
     summary: {
       overall_tone: 'mixed',
-      overall_summary: 'Journee mobile.',
       top_categories: [],
       bottom_categories: [],
       best_window: null,

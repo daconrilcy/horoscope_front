@@ -1,4 +1,4 @@
-/* Primitive champ connectee aux tokens globaux sans fallbacks locaux. */
+/* Primitive champ connectee aux tokens globaux sans valeurs locales. */
 
 .field {
   display: flex;

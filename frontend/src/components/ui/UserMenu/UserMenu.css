@@ -1,12 +1,14 @@
+/* Primitive de menu utilisateur connectee aux tokens globaux sans valeurs locales. */
+
 .user-menu {
   position: absolute;
   top: calc(100% + var(--space-2));
   right: 0;
   min-width: 220px;
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   z-index: 300;
@@ -42,7 +44,7 @@
 
 .user-menu__email {
   font-size: var(--font-size-sm);
-  color: var(--text-1);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -51,14 +53,14 @@
 
 .user-menu__role {
   font-size: var(--font-size-xs);
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--type-ui-role-letter-spacing);
 }
 
 .user-menu__divider {
   height: 1px;
-  background: var(--glass-border);
+  background: var(--color-glass-border);
   margin: 0;
 }
 
@@ -69,16 +71,16 @@
   padding: var(--space-3) var(--space-4);
   background: none;
   border: none;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   font-size: var(--font-size-sm);
   cursor: pointer;
   text-align: left;
   transition: background var(--duration-fast) var(--easing-default);
-  box-shadow: none;
+  box-shadow: var(--shadow-none);
 }
 
 .user-menu__item:hover {
-  background: var(--glass-2);
+  background: var(--color-glass-bg-2);
   transform: none;
 }
 

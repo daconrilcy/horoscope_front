@@ -1,3 +1,4 @@
+// Page React gerant les conversations de chat astrologique et leurs redirections canoniques.
 import { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 
@@ -79,8 +80,6 @@ export function ChatPage() {
   const [searchParams] = useSearchParams()
   // AC2: support ?personaId=xxx for get-or-create redirect
   const personaIdFromUrl = searchParams.get("personaId")
-  // Deprecated: astrologerId kept for backwards compatibility
-  const astrologerIdFromUrl = searchParams.get("astrologerId")
   const navigate = useNavigate()
   const isMobile = useIsMobile()
   const lang = detectLang()
@@ -206,9 +205,9 @@ export function ChatPage() {
   )
 
   const handlePickAstrologer = useCallback(
-    async (astrologerId: string) => {
+    async (personaId: string) => {
       try {
-        const result = await createConversation.mutateAsync(astrologerId)
+        const result = await createConversation.mutateAsync(personaId)
         setShowAstrologerPicker(false)
         void conversations.refetch()
         navigate(`/chat/${result.conversation_id}`)
@@ -254,7 +253,6 @@ export function ChatPage() {
           ...(selectedConversationId
             ? { conversation_id: selectedConversationId }
             : {}),
-          ...(astrologerIdFromUrl ? { persona_id: astrologerIdFromUrl } : {}),
         })
 
         if (!selectedConversationId) {
@@ -303,7 +301,6 @@ export function ChatPage() {
       conversations,
       quota,
       history,
-      astrologerIdFromUrl,
       lastClientMessageId,
     ]
   )

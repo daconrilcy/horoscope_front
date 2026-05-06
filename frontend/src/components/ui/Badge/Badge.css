@@ -48,7 +48,7 @@
 .badge--lg {
   width: 44px;
   height: 44px;
-  border-radius: 16px; /* Specific to ShortcutCard */
+  border-radius: var(--radius-shortcut-badge);
 }
 
 .badge--icon svg {

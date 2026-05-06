@@ -83,7 +83,6 @@ export interface DailyPredictionTimeBlock {
 
 export interface DailyPredictionSummary {
   overall_tone: string | null;
-  overall_summary: string | null;
   calibration_note?: string | null;
   top_categories: string[];
   bottom_categories: string[];

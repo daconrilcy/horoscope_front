@@ -109,7 +109,6 @@ const predictionOk = {
   },
   summary: {
     overall_tone: "open",
-    overall_summary: "Journee favorable pour prendre contact et structurer vos priorites.",
     top_categories: ["love", "career"],
     bottom_categories: ["energy", "social_network"],
     best_window: {
@@ -224,7 +223,6 @@ const predictionWithDecisionWindows = {
   },
   summary: {
     overall_tone: "positive",
-    overall_summary: "Journée avec des créneaux décisionnels bien définis.",
     top_categories: ["love", "work"],
     bottom_categories: ["energy"],
     best_window: null,
@@ -335,8 +333,6 @@ const predictionTechnical = {
   },
   summary: {
     overall_tone: "neutral",
-    overall_summary:
-      "Votre journée du 2026-03-08 s'annonce équilibrée. Vos points forts : Énergie & Vitalité, Humeur & Climat intérieur, Santé & Hygiène de vie.",
     calibration_note:
       "Les scores sont calculés sans données historiques : ils reflètent des tendances relatives à la journée, pas des statistiques absolues.",
     top_categories: ["energy", "mood", "health"],
@@ -422,7 +418,7 @@ const predictionTechnical = {
       summary: null,
       drivers: [
         {
-          event_type: "exact",
+          event_type: "aspect_exact_to_personal",
           body: "Venus",
           target: "Pluto",
           aspect: "opposition",
@@ -472,7 +468,6 @@ const predictionNeutralTimelineWithLateWindows = {
   },
   summary: {
     overall_tone: "positive",
-    overall_summary: "Votre journée du 2026-03-10 s'annonce très porteuse.",
     calibration_note: "Les scores sont calculés sans données historiques : ils reflètent des tendances relatives à la journée, pas des statistiques absolues.",
     top_categories: ["social_network", "pleasure_creativity", "energy"],
     bottom_categories: ["money", "work"],
@@ -598,7 +593,6 @@ const predictionWithInferredEmergence = {
   },
   summary: {
     overall_tone: "neutral",
-    overall_summary: "Journée équilibrée avec une transition tardive.",
     top_categories: ["health", "money"],
     bottom_categories: ["energy"],
     best_window: null,
@@ -673,7 +667,6 @@ const predictionWithoutApiTurningPointsButClearSignal = {
   },
   summary: {
     overall_tone: "neutral",
-    overall_summary: "Journée équilibrée avec des rééquilibrages progressifs.",
     top_categories: ["health", "work"],
     bottom_categories: ["energy"],
     best_window: null,

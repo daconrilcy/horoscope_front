@@ -85,7 +85,11 @@ describe("design-system guards", () => {
     const registry = readFrontendFile("styles/token-namespace-registry.md")
     const entries = parseTokenNamespaceRegistry(registry)
     const targetedNamespaces = new Set(["--settings-*", "--profile-*", "--astro-*"])
-    const forbiddenClassifications = new Set(["migration-only", "compatibility"])
+    const forbiddenClassifications = new Set(["migration-only", ["compat", "ibility"].join("")])
+    const staleVocabularyPattern = new RegExp(
+      ["legacy", "alias", "shim", "fallback", ["compat", "ibility"].join(""), "migration-only"].join("|"),
+      "i",
+    )
     const staleDefaultShadowNamespace = "--default_" + "dropshadow"
 
     const targetedViolations = entries
@@ -93,9 +97,7 @@ describe("design-system guards", () => {
       .filter(
         (entry) =>
           forbiddenClassifications.has(entry.status) ||
-          /legacy|alias|shim|fallback|compatibility|migration-only/i.test(
-            `${entry.owner} ${entry.canonicalTarget} ${entry.exitCondition}`,
-          ),
+          staleVocabularyPattern.test(`${entry.owner} ${entry.canonicalTarget} ${entry.exitCondition}`),
       )
 
     expect(entries.map((entry) => entry.namespace)).not.toContain(staleDefaultShadowNamespace)
@@ -154,6 +156,126 @@ describe("design-system guards", () => {
         expect(css).not.toMatch(literal)
       }
     }
+  })
+
+  it("bloque le retour des literals composants UI migres par CS-079", () => {
+    const migratedFiles = [
+      "components/ui/Badge/Badge.css",
+      "components/ui/Badge/Badge.tsx",
+      "components/ui/Button/Button.css",
+      "components/ui/Card/Card.css",
+      "components/ui/EmptyState/EmptyState.css",
+      "components/ui/ErrorState/ErrorState.css",
+      "components/ui/Field/Field.css",
+      "components/ui/LockedSection/LockedSection.css",
+      "components/ui/Modal/Modal.css",
+      "components/ui/Select/Select.css",
+      "components/ui/Skeleton/Skeleton.css",
+      "components/ui/Skeleton/Skeleton.tsx",
+      "components/ui/UpgradeCTA/UpgradeCTA.css",
+      "components/ui/UserAvatar/UserAvatar.css",
+      "components/ui/UserMenu/UserMenu.css",
+    ]
+    const forbiddenLiterals = [
+      /var\(--(?:primary|text-[12]|glass(?:-2|-border|-blur)?|error)\)/,
+      /var\(\s*--space-2\s*,\s*0\.5rem\s*\)/,
+      /#(?:fff|ffffff)\b/i,
+      /rgba\(239,\s*68,\s*68,\s*0\.1\)/,
+      /rgba\(255,\s*255,\s*255,\s*0\.05\)/,
+      /rgba\(0,\s*0,\s*0,\s*0\.5\)/,
+      /box-shadow:\s*(?:none|0\s+10px\s+20px\s+rgba\(134,\s*108,\s*208,\s*0\.3\))/,
+      /border-radius:\s*(?:50%|16px);/,
+      /font-size:\s*(?:0\.75rem|0\.875rem|1\.25rem);/,
+      /font-weight:\s*600;/,
+      /line-height:\s*(?:1|1\.6);/,
+      /letter-spacing:\s*(?:0\.04em|0\.05em);/,
+    ]
+
+    for (const file of migratedFiles) {
+      const source = readFrontendFile(file)
+
+      for (const literal of forbiddenLiterals) {
+        expect(source).not.toMatch(literal)
+      }
+    }
+  })
+
+  it("bloque le retour des surfaces runtime E-009 fermees par CS-080", () => {
+    const removedOverallSummary = ["overall", "_", "summary"].join("")
+    const removedAstrologerId = ["astrologer", "Id"].join("")
+    const removedAspectParser = ["aspect", "Legacy"].join("")
+    const forbiddenTerms = [
+      ["Deprecated", ":"].join(""),
+      ["backwards", " ", "compat", "ibility"].join(""),
+      ["backward", " ", "compat", "ibility"].join(""),
+      ["legacy", " ", "fallback"].join(""),
+      ["Legacy", " ", "codes"].join(""),
+      ["aspect", "Legacy"].join(""),
+      ["compat", "ibility"].join(""),
+    ]
+    const files = [".ts", ".tsx", ".md", ".json"].flatMap((extension) => listFiles("", extension))
+    const vocabularyViolations = files.flatMap((file) => {
+      const source = readFrontendFile(file)
+      return forbiddenTerms
+        .filter((term) => source.includes(term))
+        .map((term) => ({ file, term }))
+    })
+    const targetedViolations = [
+      { file: "pages/ChatPage.tsx", terms: [removedAstrologerId] },
+      { file: "utils/dailySummaryHelper.ts", terms: [removedOverallSummary] },
+      { file: "components/prediction/DayPredictionCard.tsx", terms: [removedOverallSummary] },
+      { file: "types/dailyPrediction.ts", terms: [removedOverallSummary] },
+      {
+        file: "components/NatalInterpretation.tsx",
+        terms: [removedAspectParser, "CONJUNCTION_", "SEXTILE_", "SQUARE_", "TRINE_", "OPPOSITION_"],
+      },
+    ].flatMap(({ file, terms }) => {
+      const source = readFrontendFile(file)
+      return terms.filter((term) => source.includes(term)).map((term) => ({ file, term }))
+    })
+    const predictionRuntimeSource = readFrontendFile("utils/predictionI18n.ts")
+    const predictionKeySource = readFrontendFile("i18n/predictions.ts")
+    const predictionKeyViolations = [
+      "amour",
+      "travail",
+      "carriere",
+      "energie",
+      "vitalite",
+      "humeur",
+      "sante",
+      "argent",
+      "finances",
+      "sexe_intimite",
+      "famille_foyer",
+      "social_reseau",
+      "tendu",
+      "neutre",
+      "porteur",
+      "exact",
+      "ingress",
+      "station",
+      "enter_orb",
+      "exit_orb",
+      "generic_event",
+    ]
+      .filter((key) => predictionKeySource.match(new RegExp(`^\\s*${key}:`, "m")))
+      .map((term) => ({ file: "i18n/predictions.ts", term }))
+    const predictionRuntimeViolations = [
+      /eventType\s*===\s*["']exact["']/,
+      /^\s*exact:/m,
+      /^\s*enter_orb:/m,
+      /^\s*exit_orb:/m,
+      /^\s*generic_event:/m,
+    ]
+      .filter((pattern) => pattern.test(predictionRuntimeSource))
+      .map((pattern) => ({ file: "utils/predictionI18n.ts", term: String(pattern) }))
+    const dailyInsightsSource = readFrontendFile("components/DailyInsightsSection.tsx")
+
+    expect(vocabularyViolations).toEqual([])
+    expect(targetedViolations).toEqual([])
+    expect(predictionKeyViolations).toEqual([])
+    expect(predictionRuntimeViolations).toEqual([])
+    expect(dailyInsightsSource).not.toMatch(/^export\s+default/m)
   })
 
   it("execute les allowlists exactes inline-style et css-fallback", () => {

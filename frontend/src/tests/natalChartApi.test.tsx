@@ -245,7 +245,7 @@ describe("astro_profile nullable consumption", () => {
   })
 })
 
-describe("planet position retrograde contract compatibility", () => {
+describe("planet position retrograde contract continuity", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })

@@ -1,13 +1,13 @@
-/* Primitive avatar utilisateur connectee aux tokens globaux sans fallbacks locaux. */
+/* Primitive avatar utilisateur connectee aux tokens globaux sans valeurs locales. */
 
 .user-avatar {
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-text-on-astro);
   font-weight: var(--font-weight-bold);
   flex-shrink: 0;
   cursor: default;
@@ -18,19 +18,19 @@
 .user-avatar--sm {
   width: 32px;
   height: 32px;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
 }
 
 .user-avatar--md {
   width: 40px;
   height: 40px;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .user-avatar--lg {
   width: 56px;
   height: 56px;
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
 }
 
 button.user-avatar {
@@ -43,7 +43,7 @@ button.user-avatar:hover {
 }
 
 button.user-avatar:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -54,6 +54,6 @@ button.user-avatar:focus-visible {
 }
 
 .user-avatar__initial {
-  line-height: 1;
+  line-height: var(--type-numeric-line-height);
   user-select: none;
 }

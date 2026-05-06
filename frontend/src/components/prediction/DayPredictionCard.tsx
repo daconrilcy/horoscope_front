@@ -7,6 +7,7 @@ import {
   getPredictionMessage,
   getToneLabel,
 } from "../../utils/predictionI18n";
+import { getDailyEditorialSummary } from "../../utils/dailySummaryHelper";
 
 import { AstroMoodBackground } from "../astro/AstroMoodBackground";
 import type { ZodiacSign } from "../astro/zodiacPatterns";
@@ -80,6 +81,7 @@ export const DayPredictionCard: React.FC<Props> = ({
   }
 
   const { summary, meta } = prediction;
+  const editorialSummary = getDailyEditorialSummary(prediction);
   const toneLabel = getToneLabel(summary.overall_tone, lang);
   const calibrationMessage =
     summary.calibration_note || getPredictionMessage("provisional_calibration", lang);
@@ -98,7 +100,7 @@ export const DayPredictionCard: React.FC<Props> = ({
   const bodyContent = (
     <div className="day-prediction-card__body">
       <p className="day-prediction-card__summary">
-        {summary.overall_summary || getPredictionMessage("pending_summary", lang)}
+        {editorialSummary || getPredictionMessage("pending_summary", lang)}
       </p>
 
       {meta.is_provisional_calibration && (

@@ -1,6 +1,6 @@
-/* Primitive skeleton connectee aux tokens globaux sans fallbacks locaux. */
+/* Primitive skeleton connectee aux tokens globaux sans valeurs locales. */
 
-@keyframes skeleton-shimmer {
+@keyframes skeleton-sheen {
   0% {
     background-position: -200% center;
   }
@@ -17,13 +17,13 @@
     var(--color-glass-mini) 75%
   );
   background-size: 200% 100%;
-  animation: skeleton-shimmer 2s ease-in-out infinite;
+  animation: skeleton-sheen var(--duration-skeleton-sheen) var(--easing-skeleton-sheen) infinite;
   border-radius: var(--radius-sm);
 }
 
 .skeleton--text {
   height: 1em;
-  margin-bottom: 0.25em;
+  margin-bottom: var(--space-skeleton-text-gap);
 }
 
 .skeleton--rect {

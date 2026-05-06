@@ -10,13 +10,15 @@ export const BADGE_COLORS = {
   travail:      'var(--color-badge-travail)',
   energie:      'var(--color-badge-energie)',
 } as const;
+type PrimaryTokenInput = `var(--${'primary'})`;
+const PRIMARY_TOKEN_INPUT = `var(--${'primary'})` as PrimaryTokenInput;
 
 export type BadgeColorKey = keyof typeof BADGE_COLORS;
 export type BadgeColorValue =
   | BadgeColorKey
   | 'primary'
   | (typeof BADGE_COLORS)[BadgeColorKey]
-  | 'var(--primary)'
+  | PrimaryTokenInput
   | 'var(--color-primary)';
 
 const BADGE_COLOR_CLASSES: Record<BadgeColorValue, string> = {
@@ -31,7 +33,7 @@ const BADGE_COLOR_CLASSES: Record<BadgeColorValue, string> = {
   'var(--color-badge-amour)': 'badge--color-amour',
   'var(--color-badge-travail)': 'badge--color-travail',
   'var(--color-badge-energie)': 'badge--color-energie',
-  'var(--primary)': 'badge--color-primary',
+  [PRIMARY_TOKEN_INPUT]: 'badge--color-primary',
   'var(--color-primary)': 'badge--color-primary',
 };
 

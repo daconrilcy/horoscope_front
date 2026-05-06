@@ -12,8 +12,6 @@ import {
 } from "../utils/predictionI18n";
 
 const TECHNICAL_DRIVER_CODES = [
-  "enter_orb",
-  "exit_orb",
   "moon_sign_ingress",
   "asc_sign_change",
   "aspect_enter_orb",

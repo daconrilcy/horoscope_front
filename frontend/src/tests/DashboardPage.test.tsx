@@ -27,7 +27,21 @@ const PREDICTION_OK = {
   json: async () => ({
     meta: { date_local: "2026-03-12" },
     summary: {
-      overall_summary: "Une excellente journée vous attend avec de belles opportunités.",
+      overall_tone: "open",
+      top_categories: ["love"],
+      bottom_categories: [],
+      best_window: null,
+      main_turning_point: null,
+    },
+    day_climate: {
+      label: "Climat favorable",
+      tone: "open",
+      intensity: 7,
+      stability: 6,
+      summary: "Une excellente journée vous attend avec de belles opportunités.",
+      top_domains: ["love"],
+      watchout: null,
+      best_window_ref: null,
     },
     categories: [
       { code: 'love', note_20: 18 },
@@ -122,7 +136,7 @@ describe("DashboardPage Landing", () => {
     expect(screen.getByText("Guidance ciblée")).toBeInTheDocument()
   })
 
-  it("priorise daily_synthesis sur overall_summary", async () => {
+  it("priorise daily_synthesis sur le résumé de climat", async () => {
     const predictionWithSynthesis = {
       ok: true,
       status: 200,
@@ -130,7 +144,21 @@ describe("DashboardPage Landing", () => {
         meta: { date_local: "2026-03-12" },
         daily_synthesis: "Texte synthétique LLM prioritaire.",
         summary: {
-          overall_summary: "Résumé legacy à ignorer.",
+          overall_tone: "open",
+          top_categories: ["love"],
+          bottom_categories: [],
+          best_window: null,
+          main_turning_point: null,
+        },
+        day_climate: {
+          label: "Climat favorable",
+          tone: "open",
+          intensity: 7,
+          stability: 6,
+          summary: "Résumé de climat à ignorer.",
+          top_domains: ["love"],
+          watchout: null,
+          best_window_ref: null,
         },
         categories: [{ code: 'love', note_20: 18 }],
         timeline: [],
@@ -144,7 +172,7 @@ describe("DashboardPage Landing", () => {
     await waitFor(() => {
       expect(screen.getByText(/Texte synthétique LLM prioritaire/i)).toBeInTheDocument()
     })
-    expect(screen.queryByText(/Résumé legacy à ignorer/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Résumé de climat à ignorer/i)).not.toBeInTheDocument()
   })
 
   it("navigue vers le détail de l'horoscope quand on clique sur le résumé", async () => {

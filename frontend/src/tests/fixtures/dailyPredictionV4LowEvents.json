@@ -10,11 +10,20 @@
   },
   "summary": {
     "overall_tone": "neutral",
-    "overall_summary": "Journée calme.",
     "top_categories": [],
     "bottom_categories": [],
     "best_window": null,
     "main_turning_point": null
+  },
+  "day_climate": {
+    "label": "Journée calme",
+    "tone": "neutral",
+    "intensity": 3.0,
+    "stability": 8.0,
+    "summary": "Journée calme.",
+    "top_domains": [],
+    "watchout": null,
+    "best_window_ref": null
   },
   "astro_foundation": null,
   "time_windows": [],

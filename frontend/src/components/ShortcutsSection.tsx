@@ -37,7 +37,7 @@ export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryCl
       title: shortcuts.historyTitle,
       subtitle: shortcuts.historySubtitle,
       icon: Calendar,
-      badgeColor: 'var(--primary)',
+      badgeColor: 'var(--color-primary)',
       path: '/dashboard',
       isOnline: false,
     },

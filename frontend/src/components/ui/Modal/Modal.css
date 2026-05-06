@@ -1,9 +1,9 @@
-/* Primitive modale connectee aux tokens globaux sans fallbacks locaux. */
+/* Primitive modale connectee aux tokens globaux sans valeurs locales. */
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay-modal);
   backdrop-filter: blur(4px);
   z-index: var(--z-index-modal);
   display: flex;

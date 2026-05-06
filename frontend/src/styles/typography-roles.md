@@ -17,6 +17,8 @@ typographie dans les surfaces migrees. Les tokens `--type-*` vivent dans
 | metadata | `.type-metadata` | `--type-metadata-*` | metadonnees compactes |
 | label | `.type-label` | `--type-label-*` | labels et libelles de formulaire |
 | eyebrow | `.type-eyebrow` | `--type-eyebrow-*` | micro-titres en capitales |
+| ui-group-label | n/a | `--type-ui-group-letter-spacing` | libelles de groupes compacts dans les primitives UI |
+| ui-role-label | n/a | `--type-ui-role-letter-spacing` | roles utilisateur compacts dans les primitives UI |
 | cta | `.type-cta` | `--type-cta-*` | texte de boutons et liens d'action |
 | numeric | `.type-numeric` | `--type-numeric-*` | chiffres, scores, compteurs |
 

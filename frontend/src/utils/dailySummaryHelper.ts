@@ -1,11 +1,8 @@
+// Helper de synthese quotidienne expose uniquement les champs editoriaux canoniques.
 import type { DailyPredictionResponse } from '../types/dailyPrediction';
 
 /**
- * Extract the canonical editorial summary from a daily prediction.
- * Source priority:
- * 1. daily_synthesis (LLM generated)
- * 2. day_climate.summary (climat template)
- * 3. summary.overall_summary (legacy fallback)
+ * Extrait le resume editorial canonique depuis une prediction quotidienne.
  */
 export function getDailyEditorialSummary(prediction: DailyPredictionResponse): string {
   if (prediction.daily_synthesis) {
@@ -16,5 +13,5 @@ export function getDailyEditorialSummary(prediction: DailyPredictionResponse): s
     return prediction.day_climate.summary;
   }
 
-  return prediction.summary.overall_summary || '';
+  return '';
 }

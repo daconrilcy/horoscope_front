@@ -10,11 +10,20 @@
   },
   "summary": {
     "overall_tone": "positive",
-    "overall_summary": "Un tournant positif.",
     "top_categories": ["love"],
     "bottom_categories": ["work"],
     "best_window": null,
     "main_turning_point": null
+  },
+  "day_climate": {
+    "label": "Tournant positif",
+    "tone": "positive",
+    "intensity": 7.5,
+    "stability": 4.5,
+    "summary": "Un tournant positif.",
+    "top_domains": ["relations_echanges"],
+    "watchout": null,
+    "best_window_ref": "15:30"
   },
   "turning_point": {
     "time": "15:30",

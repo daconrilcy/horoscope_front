@@ -2,8 +2,7 @@ import "@testing-library/jest-dom/vitest"
 import { cleanup } from "@testing-library/react"
 import { afterEach, beforeEach, vi } from "vitest"
 
-// Default language for all tests to French to maintain backward compatibility
-// with existing tests that expect French strings.
+// Default language for all tests to French so existing string assertions stay stable.
 beforeEach(() => {
   if (typeof navigator !== "undefined") {
     vi.stubGlobal("navigator", {
