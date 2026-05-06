@@ -46,6 +46,18 @@ function extractMigratedHelpPageValues(ownerBody: string): string[] {
   return [...new Set(declarations.filter((value) => /rgba?\(|#[a-fA-F0-9]{3,8}\b|gradient\(|^2\.35rem$/.test(value)))]
 }
 
+function extractMigratedChatValues(ownerBody: string): string[] {
+  const declarations = [...ownerBody.matchAll(/--chat-[a-zA-Z0-9_-]+\s*:\s*([\s\S]*?);/g)].map((match) =>
+    normalizeCssValue(match[1]),
+  )
+
+  return [
+    ...new Set(
+      declarations.filter((value) => /rgba?\(|#[a-fA-F0-9]{3,8}\b|gradient\(/.test(value)),
+    ),
+  ]
+}
+
 // Suite anti-drift qui raccorde les registres design-system aux fichiers reels.
 describe("design-system guards", () => {
   it("couvre les namespaces de tokens CSS par le registre CS-026", () => {
@@ -196,6 +208,37 @@ describe("design-system guards", () => {
 
       for (const literal of forbiddenLiterals) {
         expect(source).not.toMatch(literal)
+      }
+    }
+  })
+
+  it("bloque le retour des literals chat migres par CS-081", () => {
+    const migratedFiles = [
+      "pages/ChatPage.css",
+      "features/chat/components/ChatComposer.css",
+      "features/chat/components/ChatPageHeader.css",
+      "features/chat/components/ChatQuotaBanner.css",
+      "features/chat/components/ChatWindow.css",
+      "features/chat/components/ConversationItem.css",
+      "features/chat/components/ConversationList.css",
+    ]
+    const chatPageCss = readFrontendFile("pages/ChatPage.css")
+    const ownerBlock = findFlatCssBlock(chatPageCss, ".chat-page-container")
+    const migratedValues = extractMigratedChatValues(ownerBlock.body)
+    const forbiddenPropertyLiterals =
+      /(?:#[a-fA-F0-9]{3,8}\b|rgba?\(|hsl(?:a)?\(|border-radius:\s*(?:50%|999px|28px|24px|22px|20px|16px|14px|12px|10px|6px|4px)\b|font-size:\s*(?:11|12|13|14|15|20|22|28|38)px\b|font-weight:\s*(?:500|600|650|700|750)\b|line-height:\s*(?:1\.1|1\.15|1\.4|1\.5|1\.55|1\.65)\b|letter-spacing:\s*-?0\.\d+em\b|box-shadow:\s*(?!\s*var\())/
+
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--chat-*` | semantic-extension |")
+    expect(migratedValues.length).toBeGreaterThan(0)
+
+    for (const file of migratedFiles) {
+      const source = file === "pages/ChatPage.css" ? removeCssRange(chatPageCss, ownerBlock.start, ownerBlock.end) : readFrontendFile(file)
+      const normalizedSource = normalizeCssValue(source)
+
+      expect(source).toContain("var(--chat-")
+      expect(source).not.toMatch(forbiddenPropertyLiterals)
+      for (const value of migratedValues) {
+        expect(normalizedSource).not.toContain(value)
       }
     }
   })

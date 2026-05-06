@@ -29,24 +29,24 @@
   min-width: 12rem;
   height: 0.5rem;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--chat-radius-pill);
   overflow: hidden;
   background: var(--glass-border);
 }
 
 .chat-quota-banner__meter::-webkit-progress-bar {
   background: var(--glass-border);
-  border-radius: 999px;
+  border-radius: var(--chat-radius-pill);
 }
 
 .chat-quota-banner__meter::-webkit-progress-value {
   background: linear-gradient(90deg, var(--color-primary), var(--color-primary-strong));
-  border-radius: 999px;
+  border-radius: var(--chat-radius-pill);
 }
 
 .chat-quota-banner__meter::-moz-progress-bar {
   background: linear-gradient(90deg, var(--color-primary), var(--color-primary-strong));
-  border-radius: 999px;
+  border-radius: var(--chat-radius-pill);
 }
 
 .chat-quota-banner__reset {

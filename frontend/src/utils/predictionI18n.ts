@@ -1,3 +1,4 @@
+// Utilitaires de présentation i18n pour les prédictions et leurs signaux quotidiens.
 import {
   CATEGORY_LABELS,
   NOTE_BAND_LABELS,
@@ -38,6 +39,22 @@ const CATEGORY_ICONS: Record<string, string> = {
   energie_bienetre: "⚡",
   argent_ressources: "💰",
   vie_personnelle: "🎨",
+};
+
+const CATEGORY_CODE_NORMALIZATION: Record<string, string> = {
+  amour: "love",
+  travail: "work",
+  carriere: "career",
+  carrière: "career",
+  energie: "energy",
+  énergie: "energy",
+  humeur: "mood",
+  sante: "health",
+  santé: "health",
+  argent: "money",
+  sexe_intimite: "sex_intimacy",
+  famille_foyer: "family_home",
+  social_reseau: "social_network",
 };
 
 const TONE_COLORS: Record<string, string> = {
@@ -110,44 +127,50 @@ const ASPECT_LABELS: Record<string, Record<Lang, string>> = {
   sextile: { fr: "sextile", en: "sextile" },
 };
 
+type PrimaryPredictionDriver = {
+  event_type: string;
+  body?: string;
+  target?: string;
+  aspect?: string;
+  orb_deg?: number | null;
+  phase?: string | null;
+  metadata?: Record<string, unknown>;
+};
+
 export function getCategoryLabel(code: string, lang: Lang): string {
   return getLabel(CATEGORY_LABELS, code, lang);
 }
 
 export function getCategoryIcon(code: string): string {
-  return CATEGORY_ICONS[code] || "✨";
+  const canonical = normalizeCategoryCode(code);
+  return CATEGORY_ICONS[canonical] || "✨";
+}
+
+function normalizeCategoryCode(code: string): string {
+  const normalized = code.toLowerCase().trim();
+  return CATEGORY_CODE_NORMALIZATION[normalized] || normalized;
 }
 
 export function getNoteBand(note: number, lang: Lang) {
-  const bandKey = note <= 5 ? "fragile" : note <= 9 ? "tendu" : note <= 12 ? "neutre" : note <= 16 ? "porteur" : "très favorable";
+  const bandKey = note <= 5 ? "fragile" : note <= 9 ? "tense" : note <= 12 ? "neutral" : note <= 16 ? "favorable" : "very_favorable";
   
   const colors: Record<string, string> = {
     fragile: "var(--color-danger)",
-    tendu: "var(--warning)",
-    neutre: "var(--text-2)",
-    porteur: "var(--color-success)",
-    "très favorable": "var(--primary)",
-  };
-
-  // Canonical keys for tests if needed
-  const canonicalMap: Record<string, string> = {
-    fragile: "fragile",
-    tendu: "tense",
-    neutre: "neutral",
-    porteur: "favorable",
-    "très favorable": "very_favorable"
+    tense: "var(--warning)",
+    neutral: "var(--text-2)",
+    favorable: "var(--color-success)",
+    very_favorable: "var(--primary)",
   };
 
   return {
-    key: canonicalMap[bandKey],
+    key: bandKey,
     label: getLabel(NOTE_BAND_LABELS, bandKey, lang),
     colorVar: colors[bandKey],
   };
 }
 
 export function getCategoryMeta(code: string, lang: Lang) {
-  const normalized = code.toLowerCase().trim();
-  const canonical = normalized;
+  const canonical = normalizeCategoryCode(code);
   const categoryLabel = getCategoryLabel(canonical, lang);
   const displayLabel =
     categoryLabel === canonical
@@ -263,18 +286,7 @@ function formatUnsignedValue(value: number, lang: Lang, digits = 2): string {
 }
 
 export function humanizePrimaryDriver(
-  driver:
-    | {
-        event_type: string;
-        body?: string;
-        target?: string;
-        aspect?: string;
-        orb_deg?: number | null;
-        phase?: string | null;
-        metadata?: Record<string, unknown>;
-      }
-    | null
-    | undefined,
+  driver: PrimaryPredictionDriver | null | undefined,
   lang: Lang,
 ): { headline: string; details: string | null } | null {
   if (!driver) return null;
@@ -322,7 +334,7 @@ export function humanizeTurningPointSemantic(
     impacted_categories?: string[];
     previous_categories?: string[];
     next_categories?: string[];
-    primary_driver?: any;
+    primary_driver?: PrimaryPredictionDriver | null;
   },
   lang: Lang
 ) {

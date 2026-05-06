@@ -33,6 +33,7 @@ sourcee dans ce registre.
 | `--period-accent` | dynamic | prediction timeline components | runtime accent value | permanent custom property bridge |
 | `--landing-*` | semantic-extension | landing layout and sections | premium landing layer | product decision before global merge |
 | `--help-*` | semantic-extension | `frontend/src/pages/HelpPage.css` | help page visual roles | permanent page-scoped semantic layer |
+| `--chat-*` | semantic-extension | `frontend/src/pages/ChatPage.css` | chat cluster visual and typography roles | permanent chat page-scoped semantic layer |
 | `--admin-settings-*` | semantic-extension | `frontend/src/pages/admin/AdminSettingsPage.css` | admin settings cluster local visual roles | permanent page-scoped semantic layer |
 | `--admin-entitlements-*` | semantic-extension | `frontend/src/pages/admin/AdminEntitlementsPage.css` | admin entitlements cluster local visual roles | permanent page-scoped semantic layer |
 | `--calendar-*` | semantic-extension | `frontend/src/index.css` | calendar cell background states | permanent calendar UI role |

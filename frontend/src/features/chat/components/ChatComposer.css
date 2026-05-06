@@ -4,7 +4,7 @@
   gap: 12px;
   padding: 16px 20px;
   border-top: 1px solid var(--premium-glass-border);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--chat-surface-subtle);
   backdrop-filter: blur(10px);
 }
 
@@ -12,12 +12,12 @@
   flex: 1;
   padding: 12px 16px;
   border: 1px solid var(--premium-glass-border);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--chat-radius-lg);
+  background: var(--chat-surface-input);
   color: var(--premium-text-strong);
   font-family: inherit;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--chat-type-label-size);
+  line-height: var(--chat-type-copy-line-height);
   resize: none;
   transition: all 0.2s ease;
   min-height: 46px;
@@ -27,8 +27,8 @@
 .chat-composer-input:focus {
   outline: none;
   border-color: var(--premium-accent-purple);
-  background: white;
-  box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.1);
+  background: var(--color-star-fill);
+  box-shadow: var(--chat-shadow-focus-ring);
 }
 
 .chat-composer-input:disabled {
@@ -41,15 +41,15 @@
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.62) 100%);
+  border-radius: var(--chat-radius-pill);
+  border: 1px solid var(--color-glass-shortcut-border);
+  background: var(--chat-glass-action-strong-bg);
   color: color-mix(in srgb, var(--premium-accent-purple-strong) 84%, var(--premium-text-strong) 16%);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--chat-type-compact-size);
+  font-weight: var(--chat-type-compact-weight);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  box-shadow: 0 10px 25px rgba(88, 58, 130, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+  letter-spacing: var(--type-ui-group-letter-spacing);
+  box-shadow: var(--chat-shadow-action-compact);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
@@ -59,7 +59,7 @@
 
 .chat-composer-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(88, 58, 130, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: var(--chat-shadow-action-hover);
   filter: brightness(1.02);
 }
 
@@ -71,7 +71,7 @@
   opacity: 0.5;
   cursor: not-allowed;
   filter: grayscale(0.5);
-  box-shadow: none;
+  box-shadow: var(--shadow-none);
 }
 
 .chat-composer-button svg {
