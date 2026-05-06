@@ -1,3 +1,4 @@
+// Primitive de badge qui mappe les couleurs autorisees vers des classes CSS tokenisees.
 import React from 'react';
 import { classNames } from '@utils/classNames';
 import './Badge.css';
@@ -11,9 +12,45 @@ export const BADGE_COLORS = {
 } as const;
 
 export type BadgeColorKey = keyof typeof BADGE_COLORS;
+export type BadgeColorValue =
+  | BadgeColorKey
+  | 'primary'
+  | (typeof BADGE_COLORS)[BadgeColorKey]
+  | 'var(--badge-chat)'
+  | 'var(--badge-consultation)'
+  | 'var(--badge-amour)'
+  | 'var(--badge-travail)'
+  | 'var(--badge-energie)'
+  | 'var(--primary)'
+  | 'var(--color-primary)';
+
+const BADGE_COLOR_CLASSES: Record<BadgeColorValue, string> = {
+  chat: 'badge--color-chat',
+  consultation: 'badge--color-consultation',
+  amour: 'badge--color-amour',
+  travail: 'badge--color-travail',
+  energie: 'badge--color-energie',
+  primary: 'badge--color-primary',
+  'var(--badge-chat)': 'badge--color-chat',
+  'var(--badge-consultation)': 'badge--color-consultation',
+  'var(--badge-amour)': 'badge--color-amour',
+  'var(--badge-travail)': 'badge--color-travail',
+  'var(--badge-energie)': 'badge--color-energie',
+  'var(--primary)': 'badge--color-primary',
+  'var(--color-badge-chat)': 'badge--color-chat',
+  'var(--color-badge-consultation)': 'badge--color-consultation',
+  'var(--color-badge-amour)': 'badge--color-amour',
+  'var(--color-badge-travail)': 'badge--color-travail',
+  'var(--color-badge-energie)': 'badge--color-energie',
+  'var(--color-primary)': 'badge--color-primary',
+};
+
+function resolveBadgeColorClass(color?: BadgeColorValue): string | undefined {
+  return color ? BADGE_COLOR_CLASSES[color] : undefined;
+}
 
 export interface BadgeProps {
-  color?: string;
+  color?: BadgeColorValue;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   children?: React.ReactNode;
@@ -27,8 +64,7 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   return (
     <div
-      className={classNames('badge', `badge--${size}`, className)}
-      style={{ background: color }}
+      className={classNames('badge', `badge--${size}`, resolveBadgeColorClass(color), className)}
       aria-hidden="true"
     >
       {children}
@@ -38,7 +74,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
 export interface IconBadgeProps {
   icon: React.ReactNode;
-  color?: string;
+  color?: BadgeColorValue;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }

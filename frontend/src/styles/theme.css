@@ -2,31 +2,18 @@
 /* Source: docs/interfaces/horoscope-ui-spec.md §2, §3, §4 */
 
 :root {
-  /* Text */
+  /* Legacy token aliases retired by CS-067. */
   --color-purple-1: var(--color-purple-1); /* keep for external refs if any */
   --color-purple-2: var(--color-purple-2);
-  --text-1: var(--color-text-primary);
-  --text-2: var(--color-text-secondary);
-  --text-3: var(--color-text-muted);
-  --text-headline: var(--color-text-headline);
 
   /* Background (V5 — gradient original maquette) */
   --bg-top: var(--color-bg-top);
   --bg-mid: var(--color-bg-mid);
   --bg-bot: var(--color-bg-bot);
 
-  /* Glass surfaces */
-  --glass: var(--color-glass-bg);
-  --glass-2: var(--color-glass-bg-2);
-  --glass-border: var(--color-glass-border);
-
   /* Accent / CTA */
   --cta-l: var(--color-cta-left);
   --cta-r: var(--color-cta-right);
-
-  /* Primary (legacy compatibility) */
-  --primary: var(--color-primary);
-  --primary-strong: var(--color-primary-strong);
 
   /* Chips */
   --chip: linear-gradient(90deg,#B3A5DE 0%, var(--color-purple-2) 100%);
@@ -62,14 +49,6 @@
   /* Constellation SVG (lilas en light mode) */
   --constellation-color: var(--color-constellation);
 
-  /* Glass surfaces spécifiques — Shortcut cards (V5 — plus blanches) */
-  --glass-shortcut: var(--color-glass-shortcut);
-  --glass-shortcut-border: var(--color-glass-shortcut-border);
-
-  /* Glass surfaces spécifiques — Mini-insight cards (AC #5) */
-  --glass-mini: var(--color-glass-mini);
-  --glass-mini-border: var(--color-glass-mini-border);
-
   /* Hero card gradient (V3) */
   --hero-g1: rgba(172,132,255,0.28);
   --hero-g2: rgba(110,170,255,0.18);
@@ -79,8 +58,8 @@
   --hero-cta-panel-border: rgba(255,255,255,0.55);
 
   /* Hero chip sign/date colors */
-  --hero-chip-sign-color: var(--text-1);
-  --hero-chip-date-color: var(--text-2);
+  --hero-chip-sign-color: var(--color-text-primary);
+  --hero-chip-date-color: var(--color-text-secondary);
 
   /* Mini-card gradients (V3) */
   --love-g1: var(--color-love-g1);
@@ -92,11 +71,7 @@
 }
 
 .dark {
-  /* Notice: many variables like --text-1 will inherit from :root 
-     which points to var(--color-text-primary) which is already dark 
-     in .dark class in design-tokens.css.
-     We only redefine things that need specific dark mode shadows or complex structures 
-     not yet extracted. */
+  /* Variables theme-only qui ne sont pas encore dans design-tokens.css. */
 
   /* Chips */
   --chip: #4F3F71;

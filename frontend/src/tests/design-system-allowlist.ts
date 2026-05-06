@@ -13,10 +13,6 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
     "style": "style={{ ['--period-accent' as string]: accentColor }"
   },
   {
-    "file": "components/ui/Badge/Badge.tsx",
-    "style": "style={{ background: color }"
-  },
-  {
     "file": "components/ui/Skeleton/Skeleton.tsx",
     "style": "style={style}"
   },
@@ -35,11 +31,6 @@ export const CSS_FALLBACK_EXCEPTIONS: CssFallbackException[] = [
     "file": "App.css",
     "token": "--usage-progress",
     "literal": "0"
-  },
-  {
-    "file": "pages/admin/AdminEntitlementsPage.css",
-    "token": "--glass-heavy",
-    "literal": "#1a1a1a"
   },
   {
     "file": "pages/settings/Settings.css",

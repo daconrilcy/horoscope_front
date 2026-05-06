@@ -98,7 +98,7 @@ describe("MiniInsightCard", () => {
         />
       )
       const badge = document.querySelector(".mini-card__badge") as HTMLElement
-      expect(badge?.style.background).toBe("var(--badge-amour)")
+      expect(badge).toHaveClass("badge--color-amour")
     })
 
     it("le badge est caché pour les lecteurs d'écran (aria-hidden)", () => {
@@ -236,19 +236,19 @@ describe("DailyInsightsSection", () => {
     it("la card Amour a le badge avec var(--badge-amour)", () => {
       render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
-      expect(badges[0]?.style.background).toBe("var(--badge-amour)")
+      expect(badges[0]).toHaveClass("badge--color-amour")
     })
 
     it("la card Travail a le badge avec var(--badge-travail)", () => {
       render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
-      expect(badges[1]?.style.background).toBe("var(--badge-travail)")
+      expect(badges[1]).toHaveClass("badge--color-travail")
     })
 
     it("la card Énergie a le badge avec var(--badge-energie)", () => {
       render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
-      expect(badges[2]?.style.background).toBe("var(--badge-energie)")
+      expect(badges[2]).toHaveClass("badge--color-energie")
     })
   })
 })

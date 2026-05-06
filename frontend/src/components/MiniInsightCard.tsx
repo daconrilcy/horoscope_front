@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { IconBadge } from './ui'
+import type { BadgeColorValue } from './ui'
 import './MiniInsightCard.css'
 
 export type MiniInsightCardType = 'love' | 'work' | 'energy'
@@ -8,7 +9,7 @@ export interface MiniInsightCardProps {
   title: string
   description: string
   icon: LucideIcon
-  badgeColor: string
+  badgeColor: BadgeColorValue
   type?: MiniInsightCardType
   onClick?: () => void
 }

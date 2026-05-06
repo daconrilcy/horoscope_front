@@ -5,7 +5,6 @@ export const INLINE_STYLE_DYNAMIC_ALLOWLIST = [
   "frontend/src/layouts/TwoColumnLayout.tsx::--sidebar-width",
   "frontend/src/components/DomainRankingCard.tsx::width",
   "frontend/src/components/prediction/DayTimelineSectionV4.tsx::--period-accent",
-  "frontend/src/components/ui/Badge/Badge.tsx::background",
   "frontend/src/components/ui/Skeleton/Skeleton.tsx::style-prop",
   "frontend/src/components/ui/Skeleton/Skeleton.tsx::--skeleton-gap",
 ] as const

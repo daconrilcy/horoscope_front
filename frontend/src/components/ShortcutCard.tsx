@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
 import { IconBadge } from './ui'
+import type { BadgeColorValue } from './ui'
 import './ShortcutCard.css'
 
 export interface ShortcutCardProps {
   title: string
   subtitle: string
   icon: LucideIcon
-  badgeColor: string
+  badgeColor: BadgeColorValue
   onClick?: () => void
   to?: string
   isOnline?: boolean

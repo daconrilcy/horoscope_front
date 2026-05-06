@@ -1,4 +1,5 @@
 // @ts-nocheck
+// Page admin des prompts LLM avec surfaces de styles route-specific sans selectors legacy.
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
@@ -222,11 +223,11 @@ function LegacyVersionMetaStrip({ version, headingId, variant, legacy, lang }: L
         ? legacy.metaVariantProduction
         : legacy.metaVariantPeer
   return (
-    <div className="admin-prompts-legacy__meta-strip-wrap" aria-labelledby={headingId}>
-      <div className="admin-prompts-legacy__meta-strip-kicker">
-        <span className="admin-prompts-legacy__pill">{variantLabel}</span>
+    <div className="admin-prompts-archive__meta-strip-wrap" aria-labelledby={headingId}>
+      <div className="admin-prompts-archive__meta-strip-kicker">
+        <span className="admin-prompts-archive__pill">{variantLabel}</span>
       </div>
-      <dl className="admin-prompts-legacy__meta-strip">
+      <dl className="admin-prompts-archive__meta-strip">
         <div>
           <dt>{legacy.metaStatus}</dt>
           <dd>
@@ -294,7 +295,7 @@ function LegacyRollbackModal({
   return (
     <div className="modal-overlay" role="presentation">
       <div
-        className="modal-content admin-prompts-modal admin-prompts-modal--legacy-rollback"
+        className="modal-content admin-prompts-modal admin-prompts-modal--rollback"
         aria-labelledby="legacy-rollback-title"
         role="dialog"
         aria-modal="true"
@@ -2552,7 +2553,7 @@ export function AdminPromptsPage() {
       ) : null}
 
       {activeTab === "legacy" ? (
-        <section className="panel admin-prompts-legacy" aria-label={tLegacy.regionAriaLabel}>
+        <section className="panel admin-prompts-archive" aria-label={tLegacy.regionAriaLabel}>
           {successMessage ? (
             <p className="state-line state-success" role="status" aria-live="polite">
               {successMessage}
@@ -2562,15 +2563,15 @@ export function AdminPromptsPage() {
           {hasLegacyError ? <p className="chat-error">{tLegacy.errorHistory}</p> : null}
 
           {!isLegacyLoading && !hasLegacyError ? (
-            <div className="admin-prompts-legacy__surface">
-              <header className="admin-prompts-legacy__surface-header">
-                <p className="admin-prompts-legacy__kicker">{tLegacy.kicker}</p>
-                <h3 className="admin-prompts-legacy__surface-title">{tLegacy.surfaceTitle}</h3>
-                <p className="admin-prompts-legacy__surface-intro text-muted">{tLegacy.surfaceIntro}</p>
+            <div className="admin-prompts-archive__surface">
+              <header className="admin-prompts-archive__surface-header">
+                <p className="admin-prompts-archive__kicker">{tLegacy.kicker}</p>
+                <h3 className="admin-prompts-archive__surface-title">{tLegacy.surfaceTitle}</h3>
+                <p className="admin-prompts-archive__surface-intro text-muted">{tLegacy.surfaceIntro}</p>
               </header>
 
-              <div className="admin-prompts-legacy__toolbar">
-                <label className="admin-prompts-compare admin-prompts-legacy__field">
+              <div className="admin-prompts-archive__toolbar">
+                <label className="admin-prompts-compare admin-prompts-archive__field">
                   <span>{tLegacy.toolbarLabel}</span>
                   <select
                     aria-label={tLegacy.useCaseSelectAria}
@@ -2602,26 +2603,26 @@ export function AdminPromptsPage() {
               ) : null}
 
               {selectedLegacyHistory.length === 0 ? (
-                <p className="admin-prompts-legacy__empty text-muted" role="status">
+                <p className="admin-prompts-archive__empty text-muted" role="status">
                   {tLegacy.emptyVersions}
                 </p>
               ) : (
                 <>
-                  <section className="admin-prompts-legacy__versions" aria-labelledby="legacy-versions-heading">
-                    <div className="admin-prompts-legacy__section-head">
-                      <h4 id="legacy-versions-heading" className="admin-prompts-legacy__section-heading">
+                  <section className="admin-prompts-archive__versions" aria-labelledby="legacy-versions-heading">
+                    <div className="admin-prompts-archive__section-head">
+                      <h4 id="legacy-versions-heading" className="admin-prompts-archive__section-heading">
                         {tLegacy.versionsHeading}
                       </h4>
-                      <p className="admin-prompts-legacy__section-hint text-muted">
+                      <p className="admin-prompts-archive__section-hint text-muted">
                         {activeLegacyVersion ? tLegacy.versionsHintActiveKnown : tLegacy.versionsHintActiveUnknown}
                       </p>
                     </div>
-                    <div className="admin-prompts-history admin-prompts-legacy__version-list">
+                    <div className="admin-prompts-history admin-prompts-archive__version-list">
                       {selectedLegacyHistory.map((version) => {
                         const isResolvedActiveRow =
                           activeLegacyVersion !== null && version.id === activeLegacyVersion.id
                         return (
-                          <article key={version.id} className="admin-prompts-history__item admin-prompts-legacy__version-row">
+                          <article key={version.id} className="admin-prompts-history__item admin-prompts-archive__version-row">
                             <div>
                               <div className="admin-prompts-history__topline">
                                 <span
@@ -2630,7 +2631,7 @@ export function AdminPromptsPage() {
                                   {legacyPromptStatusLabel(version.status, tLegacy)}
                                 </span>
                                 {isResolvedActiveRow ? (
-                                  <span className="admin-prompts-legacy__pill admin-prompts-legacy__pill--active">
+                                  <span className="admin-prompts-archive__pill admin-prompts-archive__pill--active">
                                     {tLegacy.badgeInProduction}
                                   </span>
                                 ) : null}
@@ -2651,9 +2652,9 @@ export function AdminPromptsPage() {
                               ) : null}
                               <code>{version.id}</code>
                             </div>
-                            <div className="admin-prompts-history__actions admin-prompts-legacy__version-actions">
+                            <div className="admin-prompts-history__actions admin-prompts-archive__version-actions">
                               {isResolvedActiveRow ? (
-                                <span className="admin-prompts-legacy__action-placeholder text-muted">
+                                <span className="admin-prompts-archive__action-placeholder text-muted">
                                   {tLegacy.alreadyActiveHint}
                                 </span>
                               ) : (
@@ -2674,19 +2675,19 @@ export function AdminPromptsPage() {
 
                   {canShowLegacyDiff && compareLegacyVersion && legacyDiffRightVersion ? (
                     <section
-                      className="admin-prompts-legacy__diff panel"
+                      className="admin-prompts-archive__diff panel"
                       aria-labelledby="legacy-diff-heading"
                     >
-                      <div className="admin-prompts-legacy__diff-head">
+                      <div className="admin-prompts-archive__diff-head">
                         <div>
-                          <h4 id="legacy-diff-heading" className="admin-prompts-legacy__section-heading">
+                          <h4 id="legacy-diff-heading" className="admin-prompts-archive__section-heading">
                             {tLegacy.diffHeading}
                           </h4>
-                          <p className="admin-prompts-legacy__diff-lead text-muted">
+                          <p className="admin-prompts-archive__diff-lead text-muted">
                             {activeLegacyVersion ? tLegacy.diffLeadActiveKnown : tLegacy.diffLeadActiveUnknown}
                           </p>
                         </div>
-                        <label className="admin-prompts-compare admin-prompts-legacy__field admin-prompts-legacy__field--inline">
+                        <label className="admin-prompts-compare admin-prompts-archive__field admin-prompts-archive__field--inline">
                           <span>{tLegacy.refVersionLabel}</span>
                           <select
                             aria-label={tLegacy.refSelectAria}
@@ -2707,12 +2708,12 @@ export function AdminPromptsPage() {
                       </div>
 
                       <div
-                        className="admin-prompts-diff admin-prompts-legacy__diff-grid"
+                        className="admin-prompts-diff admin-prompts-archive__diff-grid"
                         role="group"
                         aria-label={tLegacy.diffGroupAria}
                       >
                         <div className="admin-prompts-diff__column admin-prompts-diff__column--left">
-                          <h4 className="admin-prompts-legacy__diff-column-title" id="legacy-diff-left-title">
+                          <h4 className="admin-prompts-archive__diff-column-title" id="legacy-diff-left-title">
                             {tLegacy.refColumnTitle}
                           </h4>
                           <LegacyVersionMetaStrip
@@ -2722,7 +2723,7 @@ export function AdminPromptsPage() {
                             legacy={tLegacy}
                             lang={lang}
                           />
-                          <p className="admin-prompts-legacy__diff-caption text-muted">
+                          <p className="admin-prompts-archive__diff-caption text-muted">
                             {tLegacy.contentComparedCaption}
                           </p>
                           {legacyDiffRows.map((row, index) => (
@@ -2735,7 +2736,7 @@ export function AdminPromptsPage() {
                           ))}
                         </div>
                         <div className="admin-prompts-diff__column">
-                          <h4 className="admin-prompts-legacy__diff-column-title" id="legacy-diff-right-title">
+                          <h4 className="admin-prompts-archive__diff-column-title" id="legacy-diff-right-title">
                             {activeLegacyVersion ? tLegacy.rightColumnTitleProduction : tLegacy.rightColumnTitlePeer}
                           </h4>
                           <LegacyVersionMetaStrip
@@ -2745,7 +2746,7 @@ export function AdminPromptsPage() {
                             legacy={tLegacy}
                             lang={lang}
                           />
-                          <p className="admin-prompts-legacy__diff-caption text-muted">
+                          <p className="admin-prompts-archive__diff-caption text-muted">
                             {tLegacy.contentComparedCaption}
                           </p>
                           {legacyDiffRows.map((row, index) => (

@@ -85,7 +85,7 @@ describe("ShortcutCard", () => {
     it("rend le badge avec la bonne couleur", () => {
       const { container } = render(<ShortcutCard {...defaultProps} />, { wrapper: RouterWrapper })
       const badge = container.querySelector(".shortcut-card__badge") as HTMLElement
-      expect(badge).toHaveStyle({ background: defaultProps.badgeColor })
+      expect(badge).toHaveClass("badge--color-chat")
     })
   })
 

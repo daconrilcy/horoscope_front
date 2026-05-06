@@ -19,11 +19,9 @@ compatibility cible ou une dette migration-only documentee.
 | `--easing-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--layout-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--surface-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
-| `--text-*` | compatibility | `frontend/src/styles/theme.css` | `--color-text-*` | retire after all consumers use `--color-text-*` |
+| `--glass-heavy` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--bg-*` | compatibility | `frontend/src/styles/theme.css` | `--color-bg-*` | retire after all consumers use `--color-bg-*` |
-| `--glass*` | compatibility | `frontend/src/styles/theme.css` | `--color-glass-*` | retire after all consumers use `--color-glass-*` |
 | `--cta-*` | compatibility | `frontend/src/styles/theme.css` | `--color-cta-*` | retire after all consumers use `--color-cta-*` |
-| `--primary*` | compatibility | `frontend/src/styles/theme.css` | `--color-primary*` | retire after all consumers use `--color-primary*` |
 | `--badge-*` | compatibility | `frontend/src/styles/theme.css` | `--color-badge-*` | retire after all consumers use `--color-badge-*` |
 | `--hero-*` | semantic-extension | `frontend/src/styles/theme.css` | hero composition tokens | product decision before merge into global color tokens |
 | `--love-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
@@ -51,3 +49,12 @@ compatibility cible ou une dette migration-only documentee.
 | `--page-*` | migration-only | page local CSS | global background tokens | migrate page local surfaces |
 | `--inner-light` | migration-only | premium card local CSS | `--premium-inner-light` | replace in premium migration |
 | `--accent-purple*` | migration-only | legacy/premium local CSS | `--premium-accent-purple*` or `--color-primary*` | migrate consumers |
+| `--glass-surface-1` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
+| `--glass-surface-2` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
+| `--glass-surface-3` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
+| `--glass-border` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass border | migrate with daily premium token layer |
+| `--glass-border-strong` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass border | migrate with daily premium token layer |
+| `--text-strong` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |
+| `--text-main` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |
+| `--text-meta` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |
+| `--text-faint` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |

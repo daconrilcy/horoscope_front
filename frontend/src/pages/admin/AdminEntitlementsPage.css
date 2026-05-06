@@ -1,3 +1,5 @@
+/* Styles de la matrice admin des droits avec tokens design-system canoniques. */
+
 .admin-entitlements-page {
   display: flex;
   flex-direction: column;
@@ -41,7 +43,7 @@
 .sticky-col {
   position: sticky;
   left: 0;
-  background: var(--glass-heavy, #1a1a1a);
+  background: var(--glass-heavy);
   z-index: 10;
   width: 250px;
   text-align: left !important;

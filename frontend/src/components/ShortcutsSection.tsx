@@ -1,5 +1,6 @@
 import { MessageCircle, Layers, Calendar } from 'lucide-react'
 import { ShortcutCard } from './ShortcutCard'
+import type { BadgeColorValue } from './ui'
 import { useAstrologyLabels } from '../i18n/astrology'
 import { translateDashboardPage } from '../i18n/dashboard'
 
@@ -40,7 +41,15 @@ export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryCl
       path: '/dashboard',
       isOnline: false,
     },
-  ]
+  ] satisfies Array<{
+    key: 'chat' | 'consultation' | 'history'
+    title: string
+    subtitle: string
+    icon: typeof MessageCircle
+    badgeColor: BadgeColorValue
+    path: string
+    isOnline: boolean
+  }>
 
   return (
     <section className="shortcuts-section">

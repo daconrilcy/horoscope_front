@@ -3,12 +3,13 @@ import { Heart, Briefcase, Zap, type LucideIcon } from 'lucide-react'
 import { useAstrologyLabels } from '../i18n/astrology'
 import { translateInsight, translateInsightSection, type InsightId } from '../i18n/insights'
 import type { MiniInsightCardType } from '../components/MiniInsightCard'
+import type { BadgeColorValue } from '../components/ui'
 
 export interface InsightItem {
   id: InsightId
   type: MiniInsightCardType
   icon: LucideIcon
-  badgeColor: string
+  badgeColor: BadgeColorValue
   title: string
   description: string
 }
@@ -22,7 +23,12 @@ const INSIGHT_CONFIG = [
   { id: 'amour' as const, type: 'love' as const, icon: Heart, badgeColor: 'var(--badge-amour)' },
   { id: 'travail' as const, type: 'work' as const, icon: Briefcase, badgeColor: 'var(--badge-travail)' },
   { id: 'energie' as const, type: 'energy' as const, icon: Zap, badgeColor: 'var(--badge-energie)' },
-]
+] satisfies ReadonlyArray<{
+  id: InsightId
+  type: MiniInsightCardType
+  icon: LucideIcon
+  badgeColor: BadgeColorValue
+}>
 
 export function useDailyInsights(): DailyInsightsData {
   const { lang } = useAstrologyLabels()

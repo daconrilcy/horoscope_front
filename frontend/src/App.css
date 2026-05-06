@@ -1,7 +1,3 @@
-:root {
-  --glass-blur: 8px;
-}
-
 #root {
   min-height: 100vh;
 }
@@ -41,8 +37,8 @@
   background: var(--nav-glass);
   border: 1px solid var(--nav-border);
   box-shadow: var(--shadow-nav);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
   z-index: 100;
 }
 
@@ -56,13 +52,13 @@
   padding: 6px 4px;
   border-radius: 18px;
   text-decoration: none;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   transition: background 0.15s ease;
 }
 
 .bottom-nav__item--active {
   background: var(--nav-active-bg);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .bottom-nav__label {
@@ -81,7 +77,7 @@
   margin-top: 0;
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 /* Responsive */
@@ -101,10 +97,10 @@
 }
 
 .panel {
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
   border-radius: 16px;
   padding: 1.5rem;
   box-shadow: var(--shadow-card);
@@ -121,11 +117,11 @@
 .panel p,
 .panel li,
 .panel label {
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .panel p {
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .grid {
@@ -135,8 +131,8 @@
 }
 
 .card {
-  background: var(--glass-2);
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg-2);
+  border: 1px solid var(--color-glass-border);
   border-radius: 12px;
   padding: 1rem;
 }
@@ -147,8 +143,8 @@ button {
   background: linear-gradient(170deg,
       rgba(var(--purple_base), 0.1) 0%,
       rgba(var(--purple_base), 0.3) 100%);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
   color: var(--btn-text);
   font-size: 1rem;
   font-weight: var(--font-weight-semibold);
@@ -172,7 +168,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -189,7 +185,7 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.7rem 0.8rem;
-  background: var(--glass-2);
+  background: var(--color-glass-bg-2);
 }
 
 .chat-item-assistant {
@@ -211,8 +207,8 @@ textarea:focus-visible {
   padding: 0.55rem 0.7rem;
   font: inherit;
   resize: vertical;
-  color: var(--text-1);
-  background: var(--glass-2);
+  color: var(--color-text-primary);
+  background: var(--color-glass-bg-2);
 }
 
 .chat-form input,
@@ -222,8 +218,8 @@ textarea:focus-visible {
   border-radius: var(--radius-sm);
   padding: 0.5rem 0.65rem;
   font: inherit;
-  color: var(--text-1);
-  background: var(--glass-2);
+  color: var(--color-text-primary);
+  background: var(--color-glass-bg-2);
 }
 
 .chat-error {
@@ -240,8 +236,8 @@ textarea:focus-visible {
   border-radius: 10px;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--line);
-  background: var(--glass-2);
-  color: var(--text-1);
+  background: var(--color-glass-bg-2);
+  color: var(--color-text-primary);
 }
 
 .state-loading {
@@ -304,10 +300,10 @@ textarea:focus-visible {
   justify-content: center;
   gap: 0.75rem;
   padding: 1.5rem 1rem;
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
   border-radius: 12px;
   transition: all 0.2s ease;
   text-align: center;
@@ -319,12 +315,12 @@ textarea:focus-visible {
 .dashboard-card:hover {
   transform: translateY(-2px);
   border-color: var(--cta-l);
-  background: var(--glass-2);
+  background: var(--color-glass-bg-2);
   box-shadow: var(--shadow-card);
 }
 
 .dashboard-card:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -335,12 +331,12 @@ textarea:focus-visible {
 .dashboard-card-label {
   font-size: 1.1rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .dashboard-card-description {
   font-size: 0.85rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 /* Message Bubble */
 .message-bubble {
@@ -351,15 +347,15 @@ textarea:focus-visible {
 
 .message-bubble--user {
   align-self: flex-end;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
   color: var(--btn-text);
 }
 
 .message-bubble--assistant {
   align-self: flex-start;
   background: var(--badge-chat);
-  border: 1px solid var(--glass-border);
-  color: var(--text-1);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-text-primary);
 }
 
 .message-bubble-content {
@@ -371,7 +367,7 @@ textarea:focus-visible {
 .message-bubble-author {
   font-size: 0.75rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .message-bubble--user .message-bubble-author {
@@ -387,7 +383,7 @@ textarea:focus-visible {
 
 .message-bubble-time {
   font-size: 0.7rem;
-  color: var(--text-3);
+  color: var(--color-text-muted);
   align-self: flex-end;
 }
 
@@ -397,7 +393,7 @@ textarea:focus-visible {
   padding: 0.75rem 1rem;
   border-radius: 12px;
   background: var(--badge-chat);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
 }
 
 .typing-indicator-content {
@@ -409,7 +405,7 @@ textarea:focus-visible {
 .typing-indicator-author {
   font-size: 0.75rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .typing-indicator-dots {
@@ -421,7 +417,7 @@ textarea:focus-visible {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--text-2);
+  background: var(--color-text-secondary);
   animation: typing-bounce 1.4s infinite ease-in-out;
 }
 
@@ -467,7 +463,7 @@ textarea:focus-visible {
   margin: 0 auto 0.75rem;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
-  border: 2px solid var(--primary);
+  border: 2px solid var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -487,7 +483,7 @@ textarea:focus-visible {
 .astrologer-panel-name {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-panel-status {
@@ -508,7 +504,7 @@ textarea:focus-visible {
 .astrologer-panel-conversation h4 {
   margin: 0 0 0.5rem;
   font-size: 0.9rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -516,7 +512,7 @@ textarea:focus-visible {
 .astrologer-panel-info p {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   line-height: var(--line-height-normal);
 }
 
@@ -529,24 +525,24 @@ textarea:focus-visible {
 .astrologer-panel-specialties li {
   padding: 0.35rem 0;
   font-size: 0.9rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-panel-specialties li::before {
   content: "✦ ";
-  color: var(--primary);
+  color: var(--color-primary);
 }
 
 .astrologer-panel-conversation-id {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--primary);
+  color: var(--color-primary);
   font-family: monospace;
 }
 .skeleton-line {
   display: block;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--glass) 25%, var(--glass-2) 50%, var(--glass) 75%);
+  background: linear-gradient(90deg, var(--color-glass-bg) 25%, var(--color-glass-bg-2) 50%, var(--color-glass-bg) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s infinite;
 }
@@ -596,8 +592,8 @@ textarea:focus-visible {
   margin-bottom: 1.25rem;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(134, 108, 208, 0.12) 0%, rgba(161, 144, 237, 0.12) 100%);
-  border: 1px solid var(--glass-border);
-  color: var(--primary);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-primary);
 }
 
 .chat-empty-state-icon {
@@ -608,12 +604,12 @@ textarea:focus-visible {
 .chat-empty-state-title {
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .chat-empty-state-description {
   margin: 0 0 1.5rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   max-width: 360px;
   line-height: var(--line-height-relaxed);
 }
@@ -633,10 +629,10 @@ textarea:focus-visible {
 }
 
 .astrologer-picker-modal {
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
   border-radius: 16px;
   width: 100%;
   max-width: 480px;
@@ -658,7 +654,7 @@ textarea:focus-visible {
 .astrologer-picker-title {
   margin: 0;
   font-size: 1rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-picker-close {
@@ -668,15 +664,15 @@ textarea:focus-visible {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: transparent;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .astrologer-picker-close:hover {
-  background: var(--glass-2);
+  background: var(--color-glass-bg-2);
 }
 
 .astrologer-picker-body {
@@ -691,7 +687,7 @@ textarea:focus-visible {
 .astrologer-picker-empty {
   padding: 2rem;
   text-align: center;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
@@ -707,12 +703,12 @@ textarea:focus-visible {
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-picker-item:hover:not(:disabled) {
-  background: var(--glass-2);
-  border-color: var(--glass-border);
+  background: var(--color-glass-bg-2);
+  border-color: var(--color-glass-border);
 }
 
 .astrologer-picker-item:disabled {
@@ -725,7 +721,7 @@ textarea:focus-visible {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   background: linear-gradient(135deg, rgba(134, 108, 208, 0.15) 0%, rgba(161, 144, 237, 0.15) 100%);
   flex-shrink: 0;
   overflow: hidden;
@@ -746,7 +742,7 @@ textarea:focus-visible {
   justify-content: center;
   font-size: 1.1rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--primary);
+  color: var(--color-primary);
 }
 
 .astrologer-picker-item-avatar-fallback[hidden],
@@ -765,12 +761,12 @@ textarea:focus-visible {
 .astrologer-picker-item-name {
   font-size: 0.95rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-picker-item-bio {
   font-size: 0.8rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -861,7 +857,7 @@ textarea:focus-visible {
   justify-content: center;
   padding: 3rem 2rem;
   text-align: center;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .astrologer-grid-empty-icon {
@@ -1272,10 +1268,10 @@ textarea:focus-visible {
 
 /* Astrologer Profile Header */
 .astrologer-profile-header {
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
   border-radius: 16px;
   padding: 2rem;
   box-shadow: var(--shadow-card);
@@ -1293,7 +1289,7 @@ textarea:focus-visible {
   height: 96px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
-  border: 3px solid var(--primary);
+  border: 3px solid var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1318,19 +1314,19 @@ textarea:focus-visible {
 .astrologer-profile-name {
   margin: 0 0 0.35rem;
   font-size: 1.75rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-profile-style {
   margin: 0 0 0.25rem;
   font-size: 1rem;
-  color: var(--primary);
+  color: var(--color-primary);
 }
 
 .astrologer-profile-experience {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .astrologer-profile-meta {
@@ -1347,14 +1343,14 @@ textarea:focus-visible {
 .astrologer-profile-languages h3 {
   margin: 0 0 0.5rem;
   font-size: 0.85rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .astrologer-profile-languages p {
   margin: 0;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-profile-tags {
@@ -1369,13 +1365,13 @@ textarea:focus-visible {
   background: rgba(102, 230, 255, 0.1);
   border: 1px solid rgba(102, 230, 255, 0.25);
   font-size: 0.85rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-profile-bio h3 {
   margin: 0 0 0.75rem;
   font-size: 0.85rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1383,7 +1379,7 @@ textarea:focus-visible {
 .astrologer-profile-bio p {
   margin: 0;
   font-size: 1rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   line-height: var(--line-height-relaxed);
 }
 
@@ -1407,19 +1403,19 @@ textarea:focus-visible {
 .astrologers-page-header h1 {
   margin: 0 0 0.5rem;
   font-size: 1.75rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologers-page-header p {
   margin: 0;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .astrologers-page-loading {
   display: flex;
   justify-content: center;
   padding: 3rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .astrologers-page-error {
@@ -1441,12 +1437,12 @@ textarea:focus-visible {
   font-size: 0.9rem;
   background: transparent;
   border: 1px solid var(--line);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-profile-page-back:hover {
   background: rgba(102, 230, 255, 0.05);
-  border-color: var(--primary);
+  border-color: var(--color-primary);
 }
 
 .astrologer-profile-page-loading,
@@ -1457,7 +1453,7 @@ textarea:focus-visible {
   justify-content: center;
   padding: 3rem;
   text-align: center;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .astrologer-profile-page-not-found-icon,
@@ -1473,7 +1469,7 @@ textarea:focus-visible {
   justify-content: center;
   padding: 3rem;
   text-align: center;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .astrologer-profile-page-error h2 {
@@ -1545,14 +1541,14 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 2rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
   transition: color 0.2s ease;
 }
 
 .premium-back-link:hover {
-  color: var(--primary);
+  color: var(--color-primary);
 }
 
 .premium-hero-title {
@@ -1766,14 +1762,14 @@ textarea:focus-visible {
   align-items: center;
   gap: 1rem;
   padding: 4rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .premium-spinner {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(134, 108, 208, 0.1);
-  border-top-color: var(--primary);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1819,12 +1815,12 @@ textarea:focus-visible {
 .consultations-page-header h1 {
   margin: 0 0 0.5rem;
   font-size: 1.75rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .consultations-page-header p {
   margin: 0;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .consultations-types-section {
@@ -1851,12 +1847,12 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: 12px;
   text-decoration: none;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   transition: all 0.2s ease;
 }
 
 .consultations-type-preview-card:hover {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(102, 230, 255, 0.1);
   transform: translateY(-2px);
 }
@@ -1874,7 +1870,7 @@ textarea:focus-visible {
 .consultations-history-section h2 {
   margin: 0 0 1rem;
   font-size: 1.25rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .consultations-history-list {
@@ -1898,7 +1894,7 @@ textarea:focus-visible {
   gap: 1rem;
   padding: 1rem;
   text-decoration: none;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   transition: background 0.2s ease;
 }
 
@@ -1924,13 +1920,13 @@ textarea:focus-visible {
 
 .consultations-history-date {
   font-size: 0.8rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .consultations-history-context {
   flex: 1;
   font-size: 0.85rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1986,12 +1982,12 @@ textarea:focus-visible {
   border-radius: 50%;
   font-size: 0.85rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .wizard-progress-step--current .wizard-progress-number {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
   background: rgba(102, 230, 255, 0.1);
 }
 
@@ -2003,11 +1999,11 @@ textarea:focus-visible {
 
 .wizard-progress-label {
   font-size: 0.75rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .wizard-progress-step--current .wizard-progress-label {
-  color: var(--primary);
+  color: var(--color-primary);
   font-weight: var(--font-weight-medium);
 }
 
@@ -2041,14 +2037,14 @@ textarea:focus-visible {
   margin: 0 0 1.75rem;
   font-size: 1.4rem;
   font-weight: var(--font-weight-bold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .wizard-loading {
   display: flex;
   justify-content: center;
   padding: 2rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .wizard-error {
@@ -2087,7 +2083,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.75rem;
   padding: 1.5rem;
-  background: var(--glass);
+  background: var(--color-glass-bg);
   border: 1.5px solid rgba(134, 108, 208, 0.15);
   border-radius: 16px;
   cursor: pointer;
@@ -2097,14 +2093,14 @@ textarea:focus-visible {
 }
 
 .consultation-type-card:hover {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(134, 108, 208, 0.07);
   box-shadow: 0 8px 24px rgba(64, 42, 102, 0.1);
   transform: translateY(-2px);
 }
 
 .consultation-type-card--selected {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(134, 108, 208, 0.1);
   box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.2);
 }
@@ -2117,7 +2113,7 @@ textarea:focus-visible {
   font-size: 0.95rem;
   font-weight: var(--font-weight-medium);
   text-align: center;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 /* Astrologer Select Grid */
@@ -2134,7 +2130,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  background: var(--glass);
+  background: var(--color-glass-bg);
   border: 1.5px solid rgba(134, 108, 208, 0.15);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -2143,14 +2139,14 @@ textarea:focus-visible {
 }
 
 .astrologer-option:hover {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(134, 108, 208, 0.07);
   box-shadow: 0 6px 18px rgba(64, 42, 102, 0.1);
   transform: translateY(-2px);
 }
 
 .astrologer-option--selected {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(134, 108, 208, 0.1);
   box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.2);
 }
@@ -2196,17 +2192,17 @@ textarea:focus-visible {
 .astrologer-option-name {
   font-weight: var(--font-weight-medium);
   font-size: 0.9rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .astrologer-option-style {
   font-size: 0.75rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .astrologer-option-label {
   font-size: 0.9rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 /* Drawing Options */
@@ -2230,12 +2226,12 @@ textarea:focus-visible {
 }
 
 .drawing-option-card:hover {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(102, 230, 255, 0.08);
 }
 
 .drawing-option-card--selected {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(102, 230, 255, 0.12);
   box-shadow: 0 0 0 3px rgba(102, 230, 255, 0.2);
 }
@@ -2247,7 +2243,7 @@ textarea:focus-visible {
 .drawing-option-label {
   font-size: 0.9rem;
   font-weight: var(--font-weight-medium);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 /* Validation Step */
@@ -2271,12 +2267,12 @@ textarea:focus-visible {
 }
 
 .validation-label {
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
 .validation-value {
-  color: var(--text-1);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
   font-size: 0.9rem;
 }
@@ -2292,7 +2288,7 @@ textarea:focus-visible {
   margin-top: 0.9rem;
   font-size: 0.88rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   letter-spacing: 0.01em;
 }
 
@@ -2303,10 +2299,10 @@ textarea:focus-visible {
 .validation-context-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: var(--glass);
+  background: var(--color-glass-bg);
   border: 1px solid rgba(134, 108, 208, 0.18);
   border-radius: 10px;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   font-size: 0.95rem;
   resize: vertical;
   box-sizing: border-box;
@@ -2319,25 +2315,25 @@ textarea.validation-context-input {
 
 .validation-context-input:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--color-primary);
 }
 
 .validation-context-input::placeholder {
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   opacity: 0.7;
 }
 
 .validation-context-counter {
   margin-top: 0.5rem;
   font-size: 0.8rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-align: right;
 }
 
 .validation-context-hint {
   margin-top: 0.5rem;
   font-size: 0.85rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 /* === Wizard selected astrologer card === */
@@ -2346,8 +2342,8 @@ textarea.validation-context-input {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-4);
 }
@@ -2384,12 +2380,12 @@ textarea.validation-context-input {
 .wizard-astrologer-card__name {
   font-size: 0.9rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .wizard-astrologer-card__style {
   font-size: 0.75rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2406,7 +2402,7 @@ textarea.validation-context-input {
   display: block;
   font-size: 0.85rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
   margin-bottom: var(--space-2);
 }
 
@@ -2422,8 +2418,8 @@ textarea.validation-context-input {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  background: var(--glass);
-  border: 1.5px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  border: 1.5px solid var(--color-glass-border);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--duration-normal) ease;
@@ -2432,12 +2428,12 @@ textarea.validation-context-input {
 }
 
 .type-pill:hover {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(134, 108, 208, 0.07);
 }
 
 .type-pill--selected {
-  border-color: var(--primary);
+  border-color: var(--color-primary);
   background: rgba(134, 108, 208, 0.12);
   box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.15);
 }
@@ -2450,19 +2446,19 @@ textarea.validation-context-input {
 .type-pill-label {
   font-size: 0.8rem;
   font-weight: var(--font-weight-medium);
-  color: var(--text-1);
+  color: var(--color-text-primary);
   line-height: 1.3;
 }
 
 .type-pill--selected .type-pill-label {
-  color: var(--primary);
+  color: var(--color-primary);
   font-weight: var(--font-weight-semibold);
 }
 
 .form-group--third-party-toggle {
   padding: var(--space-4);
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-lg);
 }
 
@@ -2479,7 +2475,7 @@ textarea.validation-context-input {
   gap: 0.75rem;
   border-radius: 12px;
   z-index: 10;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
   pointer-events: none;
 }
@@ -2554,14 +2550,14 @@ textarea.validation-context-input {
 .user-data-missing-notice p {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 /* === Nothing to collect === */
 .nothing-to-collect {
   padding: 2rem;
   text-align: center;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   font-size: 0.95rem;
   background: rgba(134, 108, 208, 0.04);
   border: 1px dashed rgba(134, 108, 208, 0.2);
@@ -2584,7 +2580,7 @@ textarea.validation-context-input {
 .interaction-toggle-hint {
   margin: 0.4rem 0 0;
   font-size: 0.82rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 /* === Checkbox label === */
@@ -2594,7 +2590,7 @@ textarea.validation-context-input {
   gap: 0.5rem;
   cursor: pointer;
   font-size: 0.9rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   user-select: none;
 }
 
@@ -2602,13 +2598,13 @@ textarea.validation-context-input {
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: var(--primary);
+  accent-color: var(--color-primary);
   flex-shrink: 0;
 }
 
 /* === Form groups (OtherPersonForm) === */
 .other-person-form {
-  background: var(--glass);
+  background: var(--color-glass-bg);
   border: 1px solid rgba(134, 108, 208, 0.14);
   border-radius: 16px;
   padding: 1.5rem;
@@ -2623,13 +2619,13 @@ textarea.validation-context-input {
   margin: 0;
   font-size: 1rem;
   font-weight: var(--font-weight-bold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .other-person-form-hint {
   margin: -0.25rem 0 0;
   font-size: 0.85rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .form-group {
@@ -2641,7 +2637,7 @@ textarea.validation-context-input {
 .form-group label {
   font-size: 0.85rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .form-group input,
@@ -2651,7 +2647,7 @@ textarea.validation-context-input {
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(134, 108, 208, 0.18);
   border-radius: 10px;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   font-size: 0.9rem;
   box-sizing: border-box;
   transition: border-color 0.2s;
@@ -2660,7 +2656,7 @@ textarea.validation-context-input {
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--color-primary);
 }
 
 .form-group input[readonly] {
@@ -2705,12 +2701,12 @@ textarea.validation-context-input {
 .nickname-input-group label {
   font-size: 0.85rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 /* === Summary step === */
 .summary-details {
-  background: var(--glass);
+  background: var(--color-glass-bg);
   border: 1px solid rgba(134, 108, 208, 0.12);
   border-radius: var(--radius-md);
   padding: 1.25rem;
@@ -2739,7 +2735,7 @@ textarea.validation-context-input {
 
 .summary-label {
   font-size: 0.82rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   font-weight: var(--font-weight-medium);
   flex-shrink: 0;
   padding-top: 0.1rem;
@@ -2747,7 +2743,7 @@ textarea.validation-context-input {
 
 .summary-value {
   font-size: 0.9rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
   text-align: right;
 }
@@ -2764,7 +2760,7 @@ textarea.validation-context-input {
   margin: 0 0 0.75rem;
   font-size: 0.95rem;
   font-weight: var(--font-weight-bold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .precheck-status {
@@ -2827,13 +2823,13 @@ textarea.validation-context-input {
   margin: 0;
   font-size: 0.9rem;
   font-weight: var(--font-weight-bold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .banner-text {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 /* === Consultation Result Page */
@@ -2855,7 +2851,7 @@ textarea.validation-context-input {
 }
 
 .consultation-result-loading {
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .consultation-result-error {
@@ -2869,7 +2865,7 @@ textarea.validation-context-input {
 .consultation-result-header h1 {
   margin: 0;
   font-size: 1.5rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .consultation-result-summary {
@@ -2894,7 +2890,7 @@ textarea.validation-context-input {
 .consultation-result-type-label {
   font-size: 1.25rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .consultation-result-meta {
@@ -2903,7 +2899,7 @@ textarea.validation-context-input {
   gap: 1rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 .consultation-result-context {
@@ -2914,13 +2910,13 @@ textarea.validation-context-input {
 .consultation-result-context strong {
   display: block;
   margin-bottom: 0.5rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
 }
 
 .consultation-result-context p {
   margin: 0;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   line-height: var(--line-height-normal);
 }
 
@@ -2931,13 +2927,13 @@ textarea.validation-context-input {
 .consultation-result-interpretation h2 {
   margin: 0 0 1rem;
   font-size: 1.25rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .consultation-result-interpretation-text {
   margin: 0;
   line-height: 1.7;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   font-size: 1rem;
   white-space: pre-wrap;
 }
@@ -3005,7 +3001,7 @@ textarea.validation-context-input {
 .settings-title {
   margin: 0 0 1.5rem;
   font-size: 1.75rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .settings-tabs {
@@ -3018,7 +3014,7 @@ textarea.validation-context-input {
 
 .settings-tab {
   padding: 0.75rem 1.25rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-decoration: none;
   font-size: 0.95rem;
   border-bottom: 2px solid transparent;
@@ -3027,13 +3023,13 @@ textarea.validation-context-input {
 }
 
 .settings-tab:hover {
-  color: var(--text-1);
+  color: var(--color-text-primary);
   background: rgba(102, 230, 255, 0.05);
 }
 
 .settings-tab--active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .settings-content {
@@ -3043,7 +3039,7 @@ textarea.validation-context-input {
 .settings-section-title {
   margin: 0 0 1rem;
   font-size: 1.25rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 /* Account Settings */
@@ -3068,14 +3064,14 @@ textarea.validation-context-input {
 
 .account-info-label {
   font-size: 0.85rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .account-info-value {
   font-size: 1rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 /* Usage Settings */
@@ -3105,7 +3101,7 @@ textarea.validation-context-input {
 
 .usage-stat-label {
   font-size: 0.8rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -3113,7 +3109,7 @@ textarea.validation-context-input {
 .usage-stat-value {
   font-size: 1.2rem;
   font-weight: var(--font-weight-semibold);
-  color: var(--primary);
+  color: var(--color-primary);
 }
 
 .usage-progress-bar {
@@ -3126,7 +3122,7 @@ textarea.validation-context-input {
 .usage-progress-fill {
   height: 100%;
   width: calc(var(--usage-progress, 0) * 1%);
-  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-strong) 100%);
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -3162,10 +3158,10 @@ textarea.validation-context-input {
 }
 
 .modal-content {
-  background: var(--glass);
+  background: var(--color-glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: 16px;
   padding: 2rem;
   max-width: 450px;
@@ -3176,12 +3172,12 @@ textarea.validation-context-input {
 .modal-title {
   margin: 0 0 1rem;
   font-size: 1.25rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .modal-message {
   margin: 0 0 1.5rem;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   line-height: var(--line-height-normal);
 }
 
@@ -3201,17 +3197,17 @@ textarea.validation-context-input {
 .modal-input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-sm);
-  background: var(--glass-2);
-  color: var(--text-1);
+  background: var(--color-glass-bg-2);
+  color: var(--color-text-primary);
   font-size: 1rem;
   margin-bottom: 1rem;
 }
 
 .modal-input:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--color-primary);
 }
 
 .modal-error {
@@ -3268,21 +3264,21 @@ textarea.validation-context-input {
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   transition: color 0.2s ease, background 0.2s ease;
   padding: 0;
 }
 
 .today-header__toggle:hover,
 .today-header__back:hover {
-  background: var(--glass-2);
-  color: var(--text-1);
+  background: var(--color-glass-bg-2);
+  color: var(--color-text-primary);
   transform: none;
   box-shadow: none;
 }
 
 .today-header__toggle:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -3290,7 +3286,7 @@ textarea.validation-context-input {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.2px;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   margin: 0;
   padding-bottom: 6px;
 }
@@ -3301,7 +3297,7 @@ textarea.validation-context-input {
   font-weight: var(--font-weight-medium);
   line-height: 1.05;
   letter-spacing: -0.5px;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
@@ -3312,7 +3308,7 @@ textarea.validation-context-input {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   overflow: hidden;
   background: var(--chip);
   display: flex;
@@ -3320,26 +3316,26 @@ textarea.validation-context-input {
   justify-content: center;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--text-1);
+  color: var(--color-text-primary);
 }
 
 .today-header__avatar--loading {
-  background: var(--glass-2);
-  border-color: var(--glass-border);
+  background: var(--color-glass-bg-2);
+  border-color: var(--color-glass-border);
   animation: avatar-pulse 1.5s infinite ease-in-out;
 }
 
 @keyframes avatar-pulse {
   0% {
-    background-color: var(--glass-2);
+    background-color: var(--color-glass-bg-2);
   }
 
   50% {
-    background-color: var(--glass);
+    background-color: var(--color-glass-bg);
   }
 
   100% {
-    background-color: var(--glass-2);
+    background-color: var(--color-glass-bg-2);
   }
 }
 
@@ -3600,7 +3596,7 @@ textarea.validation-context-input {
 
 .skeleton-line {
   height: 1rem;
-  background: linear-gradient(90deg, rgba(var(--primary-rgb), 0.05) 25%, rgba(var(--primary-rgb), 0.1) 50%, rgba(var(--primary-rgb), 0.05) 75%);
+  background: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.05) 25%, rgba(var(--color-primary-rgb), 0.1) 50%, rgba(var(--color-primary-rgb), 0.05) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s infinite;
   border-radius: 4px;
@@ -3632,7 +3628,7 @@ textarea.validation-context-input {
   flex-direction: column;
   align-items: center;
   gap: var(--space-3);
-  color: var(--text-2);
+  color: var(--color-text-secondary);
 }
 
 @media (max-width: 768px) {
@@ -3734,14 +3730,14 @@ textarea.validation-context-input {
 }
 
 .section-header--clickable:focus-visible {
-  outline: 2px solid var(--text-2);
+  outline: 2px solid var(--color-text-secondary);
   outline-offset: 4px;
 }
 
 .section-header__title {
   font-size: var(--font-size-lg);
   font-weight: 650;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
@@ -3759,7 +3755,7 @@ textarea.validation-context-input {
 }
 
 .section-header__button:hover {
-  background: var(--glass-2);
+  background: var(--color-glass-bg-2);
 }
 
 .dashboard-container {
@@ -3789,7 +3785,7 @@ textarea.validation-context-input {
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-2);
+  color: var(--color-text-secondary);
   margin: 0 0 0.75rem 0;
 }
 
@@ -3854,7 +3850,7 @@ textarea.validation-context-input {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 2px solid var(--primary);
+  border: 2px solid var(--color-primary);
   margin-bottom: 1rem;
   object-fit: cover;
 }
@@ -3862,7 +3858,7 @@ textarea.validation-context-input {
 .chat-window-empty-persona {
   font-weight: var(--font-weight-bold);
   font-size: 1.1rem;
-  color: var(--text-1);
+  color: var(--color-text-primary);
   margin-bottom: 0.5rem;
 }
 

@@ -18,16 +18,14 @@ describe('Badge', () => {
     expect(lg.firstChild).toHaveClass('badge--lg');
   });
 
-  it('applies custom background color', () => {
-    const { container } = render(<Badge color="red">Red</Badge>);
-    const el = container.firstChild as HTMLElement;
-    expect(el.style.background).toBe('red');
+  it('applies tokenized color class', () => {
+    const { container } = render(<Badge color="amour">Amour</Badge>);
+    expect(container.firstChild).toHaveClass('badge--color-amour');
   });
 
   it('uses BADGE_COLORS correctly', () => {
     const { container } = render(<Badge color={BADGE_COLORS.amour}>Amour</Badge>);
-    const el = container.firstChild as HTMLElement;
-    expect(el.style.background).toContain('var(--color-badge-amour)');
+    expect(container.firstChild).toHaveClass('badge--color-amour');
   });
 });
 

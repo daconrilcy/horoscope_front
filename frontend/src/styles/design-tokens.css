@@ -24,12 +24,14 @@
   --color-glass-shortcut-border: rgba(255,255,255,0.72);
   --color-glass-mini: rgba(255,255,255,0.40);
   --color-glass-mini-border: rgba(255,255,255,0.58);
+  --glass-heavy: #1a1a1a;
   --surface-glass-blur: 14px;
 
   /* === BRAND/CTA === */
   --color-cta-left: #866CD0;
   --color-cta-right: #A190ED;
   --color-primary: #866CD0;
+  --color-primary-rgb: 134, 108, 208;
   --color-primary-strong: #7355C7;
   --color-btn-text: #1E1B2E;
   --color-purple-1: #977FD3;
@@ -214,11 +216,13 @@
   --color-glass-shortcut-border: rgba(255,255,255,0.10);
   --color-glass-mini: rgba(255,255,255,0.06);
   --color-glass-mini-border: rgba(255,255,255,0.10);
+  --glass-heavy: #1a1a1a;
 
   /* === BRAND/CTA === */
   --color-cta-left: #37226E;
   --color-cta-right: #5839B8;
   --color-primary: #A190ED;
+  --color-primary-rgb: 161, 144, 237;
   --color-primary-strong: #7355C7;
   --color-btn-text: #ffffff;
 

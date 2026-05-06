@@ -23,19 +23,19 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
       expect(cssContent).toMatch(/\.dark[\s\S]*?--color-primary-strong:\s*#[0-9A-Fa-f]{6}/)
     })
 
-    it("defines text tokens --text-1, --text-2, --text-3 in :root", () => {
-      expect(cssContent).toMatch(/--text-1:/)
-      expect(cssContent).toMatch(/--text-2:/)
-      expect(cssContent).toMatch(/--text-3:/)
+    it("defines canonical text tokens in :root", () => {
+      expect(cssContent).toMatch(/--color-text-primary:/)
+      expect(cssContent).toMatch(/--color-text-secondary:/)
+      expect(cssContent).toMatch(/--color-text-muted:/)
     })
 
-    it("defines text tokens --text-1, --text-2, --text-3 in .dark", () => {
+    it("defines canonical text tokens in .dark", () => {
       expect(cssContent).toMatch(/\.dark[\s\S]*?--color-text-primary:/)
       expect(cssContent).toMatch(/\.dark[\s\S]*?--color-text-secondary:/)
       expect(cssContent).toMatch(/\.dark[\s\S]*?--color-text-muted:/)
     })
 
-    it("defines different --text-1 values for light and dark themes", () => {
+    it("defines different --color-text-primary values for light and dark themes", () => {
       const lightMatch = cssContent.match(/--color-text-primary:\s*([^;]+)/)
       const darkMatch = cssContent.match(/\.dark[\s\S]*?--color-text-primary:\s*([^;]+)/)
       
