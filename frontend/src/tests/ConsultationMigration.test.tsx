@@ -3,9 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 
 import { ConsultationResultPage } from "../pages/ConsultationResultPage"
 import { ConsultationProvider, useConsultation, STORAGE_KEY, CHAT_PREFILL_KEY } from "../state/consultationStore"
+import { tConsultations } from "../i18n/consultations"
 
 const mockNavigate = vi.fn()
 vi.mock("react-router-dom", async () => {
@@ -35,6 +38,7 @@ const queryClient = new QueryClient({
 })
 
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
+const consultationLabelsPath = resolve(process.cwd(), "src/i18n/consultations.ts")
 
 describe("Consultation Migration (Epic 47)", () => {
   beforeEach(() => {
@@ -117,5 +121,50 @@ describe("Consultation Migration (Epic 47)", () => {
     expect(stored[0].id).toBe("new-47")
     expect(stored[0].sections).toBeDefined()
     expect(stored[0].fallbackMode).toBe("user_no_birth_time")
+  })
+
+  it("exposes canonical consultation labels without legacy vocabulary", () => {
+    expect({
+      fr: tConsultations("type_dating", "fr"),
+      en: tConsultations("type_dating", "en"),
+      es: tConsultations("type_dating", "es"),
+    }).toEqual({
+      fr: "Dating / Rendez-vous amoureux",
+      en: "Dating / Romantic meetup",
+      es: "Cita / Encuentro romántico",
+    })
+
+    expect({
+      fr: tConsultations("type_pro", "fr"),
+      en: tConsultations("type_pro", "en"),
+      es: tConsultations("type_pro", "es"),
+    }).toEqual({
+      fr: "Choix professionnel",
+      en: "Professional choice",
+      es: "Elección profesional",
+    })
+
+    expect({
+      fr: tConsultations("type_event", "fr"),
+      en: tConsultations("type_event", "en"),
+      es: tConsultations("type_event", "es"),
+    }).toEqual({
+      fr: "Événement important",
+      en: "Important event",
+      es: "Evento importante",
+    })
+
+    expect({
+      fr: tConsultations("type_free", "fr"),
+      en: tConsultations("type_free", "en"),
+      es: tConsultations("type_free", "es"),
+    }).toEqual({
+      fr: "Question libre",
+      en: "Free question",
+      es: "Pregunta libre",
+    })
+
+    const consultationLabelsSource = readFileSync(consultationLabelsPath, "utf8")
+    expect(consultationLabelsSource).not.toMatch(/legacy/i)
   })
 })

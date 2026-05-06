@@ -106,7 +106,7 @@ export function AstrologerCard({ astrologer, featured = false, isDefault, onClic
         )}
       </div>
       <span className="astrologer-card-name">{fullName}</span>
-      <span className="astrologer-card-alias">{astrologer.name}</span>
+      <span className="astrologer-card-display-name">{astrologer.name}</span>
       <p className="astrologer-card-style">{astrologer.style}</p>
       <div className="astrologer-card-divider" aria-hidden="true" />
       <div className="astrologer-card-specialties">

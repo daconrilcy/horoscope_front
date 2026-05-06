@@ -33,6 +33,7 @@ compatibility cible ou une dette migration-only documentee.
 | `--period-accent` | dynamic | prediction timeline components | runtime accent value | permanent custom property bridge |
 | `--default_dropshadow` | migration-only | legacy app CSS | `--shadow-card` | replace in component migration |
 | `--landing-*` | semantic-extension | landing layout and sections | premium landing layer | product decision before global merge |
+| `--help-*` | semantic-extension | `frontend/src/pages/HelpPage.css` | help page visual roles | permanent page-scoped semantic layer |
 | `--admin-settings-*` | semantic-extension | `frontend/src/pages/admin/AdminSettingsPage.css` | admin settings cluster local visual roles | permanent page-scoped semantic layer |
 | `--admin-entitlements-*` | semantic-extension | `frontend/src/pages/admin/AdminEntitlementsPage.css` | admin entitlements cluster local visual roles | permanent page-scoped semantic layer |
 | `--calendar-*` | semantic-extension | `frontend/src/index.css` | calendar cell background states | permanent calendar UI role |

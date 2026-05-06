@@ -33,6 +33,10 @@ export function extractLegacySelectors(css: string): string[] {
   return [...css.matchAll(/\.([a-zA-Z0-9_-]*legacy[a-zA-Z0-9_-]*)/g)].map((match) => `.${match[1]}`)
 }
 
+export function extractLegacyOrAliasSelectors(css: string): string[] {
+  return [...css.matchAll(/\.([a-zA-Z0-9_-]*(?:legacy|alias)[a-zA-Z0-9_-]*)/g)].map((match) => `.${match[1]}`)
+}
+
 export function extractCssFallbacks(css: string): Array<{ token: string; literal: string }> {
   return [...css.matchAll(/var\(\s*(--[a-zA-Z0-9_-]+)\s*,\s*([^)]+)\)/g)].map((match) => ({
     token: match[1],

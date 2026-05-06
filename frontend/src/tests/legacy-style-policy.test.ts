@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
-  extractLegacySelectors,
+  extractLegacyOrAliasSelectors,
   hasRegistryMatch,
   listFiles,
   parseRegistryPatterns,
@@ -9,10 +9,10 @@ import {
 
 // Garde les selecteurs et aliases legacy classes par owner.
 describe("legacy-style policy", () => {
-  it("classe chaque famille de selecteurs legacy detectee", () => {
+  it("classe chaque famille de selecteurs legacy ou alias detectee", () => {
     const patterns = parseRegistryPatterns(readFrontendFile("styles/legacy-style-surface-registry.md"))
     const legacySelectors = new Set(
-      listFiles("", ".css").flatMap((file) => extractLegacySelectors(readFrontendFile(file))),
+      listFiles("", ".css").flatMap((file) => extractLegacyOrAliasSelectors(readFrontendFile(file))),
     )
 
     for (const selector of legacySelectors) {

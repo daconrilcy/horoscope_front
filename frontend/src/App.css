@@ -1125,7 +1125,7 @@ textarea:focus-visible {
   letter-spacing: -0.02em;
 }
 
-.astrologer-card-alias {
+.astrologer-card-display-name {
   margin-bottom: 0.52rem;
   color: rgba(84, 63, 126, 0.5);
   font-size: 0.78rem;

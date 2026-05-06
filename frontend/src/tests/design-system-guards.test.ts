@@ -12,6 +12,37 @@ import {
 import { CSS_FALLBACK_EXCEPTIONS, INLINE_STYLE_EXCEPTIONS } from "./design-system-allowlist"
 import { INLINE_STYLE_DYNAMIC_ALLOWLIST } from "./inline-style-allowlist"
 
+function normalizeCssValue(value: string): string {
+  return value.replace(/\s+/g, " ").trim()
+}
+
+function removeCssRange(css: string, start: number, end: number): string {
+  return `${css.slice(0, start)}${" ".repeat(end - start)}${css.slice(end)}`
+}
+
+function findFlatCssBlock(css: string, selector: string): { body: string; start: number; end: number } {
+  const start = css.indexOf(`${selector} {`)
+  expect(start).toBeGreaterThanOrEqual(0)
+
+  const bodyStart = css.indexOf("{", start) + 1
+  const end = css.indexOf("\n}", bodyStart)
+  expect(end).toBeGreaterThan(bodyStart)
+
+  return {
+    body: css.slice(bodyStart, end),
+    start,
+    end: end + "\n}".length,
+  }
+}
+
+function extractMigratedHelpPageValues(ownerBody: string): string[] {
+  const declarations = [...ownerBody.matchAll(/--help-[a-zA-Z0-9_-]+\s*:\s*([\s\S]*?);/g)].map((match) =>
+    normalizeCssValue(match[1]),
+  )
+
+  return [...new Set(declarations.filter((value) => /rgba?\(|#[a-fA-F0-9]{3,8}\b|gradient\(|^2\.35rem$/.test(value)))]
+}
+
 // Suite anti-drift qui raccorde les registres design-system aux fichiers reels.
 describe("design-system guards", () => {
   it("couvre les namespaces de tokens CSS par le registre CS-026", () => {
@@ -58,6 +89,24 @@ describe("design-system guards", () => {
 
     expect(collectInlineStyles().filter((entry) => !allowedInline.has(toStableJson(entry)))).toEqual([])
     expect(collectCssFallbacks().filter((entry) => !allowedFallbacks.has(toStableJson(entry)))).toEqual([])
+  })
+
+  it("bloque la reintroduction locale des literals HelpPage migres par CS-073", () => {
+    const css = readFrontendFile("pages/HelpPage.css")
+    const ownerBlock = findFlatCssBlock(css, ":where(.help-page, .help-bg-halo)")
+    const subscriptionsStart = css.indexOf("/* --- Help Subscriptions Page")
+    expect(subscriptionsStart).toBeGreaterThan(ownerBlock.end)
+
+    const migratedValues = extractMigratedHelpPageValues(ownerBlock.body)
+    let guardedCss = removeCssRange(css, ownerBlock.start, ownerBlock.end)
+    guardedCss = guardedCss.slice(0, subscriptionsStart)
+    const normalizedGuardedCss = normalizeCssValue(guardedCss)
+
+    for (const value of migratedValues) {
+      expect(normalizedGuardedCss).not.toContain(value)
+    }
+    expect(css).toContain("font-size: var(--help-section-heading-size)")
+    expect(css).toContain("font-size: clamp(1.7rem, 7vw, var(--help-section-heading-size))")
   })
 
   it("centralise les exceptions exactes anti-drift", () => {
