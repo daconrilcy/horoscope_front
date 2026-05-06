@@ -144,8 +144,8 @@
   padding: 0;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(90deg, var(--cta-l), var(--cta-r));
-  color: var(--btn-text);
+  background: linear-gradient(90deg, var(--color-cta-left), var(--color-cta-right));
+  color: var(--color-btn-text);
   font-size: 22px;
   font-weight: 400;
   cursor: pointer;

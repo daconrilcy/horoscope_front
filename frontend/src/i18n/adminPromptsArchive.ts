@@ -1,9 +1,10 @@
+// Textes i18n de l'historique archive Admin Prompts hors catalogue.
 import type { AstrologyLang } from "./astrology"
 import type { AppLocale } from "./types"
 import type { AdminPromptVersion } from "../api/adminPrompts"
 
 /** Textes historiques de l'ancien onglet prompts hors catalogue (alignes FR / EN / ES). */
-export type AdminPromptsLegacyStrings = {
+export type AdminPromptsArchiveStrings = {
   regionAriaLabel: string
   loadingHistory: string
   errorHistory: string
@@ -55,11 +56,11 @@ export type AdminPromptsLegacyStrings = {
   successRestore: string
 }
 
-export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyStrings> = {
+export const adminPromptsArchiveByLang: Record<AstrologyLang, AdminPromptsArchiveStrings> = {
   fr: {
     regionAriaLabel: "Investigation historique LLM hors catalogue",
-    loadingHistory: "Chargement de l'historique legacy…",
-    errorHistory: "Impossible de charger l'historique legacy.",
+    loadingHistory: "Chargement de l'historique archive…",
+    errorHistory: "Impossible de charger l'historique archive.",
     kicker: "Hors catalogue canonique",
     surfaceTitle: "Investigation des versions historiques",
     surfaceIntro:
@@ -82,8 +83,8 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     diffLeadActiveUnknown:
       "Diff ligne à ligne entre deux versions de l'historique : l'API n'a pas renvoyé d'identifiant de version active reconnu dans cette liste. La colonne de droite est une autre version de contraste, pas une « production » attestée.",
     refVersionLabel: "Version de référence (colonne gauche)",
-    refSelectAria: "Version de référence pour la comparaison legacy",
-    diffGroupAria: "Diff prompt développeur legacy",
+    refSelectAria: "Version de référence pour la comparaison archive",
+    diffGroupAria: "Diff prompt développeur archive",
     refColumnTitle: "Colonne gauche — version de référence",
     rightColumnTitleProduction: "Colonne droite — version en production",
     rightColumnTitlePeer: "Colonne droite — autre version (actif non résolu)",
@@ -110,7 +111,7 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     modalNoActiveResolved:
       "Aucune version active résolue dans la liste : la cible ci-dessus sera publiée pour ce cas d'usage.",
     modalEmphasis:
-      "Cette action est traçable côté serveur et affecte le prompt/persona legacy, pas le catalogue canonique.",
+      "Cette action est traçable côté serveur et affecte le prompt/persona archive, pas le catalogue canonique.",
     modalCancel: "Annuler",
     modalConfirm: "Confirmer la restauration",
     modalConfirming: "Restauration en cours…",
@@ -118,8 +119,8 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
   },
   en: {
     regionAriaLabel: "Off-catalog LLM history investigation",
-    loadingHistory: "Loading legacy history…",
-    errorHistory: "Could not load legacy history.",
+    loadingHistory: "Loading archive history…",
+    errorHistory: "Could not load archive history.",
     kicker: "Off canonical catalog",
     surfaceTitle: "Historical versions investigation",
     surfaceIntro:
@@ -142,8 +143,8 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     diffLeadActiveUnknown:
       "Line-by-line diff between two history versions: the API did not return an active version id that matches this list. The right column is another contrast version, not an asserted “production” prompt.",
     refVersionLabel: "Reference version (left column)",
-    refSelectAria: "Legacy comparison reference version",
-    diffGroupAria: "Legacy developer prompt diff",
+    refSelectAria: "Archive comparison reference version",
+    diffGroupAria: "Archive developer prompt diff",
     refColumnTitle: "Left column — reference version",
     rightColumnTitleProduction: "Right column — in-production version",
     rightColumnTitlePeer: "Right column — other version (active unresolved)",
@@ -170,7 +171,7 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     modalNoActiveResolved:
       "No active version resolved in this list: the target above will be published for this use case.",
     modalEmphasis:
-      "This action is traceable server-side and affects the legacy prompt/persona, not the canonical catalog.",
+      "This action is traceable server-side and affects the archive prompt/persona, not the canonical catalog.",
     modalCancel: "Cancel",
     modalConfirm: "Confirm restore",
     modalConfirming: "Restoring…",
@@ -178,8 +179,8 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
   },
   es: {
     regionAriaLabel: "Investigación de historial LLM fuera del catálogo",
-    loadingHistory: "Cargando historial legacy…",
-    errorHistory: "No se pudo cargar el historial legacy.",
+    loadingHistory: "Cargando historial archive…",
+    errorHistory: "No se pudo cargar el historial archive.",
     kicker: "Fuera del catálogo canónico",
     surfaceTitle: "Investigación de versiones históricas",
     surfaceIntro:
@@ -202,8 +203,8 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     diffLeadActiveUnknown:
       "Diff línea a línea entre dos versiones del historial: la API no devolvió un id de versión activa reconocido en esta lista. La columna derecha es otra versión de contraste, no una producción certificada.",
     refVersionLabel: "Versión de referencia (columna izquierda)",
-    refSelectAria: "Versión de referencia para la comparación legacy",
-    diffGroupAria: "Diff de prompt desarrollador legacy",
+    refSelectAria: "Versión de referencia para la comparación archive",
+    diffGroupAria: "Diff de prompt desarrollador archive",
     refColumnTitle: "Columna izquierda — versión de referencia",
     rightColumnTitleProduction: "Columna derecha — versión en producción",
     rightColumnTitlePeer: "Columna derecha — otra versión (activo no resuelto)",
@@ -230,7 +231,7 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
     modalNoActiveResolved:
       "Ninguna versión activa resuelta en esta lista: el objetivo anterior se publicará para este caso de uso.",
     modalEmphasis:
-      "Esta acción es trazable en el servidor y afecta el prompt/persona legacy, no el catálogo canónico.",
+      "Esta acción es trazable en el servidor y afecta el prompt/persona archive, no el catálogo canónico.",
     modalCancel: "Cancelar",
     modalConfirm: "Confirmar restauración",
     modalConfirming: "Restauración en curso…",
@@ -238,11 +239,11 @@ export const adminPromptsLegacyByLang: Record<AstrologyLang, AdminPromptsLegacyS
   },
 }
 
-export function interpolateLegacyTemplate(template: string, vars: Record<string, string>): string {
+export function interpolateArchiveTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => vars[key] ?? "")
 }
 
-export function formatLegacyPromptTimestamp(iso: string, lang: AppLocale): string {
+export function formatArchivePromptTimestamp(iso: string, lang: AppLocale): string {
   try {
     const tag = lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : "en-GB"
     return new Date(iso).toLocaleString(tag, { dateStyle: "short", timeStyle: "short" })
@@ -251,9 +252,9 @@ export function formatLegacyPromptTimestamp(iso: string, lang: AppLocale): strin
   }
 }
 
-export function legacyPromptStatusLabel(
+export function archivePromptStatusLabel(
   status: AdminPromptVersion["status"],
-  L: AdminPromptsLegacyStrings,
+  L: AdminPromptsArchiveStrings,
 ): string {
   switch (status) {
     case "published":

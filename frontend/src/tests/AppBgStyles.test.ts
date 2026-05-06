@@ -101,7 +101,7 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
 
     it("defines light gradient with linear-gradient using tokens", () => {
       expect(cssContent).toMatch(
-        /\.app-bg\s*\{[^}]*linear-gradient\(180deg, var\(--bg-top\) 0%, var\(--bg-mid\) \d+%, var\(--bg-bot\) 100%\)/
+        /\.app-bg\s*\{[^}]*linear-gradient\(180deg, var\(--color-bg-top\) 0%, var\(--color-bg-mid\) \d+%, var\(--color-bg-bot\) 100%\)/
       )
     })
   })

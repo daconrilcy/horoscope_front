@@ -5,11 +5,11 @@
 }
 
 .row--alert {
-  background-color: color-mix(in srgb, var(--danger) 10%, transparent) !important;
+  background-color: color-mix(in srgb, var(--color-danger) 10%, transparent) !important;
 }
 
 .text-danger {
-  color: var(--danger);
+  color: var(--color-danger);
   font-weight: 700;
 }
 
@@ -78,7 +78,7 @@
 }
 
 .badge--error {
-  background: var(--danger);
+  background: var(--color-danger);
   color: white;
   font-size: 10px;
   padding: 1px 6px;

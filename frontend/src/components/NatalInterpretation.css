@@ -4,10 +4,10 @@
   margin-top: 48px;
   padding-top: 40px;
   border-top: 1px solid var(--premium-glass-border-soft);
-  --ni-selector-trigger-shadow:
+  --natal-interpretation-selector-trigger-shadow:
     0 10px 22px rgba(76, 52, 122, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  --ni-selector-trigger-shadow-hover:
+  --natal-interpretation-selector-trigger-shadow-hover:
     0 12px 24px rgba(76, 52, 122, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
@@ -94,14 +94,14 @@
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(242, 235, 255, 0.92) 100%);
   border: 1px solid var(--premium-glass-border-strong);
   border-radius: var(--premium-radius-pill);
-  box-shadow: var(--ni-selector-trigger-shadow);
+  box-shadow: var(--natal-interpretation-selector-trigger-shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .ni-control-trigger:hover {
   background: white;
   transform: translateY(-1px);
-  box-shadow: var(--ni-selector-trigger-shadow-hover);
+  box-shadow: var(--natal-interpretation-selector-trigger-shadow-hover);
 }
 
 .ni-control-trigger svg {
@@ -185,11 +185,11 @@
 .ni-version-btn {
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: var(--ni-selector-trigger-shadow);
+  box-shadow: var(--natal-interpretation-selector-trigger-shadow);
 }
 
 .ni-version-btn:hover {
-  box-shadow: var(--ni-selector-trigger-shadow-hover);
+  box-shadow: var(--natal-interpretation-selector-trigger-shadow-hover);
 }
 
 .ni-version-btn__history-icon {
@@ -242,13 +242,13 @@
 .ni-version-item__row:hover,
 .ni-version-item:focus-within .ni-version-item__row {
   background: var(--premium-accent-purple-soft);
-  box-shadow: var(--ni-selector-trigger-shadow-hover);
+  box-shadow: var(--natal-interpretation-selector-trigger-shadow-hover);
   transform: translateY(-1px);
 }
 
 .ni-version-item[data-selected="true"] .ni-version-item__row {
   background: var(--premium-accent-purple-soft);
-  box-shadow: var(--ni-selector-trigger-shadow);
+  box-shadow: var(--natal-interpretation-selector-trigger-shadow);
 }
 
 .ni-version-item__btn {

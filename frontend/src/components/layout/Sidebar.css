@@ -80,7 +80,7 @@
 .app-sidebar-link--active {
   color: var(--text-1);
   background: var(--glass-2);
-  border-left-color: var(--cta-l);
+  border-left-color: var(--color-cta-left);
 }
 
 .app-sidebar-link__icon {

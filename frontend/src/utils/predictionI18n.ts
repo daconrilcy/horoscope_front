@@ -49,7 +49,7 @@ const TONE_COLORS: Record<string, string> = {
   steady: "var(--text-2)",
   push: "var(--primary)",
   careful: "var(--warning)",
-  open: "var(--success)",
+  open: "var(--color-success)",
 };
 
 const MESSAGES: Record<string, Record<Lang, string>> = {
@@ -127,10 +127,10 @@ export function getNoteBand(note: number, lang: Lang) {
   const bandKey = note <= 5 ? "fragile" : note <= 9 ? "tendu" : note <= 12 ? "neutre" : note <= 16 ? "porteur" : "très favorable";
   
   const colors: Record<string, string> = {
-    fragile: "var(--danger)",
+    fragile: "var(--color-danger)",
     tendu: "var(--warning)",
     neutre: "var(--text-2)",
-    porteur: "var(--success)",
+    porteur: "var(--color-success)",
     "très favorable": "var(--primary)",
   };
 

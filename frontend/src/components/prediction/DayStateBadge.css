@@ -25,7 +25,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent-purple-strong);
+  color: var(--premium-accent-purple-strong);
   white-space: nowrap;
 }
 
@@ -33,7 +33,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--accent-purple);
+  background-color: var(--premium-accent-purple);
   flex-shrink: 0;
 }
 

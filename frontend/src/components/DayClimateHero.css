@@ -176,7 +176,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-purple-strong);
+  color: var(--premium-accent-purple-strong);
 }
 
 @media (max-width: 760px) {

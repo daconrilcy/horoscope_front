@@ -83,7 +83,7 @@
 }
 
 .day-prediction-card__tone--open {
-  background-color: var(--success);
+  background-color: var(--color-success);
 }
 
 .day-prediction-card__tone--mixed,

@@ -1,13 +1,6 @@
 :root {
-  --bg-base: var(--color-bg-base);
-  --bg-sheen: var(--color-bg-sheen);
   --surface-1: #0b1020;
   --surface-2: #111938;
-  --purple_base: 93, 37, 223;
-  --line: var(--color-line);
-  --danger: var(--color-danger);
-  --success: var(--color-success);
-  --default_dropshadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 
   font-family: "DM Sans", "Nunito Sans", "Trebuchet MS", sans-serif;
   line-height: 1.5;
@@ -16,14 +9,14 @@
   background:
     radial-gradient(1200px circle at 8% -10%, #2d3f7a 0%, transparent 50%),
     radial-gradient(950px circle at 95% -15%, #1d6f97 0%, transparent 45%),
-    linear-gradient(170deg, var(--bg-base) 0%, var(--bg-sheen) 100%);
+    linear-gradient(170deg, var(--color-bg-base) 0%, var(--color-bg-sheen) 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --background-unselected-cell: radial-gradient(rgba(253, 251, 253, 0.15) 30%, rgba(253, 251, 253, 0.7) 100%);
-  --background-selected-cell: radial-gradient(rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.8) 100%);
+  --calendar-cell-bg-unselected: radial-gradient(rgba(253, 251, 253, 0.15) 30%, rgba(253, 251, 253, 0.7) 100%);
+  --calendar-cell-bg-selected: radial-gradient(rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.8) 100%);
 }
 
 

@@ -45,7 +45,7 @@
 .mini-card--clickable:hover {
   background: var(--glass);
   transform: translateY(-2px);
-  border-color: var(--cta-l);
+  border-color: var(--color-cta-left);
 }
 
 /* Contenu au-dessus du gradient (z-index 2) */

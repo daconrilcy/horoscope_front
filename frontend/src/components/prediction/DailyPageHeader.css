@@ -20,7 +20,7 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.38) 100%);
   border: 1px solid var(--glass-border);
-  color: color-mix(in srgb, var(--text-strong) 82%, var(--accent-purple-strong) 18%);
+  color: color-mix(in srgb, var(--text-strong) 82%, var(--premium-accent-purple-strong) 18%);
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
@@ -102,7 +102,7 @@
   border: 1px solid rgba(196, 177, 235, 0.54);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.34) 100%);
-  color: color-mix(in srgb, var(--accent-purple-strong) 88%, var(--text-strong) 12%);
+  color: color-mix(in srgb, var(--premium-accent-purple-strong) 88%, var(--text-strong) 12%);
   display: inline-flex;
   align-items: center;
   justify-content: center;

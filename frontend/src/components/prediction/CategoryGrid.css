@@ -36,7 +36,7 @@
 }
 
 .category-grid__tone--fragile {
-  color: var(--danger);
+  color: var(--color-danger);
 }
 
 .category-grid__tone--tense {
@@ -48,7 +48,7 @@
 }
 
 .category-grid__tone--favorable {
-  color: var(--success);
+  color: var(--color-success);
 }
 
 .category-grid__tone--very_favorable {

@@ -2,46 +2,10 @@
 /* Source: docs/interfaces/horoscope-ui-spec.md §2, §3, §4 */
 
 :root {
-  /* Legacy token aliases retired by CS-067. */
-  --color-purple-1: var(--color-purple-1); /* keep for external refs if any */
-  --color-purple-2: var(--color-purple-2);
-
-  /* Background (V5 — gradient original maquette) */
-  --bg-top: var(--color-bg-top);
-  --bg-mid: var(--color-bg-mid);
-  --bg-bot: var(--color-bg-bot);
-
-  /* Accent / CTA */
-  --cta-l: var(--color-cta-left);
-  --cta-r: var(--color-cta-right);
-
   /* Chips */
   --chip: linear-gradient(90deg,#B3A5DE 0%, var(--color-purple-2) 100%);
 
-  /* Nav */
-  --nav-glass: var(--color-nav-glass);
-  --nav-border: var(--color-nav-border);
-  --nav-active-bg: var(--color-nav-active-bg);
-
   /* Shadows migrées vers design-tokens.css */
-
-  /* Lines/borders */
-  --line: var(--color-line);
-
-  /* Badge accents (§2.1) */
-  --badge-chat: var(--color-badge-chat);
-  --badge-consultation: var(--color-badge-consultation);
-  --badge-amour: var(--color-badge-amour);
-  --badge-travail: var(--color-badge-travail);
-  --badge-energie: var(--color-badge-energie);
-
-  /* Semantic colors */
-  --success: var(--color-success); /* Darker green for AA contrast (4.5:1+) on light bg */
-  --error: var(--color-error);
-  --btn-text: var(--color-btn-text);
-
-  /* Background level 2 (for inputs, etc.) */
-  --bg-2: var(--color-bg-2);
 
   /* Starfield (not visible in light mode, defined for consistency) */
   --star-fill: var(--color-star-fill);

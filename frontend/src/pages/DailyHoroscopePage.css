@@ -3,11 +3,8 @@
 .daily-layout {
   --layout-max-width: var(--premium-layout-max-width);
   --layout-padding-inline: var(--premium-layout-padding-inline);
-  --timeline-card-shift: 34px;
-  --timeline-rail-center: 18px;
-  --page-bg-start: var(--premium-bg-start);
-  --page-bg-mid: var(--premium-bg-mid);
-  --page-bg-end: var(--premium-bg-end);
+  --prediction-timeline-card-shift: 34px;
+  --prediction-timeline-rail-center: 18px;
 
   --glass-surface-1: var(--premium-glass-surface-1);
   --glass-surface-2: var(--premium-glass-surface-2);
@@ -18,7 +15,6 @@
   --shadow-page: var(--premium-shadow-page);
   --shadow-card: var(--premium-shadow-card);
   --shadow-focus: var(--premium-shadow-focus);
-  --inner-light: var(--premium-inner-light);
 
   --radius-hero: var(--premium-radius-hero);
   --radius-card: var(--premium-radius-card);
@@ -29,9 +25,6 @@
   --text-main: var(--premium-text-main);
   --text-meta: var(--premium-text-meta);
   --text-faint: var(--premium-text-faint);
-  --accent-purple: var(--premium-accent-purple);
-  --accent-purple-strong: var(--premium-accent-purple-strong);
-  --accent-purple-soft: var(--premium-accent-purple-soft);
 
   position: relative;
   display: flex;
@@ -54,7 +47,7 @@
 
 .daily-layout::before {
   background:
-    linear-gradient(180deg, var(--page-bg-start) 0%, var(--page-bg-mid) 48%, var(--page-bg-end) 100%);
+    linear-gradient(180deg, var(--premium-bg-start) 0%, var(--premium-bg-mid) 48%, var(--premium-bg-end) 100%);
 }
 
 .daily-layout::after {
@@ -91,7 +84,7 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.38) 100%);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card), var(--inner-light);
+  box-shadow: var(--shadow-card), var(--premium-inner-light);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   padding: 24px;
@@ -120,7 +113,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent-purple);
+  background: var(--premium-accent-purple);
 }
 
 .daily-layout__section-header {
@@ -134,15 +127,11 @@
 .daily-layout p { font-size: 15px; line-height: 1.7; font-weight: 400; color: var(--text-main); }
 
 .dark .daily-layout {
-  --page-bg-start: #1a1625;
-  --page-bg-mid: #151223;
-  --page-bg-end: #0f0d1a;
   --glass-surface-1: rgba(255, 255, 255, 0.04);
   --glass-surface-2: rgba(255, 255, 255, 0.07);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-border-strong: rgba(156, 121, 255, 0.2);
   --shadow-card: 0 12px 34px rgba(0, 0, 0, 0.38);
-  --accent-purple: #b197ff;
   --text-strong: #f4eefc;
   --text-main: rgba(244, 238, 252, 0.84);
   --text-meta: rgba(214, 205, 234, 0.72);
@@ -164,8 +153,8 @@
   .daily-layout {
     --layout-padding-inline: 22px;
     --layout-max-width: 100%;
-    --timeline-card-shift: 28px;
-    --timeline-rail-center: 16px;
+    --prediction-timeline-card-shift: 28px;
+    --prediction-timeline-rail-center: 16px;
     gap: 24px;
   }
   .daily-layout h1 { font-size: 32px; }

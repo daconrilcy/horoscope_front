@@ -7,7 +7,7 @@ describe("predictionBands", () => {
     expect(getNoteBand(5, "fr")).toEqual({
       key: "fragile",
       label: "Fragile",
-      colorVar: "var(--danger)",
+      colorVar: "var(--color-danger)",
     });
     expect(getNoteBand(9, "fr")).toEqual({
       key: "tense",
@@ -22,7 +22,7 @@ describe("predictionBands", () => {
     expect(getNoteBand(16, "fr")).toEqual({
       key: "favorable",
       label: "Porteur",
-      colorVar: "var(--success)",
+      colorVar: "var(--color-success)",
     });
     expect(getNoteBand(20, "fr")).toEqual({
       key: "very_favorable",

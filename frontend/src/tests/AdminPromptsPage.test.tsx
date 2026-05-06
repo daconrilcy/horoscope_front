@@ -17,7 +17,7 @@ vi.mock("react-router-dom", async () => {
 
 import { AdminPromptsPage } from "../pages/admin/AdminPromptsPage"
 import { toUtcIsoFromDateTimeInput } from "../api/adminPrompts"
-import { formatLegacyPromptTimestamp } from "../i18n/adminPromptsLegacy"
+import { formatArchivePromptTimestamp } from "../i18n/adminPromptsArchive"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 
 vi.mock("../pages/admin/PersonasAdmin", () => ({
@@ -37,6 +37,7 @@ function AdminPromptsRoutesFixture() {
       <Route path="/admin/prompts" element={<AdminPromptsPage />}>
         <Route index element={<Navigate to="catalog" replace />} />
         <Route path="catalog" element={null} />
+        <Route path="archive" element={null} />
         <Route path="release" element={null} />
         <Route path="consumption" element={null} />
         <Route path="personas" element={null} />
@@ -2015,7 +2016,7 @@ describe("AdminPromptsPage", () => {
     }))
 
     renderPage()
-    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique archive" }))
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Historique LLM hors catalogue" })).toBeInTheDocument()
@@ -2028,7 +2029,7 @@ describe("AdminPromptsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Restaurer cette version" })).toBeInTheDocument()
     })
-    expect(screen.getByRole("group", { name: "Diff prompt développeur legacy" })).toBeInTheDocument()
+    expect(screen.getByRole("group", { name: "Diff prompt développeur archive" })).toBeInTheDocument()
     expect(screen.getAllByText("Statut").length).toBeGreaterThan(0)
 
     await userEvent.click(screen.getByRole("button", { name: "Restaurer cette version" }))
@@ -2042,7 +2043,7 @@ describe("AdminPromptsPage", () => {
     })
     expect(screen.getAllByText("Publié").length).toBeGreaterThan(0)
     expect(
-      screen.getByText(`Publication ${formatLegacyPromptTimestamp("2026-04-06T10:30:00Z", "fr")}`),
+      screen.getByText(`Publication ${formatArchivePromptTimestamp("2026-04-06T10:30:00Z", "fr")}`),
     ).toBeInTheDocument()
   })
 
@@ -2116,7 +2117,7 @@ describe("AdminPromptsPage", () => {
     }))
 
     renderPage()
-    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique archive" }))
 
     await waitFor(() => {
       expect(screen.getByRole("region", { name: "Investigation historique LLM hors catalogue" })).toBeInTheDocument()
@@ -2673,7 +2674,7 @@ describe("AdminPromptsPage", () => {
     vi.stubGlobal("fetch", fetchSpy)
 
     renderPage()
-    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique archive" }))
 
     expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
     expect(screen.getByLabelText("Prompt développeur")).toHaveValue("Prompt historique")
@@ -2705,7 +2706,7 @@ describe("AdminPromptsPage", () => {
     })
     await waitFor(() => {
       expect(
-        screen.getByLabelText("Version de référence pour la comparaison legacy"),
+        screen.getByLabelText("Version de référence pour la comparaison archive"),
       ).toHaveValue("prompt-draft-3")
     })
   })
@@ -2769,7 +2770,7 @@ describe("AdminPromptsPage", () => {
     vi.stubGlobal("fetch", fetchSpy)
 
     renderPage()
-    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique archive" }))
     expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
 
     await userEvent.clear(screen.getByLabelText("Prompt développeur"))
@@ -2836,7 +2837,7 @@ describe("AdminPromptsPage", () => {
     vi.stubGlobal("fetch", fetchSpy)
 
     renderPage()
-    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique archive" }))
     expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
 
     await userEvent.clear(screen.getByLabelText("Température"))
@@ -2898,7 +2899,7 @@ describe("AdminPromptsPage", () => {
     }))
 
     renderPage()
-    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique archive" }))
 
     expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
     expect(screen.getByText("Statut courant")).toBeInTheDocument()
@@ -2974,7 +2975,7 @@ describe("AdminPromptsPage", () => {
     vi.stubGlobal("fetch", fetchSpy)
 
     renderPage()
-    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique archive" }))
     expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
 
     expect(screen.getByText(/Publication/)).toBeInTheDocument()
@@ -3056,7 +3057,7 @@ describe("AdminPromptsPage", () => {
     }))
 
     renderPage()
-    await userEvent.click(screen.getByRole("link", { name: "Historique legacy" }))
+    await userEvent.click(screen.getByRole("link", { name: "Historique archive" }))
     expect(await screen.findByRole("heading", { name: "Préparer une nouvelle version" })).toBeInTheDocument()
 
     await userEvent.clear(screen.getByLabelText("Modèle"))

@@ -20,6 +20,7 @@ function AdminPromptsRoutesFixture() {
       <Route path="/admin/prompts" element={<AdminPromptsPage />}>
         <Route index element={<Navigate to="catalog" replace />} />
         <Route path="catalog" element={null} />
+        <Route path="archive" element={null} />
       </Route>
     </Routes>
   )

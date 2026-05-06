@@ -145,6 +145,7 @@ describe("resolvePromptsTabFromPath", () => {
   it("mappe les segments URL vers l’univers prompts", () => {
     expect(resolvePromptsTabFromPath("/admin/prompts")).toBe("catalog")
     expect(resolvePromptsTabFromPath("/admin/prompts/catalog")).toBe("catalog")
+    expect(resolvePromptsTabFromPath("/admin/prompts/archive")).toBe("archive")
     expect(resolvePromptsTabFromPath("/admin/prompts/unknown")).toBe("catalog")
     expect(resolvePromptsTabFromPath("/admin/prompts/sample-payloads")).toBe("samplePayloads")
   })

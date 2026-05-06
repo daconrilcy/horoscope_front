@@ -13,12 +13,12 @@
 
 .day-timeline-v4__container {
   position: relative;
-  padding-left: var(--timeline-card-shift);
+  padding-left: var(--prediction-timeline-card-shift);
 }
 
 .day-timeline-v4__line {
   position: absolute;
-  left: calc(var(--timeline-rail-center) - 1.5px);
+  left: calc(var(--prediction-timeline-rail-center) - 1.5px);
   top: 32px;
   bottom: 32px;
   width: 3px;
@@ -57,13 +57,13 @@
 
 .day-timeline-v4__dot {
   position: absolute;
-  left: calc((var(--timeline-card-shift) * -1) + var(--timeline-rail-center) - 6.5px);
+  left: calc((var(--prediction-timeline-card-shift) * -1) + var(--prediction-timeline-rail-center) - 6.5px);
   top: 25px;
   width: 13px;
   height: 13px;
   border-radius: 50%;
   background-color: var(--period-accent);
-  border: 2px solid var(--page-bg-start);
+  border: 2px solid var(--premium-bg-start);
   box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.26), 0 0 12px rgba(156, 121, 255, 0.42);
   z-index: 2;
 }

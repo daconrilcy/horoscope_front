@@ -5,8 +5,8 @@
 }
 
 .alerts-banner {
-  background: color-mix(in srgb, var(--cta-l) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--cta-l) 52%, transparent);
+  background: color-mix(in srgb, var(--color-cta-left) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-cta-left) 52%, transparent);
   border-radius: 12px;
   padding: var(--space-4) var(--space-6);
 }
@@ -115,12 +115,12 @@
 }
 
 .alert-progress::-webkit-progress-value {
-  background: var(--cta-l);
+  background: var(--color-cta-left);
   border-radius: 999px;
 }
 
 .alert-progress::-moz-progress-bar {
-  background: var(--cta-l);
+  background: var(--color-cta-left);
   border-radius: 999px;
 }
 
@@ -149,7 +149,7 @@
 }
 
 .text-danger {
-  color: var(--danger);
+  color: var(--color-danger);
   font-weight: 600;
 }
 

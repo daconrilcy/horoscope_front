@@ -16,11 +16,6 @@ export type BadgeColorValue =
   | BadgeColorKey
   | 'primary'
   | (typeof BADGE_COLORS)[BadgeColorKey]
-  | 'var(--badge-chat)'
-  | 'var(--badge-consultation)'
-  | 'var(--badge-amour)'
-  | 'var(--badge-travail)'
-  | 'var(--badge-energie)'
   | 'var(--primary)'
   | 'var(--color-primary)';
 
@@ -31,17 +26,12 @@ const BADGE_COLOR_CLASSES: Record<BadgeColorValue, string> = {
   travail: 'badge--color-travail',
   energie: 'badge--color-energie',
   primary: 'badge--color-primary',
-  'var(--badge-chat)': 'badge--color-chat',
-  'var(--badge-consultation)': 'badge--color-consultation',
-  'var(--badge-amour)': 'badge--color-amour',
-  'var(--badge-travail)': 'badge--color-travail',
-  'var(--badge-energie)': 'badge--color-energie',
-  'var(--primary)': 'badge--color-primary',
   'var(--color-badge-chat)': 'badge--color-chat',
   'var(--color-badge-consultation)': 'badge--color-consultation',
   'var(--color-badge-amour)': 'badge--color-amour',
   'var(--color-badge-travail)': 'badge--color-travail',
   'var(--color-badge-energie)': 'badge--color-energie',
+  'var(--primary)': 'badge--color-primary',
   'var(--color-primary)': 'badge--color-primary',
 };
 

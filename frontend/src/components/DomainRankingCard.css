@@ -51,7 +51,7 @@
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  color: var(--accent-purple-strong);
+  color: var(--premium-accent-purple-strong);
   box-shadow: 0 6px 16px rgba(76, 52, 122, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.52);
 }
 
@@ -101,7 +101,7 @@
 .domain-ranking-card__fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent-purple-soft) 0%, var(--accent-purple-strong) 100%);
+  background: linear-gradient(90deg, var(--premium-accent-purple-soft) 0%, var(--premium-accent-purple-strong) 100%);
   transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26);
 }
@@ -114,7 +114,7 @@
 .domain-ranking-card__status-pill--favorable,
 .domain-ranking-card__status-pill--tres_favorable {
   border-color: rgba(156, 121, 255, 0.3);
-  color: var(--accent-purple);
+  color: var(--premium-accent-purple);
 }
 
 @media (max-width: 480px) {

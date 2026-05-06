@@ -46,7 +46,7 @@ describe("ShortcutCard", () => {
     title: "Chat astrologue",
     subtitle: "En ligne",
     icon: MessageCircle,
-    badgeColor: "var(--badge-chat)",
+    badgeColor: "var(--color-badge-chat)",
   }
 
   describe("Rendu et Structure", () => {

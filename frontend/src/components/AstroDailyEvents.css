@@ -49,7 +49,7 @@
 }
 
 .astro-daily-events__group-icon {
-  color: var(--accent-purple-strong);
+  color: var(--premium-accent-purple-strong);
   opacity: 0.82;
 }
 
@@ -88,7 +88,7 @@
 .astro-daily-events__item-time {
   font-size: 11px;
   font-weight: 700;
-  color: var(--accent-purple-strong);
+  color: var(--premium-accent-purple-strong);
   background: rgba(156, 121, 255, 0.08);
   padding: 3px 7px;
   border-radius: 999px;

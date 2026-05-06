@@ -54,8 +54,8 @@ describe("AC1 — Container .bottom-nav conforme (CSS)", () => {
   it("utilise --nav-glass, --nav-border et --shadow-nav", () => {
     const match = appCss.match(/\.bottom-nav\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
-    expect(content).toContain("var(--nav-glass)")
-    expect(content).toContain("var(--nav-border)")
+    expect(content).toContain("var(--color-nav-glass)")
+    expect(content).toContain("var(--color-nav-border)")
     expect(content).toContain("var(--shadow-nav)")
   })
 })
@@ -69,10 +69,10 @@ describe("AC2 — Items nav premium (CSS)", () => {
     expect(content).toContain("border-radius: 18px")
   })
 
-  it(".bottom-nav__item--active utilise var(--nav-active-bg)", () => {
+  it(".bottom-nav__item--active utilise var(--color-nav-active-bg)", () => {
     const match = appCss.match(/\.bottom-nav__item--active\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
-    expect(content).toContain("var(--nav-active-bg)")
+    expect(content).toContain("var(--color-nav-active-bg)")
   })
 
 

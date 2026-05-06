@@ -175,7 +175,7 @@
 }
 
 .status-active {
-  color: var(--success);
+  color: var(--color-success);
   font-weight: 500;
 }
 

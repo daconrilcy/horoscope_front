@@ -149,7 +149,7 @@ describe("AC#6 — Icônes Lucide: size et strokeWidth conformes", () => {
         title="Test"
         description="desc"
         icon={Heart}
-        badgeColor="var(--badge-amour)"
+        badgeColor="var(--color-badge-amour)"
       />
     )
     const badge = container.querySelector(".mini-card__badge")
@@ -169,7 +169,7 @@ describe("AC#6 — Icônes Lucide: size et strokeWidth conformes", () => {
         title="Chat"
         subtitle="En ligne"
         icon={MessageCircle}
-        badgeColor="var(--badge-chat)"
+        badgeColor="var(--color-badge-chat)"
       />,
       {
         wrapper: ({ children }) => (

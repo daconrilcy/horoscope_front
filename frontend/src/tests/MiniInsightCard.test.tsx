@@ -40,7 +40,7 @@ describe("MiniInsightCard", () => {
           title="Amour"
           description="Balance dans ta relation"
           icon={Heart}
-          badgeColor="var(--badge-amour)"
+          badgeColor="var(--color-badge-amour)"
         />
       )
       expect(screen.getByText("Amour")).toBeInTheDocument()
@@ -52,7 +52,7 @@ describe("MiniInsightCard", () => {
           title="Travail"
           description="Nouvelle opportunité à saisir"
           icon={Briefcase}
-          badgeColor="var(--badge-travail)"
+          badgeColor="var(--color-badge-travail)"
         />
       )
       expect(screen.getByText("Nouvelle opportunité à saisir")).toBeInTheDocument()
@@ -64,7 +64,7 @@ describe("MiniInsightCard", () => {
           title="Amour"
           description="Balance dans ta relation"
           icon={Heart}
-          badgeColor="var(--badge-amour)"
+          badgeColor="var(--color-badge-amour)"
         />
       )
       const title = document.querySelector("h3.mini-card__title")
@@ -78,7 +78,7 @@ describe("MiniInsightCard", () => {
           title="Amour"
           description="Balance dans ta relation"
           icon={Heart}
-          badgeColor="var(--badge-amour)"
+          badgeColor="var(--color-badge-amour)"
         />
       )
       const desc = document.querySelector(".mini-card__desc")
@@ -94,7 +94,7 @@ describe("MiniInsightCard", () => {
           title="Amour"
           description="Balance dans ta relation"
           icon={Heart}
-          badgeColor="var(--badge-amour)"
+          badgeColor="var(--color-badge-amour)"
         />
       )
       const badge = document.querySelector(".mini-card__badge") as HTMLElement
@@ -107,7 +107,7 @@ describe("MiniInsightCard", () => {
           title="Amour"
           description="Balance dans ta relation"
           icon={Heart}
-          badgeColor="var(--badge-amour)"
+          badgeColor="var(--color-badge-amour)"
         />
       )
       const badge = document.querySelector(".mini-card__badge")
@@ -120,7 +120,7 @@ describe("MiniInsightCard", () => {
           title="Travail"
           description="Nouvelle opportunité à saisir"
           icon={Briefcase}
-          badgeColor="var(--badge-travail)"
+          badgeColor="var(--color-badge-travail)"
         />
       )
       const badge = document.querySelector(".mini-card__badge")
@@ -133,7 +133,7 @@ describe("MiniInsightCard", () => {
           title="Énergie"
           description="Énergie haute, humeur positive"
           icon={Zap}
-          badgeColor="var(--badge-energie)"
+          badgeColor="var(--color-badge-energie)"
         />
       )
       const badge = document.querySelector(".mini-card__badge")
@@ -149,7 +149,7 @@ describe("MiniInsightCard", () => {
           title="Amour"
           description="Balance dans ta relation"
           icon={Heart}
-          badgeColor="var(--badge-amour)"
+          badgeColor="var(--color-badge-amour)"
         />
       )
       const card = document.querySelector(".mini-card")
@@ -233,19 +233,19 @@ describe("DailyInsightsSection", () => {
   })
 
   describe("AC3: Badges avec les bonnes couleurs", () => {
-    it("la card Amour a le badge avec var(--badge-amour)", () => {
+    it("la card Amour a le badge avec var(--color-badge-amour)", () => {
       render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
       expect(badges[0]).toHaveClass("badge--color-amour")
     })
 
-    it("la card Travail a le badge avec var(--badge-travail)", () => {
+    it("la card Travail a le badge avec var(--color-badge-travail)", () => {
       render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
       expect(badges[1]).toHaveClass("badge--color-travail")
     })
 
-    it("la card Énergie a le badge avec var(--badge-energie)", () => {
+    it("la card Énergie a le badge avec var(--color-badge-energie)", () => {
       render(<DailyInsightsSection />)
       const badges = document.querySelectorAll(".mini-card__badge") as NodeListOf<HTMLElement>
       expect(badges[2]).toHaveClass("badge--color-energie")
@@ -318,7 +318,7 @@ describe("AC-17-14 MiniInsightCard — data-type attribute", () => {
         title="Amour"
         description="Balance dans ta relation"
         icon={Heart}
-        badgeColor="var(--badge-amour)"
+        badgeColor="var(--color-badge-amour)"
         type="love"
       />
     )
@@ -333,7 +333,7 @@ describe("AC-17-14 MiniInsightCard — data-type attribute", () => {
         title="Travail"
         description="Nouvelle opportunité"
         icon={Briefcase}
-        badgeColor="var(--badge-travail)"
+        badgeColor="var(--color-badge-travail)"
         type="work"
       />
     )
@@ -348,7 +348,7 @@ describe("AC-17-14 MiniInsightCard — data-type attribute", () => {
         title="Énergie"
         description="Énergie haute"
         icon={Zap}
-        badgeColor="var(--badge-energie)"
+        badgeColor="var(--color-badge-energie)"
         type="energy"
       />
     )
@@ -363,7 +363,7 @@ describe("AC-17-14 MiniInsightCard — data-type attribute", () => {
         title="Amour"
         description="Balance"
         icon={Heart}
-        badgeColor="var(--badge-amour)"
+        badgeColor="var(--color-badge-amour)"
         type="love"
       />
     )

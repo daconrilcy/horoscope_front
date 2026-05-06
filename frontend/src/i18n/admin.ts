@@ -1,7 +1,8 @@
 // @ts-nocheck
+// Catalogue central des libelles d'administration multi-langues.
 import type { AstrologyLang } from "./astrology"
-import type { AdminPromptsLegacyStrings } from "./adminPromptsLegacy"
-import { adminPromptsLegacyByLang } from "./adminPromptsLegacy"
+import type { AdminPromptsArchiveStrings } from "./adminPromptsArchive"
+import { adminPromptsArchiveByLang } from "./adminPromptsArchive"
 import type { AdminPromptsEditorStrings } from "./adminPromptsEditor"
 import { adminPromptsEditorByLang } from "./adminPromptsEditor"
 import type { AdminPromptsConsumptionStrings } from "./adminPromptsConsumption"
@@ -13,7 +14,7 @@ export interface AdminTranslation {
   page: { title: string; backToHub: string }
   promptsSubNav: {
     catalog: string
-    legacy: string
+    archive: string
     release: string
     consumption: string
     personas: string
@@ -21,7 +22,7 @@ export interface AdminTranslation {
   }
   promptsPageHeader: {
     catalog: { title: string; intro: string }
-    legacy: { title: string; intro: string }
+    archive: { title: string; intro: string }
     release: { title: string; intro: string }
     consumption: { title: string; intro: string }
     personas: { title: string; intro: string }
@@ -182,7 +183,7 @@ export interface AdminTranslation {
       errorDeleteRequest: (msg: string) => string
     }
   }
-  promptsLegacy: AdminPromptsLegacyStrings
+  promptsArchive: AdminPromptsArchiveStrings
   promptsEditor: AdminPromptsEditorStrings
   promptsConsumption: AdminPromptsConsumptionStrings
   promptsCatalog: AdminPromptsCatalogStrings
@@ -220,7 +221,7 @@ export const adminTranslations = {
   promptsSubNav: {
     fr: {
       catalog: "Catalogue canonique",
-      legacy: "Historique legacy",
+      archive: "Historique archive",
       release: "Historique release",
       consumption: "Consommation",
       personas: "Personas",
@@ -228,7 +229,7 @@ export const adminTranslations = {
     },
     en: {
       catalog: "Canonical catalog",
-      legacy: "Legacy history",
+      archive: "Archive history",
       release: "Release history",
       consumption: "Consumption",
       personas: "Personas",
@@ -236,7 +237,7 @@ export const adminTranslations = {
     },
     es: {
       catalog: "Catálogo canónico",
-      legacy: "Historial legacy",
+      archive: "Historial archive",
       release: "Historial de release",
       consumption: "Consumo",
       personas: "Personas",
@@ -246,7 +247,7 @@ export const adminTranslations = {
     AstrologyLang,
     {
       catalog: string
-      legacy: string
+      archive: string
       release: string
       consumption: string
       personas: string
@@ -259,9 +260,9 @@ export const adminTranslations = {
       catalog: {
         title: "Catalogue prompts LLM",
         intro:
-          "Vue canonique feature/subfeature/plan/locale gouvernée par snapshot actif, avec historique legacy séparé.",
+          "Vue canonique feature/subfeature/plan/locale gouvernée par snapshot actif, avec historique archive séparé.",
       },
-      legacy: {
+      archive: {
         title: "Historique LLM hors catalogue",
         intro:
           "Investigation seule : versions historiques par cas d’usage, comparaison au prompt actif et restauration confirmée — sans éditer le catalogue canonique.",
@@ -287,9 +288,9 @@ export const adminTranslations = {
       catalog: {
         title: "LLM prompt catalog",
         intro:
-          "Canonical feature/subfeature/plan/locale view governed by the active snapshot, with separate legacy history.",
+          "Canonical feature/subfeature/plan/locale view governed by the active snapshot, with separate archive history.",
       },
-      legacy: {
+      archive: {
         title: "Off-catalog LLM history",
         intro:
           "Investigation only: historical versions per use case, diff against the active prompt, and confirmed restore — without editing the canonical catalog.",
@@ -315,9 +316,9 @@ export const adminTranslations = {
       catalog: {
         title: "Catálogo de prompts LLM",
         intro:
-          "Vista canónica feature/subfeature/plan/locale gobernada por el snapshot activo, con historial legacy aparte.",
+          "Vista canónica feature/subfeature/plan/locale gobernada por el snapshot activo, con historial archive aparte.",
       },
-      legacy: {
+      archive: {
         title: "Historial LLM fuera del catálogo",
         intro:
           "Solo investigación: versiones históricas por caso de uso, comparación con el prompt activo y restauración confirmada — sin editar el catálogo canónico.",
@@ -343,7 +344,7 @@ export const adminTranslations = {
     AstrologyLang,
     {
       catalog: { title: string; intro: string }
-      legacy: { title: string; intro: string }
+      archive: { title: string; intro: string }
       release: { title: string; intro: string }
       consumption: { title: string; intro: string }
       personas: { title: string; intro: string }
@@ -921,7 +922,7 @@ export function translateAdmin(lang: AstrologyLang = "fr"): AdminTranslation {
     reconciliation: adminTranslations.reconciliation[lang],
     b2b: adminTranslations.b2b[lang],
     pricing: adminTranslations.pricing[lang],
-    promptsLegacy: adminPromptsLegacyByLang[lang],
+    promptsArchive: adminPromptsArchiveByLang[lang],
     promptsEditor: adminPromptsEditorByLang[lang],
     promptsConsumption: adminPromptsConsumptionByLang[lang],
     promptsCatalog: adminPromptsCatalogStrings(lang),

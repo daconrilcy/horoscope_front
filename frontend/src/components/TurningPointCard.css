@@ -15,7 +15,7 @@
 }
 
 .turning-point-card__rail--emergence {
-  background: var(--success);
+  background: var(--color-success);
 }
 
 .turning-point-card__rail--recomposition {
@@ -48,7 +48,7 @@
 }
 
 .turning-point-card__type--emergence {
-  color: var(--success);
+  color: var(--color-success);
   background: rgba(76, 175, 80, 0.1);
 }
 

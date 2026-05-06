@@ -36,7 +36,7 @@
   height: 38px;
   border-radius: 50%;
   background: linear-gradient(180deg, rgba(156, 121, 255, 0.24) 0%, rgba(255, 255, 255, 0.26) 100%);
-  color: var(--accent-purple-strong);
+  color: var(--premium-accent-purple-strong);
   flex-shrink: 0;
   position: relative;
 }

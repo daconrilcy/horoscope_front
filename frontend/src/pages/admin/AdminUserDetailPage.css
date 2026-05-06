@@ -109,7 +109,7 @@
 }
 
 .action-button--success {
-  background: var(--success);
+  background: var(--color-success);
   color: white;
 }
 

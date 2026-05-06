@@ -121,7 +121,7 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang, hideT
           {timeWindows.map((window) => {
             const Icon = PERIOD_ICONS[window.period_key] || Sparkles;
             const periodLabel = PERIOD_LABELS[window.period_key as keyof typeof PERIOD_LABELS]?.[lang] || '';
-            const accentColor = PERIOD_ACCENTS[window.period_key] || 'var(--accent-purple)';
+            const accentColor = PERIOD_ACCENTS[window.period_key] || 'var(--premium-accent-purple)';
             const regimeMeta = REGIME_META[window.regime] || {
               icon: Sparkles,
               description: {

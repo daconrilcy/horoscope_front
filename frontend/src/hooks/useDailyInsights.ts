@@ -20,9 +20,9 @@ export interface DailyInsightsData {
 }
 
 const INSIGHT_CONFIG = [
-  { id: 'amour' as const, type: 'love' as const, icon: Heart, badgeColor: 'var(--badge-amour)' },
-  { id: 'travail' as const, type: 'work' as const, icon: Briefcase, badgeColor: 'var(--badge-travail)' },
-  { id: 'energie' as const, type: 'energy' as const, icon: Zap, badgeColor: 'var(--badge-energie)' },
+  { id: 'amour' as const, type: 'love' as const, icon: Heart, badgeColor: 'var(--color-badge-amour)' },
+  { id: 'travail' as const, type: 'work' as const, icon: Briefcase, badgeColor: 'var(--color-badge-travail)' },
+  { id: 'energie' as const, type: 'energy' as const, icon: Zap, badgeColor: 'var(--color-badge-energie)' },
 ] satisfies ReadonlyArray<{
   id: InsightId
   type: MiniInsightCardType

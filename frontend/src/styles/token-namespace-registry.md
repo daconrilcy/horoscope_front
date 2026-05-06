@@ -20,9 +20,6 @@ compatibility cible ou une dette migration-only documentee.
 | `--layout-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--surface-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--glass-heavy` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
-| `--bg-*` | compatibility | `frontend/src/styles/theme.css` | `--color-bg-*` | retire after all consumers use `--color-bg-*` |
-| `--cta-*` | compatibility | `frontend/src/styles/theme.css` | `--color-cta-*` | retire after all consumers use `--color-cta-*` |
-| `--badge-*` | compatibility | `frontend/src/styles/theme.css` | `--color-badge-*` | retire after all consumers use `--color-badge-*` |
 | `--hero-*` | semantic-extension | `frontend/src/styles/theme.css` | hero composition tokens | product decision before merge into global color tokens |
 | `--love-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
 | `--work-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
@@ -34,21 +31,14 @@ compatibility cible ou une dette migration-only documentee.
 | `--usage-*` | dynamic | `frontend/src/pages/settings/Settings.css` | runtime progress value | permanent custom property bridge |
 | `--sidebar-width` | dynamic | layout components | runtime layout value | permanent custom property bridge |
 | `--period-accent` | dynamic | prediction timeline components | runtime accent value | permanent custom property bridge |
-| `--nav-*` | compatibility | `frontend/src/styles/theme.css` | `--color-nav-*` | retire after all consumers migrate |
-| `--line` | compatibility | `frontend/src/styles/theme.css` | `--color-line` | retire after all consumers migrate |
-| `--success` | compatibility | `frontend/src/styles/theme.css` | `--color-success` | retire after all consumers migrate |
-| `--danger` | compatibility | page/admin legacy styles | `--color-danger` | retire after all consumers migrate |
-| `--btn-text` | compatibility | `frontend/src/styles/theme.css` | `--color-btn-text` | retire after all consumers migrate |
-| `--purple_base` | migration-only | `frontend/src/App.css` | `--color-primary` as RGB token | replace with canonical RGB token |
 | `--default_dropshadow` | migration-only | legacy app CSS | `--shadow-card` | replace in component migration |
-| `--background-*` | migration-only | legacy calendar CSS | semantic state background tokens | migrate calendar styles |
-| `--ni-*` | migration-only | `frontend/src/components/NatalInterpretation.css` | natal interpretation component tokens | migrate component styles |
 | `--landing-*` | semantic-extension | landing layout and sections | premium landing layer | product decision before global merge |
-| `--result-*` | migration-only | result pages | result page token layer | migrate to shared result tokens |
-| `--timeline-*` | migration-only | prediction timeline CSS | prediction component tokens | migrate timeline design-system |
-| `--page-*` | migration-only | page local CSS | global background tokens | migrate page local surfaces |
-| `--inner-light` | migration-only | premium card local CSS | `--premium-inner-light` | replace in premium migration |
-| `--accent-purple*` | migration-only | legacy/premium local CSS | `--premium-accent-purple*` or `--color-primary*` | migrate consumers |
+| `--admin-settings-*` | semantic-extension | `frontend/src/pages/admin/AdminSettingsPage.css` | admin settings cluster local visual roles | permanent page-scoped semantic layer |
+| `--admin-entitlements-*` | semantic-extension | `frontend/src/pages/admin/AdminEntitlementsPage.css` | admin entitlements cluster local visual roles | permanent page-scoped semantic layer |
+| `--calendar-*` | semantic-extension | `frontend/src/index.css` | calendar cell background states | permanent calendar UI role |
+| `--consultation-result-*` | semantic-extension | `frontend/src/pages/ConsultationResultPage.css` | consultation result page visual roles | permanent page-scoped semantic layer |
+| `--natal-interpretation-*` | semantic-extension | `frontend/src/components/NatalInterpretation.css` | natal interpretation component roles | permanent component-scoped semantic layer |
+| `--prediction-timeline-*` | semantic-extension | prediction timeline CSS | prediction timeline layout roles | permanent component-scoped semantic layer |
 | `--glass-surface-1` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
 | `--glass-surface-2` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
 | `--glass-surface-3` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
