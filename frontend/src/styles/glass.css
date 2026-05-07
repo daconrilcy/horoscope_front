@@ -1,30 +1,49 @@
 /* Système Glassmorphism mutualisé */
 
+:root {
+  --glass-surface-1: var(--premium-glass-surface-1);
+  --glass-surface-2: var(--premium-glass-surface-2);
+  --glass-surface-3: var(--premium-glass-surface-3);
+  --glass-border: var(--premium-glass-border);
+  --glass-border-strong: var(--premium-glass-border-strong);
+  --glass-base-backdrop-filter: blur(var(--surface-glass-blur));
+  --glass-card-premium-bg: linear-gradient(180deg, var(--glass-surface-2) 0%, var(--glass-surface-1) 100%);
+  --glass-card-backdrop-filter: blur(18px) saturate(140%);
+  --glass-card-hero-radius: var(--radius-feature);
+  --glass-card-compact-radius: var(--radius-card-xl);
+  --glass-card-mini-shadow: 0 14px 28px rgba(20, 20, 40, 0.1);
+  --glass-card-shortcut-shadow: 0 14px 28px rgba(20, 20, 40, 0.12);
+}
+
+.dark {
+  --glass-card-premium-bg: var(--glass-surface-2);
+}
+
 .glass-card {
-  backdrop-filter: blur(var(--surface-glass-blur));
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  backdrop-filter: var(--glass-base-backdrop-filter);
+  -webkit-backdrop-filter: var(--glass-base-backdrop-filter);
   background: var(--color-glass-bg);
   border: 1px solid var(--color-glass-border);
 }
 
 .glass-card--hero {
-  border-radius: 26px;
+  border-radius: var(--glass-card-hero-radius);
   padding: 18px;
   box-shadow: var(--shadow-hero);
 }
 
 .glass-card--mini {
-  border-radius: 18px;
+  border-radius: var(--glass-card-compact-radius);
   padding: 14px;
   background: var(--color-glass-mini);
   border-color: var(--color-glass-mini-border);
-  box-shadow: 0 14px 28px rgba(20,20,40,0.10);
+  box-shadow: var(--glass-card-mini-shadow);
 }
 
 .glass-card--shortcut {
-  border-radius: 18px;
+  border-radius: var(--glass-card-compact-radius);
   padding: 14px;
   background: var(--color-glass-shortcut);
   border-color: var(--color-glass-shortcut-border);
-  box-shadow: 0 14px 28px rgba(20,20,40,0.12);
+  box-shadow: var(--glass-card-shortcut-shadow);
 }

@@ -24,6 +24,10 @@ sourcee dans ce registre.
 | `--layout-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--surface-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--glass-heavy` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
+| `--glass-surface-*` | semantic-extension | `frontend/src/styles/glass.css` | premium glass surfaces shared by daily and reusable glass cards | permanent shared glass layer |
+| `--glass-border*` | semantic-extension | `frontend/src/styles/glass.css` | premium glass borders shared by daily and reusable glass cards | permanent shared glass layer |
+| `--glass-base-*` | semantic-extension | `frontend/src/styles/glass.css` | reusable base glass effects | permanent shared glass layer |
+| `--glass-card-*` | semantic-extension | `frontend/src/styles/glass.css` | reusable glass card visual roles | permanent shared glass layer |
 | `--hero-*` | semantic-extension | `frontend/src/styles/theme.css` | hero composition tokens | product decision before merge into global color tokens |
 | `--love-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
 | `--work-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
@@ -45,11 +49,6 @@ sourcee dans ce registre.
 | `--consultation-result-*` | semantic-extension | `frontend/src/pages/ConsultationResultPage.css` | consultation result page visual roles | permanent page-scoped semantic layer |
 | `--natal-interpretation-*` | semantic-extension | `frontend/src/components/NatalInterpretation.css` | natal interpretation component roles | permanent component-scoped semantic layer |
 | `--prediction-timeline-*` | semantic-extension | prediction timeline CSS | prediction timeline layout roles | permanent component-scoped semantic layer |
-| `--glass-surface-1` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
-| `--glass-surface-2` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
-| `--glass-surface-3` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass surface | migrate with daily premium token layer |
-| `--glass-border` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass border | migrate with daily premium token layer |
-| `--glass-border-strong` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium glass border | migrate with daily premium token layer |
 | `--text-strong` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |
 | `--text-main` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |
 | `--text-meta` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |

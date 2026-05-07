@@ -27,6 +27,7 @@ let appCss: string
 let designTokensCss: string
 let themeCss: string
 let bgCss: string
+let premiumThemeCss: string
 let heroCss: string
 let settingsCss: string
 let landingLayoutCss: string
@@ -35,7 +36,8 @@ let landingPageCss: string
 beforeAll(() => {
   appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
   designTokensCss = readFileSync(resolve(__dirname, "../styles/design-tokens.css"), "utf-8")
-  themeCss = designTokensCss + "\n" + readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8")
+  premiumThemeCss = readFileSync(resolve(__dirname, "../styles/premium-theme.css"), "utf-8")
+  themeCss = designTokensCss + "\n" + readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8") + "\n" + premiumThemeCss
   bgCss = readFileSync(resolve(__dirname, "../styles/backgrounds.css"), "utf-8")
   heroCss = readFileSync(resolve(__dirname, "../components/HeroHoroscopeCard.css"), "utf-8")
   settingsCss = readFileSync(resolve(__dirname, "../pages/settings/Settings.css"), "utf-8")
@@ -120,8 +122,9 @@ describe("AC#4 — Fond dark: starfield + gradient cosmique (sans bokeh)", () =>
   })
 
   it(".dark .app-bg a des gradients cosmiques violet/bleu", () => {
-    expect(bgCss).toContain("rgba(160,120,255,0.22)")
-    expect(bgCss).toContain("rgba(90,170,255,0.14)")
+    expect(bgCss).toMatch(/\.dark\s+\.app-bg\s*\{[^}]*background:\s*var\(--premium-app-bg\)/)
+    expect(premiumThemeCss).toMatch(/rgba\(160,\s*120,\s*255,\s*0\.22\)/)
+    expect(premiumThemeCss).toMatch(/rgba\(90,\s*170,\s*255,\s*0\.14\)/)
   })
 })
 

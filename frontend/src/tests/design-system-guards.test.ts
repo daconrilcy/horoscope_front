@@ -223,6 +223,39 @@ function isForbiddenAppLiteralDeclaration(declaration: CssDeclaration): boolean 
   return /#[0-9A-Fa-f]{3,8}\b|rgba?\(|hsla?\(|(?:linear|radial)-gradient\(|color-mix\(|var\(\s*--[a-zA-Z0-9_-]+\s*,/.test(value)
 }
 
+function isPremiumSharedVisualLiteralOrFallback(value: string): boolean {
+  if (/var\(\s*--[a-zA-Z0-9_-]+\s*,/.test(value)) {
+    return true
+  }
+  if (/#[0-9A-Fa-f]{3,8}\b|rgba?\(|hsla?\(|(?:linear|radial)-gradient\(/.test(value)) {
+    return true
+  }
+
+  return false
+}
+
+function isForbiddenPremiumSharedDeclaration(file: string, declaration: CssDeclaration): boolean {
+  const property = declaration.property
+  const value = declaration.value
+
+  if (property.startsWith("--")) {
+    if (property.startsWith("--glass-")) {
+      return file !== "styles/glass.css"
+    }
+
+    return isPremiumSharedVisualLiteralOrFallback(value)
+  }
+
+  if (isPremiumSharedVisualLiteralOrFallback(value)) {
+    return true
+  }
+  if (["box-shadow", "text-shadow", "border-radius", "filter", "backdrop-filter", "-webkit-backdrop-filter"].includes(property)) {
+    return !/^(?:var\(|none|inherit)/.test(value)
+  }
+
+  return false
+}
+
 function hasRepeatedNameSegment(name: string): boolean {
   const segments = name.replace(/^--app-/, "").split("-")
 
@@ -439,6 +472,34 @@ describe("design-system guards", () => {
         expect(css).not.toMatch(literal)
       }
     }
+  })
+
+  it("bloque le retour des literals premium partages migres par CS-089", () => {
+    const guardedFiles = [
+      "styles/backgrounds.css",
+      "styles/glass.css",
+      "pages/DailyHoroscopePage.css",
+      "components/prediction/DailyAdviceCard.css",
+    ]
+    const registry = readFrontendFile("styles/token-namespace-registry.md")
+    const premiumTheme = readFrontendFile("styles/premium-theme.css")
+    const glassCss = readFrontendFile("styles/glass.css")
+
+    const violations = guardedFiles.flatMap((file) =>
+      collectCssDeclarations(readFrontendFile(file))
+        .filter((declaration) => isForbiddenPremiumSharedDeclaration(file, declaration))
+        .map((declaration) => ({ file, declaration })),
+    )
+
+    expect(registry).toContain("| `--premium-*` | semantic-extension |")
+    expect(registry).toContain("| `--glass-card-*` | semantic-extension |")
+    expect(premiumTheme).toContain("--premium-app-bg:")
+    expect(premiumTheme).toContain("--premium-daily-advice-icon-bg:")
+    expect(glassCss).toContain("--glass-card-premium-bg:")
+    expect(readFrontendFile("styles/backgrounds.css")).not.toMatch(/--(?:glass|premium)-[a-zA-Z0-9_-]*\s*:/)
+    expect(readFrontendFile("pages/DailyHoroscopePage.css")).not.toMatch(/--glass-[a-zA-Z0-9_-]*\s*:/)
+    expect(readFrontendFile("components/prediction/DailyAdviceCard.css")).not.toMatch(/--(?:glass|premium)-[a-zA-Z0-9_-]*\s*:/)
+    expect(violations).toEqual([])
   })
 
   it("bloque le retour des literals composants UI migres par CS-079", () => {

@@ -5,7 +5,7 @@
   position: relative;
   overflow: hidden;
   padding: var(--space-7);
-  background: linear-gradient(180deg, var(--glass-surface-3) 0%, var(--glass-surface-1) 100%);
+  background: var(--glass-card-premium-bg);
   border: 1px solid var(--glass-border-strong);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card), var(--premium-inner-light);
@@ -16,8 +16,8 @@
   position: absolute;
   inset: auto -6% -28% 48%;
   height: 80%;
-  background: radial-gradient(circle, rgba(170, 144, 255, 0.22) 0%, transparent 72%);
-  filter: blur(18px);
+  background: var(--premium-daily-advice-glow);
+  filter: var(--premium-daily-advice-glow-filter);
   pointer-events: none;
 }
 
@@ -35,18 +35,17 @@
   width: var(--space-10);
   height: var(--space-10);
   border-radius: var(--radius-full);
-  background: linear-gradient(180deg, rgba(156, 121, 255, 0.24) 0%, rgba(255, 255, 255, 0.26) 100%);
+  background: var(--premium-daily-advice-icon-bg);
   color: var(--premium-accent-purple-strong);
   flex-shrink: 0;
   position: relative;
 }
 
-/* Local Halo (AC9.35) */
 .daily-advice-card__icon-badge::before {
   content: '';
   position: absolute;
   inset: -10px;
-  background: radial-gradient(circle, rgba(156, 121, 255, 0.28) 0%, transparent 70%);
+  background: var(--premium-daily-advice-icon-halo);
   z-index: -1;
 }
 

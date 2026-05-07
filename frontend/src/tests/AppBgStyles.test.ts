@@ -8,8 +8,9 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
   beforeAll(() => {
     const themePath = resolve(__dirname, "../styles/theme.css")
     const designTokensPath = resolve(__dirname, "../styles/design-tokens.css")
+    const premiumThemePath = resolve(__dirname, "../styles/premium-theme.css")
     const bgPath = resolve(__dirname, "../styles/backgrounds.css")
-    cssContent = readFileSync(designTokensPath, "utf-8") + "\n" + readFileSync(themePath, "utf-8") + "\n" + readFileSync(bgPath, "utf-8")
+    cssContent = readFileSync(designTokensPath, "utf-8") + "\n" + readFileSync(themePath, "utf-8") + "\n" + readFileSync(premiumThemePath, "utf-8") + "\n" + readFileSync(bgPath, "utf-8")
   })
 
   describe("Theme token definitions", () => {
@@ -91,17 +92,14 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
 
     it("defines light gradient with radial-gradient", () => {
-      expect(cssContent).toMatch(
-        /\.app-bg\s*\{[^}]*radial-gradient\(1200px 800px at 20% 10%/
-      )
-      expect(cssContent).toMatch(
-        /\.app-bg\s*\{[^}]*radial-gradient\(900px 700px at 80% 60%/
-      )
+      expect(cssContent).toMatch(/\.app-bg\s*\{[^}]*background:\s*var\(--premium-app-bg\)/)
+      expect(cssContent).toMatch(/--premium-app-bg:\s*radial-gradient\(720px 520px/)
+      expect(cssContent).toMatch(/radial-gradient\(1200px 800px at 20% 10%/)
     })
 
     it("defines light gradient with linear-gradient using tokens", () => {
       expect(cssContent).toMatch(
-        /\.app-bg\s*\{[^}]*linear-gradient\(180deg, var\(--color-bg-top\) 0%, var\(--color-bg-mid\) \d+%, var\(--color-bg-bot\) 100%\)/
+        /--premium-app-bg:[\s\S]*linear-gradient\(180deg, var\(--color-bg-top\) 0%, var\(--color-bg-mid\) \d+%, var\(--color-bg-bot\) 100%\)/
       )
     })
   })
@@ -133,14 +131,15 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
   describe("AC3: Fond gradient dark cosmic correct", () => {
     it("defines .dark .app-bg class with dark gradients", () => {
       expect(cssContent).toMatch(/\.dark\s+\.app-bg\s*\{/)
+      expect(cssContent).toMatch(/\.dark\s*\{[\s\S]*--premium-app-bg:/)
     })
 
     it("uses different radial-gradient opacities for dark mode", () => {
       expect(cssContent).toMatch(
-        /\.dark\s+\.app-bg\s*\{[^}]*rgba\(160,120,255,0\.22\)/
+        /\.dark\s*\{[\s\S]*rgba\(160,\s*120,\s*255,\s*0\.22\)/
       )
       expect(cssContent).toMatch(
-        /\.dark\s+\.app-bg\s*\{[^}]*rgba\(90,170,255,0\.14\)/
+        /\.dark\s*\{[\s\S]*rgba\(90,\s*170,\s*255,\s*0\.14\)/
       )
     })
   })
@@ -197,7 +196,8 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
 
   describe("Noise overlay SVG", () => {
     it("uses feTurbulence SVG filter in ::after", () => {
-      expect(cssContent).toMatch(/\.app-bg::after\s*\{[^}]*data:image\/svg\+xml/)
+      expect(cssContent).toMatch(/\.app-bg::after\s*\{[^}]*background-image:\s*var\(--premium-noise-image\)/)
+      expect(cssContent).toMatch(/--premium-noise-image:\s*url\("data:image\/svg\+xml/)
       expect(cssContent).toMatch(/feTurbulence/)
       expect(cssContent).toMatch(/fractalNoise/)
     })

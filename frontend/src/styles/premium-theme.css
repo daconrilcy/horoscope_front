@@ -7,6 +7,24 @@
   --premium-bg-start: #f4edf6;
   --premium-bg-mid: #ece2f1;
   --premium-bg-end: #e2d7ec;
+  --premium-app-bg: radial-gradient(720px 520px at 14% 18%, rgba(255, 255, 255, 0.72), transparent 58%),
+    radial-gradient(1200px 800px at 20% 10%, rgba(247, 210, 201, 0.18), transparent 50%),
+    radial-gradient(680px 520px at 76% 22%, rgba(182, 154, 255, 0.2), transparent 62%),
+    radial-gradient(900px 700px at 80% 60%, rgba(6, 61, 112, 0.1), transparent 100%),
+    radial-gradient(860px 600px at 52% 78%, rgba(255, 255, 255, 0.34), transparent 60%),
+    radial-gradient(760px 580px at 88% 88%, rgba(150, 125, 255, 0.16), transparent 62%),
+    linear-gradient(180deg, var(--color-bg-top) 0%, var(--color-bg-mid) 58%, var(--color-bg-bot) 100%);
+  --premium-app-bg-atmosphere: radial-gradient(46% 34% at 50% 30%, rgba(255, 255, 255, 0.3), transparent 72%),
+    radial-gradient(38% 28% at 72% 62%, rgba(176, 135, 255, 0.18), transparent 76%),
+    radial-gradient(34% 28% at 24% 72%, rgba(255, 228, 238, 0.18), transparent 74%),
+    radial-gradient(120% 92% at 50% 50%, transparent 58%, rgba(122, 104, 176, 0.08) 100%);
+  --premium-noise-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  --premium-daily-page-bg: linear-gradient(180deg, var(--premium-bg-start) 0%, var(--premium-bg-mid) 48%, var(--premium-bg-end) 100%);
+  --premium-daily-bg-atmosphere: radial-gradient(circle at 78% 18%, rgba(144, 117, 240, 0.24) 0%, transparent 36%),
+    radial-gradient(circle at 16% 88%, rgba(255, 211, 236, 0.18) 0%, transparent 34%),
+    radial-gradient(circle at 48% 28%, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
+  --premium-daily-bg-depth: radial-gradient(circle at 84% 68%, rgba(147, 117, 235, 0.15) 0%, transparent 28%),
+    radial-gradient(circle at 30% 8%, rgba(255, 255, 255, 0.24) 0%, transparent 32%);
 
   --premium-glass-surface-1: rgba(255, 255, 255, 0.44);
   --premium-glass-surface-2: rgba(255, 255, 255, 0.5);
@@ -19,6 +37,10 @@
   --premium-shadow-card: 0 14px 40px rgba(70, 50, 110, 0.1);
   --premium-shadow-focus: 0 18px 50px rgba(70, 50, 110, 0.14);
   --premium-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  --premium-daily-advice-glow: radial-gradient(circle, rgba(170, 144, 255, 0.22) 0%, transparent 72%);
+  --premium-daily-advice-glow-filter: blur(18px);
+  --premium-daily-advice-icon-bg: linear-gradient(180deg, rgba(156, 121, 255, 0.24) 0%, rgba(255, 255, 255, 0.26) 100%);
+  --premium-daily-advice-icon-halo: radial-gradient(circle, rgba(156, 121, 255, 0.28) 0%, transparent 70%);
 
   --premium-radius-hero: 28px;
   --premium-radius-card: 24px;
@@ -41,9 +63,26 @@
   --premium-bg-start: #1a1625;
   --premium-bg-mid: #151223;
   --premium-bg-end: #0f0d1a;
+  --premium-app-bg: radial-gradient(820px 580px at 18% 16%, rgba(244, 236, 255, 0.12), transparent 58%),
+    radial-gradient(1200px 800px at 20% 10%, rgba(160, 120, 255, 0.22), transparent 55%),
+    radial-gradient(760px 560px at 74% 18%, rgba(180, 130, 255, 0.18), transparent 58%),
+    radial-gradient(900px 700px at 80% 60%, rgba(90, 170, 255, 0.14), transparent 60%),
+    radial-gradient(900px 640px at 46% 82%, rgba(124, 100, 228, 0.16), transparent 62%),
+    radial-gradient(680px 500px at 88% 78%, rgba(120, 214, 255, 0.1), transparent 64%),
+    linear-gradient(180deg, var(--color-bg-top) 0%, var(--color-bg-mid) 55%, var(--color-bg-bot) 100%);
+  --premium-app-bg-atmosphere: radial-gradient(44% 32% at 50% 28%, rgba(214, 198, 255, 0.12), transparent 72%),
+    radial-gradient(34% 26% at 74% 60%, rgba(140, 102, 255, 0.14), transparent 76%),
+    radial-gradient(30% 24% at 28% 74%, rgba(90, 170, 255, 0.1), transparent 76%),
+    radial-gradient(120% 92% at 50% 50%, transparent 56%, rgba(10, 7, 32, 0.18) 100%);
+  --premium-daily-page-bg: linear-gradient(180deg, var(--premium-bg-start) 0%, var(--premium-bg-mid) 48%, var(--premium-bg-end) 100%);
+  --premium-daily-bg-atmosphere: radial-gradient(circle at 80% 20%, rgba(156, 121, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, rgba(100, 80, 200, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 42%);
+  --premium-daily-bg-depth: radial-gradient(circle at 50% 50%, rgba(30, 25, 45, 0.4) 0%, transparent 70%);
   
   --premium-glass-surface-1: rgba(255, 255, 255, 0.04);
   --premium-glass-surface-2: rgba(255, 255, 255, 0.07);
+  --premium-glass-surface-3: rgba(255, 255, 255, 0.09);
   --premium-glass-border: rgba(255, 255, 255, 0.1);
   --premium-glass-border-soft: rgba(255, 255, 255, 0.1);
   --premium-glass-border-strong: rgba(156, 121, 255, 0.2);
@@ -60,7 +99,7 @@
 
 /* Utility Class for Glass Cards */
 .premium-glass-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.38) 100%);
+  background: var(--glass-card-premium-bg);
   border: 1px solid var(--premium-glass-border);
   border-radius: var(--premium-radius-card);
   box-shadow: var(--premium-shadow-card), var(--premium-inner-light);
@@ -70,7 +109,7 @@
 }
 
 .dark .premium-glass-card {
-  background: var(--premium-glass-surface-2);
+  background: var(--glass-card-premium-bg);
 }
 
 .premium-glass-card:hover {
