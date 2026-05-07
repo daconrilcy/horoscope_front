@@ -1,19 +1,19 @@
 /* Styles de la matrice admin des droits avec tokens design-system canoniques. */
 
 .admin-entitlements-page {
-  --admin-entitlements-surface-subtle: rgba(255, 255, 255, 0.03);
-  --admin-entitlements-surface-soft: rgba(255, 255, 255, 0.05);
-  --admin-entitlements-surface-faint: rgba(255, 255, 255, 0.02);
-  --admin-entitlements-control-surface: rgba(0, 0, 0, 0.2);
-  --admin-entitlements-control-surface-strong: rgba(0, 0, 0, 0.3);
-  --admin-entitlements-danger-surface: rgba(255, 0, 0, 0.1);
-  --admin-entitlements-radius-section: 16px;
-  --admin-entitlements-radius-card: 12px;
-  --admin-entitlements-radius-control: 4px;
-  --admin-entitlements-radius-panel: 8px;
-  --admin-entitlements-radius-pill: 20px;
-  --admin-entitlements-font-compact: 10px;
-  --admin-entitlements-font-control: 11px;
+  --admin-entitlements-surface-subtle: var(--color-admin-surface-subtle);
+  --admin-entitlements-surface-soft: var(--color-admin-surface-hover);
+  --admin-entitlements-surface-faint: var(--color-admin-surface-faint);
+  --admin-entitlements-control-surface: var(--color-admin-control-surface-strong);
+  --admin-entitlements-control-surface-strong: var(--color-admin-control-surface-emphasis);
+  --admin-entitlements-danger-surface: var(--color-admin-danger-soft);
+  --admin-entitlements-radius-section: var(--radius-admin-panel);
+  --admin-entitlements-radius-card: var(--radius-admin-card);
+  --admin-entitlements-radius-control: var(--radius-admin-xs);
+  --admin-entitlements-radius-panel: var(--radius-sm);
+  --admin-entitlements-radius-pill: var(--radius-admin-modal);
+  --admin-entitlements-font-compact: var(--type-admin-compact-size);
+  --admin-entitlements-font-control: var(--type-admin-control-size);
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -23,14 +23,14 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   background: var(--admin-entitlements-surface-soft);
-  padding: 2px 8px;
+  padding: calc(var(--space-1) / 2) var(--space-2);
   border-radius: var(--admin-entitlements-radius-control);
 }
 
 .matrix-section {
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--admin-entitlements-radius-section);
   overflow: hidden;
 }
@@ -48,7 +48,7 @@
 .entitlement-matrix th,
 .entitlement-matrix td {
   padding: var(--space-4);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   text-align: center;
   position: relative;
 }
@@ -65,11 +65,11 @@
 .plan-header {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: calc(var(--space-1) / 2);
 }
 
 .plan-name {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-headline);
   text-transform: uppercase;
 }
@@ -85,7 +85,7 @@
 }
 
 .feature-name {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
@@ -113,9 +113,9 @@
 }
 
 .cell--unlimited {
-  background: rgba(var(--color-primary-rgb), 0.05);
+  background: var(--color-admin-interactive-subtle);
   color: var(--color-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .cell--quota {
@@ -124,7 +124,7 @@
 
 .cell--incoherent {
   background: var(--admin-entitlements-danger-surface) !important;
-  color: var(--error) !important;
+  color: var(--color-error) !important;
 }
 
 .admin-entitlements-page--editing {
@@ -135,11 +135,11 @@
 
 .editing-banner {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-admin-contrast-ink);
   padding: var(--space-1) var(--space-4);
   border-radius: var(--admin-entitlements-radius-pill);
   font-size: var(--font-size-xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   margin-left: var(--space-4);
   animation: pulse 2s infinite;
 }
@@ -152,7 +152,7 @@
 
 .action-button--active {
   background: var(--color-primary-strong);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-admin-inset-active);
 }
 
 .cell--editable {
@@ -163,7 +163,7 @@
 .edit-controls {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   align-items: center;
 }
 
@@ -171,8 +171,8 @@
 .edit-controls input[type="number"] {
   width: 100%;
   background: var(--admin-entitlements-control-surface-strong);
-  border: 1px solid var(--glass-border);
-  color: white;
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-admin-contrast-ink);
   border-radius: var(--admin-entitlements-radius-control);
   font-size: var(--admin-entitlements-font-control);
   padding: 2px;
@@ -182,7 +182,7 @@
   font-size: var(--admin-entitlements-font-compact);
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: calc(var(--space-1) / 2);
   color: var(--color-text-secondary);
 }
 
@@ -191,7 +191,7 @@
 }
 
 .quota-val {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .cell-tooltip {
@@ -199,11 +199,11 @@
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: #2a2a2a;
-  color: white;
+  background: var(--color-admin-tooltip-surface);
+  color: var(--color-admin-contrast-ink);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--admin-entitlements-radius-panel);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-admin-panel);
   z-index: 100;
   width: 180px;
   text-align: left;
@@ -231,7 +231,7 @@
   background: var(--admin-entitlements-surface-subtle);
   padding: var(--space-4);
   border-radius: var(--admin-entitlements-radius-card);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
 }
 
 .rule-card h4 {

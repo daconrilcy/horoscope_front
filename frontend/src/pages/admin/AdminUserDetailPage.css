@@ -1,3 +1,4 @@
+/* Styles du detail utilisateur admin rattaches aux tokens design-system canoniques. */
 .admin-user-detail-page {
   display: flex;
   flex-direction: column;
@@ -17,17 +18,17 @@
 
 .back-button {
   background: transparent;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   color: var(--color-text-secondary);
   padding: var(--space-1) var(--space-3);
-  border-radius: 6px;
+  border-radius: var(--radius-admin-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
   transition: all var(--duration-fast);
 }
 
 .back-button:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-admin-surface-hover);
   color: var(--color-text-primary);
 }
 
@@ -50,10 +51,10 @@
 }
 
 .detail-card {
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-admin-panel);
   padding: var(--space-6);
 }
 
@@ -62,7 +63,7 @@
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: var(--space-4);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 
 .card-header-with-actions .card-title {
@@ -84,16 +85,16 @@
   margin: 0 0 var(--space-4);
   font-size: var(--font-size-base);
   color: var(--color-text-headline);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
   padding-bottom: var(--space-2);
 }
 
 .action-button {
   border: none;
-  padding: 4px 12px;
-  border-radius: 6px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-admin-sm);
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: opacity var(--duration-fast);
 }
@@ -104,23 +105,23 @@
 }
 
 .action-button--danger {
-  background: var(--error);
-  color: white;
+  background: var(--color-error);
+  color: var(--color-admin-contrast-ink);
 }
 
 .action-button--success {
   background: var(--color-success);
-  color: white;
+  color: var(--color-admin-contrast-ink);
 }
 
 .action-button--warning {
-  background: #f59e0b;
-  color: white;
+  background: var(--color-admin-warning-solid);
+  color: var(--color-admin-contrast-ink);
 }
 
 .action-button--primary {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-admin-contrast-ink);
 }
 
 .info-list {
@@ -142,7 +143,7 @@
 
 .info-value {
   color: var(--color-text-primary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .stripe-id-container {
@@ -152,20 +153,20 @@
 }
 
 .stripe-id-container code {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: var(--color-admin-control-surface-strong);
+  padding: calc(var(--space-1) / 2) var(--space-2);
+  border-radius: var(--radius-admin-xs);
   font-family: monospace;
 }
 
 .reveal-button {
   background: transparent;
-  border: 1px solid var(--glass-border);
-  border-radius: 999px;
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-full);
   color: var(--color-text-primary);
   cursor: pointer;
   font-size: var(--font-size-xs);
-  padding: 4px 10px;
+  padding: var(--space-1) var(--space-3);
   opacity: 0.6;
   transition: opacity var(--duration-fast);
 }
@@ -200,14 +201,14 @@
 
 .quota-name {
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
 
 .quota-values {
   font-size: var(--font-size-xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
 
@@ -226,8 +227,8 @@
 
 .quota-bar-container {
   height: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  background: var(--color-admin-surface-hover);
+  border-radius: var(--radius-admin-xs);
   overflow: hidden;
 }
 
@@ -236,44 +237,44 @@
   height: 8px;
   appearance: none;
   border: none;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-admin-surface-hover);
 }
 
 .quota-progress::-webkit-progress-bar {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 999px;
+  background: var(--color-admin-surface-hover);
+  border-radius: var(--radius-full);
 }
 
 .quota-progress::-webkit-progress-value {
   background: var(--color-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 }
 
 .quota-progress::-moz-progress-bar {
   background: var(--color-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 }
 
 .quota-period {
-  font-size: 10px;
+  font-size: var(--type-admin-compact-size);
   color: var(--color-text-muted);
   text-align: right;
 }
 
 .badge--suspended, .badge--locked {
-  background: var(--error);
-  color: white;
+  background: var(--color-error);
+  color: var(--color-admin-contrast-ink);
   border: none;
 }
 
 .status-suspended {
-  color: var(--error);
-  font-weight: 600;
+  color: var(--color-error);
+  font-weight: var(--font-weight-semibold);
 }
 
 .status-active {
-  color: #4ade80;
-  font-weight: 600;
+  color: var(--color-admin-success-ink);
+  font-weight: var(--font-weight-semibold);
 }
 
 .scope-list {
@@ -286,16 +287,16 @@
 .scope-badge {
   margin: 0;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-admin-md);
+  background: var(--color-admin-surface-selected);
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
 }
 
 .scope-badge--warning {
-  border-color: rgba(245, 158, 11, 0.5);
-  background: rgba(245, 158, 11, 0.08);
+  border-color: var(--color-admin-warning-border);
+  background: var(--color-admin-warning-surface);
 }
 
 .admin-user-detail-modal {
@@ -318,9 +319,9 @@
 .modal-form-grid input,
 .modal-form-grid select,
 .modal-form-grid textarea {
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid var(--glass-border);
-  border-radius: 10px;
+  background: var(--color-admin-control-surface-medium);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-admin-md);
   color: var(--color-text-primary);
   padding: var(--space-3);
 }

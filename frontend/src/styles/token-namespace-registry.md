@@ -12,9 +12,12 @@ sourcee dans ce registre.
 | `--font-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--line-height-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--type-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
+| `--type-admin-*` | canonical | `frontend/src/styles/design-tokens.css` | admin typography roles | none |
 | `--space-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--radius-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
+| `--radius-admin-*` | canonical | `frontend/src/styles/design-tokens.css` | admin shape roles | none |
 | `--shadow-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
+| `--shadow-admin-*` | canonical | `frontend/src/styles/design-tokens.css` | admin elevation roles | none |
 | `--duration-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--easing-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--layout-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |

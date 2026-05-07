@@ -1,3 +1,4 @@
+/* Styles du shell admin rattaches aux tokens design-system canoniques. */
 .admin-layout {
   display: flex;
   min-height: calc(100vh - 64px - 64px); /* Subtract header and bottom nav heights if they exist */
@@ -9,8 +10,8 @@
   width: 260px;
   flex-shrink: 0;
   background: var(--color-admin-surface);
-  backdrop-filter: blur(var(--glass-blur));
-  border-right: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  border-right: 1px solid var(--color-glass-border);
   display: flex;
   flex-direction: column;
   padding: var(--space-4) 0;
@@ -18,13 +19,13 @@
 
 .admin-sidebar-header {
   padding: 0 var(--space-6) var(--space-6);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
   margin-bottom: var(--space-4);
 }
 
 .admin-sidebar-logo {
   font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-admin-ink-strong);
   text-decoration: none;
 }
@@ -41,11 +42,11 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--color-admin-ink-strong);
   text-decoration: none;
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   transition: background-color var(--duration-fast), color var(--duration-fast);
 }
 
@@ -111,9 +112,9 @@
   justify-content: center;
   padding: var(--space-8) var(--space-6);
   background: var(--color-admin-surface);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-admin-panel);
   text-decoration: none;
   transition: transform var(--duration-fast), box-shadow var(--duration-fast);
 }
@@ -132,7 +133,7 @@
 
 .admin-card-label {
   font-size: var(--font-size-base);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-admin-ink-strong);
   text-align: center;
 }
@@ -150,24 +151,24 @@
   border-collapse: collapse;
   margin-top: var(--space-4);
   background: var(--color-admin-surface);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 .pricing-table th,
 .pricing-table td {
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
   text-align: left;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 
 .pricing-table th {
   background: var(--color-admin-surface-soft);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-admin-ink-soft);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--type-ui-group-letter-spacing);
 }
 
 .pricing-table tbody tr:hover {
@@ -176,7 +177,7 @@
 
 .status-active {
   color: var(--color-success);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .status-inactive {
@@ -187,37 +188,37 @@
   margin-top: var(--space-8);
   padding: var(--space-4);
   background: var(--color-admin-surface-soft);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border-left: 4px solid var(--color-primary);
 }
 
 .admin-notice h3 {
   margin: 0 0 var(--space-2);
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   color: var(--color-admin-ink-strong);
 }
 
 .admin-notice ul {
-  margin: 0.5rem 0;
-  padding-left: 1.5rem;
+  margin: var(--space-2) 0;
+  padding-left: var(--space-6);
 }
 
 .admin-notice li {
   color: var(--color-admin-ink-soft);
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--space-1);
 }
 
 .info-note {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-admin-ink-soft);
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   font-style: italic;
 }
 
 .error-detail {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-admin-danger-ink);
-  margin: 0.5rem 0;
+  margin: var(--space-2) 0;
 }
 
 /* Responsive adjustments */
@@ -245,7 +246,7 @@
     width: 100%;
     height: auto;
     border-right: none;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--color-glass-border);
     flex-direction: row;
     overflow-x: auto;
     padding: var(--space-2) var(--space-4);

@@ -1,3 +1,4 @@
+/* Styles de la page admin des utilisateurs rattaches aux tokens design-system canoniques. */
 .admin-users-page {
   display: flex;
   flex-direction: column;
@@ -5,10 +6,10 @@
 }
 
 .search-section {
-  background: var(--glass);
+  background: var(--color-glass-bg);
   padding: var(--space-4) var(--space-6);
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-admin-card);
+  border: 1px solid var(--color-glass-border);
 }
 
 .search-form {
@@ -18,9 +19,9 @@
 
 .search-input {
   flex-grow: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  background: var(--color-admin-surface-hover);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-4);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
@@ -34,11 +35,11 @@
 
 .search-button {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-admin-contrast-ink);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-6);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: background-color var(--duration-fast);
 }
@@ -53,43 +54,43 @@
 }
 
 .user-row:hover {
-  background-color: rgba(var(--color-primary-rgb), 0.05) !important;
+  background-color: var(--color-admin-interactive-subtle) !important;
 }
 
 .badge {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: calc(var(--space-1) / 2) var(--space-2);
+  border-radius: var(--radius-admin-card);
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
 
 .badge--role-admin {
-  background: rgba(var(--color-primary-rgb), 0.2);
+  background: var(--color-admin-interactive-soft);
   color: var(--color-primary-strong);
   border: 1px solid var(--color-primary);
 }
 
 .badge--role-user {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-admin-surface-emphasis);
   color: var(--color-text-secondary);
 }
 
 .badge--status-active {
-  background: rgba(0, 255, 0, 0.1);
-  color: #4ade80;
+  background: var(--color-admin-success-soft);
+  color: var(--color-admin-success-ink);
 }
 
 .badge--status-canceled {
-  background: rgba(255, 0, 0, 0.1);
-  color: #f87171;
+  background: var(--color-admin-danger-soft);
+  color: var(--color-admin-danger-ink-soft);
 }
 
 .table-footer {
   padding: var(--space-4);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-  border-top: 1px solid var(--glass-border);
+  border-top: 1px solid var(--color-glass-border);
   text-align: right;
 }

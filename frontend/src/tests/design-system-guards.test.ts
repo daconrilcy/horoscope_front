@@ -109,6 +109,16 @@ function extractMigratedLandingValues(ownerBody: string): string[] {
   ]
 }
 
+function collectAdminCssCluster(): Array<{ file: string; source: string }> {
+  return [
+    "layouts/AdminLayout.css",
+    ...listFiles("pages/admin", ".css"),
+  ].map((file) => ({
+    file,
+    source: readFrontendFile(file),
+  }))
+}
+
 // Suite anti-drift qui raccorde les registres design-system aux fichiers reels.
 describe("design-system guards", () => {
   it("couvre les namespaces de tokens CSS par le registre CS-026", () => {
@@ -384,6 +394,25 @@ describe("design-system guards", () => {
     expect(guardedCss).not.toMatch(forbiddenPageScopedNamespaceUsage)
     for (const value of migratedValues) {
       expect(normalizedGuardedCss).not.toContain(value)
+    }
+  })
+
+  it("bloque le retour des literals admin migres par CS-086", () => {
+    const forbiddenVisualOrTypeLiterals =
+      /(?:#[a-fA-F0-9]{3,8}\b|rgba?\(|hsl(?:a)?\(|box-shadow:\s*(?!\s*var\()|border-radius:\s*(?:50%|\d)|font-size:\s*(?:clamp\(|\d)|font-weight:\s*\d|line-height:\s*\d|letter-spacing:\s*-?0\.|var\(\s*--[a-zA-Z0-9_-]+\s*,)/
+    const forbiddenMigratedSpacingLiterals =
+      /(?:padding:\s*(?:4px 12px|0\.75rem 1rem)|gap:\s*2px|margin:\s*0 0 4px|margin-bottom:\s*0\.25rem|padding-left:\s*1\.5rem|margin-top:\s*0\.5rem)/
+    const forbiddenPageScopedNamespaceUsage = /--(?:settings|help|chat|app|landing)-[a-zA-Z0-9_-]+/
+    const adminCluster = collectAdminCssCluster()
+
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--radius-admin-*` | canonical |")
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--shadow-admin-*` | canonical |")
+    expect(readFrontendFile("styles/typography-roles.md")).toContain("admin-compact")
+
+    for (const { source } of adminCluster) {
+      expect(source).not.toMatch(forbiddenVisualOrTypeLiterals)
+      expect(source).not.toMatch(forbiddenMigratedSpacingLiterals)
+      expect(source).not.toMatch(forbiddenPageScopedNamespaceUsage)
     }
   })
 

@@ -1,22 +1,23 @@
+/* Styles de la page admin des reglages rattaches aux tokens design-system canoniques. */
 .admin-settings-page {
-  --admin-settings-surface-subtle: rgba(255, 255, 255, 0.03);
-  --admin-settings-overlay-strong: rgba(0, 0, 0, 0.8);
-  --admin-settings-control-surface: rgba(0, 0, 0, 0.2);
-  --admin-settings-radius-section: 16px;
-  --admin-settings-radius-card: 12px;
-  --admin-settings-radius-modal: 20px;
-  --admin-settings-radius-control: 6px;
-  --admin-settings-radius-alert: 8px;
-  --admin-settings-shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.5);
+  --admin-settings-surface-subtle: var(--color-admin-surface-subtle);
+  --admin-settings-overlay-strong: var(--color-admin-overlay-strong);
+  --admin-settings-control-surface: var(--color-admin-control-surface-strong);
+  --admin-settings-radius-section: var(--radius-admin-panel);
+  --admin-settings-radius-card: var(--radius-admin-card);
+  --admin-settings-radius-modal: var(--radius-admin-modal);
+  --admin-settings-radius-control: var(--radius-admin-sm);
+  --admin-settings-radius-alert: var(--radius-sm);
+  --admin-settings-shadow-modal: var(--shadow-admin-modal);
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
 }
 
 .settings-section {
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--admin-settings-radius-section);
   padding: var(--space-6);
 }
@@ -39,7 +40,7 @@
   align-items: center;
   padding: var(--space-4) var(--space-6);
   background: var(--admin-settings-surface-subtle);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--admin-settings-radius-card);
   transition: border-color var(--duration-fast);
 }
@@ -49,7 +50,7 @@
 }
 
 .export-info h4 {
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-1);
   color: var(--color-text-headline);
 }
 
@@ -80,8 +81,8 @@
 }
 
 .modal-content {
-  background: var(--glass-2);
-  border: 1px solid var(--glass-border);
+  background: var(--color-glass-bg-2);
+  border: 1px solid var(--color-glass-border);
   border-radius: var(--admin-settings-radius-modal);
   padding: var(--space-8);
   width: 100%;
@@ -144,20 +145,20 @@
 .filter-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .filter-field label {
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
 }
 
 .filter-field input,
 .filter-field select {
   background: var(--admin-settings-control-surface);
-  border: 1px solid var(--glass-border);
-  color: white;
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-admin-contrast-ink);
   padding: var(--space-2);
   border-radius: var(--admin-settings-radius-control);
   outline: none;
@@ -187,7 +188,7 @@
 
 .action-button--primary {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-admin-contrast-ink);
 }
 
 .action-button--primary:disabled {

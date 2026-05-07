@@ -1,3 +1,4 @@
+/* Styles du tableau de bord admin rattaches aux tokens design-system canoniques. */
 .admin-dashboard-page {
   display: flex;
   flex-direction: column;
@@ -8,7 +9,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
   padding-bottom: var(--space-4);
   flex-wrap: wrap;
   gap: var(--space-4);
@@ -17,10 +18,10 @@
 .dashboard-filters {
   display: flex;
   gap: var(--space-6);
-  background: var(--glass);
+  background: var(--color-glass-bg);
   padding: var(--space-2) var(--space-4);
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-admin-card);
+  border: 1px solid var(--color-glass-border);
 }
 
 .filter-group {
@@ -31,7 +32,7 @@
 
 .filter-group label {
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   text-transform: uppercase;
 }
@@ -39,8 +40,8 @@
 .filter-group select {
   background: transparent;
   color: var(--color-text-primary);
-  border: 1px solid var(--glass-border);
-  border-radius: 6px;
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-admin-sm);
   padding: var(--space-1) var(--space-2);
   font-size: var(--font-size-sm);
   outline: none;
@@ -58,7 +59,7 @@
 
 .section-title {
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-headline);
   margin: 0;
 }
@@ -70,10 +71,10 @@
 }
 
 .kpi-card {
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-admin-card);
   padding: var(--space-4) var(--space-6);
   display: flex;
   flex-direction: column;
@@ -83,7 +84,7 @@
 
 .kpi-card--highlight {
   border-color: var(--color-primary);
-  background: linear-gradient(to bottom right, var(--glass), rgba(var(--color-primary-rgb), 0.05));
+  background: linear-gradient(to bottom right, var(--color-glass-bg), var(--color-admin-interactive-subtle));
 }
 
 .kpi-card--clickable {
@@ -98,10 +99,10 @@
 
 .kpi-card-title {
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--type-ui-group-letter-spacing);
   margin: 0;
 }
 
@@ -113,7 +114,7 @@
 
 .kpi-number {
   font-size: var(--font-size-2xl);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-headline);
 }
 
@@ -146,10 +147,10 @@
 }
 
 .visual-card {
-  background: var(--glass);
-  backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-admin-panel);
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
@@ -170,7 +171,7 @@
   margin: 0;
   font-size: var(--font-size-base);
   color: var(--color-text-headline);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .text-button {
@@ -178,15 +179,15 @@
   border: none;
   color: var(--color-primary);
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   padding: var(--space-1) var(--space-2);
-  border-radius: 4px;
+  border-radius: var(--radius-admin-xs);
   transition: background-color var(--duration-fast);
 }
 
 .text-button:hover {
-  background-color: rgba(var(--color-primary-rgb), 0.1);
+  background-color: var(--color-admin-interactive-hover);
   text-decoration: underline;
 }
 
@@ -237,15 +238,15 @@
 .admin-table td {
   padding: var(--space-3) var(--space-4);
   text-align: left;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 
 .admin-table th {
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--type-ui-group-letter-spacing);
 }
 
 .admin-table td {
@@ -254,7 +255,7 @@
 }
 
 .admin-table tfoot td {
-  border-top: 2px solid var(--glass-border);
+  border-top: 2px solid var(--color-glass-border);
   border-bottom: none;
   color: var(--color-text-headline);
 }
@@ -273,24 +274,24 @@
   display: flex;
   justify-content: space-between;
   padding: var(--space-3) var(--space-4);
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+  background: var(--color-admin-surface-subtle);
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   transition: border-color var(--duration-fast);
 }
 
 .plan-item:hover {
-  border-color: var(--glass-border);
+  border-color: var(--color-glass-border);
 }
 
 .plan-name {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
   text-transform: capitalize;
 }
 
 .plan-count {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-primary);
 }
 
@@ -310,18 +311,18 @@
 .admin-error {
   padding: var(--space-8);
   text-align: center;
-  color: var(--error);
-  background: rgba(255, 0, 0, 0.05);
-  border-radius: 12px;
-  border: 1px solid var(--error);
+  color: var(--color-error);
+  background: var(--color-admin-danger-faint);
+  border-radius: var(--radius-admin-card);
+  border: 1px solid var(--color-error);
 }
 
 .admin-error button {
   margin-top: var(--space-4);
   padding: var(--space-2) var(--space-4);
   background: var(--color-primary);
-  color: white;
+  color: var(--color-admin-contrast-ink);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-admin-sm);
   cursor: pointer;
 }

@@ -1,3 +1,4 @@
+/* Styles de la page admin des payloads d'exemple rattaches aux tokens design-system canoniques. */
 .sample-payloads-admin {
   display: flex;
   flex-direction: column;
@@ -37,9 +38,9 @@
 
 .sample-payloads-admin__table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  background: var(--glass);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-admin-panel);
+  background: var(--color-glass-bg);
 }
 
 .sample-payloads-admin__table {
@@ -52,12 +53,12 @@
 .sample-payloads-admin__table td {
   padding: var(--space-3) var(--space-4);
   text-align: left;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 
 .sample-payloads-admin__table th {
   color: var(--color-text-secondary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .sample-payloads-admin__table tr:last-child td {

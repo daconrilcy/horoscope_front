@@ -21,6 +21,8 @@ typographie dans les surfaces migrees. Les tokens `--type-*` vivent dans
 | ui-role-label | n/a | `--type-ui-role-letter-spacing` | roles utilisateur compacts dans les primitives UI |
 | cta | `.type-cta` | `--type-cta-*` | texte de boutons et liens d'action |
 | numeric | `.type-numeric` | `--type-numeric-*` | chiffres, scores, compteurs |
+| admin-compact | n/a | `--type-admin-compact-*` | metadonnees techniques tres compactes dans les tableaux admin |
+| admin-control | n/a | `--type-admin-control-*` | controles et infobulles denses du cluster admin |
 | landing-marketing | n/a | `--landing-type-*` | echelle marketing landing declaree par `frontend/src/layouts/LandingLayout.css` et consommee par `frontend/src/pages/landing/**` |
 
 ## Exceptions classees
