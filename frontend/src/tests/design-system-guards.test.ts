@@ -46,6 +46,26 @@ function extractMigratedHelpPageValues(ownerBody: string): string[] {
   return [...new Set(declarations.filter((value) => /rgba?\(|#[a-fA-F0-9]{3,8}\b|gradient\(|^2\.35rem$/.test(value)))]
 }
 
+function extractMigratedHelpSubscriptionsValues(ownerBody: string): string[] {
+  const declarations = [...ownerBody.matchAll(/--help-subscriptions-[a-zA-Z0-9_-]+\s*:\s*([\s\S]*?);/g)].map(
+    (match) => normalizeCssValue(match[1]),
+  )
+  const atomicLiterals = declarations.flatMap((value) => [
+    ...value.matchAll(/#[a-fA-F0-9]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g),
+  ])
+
+  return [
+    ...new Set(
+      [
+        ...atomicLiterals.map((match) => normalizeCssValue(match[0])),
+        ...declarations.filter((value) =>
+          /rgba?\(|hsla?\(|#[a-fA-F0-9]{3,8}\b|gradient\(|clamp\(|^\d+(?:\.\d+)?(?:rem|em)$/.test(value),
+        ),
+      ],
+    ),
+  ]
+}
+
 function extractMigratedChatValues(ownerBody: string): string[] {
   const declarations = [...ownerBody.matchAll(/--chat-[a-zA-Z0-9_-]+\s*:\s*([\s\S]*?);/g)].map((match) =>
     normalizeCssValue(match[1]),
@@ -749,6 +769,48 @@ describe("design-system guards", () => {
     }
     expect(css).toContain("font-size: var(--help-section-heading-size)")
     expect(css).toContain("font-size: clamp(1.7rem, 7vw, var(--help-section-heading-size))")
+  })
+
+  it("bloque la reintroduction locale des literals subscriptions Help migres par CS-088", () => {
+    const css = readFrontendFile("pages/HelpPage.css")
+    const ownerBlock = findFlatCssBlock(css, ":where(.help-page, .help-bg-halo)")
+    const subscriptionsStart = css.indexOf("/* --- Help Subscriptions Page")
+    expect(subscriptionsStart).toBeGreaterThan(ownerBlock.end)
+
+    const migratedValues = extractMigratedHelpSubscriptionsValues(ownerBlock.body)
+    const guardedCss = css.slice(subscriptionsStart)
+    const guardedDeclarations = collectCssDeclarations(guardedCss).filter(
+      (declaration) => !declaration.property.startsWith("--"),
+    )
+    const guardedDeclarationValues = guardedDeclarations.map((declaration) => declaration.value)
+    const forbiddenTypographyLiterals = [
+      "font-size: 0.78rem",
+      "font-size: 0.76rem",
+      "font-size: 0.7rem",
+      "font-size: 2.15rem",
+      "font-size: clamp(2.8rem, 6vw, 3.55rem)",
+      "font-size: clamp(3.35rem, 6vw, 4.22rem)",
+      "line-height: 0.96",
+      "line-height: 1.72",
+      "letter-spacing: 0.12em",
+      "letter-spacing: 0.14em",
+    ]
+
+    expect(migratedValues.length).toBeGreaterThan(40)
+    expect(extractMigratedHelpSubscriptionsValues("--help-subscriptions-proof: hsl(10 20% 30%);")).toContain(
+      "hsl(10 20% 30%)",
+    )
+    expect(extractMigratedHelpSubscriptionsValues("--help-subscriptions-proof: hsla(10, 20%, 30%, 0.4);")).toContain(
+      "hsla(10, 20%, 30%, 0.4)",
+    )
+    for (const value of migratedValues) {
+      expect(guardedDeclarationValues.filter((declarationValue) => declarationValue.includes(value))).toEqual([])
+    }
+    for (const literal of forbiddenTypographyLiterals) {
+      expect(normalizeCssValue(guardedCss)).not.toContain(literal)
+    }
+    expect(guardedCss).not.toMatch(/var\(\s*--(?:settings|app|chat|landing|admin)-/)
+    expect(guardedCss).not.toMatch(/var\(\s*--[a-zA-Z0-9_-]+\s*,/)
   })
 
   it("centralise les exceptions exactes anti-drift", () => {
