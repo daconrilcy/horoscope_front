@@ -1,0 +1,133 @@
+<!-- Candidats stories issus de l'audit frontend design-system apres refactors. -->
+
+# Story Candidates - frontend-design-system
+
+## SC-001
+
+- Candidate ID: SC-001
+- Source finding: F-002
+- Suggested story title: Migrer un prochain cluster coherent de valeurs visuelles et typographiques frontend
+- Suggested archetype: design-system-token-convergence
+- Primary domain: frontend-design-system
+- Required contracts:
+  - `_condamad/stories/regression-guardrails.md`
+  - `frontend/src/styles/token-namespace-registry.md`
+  - `frontend/src/styles/typography-roles.md`
+  - `frontend/src/styles/css-fallback-allowlist.md`
+  - `frontend/src/styles/legacy-style-surface-registry.md`
+  - `frontend/src/tests/design-system-guards.test.ts`
+  - `frontend/src/tests/design-system-allowlist.ts`
+- Draft objective: reduce the remaining hardcoded visual and typography ownership debt by migrating one bounded, coherent file cluster to existing or newly documented semantic tokens and typography roles.
+- Must include:
+  - select a bounded subset from the exhaustive file list below;
+  - classify each selected literal as global token, semantic page/component token, typography role, typed runtime constant or intentionally local non-style data;
+  - avoid inline styles; put CSS changes in the appropriate `.css` file;
+  - update token namespace and typography registries when adding semantic ownership;
+  - update exact anti-regression guards for the migrated cluster;
+  - preserve existing `RG-044` through `RG-060` invariants.
+- Validation hints:
+  - `npm run test -- design-system theme-tokens css-fallback inline-style legacy-style visual-smoke`
+  - `npm run test`
+  - `npm run lint`
+  - `npm run build`
+  - targeted scan for the migrated literals before and after implementation.
+- Blockers: Decide the next cluster. Recommended first cluster: `HelpPage.css`, `Settings.css`, `AstrologerProfilePage.css`, `LandingPage.css`, or `NatalInterpretation.css`. `App.css` should be treated as its own story because `--app-*` now owns semantic tokens; decide what remains app-scoped versus what should be promoted.
+- Files to modify:
+  - choose a bounded subset from the exhaustive `F-002` list in `00-audit-report.md`; do not touch all 68 files in one story.
+
+## Exhaustive F-002 Candidate File List
+
+- `frontend/src/App.css`
+- `frontend/src/components/AdminGuard.css`
+- `frontend/src/components/AstroDailyEvents.css`
+- `frontend/src/components/AstroFoundationSection.css`
+- `frontend/src/components/BestWindowCard.css`
+- `frontend/src/components/DayClimateHero.css`
+- `frontend/src/components/DomainRankingCard.css`
+- `frontend/src/components/ErrorBoundary/ErrorBoundary.css`
+- `frontend/src/components/HeroHoroscopeCard.css`
+- `frontend/src/components/MiniInsightCard.css`
+- `frontend/src/components/NatalInterpretation.css`
+- `frontend/src/components/ShortcutCard.css`
+- `frontend/src/components/SignUpForm.css`
+- `frontend/src/components/SignUpForm.tsx`
+- `frontend/src/components/TurningPointCard.css`
+- `frontend/src/components/astro/AstroMoodBackground.css`
+- `frontend/src/components/astro/AstroMoodBackground.tsx`
+- `frontend/src/components/layout/Header.css`
+- `frontend/src/components/layout/Sidebar.css`
+- `frontend/src/components/prediction/CategoryGrid.css`
+- `frontend/src/components/prediction/DailyAdviceCard.css`
+- `frontend/src/components/prediction/DayAgenda.css`
+- `frontend/src/components/prediction/DayPredictionCard.css`
+- `frontend/src/components/prediction/DayTimeline.css`
+- `frontend/src/components/prediction/DayTimelineSectionV4.css`
+- `frontend/src/components/prediction/DayTimelineSectionV4.tsx`
+- `frontend/src/components/prediction/KeyPointCard.css`
+- `frontend/src/components/prediction/PeriodCard.css`
+- `frontend/src/components/prediction/SectionTitle.css`
+- `frontend/src/components/prediction/TimelineRail.css`
+- `frontend/src/components/prediction/TurningPointsList.css`
+- `frontend/src/features/chat/components/ChatWindow.css`
+- `frontend/src/features/chat/components/ConversationItem.css`
+- `frontend/src/index.css`
+- `frontend/src/layouts/AdminLayout.css`
+- `frontend/src/layouts/LandingLayout.css`
+- `frontend/src/layouts/WizardLayout.css`
+- `frontend/src/pages/AstrologerProfilePage.css`
+- `frontend/src/pages/BirthProfilePage.css`
+- `frontend/src/pages/ChatPage.css`
+- `frontend/src/pages/ConsultationResultPage.css`
+- `frontend/src/pages/DailyHoroscopePage.css`
+- `frontend/src/pages/DashboardPage.css`
+- `frontend/src/pages/HelpPage.css`
+- `frontend/src/pages/NatalChartPage.css`
+- `frontend/src/pages/admin/AdminAiGenerationsPage.css`
+- `frontend/src/pages/admin/AdminContentPage.css`
+- `frontend/src/pages/admin/AdminDashboardPage.css`
+- `frontend/src/pages/admin/AdminEntitlementsPage.css`
+- `frontend/src/pages/admin/AdminLogsPage.css`
+- `frontend/src/pages/admin/AdminPromptsPage.css`
+- `frontend/src/pages/admin/AdminSamplePayloadsAdmin.css`
+- `frontend/src/pages/admin/AdminSettingsPage.css`
+- `frontend/src/pages/admin/AdminSupportPage.css`
+- `frontend/src/pages/admin/AdminUserDetailPage.css`
+- `frontend/src/pages/admin/AdminUsersPage.css`
+- `frontend/src/pages/admin/PersonasAdmin.css`
+- `frontend/src/pages/billing/billing-return.css`
+- `frontend/src/pages/landing/LandingPage.css`
+- `frontend/src/pages/landing/sections/FaqSection.css`
+- `frontend/src/pages/landing/sections/LandingFooter.css`
+- `frontend/src/pages/landing/sections/LandingNavbar.css`
+- `frontend/src/pages/landing/sections/PricingSection.css`
+- `frontend/src/pages/landing/sections/ProblemSection.css`
+- `frontend/src/pages/landing/sections/SocialProofSection.css`
+- `frontend/src/pages/landing/sections/SolutionSection.css`
+- `frontend/src/pages/landing/sections/TestimonialsSection.css`
+- `frontend/src/pages/settings/Settings.css`
+
+## Regression Guardrails
+
+- Guardrail source: `_condamad/stories/regression-guardrails.md`
+- Applicable invariants:
+  - `RG-044` - token namespaces must stay classified.
+  - `RG-045` - migrated hardcoded values must not return.
+  - `RG-046` - typography roles remain canonical for repeated type decisions.
+  - `RG-047` - static inline styles remain forbidden.
+  - `RG-048` - CSS fallback exceptions remain exact and classified.
+  - `RG-049` - legacy style surfaces remain classified.
+  - `RG-050` - anti-drift guard suite remains executable.
+  - `RG-051` - page-scoped token ownership must not be crossed.
+  - `RG-052` - migration-only namespaces must not return.
+  - `RG-053`, `RG-057` - runtime compatibility surfaces must not return.
+  - `RG-054` - legacy admin redirects must not return.
+  - `RG-055`, `RG-056`, `RG-058`, `RG-059` - migrated clusters remain protected.
+  - `RG-060` - active CSS comments must not keep unclassified No Legacy vocabulary.
+- Required regression evidence:
+  - focused design-system guard command;
+  - full Vitest command;
+  - lint;
+  - build;
+  - targeted before/after scan for selected literals.
+- Allowed differences:
+  - only the selected cluster's intentional tokenization and guard updates.

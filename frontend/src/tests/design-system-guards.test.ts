@@ -81,6 +81,20 @@ function extractSelectedAppValues(ownerBody: string): string[] {
   return [...new Set(declarations)]
 }
 
+function extractMigratedSettingsValues(ownerBody: string): string[] {
+  const declarations = [...ownerBody.matchAll(/--settings-[a-zA-Z0-9_-]+\s*:\s*([\s\S]*?);/g)].map((match) =>
+    normalizeCssValue(match[1]),
+  )
+
+  return [
+    ...new Set(
+      declarations.filter((value) =>
+        /rgba?\(|#[a-fA-F0-9]{3,8}\b|gradient\(|clamp\(/.test(value),
+      ),
+    ),
+  ]
+}
+
 // Suite anti-drift qui raccorde les registres design-system aux fichiers reels.
 describe("design-system guards", () => {
   it("couvre les namespaces de tokens CSS par le registre CS-026", () => {
@@ -299,6 +313,29 @@ describe("design-system guards", () => {
     expect(catalogueBlock.body).toContain("background: var(--app-astro-catalog-page-bg)")
     expect(summaryBlock.body).toContain("background: var(--app-dashboard-summary-bg)")
     expect(summaryBlock.body).toContain("box-shadow: var(--app-dashboard-summary-shadow)")
+  })
+
+  it("bloque le retour des literals Settings migres par CS-084", () => {
+    const settingsCss = readFrontendFile("pages/settings/Settings.css")
+    const ownerBlock = findFlatCssBlock(settingsCss, ".is-settings-page")
+    const guardedCss = removeCssRange(settingsCss, ownerBlock.start, ownerBlock.end)
+    const normalizedGuardedCss = normalizeCssValue(guardedCss)
+    const migratedValues = extractMigratedSettingsValues(ownerBlock.body)
+    const forbiddenPropertyLiterals =
+      /(?:#[a-fA-F0-9]{3,8}\b|rgba?\(|hsl(?:a)?\(|background:\s*(?:linear|radial)-gradient\(|box-shadow:\s*(?!\s*var\()|border-radius:\s*(?:50%|\d)|font-size:\s*(?:clamp\(|\d)|font-weight:\s*\d|line-height:\s*\d|letter-spacing:\s*-?0\.|(?:^|[;{\n]\s*)(?:margin|padding|gap|inset|top|right|bottom|left|outline-offset):\s*-?\d+(?:\.\d+)?(?:px|rem|em|ch|%))/
+
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--settings-*` | semantic-extension |")
+    expect(migratedValues.length).toBeGreaterThan(0)
+    expect(ownerBlock.body).toContain("--settings-page-bg:")
+    expect(ownerBlock.body).toContain("--settings-page-padding:")
+    expect(ownerBlock.body).toContain("--settings-save-feedback-offset:")
+    expect(guardedCss).toContain("var(--settings-")
+    expect(guardedCss).toContain("var(--usage-progress, 0)")
+    expect(findFlatCssBlock(settingsCss, ".settings-bg-halo").body).toContain("background: var(--settings-page-bg)")
+    expect(guardedCss).not.toMatch(forbiddenPropertyLiterals)
+    for (const value of migratedValues) {
+      expect(normalizedGuardedCss).not.toContain(value)
+    }
   })
 
   it("bloque le retour des surfaces runtime E-009 fermees par CS-080", () => {

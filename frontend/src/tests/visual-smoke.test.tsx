@@ -14,6 +14,7 @@ import { MemoryRouter } from "react-router-dom"
 import { Heart, MessageCircle } from "lucide-react"
 import { MiniInsightCard } from "../components/MiniInsightCard"
 import { ShortcutCard } from "../components/ShortcutCard"
+import { SettingsLayout } from "../layouts/SettingsLayout"
 
 afterEach(() => {
   cleanup()
@@ -27,6 +28,7 @@ let designTokensCss: string
 let themeCss: string
 let bgCss: string
 let heroCss: string
+let settingsCss: string
 
 beforeAll(() => {
   appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
@@ -34,6 +36,7 @@ beforeAll(() => {
   themeCss = designTokensCss + "\n" + readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8")
   bgCss = readFileSync(resolve(__dirname, "../styles/backgrounds.css"), "utf-8")
   heroCss = readFileSync(resolve(__dirname, "../components/HeroHoroscopeCard.css"), "utf-8")
+  settingsCss = readFileSync(resolve(__dirname, "../pages/settings/Settings.css"), "utf-8")
 })
 
 function expectDeclarationToUseDefinedToken(css: string, property: string, token: string) {
@@ -188,3 +191,30 @@ describe("AC#6 — Icônes Lucide: size et strokeWidth conformes", () => {
   })
 })
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
+
+describe("CS-084 — rendu smoke Settings", () => {
+  it("rend le layout Settings avec le halo heritant du proprietaire semantique", () => {
+    const { container } = render(
+      <SettingsLayout title="Parametres">
+        <section aria-label="Surface Settings">Contenu Settings</section>
+      </SettingsLayout>,
+      {
+        wrapper: ({ children }) => (
+          <MemoryRouter initialEntries={["/settings"]} future={routerFutureFlags}>
+            {children}
+          </MemoryRouter>
+        ),
+      },
+    )
+
+    const page = container.querySelector(".is-settings-page")
+    const halo = container.querySelector(".settings-bg-halo")
+
+    expect(page).toBeInTheDocument()
+    expect(halo).toBeInTheDocument()
+    expect(page).toContainElement(halo)
+    expect(container.querySelector(".settings-container")).toHaveTextContent("Contenu Settings")
+    expect(settingsCss).toContain("--settings-page-bg:")
+    expect(settingsCss).toMatch(/\.settings-bg-halo\s*\{[^}]*background:\s*var\(--settings-page-bg\)/)
+  })
+})
