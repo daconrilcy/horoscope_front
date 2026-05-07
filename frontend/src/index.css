@@ -1,22 +1,24 @@
-:root {
-  --surface-1: #0b1020;
-  --surface-2: #111938;
+/* Styles alignes sur les tokens du design system. */
 
-  font-family: "DM Sans", "Nunito Sans", "Trebuchet MS", sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+:root {
+  --surface-1: var(--color-token-0b1020);
+  --surface-2: var(--color-token-111938);
+
+  font-family: var(--font-family-base);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-primary);
   background:
-    radial-gradient(1200px circle at 8% -10%, #2d3f7a 0%, transparent 50%),
-    radial-gradient(950px circle at 95% -15%, #1d6f97 0%, transparent 45%),
+    radial-gradient(1200px circle at 8% -10%, var(--color-token-2d3f7a) 0%, transparent 50%),
+    radial-gradient(950px circle at 95% -15%, var(--color-token-1d6f97) 0%, transparent 45%),
     linear-gradient(170deg, var(--color-bg-base) 0%, var(--color-bg-sheen) 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --calendar-cell-bg-unselected: radial-gradient(rgba(253, 251, 253, 0.15) 30%, rgba(253, 251, 253, 0.7) 100%);
-  --calendar-cell-bg-selected: radial-gradient(rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.8) 100%);
+  --calendar-cell-bg-unselected: radial-gradient(color-mix(in srgb, var(--color-token-rgb-253-251-253) 15%, transparent) 30%, color-mix(in srgb, var(--color-token-rgb-253-251-253) 70%, transparent) 100%);
+  --calendar-cell-bg-selected: radial-gradient(color-mix(in srgb, var(--color-token-rgb-255-255-255) 10%, transparent) 60%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 80%, transparent) 100%);
 }
 
 

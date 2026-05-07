@@ -13,13 +13,13 @@
 }
 
 .astro-foundation-section__title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight-xs);
 }
 
 .astro-foundation-section__chevron {
-  transition: transform 0.3s ease;
+  transition: transform var(--duration-slow) var(--easing-default);
   color: var(--text-meta);
 }
 
@@ -31,7 +31,7 @@
   margin: 0 0 24px;
   color: var(--text-main);
   font-style: italic;
-  line-height: 1.5;
+  line-height: var(--line-height-normal);
   padding-bottom: 16px;
   border-bottom: 1px solid var(--glass-border);
 }
@@ -44,11 +44,11 @@
 
 .astro-foundation-section__section-title {
   margin: 0 0 12px;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
   color: var(--text-meta);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-wide-md);
 }
 
 .astro-foundation-section__row {
@@ -56,21 +56,21 @@
   justify-content: space-between;
   gap: 12px;
   color: var(--text-main);
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: var(--font-size-sm);
+  line-height: var(--type-metadata-line-height);
   padding: 8px 0;
 }
 
 .astro-foundation-section__hint {
   color: var(--text-meta);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .astro-foundation-section__tonality {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-wide-control);
 }
 
 .astro-foundation-section__bridge {
@@ -80,7 +80,7 @@
   color: var(--text-main);
   background: var(--glass-surface-2);
   border: 1px solid var(--glass-border);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
   font-style: italic;
 }

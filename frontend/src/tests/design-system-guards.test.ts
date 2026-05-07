@@ -119,6 +119,53 @@ function collectAdminCssCluster(): Array<{ file: string; source: string }> {
   }))
 }
 
+function collectResidualCssTokenCluster(): Array<{ file: string; source: string }> {
+  return [
+    "components/AdminGuard.css",
+    "components/astro/AstroMoodBackground.css",
+    "components/AstroDailyEvents.css",
+    "components/AstroFoundationSection.css",
+    "components/BestWindowCard.css",
+    "components/DayClimateHero.css",
+    "components/DomainRankingCard.css",
+    "components/ErrorBoundary/ErrorBoundary.css",
+    "components/HeroHoroscopeCard.css",
+    "components/layout/Header.css",
+    "components/layout/Sidebar.css",
+    "components/MiniInsightCard.css",
+    "components/NatalInterpretation.css",
+    "components/prediction/CategoryGrid.css",
+    "components/prediction/DayAgenda.css",
+    "components/prediction/DayPredictionCard.css",
+    "components/prediction/DayTimeline.css",
+    "components/prediction/DayTimelineSectionV4.css",
+    "components/prediction/KeyPointCard.css",
+    "components/prediction/PeriodCard.css",
+    "components/prediction/SectionTitle.css",
+    "components/prediction/TimelineRail.css",
+    "components/prediction/TurningPointsList.css",
+    "components/settings/DeleteAccountModal.css",
+    "components/ShortcutCard.css",
+    "components/SignUpForm.css",
+    "components/TurningPointCard.css",
+    "index.css",
+    "layouts/AdminLayout.css",
+    "layouts/PageLayout.css",
+    "layouts/WizardLayout.css",
+    ...listFiles("pages/admin", ".css"),
+    "pages/AstrologerProfilePage.css",
+    "pages/billing/billing-return.css",
+    "pages/BirthProfilePage.css",
+    "pages/ConsultationResultPage.css",
+    "pages/DashboardPage.css",
+    "pages/NatalChartPage.css",
+    "pages/PrivacyPolicyPage.css",
+  ].map((file) => ({
+    file,
+    source: readFrontendFile(file),
+  }))
+}
+
 // Suite anti-drift qui raccorde les registres design-system aux fichiers reels.
 describe("design-system guards", () => {
   it("couvre les namespaces de tokens CSS par le registre CS-026", () => {
@@ -414,6 +461,31 @@ describe("design-system guards", () => {
       expect(source).not.toMatch(forbiddenMigratedSpacingLiterals)
       expect(source).not.toMatch(forbiddenPageScopedNamespaceUsage)
     }
+  })
+
+  it("bloque le retour des literals du cluster residuel frontend design-system", () => {
+    const forbiddenVisualOrTypeLiterals = new RegExp(
+      [
+        "#[a-fA-F0-9]{3,8}\\b",
+        "rgba?\\(",
+        "hsl(?:a)?\\(",
+        "box-shadow:\\s*(?!\\s*(?:var\\(|none))",
+        "text-shadow:\\s*(?!\\s*(?:var\\(|none))",
+        "border-radius:\\s*(?!\\s*(?:var\\(|inherit))[\\d.]+(?:px|rem|%)",
+        "font-size:\\s*(?!\\s*var\\()[^;]*(?:clamp\\(|[\\d.]+(?:px|rem))",
+        "font-weight:\\s*(?!\\s*var\\()\\d",
+        "line-height:\\s*(?!\\s*(?:var\\(|inherit))[\\d.]+",
+        "letter-spacing:\\s*(?!\\s*var\\()-?[\\d.]+(?:px|em)",
+        "font-family:\\s*(?!\\s*(?:var\\(|inherit))",
+        "var\\(\\s*--[a-zA-Z0-9_-]+\\s*,",
+      ].join("|"),
+    )
+
+    for (const { source } of collectResidualCssTokenCluster()) {
+      expect(source).not.toMatch(forbiddenVisualOrTypeLiterals)
+    }
+    expect(readFrontendFile("styles/typography-roles.md")).toContain("residual-css-token-cluster")
+    expect(readFrontendFile("styles/typography-roles.md")).not.toContain("profile editorial sizes")
   })
 
   it("bloque le retour des surfaces runtime E-009 fermees par CS-080", () => {

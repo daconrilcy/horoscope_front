@@ -1,3 +1,5 @@
+/* Styles alignes sur les tokens du design system. */
+
 .birth-time-unknown-label {
   display: flex;
   align-items: center;
@@ -20,7 +22,7 @@
   margin-top: 0.5rem;
   padding: 0.5rem 1rem;
   cursor: pointer;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-xs);
 }
 
 .section-header {
@@ -31,7 +33,7 @@
 }
 
 .help-text {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   margin-bottom: 1rem;
 }
@@ -51,7 +53,7 @@
   margin-top: 1rem;
   padding: 1rem;
   background-color: var(--color-bg-2);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -62,7 +64,7 @@
   color: var(--color-text-primary);
   border: 1px solid var(--color-line);
   padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   align-self: flex-start;
 }

@@ -11,6 +11,7 @@ sourcee dans ce registre.
 | `--color-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--font-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--line-height-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
+| `--letter-spacing-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--type-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |
 | `--type-admin-*` | canonical | `frontend/src/styles/design-tokens.css` | admin typography roles | none |
 | `--space-*` | canonical | `frontend/src/styles/design-tokens.css` | self | none |

@@ -262,7 +262,7 @@ describe("AC-17-12 Correctifs MiniInsightCard — analyse CSS statique (MiniInsi
 
   it("AC#5 — .mini-card__title est 15px semibold", () => {
     const ruleContent = getLastCssRuleContent(miniCssContent, ".mini-card__title")
-    expect(ruleContent).toMatch(/font-size\s*:\s*15px/)
+    expect(ruleContent).toMatch(/font-size\s*:\s*var\(--font-size-15\)/)
   })
 
   it("AC#5 — .glass-card--mini utilise --color-glass-mini pour le fond", () => {
@@ -279,7 +279,7 @@ describe("AC-17-12 Correctifs MiniInsightCard — analyse CSS statique (MiniInsi
     const ruleContent = getLastCssRuleContent(miniCssContent, ".mini-card__badge")
     expect(ruleContent).toMatch(/width\s*:\s*36px/)
     expect(ruleContent).toMatch(/height\s*:\s*36px/)
-    expect(ruleContent).toMatch(/border-radius\s*:\s*14px/)
+    expect(ruleContent).toMatch(/border-radius\s*:\s*var\(--radius-md\)/)
   })
 
   it("AC-17-14 — .mini-card--love::before utilise linear-gradient avec --love-g1/g2", () => {

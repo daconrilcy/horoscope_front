@@ -17,11 +17,11 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-1);
-  transition: 0.25s ease;
+  transition: var(--duration-normal) var(--easing-default);
   outline: none;
   text-align: left;
   /* Ombre très diffuse, pas "boxed" */
-  box-shadow: var(--shadow-card);
+  box-shadow:var(--shadow-card);
   overflow: hidden;
 }
 
@@ -63,10 +63,7 @@
     background: var(--calendar-cell-bg-selected);
     border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
     box-shadow:
-      0 6px 28px color-mix(in srgb, var(--color-primary) 14%, transparent),
-      0 1px 6px color-mix(in srgb, var(--color-primary) 8%, transparent),
-      4px 4px 24px color-mix(in srgb, black 10%, transparent),
-      0 0 12px color-mix(in srgb, white 40%, transparent);
+      var(--shadow-card);
     transform: scale(1.15);
     z-index: 1;
 
@@ -99,19 +96,19 @@
 
   /* Couleurs des icônes par période */
   .period-card__icon--nuit {
-    color: #7B6FA0;
+    color: var(--color-token-7b6fa0);
   }
 
   .period-card__icon--matin {
-    color: #C4882A;
+    color: var(--color-token-c4882a);
   }
 
   .period-card__icon--apres-midi {
-    color: #8866D0;
+    color: var(--color-token-8866d0);
   }
 
   .period-card__icon--soiree {
-    color: #A06090;
+    color: var(--color-token-a06090);
   }
 
   .period-card--selected .period-card__icon {
@@ -120,24 +117,24 @@
 
   .period-card__name {
     font-size: var(--font-size-md);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     color: var(--color-text-primary);
     white-space: nowrap;
     padding-top: var(--space-2);
     overflow: hidden;
     text-overflow: ellipsis;
-    letter-spacing: -0.01em;
+    letter-spacing: var(--letter-spacing-tight-xs);
   }
 
   /* ── Plage horaire ── */
   .period-card__time {
     font-size: var(--type-metadata-size);
-    font-weight: 400;
+    font-weight: var(--font-weight-regular);
     color: var(--color-text-muted);
     padding-left: calc(18px + var(--space-2));
     /* aligne sous le nom */
     white-space: nowrap;
-    letter-spacing: 0.01em;
+    letter-spacing: var(--letter-spacing-wide-xs);
   }
 
   /* ── Séparateur interne : rythme, pas coupure ── */
@@ -166,10 +163,10 @@
     width: var(--space-2);
     height: var(--space-2);
     margin: var(--space-2);
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     flex-shrink: 0;
     background: color-mix(in srgb, var(--color-text-primary) 28%, transparent);
-    box-shadow: 0 0 var(--space-1) color-mix(in srgb, var(--color-text-primary) 40%, transparent);
+    box-shadow: var(--shadow-card);
   }
 
   .period-card__tone-dot--pivot {
@@ -177,25 +174,25 @@
     height: 18px;
     margin: var(--space-1);
     background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-    color: white;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 30%, transparent);
+    color: var(--color-star-fill);
+    box-shadow: var(--shadow-card);
   }
 
   .period-card--selected .period-card__tone-dot--pivot {
     background: color-mix(in srgb, var(--color-primary) 25%, transparent);
-    box-shadow: 0 0 0 3px rgb(206 187 255 / 78%);
+    box-shadow: var(--shadow-card);
   }
 
   .period-card__tone-dot[data-tone="positive"] {
     background: var(--color-success);
-    box-shadow: 0 0 var(--space-1) color-mix(in srgb, var(--color-success) 40%, transparent);
+    box-shadow: var(--shadow-card);
   }
 
   .period-card__tone-dot[data-tone="push"],
   .period-card__tone-dot[data-tone="favorable"],
   .period-card__tone-dot[data-tone="porteur"] {
     background: var(--color-admin-warning-ink);
-    box-shadow: 0 0 5px color-mix(in srgb, var(--color-admin-warning-ink) 45%, transparent);
+    box-shadow: var(--shadow-card);
   }
 
   .period-card__tone-dot[data-tone="negative"] {
@@ -214,13 +211,13 @@
   /* Le dot devient primary quand la carte est sélectionnée */
   .period-card--selected .period-card__tone-dot {
     background: var(--color-primary);
-    box-shadow: 0 0 0px 4px rgb(206 187 255 / 78%);
+    box-shadow: var(--shadow-card);
   }
 
   .period-card__tone-label,
   period-card__pivot-label {
     font-size: var(--type-label-size);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -249,8 +246,8 @@
   }
 
   /* .period-card__pivot-label {
-    font-size: 0.68rem;
-    font-weight: 600;
+    font-size: var(--font-size-4xs);
+    font-weight: var(--font-weight-semibold);
     color: var(--color-primary);
     white-space: nowrap;
   } */
@@ -259,7 +256,7 @@
     color: var(--color-text-muted);
     font-size: var(--type-metadata-size);
     flex-shrink: 0;
-    line-height: 1;
+    line-height: var(--type-numeric-line-height);
   }
 
   .period-card__cat-label {

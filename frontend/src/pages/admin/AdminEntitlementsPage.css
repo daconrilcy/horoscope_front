@@ -92,7 +92,7 @@
 .feature-code {
   font-size: var(--admin-entitlements-font-compact);
   color: var(--color-text-muted);
-  font-family: monospace;
+  font-family: var(--font-family-monospace);
 }
 
 .matrix-cell {
@@ -152,7 +152,7 @@
 
 .action-button--active {
   background: var(--color-primary-strong);
-  box-shadow: var(--shadow-admin-inset-active);
+  box-shadow:var(--shadow-card);
 }
 
 .cell--editable {
@@ -203,7 +203,7 @@
   color: var(--color-admin-contrast-ink);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--admin-entitlements-radius-panel);
-  box-shadow: var(--shadow-admin-panel);
+  box-shadow:var(--shadow-card);
   z-index: 100;
   width: 180px;
   text-align: left;

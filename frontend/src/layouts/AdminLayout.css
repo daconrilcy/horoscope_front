@@ -121,7 +121,7 @@
 
 .admin-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
+  box-shadow:var(--shadow-card);
 }
 
 .admin-card-icon-svg {

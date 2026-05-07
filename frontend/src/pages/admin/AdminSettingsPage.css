@@ -87,7 +87,7 @@
   padding: var(--space-8);
   width: 100%;
   max-width: 500px;
-  box-shadow: var(--admin-settings-shadow-modal);
+  box-shadow:var(--shadow-card);
 }
 
 .export-modal h3 {

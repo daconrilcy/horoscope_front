@@ -36,10 +36,10 @@
 .turning-point-card__time,
 .turning-point-card__type,
 .turning-point-card__domain-pill {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-wide-control);
   padding: 4px 10px;
   border-radius: var(--radius-pill);
   background: var(--glass-surface-2);
@@ -49,17 +49,17 @@
 
 .turning-point-card__type--emergence {
   color: var(--color-success);
-  background: rgba(76, 175, 80, 0.1);
+  background: color-mix(in srgb, var(--color-token-rgb-76-175-80) 10%, transparent);
 }
 
 .turning-point-card__type--recomposition {
   color: var(--primary);
-  background: rgba(33, 150, 243, 0.1);
+  background: color-mix(in srgb, var(--color-token-rgb-33-150-243) 10%, transparent);
 }
 
 .turning-point-card__type--attenuation {
   color: var(--text-2);
-  background: rgba(158, 158, 158, 0.1);
+  background: color-mix(in srgb, var(--color-token-rgb-158-158-158) 10%, transparent);
 }
 
 .turning-point-card__type--default {
@@ -69,16 +69,16 @@
 
 .turning-point-card__title {
   margin: 0 0 12px 0;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
   color: var(--text-main);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--letter-spacing-tight-xs);
 }
 
 .turning-point-card__body {
   margin: 0 0 16px 0;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: var(--font-size-15);
+  line-height: var(--line-height-normal);
   color: var(--text-main);
 }
 
@@ -98,25 +98,25 @@
 
 .turning-point-card__action-label {
   display: block;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-wide-md);
   margin-bottom: 4px;
 }
 
 .turning-point-card__action--do .turning-point-card__action-label {
-  color: #4caf50;
+  color: var(--color-token-4caf50);
 }
 
 .turning-point-card__action--avoid .turning-point-card__action-label {
-  color: #f44336;
+  color: var(--color-token-f44336);
 }
 
 .turning-point-card__action-text {
-  font-size: 13px;
+  font-size: var(--font-size-13);
   color: var(--text-main);
-  line-height: 1.4;
+  line-height: var(--type-metadata-line-height);
 }
 
 @media (max-width: 640px) {

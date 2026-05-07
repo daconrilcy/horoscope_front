@@ -24,9 +24,4 @@ typographie dans les surfaces migrees. Les tokens `--type-*` vivent dans
 | admin-compact | n/a | `--type-admin-compact-*` | metadonnees techniques tres compactes dans les tableaux admin |
 | admin-control | n/a | `--type-admin-control-*` | controles et infobulles denses du cluster admin |
 | landing-marketing | n/a | `--landing-type-*` | echelle marketing landing declaree par `frontend/src/layouts/LandingLayout.css` et consommee par `frontend/src/pages/landing/**` |
-
-## Exceptions classees
-
-| File | Literal | Reason | Exit condition |
-|---|---|---|---|
-| `frontend/src/pages/AstrologerProfilePage.css` | profile editorial sizes | surface expressive volumineuse | migration par story dediee |
+| residual-css-token-cluster | n/a | `--font-*`, `--line-height-*`, `--letter-spacing-*` | cluster residuel frontend design-system migre sans literals typographiques locaux |

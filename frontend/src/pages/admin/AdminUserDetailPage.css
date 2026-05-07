@@ -156,7 +156,7 @@
   background: var(--color-admin-control-surface-strong);
   padding: calc(var(--space-1) / 2) var(--space-2);
   border-radius: var(--radius-admin-xs);
-  font-family: monospace;
+  font-family: var(--font-family-monospace);
 }
 
 .reveal-button {

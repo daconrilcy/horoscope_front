@@ -1,3 +1,5 @@
+/* Styles alignes sur les tokens du design system. */
+
 .wizard-layout {
   display: flex;
   flex-direction: column;
@@ -30,7 +32,7 @@
 .wizard-progress-step__indicator {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--glass);
   border: 2px solid var(--glass-border);
   display: flex;
@@ -44,7 +46,7 @@
 .wizard-progress-step--active .wizard-progress-step__indicator {
   border-color: var(--primary);
   color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .wizard-progress-step--done .wizard-progress-step__indicator {
@@ -54,14 +56,14 @@
 }
 
 .wizard-progress-step__label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   text-align: center;
 }
 
 .wizard-progress-step--active .wizard-progress-step__label {
   color: var(--color-text-headline);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .wizard-progress-step__connector {

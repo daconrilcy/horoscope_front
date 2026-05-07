@@ -1,9 +1,11 @@
+/* Styles alignes sur les tokens du design system. */
+
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--color-token-rgb-0-0-0) 50%, transparent);
   z-index: 200;
-  animation: sidebar-backdrop-fade-in 0.2s ease-out;
+  animation: sidebar-backdrop-fade-in var(--duration-normal) var(--easing-default)-out;
 }
 
 @keyframes sidebar-backdrop-fade-in {
@@ -28,9 +30,9 @@
   overflow: hidden;
   z-index: 201;
   transition:
-    width 0.2s ease-out,
-    transform 0.2s ease-out,
-    opacity 0.2s ease-out;
+    width var(--duration-normal) var(--easing-default)-out,
+    transform var(--duration-normal) var(--easing-default)-out,
+    opacity var(--duration-normal) var(--easing-default)-out;
 }
 
 .app-sidebar--hidden {
@@ -67,7 +69,7 @@
   color: var(--text-2);
   text-decoration: none;
   border-left: 3px solid transparent;
-  transition: all 0.15s ease;
+  transition: all var(--duration-fast) var(--easing-default);
   white-space: nowrap;
   overflow: hidden;
 }

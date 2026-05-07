@@ -68,9 +68,9 @@
   color: var(--color-text-primary);
   text-align: left;
   transition:
-    border-color 160ms ease,
-    transform 160ms ease,
-    background 160ms ease;
+    border-color var(--duration-fast) var(--easing-default),
+    transform var(--duration-fast) var(--easing-default),
+    background var(--duration-fast) var(--easing-default);
 }
 
 .admin-prompts-card:hover,
@@ -1197,9 +1197,9 @@
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 160ms ease,
-    transform 160ms ease,
-    background 160ms ease;
+    border-color var(--duration-fast) var(--easing-default),
+    transform var(--duration-fast) var(--easing-default),
+    background var(--duration-fast) var(--easing-default);
 }
 
 .admin-prompts-logic-graph__node--interactive:hover,

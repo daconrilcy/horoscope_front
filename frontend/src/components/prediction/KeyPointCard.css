@@ -4,27 +4,27 @@
   /* Glassmorphism */
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.38); /* Light default */
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 38%, transparent); /* Light default */
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-lg);
   padding: var(--space-4) var(--space-3);
-  box-shadow: var(--shadow-hero-card);
+  box-shadow:var(--shadow-card);
   
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform var(--duration-normal) var(--easing-default), box-shadow var(--duration-normal) var(--easing-default);
 }
 
 @media (prefers-color-scheme: dark) {
   .key-point-card {
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 6%, transparent);
   }
 }
 
 /* Also support an explicit .dark class if the project uses it */
 .dark .key-point-card {
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 6%, transparent);
 }
 
 .key-point-card__top {
@@ -36,8 +36,8 @@
 .key-point-card__icon-pill {
   flex-shrink: 0;
   font-size: var(--font-size-xl);
-  line-height: 1;
-  background: rgba(134, 108, 208, 0.12);
+  line-height: var(--type-numeric-line-height);
+  background: color-mix(in srgb, var(--color-token-rgb-134-108-208) 12%, transparent);
   border-radius: var(--radius-md);
   padding: var(--space-2);
   display: flex;
@@ -47,9 +47,9 @@
 
 .key-point-card__label {
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-hero-ink);
-  line-height: 1.3;
+  line-height: var(--type-label-line-height);
 }
 
 .key-point-card__gauge {
@@ -58,15 +58,15 @@
 
 .key-point-card__gauge-track {
   height: 6px;
-  border-radius: 3px;
-  background: rgba(134, 108, 208, 0.15);
+  border-radius: var(--radius-2xs);
+  background: color-mix(in srgb, var(--color-token-rgb-134-108-208) 15%, transparent);
   overflow: hidden;
   width: 100%;
 }
 
 .key-point-card__gauge-fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: var(--radius-2xs);
   background: linear-gradient(90deg, var(--color-primary), var(--color-hero-ink-accent));
-  transition: width 0.4s ease;
+  transition: width var(--duration-slow) var(--easing-default);
 }

@@ -11,14 +11,14 @@
   width: 6px;
   height: 6px;
   background-color: var(--premium-accent-purple);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
 .section-title__text {
-  font-size: 20px;
-  line-height: 1.2;
-  font-weight: 600;
+  font-size: var(--font-size-xl);
+  line-height: var(--type-eyebrow-line-height);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-main);
   margin: 0;
   white-space: nowrap;

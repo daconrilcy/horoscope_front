@@ -91,7 +91,7 @@
 
 .sample-payloads-admin__modal-field textarea {
   min-height: 6rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-family-monospace);
   font-size: var(--font-size-xs);
 }
 

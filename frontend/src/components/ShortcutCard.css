@@ -12,28 +12,28 @@
   text-decoration: none;
   min-height: 122px;
   padding: 20px 18px 22px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.64) 0%, rgba(255, 255, 255, 0.44) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 44%, transparent) 100%);
   border: 1px solid var(--premium-glass-border);
-  border-radius: 22px;
-  box-shadow: 0 16px 38px rgba(72, 52, 110, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform var(--duration-normal) var(--easing-default), background var(--duration-normal) var(--easing-default), border-color var(--duration-normal) var(--easing-default), box-shadow var(--duration-normal) var(--easing-default);
 }
 
 .shortcut-card:hover {
   transform: translateY(-2px);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.66) 0%, rgba(255, 255, 255, 0.44) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 66%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 44%, transparent) 100%);
   border-color: var(--premium-glass-border-strong);
-  box-shadow: var(--premium-shadow-focus);
+  box-shadow:var(--shadow-card);
 }
 
 .shortcut-card__badge {
   width: 44px;
   height: 44px;
-  border-radius: 16px;
+  border-radius: var(--radius-card-lg);
   flex-shrink: 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56), 0 10px 24px rgba(88, 58, 130, 0.08);
+  box-shadow: var(--shadow-card);
   filter: saturate(0.48);
   opacity: 0.7;
 }
@@ -49,8 +49,8 @@
 }
 
 .shortcut-card__title {
-  font-size: 15px;
-  font-weight: 650;
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-strong);
   color: color-mix(in srgb, var(--premium-text-strong) 96%, var(--premium-accent-purple-strong) 4%);
   margin: 0;
   white-space: nowrap;
@@ -64,11 +64,11 @@
   align-items: center;
   min-height: 31px;
   padding: 4px 11px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  font-size: 13px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 38%, transparent);
+  box-shadow: var(--shadow-card);
+  font-size: var(--font-size-13);
   color: var(--premium-text-meta);
   margin-top: 0;
   width: auto;
@@ -79,9 +79,9 @@
 }
 
 .shortcut-card__subtitle--online {
-  background: rgba(255, 255, 255, 0.48);
-  border: 1px solid rgba(255, 255, 255, 0.44);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 48%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 44%, transparent);
   color: var(--premium-accent-purple-strong);
-  font-weight: 600;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-card);
 }

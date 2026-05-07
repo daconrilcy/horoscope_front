@@ -26,7 +26,7 @@
   padding: var(--space-5);
   border: 1px solid var(--primary);
   cursor: default;
-  background-color: rgba(var(--primary-rgb), 0.03);
+  background-color: color-mix(in srgb, var(--color-primary) 3%, transparent);
 }
 
 .turning-points-list__card--clickable {
@@ -50,7 +50,7 @@
 }
 
 .turning-points-list__time {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
   color: var(--primary);
 }
@@ -68,7 +68,7 @@
 
 .turning-points-list__eyebrow,
 .turning-points-list__impact-label {
-  font-size: 0.7rem;
+  font-size: var(--font-size-compact);
   color: var(--text-3);
   text-transform: uppercase;
   font-weight: var(--font-weight-bold);
@@ -93,13 +93,13 @@
 .turning-points-list__movement-detail,
 .turning-points-list__delta-label,
 .turning-points-list__driver-detail {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--text-2);
 }
 
 .turning-points-list__detail {
   margin: 0.35rem 0 0;
-  line-height: 1.4;
+  line-height: var(--type-metadata-line-height);
 }
 
 .turning-points-list__category-row,
@@ -138,13 +138,13 @@
 .turning-points-list__transition {
   margin: var(--space-2) 0 0;
   font-size: var(--font-size-sm);
-  line-height: 1.4;
+  line-height: var(--type-metadata-line-height);
   color: var(--text-2);
 }
 
 .turning-points-list__movement {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--font-size-compact-body);
   color: var(--text-1);
   font-weight: var(--font-weight-medium);
 }
@@ -166,8 +166,8 @@
 
 .turning-points-list__implication {
   margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: var(--font-size-compact-body);
+  line-height: var(--type-metadata-line-height);
   color: var(--text-2);
 }
 

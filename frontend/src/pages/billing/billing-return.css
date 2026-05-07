@@ -1,3 +1,5 @@
+/* Styles alignes sur les tokens du design system. */
+
 .billing-return-container {
   display: flex;
   flex-direction: column;
@@ -27,26 +29,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: var(--font-size-display-md);
   margin-bottom: var(--space-4);
 }
 
 .billing-return-icon--success {
-  background: rgba(22, 101, 52, 0.1);
+  background: color-mix(in srgb, var(--color-token-rgb-22-101-52) 10%, transparent);
   color: var(--color-success);
-  border: 2px solid rgba(22, 101, 52, 0.2);
+  border: 2px solid color-mix(in srgb, var(--color-token-rgb-22-101-52) 20%, transparent);
 }
 
 .billing-return-icon--cancel {
-  background: rgba(255, 107, 129, 0.1);
+  background: color-mix(in srgb, var(--color-token-rgb-255-107-129) 10%, transparent);
   color: var(--color-error);
-  border: 2px solid rgba(255, 107, 129, 0.2);
+  border: 2px solid color-mix(in srgb, var(--color-token-rgb-255-107-129) 20%, transparent);
 }
 
 .billing-return-icon--info {
-  background: rgba(134, 108, 208, 0.1);
+  background: color-mix(in srgb, var(--color-token-rgb-134-108-208) 10%, transparent);
   color: var(--color-primary);
-  border: 2px solid rgba(134, 108, 208, 0.2);
+  border: 2px solid color-mix(in srgb, var(--color-token-rgb-134-108-208) 20%, transparent);
 }
 
 .billing-return-icon--loading {
@@ -100,7 +102,7 @@
   height: 48px;
   border: 3px solid var(--color-glass-border);
   border-bottom-color: var(--color-primary);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   display: inline-block;
   box-sizing: border-box;
   animation: rotation 1s linear infinite;

@@ -1,11 +1,13 @@
+/* Styles alignes sur les tokens du design system. */
+
 .astro-mood-background {
   position: relative;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   width: 100%;
   height: 100%;
   /* Fond dynamique de secours via variables de theme */
-  background: linear-gradient(to top left, var(--color-bg-bot) 0%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(to top left, var(--color-bg-bot) 0%, transparent 100%);
 }
 
 .astro-mood-background__canvas {

@@ -174,7 +174,7 @@ describe("AC-17-12 & AC-17-14 Correctifs ShortcutCard — analyse CSS statique (
 
   it("AC-17-14 — .shortcut-card__badge a border-radius: 16px", () => {
     const badgeContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card__badge")
-    expect(badgeContent).toMatch(/border-radius\s*:\s*16px/)
+    expect(badgeContent).toMatch(/border-radius\s*:\s*var\(--radius-card-lg\)/)
   })
 
   it("AC#2 — .glass-card--shortcut utilise --color-glass-shortcut pour le fond", () => {
@@ -191,8 +191,8 @@ describe("AC-17-12 & AC-17-14 Correctifs ShortcutCard — analyse CSS statique (
 
   it("AC-17-14 — .shortcut-card__title a font-size: 15px et font-weight: 650", () => {
     const ruleContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card__title")
-    expect(ruleContent).toMatch(/font-size\s*:\s*15px/)
-    expect(ruleContent).toMatch(/font-weight\s*:\s*650/)
+    expect(ruleContent).toMatch(/font-size\s*:\s*var\(--font-size-15\)/)
+    expect(ruleContent).toMatch(/font-weight\s*:\s*var\(--font-weight-strong\)/)
   })
 
   it("AC-17-15 — .glass-card--shortcut a une box-shadow (profondeur, détache du fond)", () => {

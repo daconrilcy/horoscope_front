@@ -1,8 +1,8 @@
 /* ── DomainRankingCard — Premium Metrics (Story 60.17) ── */
 
 .domain-ranking-card__title {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-strong);
   margin: 0 0 18px 0;
 }
@@ -25,7 +25,7 @@
 }
 
 .domain-ranking-card__item + .domain-ranking-card__item {
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  border-top: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 22%, transparent);
 }
 
 .domain-ranking-card__row {
@@ -44,20 +44,20 @@
 .domain-ranking-card__icon-circle {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.64) 0%, rgba(255, 255, 255, 0.24) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: var(--radius-full);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 24%, transparent) 100%);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 48%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: var(--font-size-md);
   color: var(--premium-accent-purple-strong);
-  box-shadow: 0 6px 16px rgba(76, 52, 122, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  box-shadow: var(--shadow-card);
 }
 
 .domain-ranking-card__label {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-main);
 }
 
@@ -68,31 +68,31 @@
 }
 
 .domain-ranking-card__score-pill {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   color: var(--text-strong);
-  background: rgba(255, 255, 255, 0.44);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 44%, transparent);
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.38);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 38%, transparent);
 }
 
 .domain-ranking-card__status-pill {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-wide-md);
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(196, 177, 235, 0.4);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-196-177-235) 40%, transparent);
   color: var(--text-meta);
-  background: rgba(255, 255, 255, 0.16);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 16%, transparent);
   white-space: nowrap;
 }
 
 .domain-ranking-card__track {
   height: 6px;
-  background: rgba(123, 104, 180, 0.14);
+  background: color-mix(in srgb, var(--color-token-rgb-123-104-180) 14%, transparent);
   border-radius: var(--radius-pill);
   overflow: hidden;
   position: relative;
@@ -103,17 +103,17 @@
   border-radius: inherit;
   background: linear-gradient(90deg, var(--premium-accent-purple-soft) 0%, var(--premium-accent-purple-strong) 100%);
   transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26);
+  box-shadow: var(--shadow-card);
 }
 
 .domain-ranking-card__fill--favorable,
 .domain-ranking-card__fill--tres_favorable {
-  box-shadow: 0 0 12px rgba(156, 121, 255, 0.3);
+  box-shadow: var(--shadow-card);
 }
 
 .domain-ranking-card__status-pill--favorable,
 .domain-ranking-card__status-pill--tres_favorable {
-  border-color: rgba(156, 121, 255, 0.3);
+  border-color: color-mix(in srgb, var(--color-token-rgb-156-121-255) 30%, transparent);
   color: var(--premium-accent-purple);
 }
 

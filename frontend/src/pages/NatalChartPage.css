@@ -1,3 +1,5 @@
+/* Styles alignes sur les tokens du design system. */
+
 .natal-page-container {
   --layout-page-max-width: 1200px;
   --layout-page-padding: 0;
@@ -30,9 +32,9 @@
 .natal-page-container__bg-halo {
   z-index: -1;
   background:
-    radial-gradient(circle at 12% 18%, rgba(147, 117, 235, 0.12) 0%, transparent 32%),
-    radial-gradient(circle at 88% 82%, rgba(255, 211, 236, 0.14) 0%, transparent 36%),
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.25) 0%, transparent 45%);
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--color-token-rgb-147-117-235) 12%, transparent) 0%, transparent 32%),
+    radial-gradient(circle at 88% 82%, color-mix(in srgb, var(--color-token-rgb-255-211-236) 14%, transparent) 0%, transparent 36%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 25%, transparent) 0%, transparent 45%);
 }
 
 .natal-page-container__noise {
@@ -55,20 +57,20 @@
 
 .natal-page-header__meta {
   display: block;
-  font-size: 11px;
-  font-weight: 650;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-strong);
   color: var(--premium-text-meta);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--letter-spacing-wide-lg);
   margin-bottom: 4px;
 }
 
 .natal-page-header__title {
   margin: 0;
-  font-size: 40px;
-  line-height: 1.05;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: var(--font-size-display-md);
+  line-height: var(--line-height-display-relaxed);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight-sm);
   color: var(--premium-text-strong);
 }
 
@@ -82,38 +84,36 @@
 
 .natal-page-header__persona {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   color: var(--premium-text-main);
 }
 
 .natal-page-header__cta {
   height: 40px;
   padding: 0 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--premium-glass-border-strong);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(244, 237, 255, 0.92) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 78%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-244-237-255) 92%, transparent) 100%);
   color: var(--premium-accent-purple-strong);
   box-shadow:
-    0 12px 28px rgba(88, 58, 130, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.54);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+    var(--shadow-card);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide-control);
   text-transform: uppercase;
   cursor: pointer;
-  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  transition: transform var(--duration-fast) var(--easing-default), box-shadow var(--duration-fast) var(--easing-default), background var(--duration-fast) var(--easing-default);
 }
 
 .natal-page-header__cta:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 16px 36px rgba(88, 58, 130, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    var(--shadow-card);
 }
 
 .natal-page-header__info {
   margin-top: 12px;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   color: var(--premium-text-muted);
   display: flex;
   flex-wrap: wrap;
@@ -137,21 +137,21 @@
   border: 1px solid var(--premium-glass-border);
   border-radius: var(--premium-radius-card);
   padding: 24px;
-  box-shadow: var(--premium-shadow-card);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow:var(--shadow-card);
+  transition: transform var(--duration-normal) var(--easing-default), box-shadow var(--duration-normal) var(--easing-default);
 }
 
 .natal-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--premium-shadow-focus);
+  box-shadow:var(--shadow-card);
 }
 
 .natal-card h2 {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
   margin: 0 0 20px;
   color: var(--premium-text-strong);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--letter-spacing-tight-xs);
 }
 
 .natal-card__lead {
@@ -175,8 +175,8 @@
 }
 
 .natal-card__secondary-link {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .natal-card__complete-link {
@@ -213,11 +213,11 @@
 }
 
 .natal-astro-summary__item dt {
-  font-size: 11px;
-  font-weight: 650;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-strong);
   color: var(--premium-text-meta);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-wide-md);
 }
 
 .natal-astro-summary__item dd {
@@ -225,8 +225,8 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
   color: var(--premium-accent-purple-strong);
 }
 
@@ -239,8 +239,8 @@
 
 .natal-card__intro {
   margin: 0 0 20px;
-  font-size: 14px;
-  line-height: 1.65;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-prose);
   color: var(--premium-text-main);
 }
 
@@ -255,11 +255,11 @@
 }
 
 .natal-card li {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   color: var(--premium-text-main);
   padding-bottom: 12px;
   border-bottom: 1px solid var(--premium-glass-border-soft);
-  line-height: 1.5;
+  line-height: var(--line-height-normal);
 }
 
 .natal-card li:last-child {
@@ -274,14 +274,13 @@
 
 .natal-data-card {
   padding: 16px 18px;
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46) 0%, rgba(248, 243, 255, 0.74) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.42) !important;
+  border-radius: var(--radius-card-xl);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 46%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-248-243-255) 74%, transparent) 100%);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent) !important;
   padding-bottom: 16px !important;
   box-shadow:
-    0 10px 26px rgba(72, 52, 110, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.48);
+    var(--shadow-card);
 }
 
 .natal-data-card__head {
@@ -292,13 +291,13 @@
 }
 
 .natal-data-card__title {
-  font-size: 15px;
+  font-size: var(--font-size-15);
   color: var(--premium-text-strong);
 }
 
 .natal-data-card__value {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
   color: var(--premium-accent-purple-strong);
   text-align: right;
 }
@@ -312,8 +311,8 @@
 
 .natal-data-card__reading {
   margin: 8px 0 0;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-copy-loose);
   color: var(--premium-text-main);
 }
 
@@ -322,18 +321,18 @@
   align-items: center;
   min-height: 28px;
   padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 46%, transparent);
   color: var(--premium-text-main);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .natal-data-card__support {
   margin: 12px 0 0;
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-copy-loose);
   color: var(--premium-text-meta);
 }
 
@@ -341,7 +340,7 @@
   display: inline-block;
   margin-right: 8px;
   color: var(--premium-text-main);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 /* Natal Chart Guide Premium Styling */
@@ -350,18 +349,18 @@
   border: 1px solid var(--premium-glass-border-soft);
   border-radius: var(--premium-radius-card);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all var(--duration-slow) var(--easing-default);
 }
 
 .natal-chart-guide[open] {
   background: var(--premium-glass-surface-1);
-  box-shadow: var(--premium-shadow-focus);
+  box-shadow:var(--shadow-card);
 }
 
 .natal-chart-guide__summary {
   padding: 20px 24px;
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
   color: var(--premium-text-strong);
   cursor: pointer;
   list-style: none;
@@ -376,9 +375,9 @@
 
 .natal-chart-guide__summary::after {
   content: '+';
-  font-size: 20px;
-  font-weight: 400;
-  transition: transform 0.3s ease;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-regular);
+  transition: transform var(--duration-slow) var(--easing-default);
 }
 
 .natal-chart-guide[open] .natal-chart-guide__summary::after {
@@ -387,9 +386,9 @@
 
 .natal-chart-guide__content {
   padding: 0 24px 24px;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   color: var(--premium-text-main);
-  line-height: 1.6;
+  line-height: var(--line-height-relaxed);
 }
 
 .natal-chart-guide__intro {
@@ -406,12 +405,12 @@
 }
 
 .natal-chart-guide__section h3 {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-bold);
   margin: 0 0 12px;
   color: var(--premium-accent-purple-strong);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letter-spacing-wide-control);
 }
 
 .natal-chart-guide__faq dl {
@@ -421,7 +420,7 @@
 }
 
 .natal-chart-guide__faq-item dt {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--premium-text-strong);
   margin-bottom: 4px;
 }
@@ -432,7 +431,7 @@
 }
 
 .natal-house-interval {
-  font-size: 11px;
+  font-size: var(--font-size-2xs);
   opacity: 0.7;
   display: inline;
 }
@@ -451,15 +450,14 @@
 }
 
 .natal-aspect-item {
-  border: 1px solid rgba(255, 255, 255, 0.42) !important;
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent) !important;
   padding: 18px !important;
   display: flex;
   flex-direction: column;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(248, 244, 255, 0.72) 100%);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-248-244-255) 72%, transparent) 100%);
   box-shadow:
-    0 12px 28px rgba(72, 52, 110, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.48);
+    var(--shadow-card);
 }
 
 .natal-aspect-item__head {
@@ -474,27 +472,27 @@
   align-items: center;
   min-height: 30px;
   padding: 0 12px;
-  border-radius: 999px;
-  background: rgba(122, 95, 220, 0.12);
-  border: 1px solid rgba(122, 95, 220, 0.14);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-token-rgb-122-95-220) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-122-95-220) 14%, transparent);
   color: var(--premium-accent-purple-strong);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-wide-md);
 }
 
 .natal-aspect-title {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.3;
+  font-size: var(--font-size-md);
+  line-height: var(--type-label-line-height);
   color: var(--premium-text-strong);
 }
 
 .natal-aspect-meaning {
   margin: 12px 0 0;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
   color: var(--premium-text-main);
 }
 
@@ -508,24 +506,24 @@
 .natal-aspect-meta__item {
   margin: 0;
   padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.66);
-  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 66%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
 }
 
 .natal-aspect-meta__item dt {
   margin: 0 0 4px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide-label);
   text-transform: uppercase;
   color: var(--premium-text-meta);
 }
 
 .natal-aspect-meta__item dd {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: var(--font-size-13);
+  line-height: var(--type-metadata-line-height);
   color: var(--premium-text-strong);
 }
 
@@ -540,7 +538,7 @@
   }
   
   .natal-page-header__title {
-    font-size: 32px;
+    font-size: var(--font-size-display-sm);
   }
 
   .natal-page-header__actions {

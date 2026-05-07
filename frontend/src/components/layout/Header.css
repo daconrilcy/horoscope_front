@@ -1,3 +1,5 @@
+/* Styles alignes sur les tokens du design system. */
+
 .app-header {
   display: flex;
   align-items: center;
@@ -7,13 +9,12 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  background: color-mix(in srgb, var(--glass) 88%, rgba(255, 255, 255, 0.12));
+  background: color-mix(in srgb, var(--glass) 88%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 12%, transparent));
   backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(150%);
   -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(150%);
-  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 72%, rgba(255, 255, 255, 0.2));
+  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 72%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 20%, transparent));
   box-shadow:
-    0 14px 28px rgba(16, 18, 40, 0.12),
-    0 2px 0 rgba(255, 255, 255, 0.12) inset;
+    var(--shadow-card);
   position: sticky;
   top: 0;
   left: 0;
@@ -38,7 +39,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: none;
+  box-shadow:var(--shadow-card);
   transform: none;
 }
 
@@ -69,8 +70,8 @@
 }
 
 .app-header-title {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
   margin: 0;
   background: linear-gradient(90deg, var(--color-cta-left) 0%, var(--color-cta-right) 100%);
   -webkit-background-clip: text;
@@ -80,11 +81,11 @@
 }
 
 .dark .app-header-title {
-  background: linear-gradient(90deg, rgba(244, 240, 255, 0.98) 0%, rgba(210, 228, 255, 0.96) 100%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-token-rgb-244-240-255) 98%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-210-228-255) 96%, transparent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 1px 10px rgba(118, 164, 255, 0.18));
+  filter: drop-shadow(0 1px 10px color-mix(in srgb, var(--color-token-rgb-118-164-255) 18%, transparent));
 }
 
 .app-header-actions {

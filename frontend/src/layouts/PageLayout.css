@@ -1,3 +1,5 @@
+/* Styles alignes sur les tokens du design system. */
+
 .page-layout {
   max-width: var(--layout-page-max-width);
   margin: 0 auto;

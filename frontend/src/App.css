@@ -578,7 +578,7 @@ textarea:focus-visible {
   margin: 0;
   font-size: 0.9rem;
   color: var(--color-primary);
-  font-family: monospace;
+  font-family: var(--font-family-monospace);
 }
 .skeleton-line {
   display: block;

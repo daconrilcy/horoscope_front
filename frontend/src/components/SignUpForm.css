@@ -1,3 +1,5 @@
+/* Styles alignes sur les tokens du design system. */
+
 .auth-form-card {
   padding: 40px;
   display: flex;
@@ -7,8 +9,8 @@
 }
 
 .auth-form-title {
-  font-family: "Cormorant Garamond", serif;
-  font-size: 2rem;
+  font-family: var(--font-family-editorial);
+  font-size: var(--font-size-display-sm);
   color: var(--premium-text-strong);
   text-align: center;
   margin: 0;
@@ -19,8 +21,8 @@
   color: var(--premium-accent-purple-strong);
   padding: 8px 16px;
   border-radius: var(--premium-radius-pill);
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   text-align: center;
 }
 
@@ -33,17 +35,17 @@
   width: 100%;
   height: 48px;
   background: white;
-  border: 1px solid #dadce0;
+  border: 1px solid var(--color-token-dadce0);
   border-radius: var(--premium-radius-panel);
-  color: #3c4043;
-  font-size: 0.9375rem;
-  font-weight: 600;
+  color: var(--color-token-3c4043);
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .google-auth-btn:hover {
-  background-color: #f8f9fa;
+  background-color: var(--color-token-f8f9fa);
 }
 
 .auth-divider {
@@ -51,9 +53,9 @@
   align-items: center;
   gap: 16px;
   color: var(--premium-text-faint);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-13);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-wide-label);
 }
 
 .auth-divider::before,
@@ -72,9 +74,9 @@
 
 .auth-error-inline {
   color: var(--color-danger);
-  font-size: 0.875rem;
-  font-weight: 500;
-  background: rgba(255, 107, 129, 0.1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  background: color-mix(in srgb, var(--color-token-rgb-255-107-129) 10%, transparent);
   padding: 8px 12px;
   border-radius: var(--premium-radius-panel);
 }
@@ -89,11 +91,11 @@
   justify-content: center;
   column-gap: 10px;
   row-gap: 8px;
-  font-size: 0.78125rem;
+  font-size: var(--font-size-xs);
   color: var(--premium-text-meta);
   flex-wrap: wrap;
   text-align: center;
-  line-height: 1.45;
+  line-height: var(--line-height-copy-tight);
 }
 
 .auth-reassurance-item {
@@ -106,7 +108,7 @@
   flex: 0 0 auto;
   width: 4px;
   height: 4px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--premium-text-faint);
   opacity: 0.7;
 }
@@ -115,7 +117,7 @@
   .auth-reassurance {
     column-gap: 8px;
     row-gap: 6px;
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
   }
 
   .auth-reassurance-item {
@@ -131,7 +133,7 @@
 .auth-switch-link {
   margin-top: 16px;
   text-align: center;
-  font-size: 0.9375rem;
+  font-size: var(--font-size-15);
   color: var(--premium-text-main);
   display: flex;
   align-items: center;
@@ -143,32 +145,30 @@
 .auth-switch-link button {
   min-height: 38px;
   padding: 0 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(134, 108, 208, 0.34);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(237, 229, 255, 0.84));
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-134-108-208) 34%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, transparent), color-mix(in srgb, var(--color-token-rgb-237-229-255) 84%, transparent));
   color: var(--premium-accent-purple-strong);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    0 10px 20px rgba(111, 87, 217, 0.14);
+    var(--shadow-card);
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    background 0.2s ease;
+    transform var(--duration-normal) var(--easing-default),
+    box-shadow var(--duration-normal) var(--easing-default),
+    border-color var(--duration-normal) var(--easing-default),
+    background var(--duration-normal) var(--easing-default);
 }
 
 .auth-switch-link button:hover {
   transform: translateY(-1px);
-  border-color: rgba(134, 108, 208, 0.46);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(232, 221, 255, 0.94));
+  border-color: color-mix(in srgb, var(--color-token-rgb-134-108-208) 46%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, transparent), color-mix(in srgb, var(--color-token-rgb-232-221-255) 94%, transparent));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    0 14px 26px rgba(111, 87, 217, 0.18);
+    var(--shadow-card);
 }
 
 .auth-switch-link button:focus-visible {
-  outline: 2px solid rgba(134, 108, 208, 0.28);
+  outline: 2px solid color-mix(in srgb, var(--color-token-rgb-134-108-208) 28%, transparent);
   outline-offset: 3px;
 }

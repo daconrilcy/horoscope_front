@@ -7,8 +7,8 @@
 .timeline-rail__track {
   position: relative;
   height: 3px;
-  border-radius: 2px;
-  background: rgba(134, 108, 208, 0.10);
+  border-radius: var(--radius-2xs);
+  background: color-mix(in srgb, var(--color-token-rgb-134-108-208) 10%, transparent);
   width: 100%;
 }
 
@@ -18,10 +18,10 @@
   top: 0;
   left: 0;
   height: 100%;
-  border-radius: 2px;
+  border-radius: var(--radius-2xs);
   background: linear-gradient(
     90deg,
-    rgba(134, 108, 208, 0.25) 0%,
+    color-mix(in srgb, var(--color-token-rgb-134-108-208) 25%, transparent) 0%,
     var(--color-primary) 100%
   );
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -50,9 +50,9 @@
   top: -3px;
   width: 1px;
   height: 9px;
-  background: rgba(134, 108, 208, 0.18);
+  background: color-mix(in srgb, var(--color-token-rgb-134-108-208) 18%, transparent);
   transform: translateX(-50%);
-  border-radius: 1px;
+  border-radius: var(--space-px);
 }
 
 .timeline-rail__tick--0 {
@@ -87,12 +87,11 @@
   top: 50%;
   width: 11px;
   height: 11px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--color-primary);
   transform: translate(-50%, -50%);
   box-shadow:
-    0 0 0 3px rgba(134, 108, 208, 0.18),
-    0 1px 4px rgba(134, 108, 208, 0.25);
+    var(--shadow-card);
   transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
