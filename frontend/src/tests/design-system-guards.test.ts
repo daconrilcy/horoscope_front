@@ -81,6 +81,149 @@ function extractSelectedAppValues(ownerBody: string): string[] {
   return [...new Set(declarations)]
 }
 
+type CssDeclaration = {
+  selector: string
+  property: string
+  value: string
+}
+
+function findSelectorBeforeBrace(css: string, braceIndex: number): string {
+  let cursor = braceIndex - 1
+  while (cursor >= 0 && /\s/.test(css[cursor])) {
+    cursor -= 1
+  }
+
+  const end = cursor + 1
+  while (cursor >= 0 && css[cursor] !== "}" && css[cursor] !== "{") {
+    cursor -= 1
+  }
+
+  return css.slice(cursor + 1, end).trim()
+}
+
+function collectCssDeclarations(css: string): CssDeclaration[] {
+  const declarations: CssDeclaration[] = []
+  const selectorStack: string[] = []
+  let cursor = 0
+
+  while (cursor < css.length) {
+    const current = css[cursor]
+    if (current === "/" && css[cursor + 1] === "*") {
+      const commentEnd = css.indexOf("*/", cursor + 2)
+      cursor = commentEnd === -1 ? css.length : commentEnd + 2
+      continue
+    }
+
+    if (current === "{") {
+      selectorStack.push(findSelectorBeforeBrace(css, cursor))
+      cursor += 1
+      continue
+    }
+
+    if (current === "}") {
+      selectorStack.pop()
+      cursor += 1
+      continue
+    }
+
+    if (current === ":" && selectorStack.length > 0) {
+      let propertyStart = cursor - 1
+      while (propertyStart >= 0 && /[a-zA-Z0-9_-]/.test(css[propertyStart])) {
+        propertyStart -= 1
+      }
+
+      const property = css.slice(propertyStart + 1, cursor)
+      let valueEnd = cursor + 1
+      let depth = 0
+      let quote: string | null = null
+
+      while (valueEnd < css.length) {
+        const char = css[valueEnd]
+        if (quote !== null) {
+          if (char === "\\") {
+            valueEnd += 2
+            continue
+          }
+          if (char === quote) {
+            quote = null
+          }
+          valueEnd += 1
+          continue
+        }
+
+        if (char === "\"" || char === "'") {
+          quote = char
+          valueEnd += 1
+          continue
+        }
+        if (char === "(") {
+          depth += 1
+        } else if (char === ")") {
+          depth = Math.max(0, depth - 1)
+        } else if ((char === ";" || char === "}") && depth === 0) {
+          break
+        }
+        valueEnd += 1
+      }
+
+      if (css[valueEnd] === ";") {
+        declarations.push({
+          selector: selectorStack[selectorStack.length - 1],
+          property: property.trim(),
+          value: normalizeCssValue(css.slice(cursor + 1, valueEnd)),
+        })
+        cursor = valueEnd + 1
+        continue
+      }
+    }
+
+    cursor += 1
+  }
+
+  return declarations
+}
+
+function isForbiddenAppLiteralDeclaration(declaration: CssDeclaration): boolean {
+  const property = declaration.property.toLowerCase()
+  if (declaration.selector === "#root" || property.startsWith("--")) {
+    return false
+  }
+
+  const value = declaration.value
+  if (declaration.selector === ".usage-progress-fill" && property === "width") {
+    return value !== "calc(var(--usage-progress, 0) * 1%)"
+  }
+  if (["font-size", "font-weight", "line-height", "letter-spacing"].includes(property)) {
+    return !value.startsWith("var(")
+  }
+  if (["border-radius", "box-shadow", "text-shadow"].includes(property)) {
+    return !/^(?:var\(|none(?:\s*!important)?|inherit)/.test(value)
+  }
+
+  return /#[0-9A-Fa-f]{3,8}\b|rgba?\(|hsla?\(|(?:linear|radial)-gradient\(|color-mix\(|var\(\s*--[a-zA-Z0-9_-]+\s*,/.test(value)
+}
+
+function hasRepeatedNameSegment(name: string): boolean {
+  const segments = name.replace(/^--app-/, "").split("-")
+
+  for (let size = 2; size <= 4; size += 1) {
+    const seen = new Set<string>()
+    for (let index = 0; index <= segments.length - size; index += 1) {
+      const segment = segments.slice(index, index + size).join("-")
+      if (seen.has(segment)) {
+        return true
+      }
+      seen.add(segment)
+    }
+  }
+
+  return false
+}
+
+function isMechanicalAppCustomPropertyName(name: string): boolean {
+  return name.includes("__") || hasRepeatedNameSegment(name)
+}
+
 function extractMigratedSettingsValues(ownerBody: string): string[] {
   const declarations = [...ownerBody.matchAll(/--settings-[a-zA-Z0-9_-]+\s*:\s*([\s\S]*?);/g)].map((match) =>
     normalizeCssValue(match[1]),
@@ -384,6 +527,22 @@ describe("design-system guards", () => {
     expect(catalogueBlock.body).toContain("background: var(--app-astro-catalog-page-bg)")
     expect(summaryBlock.body).toContain("background: var(--app-dashboard-summary-bg)")
     expect(summaryBlock.body).toContain("box-shadow: var(--app-dashboard-summary-shadow)")
+  })
+
+  it("bloque les declarations visuelles et typographiques App non routees par CS-087", () => {
+    const appCss = readFrontendFile("App.css")
+    const ownerBlock = findFlatCssBlock(appCss, "#root")
+    const declarations = collectCssDeclarations(appCss)
+    const activeViolations = declarations.filter(isForbiddenAppLiteralDeclaration)
+    const appOwnerNames = [...ownerBlock.body.matchAll(/(--app-[a-zA-Z0-9_-]+)\s*:/g)].map((match) => match[1])
+    const mechanicalOwnerNames = appOwnerNames.filter(isMechanicalAppCustomPropertyName)
+
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--app-*` | semantic-extension |")
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--astro-*` | semantic-extension |")
+    expect(activeViolations).toEqual([])
+    expect(mechanicalOwnerNames).toEqual([])
+    expect(appCss).toContain("width: calc(var(--usage-progress, 0) * 1%)")
+    expect(appCss.match(/var\(\s*--[a-zA-Z0-9_-]+\s*,/g)).toEqual(["var(--usage-progress,"])
   })
 
   it("bloque le retour des literals Settings migres par CS-084", () => {

@@ -1,4 +1,447 @@
 #root {
+  --app-admin-layout-h2-font-size: 1.5rem;
+  --app-panel-border-radius: 16px;
+  --app-panel-h1-font-size: 2rem;
+  --app-card-border-radius: 12px;
+  --app-button-font-size: 1rem;
+  --app-chat-item-border-radius: 10px;
+  --app-chat-item-assistant-background: rgba(0, 211, 167, 0.08);
+  --app-chat-item-assistant-border-color: rgba(0, 211, 167, 0.4);
+  --app-chat-error-border-radius: 10px;
+  --app-state-line-border-radius: 10px;
+  --app-dashboard-card-border-radius: 12px;
+  --app-dashboard-card-icon-font-size: 2.5rem;
+  --app-dashboard-card-label-font-size: 1.1rem;
+  --app-dashboard-card-description-font-size: 0.85rem;
+  --app-message-bubble-border-radius: 12px;
+  --app-message-bubble-user-background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
+  --app-message-bubble-author-font-size: 0.75rem;
+  --app-message-bubble-user-author-color: rgba(255, 255, 255, 0.8);
+  --app-message-bubble-time-font-size: 0.7rem;
+  --app-typing-indicator-border-radius: 12px;
+  --app-typing-indicator-author-font-size: 0.75rem;
+  --app-typing-indicator-dot-border-radius: 50%;
+  --app-astrologer-panel-avatar-border-radius: 50%;
+  --app-astrologer-panel-avatar-background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
+  --app-astrologer-panel-avatar-icon-font-size: 1.75rem;
+  --app-astrologer-panel-avatar-img-border-radius: 50%;
+  --app-astrologer-panel-name-font-size: 1.1rem;
+  --app-astrologer-panel-status-font-size: 0.85rem;
+  --app-astrologer-panel-status-color: #00d3a7;
+  --app-astrologer-panel-info-h4-font-size: 0.9rem;
+  --app-astrologer-panel-info-h4-letter-spacing: 0.05em;
+  --app-astrologer-panel-info-p-font-size: 0.9rem;
+  --app-astrologer-panel-specialties-li-font-size: 0.9rem;
+  --app-astrologer-panel-conversation-id-font-size: 0.9rem;
+  --app-skeleton-line-border-radius: 4px;
+  --app-skeleton-line-background: linear-gradient(90deg, var(--color-glass-bg) 25%, var(--color-glass-bg-2) 50%, var(--color-glass-bg) 75%);
+  --app-chat-empty-state-icon-wrap-border-radius: 50%;
+  --app-chat-empty-state-icon-wrap-background: linear-gradient(135deg, rgba(134, 108, 208, 0.12) 0%, rgba(161, 144, 237, 0.12) 100%);
+  --app-chat-empty-state-icon-font-size: 4rem;
+  --app-chat-empty-state-title-font-size: 1.25rem;
+  --app-astrologer-picker-overlay-background: rgba(0, 0, 0, 0.45);
+  --app-astrologer-picker-modal-border-radius: 16px;
+  --app-astrologer-picker-title-font-size: 1rem;
+  --app-astrologer-picker-loading-font-size: 0.9rem;
+  --app-astrologer-picker-item-border-radius: 10px;
+  --app-astrologer-picker-item-avatar-border-radius: 50%;
+  --app-astrologer-picker-item-avatar-background: linear-gradient(135deg, rgba(134, 108, 208, 0.15) 0%, rgba(161, 144, 237, 0.15) 100%);
+  --app-astrologer-picker-item-avatar-img-border-radius: 50%;
+  --app-astrologer-picker-item-avatar-placeholder-font-size: 1.1rem;
+  --app-astrologer-picker-item-name-font-size: 0.95rem;
+  --app-astrologer-picker-item-bio-font-size: 0.8rem;
+  --app-astrologers-page-header-h1-font-size: clamp(2.4rem, 4vw, 4rem);
+  --app-astrologers-page-header-h1-line-height: 0.96;
+  --app-astrologers-page-header-h1-letter-spacing: -0.04em;
+  --app-astrologers-page-header-h1-text-shadow: 0 10px 25px rgba(164, 139, 255, 0.12);
+  --app-astrologers-page-header-p-font-size: 1.02rem;
+  --app-astrologers-page-header-p-line-height: 1.7;
+  --app-astrologer-grid-empty-icon-font-size: 3rem;
+  --app-astrologer-grid-empty-p-font-size: 1.1rem;
+  --app-astrologer-card-background: radial-gradient(circle at 20% 14%, rgba(255, 255, 255, 0.68), transparent 28%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.42)),
+    rgba(255, 255, 255, 0.56);
+  --app-astrologer-card-border: 1px solid rgba(136, 112, 211, 0.18);
+  --app-astrologer-card-border-radius: 24px;
+  --app-astrologer-card-box-shadow: 0 24px 64px rgba(64, 42, 102, 0.14),
+    0 14px 34px rgba(115, 88, 180, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --app-astrologer-card-border-color: color-mix(in srgb, var(--astro-accent) 46%, rgba(255, 255, 255, 0.28) 54%);
+  --app-astrologer-card-background-2: radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.82), transparent 30%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.52)),
+    rgba(255, 255, 255, 0.68);
+  --app-astrologer-card-box-shadow-2: 0 30px 72px color-mix(in srgb, var(--astro-glow) 38%, rgba(72, 54, 110, 0.16) 62%),
+    0 16px 34px rgba(107, 86, 169, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  --app-astrologer-card-featured-background: radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--astro-glow) 52%, rgba(255, 255, 255, 0.18) 48%), transparent 28%),
+    radial-gradient(circle at 10% 8%, rgba(255, 255, 255, 0.68), transparent 24%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.58));
+  --app-astrologer-card-featured-border-color: color-mix(in srgb, var(--astro-accent) 40%, rgba(255, 255, 255, 0.32) 60%);
+  --app-astrologer-card-featured-box-shadow: 0 34px 86px rgba(95, 69, 155, 0.2),
+    0 16px 34px rgba(126, 103, 187, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  --app-astrologer-card-featured-name-font-size: 1.52rem;
+  --app-astrologer-card-featured-style-font-size: 1rem;
+  --app-astrologer-card-featured-bio-font-size: 0.99rem;
+  --app-astrologer-card-orbit-one-background: radial-gradient(circle, var(--astro-glow) 0%, transparent 70%);
+  --app-astrologer-card-orbit-two-background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  --app-astrologer-card-icon-color: #fff8ff;
+  --app-astrologer-card-icon-background: color-mix(in srgb, var(--astro-accent) 48%, rgba(255, 255, 255, 0.35) 52%);
+  --app-astrologer-card-icon-box-shadow: 0 0 18px color-mix(in srgb, var(--astro-glow) 72%, transparent 28%);
+  --app-astrologer-card-icon-font-size: 0.92rem;
+  --app-astrologer-card-featured-badge-background: rgba(255, 255, 255, 0.62);
+  --app-astrologer-card-featured-badge-border: 1px solid color-mix(in srgb, var(--astro-accent) 26%, rgba(255, 255, 255, 0.34) 74%);
+  --app-astrologer-card-featured-badge-color: color-mix(in srgb, var(--astro-accent) 72%, #3a2d5a 28%);
+  --app-astrologer-card-featured-badge-font-size: 0.74rem;
+  --app-astrologer-card-featured-badge-letter-spacing: 0.06em;
+  --app-astrologer-card-featured-badge-box-shadow: 0 10px 24px rgba(129, 100, 192, 0.12);
+  --app-astrologer-card-provider-badge-border: 1px solid rgba(255, 255, 255, 0.52);
+  --app-astrologer-card-provider-badge-background: rgba(255, 255, 255, 0.46);
+  --app-astrologer-card-provider-badge-color: #4a4f7a;
+  --app-astrologer-card-provider-badge-font-size: 0.68rem;
+  --app-astrologer-card-provider-badge-letter-spacing: 0.05em;
+  --app-astrologer-card-provider-badge-box-shadow: 0 8px 18px rgba(129, 100, 192, 0.1);
+  --app-astrologer-card-provider-badge-ia-border-color: color-mix(in srgb, var(--astro-accent) 28%, rgba(255, 255, 255, 0.44) 72%);
+  --app-astrologer-card-provider-badge-ia-color: color-mix(in srgb, var(--astro-accent) 68%, #3d4b7f 32%);
+  --app-astrologer-card-provider-badge-real-border-color: rgba(215, 180, 120, 0.5);
+  --app-astrologer-card-provider-badge-real-color: #a87332;
+  --app-astrologer-card-provider-badge-real-background: rgba(255, 248, 236, 0.58);
+  --app-astrologer-card-featured-badge-font-size-2: 0.82rem;
+  --app-astrologer-card-avatar-border-radius: 50%;
+  --app-astrologer-card-avatar-background: linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
+    color-mix(in srgb, var(--astro-accent) 18%, rgba(15, 10, 30, 0.82) 82%);
+  --app-astrologer-card-avatar-border: 1px solid color-mix(in srgb, var(--astro-accent) 40%, rgba(255, 255, 255, 0.08) 60%);
+  --app-astrologer-card-avatar-box-shadow: 0 0 22px color-mix(in srgb, var(--astro-glow) 84%, transparent 16%),
+    0 14px 26px rgba(0, 0, 0, 0.28);
+  --app-astrologer-card-avatar-background-2: radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 22%, color-mix(in srgb, var(--astro-glow) 82%, rgba(255, 255, 255, 0.24) 18%) 34%, color-mix(in srgb, var(--astro-glow) 42%, transparent 58%) 52%, transparent 74%);
+  --app-astrologer-card-avatar-border-2: 1.5px solid color-mix(in srgb, var(--astro-accent) 56%, rgba(255, 255, 255, 0.76) 44%);
+  --app-astrologer-card-avatar-box-shadow-2: 0 0 0 1px rgba(255, 255, 255, 0.58),
+    0 0 0 3px color-mix(in srgb, var(--astro-glow) 18%, transparent 82%),
+    0 0 24px color-mix(in srgb, var(--astro-glow) 78%, transparent 22%),
+    inset 0 0 12px rgba(255, 255, 255, 0.18);
+  --app-astrologer-card-avatar-icon-font-size: 2.3rem;
+  --app-astrologer-card-avatar-img-border-radius: 50%;
+  --app-astrologer-card-name-font-size: 1.24rem;
+  --app-astrologer-card-name-color: #2d2144;
+  --app-astrologer-card-name-letter-spacing: -0.02em;
+  --app-astrologer-card-display-name-color: rgba(84, 63, 126, 0.5);
+  --app-astrologer-card-display-name-font-size: 0.78rem;
+  --app-astrologer-card-display-name-letter-spacing: 0.08em;
+  --app-astrologer-card-style-font-size: 0.94rem;
+  --app-astrologer-card-style-color: color-mix(in srgb, var(--astro-accent) 76%, #3a2d5a 24%);
+  --app-astrologer-card-divider-background: linear-gradient(90deg, rgba(114, 88, 182, 0.18), transparent 100%);
+  --app-astrologer-card-tag-background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.24)),
+    rgba(255, 255, 255, 0.24);
+  --app-astrologer-card-tag-border: 1px solid color-mix(in srgb, var(--astro-chip-border) 74%, rgba(255, 255, 255, 0.34) 26%);
+  --app-astrologer-card-tag-font-size: 0.76rem;
+  --app-astrologer-card-tag-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 4px 10px rgba(138, 114, 201, 0.08);
+  --app-astrologer-card-tag-accent-border-color: color-mix(in srgb, var(--astro-accent) 42%, rgba(255, 255, 255, 0.36) 58%);
+  --app-astrologer-card-tag-accent-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 8px 18px color-mix(in srgb, var(--astro-glow) 30%, transparent 70%);
+  --app-astrologer-card-bio-font-size: 0.92rem;
+  --app-astrologer-card-bio-color: rgba(73, 53, 109, 0.7);
+  --app-astrologer-card-bio-line-height: 1.62;
+  --app-astrologer-card-featured-avatar-box-shadow: 0 0 32px color-mix(in srgb, var(--astro-glow) 94%, transparent 6%),
+    0 18px 30px rgba(0, 0, 0, 0.22);
+  --app-astrologer-card-featured-avatar-highlight-box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 0 4px color-mix(in srgb, var(--astro-glow) 22%, transparent 78%),
+    0 0 30px color-mix(in srgb, var(--astro-glow) 84%, transparent 16%),
+    inset 0 0 14px rgba(255, 255, 255, 0.22);
+  --app-astrologer-profile-header-border-radius: 16px;
+  --app-astrologer-profile-avatar-border-radius: 50%;
+  --app-astrologer-profile-avatar-background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
+  --app-astrologer-profile-avatar-icon-font-size: 2.5rem;
+  --app-astrologer-profile-avatar-img-border-radius: 50%;
+  --app-astrologer-profile-name-font-size: 1.75rem;
+  --app-astrologer-profile-style-font-size: 1rem;
+  --app-astrologer-profile-experience-font-size: 0.9rem;
+  --app-astrologer-profile-specialties-h3-font-size: 0.85rem;
+  --app-astrologer-profile-specialties-h3-letter-spacing: 0.05em;
+  --app-astrologer-profile-tag-border-radius: 12px;
+  --app-astrologer-profile-tag-background: rgba(102, 230, 255, 0.1);
+  --app-astrologer-profile-tag-border: 1px solid rgba(102, 230, 255, 0.25);
+  --app-astrologer-profile-tag-font-size: 0.85rem;
+  --app-astrologer-profile-bio-h3-font-size: 0.85rem;
+  --app-astrologer-profile-bio-h3-letter-spacing: 0.05em;
+  --app-astrologer-profile-bio-p-font-size: 1rem;
+  --app-astrologer-profile-cta-font-size: 1rem;
+  --app-astrologers-page-header-h1-font-size-2: 1.75rem;
+  --app-astrologers-page-error-border-radius: 10px;
+  --app-astrologers-page-error-background: rgba(255, 107, 129, 0.1);
+  --app-astrologers-page-error-border: 1px solid rgba(255, 107, 129, 0.4);
+  --app-astrologers-page-error-color: #ffd7de;
+  --app-astrologer-profile-page-back-font-size: 0.9rem;
+  --app-astrologer-profile-page-back-background: rgba(102, 230, 255, 0.05);
+  --app-astrologer-profile-page-not-found-icon-font-size: 3rem;
+  --app-astrologers-page-header-h1-font-size-3: 2.35rem;
+  --app-astrologers-page-header-p-font-size-2: 0.95rem;
+  --app-premium-page-layout-background: radial-gradient(circle at 50% 16%, rgba(118, 179, 255, 0.1), transparent 26%),
+    radial-gradient(circle at 18% 22%, rgba(160, 132, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 82% 72%, rgba(255, 191, 215, 0.1), transparent 32%),
+    linear-gradient(180deg, #fffafc 0%, #f6efff 48%, #efe6ff 100%);
+  --app-premium-hero-title-font-size: clamp(2.4rem, 4vw, 4rem);
+  --app-premium-hero-title-line-height: 1;
+  --app-premium-hero-title-letter-spacing: -0.04em;
+  --app-premium-hero-title-color: #2b1f44;
+  --app-premium-hero-subtitle-font-size: 1.1rem;
+  --app-premium-hero-subtitle-color: rgba(69, 50, 103, 0.7);
+  --app-consultation-card-premium-background: rgba(255, 255, 255, 0.6);
+  --app-consultation-card-premium-border: 1px solid rgba(136, 112, 211, 0.15);
+  --app-consultation-card-premium-border-radius: 24px;
+  --app-consultation-card-premium-box-shadow: 0 10px 30px rgba(64, 42, 102, 0.05);
+  --app-consultation-card-premium-background-2: rgba(255, 255, 255, 0.8);
+  --app-consultation-card-premium-border-color: rgba(134, 108, 208, 0.4);
+  --app-consultation-card-premium-box-shadow-2: 0 20px 40px rgba(64, 42, 102, 0.1);
+  --app-consultation-card-premium-locked-background: rgba(255, 255, 255, 0.72);
+  --app-consultation-card-premium-locked-border-color: rgba(134, 108, 208, 0.22);
+  --app-consultation-card-premium-locked-box-shadow: 0 12px 28px rgba(64, 42, 102, 0.08);
+  --app-consultation-card-premium-icon-font-size: 3rem;
+  --app-consultation-card-premium-icon-background: rgba(160, 132, 255, 0.1);
+  --app-consultation-card-premium-title-font-size: 1.5rem;
+  --app-consultation-card-premium-title-color: #2b1f44;
+  --app-consultation-card-premium-subtitle-font-size: 1rem;
+  --app-consultation-card-premium-subtitle-color: rgba(69, 50, 103, 0.6);
+  --app-consultation-premium-tag-background: rgba(160, 132, 255, 0.08);
+  --app-consultation-premium-tag-border: 1px solid rgba(160, 132, 255, 0.2);
+  --app-consultation-premium-tag-font-size: 0.8rem;
+  --app-consultation-premium-tag-color: #5c438f;
+  --app-premium-cta-inline-background: linear-gradient(135deg, #866cd0 0%, #a190ed 100%);
+  --app-premium-cta-inline-box-shadow: 0 8px 16px rgba(134, 108, 208, 0.3);
+  --app-premium-cta-inline-hover-box-shadow: 0 10px 20px rgba(134, 108, 208, 0.4);
+  --app-consultation-card-premium-alt-background: linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(160, 132, 255, 0.1));
+  --app-premium-section-title-font-size: 1.75rem;
+  --app-premium-section-title-color: #2b1f44;
+  --app-consultation-history-card-premium-background: rgba(255, 255, 255, 0.4);
+  --app-consultation-history-card-premium-border: 1px solid rgba(136, 112, 211, 0.1);
+  --app-consultation-history-card-premium-background-2: rgba(255, 255, 255, 0.7);
+  --app-consultation-history-card-premium-border-color: rgba(134, 108, 208, 0.3);
+  --app-consultation-history-card-icon-font-size: 1.5rem;
+  --app-consultation-history-card-icon-background: rgba(160, 132, 255, 0.05);
+  --app-consultation-history-card-icon-border-radius: 10px;
+  --app-consultation-history-card-type-color: #2b1f44;
+  --app-consultation-history-card-date-font-size: 0.8rem;
+  --app-consultation-history-card-date-color: rgba(69, 50, 103, 0.5);
+  --app-consultation-history-card-context-font-size: 0.9rem;
+  --app-consultation-history-card-context-color: rgba(69, 50, 103, 0.7);
+  --app-premium-spinner-border: 3px solid rgba(134, 108, 208, 0.1);
+  --app-premium-spinner-border-radius: 50%;
+  --app-premium-hero-title-font-size-2: 2.5rem;
+  --app-consultations-page-header-h1-font-size: 1.75rem;
+  --app-consultations-type-preview-card-background: rgba(102, 230, 255, 0.05);
+  --app-consultations-type-preview-card-border-radius: 12px;
+  --app-consultations-type-preview-card-background-2: rgba(102, 230, 255, 0.1);
+  --app-consultations-type-preview-icon-font-size: 2rem;
+  --app-consultations-type-preview-label-font-size: 0.9rem;
+  --app-consultations-history-section-h2-font-size: 1.25rem;
+  --app-consultations-history-link-background: rgba(102, 230, 255, 0.05);
+  --app-consultations-history-icon-font-size: 1.5rem;
+  --app-consultations-history-type-font-size: 0.9rem;
+  --app-consultations-history-date-font-size: 0.8rem;
+  --app-consultations-history-context-font-size: 0.85rem;
+  --app-wizard-progress-number-border-radius: 50%;
+  --app-wizard-progress-number-font-size: 0.85rem;
+  --app-wizard-progress-current-number-background: rgba(102, 230, 255, 0.1);
+  --app-wizard-progress-completed-number-color: #fff;
+  --app-wizard-progress-label-font-size: 0.75rem;
+  --app-wizard-step-title-font-size: 1.4rem;
+  --app-wizard-error-background: rgba(255, 107, 129, 0.1);
+  --app-wizard-error-border: 1px solid rgba(255, 107, 129, 0.4);
+  --app-wizard-error-color: #ffd7de;
+  --app-consultation-type-card-border: 1.5px solid rgba(134, 108, 208, 0.15);
+  --app-consultation-type-card-border-radius: 16px;
+  --app-consultation-type-card-box-shadow: 0 4px 16px rgba(64, 42, 102, 0.04);
+  --app-consultation-type-card-background: rgba(134, 108, 208, 0.07);
+  --app-consultation-type-card-box-shadow-2: 0 8px 24px rgba(64, 42, 102, 0.1);
+  --app-consultation-type-card-selected-background: rgba(134, 108, 208, 0.1);
+  --app-consultation-type-card-selected-box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.2);
+  --app-consultation-type-icon-font-size: 2.5rem;
+  --app-consultation-type-label-font-size: 0.95rem;
+  --app-astrologer-option-border: 1.5px solid rgba(134, 108, 208, 0.15);
+  --app-astrologer-option-box-shadow: 0 4px 12px rgba(64, 42, 102, 0.04);
+  --app-astrologer-option-background: rgba(134, 108, 208, 0.07);
+  --app-astrologer-option-box-shadow-2: 0 6px 18px rgba(64, 42, 102, 0.1);
+  --app-astrologer-option-selected-background: rgba(134, 108, 208, 0.1);
+  --app-astrologer-option-selected-box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.2);
+  --app-astrologer-option-icon-font-size: 1.5rem;
+  --app-astrologer-option-avatar-border-radius: 50%;
+  --app-astrologer-option-avatar-placeholder-font-size: 1.5rem;
+  --app-astrologer-option-name-font-size: 0.9rem;
+  --app-astrologer-option-style-font-size: 0.75rem;
+  --app-astrologer-option-label-font-size: 0.9rem;
+  --app-drawing-option-card-background: rgba(102, 230, 255, 0.03);
+  --app-drawing-option-card-border-radius: 12px;
+  --app-drawing-option-card-background-2: rgba(102, 230, 255, 0.08);
+  --app-drawing-option-card-selected-background: rgba(102, 230, 255, 0.12);
+  --app-drawing-option-card-selected-box-shadow: 0 0 0 3px rgba(102, 230, 255, 0.2);
+  --app-drawing-option-icon-font-size: 2rem;
+  --app-drawing-option-label-font-size: 0.9rem;
+  --app-validation-summary-background: rgba(102, 230, 255, 0.03);
+  --app-validation-summary-border-radius: 10px;
+  --app-validation-label-font-size: 0.9rem;
+  --app-validation-value-font-size: 0.9rem;
+  --app-validation-context-label-font-size: 0.88rem;
+  --app-validation-context-label-letter-spacing: 0.01em;
+  --app-validation-context-input-border: 1px solid rgba(134, 108, 208, 0.18);
+  --app-validation-context-input-border-radius: 10px;
+  --app-validation-context-input-font-size: 0.95rem;
+  --app-validation-context-counter-font-size: 0.8rem;
+  --app-validation-context-hint-font-size: 0.85rem;
+  --app-wizard-astrologer-card-avatar-radius: 50%;
+  --app-wizard-astrologer-card-avatar-background: rgba(134, 108, 208, 0.12);
+  --app-wizard-astrologer-card-avatar-icon-size: 1.2rem;
+  --app-wizard-astrologer-card-name-size: 0.9rem;
+  --app-wizard-astrologer-card-style-size: 0.75rem;
+  --app-form-label-font-size: 0.85rem;
+  --app-type-pill-background: rgba(134, 108, 208, 0.07);
+  --app-type-pill-selected-background: rgba(134, 108, 208, 0.12);
+  --app-type-pill-selected-box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.15);
+  --app-type-pill-icon-font-size: 1.5rem;
+  --app-type-pill-icon-line-height: 1;
+  --app-type-pill-label-font-size: 0.8rem;
+  --app-type-pill-label-line-height: 1.3;
+  --app-wizard-loading-overlay-background: rgba(255, 255, 255, 0.55);
+  --app-wizard-loading-overlay-border-radius: 12px;
+  --app-wizard-loading-overlay-font-size: 0.9rem;
+  --app-precision-badge-border-radius: 100px;
+  --app-precision-badge-font-size: 0.8rem;
+  --app-precision-badge-high-background: rgba(34, 197, 94, 0.1);
+  --app-precision-badge-high-border: 1px solid rgba(34, 197, 94, 0.4);
+  --app-precision-badge-high-color: #166534;
+  --app-precision-badge-medium-background: rgba(251, 191, 36, 0.1);
+  --app-precision-badge-medium-border: 1px solid rgba(251, 191, 36, 0.5);
+  --app-precision-badge-medium-color: #92400e;
+  --app-precision-badge-limited-background: rgba(249, 115, 22, 0.1);
+  --app-precision-badge-limited-border: 1px solid rgba(249, 115, 22, 0.5);
+  --app-precision-badge-limited-color: #9a3412;
+  --app-precision-badge-blocked-background: rgba(239, 68, 68, 0.1);
+  --app-precision-badge-blocked-border: 1px solid rgba(239, 68, 68, 0.5);
+  --app-precision-badge-blocked-color: #991b1b;
+  --app-degraded-warning-background: rgba(251, 191, 36, 0.08);
+  --app-degraded-warning-border: 1px solid rgba(251, 191, 36, 0.35);
+  --app-degraded-warning-font-size: 0.85rem;
+  --app-degraded-warning-color: #92400e;
+  --app-user-data-missing-notice-background: rgba(134, 108, 208, 0.06);
+  --app-user-data-missing-notice-border: 1px solid rgba(134, 108, 208, 0.2);
+  --app-user-data-missing-notice-border-radius: 12px;
+  --app-user-data-missing-notice-p-font-size: 0.9rem;
+  --app-nothing-to-collect-font-size: 0.95rem;
+  --app-nothing-to-collect-background: rgba(134, 108, 208, 0.04);
+  --app-nothing-to-collect-border: 1px dashed rgba(134, 108, 208, 0.2);
+  --app-nothing-to-collect-border-radius: 12px;
+  --app-interaction-toggle-section-background: rgba(134, 108, 208, 0.05);
+  --app-interaction-toggle-section-border: 1px solid rgba(134, 108, 208, 0.15);
+  --app-interaction-toggle-section-border-radius: 10px;
+  --app-interaction-toggle-hint-font-size: 0.82rem;
+  --app-checkbox-label-font-size: 0.9rem;
+  --app-other-person-form-border: 1px solid rgba(134, 108, 208, 0.14);
+  --app-other-person-form-border-radius: 16px;
+  --app-other-person-form-box-shadow: 0 4px 16px rgba(64, 42, 102, 0.05);
+  --app-other-person-form-title-font-size: 1rem;
+  --app-other-person-form-hint-font-size: 0.85rem;
+  --app-form-group-label-font-size: 0.85rem;
+  --app-form-group-input-background: rgba(255, 255, 255, 0.5);
+  --app-form-group-input-border: 1px solid rgba(134, 108, 208, 0.18);
+  --app-form-group-input-border-radius: 10px;
+  --app-form-group-input-font-size: 0.9rem;
+  --app-nickname-input-group-label-font-size: 0.85rem;
+  --app-summary-details-border: 1px solid rgba(134, 108, 208, 0.12);
+  --app-summary-details-box-shadow: 0 4px 16px rgba(64, 42, 102, 0.04);
+  --app-summary-label-font-size: 0.82rem;
+  --app-summary-value-font-size: 0.9rem;
+  --app-summary-subtitle-font-size: 0.95rem;
+  --app-error-message-background: rgba(239, 68, 68, 0.07);
+  --app-error-message-border: 1px solid rgba(239, 68, 68, 0.3);
+  --app-error-message-font-size: 0.85rem;
+  --app-error-message-color: #991b1b;
+  --app-consultation-banner-nominal-background: rgba(34, 197, 94, 0.07);
+  --app-consultation-banner-nominal-border: 1px solid rgba(34, 197, 94, 0.25);
+  --app-consultation-banner-degraded-background: rgba(251, 191, 36, 0.07);
+  --app-consultation-banner-degraded-border: 1px solid rgba(251, 191, 36, 0.3);
+  --app-consultation-banner-blocked-background: rgba(239, 68, 68, 0.07);
+  --app-consultation-banner-blocked-border: 1px solid rgba(239, 68, 68, 0.3);
+  --app-banner-icon-font-size: 1.4rem;
+  --app-banner-icon-line-height: 1.2;
+  --app-banner-title-font-size: 0.9rem;
+  --app-banner-text-font-size: 0.85rem;
+  --app-consultation-result-error-color: #ffd7de;
+  --app-consultation-result-header-h1-font-size: 1.5rem;
+  --app-consultation-result-summary-background: rgba(102, 230, 255, 0.03);
+  --app-consultation-result-summary-border-radius: 12px;
+  --app-consultation-result-type-icon-font-size: 2rem;
+  --app-consultation-result-type-label-font-size: 1.25rem;
+  --app-consultation-result-meta-font-size: 0.9rem;
+  --app-consultation-result-context-strong-font-size: 0.85rem;
+  --app-consultation-result-interpretation-h2-font-size: 1.25rem;
+  --app-consultation-result-interpretation-text-line-height: 1.7;
+  --app-consultation-result-interpretation-text-font-size: 1rem;
+  --app-settings-title-font-size: 1.75rem;
+  --app-settings-tab-font-size: 0.95rem;
+  --app-settings-tab-background: rgba(102, 230, 255, 0.05);
+  --app-settings-section-title-font-size: 1.25rem;
+  --app-account-info-label-font-size: 0.85rem;
+  --app-account-info-label-letter-spacing: 0.05em;
+  --app-account-info-value-font-size: 1rem;
+  --app-usage-stat-item-background: rgba(102, 230, 255, 0.05);
+  --app-usage-stat-item-border-radius: 10px;
+  --app-usage-stat-label-font-size: 0.8rem;
+  --app-usage-stat-label-letter-spacing: 0.05em;
+  --app-usage-stat-value-font-size: 1.2rem;
+  --app-usage-progress-bar-background: rgba(102, 230, 255, 0.15);
+  --app-usage-progress-bar-border-radius: 4px;
+  --app-usage-progress-fill-background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
+  --app-usage-progress-fill-border-radius: 4px;
+  --app-btn-danger-background: linear-gradient(180deg, #ff6b81 0%, #e84a5f 100%);
+  --app-btn-danger-border-color: rgba(255, 107, 129, 0.5);
+  --app-btn-danger-color: #fff;
+  --app-btn-danger-box-shadow: 0 8px 20px rgba(255, 107, 129, 0.3);
+  --app-modal-overlay-background: rgba(0, 0, 0, 0.75);
+  --app-modal-content-border-radius: 16px;
+  --app-modal-title-font-size: 1.25rem;
+  --app-modal-confirm-word-background: rgba(255, 107, 129, 0.15);
+  --app-modal-confirm-word-border: 1px solid rgba(255, 107, 129, 0.4);
+  --app-modal-confirm-word-font-size: 1.25rem;
+  --app-modal-confirm-word-color: #ff6b81;
+  --app-modal-confirm-word-letter-spacing: 0.1em;
+  --app-modal-input-font-size: 1rem;
+  --app-modal-error-background: rgba(255, 107, 129, 0.1);
+  --app-modal-error-border-radius: 6px;
+  --app-modal-error-color: #ff6b81;
+  --app-modal-error-font-size: 0.9rem;
+  --app-today-header-toggle-radius: 50%;
+  --app-today-header-kicker-spacing: 0.2px;
+  --app-today-header-title-size: 40px;
+  --app-today-header-title-line-height: 1.05;
+  --app-today-header-title-spacing: -0.5px;
+  --app-today-header-avatar-radius: 50%;
+  --app-dashboard-summary-text-size: 15px;
+  --app-dashboard-summary-text-line-height: 2.02;
+  --app-dashboard-summary-text-color: color-mix(in srgb, var(--premium-text-main) 78%, var(--premium-text-strong) 22%);
+  --app-dashboard-summary-footer-radius: 50%;
+  --app-dashboard-summary-cta-color: color-mix(in srgb, var(--premium-accent-purple-strong) 84%, var(--premium-text-strong) 16%);
+  --app-dashboard-summary-cta-spacing: 0.06em;
+  --app-dashboard-summary-loading-spinner-background: rgba(255, 255, 255, 0.46);
+  --app-dashboard-summary-loading-message-size: 15px;
+  --app-skeleton-line-background-2: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.05) 25%, rgba(var(--color-primary-rgb), 0.1) 50%, rgba(var(--color-primary-rgb), 0.05) 75%);
+  --app-day-prediction-header-background-radius: 0;
+  --app-section-header-title-weight: 650;
+  --app-section-header-button-radius: 50%;
+  --app-evidence-tags-title-size: 11px;
+  --app-evidence-tags-title-spacing: 0.1em;
+  --app-evidence-pill-font-size: 11px;
+  --app-evidence-pill-dot-radius: 50%;
+  --app-evidence-pill-planet-background: rgba(139, 92, 246, 0.12);
+  --app-evidence-pill-planet-color: rgb(102, 65, 248);
+  --app-evidence-pill-planet-border-color: rgba(139, 92, 246, 0.25);
+  --app-evidence-pill-aspect-background: rgba(59, 130, 246, 0.12);
+  --app-evidence-pill-aspect-color: rgba(147, 197, 253, 1);
+  --app-evidence-pill-aspect-border-color: rgba(59, 130, 246, 0.25);
+  --app-evidence-pill-angle-background: rgba(245, 158, 11, 0.12);
+  --app-evidence-pill-angle-color: rgba(252, 211, 77, 1);
+  --app-evidence-pill-angle-border-color: rgba(245, 158, 11, 0.25);
+  --app-chat-window-loading-overlay-background: rgba(0, 0, 0, 0.3);
+  --app-chat-window-empty-avatar-border-radius: 50%;
+  --app-chat-window-empty-persona-font-size: 1.1rem;
   --app-shell-main-padding: 22px 18px;
   --app-shell-sidebar-offset: 48px;
   --app-mobile-nav-inset: var(--space-4);
@@ -119,7 +562,7 @@
 .enterprise-layout h2 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  font-size: 1.5rem;
+  font-size: var(--app-admin-layout-h2-font-size);
   color: var(--color-text-primary);
 }
 
@@ -144,7 +587,7 @@
   backdrop-filter: blur(var(--surface-glass-blur));
   -webkit-backdrop-filter: blur(var(--surface-glass-blur));
   border: 1px solid var(--color-glass-border);
-  border-radius: 16px;
+  border-radius: var(--app-panel-border-radius);
   padding: 1.5rem;
   box-shadow: var(--shadow-card);
   margin-bottom: 1rem;
@@ -152,7 +595,7 @@
 
 .panel h1 {
   margin-top: 0;
-  font-size: 2rem;
+  font-size: var(--app-panel-h1-font-size);
 }
 
 .panel h2,
@@ -176,7 +619,7 @@
 .card {
   background: var(--color-glass-bg-2);
   border: 1px solid var(--color-glass-border);
-  border-radius: 12px;
+  border-radius: var(--app-card-border-radius);
   padding: 1rem;
 }
 
@@ -187,7 +630,7 @@ button {
   backdrop-filter: blur(var(--surface-glass-blur));
   -webkit-backdrop-filter: blur(var(--surface-glass-blur));
   color: var(--color-btn-text);
-  font-size: 1rem;
+  font-size: var(--app-button-font-size);
   font-weight: var(--font-weight-semibold);
   padding: 0.5rem 1rem;
   cursor: pointer;
@@ -224,14 +667,14 @@ textarea:focus-visible {
 
 .chat-item {
   border: 1px solid var(--color-line);
-  border-radius: 10px;
+  border-radius: var(--app-chat-item-border-radius);
   padding: 0.7rem 0.8rem;
   background: var(--color-glass-bg-2);
 }
 
 .chat-item-assistant {
-  background: rgba(0, 211, 167, 0.08);
-  border-color: rgba(0, 211, 167, 0.4);
+  background: var(--app-chat-item-assistant-background);
+  border-color: var(--app-chat-item-assistant-border-color);
 }
 
 .chat-form {
@@ -265,7 +708,7 @@ textarea:focus-visible {
 
 .chat-error {
   border: 1px solid var(--app-danger-border);
-  border-radius: 10px;
+  border-radius: var(--app-chat-error-border-radius);
   background: var(--app-danger-surface);
   padding: 0.7rem 0.8rem;
   margin-top: 0.8rem;
@@ -274,7 +717,7 @@ textarea:focus-visible {
 
 .state-line {
   margin-top: 0.6rem;
-  border-radius: 10px;
+  border-radius: var(--app-state-line-border-radius);
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--color-line);
   background: var(--color-glass-bg-2);
@@ -345,7 +788,7 @@ textarea:focus-visible {
   backdrop-filter: blur(var(--surface-glass-blur));
   -webkit-backdrop-filter: blur(var(--surface-glass-blur));
   border: 1px solid var(--color-glass-border);
-  border-radius: 12px;
+  border-radius: var(--app-dashboard-card-border-radius);
   transition: all 0.2s ease;
   text-align: center;
   min-height: 140px;
@@ -366,29 +809,29 @@ textarea:focus-visible {
 }
 
 .dashboard-card-icon {
-  font-size: 2.5rem;
+  font-size: var(--app-dashboard-card-icon-font-size);
 }
 
 .dashboard-card-label {
-  font-size: 1.1rem;
+  font-size: var(--app-dashboard-card-label-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
 .dashboard-card-description {
-  font-size: 0.85rem;
+  font-size: var(--app-dashboard-card-description-font-size);
   color: var(--color-text-secondary);
 }
 /* Message Bubble */
 .message-bubble {
   max-width: 80%;
   padding: 0.75rem 1rem;
-  border-radius: 12px;
+  border-radius: var(--app-message-bubble-border-radius);
 }
 
 .message-bubble--user {
   align-self: flex-end;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
+  background: var(--app-message-bubble-user-background);
   color: var(--color-btn-text);
 }
 
@@ -406,13 +849,13 @@ textarea:focus-visible {
 }
 
 .message-bubble-author {
-  font-size: 0.75rem;
+  font-size: var(--app-message-bubble-author-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
 }
 
 .message-bubble--user .message-bubble-author {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--app-message-bubble-user-author-color);
 }
 
 .message-bubble-text {
@@ -423,7 +866,7 @@ textarea:focus-visible {
 }
 
 .message-bubble-time {
-  font-size: 0.7rem;
+  font-size: var(--app-message-bubble-time-font-size);
   color: var(--color-text-muted);
   align-self: flex-end;
 }
@@ -432,7 +875,7 @@ textarea:focus-visible {
 .typing-indicator {
   align-self: flex-start;
   padding: 0.75rem 1rem;
-  border-radius: 12px;
+  border-radius: var(--app-typing-indicator-border-radius);
   background: var(--color-badge-chat);
   border: 1px solid var(--color-glass-border);
 }
@@ -444,7 +887,7 @@ textarea:focus-visible {
 }
 
 .typing-indicator-author {
-  font-size: 0.75rem;
+  font-size: var(--app-typing-indicator-author-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
 }
@@ -457,7 +900,7 @@ textarea:focus-visible {
 .typing-indicator-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: var(--app-typing-indicator-dot-border-radius);
   background: var(--color-text-secondary);
   animation: typing-bounce 1.4s infinite ease-in-out;
 }
@@ -502,8 +945,8 @@ textarea:focus-visible {
   width: 64px;
   height: 64px;
   margin: 0 auto 0.75rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
+  border-radius: var(--app-astrologer-panel-avatar-border-radius);
+  background: var(--app-astrologer-panel-avatar-background);
   border: 2px solid var(--color-primary);
   display: flex;
   align-items: center;
@@ -511,26 +954,26 @@ textarea:focus-visible {
 }
 
 .astrologer-panel-avatar-icon {
-  font-size: 1.75rem;
+  font-size: var(--app-astrologer-panel-avatar-icon-font-size);
 }
 
 .astrologer-panel-avatar-img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: var(--app-astrologer-panel-avatar-img-border-radius);
   object-fit: cover;
 }
 
 .astrologer-panel-name {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--app-astrologer-panel-name-font-size);
   color: var(--color-text-primary);
 }
 
 .astrologer-panel-status {
   margin: 0.25rem 0 0;
-  font-size: 0.85rem;
-  color: #00d3a7;
+  font-size: var(--app-astrologer-panel-status-font-size);
+  color: var(--app-astrologer-panel-status-color);
 }
 
 .astrologer-panel-info,
@@ -544,15 +987,15 @@ textarea:focus-visible {
 .astrologer-panel-specialties h4,
 .astrologer-panel-conversation h4 {
   margin: 0 0 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-panel-info-h4-font-size);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--app-astrologer-panel-info-h4-letter-spacing);
 }
 
 .astrologer-panel-info p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-panel-info-p-font-size);
   color: var(--color-text-primary);
   line-height: var(--line-height-normal);
 }
@@ -565,7 +1008,7 @@ textarea:focus-visible {
 
 .astrologer-panel-specialties li {
   padding: 0.35rem 0;
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-panel-specialties-li-font-size);
   color: var(--color-text-primary);
 }
 
@@ -576,14 +1019,14 @@ textarea:focus-visible {
 
 .astrologer-panel-conversation-id {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-panel-conversation-id-font-size);
   color: var(--color-primary);
   font-family: var(--font-family-monospace);
 }
 .skeleton-line {
   display: block;
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--color-glass-bg) 25%, var(--color-glass-bg-2) 50%, var(--color-glass-bg) 75%);
+  border-radius: var(--app-skeleton-line-border-radius);
+  background: var(--app-skeleton-line-background);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s infinite;
 }
@@ -631,20 +1074,20 @@ textarea:focus-visible {
   width: 80px;
   height: 80px;
   margin-bottom: 1.25rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(134, 108, 208, 0.12) 0%, rgba(161, 144, 237, 0.12) 100%);
+  border-radius: var(--app-chat-empty-state-icon-wrap-border-radius);
+  background: var(--app-chat-empty-state-icon-wrap-background);
   border: 1px solid var(--color-glass-border);
   color: var(--color-primary);
 }
 
 .chat-empty-state-icon {
-  font-size: 4rem;
+  font-size: var(--app-chat-empty-state-icon-font-size);
   margin-bottom: 1rem;
 }
 
 .chat-empty-state-title {
   margin: 0 0 0.5rem;
-  font-size: 1.25rem;
+  font-size: var(--app-chat-empty-state-title-font-size);
   color: var(--color-text-primary);
 }
 
@@ -659,7 +1102,7 @@ textarea:focus-visible {
 .astrologer-picker-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--app-astrologer-picker-overlay-background);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
@@ -674,7 +1117,7 @@ textarea:focus-visible {
   backdrop-filter: blur(var(--surface-glass-blur));
   -webkit-backdrop-filter: blur(var(--surface-glass-blur));
   border: 1px solid var(--color-glass-border);
-  border-radius: 16px;
+  border-radius: var(--app-astrologer-picker-modal-border-radius);
   width: 100%;
   max-width: 480px;
   max-height: 80vh;
@@ -694,7 +1137,7 @@ textarea:focus-visible {
 
 .astrologer-picker-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--app-astrologer-picker-title-font-size);
   color: var(--color-text-primary);
 }
 
@@ -729,7 +1172,7 @@ textarea:focus-visible {
   padding: 2rem;
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-picker-loading-font-size);
 }
 
 .astrologer-picker-item {
@@ -739,7 +1182,7 @@ textarea:focus-visible {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--app-astrologer-picker-item-border-radius);
   background: transparent;
   cursor: pointer;
   text-align: left;
@@ -761,9 +1204,9 @@ textarea:focus-visible {
   position: relative;
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--app-astrologer-picker-item-avatar-border-radius);
   border: 1px solid var(--color-glass-border);
-  background: linear-gradient(135deg, rgba(134, 108, 208, 0.15) 0%, rgba(161, 144, 237, 0.15) 100%);
+  background: var(--app-astrologer-picker-item-avatar-background);
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -772,7 +1215,7 @@ textarea:focus-visible {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: var(--app-astrologer-picker-item-avatar-img-border-radius);
 }
 
 .astrologer-picker-item-avatar-fallback {
@@ -781,7 +1224,7 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: var(--app-astrologer-picker-item-avatar-placeholder-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary);
 }
@@ -800,13 +1243,13 @@ textarea:focus-visible {
 }
 
 .astrologer-picker-item-name {
-  font-size: 0.95rem;
+  font-size: var(--app-astrologer-picker-item-name-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
 .astrologer-picker-item-bio {
-  font-size: 0.8rem;
+  font-size: var(--app-astrologer-picker-item-bio-font-size);
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -860,18 +1303,18 @@ textarea:focus-visible {
 
 .astrologers-page-header h1 {
   margin: 0;
-  font-size: clamp(2.4rem, 4vw, 4rem);
-  line-height: 0.96;
-  letter-spacing: -0.04em;
+  font-size: var(--app-astrologers-page-header-h1-font-size);
+  line-height: var(--app-astrologers-page-header-h1-line-height);
+  letter-spacing: var(--app-astrologers-page-header-h1-letter-spacing);
   color: var(--app-astro-catalog-title-color);
-  text-shadow: 0 10px 25px rgba(164, 139, 255, 0.12);
+  text-shadow: var(--app-astrologers-page-header-h1-text-shadow);
 }
 
 .astrologers-page-header p {
   max-width: 760px;
   margin: 1rem 0 0;
-  font-size: 1.02rem;
-  line-height: 1.7;
+  font-size: var(--app-astrologers-page-header-p-font-size);
+  line-height: var(--app-astrologers-page-header-p-line-height);
   color: var(--app-astro-catalog-copy-color);
 }
 
@@ -893,13 +1336,13 @@ textarea:focus-visible {
 }
 
 .astrologer-grid-empty-icon {
-  font-size: 3rem;
+  font-size: var(--app-astrologer-grid-empty-icon-font-size);
   margin-bottom: 1rem;
 }
 
 .astrologer-grid-empty p {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: var(--app-astrologer-grid-empty-p-font-size);
 }
 
 /* Astrologer Card */
@@ -916,52 +1359,34 @@ textarea:focus-visible {
   align-items: flex-start;
   padding: 1.7rem 1.55rem 1.55rem;
   min-height: 100%;
-  background:
-    radial-gradient(circle at 20% 14%, rgba(255, 255, 255, 0.68), transparent 28%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.42)),
-    rgba(255, 255, 255, 0.56);
+  background: var(--app-astrologer-card-background);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(136, 112, 211, 0.18);
-  border-radius: 24px;
+  border: var(--app-astrologer-card-border);
+  border-radius: var(--app-astrologer-card-border-radius);
   cursor: pointer;
   text-align: left;
   transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease;
   color: inherit;
-  font-weight: normal;
+  font-weight: var(--font-weight-regular);
   overflow: hidden;
-  box-shadow:
-    0 24px 64px rgba(64, 42, 102, 0.14),
-    0 14px 34px rgba(115, 88, 180, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  box-shadow: var(--app-astrologer-card-box-shadow);
   will-change: transform, box-shadow;
 }
 
 .astrologer-card:hover {
   transform: translateY(-8px) scale(1.022);
-  border-color: color-mix(in srgb, var(--astro-accent) 46%, rgba(255, 255, 255, 0.28) 54%);
-  background:
-    radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.82), transparent 30%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.52)),
-    rgba(255, 255, 255, 0.68);
-  box-shadow:
-    0 30px 72px color-mix(in srgb, var(--astro-glow) 38%, rgba(72, 54, 110, 0.16) 62%),
-    0 16px 34px rgba(107, 86, 169, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  border-color: var(--app-astrologer-card-border-color);
+  background: var(--app-astrologer-card-background-2);
+  box-shadow: var(--app-astrologer-card-box-shadow-2);
 }
 
 .astrologer-card--featured {
   grid-column: span 2;
   padding: 2.18rem 1.95rem 1.92rem;
-  background:
-    radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--astro-glow) 52%, rgba(255, 255, 255, 0.18) 48%), transparent 28%),
-    radial-gradient(circle at 10% 8%, rgba(255, 255, 255, 0.68), transparent 24%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.58));
-  border-color: color-mix(in srgb, var(--astro-accent) 40%, rgba(255, 255, 255, 0.32) 60%);
-  box-shadow:
-    0 34px 86px rgba(95, 69, 155, 0.2),
-    0 16px 34px rgba(126, 103, 187, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  background: var(--app-astrologer-card-featured-background);
+  border-color: var(--app-astrologer-card-featured-border-color);
+  box-shadow: var(--app-astrologer-card-featured-box-shadow);
 }
 
 .astrologer-card--featured:hover {
@@ -969,16 +1394,16 @@ textarea:focus-visible {
 }
 
 .astrologer-card--featured .astrologer-card-name {
-  font-size: 1.52rem;
+  font-size: var(--app-astrologer-card-featured-name-font-size);
 }
 
 .astrologer-card--featured .astrologer-card-style {
-  font-size: 1rem;
+  font-size: var(--app-astrologer-card-featured-style-font-size);
 }
 
 .astrologer-card--featured .astrologer-card-bio {
   max-width: 64ch;
-  font-size: 0.99rem;
+  font-size: var(--app-astrologer-card-featured-bio-font-size);
 }
 
 .astrologer-card-orbit {
@@ -994,7 +1419,7 @@ textarea:focus-visible {
   right: -8px;
   width: 120px;
   height: 120px;
-  background: radial-gradient(circle, var(--astro-glow) 0%, transparent 70%);
+  background: var(--app-astrologer-card-orbit-one-background);
   animation: astrologer-orbit-drift 8s ease-in-out infinite;
 }
 
@@ -1003,7 +1428,7 @@ textarea:focus-visible {
   left: -18px;
   width: 110px;
   height: 110px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  background: var(--app-astrologer-card-orbit-two-background);
   animation: astrologer-orbit-drift 10s ease-in-out infinite reverse;
 }
 
@@ -1031,10 +1456,10 @@ textarea:focus-visible {
   width: 1.85rem;
   height: 1.85rem;
   border-radius: var(--radius-full);
-  color: #fff8ff;
-  background: color-mix(in srgb, var(--astro-accent) 48%, rgba(255, 255, 255, 0.35) 52%);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--astro-glow) 72%, transparent 28%);
-  font-size: 0.92rem;
+  color: var(--app-astrologer-card-icon-color);
+  background: var(--app-astrologer-card-icon-background);
+  box-shadow: var(--app-astrologer-card-icon-box-shadow);
+  font-size: var(--app-astrologer-card-icon-font-size);
 }
 
 .astrologer-card-featured-badge {
@@ -1043,14 +1468,14 @@ textarea:focus-visible {
   gap: 0.38rem;
   padding: 0.42rem 0.8rem;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid color-mix(in srgb, var(--astro-accent) 26%, rgba(255, 255, 255, 0.34) 74%);
-  color: color-mix(in srgb, var(--astro-accent) 72%, #3a2d5a 28%);
-  font-size: 0.74rem;
+  background: var(--app-astrologer-card-featured-badge-background);
+  border: var(--app-astrologer-card-featured-badge-border);
+  color: var(--app-astrologer-card-featured-badge-color);
+  font-size: var(--app-astrologer-card-featured-badge-font-size);
   font-weight: var(--font-weight-bold);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--app-astrologer-card-featured-badge-letter-spacing);
   text-transform: uppercase;
-  box-shadow: 0 10px 24px rgba(129, 100, 192, 0.12);
+  box-shadow: var(--app-astrologer-card-featured-badge-box-shadow);
 }
 
 .astrologer-card-provider-badge {
@@ -1058,48 +1483,44 @@ textarea:focus-visible {
   align-items: center;
   padding: 0.34rem 0.66rem;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  background: rgba(255, 255, 255, 0.46);
-  color: #4a4f7a;
-  font-size: 0.68rem;
+  border: var(--app-astrologer-card-provider-badge-border);
+  background: var(--app-astrologer-card-provider-badge-background);
+  color: var(--app-astrologer-card-provider-badge-color);
+  font-size: var(--app-astrologer-card-provider-badge-font-size);
   font-weight: var(--font-weight-bold);
-  letter-spacing: 0.05em;
+  letter-spacing: var(--app-astrologer-card-provider-badge-letter-spacing);
   text-transform: uppercase;
-  box-shadow: 0 8px 18px rgba(129, 100, 192, 0.1);
+  box-shadow: var(--app-astrologer-card-provider-badge-box-shadow);
 }
 
 .astrologer-card-provider-badge--ia {
-  border-color: color-mix(in srgb, var(--astro-accent) 28%, rgba(255, 255, 255, 0.44) 72%);
-  color: color-mix(in srgb, var(--astro-accent) 68%, #3d4b7f 32%);
+  border-color: var(--app-astrologer-card-provider-badge-ia-border-color);
+  color: var(--app-astrologer-card-provider-badge-ia-color);
 }
 
 .astrologer-card-provider-badge--real {
-  border-color: rgba(215, 180, 120, 0.5);
-  color: #a87332;
-  background: rgba(255, 248, 236, 0.58);
+  border-color: var(--app-astrologer-card-provider-badge-real-border-color);
+  color: var(--app-astrologer-card-provider-badge-real-color);
+  background: var(--app-astrologer-card-provider-badge-real-background);
 }
 
 .astrologer-card-featured-badge::before {
   content: "★";
-  font-size: 0.82rem;
+  font-size: var(--app-astrologer-card-featured-badge-font-size-2);
 }
 
 .astrologer-card-avatar {
   position: relative;
   width: 104px;
   height: 104px;
-  border-radius: 50%;
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)),
-    color-mix(in srgb, var(--astro-accent) 18%, rgba(15, 10, 30, 0.82) 82%);
-  border: 1px solid color-mix(in srgb, var(--astro-accent) 40%, rgba(255, 255, 255, 0.08) 60%);
+  border-radius: var(--app-astrologer-card-avatar-border-radius);
+  background: var(--app-astrologer-card-avatar-background);
+  border: var(--app-astrologer-card-avatar-border);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1.15rem;
-  box-shadow:
-    0 0 22px color-mix(in srgb, var(--astro-glow) 84%, transparent 16%),
-    0 14px 26px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--app-astrologer-card-avatar-box-shadow);
   z-index: 1;
   transition: transform 0.28s ease, box-shadow 0.28s ease;
 }
@@ -1108,9 +1529,8 @@ textarea:focus-visible {
   content: "";
   position: absolute;
   inset: -14px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 22%, color-mix(in srgb, var(--astro-glow) 82%, rgba(255, 255, 255, 0.24) 18%) 34%, color-mix(in srgb, var(--astro-glow) 42%, transparent 58%) 52%, transparent 74%);
+  border-radius: var(--app-astrologer-card-avatar-border-radius);
+  background: var(--app-astrologer-card-avatar-background-2);
   opacity: 0.98;
   filter: blur(14px);
   z-index: -1;
@@ -1121,13 +1541,9 @@ textarea:focus-visible {
   content: "";
   position: absolute;
   inset: -5px;
-  border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--astro-accent) 56%, rgba(255, 255, 255, 0.76) 44%);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.58),
-    0 0 0 3px color-mix(in srgb, var(--astro-glow) 18%, transparent 82%),
-    0 0 24px color-mix(in srgb, var(--astro-glow) 78%, transparent 22%),
-    inset 0 0 12px rgba(255, 255, 255, 0.18);
+  border-radius: var(--app-astrologer-card-avatar-border-radius);
+  border: var(--app-astrologer-card-avatar-border-2);
+  box-shadow: var(--app-astrologer-card-avatar-box-shadow-2);
   pointer-events: none;
 }
 
@@ -1137,13 +1553,13 @@ textarea:focus-visible {
 }
 
 .astrologer-card-avatar-icon {
-  font-size: 2.3rem;
+  font-size: var(--app-astrologer-card-avatar-icon-font-size);
 }
 
 .astrologer-card-avatar-img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: var(--app-astrologer-card-avatar-img-border-radius);
   object-fit: cover;
   transform: scale(1.08);
   transition: transform 0.28s ease;
@@ -1151,24 +1567,24 @@ textarea:focus-visible {
 
 .astrologer-card-name {
   margin: 0 0 0.18rem;
-  font-size: 1.24rem;
+  font-size: var(--app-astrologer-card-name-font-size);
   font-weight: var(--font-weight-bold);
-  color: #2d2144;
-  letter-spacing: -0.02em;
+  color: var(--app-astrologer-card-name-color);
+  letter-spacing: var(--app-astrologer-card-name-letter-spacing);
 }
 
 .astrologer-card-display-name {
   margin-bottom: 0.52rem;
-  color: rgba(84, 63, 126, 0.5);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  color: var(--app-astrologer-card-display-name-color);
+  font-size: var(--app-astrologer-card-display-name-font-size);
+  letter-spacing: var(--app-astrologer-card-display-name-letter-spacing);
   text-transform: uppercase;
 }
 
 .astrologer-card-style {
   margin: 0 0 0.85rem;
-  font-size: 0.94rem;
-  color: color-mix(in srgb, var(--astro-accent) 76%, #3a2d5a 24%);
+  font-size: var(--app-astrologer-card-style-font-size);
+  color: var(--app-astrologer-card-style-color);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -1176,7 +1592,7 @@ textarea:focus-visible {
   width: 100%;
   height: 1px;
   margin-bottom: 1.05rem;
-  background: linear-gradient(90deg, rgba(114, 88, 182, 0.18), transparent 100%);
+  background: var(--app-astrologer-card-divider-background);
 }
 
 .astrologer-card-specialties {
@@ -1190,41 +1606,33 @@ textarea:focus-visible {
 .astrologer-card-tag {
   padding: 0.36rem 0.72rem;
   border-radius: var(--radius-full);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.24)),
-    rgba(255, 255, 255, 0.24);
-  border: 1px solid color-mix(in srgb, var(--astro-chip-border) 74%, rgba(255, 255, 255, 0.34) 26%);
+  background: var(--app-astrologer-card-tag-background);
+  border: var(--app-astrologer-card-tag-border);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  font-size: 0.76rem;
+  font-size: var(--app-astrologer-card-tag-font-size);
   color: var(--astro-chip-text);
   font-weight: var(--font-weight-semibold);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.32),
-    0 4px 10px rgba(138, 114, 201, 0.08);
+  box-shadow: var(--app-astrologer-card-tag-box-shadow);
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .astrologer-card:hover .astrologer-card-tag {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--astro-accent) 42%, rgba(255, 255, 255, 0.36) 58%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 8px 18px color-mix(in srgb, var(--astro-glow) 30%, transparent 70%);
+  border-color: var(--app-astrologer-card-tag-accent-border-color);
+  box-shadow: var(--app-astrologer-card-tag-accent-box-shadow);
 }
 
 .astrologer-card-bio {
   margin: 0;
-  font-size: 0.92rem;
-  color: rgba(73, 53, 109, 0.7);
-  line-height: 1.62;
+  font-size: var(--app-astrologer-card-bio-font-size);
+  color: var(--app-astrologer-card-bio-color);
+  line-height: var(--app-astrologer-card-bio-line-height);
 }
 
 .astrologer-card:hover .astrologer-card-avatar {
   transform: scale(1.08);
-  box-shadow:
-    0 0 32px color-mix(in srgb, var(--astro-glow) 94%, transparent 6%),
-    0 18px 30px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--app-astrologer-card-featured-avatar-box-shadow);
 }
 
 .astrologer-card:hover .astrologer-card-avatar::before {
@@ -1234,11 +1642,7 @@ textarea:focus-visible {
 }
 
 .astrologer-card:hover .astrologer-card-avatar::after {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.7),
-    0 0 0 4px color-mix(in srgb, var(--astro-glow) 22%, transparent 78%),
-    0 0 30px color-mix(in srgb, var(--astro-glow) 84%, transparent 16%),
-    inset 0 0 14px rgba(255, 255, 255, 0.22);
+  box-shadow: var(--app-astrologer-card-featured-avatar-highlight-box-shadow);
 }
 
 .astrologer-card:hover .astrologer-card-avatar-img {
@@ -1304,7 +1708,7 @@ textarea:focus-visible {
   backdrop-filter: blur(var(--surface-glass-blur));
   -webkit-backdrop-filter: blur(var(--surface-glass-blur));
   border: 1px solid var(--color-glass-border);
-  border-radius: 16px;
+  border-radius: var(--app-astrologer-profile-header-border-radius);
   padding: 2rem;
   box-shadow: var(--shadow-card);
 }
@@ -1319,8 +1723,8 @@ textarea:focus-visible {
 .astrologer-profile-avatar {
   width: 96px;
   height: 96px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(102, 230, 255, 0.2) 0%, rgba(0, 211, 167, 0.2) 100%);
+  border-radius: var(--app-astrologer-profile-avatar-border-radius);
+  background: var(--app-astrologer-profile-avatar-background);
   border: 3px solid var(--color-primary);
   display: flex;
   align-items: center;
@@ -1329,13 +1733,13 @@ textarea:focus-visible {
 }
 
 .astrologer-profile-avatar-icon {
-  font-size: 2.5rem;
+  font-size: var(--app-astrologer-profile-avatar-icon-font-size);
 }
 
 .astrologer-profile-avatar-img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: var(--app-astrologer-profile-avatar-img-border-radius);
   object-fit: cover;
 }
 
@@ -1345,19 +1749,19 @@ textarea:focus-visible {
 
 .astrologer-profile-name {
   margin: 0 0 0.35rem;
-  font-size: 1.75rem;
+  font-size: var(--app-astrologer-profile-name-font-size);
   color: var(--color-text-primary);
 }
 
 .astrologer-profile-style {
   margin: 0 0 0.25rem;
-  font-size: 1rem;
+  font-size: var(--app-astrologer-profile-style-font-size);
   color: var(--color-primary);
 }
 
 .astrologer-profile-experience {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-profile-experience-font-size);
   color: var(--color-text-secondary);
 }
 
@@ -1374,10 +1778,10 @@ textarea:focus-visible {
 .astrologer-profile-specialties h3,
 .astrologer-profile-languages h3 {
   margin: 0 0 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--app-astrologer-profile-specialties-h3-font-size);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--app-astrologer-profile-specialties-h3-letter-spacing);
 }
 
 .astrologer-profile-languages p {
@@ -1393,24 +1797,24 @@ textarea:focus-visible {
 
 .astrologer-profile-tag {
   padding: 0.3rem 0.75rem;
-  border-radius: 12px;
-  background: rgba(102, 230, 255, 0.1);
-  border: 1px solid rgba(102, 230, 255, 0.25);
-  font-size: 0.85rem;
+  border-radius: var(--app-astrologer-profile-tag-border-radius);
+  background: var(--app-astrologer-profile-tag-background);
+  border: var(--app-astrologer-profile-tag-border);
+  font-size: var(--app-astrologer-profile-tag-font-size);
   color: var(--color-text-primary);
 }
 
 .astrologer-profile-bio h3 {
   margin: 0 0 0.75rem;
-  font-size: 0.85rem;
+  font-size: var(--app-astrologer-profile-bio-h3-font-size);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--app-astrologer-profile-bio-h3-letter-spacing);
 }
 
 .astrologer-profile-bio p {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--app-astrologer-profile-bio-p-font-size);
   color: var(--color-text-primary);
   line-height: var(--line-height-relaxed);
 }
@@ -1424,7 +1828,7 @@ textarea:focus-visible {
 .astrologer-profile-cta {
   flex: 1;
   padding: 0.85rem 1.5rem;
-  font-size: 1rem;
+  font-size: var(--app-astrologer-profile-cta-font-size);
 }
 
 /* Astrologers Page */
@@ -1434,7 +1838,7 @@ textarea:focus-visible {
 
 .astrologers-page-header h1 {
   margin: 0 0 0.5rem;
-  font-size: 1.75rem;
+  font-size: var(--app-astrologers-page-header-h1-font-size-2);
   color: var(--color-text-primary);
 }
 
@@ -1453,10 +1857,10 @@ textarea:focus-visible {
 .astrologers-page-error {
   padding: 1rem;
   margin-top: 1rem;
-  border-radius: 10px;
-  background: rgba(255, 107, 129, 0.1);
-  border: 1px solid rgba(255, 107, 129, 0.4);
-  color: #ffd7de;
+  border-radius: var(--app-astrologers-page-error-border-radius);
+  background: var(--app-astrologers-page-error-background);
+  border: var(--app-astrologers-page-error-border);
+  color: var(--app-astrologers-page-error-color);
 }
 
 /* Astrologer Profile Page */
@@ -1466,14 +1870,14 @@ textarea:focus-visible {
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-profile-page-back-font-size);
   background: transparent;
   border: 1px solid var(--color-line);
   color: var(--color-text-primary);
 }
 
 .astrologer-profile-page-back:hover {
-  background: rgba(102, 230, 255, 0.05);
+  background: var(--app-astrologer-profile-page-back-background);
   border-color: var(--color-primary);
 }
 
@@ -1490,7 +1894,7 @@ textarea:focus-visible {
 
 .astrologer-profile-page-not-found-icon,
 .astrologer-profile-page-error-icon {
-  font-size: 3rem;
+  font-size: var(--app-astrologer-profile-page-not-found-icon-font-size);
   margin-bottom: 1rem;
 }
 
@@ -1515,11 +1919,11 @@ textarea:focus-visible {
 
 @media (max-width: 768px) {
   .astrologers-page-header h1 {
-    font-size: 2.35rem;
+    font-size: var(--app-astrologers-page-header-h1-font-size-3);
   }
 
   .astrologers-page-header p {
-    font-size: 0.95rem;
+    font-size: var(--app-astrologers-page-header-p-font-size-2);
   }
 
   .astrologer-grid {
@@ -1553,11 +1957,7 @@ textarea:focus-visible {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background:
-    radial-gradient(circle at 50% 16%, rgba(118, 179, 255, 0.1), transparent 26%),
-    radial-gradient(circle at 18% 22%, rgba(160, 132, 255, 0.12), transparent 30%),
-    radial-gradient(circle at 82% 72%, rgba(255, 191, 215, 0.1), transparent 32%),
-    linear-gradient(180deg, #fffafc 0%, #f6efff 48%, #efe6ff 100%);
+  background: var(--app-premium-page-layout-background);
   min-height: 100vh;
   padding: 2rem;
 }
@@ -1584,16 +1984,16 @@ textarea:focus-visible {
 }
 
 .premium-hero-title {
-  font-size: clamp(2.4rem, 4vw, 4rem);
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: #2b1f44;
+  font-size: var(--app-premium-hero-title-font-size);
+  line-height: var(--app-premium-hero-title-line-height);
+  letter-spacing: var(--app-premium-hero-title-letter-spacing);
+  color: var(--app-premium-hero-title-color);
   margin-bottom: 1rem;
 }
 
 .premium-hero-subtitle {
-  font-size: 1.1rem;
-  color: rgba(69, 50, 103, 0.7);
+  font-size: var(--app-premium-hero-subtitle-font-size);
+  color: var(--app-premium-hero-subtitle-color);
   max-width: 600px;
   margin: 0 auto;
 }
@@ -1614,22 +2014,22 @@ textarea:focus-visible {
   align-items: center;
   gap: 2rem;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--app-consultation-card-premium-background);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(136, 112, 211, 0.15);
-  border-radius: 24px;
+  border: var(--app-consultation-card-premium-border);
+  border-radius: var(--app-consultation-card-premium-border-radius);
   text-decoration: none;
   color: inherit;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 30px rgba(64, 42, 102, 0.05);
+  box-shadow: var(--app-consultation-card-premium-box-shadow);
 }
 
 .consultation-card-premium:hover {
   transform: translateY(-4px) scale(1.01);
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(134, 108, 208, 0.4);
-  box-shadow: 0 20px 40px rgba(64, 42, 102, 0.1);
+  background: var(--app-consultation-card-premium-background-2);
+  border-color: var(--app-consultation-card-premium-border-color);
+  box-shadow: var(--app-consultation-card-premium-box-shadow-2);
 }
 
 .consultation-card-premium--locked {
@@ -1638,19 +2038,19 @@ textarea:focus-visible {
 
 .consultation-card-premium--locked:hover {
   transform: none;
-  background: rgba(255, 255, 255, 0.72);
-  border-color: rgba(134, 108, 208, 0.22);
-  box-shadow: 0 12px 28px rgba(64, 42, 102, 0.08);
+  background: var(--app-consultation-card-premium-locked-background);
+  border-color: var(--app-consultation-card-premium-locked-border-color);
+  box-shadow: var(--app-consultation-card-premium-locked-box-shadow);
 }
 
 .consultation-card-premium-icon {
-  font-size: 3rem;
+  font-size: var(--app-consultation-card-premium-icon-font-size);
   width: 80px;
   height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(160, 132, 255, 0.1);
+  background: var(--app-consultation-card-premium-icon-background);
   border-radius: var(--radius-lg);
   flex-shrink: 0;
 }
@@ -1660,15 +2060,15 @@ textarea:focus-visible {
 }
 
 .consultation-card-premium-title {
-  font-size: 1.5rem;
+  font-size: var(--app-consultation-card-premium-title-font-size);
   font-weight: var(--font-weight-bold);
-  color: #2b1f44;
+  color: var(--app-consultation-card-premium-title-color);
   margin: 0 0 0.5rem;
 }
 
 .consultation-card-premium-subtitle {
-  font-size: 1rem;
-  color: rgba(69, 50, 103, 0.6);
+  font-size: var(--app-consultation-card-premium-subtitle-font-size);
+  color: var(--app-consultation-card-premium-subtitle-color);
   margin: 0 0 1rem;
 }
 
@@ -1680,27 +2080,27 @@ textarea:focus-visible {
 
 .consultation-premium-tag {
   padding: 0.25rem 0.75rem;
-  background: rgba(160, 132, 255, 0.08);
-  border: 1px solid rgba(160, 132, 255, 0.2);
+  background: var(--app-consultation-premium-tag-background);
+  border: var(--app-consultation-premium-tag-border);
   border-radius: var(--radius-full);
-  font-size: 0.8rem;
+  font-size: var(--app-consultation-premium-tag-font-size);
   font-weight: var(--font-weight-semibold);
-  color: #5c438f;
+  color: var(--app-consultation-premium-tag-color);
 }
 
 .premium-cta-inline {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #866cd0 0%, #a190ed 100%);
+  background: var(--app-premium-cta-inline-background);
   color: white;
   border-radius: var(--radius-full);
   font-weight: var(--font-weight-semibold);
-  box-shadow: 0 8px 16px rgba(134, 108, 208, 0.3);
+  box-shadow: var(--app-premium-cta-inline-box-shadow);
   transition: all 0.2s ease;
 }
 
 .consultation-card-premium:hover .premium-cta-inline {
   transform: scale(1.05);
-  box-shadow: 0 10px 20px rgba(134, 108, 208, 0.4);
+  box-shadow: var(--app-premium-cta-inline-hover-box-shadow);
 }
 
 .consultation-card-premium-action .upgrade-cta {
@@ -1708,7 +2108,7 @@ textarea:focus-visible {
 }
 
 .consultation-card-premium--alt {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(160, 132, 255, 0.1));
+  background: var(--app-consultation-card-premium-alt-background);
   border-style: dashed;
 }
 
@@ -1719,9 +2119,9 @@ textarea:focus-visible {
 }
 
 .premium-section-title {
-  font-size: 1.75rem;
+  font-size: var(--app-premium-section-title-font-size);
   font-weight: var(--font-weight-bold);
-  color: #2b1f44;
+  color: var(--app-premium-section-title-color);
   margin-bottom: 2rem;
   text-align: center;
 }
@@ -1734,8 +2134,8 @@ textarea:focus-visible {
 
 .consultation-history-card-premium {
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(136, 112, 211, 0.1);
+  background: var(--app-consultation-history-card-premium-background);
+  border: var(--app-consultation-history-card-premium-border);
   border-radius: var(--radius-lg);
   text-decoration: none;
   color: inherit;
@@ -1743,8 +2143,8 @@ textarea:focus-visible {
 }
 
 .consultation-history-card-premium:hover {
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(134, 108, 208, 0.3);
+  background: var(--app-consultation-history-card-premium-background-2);
+  border-color: var(--app-consultation-history-card-premium-border-color);
   transform: translateY(-2px);
 }
 
@@ -1756,14 +2156,14 @@ textarea:focus-visible {
 }
 
 .consultation-history-card-icon {
-  font-size: 1.5rem;
+  font-size: var(--app-consultation-history-card-icon-font-size);
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(160, 132, 255, 0.05);
-  border-radius: 10px;
+  background: var(--app-consultation-history-card-icon-background);
+  border-radius: var(--app-consultation-history-card-icon-border-radius);
 }
 
 .consultation-history-card-meta {
@@ -1773,17 +2173,17 @@ textarea:focus-visible {
 
 .consultation-history-card-type {
   font-weight: var(--font-weight-semibold);
-  color: #2b1f44;
+  color: var(--app-consultation-history-card-type-color);
 }
 
 .consultation-history-card-date {
-  font-size: 0.8rem;
-  color: rgba(69, 50, 103, 0.5);
+  font-size: var(--app-consultation-history-card-date-font-size);
+  color: var(--app-consultation-history-card-date-color);
 }
 
 .consultation-history-card-context {
-  font-size: 0.9rem;
-  color: rgba(69, 50, 103, 0.7);
+  font-size: var(--app-consultation-history-card-context-font-size);
+  color: var(--app-consultation-history-card-context-color);
   line-height: var(--line-height-normal);
   margin: 0;
 }
@@ -1800,9 +2200,9 @@ textarea:focus-visible {
 .premium-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(134, 108, 208, 0.1);
+  border: var(--app-premium-spinner-border);
   border-top-color: var(--color-primary);
-  border-radius: 50%;
+  border-radius: var(--app-premium-spinner-border-radius);
   animation: spin 1s linear infinite;
 }
 
@@ -1830,7 +2230,7 @@ textarea:focus-visible {
   }
 
   .premium-hero-title {
-    font-size: 2.5rem;
+    font-size: var(--app-premium-hero-title-font-size-2);
   }
 }
 
@@ -1846,7 +2246,7 @@ textarea:focus-visible {
 
 .consultations-page-header h1 {
   margin: 0 0 0.5rem;
-  font-size: 1.75rem;
+  font-size: var(--app-consultations-page-header-h1-font-size);
   color: var(--color-text-primary);
 }
 
@@ -1875,9 +2275,9 @@ textarea:focus-visible {
   flex-direction: column;
   align-items: center;
   padding: 1.5rem 1rem;
-  background: rgba(102, 230, 255, 0.05);
+  background: var(--app-consultations-type-preview-card-background);
   border: 1px solid var(--color-line);
-  border-radius: 12px;
+  border-radius: var(--app-consultations-type-preview-card-border-radius);
   text-decoration: none;
   color: var(--color-text-primary);
   transition: all 0.2s ease;
@@ -1885,23 +2285,23 @@ textarea:focus-visible {
 
 .consultations-type-preview-card:hover {
   border-color: var(--color-primary);
-  background: rgba(102, 230, 255, 0.1);
+  background: var(--app-consultations-type-preview-card-background-2);
   transform: translateY(-2px);
 }
 
 .consultations-type-preview-icon {
-  font-size: 2rem;
+  font-size: var(--app-consultations-type-preview-icon-font-size);
   margin-bottom: 0.5rem;
 }
 
 .consultations-type-preview-label {
-  font-size: 0.9rem;
+  font-size: var(--app-consultations-type-preview-label-font-size);
   text-align: center;
 }
 
 .consultations-history-section h2 {
   margin: 0 0 1rem;
-  font-size: 1.25rem;
+  font-size: var(--app-consultations-history-section-h2-font-size);
   color: var(--color-text-primary);
 }
 
@@ -1931,11 +2331,11 @@ textarea:focus-visible {
 }
 
 .consultations-history-link:hover {
-  background: rgba(102, 230, 255, 0.05);
+  background: var(--app-consultations-history-link-background);
 }
 
 .consultations-history-icon {
-  font-size: 1.5rem;
+  font-size: var(--app-consultations-history-icon-font-size);
 }
 
 .consultations-history-info {
@@ -1947,17 +2347,17 @@ textarea:focus-visible {
 
 .consultations-history-type {
   font-weight: var(--font-weight-medium);
-  font-size: 0.9rem;
+  font-size: var(--app-consultations-history-type-font-size);
 }
 
 .consultations-history-date {
-  font-size: 0.8rem;
+  font-size: var(--app-consultations-history-date-font-size);
   color: var(--color-text-secondary);
 }
 
 .consultations-history-context {
   flex: 1;
-  font-size: 0.85rem;
+  font-size: var(--app-consultations-history-context-font-size);
   color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2011,8 +2411,8 @@ textarea:focus-visible {
   justify-content: center;
   background: var(--color-bg-2);
   border: 2px solid var(--color-line);
-  border-radius: 50%;
-  font-size: 0.85rem;
+  border-radius: var(--app-wizard-progress-number-border-radius);
+  font-size: var(--app-wizard-progress-number-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
 }
@@ -2020,17 +2420,17 @@ textarea:focus-visible {
 .wizard-progress-step--current .wizard-progress-number {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: rgba(102, 230, 255, 0.1);
+  background: var(--app-wizard-progress-current-number-background);
 }
 
 .wizard-progress-step--completed .wizard-progress-number {
   border-color: var(--color-success);
   background: var(--color-success);
-  color: #fff;
+  color: var(--app-wizard-progress-completed-number-color);
 }
 
 .wizard-progress-label {
-  font-size: 0.75rem;
+  font-size: var(--app-wizard-progress-label-font-size);
   color: var(--color-text-secondary);
 }
 
@@ -2067,7 +2467,7 @@ textarea:focus-visible {
 
 .wizard-step-title {
   margin: 0 0 1.75rem;
-  font-size: 1.4rem;
+  font-size: var(--app-wizard-step-title-font-size);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
@@ -2082,9 +2482,9 @@ textarea:focus-visible {
 .wizard-error {
   padding: 1rem;
   border-radius: var(--radius-sm);
-  background: rgba(255, 107, 129, 0.1);
-  border: 1px solid rgba(255, 107, 129, 0.4);
-  color: #ffd7de;
+  background: var(--app-wizard-error-background);
+  border: var(--app-wizard-error-border);
+  color: var(--app-wizard-error-color);
   margin-top: 1rem;
 }
 
@@ -2116,33 +2516,33 @@ textarea:focus-visible {
   gap: 0.75rem;
   padding: 1.5rem;
   background: var(--color-glass-bg);
-  border: 1.5px solid rgba(134, 108, 208, 0.15);
-  border-radius: 16px;
+  border: var(--app-consultation-type-card-border);
+  border-radius: var(--app-consultation-type-card-border-radius);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 16px rgba(64, 42, 102, 0.04);
+  box-shadow: var(--app-consultation-type-card-box-shadow);
   text-decoration: none;
 }
 
 .consultation-type-card:hover {
   border-color: var(--color-primary);
-  background: rgba(134, 108, 208, 0.07);
-  box-shadow: 0 8px 24px rgba(64, 42, 102, 0.1);
+  background: var(--app-consultation-type-card-background);
+  box-shadow: var(--app-consultation-type-card-box-shadow-2);
   transform: translateY(-2px);
 }
 
 .consultation-type-card--selected {
   border-color: var(--color-primary);
-  background: rgba(134, 108, 208, 0.1);
-  box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.2);
+  background: var(--app-consultation-type-card-selected-background);
+  box-shadow: var(--app-consultation-type-card-selected-box-shadow);
 }
 
 .consultation-type-icon {
-  font-size: 2.5rem;
+  font-size: var(--app-consultation-type-icon-font-size);
 }
 
 .consultation-type-label {
-  font-size: 0.95rem;
+  font-size: var(--app-consultation-type-label-font-size);
   font-weight: var(--font-weight-medium);
   text-align: center;
   color: var(--color-text-primary);
@@ -2163,24 +2563,24 @@ textarea:focus-visible {
   gap: 0.5rem;
   padding: 1rem;
   background: var(--color-glass-bg);
-  border: 1.5px solid rgba(134, 108, 208, 0.15);
+  border: var(--app-astrologer-option-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(64, 42, 102, 0.04);
+  box-shadow: var(--app-astrologer-option-box-shadow);
 }
 
 .astrologer-option:hover {
   border-color: var(--color-primary);
-  background: rgba(134, 108, 208, 0.07);
-  box-shadow: 0 6px 18px rgba(64, 42, 102, 0.1);
+  background: var(--app-astrologer-option-background);
+  box-shadow: var(--app-astrologer-option-box-shadow-2);
   transform: translateY(-2px);
 }
 
 .astrologer-option--selected {
   border-color: var(--color-primary);
-  background: rgba(134, 108, 208, 0.1);
-  box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.2);
+  background: var(--app-astrologer-option-selected-background);
+  box-shadow: var(--app-astrologer-option-selected-box-shadow);
 }
 
 .astrologer-option--auto {
@@ -2190,13 +2590,13 @@ textarea:focus-visible {
 }
 
 .astrologer-option-icon {
-  font-size: 1.5rem;
+  font-size: var(--app-astrologer-option-icon-font-size);
 }
 
 .astrologer-option-avatar {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  border-radius: var(--app-astrologer-option-avatar-border-radius);
   overflow: hidden;
   background: var(--color-bg-2);
   display: flex;
@@ -2211,7 +2611,7 @@ textarea:focus-visible {
 }
 
 .astrologer-option-avatar-fallback {
-  font-size: 1.5rem;
+  font-size: var(--app-astrologer-option-avatar-placeholder-font-size);
 }
 
 .astrologer-option-info {
@@ -2223,17 +2623,17 @@ textarea:focus-visible {
 
 .astrologer-option-name {
   font-weight: var(--font-weight-medium);
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-option-name-font-size);
   color: var(--color-text-primary);
 }
 
 .astrologer-option-style {
-  font-size: 0.75rem;
+  font-size: var(--app-astrologer-option-style-font-size);
   color: var(--color-text-secondary);
 }
 
 .astrologer-option-label {
-  font-size: 0.9rem;
+  font-size: var(--app-astrologer-option-label-font-size);
   color: var(--color-text-primary);
 }
 
@@ -2250,39 +2650,39 @@ textarea:focus-visible {
   align-items: center;
   gap: 0.75rem;
   padding: 1.5rem;
-  background: rgba(102, 230, 255, 0.03);
+  background: var(--app-drawing-option-card-background);
   border: 2px solid var(--color-line);
-  border-radius: 12px;
+  border-radius: var(--app-drawing-option-card-border-radius);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .drawing-option-card:hover {
   border-color: var(--color-primary);
-  background: rgba(102, 230, 255, 0.08);
+  background: var(--app-drawing-option-card-background-2);
 }
 
 .drawing-option-card--selected {
   border-color: var(--color-primary);
-  background: rgba(102, 230, 255, 0.12);
-  box-shadow: 0 0 0 3px rgba(102, 230, 255, 0.2);
+  background: var(--app-drawing-option-card-selected-background);
+  box-shadow: var(--app-drawing-option-card-selected-box-shadow);
 }
 
 .drawing-option-icon {
-  font-size: 2rem;
+  font-size: var(--app-drawing-option-icon-font-size);
 }
 
 .drawing-option-label {
-  font-size: 0.9rem;
+  font-size: var(--app-drawing-option-label-font-size);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
 }
 
 /* Validation Step */
 .validation-summary {
-  background: rgba(102, 230, 255, 0.03);
+  background: var(--app-validation-summary-background);
   border: 1px solid var(--color-line);
-  border-radius: 10px;
+  border-radius: var(--app-validation-summary-border-radius);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
 }
@@ -2300,13 +2700,13 @@ textarea:focus-visible {
 
 .validation-label {
   color: var(--color-text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--app-validation-label-font-size);
 }
 
 .validation-value {
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
-  font-size: 0.9rem;
+  font-size: var(--app-validation-value-font-size);
 }
 
 .validation-context {
@@ -2318,10 +2718,10 @@ textarea:focus-visible {
 .validation-context-label {
   display: block;
   margin-top: 0.9rem;
-  font-size: 0.88rem;
+  font-size: var(--app-validation-context-label-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
-  letter-spacing: 0.01em;
+  letter-spacing: var(--app-validation-context-label-letter-spacing);
 }
 
 .validation-context-label:first-child {
@@ -2332,10 +2732,10 @@ textarea:focus-visible {
   width: 100%;
   padding: 0.75rem 1rem;
   background: var(--color-glass-bg);
-  border: 1px solid rgba(134, 108, 208, 0.18);
-  border-radius: 10px;
+  border: var(--app-validation-context-input-border);
+  border-radius: var(--app-validation-context-input-border-radius);
   color: var(--color-text-primary);
-  font-size: 0.95rem;
+  font-size: var(--app-validation-context-input-font-size);
   resize: vertical;
   box-sizing: border-box;
   transition: border-color 0.2s;
@@ -2357,14 +2757,14 @@ textarea.validation-context-input {
 
 .validation-context-counter {
   margin-top: 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--app-validation-context-counter-font-size);
   color: var(--color-text-secondary);
   text-align: right;
 }
 
 .validation-context-hint {
   margin-top: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--app-validation-context-hint-font-size);
   color: var(--color-text-secondary);
 }
 
@@ -2383,9 +2783,9 @@ textarea.validation-context-input {
 .wizard-astrologer-card__avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--app-wizard-astrologer-card-avatar-radius);
   overflow: hidden;
-  background: rgba(134, 108, 208, 0.12);
+  background: var(--app-wizard-astrologer-card-avatar-background);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2399,7 +2799,7 @@ textarea.validation-context-input {
 }
 
 .wizard-astrologer-card__avatar-icon {
-  font-size: 1.2rem;
+  font-size: var(--app-wizard-astrologer-card-avatar-icon-size);
 }
 
 .wizard-astrologer-card__info {
@@ -2410,13 +2810,13 @@ textarea.validation-context-input {
 }
 
 .wizard-astrologer-card__name {
-  font-size: 0.9rem;
+  font-size: var(--app-wizard-astrologer-card-name-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
 .wizard-astrologer-card__style {
-  font-size: 0.75rem;
+  font-size: var(--app-wizard-astrologer-card-style-size);
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -2432,7 +2832,7 @@ textarea.validation-context-input {
 
 .form-label {
   display: block;
-  font-size: 0.85rem;
+  font-size: var(--app-form-label-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   margin-bottom: var(--space-2);
@@ -2461,25 +2861,25 @@ textarea.validation-context-input {
 
 .type-pill:hover {
   border-color: var(--color-primary);
-  background: rgba(134, 108, 208, 0.07);
+  background: var(--app-type-pill-background);
 }
 
 .type-pill--selected {
   border-color: var(--color-primary);
-  background: rgba(134, 108, 208, 0.12);
-  box-shadow: 0 0 0 3px rgba(134, 108, 208, 0.15);
+  background: var(--app-type-pill-selected-background);
+  box-shadow: var(--app-type-pill-selected-box-shadow);
 }
 
 .type-pill-icon {
-  font-size: 1.5rem;
-  line-height: 1;
+  font-size: var(--app-type-pill-icon-font-size);
+  line-height: var(--app-type-pill-icon-line-height);
 }
 
 .type-pill-label {
-  font-size: 0.8rem;
+  font-size: var(--app-type-pill-label-font-size);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
-  line-height: 1.3;
+  line-height: var(--app-type-pill-label-line-height);
 }
 
 .type-pill--selected .type-pill-label {
@@ -2498,17 +2898,17 @@ textarea.validation-context-input {
 .wizard-loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--app-wizard-loading-overlay-background);
   backdrop-filter: blur(2px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  border-radius: 12px;
+  border-radius: var(--app-wizard-loading-overlay-border-radius);
   z-index: 10;
   color: var(--color-text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--app-wizard-loading-overlay-font-size);
   pointer-events: none;
 }
 
@@ -2517,35 +2917,35 @@ textarea.validation-context-input {
   display: inline-flex;
   align-items: center;
   padding: 0.3rem 0.85rem;
-  border-radius: 100px;
-  font-size: 0.8rem;
+  border-radius: var(--app-precision-badge-border-radius);
+  font-size: var(--app-precision-badge-font-size);
   font-weight: var(--font-weight-semibold);
   margin: 0;
   width: fit-content;
 }
 
 .precision-badge--high {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.4);
-  color: #166534;
+  background: var(--app-precision-badge-high-background);
+  border: var(--app-precision-badge-high-border);
+  color: var(--app-precision-badge-high-color);
 }
 
 .precision-badge--medium {
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.5);
-  color: #92400e;
+  background: var(--app-precision-badge-medium-background);
+  border: var(--app-precision-badge-medium-border);
+  color: var(--app-precision-badge-medium-color);
 }
 
 .precision-badge--limited {
-  background: rgba(249, 115, 22, 0.1);
-  border: 1px solid rgba(249, 115, 22, 0.5);
-  color: #9a3412;
+  background: var(--app-precision-badge-limited-background);
+  border: var(--app-precision-badge-limited-border);
+  color: var(--app-precision-badge-limited-color);
 }
 
 .precision-badge--blocked {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.5);
-  color: #991b1b;
+  background: var(--app-precision-badge-blocked-background);
+  border: var(--app-precision-badge-blocked-border);
+  color: var(--app-precision-badge-blocked-color);
 }
 
 /* === Precheck summary (DataCollectionStep) === */
@@ -2560,19 +2960,19 @@ textarea.validation-context-input {
 .degraded-warning {
   margin: 0;
   padding: 0.6rem 1rem;
-  background: rgba(251, 191, 36, 0.08);
-  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: var(--app-degraded-warning-background);
+  border: var(--app-degraded-warning-border);
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  color: #92400e;
+  font-size: var(--app-degraded-warning-font-size);
+  color: var(--app-degraded-warning-color);
 }
 
 /* === User data missing notice === */
 .user-data-missing-notice {
   padding: 1rem 1.25rem;
-  background: rgba(134, 108, 208, 0.06);
-  border: 1px solid rgba(134, 108, 208, 0.2);
-  border-radius: 12px;
+  background: var(--app-user-data-missing-notice-background);
+  border: var(--app-user-data-missing-notice-border);
+  border-radius: var(--app-user-data-missing-notice-border-radius);
   margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
@@ -2581,7 +2981,7 @@ textarea.validation-context-input {
 
 .user-data-missing-notice p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--app-user-data-missing-notice-p-font-size);
   color: var(--color-text-primary);
 }
 
@@ -2590,10 +2990,10 @@ textarea.validation-context-input {
   padding: 2rem;
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 0.95rem;
-  background: rgba(134, 108, 208, 0.04);
-  border: 1px dashed rgba(134, 108, 208, 0.2);
-  border-radius: 12px;
+  font-size: var(--app-nothing-to-collect-font-size);
+  background: var(--app-nothing-to-collect-background);
+  border: var(--app-nothing-to-collect-border);
+  border-radius: var(--app-nothing-to-collect-border-radius);
 }
 
 .nothing-to-collect p {
@@ -2604,14 +3004,14 @@ textarea.validation-context-input {
 .interaction-toggle-section {
   margin-top: 0.5rem;
   padding: 1rem 1.25rem;
-  background: rgba(134, 108, 208, 0.05);
-  border: 1px solid rgba(134, 108, 208, 0.15);
-  border-radius: 10px;
+  background: var(--app-interaction-toggle-section-background);
+  border: var(--app-interaction-toggle-section-border);
+  border-radius: var(--app-interaction-toggle-section-border-radius);
 }
 
 .interaction-toggle-hint {
   margin: 0.4rem 0 0;
-  font-size: 0.82rem;
+  font-size: var(--app-interaction-toggle-hint-font-size);
   color: var(--color-text-secondary);
 }
 
@@ -2621,7 +3021,7 @@ textarea.validation-context-input {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--app-checkbox-label-font-size);
   color: var(--color-text-primary);
   user-select: none;
 }
@@ -2637,26 +3037,26 @@ textarea.validation-context-input {
 /* === Form groups (OtherPersonForm) === */
 .other-person-form {
   background: var(--color-glass-bg);
-  border: 1px solid rgba(134, 108, 208, 0.14);
-  border-radius: 16px;
+  border: var(--app-other-person-form-border);
+  border-radius: var(--app-other-person-form-border-radius);
   padding: 1.5rem;
   backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  box-shadow: 0 4px 16px rgba(64, 42, 102, 0.05);
+  box-shadow: var(--app-other-person-form-box-shadow);
 }
 
 .other-person-form-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--app-other-person-form-title-font-size);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
 
 .other-person-form-hint {
   margin: -0.25rem 0 0;
-  font-size: 0.85rem;
+  font-size: var(--app-other-person-form-hint-font-size);
   color: var(--color-text-secondary);
 }
 
@@ -2667,7 +3067,7 @@ textarea.validation-context-input {
 }
 
 .form-group label {
-  font-size: 0.85rem;
+  font-size: var(--app-form-group-label-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
 }
@@ -2676,11 +3076,11 @@ textarea.validation-context-input {
 .form-group select {
   width: 100%;
   padding: 0.7rem 1rem;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(134, 108, 208, 0.18);
-  border-radius: 10px;
+  background: var(--app-form-group-input-background);
+  border: var(--app-form-group-input-border);
+  border-radius: var(--app-form-group-input-border-radius);
   color: var(--color-text-primary);
-  font-size: 0.9rem;
+  font-size: var(--app-form-group-input-font-size);
   box-sizing: border-box;
   transition: border-color 0.2s;
 }
@@ -2731,7 +3131,7 @@ textarea.validation-context-input {
 }
 
 .nickname-input-group label {
-  font-size: 0.85rem;
+  font-size: var(--app-nickname-input-group-label-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-secondary);
 }
@@ -2739,12 +3139,12 @@ textarea.validation-context-input {
 /* === Summary step === */
 .summary-details {
   background: var(--color-glass-bg);
-  border: 1px solid rgba(134, 108, 208, 0.12);
+  border: var(--app-summary-details-border);
   border-radius: var(--radius-md);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 16px rgba(64, 42, 102, 0.04);
+  box-shadow: var(--app-summary-details-box-shadow);
 }
 
 .summary-item {
@@ -2766,7 +3166,7 @@ textarea.validation-context-input {
 }
 
 .summary-label {
-  font-size: 0.82rem;
+  font-size: var(--app-summary-label-font-size);
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-medium);
   flex-shrink: 0;
@@ -2774,7 +3174,7 @@ textarea.validation-context-input {
 }
 
 .summary-value {
-  font-size: 0.9rem;
+  font-size: var(--app-summary-value-font-size);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
   text-align: right;
@@ -2790,7 +3190,7 @@ textarea.validation-context-input {
 
 .summary-subtitle {
   margin: 0 0 0.75rem;
-  font-size: 0.95rem;
+  font-size: var(--app-summary-subtitle-font-size);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
@@ -2805,11 +3205,11 @@ textarea.validation-context-input {
 .error-message {
   margin: 0;
   padding: 0.5rem 0.9rem;
-  background: rgba(239, 68, 68, 0.07);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--app-error-message-background);
+  border: var(--app-error-message-border);
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  color: #991b1b;
+  font-size: var(--app-error-message-font-size);
+  color: var(--app-error-message-color);
 }
 
 /* === Consultation banners === */
@@ -2824,24 +3224,24 @@ textarea.validation-context-input {
 }
 
 .consultation-banner--nominal {
-  background: rgba(34, 197, 94, 0.07);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: var(--app-consultation-banner-nominal-background);
+  border: var(--app-consultation-banner-nominal-border);
 }
 
 .consultation-banner--degraded {
-  background: rgba(251, 191, 36, 0.07);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: var(--app-consultation-banner-degraded-background);
+  border: var(--app-consultation-banner-degraded-border);
 }
 
 .consultation-banner--blocked {
-  background: rgba(239, 68, 68, 0.07);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--app-consultation-banner-blocked-background);
+  border: var(--app-consultation-banner-blocked-border);
 }
 
 .banner-icon {
-  font-size: 1.4rem;
+  font-size: var(--app-banner-icon-font-size);
   flex-shrink: 0;
-  line-height: 1.2;
+  line-height: var(--app-banner-icon-line-height);
 }
 
 .banner-content {
@@ -2853,14 +3253,14 @@ textarea.validation-context-input {
 
 .banner-title {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--app-banner-title-font-size);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
 
 .banner-text {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--app-banner-text-font-size);
   color: var(--color-text-secondary);
 }
 
@@ -2887,7 +3287,7 @@ textarea.validation-context-input {
 }
 
 .consultation-result-error {
-  color: #ffd7de;
+  color: var(--app-consultation-result-error-color);
 }
 
 .consultation-result-header {
@@ -2896,14 +3296,14 @@ textarea.validation-context-input {
 
 .consultation-result-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--app-consultation-result-header-h1-font-size);
   color: var(--color-text-primary);
 }
 
 .consultation-result-summary {
-  background: rgba(102, 230, 255, 0.03);
+  background: var(--app-consultation-result-summary-background);
   border: 1px solid var(--color-line);
-  border-radius: 12px;
+  border-radius: var(--app-consultation-result-summary-border-radius);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
@@ -2916,11 +3316,11 @@ textarea.validation-context-input {
 }
 
 .consultation-result-type-icon {
-  font-size: 2rem;
+  font-size: var(--app-consultation-result-type-icon-font-size);
 }
 
 .consultation-result-type-label {
-  font-size: 1.25rem;
+  font-size: var(--app-consultation-result-type-label-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
@@ -2930,7 +3330,7 @@ textarea.validation-context-input {
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1rem;
-  font-size: 0.9rem;
+  font-size: var(--app-consultation-result-meta-font-size);
   color: var(--color-text-secondary);
 }
 
@@ -2943,7 +3343,7 @@ textarea.validation-context-input {
   display: block;
   margin-bottom: 0.5rem;
   color: var(--color-text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--app-consultation-result-context-strong-font-size);
 }
 
 .consultation-result-context p {
@@ -2958,15 +3358,15 @@ textarea.validation-context-input {
 
 .consultation-result-interpretation h2 {
   margin: 0 0 1rem;
-  font-size: 1.25rem;
+  font-size: var(--app-consultation-result-interpretation-h2-font-size);
   color: var(--color-text-primary);
 }
 
 .consultation-result-interpretation-text {
   margin: 0;
-  line-height: 1.7;
+  line-height: var(--app-consultation-result-interpretation-text-line-height);
   color: var(--color-text-primary);
-  font-size: 1rem;
+  font-size: var(--app-consultation-result-interpretation-text-font-size);
   white-space: pre-wrap;
 }
 
@@ -3032,7 +3432,7 @@ textarea.validation-context-input {
 
 .settings-title {
   margin: 0 0 1.5rem;
-  font-size: 1.75rem;
+  font-size: var(--app-settings-title-font-size);
   color: var(--color-text-primary);
 }
 
@@ -3048,7 +3448,7 @@ textarea.validation-context-input {
   padding: 0.75rem 1.25rem;
   color: var(--color-text-secondary);
   text-decoration: none;
-  font-size: 0.95rem;
+  font-size: var(--app-settings-tab-font-size);
   border-bottom: 2px solid transparent;
   transition: all 0.15s ease;
   margin-bottom: -1px;
@@ -3056,7 +3456,7 @@ textarea.validation-context-input {
 
 .settings-tab:hover {
   color: var(--color-text-primary);
-  background: rgba(102, 230, 255, 0.05);
+  background: var(--app-settings-tab-background);
 }
 
 .settings-tab--active {
@@ -3070,7 +3470,7 @@ textarea.validation-context-input {
 
 .settings-section-title {
   margin: 0 0 1rem;
-  font-size: 1.25rem;
+  font-size: var(--app-settings-section-title-font-size);
   color: var(--color-text-primary);
 }
 
@@ -3095,14 +3495,14 @@ textarea.validation-context-input {
 }
 
 .account-info-label {
-  font-size: 0.85rem;
+  font-size: var(--app-account-info-label-font-size);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--app-account-info-label-letter-spacing);
 }
 
 .account-info-value {
-  font-size: 1rem;
+  font-size: var(--app-account-info-value-font-size);
   color: var(--color-text-primary);
 }
 
@@ -3126,36 +3526,36 @@ textarea.validation-context-input {
   gap: 0.25rem;
   text-align: center;
   padding: 1rem;
-  background: rgba(102, 230, 255, 0.05);
-  border-radius: 10px;
+  background: var(--app-usage-stat-item-background);
+  border-radius: var(--app-usage-stat-item-border-radius);
   border: 1px solid var(--color-line);
 }
 
 .usage-stat-label {
-  font-size: 0.8rem;
+  font-size: var(--app-usage-stat-label-font-size);
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--app-usage-stat-label-letter-spacing);
 }
 
 .usage-stat-value {
-  font-size: 1.2rem;
+  font-size: var(--app-usage-stat-value-font-size);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary);
 }
 
 .usage-progress-bar {
   height: 8px;
-  background: rgba(102, 230, 255, 0.15);
-  border-radius: 4px;
+  background: var(--app-usage-progress-bar-background);
+  border-radius: var(--app-usage-progress-bar-border-radius);
   overflow: hidden;
 }
 
 .usage-progress-fill {
   height: 100%;
   width: calc(var(--usage-progress, 0) * 1%);
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
-  border-radius: 4px;
+  background: var(--app-usage-progress-fill-background);
+  border-radius: var(--app-usage-progress-fill-border-radius);
   transition: width 0.3s ease;
 }
 
@@ -3168,20 +3568,20 @@ textarea.validation-context-input {
 
 /* Danger Button */
 .btn-danger {
-  background: linear-gradient(180deg, #ff6b81 0%, #e84a5f 100%);
-  border-color: rgba(255, 107, 129, 0.5);
-  color: #fff;
+  background: var(--app-btn-danger-background);
+  border-color: var(--app-btn-danger-border-color);
+  color: var(--app-btn-danger-color);
 }
 
 .btn-danger:hover:not(:disabled) {
-  box-shadow: 0 8px 20px rgba(255, 107, 129, 0.3);
+  box-shadow: var(--app-btn-danger-box-shadow);
 }
 
 /* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--app-modal-overlay-background);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3194,7 +3594,7 @@ textarea.validation-context-input {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-glass-border);
-  border-radius: 16px;
+  border-radius: var(--app-modal-content-border-radius);
   padding: 2rem;
   max-width: 450px;
   width: 100%;
@@ -3203,7 +3603,7 @@ textarea.validation-context-input {
 
 .modal-title {
   margin: 0 0 1rem;
-  font-size: 1.25rem;
+  font-size: var(--app-modal-title-font-size);
   color: var(--color-text-primary);
 }
 
@@ -3216,14 +3616,14 @@ textarea.validation-context-input {
 .modal-confirm-word {
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;
-  background: rgba(255, 107, 129, 0.15);
-  border: 1px solid rgba(255, 107, 129, 0.4);
+  background: var(--app-modal-confirm-word-background);
+  border: var(--app-modal-confirm-word-border);
   border-radius: var(--radius-sm);
-  font-size: 1.25rem;
+  font-size: var(--app-modal-confirm-word-font-size);
   font-weight: var(--font-weight-bold);
-  color: #ff6b81;
+  color: var(--app-modal-confirm-word-color);
   text-align: center;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--app-modal-confirm-word-letter-spacing);
 }
 
 .modal-input {
@@ -3233,7 +3633,7 @@ textarea.validation-context-input {
   border-radius: var(--radius-sm);
   background: var(--color-glass-bg-2);
   color: var(--color-text-primary);
-  font-size: 1rem;
+  font-size: var(--app-modal-input-font-size);
   margin-bottom: 1rem;
 }
 
@@ -3245,10 +3645,10 @@ textarea.validation-context-input {
 .modal-error {
   margin: 0 0 1rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(255, 107, 129, 0.1);
-  border-radius: 6px;
-  color: #ff6b81;
-  font-size: 0.9rem;
+  background: var(--app-modal-error-background);
+  border-radius: var(--app-modal-error-border-radius);
+  color: var(--app-modal-error-color);
+  font-size: var(--app-modal-error-font-size);
 }
 
 .modal-actions {
@@ -3294,7 +3694,7 @@ textarea.validation-context-input {
   justify-content: center;
   background: transparent;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--app-today-header-toggle-radius);
   cursor: pointer;
   color: var(--color-text-secondary);
   transition: color 0.2s ease, background 0.2s ease;
@@ -3317,7 +3717,7 @@ textarea.validation-context-input {
 .today-header__kicker {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.2px;
+  letter-spacing: var(--app-today-header-kicker-spacing);
   color: var(--color-text-secondary);
   margin: 0;
   padding-bottom: 6px;
@@ -3325,10 +3725,10 @@ textarea.validation-context-input {
 
 .today-header__title {
   padding-top: 6px;
-  font-size: 40px;
+  font-size: var(--app-today-header-title-size);
   font-weight: var(--font-weight-medium);
-  line-height: 1.05;
-  letter-spacing: -0.5px;
+  line-height: var(--app-today-header-title-line-height);
+  letter-spacing: var(--app-today-header-title-spacing);
   color: var(--color-text-primary);
   margin: 0;
 }
@@ -3339,7 +3739,7 @@ textarea.validation-context-input {
   right: 0;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--app-today-header-avatar-radius);
   border: 1px solid var(--color-glass-border);
   overflow: hidden;
   background: var(--chip);
@@ -3494,9 +3894,9 @@ textarea.validation-context-input {
 
 .dashboard-summary-card__text {
   margin: 0;
-  font-size: 15px;
-  line-height: 2.02;
-  color: color-mix(in srgb, var(--premium-text-main) 78%, var(--premium-text-strong) 22%);
+  font-size: var(--app-dashboard-summary-text-size);
+  line-height: var(--app-dashboard-summary-text-line-height);
+  color: var(--app-dashboard-summary-text-color);
   display: -webkit-box;
   -webkit-line-clamp: 4;
   line-clamp: 4;
@@ -3521,7 +3921,7 @@ textarea.validation-context-input {
   bottom: 14px;
   width: 220px;
   height: 220px;
-  border-radius: 50%;
+  border-radius: var(--app-dashboard-summary-footer-radius);
   background: var(--app-dashboard-summary-glow);
   filter: blur(24px);
   pointer-events: none;
@@ -3548,11 +3948,11 @@ textarea.validation-context-input {
   border-radius: var(--radius-full);
   border: 1px solid var(--app-dashboard-summary-action-border);
   background: var(--app-dashboard-summary-action-bg);
-  color: color-mix(in srgb, var(--premium-accent-purple-strong) 84%, var(--premium-text-strong) 16%);
+  color: var(--app-dashboard-summary-cta-color);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--app-dashboard-summary-cta-spacing);
   box-shadow: var(--app-dashboard-summary-action-shadow);
   position: relative;
   z-index: 1;
@@ -3593,7 +3993,7 @@ textarea.validation-context-input {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.46);
+  background: var(--app-dashboard-summary-loading-spinner-background);
   border: 1px solid var(--premium-glass-border);
   color: var(--premium-accent-purple-strong);
   box-shadow: var(--premium-inner-light);
@@ -3606,7 +4006,7 @@ textarea.validation-context-input {
 .dashboard-summary-card__loading-message {
   margin: 0;
   max-width: 26ch;
-  font-size: 15px;
+  font-size: var(--app-dashboard-summary-loading-message-size);
   line-height: var(--line-height-normal);
   font-weight: var(--font-weight-semibold);
   color: var(--premium-text-main);
@@ -3624,10 +4024,10 @@ textarea.validation-context-input {
 
 .skeleton-line {
   height: 1rem;
-  background: linear-gradient(90deg, rgba(var(--color-primary-rgb), 0.05) 25%, rgba(var(--color-primary-rgb), 0.1) 50%, rgba(var(--color-primary-rgb), 0.05) 75%);
+  background: var(--app-skeleton-line-background-2);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s infinite;
-  border-radius: 4px;
+  border-radius: var(--app-skeleton-line-border-radius);
 }
 
 @keyframes skeleton-loading {
@@ -3706,7 +4106,7 @@ textarea.validation-context-input {
 }
 
 .day-prediction-card__header-bg-wrapper .astro-mood-background {
-  border-radius: 0;
+  border-radius: var(--app-day-prediction-header-background-radius);
 }
 
 .day-prediction-card__header-bg-wrapper .astro-mood-background__content {
@@ -3764,7 +4164,7 @@ textarea.validation-context-input {
 
 .section-header__title {
   font-size: var(--font-size-lg);
-  font-weight: 650;
+  font-weight: var(--app-section-header-title-weight);
   color: var(--color-text-primary);
   margin: 0;
 }
@@ -3778,7 +4178,7 @@ textarea.validation-context-input {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: var(--app-section-header-button-radius);
   transition: background 0.2s;
 }
 
@@ -3809,10 +4209,10 @@ textarea.validation-context-input {
 }
 
 .evidence-tags__title {
-  font-size: 11px;
+  font-size: var(--app-evidence-tags-title-size);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--app-evidence-tags-title-spacing);
   color: var(--color-text-secondary);
   margin: 0 0 0.75rem 0;
 }
@@ -3827,7 +4227,7 @@ textarea.validation-context-input {
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.6rem;
-  font-size: 11px;
+  font-size: var(--app-evidence-pill-font-size);
   font-weight: var(--font-weight-medium);
   border-radius: var(--radius-full);
   border: 1px solid transparent;
@@ -3836,7 +4236,7 @@ textarea.validation-context-input {
 .evidence-pill__dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: var(--app-evidence-pill-dot-radius);
   margin-right: 5px;
   opacity: 0.7;
   background: currentColor;
@@ -3845,28 +4245,28 @@ textarea.validation-context-input {
 }
 
 .evidence-pill--planet {
-  background: rgba(139, 92, 246, 0.12);
-  color: rgb(102, 65, 248);
-  border-color: rgba(139, 92, 246, 0.25);
+  background: var(--app-evidence-pill-planet-background);
+  color: var(--app-evidence-pill-planet-color);
+  border-color: var(--app-evidence-pill-planet-border-color);
 }
 
 .evidence-pill--aspect {
-  background: rgba(59, 130, 246, 0.12);
-  color: rgba(147, 197, 253, 1);
-  border-color: rgba(59, 130, 246, 0.25);
+  background: var(--app-evidence-pill-aspect-background);
+  color: var(--app-evidence-pill-aspect-color);
+  border-color: var(--app-evidence-pill-aspect-border-color);
 }
 
 .evidence-pill--angle {
-  background: rgba(245, 158, 11, 0.12);
-  color: rgba(252, 211, 77, 1);
-  border-color: rgba(245, 158, 11, 0.25);
+  background: var(--app-evidence-pill-angle-background);
+  color: var(--app-evidence-pill-angle-color);
+  border-color: var(--app-evidence-pill-angle-border-color);
 }
 
 /* Code Review Fixes */
 .chat-window-loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--app-chat-window-loading-overlay-background);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
@@ -3877,7 +4277,7 @@ textarea.validation-context-input {
 .chat-window-empty-avatar {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
+  border-radius: var(--app-chat-window-empty-avatar-border-radius);
   border: 2px solid var(--color-primary);
   margin-bottom: 1rem;
   object-fit: cover;
@@ -3885,7 +4285,7 @@ textarea.validation-context-input {
 
 .chat-window-empty-persona {
   font-weight: var(--font-weight-bold);
-  font-size: 1.1rem;
+  font-size: var(--app-chat-window-empty-persona-font-size);
   color: var(--color-text-primary);
   margin-bottom: 0.5rem;
 }
