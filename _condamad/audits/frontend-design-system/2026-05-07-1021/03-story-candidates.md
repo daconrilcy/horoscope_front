@@ -1,0 +1,107 @@
+<!-- Candidats stories issus du nouvel audit frontend design-system. -->
+
+# Story Candidates - frontend-design-system
+
+## SC-001
+
+- Candidate ID: SC-001
+- Source finding: F-002
+- Suggested story title: Migrer le prochain cluster coherent de valeurs visuelles et typographiques frontend
+- Suggested archetype: design-system-token-convergence
+- Primary domain: frontend-design-system
+- Required contracts:
+  - `_condamad/stories/regression-guardrails.md`
+  - `frontend/src/styles/token-namespace-registry.md`
+  - `frontend/src/styles/typography-roles.md`
+  - `frontend/src/styles/css-fallback-allowlist.md`
+  - `frontend/src/styles/legacy-style-surface-registry.md`
+  - `frontend/src/tests/design-system-guards.test.ts`
+  - `frontend/src/tests/design-system-allowlist.ts`
+- Draft objective: reduce remaining hardcoded visual and typography ownership debt by migrating one bounded CSS file cluster to existing or newly documented semantic tokens and typography roles.
+- Must include:
+  - choose one coherent subset from the exhaustive file list below;
+  - classify each selected literal as global token, semantic page/component token, typography role, typed runtime constant, or intentionally local non-style data;
+  - keep all static styling in `.css` files and avoid new inline styles;
+  - update token namespace and typography registries when adding semantic ownership;
+  - add or update exact anti-regression guards for the selected cluster;
+  - preserve `RG-044` through `RG-060`.
+- Validation hints:
+  - `npm run test -- design-system theme-tokens css-fallback inline-style legacy-style visual-smoke`
+  - `npm run test`
+  - `npm run lint`
+  - `npm run build`
+  - targeted before/after scan for the selected literals.
+- Blockers: choose the next cluster. Recommended options are admin CSS, landing CSS, natal/profile CSS, or remaining prediction CSS. Do not attempt all 70 files in one story.
+
+## Exhaustive F-002 Files To Modify
+
+- `frontend/src/App.css`
+- `frontend/src/components/AdminGuard.css`
+- `frontend/src/components/astro/AstroMoodBackground.css`
+- `frontend/src/components/AstroDailyEvents.css`
+- `frontend/src/components/AstroFoundationSection.css`
+- `frontend/src/components/BestWindowCard.css`
+- `frontend/src/components/DayClimateHero.css`
+- `frontend/src/components/DomainRankingCard.css`
+- `frontend/src/components/ErrorBoundary/ErrorBoundary.css`
+- `frontend/src/components/HeroHoroscopeCard.css`
+- `frontend/src/components/layout/Header.css`
+- `frontend/src/components/layout/Sidebar.css`
+- `frontend/src/components/MiniInsightCard.css`
+- `frontend/src/components/NatalInterpretation.css`
+- `frontend/src/components/prediction/CategoryGrid.css`
+- `frontend/src/components/prediction/DailyAdviceCard.css`
+- `frontend/src/components/prediction/DailyPageHeader.css`
+- `frontend/src/components/prediction/DayAgenda.css`
+- `frontend/src/components/prediction/DayPredictionCard.css`
+- `frontend/src/components/prediction/DayStateBadge.css`
+- `frontend/src/components/prediction/DayTimeline.css`
+- `frontend/src/components/prediction/DayTimelineSectionV4.css`
+- `frontend/src/components/prediction/KeyPointCard.css`
+- `frontend/src/components/prediction/PeriodCard.css`
+- `frontend/src/components/prediction/SectionTitle.css`
+- `frontend/src/components/prediction/TimelineRail.css`
+- `frontend/src/components/prediction/TurningPointsList.css`
+- `frontend/src/components/ShortcutCard.css`
+- `frontend/src/components/SignUpForm.css`
+- `frontend/src/components/TurningPointCard.css`
+- `frontend/src/components/ui/Button/Button.css`
+- `frontend/src/components/ui/Skeleton/Skeleton.css`
+- `frontend/src/features/chat/components/ChatQuotaBanner.css`
+- `frontend/src/features/chat/components/ConversationItem.css`
+- `frontend/src/features/chat/components/ConversationList.css`
+- `frontend/src/index.css`
+- `frontend/src/layouts/AdminLayout.css`
+- `frontend/src/layouts/LandingLayout.css`
+- `frontend/src/layouts/WizardLayout.css`
+- `frontend/src/pages/admin/AdminAiGenerationsPage.css`
+- `frontend/src/pages/admin/AdminContentPage.css`
+- `frontend/src/pages/admin/AdminDashboardPage.css`
+- `frontend/src/pages/admin/AdminEntitlementsPage.css`
+- `frontend/src/pages/admin/AdminLogsPage.css`
+- `frontend/src/pages/admin/AdminPromptsPage.css`
+- `frontend/src/pages/admin/AdminSamplePayloadsAdmin.css`
+- `frontend/src/pages/admin/AdminSettingsPage.css`
+- `frontend/src/pages/admin/AdminSupportPage.css`
+- `frontend/src/pages/admin/AdminUserDetailPage.css`
+- `frontend/src/pages/admin/AdminUsersPage.css`
+- `frontend/src/pages/admin/PersonasAdmin.css`
+- `frontend/src/pages/AstrologerProfilePage.css`
+- `frontend/src/pages/billing/billing-return.css`
+- `frontend/src/pages/BirthProfilePage.css`
+- `frontend/src/pages/ChatPage.css`
+- `frontend/src/pages/ConsultationResultPage.css`
+- `frontend/src/pages/DailyHoroscopePage.css`
+- `frontend/src/pages/DashboardPage.css`
+- `frontend/src/pages/HelpPage.css`
+- `frontend/src/pages/landing/LandingPage.css`
+- `frontend/src/pages/landing/sections/FaqSection.css`
+- `frontend/src/pages/landing/sections/LandingFooter.css`
+- `frontend/src/pages/landing/sections/LandingNavbar.css`
+- `frontend/src/pages/landing/sections/PricingSection.css`
+- `frontend/src/pages/landing/sections/ProblemSection.css`
+- `frontend/src/pages/landing/sections/SocialProofSection.css`
+- `frontend/src/pages/landing/sections/SolutionSection.css`
+- `frontend/src/pages/landing/sections/TestimonialsSection.css`
+- `frontend/src/pages/NatalChartPage.css`
+- `frontend/src/pages/settings/Settings.css`
