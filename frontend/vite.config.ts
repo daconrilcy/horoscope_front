@@ -1,3 +1,4 @@
+// Configure Vite pour l'application React et son environnement de test.
 import { defineConfig } from "vitest/config"
 import react from "@vitejs/plugin-react"
 import path from "node:path"
@@ -23,5 +24,42 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/tests/setup.ts",
     exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) {
+            return undefined
+          }
+
+          if (id.includes("@xyflow/react")) {
+            return "vendor-flow"
+          }
+
+          if (id.includes("react-dom") || id.includes("react/")) {
+            return "vendor-react"
+          }
+
+          if (id.includes("react-router-dom") || id.includes("@remix-run")) {
+            return "vendor-router"
+          }
+
+          if (id.includes("@tanstack/react-query")) {
+            return "vendor-query"
+          }
+
+          if (
+            id.includes("react-hook-form") ||
+            id.includes("@hookform/resolvers") ||
+            id.includes("zod")
+          ) {
+            return "vendor-forms"
+          }
+
+          return undefined
+        },
+      },
+    },
   },
 })

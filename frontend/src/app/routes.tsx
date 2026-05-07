@@ -1,3 +1,5 @@
+// Declare les routes applicatives avec chargement differe des ecrans lourds.
+import { lazy, Suspense, type ReactNode } from "react"
 import type { RouteObject } from "react-router-dom"
 import { Navigate } from "react-router-dom"
 
@@ -10,45 +12,128 @@ import { EnterpriseLayout } from "../components/layout/EnterpriseLayout"
 import { EnterpriseCredentialsPanel } from "../components/EnterpriseCredentialsPanel"
 import { SupportOpsPanel } from "../components/SupportOpsPanel"
 
-// Pages
-import { DashboardPage } from "../pages/DashboardPage"
-import DailyHoroscopePage from "../pages/DailyHoroscopePage"
-import { NatalChartPage } from "../pages/NatalChartPage"
-import { BirthProfilePage } from "../pages/BirthProfilePage"
-import { ChatPage } from "../pages/ChatPage"
-import { AstrologersPage } from "../pages/AstrologersPage"
-import { AstrologerProfilePage } from "../pages/AstrologerProfilePage"
-import { SettingsPage } from "../pages/SettingsPage"
+import { ConsultationLayout } from "../features/consultations/components/ConsultationLayout"
 import { LoginPage } from "../pages/LoginPage"
 import { RegisterPage } from "../pages/RegisterPage"
-import { NotFoundPage } from "../pages/NotFoundPage"
-import { ConsultationsPage } from "../pages/ConsultationsPage"
-import { ConsultationWizardPage } from "../pages/ConsultationWizardPage"
-import { ConsultationResultPage } from "../pages/ConsultationResultPage"
-import HelpPage from "../pages/HelpPage"
-import { EnterpriseDashboardPage } from "../pages/EnterpriseDashboardPage"
-import { AdminPage } from "../pages/AdminPage"
-import { SubscriptionGuidePage } from "../pages/SubscriptionGuidePage"
-import { ConsultationLayout } from "../features/consultations/components/ConsultationLayout"
-import { AccountSettings } from "../pages/settings/AccountSettings"
-import { SubscriptionSettings } from "../pages/settings/SubscriptionSettings"
-import { UsageSettings } from "../pages/settings/UsageSettings"
 
-import {
-  AdminDashboardPage,
-  AdminUsersPage,
-  AdminUserDetailPage,
-  AdminEntitlementsPage,
-  AdminAiGenerationsPage,
-  AdminPromptsPage,
-  AdminContentPage,
-  AdminBillingPage,
-  AdminLogsPage,
-  AdminSupportPage,
-  AdminSettingsPage,
-  AdminHubPage,
-  ReconciliationAdmin
-} from "../pages/admin"
+const DashboardPage = lazy(() =>
+  import("../pages/DashboardPage").then(({ DashboardPage }) => ({ default: DashboardPage })),
+)
+const DailyHoroscopePage = lazy(() => import("../pages/DailyHoroscopePage"))
+const NatalChartPage = lazy(() =>
+  import("../pages/NatalChartPage").then(({ NatalChartPage }) => ({ default: NatalChartPage })),
+)
+const BirthProfilePage = lazy(() =>
+  import("../pages/BirthProfilePage").then(({ BirthProfilePage }) => ({ default: BirthProfilePage })),
+)
+const ChatPage = lazy(() => import("../pages/ChatPage").then(({ ChatPage }) => ({ default: ChatPage })))
+const AstrologersPage = lazy(() =>
+  import("../pages/AstrologersPage").then(({ AstrologersPage }) => ({ default: AstrologersPage })),
+)
+const AstrologerProfilePage = lazy(() =>
+  import("../pages/AstrologerProfilePage").then(({ AstrologerProfilePage }) => ({ default: AstrologerProfilePage })),
+)
+const SettingsPage = lazy(() =>
+  import("../pages/SettingsPage").then(({ SettingsPage }) => ({ default: SettingsPage })),
+)
+const NotFoundPage = lazy(() =>
+  import("../pages/NotFoundPage").then(({ NotFoundPage }) => ({ default: NotFoundPage })),
+)
+const ConsultationsPage = lazy(() =>
+  import("../pages/ConsultationsPage").then(({ ConsultationsPage }) => ({ default: ConsultationsPage })),
+)
+const ConsultationWizardPage = lazy(() =>
+  import("../pages/ConsultationWizardPage").then(({ ConsultationWizardPage }) => ({
+    default: ConsultationWizardPage,
+  })),
+)
+const ConsultationResultPage = lazy(() =>
+  import("../pages/ConsultationResultPage").then(({ ConsultationResultPage }) => ({
+    default: ConsultationResultPage,
+  })),
+)
+const HelpPage = lazy(() => import("../pages/HelpPage"))
+const EnterpriseDashboardPage = lazy(() =>
+  import("../pages/EnterpriseDashboardPage").then(({ EnterpriseDashboardPage }) => ({
+    default: EnterpriseDashboardPage,
+  })),
+)
+const AdminPage = lazy(() => import("../pages/AdminPage").then(({ AdminPage }) => ({ default: AdminPage })))
+const SubscriptionGuidePage = lazy(() =>
+  import("../pages/SubscriptionGuidePage").then(({ SubscriptionGuidePage }) => ({
+    default: SubscriptionGuidePage,
+  })),
+)
+const AccountSettings = lazy(() =>
+  import("../pages/settings/AccountSettings").then(({ AccountSettings }) => ({ default: AccountSettings })),
+)
+const SubscriptionSettings = lazy(() =>
+  import("../pages/settings/SubscriptionSettings").then(({ SubscriptionSettings }) => ({
+    default: SubscriptionSettings,
+  })),
+)
+const UsageSettings = lazy(() =>
+  import("../pages/settings/UsageSettings").then(({ UsageSettings }) => ({ default: UsageSettings })),
+)
+const AdminDashboardPage = lazy(() =>
+  import("../pages/admin/AdminDashboardPage").then(({ AdminDashboardPage }) => ({ default: AdminDashboardPage })),
+)
+const AdminUsersPage = lazy(() =>
+  import("../pages/admin/AdminUsersPage").then(({ AdminUsersPage }) => ({ default: AdminUsersPage })),
+)
+const AdminUserDetailPage = lazy(() =>
+  import("../pages/admin/AdminUserDetailPage").then(({ AdminUserDetailPage }) => ({ default: AdminUserDetailPage })),
+)
+const AdminEntitlementsPage = lazy(() =>
+  import("../pages/admin/AdminEntitlementsPage").then(({ AdminEntitlementsPage }) => ({
+    default: AdminEntitlementsPage,
+  })),
+)
+const AdminAiGenerationsPage = lazy(() =>
+  import("../pages/admin/AdminAiGenerationsPage").then(({ AdminAiGenerationsPage }) => ({
+    default: AdminAiGenerationsPage,
+  })),
+)
+const AdminPromptsPage = lazy(() =>
+  import("../pages/admin/AdminPromptsPage").then(({ AdminPromptsPage }) => ({ default: AdminPromptsPage })),
+)
+const AdminContentPage = lazy(() =>
+  import("../pages/admin/AdminContentPage").then(({ AdminContentPage }) => ({ default: AdminContentPage })),
+)
+const AdminBillingPage = lazy(() =>
+  import("../pages/admin/AdminBillingPage").then(({ AdminBillingPage }) => ({ default: AdminBillingPage })),
+)
+const AdminLogsPage = lazy(() =>
+  import("../pages/admin/AdminLogsPage").then(({ AdminLogsPage }) => ({ default: AdminLogsPage })),
+)
+const AdminSupportPage = lazy(() =>
+  import("../pages/admin/AdminSupportPage").then(({ AdminSupportPage }) => ({ default: AdminSupportPage })),
+)
+const AdminSettingsPage = lazy(() =>
+  import("../pages/admin/AdminSettingsPage").then(({ AdminSettingsPage }) => ({ default: AdminSettingsPage })),
+)
+const AdminHubPage = lazy(() =>
+  import("../pages/admin/AdminHubPage").then(({ AdminHubPage }) => ({ default: AdminHubPage })),
+)
+const ReconciliationAdmin = lazy(() =>
+  import("../pages/admin/ReconciliationAdmin").then(({ ReconciliationAdmin }) => ({ default: ReconciliationAdmin })),
+)
+
+/** Affiche un retour accessible pendant le chargement d'un chunk de route. */
+export function RouteLoadingFallback() {
+  return (
+    <div className="panel">
+      <div className="state-line state-loading" role="status" aria-busy="true" aria-live="polite">
+        Chargement de la page...
+      </div>
+    </div>
+  )
+}
+
+/** Enveloppe un ecran charge a la demande dans une limite Suspense locale. */
+function lazyElement(element: ReactNode) {
+  return <Suspense fallback={<RouteLoadingFallback />}>{element}</Suspense>
+}
 
 /** Enfant de route pour les sections prompts : le rendu réel est entièrement dans `AdminPromptsPage`. */
 function AdminPromptsRouteSlot() {
@@ -81,11 +166,11 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <DashboardPage />,
+            element: lazyElement(<DashboardPage />),
           },
           {
             path: "horoscope",
-            element: <DailyHoroscopePage />,
+            element: lazyElement(<DailyHoroscopePage />),
           },
         ],
       },
@@ -95,15 +180,15 @@ export const routes: RouteObject[] = [
       },
       {
         path: "natal",
-        element: <NatalChartPage />,
+        element: lazyElement(<NatalChartPage />),
       },
       {
         path: "natal-chart",
-        element: <NatalChartPage />,
+        element: lazyElement(<NatalChartPage />),
       },
       {
         path: "profile",
-        element: <BirthProfilePage />,
+        element: lazyElement(<BirthProfilePage />),
       },
       {
         path: "birth-profile",
@@ -111,19 +196,19 @@ export const routes: RouteObject[] = [
       },
       {
         path: "chat",
-        element: <ChatPage />,
+        element: lazyElement(<ChatPage />),
       },
       {
         path: "chat/:conversationId",
-        element: <ChatPage />,
+        element: lazyElement(<ChatPage />),
       },
       {
         path: "astrologers",
-        element: <AstrologersPage />,
+        element: lazyElement(<AstrologersPage />),
       },
       {
         path: "astrologers/:id",
-        element: <AstrologerProfilePage />,
+        element: lazyElement(<AstrologerProfilePage />),
       },
       {
         path: "consultations",
@@ -131,21 +216,21 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <ConsultationsPage />,
+            element: lazyElement(<ConsultationsPage />),
           },
           {
             path: "new",
-            element: <ConsultationWizardPage />,
+            element: lazyElement(<ConsultationWizardPage />),
           },
           {
             path: "result",
-            element: <ConsultationResultPage />,
+            element: lazyElement(<ConsultationResultPage />),
           },
         ],
       },
       {
         path: "settings",
-        element: <SettingsPage />,
+        element: lazyElement(<SettingsPage />),
         children: [
           {
             index: true,
@@ -153,15 +238,15 @@ export const routes: RouteObject[] = [
           },
           {
             path: "account",
-            element: <AccountSettings />,
+            element: lazyElement(<AccountSettings />),
           },
           {
             path: "subscription",
-            element: <SubscriptionSettings />,
+            element: lazyElement(<SubscriptionSettings />),
           },
           {
             path: "usage",
-            element: <UsageSettings />,
+            element: lazyElement(<UsageSettings />),
           },
         ],
       },
@@ -169,7 +254,7 @@ export const routes: RouteObject[] = [
         path: "help",
         element: (
           <RoleGuard roles={["user", "admin", "ops", "support"]}>
-            <HelpPage />
+            {lazyElement(<HelpPage />)}
           </RoleGuard>
         ),
       },
@@ -177,7 +262,7 @@ export const routes: RouteObject[] = [
         path: "help/subscriptions",
         element: (
           <RoleGuard roles={["user", "admin", "ops", "support"]}>
-            <SubscriptionGuidePage />
+            {lazyElement(<SubscriptionGuidePage />)}
           </RoleGuard>
         ),
       },
@@ -199,7 +284,7 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <EnterpriseDashboardPage />,
+            element: lazyElement(<EnterpriseDashboardPage />),
           },
           {
             path: "credentials",
@@ -211,37 +296,37 @@ export const routes: RouteObject[] = [
         path: "admin",
         element: (
           <AdminGuard>
-            <AdminPage />
+            {lazyElement(<AdminPage />)}
           </AdminGuard>
         ),
         children: [
           {
             index: true,
-            element: <AdminHubPage />,
+            element: lazyElement(<AdminHubPage />),
           },
           {
             path: "dashboard",
-            element: <AdminDashboardPage />,
+            element: lazyElement(<AdminDashboardPage />),
           },
           {
             path: "users",
-            element: <AdminUsersPage />,
+            element: lazyElement(<AdminUsersPage />),
           },
           {
             path: "users/:userId",
-            element: <AdminUserDetailPage />,
+            element: lazyElement(<AdminUserDetailPage />),
           },
           {
             path: "entitlements",
-            element: <AdminEntitlementsPage />,
+            element: lazyElement(<AdminEntitlementsPage />),
           },
           {
             path: "ai-generations",
-            element: <AdminAiGenerationsPage />,
+            element: lazyElement(<AdminAiGenerationsPage />),
           },
           {
             path: "prompts",
-            element: <AdminPromptsPage />,
+            element: lazyElement(<AdminPromptsPage />),
             children: [
               { index: true, element: <Navigate to="catalog" replace /> },
               { path: "catalog", element: <AdminPromptsRouteSlot /> },
@@ -255,33 +340,33 @@ export const routes: RouteObject[] = [
           },
           {
             path: "content",
-            element: <AdminContentPage />,
+            element: lazyElement(<AdminContentPage />),
           },
           {
             path: "billing",
-            element: <AdminBillingPage />,
+            element: lazyElement(<AdminBillingPage />),
           },
           {
             path: "logs",
-            element: <AdminLogsPage />,
+            element: lazyElement(<AdminLogsPage />),
           },
           {
             path: "support",
-            element: <AdminSupportPage />,
+            element: lazyElement(<AdminSupportPage />),
           },
           {
             path: "settings",
-            element: <AdminSettingsPage />,
+            element: lazyElement(<AdminSettingsPage />),
           },
           {
             path: "reconciliation",
-            element: <ReconciliationAdmin />,
+            element: lazyElement(<ReconciliationAdmin />),
           },
         ],
       },
       {
         path: "*",
-        element: <NotFoundPage />,
+        element: lazyElement(<NotFoundPage />),
       },
     ],
   },

@@ -6,7 +6,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { TestAppRouter } from "../app/router"
-import { routes } from "../app/routes"
+import { RouteLoadingFallback, routes } from "../app/routes"
 import { ThemeProvider } from "../state/ThemeProvider"
 import { adminTranslations } from "../i18n/admin"
 import { navigationTranslations } from "../i18n/navigation"
@@ -329,6 +329,13 @@ describe("Dashboard Path", () => {
     await waitFor(() => {
       expect(screen.getByText(/Accédez rapidement à toutes les fonctionnalités/i)).toBeInTheDocument()
     })
+  })
+
+  it("expose un fallback accessible pour le chargement differe d'une route", () => {
+    render(<RouteLoadingFallback />)
+
+    expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true")
+    expect(screen.getByText(/Chargement de la page/i)).toBeInTheDocument()
   })
 
   it("keeps dashboard tab active in BottomNav for both routes", async () => {
