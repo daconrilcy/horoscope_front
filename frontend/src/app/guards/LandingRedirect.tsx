@@ -1,8 +1,18 @@
+// Route publique chargeant la landing avec son scope de variables semantiques.
 import { Suspense, lazy } from "react"
 import { Navigate } from "react-router-dom"
 import { isAccessTokenExpired, useAccessTokenSnapshot, clearAccessToken } from "../../utils/authToken"
+import "../../layouts/LandingLayout.css"
 
 const LandingPage = lazy(() => import("../../pages/landing/LandingPage"))
+
+function ScopedLandingPage() {
+  return (
+    <div className="landing-layout">
+      <LandingPage />
+    </div>
+  )
+}
 
 export function LandingRedirect() {
   const token = useAccessTokenSnapshot()
@@ -11,7 +21,7 @@ export function LandingRedirect() {
     clearAccessToken()
     return (
       <Suspense fallback={null}>
-        <LandingPage />
+        <ScopedLandingPage />
       </Suspense>
     )
   }
@@ -22,7 +32,7 @@ export function LandingRedirect() {
 
   return (
     <Suspense fallback={null}>
-      <LandingPage />
+      <ScopedLandingPage />
     </Suspense>
   )
 }

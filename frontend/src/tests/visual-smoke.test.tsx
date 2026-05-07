@@ -29,6 +29,8 @@ let themeCss: string
 let bgCss: string
 let heroCss: string
 let settingsCss: string
+let landingLayoutCss: string
+let landingPageCss: string
 
 beforeAll(() => {
   appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
@@ -37,6 +39,8 @@ beforeAll(() => {
   bgCss = readFileSync(resolve(__dirname, "../styles/backgrounds.css"), "utf-8")
   heroCss = readFileSync(resolve(__dirname, "../components/HeroHoroscopeCard.css"), "utf-8")
   settingsCss = readFileSync(resolve(__dirname, "../pages/settings/Settings.css"), "utf-8")
+  landingLayoutCss = readFileSync(resolve(__dirname, "../layouts/LandingLayout.css"), "utf-8")
+  landingPageCss = readFileSync(resolve(__dirname, "../pages/landing/LandingPage.css"), "utf-8")
 })
 
 function expectDeclarationToUseDefinedToken(css: string, property: string, token: string) {
@@ -216,5 +220,13 @@ describe("CS-084 — rendu smoke Settings", () => {
     expect(container.querySelector(".settings-container")).toHaveTextContent("Contenu Settings")
     expect(settingsCss).toContain("--settings-page-bg:")
     expect(settingsCss).toMatch(/\.settings-bg-halo\s*\{[^}]*background:\s*var\(--settings-page-bg\)/)
+  })
+})
+
+describe("CS-085 — rendu smoke Landing", () => {
+  it("expose le scope owner landing et des styles representatifs token-backed", () => {
+    expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*--landing-page-atmosphere:/)
+    expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*background:\s*var\(--landing-page-atmosphere\)/)
+    expect(landingPageCss).toMatch(/\.hero-content h1\s*\{[^}]*font-size:\s*var\(--landing-type-hero-title-size\)/)
   })
 })

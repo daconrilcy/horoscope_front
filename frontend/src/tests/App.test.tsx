@@ -151,12 +151,14 @@ describe("App", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
     localStorage.removeItem("access_token")
     
-    renderApp(["/"])
+    const { container } = renderApp(["/"])
     
     await waitFor(() => {
       // Check for landing page hero title (FR default)
       expect(screen.getByText(/Votre guide astrologique personnel/i)).toBeInTheDocument()
     })
+    expect(container.querySelector(".landing-layout")).toBeInTheDocument()
+    expect(container.querySelector(".landing-layout .landing-page")).toBeInTheDocument()
   })
 
   it("shows login form at /login when unauthenticated", async () => {

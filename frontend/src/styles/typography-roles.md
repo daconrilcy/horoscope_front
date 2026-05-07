@@ -21,11 +21,10 @@ typographie dans les surfaces migrees. Les tokens `--type-*` vivent dans
 | ui-role-label | n/a | `--type-ui-role-letter-spacing` | roles utilisateur compacts dans les primitives UI |
 | cta | `.type-cta` | `--type-cta-*` | texte de boutons et liens d'action |
 | numeric | `.type-numeric` | `--type-numeric-*` | chiffres, scores, compteurs |
+| landing-marketing | n/a | `--landing-type-*` | echelle marketing landing declaree par `frontend/src/layouts/LandingLayout.css` et consommee par `frontend/src/pages/landing/**` |
 
 ## Exceptions classees
 
 | File | Literal | Reason | Exit condition |
 |---|---|---|---|
-| `frontend/src/layouts/LandingLayout.css` | landing-scale typography | echelle marketing expressive | decision UX dediee |
-| `frontend/src/pages/landing/**` | landing-scale typography | pages marketing hors lot | decision UX dediee |
 | `frontend/src/pages/AstrologerProfilePage.css` | profile editorial sizes | surface expressive volumineuse | migration par story dediee |

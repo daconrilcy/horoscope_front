@@ -1,8 +1,8 @@
 .landing-footer {
   margin-top: 24px;
   padding: 72px var(--premium-layout-padding-inline) 36px;
-  background: rgba(21, 18, 35, 0.94);
-  color: rgba(245, 245, 255, 0.82);
+  background: var(--landing-footer-bg);
+  color: var(--landing-text-on-dark);
 }
 
 .landing-footer__container {
@@ -28,25 +28,25 @@
 
 .landing-footer__logo-text {
   font-family: var(--font-family-heading);
-  font-size: 1.28rem;
-  color: white;
+  font-size: var(--landing-type-footer-logo-size);
+  color: var(--color-star-fill);
 }
 
 .landing-footer__desc {
   margin: 0;
   max-width: 34ch;
-  font-size: 0.95rem;
-  line-height: 1.75;
-  color: rgba(245, 245, 255, 0.68);
+  font-size: var(--landing-type-body-size);
+  line-height: var(--landing-type-body-open-line-height);
+  color: var(--landing-text-on-dark-muted);
 }
 
 .landing-footer__column-title {
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: var(--landing-type-eyebrow-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--landing-type-eyebrow-wide-letter-spacing);
   text-transform: uppercase;
-  color: rgba(245, 245, 255, 0.9);
+  color: var(--landing-text-on-dark-strong);
 }
 
 .landing-footer__links {
@@ -61,26 +61,26 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9375rem;
-  line-height: 1.5;
-  color: rgba(245, 245, 255, 0.66);
+  font-size: var(--landing-type-body-size);
+  line-height: var(--landing-type-body-tight-line-height);
+  color: var(--landing-text-on-dark-soft);
   text-decoration: none;
 }
 
 .landing-footer__link:hover {
-  color: white;
+  color: var(--color-star-fill);
 }
 
 .landing-footer__bottom {
   max-width: var(--landing-page-max-width);
   margin: 48px auto 0;
   padding-top: 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--landing-footer-border);
 }
 
 .landing-footer__copyright {
-  color: rgba(245, 245, 255, 0.56);
-  font-size: 0.875rem;
+  color: var(--landing-text-on-dark-faint);
+  font-size: var(--landing-type-small-size);
 }
 
 @media (max-width: 1023px) {

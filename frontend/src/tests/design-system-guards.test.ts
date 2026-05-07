@@ -95,6 +95,20 @@ function extractMigratedSettingsValues(ownerBody: string): string[] {
   ]
 }
 
+function extractMigratedLandingValues(ownerBody: string): string[] {
+  const declarations = [...ownerBody.matchAll(/--landing-[a-zA-Z0-9_-]+\s*:\s*([\s\S]*?);/g)].map((match) =>
+    normalizeCssValue(match[1]),
+  )
+
+  return [
+    ...new Set(
+      declarations.filter((value) =>
+        /rgba?\(|#[a-fA-F0-9]{3,8}\b|gradient\(|clamp\(/.test(value),
+      ),
+    ),
+  ]
+}
+
 // Suite anti-drift qui raccorde les registres design-system aux fichiers reels.
 describe("design-system guards", () => {
   it("couvre les namespaces de tokens CSS par le registre CS-026", () => {
@@ -333,6 +347,41 @@ describe("design-system guards", () => {
     expect(guardedCss).toContain("var(--usage-progress, 0)")
     expect(findFlatCssBlock(settingsCss, ".settings-bg-halo").body).toContain("background: var(--settings-page-bg)")
     expect(guardedCss).not.toMatch(forbiddenPropertyLiterals)
+    for (const value of migratedValues) {
+      expect(normalizedGuardedCss).not.toContain(value)
+    }
+  })
+
+  it("bloque le retour des literals landing migres par CS-085", () => {
+    const layoutCss = readFrontendFile("layouts/LandingLayout.css")
+    const ownerBlock = findFlatCssBlock(layoutCss, ".landing-layout")
+    const landingFiles = [
+      "layouts/LandingLayout.css",
+      "pages/landing/LandingPage.css",
+      "pages/landing/sections/FaqSection.css",
+      "pages/landing/sections/LandingFooter.css",
+      "pages/landing/sections/LandingNavbar.css",
+      "pages/landing/sections/PricingSection.css",
+      "pages/landing/sections/ProblemSection.css",
+      "pages/landing/sections/SocialProofSection.css",
+      "pages/landing/sections/SolutionSection.css",
+      "pages/landing/sections/TestimonialsSection.css",
+    ]
+    const guardedCss = landingFiles
+      .map((file) => (file === "layouts/LandingLayout.css" ? removeCssRange(layoutCss, ownerBlock.start, ownerBlock.end) : readFrontendFile(file)))
+      .join("\n")
+    const normalizedGuardedCss = normalizeCssValue(guardedCss)
+    const migratedValues = extractMigratedLandingValues(ownerBlock.body)
+    const forbiddenPropertyLiterals =
+      /(?:#[a-fA-F0-9]{3,8}\b|rgba?\(|hsl(?:a)?\(|box-shadow:\s*(?!\s*(?:var\(|none))|border-radius:\s*(?:50%|\d)|font-size:\s*(?:clamp\(|\d)|font-weight:\s*\d|line-height:\s*\d|letter-spacing:\s*-?0\.|var\(\s*--[a-zA-Z0-9_-]+\s*,)/
+    const forbiddenPageScopedNamespaceUsage = /--(?:settings|help|chat|app)-[a-zA-Z0-9_-]+/
+
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--landing-*` | semantic-extension |")
+    expect(readFrontendFile("styles/typography-roles.md")).toContain("landing-marketing")
+    expect(migratedValues.length).toBeGreaterThan(100)
+    expect(guardedCss).toContain("var(--landing-")
+    expect(guardedCss).not.toMatch(forbiddenPropertyLiterals)
+    expect(guardedCss).not.toMatch(forbiddenPageScopedNamespaceUsage)
     for (const value of migratedValues) {
       expect(normalizedGuardedCss).not.toContain(value)
     }

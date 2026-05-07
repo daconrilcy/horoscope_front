@@ -14,24 +14,24 @@
 
 .problem-section__eyebrow {
   color: var(--premium-accent-purple-strong);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: var(--landing-type-eyebrow-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--landing-type-eyebrow-letter-spacing);
   text-transform: uppercase;
 }
 
 .problem-section__heading h2 {
   margin: 0;
   font-family: var(--font-family-heading);
-  font-size: clamp(2rem, 3.5vw, 3rem);
-  line-height: 1.05;
+  font-size: var(--landing-type-section-title-size);
+  line-height: var(--landing-type-section-title-line-height);
   color: var(--premium-text-strong);
 }
 
 .problem-section__heading p {
   margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: var(--landing-type-section-copy-size);
+  line-height: var(--landing-type-section-copy-line-height);
   color: var(--premium-text-main);
 }
 
@@ -50,13 +50,13 @@
 }
 
 .problem-column--before {
-  background: rgba(53, 44, 77, 0.08);
-  border: 1px solid rgba(53, 44, 77, 0.08);
+  background: var(--landing-problem-before-bg);
+  border: 1px solid var(--landing-problem-before-bg);
 }
 
 .problem-column--after {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(242, 237, 255, 0.88));
-  border: 1px solid rgba(255, 255, 255, 0.84);
+  background: var(--landing-surface-feature);
+  border: 1px solid var(--landing-surface-card-border-strong);
   box-shadow: var(--landing-shadow-card);
 }
 
@@ -66,13 +66,13 @@
   gap: 10px;
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: 1rem;
-  letter-spacing: 0.03em;
+  font-size: var(--landing-type-mobile-copy-size);
+  letter-spacing: var(--landing-type-compact-letter-spacing);
   text-transform: uppercase;
 }
 
 .problem-column--before .problem-column-title {
-  color: color-mix(in srgb, var(--premium-text-main) 78%, #4f485f 22%);
+  color: color-mix(in srgb, var(--premium-text-main) 78%, var(--landing-problem-before-title) 22%);
 }
 
 .problem-column--after .problem-column-title {
@@ -95,22 +95,22 @@
 }
 
 .problem-column--before .problem-item-icon {
-  color: #9f6b7d;
+  color: var(--landing-icon-warning);
 }
 
 .problem-column--after .problem-item-icon {
-  color: #39805f;
+  color: var(--landing-icon-success);
 }
 
 .problem-item-text {
-  font-size: 1rem;
-  line-height: 1.65;
+  font-size: var(--landing-type-mobile-copy-size);
+  line-height: var(--landing-type-copy-line-height);
   color: var(--premium-text-main);
 }
 
 .problem-column--after .problem-item-text {
   color: var(--premium-text-strong);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 @media (max-width: 1023px) {

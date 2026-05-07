@@ -14,24 +14,24 @@
 
 .solution-section__eyebrow {
   color: var(--premium-accent-purple-strong);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: var(--landing-type-eyebrow-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--landing-type-eyebrow-letter-spacing);
   text-transform: uppercase;
 }
 
 .solution-section__heading h2 {
   margin: 0;
   font-family: var(--font-family-heading);
-  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-size: var(--landing-type-section-title-size);
   color: var(--premium-text-strong);
-  line-height: 1.05;
+  line-height: var(--landing-type-section-title-line-height);
 }
 
 .solution-section__heading p {
   margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: var(--landing-type-section-copy-size);
+  line-height: var(--landing-type-section-copy-line-height);
   color: var(--premium-text-main);
 }
 
@@ -47,8 +47,8 @@
   min-height: 100%;
   padding: 28px;
   border-radius: calc(var(--landing-radius-card) + 4px);
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: var(--landing-surface-panel);
+  border: 1px solid var(--landing-surface-panel-border);
   box-shadow: var(--landing-shadow-card);
 }
 
@@ -60,10 +60,10 @@
 }
 
 .solution-step-number {
-  color: color-mix(in srgb, var(--landing-accent) 74%, white 26%);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--landing-accent) 74%, var(--color-star-fill) 26%);
+  font-size: var(--landing-type-eyebrow-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--type-eyebrow-letter-spacing);
   text-transform: uppercase;
 }
 
@@ -73,8 +73,8 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: 16px;
-  background: rgba(142, 124, 240, 0.12);
+  border-radius: var(--radius-shortcut-badge);
+  background: var(--landing-accent-surface);
   color: var(--landing-accent);
 }
 
@@ -85,26 +85,26 @@
 
 .solution-card-content h3 {
   margin: 0;
-  font-size: 1.2rem;
-  line-height: 1.25;
+  font-size: var(--landing-type-hero-panel-title-size);
+  line-height: var(--line-height-tight);
   color: var(--premium-text-strong);
 }
 
 .solution-card-content p {
   margin: 0;
-  font-size: 0.98rem;
-  line-height: 1.65;
+  font-size: var(--landing-type-copy-size);
+  line-height: var(--landing-type-copy-line-height);
   color: var(--premium-text-main);
 }
 
 .solution-card-example {
   padding: 16px 18px;
-  border-radius: 18px;
-  background: rgba(249, 246, 255, 0.9);
+  border-radius: var(--landing-radius-panel);
+  background: var(--landing-surface-final-cta);
   color: var(--premium-text-strong);
-  font-size: 0.9375rem;
-  line-height: 1.55;
-  border: 1px solid rgba(111, 87, 217, 0.1);
+  font-size: var(--landing-type-body-size);
+  line-height: var(--landing-type-body-compact-line-height);
+  border: 1px solid var(--landing-accent-border-muted);
 }
 
 .solution-benefit-badge {
@@ -114,10 +114,10 @@
   min-height: 36px;
   padding: 0 14px;
   border-radius: var(--landing-radius-cta);
-  background: rgba(142, 124, 240, 0.12);
+  background: var(--landing-accent-surface);
   color: var(--premium-accent-purple-strong);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-size: var(--landing-type-eyebrow-size);
+  font-weight: var(--font-weight-bold);
 }
 
 @media (max-width: 1023px) {

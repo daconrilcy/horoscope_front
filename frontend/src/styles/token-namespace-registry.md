@@ -32,7 +32,7 @@ sourcee dans ce registre.
 | `--usage-*` | dynamic | `frontend/src/pages/settings/Settings.css` | runtime progress value | permanent custom property bridge |
 | `--sidebar-width` | dynamic | layout components | runtime layout value | permanent custom property bridge |
 | `--period-accent` | dynamic | prediction timeline components | runtime accent value | permanent custom property bridge |
-| `--landing-*` | semantic-extension | landing layout and sections | premium landing layer | product decision before global merge |
+| `--landing-*` | semantic-extension | `frontend/src/layouts/LandingLayout.css` | landing visual and typography semantic owners consumed by landing sections | permanent landing-scoped semantic layer |
 | `--help-*` | semantic-extension | `frontend/src/pages/HelpPage.css` | help page visual roles | permanent page-scoped semantic layer |
 | `--chat-*` | semantic-extension | `frontend/src/pages/ChatPage.css` | chat cluster visual and typography roles | permanent chat page-scoped semantic layer |
 | `--admin-settings-*` | semantic-extension | `frontend/src/pages/admin/AdminSettingsPage.css` | admin settings cluster local visual roles | permanent page-scoped semantic layer |
