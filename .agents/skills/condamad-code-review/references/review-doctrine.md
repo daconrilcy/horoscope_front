@@ -45,6 +45,16 @@ For each AC:
 - flag missing, partial, or contradicted evidence;
 - verify non-goals were not implemented accidentally.
 
+For audit-sourced stories, also audit source-finding closure:
+
+- source finding and story candidate were reviewed;
+- implementation closes the finding, implements an explicit phase, blocks on a
+  decision, or defers a non-domain concern;
+- no hidden in-domain residual work remains for a full-closure story;
+- no broad allowlist, wildcard exception, unclassified fallback, compatibility,
+  legacy, migration-only, shim, alias, TODO, or `PASS with limitation` is used
+  to make the story appear complete.
+
 ### 3. Validation Audit
 
 Check whether validation commands are:
@@ -143,5 +153,6 @@ Do not return `CLEAN` when:
 - claimed tests were not verified;
 - required validation was skipped;
 - No Legacy hits remain unclassified;
+- audit-sourced full-closure stories leave known in-domain residual work;
 - exact changed files are unknown;
 - `git diff --check` or equivalent was not run or explicitly skipped with risk.

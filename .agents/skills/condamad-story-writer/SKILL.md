@@ -39,6 +39,16 @@ The output story must be executable by `condamad-dev-story` and reviewable by
   evidence.
 - Do not invent repo facts. Mark assumptions explicitly.
 - Do not create compatibility shims, aliases, fallbacks, or legacy paths as acceptable implementation routes.
+- In audit-to-story mode, inspect latest same-domain audits and sibling stories
+  before drafting. Do not generate a repetitive "next batch", "next cluster",
+  or "continue reducing" micro-story unless the source audit provides a finite
+  closure map and the story states exactly which phase it closes.
+- Prefer a closure-ready story: the story should either close the source
+  finding fully, declare an explicit user-decision blocker, or identify an
+  intentionally phased slice with the remaining closure map and stop condition.
+- If the source finding expects full closure, the story must forbid `PASS with
+  limitation`, broad allowlists, wildcard exceptions, unclassified fallback,
+  compatibility, legacy, migration-only, shim, alias, or hidden residual work.
 - Do not mark a story `ready-to-dev` unless it passes the story validation contract.
 - Do not mark a story `ready-to-review` unless implementation evidence exists.
 - Do not mark a story `done` unless review evidence exists.

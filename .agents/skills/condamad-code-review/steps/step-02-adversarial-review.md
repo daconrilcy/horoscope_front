@@ -32,6 +32,19 @@ For every AC:
 - flag missing, contradicted, or weak proof;
 - check non-goals and scope boundaries.
 
+### Layer B2 - Source Finding Closure Auditor
+
+For audit-sourced stories:
+
+- compare implementation evidence to the source finding and story candidate;
+- inspect latest same-domain audit or sibling stories when available;
+- decide whether the source finding is closed, intentionally phased, blocked,
+  or non-domain;
+- flag hidden in-domain residual work, vague phase boundaries, missing
+  before/after proof, missing anti-return guards, broad allowlists, wildcard
+  exceptions, unclassified fallback, compatibility, legacy, migration-only,
+  shim, alias, TODO, or `PASS with limitation`.
+
 ### Layer C - Edge Case Hunter
 
 Inspect changed code and nearby callers for:
@@ -95,4 +108,3 @@ Produce raw candidate findings with:
 - evidence;
 - suspected bucket;
 - suggested fix.
-

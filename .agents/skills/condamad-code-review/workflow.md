@@ -10,6 +10,7 @@ findings grounded in:
 - the real repository diff;
 - the story or CONDAMAD capsule;
 - acceptance criteria and final evidence;
+- source audit finding/candidate when the story was generated from an audit;
 - validation commands actually run;
 - DRY / No Legacy constraints;
 - `_condamad/stories/regression-guardrails.md` shared invariants;
@@ -45,6 +46,12 @@ _condamad/stories/<story-key>/
   generated/07-no-legacy-dry-guardrails.md
   generated/10-final-evidence.md
 ```
+
+When the story references an audit finding or story candidate, also review that
+source material and the latest same-domain audit or sibling stories when they
+are available. The review must verify whether the implementation closes the
+finding, executes an explicitly bounded phase, blocks on a decision, or defers a
+non-domain concern.
 
 If the `condamad-dev-story` reference files are available, their doctrine is
 normative for implementation evidence:
@@ -143,6 +150,10 @@ difference for an applicable invariant is a finding.
   security, or test risk.
 - Do not treat a skipped command as passing.
 - Do not accept final evidence that lacks AC-to-validation mapping.
+- Do not return `CLEAN` for an audit-sourced full-closure story while known
+  in-domain residual work, broad allowlists, wildcard exceptions, unclassified
+  fallback, compatibility, legacy, migration-only, shim, alias, TODO, or `PASS
+  with limitation` remains.
 - For No Legacy stories, classify legacy/search hits; unclassified active hits
   are review findings.
 - If subagents are not explicitly authorized by the current user, run the
@@ -223,6 +234,11 @@ Use exactly one:
   full-regression validation could not be run and the residual risk is
   documented.
 - `CLEAN`: no actionable findings and validation evidence is adequate.
+
+For audit-sourced stories, `ACCEPTABLE_WITH_LIMITATIONS` is forbidden when the
+story objective, ACs, source finding, or regression guardrails require full
+closure. Use `CHANGES_REQUESTED` or `BLOCKING` until closure evidence is
+complete, or document the blocker explicitly.
 
 ## Story Status Synchronization
 

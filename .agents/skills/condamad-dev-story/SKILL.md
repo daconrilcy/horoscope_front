@@ -146,6 +146,11 @@ Never ignore repository-local `AGENTS.md` instructions. Read every applicable `A
 - Do not change public behavior unless the story requires it.
 - Do not change Acceptance Criteria during implementation.
 - Do not modify architectural doctrine to fit the implementation; change implementation to fit doctrine.
+- For stories sourced from audits, verify before implementation that the story
+  is sufficient for the source finding or phase it claims to close. Stop with a
+  precise blocker if the story is a vague "next batch", "next cluster", or
+  "continue reducing" slice without exact surface, closure map, stop condition,
+  before/after evidence, and anti-return guard requirements.
 
 ### DRY / No Legacy
 
@@ -328,6 +333,18 @@ Extract:
 - whether the story has a frontend slice requiring `condamad-frontend-dev`
   subagent delegation.
 
+For audit-sourced stories, also read the referenced audit finding/candidate and
+nearby same-domain stories when paths are available. Record in the capsule or
+dev log whether the story is:
+
+- `full-closure`: intended to close the source finding;
+- `phased-with-map`: intentionally bounded with remaining closure map;
+- `blocked`: requires a user/product/technical decision;
+- `non-domain`: records deferred context outside the story domain.
+
+Do not implement an under-scoped story that claims closure while leaving known
+in-domain residual work.
+
 ### Step 3 - Inspect repository before editing
 
 Use `rg` and targeted file reads before implementing.
@@ -431,6 +448,8 @@ Check:
 - deleted files are intentional;
 - tests prove the ACs;
 - formatting-only churn is justified.
+- audit-sourced stories have closed, phased, blocked, or non-domain status for
+  the source finding and no hidden in-domain residual work.
 
 ### Step 8 - Complete evidence
 
@@ -453,6 +472,7 @@ Record:
 - AC-by-AC evidence;
 - frontend subagent result and evidence when a frontend slice existed;
 - remaining risks.
+- source finding closure status when the story came from an audit.
 
 Synchronize the canonical story registry:
 
@@ -552,6 +572,8 @@ A CONDAMAD story is complete only when all of the following are true:
 - relevant tests/checks pass, or limitations are explicitly classified;
 - no unrelated files changed;
 - no forbidden legacy path remains unclassified;
+- audit-sourced stories do not leave unclassified in-domain residual work for
+  the source finding they claim to close;
 - final evidence is complete;
 - final `git status --short` is reported.
 

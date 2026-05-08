@@ -33,3 +33,22 @@
 - Story candidates must reference existing findings whose `Story candidate` value is `yes`.
 - Risk matrix rows must reference known findings, and every finding must appear in the risk matrix.
 - Evidence log must contain at least one command/source or an explicit limitation.
+
+## Closure Status
+
+`00-audit-report.md` must include a domain closure status:
+
+- `closed`: no implementation story remains for the audited domain;
+- `open`: at least one in-domain implementation finding remains;
+- `phased-with-map`: multiple bounded implementation slices remain and the
+  report provides the complete surface plus stop condition;
+- `blocked`: a user, product, or technical decision is required before
+  implementation;
+- `non-domain`: residual issues belong to another audit domain.
+
+`03-story-candidates.md` must include an `Exhaustive Files To Modify` section
+for every open or phased implementation finding. Use explicit `none` entries
+when no application or governance/test file remains.
+
+Residual concerns outside the audited domain must be placed in a separate
+deferred non-domain section and must not keep the audited domain open.

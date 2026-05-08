@@ -57,6 +57,7 @@ Every story must include these sections:
 3. Domain Boundary
 4. Operation Contract
 4a. Required Contracts
+4j. Source Finding Closure
 5. Current State Evidence
 6. Target State
 7. Acceptance Criteria
@@ -145,6 +146,41 @@ The Operation Contract section must include:
 - `Deletion allowed: yes | no`
 - `Replacement allowed: yes | no`
 - `User decision required if: <condition>`
+
+## Source Finding Closure
+
+Every story must include:
+
+```md
+## 4j. Source Finding Closure
+```
+
+For audit-sourced stories, this section must include:
+
+- `Closure status: full-closure | phased-with-map | blocked | non-domain`
+- `Source finding: <finding id and path>`
+- `Closure proof required: <before/after artifact, guard, test, scan>`
+- `Known residual in-domain work: none | <explicit list>`
+- `Deferred non-domain concerns: none | <explicit list>`
+
+Rules:
+
+- `full-closure` stories must state `Known residual in-domain work: none`.
+- `phased-with-map` stories must include the remaining closure map and stop
+  condition.
+- `blocked` stories must state the exact user/product/technical decision.
+- `non-domain` stories must name the correct deferred domain.
+- If full closure is required by the source finding, the story must forbid
+  `PASS with limitation`, broad allowlists, wildcard exceptions, unclassified
+  fallback, compatibility, legacy, migration-only, shim, alias, TODO, and hidden
+  residual work.
+
+For non-audit stories, write:
+
+```md
+- Closure status: not applicable
+- Reason: story is not sourced from an audit finding.
+```
 
 The primary archetype must come from `references/story-archetypes.md` unless it
 is `custom`, in which case the story must explain why no supported archetype

@@ -10,9 +10,25 @@
 
 ## Findings To Convert
 
-| Finding | Severity | Evidence | Desired correction |
-|---|---|---|---|
-| F1 | High | `relative/path.py` | ... |
+| Finding | Severity | Evidence | Desired correction | Closure intent |
+|---|---|---|---|---|
+| F1 | High | `relative/path.py` | ... | full-closure \| phased-with-map \| blocked \| non-domain |
+
+## Prior Domain History
+
+- Latest same-domain audit:
+- Sibling stories already attempted:
+- Findings already closed:
+- Findings still active:
+- Deferred non-domain concerns:
+
+## Closure Requirements
+
+- Exact affected surface:
+- Before/after evidence required:
+- Reintroduction guard required:
+- Stop condition proving no repeated follow-up story is needed:
+- User decision blocker, if any:
 
 ## Domain Boundary
 
@@ -32,4 +48,3 @@
 <negative rg scans>
 <lint/type checks>
 ```
-

@@ -111,6 +111,23 @@ Choose exactly one snippet:
 - `templates/snippets/reintroduction-guard-active.md`
 - `templates/snippets/reintroduction-guard-not-applicable.md`
 
+## 4j. Source Finding Closure
+
+Use for every story.
+
+For audit-sourced stories:
+
+- Closure status: full-closure | phased-with-map | blocked | non-domain
+- Source finding: `<audit path>#<finding-id>`
+- Closure proof required: <before/after artifact, guard, test, scan>
+- Known residual in-domain work: none | <explicit list>
+- Deferred non-domain concerns: none | <explicit list>
+
+For non-audit stories:
+
+- Closure status: not applicable
+- Reason: story is not sourced from an audit finding.
+
 ## 5. Current State Evidence
 
 The current codebase or audit indicates:
@@ -333,6 +350,10 @@ Run or justify why skipped:
 - If an AC cannot be satisfied, stop and record the blocker.
 - Do not preserve legacy behavior for convenience.
 - Do not bypass deletion through repointing, soft-disable, wrapper, alias, fallback, or re-export.
+- Do not accept `PASS with limitation`, broad allowlists, wildcard exceptions,
+  unclassified fallback, compatibility, legacy, migration-only, shim, alias,
+  TODO, or hidden residual in-domain work when this story is marked
+  `full-closure`.
 
 ## 24. References
 

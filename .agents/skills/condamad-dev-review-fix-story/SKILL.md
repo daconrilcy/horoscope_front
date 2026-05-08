@@ -29,7 +29,9 @@ orchestration loop:
    closure loop.
 5. Use `../condamad-frontend-dev/SKILL.md` for every frontend implementation
    and frontend review-fix slice.
-6. Keep final triage, fixes, validation, and status synchronization in the main
+6. Verify that the story is sufficient to close the finding or bounded phase it
+   claims to close before spending implementation time.
+7. Keep final triage, fixes, validation, and status synchronization in the main
    Codex session.
 
 This skill composes existing CONDAMAD skills. Do not duplicate or weaken their
@@ -133,8 +135,48 @@ evidence that the implementation is correct.
 3. Read applicable `AGENTS.md` files.
 4. Resolve exactly one story target.
 5. Ensure `_condamad/stories/regression-guardrails.md` exists and read it.
+6. If the story was generated from an audit, read the source audit finding,
+   story candidate, latest same-domain audit if any, and nearby stories that
+   already attempted the same finding.
 
 Preserve unrelated dirty files. Do not overwrite user changes.
+
+### 1a. Story sufficiency gate
+
+Before implementation, decide whether the target story is closure-ready for its
+declared objective.
+
+The gate must inspect:
+
+- source finding and candidate text;
+- target story objective, scope, ACs, expected files, non-goals, and validation
+  plan;
+- prior stories and audits for the same domain/finding;
+- applicable regression guardrails.
+
+Pass the gate only when all are true:
+
+- the story has exact files or an exact selection rule for the full surface it
+  claims to remediate;
+- it defines before/after evidence or equivalent persistent proof;
+- it requires deterministic reintroduction guards for removed or converged
+  debt;
+- it forbids broad allowlists, wildcard exceptions, unclassified fallback,
+  compatibility, legacy, migration-only, shim, alias, or `PASS with limitation`
+  when the source finding expects full closure;
+- its validation commands cover the changed domain and the relevant guardrails;
+- any known residual work is either outside the domain, explicitly out of scope,
+  or blocked by a user decision.
+
+If the story says "next batch", "next cluster", "continue reducing", or similar
+without a finite closure map and stop condition, stop before implementation and
+report that the story must be recut or expanded. Do not implement an
+under-scoped story that is likely to require another story for the same finding.
+
+If the story is intentionally phased, record the exact phase boundary and the
+remaining closure map in the dev log/final evidence. A phased story can be
+accepted only when the phase boundary is explicit and does not claim full
+closure.
 
 ### 2. Development
 
@@ -156,7 +198,7 @@ incomplete implementation unless the user explicitly asks for a partial review.
 
 After development, rebuild context using the isolation policy, then launch the
 independent review layers. When subagents are authorized and available, run the
-two read-only review layers in parallel. Otherwise, run them sequentially in the
+read-only review layers in parallel. Otherwise, run them sequentially in the
 main session.
 
 #### Story Conformance Reviewer
@@ -189,6 +231,25 @@ Mission:
 - find runtime bugs, broken imports, data/API risks, missing tests, validation
   gaps, DRY violations, No Legacy violations, and regression-guardrail gaps.
 
+#### Source Finding Closure Reviewer
+
+Inputs:
+
+- source audit finding and story candidate;
+- latest same-domain audit when available;
+- prior sibling stories for the same finding or domain;
+- generated final evidence;
+- `git diff`.
+
+Mission:
+
+- verify that the implementation closes the exact finding, phase, or user
+  decision stated by the story;
+- detect leftover application files, governance files, allowlist entries,
+  unguarded literals, legacy/fallback/compatibility surfaces, or validation
+  gaps that would force another story on the same subject;
+- separate true residual findings from non-domain concerns.
+
 Each review layer must return findings with severity, file/line evidence when
 possible, reason, and expected correction. If it finds no issue, it must say
 that clearly and list residual validation risk.
@@ -211,6 +272,9 @@ For each candidate finding:
 - fix accepted findings with the smallest coherent patch;
 - add or update tests/guards when the finding exposes behavior or regression
   risk;
+- for source-finding closure findings, fix the whole remaining in-domain
+  surface covered by the story objective, not just the first example that made
+  the reviewer fail;
 - update `generated/10-final-evidence.md` and `generated/11-code-review.md`
   when a capsule exists.
 
@@ -262,6 +326,20 @@ Repeat review, fix, and validation until a fresh review reaches `CLEAN` or
 `ACCEPTABLE_WITH_LIMITATIONS` with all required validation evidence present. Do
 not treat optional residual validation risk as a finding unless the story,
 guardrails, or repository instructions require that validation.
+
+For stories sourced from audits, `ACCEPTABLE_WITH_LIMITATIONS` is not allowed
+when the story objective, ACs, source finding, or regression guardrails require
+full closure. In that case the loop must continue until `CLEAN`, or stop with a
+real blocker and explicit evidence.
+
+Before accepting a clean result, perform a final source-finding closure check:
+
+- every AC is satisfied by durable evidence;
+- source finding status is closed, intentionally phased, non-domain, or blocked;
+- no new broad allowlist, wildcard, fallback, alias, shim, compatibility,
+  migration-only, No Legacy exception, or TODO was introduced to pass tests;
+- all changed frontend surfaces have exact guard coverage or a documented reason
+  why existing guards already cover them.
 
 Stop only for a real blocker: missing story, unreadable required instructions,
 unsafe destructive change, conflicting acceptance criteria, repeated validation

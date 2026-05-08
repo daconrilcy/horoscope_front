@@ -62,9 +62,25 @@ Do not weaken acceptance criteria or review findings to make the loop pass.
    relevant git diff/history, and repository searches. The review target is the
    code implemented for that story, not the whole repository and not only the
    currently unstaged diff.
+8. If the story came from an audit, read the source finding/candidate and
+   latest same-domain audit or sibling stories when available.
 
 Never overwrite unrelated user changes. If unrelated dirty files exist, leave
 them untouched and commit only files that belong to this story closure.
+
+## Story closure gate
+
+Before the first review/fix loop, classify audit-sourced stories as
+`full-closure`, `phased-with-map`, `blocked`, or `non-domain`.
+
+If the story claims or implies full closure, do not accept residual in-domain
+work, broad allowlists, wildcard exceptions, unclassified fallback,
+compatibility, legacy, migration-only, shim, alias, TODO, or `PASS with
+limitation` as a valid end state.
+
+If the story is only a phase, require the remaining closure map and exact stop
+condition in evidence. If neither is present, treat the story as under-scoped
+and record a review finding before applying fixes.
 
 ## Review/fix loop
 
@@ -120,6 +136,8 @@ Rules:
 - Do not mark a finding resolved without code/evidence and validation.
 - Do not introduce compatibility shims, fallback behavior, aliases, or duplicate
   active paths unless the story explicitly requires them.
+- For audit-source closure findings, fix the whole remaining in-domain surface
+  covered by the story objective, not just the first failing example.
 
 Frontend review-fix rules:
 
@@ -188,13 +206,16 @@ When a fresh review has no issues:
    - preserve story ID, key, title, path, source, and table shape.
 3. Run final validation required by the story and repository.
 4. Review `git diff --stat` and `git diff` to confirm scope.
-5. Commit only the story closure changes with a concise message, for example:
+5. Confirm audit-source closure status is closed, intentionally phased with
+   remaining map, blocked by an explicit decision, or non-domain. Do not close a
+   full-closure story with hidden residual in-domain work.
+6. Commit only the story closure changes with a concise message, for example:
 
 ```text
 chore(condamad): close CS-013 review
 ```
 
-6. Push the current branch with a non-destructive push:
+7. Push the current branch with a non-destructive push:
 
 ```powershell
 git push

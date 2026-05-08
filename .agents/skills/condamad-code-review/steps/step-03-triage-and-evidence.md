@@ -29,6 +29,11 @@ Turn raw adversarial observations into a short list of actionable findings.
     - `CLEAN` only when no actionable issue remains and False CLEAN Prevention
       conditions do not apply.
 
+For audit-sourced stories, include source-finding closure in triage. If the
+story claims full closure but leaves known in-domain residual work or uses broad
+exceptions/limitations to pass, classify the issue as `patch` or
+`decision_needed`; do not downgrade it to `defer`.
+
 ## Evidence Requirements
 
 Every non-dismissed finding must include:
@@ -52,6 +57,7 @@ If a CONDAMAD capsule exists, write or update
 - commands run by reviewer;
 - verdict;
 - residual risks.
+- source finding closure status for audit-sourced stories.
 
 Replace the full file on each review run. Do not append multiple contradictory
 reviews to the same artifact.

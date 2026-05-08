@@ -63,6 +63,8 @@ Do not draft the story until required contracts are selected.
 Collect enough evidence to avoid invented repo facts:
 
 - source brief or audit;
+- latest same-domain audits when the source is an audit or audit follow-up;
+- sibling stories already produced for the same source finding or domain;
 - applicable `AGENTS.md`;
 - repository structure;
 - existing implementation;
@@ -72,6 +74,20 @@ Collect enough evidence to avoid invented repo facts:
 
 If repository evidence is unavailable, state that explicitly and record the
 assumption risk.
+
+Build a closure ledger for audit-to-story inputs:
+
+- source finding status: `open`, `closed`, `superseded`, `blocked`, or
+  `non-domain`;
+- prior stories that attempted the same finding;
+- residual in-domain files/surfaces, separated from governance/test files;
+- deferred non-domain concerns;
+- exact stop condition for this story.
+
+If the source audit only says "next cluster", "next batch", "continue", or
+similar without a finite closure map, do not draft another micro-story. Stop and
+ask for a recut audit/candidate or perform repo-informed scoping to create a
+closure-ready story.
 
 ## Step 4 - Draft Implementation Contract
 
@@ -111,6 +127,12 @@ The draft must include:
 - regression risks;
 - dev agent instructions.
 
+For audit-to-story inputs, the draft must also state whether it closes the
+source finding fully, executes an explicitly bounded phase, blocks on a user
+decision, or defers a non-domain concern. A phased story must include the
+remaining closure map; a full-closure story must prohibit `PASS with
+limitation` and hidden residual implementation work.
+
 ## Step 5 - Anti-Drift Validation
 
 Before writing the final story, check:
@@ -121,6 +143,8 @@ Before writing the final story, check:
 - no global refactor or broad cleanup is hidden in the scope;
 - no new dependency is permitted without explicit justification;
 - no compatibility shim, alias, fallback, or re-export is listed as acceptable.
+- audit-to-story scope has exact files or an exact selection rule, before/after
+  evidence, anti-return guards, and a stop condition.
 
 ## Step 6 - Story Lint
 
@@ -172,6 +196,10 @@ Check:
 - Can the agent skip persistent evidence?
 - Can one AC be partially implemented and still look complete?
 - Can an internal test import be mistaken for external usage?
+- Can the story leave known in-domain residual work and still claim to close the
+  source finding?
+- Can a "next cluster" phrasing force another audit/story cycle on the same
+  subject?
 
 If yes, tighten the story before writing final output.
 
