@@ -1,6 +1,6 @@
 # Story CS-105 rattacher-routes-auth-publiques-layout: Rattacher les routes auth publiques a un layout
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

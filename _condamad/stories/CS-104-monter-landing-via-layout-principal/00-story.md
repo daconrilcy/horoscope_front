@@ -1,6 +1,6 @@
 # Story CS-104 monter-landing-via-layout-principal: Monter la landing via son layout principal
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

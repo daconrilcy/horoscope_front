@@ -1,6 +1,6 @@
 # Story CS-103 converger-layout-maitre-frontend: Converger le layout maitre frontend
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

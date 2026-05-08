@@ -5,6 +5,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react"
+import path from "node:path"
 import { describe, expect, it } from "vitest"
 import type { RouteObject } from "react-router-dom"
 
@@ -14,7 +15,11 @@ import { AppLayout } from "../layouts/AppLayout"
 import { AuthLayout } from "../layouts/AuthLayout"
 import { LandingLayout } from "../layouts/LandingLayout"
 import { RootLayout } from "../layouts/RootLayout"
-import { listFiles, readFrontendFile } from "./design-system-policy"
+import {
+  frontendRoot,
+  listFiles,
+  readFrontendFile,
+} from "./design-system-policy"
 import {
   DIRECT_API_PAGE_EXCEPTIONS,
   FORBIDDEN_ADMIN_BARREL_EXPORTS,
@@ -115,6 +120,92 @@ function collectRoutePaths(
 
 function forbiddenUnknownClassification(): string {
   return ["unk", "nown"].join("")
+}
+
+function anonymousDecisionTokens(): string[] {
+  return ["A definir", "Aucun owner runtime actif"]
+}
+
+function pageSymbol(file: string): string {
+  return file.split("/").at(-1)?.replace(/\.tsx$/, "") ?? ""
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function pageModulePath(file: string): string {
+  return file.replace(/\.tsx$/, "")
+}
+
+function normalizeFrontendPath(value: string): string {
+  return value.replace(/\\/g, "/").replace(/\.tsx?$/, "")
+}
+
+function extractModuleSpecifiers(source: string): string[] {
+  return [
+    ...source.matchAll(
+      /\b(?:import\s*\(|import\s+[^'";]+?\s+from\s+|export\s+[^'";]+?\s+from\s*)['"]([^'"]+)['"]/g,
+    ),
+  ].map((match) => match[1])
+}
+
+function resolveModuleSpecifier(
+  importerFile: string,
+  specifier: string,
+): string {
+  if (specifier.startsWith("@pages/")) {
+    return normalizeFrontendPath(specifier.replace(/^@pages\//, "pages/"))
+  }
+
+  if (specifier === "@pages") {
+    return "pages/index"
+  }
+
+  if (!specifier.startsWith(".")) {
+    return normalizeFrontendPath(specifier)
+  }
+
+  const importerDirectory = path.dirname(path.join(frontendRoot, importerFile))
+  const resolved = path.resolve(importerDirectory, specifier)
+  return normalizeFrontendPath(path.relative(frontendRoot, resolved))
+}
+
+function moduleSpecifierTargetsPage(
+  importerFile: string,
+  specifier: string,
+  candidateFile: string,
+): boolean {
+  return resolveModuleSpecifier(importerFile, specifier) === pageModulePath(candidateFile)
+}
+
+function sourceReattachesPage(
+  source: string,
+  importerFile: string,
+  symbol: string,
+  file: string,
+): boolean {
+  const escapedSymbol = escapeRegExp(symbol)
+  const importsCandidate = extractModuleSpecifiers(source).some((specifier) =>
+    moduleSpecifierTargetsPage(importerFile, specifier, file),
+  )
+  const jsxPattern = new RegExp(`<${escapedSymbol}\\b`)
+
+  return importsCandidate || jsxPattern.test(source)
+}
+
+function runtimeSourceFiles(): string[] {
+  return [...listFiles("", ".tsx"), ...listFiles("", ".ts")].filter(
+    (file) => !file.startsWith("tests/") && !file.startsWith("test/"),
+  )
+}
+
+function isStructuredStoryKey(value: string): boolean {
+  return /^CS-\d{3}-[a-z0-9-]+$/.test(value)
+}
+
+function isIsoDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
 
 describe("page-architecture", () => {
@@ -291,17 +382,99 @@ describe("page-architecture", () => {
     )
     const routesSource = readFrontendFile("app/routes.tsx")
     const routedBlockedFiles = blockedFiles
-      .filter((entry) => {
-        const symbol = entry.file
-          .split("/")
-          .at(-1)
-          ?.replace(/\.tsx$/, "")
-        return Boolean(symbol && routesSource.includes(symbol))
-      })
+      .filter((entry) => routesSource.includes(pageSymbol(entry.file)))
       .map((entry) => entry.file)
 
     expect(blockedFiles.length).toBeGreaterThan(0)
     expect(routedBlockedFiles).toEqual([])
+  })
+
+  it("bloque le routage et le rattachement runtime des pages candidates mortes", () => {
+    const deadCandidates = PAGE_LAYOUT_OWNER_CLASSIFICATIONS.filter(
+      (entry) => entry.classification === "dead/unmounted-page-candidate",
+    )
+    const runtimeFiles = runtimeSourceFiles()
+    const reattachedCandidates = deadCandidates.flatMap((entry) => {
+      const symbol = pageSymbol(entry.file)
+      const importingFiles = runtimeFiles.filter((file) => {
+        if (file === entry.file) {
+          return false
+        }
+        return sourceReattachesPage(
+          readFrontendFile(file),
+          file,
+          symbol,
+          entry.file,
+        )
+      })
+
+      return importingFiles.map((file) => `${entry.file}:${file}`)
+    })
+
+    expect(deadCandidates.length).toBeGreaterThan(0)
+    expect(reattachedCandidates).toEqual([])
+  })
+
+  it("detecte les imports relatifs imbriques des pages candidates mortes", () => {
+    expect(
+      sourceReattachesPage(
+        'const Testimonials = lazy(() => import("./sections/TestimonialsSection"))',
+        "pages/landing/LandingPage.tsx",
+        "TestimonialsSection",
+        "pages/landing/sections/TestimonialsSection.tsx",
+      ),
+    ).toBe(true)
+    expect(
+      sourceReattachesPage(
+        "export { HomePage as LegacyHome } from './HomePage'",
+        "pages/index.ts",
+        "HomePage",
+        "pages/HomePage.tsx",
+      ),
+    ).toBe(true)
+    expect(
+      sourceReattachesPage(
+        'const LegacyHome = lazy(() => import("@pages/HomePage"))',
+        "app/routes.tsx",
+        "HomePage",
+        "pages/HomePage.tsx",
+      ),
+    ).toBe(true)
+  })
+
+  it("exige une decision sourcee pour les pages bloquees ou candidates mortes", () => {
+    const decisionEntries = PAGE_LAYOUT_OWNER_CLASSIFICATIONS.filter(
+      (entry) =>
+        entry.classification === "needs-user-decision" ||
+        entry.classification === "dead/unmounted-page-candidate",
+    )
+    const anonymousTokens = anonymousDecisionTokens()
+    const invalidDecisionEntries = decisionEntries
+      .filter((entry) => {
+        const decisionText = `${entry.owner} ${entry.reason} ${entry.exit}`
+        const hasAnonymousToken = anonymousTokens.some((token) =>
+          decisionText.includes(token),
+        )
+        const hasSource = Boolean(
+          entry.decisionSource &&
+            isStructuredStoryKey(entry.decisionSource.story) &&
+            isIsoDate(entry.decisionSource.decidedOn) &&
+            entry.decisionSource.owner === entry.owner &&
+            entry.decisionSource.evidence.includes(
+              entry.decisionSource.story,
+            ) &&
+            entry.decisionSource.evidence.endsWith(".md"),
+        )
+        const hasExit =
+          entry.classification === "needs-user-decision"
+            ? Boolean(entry.expiresOn && isIsoDate(entry.expiresOn))
+            : Boolean(entry.removalStory)
+
+        return hasAnonymousToken || !hasSource || !hasExit
+      })
+      .map((entry) => entry.file)
+
+    expect(invalidDecisionEntries).toEqual([])
   })
 
   it("verifie que les routes classees comme routees sont presentes dans l'arbre", () => {

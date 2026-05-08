@@ -7,8 +7,8 @@ Source executable: `frontend/src/tests/page-architecture-allowlist.ts`, export `
 - Zero fichier `frontend/src/pages/**/*.tsx` non classe.
 - Les routes applicatives/admin/auth/landing ont un owner layout prouve par `page-architecture-guards.test.ts`.
 - Les composants page-adjacent restent classes avec owner exact; aucune relocation n'est faite dans cette story.
-- Les pages publiques potentielles `PrivacyPolicyPage`, `BillingSuccessPage` et `BillingCancelPage` restent `needs-user-decision` et ne sont pas routees.
-- Les candidats morts `HomePage` et `TestimonialsSection` ne sont pas supprimes dans cette story.
+- Les pages publiques potentielles `PrivacyPolicyPage`, `BillingSuccessPage` et `BillingCancelPage` restent non routees avec decisions CS-108, owner et expiry explicites.
+- Les candidats morts `HomePage` et `TestimonialsSection` ne sont pas supprimes; CS-108 les retient jusqu'a story de retrait dediee.
 
 ## Classification par fichier
 
@@ -60,15 +60,17 @@ Source executable: `frontend/src/tests/page-architecture-allowlist.ts`, export `
 | `pages/landing/sections/ProblemSection.tsx` | `page-adjacent-component` | owner `LandingPage` | keep-classified |
 | `pages/landing/sections/SocialProofSection.tsx` | `page-adjacent-component` | owner `LandingPage` | keep-classified |
 | `pages/landing/sections/SolutionSection.tsx` | `page-adjacent-component` | owner `LandingPage` | keep-classified |
-| `pages/landing/sections/TestimonialsSection.tsx` | `dead/unmounted-page-candidate` | aucun import runtime actif detecte | keep-classified |
-| `pages/PrivacyPolicyPage.tsx` | `needs-user-decision` | owner public a definir | block routing/deletion |
-| `pages/billing/BillingSuccessPage.tsx` | `needs-user-decision` | retour billing public a definir | block routing/deletion |
-| `pages/billing/BillingCancelPage.tsx` | `needs-user-decision` | retour billing public a definir | block routing/deletion |
-| `pages/HomePage.tsx` | `dead/unmounted-page-candidate` | ancien export barrel sans route | keep-classified |
+| `pages/landing/sections/TestimonialsSection.tsx` | `dead/unmounted-page-candidate` | owner `Product removal decision owner`; decisionSource CS-108; aucun import runtime actif detecte | keep pending dedicated removal story |
+| `pages/PrivacyPolicyPage.tsx` | `needs-user-decision` | owner `Legal/Product decision owner`; decisionSource CS-108; non routee; expiry `2026-06-30` | block routing/deletion until named legal/product decision |
+| `pages/billing/BillingSuccessPage.tsx` | `needs-user-decision` | owner `Billing/Stripe decision owner`; decisionSource CS-108; non routee; expiry `2026-06-30` | block routing/deletion until named billing decision |
+| `pages/billing/BillingCancelPage.tsx` | `needs-user-decision` | owner `Billing/Stripe decision owner`; decisionSource CS-108; non routee; expiry `2026-06-30` | block routing/deletion until named billing decision |
+| `pages/HomePage.tsx` | `dead/unmounted-page-candidate` | owner `Product removal decision owner`; decisionSource CS-108; aucun export barrel ni route | keep pending dedicated removal story |
 | `pages/NotFoundPage.tsx` | `routed-page` | `*` sous `AppLayout` | keep |
 
 ## Guard
 
 - `npm run test -- page-architecture` echoue si un fichier page est absent du registre.
 - `npm run test -- page-architecture` echoue si une entree `needs-user-decision` est routee dans `routes.tsx`.
+- `npm run test -- page-architecture` echoue si une entree `needs-user-decision` ou `dead/unmounted-page-candidate` conserve une decision sans `decisionSource` structuree ou sans sortie explicite.
+- `npm run test -- page-architecture` echoue si une entree `dead/unmounted-page-candidate` est routee ou rattachee par import runtime.
 - Aucun wildcard ni exception folder-wide n'est present.

@@ -14,6 +14,14 @@ export type PageLayoutOwnerClassification = PageArchitectureException & {
     | "dead/unmounted-page-candidate"
     | "needs-user-decision"
   route?: string
+  decisionSource?: {
+    story: string
+    decidedOn: string
+    owner: string
+    evidence: string
+  }
+  expiresOn?: string
+  removalStory?: string
 }
 
 export const TS_NOCHECK_PAGE_EXCEPTIONS: PageArchitectureException[] = []
@@ -396,41 +404,87 @@ export const PAGE_LAYOUT_OWNER_CLASSIFICATIONS: PageLayoutOwnerClassification[] 
     {
       file: "pages/landing/sections/TestimonialsSection.tsx",
       classification: "dead/unmounted-page-candidate",
-      owner: "Aucun owner runtime actif",
+      owner: "Product removal decision owner",
       reason:
-        "Aucun import runtime detecte dans LandingPage ou routes; suppression hors scope.",
-      exit: "Decision produit ou story de retrait dediee.",
+        "Section non montee retenue sans rattachement jusqu'a decision de retrait dediee.",
+      exit:
+        "Retenue jusqu'a story de retrait dediee; aucune suppression physique dans cette classification.",
+      decisionSource: {
+        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        decidedOn: "2026-05-08",
+        owner: "Product removal decision owner",
+        evidence:
+          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+      },
+      removalStory: "story de retrait dediee a ouvrir avant suppression",
     },
     {
       file: "pages/PrivacyPolicyPage.tsx",
       classification: "needs-user-decision",
-      owner: "A definir",
+      owner: "Legal/Product decision owner",
       reason:
-        "Page publique potentielle non routee; exposition legale requiert decision produit.",
-      exit: "Decision explicite avant routage ou retrait.",
+        "Page privacy publique gardee bloquee; routage ou retrait interdit sans owner legal nomme.",
+      exit:
+        "Expire le 2026-06-30 si aucune decision legal/product nommee ne cree une route sous owner public ou une story de retrait dediee.",
+      decisionSource: {
+        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        decidedOn: "2026-05-08",
+        owner: "Legal/Product decision owner",
+        evidence:
+          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+      },
+      expiresOn: "2026-06-30",
     },
     {
       file: "pages/billing/BillingSuccessPage.tsx",
       classification: "needs-user-decision",
-      owner: "A definir",
+      owner: "Billing/Stripe decision owner",
       reason:
-        "Retour billing potentiellement externe non route; exposition publique requiert decision produit.",
-      exit: "Decision explicite avant routage ou retrait.",
+        "Callback success billing garde bloque; routage ou retrait interdit sans owner billing nomme.",
+      exit:
+        "Expire le 2026-06-30 si aucune decision billing/Stripe nommee ne cree une route callback sous owner explicite ou une story de retrait dediee.",
+      decisionSource: {
+        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        decidedOn: "2026-05-08",
+        owner: "Billing/Stripe decision owner",
+        evidence:
+          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+      },
+      expiresOn: "2026-06-30",
     },
     {
       file: "pages/billing/BillingCancelPage.tsx",
       classification: "needs-user-decision",
-      owner: "A definir",
+      owner: "Billing/Stripe decision owner",
       reason:
-        "Retour billing potentiellement externe non route; exposition publique requiert decision produit.",
-      exit: "Decision explicite avant routage ou retrait.",
+        "Callback cancel billing garde bloque; routage ou retrait interdit sans owner billing nomme.",
+      exit:
+        "Expire le 2026-06-30 si aucune decision billing/Stripe nommee ne cree une route callback sous owner explicite ou une story de retrait dediee.",
+      decisionSource: {
+        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        decidedOn: "2026-05-08",
+        owner: "Billing/Stripe decision owner",
+        evidence:
+          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+      },
+      expiresOn: "2026-06-30",
     },
     {
       file: "pages/HomePage.tsx",
       classification: "dead/unmounted-page-candidate",
-      owner: "Aucun owner runtime actif",
-      reason: "Ancienne page non routee; export barrel seulement.",
-      exit: "Decision de retrait dediee.",
+      owner: "Product removal decision owner",
+      reason:
+        "Ancienne page non routee retenue sans routage jusqu'a decision de retrait dediee.",
+      exit:
+        "Retenue jusqu'a story de retrait dediee; aucune suppression physique dans cette classification.",
+      decisionSource: {
+        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        decidedOn: "2026-05-08",
+        owner: "Product removal decision owner",
+        evidence:
+          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+      },
+      removalStory: "story de retrait dediee a ouvrir avant suppression",
     },
     {
       file: "pages/NotFoundPage.tsx",

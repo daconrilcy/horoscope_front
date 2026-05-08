@@ -1,6 +1,6 @@
 # Story CS-106 ajouter-guards-hierarchie-layout-frontend: Ajouter les guards de hierarchie layout frontend
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

@@ -1,6 +1,6 @@
 # Story CS-107 classer-pages-layout-owner: Classer tous les fichiers pages sous un layout owner
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
