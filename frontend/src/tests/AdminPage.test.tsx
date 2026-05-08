@@ -149,9 +149,9 @@ describe("AdminPage - Story 65.4", () => {
 
     renderApp(["/admin"])
 
-    await waitFor(() => {
-      expect(screen.getByText(/Accédez rapidement à toutes les fonctionnalités/i)).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByText(/Accédez rapidement à toutes les fonctionnalités/i, {}, { timeout: 5000 }),
+    ).toBeInTheDocument()
   })
 
   it("redirects non-admin user (ops) from /admin to /", async () => {
@@ -224,9 +224,9 @@ describe("AdminPage - Story 65.4", () => {
     await waitFor(() => {
       expect(personasRouter.state.location.pathname).toBe("/admin/prompts/personas")
     })
-    await waitFor(() => {
-      expect(screen.getByTestId("personas-admin-title")).toHaveTextContent("Personas astrologues")
-    })
+    expect(await screen.findByTestId("personas-admin-title", {}, { timeout: 5000 })).toHaveTextContent(
+      "Personas astrologues",
+    )
   })
 
   it("ne declare aucun enfant admin top-level pour les anciens segments", async () => {

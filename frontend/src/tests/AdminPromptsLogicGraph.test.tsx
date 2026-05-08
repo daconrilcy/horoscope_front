@@ -28,8 +28,8 @@ vi.mock("@xyflow/react", async () => {
   }
 })
 
-import type { LogicGraphProjection } from "../pages/admin/adminPromptsLogicGraphProjection"
-import { AdminPromptsLogicGraph } from "../pages/admin/AdminPromptsLogicGraph"
+import type { LogicGraphProjection } from "../features/admin-prompts/adminPromptsLogicGraphProjection"
+import { AdminPromptsLogicGraph } from "../features/admin-prompts/AdminPromptsLogicGraph"
 
 function makeProjection(boundaryRemountKey: string): LogicGraphProjection {
   return {

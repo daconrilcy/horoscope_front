@@ -1,3 +1,4 @@
+// Modale feature Admin Prompts pour inspecter ou editer un noeud du catalogue.
 import type {
   AdminLlmUseCase,
   AdminPromptDraftCreateInput,

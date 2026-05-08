@@ -1,3 +1,4 @@
+// Surface feature Admin Prompts pour gerer les payloads d'echantillon runtime.
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -12,6 +13,10 @@ import {
   type AdminLlmSamplePayload,
   type AdminLlmSamplePayloadSummary,
 } from "@api"
+import {
+  AdminSamplePayloadDeleteDialog,
+  AdminSamplePayloadsToolbar,
+} from "./AdminSamplePayloadsParts"
 import { formatDateTime } from "@utils/formatDate"
 import "./AdminSamplePayloadsAdmin.css"
 
@@ -424,58 +429,17 @@ export function AdminSamplePayloadsAdmin({
         </p>
       ) : null}
 
-      <div className="sample-payloads-admin__toolbar">
-        <label>
-          Feature
-          <select
-            aria-label="Feature pour les sample payloads"
-            value={mgmtFeature}
-            onChange={(event) => {
-              setMgmtFeature(event.target.value)
-            }}
-          >
-            <option value="">—</option>
-            {featureOptions.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Locale
-          <select
-            aria-label="Locale pour les sample payloads"
-            value={mgmtLocale}
-            onChange={(event) => {
-              setMgmtLocale(event.target.value)
-            }}
-          >
-            <option value="">—</option>
-            {localeOptions.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="sample-payloads-admin__toolbar-actions">
-          <span>Afficher les inactifs</span>
-          <input
-            type="checkbox"
-            checked={includeInactive}
-            onChange={(event) => {
-              setIncludeInactive(event.target.checked)
-            }}
-            aria-label="Afficher les sample payloads inactifs"
-          />
-        </label>
-        <div className="sample-payloads-admin__toolbar-actions">
-          <button className="action-button action-button--primary" type="button" onClick={openCreate} disabled={!mgmtFeature || !mgmtLocale}>
-            Nouveau sample payload
-          </button>
-        </div>
-      </div>
+      <AdminSamplePayloadsToolbar
+        featureOptions={featureOptions}
+        localeOptions={localeOptions}
+        feature={mgmtFeature}
+        locale={mgmtLocale}
+        includeInactive={includeInactive}
+        onFeatureChange={setMgmtFeature}
+        onLocaleChange={setMgmtLocale}
+        onIncludeInactiveChange={setIncludeInactive}
+        onCreate={openCreate}
+      />
 
       {!mgmtFeature || !mgmtLocale ? (
         <p className="text-muted">Choisissez une feature et une locale pour afficher la liste.</p>
@@ -703,34 +667,16 @@ export function AdminSamplePayloadsAdmin({
       ) : null}
 
       {deleteTarget ? (
-        <div className="modal-overlay" role="presentation">
-          <div className="modal-content admin-prompts-modal" role="dialog" aria-modal="true" aria-labelledby="sample-payload-delete-title">
-            <h3 id="sample-payload-delete-title">Supprimer le sample payload</h3>
-            <p className="admin-prompts-modal__copy">
-              Confirmer la suppression de <strong>{deleteTarget.name}</strong> ? Cette action est irréversible.
-            </p>
-            {deleteError ? (
-              <p className="chat-error" role="alert">
-                {deleteError}
-              </p>
-            ) : null}
-            <div className="modal-actions">
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => {
-                  setDeleteTarget(null)
-                  setDeleteError(null)
-                }}
-              >
-                Annuler
-              </button>
-              <button className="action-button action-button--secondary" type="button" onClick={() => void handleDelete()} disabled={isPending}>
-                {isPending ? "Suppression…" : "Supprimer"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <AdminSamplePayloadDeleteDialog
+          name={deleteTarget.name}
+          error={deleteError}
+          isPending={isPending}
+          onCancel={() => {
+            setDeleteTarget(null)
+            setDeleteError(null)
+          }}
+          onConfirm={() => void handleDelete()}
+        />
       ) : null}
     </section>
   )

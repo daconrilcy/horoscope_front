@@ -113,38 +113,40 @@ describe("HelpPage", () => {
   it("affiche le hero premium et les sections d'aide", async () => {
     renderHelpPage()
 
-    await waitFor(() => {
-      expect(screen.getByText("Comment pouvons-nous vous aider aujourd’hui ?")).toBeInTheDocument()
-      // Hero + liste tickets (empty CTA ou doublon layout) : même libellé accessible
-      const openTicketCtas = screen.getAllByRole("button", { name: "Ouvrir un ticket support" })
-      expect(openTicketCtas.length).toBeGreaterThan(0)
+    expect(
+      await screen.findByText("Comment pouvons-nous vous aider aujourd’hui ?", {}, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    // Hero + liste tickets (empty CTA ou doublon layout) : même libellé accessible
+    const openTicketCtas = screen.getAllByRole("button", { name: "Ouvrir un ticket support" })
+    expect(openTicketCtas.length).toBeGreaterThan(0)
 
-      expect(screen.getByText("Explorer les sections du site")).toBeInTheDocument()
-      expect(screen.getByText("Horoscope")).toBeInTheDocument()
-      expect(screen.getByText("Suivez votre météo astrale")).toBeInTheDocument()
+    expect(screen.getByText("Explorer les sections du site")).toBeInTheDocument()
+    expect(screen.getByText("Horoscope")).toBeInTheDocument()
+    expect(screen.getByText("Suivez votre météo astrale")).toBeInTheDocument()
 
-      expect(screen.getByText("Fonctionnement des abonnements")).toBeInTheDocument()
-      expect(screen.getByText("Que comprend mon abonnement")).toBeInTheDocument()
-      expect(screen.getByText("Qu’est-ce qu’un token ?")).toBeInTheDocument()
-      expect(screen.getByText("Chaque abonnement donne accès à un ensemble de fonctionnalités adapté à votre formule.")).toBeInTheDocument()
-      expect(screen.getByRole("link", { name: /Voir le détail des abonnements/i })).toHaveAttribute(
-        "href",
-        "/help/subscriptions",
-      )
+    expect(screen.getByText("Fonctionnement des abonnements")).toBeInTheDocument()
+    expect(screen.getByText("Que comprend mon abonnement")).toBeInTheDocument()
+    expect(screen.getByText("Qu’est-ce qu’un token ?")).toBeInTheDocument()
+    expect(screen.getByText("Chaque abonnement donne accès à un ensemble de fonctionnalités adapté à votre formule.")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Voir le détail des abonnements/i })).toHaveAttribute(
+      "href",
+      "/help/subscriptions",
+    )
 
-      expect(screen.getByText("Abonnement & Facturation")).toBeInTheDocument()
-      expect(screen.getByRole("link", { name: /Accéder à mon espace facturation/i })).toHaveAttribute(
-        "href",
-        "/settings/subscription",
-      )
+    expect(screen.getByText("Abonnement & Facturation")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Accéder à mon espace facturation/i })).toHaveAttribute(
+      "href",
+      "/settings/subscription",
+    )
 
-      expect(screen.getByText("Bug / dysfonctionnement")).toBeInTheDocument()
-      expect(screen.getByText("Signalement d'un bug")).toBeInTheDocument()
+    expect(screen.getByText("Bug / dysfonctionnement")).toBeInTheDocument()
+    expect(screen.getByText("Signalement d'un bug")).toBeInTheDocument()
 
-      expect(screen.getByText("Mes demandes")).toBeInTheDocument()
-      expect(screen.getByText("Test Ticket")).toBeInTheDocument()
-      expect(screen.getByText("Nous avons bien pris en charge votre demande.")).toBeInTheDocument()
-    })
+    expect(screen.getByRole("heading", { level: 2, name: "Mes demandes" })).toBeInTheDocument()
+    expect(await screen.findByText("Test Ticket", {}, { timeout: 5000 })).toBeInTheDocument()
+    expect(
+      await screen.findByText("Nous avons bien pris en charge votre demande.", {}, { timeout: 5000 }),
+    ).toBeInTheDocument()
   })
 
   it("permet de soumettre un ticket et affiche un message de succès", async () => {

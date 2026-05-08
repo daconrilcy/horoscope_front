@@ -1,3 +1,4 @@
+// Projection feature Admin Prompts pour construire le graphe logique depuis l'assemblage resolu.
 import type { AdminResolvedAssemblyView, AdminResolvedPlaceholder } from "@api"
 
 export type LogicGraphNodeTone = "neutral" | "layer" | "system" | "fallback" | "sample"

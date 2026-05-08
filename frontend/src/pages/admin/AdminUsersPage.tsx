@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAdminUsersSearchQuery } from "../../api/adminUsers"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
+import { formatLocalDate } from "../../utils/formatDate"
 import "./AdminUsersPage.css"
 
 export function AdminUsersPage() {
@@ -69,7 +70,7 @@ export function AdminUsersPage() {
                         {user.subscription_status || "N/A"}
                       </span>
                     </td>
-                    <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td>{formatLocalDate(user.created_at)}</td>
                     <td>
                       <button className="text-button" onClick={(e) => {
                         e.stopPropagation()

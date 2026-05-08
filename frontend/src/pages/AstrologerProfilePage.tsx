@@ -8,7 +8,6 @@ import {
   Star, 
   Quote, 
   Users, 
-  MessageSquare, 
   Clock,
   Sparkles,
   Zap,
@@ -16,7 +15,6 @@ import {
   GraduationCap,
   Orbit,
   Heart,
-  ArrowRight,
   Check
 } from "lucide-react"
 
@@ -24,23 +22,21 @@ import { useAstrologer, rateAstrologer } from "../api/astrologers"
 import { useUserSettings, useUpdateUserSettings } from "@api/userSettings"
 import { detectLang } from "../i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
+import {
+  AstrologerProfileFinalCta,
+  AstrologerProfileMethodSection,
+  AstrologerProfileMetricsBar,
+  AstrologerProfileReviewsSection,
+  type AstrologerProfileMetricItem,
+  type AstrologerProfileTrustItem,
+} from "../features/astrologers/components/AstrologerProfileSections"
 import { PageLayout } from "../layouts"
 import { ErrorState, Button } from "@ui"
 import "./AstrologerProfilePage.css"
-
-type MetricItem = {
-  key: string
-  value: string
-  label: string
-  helper?: string
-  icon: typeof Clock
-}
-
 type BackgroundMetric = {
   value: string
   label: string
 }
-
 function formatCompactCount(value: number): string {
   if (value >= 1000) {
     const rounded = Math.round(value / 100) / 10
@@ -48,11 +44,9 @@ function formatCompactCount(value: number): string {
   }
   return `+${value}`
 }
-
 function formatReviewPercentage(value: number): number {
   return Math.max(0, Math.min(100, Math.round((value / 5) * 100)))
 }
-
 function normalizeBackgroundLabel(label: string): string {
   return label
     .replace(/\((.*?)\)/g, "$1")
@@ -379,7 +373,7 @@ export function AstrologerProfilePage() {
   const subtitle = getProfileSubtitle(profile.style, profile.bio_short)
   const idealForLabel = getIdealForLabel(profile.ideal_for)
   const providerType = profile.provider_type ?? "ia"
-  const trustItems =
+  const trustItems: AstrologerProfileTrustItem[] =
     providerType === "real"
       ? [
           { icon: Clock, label: "Réservation sur demande" },
@@ -391,7 +385,7 @@ export function AstrologerProfilePage() {
           { icon: Zap, label: "Ou via crédits" },
           { icon: Clock, label: "Accès immédiat" },
         ]
-  const metricItems: MetricItem[] = [
+  const metricItems: AstrologerProfileMetricItem[] = [
     ...(professionalMetric
       ? [{
           key: "background",
@@ -518,24 +512,7 @@ export function AstrologerProfilePage() {
           </div>
         </section>
 
-        {/* Metrics Bar */}
-        <section className="profile-metrics-bar">
-          {metricItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <div key={item.key} className="metric-card">
-                <div className="metric-card__icon-wrap">
-                  <Icon size={24} className="metric-icon" />
-                </div>
-                <div className="metric-card__body">
-                  <span className="metric-value">{item.value}</span>
-                  <span className="metric-title">{item.label}</span>
-                  {item.helper ? <span className="metric-helper">{item.helper}</span> : null}
-                </div>
-              </div>
-            )
-          })}
-        </section>
+        <AstrologerProfileMetricsBar items={metricItems} />
 
         {/* Main Grid */}
         <div className="profile-main-grid">
@@ -603,195 +580,51 @@ export function AstrologerProfilePage() {
           </aside>
         </div>
 
-        <section className="profile-method">
-          <h2 className="profile-section-title profile-section-title--method">
-            <Sparkles size={22} />
-            {getApproachTitle(profile.style, profile.first_name)}
-          </h2>
-          <div className="profile-method-stepper">
-            <div className="method-step">
-              <div className="step-number">1</div>
-              <div className="step-content">
-                <p className="step-title">{t("method_step_1", lang)}</p>
-              </div>
-            </div>
-            <div className="method-arrow" aria-hidden="true">→</div>
-            <div className="method-step">
-              <div className="step-number">2</div>
-              <div className="step-content">
-                <p className="step-title">{t("method_step_2", lang)}</p>
-              </div>
-            </div>
-            <div className="method-arrow" aria-hidden="true">→</div>
-            <div className="method-step">
-              <div className="step-number">3</div>
-              <div className="step-content">
-                <p className="step-title">{t("method_step_3", lang)}</p>
-              </div>
-            </div>
-            <div className="method-arrow" aria-hidden="true">→</div>
-            <div className="method-step">
-              <div className="step-number">4</div>
-              <div className="step-content">
-                <p className="step-title">{t("method_step_4", lang)}</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <AstrologerProfileMethodSection
+          title={getApproachTitle(profile.style, profile.first_name)}
+          steps={[
+            t("method_step_1", lang),
+            t("method_step_2", lang),
+            t("method_step_3", lang),
+            t("method_step_4", lang),
+          ]}
+        />
 
-        {/* Reviews Section */}
-        <section className="profile-reviews-section">
-          <div className="profile-reviews-section__header">
-            <h2 className="profile-section-title profile-section-title--reviews">{t("reviews_title", lang)}</h2>
-            <div className="profile-reviews-summary">
-              <div className="profile-reviews-stars" aria-hidden="true">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    size={18}
-                    fill={star <= Math.round(averageRating) ? "currentColor" : "none"}
-                  />
-                ))}
-              </div>
-              <span className="profile-reviews-summary__score">{`${averageRating.toFixed(1)}/5`}</span>
-              <span className="profile-reviews-summary__count">{`(${reviewCount} avis)`}</span>
-            </div>
-          </div>
-          <div className="reviews-container">
-            <div className="reviews-list">
-              {profile.reviews.length > 0 ? (
-                profile.reviews.map((r) => (
-                  <div key={r.id} className="review-item">
-                    <div className="review-quote-mark">“</div>
-                    {r.comment && <p className="review-comment">{r.comment}</p>}
-                    <div className="review-footer">
-                      <div className="review-user-info">
-                        <span className="review-user-name">{`— ${r.user_name}`}</span>
-                        {r.tags.length > 0 ? (
-                          <div className="review-tags">
-                            {r.tags.map((tag) => (
-                              <span key={tag} className="review-tag">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="review-rating">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={15} fill={i < r.rating ? "currentColor" : "none"} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="review-item review-item--empty">
-                  <p className="review-comment">
-                    Cet astrologue n&apos;a pas encore reçu d&apos;avis publics. Vous pouvez être le premier à partager votre retour.
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="review-stats-card">
-              <div className="review-stats-card__grid">
-                <div className="review-stats-card__metric">
-                  <div className="big-rating">{reviewCount}</div>
-                  <p className="metric-title">Avis</p>
-                </div>
-                <div className="review-stats-card__metric">
-                  <div className="big-rating">{`${satisfactionRate}%`}</div>
-                  <p className="metric-title">Satisfaits</p>
-                </div>
-              </div>
-              <div className="review-stats-card__recommendation">
-                <Heart size={18} />
-                <span>{`Recommandé par ${recommendationRate}%`}</span>
-              </div>
+        <AstrologerProfileReviewsSection
+          profile={profile}
+          averageRating={averageRating}
+          reviewCount={reviewCount}
+          satisfactionRate={satisfactionRate}
+          recommendationRate={recommendationRate}
+          displayedUserRating={displayedUserRating}
+          canAddReviewText={canAddReviewText}
+          isRating={isRating}
+          labels={{
+            reviewsTitle: t("reviews_title", lang),
+            yourRatingTitle: t("your_rating_title", lang),
+            reviewAddButton: t("review_add_button", lang),
+          }}
+          onReviewComposerOpen={handleReviewComposerOpen}
+          onReviewTextComposerOpen={() => {
+            setDraftRating(profile.user_rating ?? null)
+            setReviewDraft(profile.user_review?.comment ?? "")
+            setReviewError(null)
+            setIsReviewComposerOpen(true)
+          }}
+        />
 
-              <div className="review-stats-card__rating">
-                <p className="step-title review-stats-card__rating-title">{t("your_rating_title", lang)}</p>
-                <div className="review-rating review-rating--interactive">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      className="review-rating__button"
-                      onClick={() => handleReviewComposerOpen(star)}
-                      disabled={Boolean(profile.user_rating) || isRating}
-                      aria-label={`${t("your_rating_title", lang)} ${star}/5`}
-                    >
-                      <Star
-                        size={24}
-                        fill={displayedUserRating >= star ? "currentColor" : "none"}
-                        className="review-rating__star"
-                      />
-                    </button>
-                  ))}
-                </div>
-                {canAddReviewText ? (
-                  <div className="review-stats-card__write-review">
-                    <Button type="button" variant="secondary" onClick={() => {
-                      setDraftRating(profile.user_rating ?? null)
-                      setReviewDraft(profile.user_review?.comment ?? "")
-                      setReviewError(null)
-                      setIsReviewComposerOpen(true)
-                    }}>
-                      {t("review_add_button", lang)}
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA Section */}
-        <section className="profile-final-cta">
-          <div className="profile-final-cta__sparkles" aria-hidden="true">✦</div>
-          <h2 className="profile-full-name profile-full-name--cta">{`Commencer avec ${profile.first_name}`}</h2>
-          <p className="profile-final-cta__subtitle">Réservez votre première consultation découverte</p>
-          <Button
-            size="lg"
-            variant="primary"
-            className="premium-cta premium-cta--primary"
-            onClick={handleConsultationCta}
-            rightIcon={<ArrowRight size={20} />}
-          >
-            {t("cta_consultation", lang)}
-          </Button>
-          <div className="profile-final-cta__trust">
-            {trustItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <span key={item.label}>
-                  <Icon size={14} />
-                  {item.label}
-                </span>
-              )
-            })}
-          </div>
-          <div className="cta-group cta-group--secondary">
-            <Button 
-              size="lg" 
-              variant="secondary"
-              className="premium-cta"
-              onClick={handleChatCta}
-              leftIcon={<MessageSquare size={18} />}
-            >
-              {profile.action_state.has_chat ? t("cta_chat_resume", lang) : t("cta_chat_new", lang)}
-            </Button>
-            
-            <Button
-              size="lg"
-              variant="secondary"
-              onClick={handleNatalCta}
-              leftIcon={<Sparkles size={18} />}
-            >
-              {profile.action_state.has_natal_interpretation ? t("cta_natal_view", lang) : t("cta_natal_new", lang)}
-            </Button>
-          </div>
-        </section>
+        <AstrologerProfileFinalCta
+          profile={profile}
+          trustItems={trustItems}
+          labels={{
+            consultation: t("cta_consultation", lang),
+            chat: profile.action_state.has_chat ? t("cta_chat_resume", lang) : t("cta_chat_new", lang),
+            natal: profile.action_state.has_natal_interpretation ? t("cta_natal_view", lang) : t("cta_natal_new", lang),
+          }}
+          onConsultation={handleConsultationCta}
+          onChat={handleChatCta}
+          onNatal={handleNatalCta}
+        />
 
         <div className="profile-bottom-back">
           <button type="button" className="profile-bottom-back__button" onClick={handleBack}>

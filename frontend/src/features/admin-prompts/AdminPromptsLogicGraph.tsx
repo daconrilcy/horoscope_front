@@ -1,3 +1,4 @@
+// Graphe feature Admin Prompts pour visualiser la chaine logique d'assemblage LLM.
 import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo } from "react"
 import {
   Background,

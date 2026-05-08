@@ -49,6 +49,36 @@ export function formatDateTime(value: string, fallback = "—"): string {
 }
 
 /**
+ * Formate une date avec le locale navigateur pour préserver les anciens affichages UI sans options.
+ */
+export function formatLocalDate(value: string, fallback = "—"): string {
+  try {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) {
+      return fallback
+    }
+    return date.toLocaleDateString()
+  } catch {
+    return fallback
+  }
+}
+
+/**
+ * Formate une date/heure avec le locale navigateur pour remplacer les appels inline historiques.
+ */
+export function formatLocalDateTime(value: string, fallback = "—"): string {
+  try {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) {
+      return fallback
+    }
+    return date.toLocaleString()
+  } catch {
+    return fallback
+  }
+}
+
+/**
  * Formate une date ISO avec des options explicites quand une page a besoin d'un libelle long.
  */
 export function formatDateWithOptions(
@@ -62,7 +92,7 @@ export function formatDateWithOptions(
     if (Number.isNaN(date.getTime())) {
       return fallback
     }
-    return date.toLocaleDateString(locale, options)
+    return new Intl.DateTimeFormat(locale, options).format(date)
   } catch {
     return fallback
   }

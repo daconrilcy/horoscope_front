@@ -1,3 +1,4 @@
+// Projection feature Admin Prompts pour transformer l'assemblage resolu en graphe catalogue.
 import type {
   AdminResolvedAssemblyView,
   AdminRuntimeArtifactView,

@@ -19,6 +19,12 @@ import { TimezoneSelect } from "../components/TimezoneSelect"
 import { getUserTimezone } from "../data/timezones"
 import { detectLang, GEOCODING_MESSAGES } from "../i18n/astrology"
 import { birthProfileTranslations, type BirthProfileValidation } from "../i18n/birthProfile"
+import {
+  BirthProfileCurrentLocationSection,
+  BirthProfileGeocodingStatus,
+  BirthProfileLoadState,
+  BirthProfileNatalGenerationSection,
+} from "../features/birth-profile/components/BirthProfileNatalGenerationSection"
 import "./BirthProfilePage.css"
 
 function createBirthProfileSchema(v: BirthProfileValidation) {
@@ -512,21 +518,14 @@ export function BirthProfilePage() {
     <PageLayout className="panel">
       <h2 id="birth-profile-title">{t.title}</h2>
 
-      {isLoading ? (
-        <p className="state-line" aria-busy="true" role="status">
-          <span className="state-loading" aria-hidden="true" />
-          {t.loading}
-        </p>
-      ) : null}
-
-      {isError && !isLoading ? (
-        <div className="chat-error" role="alert">
-          <p>{t.loadError}</p>
-          <button type="button" onClick={() => void refetch()} className="retry-button">
-            {t.retry}
-          </button>
-        </div>
-      ) : null}
+      <BirthProfileLoadState
+        isLoading={isLoading}
+        isError={isError && !isLoading}
+        loadingLabel={t.loading}
+        errorLabel={t.loadError}
+        retryLabel={t.retry}
+        onRetry={() => void refetch()}
+      />
 
       {!isLoading && !isError ? (
         <form
@@ -597,29 +596,14 @@ export function BirthProfilePage() {
             </div>
           </div>
 
-          <div aria-live="polite" aria-atomic="true">
-            {geocodingState === "loading" && (
-              <p className="state-line" aria-busy="true" role="status">
-                <span className="state-loading" aria-hidden="true" />
-                {GEOCODING_MESSAGES.loading[lang]}
-              </p>
-            )}
-            {geocodingState === "success" && resolvedGeoLabel !== null && (
-              <p className="state-line state-success" role="status">
-                ✓ {GEOCODING_MESSAGES.success[lang]} : {resolvedGeoLabel}
-              </p>
-            )}
-            {geocodingState === "error_not_found" && (
-              <div className="chat-error degraded-warning" role="alert">
-                <p>{GEOCODING_MESSAGES.error_not_found[lang]}</p>
-              </div>
-            )}
-            {geocodingState === "error_unavailable" && (
-              <div className="chat-error degraded-warning" role="alert">
-                <p>{GEOCODING_MESSAGES.error_unavailable[lang]}</p>
-              </div>
-            )}
-          </div>
+          <BirthProfileGeocodingStatus
+            state={geocodingState}
+            loadingLabel={GEOCODING_MESSAGES.loading[lang]}
+            successLabel={GEOCODING_MESSAGES.success[lang]}
+            notFoundLabel={GEOCODING_MESSAGES.error_not_found[lang]}
+            unavailableLabel={GEOCODING_MESSAGES.error_unavailable[lang]}
+            resolvedGeoLabel={resolvedGeoLabel}
+          />
 
           <div>
             <label htmlFor="birth-timezone">{t.labels.birthTimezone}</label>
@@ -644,85 +628,25 @@ export function BirthProfilePage() {
             )}
           </div>
 
-          <div className="section-divider">
-            <h3 id="current-location-title">{t.labels.currentLocation || "Localisation actuelle"}</h3>
-            <p className="help-text">
-              {t.labels.locationHelp || "La localisation actuelle permet de personnaliser vos guidances avec les énergies du lieu où vous vous trouvez."}
-            </p>
-            
-            <div className="consent-field">
-              <label htmlFor="geolocation-consent" className="consent-label">
-                <input
-                  id="geolocation-consent"
-                  type="checkbox"
-                  {...register("geolocation_consent")}
-                />
-                {t.labels.allowGeolocation || "Autoriser la géolocalisation pour personnaliser mes guidances"}
-              </label>
-            </div>
-
-            {geolocationConsent && (
-              <div className="current-location-controls">
-                {currentLocationLabel ? (
-                  <p className="state-line state-success">
-                    ✓ {t.labels.locationDetected || "Lieu détecté"} : {currentLocationLabel}
-                  </p>
-                ) : (
-                  <p className="state-line">
-                    {t.labels.noLocation || "Aucun lieu détecté"}
-                  </p>
-                )}
-                
-                <button
-                  type="button"
-                  onClick={handleDetectLocation}
-                  disabled={currentLocationState === "detecting" || currentLocationState === "resolving"}
-                  className="secondary-button"
-                >
-                  {currentLocationState === "detecting" || currentLocationState === "resolving" ? (
-                    <span className="state-line">
-                      <span className="state-loading" aria-hidden="true" />
-                      {t.labels.detecting || "Détection..."}
-                    </span>
-                  ) : (
-                    t.labels.detectNow || "Me localiser maintenant"
-                  )}
-                </button>
-                
-                {currentLocationState === "error" && (
-                  <p className="chat-error">{currentLocationError ?? t.errors.locationFailed}</p>
-                )}
-              </div>
-            )}
-
-            {(!geolocationConsent || currentLocationState === "error") && (
-              <div className="current-location-controls">
-                <p className="help-text">
-                  {t.labels.manualLocationHelp}
-                </p>
-                <div className="birth-location-row">
-                  <div className="birth-location-field">
-                    <Field
-                      id="current-city"
-                      label={t.labels.currentCity}
-                      type="text"
-                      placeholder="Paris"
-                      {...register("current_city")}
-                    />
-                  </div>
-                  <div className="birth-location-field">
-                    <Field
-                      id="current-country"
-                      label={t.labels.currentCountry}
-                      type="text"
-                      placeholder="France"
-                      {...register("current_country")}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <BirthProfileCurrentLocationSection
+            title={t.labels.currentLocation || "Localisation actuelle"}
+            help={t.labels.locationHelp || "La localisation actuelle permet de personnaliser vos guidances avec les énergies du lieu où vous vous trouvez."}
+            consentLabel={t.labels.allowGeolocation || "Autoriser la géolocalisation pour personnaliser mes guidances"}
+            consentInput={<input id="geolocation-consent" type="checkbox" {...register("geolocation_consent")} />}
+            geolocationConsent={geolocationConsent}
+            currentLocationLabel={currentLocationLabel}
+            currentLocationState={currentLocationState}
+            currentLocationError={currentLocationError}
+            locationDetectedLabel={t.labels.locationDetected || "Lieu détecté"}
+            noLocationLabel={t.labels.noLocation || "Aucun lieu détecté"}
+            detectingLabel={t.labels.detecting || "Détection..."}
+            detectNowLabel={t.labels.detectNow || "Me localiser maintenant"}
+            locationFailedLabel={t.errors.locationFailed}
+            manualLocationHelp={t.labels.manualLocationHelp}
+            manualCityField={<Field id="current-city" label={t.labels.currentCity} type="text" placeholder="Paris" {...register("current_city")} />}
+            manualCountryField={<Field id="current-country" label={t.labels.currentCountry} type="text" placeholder="France" {...register("current_country")} />}
+            onDetectLocation={handleDetectLocation}
+          />
 
           {globalError && (
             <div className="chat-error" role="alert">
@@ -743,26 +667,20 @@ export function BirthProfilePage() {
       ) : null}
 
       {data && !isLoading && !isError ? (
-        <div className="section-divider" aria-labelledby="natal-generation-title">
-          <h3 id="natal-generation-title">{t.status.generationSection}</h3>
-          {generationError && (
-            <div className="chat-error" role="alert">
-              <p>{generationError}</p>
-            </div>
-          )}
-          <Button
-            type="button"
-            loading={generationMutation.isPending}
-            onClick={() => {
-              setGenerationError(null)
-              generationMutation.mutate()
-            }}
-          >
-            {generationMutation.isPending
+        <BirthProfileNatalGenerationSection
+          title={t.status.generationSection}
+          error={generationError}
+          isPending={generationMutation.isPending}
+          buttonLabel={
+            generationMutation.isPending
               ? t.buttons.generating.replace("{timeout}", GENERATION_TIMEOUT_LABEL)
-              : t.buttons.generate}
-          </Button>
-        </div>
+              : t.buttons.generate
+          }
+          onGenerate={() => {
+            setGenerationError(null)
+            generationMutation.mutate()
+          }}
+        />
       ) : null}
     </PageLayout>
   )

@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
-import { AdminSamplePayloadsAdmin } from "../pages/admin/AdminSamplePayloadsAdmin"
+import { AdminSamplePayloadsAdmin } from "../features/admin-prompts/AdminSamplePayloadsAdmin"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 
 function makeJsonResponse(payload: unknown, status = 200) {

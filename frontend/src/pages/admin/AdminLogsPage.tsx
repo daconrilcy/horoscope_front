@@ -11,6 +11,7 @@ import {
   type AdminLlmLog,
 } from "../../api/adminLogs"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
+import { formatLocalDateTime } from "../../utils/formatDate"
 import "./AdminLogsPage.css"
 
 interface ReplayModalProps {
@@ -143,7 +144,7 @@ function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
         <div className="modal-summary admin-audit-summary">
           <div>
             <strong>Timestamp</strong>
-            <span>{new Date(log.timestamp).toLocaleString()}</span>
+            <span>{formatLocalDateTime(log.timestamp)}</span>
           </div>
           <div>
             <strong>Acteur</strong>
@@ -431,7 +432,7 @@ export function AdminLogsPage() {
                   <tbody>
                     {auditLogs.map((log) => (
                       <tr key={log.id}>
-                        <td>{new Date(log.timestamp).toLocaleString()}</td>
+                        <td>{formatLocalDateTime(log.timestamp)}</td>
                         <td>{log.actor_email_masked ?? log.actor_role}</td>
                         <td>{log.action}</td>
                         <td>{log.target_id_masked ?? log.target_type ?? "Système"}</td>
@@ -467,7 +468,7 @@ export function AdminLogsPage() {
                   <tbody>
                     {llmLogs.map((log) => (
                       <tr key={log.id}>
-                        <td>{new Date(log.timestamp).toLocaleString()}</td>
+                        <td>{formatLocalDateTime(log.timestamp)}</td>
                         <td>{log.use_case}</td>
                         <td>
                           <span
@@ -514,7 +515,7 @@ export function AdminLogsPage() {
                   <tbody>
                     {stripeEvents.map((event) => (
                       <tr key={event.id}>
-                        <td>{new Date(event.received_at).toLocaleString()}</td>
+                        <td>{formatLocalDateTime(event.received_at)}</td>
                         <td className="event-type">{event.event_type}</td>
                         <td>
                           <span className={`badge badge--status-${event.status}`}>

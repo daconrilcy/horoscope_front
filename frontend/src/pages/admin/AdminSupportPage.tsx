@@ -8,6 +8,7 @@ import {
   useReviewFlaggedContent,
 } from "../../api/adminOperations"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
+import { formatLocalDate, formatLocalDateTime } from "../../utils/formatDate"
 import "./AdminSupportPage.css"
 
 export function AdminSupportPage() {
@@ -99,7 +100,7 @@ export function AdminSupportPage() {
                           {ticket.priority}
                         </span>
                       </td>
-                      <td>{new Date(ticket.created_at).toLocaleDateString()}</td>
+                      <td>{formatLocalDate(ticket.created_at)}</td>
                       <td>
                         <button className="text-button">Voir</button>
                       </td>
@@ -124,7 +125,7 @@ export function AdminSupportPage() {
                   <div key={content.id} className="flagged-card">
                     <div className="flagged-card-header">
                       <span className="content-type">{content.content_type}</span>
-                      <span className="reported-date">{new Date(content.reported_at).toLocaleString()}</span>
+                      <span className="reported-date">{formatLocalDateTime(content.reported_at)}</span>
                     </div>
                     <p className="excerpt">"{content.excerpt}"</p>
                     <div className="flagged-card-footer">

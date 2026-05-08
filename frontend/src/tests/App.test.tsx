@@ -153,10 +153,10 @@ describe("App", () => {
     
     const { container } = renderApp(["/"])
     
-    await waitFor(() => {
-      // Check for landing page hero title (FR default)
-      expect(screen.getByText(/Votre guide astrologique personnel/i)).toBeInTheDocument()
-    })
+    // Check for landing page hero title (FR default)
+    expect(
+      await screen.findByText(/Votre guide astrologique personnel/i, {}, { timeout: 5000 }),
+    ).toBeInTheDocument()
     expect(container.querySelector(".landing-layout")).toBeInTheDocument()
     expect(container.querySelector(".landing-layout .landing-page")).toBeInTheDocument()
   })

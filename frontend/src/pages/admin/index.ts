@@ -1,4 +1,3 @@
-export * from "./PersonasAdmin"
 export * from "./ReconciliationAdmin"
 export * from "./AdminDashboardPage"
 export * from "./AdminUsersPage"

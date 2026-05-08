@@ -5,6 +5,7 @@ import {
 } from "@api/billing"
 import { detectLang, type AstrologyLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
+import { formatDateWithOptions } from "@utils/formatDate"
 import { getLocale } from "@utils/locale"
 import "./Settings.css"
 
@@ -13,13 +14,13 @@ function formatUsageNumber(value: number): string {
 }
 
 function formatResetDate(value: string, lang: AstrologyLang): string {
-  return new Intl.DateTimeFormat(getLocale(lang), {
+  return formatDateWithOptions(value, getLocale(lang), {
     day: "2-digit",
     month: "long",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(value))
+  })
 }
 
 function formatUsageRatio(consumed: number, total: number, totalLabel: string): string {

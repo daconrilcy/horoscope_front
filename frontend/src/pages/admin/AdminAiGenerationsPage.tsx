@@ -4,6 +4,7 @@ import {
   useAdminAiUseCaseDetail,
 } from "../../api/adminOperations"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
+import { formatLocalDateTime } from "../../utils/formatDate"
 import "./AdminAiGenerationsPage.css"
 
 export function AdminAiGenerationsPage() {
@@ -108,7 +109,7 @@ export function AdminAiGenerationsPage() {
                   <tbody>
                     {detailData.recent_failed_calls.map(f => (
                       <tr key={f.id}>
-                        <td>{new Date(f.timestamp).toLocaleString()}</td>
+                        <td>{formatLocalDateTime(f.timestamp)}</td>
                         <td><code>{f.request_id_masked}</code></td>
                         <td><span className="badge badge--error">{f.error_code}</span></td>
                       </tr>

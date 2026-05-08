@@ -3,6 +3,7 @@ import { useTranslation } from "../i18n"
 import { Button } from "../components/ui/Button/Button"
 import { Link } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
+import { formatLocalDate } from "../utils/formatDate"
 import "./PrivacyPolicyPage.css"
 
 export const PrivacyPolicyPage = () => {
@@ -27,7 +28,7 @@ export const PrivacyPolicyPage = () => {
       </h1>
       
       <p className="privacy-policy-page__updated-at">
-        Dernière mise à jour : {new Date().toLocaleDateString()}
+        Dernière mise à jour : {formatLocalDate(new Date().toISOString())}
       </p>
 
       <section className="privacy-policy-page__section">

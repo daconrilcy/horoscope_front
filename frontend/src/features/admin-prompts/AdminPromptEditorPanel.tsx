@@ -1,3 +1,4 @@
+// Panneau feature Admin Prompts pour preparer une nouvelle version de prompt.
 import { useEffect, useMemo, useState, type FormEvent } from "react"
 
 import type {

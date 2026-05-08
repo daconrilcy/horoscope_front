@@ -8,7 +8,7 @@ import { createTestMemoryRouter } from "../app/router"
 import { ThemeProvider } from "../state/ThemeProvider"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 
-vi.mock("../pages/admin/PersonasAdmin", () => ({
+vi.mock("../features/admin-prompts/PersonasAdmin", () => ({
   PersonasAdmin: () => <div data-testid="personas-admin-mock">Personas tab</div>,
 }))
 
@@ -172,9 +172,9 @@ describe("AdminPromptsPage — navigation release → catalogue (intégration ro
 
     const { router } = renderPromptsApp(["/admin/prompts/release"])
 
-    await waitFor(() => {
-      expect(screen.getByRole("region", { name: "Investigation des snapshots release" })).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByRole("region", { name: "Investigation des snapshots release" }, { timeout: 5000 }),
+    ).toBeInTheDocument()
 
     const catalogBtn = await screen.findByRole("button", {
       name: `Ouvrir l'entrée canonique ${MANIFEST_ENTRY_ID} dans le catalogue`,

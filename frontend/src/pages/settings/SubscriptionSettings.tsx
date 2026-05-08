@@ -14,25 +14,27 @@ import { detectLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
 import { supportTranslations } from "@i18n/support"
 import { Modal } from "@components/ui"
+import {
+  SubscriptionOverviewSection,
+  SubscriptionPlanGrid,
+  type SubscriptionPlanOption,
+} from "@components/settings/SubscriptionPlanGrid"
+import { formatDateWithOptions } from "@utils/formatDate"
 import { formatCurrencyCents } from "@utils/formatPrice"
 import { ArrowRight, CalendarClock, Check, CreditCard, RefreshCcw, Sparkles } from "lucide-react"
 import "./Settings.css"
-
 const BILLING_PORTAL_PENDING_ACTION_KEY = "billing_portal_pending_action"
 const BILLING_PORTAL_SYNC_WINDOW_MS = 60_000
 const BILLING_PORTAL_POLL_INTERVAL_MS = 3_000
-
 type PendingBillingPortalAction = {
   action: "cancel"
   createdAt: number
   currentPeriodEnd?: string | null
 }
-
 function readPendingBillingPortalAction(): PendingBillingPortalAction | null {
   if (typeof window === "undefined") return null
   const raw = window.localStorage.getItem(BILLING_PORTAL_PENDING_ACTION_KEY)
   if (!raw) return null
-
   try {
     const parsed = JSON.parse(raw) as PendingBillingPortalAction
     if (parsed.action !== "cancel" || typeof parsed.createdAt !== "number") {
@@ -43,7 +45,6 @@ function readPendingBillingPortalAction(): PendingBillingPortalAction | null {
     return null
   }
 }
-
 function persistPendingBillingPortalAction(
   action: PendingBillingPortalAction["action"],
   metadata: { currentPeriodEnd?: string | null } = {},
@@ -54,12 +55,10 @@ function persistPendingBillingPortalAction(
     JSON.stringify({ action, createdAt: Date.now(), ...metadata }),
   )
 }
-
 function clearPendingBillingPortalAction() {
   if (typeof window === "undefined") return
   window.localStorage.removeItem(BILLING_PORTAL_PENDING_ACTION_KEY)
 }
-
 export function SubscriptionSettings() {
   const lang = detectLang()
   const t = settingsTranslations.subscription[lang]
@@ -71,15 +70,11 @@ export function SubscriptionSettings() {
   } = useBillingSubscription()
   const { data: catalog, isLoading: plansLoading } = useBillingPlans()
   const currentSubscriptionPlan = subscription?.plan ?? subscription?.active_plan ?? null
-
   const isLoading = subLoading || plansLoading
-
   const PLANS = useMemo(() => {
     const locale = lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : "en-US"
-
     const basicPlan = catalog?.find(p => p.code === "basic")
     const premiumPlan = catalog?.find(p => p.code === "premium")
-
     return [
       {
         code: "basic",
@@ -109,7 +104,7 @@ export function SubscriptionSettings() {
             })} ${subscriptionGuide.perMonth}`
           : `29 ${subscriptionGuide.perMonth}`,
       },
-    ]
+    ] satisfies SubscriptionPlanOption[]
   }, [catalog, lang, subscriptionGuide])
 
   const currentPlanCode = currentSubscriptionPlan?.code ?? null
@@ -263,8 +258,7 @@ export function SubscriptionSettings() {
     && selectedPlanPriceCents > currentPlanPriceCents
 
   const formatDisplayDate = (dateStr: string) => {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", {
+    return formatDateWithOptions(dateStr, lang === "fr" ? "fr-FR" : "en-US", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -523,56 +517,25 @@ export function SubscriptionSettings() {
           <p className="settings-save-feedback settings-save-feedback--saving">Chargement...</p>
         ) : (
           <>
-            <section className="subscription-overview">
-              <div className="subscription-overview__header">
-                <div className="subscription-overview__copy">
-                  <span className="subscription-overview__eyebrow">{t.overviewEyebrow}</span>
-                  <h3 className="subscription-overview__title" aria-label={overviewPlanLabel}>
-                    {currentPlanExperience}
-                  </h3>
-                  <p className="subscription-overview__tagline">{currentPlanExperience}</p>
-                  <p className="subscription-overview__lead">{overviewLead}</p>
-                  <ul className="subscription-overview__highlights">
-                    {currentPlanHighlights.map((highlight) => (
-                      <li key={highlight} className="subscription-overview__highlight">
-                        <Check size={14} />
-                        <span>{highlight}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="subscription-overview__aside">
-                  <span className="subscription-overview__aside-label">{t.overviewActionLabel}</span>
-                  <p className="subscription-overview__aside-value">{overviewActionMessage}</p>
-                  <button
-                    type="button"
-                    className="settings-tab subscription-overview__jump"
-                    onClick={scrollToPlans}
-                  >
-                    {t.jumpToPlans}
-                  </button>
-                </div>
-              </div>
-
-              <div className="subscription-overview__stats">
-                <div className="subscription-overview__stat">
-                  <span className="subscription-overview__stat-label">{t.overviewPlanLabel}</span>
-                  <strong className="subscription-overview__stat-value">{overviewPlanLabel}</strong>
-                </div>
-                <div className="subscription-overview__stat">
-                  <span className="subscription-overview__stat-label">{t.overviewExperienceLabel}</span>
-                  <strong className="subscription-overview__stat-value">{currentPlanExperience}</strong>
-                </div>
-                <div className="subscription-overview__stat">
-                  <span className="subscription-overview__stat-label">{t.overviewBillingLabel}</span>
-                  <strong className="subscription-overview__stat-value">{overviewBillingValue}</strong>
-                </div>
-                <div className="subscription-overview__stat">
-                  <span className="subscription-overview__stat-label">{t.overviewRenewalLabel}</span>
-                  <strong className="subscription-overview__stat-value">{overviewRenewalValue}</strong>
-                </div>
-              </div>
-            </section>
+            <SubscriptionOverviewSection
+              labels={{
+                eyebrow: t.overviewEyebrow,
+                actionLabel: t.overviewActionLabel,
+                jumpToPlans: t.jumpToPlans,
+                planLabel: t.overviewPlanLabel,
+                experienceLabel: t.overviewExperienceLabel,
+                billingLabel: t.overviewBillingLabel,
+                renewalLabel: t.overviewRenewalLabel,
+              }}
+              currentPlanExperience={currentPlanExperience}
+              overviewLead={overviewLead}
+              currentPlanHighlights={currentPlanHighlights}
+              overviewActionMessage={overviewActionMessage}
+              overviewPlanLabel={overviewPlanLabel}
+              overviewBillingValue={overviewBillingValue}
+              overviewRenewalValue={overviewRenewalValue}
+              onJumpToPlans={scrollToPlans}
+            />
 
             <section id="subscription-plans" className="subscription-plan-stage">
               <div className="subscription-plan-stage__header">
@@ -584,105 +547,26 @@ export function SubscriptionSettings() {
                 </p>
               </div>
 
-              <div className="subscription-plans-grid">
-              {PLANS.map((plan) => {
-                const isCurrent = currentPlanCode === plan.code
-                const isSelected = displaySelected === plan.code
-                const currentPlanNote = isCurrent ? currentPlanStatusMessage : null
-                const scheduledPlanNote =
-                  subscription?.scheduled_plan?.code === plan.code && subscription.change_effective_at
-                    ? t.planChangeScheduled
-                        .replace("{{plan}}", subscription.scheduled_plan.display_name)
-                        .replace("{{date}}", formatDisplayDate(subscription.change_effective_at))
-                    : null
-                const reactivateLabel =
-                  isCancellationAlreadyScheduled && plan.code
-                    ? plan.code === "basic"
-                      ? t.reactivateWithBasic
-                      : t.reactivateWithPremium
-                    : null
-                const cardActionLabel = !isCurrent && isSelected
-                    ? t.overviewActionChangeTo.replace("{{plan}}", plan.label)
-                    : null
-                return (
-                  <button
-                    key={plan.code || "free"}
-                    type="button"
-                    className={[
-                      "subscription-plan-card",
-                      isSelected ? "subscription-plan-card--active" : "",
-                      `subscription-plan-card--${plan.code}`,
-                    ].filter(Boolean).join(" ")}
-                    onClick={() => {
-                      if (isUiLocked) return
-                      setSelectedPlanCode(plan.code)
-                    }}
-                    role="button"
-                    tabIndex={isUiLocked ? -1 : 0}
-                    aria-pressed={isSelected}
-                    aria-disabled={isUiLocked}
-                    onKeyDown={(event) => {
-                      if (isUiLocked) return
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault()
-                        setSelectedPlanCode(plan.code)
-                      }
-                    }}
-                    data-current-unselected={isCurrent && !isSelected}
-                    data-pending={isUiLocked}
-                  >
-                    <div className="subscription-plan-card__topline">
-                      <div className="subscription-plan-card__copy">
-                        <span className="subscription-plan-card__tagline">{plan.tagline}</span>
-                        <h4 className="subscription-plan-card__name">
-                          {plan.label}
-                        </h4>
-                      </div>
-                      {isSelected && (
-                        <div className="subscription-plan-card__badge">
-                        <Check size={12} /> {isCurrent ? t.currentPlan : t.selected}
-                        </div>
-                      )}
-                      {isCurrent && !isSelected && (
-                        <div className="subscription-plan-card__badge subscription-plan-card__badge--muted">
-                          {t.currentPlan}
-                        </div>
-                      )}
-                    </div>
-                    <div className="subscription-plan-card__priority">{plan.priority}</div>
-                    <div className="subscription-plan-card__price">{plan.price}</div>
-                    <p className="subscription-plan-card__lead">{plan.lead}</p>
-                    <div className="subscription-plan-card__positioning">{plan.positioning}</div>
-                    <ul className="subscription-plan-card__highlights">
-                      {plan.highlights.map((highlight) => (
-                        <li key={highlight} className="subscription-plan-card__highlight">
-                          <Check size={14} />
-                          <span>{highlight}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    {cardActionLabel && (
-                      <div className="subscription-plan-card__selection-note">
-                        {cardActionLabel}
-                      </div>
-                    )}
-                    {currentPlanNote && (
-                      <div className="subscription-plan-card__status-note">
-                        {currentPlanNote}
-                      </div>
-                    )}
-                    {scheduledPlanNote && (
-                      <div className="subscription-plan-card__status-note subscription-plan-card__status-note--scheduled">
-                        {scheduledPlanNote}
-                      </div>
-                    )}
-                    {reactivateLabel && (
-                      <div className="subscription-plan-card__action-hint">{reactivateLabel}</div>
-                    )}
-                  </button>
-                )
-              })}
-              </div>
+              <SubscriptionPlanGrid
+                plans={PLANS}
+                currentPlanCode={currentPlanCode}
+                displaySelected={displaySelected}
+                isUiLocked={isUiLocked}
+                currentPlanStatusMessage={currentPlanStatusMessage}
+                scheduledPlan={subscription?.scheduled_plan}
+                changeEffectiveAt={subscription?.change_effective_at}
+                isCancellationAlreadyScheduled={isCancellationAlreadyScheduled}
+                labels={{
+                  currentPlan: t.currentPlan,
+                  selected: t.selected,
+                  planChangeScheduled: t.planChangeScheduled,
+                  reactivateWithBasic: t.reactivateWithBasic,
+                  reactivateWithPremium: t.reactivateWithPremium,
+                  overviewActionChangeTo: t.overviewActionChangeTo,
+                }}
+                formatDisplayDate={formatDisplayDate}
+                onSelectPlan={setSelectedPlanCode}
+              />
             </section>
 
             <div className="subscription-feedback-stack" aria-live="polite">

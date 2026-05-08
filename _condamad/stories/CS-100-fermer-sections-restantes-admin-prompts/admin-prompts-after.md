@@ -1,0 +1,34 @@
+# CS-100 after inventory
+
+- line-count: `frontend/src/pages/admin/AdminPromptsPage.tsx` = 81 lignes apres correction review CS-100.
+- route-shell-path: `frontend/src/pages/admin/AdminPromptsPage.tsx`.
+- route-shell-responsibilities: resolution onglet actif, header, navigation `NavLink`, composition du owner feature et `Outlet`.
+- extracted-owner-path: `frontend/src/features/admin-prompts/AdminPromptsRoute.tsx`.
+- feature-owner-supporting-paths:
+  - `frontend/src/features/admin-prompts/AdminPromptCatalogNodeModal.tsx`
+  - `frontend/src/features/admin-prompts/AdminPromptEditorPanel.tsx`
+  - `frontend/src/features/admin-prompts/AdminPromptsLogicGraph.tsx`
+  - `frontend/src/features/admin-prompts/AdminSamplePayloadsAdmin.tsx`
+  - `frontend/src/features/admin-prompts/PersonasAdmin.tsx`
+  - `frontend/src/features/admin-prompts/adminPromptCatalogFlowProjection.ts`
+  - `frontend/src/features/admin-prompts/adminPromptsLogicGraphProjection.ts`
+- PAGE_SIZE_EXCEPTIONS: entree `pages/admin/AdminPromptsPage.tsx` supprimee de `frontend/src/tests/page-architecture-allowlist.ts`.
+- section ownership:
+  - catalog: `extracted-owner-path` = `frontend/src/features/admin-prompts/AdminPromptsRoute.tsx`.
+  - consumption: `extracted-owner-path` = `frontend/src/features/admin-prompts/AdminPromptsRoute.tsx`.
+  - release: `extracted-owner-path` = `frontend/src/features/admin-prompts/AdminPromptsRoute.tsx`.
+- page-absence-proof:
+  - `AdminPromptsPage.tsx` ne contient plus `admin-prompts-catalog`, `admin-prompts-consumption`, `admin-prompts-release`, `catalogQuery`, `consumptionQuery` ou `releaseTimelineQuery`.
+  - `AdminPromptsPage.tsx` importe `AdminPromptsRoute` depuis `features/admin-prompts`.
+  - `duplicate-active: none`.
+- feature-boundary-proof:
+  - `rg -n "pages/admin" src/features/admin-prompts -S` = zero hit.
+  - Les composants/projections AdminPrompts importes par le owner feature ne dependent plus de `pages/admin`.
+- forbidden scan after:
+  - `rg -n "@ts-nocheck|@ts-ignore|apiFetch\\(" src/pages/admin/AdminPromptsPage.tsx src/features/admin-prompts -g "*.tsx"` = zero hit.
+  - `rg -n "pages/admin/AdminPromptsPage.tsx" src/tests/page-architecture-allowlist.ts` = zero hit.
+- behavior guard:
+  - `npm run test -- AdminPromptsPage AdminPromptsRouting AdminPromptsCatalogFlow page-architecture` = PASS, 5 files passed, 38 tests passed, 8 skipped.
+- lint guard:
+  - `npm run lint` = PASS.
+- residual status: none for CS-100 sections.

@@ -20,7 +20,7 @@ import { toUtcIsoFromDateTimeInput } from "../api/adminPrompts"
 import { formatArchivePromptTimestamp } from "../i18n/adminPromptsArchive"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 
-vi.mock("../pages/admin/PersonasAdmin", () => ({
+vi.mock("../features/admin-prompts/PersonasAdmin", () => ({
   PersonasAdmin: () => <div data-testid="personas-admin-mock">Personas tab</div>,
 }))
 

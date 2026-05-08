@@ -7,6 +7,7 @@ import {
   useRevealAdminUserStripeIdMutation,
 } from "../../api/adminUsers"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
+import { formatLocalDate, formatLocalDateTime } from "../../utils/formatDate"
 import "./AdminUserDetailPage.css"
 
 type ActionDialogState =
@@ -288,7 +289,7 @@ export function AdminUserDetailPage() {
               </div>
               <div className="info-item">
                 <span className="info-label">Créé le</span>
-                <span className="info-value">{new Date(user.created_at).toLocaleString()}</span>
+                <span className="info-value">{formatLocalDateTime(user.created_at)}</span>
               </div>
               <div className="info-item">
                 <span className="info-label">Statut Compte</span>
@@ -456,7 +457,7 @@ export function AdminUserDetailPage() {
                   <div className="list-item-main">
                     <span className="list-item-title">{ticket.title}</span>
                     <span className="list-item-date">
-                      {new Date(ticket.created_at).toLocaleDateString()}
+                      {formatLocalDate(ticket.created_at)}
                     </span>
                   </div>
                   <span className={`badge badge--status-${ticket.status.toLowerCase()}`}>
@@ -476,7 +477,7 @@ export function AdminUserDetailPage() {
                   <div className="list-item-main">
                     <span className="audit-action">{event.action}</span>
                     <span className="list-item-date">
-                      {new Date(event.created_at).toLocaleString()}
+                      {formatLocalDateTime(event.created_at)}
                     </span>
                   </div>
                   <span className="audit-actor">{event.actor_role}</span>

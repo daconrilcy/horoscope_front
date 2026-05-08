@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatDate, formatDateTime, formatDateWithOptions } from "../utils/formatDate"
+import { formatDate, formatDateTime, formatDateWithOptions, formatLocalDate, formatLocalDateTime } from "../utils/formatDate"
 
 describe("formatDate", () => {
   it("formats valid ISO date string", () => {
@@ -77,6 +77,30 @@ describe("formatDateTime", () => {
   it("returns fallback for malformed date like 'undefined'", () => {
     const result = formatDateTime("undefined")
     expect(result).toBe("—")
+  })
+})
+
+describe("formatLocalDate", () => {
+  it("preserves browser local date formatting without explicit options", () => {
+    const value = "2024-06-15T10:30:00Z"
+
+    expect(formatLocalDate(value)).toBe(new Date(value).toLocaleDateString())
+  })
+
+  it("returns fallback for invalid local date input", () => {
+    expect(formatLocalDate("invalid")).toBe("—")
+  })
+})
+
+describe("formatLocalDateTime", () => {
+  it("preserves browser local date/time formatting without explicit options", () => {
+    const value = "2024-06-15T10:30:00Z"
+
+    expect(formatLocalDateTime(value)).toBe(new Date(value).toLocaleString())
+  })
+
+  it("returns fallback for invalid local date/time input", () => {
+    expect(formatLocalDateTime("invalid")).toBe("—")
   })
 })
 

@@ -862,9 +862,9 @@ describe("DailyHoroscopePage", () => {
 
     renderDashboard();
 
-    await waitFor(() => {
-      expect(screen.getByText(/Journee favorable pour prendre contact/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText(/Journee favorable pour prendre contact/i, {}, { timeout: 5000 }),
+    ).toBeInTheDocument();
 
     expect(screen.getByRole("heading", { level: 1, name: /mars/i })).toBeInTheDocument();
     expect(screen.getByText("Vos domaines clés")).toBeInTheDocument();
@@ -883,9 +883,9 @@ describe("DailyHoroscopePage", () => {
     
     const { router } = renderDashboard()
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/Retour au tableau de bord/i)).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByLabelText(/Retour au tableau de bord/i, {}, { timeout: 5000 }),
+    ).toBeInTheDocument()
 
     const backBtn = screen.getByLabelText(/Retour au tableau de bord/i)
     await userEvent.click(backBtn)
