@@ -1,5 +1,4 @@
-// Page legale statique dont la presentation est centralisee dans la feuille CSS adjacente.
-import { useTranslation } from "../i18n"
+// Page legale publique dont la presentation est centralisee dans la feuille CSS adjacente.
 import { Button } from "../components/ui/Button/Button"
 import { Link } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
@@ -7,8 +6,6 @@ import { formatLocalDate } from "../utils/formatDate"
 import "./PrivacyPolicyPage.css"
 
 export const PrivacyPolicyPage = () => {
-  const t = useTranslation("landing")
-  
   return (
     <div className="privacy-policy-page">
       <Button
@@ -19,7 +16,6 @@ export const PrivacyPolicyPage = () => {
         className="privacy-policy-page__back-link"
         leftIcon={<ArrowLeft size={16} aria-hidden="true" />}
       >
-        {t.navbar.howItWorks} {/* Reusing an existing label for back button if needed, but here just home */}
         Retour à l'accueil
       </Button>
 

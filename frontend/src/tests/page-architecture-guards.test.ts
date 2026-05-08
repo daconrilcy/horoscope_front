@@ -337,6 +337,15 @@ describe("page-architecture", () => {
     expect(landingWrapperOwners).toEqual([])
   })
 
+  it("route la page privacy sous LandingLayout", () => {
+    const landingBranch = rootChildren().find(
+      (route) => routeElementType(route) === LandingLayout,
+    )
+    const landingRoutePaths = collectRoutePaths(landingBranch?.children ?? [])
+
+    expect(landingRoutePaths).toContain("/privacy")
+  })
+
   it("monte les routes auth sous AuthLayout sans routes directes au niveau maitre", () => {
     const authBranch = rootChildren().find(
       (route) => routeElementType(route) === AuthLayout,
@@ -351,6 +360,18 @@ describe("page-architecture", () => {
     expect(authBranch).toBeDefined()
     expect(authPaths).toEqual(new Set(["login", "register"]))
     expect(directAuthRoutes).toEqual([])
+  })
+
+  it("route les callbacks billing sous AppLayout", () => {
+    const protectedBranch = rootChildren().find((route) =>
+      routeHasElementType(route, AppLayout),
+    )
+    const protectedRoutePaths = collectRoutePaths(
+      protectedBranch?.children ?? [],
+    )
+
+    expect(protectedRoutePaths).toContain("/billing/success")
+    expect(protectedRoutePaths).toContain("/billing/cancel")
   })
 
   it("classe chaque fichier page avec un owner exact", () => {
@@ -376,6 +397,20 @@ describe("page-architecture", () => {
     expect(invalid).toEqual([])
   })
 
+  it("bloque la reintroduction de HomePage comme fichier, route, export ou classification", () => {
+    const runtimeSources = runtimeSourceFiles()
+    const offenders = runtimeSources.filter((file) =>
+      readFrontendFile(file).includes("HomePage"),
+    )
+    const classifiedHomePage = PAGE_LAYOUT_OWNER_CLASSIFICATIONS.filter(
+      (entry) => entry.file === "pages/HomePage.tsx",
+    )
+
+    expect(pageFiles()).not.toContain("pages/HomePage.tsx")
+    expect(offenders).toEqual([])
+    expect(classifiedHomePage).toEqual([])
+  })
+
   it("bloque le routage des pages qui attendent une decision produit", () => {
     const blockedFiles = PAGE_LAYOUT_OWNER_CLASSIFICATIONS.filter(
       (entry) => entry.classification === "needs-user-decision",
@@ -385,7 +420,6 @@ describe("page-architecture", () => {
       .filter((entry) => routesSource.includes(pageSymbol(entry.file)))
       .map((entry) => entry.file)
 
-    expect(blockedFiles.length).toBeGreaterThan(0)
     expect(routedBlockedFiles).toEqual([])
   })
 
@@ -411,7 +445,6 @@ describe("page-architecture", () => {
       return importingFiles.map((file) => `${entry.file}:${file}`)
     })
 
-    expect(deadCandidates.length).toBeGreaterThan(0)
     expect(reattachedCandidates).toEqual([])
   })
 

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import { clearAccessToken, setAccessToken } from "../utils/authToken"
+import { setAccessToken } from "../utils/authToken"
 import { TestAppRouter } from "../app/router"
 import { ThemeProvider } from "../state/ThemeProvider"
 
@@ -170,6 +170,21 @@ describe("App", () => {
     expect(screen.getByLabelText(/Adresse e-mail/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Mot de passe/i, { selector: 'input' })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Se connecter/i })).toBeInTheDocument()
+  })
+
+  it("shows privacy policy at /privacy under the public layout", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
+    localStorage.removeItem("access_token")
+
+    const { container } = renderApp(["/privacy"])
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: /Politique de Confidentialité/i,
+      }),
+    ).toBeInTheDocument()
+    expect(container.querySelector(".landing-layout")).toBeInTheDocument()
   })
 
   it("navigates from login to register when 'Créer un compte' is clicked", async () => {

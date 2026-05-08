@@ -1,6 +1,15 @@
 # Final Evidence
 
-## Story status
+## Current closure note
+
+This file is historical evidence for the original CS-108 scope. The active
+closure source for the residual page decisions is now
+`_condamad/stories/CS-109-fermer-decisions-residuelles-pages-layout/generated/10-final-evidence.md`.
+CS-109 supersedes the original CS-108 blocker state by routing privacy and
+billing callbacks, deleting `HomePage`, and owning `TestimonialsSection` from
+`LandingPage`.
+
+## Historical CS-108 story status
 
 - Validation outcome: PASS
 - Ready for review: yes
@@ -28,16 +37,20 @@
 | `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Story-specific guardrails created. |
 | `generated/10-final-evidence.md` | yes | yes | PASS | Completion evidence in progress. |
 
-## AC validation
+## Historical AC validation for original CS-108 scope
+
+The rows below are retained as evidence for the original CS-108 implementation
+boundary only. They are not current-state claims after CS-109. Current route,
+deletion and ownership truth is recorded in CS-109 final evidence.
 
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
-| AC1 | `page-decisions-before.md` liste les cinq residus avec classification, owner initial, route et preuve. | `rg -n "PrivacyPolicyPage|BillingSuccessPage" page-decisions-before.md` PASS. | PASS | Baseline complet. |
-| AC2 | `frontend/src/tests/page-architecture-allowlist.ts` et `page-decisions-after.md` portent owner, `decisionSource`, `expiresOn` ou `removalStory`. | `npm run test -- page-architecture layout` PASS; scan des cinq symboles dans `page-decisions-after.md` PASS. | PASS | Les decisions restent bloquees ou retenues, sans routage. |
-| AC3 | `frontend/src/app/routes.tsx` reste sans route pour les trois pages bloquees; guard existant conserve. | `npm run test -- page-architecture layout` PASS; scan `routes.tsx` zero-hit PASS. | PASS | Aucun routage non decide. |
-| AC4 | Aucune route ajoutee; aucun diff sur `frontend/src/app/routes.tsx`. | `npm run test -- page-architecture layout` PASS. | PASS | Owner de route inchange. |
+| AC1 | `page-decisions-before.md` liste les cinq residus avec classification, owner initial, route et preuve. | `rg -n "PrivacyPolicyPage|BillingSuccessPage" page-decisions-before.md` PASS. | PASS | Baseline historique complet. |
+| AC2 | Dans le scope original CS-108, `frontend/src/tests/page-architecture-allowlist.ts` et `page-decisions-after.md` portaient owner, `decisionSource`, `expiresOn` ou `removalStory`. | `npm run test -- page-architecture layout` PASS; scan des cinq symboles dans `page-decisions-after.md` PASS. | PASS | Etat original supersede par CS-109. |
+| AC3 | Dans le scope original CS-108, `frontend/src/app/routes.tsx` restait sans route pour les trois pages bloquees. | `npm run test -- page-architecture layout` PASS; scan `routes.tsx` zero-hit PASS. | PASS | Etat original supersede par CS-109. |
+| AC4 | Dans le scope original CS-108, aucune route n'etait ajoutee. | `npm run test -- page-architecture layout` PASS. | PASS | Etat original supersede par CS-109. |
 | AC5 | `page-layout-owner-after.md` aligne les cinq lignes avec l'allowlist CS-108. | `rg -n "HomePage" page-layout-owner-after.md` PASS; page-architecture PASS. | PASS | Inventaire CS-107 synchronise. |
-| AC6 | Aucune suppression physique de page; `HomePage` n'est plus re-exportee par le barrel runtime; sorties futures documentees. | `git diff --stat` confirme aucune suppression de page; page-architecture PASS; scan `src/pages/index.ts` zero-hit pour `HomePage`. | PASS | `frontend/lint_output.txt` etait deja supprime avant CS-108. |
+| AC6 | Dans le scope original CS-108, aucune suppression physique de page n'etait faite; CS-109 supprime ensuite `HomePage`. | `git diff --stat` historique CS-108; page-architecture PASS; scan `src/pages/index.ts` zero-hit pour `HomePage`. | PASS | Etat original supersede par CS-109. |
 | AC7 | Frontend change limite a l'allowlist et au guard. | `npm run lint` PASS; `npm run test -- App router BillingSuccessPage` PASS. | PASS | React Router warnings existants non bloquants dans les tests billing. |
 
 ## Files changed
@@ -59,9 +72,9 @@
 | `frontend/src/tests/page-architecture-guards.test.ts` | modified | Guard contre decisions anonymes sur pages bloquees ou candidates mortes. | AC3, AC5, AC7 |
 | `frontend/src/pages/index.ts` | modified | Retirer le re-export runtime de `HomePage` pour conserver la classification dead/unmounted. | AC6 |
 
-## Files deleted
+## Historical files deleted
 
-None by CS-108. No page file was deleted.
+None by original CS-108. `HomePage.tsx` is deleted later by CS-109.
 
 ## Tests added or updated
 
@@ -80,8 +93,8 @@ None by CS-108. No page file was deleted.
 | `npm run lint` | `frontend/` | PASS | 0 | TypeScript lint projects passed. |
 | `rg -n "PrivacyPolicyPage|BillingSuccessPage" page-decisions-before.md` | story directory | PASS | 0 | Baseline rows found. |
 | `rg -n "PrivacyPolicyPage|BillingSuccessPage|BillingCancelPage|HomePage|TestimonialsSection" page-decisions-after.md` | story directory | PASS | 0 | Five after decision rows found. |
-| `rg -n "PrivacyPolicyPage|BillingSuccessPage|BillingCancelPage|HomePage|TestimonialsSection|CS-108 2026-05-08|Decision sourcee CS-108" src/app src/pages/index.ts src/tests/page-architecture-allowlist.ts` | `frontend/` | PASS | 0 | Hits only in allowlist; no route/app/barrel hits and no old string provenance hits. |
-| `rg -n "PrivacyPolicyPage|BillingSuccessPage|BillingCancelPage|HomePage|TestimonialsSection" src/app/routes.tsx` | `frontend/` | PASS | 0 | `NO_HITS`; no residual page is routed. |
+| `rg -n "PrivacyPolicyPage|BillingSuccessPage|BillingCancelPage|HomePage|TestimonialsSection|CS-108 2026-05-08|Decision sourcee CS-108" src/app src/pages/index.ts src/tests/page-architecture-allowlist.ts` | `frontend/` | PASS | 0 | Historical original CS-108 command; superseded by CS-109 route and allowlist evidence. |
+| `rg -n "PrivacyPolicyPage|BillingSuccessPage|BillingCancelPage|HomePage|TestimonialsSection" src/app/routes.tsx` | `frontend/` | PASS | 0 | Historical original CS-108 `NO_HITS`; superseded by CS-109 route evidence. |
 | `rg -n "HomePage" src/pages/index.ts` | `frontend/` | PASS | 0 | `NO_HITS`; no barrel re-export remains. |
 | `rg -n "CS-108 2026-05-08|Decision sourcee CS-108" src/tests/page-architecture-allowlist.ts src/tests/page-architecture-guards.test.ts` | `frontend/` | PASS | 0 | `NO_HITS`; provenance is structured. |
 | `rg -n <forbidden closure vocabulary pattern> page-decisions-after.md generated/10-final-evidence.md ../CS-107.../page-layout-owner-after.md` | `frontend/` | PASS | 0 | One allowed negative statement hit in CS-107 about absence of broad pattern exception; no active closure justification hit. |
@@ -103,13 +116,13 @@ None by CS-108. No page file was deleted.
 
 ## DRY / No Legacy evidence
 
-- No route, redirect, compatibility layer or alternate-path behavior was added.
-- `frontend/src/app/routes.tsx` has no residual page symbol hit.
+- In original CS-108, no route, redirect, compatibility layer or alternate-path behavior was added.
+- The original CS-108 `routes.tsx` no-hit evidence is historical; CS-109 now owns route closure.
 - `frontend/src/pages/index.ts` no longer re-exports `HomePage`.
 - `page-architecture-guards.test.ts` rejects `dead/unmounted-page-candidate` route/import reattachment by resolving module specifiers relative to each runtime source file.
 - No broad pattern or folder-wide page exception was added.
 - Existing CS-107 negative statement about broad pattern exceptions is an allowed proof statement, not an active exception.
-- `HomePage.tsx` and `TestimonialsSection.tsx` were not deleted in this story.
+- `HomePage.tsx` and `TestimonialsSection.tsx` were not deleted in original CS-108; `HomePage.tsx` is deleted by CS-109.
 
 ## Diff review
 
@@ -123,8 +136,27 @@ Final `git status --short` includes expected CS-108 untracked files plus pre-exi
 
 ## Remaining risks
 
-None for CS-108 acceptance. The source audit finding remains intentionally blocked by named owner/expiry decisions for privacy/billing and dedicated-removal decisions for the two dead candidates.
+None for CS-108 acceptance. The source audit finding that was still open after
+CS-108 is closed by CS-109.
 
 ## Suggested reviewer focus
 
-Review that the five residual decisions are explicit, source-backed and guarded without adding routes or deleting pages.
+Review CS-109 for the current route/deletion/ownership closure. Review this file only as historical CS-108 evidence.
+
+## Amendment - 2026-05-08 user decisions applied
+
+After the follow-up audit, the user supplied the missing decisions. CS-109 is
+the active closure story for these changes:
+
+- `PrivacyPolicyPage` is now routed at `/privacy` under `LandingLayout`.
+- `BillingSuccessPage` is now routed at `/billing/success` because backend checkout config defaults `STRIPE_CHECKOUT_SUCCESS_URL` to that path.
+- `BillingCancelPage` is now routed at `/billing/cancel` because backend checkout config defaults `STRIPE_CHECKOUT_CANCEL_URL` to that path.
+- `HomePage.tsx` was removed because the landing page replaces the old home page.
+- `TestimonialsSection` is now composed by `LandingPage` and remains controlled by `VITE_SHOW_TESTIMONIALS`.
+
+Updated validation:
+
+- `npm run test -- page-architecture layout`: PASS.
+- `npm run test -- App router BillingSuccessPage BillingCancelPage`: PASS.
+- `npm run test -- LandingPage visual-smoke`: PASS.
+- `npm run lint`: PASS.

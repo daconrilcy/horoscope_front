@@ -1,9 +1,11 @@
+// Page publique principale composee depuis les sections marketing de la landing.
 import { useEffect } from "react"
 import { useTranslation } from "../../i18n"
 import { useAnalytics, getUtmParams } from "../../hooks/useAnalytics"
 import "./LandingPage.css"
 import { HeroSection } from "./sections/HeroSection"
 import { SocialProofSection } from "./sections/SocialProofSection"
+import { TestimonialsSection } from "./sections/TestimonialsSection"
 import { ProblemSection } from "./sections/ProblemSection"
 import { SolutionSection } from "./sections/SolutionSection"
 import { PricingSection } from "./sections/PricingSection"
@@ -141,6 +143,7 @@ export const LandingPage = () => {
     <div className="landing-page">
       <HeroSection />
       <SocialProofSection />
+      <TestimonialsSection />
       <ProblemSection />
       <SolutionSection />
       <PricingSection />

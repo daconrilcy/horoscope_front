@@ -7,8 +7,9 @@ Source executable: `frontend/src/tests/page-architecture-allowlist.ts`, export `
 - Zero fichier `frontend/src/pages/**/*.tsx` non classe.
 - Les routes applicatives/admin/auth/landing ont un owner layout prouve par `page-architecture-guards.test.ts`.
 - Les composants page-adjacent restent classes avec owner exact; aucune relocation n'est faite dans cette story.
-- Les pages publiques potentielles `PrivacyPolicyPage`, `BillingSuccessPage` et `BillingCancelPage` restent non routees avec decisions CS-108, owner et expiry explicites.
-- Les candidats morts `HomePage` et `TestimonialsSection` ne sont pas supprimes; CS-108 les retient jusqu'a story de retrait dediee.
+- Les pages publiques et callbacks `PrivacyPolicyPage`, `BillingSuccessPage` et `BillingCancelPage` sont routees avec owner layout explicite.
+- L'ancien fichier `HomePage` est retire car la landing est l'owner de la route `/`.
+- `TestimonialsSection` est rattachee a `LandingPage` et reste controlee par son feature flag.
 
 ## Classification par fichier
 
@@ -60,11 +61,10 @@ Source executable: `frontend/src/tests/page-architecture-allowlist.ts`, export `
 | `pages/landing/sections/ProblemSection.tsx` | `page-adjacent-component` | owner `LandingPage` | keep-classified |
 | `pages/landing/sections/SocialProofSection.tsx` | `page-adjacent-component` | owner `LandingPage` | keep-classified |
 | `pages/landing/sections/SolutionSection.tsx` | `page-adjacent-component` | owner `LandingPage` | keep-classified |
-| `pages/landing/sections/TestimonialsSection.tsx` | `dead/unmounted-page-candidate` | owner `Product removal decision owner`; decisionSource CS-108; aucun import runtime actif detecte | keep pending dedicated removal story |
-| `pages/PrivacyPolicyPage.tsx` | `needs-user-decision` | owner `Legal/Product decision owner`; decisionSource CS-108; non routee; expiry `2026-06-30` | block routing/deletion until named legal/product decision |
-| `pages/billing/BillingSuccessPage.tsx` | `needs-user-decision` | owner `Billing/Stripe decision owner`; decisionSource CS-108; non routee; expiry `2026-06-30` | block routing/deletion until named billing decision |
-| `pages/billing/BillingCancelPage.tsx` | `needs-user-decision` | owner `Billing/Stripe decision owner`; decisionSource CS-108; non routee; expiry `2026-06-30` | block routing/deletion until named billing decision |
-| `pages/HomePage.tsx` | `dead/unmounted-page-candidate` | owner `Product removal decision owner`; decisionSource CS-108; aucun export barrel ni route | keep pending dedicated removal story |
+| `pages/landing/sections/TestimonialsSection.tsx` | `page-adjacent-component` | owner `LandingPage` | keep-classified |
+| `pages/PrivacyPolicyPage.tsx` | `routed-page` | `/privacy` via `LandingLayout` sous `RootLayout` | keep |
+| `pages/billing/BillingSuccessPage.tsx` | `routed-page` | `/billing/success` via `AppLayout` sous `RootLayout` | keep |
+| `pages/billing/BillingCancelPage.tsx` | `routed-page` | `/billing/cancel` via `AppLayout` sous `RootLayout` | keep |
 | `pages/NotFoundPage.tsx` | `routed-page` | `*` sous `AppLayout` | keep |
 
 ## Guard

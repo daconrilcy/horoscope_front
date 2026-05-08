@@ -1,3 +1,4 @@
+// Page de retour Stripe cancel qui renvoie vers la gestion d'abonnement.
 import React from "react"
 import { useNavigate } from "react-router-dom"
 import { XCircle, RefreshCw, Settings } from "lucide-react"
@@ -20,14 +21,14 @@ export const BillingCancelPage: React.FC = () => {
         <div className="billing-return-actions">
           <Button 
             variant="primary" 
-            onClick={() => navigate("/billing")}
+            onClick={() => navigate("/settings/subscription")}
             leftIcon={<RefreshCw size={18} />}
           >
             {t.tryAgain}
           </Button>
           <Button 
             variant="secondary" 
-            onClick={() => navigate("/settings?tab=subscription")}
+            onClick={() => navigate("/settings/subscription")}
             leftIcon={<Settings size={18} />}
           >
             {t.backToSettings}

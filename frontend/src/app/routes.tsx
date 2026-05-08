@@ -25,6 +25,25 @@ const DashboardPage = lazy(() =>
   })),
 )
 const DailyHoroscopePage = lazy(() => import("../pages/DailyHoroscopePage"))
+const PrivacyPolicyPage = lazy(() =>
+  import("../pages/PrivacyPolicyPage").then(({ PrivacyPolicyPage }) => ({
+    default: PrivacyPolicyPage,
+  })),
+)
+const BillingSuccessPage = lazy(() =>
+  import("../pages/billing/BillingSuccessPage").then(
+    ({ BillingSuccessPage }) => ({
+      default: BillingSuccessPage,
+    }),
+  ),
+)
+const BillingCancelPage = lazy(() =>
+  import("../pages/billing/BillingCancelPage").then(
+    ({ BillingCancelPage }) => ({
+      default: BillingCancelPage,
+    }),
+  ),
+)
 const NatalChartPage = lazy(() =>
   import("../pages/NatalChartPage").then(({ NatalChartPage }) => ({
     default: NatalChartPage,
@@ -222,6 +241,10 @@ export const routes: RouteObject[] = [
             index: true,
             element: <LandingRedirect />,
           },
+          {
+            path: "privacy",
+            element: lazyElement(<PrivacyPolicyPage />),
+          },
         ],
       },
       {
@@ -264,6 +287,14 @@ export const routes: RouteObject[] = [
           {
             path: "profile",
             element: lazyElement(<BirthProfilePage />),
+          },
+          {
+            path: "billing/success",
+            element: lazyElement(<BillingSuccessPage />),
+          },
+          {
+            path: "billing/cancel",
+            element: lazyElement(<BillingCancelPage />),
           },
           {
             path: "chat",

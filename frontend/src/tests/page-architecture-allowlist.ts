@@ -403,88 +403,70 @@ export const PAGE_LAYOUT_OWNER_CLASSIFICATIONS: PageLayoutOwnerClassification[] 
     },
     {
       file: "pages/landing/sections/TestimonialsSection.tsx",
-      classification: "dead/unmounted-page-candidate",
-      owner: "Product removal decision owner",
+      classification: "page-adjacent-component",
+      owner: "LandingPage",
       reason:
-        "Section non montee retenue sans rattachement jusqu'a decision de retrait dediee.",
+        "Section testimonials rattachee a LandingPage par decision produit.",
       exit:
-        "Retenue jusqu'a story de retrait dediee; aucune suppression physique dans cette classification.",
+        "Reste sous namespace landing tant que LandingPage en est l'owner.",
       decisionSource: {
-        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        story: "CS-109-fermer-decisions-residuelles-pages-layout",
         decidedOn: "2026-05-08",
-        owner: "Product removal decision owner",
+        owner: "LandingPage",
         evidence:
-          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+          "_condamad/stories/CS-109-fermer-decisions-residuelles-pages-layout/closure-after.md",
       },
-      removalStory: "story de retrait dediee a ouvrir avant suppression",
     },
     {
       file: "pages/PrivacyPolicyPage.tsx",
-      classification: "needs-user-decision",
-      owner: "Legal/Product decision owner",
+      classification: "routed-page",
+      route: "/privacy",
+      owner: "LandingLayout sous RootLayout",
       reason:
-        "Page privacy publique gardee bloquee; routage ou retrait interdit sans owner legal nomme.",
+        "Page privacy publique routee apres decision utilisateur.",
       exit:
-        "Expire le 2026-06-30 si aucune decision legal/product nommee ne cree une route sous owner public ou une story de retrait dediee.",
+        "Route publique conservee sous owner landing.",
       decisionSource: {
-        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        story: "CS-109-fermer-decisions-residuelles-pages-layout",
         decidedOn: "2026-05-08",
-        owner: "Legal/Product decision owner",
+        owner: "LandingLayout sous RootLayout",
         evidence:
-          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+          "_condamad/stories/CS-109-fermer-decisions-residuelles-pages-layout/closure-after.md",
       },
-      expiresOn: "2026-06-30",
     },
     {
       file: "pages/billing/BillingSuccessPage.tsx",
-      classification: "needs-user-decision",
-      owner: "Billing/Stripe decision owner",
+      classification: "routed-page",
+      route: "/billing/success",
+      owner: "AppLayout sous RootLayout",
       reason:
-        "Callback success billing garde bloque; routage ou retrait interdit sans owner billing nomme.",
+        "Callback success Stripe route car STRIPE_CHECKOUT_SUCCESS_URL pointe vers /billing/success par defaut.",
       exit:
-        "Expire le 2026-06-30 si aucune decision billing/Stripe nommee ne cree une route callback sous owner explicite ou une story de retrait dediee.",
+        "Route callback conservee tant que la config checkout Stripe utilise ce chemin.",
       decisionSource: {
-        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        story: "CS-109-fermer-decisions-residuelles-pages-layout",
         decidedOn: "2026-05-08",
-        owner: "Billing/Stripe decision owner",
+        owner: "AppLayout sous RootLayout",
         evidence:
-          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+          "_condamad/stories/CS-109-fermer-decisions-residuelles-pages-layout/closure-after.md",
       },
-      expiresOn: "2026-06-30",
     },
     {
       file: "pages/billing/BillingCancelPage.tsx",
-      classification: "needs-user-decision",
-      owner: "Billing/Stripe decision owner",
+      classification: "routed-page",
+      route: "/billing/cancel",
+      owner: "AppLayout sous RootLayout",
       reason:
-        "Callback cancel billing garde bloque; routage ou retrait interdit sans owner billing nomme.",
+        "Callback cancel Stripe route car STRIPE_CHECKOUT_CANCEL_URL pointe vers /billing/cancel par defaut.",
       exit:
-        "Expire le 2026-06-30 si aucune decision billing/Stripe nommee ne cree une route callback sous owner explicite ou une story de retrait dediee.",
+        "Route callback conservee tant que la config checkout Stripe utilise ce chemin.",
       decisionSource: {
-        story: "CS-108-statuer-pages-publiques-candidates-layout",
+        story: "CS-109-fermer-decisions-residuelles-pages-layout",
         decidedOn: "2026-05-08",
-        owner: "Billing/Stripe decision owner",
+        owner: "AppLayout sous RootLayout",
         evidence:
-          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
+          "_condamad/stories/CS-109-fermer-decisions-residuelles-pages-layout/closure-after.md",
       },
-      expiresOn: "2026-06-30",
-    },
-    {
-      file: "pages/HomePage.tsx",
-      classification: "dead/unmounted-page-candidate",
-      owner: "Product removal decision owner",
-      reason:
-        "Ancienne page non routee retenue sans routage jusqu'a decision de retrait dediee.",
-      exit:
-        "Retenue jusqu'a story de retrait dediee; aucune suppression physique dans cette classification.",
-      decisionSource: {
-        story: "CS-108-statuer-pages-publiques-candidates-layout",
-        decidedOn: "2026-05-08",
-        owner: "Product removal decision owner",
-        evidence:
-          "_condamad/stories/CS-108-statuer-pages-publiques-candidates-layout/page-decisions-after.md",
-      },
-      removalStory: "story de retrait dediee a ouvrir avant suppression",
     },
     {
       file: "pages/NotFoundPage.tsx",

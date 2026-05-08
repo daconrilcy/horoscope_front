@@ -1,3 +1,4 @@
+// Page de retour Stripe success dont l'etat depend de la reconciliation backend.
 import React from "react"
 import { useNavigate } from "react-router-dom"
 import { LayoutDashboard, Settings, Info, CheckCircle, Clock, AlertCircle, RefreshCw } from "lucide-react"
