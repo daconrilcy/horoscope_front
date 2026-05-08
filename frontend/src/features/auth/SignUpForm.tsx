@@ -1,16 +1,17 @@
+// Container d'inscription public rattache a la feature auth.
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { registerApi, AuthApiError } from "@api"
-import { setAccessToken } from "../utils/authToken"
+import { setAccessToken } from "../../utils/authToken"
 import { useTranslation } from "@i18n"
 import { createSignUpSchema } from "@i18n/zod/auth"
 import { Field } from "@ui/Field"
 import { Button } from "@ui/Button"
-import { useAnalytics } from "../hooks/useAnalytics"
-import { PRICING_CONFIG } from "../config/pricingConfig"
+import { useAnalytics } from "../../hooks/useAnalytics"
+import { PRICING_CONFIG } from "../../config/pricingConfig"
 import "./SignUpForm.css"
 
 type SignUpFormData = {
@@ -22,6 +23,7 @@ type SignUpFormProps = {
   onSignIn: () => void
 }
 
+/** Orchestre l'inscription email/mot de passe, le plan choisi et le tracking associe. */
 export function SignUpForm({ onSignIn }: SignUpFormProps) {
   const tAuth = useTranslation("auth")
   const tLanding = useTranslation("landing")
@@ -98,7 +100,9 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
 
       {selectedPlan && (
         <div className="auth-plan-badge">
-          {tAuth.signUp.selectedPlanLabel} {(tLanding.pricing.plans as any)[selectedPlan.planCode]?.name || selectedPlan.planCode}
+          {tAuth.signUp.selectedPlanLabel}{" "}
+          {(tLanding.pricing.plans as Record<string, { name: string }>)[selectedPlan.planCode]?.name ||
+            selectedPlan.planCode}
         </div>
       )}
 

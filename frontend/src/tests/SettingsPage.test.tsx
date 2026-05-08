@@ -8,6 +8,7 @@ import { setAccessToken } from "../utils/authToken"
 import { routes } from "../app/routes"
 import { settingsTranslations } from "../i18n/settings"
 import { ThemeProvider } from "../state/ThemeProvider"
+import { routerFutureFlags, routerProviderFutureFlags } from "./test-utils"
 
 beforeEach(() => {
   localStorage.setItem("lang", "fr")
@@ -152,7 +153,7 @@ function setupToken(sub = "42") {
 function renderWithRouter(initialEntries: string[] = ["/settings"]) {
   const router = createMemoryRouter(routes, {
     initialEntries,
-    future: { v7_relativeSplatPath: true },
+    future: routerFutureFlags,
   })
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
@@ -163,7 +164,7 @@ function renderWithRouter(initialEntries: string[] = ["/settings"]) {
     ...render(
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+          <RouterProvider router={router} future={routerProviderFutureFlags} />
         </QueryClientProvider>
       </ThemeProvider>
     ),

@@ -408,7 +408,7 @@ function collectResidualCssTokenCluster(): Array<{ file: string; source: string 
     "components/prediction/TurningPointsList.css",
     "components/settings/DeleteAccountModal.css",
     "components/ShortcutCard.css",
-    "components/SignUpForm.css",
+    "features/auth/SignUpForm.css",
     "components/TurningPointCard.css",
     "index.css",
     "layouts/AdminLayout.css",

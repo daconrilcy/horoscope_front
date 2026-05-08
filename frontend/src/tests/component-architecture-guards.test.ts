@@ -29,6 +29,10 @@ function hasApiOrFeatureOwnership(source: string): boolean {
   )
 }
 
+function frontendSourceFiles(): string[] {
+  return [".ts", ".tsx"].flatMap((extension) => listFiles("", extension))
+}
+
 describe("component-architecture guards", () => {
   it("bloque les imports API/feature et appels HTTP non classes dans components", () => {
     const allowed = exactFiles(COMPONENT_API_IMPORT_EXCEPTIONS)
@@ -54,6 +58,23 @@ describe("component-architecture guards", () => {
 
     expect(violations).toEqual([])
     expect(staleEntries).toEqual([])
+  })
+
+  it("bloque le retour des anciens containers auth sous components", () => {
+    const forbiddenAllowlistEntries = new Set(
+      ["SignInForm.tsx", "SignUpForm.tsx"].map((fileName) => ["components", fileName].join("/")),
+    )
+    const staleAuthEntries = COMPONENT_API_IMPORT_EXCEPTIONS.filter((entry) =>
+      forbiddenAllowlistEntries.has(entry.file),
+    )
+    const legacyAuthImports = frontendSourceFiles().filter((file) => {
+      const source = readFrontendFile(file)
+      return /from\s+["']\.\.\/components\/Sign(?:In|Up)Form["']/.test(source)
+    })
+
+    expect(staleAuthEntries).toEqual([])
+    expect(legacyAuthImports).toEqual([])
+    expect(readFrontendFile("pages/LoginPage.tsx")).toContain('from "../features/auth/SignInForm"')
   })
 
   it("garde NatalInterpretation comme container et les enfants presentational sans API", () => {

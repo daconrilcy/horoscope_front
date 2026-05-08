@@ -14,6 +14,7 @@ import {
 } from "../api/natalChart";
 import { useAstrologers } from "../api/astrologers";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { routerFutureFlags } from "./test-utils";
 
 // Mock hooks
 vi.mock("../api/natalChart", async () => {
@@ -133,7 +134,7 @@ describe("NatalInterpretationSection", () => {
 
   const renderSection = (props: Partial<ComponentProps<typeof NatalInterpretationSection>> = {}) => {
     return render(
-      <MemoryRouter initialEntries={["/natal"]}>
+      <MemoryRouter initialEntries={["/natal"]} future={routerFutureFlags}>
         <Routes>
           <Route
             path="/natal"
@@ -416,7 +417,7 @@ describe("NatalInterpretationSection", () => {
 
   it("autorise le flux free_short complet sans persona quand le thème free est verrouillé", () => {
     render(
-      <MemoryRouter initialEntries={["/natal"]}>
+      <MemoryRouter initialEntries={["/natal"]} future={routerFutureFlags}>
         <Routes>
           <Route
             path="/natal"
@@ -501,7 +502,7 @@ describe("NatalInterpretationSection", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/natal"]}>
+      <MemoryRouter initialEntries={["/natal"]} future={routerFutureFlags}>
         <Routes>
           <Route
             path="/natal"

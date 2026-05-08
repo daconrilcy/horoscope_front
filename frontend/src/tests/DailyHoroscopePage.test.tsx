@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { routerFutureFlags, routerProviderFutureFlags } from "./test-utils";
 
 import { routes } from "../app/routes";
 import { ThemeProvider } from "../state/ThemeProvider";
@@ -806,7 +807,7 @@ function setupToken(sub = "42") {
 function renderDashboard(initialEntries: string[] = ["/dashboard/horoscope"]) {
   const router = createMemoryRouter(routes, {
     initialEntries,
-    future: { v7_relativeSplatPath: true },
+    future: routerFutureFlags,
   });
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
@@ -817,7 +818,7 @@ function renderDashboard(initialEntries: string[] = ["/dashboard/horoscope"]) {
     ...render(
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+          <RouterProvider router={router} future={routerProviderFutureFlags} />
         </QueryClientProvider>
       </ThemeProvider>,
     ),
@@ -830,7 +831,7 @@ function renderDailyHoroscopeWithClient(
 ) {
   const router = createMemoryRouter(routes, {
     initialEntries,
-    future: { v7_relativeSplatPath: true },
+    future: routerFutureFlags,
   });
 
   return {
@@ -838,7 +839,7 @@ function renderDailyHoroscopeWithClient(
     ...render(
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+          <RouterProvider router={router} future={routerProviderFutureFlags} />
         </QueryClientProvider>
       </ThemeProvider>,
     ),

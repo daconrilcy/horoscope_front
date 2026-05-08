@@ -75,18 +75,6 @@ export const COMPONENT_API_IMPORT_EXCEPTIONS: ComponentArchitectureException[] =
     exitCondition: "Deplacer sous pages/settings ou feature privacy.",
   },
   {
-    file: "components/SignInForm.tsx",
-    owner: "auth pages",
-    reason: "Formulaire auth historique avec mutation API directe.",
-    exitCondition: "Deplacer sous une feature auth.",
-  },
-  {
-    file: "components/SignUpForm.tsx",
-    owner: "auth pages",
-    reason: "Formulaire auth historique avec mutation API directe.",
-    exitCondition: "Deplacer sous une feature auth.",
-  },
-  {
     file: "components/SupportOpsPanel.tsx",
     owner: "admin operations",
     reason: "Panel support ops conserve comme container API exact.",

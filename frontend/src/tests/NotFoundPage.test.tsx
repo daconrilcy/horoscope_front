@@ -3,13 +3,14 @@ import { MemoryRouter } from "react-router-dom"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { NotFoundPage } from "../pages/NotFoundPage"
+import { routerFutureFlags } from "./test-utils"
 
 describe("NotFoundPage", () => {
   afterEach(cleanup)
 
   it("renders the dashboard return action", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={routerFutureFlags}>
         <NotFoundPage />
       </MemoryRouter>,
     )

@@ -7,6 +7,15 @@ type WrapperProps = {
   children: ReactNode
 }
 
+export const routerFutureFlags = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+} as const
+
+export const routerProviderFutureFlags = {
+  v7_startTransition: true,
+} as const
+
 function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -23,10 +32,7 @@ export function createWrapper(initialEntries: string[] = ["/"]) {
   return function Wrapper({ children }: WrapperProps) {
     return (
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter
-          initialEntries={initialEntries}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
+        <MemoryRouter initialEntries={initialEntries} future={routerFutureFlags}>
           {children}
         </MemoryRouter>
       </QueryClientProvider>

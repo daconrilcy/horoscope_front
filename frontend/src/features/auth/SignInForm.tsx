@@ -1,10 +1,11 @@
+// Container de connexion public rattache a la feature auth.
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 import { loginApi, AuthApiError } from "@api"
-import { setAccessToken } from "../utils/authToken"
+import { setAccessToken } from "../../utils/authToken"
 import { useTranslation } from "@i18n"
 import { createSignInSchema } from "@i18n/zod/auth"
 import { Field } from "@ui/Field"
@@ -19,6 +20,7 @@ type SignInFormProps = {
   onRegister?: () => void
 }
 
+/** Orchestre la connexion email/mot de passe et la navigation post-authentification. */
 export function SignInForm({ onRegister }: SignInFormProps = {}) {
   const t = useTranslation("auth")
   const schema = createSignInSchema(t)

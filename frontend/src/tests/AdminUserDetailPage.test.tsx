@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom"
 
 import { AdminUserDetailPage } from "../pages/admin/AdminUserDetailPage"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
+import { routerFutureFlags } from "./test-utils"
 
 function renderPage() {
   const queryClient = new QueryClient({
@@ -13,7 +14,7 @@ function renderPage() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={["/admin/users/42"]}>
+      <MemoryRouter initialEntries={["/admin/users/42"]} future={routerFutureFlags}>
         <Routes>
           <Route path="/admin/users/:userId" element={<AdminUserDetailPage />} />
         </Routes>

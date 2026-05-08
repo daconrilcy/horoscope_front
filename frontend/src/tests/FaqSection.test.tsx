@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { FaqSection } from "../pages/landing/sections/FaqSection"
 import { MemoryRouter } from "react-router-dom"
+import { routerFutureFlags } from "./test-utils"
 
 // Mock translations
 vi.mock("../i18n", () => ({
@@ -26,7 +27,7 @@ vi.mock("../i18n", () => ({
 describe("FaqSection", () => {
   it("renders all FAQ items with correct ARIA attributes", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={routerFutureFlags}>
         <FaqSection />
       </MemoryRouter>
     )
@@ -40,7 +41,7 @@ describe("FaqSection", () => {
 
   it("updates aria-expanded when an item is toggled", async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={routerFutureFlags}>
         <FaqSection />
       </MemoryRouter>
     )
@@ -66,7 +67,7 @@ describe("FaqSection", () => {
 
   it("maintains exclusive accordion behavior (one open at a time)", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={routerFutureFlags}>
         <FaqSection />
       </MemoryRouter>
     )

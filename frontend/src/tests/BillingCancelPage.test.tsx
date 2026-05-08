@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { BrowserRouter } from "react-router-dom"
 
 import BillingCancelPage from "../pages/billing/BillingCancelPage"
+import { routerFutureFlags } from "./test-utils"
 
 const mockNavigate = vi.fn()
 
@@ -35,7 +36,7 @@ describe("BillingCancelPage", () => {
     const user = userEvent.setup()
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingCancelPage />
       </BrowserRouter>,
     )
@@ -49,7 +50,7 @@ describe("BillingCancelPage", () => {
     const user = userEvent.setup()
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingCancelPage />
       </BrowserRouter>,
     )

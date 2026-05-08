@@ -6,11 +6,12 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { AdminSupportPage } from "../pages/admin/AdminSupportPage"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
+import { routerFutureFlags } from "./test-utils"
 
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <MemoryRouter>
+    <MemoryRouter future={routerFutureFlags}>
       <QueryClientProvider client={queryClient}>
         <AdminSupportPage />
       </QueryClientProvider>

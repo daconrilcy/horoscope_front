@@ -7,6 +7,7 @@ import { MemoryRouter, useLocation } from "react-router-dom"
 import { AdminDashboardPage } from "../pages/admin/AdminDashboardPage"
 import { setAccessToken, clearAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
+import { routerFutureFlags } from "./test-utils"
 
 function LocationDisplay() {
   const location = useLocation()
@@ -94,7 +95,7 @@ function renderPage() {
   return render(
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
+        <MemoryRouter future={routerFutureFlags}>
           <AdminDashboardPage />
           <LocationDisplay />
         </MemoryRouter>

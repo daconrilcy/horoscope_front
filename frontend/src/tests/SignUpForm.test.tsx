@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest"
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react"
 
-import { SignUpForm } from "../components/SignUpForm"
+import { SignUpForm } from "../features/auth/SignUpForm"
 import { renderWithRouter } from "./test-utils"
 
 const ACCESS_TOKEN = "tok.eyJzdWIiOiI0MiIsInJvbGUiOiJ1c2VyIn0.sig"

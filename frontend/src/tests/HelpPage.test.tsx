@@ -7,6 +7,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { clearAccessToken, setAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
 import { routes } from "../app/routes"
+import { routerFutureFlags, routerProviderFutureFlags } from "./test-utils"
 
 const helpApiMock = vi.hoisted(() => ({
   categories: [] as Array<{ code: string; label: string; description: string | null }>,
@@ -222,13 +223,14 @@ function renderHelpPage() {
 
   const router = createMemoryRouter(routes, {
     initialEntries: ["/help"],
+    future: routerFutureFlags,
   })
 
   return {
     ...render(
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <RouterProvider router={router} />
+          <RouterProvider router={router} future={routerProviderFutureFlags} />
         </ThemeProvider>
       </QueryClientProvider>,
     ),

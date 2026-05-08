@@ -7,6 +7,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import { setAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
 import { routes } from "../app/routes"
+import { routerFutureFlags, routerProviderFutureFlags } from "./test-utils"
 
 const AUTH_ME_USER = {
   ok: true,
@@ -384,13 +385,14 @@ function renderDashboard() {
   
   const router = createMemoryRouter(routes, {
     initialEntries: ["/dashboard"],
+    future: routerFutureFlags,
   })
 
   return {
     ...render(
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <RouterProvider router={router} />
+          <RouterProvider router={router} future={routerProviderFutureFlags} />
         </ThemeProvider>
       </QueryClientProvider>
     ),

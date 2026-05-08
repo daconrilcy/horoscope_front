@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import BillingSuccessPage from "../pages/billing/BillingSuccessPage"
 import { BrowserRouter } from "react-router-dom"
+import { routerFutureFlags } from "./test-utils"
 
 const mockNavigate = vi.fn()
 const mockRefetch = vi.fn()
@@ -61,7 +62,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
@@ -82,7 +83,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
@@ -109,7 +110,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
@@ -130,7 +131,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
@@ -148,7 +149,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
@@ -167,7 +168,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
@@ -186,7 +187,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
@@ -205,7 +206,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
@@ -225,7 +226,7 @@ describe("BillingSuccessPage", () => {
     })
 
     render(
-      <BrowserRouter>
+      <BrowserRouter future={routerFutureFlags}>
         <BillingSuccessPage />
       </BrowserRouter>,
     )
