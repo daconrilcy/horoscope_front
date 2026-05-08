@@ -1,19 +1,15 @@
-// Route publique chargeant la landing avec son scope de variables semantiques.
+// Route publique limitant le guard landing aux decisions de token et redirection.
 import { Suspense, lazy } from "react"
 import { Navigate } from "react-router-dom"
-import { isAccessTokenExpired, useAccessTokenSnapshot, clearAccessToken } from "../../utils/authToken"
-import "../../layouts/LandingLayout.css"
+import {
+  isAccessTokenExpired,
+  useAccessTokenSnapshot,
+  clearAccessToken,
+} from "../../utils/authToken"
 
 const LandingPage = lazy(() => import("../../pages/landing/LandingPage"))
 
-function ScopedLandingPage() {
-  return (
-    <div className="landing-layout">
-      <LandingPage />
-    </div>
-  )
-}
-
+/** Preserve la decision d'acces sans redevenir proprietaire du layout landing. */
 export function LandingRedirect() {
   const token = useAccessTokenSnapshot()
 
@@ -21,7 +17,7 @@ export function LandingRedirect() {
     clearAccessToken()
     return (
       <Suspense fallback={null}>
-        <ScopedLandingPage />
+        <LandingPage />
       </Suspense>
     )
   }
@@ -32,7 +28,7 @@ export function LandingRedirect() {
 
   return (
     <Suspense fallback={null}>
-      <ScopedLandingPage />
+      <LandingPage />
     </Suspense>
   )
 }

@@ -1,11 +1,18 @@
-import { Outlet } from "react-router-dom"
+// Fournit le layout maitre unique pour le fond global et le conteneur de route.
+import { Outlet, useLocation } from "react-router-dom"
 import { StarfieldBackground } from "../components/StarfieldBackground"
 
+/** Rend le fond applicatif canonique et laisse les layouts secondaires gerer leur navigation. */
 export function RootLayout() {
+  const location = useLocation()
+  const containerClassName = location.pathname.startsWith("/admin")
+    ? "app-bg-container app-bg-container--admin"
+    : "app-bg-container"
+
   return (
     <div className="app-shell app-bg">
       <StarfieldBackground />
-      <div className="app-bg-container">
+      <div className={containerClassName}>
         <Outlet />
       </div>
     </div>
