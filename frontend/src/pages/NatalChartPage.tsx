@@ -7,6 +7,7 @@ import { ApiError, useLatestNatalChart } from "@api"
 import { generateNatalChart } from "../api/natalChart"
 import { useAstrologyLabels, DEGRADED_MODE_MESSAGES } from "../i18n/astrology"
 import { natalChartTranslations } from "../i18n/natalChart"
+import { shouldLogSupportForApiError } from "../utils/apiErrorSupport"
 import { logSupportRequestId } from "../utils/constants"
 import { formatDateTime } from "../utils/formatDate"
 import { useAccessTokenSnapshot } from "../utils/authToken"
@@ -16,10 +17,6 @@ import { NatalInterpretationSection } from "../components/NatalInterpretation"
 import { getZodiacIcon } from "../components/zodiacSignIconMap"
 import "./NatalChartPage.css"
 import "../components/prediction/DailyPageHeader.css"
-
-function shouldLogSupportForApiError(error: ApiError): boolean {
-  return error.status >= 500
-}
 
 function normalize360(value: number): number {
   const normalized = value % 360

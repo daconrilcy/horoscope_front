@@ -1,18 +1,8 @@
 import React, { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
-import { apiFetch } from "../../api/client"
+import { useAdminUsersSearchQuery } from "../../api/adminUsers"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminUsersPage.css"
-
-interface UserSearchItem {
-  id: number
-  email: string
-  role: string
-  plan_code: string | null
-  subscription_status: string | null
-  created_at: string
-}
 
 export function AdminUsersPage() {
   const token = useAccessTokenSnapshot()
@@ -22,17 +12,7 @@ export function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState(initialFilter === "payment_failure" ? "payment_failure" : "")
   const [appliedQuery, setAppliedQuery] = useState(searchQuery)
 
-  const { data, isLoading, error } = useQuery<{ data: UserSearchItem[], total: number }>({
-    queryKey: ["admin-users-search", appliedQuery],
-    queryFn: async () => {
-      const response = await apiFetch(`/v1/admin/users?q=${encodeURIComponent(appliedQuery)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) throw new Error("Search failed")
-      return response.json()
-    },
-    enabled: Boolean(token),
-  })
+  const { data, isLoading, error } = useAdminUsersSearchQuery(token, appliedQuery)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

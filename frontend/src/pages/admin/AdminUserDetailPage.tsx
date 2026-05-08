@@ -1,53 +1,13 @@
 import React, { useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useParams } from "react-router-dom"
 
-import { apiFetch } from "../../api/client"
+import {
+  useAdminUserActionMutation,
+  useAdminUserDetailQuery,
+  useRevealAdminUserStripeIdMutation,
+} from "../../api/adminUsers"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminUserDetailPage.css"
-
-interface UserDetail {
-  id: number
-  email: string
-  role: string
-  created_at: string
-  is_active: boolean
-  is_suspended: boolean
-  is_locked: boolean
-  plan_code: string | null
-  subscription_status: string | null
-  stripe_customer_id_masked: string | null
-  payment_method_summary: string | null
-  last_invoice_amount_cents: number | null
-  last_invoice_date: string | null
-  activity_summary: {
-    total_tokens: number
-    tokens_in: number
-    tokens_out: number
-    messages_count: number
-    natal_charts_total: number
-    natal_charts_short: number
-    natal_charts_complete: number
-  }
-  quotas: Array<{
-    feature_code: string
-    used: number
-    limit: number | null
-    period: string
-  }>
-  recent_tickets: Array<{
-    id: number
-    title: string
-    status: string
-    created_at: string
-  }>
-  recent_audit_events: Array<{
-    id: number
-    action: string
-    actor_role: string
-    created_at: string
-  }>
-}
 
 type ActionDialogState =
   | { type: "refresh-subscription" }
@@ -199,7 +159,6 @@ export function AdminUserDetailPage() {
   const { userId } = useParams()
   const token = useAccessTokenSnapshot()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [revealedStripeId, setRevealedStripeId] = useState<string | null>(null)
   const [dialog, setDialog] = useState<ActionDialogState>(null)
   const [assignPlanForm, setAssignPlanForm] = useState({
@@ -212,63 +171,17 @@ export function AdminUserDetailPage() {
     reason: "",
   })
 
-  const { data, isLoading, error } = useQuery<{ data: UserDetail }>({
-    queryKey: ["admin-user-detail", userId],
-    queryFn: async () => {
-      const response = await apiFetch(`/v1/admin/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!response.ok) {
-        throw new Error("Failed to fetch user detail")
-      }
-      return response.json()
-    },
-    enabled: Boolean(token && userId),
-  })
+  const { data, isLoading, error } = useAdminUserDetailQuery(token, userId)
+  const actionMutation = useAdminUserActionMutation(token, userId)
+  const revealMutation = useRevealAdminUserStripeIdMutation(token, userId)
 
-  const actionMutation = useMutation({
-    mutationFn: async ({
-      action,
-      body,
-    }: {
-      action: string
-      body?: Record<string, string | number>
-    }) => {
-      const response = await apiFetch(`/v1/admin/users/${userId}/${action}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: body ? JSON.stringify(body) : undefined,
-      })
-      if (!response.ok) {
-        throw new Error(`${action} failed`)
-      }
-      return response.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-user-detail", userId] })
-      setDialog(null)
-    },
-  })
-
-  const revealMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiFetch(`/v1/admin/users/${userId}/reveal-stripe-id`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!response.ok) {
-        throw new Error("Reveal failed")
-      }
-      return response.json()
-    },
-    onSuccess: (response) => {
+  const revealStripeId = () => {
+    revealMutation.mutate(undefined, {
+      onSuccess: (response) => {
       setRevealedStripeId(response.stripe_customer_id)
-      queryClient.invalidateQueries({ queryKey: ["admin-user-detail", userId] })
-    },
-  })
+      },
+    })
+  }
 
   const runImmediateAction = (action: string, body?: Record<string, string>) => {
     actionMutation.mutate({ action, body })
@@ -276,30 +189,36 @@ export function AdminUserDetailPage() {
 
   const submitDialogAction = () => {
     if (dialog?.type === "refresh-subscription") {
-      actionMutation.mutate({ action: "refresh-subscription" })
+      actionMutation.mutate({ action: "refresh-subscription" }, { onSuccess: () => setDialog(null) })
       return
     }
 
     if (dialog?.type === "assign-plan") {
-      actionMutation.mutate({
-        action: "assign-plan",
-        body: {
-          plan_code: assignPlanForm.plan_code,
-          reason: assignPlanForm.reason,
+      actionMutation.mutate(
+        {
+          action: "assign-plan",
+          body: {
+            plan_code: assignPlanForm.plan_code,
+            reason: assignPlanForm.reason,
+          },
         },
-      })
+        { onSuccess: () => setDialog(null) },
+      )
       return
     }
 
     if (dialog?.type === "commercial-gesture") {
-      actionMutation.mutate({
-        action: "commercial-gesture",
-        body: {
-          gesture_type: commercialGestureForm.gesture_type,
-          value: commercialGestureForm.value,
-          reason: commercialGestureForm.reason,
+      actionMutation.mutate(
+        {
+          action: "commercial-gesture",
+          body: {
+            gesture_type: commercialGestureForm.gesture_type,
+            value: commercialGestureForm.value,
+            reason: commercialGestureForm.reason,
+          },
         },
-      })
+        { onSuccess: () => setDialog(null) },
+      )
     }
   }
 
@@ -441,7 +360,7 @@ export function AdminUserDetailPage() {
                   {!revealedStripeId && user.stripe_customer_id_masked && (
                     <button
                       className="reveal-button"
-                      onClick={() => revealMutation.mutate()}
+                      onClick={revealStripeId}
                       disabled={revealMutation.isPending}
                       title="Révéler l'ID (action journalisée)"
                     >

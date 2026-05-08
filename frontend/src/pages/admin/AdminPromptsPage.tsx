@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Page admin des prompts LLM avec surfaces de styles route-specific et historique archive.
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -47,29 +46,9 @@ import { AdminPromptsLogicGraph } from "./AdminPromptsLogicGraph"
 import { AdminPromptCatalogNodeModal } from "./AdminPromptCatalogNodeModal"
 import { buildAdminPromptCatalogFlowProjection } from "./adminPromptCatalogFlowProjection"
 import { buildLogicGraphProjection } from "./adminPromptsLogicGraphProjection"
+import { useMatchMediaMaxWidth } from "../../features/admin-prompts/hooks/useMatchMediaMaxWidth"
 import type { AdminPromptsCatalogStrings } from "../../i18n/adminPromptsCatalog"
 import "./AdminPromptsPage.css"
-
-function useMatchMediaMaxWidth(maxPx: number, enabled: boolean): boolean {
-  const [matches, setMatches] = useState(() => {
-    if (!enabled || typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return false
-    }
-    return window.matchMedia(`(max-width: ${maxPx}px)`).matches
-  })
-  useEffect(() => {
-    if (!enabled || typeof window.matchMedia !== "function") {
-      setMatches(false)
-      return
-    }
-    const mq = window.matchMedia(`(max-width: ${maxPx}px)`)
-    const apply = () => setMatches(mq.matches)
-    apply()
-    mq.addEventListener("change", apply)
-    return () => mq.removeEventListener("change", apply)
-  }, [enabled, maxPx])
-  return matches
-}
 
 type PromptPageTab = "catalog" | "archive" | "release" | "consumption" | "personas" | "samplePayloads"
 
@@ -891,15 +870,17 @@ export function AdminPromptsPage() {
     selectedCatalogUseCase?.active_prompt_version_id != null
       ? (catalogHistory.find((item) => item.id === selectedCatalogUseCase.active_prompt_version_id) ?? null)
       : null
-  const logicGraph =
+  const structuredResolvedAssembly =
     resolvedQuery.data &&
     resolvedQuery.data.activation &&
     Array.isArray(resolvedQuery.data.selected_components) &&
     Array.isArray(resolvedQuery.data.runtime_artifacts)
-      ? buildAdminPromptCatalogFlowProjection(resolvedQuery.data)
+      ? resolvedQuery.data
+      : null
+  const logicGraph = structuredResolvedAssembly
+      ? buildAdminPromptCatalogFlowProjection(structuredResolvedAssembly)
       : null
   const resolvedLogicGraph = resolvedQuery.data ? buildLogicGraphProjection(resolvedQuery.data) : null
-  const hasStructuredCatalogView = Boolean(logicGraph && resolvedQuery.data?.activation)
   const selectedCatalogFlowNode =
     logicGraph?.flowNodes.find((node) => node.id === catalogModalNodeId) ?? null
   const canApplyCatalogSelection = Boolean(
@@ -1205,7 +1186,7 @@ export function AdminPromptsPage() {
               </div>
             ) : null}
 
-            {catalogSelection && selectedManifestEntryId && hasStructuredCatalogView ? (
+            {catalogSelection && selectedManifestEntryId && structuredResolvedAssembly && logicGraph ? (
               <>
                 <section
                   className="admin-prompts-catalog-detail-summary"
@@ -1249,7 +1230,7 @@ export function AdminPromptsPage() {
                       </dd>
                     </div>
                   </dl>
-                  {hasStructuredCatalogView ? (
+                  {structuredResolvedAssembly ? (
                     <div className="admin-prompts-catalog-layers">
                       <section className="admin-prompts-catalog-layer-card" aria-label="Activation">
                         <h4>Activation</h4>
@@ -1257,28 +1238,28 @@ export function AdminPromptsPage() {
                           <div>
                             <dt>Manifest</dt>
                             <dd>
-                              <code>{resolvedQuery.data.activation.manifest_entry_id}</code>
+                              <code>{structuredResolvedAssembly.activation.manifest_entry_id}</code>
                             </dd>
                           </div>
                           <div>
                             <dt>Provider</dt>
-                            <dd>{resolvedQuery.data.activation.provider_target}</dd>
+                            <dd>{structuredResolvedAssembly.activation.provider_target}</dd>
                           </div>
                           <div>
                             <dt>Policy family</dt>
-                            <dd>{resolvedQuery.data.activation.policy_family}</dd>
+                            <dd>{structuredResolvedAssembly.activation.policy_family}</dd>
                           </div>
                           <div>
                             <dt>Output schema</dt>
-                            <dd>{resolvedQuery.data.activation.output_schema ?? "—"}</dd>
+                            <dd>{structuredResolvedAssembly.activation.output_schema ?? "—"}</dd>
                           </div>
                           <div>
                             <dt>Injecteurs</dt>
-                            <dd>{resolvedQuery.data.activation.injector_set.join(", ") || "—"}</dd>
+                            <dd>{structuredResolvedAssembly.activation.injector_set.join(", ") || "—"}</dd>
                           </div>
                           <div>
                             <dt>Persona policy</dt>
-                            <dd>{resolvedQuery.data.activation.persona_policy ?? "—"}</dd>
+                            <dd>{structuredResolvedAssembly.activation.persona_policy ?? "—"}</dd>
                           </div>
                         </dl>
                       </section>
@@ -1286,7 +1267,7 @@ export function AdminPromptsPage() {
                       <section className="admin-prompts-catalog-layer-card" aria-label="Composants sélectionnés">
                         <h4>Composants sélectionnés</h4>
                         <ul className="admin-prompts-catalog-layer-card__list">
-                          {resolvedQuery.data.selected_components.map((component) => (
+                          {structuredResolvedAssembly.selected_components.map((component) => (
                             <li key={component.key}>
                               <strong>{component.title}</strong>
                               <span>{component.summary}</span>
@@ -1298,7 +1279,7 @@ export function AdminPromptsPage() {
                       <section className="admin-prompts-catalog-layer-card" aria-label="Artefacts runtime">
                         <h4>Artefacts runtime</h4>
                         <ul className="admin-prompts-catalog-layer-card__list">
-                          {resolvedQuery.data.runtime_artifacts.map((artifact) => (
+                          {structuredResolvedAssembly.runtime_artifacts.map((artifact) => (
                             <li key={artifact.key}>
                               <strong>{artifact.title}</strong>
                               <span>{artifact.delta_note ?? artifact.summary}</span>
@@ -1316,8 +1297,8 @@ export function AdminPromptsPage() {
                       <h3 className="admin-prompts-catalog__graph-title">{tCat.graphZoneTitle}</h3>
                       <p className="admin-prompts-catalog__graph-intro text-muted">{tCat.graphIntro}</p>
                     </div>
-                    {hasStructuredCatalogView ? (
-                      <span className="badge badge--info">{resolvedQuery.data.activation.provider_target}</span>
+                    {structuredResolvedAssembly ? (
+                      <span className="badge badge--info">{structuredResolvedAssembly.activation.provider_target}</span>
                     ) : null}
                   </div>
 
@@ -1326,7 +1307,7 @@ export function AdminPromptsPage() {
                     <AdminPromptsResolvedAssemblyError error={resolvedQuery.error} catalog={tCat} />
                   ) : null}
 
-                  {hasStructuredCatalogView ? (
+                  {structuredResolvedAssembly && logicGraph ? (
                     <>
                       <AdminPromptsLogicGraph
                         projection={logicGraph}
@@ -1339,7 +1320,7 @@ export function AdminPromptsPage() {
                       <section className="admin-prompts-catalog__final-prompt">
                         <h4>Final provider payload</h4>
                         <pre className="admin-prompts-code">
-                          {resolvedQuery.data.runtime_artifacts.find(
+                          {structuredResolvedAssembly.runtime_artifacts.find(
                             (artifact) => artifact.key === "final_provider_payload",
                           )?.content ?? "Payload final indisponible."}
                         </pre>
@@ -2166,7 +2147,7 @@ export function AdminPromptsPage() {
                             <AdminPromptsLogicGraph projection={resolvedLogicGraph} />
                           ) : (
                             <p className="admin-prompts-resolved__state" role="status" aria-live="polite">
-                              {tCat.graphUnavailable ?? tCat.notAvailable}
+                              {tCat.notAvailable}
                             </p>
                           )}
                           <details className="admin-prompts-detail__disclosure admin-prompts-detail__disclosure--sources">

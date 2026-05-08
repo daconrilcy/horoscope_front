@@ -1,52 +1,13 @@
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
-import { apiFetch } from "../../api/client"
+import {
+  useAdminDashboardBillingQuery,
+  useAdminDashboardFluxQuery,
+  useAdminDashboardSnapshotQuery,
+  type AdminDashboardTrendPoint,
+} from "../../api/adminDashboard"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminDashboardPage.css"
-
-interface KpisSnapshot {
-  total_users: number
-  active_users_7j: number
-  active_users_30j: number
-  subscriptions_by_plan: Record<string, number>
-  mrr_cents: number
-  arr_cents: number
-  trials_count: number
-  last_updated: string
-}
-
-interface TrendPoint {
-  date: string
-  new_users: number
-}
-
-interface KpisFlux {
-  period: string
-  plan: string
-  new_users: number
-  churn_count: number
-  upgrades_count: number
-  downgrades_count: number
-  payment_failures_count: number
-  revenue_cents: number
-  trend_data: TrendPoint[]
-  last_updated: string
-}
-
-interface KpisBilling {
-  period: string
-  plan: string
-  payment_failures: number
-  estimated_total_revenue_cents: number
-  revenue_by_plan: Array<{
-    plan_code: string
-    count: number
-    mrr_cents: number
-    estimated_period_revenue_cents: number
-  }>
-  last_updated: string
-}
 
 function KpiCard({ 
   title, 
@@ -65,10 +26,21 @@ function KpiCard({
   onClick?: () => void,
   clickable?: boolean
 }) {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!clickable || !onClick) {
+      return
+    }
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      onClick()
+    }
+  }
+
   return (
     <div 
       className={`kpi-card ${highlight ? "kpi-card--highlight" : ""} ${clickable ? "kpi-card--clickable" : ""}`}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
     >
@@ -87,7 +59,7 @@ function KpiCard({
   )
 }
 
-function TrendChart({ data }: { data: TrendPoint[] }) {
+function TrendChart({ data }: { data: AdminDashboardTrendPoint[] }) {
   if (data.length === 0) return <div className="chart-empty">Aucune donnée de tendance.</div>
 
   const maxVal = Math.max(...data.map(p => p.new_users), 1)
@@ -143,44 +115,9 @@ export function AdminDashboardPage() {
   const [period, setPeriod] = useState("30d")
   const [plan, setPlan] = useState("all")
   
-  // 1. Snapshot KPIs
-  const snapshotQuery = useQuery<{ data: KpisSnapshot }>({
-    queryKey: ["admin-kpis-snapshot"],
-    queryFn: async () => {
-      const response = await apiFetch("/v1/admin/dashboard/kpis-snapshot", {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) throw new Error("Failed to fetch snapshot KPIs")
-      return response.json()
-    },
-    enabled: Boolean(token),
-  })
-
-  // 2. Flux KPIs
-  const fluxQuery = useQuery<{ data: KpisFlux }>({
-    queryKey: ["admin-kpis-flux", period, plan],
-    queryFn: async () => {
-      const response = await apiFetch(`/v1/admin/dashboard/kpis-flux?period=${period}&plan=${plan}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) throw new Error("Failed to fetch flux KPIs")
-      return response.json()
-    },
-    enabled: Boolean(token),
-  })
-
-  // 3. Billing KPIs
-  const billingQuery = useQuery<{ data: KpisBilling }>({
-    queryKey: ["admin-kpis-billing", period, plan],
-    queryFn: async () => {
-      const response = await apiFetch(`/v1/admin/dashboard/kpis-billing?period=${period}&plan=${plan}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) throw new Error("Failed to fetch billing KPIs")
-      return response.json()
-    },
-    enabled: Boolean(token),
-  })
+  const snapshotQuery = useAdminDashboardSnapshotQuery(token)
+  const fluxQuery = useAdminDashboardFluxQuery(token, period, plan)
+  const billingQuery = useAdminDashboardBillingQuery(token, period, plan)
 
   const snapshot = snapshotQuery.data?.data
   const flux = fluxQuery.data?.data

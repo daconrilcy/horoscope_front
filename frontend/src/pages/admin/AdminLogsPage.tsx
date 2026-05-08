@@ -1,69 +1,28 @@
 import React, { useState } from "react"
-import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { apiFetch } from "../../api/client"
+import {
+  useAdminAuditLogsQuery,
+  useAdminLlmLogsQuery,
+  useAdminQuotaAlertsQuery,
+  useAdminStripeLogsQuery,
+  useExportAdminAuditMutation,
+  useReplayAdminLlmLogMutation,
+  type AdminAuditLog,
+  type AdminLlmLog,
+} from "../../api/adminLogs"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminLogsPage.css"
 
-interface QuotaAlert {
-  user_id: number
-  user_email_masked: string
-  plan_code: string
-  feature_code: string
-  used: number
-  limit: number
-  consumption_rate: number
-}
-
-interface AuditLog {
-  id: number
-  timestamp: string
-  actor_email_masked: string | null
-  actor_role: string
-  action: string
-  target_type: string | null
-  target_id_masked: string | null
-  status: string
-  details: Record<string, unknown>
-}
-
-interface AuditLogsResponse {
-  data: AuditLog[]
-  total: number
-  page: number
-  per_page: number
-}
-
-interface LlmLog {
-  id: string
-  request_id: string
-  timestamp: string
-  use_case: string
-  validation_status: string
-  latency_ms: number
-  tokens_total: number
-  prompt_version_id: string | null
-}
-
-interface StripeEvent {
-  id: number
-  stripe_event_id: string
-  event_type: string
-  status: string
-  received_at: string
-  last_error: string | null
-}
-
 interface ReplayModalProps {
   isPending: boolean
-  log: LlmLog
+  log: AdminLlmLog
   replayResult: string | null
   onClose: () => void
   onConfirm: () => void
 }
 
 interface AuditDetailModalProps {
-  log: AuditLog
+  log: AdminAuditLog
   onClose: () => void
 }
 
@@ -216,116 +175,36 @@ function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
   )
 }
 
-function buildLlmLogsPath(
-  useCaseFilter: string,
-  statusFilter: string,
-  periodFilter: string,
-) {
-  const params = new URLSearchParams()
-  if (useCaseFilter !== "all") {
-    params.set("use_case", useCaseFilter)
-  }
-  if (statusFilter !== "all") {
-    params.set("status", statusFilter)
-  }
-  if (periodFilter !== "all") {
-    const now = new Date()
-    const fromDate = new Date(now)
-    if (periodFilter === "7d") {
-      fromDate.setDate(now.getDate() - 7)
-    } else if (periodFilter === "30d") {
-      fromDate.setDate(now.getDate() - 30)
-    }
-    params.set("from_date", fromDate.toISOString())
-  }
-  const query = params.toString()
-  return query ? `/v1/admin/llm/call-logs?${query}` : "/v1/admin/llm/call-logs"
-}
-
-function buildAuditLogsPath(actorFilter: string, actionFilter: string, periodFilter: string) {
-  const params = new URLSearchParams()
-  if (actorFilter.trim()) {
-    params.set("actor", actorFilter.trim())
-  }
-  if (actionFilter !== "all") {
-    params.set("action", actionFilter)
-  }
-  if (periodFilter !== "all") {
-    params.set("period", periodFilter)
-  }
-  const query = params.toString()
-  return query ? `/v1/admin/audit?${query}` : "/v1/admin/audit"
-}
-
-async function extractApiErrorMessage(response: Response, fallback: string) {
-  try {
-    const payload = (await response.clone().json()) as { error?: { message?: string } }
-    return payload?.error?.message ?? fallback
-  } catch {
-    return fallback
-  }
-}
-
 export function AdminLogsPage() {
   const token = useAccessTokenSnapshot()
   const [activeTab, setActiveTab] = useState<"audit" | "llm" | "stripe">("audit")
   const [auditActorFilter, setAuditActorFilter] = useState("")
   const [auditActionFilter, setAuditActionFilter] = useState("all")
   const [auditPeriodFilter, setAuditPeriodFilter] = useState("30d")
-  const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLog | null>(null)
+  const [selectedAuditLog, setSelectedAuditLog] = useState<AdminAuditLog | null>(null)
   const [auditExportMessage, setAuditExportMessage] = useState<string | null>(null)
   const [llmStatusFilter, setLlmStatusFilter] = useState("all")
   const [llmUseCaseFilter, setLlmUseCaseFilter] = useState("all")
   const [llmPeriodFilter, setLlmPeriodFilter] = useState("30d")
-  const [selectedReplayLog, setSelectedReplayLog] = useState<LlmLog | null>(null)
+  const [selectedReplayLog, setSelectedReplayLog] = useState<AdminLlmLog | null>(null)
   const [replayResult, setReplayResult] = useState<string | null>(null)
 
-  const { data: alertsData } = useQuery<{ data: QuotaAlert[] }>({
-    queryKey: ["admin-quota-alerts"],
-    queryFn: async () => {
-      const response = await apiFetch("/v1/admin/logs/quota-alerts", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      return response.json()
-    },
-    enabled: Boolean(token),
-  })
-
-  const auditLogsPath = buildAuditLogsPath(auditActorFilter, auditActionFilter, auditPeriodFilter)
-  const llmLogsPath = buildLlmLogsPath(llmUseCaseFilter, llmStatusFilter, llmPeriodFilter)
-
-  const { data: auditLogsData, isLoading: isAuditLoading } = useQuery<AuditLogsResponse>({
-    queryKey: ["admin-audit", auditActorFilter, auditActionFilter, auditPeriodFilter],
-    queryFn: async () => {
-      const response = await apiFetch(auditLogsPath, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      return response.json()
-    },
-    enabled: Boolean(token) && activeTab === "audit",
-  })
-
-  const { data: llmLogsData, isLoading: isLlmLoading } = useQuery<{ data: LlmLog[] }>({
-    queryKey: ["admin-logs-llm", llmUseCaseFilter, llmStatusFilter, llmPeriodFilter],
-    queryFn: async () => {
-      const response = await apiFetch(llmLogsPath, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      return response.json()
-    },
-    enabled: Boolean(token) && activeTab === "llm",
-  })
-
-  const { data: stripeLogsData, isLoading: isStripeLoading } = useQuery<{ data: StripeEvent[] }>({
-    queryKey: ["admin-logs-stripe"],
-    queryFn: async () => {
-      const response = await apiFetch("/v1/admin/logs/stripe", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      return response.json()
-    },
-    enabled: Boolean(token) && activeTab === "stripe",
-  })
+  const { data: alertsData } = useAdminQuotaAlertsQuery(token)
+  const { data: auditLogsData, isLoading: isAuditLoading } = useAdminAuditLogsQuery(
+    token,
+    auditActorFilter,
+    auditActionFilter,
+    auditPeriodFilter,
+    activeTab === "audit",
+  )
+  const { data: llmLogsData, isLoading: isLlmLoading } = useAdminLlmLogsQuery(
+    token,
+    llmUseCaseFilter,
+    llmStatusFilter,
+    llmPeriodFilter,
+    activeTab === "llm",
+  )
+  const { data: stripeLogsData, isLoading: isStripeLoading } = useAdminStripeLogsQuery(token, activeTab === "stripe")
 
   const auditLogs = auditLogsData?.data ?? []
   const llmLogs = llmLogsData?.data ?? []
@@ -336,50 +215,28 @@ export function AdminLogsPage() {
   const auditActionOptions = Array.from(new Set(auditLogs.map((log) => log.action))).sort()
   const isLoading = activeTab === "audit" ? isAuditLoading : activeTab === "llm" ? isLlmLoading : isStripeLoading
 
-  const replayMutation = useMutation({
-    mutationFn: async (log: LlmLog) => {
-      const response = await apiFetch("/v1/admin/llm/replay", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          request_id: log.request_id,
-          prompt_version_id: log.prompt_version_id,
-        }),
-      })
-      const payload = await response.json()
-      if (!response.ok) {
-        throw new Error(payload?.error?.message ?? "Replay failed")
-      }
-      return payload
-    },
+  const replayMutation = useReplayAdminLlmLogMutation(token)
+  const exportMutation = useExportAdminAuditMutation(token)
+
+  const runReplay = (log: AdminLlmLog) => {
+    replayMutation.mutate(log, {
     onSuccess: (payload) => {
       setReplayResult(
         payload?.data ? "Replay exécuté avec succès." : "Replay terminé sans résultat exploitable.",
       )
     },
-  })
+    })
+  }
 
-  const exportMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiFetch("/v1/admin/audit/export", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          actor: auditActorFilter.trim() || null,
-          action: auditActionFilter === "all" ? null : auditActionFilter,
-          period: auditPeriodFilter,
-        }),
-      })
-      if (!response.ok) {
-        throw new Error(await extractApiErrorMessage(response, "Export CSV impossible."))
-      }
-
+  const runAuditExport = () => {
+    exportMutation.mutate(
+      {
+        actor: auditActorFilter.trim() || null,
+        action: auditActionFilter === "all" ? null : auditActionFilter,
+        period: auditPeriodFilter,
+      },
+      {
+        onSuccess: async (response) => {
       const blob = await response.blob()
       const header = response.headers.get("Content-Disposition")
       const filename = header?.match(/filename=([^;]+)/)?.[1] ?? "audit_log.csv"
@@ -391,22 +248,21 @@ export function AdminLogsPage() {
       anchor.click()
       document.body.removeChild(anchor)
       window.URL.revokeObjectURL(objectUrl)
-      return filename
-    },
-    onSuccess: (filename) => {
       setAuditExportMessage(`Export CSV généré: ${filename}`)
-    },
-    onError: (error) => {
+        },
+        onError: (error) => {
       setAuditExportMessage(error instanceof Error ? error.message : "Export CSV impossible.")
-    },
-  })
+        },
+      },
+    )
+  }
 
-  const openReplayModal = (log: LlmLog) => {
+  const openReplayModal = (log: AdminLlmLog) => {
     setReplayResult(null)
     setSelectedReplayLog(log)
   }
 
-  const openAuditDetail = (log: AuditLog) => {
+  const openAuditDetail = (log: AdminAuditLog) => {
     setSelectedAuditLog(log)
   }
 
@@ -500,7 +356,7 @@ export function AdminLogsPage() {
             <button
               className="action-button action-button--primary"
               disabled={exportMutation.isPending}
-              onClick={() => exportMutation.mutate()}
+              onClick={runAuditExport}
             >
               {exportMutation.isPending ? "Export..." : "Exporter CSV"}
             </button>
@@ -690,7 +546,7 @@ export function AdminLogsPage() {
           log={selectedReplayLog}
           replayResult={replayResult}
           onClose={() => setSelectedReplayLog(null)}
-          onConfirm={() => replayMutation.mutate(selectedReplayLog)}
+          onConfirm={() => runReplay(selectedReplayLog)}
         />
       )}
     </div>

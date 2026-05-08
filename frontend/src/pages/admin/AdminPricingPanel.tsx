@@ -1,3 +1,4 @@
+// Affiche le panneau canonique de tarification dans la page de facturation admin.
 import { useBillingPlans } from "@api/billing"
 import { detectLang } from "@i18n/astrology"
 import { adminTranslations } from "@i18n/admin"
@@ -11,7 +12,7 @@ function formatPrice(cents: number, currency: string, locale: string): string {
   }).format(amount)
 }
 
-export function PricingAdmin() {
+export function AdminPricingPanel() {
   const lang = detectLang()
   const t = adminTranslations.pricing[lang]
   const locale = getLocale(lang)

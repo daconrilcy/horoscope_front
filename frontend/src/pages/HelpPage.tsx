@@ -47,9 +47,9 @@ export default function HelpPage() {
   }
 
   const shortcuts = [
-    { icon: LayoutDashboard, key: "dashboard", to: "/today" },
+    { icon: LayoutDashboard, key: "dashboard", to: "/dashboard/horoscope" },
     { icon: MessageSquare, key: "chat", to: "/chat" },
-    { icon: Sparkles, key: "natal", to: "/natal-chart" },
+    { icon: Sparkles, key: "natal", to: "/natal" },
     { icon: ScrollText, key: "consultations", to: "/consultations" },
   ]
 

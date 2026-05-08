@@ -175,24 +175,12 @@ export const routes: RouteObject[] = [
         ],
       },
       {
-        path: "today",
-        element: <Navigate to="/dashboard/horoscope" replace />,
-      },
-      {
         path: "natal",
-        element: lazyElement(<NatalChartPage />),
-      },
-      {
-        path: "natal-chart",
         element: lazyElement(<NatalChartPage />),
       },
       {
         path: "profile",
         element: lazyElement(<BirthProfilePage />),
-      },
-      {
-        path: "birth-profile",
-        element: <Navigate to="/profile" replace />,
       },
       {
         path: "chat",

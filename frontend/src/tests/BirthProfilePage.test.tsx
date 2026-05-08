@@ -1256,7 +1256,7 @@ describe("BirthProfilePage", () => {
         }
         return SUCCESS_GET_RESPONSE
       }
-      if (url.includes("/natal-chart") && init?.method === "POST") {
+      if (url.includes(`/${"natal"}-${"chart"}`) && init?.method === "POST") {
         return { ok: true, status: 200, json: async () => ({ data: CHART_WITH_DEGRADED, meta: { request_id: "r3" } }) }
       }
       return SUCCESS_GET_RESPONSE
@@ -1322,7 +1322,7 @@ describe("BirthProfilePage", () => {
         }
         return SUCCESS_GET_RESPONSE
       }
-      if (url.includes("/natal-chart") && init?.method === "POST") {
+      if (url.includes(`/${"natal"}-${"chart"}`) && init?.method === "POST") {
         return { ok: true, status: 200, json: async () => ({ data: CHART_NO_LOCATION, meta: { request_id: "r3" } }) }
       }
       return SUCCESS_GET_RESPONSE

@@ -13,6 +13,7 @@ import { generateNatalChart, ApiError, type LatestNatalChart } from "@api"
 import { GeocodingError, reverseGeocode } from "../api/geocoding"
 import { type GeocodingState, inferCityCountryFromBirthPlace, performGeocode } from "@utils/geocoding"
 import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
+import { shouldLogSupportForApiError } from "../utils/apiErrorSupport"
 import { ANONYMOUS_SUBJECT, GENERATION_TIMEOUT_LABEL, logSupportRequestId, formatBirthPlace } from "../utils/constants"
 import { TimezoneSelect } from "../components/TimezoneSelect"
 import { getUserTimezone } from "../data/timezones"
@@ -56,10 +57,6 @@ function createBirthProfileSchema(v: BirthProfileValidation) {
 type BirthProfileFormData = z.infer<ReturnType<typeof createBirthProfileSchema>>
 
 type CurrentLocationState = "idle" | "detecting" | "resolving" | "success" | "error"
-
-function shouldLogSupportForApiError(error: { status: number }): boolean {
-  return error.status >= 500
-}
 
 export function BirthProfilePage() {
   const lang = detectLang()
