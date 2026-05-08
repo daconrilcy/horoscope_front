@@ -24,6 +24,10 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/tests/setup.ts",
     exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
+    reporters: ["default", "json"],
+    outputFile: {
+      json: "./logs/vite/vitest-report.json",
+    },
   },
   build: {
     rollupOptions: {

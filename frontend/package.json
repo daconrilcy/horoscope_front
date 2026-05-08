@@ -4,15 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "node ./scripts/run-vite-logged.mjs vite vite-dev dev",
+    "build": "tsc -b && node ./scripts/run-vite-logged.mjs vite vite-build build",
     "lint": "tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json",
-    "preview": "vite preview",
-    "test": "vitest run",
+    "preview": "node ./scripts/run-vite-logged.mjs vite vite-preview preview",
+    "test": "node ./scripts/run-vite-logged.mjs vitest vitest run",
     "test:e2e": "playwright test",
     "test:e2e:dashboard": "playwright test e2e/dashboard-ac4-ac5.spec.ts",
-    "test:b2b": "vitest run --config vitest.b2b.config.ts",
-    "test:b2b:coverage": "vitest run --config vitest.b2b.config.ts --coverage",
+    "test:b2b": "node ./scripts/run-vite-logged.mjs vitest vitest-b2b run --config vitest.b2b.config.ts",
+    "test:b2b:coverage": "node ./scripts/run-vite-logged.mjs vitest vitest-b2b-coverage run --config vitest.b2b.config.ts --coverage",
     "audit:prod": "npm audit --omit=dev"
   },
   "dependencies": {

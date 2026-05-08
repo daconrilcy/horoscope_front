@@ -1,3 +1,4 @@
+// Configure la suite Vitest B2B et centralise ses rapports dans les logs frontend.
 import { defineConfig } from "vitest/config"
 import react from "@vitejs/plugin-react"
 
@@ -12,8 +13,13 @@ export default defineConfig({
       "src/tests/EnterpriseCredentialsPanel.test.tsx",
       "src/tests/enterpriseCredentialsApi.test.ts",
     ],
+    reporters: ["default", "json"],
+    outputFile: {
+      json: "./logs/vite/vitest-b2b-report.json",
+    },
     coverage: {
       provider: "v8",
+      reportsDirectory: "./logs/vite/coverage-b2b",
       reporter: ["text", "text-summary"],
       include: [
         "src/api/b2bAstrology.ts",

@@ -20,6 +20,8 @@ backend/uvicorn_err.log
 # Node artifacts
 node_modules/
 frontend/node_modules/
+frontend/logs/vite/*
+!frontend/logs/vite/.gitkeep
 
 # Build outputs
 dist/
