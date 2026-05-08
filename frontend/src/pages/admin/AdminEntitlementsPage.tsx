@@ -1,38 +1,14 @@
 import React, { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiFetch } from "../../api/client"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  adminOperationsQueryKeys,
+  updateAdminEntitlement,
+  useAdminEntitlementsMatrix,
+  type EntitlementUpdatePayload,
+} from "../../api/adminOperations"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import { useAdminPermissions } from "../../state/AdminPermissionsContext"
 import "./AdminEntitlementsPage.css"
-
-interface EntitlementPlan {
-  id: number
-  code: string
-  name: string
-  audience: string
-}
-
-interface EntitlementFeature {
-  id: number
-  code: string
-  name: string
-  is_metered: boolean
-}
-
-interface EntitlementCell {
-  access_mode: string
-  is_enabled: boolean
-  variant_code: string | null
-  quota_limit: number | null
-  period: string | null
-  is_incoherent: boolean
-}
-
-interface MatrixResponse {
-  plans: EntitlementPlan[]
-  features: EntitlementFeature[]
-  cells: Record<string, EntitlementCell>
-}
 
 export function AdminEntitlementsPage() {
   const token = useAccessTokenSnapshot()
@@ -41,33 +17,13 @@ export function AdminEntitlementsPage() {
   const [hoveredCell, setHoveredCell] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
 
-  const { data, isLoading, error } = useQuery<MatrixResponse>({
-    queryKey: ["admin-entitlements-matrix"],
-    queryFn: async () => {
-      const response = await apiFetch("/v1/admin/entitlements/matrix", {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) throw new Error("Failed to fetch matrix")
-      return response.json()
-    },
-    enabled: Boolean(token),
-  })
+  const { data, isLoading, error } = useAdminEntitlementsMatrix(Boolean(token))
 
   const updateMutation = useMutation({
-    mutationFn: async ({ planId, featureId, payload }: { planId: number, featureId: number, payload: any }) => {
-      const response = await apiFetch(`/v1/admin/entitlements/${planId}/${featureId}`, {
-        method: "PATCH",
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      })
-      if (!response.ok) throw new Error("Update failed")
-      return response.json()
-    },
+    mutationFn: ({ planId, featureId, payload }: { planId: number; featureId: number; payload: EntitlementUpdatePayload }) =>
+      updateAdminEntitlement(planId, featureId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-entitlements-matrix"] })
+      queryClient.invalidateQueries({ queryKey: adminOperationsQueryKeys.entitlementsMatrix })
     }
   })
 
@@ -76,7 +32,13 @@ export function AdminEntitlementsPage() {
 
   const { plans, features, cells } = data
 
-  const handleCellChange = (planId: number, featureId: number, field: string, value: any, label: string) => {
+  const handleCellChange = (
+    planId: number,
+    featureId: number,
+    field: keyof EntitlementUpdatePayload,
+    value: EntitlementUpdatePayload[keyof EntitlementUpdatePayload],
+    label: string,
+  ) => {
     if (window.confirm(`Confirmer la modification : ${label} ?`)) {
       updateMutation.mutate({ planId, featureId, payload: { [field]: value } })
     }

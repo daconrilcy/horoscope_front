@@ -3,14 +3,7 @@ import { useBillingPlans } from "@api/billing"
 import { detectLang } from "@i18n/astrology"
 import { adminTranslations } from "@i18n/admin"
 import { getLocale } from "@utils/locale"
-
-function formatPrice(cents: number, currency: string, locale: string): string {
-  const amount = cents / 100
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currency,
-  }).format(amount)
-}
+import { formatCurrencyCents } from "@utils/formatPrice"
 
 export function AdminPricingPanel() {
   const lang = detectLang()
@@ -61,7 +54,7 @@ export function AdminPricingPanel() {
               <tr key={plan.code}>
                 <td>{plan.code}</td>
                 <td>{plan.display_name}</td>
-                <td>{formatPrice(plan.monthly_price_cents, plan.currency, locale)}</td>
+                <td>{formatCurrencyCents(plan.monthly_price_cents, plan.currency, locale)}</td>
                 <td>{plan.daily_message_limit}</td>
                 <td>
                   <span className={plan.is_active ? "status-active" : "status-inactive"}>

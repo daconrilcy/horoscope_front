@@ -15,6 +15,7 @@ import {
   type AdminContentFeatureFlag,
   type CalibrationRule,
 } from "@api"
+import { formatDateTime } from "@utils/formatDate"
 import "./AdminContentPage.css"
 
 type ContentTab = "paywall" | "transactional" | "flags" | "rules"
@@ -28,13 +29,6 @@ type CalibrationModalState = {
   nextValue: string
   rule: CalibrationRule
 } | null
-
-function formatDate(value: string | null): string {
-  if (!value) {
-    return "Non publié"
-  }
-  return new Date(value).toLocaleString("fr-FR")
-}
 
 function FeatureFlagModal({
   isPending,
@@ -280,7 +274,7 @@ export function AdminContentPage() {
                 <div>
                   <strong>{entry.key}</strong>
                   <span className="admin-content-text-card__meta">
-                    Dernière modification: {formatDate(entry.updated_at)}
+                    Dernière modification: {formatDateTime(entry.updated_at)}
                   </span>
                 </div>
                 <button
@@ -435,7 +429,7 @@ export function AdminContentPage() {
                     <strong>{template.title}</strong>
                     <span>{template.template_code}</span>
                     <span>
-                      Version active: {template.active_version_number ?? "-"} · {formatDate(template.published_at)}
+                      Version active: {template.active_version_number ?? "-"} · {template.published_at ? formatDateTime(template.published_at) : "Non publié"}
                     </span>
                   </button>
                 ))}
@@ -448,7 +442,7 @@ export function AdminContentPage() {
                       <div>
                         <h4>{activeTemplate.title}</h4>
                         <p>
-                          Version active {activeTemplate.version_number} · {formatDate(activeTemplate.published_at)}
+                          Version active {activeTemplate.version_number} · {activeTemplate.published_at ? formatDateTime(activeTemplate.published_at) : "Non publié"}
                         </p>
                       </div>
                       <span className="badge badge--info">{activeTemplate.status}</span>
@@ -522,7 +516,7 @@ export function AdminContentPage() {
                             <div>
                               <strong>Version {version.version_number}</strong>
                               <p>
-                                {formatDate(version.published_at ?? version.created_at)} · {version.status}
+                                {formatDateTime(version.published_at ?? version.created_at)} · {version.status}
                               </p>
                             </div>
                             {isActive ? (

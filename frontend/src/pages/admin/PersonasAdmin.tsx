@@ -7,6 +7,7 @@ import {
   useUpdateAdminPersona,
   type AdminLlmPersona,
 } from "@api"
+import { formatDateTime } from "@utils/formatDate"
 import "./PersonasAdmin.css"
 
 type TogglePersonaModalProps = {
@@ -15,10 +16,6 @@ type TogglePersonaModalProps = {
   persona: AdminLlmPersona
   onCancel: () => void
   onConfirm: () => void
-}
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleString("fr-FR")
 }
 
 function TogglePersonaModal({
@@ -160,7 +157,7 @@ export function PersonasAdmin() {
                 </div>
                 <p className="personas-admin__card-copy">{persona.description || "Aucune description."}</p>
                 <span className="personas-admin__card-meta">
-                  Dernière modification: {formatDate(persona.updated_at)}
+                  Dernière modification: {formatDateTime(persona.updated_at)}
                 </span>
               </button>
             ))}
@@ -197,7 +194,7 @@ export function PersonasAdmin() {
                   </div>
                   <div>
                     <dt>Dernière modification</dt>
-                    <dd>{formatDate(detail.persona.updated_at)}</dd>
+                    <dd>{formatDateTime(detail.persona.updated_at)}</dd>
                   </div>
                   <div>
                     <dt>Utilisateurs impactés</dt>

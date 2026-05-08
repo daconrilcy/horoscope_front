@@ -14,6 +14,7 @@ import { detectLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
 import { supportTranslations } from "@i18n/support"
 import { Modal } from "@components/ui"
+import { formatCurrencyCents } from "@utils/formatPrice"
 import { ArrowRight, CalendarClock, Check, CreditCard, RefreshCcw, Sparkles } from "lucide-react"
 import "./Settings.css"
 
@@ -75,16 +76,6 @@ export function SubscriptionSettings() {
 
   const PLANS = useMemo(() => {
     const locale = lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : "en-US"
-    const formatPrice = (priceCents: number, currency: string) => {
-      return (
-        new Intl.NumberFormat(locale, {
-        style: "currency",
-        currency: currency,
-        maximumFractionDigits: 0,
-      }).format(priceCents / 100)
-        + ` ${subscriptionGuide.perMonth}`
-      )
-    }
 
     const basicPlan = catalog?.find(p => p.code === "basic")
     const premiumPlan = catalog?.find(p => p.code === "premium")
@@ -99,7 +90,9 @@ export function SubscriptionSettings() {
         highlights: subscriptionGuide.planHighlights.basic.slice(0, 4),
         priority: subscriptionGuide.priority.medium,
         price: basicPlan
-          ? formatPrice(basicPlan.monthly_price_cents, basicPlan.currency)
+          ? `${formatCurrencyCents(basicPlan.monthly_price_cents, basicPlan.currency, locale, {
+              maximumFractionDigits: 0,
+            })} ${subscriptionGuide.perMonth}`
           : `9 ${subscriptionGuide.perMonth}`,
       },
       {
@@ -111,7 +104,9 @@ export function SubscriptionSettings() {
         highlights: subscriptionGuide.planHighlights.premium.slice(0, 4),
         priority: subscriptionGuide.priority.high,
         price: premiumPlan
-          ? formatPrice(premiumPlan.monthly_price_cents, premiumPlan.currency)
+          ? `${formatCurrencyCents(premiumPlan.monthly_price_cents, premiumPlan.currency, locale, {
+              maximumFractionDigits: 0,
+            })} ${subscriptionGuide.perMonth}`
           : `29 ${subscriptionGuide.perMonth}`,
       },
     ]

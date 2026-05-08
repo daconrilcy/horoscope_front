@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatDate, formatDateTime } from "../utils/formatDate"
+import { formatDate, formatDateTime, formatDateWithOptions } from "../utils/formatDate"
 
 describe("formatDate", () => {
   it("formats valid ISO date string", () => {
@@ -77,5 +77,22 @@ describe("formatDateTime", () => {
   it("returns fallback for malformed date like 'undefined'", () => {
     const result = formatDateTime("undefined")
     expect(result).toBe("—")
+  })
+})
+
+describe("formatDateWithOptions", () => {
+  it("formats with caller-provided date options", () => {
+    const result = formatDateWithOptions("2024-06-15T10:30:00Z", "fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+
+    expect(result).toContain("2024")
+    expect(result).toMatch(/juin|June/)
+  })
+
+  it("returns fallback for invalid date string", () => {
+    expect(formatDateWithOptions("invalid", "fr-FR", { year: "numeric" })).toBe("—")
   })
 })

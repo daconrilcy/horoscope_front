@@ -35,14 +35,15 @@ describe("legacy-style policy", () => {
 
   it("bloque le retour des selectors legacy admin prompts retires par CS-067", () => {
     const tsx = readFrontendFile("pages/admin/AdminPromptsPage.tsx")
+    const partsTsx = readFrontendFile("features/admin-prompts/adminPromptsPageParts.tsx")
     const css = readFrontendFile("pages/admin/AdminPromptsPage.css")
-    const combined = `${tsx}\n${css}`
+    const combined = `${tsx}\n${partsTsx}\n${css}`
 
     expect(combined).not.toContain("admin-prompts-legacy")
     expect(combined).not.toContain("admin-prompts-modal--legacy-rollback")
-    expect(tsx).toContain("admin-prompts-archive")
+    expect(combined).toContain("admin-prompts-archive")
     expect(css).toContain(".admin-prompts-archive")
-    expect(tsx).toContain("admin-prompts-modal--rollback")
+    expect(combined).toContain("admin-prompts-modal--rollback")
     expect(css).toContain(".admin-prompts-modal--rollback")
   })
 

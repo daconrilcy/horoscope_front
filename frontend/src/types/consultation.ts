@@ -35,6 +35,37 @@ export type ConsultationDraft = {
   selectedThirdPartyExternalId: string | null
 }
 
+export type ConsultationBlock = {
+  kind: "paragraph" | "title" | "subtitle" | "bullet_list"
+  text?: string | null
+  items?: string[]
+}
+
+export type ConsultationSection = {
+  id: string
+  title: string
+  content: string
+  blocks?: ConsultationBlock[]
+}
+
+export type ConsultationResult = {
+  id: string
+  type: ConsultationType
+  astrologerId: string
+  context: string
+  objective?: string
+  timeHorizon?: string | null
+  summary: string
+  keyPoints?: string[]
+  actionableAdvice?: string[]
+  createdAt: string
+  disclaimer?: string
+  fallbackMode?: string | null
+  precisionLevel?: string | null
+  sections?: ConsultationSection[]
+  routeKey?: string | null
+}
+
 export type ConsultationTypeConfig = {
   id: ConsultationType
   icon: string

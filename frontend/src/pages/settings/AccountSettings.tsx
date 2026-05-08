@@ -8,6 +8,7 @@ import { DeleteAccountModal } from "@components/settings/DeleteAccountModal"
 import { detectLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
 import { getLocale } from "@utils/locale"
+import { formatDateWithOptions } from "@utils/formatDate"
 import { Check } from "lucide-react"
 import "./Settings.css"
 
@@ -24,18 +25,6 @@ export function AccountSettings() {
   const handleDefaultAstrologerChange = (id: string | null) => {
     if (updateSettings.isPending) return
     updateSettings.mutate({ default_astrologer_id: id })
-  }
-
-  const formatDate = (isoDate: string): string => {
-    const date = new Date(isoDate)
-    if (isNaN(date.getTime())) {
-      return "—"
-    }
-    return date.toLocaleDateString(getLocale(lang), {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
   }
 
   return (
@@ -70,7 +59,11 @@ export function AccountSettings() {
               <div>
                 <div className="usage-stat-label">{t.memberSince}</div>
                 <div className="default-astrologer-option__name">
-                  {formatDate(authMe.data.created_at)}
+                  {formatDateWithOptions(authMe.data.created_at, getLocale(lang), {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
                 </div>
               </div>
               <div>

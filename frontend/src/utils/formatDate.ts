@@ -47,3 +47,23 @@ export function formatDateTime(value: string, fallback = "—"): string {
     return fallback
   }
 }
+
+/**
+ * Formate une date ISO avec des options explicites quand une page a besoin d'un libelle long.
+ */
+export function formatDateWithOptions(
+  value: string,
+  locale: string,
+  options: Intl.DateTimeFormatOptions,
+  fallback = "—",
+): string {
+  try {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) {
+      return fallback
+    }
+    return date.toLocaleDateString(locale, options)
+  } catch {
+    return fallback
+  }
+}

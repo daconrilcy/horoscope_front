@@ -1,5 +1,5 @@
 // Page admin des prompts LLM avec surfaces de styles route-specific et historique archive.
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 
@@ -7,10 +7,9 @@ import { useTranslation } from "../../i18n"
 import { useAstrologyLabels } from "../../i18n/astrology"
 import type { AppLocale } from "../../i18n/types"
 import {
+  archivePromptStatusLabel,
   formatArchivePromptTimestamp,
   interpolateArchiveTemplate,
-  archivePromptStatusLabel,
-  type AdminPromptsArchiveStrings,
 } from "../../i18n/adminPromptsArchive"
 
 import {
@@ -30,13 +29,10 @@ import {
   AdminPromptsApiError,
   executeAdminCatalogSamplePayload,
   isAdminRuntimePreviewExecutable,
-  type AdminConsumptionRow,
   type AdminConsumptionView,
   type AdminInspectionMode,
-  type AdminLlmCatalogEntry,
   type AdminPromptDraftCreateInput,
   type AdminPromptVersion,
-  type AdminResolvedPlaceholder,
   type SnapshotTimelineItem,
 } from "@api"
 import { PersonasAdmin } from "./PersonasAdmin"
@@ -47,7 +43,24 @@ import { AdminPromptCatalogNodeModal } from "./AdminPromptCatalogNodeModal"
 import { buildAdminPromptCatalogFlowProjection } from "./adminPromptCatalogFlowProjection"
 import { buildLogicGraphProjection } from "./adminPromptsLogicGraphProjection"
 import { useMatchMediaMaxWidth } from "../../features/admin-prompts/hooks/useMatchMediaMaxWidth"
-import type { AdminPromptsCatalogStrings } from "../../i18n/adminPromptsCatalog"
+import {
+  AdminPromptsResolvedAssemblyError,
+  ArchiveRollbackModal,
+  ArchiveVersionMetaStrip,
+  ManualLlmExecuteConfirmModal,
+  PromptDisclosure,
+  buildDiffRows,
+  consumptionRowKey,
+  formatCatalogFeatureLabel,
+  formatManifestEntryCatalogHint,
+  formatPromptSaveError,
+  formatReleaseSnapshotIdShort,
+  manualExecutionFailureLead,
+  pickPreferredCatalogEntry,
+  placeholderStatusClassName,
+  releaseDiffAxisBadgeClass,
+  resolvedAssemblyErrorPresentation,
+} from "../../features/admin-prompts/adminPromptsPageParts"
 import "./AdminPromptsPage.css"
 
 type PromptPageTab = "catalog" | "archive" | "release" | "consumption" | "personas" | "samplePayloads"
@@ -72,365 +85,6 @@ export function resolvePromptsTabFromPath(pathname: string): PromptPageTab {
     "sample-payloads": "samplePayloads",
   }
   return map[segment] ?? "catalog"
-}
-
-function consumptionRowKey(row: AdminConsumptionRow): string {
-  return `${row.period_start_utc}::${row.user_id ?? "none"}::${row.subscription_plan ?? "none"}::${row.feature ?? "none"}::${row.subfeature ?? "none"}`
-}
-
-function formatReleaseSnapshotIdShort(id: string): string {
-  return id.length > 10 ? `${id.slice(0, 8)}…` : id
-}
-
-/** Segments complets du manifest (feature, sous-fonction, plan, locale, …) pour distinguer les variantes canoniques. */
-function formatManifestEntryCatalogHint(manifestEntryId: string): string {
-  const parts = manifestEntryId
-    .split(":")
-    .map((segment) => segment.trim())
-    .filter((segment) => segment.length > 0)
-  if (parts.length === 0) {
-    return manifestEntryId.trim() || "—"
-  }
-  return parts.join(" · ")
-}
-
-function pickPreferredCatalogEntry(entries: AdminLlmCatalogEntry[]): AdminLlmCatalogEntry | null {
-  if (entries.length === 0) {
-    return null
-  }
-  return [...entries].sort((left, right) => {
-    const leftScore =
-      (left.execution_path_kind === "nominal" ? 4 : 0) +
-      (left.source_of_truth_status === "active_snapshot" ? 2 : 0) +
-      (left.catalog_visibility_status === "visible" ? 1 : 0)
-    const rightScore =
-      (right.execution_path_kind === "nominal" ? 4 : 0) +
-      (right.source_of_truth_status === "active_snapshot" ? 2 : 0) +
-      (right.catalog_visibility_status === "visible" ? 1 : 0)
-    if (leftScore !== rightScore) {
-      return rightScore - leftScore
-    }
-    return (left.subfeature ?? "").localeCompare(right.subfeature ?? "")
-  })[0] ?? null
-}
-
-function formatCatalogFeatureLabel(feature: string): string {
-  const normalized = feature.trim().toLowerCase()
-  const labels: Record<string, string> = {
-    chat: "Chat",
-    guidance: "Consultations thematiques",
-    natal: "Natal",
-    horoscope_daily: "Horoscope quotidien",
-  }
-  return labels[normalized] ?? feature
-}
-
-function releaseDiffAxisBadgeClass(changed: boolean): string {
-  return changed ? "badge badge--warning" : "badge badge--info"
-}
-
-type ManualLlmExecuteConfirmModalProps = {
-  isPending: boolean
-  manifestEntryId: string
-  samplePayloadId: string
-  inspectionModeLabel: string
-  catalog: AdminPromptsCatalogStrings
-  onCancel: () => void
-  onConfirm: () => void
-}
-
-function ManualLlmExecuteConfirmModal({
-  isPending,
-  manifestEntryId,
-  samplePayloadId,
-  inspectionModeLabel,
-  catalog: c,
-  onCancel,
-  onConfirm,
-}: ManualLlmExecuteConfirmModalProps) {
-  return (
-    <div className="modal-overlay" role="presentation">
-      <div
-        className="modal-content admin-prompts-modal admin-prompts-modal--manual-llm"
-        aria-labelledby="manual-llm-exec-title"
-        role="dialog"
-        aria-modal="true"
-      >
-        <h3 id="manual-llm-exec-title">{c.manualLlmModalTitle}</h3>
-        <p className="admin-prompts-modal__copy">
-          {c.manualLlmModalIntroBeforeSample}
-          <code>{samplePayloadId}</code>
-          {c.manualLlmModalBetweenSampleAndManifest}
-          <code>{manifestEntryId}</code>
-          {c.manualLlmModalAfterManifest}
-        </p>
-        <p className="admin-prompts-modal__copy admin-prompts-modal__copy--emphasis">
-          {c.manualLlmModalModePrefix}
-          <strong>{inspectionModeLabel}</strong>
-          {c.manualLlmModalModeTraced}
-        </p>
-        <div className="modal-actions">
-          <button className="text-button" type="button" onClick={onCancel}>
-            {c.manualLlmModalCancel}
-          </button>
-          <button
-            className="action-button action-button--primary"
-            type="button"
-            disabled={isPending}
-            onClick={onConfirm}
-          >
-            {isPending ? c.manualLlmModalExecuting : c.manualLlmModalConfirm}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-type ArchiveVersionMetaStripProps = {
-  version: AdminPromptVersion
-  headingId: string
-  variant: "reference" | "active" | "peer"
-  archive: AdminPromptsArchiveStrings
-  lang: AppLocale
-}
-
-function ArchiveVersionMetaStrip({ version, headingId, variant, archive, lang }: ArchiveVersionMetaStripProps) {
-  const variantLabel =
-    variant === "reference"
-      ? archive.metaVariantReference
-      : variant === "active"
-        ? archive.metaVariantProduction
-        : archive.metaVariantPeer
-  return (
-    <div className="admin-prompts-archive__meta-strip-wrap" aria-labelledby={headingId}>
-      <div className="admin-prompts-archive__meta-strip-kicker">
-        <span className="admin-prompts-archive__pill">{variantLabel}</span>
-      </div>
-      <dl className="admin-prompts-archive__meta-strip">
-        <div>
-          <dt>{archive.metaStatus}</dt>
-          <dd>
-            <span
-              className={`badge ${version.status === "published" ? "badge--info" : "badge--warning"}`}
-            >
-              {archivePromptStatusLabel(version.status, archive)}
-            </span>
-          </dd>
-        </div>
-        <div>
-          <dt>{archive.metaModel}</dt>
-          <dd>{version.model}</dd>
-        </div>
-        <div>
-          <dt>{archive.metaAuthor}</dt>
-          <dd>{version.created_by}</dd>
-        </div>
-        <div>
-          <dt>{archive.metaCreated}</dt>
-          <dd>{formatArchivePromptTimestamp(version.created_at, lang)}</dd>
-        </div>
-        <div>
-          <dt>{archive.metaId}</dt>
-          <dd>
-            <code>{version.id}</code>
-          </dd>
-        </div>
-        {version.published_at ? (
-          <div>
-            <dt>{archive.metaPublished}</dt>
-            <dd>{formatArchivePromptTimestamp(version.published_at, lang)}</dd>
-          </div>
-        ) : null}
-      </dl>
-    </div>
-  )
-}
-
-type ArchiveRollbackModalProps = {
-  isPending: boolean
-  useCaseKey: string
-  useCaseDisplayName: string
-  activeVersion: AdminPromptVersion | null
-  targetVersion: AdminPromptVersion
-  archive: AdminPromptsArchiveStrings
-  onCancel: () => void
-  onConfirm: () => void
-}
-
-function ArchiveRollbackModal({
-  isPending,
-  useCaseKey,
-  useCaseDisplayName,
-  activeVersion,
-  targetVersion,
-  archive,
-  onCancel,
-  onConfirm,
-}: ArchiveRollbackModalProps) {
-  const activeShort = activeVersion ? `${activeVersion.id.slice(0, 8)}…` : "—"
-  const targetShort = `${targetVersion.id.slice(0, 8)}…`
-  const statusTarget = archivePromptStatusLabel(targetVersion.status, archive)
-  const statusActive = activeVersion ? archivePromptStatusLabel(activeVersion.status, archive) : ""
-  return (
-    <div className="modal-overlay" role="presentation">
-      <div
-        className="modal-content admin-prompts-modal admin-prompts-modal--rollback"
-        aria-labelledby="archive-rollback-title"
-        role="dialog"
-        aria-modal="true"
-      >
-        <h3 id="archive-rollback-title">{archive.modalTitle}</h3>
-        <p className="admin-prompts-modal__copy">
-          {interpolateArchiveTemplate(archive.modalPublishTarget, {
-            code: targetShort,
-            status: statusTarget,
-            name: useCaseDisplayName,
-            key: useCaseKey,
-          })}
-        </p>
-        {activeVersion ? (
-          <p className="admin-prompts-modal__copy">
-            {interpolateArchiveTemplate(archive.modalReplaceActive, {
-              code: activeShort,
-              status: statusActive,
-            })}
-          </p>
-        ) : (
-          <p className="admin-prompts-modal__copy text-muted">{archive.modalNoActiveResolved}</p>
-        )}
-        <p className="admin-prompts-modal__copy admin-prompts-modal__copy--emphasis">{archive.modalEmphasis}</p>
-        <div className="modal-actions">
-          <button className="text-button" type="button" onClick={onCancel}>
-            {archive.modalCancel}
-          </button>
-          <button className="action-button action-button--primary" type="button" disabled={isPending} onClick={onConfirm}>
-            {isPending ? archive.modalConfirming : archive.modalConfirm}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-type PromptDisclosureProps = {
-  summary: string
-  children: ReactNode
-}
-
-function PromptDisclosure({ summary, children }: PromptDisclosureProps) {
-  return (
-    <details className="admin-prompts-detail__disclosure">
-      <summary className="admin-prompts-detail__disclosure-summary">{summary}</summary>
-      <div className="admin-prompts-detail__disclosure-body">{children}</div>
-    </details>
-  )
-}
-
-type DiffRow = {
-  leftText: string
-  rightText: string
-  leftType: "unchanged" | "removed"
-  rightType: "unchanged" | "added"
-}
-
-function resolvedAssemblyErrorPresentation(
-  error: unknown,
-  tCat: AdminPromptsCatalogStrings,
-): { primary: string; secondary: string | null } {
-  if (!(error instanceof AdminPromptsApiError)) {
-    return { primary: tCat.resolvedErrorLoadDetailGeneric, secondary: null }
-  }
-  const mapped = tCat.resolvedAssemblyErrorMessage(error.code)
-  const primary = mapped ?? error.message
-  const secondary =
-    mapped && mapped !== error.message
-      ? error.message
-      : !mapped
-        ? tCat.resolvedErrorSecondaryCodeHttp(error.code, error.status)
-        : null
-  return { primary, secondary }
-}
-
-function AdminPromptsResolvedAssemblyError({
-  error,
-  catalog,
-}: {
-  error: unknown
-  catalog: AdminPromptsCatalogStrings
-}) {
-  const { primary, secondary } = resolvedAssemblyErrorPresentation(error, catalog)
-  return (
-    <div className="admin-prompts-resolved__error" role="alert">
-      <p className="admin-prompts-resolved__error-primary">{primary}</p>
-      {secondary ? (
-        <p className="admin-prompts-resolved__error-secondary text-muted">{secondary}</p>
-      ) : null}
-    </div>
-  )
-}
-
-function placeholderStatusClassName(status: AdminResolvedPlaceholder["status"]): string {
-  switch (status) {
-    case "blocking_missing":
-      return "admin-prompts-resolved__placeholder-status--blocking"
-    case "expected_missing_in_preview":
-      return "admin-prompts-resolved__placeholder-status--expected-preview"
-    default:
-      return "admin-prompts-resolved__placeholder-status--neutral"
-  }
-}
-
-function manualExecutionFailureLead(error: unknown, tCat: AdminPromptsCatalogStrings): string | null {
-  if (!(error instanceof AdminPromptsApiError)) {
-    return null
-  }
-  const kind = error.details.failure_kind
-  if (typeof kind !== "string") {
-    return null
-  }
-  return tCat.manualExecutionFailureLeadMessage(kind) ?? null
-}
-
-function formatPromptSaveError(error: unknown): string {
-  if (error instanceof AdminPromptsApiError) {
-    const detailLines = Object.entries(error.details)
-      .filter(([, value]) => value !== null && value !== undefined && value !== "")
-      .map(([key, value]) => {
-        if (Array.isArray(value)) {
-          return `${key}: ${value.join(", ")}`
-        }
-        if (typeof value === "object") {
-          return `${key}: ${JSON.stringify(value)}`
-        }
-        return `${key}: ${String(value)}`
-      })
-    return detailLines.length > 0 ? `${error.message} (${detailLines.join(" · ")})` : error.message
-  }
-  if (error instanceof Error) {
-    return error.message
-  }
-  return "Erreur inconnue."
-}
-
-function buildDiffRows(basePrompt: string, nextPrompt: string): DiffRow[] {
-  const leftLines = basePrompt.split("\n")
-  const rightLines = nextPrompt.split("\n")
-  const rowCount = Math.max(leftLines.length, rightLines.length)
-  const rows: DiffRow[] = []
-
-  for (let index = 0; index < rowCount; index += 1) {
-    const leftText = leftLines[index] ?? ""
-    const rightText = rightLines[index] ?? ""
-    rows.push({
-      leftText,
-      rightText,
-      leftType: leftText === rightText ? "unchanged" : "removed",
-      rightType: leftText === rightText ? "unchanged" : "added",
-    })
-  }
-
-  return rows
 }
 
 export function AdminPromptsPage() {

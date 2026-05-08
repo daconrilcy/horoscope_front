@@ -11,6 +11,7 @@ import {
 } from "@api/billing"
 import { useEntitlementsSnapshot } from "@hooks/useEntitlementSnapshot"
 import { Button, SkeletonGroup, ErrorState, EmptyState } from "@ui"
+import { formatCurrencyCents } from "@utils/formatPrice"
 import "./HelpPage.css"
 
 type SupportSubscriptionsTranslation = ReturnType<typeof useTranslation<"support">>["subscriptions"]
@@ -121,7 +122,9 @@ export function SubscriptionGuidePage() {
             <p className="help-subscriptions-hero-panel-price">
               {t.hero.startingFrom.replace(
                 "{price}",
-                formatPrice(entryPlan?.monthly_price_cents ?? 0, entryPlan?.currency ?? "EUR", locale),
+                formatCurrencyCents(entryPlan?.monthly_price_cents ?? 0, entryPlan?.currency ?? "EUR", locale, {
+                  minimumFractionDigits: 0,
+                }),
               )}
             </p>
             <ul className="help-subscriptions-hero-panel-list">
@@ -372,14 +375,6 @@ function formatQuota(
   }
 
   return amount
-}
-
-function formatPrice(amountCents: number, currency: string, locale: string) {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0,
-  }).format(amountCents / 100)
 }
 
 function getEditorialIcon(title: string) {

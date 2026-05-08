@@ -1,70 +1,23 @@
 import React, { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { apiFetch } from "../../api/client"
+import {
+  useAdminAiMetrics,
+  useAdminAiUseCaseDetail,
+} from "../../api/adminOperations"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminAiGenerationsPage.css"
-
-interface UseCaseMetrics {
-  use_case: string
-  display_name: string
-  call_count: number
-  total_tokens: number
-  estimated_cost_usd: number
-  avg_latency_ms: number
-  error_rate: number
-  retry_rate: number
-}
-
-interface TrendPoint {
-  date: string
-  call_count: number
-  error_count: number
-}
-
-interface FailedCall {
-  id: string
-  timestamp: string
-  error_code: string
-  request_id_masked: string | null
-}
-
-interface UseCaseDetail {
-  use_case: string
-  metrics: UseCaseMetrics
-  trend_data: TrendPoint[]
-  recent_failed_calls: FailedCall[]
-}
 
 export function AdminAiGenerationsPage() {
   const token = useAccessTokenSnapshot()
   const [period, setPeriod] = useState("30d")
   const [selectedUseCase, setSelectedUseCase] = useState<string | null>(null)
 
-  // 1. List all use cases metrics
-  const { data: metricsData, isLoading: metricsLoading } = useQuery<{ data: UseCaseMetrics[] }>({
-    queryKey: ["admin-ai-metrics", period],
-    queryFn: async () => {
-      const response = await apiFetch(`/v1/admin/ai/metrics?period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) throw new Error("Failed to fetch AI metrics")
-      return response.json()
-    },
-    enabled: Boolean(token),
-  })
+  const { data: metricsData, isLoading: metricsLoading } = useAdminAiMetrics(period, Boolean(token))
 
-  // 2. Detail for selected use case
-  const { data: detailData, isLoading: detailLoading } = useQuery<UseCaseDetail>({
-    queryKey: ["admin-ai-use-case-detail", selectedUseCase, period],
-    queryFn: async () => {
-      const response = await apiFetch(`/v1/admin/ai/metrics/${selectedUseCase}?period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) throw new Error("Failed to fetch detail")
-      return response.json()
-    },
-    enabled: Boolean(token && selectedUseCase),
-  })
+  const { data: detailData, isLoading: detailLoading } = useAdminAiUseCaseDetail(
+    selectedUseCase,
+    period,
+    Boolean(token && selectedUseCase),
+  )
 
   return (
     <div className="admin-ai-generations-page">

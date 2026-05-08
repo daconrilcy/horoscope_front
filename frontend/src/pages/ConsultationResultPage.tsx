@@ -1,18 +1,24 @@
-// @ts-nocheck
 import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
 import { ChevronLeft, MessageSquare } from "lucide-react"
 
 import { useConsultation, CHAT_PREFILL_KEY } from "../state/consultationStore"
-import { useConsultationGenerate, type ConsultationPrecheckData } from "../api/consultations"
+import {
+  useConsultationGenerate,
+  type ConsultationPrecheckData,
+  type FallbackMode,
+  type PrecisionLevel,
+} from "../api/consultations"
 import { useAstrologer } from "../api/astrologers"
 import { detectLang } from "../i18n/astrology"
 import { tConsultations as t } from "@i18n/consultations"
 import {
   AUTO_ASTROLOGER_ID,
+  VALID_CONSULTATION_TYPES,
   getConsultationTypeConfig,
   getObjectiveForType,
+  type ConsultationType,
   type ConsultationResult,
   type ConsultationSection,
   type ConsultationBlock,
@@ -37,6 +43,38 @@ function resolveObjectiveText(
 function getRenderableBlocks(section: ConsultationSection): ConsultationBlock[] {
   if (section.blocks && section.blocks.length > 0) return section.blocks
   return []
+}
+
+function isConsultationType(value: string): value is ConsultationType {
+  return VALID_CONSULTATION_TYPES.includes(value as ConsultationType)
+}
+
+function toPrecisionLevel(value: string | null | undefined): PrecisionLevel {
+  return value === "blocked" || value === "limited" || value === "medium" || value === "high" ? value : "high"
+}
+
+function toFallbackMode(value: string | null | undefined): FallbackMode | null {
+  const allowed: readonly FallbackMode[] = [
+    "user_no_birth_time",
+    "other_no_birth_time",
+    "relation_user_only",
+    "timing_degraded",
+    "blocking_missing_data",
+    "safeguard_reframed",
+    "safeguard_refused",
+  ]
+  return value && allowed.includes(value as FallbackMode) ? value as FallbackMode : null
+}
+
+function resolveGenerationErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+  return fallback
+}
+
+function hasErrorCode(error: unknown, code: string): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === code
 }
 
 function renderSectionBlock(block: ConsultationBlock, index: number) {
@@ -109,8 +147,8 @@ export function ConsultationResultPage() {
           : currentResult.fallbackMode
             ? "degraded"
             : "nominal",
-      precision_level: (currentResult.precisionLevel as any) || "high",
-      fallback_mode: currentResult.fallbackMode as any,
+      precision_level: toPrecisionLevel(currentResult.precisionLevel),
+      fallback_mode: toFallbackMode(currentResult.fallbackMode),
       safeguard_issue: null,
       user_profile_quality: "complete",
       missing_fields: [],
@@ -133,7 +171,7 @@ export function ConsultationResultPage() {
         horizon: timeHorizon ?? undefined,
         astrologer_id: draftAstrologerId,
         save_third_party: state.draft.saveThirdParty,
-        third_party_nickname: state.draft.thirdPartyNickname,
+        third_party_nickname: state.draft.thirdPartyNickname ?? undefined,
         third_party_external_id: state.draft.selectedThirdPartyExternalId ?? undefined,
         other_person: draftOtherPerson ? {
           birth_date: draftOtherPerson.birthDate,
@@ -150,9 +188,10 @@ export function ConsultationResultPage() {
       const response = await consultationGenerate.mutateAsync(payload)
       const data = response.data
       trackEvent(EVENTS.CONSULTATION_GENERATED, { type: data.consultation_type, status: data.status, route: data.route_key })
+      const resultType = isConsultationType(data.consultation_type) ? data.consultation_type : draftType
       const result: ConsultationResult = {
         id: data.consultation_id,
-        type: data.consultation_type as any,
+        type: resultType,
         astrologerId: draftAstrologerId,
         context: draftContext,
         objective,
@@ -172,13 +211,15 @@ export function ConsultationResultPage() {
       if (state.draft.saveThirdParty) {
         void queryClient.invalidateQueries({ queryKey: ["consultation-third-parties"] })
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = resolveGenerationErrorMessage(err, t("error_generation", lang))
       setError(
-        err?.code === "request_timeout" || err?.name === "AbortError"
+        hasErrorCode(err, "request_timeout") ||
+        (err instanceof DOMException && err.name === "AbortError")
           ? t("generation_timeout", lang)
-          : err.message || t("error_generation", lang)
+          : message
       )
-      trackEvent(EVENTS.CONSULTATION_ERROR, { type: draftType, error: err.message || "unknown" })
+      trackEvent(EVENTS.CONSULTATION_ERROR, { type: draftType, error: message })
     } finally {
       setIsGenerating(false)
     }

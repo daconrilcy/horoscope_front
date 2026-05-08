@@ -6,61 +6,17 @@ export type PageArchitectureException = {
   exit: string
 }
 
-export const TS_NOCHECK_PAGE_EXCEPTIONS: PageArchitectureException[] = [
-  {
-    file: "pages/AstrologerProfilePage.tsx",
-    owner: "frontend-react-pages/profile",
-    reason: "profil astrologue non traite par CS-090 a CS-095",
-    exit: "story dediee de typage de la page profil astrologue",
-  },
-  {
-    file: "pages/ConsultationResultPage.tsx",
-    owner: "frontend-react-pages/consultations",
-    reason: "resultat consultation hors lot pages admin/public-route actuel",
-    exit: "story dediee de typage du resultat consultation",
-  },
-  {
-    file: "pages/NotFoundPage.tsx",
-    owner: "frontend-react-pages/routing",
-    reason: "page courte hors lot de convergence des alias publics",
-    exit: "story dediee de typage des pages route-support",
-  },
-]
+export const TS_NOCHECK_PAGE_EXCEPTIONS: PageArchitectureException[] = []
 
-export const DIRECT_API_PAGE_EXCEPTIONS: PageArchitectureException[] = [
-  {
-    file: "pages/admin/AdminAiGenerationsPage.tsx",
-    owner: "frontend-react-pages/admin-ai",
-    reason: "cluster admin AI hors CS-091",
-    exit: "story dediee de centralisation API admin AI",
-  },
-  {
-    file: "pages/admin/AdminEntitlementsPage.tsx",
-    owner: "frontend-react-pages/admin-entitlements",
-    reason: "cluster entitlements hors CS-091",
-    exit: "story dediee de centralisation API entitlements admin",
-  },
-  {
-    file: "pages/admin/AdminSettingsPage.tsx",
-    owner: "frontend-react-pages/admin-settings",
-    reason: "exports admin hors CS-091",
-    exit: "story dediee de centralisation API settings admin",
-  },
-  {
-    file: "pages/admin/AdminSupportPage.tsx",
-    owner: "frontend-react-pages/admin-support",
-    reason: "cluster support hors CS-091",
-    exit: "story dediee de centralisation API support admin",
-  },
-]
+export const DIRECT_API_PAGE_EXCEPTIONS: PageArchitectureException[] = []
 
 export const PAGE_SIZE_EXCEPTIONS: Array<PageArchitectureException & { maxLines: number }> = [
   {
     file: "pages/admin/AdminPromptsPage.tsx",
-    maxLines: 3200,
+    maxLines: 2700,
     owner: "frontend-react-pages/admin-prompts",
-    reason: "conteneur route encore volumineux apres extraction CS-090",
-    exit: "stories incrementales admin-prompts de reduction par sous-surface",
+    reason: "conteneur route catalogue/archive apres extraction des helpers et modales partagees CS-096",
+    exit: "prochaines stories de reduction des sections JSX catalogue et consommation",
   },
   {
     file: "pages/AstrologerProfilePage.tsx",

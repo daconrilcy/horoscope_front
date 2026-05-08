@@ -1,12 +1,11 @@
 import React, { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
-import { apiFetch } from "../../api/client"
+import { exportAdminData, type AdminExportType } from "../../api/adminOperations"
 import { useAdminPermissions } from "../../state/AdminPermissionsContext"
-import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminSettingsPage.css"
 
 interface ExportModalProps {
-  type: "users" | "generations" | "billing"
+  type: AdminExportType
   onClose: () => void
   onExportCompleted?: (result: ExportResult) => void
 }
@@ -15,26 +14,18 @@ interface ExportResult {
 }
 
 function ExportModal({ type, onClose, onExportCompleted }: ExportModalProps) {
-  const token = useAccessTokenSnapshot()
   const [period, setPeriod] = useState({ start: "", end: "" })
   const [format, setFormat] = useState("csv")
   const [confirmed, setConfirmed] = useState(false)
 
   const exportMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiFetch(`/v1/admin/exports/${type}`, {
-        method: "POST",
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          period: period.start || period.end ? {
-            start: period.start ? new Date(period.start).toISOString() : null,
-            end: period.end ? new Date(period.end).toISOString() : null
-          } : null,
-          format: type === "generations" ? format : undefined
-        })
+      const response = await exportAdminData(type, {
+        period: period.start || period.end ? {
+          start: period.start ? new Date(period.start).toISOString() : null,
+          end: period.end ? new Date(period.end).toISOString() : null,
+        } : null,
+        format: type === "generations" ? format : undefined,
       })
       if (!response.ok) throw new Error("Export failed")
 

@@ -12,6 +12,7 @@ import {
   type AdminLlmSamplePayload,
   type AdminLlmSamplePayloadSummary,
 } from "@api"
+import { formatDateTime } from "@utils/formatDate"
 import "./AdminSamplePayloadsAdmin.css"
 
 const FALLBACK_FEATURES = ["chat", "guidance", "horoscope_daily", "natal"] as const
@@ -96,10 +97,6 @@ function buildNatalPayload(chartJsonText: string, extrasText: string): Record<st
 
 function isNatalFeature(feature: string): boolean {
   return feature.trim().toLowerCase() === "natal"
-}
-
-function formatDate(value: string): string {
-  return new Date(value).toLocaleString("fr-FR")
 }
 
 export type AdminSamplePayloadsCatalogFacetsBundle = {
@@ -518,7 +515,7 @@ export function AdminSamplePayloadsAdmin({
                     </td>
                     <td>{row.is_default ? "oui" : "non"}</td>
                     <td>{row.is_active ? "oui" : "non"}</td>
-                    <td>{formatDate(row.updated_at)}</td>
+                    <td>{formatDateTime(row.updated_at)}</td>
                     <td>
                       <div className="sample-payloads-admin__row-actions">
                         <button className="text-button" type="button" onClick={() => void openEdit(row.id)}>

@@ -1,32 +1,14 @@
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiFetch } from "../../api/client"
+import { useQueryClient } from "@tanstack/react-query"
+import {
+  adminOperationsQueryKeys,
+  useAdminFlaggedContent,
+  useAdminSupportTickets,
+  useReviewFlaggedContent,
+} from "../../api/adminOperations"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import "./AdminSupportPage.css"
-
-interface SupportTicket {
-  id: number
-  user_id: number
-  user_email: string
-  category: string
-  title: string
-  status: string
-  priority: string
-  created_at: string
-}
-
-interface FlaggedContent {
-  id: number
-  user_id: number
-  user_email: string
-  content_type: string
-  content_ref_id: string
-  excerpt: string
-  reason: string | null
-  reported_at: string
-  status: string
-}
 
 export function AdminSupportPage() {
   const token = useAccessTokenSnapshot()
@@ -35,47 +17,23 @@ export function AdminSupportPage() {
   const [activeTab, setActiveTab] = useState<"tickets" | "flagged">("tickets")
   const [statusFilter, setStatusFilter] = useState("all")
 
-  // 1. Tickets Query
-  const { data: ticketsData, isLoading: ticketsLoading } = useQuery<{ data: SupportTicket[] }>({
-    queryKey: ["admin-support-tickets", statusFilter],
-    queryFn: async () => {
-      const response = await apiFetch(`/v1/admin/support/tickets?status=${statusFilter}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      return response.json()
-    },
-    enabled: Boolean(token && activeTab === "tickets"),
-  })
+  const { data: ticketsData, isLoading: ticketsLoading } = useAdminSupportTickets(
+    statusFilter,
+    Boolean(token && activeTab === "tickets"),
+  )
 
-  // 2. Flagged Content Query
-  const { data: flaggedData, isLoading: flaggedLoading } = useQuery<{ data: FlaggedContent[] }>({
-    queryKey: ["admin-flagged-content"],
-    queryFn: async () => {
-      const response = await apiFetch("/v1/admin/support/flagged-content?status=pending", {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      return response.json()
-    },
-    enabled: Boolean(token && activeTab === "flagged"),
-  })
+  const { data: flaggedData, isLoading: flaggedLoading } = useAdminFlaggedContent(
+    Boolean(token && activeTab === "flagged"),
+  )
 
-  // 3. Review Mutation
-  const reviewMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number, status: string }) => {
-      const response = await apiFetch(`/v1/admin/support/flagged-content/${id}`, {
-        method: "PATCH",
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ status })
-      })
-      return response.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-flagged-content"] })
-    }
-  })
+  const reviewMutation = useReviewFlaggedContent()
+  const handleReviewFlaggedContent = (id: number, status: string) => {
+    reviewMutation.mutate({ id, status }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: adminOperationsQueryKeys.flaggedContent })
+      },
+    })
+  }
 
   return (
     <div className="admin-support-page">
@@ -179,14 +137,14 @@ export function AdminSupportPage() {
                       <div className="card-actions">
                         <button 
                           className="action-button action-button--success"
-                          onClick={() => reviewMutation.mutate({ id: content.id, status: "resolved" })}
+                          onClick={() => handleReviewFlaggedContent(content.id, "resolved")}
                           disabled={reviewMutation.isPending}
                         >
                           Traiter
                         </button>
                         <button 
                           className="action-button action-button--danger"
-                          onClick={() => reviewMutation.mutate({ id: content.id, status: "dismissed" })}
+                          onClick={() => handleReviewFlaggedContent(content.id, "dismissed")}
                           disabled={reviewMutation.isPending}
                         >
                           Ignorer
