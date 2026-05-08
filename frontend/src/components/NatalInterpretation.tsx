@@ -1,85 +1,82 @@
-// Composant React chargeant et affichant les interpretations de theme natal.
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import type { FeatureEntitlementResponse } from "../api/billing";
+// Container React orchestrant les donnees d'interpretation de theme natal.
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { RefreshCw } from "lucide-react"
+
+import type { FeatureEntitlementResponse } from "../api/billing"
 import {
-  useNatalInterpretation,
-  useNatalInterpretationsList,
-  useNatalPdfTemplates,
-  useNatalInterpretationById,
   deleteNatalInterpretation,
   downloadNatalInterpretationPdf,
   previewNatalInterpretationPdf,
-  type NatalInterpretationResult,
-  type AstroSection,
-  type NatalInterpretationListItem
-} from "../api/natalChart";
-import { useAstrologers, type Astrologer } from "../api/astrologers";
-import { AstrologerGrid } from "../features/astrologers";
+  useNatalInterpretation,
+  useNatalInterpretationById,
+  useNatalInterpretationsList,
+  useNatalPdfTemplates,
+  type NatalInterpretationListItem,
+} from "../api/natalChart"
+import { natalChartTranslations } from "../i18n/natalChart"
+import { type AstrologyLang } from "../i18n/astrology"
+import { ErrorBoundary } from "@components/ErrorBoundary"
+import { useAccessTokenSnapshot } from "../utils/authToken"
+import { InterpretationContent } from "./natal-interpretation/NatalInterpretationContent"
 import {
-  natalChartTranslations,
-  getNatalLockedSectionCopy,
-  getNatalSectionTeaser,
-} from "../i18n/natalChart";
-import { type AstrologyLang } from "../i18n/astrology";
-import { LockedSection, UpgradeCTA } from "@ui";
-import {
-  ChevronDown,
-  ChevronUp,
-  RefreshCw,
-  Sparkles,
-  AlertCircle,
-  Trash2,
-  History,
-  Download,
-  Eye
-} from "lucide-react";
-import { ErrorBoundary } from "@components/ErrorBoundary";
-import { Button } from "@ui/Button";
-import { useAccessTokenSnapshot } from "../utils/authToken";
-import { stripLeadingNumbering, stripLeadingNumber } from "@utils/strings";
-import "./NatalInterpretation.css";
+  ConfirmDeleteModal,
+  InterpretationError,
+  InterpretationSkeleton,
+  PdfActionsMenu,
+  VersionSelector,
+} from "./natal-interpretation/NatalInterpretationMenus"
+import { PersonaSelector } from "./natal-interpretation/NatalInterpretationPersonaSelector"
+import "./NatalInterpretation.css"
 
 interface Props {
-  chartLoaded: boolean;
-  chartId?: string;
-  lang: AstrologyLang;
-  fallbackEvidence?: string[];
-  initialPersonaId?: string | null;
-  initialInterpretationId?: number | null;
-  isLockedFree?: boolean;
+  chartLoaded: boolean
+  chartId?: string
+  lang: AstrologyLang
+  fallbackEvidence?: string[]
+  initialPersonaId?: string | null
+  initialInterpretationId?: number | null
+  isLockedFree?: boolean
   onActiveInterpretationChange?: (payload: {
-    level: "short" | "complete";
-    personaName: string | null;
-    canSwitchPersona: boolean;
-  }) => void;
+    level: "short" | "complete"
+    personaName: string | null
+    canSwitchPersona: boolean
+  }) => void
   actionRequest?: {
-    kind: "upgrade" | "switch_persona";
-    nonce: number;
-  } | null;
-  longFeatureAccess?: FeatureEntitlementResponse;
+    kind: "upgrade" | "switch_persona"
+    nonce: number
+  } | null
+  longFeatureAccess?: FeatureEntitlementResponse
 }
 
-type InterpretationTranslations = typeof natalChartTranslations['fr']['interpretation'];
-
 function isFreeShortInterpretation(item: NatalInterpretationListItem): boolean {
-  return item.use_case === "natal_long_free";
+  return item.use_case === "natal_long_free"
 }
 
 function isRealCompleteInterpretation(item: NatalInterpretationListItem): boolean {
-  return item.level === "complete" && item.use_case === "natal_interpretation";
+  return item.level === "complete" && item.use_case === "natal_interpretation"
 }
 
 function findLatestCompleteInterpretation(
   items: NatalInterpretationListItem[],
 ): NatalInterpretationListItem | null {
-  return items.find(isRealCompleteInterpretation) ?? null;
+  return items.find(isRealCompleteInterpretation) ?? null
 }
 
 function findLatestShortInterpretation(
   items: NatalInterpretationListItem[],
 ): NatalInterpretationListItem | null {
-  return items.find((item) => item.level === "short") ?? null;
+  return items.find((item) => item.level === "short") ?? null
+}
+
+function localeFromLang(lang: AstrologyLang): "fr-FR" | "en-US" | "es-ES" {
+  if (lang === "en") return "en-US"
+  if (lang === "es") return "es-ES"
+  return "fr-FR"
+}
+
+function pdfLocaleFromLang(lang: AstrologyLang): "fr" | "en" | "es" {
+  return lang === "fr" ? "fr" : lang
 }
 
 export function NatalInterpretationSection({
@@ -94,152 +91,143 @@ export function NatalInterpretationSection({
   actionRequest,
   longFeatureAccess,
 }: Props) {
-  const pageT = natalChartTranslations[lang];
-  const t = pageT.interpretation;
-  const accessToken = useAccessTokenSnapshot();
-  const navigate = useNavigate();
-  const basicUpgradePath = "/settings/subscription";
-  const premiumUpgradePath = "/settings/subscription";
+  const pageT = natalChartTranslations[lang]
+  const t = pageT.interpretation
+  const accessToken = useAccessTokenSnapshot()
+  const navigate = useNavigate()
+  const basicUpgradePath = "/settings/subscription"
+  const premiumUpgradePath = "/settings/subscription"
 
   const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">(
-    initialPersonaId || isLockedFree ? "complete" : "short"
-  );
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(initialPersonaId);
-  const [isUpsellOpen, setIsUpsellOpen] = useState(false);
-  const [forceRefresh, setForceRefresh] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const [selectedInterpretationId, setSelectedInterpretationId] = useState<number | null>(initialInterpretationId);
-  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>("");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+    initialPersonaId || isLockedFree ? "complete" : "short",
+  )
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(initialPersonaId)
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const [forceRefresh, setForceRefresh] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [selectedInterpretationId, setSelectedInterpretationId] = useState<number | null>(initialInterpretationId)
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState("")
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const historyQuery = useNatalInterpretationsList({
     enabled: chartLoaded && !!chartId,
     chartId,
-  });
+  })
   const pdfTemplatesQuery = useNatalPdfTemplates({
     enabled: chartLoaded,
-    locale: lang === "fr" ? "fr" : lang,
-  });
-
+    locale: pdfLocaleFromLang(lang),
+  })
   const mainQuery = useNatalInterpretation({
     enabled: chartLoaded && !selectedInterpretationId,
     useCaseLevel,
     personaId: selectedPersonaId,
     allowCompleteWithoutPersona: isLockedFree,
-    locale: lang === "fr" ? "fr-FR" : lang === "en" ? "en-US" : "es-ES",
+    locale: localeFromLang(lang),
     forceRefresh,
     refreshKey,
-  });
-
+  })
   const idQuery = useNatalInterpretationById({
     enabled: !!selectedInterpretationId,
     interpretationId: selectedInterpretationId ?? undefined,
-    locale: lang === "fr" ? "fr-FR" : lang === "en" ? "en-US" : "es-ES",
-  });
+    locale: localeFromLang(lang),
+  })
 
-  const activeQuery = selectedInterpretationId ? idQuery : mainQuery;
-  const { data, isLoading, error, refetch } = activeQuery;
-  const historyItems = historyQuery.data?.items ?? [];
-  const latestCompleteInterpretation = findLatestCompleteInterpretation(historyItems);
-  const latestShortInterpretation = findLatestShortInterpretation(historyItems);
-  const hasCompleteInterpretation = latestCompleteInterpretation !== null;
-  const hasPersistedFreeShortInterpretation = historyItems.some(isFreeShortInterpretation);
+  const activeQuery = selectedInterpretationId ? idQuery : mainQuery
+  const { data, isLoading, error, refetch } = activeQuery
+  const historyItems = historyQuery.data?.items ?? []
+  const latestCompleteInterpretation = findLatestCompleteInterpretation(historyItems)
+  const latestShortInterpretation = findLatestShortInterpretation(historyItems)
+  const hasCompleteInterpretation = latestCompleteInterpretation !== null
+  const hasPersistedFreeShortInterpretation = historyItems.some(isFreeShortInterpretation)
   const isQuotaUsageExhausted = Boolean(
     longFeatureAccess?.reason_code === "quota_exhausted" ||
       longFeatureAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0),
-  );
-  const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer";
-  const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer";
-  const canSwitchPersona = isPremiumPlan && hasCompleteInterpretation;
-  const shouldPreferLatestCompleteByDefault = isLockedFree || isPremiumPlan;
+  )
+  const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer"
+  const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer"
+  const canSwitchPersona = isPremiumPlan && hasCompleteInterpretation
+  const shouldPreferLatestCompleteByDefault = isLockedFree || isPremiumPlan
   const shouldRefreshShortAfterBasicUpgrade =
     isSingleAstrologerPlan &&
     !isLockedFree &&
     hasPersistedFreeShortInterpretation &&
-    latestShortInterpretation === null;
-  const isCompleteGenerationBlocked = !isLockedFree && isQuotaUsageExhausted;
+    latestShortInterpretation === null
+  const isCompleteGenerationBlocked = !isLockedFree && isQuotaUsageExhausted
   const primaryActionLabel = hasCompleteInterpretation
-    ? (isLockedFree
-        ? t.upgradeToBasicCta
-        : isCompleteGenerationBlocked
-          ? t.quotaExhaustedCta
-          : canSwitchPersona
-            ? pageT.requestAnotherAstrologer
-            : pageT.unlockCompleteInterpretation)
-    : (isLockedFree ? t.upgradeToBasicCta : pageT.unlockCompleteInterpretation);
+    ? isLockedFree
+      ? t.upgradeToBasicCta
+      : isCompleteGenerationBlocked
+        ? t.quotaExhaustedCta
+        : canSwitchPersona
+          ? pageT.requestAnotherAstrologer
+          : pageT.unlockCompleteInterpretation
+    : isLockedFree
+      ? t.upgradeToBasicCta
+      : pageT.unlockCompleteInterpretation
 
   useEffect(() => {
     onActiveInterpretationChange?.({
       level: isLockedFree ? "short" : (data?.meta.level ?? "short"),
       personaName: data?.meta.persona_name ?? null,
       canSwitchPersona,
-    });
-  }, [canSwitchPersona, data?.meta.level, data?.meta.persona_name, isLockedFree, onActiveInterpretationChange]);
+    })
+  }, [canSwitchPersona, data?.meta.level, data?.meta.persona_name, isLockedFree, onActiveInterpretationChange])
 
   useEffect(() => {
-    if (!actionRequest) return;
+    if (!actionRequest) return
     if (actionRequest.kind === "upgrade" && isLockedFree) {
-      navigate(basicUpgradePath);
-      return;
+      navigate(basicUpgradePath)
+      return
     }
     if (actionRequest.kind === "switch_persona" && isCompleteGenerationBlocked) {
-      navigate(premiumUpgradePath);
-      return;
+      navigate(premiumUpgradePath)
+      return
     }
-    setSelectedInterpretationId(null);
-    setSelectedPersonaId(null);
-    setForceRefresh(false);
-    setIsUpsellOpen(true);
-  }, [actionRequest, basicUpgradePath, isCompleteGenerationBlocked, isLockedFree, navigate, premiumUpgradePath]);
+    setSelectedInterpretationId(null)
+    setSelectedPersonaId(null)
+    setForceRefresh(false)
+    setIsUpsellOpen(true)
+  }, [actionRequest, basicUpgradePath, isCompleteGenerationBlocked, isLockedFree, navigate, premiumUpgradePath])
 
   useEffect(() => {
     if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) {
-      setSelectedInterpretationId(initialInterpretationId);
-      setSelectedPersonaId(null);
-      setUseCaseLevel("complete");
-      return;
+      setSelectedInterpretationId(initialInterpretationId)
+      setSelectedPersonaId(null)
+      setUseCaseLevel("complete")
+      return
     }
-
     if (initialPersonaId) {
-      setSelectedInterpretationId(null);
-      setSelectedPersonaId(initialPersonaId);
-      setUseCaseLevel("complete");
-      return;
+      setSelectedInterpretationId(null)
+      setSelectedPersonaId(initialPersonaId)
+      setUseCaseLevel("complete")
+      return
     }
-
     if (isLockedFree) {
-      setSelectedInterpretationId(null);
-      setSelectedPersonaId(null);
-      setUseCaseLevel("complete");
+      setSelectedInterpretationId(null)
+      setSelectedPersonaId(null)
+      setUseCaseLevel("complete")
     }
-  }, [initialInterpretationId, initialPersonaId, isLockedFree]);
+  }, [initialInterpretationId, initialPersonaId, isLockedFree])
 
   useEffect(() => {
-    if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) {
-      return;
-    }
-    if (initialPersonaId) {
-      return;
-    }
-    if (historyItems.length === 0) {
-      return;
-    }
+    if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) return
+    if (initialPersonaId) return
+    if (historyItems.length === 0) return
 
     if (shouldPreferLatestCompleteByDefault && latestCompleteInterpretation) {
       setSelectedInterpretationId((current) =>
         current === latestCompleteInterpretation.id ? current : latestCompleteInterpretation.id,
-      );
-      setSelectedPersonaId(null);
-      setUseCaseLevel("complete");
-      return;
+      )
+      setSelectedPersonaId(null)
+      setUseCaseLevel("complete")
+      return
     }
 
     if (isSingleAstrologerPlan) {
-      setSelectedInterpretationId(null);
-      setSelectedPersonaId(null);
-      setUseCaseLevel("short");
+      setSelectedInterpretationId(null)
+      setSelectedPersonaId(null)
+      setUseCaseLevel("short")
     }
   }, [
     historyItems,
@@ -248,149 +236,143 @@ export function NatalInterpretationSection({
     isSingleAstrologerPlan,
     latestCompleteInterpretation,
     shouldPreferLatestCompleteByDefault,
-  ]);
+  ])
 
   useEffect(() => {
-    if (!shouldRefreshShortAfterBasicUpgrade) {
-      return;
-    }
-    if (selectedInterpretationId !== null) {
-      return;
-    }
+    if (!shouldRefreshShortAfterBasicUpgrade) return
+    if (selectedInterpretationId !== null) return
 
-    setSelectedPersonaId(null);
-    setUseCaseLevel("short");
-    setForceRefresh(true);
-    setRefreshKey((previous) => previous + 1);
-  }, [selectedInterpretationId, shouldRefreshShortAfterBasicUpgrade]);
+    setSelectedPersonaId(null)
+    setUseCaseLevel("short")
+    setForceRefresh(true)
+    setRefreshKey((previous) => previous + 1)
+  }, [selectedInterpretationId, shouldRefreshShortAfterBasicUpgrade])
 
   useEffect(() => {
-    if (selectedTemplateKey) return;
-    const defaultTemplate = pdfTemplatesQuery.data?.items.find((item) => item.is_default);
+    if (selectedTemplateKey) return
+    const defaultTemplate = pdfTemplatesQuery.data?.items.find((item) => item.is_default)
     if (defaultTemplate) {
-      setSelectedTemplateKey(defaultTemplate.key);
+      setSelectedTemplateKey(defaultTemplate.key)
     }
-  }, [pdfTemplatesQuery.data, selectedTemplateKey]);
+  }, [pdfTemplatesQuery.data, selectedTemplateKey])
 
   useEffect(() => {
-    if (selectedInterpretationId) return;
-    const persistedAt = data?.meta.persisted_at;
-    const interpretationId = data?.meta.id;
-    if (!persistedAt && !interpretationId) return;
+    if (selectedInterpretationId) return
+    const persistedAt = data?.meta.persisted_at
+    const interpretationId = data?.meta.id
+    if (!persistedAt && !interpretationId) return
 
     const isPresentInHistory = historyItems.some(
       (item) => item.id === interpretationId || item.created_at === persistedAt,
-    );
-    if (isPresentInHistory) return;
-
-    void historyQuery.refetch();
+    )
+    if (!isPresentInHistory) {
+      void historyQuery.refetch()
+    }
   }, [
     data?.meta.id,
     data?.meta.persisted_at,
     historyItems,
     historyQuery,
     selectedInterpretationId,
-  ]);
+  ])
 
   const handleUpgrade = (personaId: string) => {
-    setSelectedPersonaId(personaId);
-    setUseCaseLevel("complete");
-    setIsUpsellOpen(false);
-    setSelectedInterpretationId(null);
-    setForceRefresh(true);
-    setRefreshKey((previous) => previous + 1);
-  };
+    setSelectedPersonaId(personaId)
+    setUseCaseLevel("complete")
+    setIsUpsellOpen(false)
+    setSelectedInterpretationId(null)
+    setForceRefresh(true)
+    setRefreshKey((previous) => previous + 1)
+  }
 
   const handleRegenerate = () => {
     if (isLockedFree) {
-      navigate(basicUpgradePath);
-      return;
+      navigate(basicUpgradePath)
+      return
     }
     if (isCompleteGenerationBlocked) {
-      navigate(premiumUpgradePath);
-      return;
+      navigate(premiumUpgradePath)
+      return
     }
-    setSelectedInterpretationId(null);
-    setSelectedPersonaId(null);
-    setForceRefresh(false);
-    setIsUpsellOpen(true);
-  };
+    setSelectedInterpretationId(null)
+    setSelectedPersonaId(null)
+    setForceRefresh(false)
+    setIsUpsellOpen(true)
+  }
 
   const handleSelectVersion = (id: number | null) => {
-    setSelectedInterpretationId(id);
+    setSelectedInterpretationId(id)
     if (id === null) {
-      setUseCaseLevel("short");
-      setSelectedPersonaId(null);
-      setForceRefresh(false);
+      setUseCaseLevel("short")
+      setSelectedPersonaId(null)
+      setForceRefresh(false)
     }
-  };
+  }
 
   const handleDelete = async (id: number) => {
-    if (!accessToken) return;
-    setIsDeleting(true);
+    if (!accessToken) return
+    setIsDeleting(true)
     try {
-      await deleteNatalInterpretation(accessToken, id);
-      const updatedHistory = await historyQuery.refetch();
-
+      await deleteNatalInterpretation(accessToken, id)
+      const updatedHistory = await historyQuery.refetch()
       if (selectedInterpretationId === id) {
-        const remaining = updatedHistory.data?.items || [];
+        const remaining = updatedHistory.data?.items ?? []
         if (remaining.length > 0) {
-          setSelectedInterpretationId(remaining[0].id);
+          setSelectedInterpretationId(remaining[0].id)
         } else {
-          setSelectedInterpretationId(null);
-          setUseCaseLevel("short");
+          setSelectedInterpretationId(null)
+          setUseCaseLevel("short")
         }
       }
-      setShowDeleteConfirm(null);
+      setShowDeleteConfirm(null)
     } catch (err) {
-      console.error("Failed to delete interpretation", err);
+      console.error("Failed to delete interpretation", err)
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   const currentInterpretationId =
     selectedInterpretationId ??
     data?.meta.id ??
-    historyQuery.data?.items.find((i) => i.created_at === data?.meta.persisted_at)?.id ??
+    historyQuery.data?.items.find((item) => item.created_at === data?.meta.persisted_at)?.id ??
     latestShortInterpretation?.id ??
-    historyQuery.data?.items[0]?.id;
-
+    historyQuery.data?.items[0]?.id
   const usedPersonaIds = new Set(
-    (historyQuery.data?.items ?? [])
+    historyItems
       .filter((item) => isRealCompleteInterpretation(item) && Boolean(item.persona_id))
       .map((item) => item.persona_id as string),
-  );
+  )
 
   const handlePreviewPdf = async () => {
-    if (!accessToken || !currentInterpretationId) return;
+    if (!accessToken || !currentInterpretationId) return
     try {
       await previewNatalInterpretationPdf(
         accessToken,
         currentInterpretationId,
         selectedTemplateKey || undefined,
-        lang === "fr" ? "fr" : lang,
-      );
+        pdfLocaleFromLang(lang),
+      )
     } catch (err) {
-      console.error("Failed to preview PDF", err);
+      console.error("Failed to preview PDF", err)
     }
-  };
+  }
 
   const handleDownloadPdf = async () => {
-    if (!accessToken || !currentInterpretationId) return;
+    if (!accessToken || !currentInterpretationId) return
     try {
       await downloadNatalInterpretationPdf(
         accessToken,
         currentInterpretationId,
         selectedTemplateKey || undefined,
-        lang === "fr" ? "fr" : lang,
-      );
+        pdfLocaleFromLang(lang),
+      )
     } catch (err) {
-      console.error("Failed to download PDF", err);
+      console.error("Failed to download PDF", err)
     }
-  };
+  }
 
-  if (!chartLoaded) return null;
+  if (!chartLoaded) return null
 
   return (
     <section className="ni-section">
@@ -399,7 +381,14 @@ export function NatalInterpretationSection({
           <h2 className="ni-title">{t.title}</h2>
           {data?.meta.persisted_at && (
             <span className="ni-date">
-              {t.generatedOnLabel} {new Date(data.meta.persisted_at).toLocaleDateString(lang, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {t.generatedOnLabel}{" "}
+              {new Date(data.meta.persisted_at).toLocaleDateString(lang, {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </span>
           )}
         </div>
@@ -407,6 +396,7 @@ export function NatalInterpretationSection({
         <div className="ni-actions">
           {data && !isLoading && (
             <button
+              type="button"
               onClick={handleRegenerate}
               title={primaryActionLabel}
               className="ni-action-btn ni-action-btn--regenerate ni-action-btn--primary"
@@ -422,7 +412,10 @@ export function NatalInterpretationSection({
               <div className="ni-actions__group-content">
                 <VersionSelector
                   items={historyItems}
-                  selectedId={selectedInterpretationId || (historyItems.find(i => i.created_at === data?.meta.persisted_at)?.id ?? null)}
+                  selectedId={
+                    selectedInterpretationId ||
+                    (historyItems.find((item) => item.created_at === data?.meta.persisted_at)?.id ?? null)
+                  }
                   onSelect={handleSelectVersion}
                   onDeleteRequest={(id) => setShowDeleteConfirm(id)}
                   t={t}
@@ -454,19 +447,13 @@ export function NatalInterpretationSection({
                   </select>
                 </label>
 
-                <PdfActionsMenu
-                  t={t}
-                  onPreview={handlePreviewPdf}
-                  onDownload={handleDownloadPdf}
-                />
+                <PdfActionsMenu t={t} onPreview={handlePreviewPdf} onDownload={handleDownloadPdf} />
               </div>
             </div>
           )}
 
           {data?.meta.level === "complete" && (
-            <span className="ni-level-badge">
-              {isLockedFree ? t.summaryBadge : t.completeBadge}
-            </span>
+            <span className="ni-level-badge">{isLockedFree ? t.summaryBadge : t.completeBadge}</span>
           )}
         </div>
       </div>
@@ -478,8 +465,12 @@ export function NatalInterpretationSection({
           <InterpretationError t={t} onRetry={() => refetch()} />
         ) : data ? (
           <>
-            <InterpretationContent data={data} lang={lang} fallbackEvidence={fallbackEvidence} isLockedFree={isLockedFree} />
-
+            <InterpretationContent
+              data={data}
+              lang={lang}
+              fallbackEvidence={fallbackEvidence}
+              isLockedFree={isLockedFree}
+            />
             {isUpsellOpen && (
               <PersonaSelector
                 t={t}
@@ -502,723 +493,5 @@ export function NatalInterpretationSection({
         />
       )}
     </section>
-  );
-}
-
-function PdfActionsMenu({
-  t,
-  onPreview,
-  onDownload,
-}: {
-  t: InterpretationTranslations
-  onPreview: () => void
-  onDownload: () => void
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (containerRef.current && !containerRef.current.contains(target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("touchstart", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("touchstart", handleOutsideClick);
-    };
-  }, [isOpen]);
-
-  return (
-    <div className="ni-version-selector" ref={containerRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen((previous) => !previous)}
-        className="ni-control-trigger ni-version-btn"
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-      >
-        <Download size={16} />
-        <span>{t.pdfActionsLabel}</span>
-        <ChevronDown
-          size={12}
-          className={`ni-version-btn__chevron${isOpen ? " ni-version-btn__chevron--open" : ""}`}
-        />
-      </button>
-
-      {isOpen && (
-        <div className="ni-version-dropdown ni-version-dropdown--actions" role="menu">
-          <div className="ni-version-dropdown__header">
-            <span className="ni-version-dropdown__label">{t.pdfGroupLabel}</span>
-          </div>
-          <div className="ni-version-dropdown__list">
-            <button type="button" className="ni-menu-action" onClick={() => { onPreview(); setIsOpen(false); }}>
-              <Eye size={16} />
-              <span>{t.previewPdf}</span>
-            </button>
-            <button type="button" className="ni-menu-action ni-menu-action--primary" onClick={() => { onDownload(); setIsOpen(false); }}>
-              <Download size={16} />
-              <span>{t.downloadPdf}</span>
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function VersionSelector({
-  items,
-  selectedId,
-  onSelect,
-  onDeleteRequest,
-  t,
-  lang
-}: {
-  items: NatalInterpretationListItem[],
-  selectedId: number | null,
-  onSelect: (id: number | null) => void,
-  onDeleteRequest: (id: number) => void,
-  t: InterpretationTranslations,
-  lang: string
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  const selectedItem = items.find(i => i.id === selectedId);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (containerRef.current && !containerRef.current.contains(target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("touchstart", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("touchstart", handleOutsideClick);
-    };
-  }, [isOpen]);
-
-  return (
-    <div className="ni-version-selector" ref={containerRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="ni-control-trigger ni-version-btn"
-      >
-        <History size={16} className="ni-version-btn__history-icon" />
-        <span>
-          {selectedItem
-            ? `${new Date(selectedItem.created_at).toLocaleDateString(lang)} - ${selectedItem.persona_name || t.standardVersionLabel}`
-            : t.historyTitle}
-        </span>
-        <ChevronDown
-          size={12}
-          className={`ni-version-btn__chevron${isOpen ? ' ni-version-btn__chevron--open' : ''}`}
-        />
-      </button>
-
-      {isOpen && (
-        <div className="ni-version-dropdown">
-          <div className="ni-version-dropdown__header">
-            <span className="ni-version-dropdown__label">{t.historyTitle}</span>
-          </div>
-          <div className="ni-version-dropdown__list">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="ni-version-item"
-                data-selected={selectedId === item.id ? "true" : undefined}
-              >
-                <div className="ni-version-item__row">
-                  <button
-                    type="button"
-                    className="ni-version-item__btn"
-                    onClick={() => {
-                    onSelect(item.id);
-                    setIsOpen(false);
-                  }}
-                >
-                  <span className="ni-version-item__name">
-                      {item.persona_name || t.standardVersionLabel}
-                  </span>
-                  <span className="ni-version-item__date">
-                      {new Date(item.created_at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {item.level === 'complete' ? t.completeBadge : t.shortBadge}
-                  </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onDeleteRequest(item.id); }}
-                    className="ni-version-item__delete"
-                    title={t.deleteCta}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ConfirmDeleteModal({ t, onConfirm, onCancel, isDeleting }: { t: InterpretationTranslations, onConfirm: () => void, onCancel: () => void, isDeleting: boolean }) {
-  return (
-    <div
-      className="modal-overlay"
-      onClick={onCancel}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-confirm-title"
-    >
-      <div className="modal-content natal-interpretation__modal" onClick={e => e.stopPropagation()}>
-        <div className="ni-modal-header">
-          <div className="ni-modal-icon">
-            <AlertCircle size={24} />
-          </div>
-          <h4 className="ni-modal-heading" id="delete-confirm-title">{t.deleteConfirm}</h4>
-        </div>
-        <p className="ni-modal-body">{t.deleteConfirmSub}</p>
-        <div className="ni-modal-footer">
-          <Button variant="ghost" onClick={onCancel} disabled={isDeleting}>
-            {t.cancel}
-          </Button>
-          <Button variant="danger" onClick={onConfirm} loading={isDeleting} leftIcon={<RefreshCw size={12} />}>
-            {t.deleteCta}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function InterpretationSkeleton({ t, isComplete }: { t: InterpretationTranslations, isComplete?: boolean }) {
-  return (
-    <div className="ni-skeleton">
-      <div className="ni-skeleton__line ni-skeleton__line--75" />
-      <div className="ni-skeleton__line" />
-      <div className="ni-skeleton__line ni-skeleton__line--83" />
-      <div className="ni-skeleton__tabs">
-        {[1, 2, 3].map(i => <div key={i} className="ni-skeleton__tab" />)}
-      </div>
-      <div className="ni-skeleton__block" />
-      <p className="ni-skeleton__caption">
-        {isComplete ? t.requestingComplete : t.loading}
-      </p>
-    </div>
-  );
-}
-
-function InterpretationError({ t, onRetry }: { t: InterpretationTranslations, onRetry: () => void }) {
-  return (
-    <div className="ni-error">
-      <div className="ni-error__icon">
-        <AlertCircle size={32} />
-      </div>
-      <p className="ni-error__message">{t.error}</p>
-      <Button variant="danger" onClick={onRetry} leftIcon={<RefreshCw size={16} />}>
-        {t.retry}
-      </Button>
-    </div>
-  );
-}
-
-function InterpretationContent({
-  data,
-  lang,
-  fallbackEvidence,
-  isLockedFree,
-}: {
-  data: NatalInterpretationResult
-  lang: AstrologyLang
-  fallbackEvidence?: string[]
-  isLockedFree?: boolean
-}) {
-  const t = natalChartTranslations[lang].interpretation;
-  const { interpretation, meta, degraded_mode } = data;
-  const highlights = Array.isArray(interpretation.highlights) ? interpretation.highlights : [];
-  const sections = Array.isArray(interpretation.sections) ? interpretation.sections : [];
-  const advice = Array.isArray(interpretation.advice) ? interpretation.advice : [];
-  const evidence =
-    Array.isArray(interpretation.evidence) && interpretation.evidence.length > 0
-      ? interpretation.evidence
-      : fallbackEvidence ?? [];
-  const legalNoticeLines = t.legalNoticeLines;
-
-  return (
-      <div className="ni-content">
-      {degraded_mode && (
-        <div className="ni-degraded-notice">
-          <AlertCircle size={16} className="ni-degraded-notice__icon" />
-          {t.degradedNotice}
-        </div>
-      )}
-
-        <div className="ni-content-card ni-content-card--summary">
-          <h3 className="ni-interpretation-title">{interpretation.title}</h3>
-          {meta.persona_name && (
-            <p className="ni-persona-text">
-              {t.completeBy} <strong>{meta.persona_name}</strong>
-            </p>
-        )}
-        <p className="ni-summary">{interpretation.summary}</p>
-      </div>
-
-      <div>
-        <p className="ni-section-label">{t.highlightsTitle}</p>
-        <HighlightsChips highlights={highlights} />
-      </div>
-
-      <SectionAccordion sections={sections} sectionsMap={t.sectionsMap} lang={lang} isLockedFree={isLockedFree} />
-
-      <div className="ni-content-card ni-content-card--advice ni-advice-block">
-        <p className="ni-section-label ni-section-label--card">{t.adviceTitle}</p>
-        <h4 className="ni-advice-title">{t.adviceTitle}</h4>
-        {isLockedFree ? (
-          <LockedSection
-            cta={
-              <UpgradeCTA
-                featureCode="natal_chart_long"
-                variant="button"
-                to="/settings/subscription"
-              />
-            }
-          >
-            <AdviceLockedContent
-              bullets={t.lockedAdviceBullets}
-              body={t.lockedAdviceBody}
-            />
-          </LockedSection>
-        ) : (
-          <AdviceList advice={advice} />
-        )}
-      </div>
-
-      <EvidenceTags evidence={evidence} title={t.evidenceTitle} t={t} />
-
-      {legalNoticeLines.length > 0 && (
-        <footer className="ni-disclaimer-footer">
-          <div className="ni-degraded-notice ni-degraded-notice--disclaimer">
-            <p className="ni-disclaimer-title">
-              <AlertCircle size={14} />
-              {t.disclaimerTitle}
-            </p>
-            <div className="ni-disclaimer-list">
-              {legalNoticeLines.map((d, i) => (
-                <p key={i} className="ni-disclaimer-item">{d}</p>
-              ))}
-            </div>
-          </div>
-        </footer>
-      )}
-    </div>
-  );
-}
-
-function HighlightsChips({ highlights }: { highlights: string[] }) {
-  return (
-    <div className="ni-highlights">
-      {highlights.map((h, i) => (
-        <div key={i} className="ni-highlight-chip">
-          <div className="ni-highlight-icon">
-            <Sparkles size={16} className="ni-highlight-star" />
-          </div>
-          <p className="ni-highlight-text">{stripLeadingNumbering(h)}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function SectionAccordion({ sections, sectionsMap, lang, isLockedFree }: { sections: AstroSection[], sectionsMap: Record<string, string>, lang: AstrologyLang, isLockedFree?: boolean }) {
-  const [openIds, setOpenIds] = useState<string[]>(sections[0] ? [`${sections[0].key}-0`] : []);
-
-  const toggleSection = (sectionId: string) => {
-    setOpenIds(prev =>
-      prev.includes(sectionId)
-        ? prev.filter(id => id !== sectionId)
-        : [...prev, sectionId]
-    );
-  };
-
-  return (
-    <div className="ni-accordion">
-      {sections.map((section, index) => {
-        const sectionId = `${section.key}-${index}`;
-        const isOpen = openIds.includes(sectionId);
-        const sectionTitle =
-          section.heading?.trim() || sectionsMap[section.key] || section.key;
-
-        if (isLockedFree) {
-          return (
-            <div key={sectionId} className="ni-accordion-item">
-              <div className="ni-accordion-header ni-accordion-header--locked">
-                <span className="ni-accordion-title">{sectionTitle}</span>
-              </div>
-              <LockedSection
-                cta={
-                  <UpgradeCTA
-                    featureCode="natal_chart_long"
-                    variant="button"
-                    to="/settings/subscription"
-                  />
-                }
-              >
-                <div className="teaser-placeholder">
-                  <p className="teaser-placeholder__lead">
-                    {getNatalSectionTeaser(section.key, lang)}
-                  </p>
-                  <p className="teaser-placeholder__body">
-                    {getNatalLockedSectionCopy(section.key, lang)}
-                  </p>
-                </div>
-              </LockedSection>
-            </div>
-          );
-        }
-
-        return (
-          <div key={sectionId} className="ni-accordion-item">
-            <button onClick={() => toggleSection(sectionId)} className="ni-accordion-header">
-              <span className="ni-accordion-title">
-                {sectionTitle}
-              </span>
-              {isOpen
-                ? <ChevronUp size={20} className="ni-accordion-icon ni-accordion-icon--open" />
-                : <ChevronDown size={20} className="ni-accordion-icon ni-accordion-icon--closed" />
-              }
-            </button>
-            {isOpen && (
-              <div className="ni-accordion-body">
-                <p className="ni-accordion-text">{section.content}</p>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function AdviceList({ advice }: { advice: string[] }) {
-  return (
-    <div className="ni-advice-list">
-      {advice.map((item, i) => (
-        <div key={i} className="ni-advice-item">
-          <div className="ni-advice-icon">
-            <Sparkles size={12} className="ni-advice-star" />
-          </div>
-          <p className="ni-advice-text">{stripLeadingNumber(item)}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AdviceLockedContent({
-  bullets,
-  body,
-}: {
-  bullets: string[]
-  body: string
-}) {
-  return (
-    <div className="ni-advice-list ni-advice-list--locked">
-      {bullets.map((item, i) => (
-        <div key={i} className="ni-advice-item">
-          <div className="ni-advice-icon">
-            <Sparkles size={12} className="ni-advice-star" />
-          </div>
-          <p className="ni-advice-text">{item}</p>
-        </div>
-      ))}
-      <p className="ni-advice-text ni-advice-text--locked">{body}</p>
-    </div>
-  );
-}
-
-function formatEvidenceId(eid: string): string {
-  const map: Record<string, string> = {
-    SUN: "Soleil", MOON: "Lune", MERCURY: "Mercure", VENUS: "Vénus", MARS: "Mars",
-    JUPITER: "Jupiter", SATURN: "Saturne", URANUS: "Uranus", NEPTUNE: "Neptune",
-    PLUTO: "Pluton", CHIRON: "Chiron", LILITH: "Lune Noire", NODE: "Nœud Nord",
-    ASC: "Ascendant", MC: "Milieu du Ciel", DSC: "Descendant", IC: "Fond du Ciel",
-    ARIES: "Bélier", TAURUS: "Taureau", GEMINI: "Gémeaux", CANCER: "Cancer",
-    LEO: "Lion", VIRGO: "Vierge", LIBRA: "Balance", SCORPIO: "Scorpion",
-    SAGITTARIUS: "Sagittaire", CAPRICORN: "Capricorne", AQUARIUS: "Verseau", PISCES: "Poissons",
-    CONJUNCTION: "conjonction", SEXTILE: "sextile", SQUARE: "carré", TRINE: "trigone", OPPOSITION: "opposition",
-    RETROGRADE: "rétrograde"
-  };
-
-  const label = (token: string): string => map[token] || token;
-  const planetSignHouse = eid.match(/^([A-Z]+)_([A-Z]+)_H(\d{1,2})$/);
-  if (planetSignHouse) {
-    const [, planet, sign, house] = planetSignHouse;
-    return `${label(planet)} ${label(sign)} (M${house})`;
-  }
-
-  const planetSign = eid.match(/^([A-Z]+)_([A-Z]+)$/);
-  if (planetSign) {
-    const [, planet, sign] = planetSign;
-    if (["ASC", "MC", "DSC", "IC"].includes(planet)) {
-      return `${label(planet)} ${label(sign)}`;
-    }
-    if (map[planet] && map[sign]) {
-      return `${label(planet)} ${label(sign)}`;
-    }
-  }
-
-  const houseInSign = eid.match(/^HOUSE_(\d{1,2})_IN_([A-Z]+)$/);
-  if (houseInSign) {
-    const [, house, sign] = houseInSign;
-    return `Maison ${house} en ${label(sign)}`;
-  }
-
-  const aspectPrefixed = eid.match(/^ASPECT_([A-Z]+)_([A-Z]+)_([A-Z]+)$/);
-  if (aspectPrefixed) {
-    const [, a, b, kind] = aspectPrefixed;
-    return `Aspect ${label(a)} - ${label(b)} (${label(kind)})`;
-  }
-
-  const parts = eid.split("_");
-  return parts
-    .map((p) => {
-      if (p.startsWith("H") && p.length <= 3) return `(M${p.substring(1)})`;
-      if (p.startsWith("ORB")) return "";
-      return label(p);
-    })
-    .filter(Boolean)
-    .join(" ");
-}
-
-type EvidenceCategoryKey =
-  | "angles"
-  | "personal_planets"
-  | "slow_planets"
-  | "dominant_houses"
-  | "major_aspects"
-  | "other"
-
-function _categorizeEvidence(eid: string): EvidenceCategoryKey {
-  if (eid.startsWith("ASPECT_")) {
-    return "major_aspects";
-  }
-  if (/^(ASC|MC|DSC|IC)_/.test(eid) || /(ASC|MC|DSC|IC)/.test(eid)) {
-    return "angles";
-  }
-  if (/^HOUSE_\d{1,2}_IN_/.test(eid) || /_H\d{1,2}$/.test(eid)) {
-    return "dominant_houses";
-  }
-  if (/^(SUN|MOON|MERCURY|VENUS|MARS)(_|$)/.test(eid)) {
-    return "personal_planets";
-  }
-  if (/^(JUPITER|SATURN|URANUS|NEPTUNE|PLUTO)(_|$)/.test(eid)) {
-    return "slow_planets";
-  }
-  return "other";
-}
-
-function EvidenceTags({
-  evidence,
-  title,
-  t,
-}: {
-  evidence: string[]
-  title: string
-  t: InterpretationTranslations
-}) {
-  const [open, setOpen] = useState(evidence.length > 0);
-  useEffect(() => {
-    if (evidence.length > 0) {
-      setOpen(true);
-    }
-  }, [evidence.length]);
-  const categoryLabels: Record<EvidenceCategoryKey, string> = {
-    angles: t.evidenceCategories.angles,
-    personal_planets: t.evidenceCategories.personalPlanets,
-    slow_planets: t.evidenceCategories.slowPlanets,
-    dominant_houses: t.evidenceCategories.dominantHouses,
-    major_aspects: t.evidenceCategories.majorAspects,
-    other: t.evidenceCategories.other,
-  };
-
-  const deduped = Array.from(
-    new Map(
-      evidence.map((eid) => {
-        const humanText = formatEvidenceId(eid);
-        return [humanText.toLowerCase(), { eid, humanText }];
-      }),
-    ).values(),
-  );
-
-  const grouped = deduped.reduce(
-    (acc, item) => {
-      const key = _categorizeEvidence(item.eid);
-      acc[key].push(item);
-      return acc;
-    },
-    {
-      angles: [] as Array<{ eid: string; humanText: string }>,
-      personal_planets: [] as Array<{ eid: string; humanText: string }>,
-      slow_planets: [] as Array<{ eid: string; humanText: string }>,
-      dominant_houses: [] as Array<{ eid: string; humanText: string }>,
-      major_aspects: [] as Array<{ eid: string; humanText: string }>,
-      other: [] as Array<{ eid: string; humanText: string }>,
-    },
-  );
-
-  const orderedKeys: EvidenceCategoryKey[] = [
-    "angles",
-    "personal_planets",
-    "slow_planets",
-    "dominant_houses",
-    "major_aspects",
-    "other",
-  ];
-
-  const totalCount = deduped.length;
-
-  return (
-    <div className="ni-evidence-tags">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="ni-evidence-toggle-btn"
-      >
-        <div>
-          <p className="ni-evidence-tags-title">
-            {title}
-          </p>
-          <p className="ni-evidence-intro">{t.evidenceIntro}</p>
-          <p className="ni-evidence-count">
-            {t.dedupedCount(totalCount)}
-          </p>
-        </div>
-        <span className="ni-evidence-toggle-icon">
-          {open ? t.hideEvidence : t.showEvidence}
-          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </span>
-      </button>
-
-      {open && (
-        <div className="ni-evidence-content">
-          {totalCount === 0 ? (
-            <p className="ni-evidence-empty">{t.evidenceEmpty}</p>
-          ) : null}
-          {orderedKeys.map((key) => {
-            const items = grouped[key];
-            if (items.length === 0) return null;
-            return (
-              <div key={key}>
-                <p className="ni-evidence-category-label">{categoryLabels[key]}</p>
-                <div className="evidence-tags__list">
-                  {items.map((item, i) => {
-                    const isAspect = item.eid.startsWith("ASPECT_");
-                    const isAngle = ["ASC", "MC", "DSC", "IC"].some((a) =>
-                      item.eid.includes(a),
-                    );
-                    const modifier = isAspect ? "aspect" : isAngle ? "angle" : "planet";
-                    return (
-                      <span
-                        key={`${item.eid}-${i}`}
-                        title={item.eid}
-                        className={`evidence-pill evidence-pill--${modifier}`}
-                      >
-                        <span className="evidence-pill__dot" />
-                        {item.humanText}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PersonaSelector({
-  t,
-  onConfirm,
-  onCancel,
-  isSubmitting,
-  excludedPersonaIds,
-}: {
-  t: InterpretationTranslations,
-  onConfirm: (id: string) => void,
-  onCancel: () => void,
-  isSubmitting?: boolean,
-  excludedPersonaIds?: Set<string>,
-}) {
-  const { data: astrologers, isLoading, isError, refetch } = useAstrologers();
-  const availableAstrologers = (astrologers ?? []).filter(
-    (astrologer) => !excludedPersonaIds?.has(astrologer.id),
-  );
-
-  return (
-    <div
-      className="modal-overlay"
-      onClick={onCancel}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="persona-selector-title"
-    >
-      <div
-        className="modal-content natal-interpretation__fullscreen-modal"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h4 className="modal-title" id="persona-selector-title">
-          {t.personaSelectorTitle}
-        </h4>
-
-        <div className="ni-persona-selector__body">
-          {isLoading ? (
-            <div className="ni-loader-container">
-              <RefreshCw size={32} className="ni-loader-spin" />
-            </div>
-          ) : isError ? (
-            <div className="ni-modal-error">
-              <div className="ni-modal-error-icon">
-                <AlertCircle size={24} />
-              </div>
-              <p className="ni-modal-error-text">{t.error}</p>
-              <Button variant="secondary" onClick={() => refetch()}>{t.retry}</Button>
-            </div>
-          ) : availableAstrologers.length > 0 ? (
-            <AstrologerGrid
-              astrologers={availableAstrologers}
-              onSelectAstrologer={(astrologer: Astrologer) => {
-                if (isSubmitting) return;
-                onConfirm(astrologer.id);
-              }}
-            />
-          ) : (
-            <p className="ni-modal-empty-text">
-              {t.allAstrologersUsed}
-            </p>
-          )}
-        </div>
-
-        <div className="modal-actions">
-          <button onClick={onCancel} disabled={isSubmitting} className="ni-modal-cancel-btn">
-            {t.cancel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  )
 }

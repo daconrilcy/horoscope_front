@@ -1,5 +1,4 @@
-// @ts-nocheck
-import React from 'react';
+// Tests du formulaire generique et de ses champs connectes.
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { z } from 'zod';

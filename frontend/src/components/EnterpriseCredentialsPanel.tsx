@@ -1,11 +1,17 @@
-// @ts-nocheck
-import React from "react"
+// Panneau admin pour gerer les credentials API entreprise.
 import { useTranslation } from "../i18n"
 import {
+  type EnterpriseCredentialsApiError,
+  type EnterpriseCredentialMetadata,
   useB2BCredentials,
   useGenerateB2BCredential,
   useRotateB2BCredential,
 } from "../api/enterpriseCredentials"
+
+type EnterpriseCredentialView = EnterpriseCredentialMetadata & {
+  scope?: string
+  is_active?: boolean
+}
 
 export function EnterpriseCredentialsPanel() {
   const t = useTranslation("admin").b2b.credentials
@@ -13,8 +19,8 @@ export function EnterpriseCredentialsPanel() {
   const generateCredential = useGenerateB2BCredential()
   const rotateCredential = useRotateB2BCredential()
 
-  const generateError = generateCredential.error as Error | null
-  const rotateError = rotateCredential.error as Error | null
+  const generateError = generateCredential.error as EnterpriseCredentialsApiError | null
+  const rotateError = rotateCredential.error as EnterpriseCredentialsApiError | null
 
   return (
     <section className="panel">
@@ -34,11 +40,11 @@ export function EnterpriseCredentialsPanel() {
           </div>
 
           <div className="credentials-list">
-            {credentials.data.credentials.map((cred) => (
+            {credentials.data.credentials.map((cred: EnterpriseCredentialView) => (
               <div key={cred.credential_id} className="credential-card mb-4 p-4 border rounded">
                 <h3>{t.keyTitle(cred.key_prefix)}</h3>
                 <p>
-                  Scope: {cred.scope} | Status: {cred.is_active ? "active" : "inactive"}
+                  Scope: {cred.scope ?? "full"} | Status: {(cred.is_active ?? cred.status === "active") ? "active" : "inactive"}
                 </p>
                 <p>{t.createdDate(new Date(cred.created_at).toLocaleDateString())}</p>
                 
@@ -46,7 +52,7 @@ export function EnterpriseCredentialsPanel() {
                   type="button"
                   className="btn btn-secondary mt-2"
                   disabled={rotateCredential.isPending}
-                  onClick={() => rotateCredential.mutate(cred.credential_id)}
+                  onClick={() => rotateCredential.mutate()}
                 >
                   {t.rotateLabel}
                 </button>
@@ -58,7 +64,7 @@ export function EnterpriseCredentialsPanel() {
             type="button"
             className="btn btn-primary mt-4"
             disabled={generateCredential.isPending}
-            onClick={() => generateCredential.mutate({ scope: "full" })}
+            onClick={() => generateCredential.mutate()}
           >
             {t.generateLabel}
           </button>

@@ -10,7 +10,7 @@ interface FormFieldBaseProps {
 
 type FormFieldProps = FormFieldBaseProps & (
   | ({ as?: 'input' } & FieldProps)
-  | ({ as: 'select' } & SelectProps)
+  | ({ as: 'select' } & Omit<SelectProps, 'value' | 'onChange'>)
 );
 
 /**

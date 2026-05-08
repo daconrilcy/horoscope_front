@@ -1,6 +1,6 @@
-// @ts-nocheck
-import React, { createContext, useContext } from 'react';
-import { useForm, type UseFormReturn, type FieldValues, type SubmitHandler } from 'react-hook-form';
+// Composant de formulaire generique reliant Zod et react-hook-form.
+import { createContext, useContext, type ReactNode } from 'react';
+import { useForm, type DefaultValues, type UseFormReturn, type FieldValues, type Resolver, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import './Form.css';
@@ -17,23 +17,24 @@ import './Form.css';
  * Usage : <Form schema={createLoginSchema(t)} onSubmit={...}>
  */
 
-interface FormProps<TSchema extends z.ZodType<any, any, any>> {
-  schema: TSchema;
-  onSubmit: SubmitHandler<z.infer<TSchema>>;
+interface FormProps<TFieldValues extends FieldValues> {
+  /** Schema Zod qui valide les valeurs manipulees par le formulaire. */
+  schema: z.ZodType<TFieldValues>;
+  onSubmit: SubmitHandler<TFieldValues>;
   loading?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   id?: string;
   /** Initial values for the form fields */
-  defaultValues?: any;
+  defaultValues?: DefaultValues<TFieldValues>;
 }
 
-const FormContext = createContext<UseFormReturn<any> | null>(null);
+const FormContext = createContext<UseFormReturn<FieldValues> | null>(null);
 
 /**
  * Hook pour accéder aux méthodes de react-hook-form dans les composants enfants
  */
-export function useFormContext<TFieldValues extends FieldValues = FieldValues>() {
+export function useFormContext<TFieldValues extends FieldValues = FieldValues>(): UseFormReturn<TFieldValues> {
   const ctx = useContext(FormContext);
   if (!ctx) {
     throw new Error('useFormContext must be used inside a <Form> component');
@@ -44,7 +45,7 @@ export function useFormContext<TFieldValues extends FieldValues = FieldValues>()
 /**
  * Composant Form générique intégrant react-hook-form et zod
  */
-export function Form<TSchema extends z.ZodType<any, any, any>>({
+export function Form<TFieldValues extends FieldValues>({
   schema,
   onSubmit,
   loading = false,
@@ -52,15 +53,16 @@ export function Form<TSchema extends z.ZodType<any, any, any>>({
   className,
   id,
   defaultValues,
-}: FormProps<TSchema>) {
-  const methods = useForm<z.infer<TSchema>>({
-    resolver: zodResolver(schema),
+}: FormProps<TFieldValues>) {
+  const resolverSchema = schema as unknown as Parameters<typeof zodResolver>[0];
+  const methods = useForm<TFieldValues>({
+    resolver: zodResolver(resolverSchema) as Resolver<TFieldValues>,
     defaultValues,
     mode: 'onTouched',
   });
 
   return (
-    <FormContext.Provider value={methods}>
+    <FormContext.Provider value={methods as unknown as UseFormReturn<FieldValues>}>
       <form
         id={id}
         onSubmit={methods.handleSubmit(onSubmit)}

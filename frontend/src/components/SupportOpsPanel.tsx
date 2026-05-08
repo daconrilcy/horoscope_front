@@ -1,14 +1,29 @@
-// @ts-nocheck
+// Panneau admin pour rechercher un utilisateur support et declencher les actions ops.
 import { useState } from "react"
 
-import { useOpsSearchUser, useOpsRollbackPersona } from "@api"
+import { type SupportUserContext, useOpsSearchUser, useOpsRollbackPersona } from "@api"
 import { useTranslation } from "../i18n"
+
+type PrivacyRequestView = SupportUserContext["privacy_requests"][number] & {
+  type?: string
+  created_at?: string
+}
+
+type AuditEventView = SupportUserContext["audit_events"][number] & {
+  timestamp?: string
+}
+
+type SupportUserContextView = SupportUserContext & {
+  audit_log?: AuditEventView[]
+}
 
 export function SupportOpsPanel() {
   const t = useTranslation("admin").b2b.support
   const [targetEmail, setTargetUser] = useState("")
   const supportContext = useOpsSearchUser(targetEmail)
   const rollbackPersona = useOpsRollbackPersona()
+  const supportData = supportContext.data as SupportUserContextView | undefined
+  const auditEvents = supportData?.audit_events ?? supportData?.audit_log ?? []
 
   return (
     <section className="panel">
@@ -32,25 +47,25 @@ export function SupportOpsPanel() {
         </button>
       </div>
 
-      {supportContext.data && (
+      {supportData && (
         <div className="support-results mt-6">
-          <p className="state-line">{t.privacyRequests(supportContext.data.privacy_requests.length)}</p>
+          <p className="state-line">{t.privacyRequests(supportData.privacy_requests.length)}</p>
           <ul className="chat-list compact-list">
-            {supportContext.data.privacy_requests.map((req: any) => (
+            {supportData.privacy_requests.map((req: PrivacyRequestView) => (
               <li key={req.request_id} className="chat-item">
-                {req.type} - {req.status} ({new Date(req.created_at).toLocaleDateString()})
+                {req.type ?? req.request_kind} - {req.status} ({new Date(req.created_at ?? req.requested_at).toLocaleDateString()})
               </li>
             ))}
           </ul>
-          {supportContext.data.privacy_requests.length === 0 && (
+          {supportData.privacy_requests.length === 0 && (
             <p className="state-line state-empty">{t.noPrivacyRequests}</p>
           )}
 
           <h3>{t.recentAuditTitle}</h3>
           <ul className="chat-list compact-list">
-            {supportContext.data.audit_log.map((entry: any) => (
+            {auditEvents.map((entry: AuditEventView) => (
               <li key={entry.event_id} className="chat-item">
-                {entry.action} - {new Date(entry.timestamp).toLocaleString()}
+                {entry.action} - {new Date(entry.timestamp ?? entry.created_at).toLocaleString()}
               </li>
             ))}
           </ul>
