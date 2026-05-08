@@ -2,7 +2,7 @@
 import { createWriteStream, mkdirSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { spawn } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url))
 const frontendRoot = resolve(scriptDirectory, "..")
@@ -19,6 +19,35 @@ mkdirSync(logDirectory, { recursive: true })
 const stdoutLog = createWriteStream(join(logDirectory, `${logName}.log`), { flags: "w" })
 const stderrLog = createWriteStream(join(logDirectory, `${logName}.err.log`), { flags: "w" })
 const executable = join(frontendRoot, "node_modules", ".bin", `${tool}.cmd`)
+let isClosing = false
+let logsClosed = false
+
+function closeLogs() {
+  if (logsClosed) {
+    return
+  }
+
+  logsClosed = true
+  stdoutLog.end()
+  stderrLog.end()
+}
+
+function killProcessTree(pid) {
+  if (!pid) {
+    return
+  }
+
+  if (process.platform === "win32") {
+    spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], { stdio: "ignore" })
+    return
+  }
+
+  try {
+    process.kill(pid, "SIGTERM")
+  } catch {
+    // Le processus enfant peut deja etre termine au moment du nettoyage.
+  }
+}
 
 // Relaye les flux vers le terminal tout en conservant une copie fichier unique.
 const child = spawn(executable, toolArgs, {
@@ -44,7 +73,21 @@ child.on("error", (error) => {
 })
 
 child.on("close", (code) => {
-  stdoutLog.end()
-  stderrLog.end()
+  closeLogs()
   process.exit(code ?? 1)
 })
+
+function shutdown(signal) {
+  if (isClosing) {
+    return
+  }
+
+  isClosing = true
+  killProcessTree(child.pid)
+  closeLogs()
+  process.exit(signal === "SIGINT" ? 130 : 143)
+}
+
+process.on("SIGINT", shutdown)
+process.on("SIGTERM", shutdown)
+process.on("SIGHUP", shutdown)

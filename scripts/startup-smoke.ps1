@@ -35,6 +35,29 @@ function Wait-HttpReady {
   throw "$Label did not become ready before timeout (${TimeoutSeconds}s)."
 }
 
+function Stop-ProcessTree {
+  param(
+    [Parameter(Mandatory = $false)]
+    [System.Diagnostics.Process]$Process
+  )
+
+  if ($null -eq $Process) {
+    return
+  }
+
+  if ($Process.HasExited) {
+    return
+  }
+
+  # Stoppe aussi les enfants npm/cmd/node afin d'eviter des serveurs Vite orphelins.
+  $children = Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $Process.Id }
+  foreach ($child in $children) {
+    Stop-ProcessTree -Process (Get-Process -Id $child.ProcessId -ErrorAction SilentlyContinue)
+  }
+
+  Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue
+}
+
 try {
   $shellExecutable = Get-ShellExecutable
   $backendCmd = ".\.venv\Scripts\Activate.ps1; Set-Location backend; python -m uvicorn app.main:app --host 127.0.0.1 --port 8001"
@@ -57,6 +80,6 @@ try {
 
   Write-Output "startup_smoke_ok"
 } finally {
-  if ($frontendProcess -and !$frontendProcess.HasExited) { Stop-Process -Id $frontendProcess.Id -Force }
-  if ($backendProcess -and !$backendProcess.HasExited) { Stop-Process -Id $backendProcess.Id -Force }
+  if ($frontendProcess) { Stop-ProcessTree -Process $frontendProcess }
+  if ($backendProcess) { Stop-ProcessTree -Process $backendProcess }
 }
