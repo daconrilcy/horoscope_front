@@ -436,7 +436,7 @@
   /* === LAYOUT === */
   --layout-page-max-width: 900px;
   --layout-page-padding: var(--space-6);
-  --layout-sidebar-width: 220px;
+  --layout-sidebar-width: 320px;
   --layout-admin-max-width: 1680px;
   --layout-admin-gutter: clamp(var(--space-4), 2vw, var(--space-8));
 

@@ -1,3 +1,4 @@
+// Gardes statiques du design-system et des primitives CSS actives.
 import { describe, expect, it } from "vitest"
 import {
   collectCssFallbacks,
@@ -107,6 +108,14 @@ type CssDeclaration = {
   value: string
 }
 
+type CssSyntaxIssue = {
+  file: string
+  selector: string
+  property: string
+  value: string
+  issue: string
+}
+
 function findSelectorBeforeBrace(css: string, braceIndex: number): string {
   let cursor = braceIndex - 1
   while (cursor >= 0 && /\s/.test(css[cursor])) {
@@ -201,6 +210,69 @@ function collectCssDeclarations(css: string): CssDeclaration[] {
   }
 
   return declarations
+}
+
+function validateCssValueDelimiters(value: string): string | null {
+  const stack: string[] = []
+  const pairs: Record<string, string> = {
+    "(": ")",
+    "[": "]",
+  }
+  let quote: string | null = null
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index]
+    if (quote !== null) {
+      if (char === "\\") {
+        index += 1
+        continue
+      }
+      if (char === quote) {
+        quote = null
+      }
+      continue
+    }
+
+    if (char === "\"" || char === "'") {
+      quote = char
+      continue
+    }
+    if (char in pairs) {
+      stack.push(pairs[char])
+      continue
+    }
+    if (char === ")" || char === "]") {
+      const expected = stack.pop()
+      if (expected !== char) {
+        return `unexpected ${char}`
+      }
+    }
+  }
+
+  if (quote !== null) {
+    return "unterminated string"
+  }
+
+  const expected = stack.pop()
+  return expected === undefined ? null : `missing ${expected}`
+}
+
+function collectCssSyntaxIssues(files: string[]): CssSyntaxIssue[] {
+  return files.flatMap((file) =>
+    collectCssDeclarations(readFrontendFile(file)).flatMap((declaration) => {
+      const issue = validateCssValueDelimiters(declaration.value)
+
+      return issue === null
+        ? []
+        : [{
+            file,
+            selector: declaration.selector,
+            property: declaration.property,
+            value: declaration.value,
+            issue,
+          }]
+    }),
+  )
 }
 
 function isForbiddenAppLiteralDeclaration(declaration: CssDeclaration): boolean {
@@ -812,6 +884,14 @@ describe("design-system guards", () => {
 
     expect(collectInlineStyles().filter((entry) => !allowedInline.has(toStableJson(entry)))).toEqual([])
     expect(collectCssFallbacks().filter((entry) => !allowedFallbacks.has(toStableJson(entry)))).toEqual([])
+  })
+
+  it("valide la syntaxe des declarations CSS actives des layouts", () => {
+    const layoutCssFiles = listFiles("layouts", ".css")
+    const syntaxIssues = collectCssSyntaxIssues(layoutCssFiles)
+
+    expect(syntaxIssues).toEqual([])
+    expect(layoutCssFiles).toContain("layouts/PageLayout.css")
   })
 
   it("bloque la reintroduction locale des literals HelpPage migres par CS-073", () => {

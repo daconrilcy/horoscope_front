@@ -1,3 +1,4 @@
+// Tests de politique frontend limitant les styles inline aux exceptions exactes.
 import { describe, expect, it } from "vitest"
 import {
   collectInlineStyles,
@@ -10,7 +11,6 @@ import { INLINE_STYLE_DYNAMIC_ALLOWLIST, INLINE_STYLE_EXCEPTIONS } from "./inlin
 // Garde les styles statiques dans les fichiers CSS et limite les exceptions dynamiques.
 describe("inline-style policy", () => {
   function toDynamicAllowlistEntry(entry: { file: string; style: string }): string {
-    if (entry.style.includes("--sidebar-width")) return `frontend/src/${entry.file}::--sidebar-width`
     if (entry.style.includes("--period-accent")) return `frontend/src/${entry.file}::--period-accent`
     if (entry.style.includes("--skeleton-gap") || entry.style.includes("groupStyle")) {
       return `frontend/src/${entry.file}::--skeleton-gap`

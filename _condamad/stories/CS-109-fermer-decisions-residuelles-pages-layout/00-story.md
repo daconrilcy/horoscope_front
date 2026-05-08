@@ -1,6 +1,6 @@
 # Story CS-109 fermer-decisions-residuelles-pages-layout: Fermer les decisions residuelles de pages layout
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -296,31 +296,31 @@ After implementation:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Capture closure baseline. (AC: AC4, AC5)
-  - [ ] Create `closure-before.md` with current audit/story contradictions and route/page inventory.
-  - [ ] Include exact references to review findings 1, 2 and 3.
+- [x] Task 1 - Capture closure baseline. (AC: AC4, AC5)
+  - [x] Create `closure-before.md` with current audit/story contradictions and route/page inventory.
+  - [x] Include exact references to review findings 1, 2 and 3.
 
-- [ ] Task 2 - Apply or verify user decisions in runtime code. (AC: AC1, AC2, AC3)
-  - [ ] Ensure `/privacy` routes `PrivacyPolicyPage` under `LandingLayout`.
-  - [ ] Ensure `/billing/success` and `/billing/cancel` route billing pages under `AppLayout`.
-  - [ ] Ensure `HomePage.tsx` is deleted and not re-exported.
-  - [ ] Ensure `TestimonialsSection` is imported and rendered by `LandingPage`.
+- [x] Task 2 - Apply or verify user decisions in runtime code. (AC: AC1, AC2, AC3)
+  - [x] Ensure `/privacy` routes `PrivacyPolicyPage` under `LandingLayout`.
+  - [x] Ensure `/billing/success` and `/billing/cancel` route billing pages under `AppLayout`.
+  - [x] Ensure `HomePage.tsx` is deleted and not re-exported.
+  - [x] Ensure `TestimonialsSection` is imported and rendered by `LandingPage`.
 
-- [ ] Task 3 - Align executable page ownership and guards. (AC: AC1, AC2, AC3, AC6)
-  - [ ] Update `PAGE_LAYOUT_OWNER_CLASSIFICATIONS` for the three routed pages and testimonials.
-  - [ ] Remove the `HomePage` classification row.
-  - [ ] Keep or strengthen guards so zero blocked/dead entries is allowed, but reintroduction still fails.
+- [x] Task 3 - Align executable page ownership and guards. (AC: AC1, AC2, AC3, AC6)
+  - [x] Update `PAGE_LAYOUT_OWNER_CLASSIFICATIONS` for the three routed pages and testimonials.
+  - [x] Remove the `HomePage` classification row.
+  - [x] Keep or strengthen guards so zero blocked/dead entries is allowed, but reintroduction still fails.
 
-- [ ] Task 4 - Close stale governance artifacts. (AC: AC4, AC5)
-  - [ ] Update audit `2026-05-08-1914` so `F-201` is closed or superseded by CS-109, not active blocked work.
-  - [ ] Rewrite CS-108 final evidence sections that currently contradict the new state, or move old statements into historical baseline notes.
-  - [ ] Update CS-107 after inventory and CS-108 decision artifact to match runtime and allowlist.
+- [x] Task 4 - Close stale governance artifacts. (AC: AC4, AC5)
+  - [x] Update audit `2026-05-08-1914` so `F-201` is closed or superseded by CS-109, not active blocked work.
+  - [x] Rewrite CS-108 final evidence sections that currently contradict the new state, or move old statements into historical baseline notes.
+  - [x] Update CS-107 after inventory and CS-108 decision artifact to match runtime and allowlist.
 
-- [ ] Task 5 - Add or update tests and final evidence. (AC: AC1, AC2, AC3, AC5, AC6)
-  - [ ] Add route/render coverage for `/privacy`.
-  - [ ] Add billing cancel coverage if absent.
-  - [ ] Write `closure-after.md` and `generated/10-final-evidence.md`.
-  - [ ] Run all validation commands and record outcomes.
+- [x] Task 5 - Add or update tests and final evidence. (AC: AC1, AC2, AC3, AC5, AC6)
+  - [x] Add route/render coverage for `/privacy`.
+  - [x] Add billing cancel coverage if absent.
+  - [x] Write `closure-after.md` and `generated/10-final-evidence.md`.
+  - [x] Run all validation commands and record outcomes.
 
 ## 9. Mandatory Reuse / DRY Constraints
 

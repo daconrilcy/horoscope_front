@@ -38,7 +38,6 @@ sourcee dans ce registre.
 | `--astro-*` | semantic-extension | `frontend/src/App.css` | astrologer card local visual roles | permanent component-scoped semantic layer |
 | `--app-*` | semantic-extension | `frontend/src/App.css` | app shell, catalogue, dashboard summary, App-owned visual and typography roles with stable semantic names | permanent app-scoped semantic layer; mechanical repeated selector names are blocked by CS-087 guard |
 | `--usage-*` | dynamic | `frontend/src/pages/settings/Settings.css` | runtime progress value | permanent custom property bridge |
-| `--sidebar-width` | dynamic | layout components | runtime layout value | permanent custom property bridge |
 | `--period-accent` | dynamic | prediction timeline components | runtime accent value | permanent custom property bridge |
 | `--landing-*` | semantic-extension | `frontend/src/layouts/LandingLayout.css` | landing visual and typography semantic owners consumed by landing sections | permanent landing-scoped semantic layer |
 | `--help-*` | semantic-extension | `frontend/src/pages/HelpPage.css` | help page visual roles | permanent page-scoped semantic layer |

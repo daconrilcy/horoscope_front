@@ -1,3 +1,4 @@
+/* Styles de la page de chat et de son layout responsive. */
 /* Prevent body-level horizontal scroll on chat page */
 body:has(.is-chat-page) {
   overflow-x: hidden;
@@ -173,10 +174,10 @@ body:has(.is-chat-page) {
 }
 
 .chat-page-container .chat-layout__body {
-  --sidebar-width: 320px;
+  --chat-sidebar-width: 320px;
 
   display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-columns: var(--chat-sidebar-width) minmax(0, 1fr);
   flex: 1;
   min-height: 0;
   width: 100%;

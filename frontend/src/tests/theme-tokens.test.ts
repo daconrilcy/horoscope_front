@@ -1,3 +1,4 @@
+// Tests de gouvernance des tokens CSS frontend.
 import { describe, it, expect } from "vitest"
 import fs from "fs"
 import path from "path"
@@ -266,6 +267,12 @@ describe("AC#2 — Valeurs exactes des tokens critiques (story 17-10)", () => {
 })
 
 describe("Story 70-11 — tokens admin largeur et contraste", () => {
+  it("preserve la largeur par defaut du layout deux colonnes", () => {
+    const layoutSidebarWidth = getTokenValue(themeContent, ":root", "--layout-sidebar-width")
+
+    expect(layoutSidebarWidth).toBe("320px")
+  })
+
   it("declare une largeur shell admin dediee dans :root", () => {
     const adminWidth = getTokenValue(themeContent, ":root", "--layout-admin-max-width")
     const adminGutter = getTokenValue(themeContent, ":root", "--layout-admin-gutter")

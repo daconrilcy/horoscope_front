@@ -19,10 +19,6 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
   {
     "file": "components/ui/Skeleton/Skeleton.tsx",
     "style": "style={groupStyle}"
-  },
-  {
-    "file": "layouts/TwoColumnLayout.tsx",
-    "style": "style={{ '--sidebar-width': sidebarWidth }"
   }
 ] as const
 

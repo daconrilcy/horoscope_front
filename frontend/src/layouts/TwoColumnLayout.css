@@ -1,6 +1,8 @@
+/* Styles de la primitive layout deux colonnes, sans ecriture inline runtime. */
+
 .two-col-layout {
   display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-columns: var(--layout-sidebar-width) minmax(0, 1fr);
   height: 100%;
   width: 100%;
   overflow: hidden;
