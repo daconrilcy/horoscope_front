@@ -1,6 +1,47 @@
 # Evidence Profiles
 
-Evidence profiles define acceptable proof for audit findings. Each evidence entry should include command/source, inspected path, result, and limitation when relevant.
+Evidence profiles define acceptable proof for audit findings. Each evidence entry should include command/source, repository-relative inspected path, inspected symbol or surface, result, and limitation when relevant.
+
+## Evidence clarity rules
+
+- Prefer commands and source references that another auditor can rerun or reopen.
+- State whether the evidence proves presence, absence, classification, closure,
+  or limitation.
+- For negative scans, include the exact searched target, excluded paths, and
+  why those exclusions are valid for the audited domain.
+- For source inspection, include the file path and the symbol, route, export,
+  selector, setting, or contract being inspected.
+- For runtime evidence, include the command, environment assumption, observed
+  output, and any skipped runtime path.
+- Do not use vague notes such as "looks unused", "seems covered", "probably
+  legacy", or "no issue found" without the concrete proof that supports the
+  conclusion.
+
+## Evidence profile: file_usage_classification
+
+Required evidence:
+
+- complete audited file or surface inventory;
+- inbound usage scan or structural owner evidence for each classified item;
+- export, route, configuration, migration, packaging, or framework registration
+  evidence when relevant;
+- test ownership evidence for `test-only` classifications;
+- explicit negative usage scan plus non-public-export proof for
+  `delete-candidate` classifications;
+- blocker or decision statement for `needs-user-decision` classifications.
+
+Valid classification values:
+
+- `used`: directly used by application, configuration, runtime registration, or
+  tests relevant to the audited domain;
+- `intentional-public-export`: intentionally exposed even if no in-repository
+  inbound usage exists;
+- `test-only`: exists only to support tests, fixtures, guards, or audit tooling;
+- `delete-candidate`: appears removable under current evidence and has a known
+  canonical replacement or no remaining owner;
+- `needs-user-decision`: repository evidence cannot determine whether to keep,
+  expose, rewrite, or remove it;
+- `out-of-domain`: inspected only to bound the audit and belongs elsewhere.
 
 ## Evidence profile: repo_wide_negative_scan
 

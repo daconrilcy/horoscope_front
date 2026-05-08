@@ -33,6 +33,13 @@
 - Story candidates must reference existing findings whose `Story candidate` value is `yes`.
 - Risk matrix rows must reference known findings, and every finding must appear in the risk matrix.
 - Evidence log must contain at least one command/source or an explicit limitation.
+- Evidence entries must be specific enough to reproduce: command/source,
+  repository-relative inspected path, inspected symbol/surface when applicable,
+  result, and limitation when relevant.
+- Negative evidence must state the searched target and exclusions.
+- Every file or bounded surface in the audited inventory must appear in a file
+  usage classification section unless the report states that no file-level
+  inventory applies to the selected domain.
 
 ## Closure Status
 
@@ -52,3 +59,27 @@ when no application or governance/test file remains.
 
 Residual concerns outside the audited domain must be placed in a separate
 deferred non-domain section and must not keep the audited domain open.
+
+## File Usage Classification
+
+`00-audit-report.md` must include a `File Usage Classification` section for
+audits that inspect files, exports, routes, components, services, test helpers,
+or other concrete repository surfaces.
+
+Use a table with these columns:
+
+| Surface | Classification | Evidence | Rationale | Limitation |
+|---|---|---|---|---|
+
+Rules:
+
+- `Surface` must be a repository-relative file path, optionally followed by a
+  symbol, export, route, selector, or contract name.
+- `Classification` must be one of `used`, `intentional-public-export`,
+  `test-only`, `delete-candidate`, `needs-user-decision`, or `out-of-domain`.
+- `Evidence` must reference existing `E-xxx` IDs.
+- `delete-candidate` rows must include negative usage evidence and a rationale
+  proving the surface is not an intentional public export or test-only owner.
+- `intentional-public-export` rows must name the public contract, entrypoint,
+  registration, or convention that makes the export intentional.
+- `needs-user-decision` rows must state the concrete decision required.

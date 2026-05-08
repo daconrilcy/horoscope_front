@@ -51,6 +51,7 @@ current files, guards, tests, or scans when feasible.
 Define:
 
 - files to inspect;
+- file/export/surface inventory to classify;
 - commands to run;
 - runtime evidence if applicable;
 - static scans;
@@ -58,6 +59,9 @@ Define:
 - No Legacy scans;
 - security or policy checks for auth and entitlement.
 - closure evidence needed to prove whether each prior finding is fully closed.
+- evidence required to classify each audited surface as `used`,
+  `intentional-public-export`, `test-only`, `delete-candidate`,
+  `needs-user-decision`, or `out-of-domain`.
 
 ## Step 4 - Execute Read-Only Evidence Collection
 
@@ -107,6 +111,31 @@ For every implementation finding, also decide whether it is:
 Avoid vague follow-up language such as "next cluster" unless the complete
 remaining cluster map and finish line are documented in the same audit.
 
+## Step 5a - Classify File And Surface Usage
+
+For every audited file, export, route, component, service, test helper, or
+bounded surface, assign exactly one classification:
+
+- `used`: current application, configuration, runtime registration, or
+  in-domain tests use it;
+- `intentional-public-export`: kept as a deliberate public API even if no
+  in-repository inbound usage exists;
+- `test-only`: owned by tests, fixtures, guards, or audit tooling;
+- `delete-candidate`: no current owner remains and deletion can be proposed
+  with a canonical replacement or explicit no-owner rationale;
+- `needs-user-decision`: repository evidence cannot decide keep/remove/export;
+- `out-of-domain`: inspected only to bound the audit.
+
+Classification evidence rules:
+
+- Use direct evidence IDs, not prose-only conclusions.
+- Pair negative usage scans with ownership checks before using
+  `delete-candidate`.
+- Treat ambiguous public exports as `needs-user-decision` unless source-backed
+  public intent exists.
+- Keep test-only files separate from application files in closure and story
+  candidate surfaces.
+
 ## Step 6 - Generate Reports
 
 Create:
@@ -122,6 +151,7 @@ The report set must include:
 
 - a domain closure status;
 - prior audit/story history consulted;
+- file usage classification for every audited file or surface;
 - exhaustive files or surfaces to modify for every active implementation
   finding;
 - explicit "none" entries when no application or governance file remains;

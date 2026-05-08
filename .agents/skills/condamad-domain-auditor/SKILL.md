@@ -32,8 +32,15 @@ This skill does not fix code. It does not refactor. It does not generate final i
 - Every finding must include evidence.
 - Every High or Critical finding must include a recommended action or `needs-user-decision`.
 - Every story candidate must map to at least one finding.
+- Every audited file or surface must be classified with an explicit ownership
+  verdict: `used`, `intentional-public-export`, `test-only`, `delete-candidate`,
+  `needs-user-decision`, or `out-of-domain`.
 - DRY, No Legacy, mono-domain, and dependency direction are mandatory audit dimensions.
 - Static scans are supporting evidence; runtime or structural evidence must be used when available.
+- Evidence must be reproducible and unambiguous: record the command or source,
+  repository-relative path, inspected symbol/surface, positive or negative
+  result, and any limitation. Do not use evidence wording that cannot be
+  independently checked.
 - Ensure `_condamad/stories/regression-guardrails.md` exists, read it before
   producing findings, and map relevant existing invariants to story candidates.
 - Before emitting new findings or story candidates, inspect the latest audits
@@ -98,6 +105,34 @@ domain:
 - explicit separation between implementation files, governance/test files, and
   deferred non-domain concerns.
 
+Every audit report must include a "File Usage Classification" section for the
+audited domain. For each file, export, route, component, service, test helper,
+or other bounded surface that is part of the audit inventory, record:
+
+- repository-relative path and optional symbol/export/route name;
+- classification value: `used`, `intentional-public-export`, `test-only`,
+  `delete-candidate`, `needs-user-decision`, or `out-of-domain`;
+- direct evidence IDs proving the classification;
+- inbound usage evidence or explicit negative scan evidence;
+- public API/export rationale when classified as `intentional-public-export`;
+- owning test or fixture rationale when classified as `test-only`;
+- canonical replacement, deletion blocker, or required decision when classified
+  as `delete-candidate` or `needs-user-decision`;
+- limitation when the classification is not fully provable from the repository.
+
+Do not recommend deletion only because a static scan has no hits. A
+`delete-candidate` classification requires at least one negative usage scan plus
+evidence that the surface is not an intentional public export, not test-only,
+and not required by configuration, routing, reflection, packaging, migrations,
+or external contract.
+
+When a public export appears unused inside the repository, classify it as
+`intentional-public-export` only if there is source-backed evidence of that
+intent, such as package entrypoints, API contracts, documented integration
+surfaces, framework registration, generated contract usage, or an explicit
+project convention. Otherwise classify it as `needs-user-decision`, not as dead
+code.
+
 Every story candidate for a remediation finding must include:
 
 - source finding ID and whether the candidate is intended to close the finding
@@ -110,6 +145,9 @@ Every story candidate for a remediation finding must include:
 - validation commands and targeted scans;
 - blocker conditions that require stopping instead of emitting another
   follow-up candidate.
+- file/surface classification changes expected after implementation, including
+  before/after evidence required for every file moving to `delete-candidate` or
+  out of the audited surface.
 
 For design-system, frontend architecture, No Legacy, CSS fallback, inline-style,
 or token ownership audits, broad residual categories must be converted into a
