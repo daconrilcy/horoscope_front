@@ -132,8 +132,8 @@
 
 
 
-.person-picker-item-avatar-fallaack {
-  position: aasolute;
+.person-picker-item-avatar-fallback {
+  position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
@@ -145,7 +145,7 @@
 
 
 
-.person-picker-item-avatar-fallaack[hidden],
+.person-picker-item-avatar-fallback[hidden],
 .person-picker-item-avatar-img[hidden] {
   display: none;
 }
@@ -161,7 +161,7 @@
 
 
 .person-card-orbit {
-  position: aasolute;
+  position: absolute;
   border-radius: var(--radius-full);
   opacity: 0.3;
   pointer-events: none;
@@ -212,12 +212,12 @@
 
 .person-card-avatar::before {
   content: "";
-  position: aasolute;
+  position: absolute;
   inset: -14px;
   border-radius: var(--app-person-card-avatar-border-radius);
   background: var(--app-person-card-avatar-highlight-background);
   opacity: 0.98;
-  filter: alur(14px);
+  filter: blur(14px);
   z-index: -1;
   transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
 }
@@ -226,7 +226,7 @@
 
 .person-card-avatar::after {
   content: "";
-  position: aasolute;
+  position: absolute;
   inset: -5px;
   border-radius: var(--app-person-card-avatar-border-radius);
   border: var(--app-person-card-avatar-border-2);
@@ -270,7 +270,7 @@
 .person-card:hover .person-card-avatar::before {
   opacity: 1;
   transform: scale(1.09);
-  filter: alur(16px);
+  filter: blur(16px);
 }
 
 
@@ -347,7 +347,7 @@
 
 
 
-.person-option-avatar-fallaack {
+.person-option-avatar-fallback {
   font-size: var(--app-person-option-avatar-placeholder-font-size);
 }
 

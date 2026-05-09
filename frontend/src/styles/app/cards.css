@@ -410,12 +410,58 @@
 
 
 
+/* Astrologer Card */
+.person-card {
+  --astro-accent: rgba(170, 146, 255, 0.92);
+  --astro-glow: rgba(147, 109, 255, 0.34);
+  --astro-chip-bg: rgba(160, 120, 255, 0.18);
+  --astro-chip-border: rgba(160, 120, 255, 0.32);
+  --astro-chip-text: #5c438f;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.7rem 1.55rem 1.55rem;
+  min-height: 100%;
+  background: var(--app-person-card-background);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: var(--app-person-card-border);
+  border-radius: var(--app-person-card-border-radius);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease;
+  color: inherit;
+  font-weight: var(--font-weight-regular);
+  overflow: hidden;
+  box-shadow: var(--app-person-card-box-shadow);
+  will-change: transform, box-shadow;
+}
+
+
+
+.person-card:hover {
+  transform: translateY(-8px) scale(1.022);
+  border-color: var(--app-person-card-border-color);
+  background: var(--app-person-card-hover-background);
+  box-shadow: var(--app-person-card-box-shadow-2);
+}
+
+
+
 .person-card--featured {
   grid-column: span 2;
   padding: 2.18rem 1.95rem 1.92rem;
   background: var(--app-person-card-featured-background);
   border-color: var(--app-person-card-featured-border-color);
   box-shadow: var(--app-person-card-featured-box-shadow);
+}
+
+
+
+.person-card--featured:hover {
+  transform: translateY(-9px) scale(1.024);
 }
 
 
@@ -456,6 +502,41 @@
   flex-wrap: wrap;
   gap: var(--space-1);
   justify-content: flex-end;
+}
+
+
+
+.person-card-featured-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.42rem 0.8rem;
+  border-radius: var(--radius-full);
+  background: var(--app-person-card-featured-badge-background);
+  border: var(--app-person-card-featured-badge-border);
+  color: var(--app-person-card-featured-badge-color);
+  font-size: var(--app-person-card-featured-badge-font-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--app-person-card-featured-badge-letter-spacing);
+  text-transform: uppercase;
+  box-shadow: var(--app-person-card-featured-badge-box-shadow);
+}
+
+
+
+.person-card-provider-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.34rem 0.66rem;
+  border-radius: var(--radius-full);
+  border: var(--app-person-card-provider-badge-border);
+  background: var(--app-person-card-provider-badge-background);
+  color: var(--app-person-card-provider-badge-color);
+  font-size: var(--app-person-card-provider-badge-font-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--app-person-card-provider-badge-letter-spacing);
+  text-transform: uppercase;
+  box-shadow: var(--app-person-card-provider-badge-box-shadow);
 }
 
 
@@ -507,6 +588,16 @@
 
 
 
+.person-card-display-name {
+  margin-bottom: 0.52rem;
+  color: var(--app-person-card-display-name-color);
+  font-size: var(--app-person-card-display-name-font-size);
+  letter-spacing: var(--app-person-card-display-name-letter-spacing);
+  text-transform: uppercase;
+}
+
+
+
 .person-card-style {
   margin: 0 0 0.85rem;
   font-size: var(--app-person-card-style-font-size);
@@ -535,11 +626,185 @@
 
 
 
+.person-card-tag {
+  padding: 0.36rem 0.72rem;
+  border-radius: var(--radius-full);
+  background: var(--app-person-card-tag-background);
+  border: var(--app-person-card-tag-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: var(--app-person-card-tag-font-size);
+  color: var(--astro-chip-text);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--app-person-card-tag-box-shadow);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+
+
+.person-card:hover .person-card-tag {
+  transform: translateY(-1px);
+  border-color: var(--app-person-card-tag-accent-border-color);
+  box-shadow: var(--app-person-card-tag-accent-box-shadow);
+}
+
+
+
 .person-card-bio {
   margin: 0;
   font-size: var(--app-person-card-bio-font-size);
   color: var(--app-person-card-bio-color);
   line-height: var(--app-person-card-bio-line-height);
+}
+
+
+
+.page-layout.people-page {
+  max-width: 600px;
+  padding: 1rem;
+}
+
+
+
+.people-page .people-page-shell {
+  max-width: none;
+}
+
+
+
+.people-page .people-page-header {
+  margin-bottom: 0.85rem;
+}
+
+
+
+.people-page .people-page-header h1 {
+  font-size: var(--font-size-19);
+  line-height: var(--line-height-tight);
+}
+
+
+
+.people-page .people-page-header p {
+  margin-top: 0.35rem;
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-copy-tight);
+}
+
+
+
+.people-page .person-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  margin-top: 1.25rem;
+}
+
+
+
+.people-page .person-card {
+  min-height: 0;
+  padding: 0.95rem;
+  background: var(--color-glass-bg);
+  border-color: var(--color-glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+
+
+.people-page .person-card--featured {
+  grid-column: span 2;
+  padding: 1.05rem;
+  background: var(--color-glass-bg-2);
+  border-color: var(--color-primary);
+}
+
+
+
+.people-page .person-card-provider-badge,
+.people-page .person-card-featured-badge,
+.people-page .person-default-badge {
+  display: none;
+}
+
+
+
+.people-page .person-card-topline {
+  margin-bottom: 0.55rem;
+}
+
+
+
+.people-page .person-card-badge-stack {
+  display: none;
+}
+
+
+
+.people-page .person-card-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  font-size: var(--font-size-label);
+}
+
+
+
+.people-page .person-card-avatar,
+.people-page .person-card--featured .person-card-avatar {
+  width: 58px;
+  height: 58px;
+  margin-bottom: 0.6rem;
+}
+
+
+
+.people-page .person-card-name,
+.people-page .person-card--featured .person-card-name {
+  font-size: var(--font-size-md);
+}
+
+
+
+.people-page .person-card-display-name {
+  margin-bottom: 0.28rem;
+  font-size: var(--font-size-3xs);
+}
+
+
+
+.people-page .person-card-style,
+.people-page .person-card--featured .person-card-style {
+  margin-bottom: 0.58rem;
+  font-size: var(--font-size-label);
+}
+
+
+
+.people-page .person-card-divider {
+  margin-bottom: 0.62rem;
+}
+
+
+
+.people-page .person-card-specialties {
+  gap: 0.35rem;
+  margin-bottom: 0.62rem;
+}
+
+
+
+.people-page .person-card-tag {
+  padding: 0.25rem 0.52rem;
+  font-size: var(--font-size-3xs);
+}
+
+
+
+.people-page .person-card-bio,
+.people-page .person-card--featured .person-card-bio {
+  max-width: none;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-relaxed);
 }
 
 
