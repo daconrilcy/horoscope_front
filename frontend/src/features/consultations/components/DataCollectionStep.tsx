@@ -3,6 +3,7 @@ import { tConsultations as t } from "@i18n/consultations"
 import { type ConsultationDraft, type OtherPersonDraft } from "@app-types/consultation"
 import { type ConsultationPrecheckData } from "@api/consultations"
 import { OtherPersonForm } from "./OtherPersonForm"
+import { ConsultationPrecisionBadge } from "./ConsultationPrecisionBadge"
 import { Link } from "react-router-dom"
 
 type DataCollectionStepProps = {
@@ -37,9 +38,9 @@ export function DataCollectionStep({
 
       {precheck && (
         <div className="precheck-summary">
-          <p className={`precision-badge precision-badge--${precheck.precision_level}`}>
+          <ConsultationPrecisionBadge precisionLevel={precheck.precision_level}>
             {t(`precision_${precheck.precision_level}`, lang)}
-          </p>
+          </ConsultationPrecisionBadge>
           {precheck.status === "degraded" && (
             <p className="degraded-warning">
               {t("degraded_mode_info", lang)}: {t(precheck.fallback_mode ?? "", lang)}

@@ -14,6 +14,7 @@ import {
   toStableJson,
 } from "./design-system-policy"
 import {
+  APP_CSS_ACCEPTED_PREFIXES,
   APP_CSS_SPECIFICITY_EXCEPTIONS,
   CSS_FALLBACK_EXCEPTIONS,
   INLINE_STYLE_EXCEPTIONS,
@@ -377,6 +378,30 @@ function collectAppSpecificCustomProperties(ownerBody: string): string[] {
   ].sort()
 }
 
+function collectAppCustomPropertyPrefixes(css: string): string[] {
+  return [
+    ...new Set(
+      [...css.matchAll(/--app-([a-zA-Z0-9]+)(?:-[a-zA-Z0-9_-]*)?\s*:/g)]
+        .map((match) => match[1]),
+    ),
+  ].sort()
+}
+
+function collectPrecisionEvidenceAppCssHits(appCss: string): string[] {
+  return [...appCss.matchAll(/(?:--app-(?:precision|evidence)-[a-zA-Z0-9_-]+|\.(?:precision-badge|evidence-tags|evidence-pill)[a-zA-Z0-9_-]*)/g)]
+    .map((match) => match[0])
+}
+
+function collectLegacyPrecisionEvidenceCssHits(): Array<{ file: string; selector: string }> {
+  const forbiddenSelectorPattern =
+    /\.(?:precision-badge(?:--[a-zA-Z0-9_-]+)?|evidence-tags(?:__[a-zA-Z0-9_-]+)?|evidence-pill(?:__[a-zA-Z0-9_-]+|--[a-zA-Z0-9_-]+)?)(?![a-zA-Z0-9_-])/g
+
+  return listFiles("", ".css").flatMap((file) =>
+    [...readFrontendFile(file).matchAll(forbiddenSelectorPattern)]
+      .map((match) => ({ file, selector: match[0] })),
+  )
+}
+
 function extractMigratedSettingsValues(ownerBody: string): string[] {
   const declarations = [...ownerBody.matchAll(/--settings-[a-zA-Z0-9_-]+\s*:\s*([\s\S]*?);/g)].map((match) =>
     normalizeCssValue(match[1]),
@@ -680,7 +705,7 @@ describe("design-system guards", () => {
     const catalogueBlock = findFlatCssBlock(appCss, ".people-page")
     const summaryBlock = findFlatCssBlock(appCss, ".summary-panel-card-wrapper")
 
-    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--app-*` | semantic-extension |")
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--app-button-*` | semantic-extension |")
     expect(migratedValues.length).toBeGreaterThan(0)
     expect(guardedCss).toContain("var(--app-")
     expect(guardedCss).not.toMatch(/var\(\s*--app-[a-zA-Z0-9_-]+\s*,/)
@@ -730,6 +755,40 @@ describe("design-system guards", () => {
     expect(expiredExceptions).toEqual([])
   })
 
+  it("bloque les prefixes App non classes par CS-125", () => {
+    const appCss = readFrontendFile("App.css")
+    const registry = readFrontendFile("styles/token-namespace-registry.md")
+    const activePrefixes = collectAppCustomPropertyPrefixes(appCss)
+    const acceptedPrefixes = APP_CSS_ACCEPTED_PREFIXES.map((entry) => entry.prefix).sort()
+    const acceptedPrefixSet = new Set(acceptedPrefixes)
+    const unclassifiedPrefixes = activePrefixes.filter((prefix) => !acceptedPrefixSet.has(prefix))
+    const staleAcceptedPrefixes = acceptedPrefixes.filter((prefix) => !activePrefixes.includes(prefix))
+    const duplicatedAcceptedPrefixes = acceptedPrefixes.filter((prefix, index) => acceptedPrefixes.indexOf(prefix) !== index)
+    const registryViolations = APP_CSS_ACCEPTED_PREFIXES.filter(
+      (entry) =>
+        !registry.includes(`| \`--app-${entry.prefix}-*\` | semantic-extension | \`${entry.owner}\` |`) ||
+        entry.classification !== "canonical-active" ||
+        entry.decision !== "retain-app-owned-prefix" ||
+        entry.proof.trim().length === 0,
+    )
+
+    expect(registry).not.toContain("| `--app-*` |")
+    expect(activePrefixes).toEqual(acceptedPrefixes)
+    expect(unclassifiedPrefixes).toEqual([])
+    expect(staleAcceptedPrefixes).toEqual([])
+    expect(duplicatedAcceptedPrefixes).toEqual([])
+    expect(registryViolations).toEqual([])
+    expect(acceptedPrefixSet.has("precision")).toBe(false)
+    expect(acceptedPrefixSet.has("evidence")).toBe(false)
+  })
+
+  it("bloque les familles precision et evidence non routees dans App.css par CS-126", () => {
+    const appCss = readFrontendFile("App.css")
+
+    expect(collectPrecisionEvidenceAppCssHits(appCss)).toEqual([])
+    expect(collectLegacyPrecisionEvidenceCssHits()).toEqual([])
+  })
+
   it("bloque les declarations visuelles et typographiques App non routees par CS-087", () => {
     const appCss = readFrontendFile("App.css")
     const ownerBlock = findFlatCssBlock(appCss, "#root")
@@ -738,7 +797,7 @@ describe("design-system guards", () => {
     const appOwnerNames = [...ownerBlock.body.matchAll(/(--app-[a-zA-Z0-9_-]+)\s*:/g)].map((match) => match[1])
     const mechanicalOwnerNames = appOwnerNames.filter(isMechanicalAppCustomPropertyName)
 
-    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--app-*` | semantic-extension |")
+    expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--app-state-*` | semantic-extension |")
     expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--astro-*` | semantic-extension |")
     expect(activeViolations).toEqual([])
     expect(mechanicalOwnerNames).toEqual([])

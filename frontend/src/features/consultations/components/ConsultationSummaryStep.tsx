@@ -3,6 +3,7 @@ import { tConsultations as t } from "@i18n/consultations"
 import { type ConsultationDraft, getConsultationTypeConfig } from "@app-types/consultation"
 import { type ConsultationPrecheckData } from "@api/consultations"
 import { AstrologerSelectStep } from "./AstrologerSelectStep"
+import { ConsultationPrecisionBadge } from "./ConsultationPrecisionBadge"
 
 type ConsultationSummaryStepProps = {
   draft: ConsultationDraft
@@ -51,9 +52,9 @@ export function ConsultationSummaryStep({
         <h3 className="summary-subtitle">{t("expected_quality_title", lang)}</h3>
         {precheck ? (
           <div className="precheck-status">
-            <p className={`precision-badge precision-badge--${precheck.precision_level}`}>
+            <ConsultationPrecisionBadge precisionLevel={precheck.precision_level}>
               {t(`precision_${precheck.precision_level}`, lang)}
-            </p>
+            </ConsultationPrecisionBadge>
             {precheck.status === "blocked" && (
               <p className="error-message">{t("blocked_reason_generic", lang)}</p>
             )}

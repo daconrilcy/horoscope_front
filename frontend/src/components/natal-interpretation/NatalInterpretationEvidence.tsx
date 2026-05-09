@@ -215,7 +215,7 @@ export function EvidenceTags({
             return (
               <div key={key}>
                 <p className="ni-evidence-category-label">{categoryLabels[key]}</p>
-                <div className="evidence-tags__list">
+                <div className="ni-evidence-tags-list">
                   {items.map((item, index) => {
                     const isAspect = item.evidenceId.startsWith("ASPECT_")
                     const isAngle = ["ASC", "MC", "DSC", "IC"].some((angle) => item.evidenceId.includes(angle))
@@ -224,9 +224,9 @@ export function EvidenceTags({
                       <span
                         key={`${item.evidenceId}-${index}`}
                         title={item.evidenceId}
-                        className={`evidence-pill evidence-pill--${modifier}`}
+                        className={`ni-evidence-pill ni-evidence-pill--${modifier}`}
                       >
-                        <span className="evidence-pill__dot" />
+                        <span className="ni-evidence-pill-dot" />
                         {item.humanText}
                       </span>
                     )
