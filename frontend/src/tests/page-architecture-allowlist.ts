@@ -182,6 +182,15 @@ export const PAGE_LAYOUT_OWNER_CLASSIFICATIONS: PageLayoutOwnerClassification[] 
       exit: "Route settings conservee.",
     },
     {
+      file: "pages/settings/components/DeleteAccountModal.tsx",
+      classification: "page-adjacent-component",
+      owner: "AccountSettings",
+      reason:
+        "Modale de suppression de compte rattachee a la sous-page compte settings.",
+      exit:
+        "Reste sous namespace settings tant que AccountSettings en est l'owner.",
+    },
+    {
       file: "pages/HelpPage.tsx",
       classification: "routed-page",
       route: "/help",
