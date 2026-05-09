@@ -1,0 +1,350 @@
+/* Primitives de layout App pour shells, piles, clusters, grilles et sections. */
+
+
+
+/* App Shell Layout */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+
+
+.app-shell-body {
+  display: flex;
+  flex: 1;
+}
+
+
+
+.app-shell-main {
+  flex: 1;
+  width: 100%;
+  padding: var(--app-shell-main-padding);
+  transition: margin-left 0.2s ease-out;
+}
+
+
+
+.app-shell-main--with-sidebar-offset {
+  margin-left: var(--app-shell-sidebar-offset);
+}
+
+
+
+/* === BottomNav === */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: var(--app-mobile-nav-inset);
+  left: var(--app-mobile-nav-inset);
+  right: var(--app-mobile-nav-inset);
+  border-radius: var(--app-mobile-nav-radius);
+  padding: var(--app-mobile-nav-padding);
+  background: var(--color-nav-glass);
+  border: 1px solid var(--color-nav-border);
+  box-shadow: var(--shadow-nav);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  z-index: 100;
+}
+
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex;
+  }
+
+  .app-shell-main {
+    padding-bottom: 110px;
+  }
+
+  .app-shell-main--with-sidebar-offset {
+    margin-left: 0;
+  }
+
+}
+
+
+
+.app-page {
+  width: 100%;
+}
+
+
+
+.app-page--centered {
+  margin: 0 auto;
+}
+
+
+
+.app-section {
+  width: 100%;
+}
+
+
+
+.app-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+
+
+.app-stack--tight {
+  gap: var(--space-2);
+}
+
+
+
+.app-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+
+
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+
+
+.app-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+
+
+.app-list--compact {
+  display: grid;
+  gap: 0.55rem;
+}
+
+
+
+.app-list--compact .chat-item {
+  margin: 0;
+}
+
+
+
+.app-section-divider {
+  margin-top: 2rem;
+  border-top: 1px solid var(--color-line);
+  padding-top: 1rem;
+}
+
+
+
+.activities-catalogue-section {
+  max-width: 1000px;
+  margin: 0 auto 4rem;
+}
+
+
+
+/* Consultations Page */
+.activities-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+
+
+.activities-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+
+
+.activities-history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 120px;
+}
+
+
+
+.flow-progress-list {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+
+
+.flow-progress-list::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--color-line);
+  z-index: 0;
+}
+
+
+
+.flow-progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+
+
+.flow-content {
+  min-height: 300px;
+  position: relative;
+}
+
+
+
+/* === Save opt-in section === */
+.save-opt-in-section {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+
+
+.precheck-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+
+
+.banner-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+
+
+.usage-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+
+
+/* === DailyHoroscopePage === */
+.today-page {
+  min-height: 100dvh;
+}
+
+
+
+.section-header--clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: opacity 0.2s;
+}
+
+
+
+.section-header--clickable:hover {
+  opacity: 0.7;
+}
+
+
+
+/* === Shortcuts Section === */
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: 12px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.stack--tight {
+  gap: var(--space-2);
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.flow-progress,
+.activities-types-section,
+.activity-result-interpretation,
+.activities-page-header {
+  margin-bottom: 2rem;
+}
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.person-profile-info,
+.activity-card-premium-main,
+.birth-time-input-row input[type="time"] {
+  flex: 1;
+}
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.people-page-header,
+.degraded-warning {
+  margin-bottom: 1rem;
+}
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.activity-cards-container,
+.account-control {
+  display: flex; flex-direction: column; gap: 1.5rem;
+}
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.summary-precheck,
+.activity-result-header {
+  margin-bottom: 1.5rem;
+}

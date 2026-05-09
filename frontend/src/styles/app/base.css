@@ -1,0 +1,105 @@
+/* Styles de base App conservant les comportements globaux non rattaches a un composant React. */
+
+
+
+.chat-item {
+  border: 1px solid var(--color-line);
+  border-radius: var(--app-chat-item-border-radius);
+  padding: 0.7rem 0.8rem;
+  background: var(--color-glass-bg-2);
+}
+
+
+
+.chat-item-assistant {
+  background: var(--app-chat-item-assistant-background);
+  border-color: var(--app-chat-item-assistant-border-color);
+}
+
+
+
+.activities-history-item {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+
+
+.activities-history-link:hover {
+  background: var(--app-activities-history-link-background);
+}
+
+
+
+.activities-history-icon {
+  font-size: var(--app-activities-history-icon-font-size);
+}
+
+
+
+.flow-progress-step--current .flow-progress-number {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--app-flow-progress-current-number-background);
+}
+
+
+
+.flow-step {
+  animation: fadeIn 0.2s ease;
+}
+
+
+
+.nothing-to-collect p {
+  margin: 0;
+}
+
+
+
+.relation-data-collection {
+  margin-top: 0.75rem;
+}
+
+
+
+.banner-icon {
+  font-size: var(--app-banner-icon-font-size);
+  flex-shrink: 0;
+  line-height: var(--app-banner-icon-line-height);
+}
+
+
+
+.usage-stat-value {
+  font-size: var(--app-usage-stat-value-font-size);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+
+
+.usage-progress-bar {
+  height: 8px;
+  background: var(--app-usage-progress-bar-background);
+  border-radius: var(--app-usage-progress-bar-border-radius);
+  overflow: hidden;
+}
+
+
+
+.usage-progress-fill {
+  height: 100%;
+  width: calc(var(--usage-progress, 0) * 1%);
+  background: var(--app-usage-progress-fill-background);
+  border-radius: var(--app-usage-progress-fill-border-radius);
+  transition: width 0.3s ease;
+}
+
+
+
+.complete-profile-link {
+  margin-top: 1rem;
+  display: inline-block;
+}

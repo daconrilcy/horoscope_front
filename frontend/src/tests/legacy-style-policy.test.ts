@@ -5,6 +5,7 @@ import {
   hasRegistryMatch,
   listFiles,
   parseRegistryPatterns,
+  readAppCssSurface,
   readFrontendFile,
 } from "./design-system-policy"
 
@@ -24,7 +25,7 @@ describe("legacy-style policy", () => {
   it("bloque le retour des aliases de tokens historiques critiques retires par CS-067", () => {
     const registry = readFrontendFile("styles/legacy-style-surface-registry.md")
     const theme = readFrontendFile("styles/theme.css")
-    const appCss = readFrontendFile("App.css")
+    const appCss = readAppCssSurface()
 
     expect(registry).not.toContain("`--text-*`")
     expect(registry).not.toContain("`--glass*`")

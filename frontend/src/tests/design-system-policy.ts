@@ -4,8 +4,29 @@ import path from "path"
 
 export const frontendRoot = path.resolve(__dirname, "..")
 
+export const APP_CSS_MODULE_FILES = [
+  "styles/app/tokens.css",
+  "styles/app/base.css",
+  "styles/app/typography.css",
+  "styles/app/layout.css",
+  "styles/app/buttons.css",
+  "styles/app/cards.css",
+  "styles/app/forms.css",
+  "styles/app/notices.css",
+  "styles/app/states.css",
+  "styles/app/media.css",
+  "styles/app/skeletons.css",
+] as const
+
 export function readFrontendFile(relativePath: string): string {
   return fs.readFileSync(path.join(frontendRoot, relativePath), "utf-8")
+}
+
+export function readAppCssSurface(): string {
+  return [
+    readFrontendFile("App.css"),
+    ...APP_CSS_MODULE_FILES.map((file) => readFrontendFile(file)),
+  ].join("\n")
 }
 
 export function listFiles(dir: string, extension: string): string[] {

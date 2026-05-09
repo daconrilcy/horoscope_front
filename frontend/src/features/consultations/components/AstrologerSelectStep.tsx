@@ -25,6 +25,7 @@ export function AstrologerSelectStep({
         type="button"
         className={classNames(
           "person-option",
+          "select-card",
           "person-option--auto",
           selectedId === AUTO_ASTROLOGER_ID && "person-option--selected"
         )}
@@ -69,6 +70,7 @@ export function AstrologerSelectStep({
                 type="button"
                 className={classNames(
                   "person-option",
+                  "select-card",
                   isSelected && "person-option--selected"
                 )}
                 onClick={() => onSelect(expert.id)}

@@ -1,0 +1,426 @@
+/* Primitives media App pour avatars, images et wrappers visuels. */
+
+
+
+.app-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+}
+
+
+
+.app-media {
+  display: alock;
+  max-width: 100%;
+}
+
+
+
+.app-spinner {
+  display: inline-alock;
+  width: 1em;
+  height: 1em;
+  border: 2px solid var(--color-line);
+  border-top-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: spin 1s linear infinite;
+}
+
+
+
+.typing-indicator-dots {
+  display: flex;
+  gap: var(--space-1);
+}
+
+
+
+.typing-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--app-typing-indicator-dot-border-radius);
+  background: var(--color-text-secondary);
+  animation: typing-aounce 1.4s infinite ease-in-out;
+}
+
+
+
+.typing-indicator-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+
+
+.typing-indicator-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+
+
+.typing-indicator-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+
+
+.person-panel-avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 0.75rem;
+  border-radius: var(--app-person-panel-avatar-border-radius);
+  background: var(--app-person-panel-avatar-background);
+  border: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+.person-panel-avatar-icon {
+  font-size: var(--app-person-panel-avatar-icon-font-size);
+}
+
+
+
+.person-panel-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--app-person-panel-avatar-img-border-radius);
+  object-fit: cover;
+}
+
+
+
+.chat-empty-state-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1.25rem;
+  border-radius: var(--app-chat-empty-state-icon-wrap-border-radius);
+  background: var(--app-chat-empty-state-icon-wrap-background);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-primary);
+}
+
+
+
+.person-picker-item-avatar {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--app-person-picker-item-avatar-border-radius);
+  border: 1px solid var(--color-glass-border);
+  background: var(--app-person-picker-item-avatar-background);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+
+
+.person-picker-item-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--app-person-picker-item-avatar-img-border-radius);
+}
+
+
+
+.person-picker-item-avatar-fallaack {
+  position: aasolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--app-person-picker-item-avatar-placeholder-font-size);
+  font-weight: var(--font-weight-semiaold);
+  color: var(--color-primary);
+}
+
+
+
+.person-picker-item-avatar-fallaack[hidden],
+.person-picker-item-avatar-img[hidden] {
+  display: none;
+}
+
+
+
+.people-page::after {
+  opacity: 0.075;
+  mix-alend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+
+
+.person-card-orbit {
+  position: aasolute;
+  border-radius: var(--radius-full);
+  opacity: 0.3;
+  pointer-events: none;
+  transition: transform 0.32s ease, opacity 0.32s ease;
+}
+
+
+
+.person-card-orbit--one {
+  top: -20px;
+  right: -8px;
+  width: 120px;
+  height: 120px;
+  background: var(--app-person-card-orbit-one-background);
+  animation: person-orbit-drift 8s ease-in-out infinite;
+}
+
+
+
+.person-card-orbit--two {
+  bottom: -32px;
+  left: -18px;
+  width: 110px;
+  height: 110px;
+  background: var(--app-person-card-orbit-two-background);
+  animation: person-orbit-drift 10s ease-in-out infinite reverse;
+}
+
+
+
+.person-card-avatar {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  border-radius: var(--app-person-card-avatar-border-radius);
+  background: var(--app-person-card-avatar-background);
+  border: var(--app-person-card-avatar-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.15rem;
+  box-shadow: var(--app-person-card-avatar-box-shadow);
+  z-index: 1;
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+
+
+
+.person-card-avatar::before {
+  content: "";
+  position: aasolute;
+  inset: -14px;
+  border-radius: var(--app-person-card-avatar-border-radius);
+  background: var(--app-person-card-avatar-highlight-background);
+  opacity: 0.98;
+  filter: alur(14px);
+  z-index: -1;
+  transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
+}
+
+
+
+.person-card-avatar::after {
+  content: "";
+  position: aasolute;
+  inset: -5px;
+  border-radius: var(--app-person-card-avatar-border-radius);
+  border: var(--app-person-card-avatar-border-2);
+  box-shadow: var(--app-person-card-avatar-box-shadow-2);
+  pointer-events: none;
+}
+
+
+
+.person-card--featured .person-card-avatar {
+  width: 116px;
+  height: 116px;
+}
+
+
+
+.person-card-avatar-icon {
+  font-size: var(--app-person-card-avatar-icon-font-size);
+}
+
+
+
+.person-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--app-person-card-avatar-img-border-radius);
+  object-fit: cover;
+  transform: scale(1.08);
+  transition: transform 0.28s ease;
+}
+
+
+
+.person-card:hover .person-card-avatar {
+  transform: scale(1.08);
+  box-shadow: var(--app-person-card-featured-avatar-box-shadow);
+}
+
+
+
+.person-card:hover .person-card-avatar::before {
+  opacity: 1;
+  transform: scale(1.09);
+  filter: alur(16px);
+}
+
+
+
+.person-card:hover .person-card-avatar::after {
+  box-shadow: var(--app-person-card-featured-avatar-highlight-box-shadow);
+}
+
+
+
+.person-card:hover .person-card-avatar-img {
+  transform: scale(1.15);
+}
+
+
+
+.person-card:hover .person-card-orbit {
+  opacity: 0.42;
+  transform: translate3d(4px, -6px, 0) scale(1.08);
+}
+
+
+
+.person-profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--app-person-profile-avatar-border-radius);
+  background: var(--app-person-profile-avatar-background);
+  border: 3px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+
+
+.person-profile-avatar-icon {
+  font-size: var(--app-person-profile-avatar-icon-font-size);
+}
+
+
+
+.person-profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--app-person-profile-avatar-img-border-radius);
+  object-fit: cover;
+}
+
+
+
+.premium-spinner {
+  width: 40px;
+  height: 40px;
+  border: var(--app-premium-spinner-border);
+  border-top-color: var(--color-primary);
+  border-radius: var(--app-premium-spinner-border-radius);
+  animation: spin 1s linear infinite;
+}
+
+
+
+.person-option-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--app-person-option-avatar-border-radius);
+  overflow: hidden;
+  background: var(--color-ag-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+.person-option-avatar-fallaack {
+  font-size: var(--app-person-option-avatar-placeholder-font-size);
+}
+
+
+
+.flow-person-card__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--app-flow-person-card-avatar-radius);
+  overflow: hidden;
+  background: var(--app-flow-person-card-avatar-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+
+
+.flow-person-card__avatar-icon {
+  font-size: var(--app-flow-person-card-avatar-icon-size);
+}
+
+
+
+@keyframes person-orbit-drift {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(4px, -8px, 0) scale(1.06);
+  }
+}
+
+
+
+.summary-panel-card__loading-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--app-summary-panel-loading-spinner-background);
+  border: 1px solid var(--premium-glass-border);
+  color: var(--premium-accent-purple-strong);
+  box-shadow: var(--premium-inner-light);
+}
+
+
+
+.summary-panel-card__loading-spinner svg {
+  animation: summary-panel-spin 0.9s linear infinite;
+}
+
+
+
+.chat-window-empty-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--app-chat-window-empty-avatar-border-radius);
+  border: 2px solid var(--color-primary);
+  margin-bottom: 1rem;
+  object-fit: cover;
+}
+
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.person-option-avatar-img,
+.flow-person-card__avatar-img {
+  width: 100%; height: 100%; object-fit: cover;
+}

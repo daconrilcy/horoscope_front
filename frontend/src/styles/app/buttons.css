@@ -1,0 +1,222 @@
+/* Primitives de boutons et actions App reutilisees par les surfaces interactives. */
+
+
+
+.app-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+
+
+.app-actions--end {
+  justify-content: flex-end;
+}
+
+
+
+.app-actions>* {
+  flex: 1 1 220px;
+}
+
+
+
+.app-actions--end>* {
+  flex: 0 0 auto;
+}
+
+
+
+.person-picker-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-glass-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+
+
+.person-profile-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+
+
+.person-profile-cta {
+  flex: 1;
+  padding: 0.85rem 1.5rem;
+  font-size: var(--app-person-profile-cta-font-size);
+}
+
+
+
+@media (max-width: 768px) {
+  .person-profile-actions {
+    flex-direction: column;
+  }
+}
+
+
+
+.premium-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  transition: color 0.2s ease;
+}
+
+
+
+.premium-back-link:hover {
+  color: var(--color-primary);
+}
+
+
+
+.premium-cta-inline {
+  padding: 0.75rem 1.5rem;
+  background: var(--app-premium-cta-inline-background);
+  color: white;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--app-premium-cta-inline-box-shadow);
+  transition: all 0.2s ease;
+}
+
+
+
+.activity-card-premium-action .upgrade-cta {
+  white-space: nowrap;
+}
+
+
+
+@media (max-width: 768px) {
+  .activity-card-premium {
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .activity-card-premium-action {
+    width: 100%;
+  }
+
+  .premium-cta-inline {
+    display: block;
+    width: 100%;
+  }
+
+  .premium-hero-title {
+    font-size: var(--app-premium-hero-title-mobile-size);
+  }
+}
+
+
+
+.activities-cta {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+
+
+.flow-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-line);
+}
+
+
+
+.flow-actions-nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+
+
+/* === Interaction toggle === */
+.interaction-toggle-section {
+  margin-top: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--app-interaction-toggle-section-background);
+  border: var(--app-interaction-toggle-section-border);
+  border-radius: var(--app-interaction-toggle-section-border-radius);
+}
+
+
+
+.interaction-toggle-hint {
+  margin: 0.4rem 0 0;
+  font-size: var(--app-interaction-toggle-hint-font-size);
+  color: var(--color-text-secondary);
+}
+
+
+
+.activity-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-line);
+}
+
+
+
+/* Danger Button */
+.app-action--danger {
+  background: var(--app-btn-danger-background);
+  border-color: var(--app-btn-danger-border-color);
+  color: var(--app-btn-danger-color);
+}
+
+
+
+.summary-panel-card__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+
+.section-header__button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  margin: -4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-section-header-button-radius);
+  transition: background 0.2s;
+}
+
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.person-picker-close:hover,
+.section-header__button:hover {
+  background: var(--color-glass-bg-2);
+}

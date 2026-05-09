@@ -1,0 +1,272 @@
+/* Primitives d etats loading, empty, success, warning et error App. */
+
+
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--app-button-hover-shadow);
+}
+
+
+
+.app-state {
+  margin-top: 0.6rem;
+  border-radius: var(--app-state-line-border-radius);
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-glass-bg-2);
+  color: var(--color-text-primary);
+}
+
+
+
+.app-state--loading {
+  border-color: var(--app-state-loading-border);
+  background: var(--app-state-loading-surface);
+}
+
+
+
+.app-state--empty {
+  border-color: var(--app-state-empty-border);
+  background: var(--app-state-empty-surface);
+}
+
+
+
+.app-state--success {
+  border-color: var(--app-state-success-border);
+  background: var(--app-state-success-surface);
+}
+
+
+
+.person-picker-loading,
+.person-picker-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--app-person-picker-loading-font-size);
+}
+
+
+
+.person-picker-item:hover:not(:disabled) {
+  background: var(--color-glass-bg-2);
+  border-color: var(--color-glass-border);
+}
+
+
+
+.person-grid-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+
+
+.person-grid-empty-icon {
+  font-size: var(--app-person-grid-empty-icon-font-size);
+  margin-bottom: 1rem;
+}
+
+
+
+.person-grid-empty p {
+  margin: 0;
+  font-size: var(--app-person-grid-empty-p-font-size);
+}
+
+
+
+.people-page-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--color-text-secondary);
+}
+
+
+
+.premium-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem;
+  color: var(--color-text-secondary);
+}
+
+
+
+.flow-progress-step--completed .flow-progress-number {
+  border-color: var(--color-success);
+  background: var(--color-success);
+  color: var(--app-flow-progress-completed-number-color);
+}
+
+
+
+.flow-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+}
+
+
+
+/* === Wizard loading overlay === */
+.flow-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--app-flow-loading-overlay-background);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-radius: var(--app-flow-loading-overlay-border-radius);
+  z-index: 10;
+  color: var(--color-text-secondary);
+  font-size: var(--app-flow-loading-overlay-font-size);
+  pointer-events: none;
+}
+
+
+
+.form-group input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
+
+.activity-result-actions .btn-success {
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+
+
+
+.app-action--danger:hover:not(:disabled) {
+  box-shadow: var(--app-btn-danger-box-shadow);
+}
+
+
+
+.summary-panel-card-wrapper--loading {
+  cursor: default;
+  pointer-events: none;
+}
+
+
+
+.summary-panel-card-wrapper--loading:hover,
+.summary-panel-card-wrapper--loading:focus {
+  transform: none;
+  box-shadow: var(--premium-shadow-card);
+  border-color: var(--premium-glass-border);
+}
+
+
+
+.summary-panel-card--loading {
+  cursor: default;
+  pointer-events: none;
+  justify-content: center;
+  min-height: 240px;
+}
+
+
+
+.summary-panel-card__loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 100%;
+  text-align: center;
+}
+
+
+
+.summary-panel-card__loading-message {
+  margin: 0;
+  max-width: 26ch;
+  font-size: var(--app-summary-panel-loading-message-size);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-semibold);
+  color: var(--premium-text-main);
+}
+
+
+
+.today-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+.app-state--centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+
+
+/* Code Review Fixes */
+.chat-window-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--app-chat-window-loading-overlay-background);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+
+
+.chat-window-empty-persona {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--app-chat-window-empty-persona-font-size);
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.state-centered {
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.person-profile-page-loading, .person-profile-page-not-found,
+.person-profile-page-error {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; text-align: center; color: var(--color-text-secondary);
+}
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+button:disabled,
+.person-picker-item:disabled {
+  opacity: 0.6; cursor: not-allowed;
+}

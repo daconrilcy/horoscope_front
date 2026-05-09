@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BottomNav } from "../layouts/components/BottomNav"
 import { readFileSync } from "fs"
 import { resolve } from "path"
+import { readAppCssSurface } from "./design-system-policy"
 
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
 
@@ -23,7 +24,7 @@ let themeCss: string
 let designTokensCss: string
 
 beforeAll(() => {
-  appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
+  appCss = readAppCssSurface()
   themeCss = readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8")
   designTokensCss = readFileSync(resolve(__dirname, "../styles/design-tokens.css"), "utf-8")
 })

@@ -14,6 +14,7 @@ import { MemoryRouter } from "react-router-dom"
 import { MessageCircle } from "lucide-react"
 import { ShortcutCard } from "../components/ShortcutCard"
 import { SettingsLayout } from "../layouts/SettingsLayout"
+import { readAppCssSurface } from "./design-system-policy"
 
 afterEach(() => {
   cleanup()
@@ -32,7 +33,7 @@ let landingLayoutCss: string
 let landingPageCss: string
 
 beforeAll(() => {
-  appCss = readFileSync(resolve(__dirname, "../App.css"), "utf-8")
+  appCss = readAppCssSurface()
   designTokensCss = readFileSync(resolve(__dirname, "../styles/design-tokens.css"), "utf-8")
   premiumThemeCss = readFileSync(resolve(__dirname, "../styles/premium-theme.css"), "utf-8")
   themeCss = designTokensCss + "\n" + readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8") + "\n" + premiumThemeCss

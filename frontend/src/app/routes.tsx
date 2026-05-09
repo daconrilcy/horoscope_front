@@ -208,7 +208,7 @@ export function RouteLoadingFallback() {
   return (
     <div className="app-panel">
       <div
-        className="app-state app-state--loading"
+        className="app-state app-state--loading state-centered"
         role="status"
         aria-busy="true"
         aria-live="polite"

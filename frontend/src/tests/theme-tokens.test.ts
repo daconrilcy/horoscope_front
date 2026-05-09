@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest"
 import fs from "fs"
 import path from "path"
+import { readAppCssSurface } from "./design-system-policy"
 
 // Resolve path to theme.css
 const themePath = path.resolve(__dirname, "../styles/theme.css")
@@ -249,8 +250,7 @@ describe("AC#2 — Valeurs exactes des tokens critiques (story 17-10)", () => {
   })
 
   it("no opacity property on .app-bg-container or .app-shell classes in App.css (AC#1)", () => {
-    const appCssPath = path.resolve(__dirname, "../App.css")
-    const appCssContent = fs.readFileSync(appCssPath, "utf-8")
+    const appCssContent = readAppCssSurface()
     // Extract .app-bg-container rule block
     const containerMatch = appCssContent.match(/\.app-bg-container\s*\{([^}]*)\}/)
     const containerContent = containerMatch ? containerMatch[1] : ""

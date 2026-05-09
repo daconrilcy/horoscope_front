@@ -1,0 +1,761 @@
+/* Primitives de formulaires, champs et controles App. */
+
+
+
+button {
+  border: 1px solid var(--app-button-border);
+  border-radius: var(--app-button-radius);
+  background: var(--app-button-bg);
+  backdrop-filter: blur(var(--surface-glass-blur));
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  color: var(--color-btn-text);
+  font-size: var(--app-button-font-size);
+  font-weight: var(--font-weight-semibold);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: var(--app-button-shadow);
+}
+
+
+
+.chat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+
+
+.chat-form textarea {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  resize: vertical;
+  color: var(--color-text-primary);
+  background: var(--color-glass-bg-2);
+}
+
+
+
+.chat-form input,
+.chat-form select {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  color: var(--color-text-primary);
+  background: var(--color-glass-bg-2);
+}
+
+
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-cta-left);
+  background: var(--color-glass-bg-2);
+  box-shadow: var(--shadow-card);
+}
+
+
+
+@keyframes typing-bounce {
+
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-4px);
+  }
+}
+
+
+
+.person-panel-info h4,
+.person-panel-specialties h4,
+.person-panel-conversation h4 {
+  margin: 0 0 0.5rem;
+  font-size: var(--app-person-panel-info-h4-font-size);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--app-person-panel-info-h4-letter-spacing);
+}
+
+
+
+/* Astrologer Card */
+.person-card {
+  --astro-accent: rgba(170, 146, 255, 0.92);
+  --astro-glow: rgba(147, 109, 255, 0.34);
+  --astro-chip-bg: rgba(160, 120, 255, 0.18);
+  --astro-chip-border: rgba(160, 120, 255, 0.32);
+  --astro-chip-text: #5c438f;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.7rem 1.55rem 1.55rem;
+  min-height: 100%;
+  background: var(--app-person-card-background);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: var(--app-person-card-border);
+  border-radius: var(--app-person-card-border-radius);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease;
+  color: inherit;
+  font-weight: var(--font-weight-regular);
+  overflow: hidden;
+  box-shadow: var(--app-person-card-box-shadow);
+  will-change: transform, box-shadow;
+}
+
+
+
+.person-card:hover {
+  transform: translateY(-8px) scale(1.022);
+  border-color: var(--app-person-card-border-color);
+  background: var(--app-person-card-hover-background);
+  box-shadow: var(--app-person-card-box-shadow-2);
+}
+
+
+
+.person-card--featured:hover {
+  transform: translateY(-9px) scale(1.024);
+}
+
+
+
+.person-card-featured-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.42rem 0.8rem;
+  border-radius: var(--radius-full);
+  background: var(--app-person-card-featured-badge-background);
+  border: var(--app-person-card-featured-badge-border);
+  color: var(--app-person-card-featured-badge-color);
+  font-size: var(--app-person-card-featured-badge-font-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--app-person-card-featured-badge-letter-spacing);
+  text-transform: uppercase;
+  box-shadow: var(--app-person-card-featured-badge-box-shadow);
+}
+
+
+
+.person-card-provider-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.34rem 0.66rem;
+  border-radius: var(--radius-full);
+  border: var(--app-person-card-provider-badge-border);
+  background: var(--app-person-card-provider-badge-background);
+  color: var(--app-person-card-provider-badge-color);
+  font-size: var(--app-person-card-provider-badge-font-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--app-person-card-provider-badge-letter-spacing);
+  text-transform: uppercase;
+  box-shadow: var(--app-person-card-provider-badge-box-shadow);
+}
+
+
+
+.person-card-display-name {
+  margin-bottom: 0.52rem;
+  color: var(--app-person-card-display-name-color);
+  font-size: var(--app-person-card-display-name-font-size);
+  letter-spacing: var(--app-person-card-display-name-letter-spacing);
+  text-transform: uppercase;
+}
+
+
+
+.person-card-tag {
+  padding: 0.36rem 0.72rem;
+  border-radius: var(--radius-full);
+  background: var(--app-person-card-tag-background);
+  border: var(--app-person-card-tag-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: var(--app-person-card-tag-font-size);
+  color: var(--astro-chip-text);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--app-person-card-tag-box-shadow);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+
+
+.person-card:hover .person-card-tag {
+  transform: translateY(-1px);
+  border-color: var(--app-person-card-tag-accent-border-color);
+  box-shadow: var(--app-person-card-tag-accent-box-shadow);
+}
+
+
+
+.person-profile-specialties h3,
+.person-profile-languages h3 {
+  margin: 0 0 0.5rem;
+  font-size: var(--app-person-profile-specialties-h3-font-size);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--app-person-profile-specialties-h3-letter-spacing);
+}
+
+
+
+.person-profile-bio h3 {
+  margin: 0 0 0.75rem;
+  font-size: var(--app-person-profile-bio-h3-font-size);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--app-person-profile-bio-h3-letter-spacing);
+}
+
+
+
+.activity-card-premium:hover {
+  transform: translateY(-4px) scale(1.01);
+  background: var(--app-activity-card-premium-hover-background);
+  border-color: var(--app-activity-card-premium-border-color);
+  box-shadow: var(--app-activity-card-premium-box-shadow-2);
+}
+
+
+
+.activity-card-premium--locked:hover {
+  transform: none;
+  background: var(--app-activity-card-premium-locked-background);
+  border-color: var(--app-activity-card-premium-locked-border-color);
+  box-shadow: var(--app-activity-card-premium-locked-box-shadow);
+}
+
+
+
+.activity-card-premium:hover .premium-cta-inline {
+  transform: scale(1.05);
+  box-shadow: var(--app-premium-cta-inline-hover-box-shadow);
+}
+
+
+
+.activity-history-card-premium:hover {
+  background: var(--app-activity-history-card-premium-hover-background);
+  border-color: var(--app-activity-history-card-premium-border-color);
+  transform: translateY(-2px);
+}
+
+
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+.activities-type-preview-card:hover {
+  border-color: var(--color-primary);
+  background: var(--app-activities-type-preview-card-hover-background);
+  transform: translateY(-2px);
+}
+
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+.activity-type-card:hover {
+  border-color: var(--color-primary);
+  background: var(--app-activity-type-card-background);
+  box-shadow: var(--app-activity-type-card-box-shadow-2);
+  transform: translateY(-2px);
+}
+
+
+
+.activity-type-card--selected {
+  border-color: var(--color-primary);
+  background: var(--app-activity-type-card-selected-background);
+  box-shadow: var(--app-activity-type-card-selected-box-shadow);
+}
+
+
+
+/* Astrologer Select Grid */
+.person-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+
+
+.person-option:hover {
+  border-color: var(--color-primary);
+  background: var(--app-person-option-background);
+  box-shadow: var(--app-person-option-box-shadow-2);
+  transform: translateY(-2px);
+}
+
+
+
+.person-option--selected {
+  border-color: var(--color-primary);
+  background: var(--app-person-option-selected-background);
+  box-shadow: var(--app-person-option-selected-box-shadow);
+}
+
+
+
+.drawing-option-card--selected {
+  border-color: var(--color-primary);
+  background: var(--app-drawing-option-card-selected-background);
+  box-shadow: var(--app-drawing-option-card-selected-box-shadow);
+}
+
+
+
+/* === Consultation Form Step === */
+.activity-form-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+
+
+.form-label {
+  display: block;
+  font-size: var(--app-form-label-font-size);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+
+
+.type-pill--selected {
+  border-color: var(--color-primary);
+  background: var(--app-type-pill-selected-background);
+  box-shadow: var(--app-type-pill-selected-box-shadow);
+}
+
+
+
+.type-pill--selected .type-pill-label {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+
+
+.form-group--third-party-toggle {
+  padding: var(--space-4);
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-lg);
+}
+
+
+
+/* === Checkbox label === */
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: var(--app-checkbox-label-font-size);
+  color: var(--color-text-primary);
+  user-select: none;
+}
+
+
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+
+
+/* === Form groups (OtherPersonForm) === */
+.other-person-form {
+  background: var(--color-glass-bg);
+  border: var(--app-other-person-form-border);
+  border-radius: var(--app-other-person-form-border-radius);
+  padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--app-other-person-form-box-shadow);
+}
+
+
+
+.other-person-form-title {
+  margin: 0;
+  font-size: var(--app-other-person-form-title-font-size);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+
+
+.other-person-form-hint {
+  margin: -0.25rem 0 0;
+  font-size: var(--app-other-person-form-hint-font-size);
+  color: var(--color-text-secondary);
+}
+
+
+
+.form-group label {
+  font-size: var(--app-form-group-label-font-size);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--app-form-group-input-background);
+  border: var(--app-form-group-input-border);
+  border-radius: var(--app-form-group-input-border-radius);
+  color: var(--color-text-primary);
+  font-size: var(--app-form-group-input-font-size);
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+
+
+.form-group input[readonly] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+
+
+.birth-time-input-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+
+
+.nickname-input-group label {
+  font-size: var(--app-nickname-input-group-label-font-size);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .flow-progress-label {
+    display: none;
+  }
+
+  .activity-type-grid,
+  .drawing-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .person-select-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .flow-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .flow-actions-nav {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .activity-result-actions {
+    flex-direction: column;
+  }
+
+  .activity-result-actions .btn {
+    width: 100%;
+  }
+
+  .activity-type-pills {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+
+
+/* ============================================
+   SETTINGS PAGES
+   ============================================ */
+
+.control-layout {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+
+
+.control-title {
+  margin: 0 0 1.5rem;
+  font-size: var(--app-control-title-font-size);
+  color: var(--color-text-primary);
+}
+
+
+
+.control-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 0;
+}
+
+
+
+.control-tab {
+  padding: 0.75rem 1.25rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--app-control-tab-font-size);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+  margin-bottom: -1px;
+}
+
+
+
+.control-tab:hover {
+  color: var(--color-text-primary);
+  background: var(--app-control-tab-background);
+}
+
+
+
+.control-tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+
+
+.control-content {
+  min-height: 300px;
+}
+
+
+
+.control-section-title {
+  margin: 0 0 1rem;
+  font-size: var(--app-control-section-title-font-size);
+  color: var(--color-text-primary);
+}
+
+
+
+.account-info-label {
+  font-size: var(--app-account-info-label-font-size);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--app-account-info-label-letter-spacing);
+}
+
+
+
+.usage-stat-label {
+  font-size: var(--app-usage-stat-label-font-size);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--app-usage-stat-label-letter-spacing);
+}
+
+
+
+.app-modal__input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-glass-bg-2);
+  color: var(--color-text-primary);
+  font-size: var(--app-modal-input-font-size);
+  margin-bottom: 1rem;
+}
+
+
+
+/* === DashboardHoroscopeSummaryCard === */
+.summary-panel-card-wrapper {
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border-radius: var(--premium-radius-hero);
+  overflow: hidden;
+  border: 1px solid var(--premium-glass-border);
+  position: relative;
+  min-height: 258px;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-summary-panel-bg);
+  box-shadow: var(--app-summary-panel-shadow);
+}
+
+
+
+.summary-panel-card-wrapper:hover,
+.summary-panel-card-wrapper:focus {
+  transform: translateY(-2px);
+  box-shadow: var(--premium-shadow-focus);
+  border-color: var(--premium-glass-border-strong);
+  outline: none;
+}
+
+
+
+.summary-panel-card__cta,
+.summary-panel-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 13px 20px 13px 19px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--app-summary-panel-action-border);
+  background: var(--app-summary-panel-action-bg);
+  color: var(--app-summary-panel-cta-color);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--app-summary-panel-cta-spacing);
+  box-shadow: var(--app-summary-panel-action-shadow);
+  position: relative;
+  z-index: 1;
+}
+
+
+
+.summary-panel-card__cta svg,
+.summary-panel-card__link svg {
+  flex-shrink: 0;
+  transform: translateY(0.25px);
+}
+
+
+
+@keyframes summary-panel-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+@media (max-width: 768px) {
+  .control-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .control-tab {
+    padding: 0.6rem 1rem;
+    white-space: nowrap;
+  }
+
+  .account-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .app-actions--end {
+    flex-direction: column-reverse;
+  }
+
+  .app-actions--end button {
+    width: 100%;
+  }
+}
+
+.form-control {
+  width: 100%;
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.form-group input:focus, .form-group select:focus,
+.app-modal__input:focus,
+.validation-context-input:focus {
+  outline: none; border-color: var(--color-primary);
+}
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.summary-card:focus-visible,
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: 2px;
+}
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.form-group,
+.nickname-input-group {
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+
+
+/* Fusion mecanique CS-127 des declarations identiques. */
+.usage-control,
+.subscription-control {
+  display: flex; flex-direction: column; gap: 1rem;
+}

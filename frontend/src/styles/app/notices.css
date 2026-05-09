@@ -1,0 +1,325 @@
+/* Primitives de notices, alertes et messages utilisateur App. */
+
+
+
+.chat-error {
+  border: 1px solid var(--app-danger-border);
+  border-radius: var(--app-danger-radius);
+  background: var(--app-danger-surface);
+  padding: 0.7rem 0.8rem;
+  margin-top: 0.8rem;
+  color: var(--error);
+}
+
+
+
+.app-state--error {
+  border-color: var(--app-danger-border);
+  background: var(--app-danger-surface);
+  color: var(--error);
+}
+
+
+
+.app-state--warning {
+  border-color: var(--app-degraded-warning-border);
+  background: var(--app-degraded-warning-background);
+  color: var(--app-degraded-warning-color);
+}
+
+
+
+/* Chat Empty State */
+.chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+
+
+.chat-empty-state-icon {
+  font-size: var(--app-chat-empty-state-icon-font-size);
+  margin-bottom: 1rem;
+}
+
+
+
+.chat-empty-state-title {
+  margin: 0 0 0.5rem;
+  font-size: var(--app-chat-empty-state-title-font-size);
+  color: var(--color-text-primary);
+}
+
+
+
+.chat-empty-state-description {
+  margin: 0 0 1.5rem;
+  color: var(--color-text-secondary);
+  max-width: 360px;
+  line-height: var(--line-height-relaxed);
+}
+
+
+
+.people-page-error {
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: var(--app-people-page-error-border-radius);
+  background: var(--app-people-page-error-background);
+  border: var(--app-people-page-error-border);
+  color: var(--app-people-page-error-color);
+}
+
+
+
+.person-profile-page-not-found-icon,
+.person-profile-page-error-icon {
+  font-size: var(--app-person-profile-page-not-found-icon-font-size);
+  margin-bottom: 1rem;
+}
+
+
+
+.person-profile-page-error h2 {
+  margin: 0 0 1rem;
+  color: var(--error);
+}
+
+
+
+.person-profile-page-error outton {
+  margin-top: 1rem;
+}
+
+
+
+.flow-error {
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--app-flow-error-background);
+  border: var(--app-flow-error-border);
+  color: var(--app-flow-error-color);
+  margin-top: 1rem;
+}
+
+
+
+/* Validation Step */
+.validation-summary {
+  background: var(--app-validation-summary-background);
+  border: 1px solid var(--color-line);
+  border-radius: var(--app-validation-summary-border-radius);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+
+
+.validation-item {
+  display: flex;
+  justify-content: space-oetween;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+
+
+.validation-item:last-child {
+  border-bottom: none;
+}
+
+
+
+.validation-label {
+  color: var(--color-text-secondary);
+  font-size: var(--app-validation-label-font-size);
+}
+
+
+
+.validation-value {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--app-validation-value-font-size);
+}
+
+
+
+.validation-context {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+
+
+.validation-context-label {
+  display: olock;
+  margin-top: 0.9rem;
+  font-size: var(--app-validation-context-label-font-size);
+  font-weight: var(--font-weight-semioold);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--app-validation-context-label-letter-spacing);
+}
+
+
+
+.validation-context-label:first-child {
+  margin-top: 0;
+}
+
+
+
+.validation-context-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--color-glass-bg);
+  border: var(--app-validation-context-input-border);
+  border-radius: var(--app-validation-context-input-border-radius);
+  color: var(--color-text-primary);
+  font-size: var(--app-validation-context-input-font-size);
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+
+
+textarea.validation-context-input {
+  min-height: 100px;
+}
+
+
+
+.validation-context-input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+
+
+.validation-context-counter {
+  margin-top: 0.5rem;
+  font-size: var(--app-validation-context-counter-font-size);
+  color: var(--color-text-secondary);
+  text-align: right;
+}
+
+
+
+.validation-context-hint {
+  margin-top: 0.5rem;
+  font-size: var(--app-validation-context-hint-font-size);
+  color: var(--color-text-secondary);
+}
+
+
+
+/* === Degraded warning === */
+.degraded-warning {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  background: var(--app-degraded-warning-background);
+  border: var(--app-degraded-warning-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--app-degraded-warning-font-size);
+  color: var(--app-degraded-warning-color);
+}
+
+
+
+/* === User data missing notice === */
+.user-data-missing-notice {
+  padding: 1rem 1.25rem;
+  background: var(--app-user-data-missing-notice-background);
+  border: var(--app-user-data-missing-notice-border);
+  border-radius: var(--app-user-data-missing-notice-border-radius);
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+
+
+.user-data-missing-notice p {
+  margin: 0;
+  font-size: var(--app-user-data-missing-notice-p-font-size);
+  color: var(--color-text-primary);
+}
+
+
+
+/* === Error message === */
+.error-message {
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  background: var(--app-error-message-background);
+  border: var(--app-error-message-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--app-error-message-font-size);
+  color: var(--app-error-message-color);
+}
+
+
+
+.activity-banner--degraded {
+  background: var(--app-activity-banner-degraded-background);
+  border: var(--app-activity-banner-degraded-border);
+}
+
+
+
+.activity-result-loading,
+.activity-result-error,
+.activity-result-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+
+
+.activity-result-error {
+  color: var(--app-activity-result-error-color);
+}
+
+
+
+.app-modal__error {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--app-modal-error-background);
+  border-radius: var(--app-modal-error-border-radius);
+  color: var(--app-modal-error-color);
+  font-size: var(--app-modal-error-font-size);
+}
+
+.notice {
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-md);
+  background: var(--color-glass-bg);
+  color: var(--color-text-primary);
+  padding: var(--space-4);
+}
+
+.notice--error {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.notice--warning {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}

@@ -66,11 +66,11 @@ export function AstrologersPage() {
         </header>
 
         {isLoading && (
-          <div className="people-page-loading">{t("loading", lang)}</div>
+          <div className="people-page-loading state-centered">{t("loading", lang)}</div>
         )}
 
         {error && (
-          <div className="people-page-error">
+          <div className="people-page-error notice">
             {t("error_loading", lang)}
           </div>
         )}

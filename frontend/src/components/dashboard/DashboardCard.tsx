@@ -12,7 +12,7 @@ export function DashboardCard({ label, path, icon, description }: DashboardCardP
   return (
     <Link
       to={path}
-      className="summary-card"
+      className="summary-card select-card"
       aria-label={`Aller à ${label}`}
     >
       <span className="summary-card-icon" aria-hidden="true">

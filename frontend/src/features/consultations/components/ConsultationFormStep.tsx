@@ -110,7 +110,7 @@ export function ConsultationFormStep({
         </label>
         <textarea
           id="form-context"
-          className="validation-context-input"
+          className="validation-context-input form-control"
           value={draft.context}
           onChange={(e) => onContextChange(e.target.value)}
           placeholder={t("context_placeholder", lang)}
@@ -130,7 +130,7 @@ export function ConsultationFormStep({
         </label>
         <input
           id="form-horizon"
-          className="validation-context-input"
+          className="validation-context-input form-control"
           type="text"
           value={draft.timeHorizon ?? ""}
           onChange={(e) => onTimeHorizonChange(e.target.value || null)}

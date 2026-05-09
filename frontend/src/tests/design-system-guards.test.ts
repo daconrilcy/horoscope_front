@@ -11,6 +11,8 @@ import {
   parseTokenNamespaceRegistry,
   patternMatches,
   readFrontendFile,
+  readAppCssSurface,
+  APP_CSS_MODULE_FILES,
   toStableJson,
 } from "./design-system-policy"
 import {
@@ -30,7 +32,8 @@ function removeCssRange(css: string, start: number, end: number): string {
 }
 
 function findFlatCssBlock(css: string, selector: string): { body: string; start: number; end: number } {
-  const start = css.indexOf(`${selector} {`)
+  const match = new RegExp(`(^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{`).exec(css)
+  const start = match === null ? -1 : match.index + match[1].length
   expect(start).toBeGreaterThanOrEqual(0)
 
   const bodyStart = css.indexOf("{", start) + 1
@@ -549,6 +552,7 @@ describe("design-system guards", () => {
   it("execute la garde des literals hardcodes migres par CS-027", () => {
     const migratedFiles = [
       "App.css",
+      ...APP_CSS_MODULE_FILES,
       "pages/admin/AdminPromptsPage.css",
       "pages/HelpPage.css",
       "pages/settings/Settings.css",
@@ -691,7 +695,7 @@ describe("design-system guards", () => {
   })
 
   it("bloque le retour des literals App migres par CS-082", () => {
-    const appCss = readFrontendFile("App.css")
+    const appCss = readAppCssSurface()
     const ownerBlock = findFlatCssBlock(appCss, "#root")
     const guardedCss = removeCssRange(appCss, ownerBlock.start, ownerBlock.end)
     const normalizedGuardedCss = normalizeCssValue(guardedCss)
@@ -726,7 +730,7 @@ describe("design-system guards", () => {
   })
 
   it("bloque les noms App specifiques non classes par CS-124", () => {
-    const appCss = readFrontendFile("App.css")
+    const appCss = readAppCssSurface()
     const ownerBlock = findFlatCssBlock(appCss, "#root")
     const allowed = new Set(
       APP_CSS_SPECIFICITY_EXCEPTIONS.map((entry) => `${entry.kind}:${entry.name}`),
@@ -756,7 +760,7 @@ describe("design-system guards", () => {
   })
 
   it("bloque les prefixes App non classes par CS-125", () => {
-    const appCss = readFrontendFile("App.css")
+    const appCss = readAppCssSurface()
     const registry = readFrontendFile("styles/token-namespace-registry.md")
     const activePrefixes = collectAppCustomPropertyPrefixes(appCss)
     const acceptedPrefixes = APP_CSS_ACCEPTED_PREFIXES.map((entry) => entry.prefix).sort()
@@ -783,14 +787,14 @@ describe("design-system guards", () => {
   })
 
   it("bloque les familles precision et evidence non routees dans App.css par CS-126", () => {
-    const appCss = readFrontendFile("App.css")
+    const appCss = readAppCssSurface()
 
     expect(collectPrecisionEvidenceAppCssHits(appCss)).toEqual([])
     expect(collectLegacyPrecisionEvidenceCssHits()).toEqual([])
   })
 
   it("bloque les declarations visuelles et typographiques App non routees par CS-087", () => {
-    const appCss = readFrontendFile("App.css")
+    const appCss = readAppCssSurface()
     const ownerBlock = findFlatCssBlock(appCss, "#root")
     const declarations = collectCssDeclarations(appCss)
     const activeViolations = declarations.filter(isForbiddenAppLiteralDeclaration)
@@ -803,6 +807,66 @@ describe("design-system guards", () => {
     expect(mechanicalOwnerNames).toEqual([])
     expect(appCss).toContain("width: calc(var(--usage-progress, 0) * 1%)")
     expect(appCss.match(/var\(\s*--[a-zA-Z0-9_-]+\s*,/g)).toEqual(["var(--usage-progress,"])
+  })
+
+  it("blocks App CSS duplicate selectors and size regression", () => {
+    const appCss = readFrontendFile("App.css")
+    const importedModules = [...appCss.matchAll(/@import ['"]\.\/(styles\/app\/[^'"]+)['"];/g)].map((match) => match[1])
+    const appSurface = readAppCssSurface()
+    const countSelector = (selector: string) =>
+      [...appSurface.matchAll(new RegExp(`(^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{`, "g"))].length
+    const mechanicalTokens = [...appSurface.matchAll(/--app-[a-zA-Z0-9_-]+-(?:font-size|border-radius|background|color)-[0-9]+/g)]
+      .map((match) => match[0])
+
+    expect(appCss.split(/\r?\n/).length).toBeLessThan(2600)
+    expect(importedModules).toEqual([...APP_CSS_MODULE_FILES])
+    expect(appCss.replace(/@import[^;]+;/g, "")).not.toMatch(/^\s*[.#][a-zA-Z0-9_-]+\s*\{/m)
+    expect(countSelector(".skeleton-line")).toBe(1)
+    expect(countSelector(".people-page-header h1")).toBe(1)
+    expect(countSelector(".people-page-header p")).toBe(1)
+    expect(mechanicalTokens).toEqual([])
+  })
+
+  it("blocks non-type App CSS module filenames", () => {
+    const approved = APP_CSS_MODULE_FILES.map((file) => file.replace("styles/app/", "")).sort()
+    const actual = listFiles("styles/app", ".css").map((file) => file.replace("styles/app/", "")).sort()
+
+    expect(actual).toEqual(approved)
+  })
+
+  it("blocks stale TSX consumers from App CSS mapping", () => {
+    const mapping = readFrontendFile("../../_condamad/stories/CS-127-reduire-app-css-par-primitives-types-modulaires/app-css-type-primitive-mapping.md")
+    const deletedSelectors = [...mapping.matchAll(/\|\s*`\.([a-zA-Z0-9_-]+)`\s*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|\s*deleted\s*\|/g)]
+      .map((match) => match[1])
+    const tsxSurface = listFiles("", ".tsx").map((file) => readFrontendFile(file)).join("\n")
+    const staleConsumers = deletedSelectors.filter((selector) =>
+      new RegExp(`\\b${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(tsxSurface),
+    )
+
+    expect(staleConsumers).toEqual([])
+  })
+
+  it("blocks single-use App custom properties without retained decision", () => {
+    const usageArtifact = readFrontendFile("../../_condamad/stories/CS-127-reduire-app-css-par-primitives-types-modulaires/app-css-variable-usage.md")
+    const appSurface = readAppCssSurface()
+    const variables = [...new Set([...appSurface.matchAll(/--app-[a-zA-Z0-9_-]+/g)].map((match) => match[0]))]
+    const undocumentedSingleUse = variables.filter((variable) => {
+      const variablePattern = variable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      const usages = [...appSurface.matchAll(new RegExp(`var\\(\\s*${variablePattern}\\s*\\)`, "g"))].length
+      return usages < 2 && !usageArtifact.includes(`| \`${variable}\` |`)
+    })
+
+    expect(undocumentedSingleUse).toEqual([])
+  })
+
+  it("CS-127 expose et consomme les primitives globales typees", () => {
+    const appCss = readAppCssSurface()
+    const tsxSurface = listFiles("", ".tsx").map((file) => readFrontendFile(file)).join("\n")
+
+    for (const primitive of [".notice", ".select-card", ".form-control", ".state-centered", ".stack", ".cluster"]) {
+      expect(appCss).toContain(`${primitive} {`)
+      expect(tsxSurface).toContain(primitive.slice(1))
+    }
   })
 
   it("bloque le retour des literals Settings migres par CS-084", () => {

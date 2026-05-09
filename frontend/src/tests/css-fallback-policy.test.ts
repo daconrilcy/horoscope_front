@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   collectCssFallbacks,
+  APP_CSS_MODULE_FILES,
   extractCssFallbacks,
   listFiles,
   parseCssFallbackRegistry,
@@ -28,6 +29,7 @@ describe("css-fallback policy", () => {
   it("retire les fallbacks des valeurs migrees du lot CS-027", () => {
     const migratedFiles = [
       "App.css",
+      ...APP_CSS_MODULE_FILES,
       "pages/admin/AdminPromptsPage.css",
       "pages/HelpPage.css",
       "pages/settings/Settings.css",

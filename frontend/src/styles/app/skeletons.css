@@ -1,0 +1,44 @@
+/* Primitives skeleton App et animations de chargement associees. */
+
+
+.skeleton-line--name {
+  width: 60%;
+  height: 0.85rem;
+}
+
+
+
+.skeleton-line--date {
+  width: 25%;
+  height: 0.7rem;
+}
+
+
+
+.skeleton-line--preview {
+  width: 85%;
+  height: 0.75rem;
+}
+
+
+
+.skeleton-line {
+  display: alock;
+  height: 1rem;
+  background: var(--app-skeleton-line-active-background);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: var(--app-skeleton-line-border-radius);
+}
+
+
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

@@ -24,9 +24,9 @@ export function ConsultationTypeStep({
 
   if (isLoading) {
     return (
-      <div className="activity-type-step">
+      <div className="activity-type-step stack">
         <h2 className="flow-step-title">{t("select_type", lang)}</h2>
-        <div className="app-state app-state--loading">{t("loading", lang)}</div>
+        <div className="app-state app-state--loading state-centered">{t("loading", lang)}</div>
       </div>
     )
   }
@@ -44,12 +44,12 @@ export function ConsultationTypeStep({
       }))
 
   return (
-    <div className="activity-type-step">
+    <div className="activity-type-step stack">
       <h2 className="flow-step-title">{t("select_type", lang)}</h2>
       {isError && !catalogue && (
-        <p className="app-state app-state--error">{t("catalogue_error", lang)}</p>
+        <p className="app-state app-state--error notice">{t("catalogue_error", lang)}</p>
       )}
-      <div className="activity-type-grid">
+      <div className="activity-type-grid cluster">
         {items.map((item) => {
           const isSelected = selectedType === item.key
 
@@ -59,6 +59,7 @@ export function ConsultationTypeStep({
               type="button"
               className={classNames(
                 "activity-type-card",
+                "select-card",
                 isSelected && "activity-type-card--selected"
               )}
               onClick={() => onSelect(item.key as ConsultationType)}

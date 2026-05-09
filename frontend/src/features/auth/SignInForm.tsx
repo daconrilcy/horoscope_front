@@ -59,7 +59,7 @@ export function SignInForm({ onRegister }: SignInFormProps = {}) {
   return (
     <section className="app-panel">
       <h2>{t.signIn.title}</h2>
-      <form className="chat-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form className="chat-form stack stack--tight" onSubmit={handleSubmit(onSubmit)} noValidate>
         <Field
           id="signin-email"
           label={t.signIn.emailLabel}
@@ -77,7 +77,7 @@ export function SignInForm({ onRegister }: SignInFormProps = {}) {
           {...register("password")}
         />
         {apiError && (
-          <span className="chat-error" role="alert">
+          <span className="chat-error notice notice--error" role="alert">
             {apiError}
           </span>
         )}

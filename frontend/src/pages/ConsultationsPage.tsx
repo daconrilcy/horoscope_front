@@ -37,7 +37,7 @@ function ConsultationCatalogueCard({
         <h3 className="activity-card-premium-title">{title}</h3>
         <p className="activity-card-premium-subtitle">{subtitle}</p>
         {tags && tags.length > 0 ? (
-          <div className="activity-card-premium-tags">
+          <div className="activity-card-premium-tags cluster">
             {tags.map((tag) => (
               <span key={tag} className="activity-premium-tag">
                 {tag}
@@ -63,14 +63,14 @@ function ConsultationCatalogueCard({
 
   if (isLocked) {
     return (
-      <div className="activity-card-premium activity-card-premium--locked">
+      <div className="activity-card-premium activity-card-premium--locked select-card">
         {cardContent}
       </div>
     )
   }
 
   return (
-    <Link to={to} className="activity-card-premium">
+    <Link to={to} className="activity-card-premium select-card">
       {cardContent}
     </Link>
   )

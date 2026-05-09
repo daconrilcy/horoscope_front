@@ -68,6 +68,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(
             }
             className={classNames(
               'field__input',
+              'form-control',
               error && 'field__input--error',
               hasLeftIcon && 'field__input--has-left-icon',
               hasRightIcon && 'field__input--has-right-icon',

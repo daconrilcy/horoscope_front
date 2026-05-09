@@ -89,7 +89,7 @@ export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
 
 export const CSS_FALLBACK_EXCEPTIONS: CssFallbackException[] = [
   {
-    "file": "App.css",
+    "file": "styles/app/base.css",
     "token": "--usage-progress",
     "literal": "0"
   },
