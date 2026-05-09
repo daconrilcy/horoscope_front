@@ -111,6 +111,7 @@ Commandes standard (exemples PowerShell, toujours après activation venv):
 
 11) Git et discipline de commits
 - Petits commits, message clair.
+- Ne jamais créer de nouvelle branche Git sauf demande expresse de l'utilisateur.
 - Ne jamais commiter:
   - .env
   - .venv
