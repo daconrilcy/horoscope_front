@@ -51,12 +51,6 @@ export const COMPONENT_API_IMPORT_EXCEPTIONS: ComponentArchitectureException[] =
     exitCondition: "Deplacer sous une feature enterprise/b2b quand le domaine est cree.",
   },
   {
-    file: "components/NatalInterpretation.tsx",
-    owner: "natal chart page",
-    reason: "Container et orchestration API de l'interpretation natale.",
-    exitCondition: "Deplacer le container sous une feature natal-chart dediee.",
-  },
-  {
     file: "components/OpsMonitoringPanel.tsx",
     owner: "admin operations",
     reason: "Panel ops conserve comme container API exact.",
@@ -103,12 +97,6 @@ export const COMPONENT_API_IMPORT_EXCEPTIONS: ComponentArchitectureException[] =
     owner: "app layout",
     reason: "Sidebar layout dependante de l'etat auth.",
     exitCondition: "Remplacer par un provider route-level ou prop issue du layout.",
-  },
-  {
-    file: "components/natal-interpretation/NatalInterpretationPersonaSelector.tsx",
-    owner: "natal chart page",
-    reason: "Sous-container persona gardant les hooks feature hors des composants presentational.",
-    exitCondition: "Deplacer sous une feature natal-chart dediee avec le container parent.",
   },
   {
     file: "components/settings/DeleteAccountModal.tsx",

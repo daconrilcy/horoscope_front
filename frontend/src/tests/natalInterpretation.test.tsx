@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { NatalInterpretationSection } from "../components/NatalInterpretation";
+import { NatalInterpretationSection } from "../features/natal-chart/NatalInterpretation";
 import { 
   useNatalInterpretation, 
   useNatalInterpretationsList, 

@@ -2,9 +2,9 @@
 import { AlertCircle, RefreshCw } from "lucide-react"
 
 import { useAstrologers, type Astrologer } from "../../api/astrologers"
-import { AstrologerGrid } from "../../features/astrologers"
+import { AstrologerGrid } from "../astrologers"
 import { Button } from "@ui/Button"
-import type { InterpretationTranslations } from "./NatalInterpretationTypes"
+import type { InterpretationTranslations } from "../../components/natal-interpretation/NatalInterpretationTypes"
 
 export function PersonaSelector({
   t,

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { RefreshCw } from "lucide-react"
 
-import type { FeatureEntitlementResponse } from "../api/billing"
+import type { FeatureEntitlementResponse } from "../../api/billing"
 import {
   deleteNatalInterpretation,
   downloadNatalInterpretationPdf,
@@ -13,20 +13,20 @@ import {
   useNatalInterpretationsList,
   useNatalPdfTemplates,
   type NatalInterpretationListItem,
-} from "../api/natalChart"
-import { natalChartTranslations } from "../i18n/natalChart"
-import { type AstrologyLang } from "../i18n/astrology"
+} from "../../api/natalChart"
+import { natalChartTranslations } from "../../i18n/natalChart"
+import { type AstrologyLang } from "../../i18n/astrology"
 import { ErrorBoundary } from "@components/ErrorBoundary"
-import { useAccessTokenSnapshot } from "../utils/authToken"
-import { InterpretationContent } from "./natal-interpretation/NatalInterpretationContent"
+import { useAccessTokenSnapshot } from "../../utils/authToken"
+import { InterpretationContent } from "../../components/natal-interpretation/NatalInterpretationContent"
 import {
   ConfirmDeleteModal,
   InterpretationError,
   InterpretationSkeleton,
   PdfActionsMenu,
   VersionSelector,
-} from "./natal-interpretation/NatalInterpretationMenus"
-import { PersonaSelector } from "./natal-interpretation/NatalInterpretationPersonaSelector"
+} from "../../components/natal-interpretation/NatalInterpretationMenus"
+import { PersonaSelector } from "./NatalInterpretationPersonaSelector"
 import "./NatalInterpretation.css"
 
 interface Props {

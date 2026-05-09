@@ -46,7 +46,7 @@ sourcee dans ce registre.
 | `--admin-entitlements-*` | semantic-extension | `frontend/src/pages/admin/AdminEntitlementsPage.css` | admin entitlements cluster local visual roles | permanent page-scoped semantic layer |
 | `--calendar-*` | semantic-extension | `frontend/src/index.css` | calendar cell background states | permanent calendar UI role |
 | `--consultation-result-*` | semantic-extension | `frontend/src/pages/ConsultationResultPage.css` | consultation result page visual roles | permanent page-scoped semantic layer |
-| `--natal-interpretation-*` | semantic-extension | `frontend/src/components/NatalInterpretation.css` | natal interpretation component roles | permanent component-scoped semantic layer |
+| `--natal-interpretation-*` | semantic-extension | `frontend/src/features/natal-chart/NatalInterpretation.css` | natal interpretation feature roles | permanent feature-scoped semantic layer |
 | `--prediction-timeline-*` | semantic-extension | prediction timeline CSS | prediction timeline layout roles | permanent component-scoped semantic layer |
 | `--text-strong` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |
 | `--text-main` | semantic-extension | `frontend/src/pages/DailyHoroscopePage.css` | daily premium text role | migrate with daily premium token layer |

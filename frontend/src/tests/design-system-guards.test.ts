@@ -401,7 +401,7 @@ function collectResidualCssTokenCluster(): Array<{ file: string; source: string 
     "components/layout/Header.css",
     "components/layout/Sidebar.css",
     "components/MiniInsightCard.css",
-    "components/NatalInterpretation.css",
+    "features/natal-chart/NatalInterpretation.css",
     "components/prediction/DayPredictionCard.css",
     "components/prediction/DayTimelineSectionV4.css",
     "components/prediction/KeyPointCard.css",
@@ -820,7 +820,7 @@ describe("design-system guards", () => {
       { file: "components/prediction/DayPredictionCard.tsx", terms: [removedOverallSummary] },
       { file: "types/dailyPrediction.ts", terms: [removedOverallSummary] },
       {
-        file: "components/NatalInterpretation.tsx",
+        file: "features/natal-chart/NatalInterpretation.tsx",
         terms: [removedAspectParser, "CONJUNCTION_", "SEXTILE_", "SQUARE_", "TRINE_", "OPPOSITION_"],
       },
     ].flatMap(({ file, terms }) => {

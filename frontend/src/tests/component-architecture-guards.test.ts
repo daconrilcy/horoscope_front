@@ -33,6 +33,46 @@ function frontendSourceFiles(): string[] {
   return [".ts", ".tsx"].flatMap((extension) => listFiles("", extension))
 }
 
+function pathPrefix(parts: string[]): string {
+  return parts.join("/")
+}
+
+function isActiveModuleUnderPrefix(file: string, prefixParts: string[]): boolean {
+  const prefix = pathPrefix(prefixParts)
+  return file === `${prefix}.ts` || file === `${prefix}.tsx` || file.startsWith(`${prefix}/`)
+}
+
+function extractModuleSpecifiers(source: string): string[] {
+  return [
+    ...source.matchAll(/\b(?:import|export)\s+(?:type\s+)?(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g),
+    ...source.matchAll(/\bimport\(\s*["']([^"']+)["']\s*\)/g),
+  ].map((match) => match[1].replace(/\\/g, "/"))
+}
+
+function modulePathVariants(parts: string[]): Set<string> {
+  const legacyPath = pathPrefix(parts)
+  return new Set([legacyPath, `${legacyPath}/index`])
+}
+
+function isForbiddenNatalInterpretationSpecifier(specifier: string): boolean {
+  const oldComponentVariants = modulePathVariants(["components", "NatalInterpretation"])
+  const oldSelectorVariants = modulePathVariants([
+    "components",
+    "natal-interpretation",
+    "NatalInterpretationPersonaSelector",
+  ])
+  const forbiddenVariants = [...oldComponentVariants, ...oldSelectorVariants]
+
+  return forbiddenVariants.some(
+    (variant) =>
+      specifier === `@/${variant}` ||
+      specifier === `@${variant}` ||
+      specifier.endsWith(`/${variant}`) ||
+      specifier.endsWith(`/${variant}.ts`) ||
+      specifier.endsWith(`/${variant}.tsx`),
+  )
+}
+
 describe("component-architecture guards", () => {
   it("bloque les imports API/feature et appels HTTP non classes dans components", () => {
     const allowed = exactFiles(COMPONENT_API_IMPORT_EXCEPTIONS)
@@ -77,8 +117,40 @@ describe("component-architecture guards", () => {
     expect(readFrontendFile("pages/LoginPage.tsx")).toContain('from "../features/auth/SignInForm"')
   })
 
-  it("garde NatalInterpretation comme container et les enfants presentational sans API", () => {
-    expect(readFrontendFile("components/NatalInterpretation.tsx")).toContain("useNatalInterpretation")
+  it("garde NatalInterpretation sous feature natal-chart et les enfants presentational sans API", () => {
+    const legacyNatalFiles = componentSourceFiles().filter(
+      (file) =>
+        isActiveModuleUnderPrefix(file, ["components", "NatalInterpretation"]) ||
+        isActiveModuleUnderPrefix(file, [
+          "components",
+          "natal-interpretation",
+          "NatalInterpretationPersonaSelector",
+        ]),
+    )
+    const legacyNatalImports = frontendSourceFiles()
+      .map((file) => ({
+        file,
+        forbiddenSpecifiers: extractModuleSpecifiers(readFrontendFile(file)).filter(
+          isForbiddenNatalInterpretationSpecifier,
+        ),
+      }))
+      .filter(({ forbiddenSpecifiers }) => forbiddenSpecifiers.length > 0)
+    const staleNatalAllowlistEntries = COMPONENT_API_IMPORT_EXCEPTIONS.filter((entry) =>
+      isActiveModuleUnderPrefix(entry.file, ["components", "NatalInterpretation"]) ||
+      isActiveModuleUnderPrefix(entry.file, [
+        "components",
+        "natal-interpretation",
+        "NatalInterpretationPersonaSelector",
+      ]),
+    )
+
+    expect(readFrontendFile("features/natal-chart/NatalInterpretation.tsx")).toContain("useNatalInterpretation")
+    expect(readFrontendFile("features/natal-chart/NatalInterpretation.tsx")).toContain(
+      'from "../../components/natal-interpretation/NatalInterpretationContent"',
+    )
+    expect(legacyNatalFiles).toEqual([])
+    expect(legacyNatalImports).toEqual([])
+    expect(staleNatalAllowlistEntries).toEqual([])
 
     const presentationalFiles = [
       "components/natal-interpretation/NatalInterpretationContent.tsx",
