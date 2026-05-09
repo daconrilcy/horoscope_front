@@ -397,15 +397,11 @@ function collectResidualCssTokenCluster(): Array<{ file: string; source: string 
     "components/DayClimateHero.css",
     "components/DomainRankingCard.css",
     "components/ErrorBoundary/ErrorBoundary.css",
-    "components/HeroHoroscopeCard.css",
     "components/layout/Header.css",
     "components/layout/Sidebar.css",
-    "components/MiniInsightCard.css",
     "features/natal-chart/NatalInterpretation.css",
-    "components/prediction/DayPredictionCard.css",
     "components/prediction/DayTimelineSectionV4.css",
     "components/prediction/KeyPointCard.css",
-    "components/prediction/TurningPointsList.css",
     "components/settings/DeleteAccountModal.css",
     "components/ShortcutCard.css",
     "features/auth/SignUpForm.css",
@@ -817,7 +813,6 @@ describe("design-system guards", () => {
     const targetedViolations = [
       { file: "pages/ChatPage.tsx", terms: [removedAstrologerId] },
       { file: "utils/dailySummaryHelper.ts", terms: [removedOverallSummary] },
-      { file: "components/prediction/DayPredictionCard.tsx", terms: [removedOverallSummary] },
       { file: "types/dailyPrediction.ts", terms: [removedOverallSummary] },
       {
         file: "features/natal-chart/NatalInterpretation.tsx",
@@ -863,13 +858,11 @@ describe("design-system guards", () => {
     ]
       .filter((pattern) => pattern.test(predictionRuntimeSource))
       .map((pattern) => ({ file: "utils/predictionI18n.ts", term: String(pattern) }))
-    const dailyInsightsSource = readFrontendFile("components/DailyInsightsSection.tsx")
 
     expect(vocabularyViolations).toEqual([])
     expect(targetedViolations).toEqual([])
     expect(predictionKeyViolations).toEqual([])
     expect(predictionRuntimeViolations).toEqual([])
-    expect(dailyInsightsSource).not.toMatch(/^export\s+default/m)
   })
 
   it("execute les allowlists exactes inline-style et css-fallback", () => {

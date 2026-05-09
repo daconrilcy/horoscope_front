@@ -11,8 +11,7 @@ import { readFileSync } from "fs"
 import { resolve } from "path"
 import { render, cleanup } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
-import { Heart, MessageCircle } from "lucide-react"
-import { MiniInsightCard } from "../components/MiniInsightCard"
+import { MessageCircle } from "lucide-react"
 import { ShortcutCard } from "../components/ShortcutCard"
 import { SettingsLayout } from "../layouts/SettingsLayout"
 
@@ -28,7 +27,6 @@ let designTokensCss: string
 let themeCss: string
 let bgCss: string
 let premiumThemeCss: string
-let heroCss: string
 let settingsCss: string
 let landingLayoutCss: string
 let landingPageCss: string
@@ -39,7 +37,6 @@ beforeAll(() => {
   premiumThemeCss = readFileSync(resolve(__dirname, "../styles/premium-theme.css"), "utf-8")
   themeCss = designTokensCss + "\n" + readFileSync(resolve(__dirname, "../styles/theme.css"), "utf-8") + "\n" + premiumThemeCss
   bgCss = readFileSync(resolve(__dirname, "../styles/backgrounds.css"), "utf-8")
-  heroCss = readFileSync(resolve(__dirname, "../components/HeroHoroscopeCard.css"), "utf-8")
   settingsCss = readFileSync(resolve(__dirname, "../pages/settings/Settings.css"), "utf-8")
   landingLayoutCss = readFileSync(resolve(__dirname, "../layouts/LandingLayout.css"), "utf-8")
   landingPageCss = readFileSync(resolve(__dirname, "../pages/landing/LandingPage.css"), "utf-8")
@@ -67,12 +64,6 @@ describe("AC#1 — Aucune opacity sur wrappers principaux (Dashboard)", () => {
 
   it(".app-bg-container n'a pas de propriété opacity", () => {
     const match = bgCss.match(/\.app-bg-container\s*\{([^}]*)\}/)
-    const content = match ? match[1] : ""
-    expect(content).not.toMatch(/\bopacity\s*:/)
-  })
-
-  it(".hero-card n'a pas de propriété opacity (container)", () => {
-    const match = heroCss.match(/\.hero-card\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
     expect(content).not.toMatch(/\bopacity\s*:/)
   })
@@ -153,26 +144,6 @@ describe("AC#5 — Fond light: gradient pastel + noise (sans overlay sombre)", (
 // ─── AC#6 — Icônes Lucide harmonisées ────────────────────────────────────────
 
 describe("AC#6 — Icônes Lucide: size et strokeWidth conformes", () => {
-  it("MiniInsightCard badge icon a size=20 (cards) et strokeWidth=1.75", () => {
-    const { container } = render(
-      <MiniInsightCard
-        title="Test"
-        description="desc"
-        icon={Heart}
-        badgeColor="var(--color-badge-amour)"
-      />
-    )
-    const badge = container.querySelector(".mini-card__badge")
-    const svg = badge?.querySelector("svg")
-    expect(svg).toBeInTheDocument()
-    expect(svg?.getAttribute("width")).toBe("20")
-    expect(svg?.getAttribute("height")).toBe("20")
-    const strokeWidth =
-      svg?.getAttribute("stroke-width") ??
-      svg?.querySelector("[stroke-width]")?.getAttribute("stroke-width")
-    expect(strokeWidth).toBe("1.75")
-  })
-
   it("ShortcutCard badge icon a size=20 (cards) et strokeWidth=1.75", () => {
     const { container } = render(
       <ShortcutCard

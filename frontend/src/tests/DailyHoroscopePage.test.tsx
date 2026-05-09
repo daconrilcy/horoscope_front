@@ -894,16 +894,18 @@ describe("DailyHoroscopePage", () => {
     expect(router.state.location.pathname).toBe("/dashboard")
   });
 
-  it("ne duplique plus l'avatar utilisateur dans le header local", async () => {
+  it("utilise le header quotidien courant sans controls utilisateur locaux", async () => {
     installFetchMock()
 
-    const { container } = renderDashboard()
+    renderDashboard()
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { level: 1, name: /mars/i })).toBeInTheDocument()
     })
 
-    expect(container.querySelector(".today-header__avatar")).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Retour au tableau de bord/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Actualiser/i)).toBeInTheDocument()
+    expect(screen.getAllByLabelText(/Menu utilisateur/i)).toHaveLength(1)
   });
 
   it("affiche un etat de chargement explicite pendant la recuperation de la prediction", async () => {
@@ -914,7 +916,7 @@ describe("DailyHoroscopePage", () => {
     renderDashboard();
 
     expect(screen.getByText("Chargement de votre ciel du jour...")).toBeInTheDocument();
-    expect(document.querySelector(".today-header__avatar")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1, name: /mars/i })).not.toBeInTheDocument();
   });
 
   it("affiche un message d'erreur explicite et permet de relancer", async () => {

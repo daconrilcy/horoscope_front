@@ -225,16 +225,18 @@ describe("DashboardPage Landing", () => {
     expect(screen.queryByText("Agenda du jour")).not.toBeInTheDocument()
   })
 
-  it("ne duplique plus les controles avatar et theme dans le contenu du dashboard", async () => {
+  it("rend le dashboard avec les controles globaux uniquement dans le layout", async () => {
     vi.stubGlobal("fetch", makeFetchMock())
 
-    const { container } = renderDashboard()
+    renderDashboard()
 
     await waitFor(() => {
       expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
     })
 
-    expect(container.querySelector(".today-header")).not.toBeInTheDocument()
+    expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
+    expect(screen.getByLabelText("Changer le thème")).toBeInTheDocument()
+    expect(screen.getByLabelText("Menu utilisateur")).toBeInTheDocument()
   })
 
   it("gère l'état de chargement du résumé sans masquer les activités", async () => {

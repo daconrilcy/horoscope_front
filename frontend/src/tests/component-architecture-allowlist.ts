@@ -15,31 +15,7 @@ export const COMPONENT_API_IMPORT_EXCEPTIONS: ComponentArchitectureException[] =
     exitCondition: "Migrer vers app/guards ou layout route-level lors de la convergence admin.",
   },
   {
-    file: "components/B2BAstrologyPanel.tsx",
-    owner: "enterprise dashboard",
-    reason: "Panel B2B conserve comme container API exact.",
-    exitCondition: "Deplacer sous une feature enterprise/b2b quand le domaine est cree.",
-  },
-  {
-    file: "components/B2BBillingPanel.tsx",
-    owner: "enterprise dashboard",
-    reason: "Panel B2B conserve comme container API exact.",
-    exitCondition: "Deplacer sous une feature enterprise/b2b quand le domaine est cree.",
-  },
-  {
-    file: "components/B2BEditorialPanel.tsx",
-    owner: "enterprise dashboard",
-    reason: "Panel B2B conserve comme container API exact.",
-    exitCondition: "Deplacer sous une feature enterprise/b2b quand le domaine est cree.",
-  },
-  {
     file: "components/B2BReconciliationPanel.tsx",
-    owner: "enterprise dashboard",
-    reason: "Panel B2B conserve comme container API exact.",
-    exitCondition: "Deplacer sous une feature enterprise/b2b quand le domaine est cree.",
-  },
-  {
-    file: "components/B2BUsagePanel.tsx",
     owner: "enterprise dashboard",
     reason: "Panel B2B conserve comme container API exact.",
     exitCondition: "Deplacer sous une feature enterprise/b2b quand le domaine est cree.",
@@ -49,24 +25,6 @@ export const COMPONENT_API_IMPORT_EXCEPTIONS: ComponentArchitectureException[] =
     owner: "enterprise dashboard",
     reason: "Panel credentials conserve comme container API exact.",
     exitCondition: "Deplacer sous une feature enterprise/b2b quand le domaine est cree.",
-  },
-  {
-    file: "components/OpsMonitoringPanel.tsx",
-    owner: "admin operations",
-    reason: "Panel ops conserve comme container API exact.",
-    exitCondition: "Deplacer sous une feature admin-ops quand le domaine est cree.",
-  },
-  {
-    file: "components/OpsPersonaPanel.tsx",
-    owner: "admin operations",
-    reason: "Panel ops conserve comme container API exact.",
-    exitCondition: "Deplacer sous une feature admin-ops quand le domaine est cree.",
-  },
-  {
-    file: "components/PrivacyPanel.tsx",
-    owner: "settings privacy",
-    reason: "Panel privacy conserve comme container API exact.",
-    exitCondition: "Deplacer sous pages/settings ou feature privacy.",
   },
   {
     file: "components/SupportOpsPanel.tsx",
