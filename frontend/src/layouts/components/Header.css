@@ -1,6 +1,9 @@
 /* Styles alignes sur les tokens du design system. */
 
 .app-header {
+  position: sticky;
+  top: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9,17 +12,28 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  background: color-mix(in srgb, var(--glass) 88%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 12%, transparent));
-  backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(150%);
-  -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(150%);
-  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 72%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 20%, transparent));
+  background: color-mix(in srgb, var(--color-bg-top) 72%, var(--color-nav-glass) 28%);
+  backdrop-filter: blur(calc(var(--surface-glass-blur) + 10px)) saturate(170%);
+  -webkit-backdrop-filter: blur(calc(var(--surface-glass-blur) + 10px)) saturate(170%);
+  border-bottom: 1px solid var(--color-nav-border);
   box-shadow:
     var(--shadow-card);
-  position: sticky;
-  top: 0;
-  left: 0;
+  isolation: isolate;
   z-index: 220;
   gap: var(--space-3);
+}
+
+.app-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-top) 88%, var(--color-nav-glass) 12%),
+    color-mix(in srgb, var(--color-bg-top) 66%, var(--color-nav-glass) 34%)
+  );
+  pointer-events: none;
 }
 
 .app-header-left {

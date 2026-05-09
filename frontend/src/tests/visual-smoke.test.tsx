@@ -6,18 +6,35 @@
  * correct typography structure (AC#3), background layers (AC#4 / AC#5),
  * and Lucide icon conformance (AC#6).
  */
-import { describe, it, expect, beforeAll, afterEach } from "vitest"
+import { describe, it, expect, beforeAll, afterEach, vi } from "vitest"
 import { readFileSync } from "fs"
 import { resolve } from "path"
-import { render, cleanup } from "@testing-library/react"
+import { render, cleanup, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MessageCircle } from "lucide-react"
 import { ShortcutCard } from "../components/ShortcutCard"
 import { SettingsLayout } from "../layouts/SettingsLayout"
 import { readAppCssSurface } from "./design-system-policy"
+import { AstrologersPage } from "../pages/AstrologersPage"
+
+const { mockUseAstrologers, mockUseUserSettings } = vi.hoisted(() => ({
+  mockUseAstrologers: vi.fn(),
+  mockUseUserSettings: vi.fn(),
+}))
+
+vi.mock("@hooks/useAstrologers", () => ({
+  useAstrologers: () => mockUseAstrologers(),
+}))
+
+vi.mock("@api/userSettings", () => ({
+  useUserSettings: () => mockUseUserSettings(),
+}))
 
 afterEach(() => {
   cleanup()
+  mockUseAstrologers.mockReset()
+  mockUseUserSettings.mockReset()
 })
 
 // ─── CSS source files ────────────────────────────────────────────────────────
@@ -46,6 +63,17 @@ beforeAll(() => {
 function expectDeclarationToUseDefinedToken(css: string, property: string, token: string) {
   expect(css).toContain(`${property}: var(${token})`)
   expect(designTokensCss).toMatch(new RegExp(`${token}:\\s*[^;]+;`))
+}
+
+function expectBlockToContain(css: string, selector: string, declarations: string[]) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const match = css.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`))
+  expect(match).toBeTruthy()
+  const block = match?.[1] ?? ""
+
+  for (const declaration of declarations) {
+    expect(block).toContain(declaration)
+  }
 }
 
 // ─── AC#1 : Aucune opacité globale sur les wrappers principaux ───────────────
@@ -171,6 +199,24 @@ describe("AC#6 — Icônes Lucide: size et strokeWidth conformes", () => {
 })
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
 
+function renderAstrologersPageSmoke() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={["/astrologers"]} future={routerFutureFlags}>
+        <AstrologersPage />
+      </MemoryRouter>
+    </QueryClientProvider>
+  )
+}
+
 describe("CS-084 — rendu smoke Settings", () => {
   it("rend le layout Settings avec le halo heritant du proprietaire semantique", () => {
     const { container } = render(
@@ -203,5 +249,99 @@ describe("CS-085 — rendu smoke Landing", () => {
     expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*--landing-page-atmosphere:/)
     expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*background:\s*var\(--landing-page-atmosphere\)/)
     expect(landingPageCss).toMatch(/\.hero-content h1\s*\{[^}]*font-size:\s*var\(--landing-type-hero-title-size\)/)
+  })
+})
+
+describe("CS-128 — rendu smoke Astrologers compact", () => {
+  it("conserve la matiere token-backed des cartes compactes", () => {
+    expectBlockToContain(appCss, ".people-page .person-card", [
+      "background: var(--app-person-card-compact-background)",
+      "border: var(--app-person-card-compact-border)",
+      "box-shadow: var(--app-person-card-compact-box-shadow)",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card--featured", [
+      "grid-column: span 2",
+      "background: var(--app-person-card-compact-featured-background)",
+      "border-color: var(--app-person-card-compact-featured-border-color)",
+      "box-shadow: var(--app-person-card-compact-featured-box-shadow)",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card-icon", [
+      "position: absolute",
+      "z-index: 5",
+      "background: var(--app-person-card-compact-icon-background)",
+      "border: var(--app-person-card-compact-icon-border)",
+      "box-shadow: var(--app-person-card-compact-icon-box-shadow)",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card-icon::before", [
+      "background: var(--app-person-card-compact-icon-ring-background)",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card-style,\n.people-page .person-card--featured .person-card-style", [
+      "color: var(--app-person-card-compact-style-color)",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card-avatar,\n.people-page .person-card--featured .person-card-avatar", [
+      "background: var(--app-person-card-compact-avatar-background)",
+      "border: var(--app-person-card-compact-avatar-border)",
+      "box-shadow: var(--app-person-card-compact-avatar-box-shadow)",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card-tag", [
+      "background: var(--app-person-card-compact-tag-background)",
+      "border: var(--app-person-card-compact-tag-border)",
+      "box-shadow: var(--app-person-card-compact-tag-box-shadow)",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card-provider-badge,\n.people-page .person-card-featured-badge,\n.people-page .person-default-badge", [
+      "display: none",
+    ])
+  })
+
+  it("rend le DOM /astrologers avec icone, avatar, chips et badges compacts", () => {
+    mockUseAstrologers.mockReturnValue({
+      astrologers: [
+        {
+          id: "luna",
+          name: "Luna Celeste",
+          first_name: "Luna",
+          last_name: "Caron",
+          avatar_url: "/avatars/luna.jpg",
+          provider_type: "ia",
+          specialties: ["Theme natal", "Transits", "Relations"],
+          style: "Bienveillant et direct",
+          bio_short: "Lecture relationnelle.",
+        },
+        {
+          id: "orion",
+          name: "Orion Mystique",
+          first_name: "Orion",
+          last_name: "Vasseur",
+          avatar_url: "/avatars/orion.jpg",
+          provider_type: "real",
+          specialties: ["Carriere", "Evenements"],
+          style: "Analytique et precis",
+          bio_short: "Astrologie previsionnelle.",
+        },
+      ],
+      isLoading: false,
+      error: null,
+    })
+    mockUseUserSettings.mockReturnValue({
+      data: { default_astrologer_id: "luna" },
+      isLoading: false,
+    })
+
+    const { container } = renderAstrologersPageSmoke()
+    const peoplePage = container.querySelector(".people-page")
+    const cards = container.querySelectorAll(".person-card")
+    const firstCard = cards[0]
+
+    expect(peoplePage).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Nos Astrologues" })).toBeInTheDocument()
+    expect(cards).toHaveLength(2)
+    expect(firstCard).toHaveClass("person-card--featured")
+    expect(firstCard.querySelector(".person-card-icon")).toBeInTheDocument()
+    expect(firstCard.querySelector(".person-card-avatar")).toBeInTheDocument()
+    expect(firstCard.querySelectorAll(".person-card-tag")).toHaveLength(3)
+    expect(firstCard.querySelector(".person-card-provider-badge")).toBeInTheDocument()
+    expect(firstCard.querySelector(".person-card-featured-badge")).toBeInTheDocument()
+    expect(firstCard.querySelector(".person-default-badge")).toBeInTheDocument()
+    expect(screen.getByAltText("Avatar de Luna Caron")).toBeInTheDocument()
   })
 })

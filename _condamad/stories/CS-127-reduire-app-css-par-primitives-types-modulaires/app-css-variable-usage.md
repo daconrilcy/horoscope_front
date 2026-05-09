@@ -217,6 +217,26 @@
 | `--app-person-card-bio-color` | 1 | retained-single-use | themeable or variant-driven App token retained with exact CS-127 decision |
 | `--app-person-card-bio-font-size` | 1 | retained-single-use | themeable or variant-driven App token retained with exact CS-127 decision |
 | `--app-person-card-bio-line-height` | 1 | retained-single-use | themeable or variant-driven App token retained with exact CS-127 decision |
+| `--app-person-card-compact-avatar-box-shadow` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-avatar-background` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-avatar-border` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-background` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-border` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-box-shadow` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-divider-background` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-featured-background` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-featured-border-color` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-featured-box-shadow` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-icon-background` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-icon-border` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-icon-box-shadow` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-icon-ring-background` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-icon-text-shadow` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-radius` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-style-color` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-tag-background` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-tag-border` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
+| `--app-person-card-compact-tag-box-shadow` | 1 | retained-single-use | themeable compact `/astrologers` visual token retained by CS-128 |
 | `--app-person-card-border` | 1 | retained-single-use | themeable or variant-driven App token retained with exact CS-127 decision |
 | `--app-person-card-border-color` | 1 | retained-single-use | themeable or variant-driven App token retained with exact CS-127 decision |
 | `--app-person-card-border-radius` | 1 | retained-single-use | themeable or variant-driven App token retained with exact CS-127 decision |

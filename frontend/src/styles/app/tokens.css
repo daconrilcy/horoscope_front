@@ -94,6 +94,7 @@
   --app-person-card-icon-background: color-mix(in srgb, var(--astro-accent) 48%, rgba(255, 255, 255, 0.35) 52%);
   --app-person-card-icon-box-shadow: 0 0 18px color-mix(in srgb, var(--astro-glow) 72%, transparent 28%);
   --app-person-card-icon-font-size: 0.92rem;
+  --app-person-card-compact-style-color: var(--color-text-primary);
   --app-person-card-featured-badge-background: rgba(255, 255, 255, 0.62);
   --app-person-card-featured-badge-border: 1px solid color-mix(in srgb, var(--astro-accent) 26%, rgba(255, 255, 255, 0.34) 74%);
   --app-person-card-featured-badge-color: color-mix(in srgb, var(--astro-accent) 72%, #3a2d5a 28%);
@@ -455,4 +456,39 @@
   --app-summary-panel-action-shadow: 0 19px 40px rgba(88, 58, 130, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.76);
 
   min-height: 100vh;
+}
+
+.person-card {
+  --app-person-card-compact-radius: 16px;
+  --app-person-card-compact-background: radial-gradient(circle at 90% 14%, color-mix(in srgb, var(--astro-glow) 32%, rgba(255, 255, 255, 0) 68%) 0 20%, rgba(255, 255, 255, 0) 38%),
+    radial-gradient(circle at 11% 10%, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0) 24%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.58));
+  --app-person-card-compact-border: 1px solid color-mix(in srgb, var(--astro-accent) 34%, rgba(255, 255, 255, 0.66) 66%);
+  --app-person-card-compact-box-shadow: 0 18px 34px rgba(76, 56, 118, 0.1),
+    0 0 30px color-mix(in srgb, var(--astro-glow) 24%, rgba(255, 255, 255, 0) 76%),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  --app-person-card-compact-featured-background: radial-gradient(circle at 88% 16%, color-mix(in srgb, var(--astro-glow) 34%, rgba(255, 255, 255, 0) 66%) 0 22%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(circle at 9% 9%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 24%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.64));
+  --app-person-card-compact-featured-border-color: color-mix(in srgb, var(--astro-accent) 58%, rgba(255, 255, 255, 0.58) 42%);
+  --app-person-card-compact-featured-box-shadow: 0 19px 36px color-mix(in srgb, var(--astro-glow) 46%, rgba(76, 56, 118, 0.08) 54%),
+    0 0 0 1px rgba(255, 255, 255, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  --app-person-card-compact-icon-background: color-mix(in srgb, var(--astro-accent) 76%, rgba(255, 255, 255, 0.46) 24%);
+  --app-person-card-compact-icon-border: 1px solid rgba(255, 255, 255, 0.78);
+  --app-person-card-compact-icon-box-shadow: 0 0 0 4px color-mix(in srgb, var(--astro-glow) 32%, rgba(255, 255, 255, 0) 68%),
+    0 6px 14px color-mix(in srgb, var(--astro-glow) 46%, rgba(76, 56, 118, 0.08) 54%);
+  --app-person-card-compact-icon-ring-background: radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.78) 0 18%, color-mix(in srgb, var(--astro-glow) 58%, rgba(255, 255, 255, 0.18) 42%) 42%, color-mix(in srgb, var(--astro-accent) 36%, rgba(255, 255, 255, 0) 64%) 72%, rgba(255, 255, 255, 0) 100%);
+  --app-person-card-compact-icon-text-shadow: 0 1px 3px color-mix(in srgb, var(--astro-accent) 48%, rgba(44, 28, 74, 0.28) 52%);
+  --app-person-card-compact-avatar-background: linear-gradient(160deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05)),
+    color-mix(in srgb, var(--astro-accent) 18%, rgba(15, 10, 30, 0.82) 82%);
+  --app-person-card-compact-avatar-border: 1px solid color-mix(in srgb, var(--astro-accent) 42%, rgba(255, 255, 255, 0.66) 58%);
+  --app-person-card-compact-avatar-box-shadow: 0 0 0 3px color-mix(in srgb, var(--astro-glow) 20%, rgba(255, 255, 255, 0) 80%),
+    0 12px 21px rgba(18, 12, 34, 0.24);
+  --app-person-card-compact-divider-background: linear-gradient(90deg, color-mix(in srgb, var(--astro-accent) 34%, rgba(108, 92, 138, 0.2) 66%), color-mix(in srgb, var(--astro-glow) 24%, rgba(108, 92, 138, 0.08) 76%) 52%, rgba(255, 255, 255, 0) 100%);
+  --app-person-card-compact-tag-background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28)),
+    var(--astro-chip-bg);
+  --app-person-card-compact-tag-border: 1px solid color-mix(in srgb, var(--astro-chip-border) 82%, rgba(255, 255, 255, 0.3) 18%);
+  --app-person-card-compact-tag-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    0 4px 10px color-mix(in srgb, var(--astro-glow) 18%, rgba(255, 255, 255, 0) 82%);
 }

@@ -695,28 +695,32 @@
 
 .people-page .person-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 1.25rem;
+  gap: 1rem 1rem;
   margin-top: 1.25rem;
 }
 
 
 
 .people-page .person-card {
-  min-height: 0;
-  padding: 0.95rem;
-  background: var(--color-glass-bg);
-  border-color: var(--color-glass-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
+  height: 256px;
+  min-height: 256px;
+  padding: 2.55rem 1rem 0.95rem;
+  background: var(--app-person-card-compact-background);
+  border: var(--app-person-card-compact-border);
+  border-radius: var(--app-person-card-compact-radius);
+  box-shadow: var(--app-person-card-compact-box-shadow);
 }
 
 
 
 .people-page .person-card--featured {
   grid-column: span 2;
-  padding: 1.05rem;
-  background: var(--color-glass-bg-2);
-  border-color: var(--color-primary);
+  height: 244px;
+  min-height: 244px;
+  padding: 2.65rem 1rem 0.95rem;
+  background: var(--app-person-card-compact-featured-background);
+  border-color: var(--app-person-card-compact-featured-border-color);
+  box-shadow: var(--app-person-card-compact-featured-box-shadow);
 }
 
 
@@ -730,7 +734,9 @@
 
 
 .people-page .person-card-topline {
-  margin-bottom: 0.55rem;
+  position: static;
+  min-height: 0;
+  margin-bottom: 0;
 }
 
 
@@ -742,25 +748,50 @@
 
 
 .people-page .person-card-icon {
-  width: 1.45rem;
-  height: 1.45rem;
-  font-size: var(--font-size-label);
+  position: absolute;
+  top: 0.72rem;
+  left: 0.9rem;
+  z-index: 5;
+  width: 1.38rem;
+  height: 1.38rem;
+  color: var(--app-person-card-icon-color);
+  background: var(--app-person-card-compact-icon-background);
+  border: var(--app-person-card-compact-icon-border);
+  box-shadow: var(--app-person-card-compact-icon-box-shadow);
+  font-size: var(--font-size-3xs);
+  isolation: isolate;
+  text-shadow: var(--app-person-card-compact-icon-text-shadow);
+}
+
+
+
+.people-page .person-card-icon::before {
+  content: "";
+  position: absolute;
+  inset: -0.36rem;
+  z-index: -1;
+  border-radius: var(--radius-full);
+  background: var(--app-person-card-compact-icon-ring-background);
+  filter: blur(1.5px);
 }
 
 
 
 .people-page .person-card-avatar,
 .people-page .person-card--featured .person-card-avatar {
-  width: 58px;
-  height: 58px;
-  margin-bottom: 0.6rem;
+  width: 64px;
+  height: 64px;
+  background: var(--app-person-card-compact-avatar-background);
+  border: var(--app-person-card-compact-avatar-border);
+  margin-bottom: 0.58rem;
+  box-shadow: var(--app-person-card-compact-avatar-box-shadow);
 }
 
 
 
 .people-page .person-card-name,
 .people-page .person-card--featured .person-card-name {
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
 }
 
 
@@ -774,28 +805,33 @@
 
 .people-page .person-card-style,
 .people-page .person-card--featured .person-card-style {
-  margin-bottom: 0.58rem;
+  margin-bottom: 0.54rem;
   font-size: var(--font-size-label);
+  color: var(--app-person-card-compact-style-color);
 }
 
 
 
 .people-page .person-card-divider {
-  margin-bottom: 0.62rem;
+  margin-bottom: 0.54rem;
+  background: var(--app-person-card-compact-divider-background);
 }
 
 
 
 .people-page .person-card-specialties {
   gap: 0.35rem;
-  margin-bottom: 0.62rem;
+  margin-bottom: 0.54rem;
 }
 
 
 
 .people-page .person-card-tag {
-  padding: 0.25rem 0.52rem;
+  padding: 0.2rem 0.48rem;
+  background: var(--app-person-card-compact-tag-background);
+  border: var(--app-person-card-compact-tag-border);
   font-size: var(--font-size-3xs);
+  box-shadow: var(--app-person-card-compact-tag-box-shadow);
 }
 
 
@@ -803,8 +839,8 @@
 .people-page .person-card-bio,
 .people-page .person-card--featured .person-card-bio {
   max-width: none;
-  font-size: var(--font-size-xs);
-  line-height: var(--line-height-relaxed);
+  font-size: var(--font-size-3xs);
+  line-height: var(--line-height-copy-tight);
 }
 
 

@@ -549,6 +549,21 @@ describe("design-system guards", () => {
     expect(readFrontendFile("pages/settings/Settings.css")).toContain("font-size: var(--type-page-title-size)")
   })
 
+  it("garde le top menu en couche glass au-dessus du contenu scrolle", () => {
+    const headerCss = readFrontendFile("layouts/components/Header.css")
+    const headerBlock = findFlatCssBlock(headerCss, ".app-header")
+    const veilBlock = findFlatCssBlock(headerCss, ".app-header::before")
+
+    expect(headerBlock.body).toContain("position: sticky")
+    expect(headerBlock.body).toContain("z-index: 220")
+    expect(headerBlock.body).toContain("background: color-mix(in srgb, var(--color-bg-top) 72%, var(--color-nav-glass) 28%)")
+    expect(headerBlock.body).toContain("backdrop-filter: blur(calc(var(--surface-glass-blur) + 10px)) saturate(170%)")
+    expect(headerBlock.body).toContain("-webkit-backdrop-filter: blur(calc(var(--surface-glass-blur) + 10px)) saturate(170%)")
+    expect(headerBlock.body).toContain("isolation: isolate")
+    expect(veilBlock.body).toContain("background: linear-gradient(")
+    expect(veilBlock.body).toContain("pointer-events: none")
+  })
+
   it("execute la garde des literals hardcodes migres par CS-027", () => {
     const migratedFiles = [
       "App.css",
@@ -727,6 +742,44 @@ describe("design-system guards", () => {
     expect(catalogueBlock.body).toContain("background: var(--app-astro-catalog-page-bg)")
     expect(summaryBlock.body).toContain("background: var(--app-summary-panel-bg)")
     expect(summaryBlock.body).toContain("box-shadow: var(--app-summary-panel-shadow)")
+  })
+
+  it("garde le relief compact de la liste astrologues CS-128", () => {
+    const appCss = readAppCssSurface()
+    const appCssEntry = readFrontendFile("App.css")
+    const compactCardBlock = findFlatCssBlock(appCss, ".people-page .person-card")
+    const featuredCardBlock = findFlatCssBlock(appCss, ".people-page .person-card--featured")
+    const iconBlock = findFlatCssBlock(appCss, ".people-page .person-card-icon")
+    const iconRingBlock = findFlatCssBlock(appCss, ".people-page .person-card-icon::before")
+    const avatarBlock = findFlatCssBlock(appCss, ".people-page .person-card-avatar,\n.people-page .person-card--featured .person-card-avatar")
+    const styleBlock = findFlatCssBlock(appCss, ".people-page .person-card-style,\n.people-page .person-card--featured .person-card-style")
+    const chipBlock = findFlatCssBlock(appCss, ".people-page .person-card-tag")
+    const badgeBlock = findFlatCssBlock(appCss, ".people-page .person-card-provider-badge,\n.people-page .person-card-featured-badge,\n.people-page .person-default-badge")
+
+    expect(appCssEntry).not.toMatch(/person-card|people-page|astrologer/)
+    expect(compactCardBlock.body).toContain("background: var(--app-person-card-compact-background)")
+    expect(compactCardBlock.body).toContain("border: var(--app-person-card-compact-border)")
+    expect(compactCardBlock.body).toContain("var(--app-person-card-compact-radius)")
+    expect(compactCardBlock.body).toContain("box-shadow: var(--app-person-card-compact-box-shadow)")
+    expect(featuredCardBlock.body).toContain("grid-column: span 2")
+    expect(featuredCardBlock.body).toContain("background: var(--app-person-card-compact-featured-background)")
+    expect(featuredCardBlock.body).toContain("border-color: var(--app-person-card-compact-featured-border-color)")
+    expect(featuredCardBlock.body).toContain("box-shadow: var(--app-person-card-compact-featured-box-shadow)")
+    expect(iconBlock.body).toContain("position: absolute")
+    expect(iconBlock.body).toContain("z-index: 5")
+    expect(iconBlock.body).toContain("background: var(--app-person-card-compact-icon-background)")
+    expect(iconBlock.body).toContain("border: var(--app-person-card-compact-icon-border)")
+    expect(iconBlock.body).toContain("box-shadow: var(--app-person-card-compact-icon-box-shadow)")
+    expect(iconRingBlock.body).toContain("background: var(--app-person-card-compact-icon-ring-background)")
+    expect(avatarBlock.body).toContain("background: var(--app-person-card-compact-avatar-background)")
+    expect(avatarBlock.body).toContain("border: var(--app-person-card-compact-avatar-border)")
+    expect(avatarBlock.body).toContain("box-shadow: var(--app-person-card-compact-avatar-box-shadow)")
+    expect(styleBlock.body).toContain("color: var(--app-person-card-compact-style-color)")
+    expect(chipBlock.body).toContain("background: var(--app-person-card-compact-tag-background)")
+    expect(chipBlock.body).toContain("border: var(--app-person-card-compact-tag-border)")
+    expect(chipBlock.body).toContain("box-shadow: var(--app-person-card-compact-tag-box-shadow)")
+    expect(badgeBlock.body).toContain("display: none")
+    expect(appCss).not.toMatch(/\.astrologer-(?:card|grid|card-avatar|card-specialties)/)
   })
 
   it("bloque les noms App specifiques non classes par CS-124", () => {
